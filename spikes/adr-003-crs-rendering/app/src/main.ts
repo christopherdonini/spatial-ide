@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { runM1 } from "./m1-render";
+import { runM15 } from "./m1_5-diagnostics";
 
 // M0 (ADR-003 spike): report WebGL2/WebGPU availability and GPU adapter
 // info from inside the native webview (WebView2 on Windows). No rendering
@@ -165,7 +166,14 @@ async function runM0Report() {
   await invoke("log_m0_report", { reportJson: JSON.stringify(report, null, 2) });
 }
 
+async function maybeRunM15() {
+  const shouldRun = await invoke<boolean>("should_run_m1_5").catch(() => false);
+  if (shouldRun) await runM15();
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   void runM0Report();
-  void runM1();
+  // M1.5 reuses the same #deck-canvas Deck instance lifecycle as M1, so it
+  // must run after M1 finishes, not concurrently with it.
+  void runM1().then(() => maybeRunM15());
 });

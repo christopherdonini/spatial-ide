@@ -20,8 +20,8 @@ export interface P1Data {
 }
 
 /**
- * Fetches P1 over the "p1" custom protocol (Arrow IPC, no JSON — ADR-004)
- * and prepares it for GPU upload.
+ * Fetches Arrow IPC bytes from the "p1" custom protocol (no JSON — ADR-004)
+ * and prepares them for GPU upload.
  *
  * Copy chain from here on (see p1.rs for the Rust-side half): fetch() gives
  * an ArrayBuffer (one OS-level copy already paid crossing the protocol
@@ -30,11 +30,11 @@ export interface P1Data {
  * unavoidable copy before the GPU upload. Never zero-copy end to end, and
  * this module doesn't pretend otherwise.
  */
-export async function loadP1(): Promise<P1Data> {
+async function fetchAndParse(url: string): Promise<P1Data> {
   const fetchStart = performance.now();
-  const res = await fetch("http://p1.localhost/points");
+  const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`P1 fetch failed: ${res.status} ${res.statusText}`);
+    throw new Error(`P1 fetch failed: ${res.status} ${res.statusText} (${url})`);
   }
   const buf = await res.arrayBuffer();
   const fetchDoneAt = performance.now();
@@ -43,7 +43,7 @@ export async function loadP1(): Promise<P1Data> {
   const eCol = table.getChild("e");
   const nCol = table.getChild("n");
   if (!eCol || !nCol) {
-    throw new Error("P1 Arrow table is missing the 'e'/'n' columns");
+    throw new Error(`P1 Arrow table is missing the 'e'/'n' columns (${url})`);
   }
   const e = eCol.toArray() as Float64Array;
   const n = nCol.toArray() as Float64Array;
@@ -60,4 +60,31 @@ export async function loadP1(): Promise<P1Data> {
   const parseDoneAt = performance.now();
 
   return { count, positions, fetchStart, fetchDoneAt, parseDoneAt };
+}
+
+/** Full P1 (default), or the first `n` points of it (M1.5 scaling curve). */
+export async function loadP1(n?: number): Promise<P1Data> {
+  const url = n === undefined ? "http://p1.localhost/points" : `http://p1.localhost/points?n=${n}`;
+  return fetchAndParse(url);
+}
+
+/**
+ * M1.5 visible-count diagnostic: server-side (crude, unindexed — see
+ * p1.rs) bbox filter over the same fixed dataset. Still EPSG:2056 absolute
+ * coordinates in, EPSG:2056 absolute coordinates out — a spatial predicate,
+ * not a reprojection.
+ */
+export async function loadP1Bbox(eMin: number, nMin: number, eMax: number, nMax: number): Promise<P1Data> {
+  return fetchAndParse(`http://p1.localhost/points?bbox=${eMin},${nMin},${eMax},${nMax}`);
+}
+
+/**
+ * M1.5 streaming diagnostic: one ~chunkSize-row slice of the fixed dataset.
+ * Each call is a separate self-contained Arrow IPC message (its own schema
+ * message, not shared across chunks) — see p1.rs and lib.rs doc comments
+ * for why this simulates chunked delivery via repeated requests rather than
+ * true streamed-body HTTP.
+ */
+export async function loadP1Chunk(chunk: number, chunkSize: number): Promise<P1Data> {
+  return fetchAndParse(`http://p1.localhost/points?chunk=${chunk}&chunkSize=${chunkSize}`);
 }

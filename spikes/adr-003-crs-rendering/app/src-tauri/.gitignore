@@ -6,6 +6,7 @@
 # will have schema files for capabilities auto-completion
 /gen/schemas
 
-# Spike report dumps (regenerated each run, see main.ts / m1-render.ts)
+# Spike report dumps (regenerated each run, see main.ts / m1-render.ts / m1_5-diagnostics.ts)
 /m0-report.json
 /m1-report.json
+/m1_5-report.json

@@ -1,5 +1,9 @@
 mod p1;
 
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use tauri::http::{header, Response, StatusCode};
 use tauri::Manager;
 
@@ -10,6 +14,16 @@ use tauri::Manager;
 #[tauri::command]
 fn webview_runtime_version() -> Result<String, String> {
     tauri::webview_version().map_err(|e| e.to_string())
+}
+
+// M1.5's diagnostic pass adds ~12 sequential sub-benchmarks (~2-4 minutes)
+// on top of M0+M1, so it's opt-in via an OS env var read on the Rust side
+// (RUN_M1_5=1 npm run tauri dev) rather than always running. A JS-side gate
+// (e.g. a Vite env var) would need extra tsconfig/vite-env.d.ts plumbing
+// this spike doesn't otherwise need; this is a one-line command instead.
+#[tauri::command]
+fn should_run_m1_5() -> bool {
+    std::env::var("RUN_M1_5").map(|v| v == "1").unwrap_or(false)
 }
 
 // Sink for the M0 report assembled in JS: prints to the `tauri dev` stdout
@@ -34,11 +48,39 @@ fn log_m1_report(report_json: String) {
     }
 }
 
-/// P1's pre-serialized Arrow IPC bytes, generated once at startup and
-/// intentionally leaked to `'static`: the dataset lives for the app's whole
-/// process lifetime anyway, so leaking avoids an extra clone on every
-/// protocol request (see p1.rs for the rest of the copy-chain accounting).
+// M1.5 diagnostic results sink, same JSON-is-fine-for-control-messages
+// reasoning as log_m1_report.
+#[tauri::command]
+fn log_m1_5_report(report_json: String) {
+    println!("[M1.5 DIAGNOSTIC REPORT] {}", report_json);
+    if let Err(e) = std::fs::write("m1_5-report.json", &report_json) {
+        eprintln!("[M1.5 DIAGNOSTIC REPORT] failed to write m1_5-report.json: {}", e);
+    }
+}
+
+/// P1's pre-serialized Arrow IPC bytes for the default (no query params)
+/// protocol response, generated once at startup and intentionally leaked to
+/// `'static`: the dataset lives for the app's whole process lifetime
+/// anyway, so leaking avoids an extra clone on every protocol request (see
+/// p1.rs for the rest of the copy-chain accounting). Kept byte-for-byte
+/// identical to what M1 measured against — M1.5's parameterized queries
+/// (below) are additive and never touch this path.
 struct P1Bytes(&'static [u8]);
+
+/// M1.5 diagnostics: the same fixed-seed point set, kept around unserialized
+/// so `?n=`/`?bbox=`/`?chunk=` requests can slice it on demand instead of
+/// re-drawing random numbers (comparable runs) or re-leaking memory per
+/// request (this is `Arc`-shared, not leaked — diagnostic requests are rare
+/// and one-off, unlike M1's own hot default path).
+struct P1DatasetState(Arc<p1::P1Dataset>);
+
+fn parse_query(query: Option<&str>) -> HashMap<&str, &str> {
+    query
+        .unwrap_or("")
+        .split('&')
+        .filter_map(|pair| pair.split_once('='))
+        .collect()
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -50,13 +92,14 @@ pub fn run() {
     // "time to first pixels" numbers in the README are measured from query
     // start (the P1 fetch), per docs/08 — real cold-launch-to-pixels time
     // is this startup delay *plus* that, and isn't what's reported there.
-    //
+    let dataset = Arc::new(p1::P1Dataset::generate());
+
     // Vec::leak (not .into_boxed_slice()+Box::leak): the writer buffer in
-    // generate_p1_arrow_ipc grows via push/write and so has spare capacity
-    // by the time it's done; into_boxed_slice() would reallocate+copy the
-    // whole ~162MB buffer to shrink it. leak() keeps the original
-    // allocation (any unused capacity is leaked too, not copied).
-    let p1_bytes: &'static [u8] = p1::generate_p1_arrow_ipc().leak();
+    // full_arrow_ipc grows via push/write and so has spare capacity by the
+    // time it's done; into_boxed_slice() would reallocate+copy the whole
+    // ~162MB buffer to shrink it. leak() keeps the original allocation (any
+    // unused capacity is leaked too, not copied).
+    let p1_bytes: &'static [u8] = dataset.full_arrow_ipc().leak();
     println!(
         "[M1] P1 generated: {} points, {} bytes Arrow IPC",
         p1::POINT_COUNT,
@@ -66,28 +109,81 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(P1Bytes(p1_bytes))
+        .manage(P1DatasetState(dataset))
         .invoke_handler(tauri::generate_handler![
             webview_runtime_version,
+            should_run_m1_5,
             log_m0_report,
-            log_m1_report
+            log_m1_report,
+            log_m1_5_report
         ])
         // Serves the P1 point cloud as raw Arrow IPC bytes — no JSON, no
-        // invoke/serde round trip (ADR-004). Single-shot, unchunked: the
-        // whole buffer is one response body. That's a deliberate M1
-        // simplification (see p1.rs doc comment); real chunking and
-        // cancellation land in M5's data-plane audit.
+        // invoke/serde round trip (ADR-004).
+        //
+        // Default (no query params): M1's original single-shot, unchunked
+        // whole-buffer response, unchanged. Real chunking/backpressure over
+        // the wire is still M5's job (docs/02, docs/06; ADR-004 honesty
+        // check) — this is spike-local scaffolding for M1.5's diagnostics,
+        // not a proposed SKP wire shape:
+        //   ?n=<count>          M1.5 scaling curve — prefix of the same
+        //                       fixed dataset (no new RNG draw).
+        //   ?bbox=eMin,nMin,eMax,nMax   M1.5 visible-count diagnostic — a
+        //                       crude unindexed linear scan (p1.rs), so its
+        //                       own cost confounds the render-cost result.
+        //   ?chunk=<i>&chunkSize=<c>    M1.5 streaming diagnostic — N
+        //                       separate self-contained Arrow IPC messages
+        //                       (each with its own schema message, unlike
+        //                       real IPC streaming's schema-once framing),
+        //                       simulating chunked delivery via repeated
+        //                       requests. This API (register_uri_scheme_
+        //                       protocol, tauri 2.11.5) has no lower-level
+        //                       streamed-body option, hence the simulation.
         .register_uri_scheme_protocol("p1", |ctx, request| {
-            let bytes = ctx.app_handle().state::<P1Bytes>().0;
+            let params = parse_query(request.uri().query());
+            let (status, body): (StatusCode, Cow<'static, [u8]>) = if let Some(chunk_str) =
+                params.get("chunk")
+            {
+                let chunk: usize = chunk_str.parse().unwrap_or(0);
+                let chunk_size: usize = params
+                    .get("chunkSize")
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(256_000);
+                let dataset = ctx.app_handle().state::<P1DatasetState>().0.clone();
+                // Dev-only diagnostic param, hand-typed URLs only, but a
+                // stray huge value shouldn't panic the protocol handler —
+                // saturate instead of overflowing (arrow_ipc_range clamps
+                // to dataset length anyway, so saturating to usize::MAX
+                // still produces a well-formed, just empty/tiny response).
+                let start = chunk.saturating_mul(chunk_size);
+                let end = (chunk.saturating_add(1)).saturating_mul(chunk_size);
+                (StatusCode::OK, Cow::Owned(dataset.arrow_ipc_range(start, end)))
+            } else if let Some(bbox_str) = params.get("bbox") {
+                let parts: Vec<f64> = bbox_str.split(',').filter_map(|s| s.parse().ok()).collect();
+                let dataset = ctx.app_handle().state::<P1DatasetState>().0.clone();
+                match parts[..] {
+                    [e_min, n_min, e_max, n_max] => (
+                        StatusCode::OK,
+                        Cow::Owned(dataset.arrow_ipc_bbox(e_min, n_min, e_max, n_max)),
+                    ),
+                    _ => (StatusCode::BAD_REQUEST, Cow::Owned(Vec::new())),
+                }
+            } else if let Some(n_str) = params.get("n") {
+                let n: usize = n_str.parse().unwrap_or(p1::POINT_COUNT);
+                let dataset = ctx.app_handle().state::<P1DatasetState>().0.clone();
+                (StatusCode::OK, Cow::Owned(dataset.arrow_ipc_range(0, n)))
+            } else {
+                (StatusCode::OK, Cow::Borrowed(ctx.app_handle().state::<P1Bytes>().0))
+            };
             let origin = request
                 .headers()
                 .get(header::ORIGIN)
                 .and_then(|v| v.to_str().ok())
                 .unwrap_or("*");
             Response::builder()
-                .status(StatusCode::OK)
+                .status(status)
                 .header(header::CONTENT_TYPE, "application/vnd.apache.arrow.stream")
                 .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin)
-                .body(bytes)
+                .body(body)
                 .expect("building the P1 response must not fail")
         })
         .run(tauri::generate_context!())
