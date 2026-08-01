@@ -30,7 +30,20 @@ export interface P1Data {
  * unavoidable copy before the GPU upload. Never zero-copy end to end, and
  * this module doesn't pretend otherwise.
  */
-async function fetchAndParse(url: string): Promise<P1Data> {
+export interface RawEN {
+  /** Absolute, untransformed EPSG:2056 metres, exactly as they left Rust. */
+  e: Float64Array;
+  n: Float64Array;
+  fetchStart: number;
+  fetchDoneAt: number;
+}
+
+/**
+ * Fetch + Arrow-decode only, with no coordinate transformation applied —
+ * f64 in, f64 out. M2 needs the untouched values as ground truth, so the
+ * offsetting deliberately does not happen here.
+ */
+export async function fetchArrowEN(url: string): Promise<RawEN> {
   const fetchStart = performance.now();
   const res = await fetch(url);
   if (!res.ok) {
@@ -45,8 +58,16 @@ async function fetchAndParse(url: string): Promise<P1Data> {
   if (!eCol || !nCol) {
     throw new Error(`P1 Arrow table is missing the 'e'/'n' columns (${url})`);
   }
-  const e = eCol.toArray() as Float64Array;
-  const n = nCol.toArray() as Float64Array;
+  return {
+    e: eCol.toArray() as Float64Array,
+    n: nCol.toArray() as Float64Array,
+    fetchStart,
+    fetchDoneAt,
+  };
+}
+
+async function fetchAndParse(url: string): Promise<P1Data> {
+  const { e, n, fetchStart, fetchDoneAt } = await fetchArrowEN(url);
   const count = e.length;
 
   // Offset-relative rendering (ADR-003 technical approach): subtract the
@@ -87,4 +108,13 @@ export async function loadP1Bbox(eMin: number, nMin: number, eMax: number, nMax:
  */
 export async function loadP1Chunk(chunk: number, chunkSize: number): Promise<P1Data> {
   return fetchAndParse(`http://p1.localhost/points?chunk=${chunk}&chunkSize=${chunkSize}`);
+}
+
+/**
+ * M2 precision probes (src-tauri/src/markers.rs), raw and untransformed.
+ * Same Arrow IPC framing as P1 — binary, no JSON (ADR-004) — just a tiny
+ * dataset with exactly-known coordinates.
+ */
+export async function loadMarkersRaw(): Promise<RawEN> {
+  return fetchArrowEN("http://p1.localhost/markers");
 }

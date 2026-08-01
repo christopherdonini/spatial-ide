@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { runM1 } from "./m1-render";
 import { runM15 } from "./m1_5-diagnostics";
+import { runM2 } from "./m2-precision";
 
 // M0 (ADR-003 spike): report WebGL2/WebGPU availability and GPU adapter
 // info from inside the native webview (WebView2 on Windows). No rendering
@@ -171,9 +172,26 @@ async function maybeRunM15() {
   if (shouldRun) await runM15();
 }
 
+// M2 runs *instead of* M1, not after it: the precision harness needs only the
+// 125-point marker set, and every milestone here shares the single
+// #deck-canvas, so letting M1's 10M-point load and 20 s frame-time sweep run
+// first would add ~25 s to each M2 run for no measurement value. Default
+// (no env var) is still M0 + M1, exactly as committed.
+async function runMilestones() {
+  const m2 = await invoke<boolean>("should_run_m2").catch(() => false);
+  if (m2) {
+    const m15 = await invoke<boolean>("should_run_m1_5").catch(() => false);
+    if (m15) {
+      console.warn("[main] RUN_M2 takes precedence over RUN_M1_5; skipping M1 and M1.5 this run");
+    }
+    await runM2();
+    return;
+  }
+  await runM1();
+  await maybeRunM15();
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   void runM0Report();
-  // M1.5 reuses the same #deck-canvas Deck instance lifecycle as M1, so it
-  // must run after M1 finishes, not concurrently with it.
-  void runM1().then(() => maybeRunM15());
+  void runMilestones();
 });

@@ -1,3 +1,5 @@
+mod arrow_en;
+mod markers;
 mod p1;
 
 use std::borrow::Cow;
@@ -24,6 +26,15 @@ fn webview_runtime_version() -> Result<String, String> {
 #[tauri::command]
 fn should_run_m1_5() -> bool {
     std::env::var("RUN_M1_5").map(|v| v == "1").unwrap_or(false)
+}
+
+// M2 is gated the same way, but runs *instead of* M1 rather than after it
+// (see main.ts): the precision harness needs only the 125-point marker set,
+// so making it wait on M1's 10M-point load and 20 s frame-time sweep would
+// add ~25 s to every run for nothing.
+#[tauri::command]
+fn should_run_m2() -> bool {
+    std::env::var("RUN_M2").map(|v| v == "1").unwrap_or(false)
 }
 
 // Sink for the M0 report assembled in JS: prints to the `tauri dev` stdout
@@ -55,6 +66,17 @@ fn log_m1_5_report(report_json: String) {
     println!("[M1.5 DIAGNOSTIC REPORT] {}", report_json);
     if let Err(e) = std::fs::write("m1_5-report.json", &report_json) {
         eprintln!("[M1.5 DIAGNOSTIC REPORT] failed to write m1_5-report.json: {}", e);
+    }
+}
+
+// Same reasoning as log_m1_report: a small results payload, not point data,
+// so JSON over invoke is fine here — only the P1/marker streams themselves
+// are required to avoid JSON (ADR-004).
+#[tauri::command]
+fn log_m2_report(report_json: String) {
+    println!("[M2 PRECISION REPORT] {}", report_json);
+    if let Err(e) = std::fs::write("m2-report.json", &report_json) {
+        eprintln!("[M2 PRECISION REPORT] failed to write m2-report.json: {}", e);
     }
 }
 
@@ -113,9 +135,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             webview_runtime_version,
             should_run_m1_5,
+            should_run_m2,
             log_m0_report,
             log_m1_report,
-            log_m1_5_report
+            log_m1_5_report,
+            log_m2_report
         ])
         // Serves the P1 point cloud as raw Arrow IPC bytes — no JSON, no
         // invoke/serde round trip (ADR-004).
@@ -140,9 +164,13 @@ pub fn run() {
         //                       streamed-body option, hence the simulation.
         .register_uri_scheme_protocol("p1", |ctx, request| {
             let params = parse_query(request.uri().query());
-            let (status, body): (StatusCode, Cow<'static, [u8]>) = if let Some(chunk_str) =
-                params.get("chunk")
+            let (status, body): (StatusCode, Cow<'static, [u8]>) = if request.uri().path()
+                == "/markers"
             {
+                // M2 precision probes — same Arrow IPC framing as P1, just a
+                // different (tiny, 125-point) dataset.
+                (StatusCode::OK, Cow::Owned(markers::arrow_ipc()))
+            } else if let Some(chunk_str) = params.get("chunk") {
                 let chunk: usize = chunk_str.parse().unwrap_or(0);
                 let chunk_size: usize = params
                     .get("chunkSize")

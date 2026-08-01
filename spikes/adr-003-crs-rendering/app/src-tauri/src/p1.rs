@@ -13,14 +13,10 @@
 //! in-memory dataset, so M1.5's runs are directly comparable to each other
 //! and to M1's own numbers (never a fresh RNG draw).
 
-use std::sync::Arc;
-
-use arrow::array::{ArrayRef, Float64Array};
-use arrow::datatypes::{DataType, Field, Schema};
-use arrow::ipc::writer::StreamWriter;
-use arrow::record_batch::RecordBatch;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+
+use crate::arrow_en::serialize_en;
 
 pub const POINT_COUNT: usize = 10_000_000;
 pub const EXTENT_E: (f64, f64) = (2_485_000.0, 2_834_000.0);
@@ -53,58 +49,12 @@ impl P1Dataset {
         Self { easting, northing }
     }
 
-    fn schema() -> Schema {
-        Schema::new(vec![
-            Field::new("e", DataType::Float64, false),
-            Field::new("n", DataType::Float64, false),
-        ])
-    }
-
-    /// Serializes `e`/`n` straight to Arrow IPC *stream* bytes (not File
-    /// format), same framing M1 established: a schema message followed by
-    /// one record-batch message. Chosen so M5 can start emitting multiple
-    /// batches over a real streaming transport without changing the framing.
-    ///
-    /// Takes `&[f64]` (not owned `Vec<f64>`) because `P1Dataset` must keep
-    /// its data around for reuse across requests, so `e.to_vec()`/
-    /// `n.to_vec()` here is an unavoidable copy for the range/bbox cases —
-    /// they're extracting a subset anyway. `full_arrow_ipc` below pays the
-    /// same copy for the *whole* dataset once, at startup, before the
-    /// window exists (M1's original single-owner version avoided this by
-    /// moving the freshly-generated Vecs straight into the Arrow array and
-    /// discarding them; that's no longer possible once the dataset needs
-    /// to survive for M1.5's on-demand slicing). Kept honest per ADR-004:
-    /// copy chain from here to the GPU is this to_vec() (startup only,
-    /// full-dataset case; per-request for range/bbox) -> `Vec<u8>` IPC
-    /// buffer, leaked to `'static` with no further copy for the default
-    /// path (lib.rs) or freshly owned for diagnostic requests -> protocol
-    /// response body, an OS-level copy into the webview's fetch buffer ->
-    /// JS ArrayBuffer, sliced into typed-array *views* by apache-arrow (no
-    /// copy) -> Float32Array cast in p1-loader.ts, one more unavoidable
-    /// copy for the f64->f32 GPU upload. Never zero-copy end to end.
-    fn serialize(e: &[f64], n: &[f64]) -> Vec<u8> {
-        let schema = Self::schema();
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Float64Array::from(e.to_vec())),
-            Arc::new(Float64Array::from(n.to_vec())),
-        ];
-        let batch = RecordBatch::try_new(Arc::new(schema.clone()), columns)
-            .expect("P1 batch schema/columns must match");
-
-        let mut buf = Vec::new();
-        {
-            let mut writer = StreamWriter::try_new(&mut buf, &schema)
-                .expect("failed to open Arrow IPC writer");
-            writer.write(&batch).expect("failed to write P1 batch");
-            writer.finish().expect("failed to finish Arrow IPC stream");
-        }
-        buf
-    }
-
     /// The full 10M-point dataset. Used once at startup to build M1's
     /// precomputed static response; not on any per-request path.
+    /// Serialization (and its copy accounting) lives in arrow_en.rs, shared
+    /// with the M2 marker set so both cross the wire in identical framing.
     pub fn full_arrow_ipc(&self) -> Vec<u8> {
-        Self::serialize(&self.easting, &self.northing)
+        serialize_en(&self.easting, &self.northing)
     }
 
     /// M1.5 scaling-curve support: the first `end - start` points of the
@@ -115,7 +65,7 @@ impl P1Dataset {
         let len = self.easting.len();
         let end = end.min(len);
         let start = start.min(end);
-        Self::serialize(&self.easting[start..end], &self.northing[start..end])
+        serialize_en(&self.easting[start..end], &self.northing[start..end])
     }
 
     /// M1.5 visible-count diagnostic: a crude O(n) linear scan, no spatial
@@ -133,6 +83,6 @@ impl P1Dataset {
                 n_out.push(n);
             }
         }
-        Self::serialize(&e_out, &n_out)
+        serialize_en(&e_out, &n_out)
     }
 }
