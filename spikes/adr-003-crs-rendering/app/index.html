@@ -4,16 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="/src/styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ADR-003 spike — M0 renderer report</title>
+    <title>ADR-003 spike</title>
     <script type="module" src="/src/main.ts" defer></script>
   </head>
 
   <body>
-    <main class="container">
-      <h1>ADR-003 spike — M0</h1>
-      <p>WebGL2 / WebGPU availability and GPU adapter info, queried from inside the webview.</p>
-      <p id="summary">detecting...</p>
-      <pre id="report">detecting...</pre>
-    </main>
+    <canvas id="deck-canvas"></canvas>
+
+    <div id="hud">
+      <h1>ADR-003 spike</h1>
+
+      <section>
+        <h2>M1 — P1 render + pan/zoom benchmark</h2>
+        <p id="m1-status">detecting...</p>
+        <pre id="m1-stats"></pre>
+      </section>
+
+      <details>
+        <summary>M0 — WebGL2 / WebGPU report</summary>
+        <p id="m0-summary">detecting...</p>
+        <pre id="m0-report"></pre>
+      </details>
+    </div>
   </body>
 </html>

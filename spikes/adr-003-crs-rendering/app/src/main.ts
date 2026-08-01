@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { runM1 } from "./m1-render";
 
 // M0 (ADR-003 spike): report WebGL2/WebGPU availability and GPU adapter
 // info from inside the native webview (WebView2 on Windows). No rendering
@@ -133,10 +134,10 @@ async function getWebGPUReport(): Promise<WebGPUReport> {
 }
 
 function renderReport(report: M0Report) {
-  const el = document.querySelector<HTMLPreElement>("#report");
+  const el = document.querySelector<HTMLPreElement>("#m0-report");
   if (el) el.textContent = JSON.stringify(report, null, 2);
 
-  const summary = document.querySelector<HTMLParagraphElement>("#summary");
+  const summary = document.querySelector<HTMLParagraphElement>("#m0-summary");
   if (summary) {
     const webgl2 = report.webgl2.supported ? "available" : "unavailable";
     const webgpu = report.webgpu.supported ? "available" : "unavailable";
@@ -166,4 +167,5 @@ async function runM0Report() {
 
 window.addEventListener("DOMContentLoaded", () => {
   void runM0Report();
+  void runM1();
 });

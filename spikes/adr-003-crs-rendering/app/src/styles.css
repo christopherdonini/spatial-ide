@@ -14,29 +14,67 @@
   -webkit-text-size-adjust: 100%;
 }
 
-.container {
-  margin: 0 auto;
-  max-width: 900px;
-  padding: 4vh 2rem;
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
-h1 {
-  margin-bottom: 0.25em;
+#deck-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #05070c;
 }
 
-#summary {
+#hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  max-width: 34rem;
+  max-height: 100vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background-color: rgba(246, 246, 246, 0.92);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#hud h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+#hud h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+#hud section {
+  margin-bottom: 0.75rem;
+}
+
+#m1-status,
+#m0-summary {
   font-weight: 600;
+  margin: 0.25em 0;
 }
 
-#report {
+#hud pre {
   white-space: pre-wrap;
   word-break: break-word;
   background-color: #ffffff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 1em;
+  padding: 0.75em;
   font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-  font-size: 0.85em;
+  font-size: 0.78em;
+  max-height: 40vh;
+  overflow: auto;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -45,7 +83,12 @@ h1 {
     background-color: #2f2f2f;
   }
 
-  #report {
+  #hud {
+    background-color: rgba(30, 30, 30, 0.92);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  #hud pre {
     background-color: #0f0f0f98;
     border-color: #444;
   }
