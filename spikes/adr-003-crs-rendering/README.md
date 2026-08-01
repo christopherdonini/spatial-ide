@@ -39,7 +39,7 @@ Real data later: swisstopo open data (cadastral surveying, swissTLM3D) for the f
 
 | Milestone | Metric | Target | Measured | Hardware / method |
 |---|---|---|---|---|
-| M0 | WebGL2 / WebGPU available | report | | |
+| M0 | WebGL2 / WebGPU available | report | WebGL2: **available** (ANGLE/D3D11, GLSL ES 3.00) · WebGPU: **available** (18 features, `core-features-and-limits`) | Windows 11, Intel UHD Graphics 630 (gen-9, ANGLE D3D11 backend), WebView2/Edge runtime 150.0.4078.105, via `tauri dev` |
 | M1 | Frame time p50 / p95 (pan, 10M pts) | ≤16 ms / report | | |
 | M1 | Time to first pixels | < 100 ms | | |
 | M2 | Screen-space error @1:500 | < 0.5 px | | |

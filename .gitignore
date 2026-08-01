@@ -18,3 +18,9 @@ spikes/**/data/
 .DS_Store
 Thumbs.db
 *.log
+
+# Claude Code local (per-machine permissions)
+.claude/settings.local.json
+
+# Stray scaffold remnants (root app/ was an accident; delete freely)
+/app/
