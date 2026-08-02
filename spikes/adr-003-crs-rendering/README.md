@@ -54,6 +54,29 @@ Real data later: swisstopo open data (cadastral surveying, swissTLM3D) for the f
 1. *Hardware label.* Every row and the M1.5 paragraph previously read "Windows 11". `Get-CimInstance Win32_OperatingSystem` on the machine that produced all of M0–M2 reports `10.0.19045` — **Windows 10 Pro 22H2**. Same machine, same GPU, same webview build; only the OS label was wrong, and it is now corrected throughout rather than left split between rows.
 2. *M1's code no longer exists verbatim.* M2 refactored both ends of the loader by extraction only: the client's Arrow fetch+decode moved out of `fetchAndParse` into `fetchArrowEN` (`src/p1-loader.ts`), and the Rust IPC serializer moved out of `P1Dataset::serialize` into `arrow_en::serialize_en` (`src-tauri/src/arrow_en.rs`), both now shared with the M2 marker path. Verified by reading the diff rather than by re-running M1: client-side operation order is preserved, and the Rust side keeps the identical schema (`e`/`n`, `Float64`, non-nullable) and identical `StreamWriter` stream framing, so P1's emitted payload is still the 162 500 488 bytes M1 recorded. M1's committed numbers therefore stand as recorded — but they were produced by code that has since been restructured, so treat them as valid-at-the-time rather than freshly reproduced, and re-run before quoting them as current.
 
+## M3 metric definition (written before measuring)
+
+Recorded here ahead of the harness so the target cannot be quietly reinterpreted to fit whatever comes out.
+
+**Picking error = |returned f64 coordinate − true f64 coordinate of the *intended* feature|**, where *intended* is the feature nearest the click point.
+
+What the < 1 cm target therefore tests:
+
+1. **Id-resolution correctness** — the GPU pick returns the index of the feature the user actually aimed at.
+2. **f64 round-trip exactness** — that index resolves, Rust-side, back to the stored source coordinate with no precision lost in transit.
+
+What it explicitly does **not** test: sub-pixel unprojection. At 1:500 one pixel is 0.132 m, so 1 cm is **0.076 px** — recovering a centimetre by unprojecting a click position is arithmetically impossible per-pixel, and any harness that appeared to achieve it would be measuring something other than what it claimed. This is why ADR-003 specifies "GPU pick → feature id → resolve exact f64 coordinate on the Rust side" rather than unprojecting the cursor: the coordinate is *looked up*, not *reconstructed*.
+
+The consequence is that the metric is close to bimodal by construction. Correct id + exact round-trip gives error identically 0. A wrong id gives the distance to whichever feature was returned instead — in the 0.1 m marker grid that is ≥ 10 cm, an order of magnitude past the budget. So < 1 cm is in practice a correctness assertion with a small tolerance for round-trip loss, not a continuous accuracy measurement, and it should be read that way.
+
+**Three click classes**, all under `offset-dynamic` rendering at the five M2 probe locations:
+
+- **(a) Dead-centre on isolated features** — requires the correct id and a bit-exact f64 round-trip.
+- **(b) Offset by 1–3 px** — requires deterministic nearest-feature selection; the intended feature is still the nearest one.
+- **(c) Dense pairs** at decreasing separation, starting from the 0.1 m marker-grid spacing (0.76 px at this scale) — measures **the separation at which id discrimination becomes reliable**. That separation is a *finding to be reported, not a pass/fail*: two features 0.76 px apart cannot be distinguished by a pixel-resolution pick buffer, and the useful output is the number at which they can.
+
+Additionally recorded: whether the returned coordinate touches f32 anywhere on its path (it must not — the render path narrows to f32 for the GPU, but the pick path is index → f64 lookup and never reads a rendered position).
+
 ## Diagnostic notes (M1.5)
 
 Informal follow-up to M1, not a milestone: M1 already recorded (unfiltered) that both the frame-time and time-to-first-pixels budgets were missed. M1.5 exists only to characterize *why* — GPU-bound, framework-bound, or workload-shaping — to feed M2–M5 planning. No pass/fail verdicts below, and the M0–M5 table above is unchanged. All four experiments reuse M1's exact fixed-seed 10M-point EPSG:2056 P1 dataset, the same `p1` custom protocol delivering Arrow IPC (never JSON, ADR-004), and the same self-driving pan/zoom benchmark harness (still no browser-automation path into the native WebView2 window). Run twice for a consistency check; both runs agree closely.
