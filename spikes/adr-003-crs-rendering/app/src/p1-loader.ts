@@ -118,3 +118,49 @@ export async function loadP1Chunk(chunk: number, chunkSize: number): Promise<P1D
 export async function loadMarkersRaw(): Promise<RawEN> {
   return fetchArrowEN("http://p1.localhost/markers");
 }
+
+export interface PickSet extends RawEN {
+  /**
+   * Stable feature identity, carried explicitly rather than inferred from row
+   * position. A GPU pick returns a *buffer ordinal*; `ids[ordinal]` is the
+   * thing that may safely cross the renderer boundary, because ordinal and id
+   * diverge the moment anything culls, chunks, sorts or LODs the buffer.
+   */
+  ids: BigUint64Array;
+}
+
+/**
+ * M3 pick datasets. `set` names a deterministically-regenerable dataset Rust
+ * can resolve by id (markers.rs): "centres" (5 isolated probes) or "pairs"
+ * (one pair per probe, `sepMm` millimetres apart along `axis`). `shuffle`
+ * reverses buffer order while ids travel with their rows, so ordinal != id —
+ * which is the point of the id indirection existing at all.
+ */
+export async function loadPickSet(
+  set: "markers" | "centres" | "pairs",
+  opts: { sepMm?: number; axis?: "e" | "n" | "d"; shuffle?: boolean } = {},
+): Promise<PickSet> {
+  const { sepMm = 100, axis = "e", shuffle = false } = opts;
+  const url =
+    `http://p1.localhost/markers?set=${set}&sepMm=${sepMm}&axis=${axis}` +
+    (shuffle ? "&shuffle=1" : "");
+  const fetchStart = performance.now();
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`pick set fetch failed: ${res.status} ${res.statusText} (${url})`);
+  const buf = await res.arrayBuffer();
+  const fetchDoneAt = performance.now();
+  const table = tableFromIPC(new Uint8Array(buf));
+  const eCol = table.getChild("e");
+  const nCol = table.getChild("n");
+  const idCol = table.getChild("id");
+  if (!eCol || !nCol || !idCol) {
+    throw new Error(`pick set is missing 'e'/'n'/'id' columns (${url})`);
+  }
+  return {
+    e: eCol.toArray() as Float64Array,
+    n: nCol.toArray() as Float64Array,
+    ids: idCol.toArray() as BigUint64Array,
+    fetchStart,
+    fetchDoneAt,
+  };
+}

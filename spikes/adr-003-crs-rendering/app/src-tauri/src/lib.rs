@@ -37,6 +37,51 @@ fn should_run_m2() -> bool {
     std::env::var("RUN_M2").map(|v| v == "1").unwrap_or(false)
 }
 
+#[tauri::command]
+fn should_run_m3() -> bool {
+    std::env::var("RUN_M3").map(|v| v == "1").unwrap_or(false)
+}
+
+/// M3: GPU pick index -> exact source coordinate, resolved host-side in f64.
+///
+/// This is ADR-003's prescribed picking path. The index arrives from the GPU
+/// picking buffer, where it is encoded as an integer RGB triple — no float is
+/// involved in carrying it — and it is resolved against the f64 source values,
+/// never against the f32 positions that were uploaded for rendering. The two
+/// paths never meet, which is what lets the returned coordinate be bit-exact
+/// while the rendered position is not.
+///
+/// f64 over Tauri's JSON IPC is control-plane (one small message per click,
+/// not a data hot path — ADR-004), and serde_json emits the shortest form
+/// that round-trips, so the value should arrive bit-identical. The client
+/// verifies that bitwise rather than trusting it.
+/// Frame-tagged on purpose. A bare `{e, n}` crossing this boundary is
+/// indistinguishable from a renderer-local value, and the whole hazard M3
+/// exists to expose is that local-frame numbers are shaped exactly like
+/// coordinates. Naming the CRS on the wire makes a silent conversion into a
+/// visible mismatch (docs/01: CRS is a type).
+#[derive(serde::Serialize)]
+struct PickedCoordinate {
+    crs: &'static str,
+    e: f64,
+    n: f64,
+}
+
+#[tauri::command]
+fn resolve_pick(
+    dataset: String,
+    sep_mm: u32,
+    axis: String,
+    id: u64,
+) -> Result<PickedCoordinate, String> {
+    let (e, n) = markers::resolve_by_id(&dataset, sep_mm, &axis, id)?;
+    Ok(PickedCoordinate {
+        crs: "EPSG:2056",
+        e,
+        n,
+    })
+}
+
 // Sink for the M0 report assembled in JS: prints to the `tauri dev` stdout
 // and writes a JSON file next to src-tauri so results survive window close,
 // for transcription into the README results table.
@@ -77,6 +122,14 @@ fn log_m2_report(report_json: String) {
     println!("[M2 PRECISION REPORT] {}", report_json);
     if let Err(e) = std::fs::write("m2-report.json", &report_json) {
         eprintln!("[M2 PRECISION REPORT] failed to write m2-report.json: {}", e);
+    }
+}
+
+#[tauri::command]
+fn log_m3_report(report_json: String) {
+    println!("[M3 PICKING REPORT] {}", report_json);
+    if let Err(e) = std::fs::write("m3-report.json", &report_json) {
+        eprintln!("[M3 PICKING REPORT] failed to write m3-report.json: {}", e);
     }
 }
 
@@ -136,10 +189,13 @@ pub fn run() {
             webview_runtime_version,
             should_run_m1_5,
             should_run_m2,
+            should_run_m3,
+            resolve_pick,
             log_m0_report,
             log_m1_report,
             log_m1_5_report,
-            log_m2_report
+            log_m2_report,
+            log_m3_report
         ])
         // Serves the P1 point cloud as raw Arrow IPC bytes — no JSON, no
         // invoke/serde round trip (ADR-004).
@@ -167,9 +223,29 @@ pub fn run() {
             let (status, body): (StatusCode, Cow<'static, [u8]>) = if request.uri().path()
                 == "/markers"
             {
-                // M2 precision probes — same Arrow IPC framing as P1, just a
-                // different (tiny, 125-point) dataset.
-                (StatusCode::OK, Cow::Owned(markers::arrow_ipc()))
+                // M2 precision probes and M3 pick datasets — same Arrow IPC
+                // framing as P1, just tiny datasets. `?set=` selects which;
+                // absent means the original 125-point M2 grid.
+                let set = params.get("set").copied().unwrap_or("markers");
+                // An unparseable sepMm must not silently become 100 — the
+                // separation *is* the independent variable of the class (c)
+                // sweep, so a quietly substituted value would relabel every
+                // row of it.
+                let sep_mm: Option<u32> = match params.get("sepMm") {
+                    Some(s) => s.parse().ok(),
+                    None => Some(100),
+                };
+                let axis = params.get("axis").copied().unwrap_or("e");
+                let shuffle = params.get("shuffle").copied() == Some("1");
+                match sep_mm.and_then(|mm| markers::dataset(set, mm, axis, shuffle)) {
+                    // Every marker-family payload now carries an explicit id
+                    // column; M2's loader reads e/n by name and is unaffected.
+                    Some((e, n, ids)) => (
+                        StatusCode::OK,
+                        Cow::Owned(arrow_en::serialize_en_id(&e, &n, &ids)),
+                    ),
+                    None => (StatusCode::BAD_REQUEST, Cow::Owned(Vec::new())),
+                }
             } else if let Some(chunk_str) = params.get("chunk") {
                 let chunk: usize = chunk_str.parse().unwrap_or(0);
                 let chunk_size: usize = params

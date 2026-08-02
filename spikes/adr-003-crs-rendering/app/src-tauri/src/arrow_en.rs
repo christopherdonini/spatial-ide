@@ -12,7 +12,7 @@
 
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, Float64Array};
+use arrow::array::{ArrayRef, Float64Array, UInt64Array};
 use arrow::datatypes::{DataType, Field, Schema};
 use arrow::ipc::writer::StreamWriter;
 use arrow::record_batch::RecordBatch;
@@ -46,6 +46,39 @@ pub fn serialize_en(e: &[f64], n: &[f64]) -> Vec<u8> {
     ];
     let batch = RecordBatch::try_new(Arc::new(schema.clone()), columns)
         .expect("(e, n) batch schema/columns must match");
+
+    let mut buf = Vec::new();
+    {
+        let mut writer =
+            StreamWriter::try_new(&mut buf, &schema).expect("failed to open Arrow IPC writer");
+        writer.write(&batch).expect("failed to write batch");
+        writer.finish().expect("failed to finish Arrow IPC stream");
+    }
+    buf
+}
+
+/// Same framing plus a non-nullable `id` column.
+///
+/// M3's reason for existing: a GPU pick returns a *buffer ordinal*, which
+/// equals the feature's identity only while the buffer happens to be the whole
+/// dataset in generation order. Culling, chunking, LOD or sorting all break
+/// that — and break it silently, returning a wrong-but-plausible coordinate.
+/// Carrying identity explicitly means the client resolves by id, so buffer
+/// order is free to differ (this spike serves a deliberately reversed variant
+/// to prove the indirection is load-bearing rather than decorative).
+pub fn serialize_en_id(e: &[f64], n: &[f64], ids: &[u64]) -> Vec<u8> {
+    let schema = Schema::new(vec![
+        Field::new("e", DataType::Float64, false),
+        Field::new("n", DataType::Float64, false),
+        Field::new("id", DataType::UInt64, false),
+    ]);
+    let columns: Vec<ArrayRef> = vec![
+        Arc::new(Float64Array::from(e.to_vec())),
+        Arc::new(Float64Array::from(n.to_vec())),
+        Arc::new(UInt64Array::from(ids.to_vec())),
+    ];
+    let batch = RecordBatch::try_new(Arc::new(schema.clone()), columns)
+        .expect("(e, n, id) batch schema/columns must match");
 
     let mut buf = Vec::new();
     {
