@@ -735,3 +735,238 @@ payload is synthetic uniform-random points at a fixed seed: no GeoParquet, no Du
 index, no picking, no editing, no reprojection, no concurrent streams, no WAN path. Interruptible
 Tauri IPC channels — ADR-004 amendment 2's third transport class — were **not measured**, and
 ADR-012 must record that exclusion.
+
+---
+
+# 16. Phase 2 addendum — transfer-isolated benchmark (preregistered)
+
+> **Void clause, mirroring §0.** This addendum is written and committed **before any Phase-2 harness
+> code exists**. Git history is the proof: **if any Phase-2 harness commit precedes this §16 commit,
+> §16 is void.**
+
+## 16.0 Why there is a Phase 2, and why this is not result-shopping
+
+Adding a phase after seeing a result is the shape of a post-hoc redesign, so the justification is
+stated first and plainly.
+
+**The deficiency was recorded by the harness's own reporting before anyone directed a Phase 2.**
+§11's 2026-08-03 amendment and §15.7 already state that §12's precondition was **untested, not
+satisfied**, and §15.6 already states that the bake-off did not measure either transport's
+throughput ceiling. The trigger is an instrument failure this study self-declared — not a disliked
+winner.
+
+**What Phase 1 established, and what it did not:**
+
+| | Status |
+|---|---|
+| H1–H7 hard gates, both candidates | **Established.** Correctness, producer-visible cancellation, bounded backpressure, security posture, JSON-free data path, no transport leakage, progress/terminal propagation — all PASS, both candidates, on an admissible run. |
+| Transport throughput | **Not established, for either candidate.** Producer generation and Arrow serialization consumed **97.2–98.9 %** of every run's wall time. Both transports idled behind the generator. |
+| §12's tie-break precondition | **Untested.** Two figures that both measure the same generator being 1.739 % apart is not evidence that the transports are within 10 % of each other. |
+
+**"Throughput could not be measured" is not "throughput is within the 10 % tie band."** Phase 1
+selected a candidate on the tie-break's first criterion while the precondition for reaching that
+criterion was unverified. Phase 2 exists to measure the thing Phase 1 could not see.
+
+**Phase 2 must be able to overturn Phase 1.** If Phase 2 selects Candidate B, ADR-012's Decision is
+**replaced, not annotated**. An addendum that can only confirm is confirmatory theatre.
+
+## 16.1 Phase 1 is frozen, by hash
+
+Phase 1's results are preserved, not revised. Artifacts are committed at
+`protocol/transport-bakeoff/results/phase1/` with `SHA256SUMS`, so "preserved untouched" is
+checkable rather than asserted.
+
+| Artifact | SHA-256 | Standing |
+|---|---|---|
+| `bakeoff-report-1785787274.json` | `2231c51ae65ed6546bdd8fbc4d576bc71c61a04a746c9014e5ca3d6a87f0b9dd` | **The Phase 1 run of record.** `valid: true`, commit `6f44d88`, full §9 counts. |
+| `bakeoff-report-1785788012.json` | `a64ab960db98776e6d902f2c0751f402778557082b6ccbc550afb2b692d81629` | Reproducibility attempt, `valid: false` — backgrounded tab. Kept because §15.0 reports it. |
+| `bakeoff-report-1785785809.json` | `a5a9233e350d2b44f6f1042ea01e7db633e534e04638945c3651fb59c958b039` | Pre-fix build (`c66e080`), superseded. Kept, not used. |
+| `bakeoff-report-1785786129.json` | `aecc0e88a57d04117dc53d203a16a993e62773d772c4fddbeddc963bb0c22826` | Pre-fix build (`c66e080`), superseded. Kept, not used. |
+
+**No re-analysis of Phase 1 data under Phase-2 rules.** Phase 1's H1–H7 verdicts stand as recorded.
+If a Phase-2 regression test falsifies one, the Phase 1 verdict is amended by an **appended dated
+note**, never by editing §15.
+
+## 16.2 The transfer-isolated workload
+
+**One deterministic Arrow corpus, pre-generated and serialized *before* the timed interval**, held
+as an ordered list of immutable byte slices. Batch boundaries are owned by the corpus, not by either
+transport. Both candidates send the **identical immutable bytes, in the same order**.
+
+- Both adapters take the **same shared immutable slice type**; neither may clone a payload. §8's
+  "unequal instrumentation between adapters" makes anything else inadmissible. Asserted: **zero
+  allocations of payload size inside the timed interval, on both candidates**, reported per run.
+- **No generation, no warm-up, and no harness-only cloning inside transport timing.** The whole
+  corpus is touched before the timed interval on both candidates, so page-cache warmth is equal.
+- Fresh connection per run on both. `TCP_NODELAY` set identically and recorded. One write per batch
+  on both, re-verifying that F7's fix survives the corpus change.
+
+**Batch-size configurations.** Total payload is held constant at 10,000,000 rows / 240,000,000
+column bytes so the configurations are comparable:
+
+| Configuration | Rows/batch | Batches | Approx. wire bytes/batch |
+|---|---|---|---|
+| **S — small** | 10,000 | 1,000 | ~244 KB |
+| **M — current** | 100,000 | 100 | 2,438,344 B (Phase 1's size) |
+| **L — large** | 500,000 | 20 | ~12.2 MB |
+
+> **Declared ceiling raise, before measuring — ADR-010 rule 6.** §4 declared `MAX_FRAME_BYTES` =
+> 4 MiB, sized for Phase 1's single configuration. Configuration **L exceeds it**. The ceiling is
+> raised to **16 MiB for Phase 2**, declared here *before any Phase-2 measurement*. Raising a
+> declared ceiling mid-run to make a configuration work would be exactly the "discovered" failure
+> rule 6 forbids; raising it in advance, in writing, with the reason, is not.
+
+**Concurrency — derived from the hero slice, not invented.** The hero slice sustains one Arrow
+stream per active query result (`docs/05` streaming, cancellable queries; `docs/06` layers binding
+directly to engine Arrow streams); two streams coexist only transiently — a superseded query
+cancelling while its replacement starts, and a publish/export read running while the canvas keeps
+streaming (`docs/01`'s never-block-the-canvas rule, `docs/03`/ADR-008) — so **N=1 is the primary
+configuration and N=2 is the secondary**, the only concurrency level the slice justifies.
+Concurrency is **not** justified by viewport tiling (that is ADR-011, which §11 forbids citing as
+settled design) nor by per-column streams (a record batch carries all columns, `docs/11`).
+
+## 16.3 Declared capacity ceilings (ADR-010 rule 6), and the exercise that drives to them
+
+Declared before measuring, and **deliberately driven to and past** — rule 6's "we are comfortably
+under it today is not a strategy". Each overrun must produce the declared terminal outcome,
+surfaced, never a silent truncation or a wrong-but-plausible result (rule 7).
+
+| Ceiling | Value |
+|---|---|
+| Max frame/message bytes accepted by the consumer | **16 MiB** (raised above, was 4 MiB) |
+| Max in-flight batches (credit window), per stream | **4** |
+| Credit window **in bytes**, per configuration | S ~976 KB · M 9,753,376 B · L ~48.8 MB |
+| Producer-resident bound, per stream | <= (4 + 1) x configuration batch wire bytes |
+| Producer-resident bound, aggregate | N x per-stream bound — credit is **per-stream**, not a global pool |
+| Max concurrent streams | **2** |
+| Total corpus bytes resident | one configuration at a time, fully RAM-resident; residency model recorded per run |
+| Consumer decoder buffer high-water | <= 2 x configuration batch wire bytes |
+| Watchdog interval / max wall-clock per run | 180 s / 600 s |
+| VRAM | rendering is **excluded from the transfer-isolated timed path**; first-pixel is measured as a separate segment so GPU-resident bytes never enter the transport comparison |
+
+## 16.4 Metrics — three timestamps, not two
+
+The split that separates a **decoder limitation** from a **transport property** is the load-bearing
+one, because that is precisely the weakness in Phase 1's criterion 1.
+
+- **t1 — raw transport receipt.** Last payload byte received at transport level.
+- **t2 — checksum complete.** Fed by a **streaming, chunk-by-chunk hasher on both candidates**, and
+  reported as its own segment. A checksum that concatenated chunks in order to hash would move the
+  reassembly copy *into* the raw-receipt segment and erase the very difference being measured.
+- **t3 — Arrow-decoded and usable.**
+
+Reported per configuration, per candidate: first-batch latency · full-transfer throughput to t1 ·
+Arrow decode time (t3 − t2) · first-pixel (separate segment) · total completion · CPU time · peak JS
+and native memory · allocation pressure (count and bytes of payload-sized allocations inside the
+timed interval) · **p50/p95/p99** · confidence intervals.
+
+**Analysis plan, fixed in advance.** p50/p95/p99 by sort-and-index, as every prior spike figure.
+Confidence intervals by **percentile bootstrap over run-level means**, 10,000 resamples, seed
+`0x5EED205600000002`. **Per-batch samples within a run are not independent**; pooling them would be
+pseudo-replication and would narrow the interval by construction, so CIs are computed over run-level
+means and any per-batch pooled figure is reported as descriptive only.
+
+**The result artifact must contain every declared assertion and the *actual* memory-sampling
+cadence**, not the intended one — §15.8 item 4 recorded that Phase 1 sampled at ~62.6 ms against a
+declared 50 ms, which was only discoverable because the timestamps were retained.
+
+## 16.5 Schedule, stopping rule, and order effects
+
+- **At least 5 clean release runs per candidate per configuration**, in **counterbalanced order**:
+  `ABBA BAAB ABBA` per configuration — 12 runs, 6 per candidate, balanced by position.
+- **No optional stopping.** The full counterbalanced schedule completes **before any per-metric
+  comparison is computed**.
+- **An invalid run invalidates and re-runs the whole counterbalanced block**, never the single run.
+  Replacing one run inside a block reintroduces the order effect counterbalancing exists to remove.
+- **Order effects are reported**: a candidate x position interaction is computed and stated; if it
+  exceeds **5 %** of the candidate main effect, the block is reported as confounded and invalid.
+
+## 16.6 Symmetric consumption — and the timebox
+
+Phase 1's consumer required every HTTP batch to be concatenated into a new `Uint8Array`, while a
+WebSocket message arrived contiguous. That asymmetry is a property of **the JS Arrow decoder's
+contiguity requirement**, not self-evidently of HTTP.
+
+**Timeboxed investigation:** attempt an incremental/segmented consumer using Arrow JS's streaming
+`RecordBatchReader` over the response body, and compare it against an **equivalent** WebSocket
+consumer. **If a symmetric incremental consumer is not working within the timebox, run with the
+concatenating consumer and report the copy as a limitation of the JS Arrow decoder's contiguity
+requirement, never as a property of HTTP** — with a note on what removing it would take.
+
+**WebView2-internal WebSocket message assembly is opaque.** Its copy count is reported as
+**unknown**. No zero-copy claim is made for either candidate, and **an unknown internal copy count
+is not counted as a win** (ADR-004: copies are "measured and minimized, **not assumed absent**").
+
+## 16.7 Hard gates — retained, plus new regression coverage
+
+All of §3's H1–H7 are retained unchanged, with two corrections and one extension:
+
+> **Correction to H1's digest invariant, for re-chunking.** §3 asserted one wire digest identical
+> across adapters and runs. Three batch sizes are three serializations, so wire digests differ
+> **by construction**. Replaced by the stronger pair: **wire digest identical *within* a
+> configuration** across adapters and runs, **and decoded column-bytes digest identical across all
+> configurations and both adapters**. Also: every batch's envelope must still carry
+> `crs`/`frame`/`axis_order` **after re-chunking** — ADR-010 rule 1 binds each batch, not the
+> corpus, and a stream that shipped only RecordBatch messages would be shipping untagged bulk
+> buffers.
+
+> **Correction to §4's rule-6 parenthetical (appended, not rewritten).** §4 said ADR-010 rule 6 was
+> "non-binding here since nothing is pickable". Picking was rule 6's *measured instance*; the
+> "declared, not discovered" clause is general and **binds Phase 2's ceilings** (§16.3).
+
+> **Extension to H7 under N>1.** Terminal outcomes and incompleteness signalling are asserted
+> **per stream**: a partially-delivered or failed stream must not leave a view that reads as
+> complete (ADR-010 rule 5, third bullet). The watchdog covers **each** stream.
+
+**New regression coverage, required to pass before any Phase-2 measurement is admissible:**
+
+| # | Scenario | Required behaviour |
+|---|---|---|
+| R1 | Byte-length mismatch | Detected; declared terminal outcome; never silently accepted |
+| R2 | Checksum mismatch | Detected; declared terminal outcome |
+| R3 | Partial/truncated terminal frame | Reported as failure, not as a short-but-complete stream |
+| R4 | Mid-stream disconnect | Producer observes it through its own transport; declared terminal outcome |
+| R5 | Oversized message, above the declared 16 MiB ceiling | Rejected at the declared limit, surfaced |
+| R6 | Cancellation | Producer-visible, < 100 ms, at most 1 further batch (H2 retained) |
+| R7 | Backpressure | Bounded to the declared per-stream and aggregate bounds (H3 retained) |
+| R8 | **WebSocket silent-truncation race** (F4) | Every batch and a terminal frame delivered; pinned browser-free |
+
+## 16.8 Phase-2 invalidators, additional to §8
+
+- corpus digest mismatch between candidates or runs
+- unequal corpus residency or page-cache warmth between candidates
+- any allocation of payload size inside the timed interval, on either candidate
+- any timed-interval work not identical between candidates
+- a comparison computed before the counterbalanced block completed
+- single-run replacement instead of whole-block replacement
+- order effect exceeding the declared 5 % threshold
+- a declared ceiling raised during, rather than before, measurement
+
+## 16.9 Decision rule — fixed before viewing any Phase-2 result
+
+1. **A failed hard gate disqualifies the candidate**, regardless of throughput.
+2. **If transfer-isolated throughput differs by more than 10 %**, select the faster eligible
+   candidate.
+3. **If within 10 %**, apply §12's existing ordering using **measured end-to-end cost**:
+   copies and allocation pressure, then cancellation simplicity, then security surface.
+4. **An unknown internal copy count is not a win.**
+5. **If results change materially with batch size**, report that **no transport-independent winner
+   exists**, and identify the **batch-size policy the product needs**. In that case ADR-012 records
+   the policy requirement and **stays Proposed** — a transport chosen only for one batch size is not
+   a transport decision.
+
+## 16.10 Scope of any Phase-2 claim
+
+Windows/WebView2 only. **Candidate A versus Candidate B only** — the interruptible Tauri IPC-channel
+class named by ADR-004 amendment 2 remains **outside the decision** and unmeasured. The corpus
+remains synthetic and structurally regular (fixed-width, non-nullable, numeric); GeoArrow
+variable-width geometry, dictionary/string columns and nulls are **not** exercised, so any
+buffer-sharing result is conditional on that shape. No GeoParquet, no DuckDB, no spatial index, no
+picking, no editing, no reprojection, no WAN path.
+
+**The hero-slice / real-SKP data-path exercise is not part of Phase 2** and is not performed in this
+directory: `docs/02` places DuckDB and GeoParquet in `engine/` ("the data-engine module and nothing
+else"), and a real SKP surface would require `docs/10`'s specification checklist and `docs/08`'s
+normative conformance suite. It is engine-module work that must follow the transport decision,
+because the engine's streaming output has nowhere to go until a transport exists. That sequencing,
+and the status ADR-012 should therefore carry, is put to the human rather than resolved here.
