@@ -4,6 +4,7 @@ import { runM15 } from "./m1_5-diagnostics";
 import { runM2 } from "./m2-precision";
 import { runM3 } from "./m3-picking";
 import { runM4 } from "./m4-editing";
+import { runM5 } from "./m5-dataplane";
 
 // M0 (ADR-003 spike): report WebGL2/WebGPU availability and GPU adapter
 // info from inside the native webview (WebView2 on Windows). No rendering
@@ -169,9 +170,23 @@ async function runM0Report() {
   await invoke("log_m0_report", { reportJson: JSON.stringify(report, null, 2) });
 }
 
+// Standing rule for every spike harness (added after the M4 freeze turned
+// out to be an uncaught exception with zero visible symptom, not a hardware
+// hang): every harness runner gets its own .catch(), on top of the global
+// unhandledrejection/error listeners below -- an application error must
+// never again be mistaken for a stalled process. Deliberately swallows
+// rather than rethrows: the point is a clearly-labelled, logged failure for
+// *this* runner, not a second, generically-worded report from the global
+// handler for the same error.
+function reportHarnessError(label: string, err: unknown) {
+  const detail = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+  console.error(`[${label}] harness runner failed:`, err);
+  void invoke("js_checkpoint", { label: `HARNESS_ERROR ${label}: ${detail}` }).catch(() => {});
+}
+
 async function maybeRunM15() {
   const shouldRun = await invoke<boolean>("should_run_m1_5").catch(() => false);
-  if (shouldRun) await runM15();
+  if (shouldRun) await runM15().catch((err: unknown) => reportHarnessError("M1.5", err));
 }
 
 // M2 runs *instead of* M1, not after it: the precision harness needs only the
@@ -180,6 +195,20 @@ async function maybeRunM15() {
 // first would add ~25 s to each M2 run for no measurement value. Default
 // (no env var) is still M0 + M1, exactly as committed.
 async function runMilestones() {
+  const m5 = await invoke<boolean>("should_run_m5").catch(() => false);
+  if (m5) {
+    const alsoOthers = await Promise.all([
+      invoke<boolean>("should_run_m4").catch(() => false),
+      invoke<boolean>("should_run_m3").catch(() => false),
+      invoke<boolean>("should_run_m2").catch(() => false),
+      invoke<boolean>("should_run_m1_5").catch(() => false),
+    ]);
+    if (alsoOthers.some(Boolean)) {
+      console.warn("[main] RUN_M5 takes precedence over RUN_M4/RUN_M3/RUN_M2/RUN_M1_5; skipping M1/M1.5/M2/M3/M4 this run");
+    }
+    await runM5().catch((err: unknown) => reportHarnessError("M5", err));
+    return;
+  }
   const m4 = await invoke<boolean>("should_run_m4").catch(() => false);
   if (m4) {
     const alsoOthers = await Promise.all([
@@ -190,7 +219,7 @@ async function runMilestones() {
     if (alsoOthers.some(Boolean)) {
       console.warn("[main] RUN_M4 takes precedence over RUN_M3/RUN_M2/RUN_M1_5; skipping M1/M1.5/M2/M3 this run");
     }
-    await runM4();
+    await runM4().catch((err: unknown) => reportHarnessError("M4", err));
     return;
   }
   const m3 = await invoke<boolean>("should_run_m3").catch(() => false);
@@ -199,7 +228,7 @@ async function runMilestones() {
     if (alsoM2) {
       console.warn("[main] RUN_M3 takes precedence over RUN_M2; skipping M1/M1.5/M2 this run");
     }
-    await runM3();
+    await runM3().catch((err: unknown) => reportHarnessError("M3", err));
     return;
   }
   const m2 = await invoke<boolean>("should_run_m2").catch(() => false);
@@ -208,10 +237,10 @@ async function runMilestones() {
     if (m15) {
       console.warn("[main] RUN_M2 takes precedence over RUN_M1_5; skipping M1 and M1.5 this run");
     }
-    await runM2();
+    await runM2().catch((err: unknown) => reportHarnessError("M2", err));
     return;
   }
-  await runM1();
+  await runM1().catch((err: unknown) => reportHarnessError("M1", err));
   await maybeRunM15();
 }
 
@@ -255,8 +284,16 @@ function startErrorReporting() {
 window.addEventListener("DOMContentLoaded", () => {
   startErrorReporting();
   void (async () => {
-    if (await invoke<boolean>("should_run_m4").catch(() => false)) startJsHeartbeat();
+    const [m4, m5] = await Promise.all([
+      invoke<boolean>("should_run_m4").catch(() => false),
+      invoke<boolean>("should_run_m5").catch(() => false),
+    ]);
+    // M5's longer runtime (property-test batches, throughput fetches) is
+    // exactly the kind of run where freeze forensics would matter if
+    // something ever hung -- gated the same way the Rust-side heartbeat
+    // thread now is (src-tauri/src/lib.rs).
+    if (m4 || m5) startJsHeartbeat();
   })();
-  void runM0Report();
-  void runMilestones();
+  void runM0Report().catch((err: unknown) => reportHarnessError("M0", err));
+  void runMilestones().catch((err: unknown) => reportHarnessError("runMilestones", err));
 });

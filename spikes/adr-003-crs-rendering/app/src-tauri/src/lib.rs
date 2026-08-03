@@ -53,6 +53,14 @@ fn should_run_m4() -> bool {
     std::env::var("RUN_M4").map(|v| v == "1").unwrap_or(false)
 }
 
+/// M5 (data-plane audit) also needs P2 loaded, same reasoning as M4's own
+/// direct env::var read in run() below -- so the RUN_M5 check there is
+/// `run_m4 || run_m5`, not a separate dataset path.
+#[tauri::command]
+fn should_run_m5() -> bool {
+    std::env::var("RUN_M5").map(|v| v == "1").unwrap_or(false)
+}
+
 /// Freeze forensics (not a milestone): dual heartbeat to localize which side
 /// of the JS/Rust boundary stops first when the reproducible stall hits.
 /// `rust-heartbeat.txt` is written by a plain OS thread (see run()) with no
@@ -136,6 +144,24 @@ struct PickedCoordinate {
     n: f64,
 }
 
+/// Bit-pattern-encoded sibling of PickedCoordinate, for the M4/M5 commit
+/// round trip specifically (see f64_to_hex_bits above) -- resolve_pick
+/// keeps using plain PickedCoordinate: M3's own picking path was measured
+/// reliably bit-exact across every run in that milestone, unlike M4's
+/// commit path, so it isn't touched here.
+// camelCase to match Tauri's own snake_case->camelCase convention for
+// command *arguments* (see commit_vertex_edit's e_bits/n_bits params,
+// called as eBits/nBits from JS) -- kept consistent on the return side too
+// rather than making callers juggle two different casing rules depending
+// on IPC direction.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PickedCoordinateBits {
+    crs: &'static str,
+    e_bits: String,
+    n_bits: String,
+}
+
 #[tauri::command]
 fn resolve_pick(
     dataset: String,
@@ -151,26 +177,46 @@ fn resolve_pick(
     })
 }
 
+/// M5 item 4 (README ADR-004 amendment draft): a plain f64 command argument
+/// was measured (M4 diagnostic notes) to not reliably survive the JS->Rust
+/// Tauri IPC boundary bit-exact -- 3 of 9 runs showed a 1-ULP loss, negligible
+/// in magnitude for M4's own screen-space budget but a genuine failure of
+/// literal bit-identity. Scalars that need guaranteed binary identity (not
+/// just "close enough") now cross as an explicit IEEE-754 bit pattern, a
+/// fixed 16-hex-digit lowercase string, instead of a native JSON number --
+/// string round-tripping is not subject to the same decimal<->float hazard.
+fn f64_to_hex_bits(v: f64) -> String {
+    format!("{:016x}", v.to_bits())
+}
+
+fn hex_bits_to_f64(hex: &str) -> Result<f64, String> {
+    let bits = u64::from_str_radix(hex, 16).map_err(|e| format!("invalid bit-pattern hex {hex:?}: {e}"))?;
+    Ok(f64::from_bits(bits))
+}
+
 /// M4's write path: commits an edited P2 vertex back into the source of
 /// truth. `crs` is required and checked rather than assumed, the write-side
 /// mirror of `resolve_pick`'s outbound tagging above -- a mislabeled frame
 /// on a *write* corrupts ground truth, not just a click's reported
-/// coordinate, so this rejects rather than trusts.
+/// coordinate, so this rejects rather than trusts. `e_bits`/`n_bits`: see
+/// f64_to_hex_bits above -- bit-pattern strings, not raw f64 args.
 #[tauri::command]
 fn commit_vertex_edit(
     state: tauri::State<'_, P2DatasetState>,
     id: u64,
-    e: f64,
-    n: f64,
+    e_bits: String,
+    n_bits: String,
     crs: String,
 ) -> Result<(), String> {
     if crs != "EPSG:2056" {
         return Err(format!("commit_vertex_edit: refusing untagged/mismatched crs {crs:?}"));
     }
+    let e = hex_bits_to_f64(&e_bits)?;
+    let n = hex_bits_to_f64(&n_bits)?;
     let dataset = state
         .0
         .as_ref()
-        .ok_or("P2 not loaded -- RUN_M4 must be 1")?;
+        .ok_or("P2 not loaded -- RUN_M4 or RUN_M5 must be 1")?;
     checkpoint(&format!("LOCK_BEGIN commit_vertex_edit id={id}"));
     let mut d = dataset.lock().map_err(|_| "P2 dataset lock poisoned")?;
     checkpoint(&format!("LOCK_ACQUIRED commit_vertex_edit id={id}"));
@@ -181,35 +227,143 @@ fn commit_vertex_edit(
 
 /// Read-back half of the M3-style bit-exact commit round trip: resolves a
 /// P2 vertex id to whatever is currently stored, independent of whatever
-/// the client thinks it just sent.
+/// the client thinks it just sent. Returns bit-pattern strings, same reason
+/// as commit_vertex_edit's e_bits/n_bits above -- this is the return-trip
+/// half of the same IPC boundary, not yet separately measured as safe, so
+/// it gets the same treatment rather than being assumed fine.
 #[tauri::command]
 fn resolve_p2_vertex(
     state: tauri::State<'_, P2DatasetState>,
     id: u64,
-) -> Result<PickedCoordinate, String> {
+) -> Result<PickedCoordinateBits, String> {
     let dataset = state
         .0
         .as_ref()
-        .ok_or("P2 not loaded -- RUN_M4 must be 1")?;
+        .ok_or("P2 not loaded -- RUN_M4 or RUN_M5 must be 1")?;
     checkpoint(&format!("LOCK_BEGIN resolve_p2_vertex id={id}"));
     let d = dataset.lock().map_err(|_| "P2 dataset lock poisoned")?;
     checkpoint(&format!("LOCK_ACQUIRED resolve_p2_vertex id={id}"));
     let (e, n) = d.resolve_vertex(id)?;
     checkpoint(&format!("LOCK_END resolve_p2_vertex id={id}"));
-    Ok(PickedCoordinate {
+    Ok(PickedCoordinateBits {
         crs: "EPSG:2056",
-        e,
-        n,
+        e_bits: f64_to_hex_bits(e),
+        n_bits: f64_to_hex_bits(n),
     })
 }
 
+/// M5 item 4's bulk property-test command: decodes each hex bit-pattern to
+/// f64 and re-encodes it, round-tripping through the *real* Tauri IPC
+/// boundary in both directions (Vec<String> args in, Vec<String> return
+/// out) at whatever batch size the caller chooses. The decode/re-encode
+/// step is redundant by construction (a string that survives IPC intact and
+/// parses as valid hex will always re-encode to itself) -- its value is
+/// exercising the exact code path commit_vertex_edit/resolve_p2_vertex use,
+/// at volume, not adding independent logic to trust.
+#[tauri::command]
+fn verify_bit_roundtrip(patterns: Vec<String>) -> Result<Vec<String>, String> {
+    patterns
+        .iter()
+        .map(|hex| hex_bits_to_f64(hex).map(f64_to_hex_bits))
+        .collect()
+}
+
+/// M5 item 4: property-tests the hex<->f64 encoding scheme itself (fast,
+/// in-process, no IPC) -- the *actual* bug this scheme fixes was in the
+/// Tauri IPC transport for raw f64 args, not in any encoding logic, so
+/// these tests can't reproduce the original failure by themselves. What
+/// they establish is that the encoding is lossless for every value class
+/// that matters, so nothing here needlessly widens the value space M5's
+/// live-IPC verification (src/m5-dataplane.ts, verify_bit_roundtrip above)
+/// has to cover. That live-IPC test is the one that re-exercises the actual
+/// boundary where the original bug lived.
+#[cfg(test)]
+mod bit_encoding_tests {
+    use super::*;
+    use rand::Rng;
+
+    fn roundtrip_ok(bits: u64) -> bool {
+        let hex = format!("{:016x}", bits);
+        let decoded = hex_bits_to_f64(&hex).expect("valid 16-hex-digit string must decode");
+        decoded.to_bits() == bits
+    }
+
+    #[test]
+    fn special_values_roundtrip() {
+        let specials: [u64; 9] = [
+            0x0000000000000000, // +0
+            0x8000000000000000, // -0
+            0x7FF0000000000000, // +inf
+            0xFFF0000000000000, // -inf
+            0x7FF8000000000000, // canonical quiet NaN
+            0xFFF8000000000000, // negative canonical NaN
+            0x7FF0000000000001, // NaN, minimal nonzero payload (signalling-style)
+            0x0000000000000001, // smallest positive subnormal
+            0x000FFFFFFFFFFFFF, // largest subnormal
+        ];
+        for bits in specials {
+            assert!(roundtrip_ok(bits), "bit pattern {bits:016x} failed to round-trip");
+        }
+    }
+
+    #[test]
+    fn previously_observed_failing_values_roundtrip() {
+        // The three 1-ULP mismatches actually captured during the M4 IPC
+        // investigation (README, "Precision & write-path correctness" row)
+        // -- named regression cases, not synthetic ones. First pair is the
+        // exact hex the bit-pattern instrumentation logged; the other two
+        // are the decimal values from the two earlier flaky runs, reparsed
+        // (Rust float-literal parsing is correctly-rounded, same guarantee
+        // JSON.stringify's shortest-round-trip output relies on).
+        let observed: [u64; 6] = [
+            0x41444a815dce737b_u64,
+            0x41444a815dce737a_u64,
+            2659586.7328628874_f64.to_bits(),
+            2659586.732862887_f64.to_bits(),
+            1185592.4587547975_f64.to_bits(),
+            1185592.4587547977_f64.to_bits(),
+        ];
+        for bits in observed {
+            assert!(roundtrip_ok(bits), "bit pattern {bits:016x} failed to round-trip");
+        }
+    }
+
+    #[test]
+    fn random_bits_roundtrip_100k() {
+        let mut rng = rand::thread_rng();
+        for _ in 0..100_000 {
+            let bits: u64 = rng.gen();
+            assert!(roundtrip_ok(bits), "bit pattern {bits:016x} failed to round-trip");
+        }
+    }
+}
+
+/// Report JSON files must not live in `src-tauri` during `tauri dev`, same
+/// reason as `heartbeat_path` above (found there first: writing 1 Hz
+/// heartbeat files to the CWD self-inflicted a rebuild-restart loop, since
+/// `tauri dev`'s file watcher monitors that whole tree). Discovered
+/// affecting *this* function's siblings the same way while building M5:
+/// `log_m5_report`'s own write into CWD retriggered a rebuild before the
+/// harness's own process even exited, which reran the whole (~30s,
+/// 100k-plus-IPC-call) M5 harness from scratch 2-3 times per invocation
+/// before a kill command landed -- silently duplicating work and, worse,
+/// silently producing multiple report files layered over each other with
+/// no signal anything had happened. Every log_m*_report below now writes
+/// here instead of the CWD; on M0-M4, this fixes a live but previously
+/// unnoticed version of the same bug (their reports likely also
+/// double-wrote or masked the rebuild's own restart, just fast enough that
+/// nobody was watching for it before M5's longer runtime made it visible).
+fn report_path(filename: &str) -> std::path::PathBuf {
+    std::env::temp_dir().join(filename)
+}
+
 // Sink for the M0 report assembled in JS: prints to the `tauri dev` stdout
-// and writes a JSON file next to src-tauri so results survive window close,
-// for transcription into the README results table.
+// and writes a JSON file (see report_path above) so results survive window
+// close, for transcription into the README results table.
 #[tauri::command]
 fn log_m0_report(report_json: String) {
     println!("[M0 GPU REPORT] {}", report_json);
-    if let Err(e) = std::fs::write("m0-report.json", &report_json) {
+    if let Err(e) = std::fs::write(report_path("m0-report.json"), &report_json) {
         eprintln!("[M0 GPU REPORT] failed to write m0-report.json: {}", e);
     }
 }
@@ -220,7 +374,7 @@ fn log_m0_report(report_json: String) {
 #[tauri::command]
 fn log_m1_report(report_json: String) {
     println!("[M1 BENCHMARK REPORT] {}", report_json);
-    if let Err(e) = std::fs::write("m1-report.json", &report_json) {
+    if let Err(e) = std::fs::write(report_path("m1-report.json"), &report_json) {
         eprintln!("[M1 BENCHMARK REPORT] failed to write m1-report.json: {}", e);
     }
 }
@@ -230,7 +384,7 @@ fn log_m1_report(report_json: String) {
 #[tauri::command]
 fn log_m1_5_report(report_json: String) {
     println!("[M1.5 DIAGNOSTIC REPORT] {}", report_json);
-    if let Err(e) = std::fs::write("m1_5-report.json", &report_json) {
+    if let Err(e) = std::fs::write(report_path("m1_5-report.json"), &report_json) {
         eprintln!("[M1.5 DIAGNOSTIC REPORT] failed to write m1_5-report.json: {}", e);
     }
 }
@@ -241,7 +395,7 @@ fn log_m1_5_report(report_json: String) {
 #[tauri::command]
 fn log_m2_report(report_json: String) {
     println!("[M2 PRECISION REPORT] {}", report_json);
-    if let Err(e) = std::fs::write("m2-report.json", &report_json) {
+    if let Err(e) = std::fs::write(report_path("m2-report.json"), &report_json) {
         eprintln!("[M2 PRECISION REPORT] failed to write m2-report.json: {}", e);
     }
 }
@@ -249,7 +403,7 @@ fn log_m2_report(report_json: String) {
 #[tauri::command]
 fn log_m3_report(report_json: String) {
     println!("[M3 PICKING REPORT] {}", report_json);
-    if let Err(e) = std::fs::write("m3-report.json", &report_json) {
+    if let Err(e) = std::fs::write(report_path("m3-report.json"), &report_json) {
         eprintln!("[M3 PICKING REPORT] failed to write m3-report.json: {}", e);
     }
 }
@@ -257,8 +411,16 @@ fn log_m3_report(report_json: String) {
 #[tauri::command]
 fn log_m4_report(report_json: String) {
     println!("[M4 EDITING REPORT] {}", report_json);
-    if let Err(e) = std::fs::write("m4-report.json", &report_json) {
+    if let Err(e) = std::fs::write(report_path("m4-report.json"), &report_json) {
         eprintln!("[M4 EDITING REPORT] failed to write m4-report.json: {}", e);
+    }
+}
+
+#[tauri::command]
+fn log_m5_report(report_json: String) {
+    println!("[M5 DATAPLANE REPORT] {}", report_json);
+    if let Err(e) = std::fs::write(report_path("m5-report.json"), &report_json) {
+        eprintln!("[M5 DATAPLANE REPORT] failed to write m5-report.json: {}", e);
     }
 }
 
@@ -321,17 +483,25 @@ pub fn run() {
     // Unlike P1 above, P2 generation is gated behind RUN_M4=1 read directly
     // here (the window doesn't exist yet, so there's no JS round trip to
     // wait on) rather than unconditional: it costs ~1-2s and ~160MB (10M
-    // vertices * 8 bytes * 2) that most runs (M0-M3) have no use for.
+    // vertices * 8 bytes * 2) that most runs (M0-M3) have no use for. M5
+    // needs it too (item 4 exercises the real commit_vertex_edit/
+    // resolve_p2_vertex commands at volume), hence run_m4 || run_m5.
     let run_m4 = std::env::var("RUN_M4").map(|v| v == "1").unwrap_or(false);
+    let run_m5 = std::env::var("RUN_M5").map(|v| v == "1").unwrap_or(false);
+    let need_p2 = run_m4 || run_m5;
 
     // Freeze forensics (README diagnostic note): a plain OS thread, no
     // Tauri/webview APIs at all, so this keeps ticking as long as the OS is
     // scheduling this process's threads -- independent of whatever the
-    // webview/JS side is doing. Gated behind RUN_M4 for the same reason the
-    // JS heartbeat is (see main.ts): an unconditional periodic mechanism
-    // would run during any future M0-M3 rerun that never had this
-    // instrumentation present when its committed numbers were measured.
-    if run_m4 {
+    // webview/JS side is doing. Gated behind RUN_M4/RUN_M5 for the same
+    // reason the JS heartbeat is (see main.ts): an unconditional periodic
+    // mechanism would run during any future M0-M3 rerun that never had this
+    // instrumentation present when its committed numbers were measured. M5
+    // included since its own longer runtime (property-test batches) is
+    // exactly the kind of run freeze forensics would matter for -- same
+    // condition as need_p2 below, kept as its own explicit check since the
+    // two gates mean different things even though they currently agree.
+    if run_m4 || run_m5 {
         std::thread::spawn(|| {
             let mut seq = 0u64;
             loop {
@@ -342,7 +512,7 @@ pub fn run() {
         });
     }
 
-    let p2_dataset: Option<Arc<p2::SharedP2Dataset>> = if run_m4 {
+    let p2_dataset: Option<Arc<p2::SharedP2Dataset>> = if need_p2 {
         let d = p2::P2Dataset::generate();
         println!(
             "[M4] P2 generated: {} polygons, {} vertices",
@@ -365,17 +535,20 @@ pub fn run() {
             should_run_m2,
             should_run_m3,
             should_run_m4,
+            should_run_m5,
             js_heartbeat,
             js_checkpoint,
             resolve_pick,
             commit_vertex_edit,
             resolve_p2_vertex,
+            verify_bit_roundtrip,
             log_m0_report,
             log_m1_report,
             log_m1_5_report,
             log_m2_report,
             log_m3_report,
-            log_m4_report
+            log_m4_report,
+            log_m5_report
         ])
         // Serves the P1 point cloud as raw Arrow IPC bytes — no JSON, no
         // invoke/serde round trip (ADR-004).

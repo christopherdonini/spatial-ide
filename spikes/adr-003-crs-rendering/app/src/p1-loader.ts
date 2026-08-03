@@ -119,6 +119,29 @@ export async function loadMarkersRaw(): Promise<RawEN> {
   return fetchArrowEN("http://p1.localhost/markers");
 }
 
+/**
+ * M5 item 1 (copy audit): re-fetches full P1 and checks, live, whether
+ * apache-arrow's column .toArray() shares the same underlying ArrayBuffer
+ * the fetch produced, or allocates a fresh copy. A separate, permanent
+ * function rather than instrumenting fetchArrowEN itself, so M1's own
+ * measured hot path stays byte-for-byte what it always was — this exists
+ * purely so M5 can re-confirm the claim on every run instead of trusting a
+ * comment (the same "measured, not assumed" standard ADR-004 sets for
+ * copies generally).
+ */
+export async function verifyNoCopyAtArrowParse(): Promise<{ noCopy: boolean; datasetBytes: number; fetchMs: number }> {
+  const t0 = performance.now();
+  const res = await fetch("http://p1.localhost/points");
+  if (!res.ok) throw new Error(`P1 fetch failed: ${res.status} ${res.statusText}`);
+  const buf = await res.arrayBuffer();
+  const fetchMs = performance.now() - t0;
+  const table = tableFromIPC(new Uint8Array(buf));
+  const eCol = table.getChild("e");
+  if (!eCol) throw new Error("P1 Arrow table is missing the 'e' column");
+  const eArr = eCol.toArray() as Float64Array;
+  return { noCopy: eArr.buffer === buf, datasetBytes: buf.byteLength, fetchMs };
+}
+
 export interface PickSet extends RawEN {
   /**
    * Stable feature identity, carried explicitly rather than inferred from row

@@ -2,6 +2,7 @@ import { COORDINATE_SYSTEM, Deck, OrthographicView } from "@deck.gl/core";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import { invoke } from "@tauri-apps/api/core";
 import { percentile } from "./benchmark";
+import { f64ToHexBits, hexBitsToF64 } from "./bit-encoding";
 import {
   CELL_H,
   CELL_W,
@@ -742,13 +743,14 @@ export async function runM4(): Promise<void> {
   setStatus("M4: committing visible-subset edit...");
   await invoke("commit_vertex_edit", {
     id: draggedVertexId,
-    e: visibleDrag.finalOverlayE,
-    n: visibleDrag.finalOverlayN,
+    eBits: f64ToHexBits(visibleDrag.finalOverlayE),
+    nBits: f64ToHexBits(visibleDrag.finalOverlayN),
     crs: "EPSG:2056",
   });
-  const resolvedAfterVisible = await invoke<{ crs: string; e: number; n: number }>("resolve_p2_vertex", {
+  const resolvedBitsAfterVisible = await invoke<{ crs: string; eBits: string; nBits: string }>("resolve_p2_vertex", {
     id: draggedVertexId,
   });
+  const resolvedAfterVisible = { e: hexBitsToF64(resolvedBitsAfterVisible.eBits), n: hexBitsToF64(resolvedBitsAfterVisible.nBits) };
   const commitBitExact =
     resolvedAfterVisible.e === visibleDrag.finalOverlayE && resolvedAfterVisible.n === visibleDrag.finalOverlayN;
   appendLog(`commit round trip: sent (${visibleDrag.finalOverlayE.toFixed(6)}, ${visibleDrag.finalOverlayN.toFixed(6)}), resolved (${resolvedAfterVisible.e.toFixed(6)}, ${resolvedAfterVisible.n.toFixed(6)}), bit-exact ${commitBitExact}`);
@@ -1006,8 +1008,8 @@ export async function runM4(): Promise<void> {
   // Commit the full-P2 drag too, so fullScaleCommit below patches real data.
   await invoke("commit_vertex_edit", {
     id: draggedVertexId,
-    e: fullDrag.finalOverlayE,
-    n: fullDrag.finalOverlayN,
+    eBits: f64ToHexBits(fullDrag.finalOverlayE),
+    nBits: f64ToHexBits(fullDrag.finalOverlayN),
     crs: "EPSG:2056",
   });
 
