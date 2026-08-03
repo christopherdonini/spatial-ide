@@ -512,6 +512,196 @@ as evidence for a conclusion. Admissible numbers live in §15 and are the tester
 
 ## 15. Results
 
-*Empty by construction — this document is committed before the harness exists. The tester agent fills
-this section from its own independent execution; measurements recorded here by any other route are
-inadmissible.*
+*Filled by the tester agent from its own independent execution against commit `6f44d88`, 2026-08-03.
+Every figure is transcribed from a report artifact the harness wrote itself. Nothing here is rounded
+to flatter, extrapolated, or estimated, and no figure from a pre-fix or invalid run appears.*
+
+### 15.0 Every run attempted, and its verdict
+
+| # | Attempt | Report artifact | `valid` | Verdict |
+|---|---|---|---|---|
+| 1 | Full §13 run | `bakeoff-report-1785787274.json` (20:01:14.694Z) | **true** | `invalidReasons: []`. **This is the measurement.** It satisfies §9 in full: 3 full runs, 10 cancellation trials, 1 backpressure trial and 3 error injections per candidate. |
+| 2 | Reproducibility check, attempt 1 | *none written* | — | **Produced no report at all.** `--launch` printed `Opening in existing browser session.`: Edge reused the still-open window from attempt 1 and opened the page as a **background tab**, which suspends `requestAnimationFrame`. No report after 500 s. |
+| 3 | Reproducibility check, attempt 2 (Edge fully closed first) | `bakeoff-report-1785788012.json` (20:13:32.962Z) | **false** | **INVALID.** `invalidReasons`: `document hidden at completion — pixel timings inadmissible`; `requestAnimationFrame throttled 12x — pixel timings inadmissible`; `tab was backgrounded mid-run — frame timings inadmissible`. |
+
+**Attempt 3 is reported as invalid and none of its numbers are used.** §8 is explicit that such a run
+is not a slower result, it is not a result. For the record of what the gate caught rather than as a
+measurement: its first-pixel figures inflated to ~3000 ms and full-render to ~7000 ms, which is the
+2000 ms rAF timeout showing through — exactly the failure mode F2 was added to detect, working.
+
+**I did not keep re-running to obtain a second clean invocation.** §9 declares 3 runs per adapter and
+attempt 1 delivers them, valid. A reproducibility check is a bonus this environment could not
+supply: nothing here can hold a browser window foregrounded for ~40 s while automation continues, so
+the tab loses focus. That is an environment limitation, not a harness defect, and the honest record
+is one admissible invocation plus two failed attempts at a second.
+
+### 15.1 Reference profile actually measured
+
+| Item | Value (recorded per run, not assumed) |
+|---|---|
+| OS | Windows 10 Pro 22H2, build 19045 |
+| Webview | Edge / WebView2 runtime **150.0.4078.105**; UA `Chrome/150.0.0.0 Edg/150.0.0.0`; isolated profile |
+| GPU | `ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11 vs_5_0 ps_5_0, D3D11)` — **real hardware**. Not Basic Render Driver / WARP / SwiftShader, so §8's software-rasterizer bar is cleared. Edge selected the integrated UHD 630, not this machine's GTX 1650. |
+| CPU / display | `hardwareConcurrency: 16`, `devicePixelRatio: 1` |
+| Rust / Node | `rustc 1.97.1 (8bab26f4f 2026-07-14)`, MSVC · Node v24.18.1 / npm 11.16.0 |
+| Build profile | **Release, `debug_assertions` off.** Verified independently of the harness: `cargo rustc --release -- --print cfg` emits no `debug_assertions` cfg, and no `.cargo/config.toml` override exists at project or user level. `[profile.release] debug = true` adds debuginfo only. |
+| Test suite | `cargo test --release`: **27 passed, 0 failed, 0 ignored** (1.14 s). Forced full recompile (`--all-targets`): **zero warnings**. `npm run verify`: typecheck clean; `check-leakage: PASS — canary caught 5 planted leaks`; bundle 416.3 kb. |
+| Clock relation | offset 326.849 ms, **bound ±0.400 ms** (min RTT 0.800 ms, 21 probes) — well under the 10 ms invalidator |
+
+### 15.2 Eligibility — H1–H7, decided before any throughput comparison
+
+**Both candidates are eligible. No hard requirement failed for either.**
+
+| Gate | A — binary WebSocket | B — loopback HTTP streaming | Evidence |
+|---|---|---|---|
+| **H1** correctness | **PASS** | **PASS** | 10,000,000 rows on 6/6 runs. Digest `5f0cbe2c7780f60f284bfcacf4212d547f826049f984acad5b15f3cfb9052c2d` identical across both adapters and all 6 runs, **and equal to the producer's own digest on 6/6** (now compared, not merely recorded). **id contiguity failures: 0** on every run. **Coordinate-domain failures: 0** on every run. Wire bytes **243,835,200**, a single distinct value across both adapters. CRS tag 100/100 batches every run. |
+| **H2** producer-visible cancel | **PASS** | **PASS** | Worst single trial of 20: **8.4013 ms** against a 100 ms gate. `batches_after_cancel_observed` ≤ 1 in 20/20. Detail in 15.4. |
+| **H3** bounded-memory backpressure | **PASS** | **PASS** | Max producer-resident payload **9,753,376 B** against the amended **12,191,720 B** bound, flat for the whole pause. Detail in 15.5. |
+| **H4** security posture | **PASS** | **PASS** | Loopback-only bind + ephemeral port asserted at startup; constant-time compare; 5 live negative tests + positive control; `the_served_document_contains_no_credential` now pins F5. Browser probes `noToken=401 wrongToken=401 valid=200`. Byte-scan of the artifact: **no token** — the only 64-hex strings are the payload digest and one partial-stream producer digest, both identified individually. |
+| **H5** JSON-free data path | **PASS** | **PASS** | Consumer `jsonFramesSeen: 0` and producer `json_frames_on_data_path: 0` on **6/6** runs — and unlike the pre-fix build, every producer figure is a measured zero rather than an unset default, because producer terminals resolved on all 6 runs. |
+| **H6** no transport leakage | **PASS** | **PASS** | Scan clean on both neutral files; one construction site; **the scan self-tests — 5 planted leaks were caught**, so a PASS is not vacuous. |
+| **H7** progress + terminal | **PASS** | **PASS** | Progress monotonic 6/6; exactly one terminal per stream; `Completed` 6/6. All 6 injections: `terminal=Cancelled`, `producerObservedCancel=true`, `viewSignalledIncomplete=true`. No partial view presented as complete. |
+
+### 15.3 Evidence table
+
+Per run, in run order. Invocation of record: `bakeoff-report-1785787274.json`.
+
+| Metric | Definition (§) | A — binary WebSocket | B — loopback HTTP streaming | Method |
+|---|---|---|---|---|
+| Time to first batch | §6 | **24.8 / 25.5 / 27.9 ms** | **23.0 / 21.2 / 19.0 ms** | Consumer `performance.now()`, clamped by Edge to 100 µs. |
+| **First meaningful pixels** (first-batch-rendered) | §6 | **52.0 / 36.1 / 57.1 ms** | **55.7 / 33.8 / 27.6 ms** | `await raf()` → `draw()` → `gl.finish()`. **Not** full-payload-rendered. |
+| **Full-payload render** | §6 | **1284.4 / 1278.6 / 1331.4 ms** | **1212.2 / 1217.8 / 1239.3 ms** | Quoted alongside the row above by §6's requirement, so the ~30–57 ms figure is never read against M1's 2178–2243 ms unchunked baseline as though it were the same measurement. |
+| Throughput per-batch p50 / p95 | §6, n=297 | **p50 208.406 / p95 243.835 MB/s** | **p50 212.031 / p95 256.669 MB/s** | Pooled over 3 runs; sort-and-index. **Generation-bound — see 15.7. Not a transport capability.** |
+| Throughput whole-transfer | §6, 1/run | **193.459 / 192.087 / 184.166 MB/s** | **203.111 / 201.617 / 198.031 MB/s** | Same caveat. |
+| Peak **producer** memory | §6 | Private commit **14,823,424 / 26,378,240 / 16,752,640 B**; `PeakWorkingSetSize` 18,440,192 / 26,001,408 / 27,328,512 B | Private commit **19,308,544 / 14,479,360 / 14,471,168 B**; `PeakWorkingSetSize` 27,328,512 B (all three) | `GetProcessMemoryInfo` → `PrivateUsage`. Measured cadence ~62.6 ms, not the declared 50 ms. `PeakWorkingSetSize` is a process-lifetime peak, hence B's three identical values — it ran second. |
+| Peak **consumer** memory | §6 | (a) **81,641,512 B** (all runs) · (b) 109,606,962 / 106,432,053 / 54,691,121 B | (a) **81,641,512 B** (all runs) · (b) 82,452,958 / 76,375,323 / 70,754,163 B | (a) is now real accounting — GPU-resident vertex data + digest chain + payload in hand — and reproduces exactly as 99×800,000 + 99×32 + 2,438,344. `maxSingleBatchBytes` reported separately at 2,438,344 B. (b) is `usedJSHeapSize`, sampled per batch not per 50 ms, with §6's own `ArrayBuffer`-accounting limitation. |
+| Copies, stage 5 (Arrow parse) | §7 — **live-asserted** | **100 / 100** batches share the wire buffer, every run | **100 / 100** batches share the wire buffer, every run | Confirms F3's 8-byte prefix fix on both candidates. |
+| Copies, stage 3 (**discriminating**) | §7 — **live-asserted** | **0 reassembly copies**; 100/100 contiguous | **100 reassembly copies per run**; 0/100 contiguous | Measured, not assumed. One WS message = one frame, so no batch spans a chunk. An HTTP body-chunk boundary falls inside **every** batch, forcing a 2,438,344-byte reassembly each — ~243.8 MB per run that A does not pay. Producer-side framing copies once on both (source-read), so the asymmetry is entirely consumer-side. |
+
+### 15.4 H2 — how this must be quoted (F10)
+
+| Quantity | A | B |
+|---|---|---|
+| Ack p50 | 0.1124 ms | 0.5370 ms |
+| Ack p95 | 0.1609 ms | 8.4013 ms |
+| Worst of 10 | 0.1609 ms | 8.4013 ms |
+| Min | **−0.0400 ms** (negative) | 0.3529 ms |
+| Producer observed | 10/10 | 10/10 |
+| `batches_after_cancel_observed` | 0 in 10/10 | 1 in 1/10, 0 in 9/10 |
+| Per-batch generation cost | p50 12.289 / p95 15.856 / max 21.410 ms (n=300) | p50 11.744 / p95 14.205 / max 18.217 ms (n=300) |
+| **Gate (< 100 ms)** | **PASS** | **PASS**, by ~12× on the worst trial |
+
+**The correct statement, per F10:** *the producer observes cancellation in under 1 ms, indistinguishable
+from zero at this clock resolution.* It must not be quoted as "0.1124 ms". The clock bound is
+±0.400 ms; A's p50 sits below it, and this run again recorded a **negative** ack (−0.0400 ms), which
+is physically impossible and is the clean proof the point estimate is under the harness's own
+resolution. **The gate verdict is unaffected** — the margin to 100 ms is orders of magnitude larger
+than the uncertainty.
+
+Two further constraints on reading this table:
+
+- **The ~12 ms per-batch generation cost does not bound the observation, only the stopping.** Neither
+  candidate detects at a write boundary — both observe on a path concurrent with the generator — so a
+  sub-millisecond ack is not a contradiction. What that cost bounds is when production actually
+  **ceases**: at most one further batch, i.e. **≤ 21.410 ms** of additional generation at the
+  measured worst case. That is the operationally meaningful cancellation figure, not the ack.
+- **`batches_after_cancel_observed` is timing-sensitive, not a stable property.** On the pre-fix build
+  B reported 1 in 19/20 trials; here it reports 1 in 1/10. Both satisfy ≤ 1. The counter is read at a
+  `finish()` snapshot that is not synchronised with the generator loop, so it should be read as
+  "never more than one", never as a per-candidate score.
+- **F9 stands: `dangling_checkpoint: produce`** appears on all three of A's injections and none of
+  B's. This is snapshot ordering — `finish()` runs before the generator closes its checkpoint — **not
+  a producer stall**, and must not be read as one.
+
+### 15.5 H3 — bounded-memory backpressure
+
+| Quantity | A | B |
+|---|---|---|
+| Pause actually applied | **3009.2 ms** | **3008.8 ms** (declared 3000 ms) |
+| Max producer-resident payload | **9,753,376 B** | **9,753,376 B** |
+| Amended declared bound | 12,191,720 B | 12,191,720 B |
+| Headroom | 2,438,344 B (20.0 %) | 2,438,344 B (20.0 %) |
+| **Verdict** | **PASS** | **PASS** |
+
+The plateau is exactly 4 × 2,438,344 B — the four in-flight batches the bounded channel permits.
+`tx.reserve()` precedes generation, so the "+1 in construction" the 5× ceiling allows for is never
+counted; the observed ceiling therefore sits one batch below the bound by construction, in both
+units. This reproduces the pre-fix figure exactly, which is what §3's H3 amendment records.
+
+### 15.6 M5 baseline comparability
+
+Stated for ADR-012 to quote directly:
+
+> **The bake-off did not measure either transport's throughput ceiling, and its MB/s figures must not
+> be compared with spike M5's.** M5 measured `fetch()` + `arrayBuffer()` on a single unchunked
+> 162,500,488-byte response with the data already in hand — a *transfer-bound* measurement. This
+> harness's figures are *generation-bound*: producer synthesis and Arrow serialization account for
+> **97.2 %–98.9 %** of every run's wall-clock time, so both transports spent essentially the whole
+> run idle behind the generator. The two numbers measure different subsystems. Quoting ≈200 MB/s
+> against M5's ≈105–112 MB/s as a ~2× transport improvement would be a fabricated result.
+
+The copy comparison is not like-for-like either. M5's model was 4 avoidable application-level copies
++ 1 required GPU upload on the Tauri custom-protocol path. Here, **live-asserted**: stage 5 is 0
+copies on both candidates, and the discriminating consumer-side reassembly is 0 for A and 100/run for
+B. The remaining stages — generation, IPC serialization, producer-side framing, OS→JS `ArrayBuffer`,
+f64→f32 narrowing, GPU upload — are **source-read**, not live-asserted, and are equal between
+candidates. This harness therefore does **not** demonstrate a reduction against M5's count. What it
+demonstrates is that the two candidates differ by exactly one whole-payload copy per batch, in A's
+favour.
+
+### 15.7 Throughput does not decide this, and the tie-break is reached by design
+
+Producer generation is **97.2 %–98.9 %** of every run's wall time (sum of per-batch
+`generation_cost_us` ÷ `fullRenderMs`; A: 97.2 / 97.9 / 98.9 %, B: 98.3 / 98.5 / 98.9 %).
+
+The clearest single demonstration that the throughput figure tracks the *generator* and not the
+transport: A's per-batch generation cost happened to run slower in its three runs than B's did in its
+three (p50 12.289 ms vs 11.744 ms). Converted to a rate, that alone predicts 198.4 vs 207.6 MB/s —
+and the measured per-batch p50s are 208.406 vs 212.031 MB/s. **A's apparent 1.739 % throughput
+deficit is explained by the generator being slower during its runs, not by the socket.**
+
+So: the two candidates' per-batch p50 figures are **1.739 % apart**, far inside §12's 10 % band, and
+**§12's tie-break is therefore reached by the workload's design rather than by a discovered
+near-equality between the transports** (§11 amendment). Its first criterion, fewer copies, resolves
+on measured data: **A pays 0 consumer-side reassembly copies, B pays 100 per run.** Criterion 1
+being decisive, criteria 2 and 3 are not reached; recorded as context only, criterion 2's ack
+difference sits at the edge of the ±0.400 ms clock bound and should not be leaned on, and criterion 3
+favours B, which has no consumer→producer channel at all.
+
+Counter-evidence for A, recorded so the ADR does not read one-sided: a WebSocket data plane has an
+application-visible shutdown protocol that both ends must get right, and getting it wrong truncates
+**silently** — F4 is a real instance, caught only because a Rust client disagreed with the browser. B
+gets ordered-delivery-then-EOF from the transport and has no equivalent failure mode.
+
+### 15.8 Harness gaps still open after `6f44d88`
+
+Recorded so ADR-012 does not over-read this evidence. None of these invalidate the run of record.
+
+1. **`debugAssertions` is emitted but never recorded.** `/clock` returns it, but `clockSync()` reads
+   only `serverNanosSinceT0` and discards it; the string appears **0 times** in the report and no
+   validity check consults it. §8's "a debug build measured as release" invalidator still has no
+   mechanism behind it *in the artifact*. I confirmed the release profile independently instead
+   (15.1), so this run is admissible — but the next person cannot confirm it from the report alone.
+   The same applies to `batchWireBytes`, also returned and also discarded.
+2. **H4's live negative tests still target `/clock`, not the data endpoints.** `/stream/ws` extracts
+   the credential from the WebSocket subprotocol list — a different code path from the
+   `Authorization` header — and no negative test drives it. A reject-side bug there would be missed.
+3. **The new H1 checks add real per-batch consumer work** inside the timed loop (a 100,000-element id
+   progression scan plus a 100,000-element domain scan). Equal across candidates, so the comparison
+   is unaffected, but it further compresses an already generation-bound throughput figure.
+4. **Consumer JS-heap sampling is still per-batch, and producer memory sampling still runs at
+   ~62.6 ms**, against §6's declared 50 ms cadence.
+5. **The consumer's accounted peak now counts GPU-resident bytes as consumer memory.** That matches
+   §6(a)'s "payload bytes retained by harness code", but it is VRAM, not JS heap, and the two should
+   not be summed with (b) or compared against a host-RAM budget.
+
+### 15.9 Scope limits
+
+§11's pre-declared limits all hold. Additionally: **one machine, one GPU (Intel UHD 630, not the
+GTX 1650 also present), one Edge build (150.0.4078.105), one admissible invocation** — the
+reproducibility check could not be obtained (15.0), so run-to-run variance on this build is
+uncharacterised. Windows/WebView2 only; nothing transfers to macOS/WKWebView or Linux/WebKitGTK. The
+payload is synthetic uniform-random points at a fixed seed: no GeoParquet, no DuckDB, no spatial
+index, no picking, no editing, no reprojection, no concurrent streams, no WAN path. Interruptible
+Tauri IPC channels — ADR-004 amendment 2's third transport class — were **not measured**, and
+ADR-012 must record that exclusion.
