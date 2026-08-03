@@ -64,6 +64,20 @@ struct AppState {
     web_dir: std::path::PathBuf,
     out_dir: std::path::PathBuf,
     facts: Mutex<HashMap<String, Arc<Mutex<ProducerFacts>>>>,
+    /// Live stream state, so `/facts` can answer from the producer's *current* observation instead
+    /// of only from the snapshot `finish()` writes. Without this, a cancellation instant that the
+    /// producer already holds stays invisible until the adapter's peer-drain completes, and a poll
+    /// that gives up first records "the producer never observed the cancel" — a false negative on
+    /// the single most important gate.
+    states: Mutex<HashMap<String, Arc<StreamState>>>,
+    /// Serialized wire size of one batch, measured once at startup.
+    ///
+    /// H3's bound must be expressed in the same unit the resident counter accumulates. That counter
+    /// holds *serialized Arrow IPC* bytes, not column bytes, so deriving the bound from
+    /// `ROWS_PER_BATCH * COLUMN_BYTES_PER_ROW` understates it by the IPC framing and makes a
+    /// correctly-behaving producer report FAIL. Deterministic for the fixed workload and seed, so
+    /// this is still a declared-before-the-run figure.
+    batch_wire_bytes: usize,
 }
 
 type Shared = Arc<AppState>;
@@ -104,28 +118,99 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         web_dir,
         out_dir: out_dir.clone(),
         facts: Mutex::new(HashMap::new()),
+        states: Mutex::new(HashMap::new()),
+        batch_wire_bytes: producer::batch_wire_bytes(),
     });
 
     let app = router(state.clone());
 
+    // The session token is delivered in the URL **fragment**, which is never sent to a server and
+    // never appears in a request line. `GET /` therefore serves a document containing no credential
+    // at all, so an unauthenticated local process that scans loopback and fetches `/` gets nothing
+    // it can use. Handing the token out of the page-serving endpoint would have made every other
+    // gate decoration (docs/09).
+    let launch_url = format!(
+        "http://127.0.0.1:{}/#{}",
+        local.port(),
+        state.session.token_for_injection()
+    );
+    let url_file = out_dir.join("launch-url.txt");
+    std::fs::write(&url_file, &launch_url)?;
+
     // The token is never printed. docs/09: credentials are redacted from logs.
     println!("[bakeoff] listening on http://127.0.0.1:{}", local.port());
     println!("[bakeoff] session token: {}", session::REDACTED);
+    println!("[bakeoff] open the URL in: {}", url_file.display());
     println!("[bakeoff] reports -> {}", out_dir.display());
     println!(
-        "[bakeoff] workload: {} rows / {} batches of {} rows",
-        TOTAL_ROWS, BATCH_COUNT, ROWS_PER_BATCH
+        "[bakeoff] workload: {} rows / {} batches of {} rows, {} wire bytes/batch",
+        TOTAL_ROWS, BATCH_COUNT, ROWS_PER_BATCH, state.batch_wire_bytes
     );
 
     if args.iter().any(|a| a == "--launch") {
-        let url = format!("http://127.0.0.1:{}/", local.port());
-        let _ = tokio::process::Command::new("cmd")
-            .args(["/C", "start", "msedge", &url])
-            .spawn();
+        launch_browser(&launch_url, &out_dir);
     }
 
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+/// Opens the page in Edge, whose engine is the WebView2 runtime.
+///
+/// Uses an **isolated user-data directory** rather than the operator's default profile: any
+/// installed extension holding `127.0.0.1` host permissions could otherwise read the session token
+/// off the page. A launch failure is reported rather than silently discarded.
+fn launch_browser(url: &str, out_dir: &std::path::Path) {
+    let profile = out_dir.join("edge-profile");
+    let mut candidates: Vec<std::path::PathBuf> = vec![
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe".into(),
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe".into(),
+    ];
+    // Newer installs use a split EdgeCore layout with a version-numbered directory and no `msedge`
+    // on PATH or in App Paths — which is why `cmd /C start msedge` fails on this reference machine
+    // with "The system cannot find the file msedge". Enumerate those too rather than assuming the
+    // classic layout.
+    for root in [
+        r"C:\Program Files (x86)\Microsoft\EdgeCore",
+        r"C:\Program Files\Microsoft\EdgeCore",
+    ] {
+        if let Ok(entries) = std::fs::read_dir(root) {
+            let mut versioned: Vec<_> = entries
+                .flatten()
+                .map(|e| e.path().join("msedge.exe"))
+                .filter(|p| p.exists())
+                .collect();
+            versioned.sort();
+            candidates.extend(versioned.into_iter().rev()); // newest version first
+        }
+    }
+    for exe in &candidates {
+        if !exe.exists() {
+            continue;
+        }
+        match std::process::Command::new(exe)
+            .arg(format!("--user-data-dir={}", profile.display()))
+            .arg("--new-window")
+            .arg("--start-maximized")
+            .arg("--no-first-run")
+            .arg(url)
+            .spawn()
+        {
+            Ok(_) => {
+                println!("[bakeoff] launched {} with an isolated profile", exe.display());
+                println!("[bakeoff] KEEP THE WINDOW VISIBLE AND FOCUSED for the whole run");
+                return;
+            }
+            // A failed launch is reported, never discarded: an earlier revision swallowed the
+            // error and left the harness waiting forever with nothing on screen to explain why.
+            Err(e) => println!("[bakeoff] launch failed ({}): {e}", exe.display()),
+        }
+    }
+    println!(
+        "[bakeoff] could not locate msedge.exe — open the URL in {} manually, \
+         in a VISIBLE, FOCUSED window",
+        out_dir.join("launch-url.txt").display()
+    );
 }
 
 fn router(state: Shared) -> Router {
@@ -141,26 +226,31 @@ fn router(state: Shared) -> Router {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Static serving. The session token is injected into the served document, which stands in for
-// delivery over the Tauri IPC control plane; in production the token crosses the control plane and
-// is never embedded in a document. It is never placed in a URL query string (docs/09).
+// Static serving.
+//
+// **This endpoint serves no credential.** The session token reaches the page through the URL
+// fragment, which browsers never transmit — so it appears in no request line, no access log, and no
+// response body. An earlier revision injected it into the document, which meant any unauthenticated
+// local process could `GET /` and read it straight out of the HTML, making the token gate on every
+// other endpoint decorative. In production this delivery is the Tauri IPC control plane; the
+// fragment stands in for it here (docs/09).
+//
+// `X-Content-Type-Options: nosniff` below is load-bearing, not boilerplate: without it a foreign
+// page can point a `<script src>` at this endpoint and have the browser execute the response.
 // ---------------------------------------------------------------------------------------------
 
 async fn serve_index(State(s): State<Shared>) -> Response {
     let path = s.web_dir.join("index.html");
     match std::fs::read_to_string(&path) {
-        Ok(html) => {
-            let injected = html.replace("__SESSION_TOKEN__", s.session.token_for_injection());
-            (
-                [
-                    (header::CONTENT_TYPE, "text/html; charset=utf-8"),
-                    (header::CACHE_CONTROL, "no-store"),
-                    (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
-                ],
-                injected,
-            )
-                .into_response()
-        }
+        Ok(html) => (
+            [
+                (header::CONTENT_TYPE, "text/html; charset=utf-8"),
+                (header::CACHE_CONTROL, "no-store"),
+                (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
+            ],
+            html,
+        )
+            .into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("consumer bundle missing at {}: {e}. Run `npm run build` in protocol/transport-bakeoff/web.", path.display()),
@@ -213,7 +303,11 @@ async fn clock(State(s): State<Shared>, headers: HeaderMap) -> Response {
         return r;
     }
     Json(serde_json::json!({
-        "serverNanosSinceT0": s.t0.elapsed().as_nanos() as u64
+        "serverNanosSinceT0": s.t0.elapsed().as_nanos() as u64,
+        // §8 makes "a debug build measured as release" inadmissible, but nothing recorded the build
+        // profile, so the invalidator had no mechanism behind it. Now the consumer can check.
+        "debugAssertions": cfg!(debug_assertions),
+        "batchWireBytes": s.batch_wire_bytes,
     }))
     .into_response()
 }
@@ -222,11 +316,28 @@ async fn facts(State(s): State<Shared>, headers: HeaderMap, Path(id): Path<Strin
     if let Err(r) = check(&s, &headers, bearer(&headers)) {
         return r;
     }
-    let entry = s.facts.lock().unwrap().get(&id).cloned();
+    let entry = s.facts.lock().unwrap_or_else(|e| e.into_inner()).get(&id).cloned();
+    let live = s.states.lock().unwrap_or_else(|e| e.into_inner()).get(&id).cloned();
     match entry {
         Some(f) => {
-            let guard = f.lock().unwrap();
-            Json(serde_json::to_value(&*guard).unwrap()).into_response()
+            let guard = f.lock().unwrap_or_else(|e| e.into_inner());
+            let mut v = serde_json::to_value(&*guard).unwrap();
+            // Answer from the producer's *current* observation, not only from the snapshot
+            // `finish()` writes. `finish()` runs after the adapter's peer-drain, so a poller that
+            // gives up first would record "the producer never observed the cancel" when in fact
+            // the instant was already held — a false negative on H2, the gate that matters most.
+            if let Some(st) = live {
+                if let Some(at) = st.observed_at() {
+                    v["cancel_observed_nanos_since_t0"] = serde_json::json!(
+                        at.saturating_duration_since(s.t0).as_nanos() as u64
+                    );
+                }
+                v["batches_generated"] = serde_json::json!(st.batches_generated());
+                v["batches_after_cancel_observed"] =
+                    serde_json::json!(st.batches_after_cancel());
+                v["bytes_emitted"] = serde_json::json!(st.bytes_emitted());
+            }
+            Json(v).into_response()
         }
         None => (StatusCode::NOT_FOUND, "unknown stream").into_response(),
     }
@@ -280,8 +391,9 @@ fn start_stream(
     let checkpoints = Arc::new(Checkpoints::default());
     let json_seen = Arc::new(AtomicU64::new(0));
 
-    let batch_bytes_bound =
-        (MAX_INFLIGHT_BATCHES as u64 + 1) * (ROWS_PER_BATCH * producer::COLUMN_BYTES_PER_ROW) as u64;
+    // Stated in the same unit the resident counter accumulates: serialized wire bytes, not column
+    // bytes. At most MAX_INFLIGHT_BATCHES queued plus one in the adapter's hand.
+    let batch_bytes_bound = (MAX_INFLIGHT_BATCHES as u64 + 1) * s.batch_wire_bytes as u64;
 
     let facts = Arc::new(Mutex::new(ProducerFacts {
         adapter: adapter.to_string(),
@@ -294,6 +406,10 @@ fn start_stream(
         .lock()
         .unwrap()
         .insert(stream_id.as_str().to_string(), facts.clone());
+    s.states
+        .lock()
+        .unwrap()
+        .insert(stream_id.as_str().to_string(), state.clone());
 
     // Bounded channel = the memory bound. The producer cannot get ahead of it (H3).
     let (tx, rx) = mpsc::channel::<Vec<u8>>(MAX_INFLIGHT_BATCHES);
@@ -327,17 +443,17 @@ fn start_stream(
                     Ok(bytes) => {
                         let cost = t.elapsed().as_micros() as u64;
                         state.note_generated(bytes.len());
-                        facts.lock().unwrap().generation_cost_us.push(cost);
+                        facts.lock().unwrap_or_else(|e| e.into_inner()).generation_cost_us.push(cost);
                         permit.send(bytes);
                     }
                     Err(e) => {
-                        facts.lock().unwrap().terminal = Some(Terminal::ProducerFailed(e));
+                        facts.lock().unwrap_or_else(|e| e.into_inner()).terminal = Some(Terminal::ProducerFailed(e));
                         break;
                     }
                 }
             }
             checkpoints.end("produce");
-            let mut f = facts.lock().unwrap();
+            let mut f = facts.lock().unwrap_or_else(|e| e.into_inner());
             f.payload_sha256 = Some(gen.finish_hash());
             f.batches_generated = state.batches_generated();
             f.batches_after_cancel_observed = state.batches_after_cancel();
@@ -356,7 +472,7 @@ fn start_stream(
                 let elapsed = t0.elapsed().as_millis() as u64;
                 let m = tracker.record(elapsed);
                 let resident = state.resident_bytes() as u64;
-                let mut f = facts.lock().unwrap();
+                let mut f = facts.lock().unwrap_or_else(|e| e.into_inner());
                 f.resident_samples.push((elapsed, resident));
                 f.memory_samples.push((elapsed, m));
                 f.peak_memory = tracker.peak;
@@ -381,7 +497,7 @@ fn finish(
     t0: Instant,
     terminal: Terminal,
 ) {
-    let mut f = facts.lock().unwrap();
+    let mut f = facts.lock().unwrap_or_else(|e| e.into_inner());
     f.terminal = Some(terminal);
     f.bytes_emitted = state.bytes_emitted();
     f.batches_generated = state.batches_generated();
@@ -517,7 +633,48 @@ mod security_tests {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpStream;
 
+    /// The served document must contain **no credential**. This is a regression test for a real
+    /// hole: `/` was the one route that never called `check()`, and it injected the session token
+    /// into the HTML — so any unauthenticated local process could `GET /`, read the token, and use
+    /// it on the data endpoints, making every other gate decoration (docs/09).
+    #[tokio::test]
+    async fn the_served_document_contains_no_credential() {
+        let web = std::env::temp_dir().join(format!("bakeoff-web-{}", std::process::id()));
+        std::fs::create_dir_all(&web).unwrap();
+        // Includes the old placeholder, so a reintroduced substitution would be caught rather than
+        // passing because the marker happens to be absent.
+        std::fs::write(
+            web.join("index.html"),
+            "<!doctype html><html><body>__SESSION_TOKEN__</body></html>",
+        )
+        .unwrap();
+
+        let (port, token) = spawn_server_with(Some(web.clone())).await;
+
+        let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        s.write_all(
+            format!("GET / HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n")
+                .as_bytes(),
+        )
+        .await
+        .unwrap();
+        let mut body = Vec::new();
+        s.read_to_end(&mut body).await.unwrap();
+        let body = String::from_utf8_lossy(&body);
+
+        assert!(body.contains("200 OK"), "the page must still be served");
+        assert!(
+            !body.contains(&token),
+            "the served document must not contain the session token"
+        );
+        let _ = std::fs::remove_dir_all(&web);
+    }
+
     async fn spawn_server() -> (u16, String) {
+        spawn_server_with(None).await
+    }
+
+    async fn spawn_server_with(web_dir: Option<std::path::PathBuf>) -> (u16, String) {
         let listener = tokio::net::TcpListener::bind(SocketAddr::new(
             IpAddr::V4(Ipv4Addr::LOCALHOST),
             0,
@@ -529,9 +686,11 @@ mod security_tests {
         let state: Shared = Arc::new(AppState {
             session: Session::new(local.port()),
             t0: Instant::now(),
-            web_dir: std::path::PathBuf::from("."),
+            web_dir: web_dir.unwrap_or_else(|| std::path::PathBuf::from(".")),
             out_dir: std::env::temp_dir().join("transport-bakeoff-test"),
             facts: Mutex::new(HashMap::new()),
+            states: Mutex::new(HashMap::new()),
+            batch_wire_bytes: producer::batch_wire_bytes(),
         });
         let token = state.session.token_for_injection().to_string();
         let app = router(state);

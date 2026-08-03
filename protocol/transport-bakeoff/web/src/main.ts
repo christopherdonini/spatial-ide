@@ -13,7 +13,14 @@ import { PointRenderer } from './render.js';
 import type { BatchTransport, Terminal } from './transport.js';
 import { FRAME_PREFIX_LEN } from './wire.js';
 
-const TOKEN: string = (window as any).__BAKEOFF_TOKEN__;
+/**
+ * The session token arrives in the URL fragment — never sent to the server, so it appears in no
+ * request line and no access log, and `GET /` serves a document with no credential in it. Read it
+ * once, then strip it from the address bar and history so it does not linger on screen or in a
+ * back-stack entry (docs/09).
+ */
+const TOKEN: string = window.location.hash.slice(1);
+history.replaceState(null, '', window.location.pathname + window.location.search);
 const BASE = window.location.origin;
 
 const TOTAL_ROWS = 10_000_000;
@@ -31,6 +38,11 @@ const CANCEL_TRIALS = SMOKE ? 2 : 10;
 const ABORT_AT_MS = 400;
 const PAUSE_MS = 3000;
 const PAUSE_AFTER_BATCH = 20;
+// EPSG:2056 (LV95) domain — must match producer.rs. H1 checks decoded values against it.
+const E_LO = 2_485_000;
+const E_HI = 2_834_000;
+const N_LO = 1_075_000;
+const N_HI = 1_296_000;
 const CLOCK_PROBES = 21;
 const CLOCK_BOUND_LIMIT_MS = 10;
 const WATCHDOG_MS = 180_000;
@@ -62,10 +74,14 @@ const heartbeat = () => {
   lastHeartbeat = performance.now();
 };
 let watchdogFired = false;
-setInterval(() => {
+const watchdog = setInterval(() => {
   if (performance.now() - lastHeartbeat > WATCHDOG_MS) {
     watchdogFired = true;
+    clearInterval(watchdog);
     log('WATCHDOG fired — no heartbeat within the declared interval');
+    // Declared policy is `none — fail visibly, mark the run invalid, and terminate with a surfaced
+    // error`. Setting a flag and carrying on would not be that policy.
+    void persistFailure('watchdog fired — no heartbeat within the declared interval');
   }
 }, 1000);
 
@@ -87,6 +103,41 @@ function danglingCheckpoint(): string | null {
     if (b && (depth.get(p) ?? 0) > 0) return p;
   }
   return null;
+}
+
+/**
+ * ADR-010 rule 7 requires the global handlers' output to be both **visible** and **persisted to a
+ * log that outlives the session**. Console and DOM satisfy "visible"; only a written artifact
+ * satisfies "persisted". Previously the sole write was on the success path, so a fatal error — the
+ * exact case rule 7 exists for, and the exact shape of the M4 freeze — left nothing on disk.
+ */
+async function persistFailure(reason: string): Promise<void> {
+  try {
+    await fetch(`${BASE}/report`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        schema: 'transport-bakeoff/v1',
+        preregistration: 'protocol/transport-bakeoff/README.md',
+        timestamp: new Date().toISOString(),
+        valid: false,
+        partial: true,
+        invalidReasons: [reason, ...fatalErrors],
+        environment: {
+          userAgent: navigator.userAgent,
+          documentHiddenAtEnd: document.hidden,
+          rafThrottleEvents,
+          becameHiddenDuringRun,
+          smokeMode: SMOKE,
+        },
+        checkpointsDangling: danglingCheckpoint(),
+        log: logLines,
+      }),
+    });
+    log('partial failure report persisted');
+  } catch (err) {
+    log(`could not persist failure report: ${String(err)}`);
+  }
 }
 
 const logLines: string[] = [];
@@ -216,11 +267,15 @@ interface RunMetrics {
   crsTaggedBatches: number;
   arrowParseSharesBuffer: number;
   contiguousBatches: number;
+  idFailures: number;
+  domainFailures: number;
+  producerPayloadSha256: string | null;
   reassemblyCopies: number;
   jsonFramesSeen: number;
   terminal: Terminal | null;
   progressMonotonic: boolean;
   peakAccountedRetainedBytes: number;
+  maxSingleBatchBytes: number;
   jsHeapSamples: number[];
   producerFacts: any;
 }
@@ -248,8 +303,12 @@ async function fullRun(
   let contiguous = 0;
   let lastProgress = -1;
   let progressMonotonic = true;
+  let expectedNextId = 0;
+  let idFailures = 0;
+  let domainFailures = 0;
   let terminal: Terminal | null = null;
   let peakRetained = 0;
+  let maxSingleBatchBytes = 0;
   const tStart = performance.now();
 
   for await (const f of t.frames()) {
@@ -265,9 +324,15 @@ async function fullRun(
       if (firstBatchMs === 0) firstBatchMs = now - tStart;
       if (f.contiguous) contiguous++;
 
-      // Accounted retained bytes: this is what H3's consumer-side bounded-memory claim rests on,
-      // not the JS heap reading.
-      peakRetained = Math.max(peakRetained, f.payload.byteLength);
+      // Accounted retained bytes: everything harness code is still holding — GPU-resident vertex
+      // data, the per-batch digest chain, and the payload currently in hand. Previously this was
+      // `max(payload.byteLength)`, which can only ever report the batch size and therefore tested
+      // nothing.
+      peakRetained = Math.max(
+        peakRetained,
+        renderer.retainedBytes + digests.length * 32 + f.payload.byteLength,
+      );
+      maxSingleBatchBytes = Math.max(maxSingleBatchBytes, f.payload.byteLength);
 
       begin('decode');
       digests.push(new Uint8Array(await sha256(f.payload)));
@@ -281,6 +346,39 @@ async function fullRun(
       // Copy-accounting stage 5, live-asserted per batch exactly as spike M5 did rather than
       // trusted from a doc comment.
       if (e.buffer === f.payload.buffer) sharesBuffer++;
+
+      // H1's remaining predicates, actually executed. They were declared in §3 and then never run,
+      // which is worse than having no gate at all: §8 would print VALID: true while checking none
+      // of this. Same class of defect as M2's failed capture scoring better than a working one.
+      const ids = table.getChild('id')!.toArray() as BigUint64Array;
+      if (
+        ids.length !== e.length ||
+        ids[0] !== BigInt(expectedNextId) ||
+        ids[ids.length - 1] !== BigInt(expectedNextId + ids.length - 1)
+      ) {
+        idFailures++;
+      } else {
+        // Strict +1 progression inside the batch, over the low 32 bits. Exact here because a batch
+        // is 100,000 rows and the ids in play are far below 2^32, and far cheaper than 10M BigInt
+        // comparisons inside the timed loop.
+        const low = new Uint32Array(ids.buffer, ids.byteOffset, ids.length * 2);
+        const base = low[0];
+        for (let i = 1; i < ids.length; i++) {
+          if (low[i * 2] !== base + i) {
+            idFailures++;
+            break;
+          }
+        }
+      }
+      expectedNextId += ids.length;
+
+      for (let i = 0; i < e.length; i++) {
+        if (e[i] < E_LO || e[i] >= E_HI || n[i] < N_LO || n[i] >= N_HI) {
+          domainFailures++;
+          break;
+        }
+      }
+
       rows += e.length;
       end('decode');
 
@@ -333,11 +431,15 @@ async function fullRun(
     crsTaggedBatches: crsTagged,
     arrowParseSharesBuffer: sharesBuffer,
     contiguousBatches: contiguous,
+    idFailures,
+    domainFailures,
+    producerPayloadSha256: producerFacts?.payload_sha256 ?? null,
     reassemblyCopies: (t as any).stats.reassemblyCopies,
     jsonFramesSeen: (t as any).stats.jsonFramesSeen,
     terminal,
     progressMonotonic,
     peakAccountedRetainedBytes: peakRetained,
+    maxSingleBatchBytes,
     jsHeapSamples,
     producerFacts,
   };
@@ -551,8 +653,24 @@ async function main() {
   }
   const hashes = new Set(runs.map((r) => r.payloadSha256));
   if (hashes.size !== 1) invalidReasons.push(`payload digest differs across runs/adapters (${hashes.size} distinct)`);
+  // H1's cross-adapter wire-byte equality, declared in §4 and previously recorded but never
+  // compared. Identical payload and identical framing must produce identical wire bytes.
+  const wireByteSet = new Set(runs.map((r) => r.wireBytes));
+  if (wireByteSet.size !== 1) {
+    invalidReasons.push(`wire bytes differ across runs/adapters: ${[...wireByteSet].join(', ')}`);
+  }
   for (const r of runs) {
     if (r.rows !== TOTAL_ROWS) invalidReasons.push(`${r.candidate} run ${r.run}: rows ${r.rows} != ${TOTAL_ROWS}`);
+    if (r.idFailures !== 0) invalidReasons.push(`${r.candidate} run ${r.run}: ${r.idFailures} batches failed id contiguity`);
+    if (r.domainFailures !== 0) invalidReasons.push(`${r.candidate} run ${r.run}: ${r.domainFailures} batches had coordinates outside the declared EPSG:2056 domain`);
+    // The consumer's independently computed digest must equal the producer's. Fetching it and
+    // never comparing it made the strongest correctness check in H1 decorative.
+    if (r.producerPayloadSha256 && r.producerPayloadSha256 !== r.payloadSha256) {
+      invalidReasons.push(`${r.candidate} run ${r.run}: consumer digest != producer digest`);
+    }
+    if (!r.producerPayloadSha256) {
+      invalidReasons.push(`${r.candidate} run ${r.run}: producer digest unavailable — cannot verify payload`);
+    }
     if (r.crsTaggedBatches !== BATCH_COUNT) invalidReasons.push(`${r.candidate} run ${r.run}: CRS tag on ${r.crsTaggedBatches}/${BATCH_COUNT} batches`);
     if (r.jsonFramesSeen !== 0) invalidReasons.push(`${r.candidate} run ${r.run}: ${r.jsonFramesSeen} JSON frames on the data path`);
     if (!r.progressMonotonic) invalidReasons.push(`${r.candidate} run ${r.run}: progress not monotonic`);
@@ -617,9 +735,10 @@ async function main() {
   (window as any).__BAKEOFF_DONE__ = true;
 }
 
-main().catch((e) => {
+main().catch(async (e) => {
   // Rule 7: an async entry point may not terminate silently.
   fatalErrors.push(String(e));
   log(`FATAL: ${e}`);
+  await persistFailure(`fatal error: ${String(e)}`);
   (window as any).__BAKEOFF_DONE__ = true;
 });

@@ -2,9 +2,10 @@
 //!
 //! Backpressure: TCP-native. The consumer stops reading, the receive window closes, the write pends,
 //! and the body stream stops being polled — so the producer channel fills and the producer blocks.
-//! No application credit protocol exists; that asymmetry against Candidate A is a real finding, not
-//! an oversight, and feeds the tie-break's "smaller security surface" and "simpler cancellation
-//! semantics" criteria.
+//! No application credit protocol exists, and there is no consumer->producer channel at all. That
+//! is a deliberate structural difference from Candidate A rather than an oversight; how it weighs
+//! under the preregistration's §12 tie-break is for the measured evidence to settle, not for this
+//! file to assert.
 //!
 //! Cancellation: `AbortController` on the consumer closes the connection; hyper drops the response
 //! body; the drop guard below records the instant **on the producer's own clock**. This is the

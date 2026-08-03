@@ -139,7 +139,7 @@ impl StreamState {
     /// Idempotent: only the first observation records the instant.
     pub fn observe_cancel(&self, at: Instant) {
         if !self.cancelled.swap(true, Ordering::SeqCst) {
-            *self.observed_at.lock().unwrap() = Some(at);
+            *self.observed_at.lock().unwrap_or_else(|e| e.into_inner()) = Some(at);
         }
     }
 
@@ -148,7 +148,7 @@ impl StreamState {
     }
 
     pub fn observed_at(&self) -> Option<Instant> {
-        *self.observed_at.lock().unwrap()
+        *self.observed_at.lock().unwrap_or_else(|e| e.into_inner())
     }
 
     pub fn note_generated(&self, bytes: usize) {
@@ -189,14 +189,14 @@ pub struct Checkpoints {
 
 impl Checkpoints {
     pub fn begin(&self, phase: &str) {
-        self.entries.lock().unwrap().push((phase.to_string(), true));
+        self.entries.lock().unwrap_or_else(|e| e.into_inner()).push((phase.to_string(), true));
     }
     pub fn end(&self, phase: &str) {
-        self.entries.lock().unwrap().push((phase.to_string(), false));
+        self.entries.lock().unwrap_or_else(|e| e.into_inner()).push((phase.to_string(), false));
     }
     /// The last BEGIN with no matching END. `None` means every phase closed cleanly.
     pub fn dangling(&self) -> Option<String> {
-        let entries = self.entries.lock().unwrap();
+        let entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
         let mut depth: std::collections::HashMap<&str, i32> = std::collections::HashMap::new();
         for (phase, is_begin) in entries.iter() {
             *depth.entry(phase.as_str()).or_insert(0) += if *is_begin { 1 } else { -1 };

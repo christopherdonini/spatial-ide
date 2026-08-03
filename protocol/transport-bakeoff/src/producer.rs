@@ -60,6 +60,19 @@ pub fn schema() -> Arc<Schema> {
     ))
 }
 
+/// Serialized wire size of one batch, by actually serializing one.
+///
+/// Deterministic for the fixed workload and fixed seed, so calling this at startup yields a figure
+/// that is still "declared before the run". H3's memory bound must be stated in this unit — the
+/// resident counter accumulates serialized IPC bytes, and a bound derived from
+/// `ROWS_PER_BATCH * COLUMN_BYTES_PER_ROW` omits the IPC framing.
+pub fn batch_wire_bytes() -> usize {
+    Generator::new()
+        .next_batch()
+        .map(|b| b.len())
+        .unwrap_or(ROWS_PER_BATCH * COLUMN_BYTES_PER_ROW)
+}
+
 /// Deterministic uniform f64 in [lo, hi) from the top 53 bits of a ChaCha8 draw.
 #[inline]
 fn uniform(rng: &mut ChaCha8Rng, lo: f64, hi: f64) -> f64 {

@@ -125,6 +125,23 @@ Each is a pass/fail predicate with a stated **observation point**. Failing any o
 - **Failure looks like:** unbounded growth during the pause (the producer racing ahead into a queue),
   or the pause not actually taking effect (which invalidates the run rather than passing it).
 
+> **Amendment to H3 (2026-08-03, during implementation — unit correction, and the reasoning behind
+> it corrected in public).** The bound was computed as `5 × ROWS_PER_BATCH × COLUMN_BYTES_PER_ROW`
+> = 12,000,000 B, but the resident counter accumulates **serialized Arrow IPC** bytes, not column
+> bytes. Comparing the two is an apples-to-oranges comparison that happened to pass. The bound is
+> now derived from an actual serialized batch measured at startup (deterministic for the fixed
+> workload and seed, so still declared before the run): `5 × 2,438,344` = **12,191,720 B**, a
+> **1.6 % increase** in the declared ceiling.
+>
+> **Why this is not a post-hoc loosening, stated because it would be easy to do that here and call
+> it a unit fix.** I initially believed a correct producer would report FAIL against the old number.
+> The tester falsified that from the data: measured maximum producer-resident payload was
+> **9,753,376 B** (= 4 × 2,438,344) held flat across the whole 3,000 ms pause, in all four
+> candidate×invocation pairs — because `tx.reserve()` precedes generation, so the "+1 in
+> construction" the 5× ceiling allows for is never actually counted. The bound is slack in **either**
+> unit, the measured margin is 18.7 %, and **no verdict turns on this change**. It is corrected so
+> the stated bound means what it says, not to rescue a result.
+
 ### H4 — Security posture (`docs/09`)
 - **Assertions, each individually checked:** the listener binds **127.0.0.1 only** (asserted not
   `0.0.0.0` / not `::`); the port is **ephemeral** (OS-assigned, port 0); an unauthenticated
@@ -230,7 +247,8 @@ centrally, correctly — an untagged axis convention is the same class of silent
 
 **No reprojection happens anywhere in this harness** (`docs/05`): bytes move in the source CRS only,
 analytically untouched. The consumer's f64→f32 offset subtraction is a float-precision translation
-for GPU upload, not a reprojection — the same distinction ADR-011 draws for per-tile origins.
+for GPU upload, not a reprojection, so it touches neither CRS-as-a-type nor the analytical/display
+split that `docs/01` and ADR-003 govern.
 
 **Producer schedule.** Batches are generated on demand as credit allows (§5). Generation is real
 work — seeded coordinate synthesis plus Arrow serialization — and its per-batch cost is measured and
@@ -419,6 +437,22 @@ Stated now so they cannot be read into the results later:
 - **ADR-011 is cited nowhere** — it binds nothing, is not architect-blockable, and may not be cited
   as settled design. The consumer keeps the single-origin offset model the spike actually measured.
 
+> **Amendment (2026-08-03, during implementation).** §4 originally cited ADR-011 in passing, which
+> directly contradicted the clause immediately above and cited it *as settled design* — the one
+> thing CLAUDE.md forbids for that ADR. The citation is removed. Recorded here rather than applied
+> silently, because editing the preregistration body without a note is the failure mode the whole
+> document exists to prevent.
+>
+> **Amendment (2026-08-03, after the first measured runs) — the workload is generation-bound, and
+> that bounds what §12 can mean.** The tester measured producer generation at **95.0–98.9 % of every
+> run's wall time**: both transports idle behind a ~200 MB/s generator, and per-batch p50 throughput
+> came out *identical* between candidates (212.031 vs 212.031 MB/s) in one invocation. Consequence,
+> stated plainly: **this workload cannot discriminate the transports on throughput**, its MB/s
+> figures are a floor rather than a capability, and §12's tie-break is therefore reached by the
+> workload's design rather than by a discovered near-equality. Any throughput-based claim needs a
+> re-run with a pre-generated payload that decouples generation from transfer. This does not affect
+> the H1–H7 eligibility gates, which are not throughput measurements.
+
 ---
 
 ## 12. Tie-break — declared before measuring
@@ -456,7 +490,27 @@ backgrounded tab suspends `requestAnimationFrame`; the harness detects this, wai
 then marks the run invalid rather than reporting a meaningless pixel timing (§8). `?smoke=1` runs a
 reduced repetition count for wiring checks and **always marks its own report invalid**.
 
-## 14. Results
+## 14. Implementation findings
+
+Recorded here, dated, because building and running the harness surfaced things that change how the
+results must be read. **Every figure in this section comes from a smoke or pre-fix run and is
+therefore inadmissible as a measurement** (§8) — each is stated as the *reason for a change*, never
+as evidence for a conclusion. Admissible numbers live in §15 and are the tester's alone.
+
+| # | Finding | Status |
+|---|---|---|
+| F1 | **Same-origin GET omits `Origin` entirely**, so H4's original "reject absent Origin" predicate rejected the harness's own requests. Now requires a positive `Sec-Fetch-Site: same-origin` signal. | Fixed; amendment recorded in §3 H4 |
+| F2 | **A hidden tab suspends `requestAnimationFrame`**, hanging the run with a demonstrably healthy transport underneath. Now detected, waited on for 30 s, then marked invalid. | Fixed; §8 inadmissibility rule added |
+| F3 | **A 5-byte frame prefix misaligned the Arrow payload.** Arrow needs an 8-byte-aligned message start to hand out buffer views; misaligned, it copies the whole batch. Prefix is now 8 bytes. Observation from an invalid smoke run: `arrowParseSharesBuffer` was 0/100 on both candidates before the change. Whether the fix buys shared buffers is §15's to establish. | Fixed; verify in §15 |
+| F4 | **WebSocket truncated silently at 98/100 batches.** The producer emitted all 100 and a Rust client received all 100; a *server-initiated* Close raced the frames still in the browser's receive path. The producer now never initiates the close, and a stream ending without a terminal frame is reported as `TransportFailed` rather than as a short-but-unremarkable stream. | Fixed; pinned by `websocket_delivers_every_batch_and_a_terminal_frame` |
+| F5 | **`GET /` served the session token to any unauthenticated local client.** It was the one route that never called `check()`, so every other gate was decoration against a local process. The token now arrives via the URL fragment, which is never transmitted; the served document contains no credential. | Fixed |
+| F6 | **Three H1 predicates were declared but never executed** — id contiguity, consumer-vs-producer digest comparison, cross-adapter wire-byte equality. A gate that runs no comparison is worse than no gate, because §8 prints `VALID: true` regardless. All three now execute. | Fixed |
+| F7 | **Unequal instrumentation between adapters** (§8 lists this as inadmissible): the WebSocket adapter accounted `note_written` after the flushed send while HTTP accounted at chunk yield, and it issued two awaited sends per batch where HTTP sent one coalesced chunk — doubling A's window in which a CANCEL frame is invisible. Both now account at handoff and send one chunk per batch. | Fixed |
+| F8 | **`--launch` failed silently** on the reference machine: Edge is installed under the split `EdgeCore\<version>\` layout with no `msedge` on `PATH`, and the spawn error was discarded. Now enumerates versioned EdgeCore directories, uses an isolated profile, and reports failures. | Fixed |
+| F9 | **`dangling_checkpoint` is a snapshot, not a stall signal.** `finish()` snapshots before the generator closes its `produce` checkpoint, so a reported `dangling: produce` after a cancellation injection is an artefact of snapshot ordering. It must not be read as a producer stall. | Known; interpret accordingly |
+| F10 | **The producer-side cancellation ack sits below the harness's own clock resolution.** The pre-fix runs recorded two *negative* acks, which is physically impossible and is clean evidence that the point estimate is under the ±0.300 ms clock bound. Report it as "under 1 ms, indistinguishable from zero at this resolution", never as a precise figure. The <100 ms gate verdict is unaffected — the margin is orders of magnitude. | Known; constrains how §15 quotes H2 |
+
+## 15. Results
 
 *Empty by construction — this document is committed before the harness exists. The tester agent fills
 this section from its own independent execution; measurements recorded here by any other route are

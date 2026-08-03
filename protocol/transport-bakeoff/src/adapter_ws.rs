@@ -69,30 +69,42 @@ pub async fn drive(
                 match maybe_batch {
                     Some(payload) => {
                         let len = payload.len();
-                        let f = wire::frame(wire::TAG_BATCH, &payload);
-                        if wire::looks_like_json(&f) {
-                            json_frames_seen.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                        }
-                        if let Err(e) = socket.send(Message::Binary(f.into())).await {
-                            state.observe_cancel(Instant::now());
-                            break Terminal::TransportFailed(format!("send: {e}"));
-                        }
+
+                        // Accounted at handoff to the transport, matching Candidate B exactly.
+                        // Counting after the flush here and before it there would be unequal
+                        // instrumentation between adapters, which the preregistration's §8 makes
+                        // inadmissible outright.
                         state.note_written(len);
                         credit -= 1;
                         batches_sent += 1;
 
-                        let p = wire::progress_payload(
-                            batches_sent,
-                            state.bytes_emitted(),
-                            total_batches,
+                        // **One send per batch, matching Candidate B's single coalesced chunk.**
+                        // Two awaited sends would not just cost an extra dispatch: the `biased`
+                        // select above cannot run while a send is pending, so every awaited send is
+                        // a window in which a CANCEL frame is invisible. Two windows per batch
+                        // instead of one would inflate this candidate's H2 figure — the gate the
+                        // whole bake-off turns on — purely through an implementation choice. The
+                        // consumer's frame decoder already handles several frames per chunk.
+                        let mut out = wire::frame(wire::TAG_BATCH, &payload);
+                        let progress = wire::frame(
+                            wire::TAG_PROGRESS,
+                            &wire::progress_payload(
+                                batches_sent,
+                                state.bytes_emitted(),
+                                total_batches,
+                            ),
                         );
-                        let pf = wire::frame(wire::TAG_PROGRESS, &p);
-                        if wire::looks_like_json(&pf) {
-                            json_frames_seen.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        for f in [&out, &progress] {
+                            if wire::looks_like_json(f) {
+                                json_frames_seen
+                                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
                         }
-                        if socket.send(Message::Binary(pf.into())).await.is_err() {
+                        out.extend_from_slice(&progress);
+
+                        if let Err(e) = socket.send(Message::Binary(out.into())).await {
                             state.observe_cancel(Instant::now());
-                            break Terminal::TransportFailed("send progress".into());
+                            break Terminal::TransportFailed(format!("send: {e}"));
                         }
                     }
                     None => break Terminal::Completed,
@@ -117,16 +129,17 @@ pub async fn drive(
     // **The producer never initiates the close.** It sends its terminal frame and then waits for
     // the consumer to close, draining whatever arrives meanwhile.
     //
-    // Found on the first smoke run: the producer emitted all 100 batches (243,834,400 bytes,
-    // terminal Completed) and a Rust client receives all of them, but the *browser* consumer saw
-    // only 98 and no terminal. A server-initiated Close races the frames still in the browser's
-    // receive path, and the peer can surface the close before draining what preceded it — silent
-    // truncation, with a healthy-looking producer on the other end.
+    // Observed on an invalid smoke run (self-invalidating under the preregistration's §8, so this
+    // is the reason for the change and not evidence for anything): the producer emitted all 100
+    // batches and a Rust client received all of them, while the browser consumer saw only 98 and no
+    // terminal frame. A server-initiated Close races the frames still in the peer's receive path,
+    // and the peer can surface the close before draining what preceded it — silent truncation, with
+    // a healthy-looking producer on the other end.
     //
-    // This is a real asymmetry for ADR-012, not merely a bug that was fixed: a WebSocket data
-    // plane has an application-visible shutdown protocol that must be got right in both directions,
-    // and getting it wrong truncates silently. An HTTP streaming response gets
-    // ordered-delivery-then-EOF from the transport itself and has no equivalent failure mode.
+    // The structural point, stated without a verdict attached: a WebSocket data plane has an
+    // application-visible shutdown protocol that both ends must get right, and getting it wrong
+    // truncates silently. Whether that counts against this candidate under §12 is the evidence's
+    // call. `websocket_delivers_every_batch_and_a_terminal_frame` pins the behaviour either way.
     let _ = tokio::time::timeout(std::time::Duration::from_secs(30), async {
         while let Some(Ok(_)) = socket.recv().await {}
     })

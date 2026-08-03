@@ -4,13 +4,12 @@
     <meta charset="utf-8" />
     <title>Data-plane transport bake-off</title>
     <!--
-      The session token is injected here at serve time. This stands in for delivery over the Tauri
-      IPC control plane; in production the token crosses the control plane and is never embedded in
-      a document. It is never placed in a URL query string (docs/09).
+      This document contains NO credential. The session token reaches the page through the URL
+      fragment, which browsers never transmit — so it appears in no request line, no access log and
+      no response body, and an unauthenticated local process that fetches `/` gets nothing usable.
+      This stands in for delivery over the Tauri IPC control plane; in production the token crosses
+      the control plane, and it is never placed in a URL query string (docs/09).
     -->
-    <script>
-      window.__BAKEOFF_TOKEN__ = '__SESSION_TOKEN__';
-    </script>
     <style>
       :root { color-scheme: dark; }
       body {

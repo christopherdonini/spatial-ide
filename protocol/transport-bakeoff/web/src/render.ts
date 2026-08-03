@@ -46,7 +46,14 @@ export class PointRenderer {
   private program: WebGLProgram;
   private buffers: { vbo: WebGLBuffer; count: number }[] = [];
   private posLoc: number;
-  /** Payload bytes retained by this renderer on the CPU side. Deliberately 0 after upload. */
+  /**
+   * Bytes this renderer still holds after upload, accumulated across batches.
+   *
+   * The CPU-side staging array is released immediately, so what remains is GPU-resident vertex
+   * data. This is real accounting: an earlier revision declared the field and never assigned it,
+   * while the report's "accounted retained bytes" metric returned the largest *single batch* — a
+   * figure that documents the batch size and cannot test anything.
+   */
   retainedBytes = 0;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -85,6 +92,7 @@ export class PointRenderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, xy, gl.STATIC_DRAW);
     this.buffers.push({ vbo, count });
+    this.retainedBytes += xy.byteLength;
     // The staging array is released immediately; nothing on the CPU side retains payload bytes,
     // which is what keeps the consumer's accounted memory bounded.
   }

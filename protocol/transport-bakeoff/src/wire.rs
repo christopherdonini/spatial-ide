@@ -17,10 +17,13 @@
 //!
 //! **The prefix is 8 bytes, not 5, and the three reserved bytes are load-bearing.** Arrow IPC needs
 //! its message start 8-byte aligned to hand out buffer *views*; at a 5-byte prefix the payload
-//! lands on offset 5 and `tableFromIPC` silently copies the whole batch to realign it. Measured on
-//! the first smoke run: `arrowParseSharesBuffer` was 0/100 on both candidates with a 5-byte prefix.
-//! That is a full extra copy of the entire payload, on the hot path, caused purely by framing —
-//! precisely the class of cost ADR-004's copy-minimized clause exists to catch.
+//! lands on offset 5, which Arrow cannot view directly.
+//!
+//! Provenance of that claim, stated precisely rather than as a measurement: it is an **observation
+//! from an invalid smoke run** (`arrowParseSharesBuffer` 0/100 on both candidates at a 5-byte
+//! prefix), and a smoke run self-invalidates under the preregistration's §8. It is the reason for
+//! the change, not evidence for it. Whether the 8-byte prefix actually buys shared buffers is the
+//! tester's to establish in §14; until then nothing here claims it does.
 
 /// Producer -> consumer.
 ///
@@ -33,8 +36,9 @@ pub const TAG_BATCH: u8 = 0x10;
 pub const TAG_PROGRESS: u8 = 0x11;
 pub const TAG_TERMINAL: u8 = 0x12;
 
-/// Consumer -> producer (Candidate A only; Candidate B carries no consumer->producer channel,
-/// which is itself a finding for the tie-break's "smaller security surface" criterion).
+/// Consumer -> producer. Candidate A only — Candidate B has no consumer->producer channel at all.
+/// Recorded here as a structural difference between the candidates; whether it counts for or
+/// against either one under §12's tie-break is the evidence's to decide, not this comment's.
 pub const TAG_CREDIT: u8 = 0x01;
 pub const TAG_CANCEL: u8 = 0x02;
 
