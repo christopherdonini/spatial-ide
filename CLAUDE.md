@@ -5,7 +5,7 @@ AI-native spatial computing platform: headless Rust kernel speaking SKP, Tauri s
 ## Read first
 
 - `docs/README.md` — constitution index. **Cite docs by number** ("per 01, derived rule 2"); conflicts resolve lower-number-wins. Accepted ADRs in `docs/adr/` are immutable — append amendments or propose new ADRs, never rewrite. Never edit `docs/01_Principles.md`.
-- **Current focus: the docs/07 Prototype hero slice** — open a 5 GB GeoParquet → filter in SQL → style it → publish a static interactive bundle. The ADR-003 renderer/arbitrary-CRS gate concluded 2026-08-03 (accepted for Windows/WebView2; see the ADR's Resolution and `spikes/adr-003-crs-rendering/README.md`'s Outcome) — kernel, engine, and renderer modules may now begin against that architecture, governed by **ADR-010** (render frames, origins, boundary rules — Proposed, not yet accepted, but its rules are architect-blockable in review starting now). Three follow-up items stay open and don't block module work, but do bound what "concluded" means (see docs/07 for all three in full): macOS/Linux hardware validation; the transport bake-off and server-side spatial indexing (both named undesigned in the spike's Outcome, now this slice's own engine work, not a deferred spike gap); and ADR-009 (license/open-core boundary, before any public code).
+- **Current focus: the docs/07 Prototype hero slice** — open a 5 GB GeoParquet → filter in SQL → style it → publish a static interactive bundle. The ADR-003 renderer/arbitrary-CRS gate concluded 2026-08-03 (accepted for Windows/WebView2; see the ADR's Resolution and `spikes/adr-003-crs-rendering/README.md`'s Outcome) — kernel, engine, and renderer modules may now begin against that architecture, governed by **ADR-010** (render frames, origins, boundary rules — Accepted 2026-08-03, architect-blockable in review). **ADR-011** (tiled render batches and GPU cache lifecycle) holds the *unmeasured* implementation direction split out of ADR-010 on 2026-08-03: it binds nothing, is **not** architect-blockable, and may not be cited either to block a review or as settled design until its acceptance gates are met. Three follow-up items stay open and don't block module work, but do bound what "concluded" means (see docs/07 for all three in full): macOS/Linux hardware validation; the transport bake-off and server-side spatial indexing (both named undesigned in the spike's Outcome, now this slice's own engine work, not a deferred spike gap); and ADR-009 (license/open-core boundary, before any public code).
 
 ## Non-negotiables (digest — full versions in docs/01)
 
@@ -21,7 +21,7 @@ AI-native spatial computing platform: headless Rust kernel speaking SKP, Tauri s
 - `docs/` — the constitution (00–14) + `docs/adr/` (canonical; the old design folder is an archive)
 - `spikes/` — throwaway validation code. Spikes may be messy; **written conclusions are the deliverable.**
 - `.claude/agents/` — architect (constitution review), reviewer (code review), tester (benchmarks)
-- `kernel/`, `engine/`, `renderer/`, `frontends/` — the ADR-003 gate that blocked these has concluded; they may now be built against docs/02's module map
+- `kernel/`, `engine/` (the **data-engine** module — 05), `protocol/` (SKP control/data plane + MCP adapter — 04, 10), `renderer/`, `frontends/` — five top-level directories, one per docs/02 module. The ADR-003 gate that blocked these has concluded; they may now be built against docs/02's module map. **Scaffolded per vertical slice, as the slice needs them** (07), not created empty up front.
 
 ## Environment
 
