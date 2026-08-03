@@ -1444,3 +1444,34 @@ cd .. && node scripts/probe-producer-facts.mjs M                # 17.6's cadence
 ```
 
 Artifacts for all five blocks are committed at `results/phase2/` with `SHA256SUMS`.
+
+---
+
+# 18. Phase 2 instrument findings — recorded by the harness author, post-review
+
+§17 is the tester's record of what the runs produced. This section records defects in **the
+instrument** found during the review of Phase 2, including two declared controls that were not
+actually in force. Recorded here rather than in §17 so the tester's execution record stays its own,
+and rather than by editing §16, which is the preregistration.
+
+**None of these change the §16.9 outcome** — the outcome is "rule 5 unevaluable", and it is
+unevaluable because M and L returned no admissible block, which none of the below affects. They do
+change what a future phase must fix first.
+
+| # | Finding | Status |
+|---|---|---|
+| P1 | **F7's fix was partially reverted, and §16.2 claims otherwise.** §16.2 declared "one write per batch on both, re-verifying that F7's fix survives the corpus change". It does not survive: `86df830` split batch and progress into two writes on **both** adapters (`adapter_ws.rs`, `adapter_http.rs`) because concatenating them would have allocated a payload-sized buffer inside the timed interval. F7's *accounting* half does survive — both still `note_written` at handoff — so §8's unequal-instrumentation invalidator is not tripped. But F7's stated rationale was **cancel-window doubling on Candidate A**, and that is reintroduced: the `biased` select cannot poll for a CANCEL frame while either send is pending, so A has two cancel-blind windows per batch and B, having no consumer→producer channel, has no analogue. **The two writes are symmetric in count but not in consequence.** Nothing caught it because Phase 2 runs no cancellation trial. | **Open** — must be resolved before any phase that measures cancellation |
+| P2 | **`TCP_NODELAY` was declared but never set or recorded.** §16.2 declared it "set identically and recorded". It is neither: the listener sets no socket options and no artifact field records the state. This compounds P1 — a 32-byte progress write issued immediately after a large batch write, with Nagle live, is exactly the shape where delayed-ACK interaction appears. No claim is made that it affected the S-block figures; the claim is that a declared control was silently absent while §17 presents itself as the compliance record. | **Open** — set and record it, or strike the declaration |
+| P3 | **§16.5's order-effect gate cannot be passed by a true null.** As operationalized, `ratio = \|earlyGap − lateGap\| / \|mean gap\|` divides the interaction by **the effect under test**. As the candidate difference approaches zero the ratio diverges regardless of how clean the block is, so "the candidates are indistinguishable" is mechanically converted into "block inadmissible" — which is what happened at M and L. The gate was honoured as written rather than argued around (§17.5), and that was right; but **the gate as written is unusable and must be respecified before another block is run** — normalize to within-block SD or to the grand mean, or gate on the interaction in absolute MB/s. | **Open** — respecify before the next phase |
+| P4 | Configuration S — the sole admissible block — **passed the order-effect gate at 4.6 % against the 5 % threshold**, clearing by 0.4 pp the gate that invalidated the other four blocks. Recorded because it further supports withholding a status change: the one block that survived did so narrowly, under a gate P3 shows to be miscalibrated in both directions. | Recorded |
+| P5 | The Phase 2 **watchdog brackets all 12 runs in one begin/end pair with no heartbeat inside**, so any block exceeding 180 s trips it with a healthy transport underneath (block 2, fired at run 12/12). The declared interval was **not** raised — §16.8 forbids raising a ceiling mid-measurement. | **Open** — needs a per-run heartbeat |
+| P6 | The Phase 2 artifact **carries no producer facts at all**: the consumer never reads the stream id, so it never calls `/facts`. Producer-side resident bytes, cancellation instants and memory samples had to be obtained out of band. Every producer-side assertion in §16 is therefore unverifiable from the Phase 2 artifact alone. | **Open** |
+| P7 | The declared bootstrap seed `0x5EED205600000002` is **truncated to 32 bits** by the harness's LCG, so the seed used is not the seed declared. The tester worked around it by recomputing every CI with the declared 64-bit seed through splitmix64 out of band, so §17's intervals follow the declared plan — but the harness does not. | **Open** |
+| P8 | `declaredAssertions.ceilings.creditWindowBytes` in the artifact carries the **producer-resident bound** (5 × batch), not the credit window (4 × batch). §16.3's credit-window figure appears in no artifact under its own name. Mislabelling only; §17 uses the correct figure in prose. | **Open** |
+| P9 | §16.9 rule 2 says "differs by more than 10 %" without defining **the denominator**. The S-block gap is 4.02 % of B or 4.20 % of A; the hasher-corrected gap is 8.57 % of B or 9.37 % of A. §17 uses the conservative pairing, erring toward overstating risk — but an undefined denominator in a decision rule is a researcher degree of freedom and must be fixed before the rule decides anything. | **Open** — fix §16.9 before the next phase |
+
+**Consequence, stated plainly:** P1, P2, P3, P5, P6 and P7 all have to be closed before another
+counterbalanced block is worth running, and P3 and P9 have to be closed before §16.9 can decide
+anything at all. Phase 2's contribution is therefore narrower than "it measured the transports": it
+established that the S configuration behaves as Phase 1 suggested, and it established that this
+instrument is not yet capable of answering the batch-size question the decision turns on.

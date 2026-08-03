@@ -2,14 +2,16 @@
 
 **Status:** Proposed — **awaiting human approval. Not accepted.** A status change was pre-approved conditional on Phase 2 selecting a winner; it is **withheld** — Phase 2 returned confounded blocks at two of three batch sizes and §16.9 rule 5 could not be evaluated. See "Phase 2 outcome".
 **Scope of any evidence below:** Windows 10 Pro 22H2 / WebView2-class engine only. Nothing here says anything about macOS/WKWebView or Linux/WebKitGTK, the same limit `docs/07` already places on ADR-003.
-**Sources:** `protocol/transport-bakeoff/README.md` — §1–§13 preregistration (committed before the harness), §14 Implementation findings, **§15 Results** (filled by the tester from its own execution)
+**Sources:** `protocol/transport-bakeoff/README.md` — §1–§13 preregistration (committed before the harness), §14 Implementation findings, **§15 Results** (Phase 1, tester-filled), §16 Phase 2 preregistration (committed before Phase-2 code), **§17 Phase 2 results** (tester-filled), §18 Phase 2 instrument findings
 **Related:** **ADR-004** (+ 2026-08-03 amendments — this ADR *implements* its deferred choice and does not modify it), ADR-003 spike M1.5/M5 findings, ADR-010 rules 1/3/5/7, `docs/07`, `docs/09`, `docs/10`, `docs/11`
 
 ## Phase 2 outcome (2026-08-04) — status change **withheld**
 
 Phase 2 ran the transfer-isolated benchmark preregistered in `protocol/transport-bakeoff/README.md` §16, which exists because Phase 1 measured a generator at 97.2–98.9 % of wall time and therefore never tested §12's tie-break precondition. Results: §17.
 
-**A status change was pre-approved conditional on Phase 2 selecting a winner. It is withheld, because Phase 2's outcome is one of the pre-declared stop cases.**
+**A status change was pre-approved conditional on Phase 2 selecting a winner. It is withheld.**
+
+The reasoning is *a fortiori*, and is stated that way rather than claiming more preregistration than exists: §16.9 rule 5 pre-commits "stays Proposed" for the case where batch-size dependence is **demonstrated**. Phase 2 landed in a strictly *less* informed state than that — it cannot say whether the ranking is batch-size dependent, because M and L returned no admissible data. A state strictly weaker than a pre-declared "stays Proposed" state cannot warrant a stronger status.
 
 - **4 of 5 counterbalanced blocks were invalid.** Only configuration **S** produced an admissible block. Configurations **M** and **L** failed §16.5's order-effect gate on both their original and their replacement blocks (ratios 1569.8 %, 226.1 %, 51.5 %, 514.1 % against a declared 5 % threshold). Whole-block replacement was used throughout; no single run was replaced.
 - The substantive reading matches the arithmetic: within-block drift (0.23–1.55 MB/s) **exceeded the candidate difference** (0.045–0.686 MB/s) at M and L, so those configurations could not have separated the candidates regardless.
@@ -29,9 +31,11 @@ Phase 2 ran the transfer-isolated benchmark preregistered in `protocol/transport
 
 Before this ADR can reach Accepted, the following must land: admissible M and L blocks (which requires removing the consumer-side hashing cost from the timed path, or measuring it out of band), the N=2 configuration, and §16.9 rule 5 actually evaluated.
 
-## Recommended status change — for the human, not applied here
+## Recommended status change — **none, as of Phase 2**
 
-**Proposed → Accepted**, scoped to Windows/WebView2, with the two qualifications in the Decision carried into the acceptance text: that the decision rests on the declared batch size, and that criterion 3 and the silent-truncation counter-evidence both favour B.
+**Remain Proposed.** This section previously recommended Proposed → Accepted on Phase 1's evidence. **That recommendation is withdrawn**, not because the candidate changed — it did not — but because Phase 2 showed the evidence base is narrower than the recommendation assumed: the batch-size dependence question that rule 5 exists to answer returned no admissible data at two of three configurations, and the one configuration that did produce a block was not transfer-bound.
+
+The prerequisites for revisiting are listed at the end of "Phase 2 outcome" above.
 
 This ADR has **not** been accepted, and nothing here modifies ADR-004 — its 2026-08-03 amendment 2 explicitly deferred this choice, and this ADR fills that deferral rather than amending it. If accepting this would in your judgement warrant an ADR-004 amendment, that is a separate proposal for you to make, in the append-only form the ADR-003 spike used.
 
@@ -77,7 +81,7 @@ The reasoning, in the order the preregistration fixed in advance:
 **Three things make this decision weaker than its headline, all stated here rather than buried in the risks.**
 
 - **Criterion 1 is measured at the JS boundary, not end-to-end.** The 0-vs-100 figure counts copies performed by harness JavaScript. A WebSocket message is assembled from TCP segments *inside the browser* before JS ever sees it, and that copy is below the measurement boundary; for HTTP the equivalent reassembly happens above it, where the counter can see it. ADR-004 requires copies to be "measured and minimized, **not assumed absent**", so the honest claim is narrower than "A copies zero times": **A pays 0 JS-observable reassembly copies and B pays 100 per run; the sub-JS ingestion cost is unmeasured on both sides.** What survives that caveat is the *difference* — both candidates must get bytes from the kernel into the process, and B additionally pays a full JS-side pass — but the absolute count is not established, and if the browser's WebSocket assembly turns out to be materially more expensive than chunk delivery, this criterion stops discriminating.
-- **It rests on the declared batch size.** B's copy cost follows from 2,438,344-byte frames crossing ~64 KB chunk boundaries. Smaller batches, or a consumer that feeds Arrow incrementally rather than requiring a contiguous message, might reduce or remove it. **Untested.**
+- **It rests on the declared batch size** — and Phase 2 has now tested one point of that. At ~244 KB batches (configuration S) Candidate B still paid **1000–1001 whole-payload copies per run**: the copy did not vanish at a smaller batch size, it relocated into the Arrow parse, because Arrow JS yields a buffer view only at 8-byte-aligned offsets and WebView2's fetch chunk views are misaligned. That is a *stronger* result for A than this ADR previously claimed. It remains untested at larger batch sizes, which is the direction that matters for rule 5 and the direction Phase 2 could not measure.
 - **The counter-evidence is real.** A WebSocket data plane has an application-visible shutdown protocol both ends must implement correctly, and getting it wrong **truncates silently** — this harness did exactly that, with a healthy-looking producer, caught only because a Rust client disagreed with the browser. B gets ordered-delivery-then-EOF from the transport and has no equivalent failure mode. A reviewer weighing that above one copy per batch would reasonably prefer B, and it is the pre-declared criterion *ordering*, not the evidence, that rules it out here.
 
 **Re-open this ADR if any of these becomes true:**
@@ -108,7 +112,7 @@ The preregistration fixes seven hard requirements as pass/fail gates, evaluated 
 
 Recorded independently by the tester agent against commit `6f44d88`, from a run whose own validity gate passed (`valid: true`, `invalidReasons: []`), satisfying the preregistration's declared counts in full. Full detail, method columns and scope limits: `protocol/transport-bakeoff/README.md` §15.
 
-*The harness has changed since that commit, so the measured tree is named explicitly rather than implied by HEAD. The later changes are security hygiene (the launch-URL file is deleted after handoff), added negative tests for the WebSocket credential path, and a fix to the leakage scan's self-test. **None of them alter either adapter's transport behaviour**, so the evidence stands as recorded; re-running is nonetheless the honest thing to do before this ADR is accepted.*
+*The harness has changed since that commit, so the measured tree is named explicitly rather than implied by HEAD. **Correction (2026-08-04):** an earlier version of this note claimed the later changes did not alter transport behaviour. That is false as of Phase 2 — `86df830` split each batch and its progress frame into two writes on both adapters, so HEAD no longer reproduces Phase 1's wire behaviour and Phase 1's figures cannot be regenerated from it. Phase 1's evidence stands **as recorded at `6f44d88`**, which is why that tree is named; it is not reproducible from HEAD. See README §18 P1 — the change also reintroduces a cancel-blind window on Candidate A that F7 had removed.*
 
 **Profile:** Windows 10 Pro 22H2 build 19045 · Edge/WebView2 150.0.4078.105, isolated profile · `ANGLE (Intel, Intel(R) UHD Graphics 630) Direct3D11` — real hardware, not a software rasterizer · release build, `debug_assertions` off · clock relation bound ±0.400 ms.
 
@@ -195,7 +199,7 @@ Both candidates require a listening TCP socket, which is a real change in local 
 
 ## Open risks and follow-up work
 
-1. **The decision's only measured basis may be removable.** B's per-batch reassembly copy follows from 2,438,344-byte frames crossing ~64 KB chunk boundaries. Smaller batches, or an incremental Arrow reader that does not require a contiguous message, might eliminate it — **untested**. If it can be eliminated, criterion 1 stops discriminating and this ADR should be re-opened rather than quietly retained.
+1. **The decision's only measured basis may be removable — but smaller batches do not remove it.** Phase 2 measured configuration S (~244 KB batches): B still paid 1000–1001 whole-payload copies per run, the copy having relocated from reassembly into the Arrow parse via misaligned chunk views. An incremental Arrow reader that does not require a contiguous message might still eliminate it; **that remains untested**, as does the large-batch direction. If it can be eliminated, criterion 1 stops discriminating and this ADR should be re-opened rather than quietly retained.
 2. **Throughput is uncharacterised for both candidates.** The workload is generation-bound at 97.2–98.9 %; neither transport's ceiling was measured. Any future throughput claim needs a re-run with a pre-generated payload that decouples generation from transfer. **No throughput-based claim may cite this ADR.**
 3. **One admissible invocation.** Run-to-run variance on the fixed build is uncharacterised: the reproducibility check could not be obtained, because nothing in this environment can hold a browser window foregrounded while automation continues. Two invocations on the *pre-fix* build did agree, which is weak corroboration and not a substitute.
 4. **One machine, one GPU, one Edge build.** Intel UHD 630 — not the GTX 1650 also present — and Edge 150.0.4078.105.
