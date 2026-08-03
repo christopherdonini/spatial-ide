@@ -3,6 +3,7 @@ import { runM1 } from "./m1-render";
 import { runM15 } from "./m1_5-diagnostics";
 import { runM2 } from "./m2-precision";
 import { runM3 } from "./m3-picking";
+import { runM4 } from "./m4-editing";
 
 // M0 (ADR-003 spike): report WebGL2/WebGPU availability and GPU adapter
 // info from inside the native webview (WebView2 on Windows). No rendering
@@ -179,6 +180,19 @@ async function maybeRunM15() {
 // first would add ~25 s to each M2 run for no measurement value. Default
 // (no env var) is still M0 + M1, exactly as committed.
 async function runMilestones() {
+  const m4 = await invoke<boolean>("should_run_m4").catch(() => false);
+  if (m4) {
+    const alsoOthers = await Promise.all([
+      invoke<boolean>("should_run_m3").catch(() => false),
+      invoke<boolean>("should_run_m2").catch(() => false),
+      invoke<boolean>("should_run_m1_5").catch(() => false),
+    ]);
+    if (alsoOthers.some(Boolean)) {
+      console.warn("[main] RUN_M4 takes precedence over RUN_M3/RUN_M2/RUN_M1_5; skipping M1/M1.5/M2/M3 this run");
+    }
+    await runM4();
+    return;
+  }
   const m3 = await invoke<boolean>("should_run_m3").catch(() => false);
   if (m3) {
     const alsoM2 = await invoke<boolean>("should_run_m2").catch(() => false);

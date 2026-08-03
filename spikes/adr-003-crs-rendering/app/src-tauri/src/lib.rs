@@ -1,10 +1,11 @@
 mod arrow_en;
 mod markers;
 mod p1;
+mod p2;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use tauri::http::{header, Response, StatusCode};
 use tauri::Manager;
@@ -42,6 +43,16 @@ fn should_run_m3() -> bool {
     std::env::var("RUN_M3").map(|v| v == "1").unwrap_or(false)
 }
 
+// M4 differs from M2/M3's gating: those commands are read from JS after the
+// window already exists, but P2 generation (below, in run()) has to happen
+// *before* the window exists, so RUN_M4 is read directly via std::env::var
+// there too. This command exists only so main.ts can decide precedence
+// (M4 over M3/M2/M1) the same way it already does for the others.
+#[tauri::command]
+fn should_run_m4() -> bool {
+    std::env::var("RUN_M4").map(|v| v == "1").unwrap_or(false)
+}
+
 /// M3: GPU pick index -> exact source coordinate, resolved host-side in f64.
 ///
 /// This is ADR-003's prescribed picking path. The index arrives from the GPU
@@ -75,6 +86,51 @@ fn resolve_pick(
     id: u64,
 ) -> Result<PickedCoordinate, String> {
     let (e, n) = markers::resolve_by_id(&dataset, sep_mm, &axis, id)?;
+    Ok(PickedCoordinate {
+        crs: "EPSG:2056",
+        e,
+        n,
+    })
+}
+
+/// M4's write path: commits an edited P2 vertex back into the source of
+/// truth. `crs` is required and checked rather than assumed, the write-side
+/// mirror of `resolve_pick`'s outbound tagging above -- a mislabeled frame
+/// on a *write* corrupts ground truth, not just a click's reported
+/// coordinate, so this rejects rather than trusts.
+#[tauri::command]
+fn commit_vertex_edit(
+    state: tauri::State<'_, P2DatasetState>,
+    id: u64,
+    e: f64,
+    n: f64,
+    crs: String,
+) -> Result<(), String> {
+    if crs != "EPSG:2056" {
+        return Err(format!("commit_vertex_edit: refusing untagged/mismatched crs {crs:?}"));
+    }
+    let dataset = state
+        .0
+        .as_ref()
+        .ok_or("P2 not loaded -- RUN_M4 must be 1")?;
+    let mut d = dataset.lock().map_err(|_| "P2 dataset lock poisoned")?;
+    d.commit_vertex(id, e, n)
+}
+
+/// Read-back half of the M3-style bit-exact commit round trip: resolves a
+/// P2 vertex id to whatever is currently stored, independent of whatever
+/// the client thinks it just sent.
+#[tauri::command]
+fn resolve_p2_vertex(
+    state: tauri::State<'_, P2DatasetState>,
+    id: u64,
+) -> Result<PickedCoordinate, String> {
+    let dataset = state
+        .0
+        .as_ref()
+        .ok_or("P2 not loaded -- RUN_M4 must be 1")?;
+    let d = dataset.lock().map_err(|_| "P2 dataset lock poisoned")?;
+    let (e, n) = d.resolve_vertex(id)?;
     Ok(PickedCoordinate {
         crs: "EPSG:2056",
         e,
@@ -133,6 +189,14 @@ fn log_m3_report(report_json: String) {
     }
 }
 
+#[tauri::command]
+fn log_m4_report(report_json: String) {
+    println!("[M4 EDITING REPORT] {}", report_json);
+    if let Err(e) = std::fs::write("m4-report.json", &report_json) {
+        eprintln!("[M4 EDITING REPORT] failed to write m4-report.json: {}", e);
+    }
+}
+
 /// P1's pre-serialized Arrow IPC bytes for the default (no query params)
 /// protocol response, generated once at startup and intentionally leaked to
 /// `'static`: the dataset lives for the app's whole process lifetime
@@ -148,6 +212,14 @@ struct P1Bytes(&'static [u8]);
 /// request (this is `Arc`-shared, not leaked — diagnostic requests are rare
 /// and one-off, unlike M1's own hot default path).
 struct P1DatasetState(Arc<p1::P1Dataset>);
+
+/// M4's P2 dataset, gated behind RUN_M4=1 unlike P1's unconditional
+/// generation (see run() below) -- `None` when M4 isn't the milestone in
+/// play this run, so the ~1-2s generation and ~160MB (10M vertices * 8
+/// bytes * 2) it costs is paid only when actually needed. `Mutex`, not a
+/// bare `Arc` like P1DatasetState, because M4 has a write path
+/// (commit_vertex_edit) that P1/M2/M3's read-only sharing never needed.
+struct P2DatasetState(Option<Arc<p2::SharedP2Dataset>>);
 
 fn parse_query(query: Option<&str>) -> HashMap<&str, &str> {
     query
@@ -181,21 +253,43 @@ pub fn run() {
         p1_bytes.len()
     );
 
+    // Unlike P1 above, P2 generation is gated behind RUN_M4=1 read directly
+    // here (the window doesn't exist yet, so there's no JS round trip to
+    // wait on) rather than unconditional: it costs ~1-2s and ~160MB (10M
+    // vertices * 8 bytes * 2) that most runs (M0-M3) have no use for.
+    let run_m4 = std::env::var("RUN_M4").map(|v| v == "1").unwrap_or(false);
+    let p2_dataset: Option<Arc<p2::SharedP2Dataset>> = if run_m4 {
+        let d = p2::P2Dataset::generate();
+        println!(
+            "[M4] P2 generated: {} polygons, {} vertices",
+            p2::POLYGON_COUNT,
+            p2::VERTEX_COUNT
+        );
+        Some(Arc::new(Mutex::new(d)))
+    } else {
+        None
+    };
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(P1Bytes(p1_bytes))
         .manage(P1DatasetState(dataset))
+        .manage(P2DatasetState(p2_dataset))
         .invoke_handler(tauri::generate_handler![
             webview_runtime_version,
             should_run_m1_5,
             should_run_m2,
             should_run_m3,
+            should_run_m4,
             resolve_pick,
+            commit_vertex_edit,
+            resolve_p2_vertex,
             log_m0_report,
             log_m1_report,
             log_m1_5_report,
             log_m2_report,
-            log_m3_report
+            log_m3_report,
+            log_m4_report
         ])
         // Serves the P1 point cloud as raw Arrow IPC bytes — no JSON, no
         // invoke/serde round trip (ADR-004).
@@ -245,6 +339,41 @@ pub fn run() {
                         Cow::Owned(arrow_en::serialize_en_id(&e, &n, &ids)),
                     ),
                     None => (StatusCode::BAD_REQUEST, Cow::Owned(Vec::new())),
+                }
+            } else if request.uri().path() == "/p2" {
+                // M4: the parcel-polygon vertex set, same Arrow IPC framing
+                // (e/n/id) as /markers. Checked by path, like /markers, and
+                // ahead of the generic ?bbox= handling below so a /p2 bbox
+                // request can't accidentally fall through to P1's bbox
+                // filter (different dataset, different state).
+                //   (no params)        full 10,000,000-vertex dataset.
+                //   ?bbox=eMin,nMin,eMax,nMax   whole polygons whose
+                //                       centroid falls in the box
+                //                       (p2.rs::arrow_ipc_bbox) — M4's
+                //                       viewport-culled visible subset.
+                match ctx.app_handle().state::<P2DatasetState>().0.as_ref() {
+                    None => (StatusCode::SERVICE_UNAVAILABLE, Cow::Owned(Vec::new())),
+                    // A poisoned lock returns 500 rather than panicking the
+                    // protocol handler thread, consistent with how
+                    // commit_vertex_edit/resolve_p2_vertex handle the
+                    // identical failure a few dozen lines above.
+                    Some(shared) => match shared.lock() {
+                        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Cow::Owned(Vec::new())),
+                        Ok(dataset) => match params.get("bbox") {
+                            Some(bbox_str) => {
+                                let parts: Vec<f64> =
+                                    bbox_str.split(',').filter_map(|s| s.parse().ok()).collect();
+                                match parts[..] {
+                                    [e_min, n_min, e_max, n_max] => (
+                                        StatusCode::OK,
+                                        Cow::Owned(dataset.arrow_ipc_bbox(e_min, n_min, e_max, n_max)),
+                                    ),
+                                    _ => (StatusCode::BAD_REQUEST, Cow::Owned(Vec::new())),
+                                }
+                            }
+                            None => (StatusCode::OK, Cow::Owned(dataset.full_arrow_ipc())),
+                        }
+                    }
                 }
             } else if let Some(chunk_str) = params.get("chunk") {
                 let chunk: usize = chunk_str.parse().unwrap_or(0);
