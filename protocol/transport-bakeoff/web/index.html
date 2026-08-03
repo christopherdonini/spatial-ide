@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Data-plane transport bake-off</title>
+    <!--
+      The session token is injected here at serve time. This stands in for delivery over the Tauri
+      IPC control plane; in production the token crosses the control plane and is never embedded in
+      a document. It is never placed in a URL query string (docs/09).
+    -->
+    <script>
+      window.__BAKEOFF_TOKEN__ = '__SESSION_TOKEN__';
+    </script>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0; background: #0d0f14; color: #d8dee9;
+        font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+        display: grid; grid-template-rows: auto 1fr auto; height: 100vh;
+      }
+      header { padding: 10px 14px; border-bottom: 1px solid #232833; }
+      h1 { font-size: 14px; margin: 0 0 2px; font-weight: 600; }
+      .sub { color: #7c8698; font-size: 12px; }
+      #gl { width: 100%; height: 100%; display: block; }
+      main { position: relative; min-height: 0; }
+      #log {
+        margin: 0; padding: 10px 14px; border-top: 1px solid #232833;
+        white-space: pre-wrap; max-height: 34vh; overflow: auto; color: #9fb3c8;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Data-plane transport bake-off &mdash; evidence for ADR-012</h1>
+      <div class="sub">
+        Candidate A: binary WebSocket &middot; Candidate B: loopback HTTP streaming response.
+        Preregistration: <code>protocol/transport-bakeoff/README.md</code>
+      </div>
+    </header>
+    <main><canvas id="gl" width="900" height="560"></canvas></main>
+    <pre id="log">starting…</pre>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

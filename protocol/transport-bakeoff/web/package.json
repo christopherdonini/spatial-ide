@@ -1,0 +1,23 @@
+{
+  "name": "transport-bakeoff-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser consumer for the data-plane transport bake-off. Vanilla TypeScript deliberately: ADR-001 left React-vs-Svelte open and a bake-off must not decide it.",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "check-leakage": "node scripts/check-leakage.mjs",
+    "verify": "npm run typecheck && npm run check-leakage && npm run build"
+  },
+  "dependencies": {
+    "apache-arrow": "^18.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0"
+  },
+  "allowScripts": {
+    "esbuild@0.24.2": true
+  }
+}

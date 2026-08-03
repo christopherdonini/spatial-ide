@@ -1,0 +1,39 @@
+# Standalone crate. Deliberately NOT a workspace root and NOT `protocol/Cargo.toml`:
+# the `protocol` module's real surface stays unwritten until someone designs it.
+# See README.md — this is decision evidence for ADR-012, not the module.
+[package]
+name = "transport-bakeoff"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+arrow = "59"
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal", "process"] }
+tokio-util = { version = "0.7", features = ["io"] }
+futures = "0.3"
+bytes = "1"
+rand_chacha = "0.3"
+rand_core = "0.6"
+sha2 = "0.10"
+hex = "0.4"
+subtle = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+# A real WebSocket client, so Candidate A's delivery guarantees can be tested without a browser in
+# the loop. Pinned to the version axum 0.8 already vendors.
+tokio-tungstenite = "0.29"
+futures-util = "0.3"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Threading",
+] }
+
+[profile.release]
+debug = true

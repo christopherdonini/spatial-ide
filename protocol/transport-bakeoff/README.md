@@ -139,6 +139,21 @@ Each is a pass/fail predicate with a stated **observation point**. Failing any o
 - **Note:** a listening TCP socket is a real change in local attack surface. `docs/09`'s "To be
   specified" does not cover it, so ADR-012 states the threat model.
 
+> **Amendment to H4 (2026-08-03, during implementation — recorded rather than silently applied).**
+> As first written, H4 required that "a connection with no `Origin` is rejected". That predicate is
+> wrong, and the first live run proved it: per the Fetch standard a browser **omits `Origin`
+> entirely on same-origin GET/HEAD**, so the rule rejected the harness page's own requests and the
+> run died at the clock-sync step. The requirement is now stated as: **a stated `Origin` must match
+> exactly (`null` and any foreign origin rejected), and an absent `Origin` is accepted only with a
+> positive `Sec-Fetch-Site: same-origin` Fetch-Metadata signal**, which the browser sets and page
+> script cannot forge. A client sending neither header is still rejected, so this is a narrowing of
+> *how* same-origin is proven, not a relaxation of whether it must be. Regression-tested both ways
+> (`same_origin_get_without_an_origin_header_is_allowed`,
+> `null_and_bare_absent_origin_are_rejected_explicitly`), including that a forged
+> `Sec-Fetch-Site: same-origin` cannot rescue a stated foreign origin. Recorded here because
+> changing a preregistered pass/fail predicate after seeing a failure is exactly the move that
+> destroys a preregistration's value if it is done quietly.
+
 ### H5 — JSON-free data path (ADR-004; `docs/10`)
 - **Assertion:** **zero** JSON bytes traverse the data channel in either direction. Data frames are
   Arrow IPC; control frames on the data channel (credit, cancel) are **fixed-layout binary**, not
@@ -334,6 +349,15 @@ trips the gate is reported as invalid, never silently dropped or quietly re-run.
 - unequal instrumentation between adapters
 - different GPU, power profile, or machine state between adapters without re-running **both**
 - fewer than the declared runs
+- **a run in a hidden or backgrounded tab, or one in which `requestAnimationFrame` was throttled**
+  *(added 2026-08-03 during implementation, after the first live run hung for two minutes on a
+  suspended rAF with a demonstrably healthy transport underneath it)*. A hidden tab does not
+  composite, so "time to first meaningful pixels" is not a slow number, it is not a number. The
+  harness now detects this, waits up to 30 s for a visible tab, and marks the run invalid rather
+  than reporting a timing taken while throttled.
+- **a run on a software rasterizer** where the GPU string names a fallback adapter (e.g. Microsoft
+  Basic Render Driver / WARP / SwiftShader) rather than real hardware. Recorded per run in
+  `environment.gpu` so this is checkable after the fact rather than assumed.
 
 M2's precedent is why this section is explicit: before its validity gate existed, a *failed* capture
 produced `NaN` and could score **better** than a working run.
@@ -411,7 +435,28 @@ Without this rule declared in advance, a 3 % margin writes the ADR.
 
 ---
 
-## 13. Results
+## 13. How to run
+
+```sh
+# 1. Build the browser consumer (also typechecks and runs the H6 leakage scan)
+cd protocol/transport-bakeoff/web && npm install && npm run verify
+
+# 2. Build and test the producer + adapters  (release only — §8)
+cd .. && cargo test --release && cargo build --release
+
+# 3. Run. --launch opens the page in Edge, whose engine is the WebView2 runtime.
+./target/release/transport-bakeoff --launch
+
+# 4. Summarize. Prints the validity verdict first and unconditionally.
+node scripts/summarize-report.mjs <report path printed by the harness>
+```
+
+**The browser window must be visible and focused for the whole run**, on hardware GPU. A hidden or
+backgrounded tab suspends `requestAnimationFrame`; the harness detects this, waits up to 30 s, and
+then marks the run invalid rather than reporting a meaningless pixel timing (§8). `?smoke=1` runs a
+reduced repetition count for wiring checks and **always marks its own report invalid**.
+
+## 14. Results
 
 *Empty by construction — this document is committed before the harness exists. The tester agent fills
 this section from its own independent execution; measurements recorded here by any other route are
