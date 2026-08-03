@@ -1,9 +1,33 @@
 # ADR-012 — Data-Plane Transport
 
-**Status:** Proposed — **awaiting human approval. Not accepted.**
+**Status:** Proposed — **awaiting human approval. Not accepted.** A status change was pre-approved conditional on Phase 2 selecting a winner; it is **withheld** — Phase 2 returned confounded blocks at two of three batch sizes and §16.9 rule 5 could not be evaluated. See "Phase 2 outcome".
 **Scope of any evidence below:** Windows 10 Pro 22H2 / WebView2-class engine only. Nothing here says anything about macOS/WKWebView or Linux/WebKitGTK, the same limit `docs/07` already places on ADR-003.
 **Sources:** `protocol/transport-bakeoff/README.md` — §1–§13 preregistration (committed before the harness), §14 Implementation findings, **§15 Results** (filled by the tester from its own execution)
 **Related:** **ADR-004** (+ 2026-08-03 amendments — this ADR *implements* its deferred choice and does not modify it), ADR-003 spike M1.5/M5 findings, ADR-010 rules 1/3/5/7, `docs/07`, `docs/09`, `docs/10`, `docs/11`
+
+## Phase 2 outcome (2026-08-04) — status change **withheld**
+
+Phase 2 ran the transfer-isolated benchmark preregistered in `protocol/transport-bakeoff/README.md` §16, which exists because Phase 1 measured a generator at 97.2–98.9 % of wall time and therefore never tested §12's tie-break precondition. Results: §17.
+
+**A status change was pre-approved conditional on Phase 2 selecting a winner. It is withheld, because Phase 2's outcome is one of the pre-declared stop cases.**
+
+- **4 of 5 counterbalanced blocks were invalid.** Only configuration **S** produced an admissible block. Configurations **M** and **L** failed §16.5's order-effect gate on both their original and their replacement blocks (ratios 1569.8 %, 226.1 %, 51.5 %, 514.1 % against a declared 5 % threshold). Whole-block replacement was used throughout; no single run was replaced.
+- The substantive reading matches the arithmetic: within-block drift (0.23–1.55 MB/s) **exceeded the candidate difference** (0.045–0.686 MB/s) at M and L, so those configurations could not have separated the candidates regardless.
+- **§16.9 rule 5 could not be evaluated.** Whether the ranking is batch-size dependent is exactly what M and L were there to answer, and neither returned admissible data. Rule 5's own closing clause is decisive here: *a transport chosen only for one batch size is not a transport decision.*
+
+**What configuration S did establish**, and it is consistent with Phase 1 rather than a new result: neither candidate was disqualified; the throughput gap was 4.02 %, inside the 10 % band, so rule 2 did not fire; and rule 3's first criterion — copies and allocation pressure — selects **Candidate A**, 0 whole-payload copies per run against B's 1000–1001 (~244.6 MB).
+
+**Three findings that further bound what Phase 2 measured**, recorded because they change how the figures must be read and because two of them are defects in the instrument rather than in either transport:
+
+1. **t1 is not a pure transport figure.** The consumer's pure-JS SHA-256 runs at 54.7–59.6 MB/s and is fed synchronously inside the decoder, accounting for **61–63 % of t1**. Phase 2 removed the generator from the timed interval and reintroduced a comparable per-byte cost at the consumer. All ten candidate×block p50s sit within 32.31–35.01 MB/s across a **49.8× change in bytes per batch**, which is the signature of a shared per-byte bottleneck rather than of transport behaviour.
+2. **The rule 2 / rule 3 branch is not robust.** Rule 2 would select B; rule 3 selects A. Subtracting the shared hasher cost as a first-order correction moves the gap from 4.02 % to **9.37 %** — still inside the band, but with ~0.6 pp of margin rather than ~6. The decision sits close to a branch boundary.
+3. **Counting only the reassembly counter under-reports Candidate B's copies by 8.6×.** B's *reassembled* frames share the Arrow buffer 116/116 while its *contiguous* frames share 0/884, because Arrow JS yields a view only at payload byteOffset ≡ 0 mod 8 and WebView2's fetch chunk views are misaligned. This strengthens the direction of criterion 1 while showing the metric that fed it was incomplete.
+
+**Not executed:** the **N=2 concurrency** configuration §16.2 declares as secondary — it is not implemented in the consumer. Everything here is single-stream. Rendering is excluded from Phase 2, so there is no first-pixel, frame-time or VRAM figure.
+
+**Consequence for this ADR:** the Decision below is **unchanged** — Phase 2 selected the same candidate at the one configuration that produced admissible data, so there is nothing to replace. But its evidence basis is now narrower than a reader would assume: transport throughput remains uncharacterised for both candidates, and **no throughput-based claim may cite this ADR**. Re-open condition 1 (throughput measured on a transfer-bound workload) is *not* discharged by Phase 2, because Phase 2 was not transfer-bound.
+
+Before this ADR can reach Accepted, the following must land: admissible M and L blocks (which requires removing the consumer-side hashing cost from the timed path, or measuring it out of band), the N=2 configuration, and §16.9 rule 5 actually evaluated.
 
 ## Recommended status change — for the human, not applied here
 
