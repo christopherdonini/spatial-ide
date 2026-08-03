@@ -8,6 +8,7 @@
 
 mod adapter_http;
 mod adapter_ws;
+mod corpus;
 mod memory;
 mod producer;
 mod session;
@@ -52,6 +53,11 @@ struct ProducerFacts {
     memory_samples: Vec<(u64, memory::MemorySample)>,
     peak_memory: memory::MemorySample,
     payload_sha256: Option<String>,
+    /// Phase 2: digest over decoded logical column values, invariant to batch granularity (§16.7).
+    column_sha256: Option<String>,
+    /// Measured gaps between memory samples, so the artifact carries the **actual** cadence
+    /// rather than the declared one (§16.4).
+    sample_gaps_us: Vec<u64>,
     json_frames_on_data_path: u64,
     terminal: Option<Terminal>,
     dangling_checkpoint: Option<String>,
@@ -78,6 +84,9 @@ struct AppState {
     /// correctly-behaving producer report FAIL. Deterministic for the fixed workload and seed, so
     /// this is still a declared-before-the-run figure.
     batch_wire_bytes: usize,
+    /// Phase 2 (§16): the pre-generated immutable corpus. `None` means Phase 1's generate-on-demand
+    /// path, which is retained unchanged so the generation-bound phase stays reproducible.
+    corpus: Option<Arc<corpus::Corpus>>,
 }
 
 type Shared = Arc<AppState>;
@@ -112,6 +121,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert!(local.ip().is_loopback(), "listener must bind loopback only");
     assert_ne!(local.port(), 0, "port must be OS-assigned and concrete");
 
+    // Phase 2 (§16.2): build the whole corpus BEFORE accepting any connection, so no generation
+    // work can land inside a timed interval. One configuration at a time, fully RAM-resident, as
+    // §16.3 declares.
+    let corpus = if args.iter().any(|a| a == "--phase2") {
+        let cfg = flag("--config")
+            .and_then(|c| corpus::Config::parse(&c))
+            .unwrap_or(corpus::Config::M);
+        println!(
+            "[bakeoff] phase 2: building corpus for configuration {} ({} rows/batch, {} batches)…",
+            cfg.label(),
+            cfg.rows_per_batch(),
+            cfg.batch_count()
+        );
+        let c = corpus::Corpus::build(cfg).map_err(|e| format!("corpus: {e}"))?;
+        println!(
+            "[bakeoff] corpus ready in {} ms: {} wire bytes, max batch {} B",
+            c.build_ms, c.total_wire_bytes, c.max_batch_wire_bytes
+        );
+        println!("[bakeoff]   wire digest   {}", c.wire_digest);
+        println!("[bakeoff]   column digest {}", c.column_digest);
+        // Touch every byte so page-cache warmth is equal for whichever candidate runs first.
+        let warm = c.warm();
+        println!("[bakeoff] corpus warmed (checksum accumulator {warm})");
+        Some(Arc::new(c))
+    } else {
+        None
+    };
+
     let state: Shared = Arc::new(AppState {
         session: Session::new(local.port()),
         t0: Instant::now(),
@@ -119,7 +156,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         out_dir: out_dir.clone(),
         facts: Mutex::new(HashMap::new()),
         states: Mutex::new(HashMap::new()),
-        batch_wire_bytes: producer::batch_wire_bytes(),
+        batch_wire_bytes: corpus
+            .as_ref()
+            .map(|c| c.max_batch_wire_bytes)
+            .unwrap_or_else(producer::batch_wire_bytes),
+        corpus,
     });
 
     let app = router(state.clone());
@@ -228,6 +269,7 @@ fn router(state: Shared) -> Router {
         .route("/clock", get(clock))
         .route("/stream/ws", get(stream_ws))
         .route("/stream/http", get(stream_http))
+        .route("/manifest", get(manifest))
         .route("/facts/{stream_id}", get(facts))
         .route("/report", post(write_report))
         .with_state(state)
@@ -320,6 +362,25 @@ async fn clock(State(s): State<Shared>, headers: HeaderMap) -> Response {
     .into_response()
 }
 
+/// The corpus manifest, so the consumer **verifies** corpus identity rather than assuming both
+/// candidates received the same bytes (§16.2). Control plane — JSON here is ADR-004-legal.
+async fn manifest(State(s): State<Shared>, headers: HeaderMap) -> Response {
+    if let Err(r) = check(&s, &headers, bearer(&headers)) {
+        return r;
+    }
+    match &s.corpus {
+        Some(c) => Json(serde_json::json!({
+            "phase": 2,
+            "corpus": c.manifest(),
+            "maxInflightBatches": MAX_INFLIGHT_BATCHES,
+            "creditWindowBytes": (MAX_INFLIGHT_BATCHES + 1) * c.max_batch_wire_bytes,
+        }))
+        .into_response(),
+        None => Json(serde_json::json!({ "phase": 1, "corpus": serde_json::Value::Null }))
+            .into_response(),
+    }
+}
+
 async fn facts(State(s): State<Shared>, headers: HeaderMap, Path(id): Path<String>) -> Response {
     if let Err(r) = check(&s, &headers, bearer(&headers)) {
         return r;
@@ -386,7 +447,7 @@ fn start_stream(
     s: &Shared,
     adapter: &str,
 ) -> (
-    mpsc::Receiver<Vec<u8>>,
+    mpsc::Receiver<bytes::Bytes>,
     Arc<StreamState>,
     Arc<Checkpoints>,
     Arc<Mutex<ProducerFacts>>,
@@ -420,7 +481,40 @@ fn start_stream(
         .insert(stream_id.as_str().to_string(), state.clone());
 
     // Bounded channel = the memory bound. The producer cannot get ahead of it (H3).
-    let (tx, rx) = mpsc::channel::<Vec<u8>>(MAX_INFLIGHT_BATCHES);
+    let (tx, rx) = mpsc::channel::<bytes::Bytes>(MAX_INFLIGHT_BATCHES);
+
+    // ---- Phase 2 (§16.2): feed pre-built immutable slices. No generation, no serialization, no
+    // payload-sized allocation — a `Bytes` clone is a refcount bump. Both adapters receive the
+    // identical slices, which is what makes the comparison a transport comparison.
+    if let Some(c) = s.corpus.clone() {
+        let (p_state, p_cps, p_facts) = (state.clone(), checkpoints.clone(), facts.clone());
+        tokio::spawn(async move {
+            p_cps.begin("produce");
+            for b in c.batches.iter() {
+                if p_state.is_cancelled() {
+                    break;
+                }
+                let permit = match tx.reserve().await {
+                    Ok(p) => p,
+                    Err(_) => break,
+                };
+                if p_state.is_cancelled() {
+                    break;
+                }
+                p_state.note_generated(b.len());
+                // Refcount bump, not a copy — this is the symmetry rule both adapters rely on.
+                permit.send(b.clone());
+            }
+            p_cps.end("produce");
+            let mut f = p_facts.lock().unwrap_or_else(|e| e.into_inner());
+            f.payload_sha256 = Some(c.wire_digest.clone());
+            f.column_sha256 = Some(c.column_digest.clone());
+            f.batches_generated = p_state.batches_generated();
+            f.batches_after_cancel_observed = p_state.batches_after_cancel();
+        });
+        start_sampler(s, state.clone(), facts.clone());
+        return (rx, state, checkpoints, facts, json_seen, operation);
+    }
 
     {
         let state = state.clone();
@@ -448,11 +542,15 @@ fn start_stream(
                 }
                 let t = Instant::now();
                 match gen.next_batch() {
-                    Ok(bytes) => {
+                    Ok(raw) => {
+                        // Phase 1 framed at send time; the channel now carries already-framed
+                        // `Bytes` so that Phase 2's pre-framed corpus slices and Phase 1's freshly
+                        // generated batches travel the identical adapter path.
+                        let framed = bytes::Bytes::from(wire::frame(wire::TAG_BATCH, &raw));
                         let cost = t.elapsed().as_micros() as u64;
-                        state.note_generated(bytes.len());
+                        state.note_generated(framed.len());
                         facts.lock().unwrap_or_else(|e| e.into_inner()).generation_cost_us.push(cost);
-                        permit.send(bytes);
+                        permit.send(framed);
                     }
                     Err(e) => {
                         facts.lock().unwrap_or_else(|e| e.into_inner()).terminal = Some(Terminal::ProducerFailed(e));
@@ -468,33 +566,38 @@ fn start_stream(
         });
     }
 
-    // 50 ms sampler for H3's bounded-memory evidence and README §6's peak-memory metric.
-    {
-        let state = state.clone();
-        let facts = facts.clone();
-        let t0 = s.t0;
-        tokio::spawn(async move {
-            let mut tracker = memory::PeakTracker::default();
-            loop {
-                tokio::time::sleep(Duration::from_millis(50)).await;
-                let elapsed = t0.elapsed().as_millis() as u64;
-                let m = tracker.record(elapsed);
-                let resident = state.resident_bytes() as u64;
-                let mut f = facts.lock().unwrap_or_else(|e| e.into_inner());
-                f.resident_samples.push((elapsed, resident));
-                f.memory_samples.push((elapsed, m));
-                f.peak_memory = tracker.peak;
-                if f.terminal.is_some() {
-                    break;
-                }
-                if f.resident_samples.len() > 4000 {
-                    break;
-                }
-            }
-        });
-    }
+    start_sampler(s, state.clone(), facts.clone());
 
     (rx, state, checkpoints, facts, json_seen, operation)
+}
+
+/// Memory + resident-bytes sampler.
+///
+/// §16.4 requires the **actual** cadence in the artifact, not the intended one: Phase 1 declared
+/// 50 ms and sampled at ~62.6 ms, which was only discoverable because the timestamps were kept.
+/// The interval is therefore recorded alongside the samples rather than assumed.
+fn start_sampler(s: &Shared, state: Arc<StreamState>, facts: Arc<Mutex<ProducerFacts>>) {
+    let t0 = s.t0;
+    tokio::spawn(async move {
+        let mut tracker = memory::PeakTracker::default();
+        let mut last = std::time::Instant::now();
+        loop {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            let gap = last.elapsed().as_micros() as u64;
+            last = std::time::Instant::now();
+            let elapsed = t0.elapsed().as_millis() as u64;
+            let m = tracker.record(elapsed);
+            let resident = state.resident_bytes() as u64;
+            let mut f = facts.lock().unwrap_or_else(|e| e.into_inner());
+            f.resident_samples.push((elapsed, resident));
+            f.memory_samples.push((elapsed, m));
+            f.sample_gaps_us.push(gap);
+            f.peak_memory = tracker.peak;
+            if f.terminal.is_some() || f.resident_samples.len() > 8000 {
+                break;
+            }
+        }
+    });
 }
 
 fn finish(
@@ -699,6 +802,7 @@ mod security_tests {
             facts: Mutex::new(HashMap::new()),
             states: Mutex::new(HashMap::new()),
             batch_wire_bytes: producer::batch_wire_bytes(),
+            corpus: None,
         });
         let token = state.session.token_for_injection().to_string();
         let app = router(state);

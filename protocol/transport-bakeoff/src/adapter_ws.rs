@@ -20,7 +20,7 @@ use crate::wire;
 
 pub async fn drive(
     mut socket: WebSocket,
-    mut rx: mpsc::Receiver<Vec<u8>>,
+    mut rx: mpsc::Receiver<bytes::Bytes>,
     state: Arc<StreamState>,
     checkpoints: Arc<Checkpoints>,
     total_batches: u64,
@@ -78,14 +78,22 @@ pub async fn drive(
                         credit -= 1;
                         batches_sent += 1;
 
-                        // **One send per batch, matching Candidate B's single coalesced chunk.**
-                        // Two awaited sends would not just cost an extra dispatch: the `biased`
-                        // select above cannot run while a send is pending, so every awaited send is
-                        // a window in which a CANCEL frame is invisible. Two windows per batch
-                        // instead of one would inflate this candidate's H2 figure — the gate the
-                        // whole bake-off turns on — purely through an implementation choice. The
-                        // consumer's frame decoder already handles several frames per chunk.
-                        let mut out = wire::frame(wire::TAG_BATCH, &payload);
+                        if wire::looks_like_json(&payload) {
+                            json_frames_seen.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
+
+                        // **The payload arrives already framed and is written through unchanged.**
+                        // Phase 1 concatenated the batch and its progress frame into one buffer;
+                        // under Phase 2's pre-generated corpus that concatenation would allocate a
+                        // payload-sized buffer *inside the timed interval*, which §16.8 makes an
+                        // invalidator. Both candidates therefore write the batch and its progress
+                        // frame as two separate writes — symmetric, and allocation-free for the
+                        // payload. `Bytes` clones share storage, so no copy happens here either.
+                        if let Err(e) = socket.send(Message::Binary(payload)).await {
+                            state.observe_cancel(Instant::now());
+                            break Terminal::TransportFailed(format!("send: {e}"));
+                        }
+
                         let progress = wire::frame(
                             wire::TAG_PROGRESS,
                             &wire::progress_payload(
@@ -94,17 +102,9 @@ pub async fn drive(
                                 total_batches,
                             ),
                         );
-                        for f in [&out, &progress] {
-                            if wire::looks_like_json(f) {
-                                json_frames_seen
-                                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                            }
-                        }
-                        out.extend_from_slice(&progress);
-
-                        if let Err(e) = socket.send(Message::Binary(out.into())).await {
+                        if socket.send(Message::Binary(progress.into())).await.is_err() {
                             state.observe_cancel(Instant::now());
-                            break Terminal::TransportFailed(format!("send: {e}"));
+                            break Terminal::TransportFailed("send progress".into());
                         }
                     }
                     None => break Terminal::Completed,

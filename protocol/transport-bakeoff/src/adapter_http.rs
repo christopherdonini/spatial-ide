@@ -27,7 +27,11 @@ use crate::wire;
 /// The response body. Its `Drop` is the cancellation signal: if the stream is dropped before it has
 /// emitted its terminal frame, the peer went away and the producer must learn about it.
 pub struct BodyStream {
-    rx: mpsc::Receiver<Vec<u8>>,
+    rx: mpsc::Receiver<bytes::Bytes>,
+    /// A progress frame produced alongside a batch and yielded on the next poll. Batch and progress
+    /// are two separate chunks on both candidates: concatenating them would allocate a
+    /// payload-sized buffer inside Phase 2's timed interval, which §16.8 makes an invalidator.
+    pending_progress: Option<bytes::Bytes>,
     state: Arc<StreamState>,
     checkpoints: Arc<Checkpoints>,
     json_frames_seen: Arc<AtomicU64>,
@@ -39,7 +43,7 @@ pub struct BodyStream {
 
 impl BodyStream {
     pub fn new(
-        rx: mpsc::Receiver<Vec<u8>>,
+        rx: mpsc::Receiver<bytes::Bytes>,
         state: Arc<StreamState>,
         checkpoints: Arc<Checkpoints>,
         total_batches: u64,
@@ -47,6 +51,7 @@ impl BodyStream {
     ) -> Self {
         Self {
             rx,
+            pending_progress: None,
             state,
             checkpoints,
             json_frames_seen,
@@ -71,33 +76,35 @@ impl Stream for BodyStream {
             return Poll::Ready(None);
         }
 
+        // A progress frame queued alongside the previous batch. Yielded as its own chunk so the
+        // batch payload is written through untouched — see `pending_progress`.
+        if let Some(p) = this.pending_progress.take() {
+            return Poll::Ready(Some(Ok(p)));
+        }
+
         match this.rx.poll_recv(cx) {
             Poll::Pending => Poll::Pending,
             Poll::Ready(Some(payload)) => {
                 let len = payload.len();
-                let batch = wire::frame(wire::TAG_BATCH, &payload);
-                if wire::looks_like_json(&batch) {
+                if wire::looks_like_json(&payload) {
                     this.json_frames_seen.fetch_add(1, Ordering::Relaxed);
                 }
                 this.state.note_written(len);
                 this.batches_sent += 1;
 
-                let p = wire::progress_payload(
-                    this.batches_sent,
-                    this.state.bytes_emitted(),
-                    this.total_batches,
+                let progress = wire::frame(
+                    wire::TAG_PROGRESS,
+                    &wire::progress_payload(
+                        this.batches_sent,
+                        this.state.bytes_emitted(),
+                        this.total_batches,
+                    ),
                 );
-                let progress = wire::frame(wire::TAG_PROGRESS, &p);
-                if wire::looks_like_json(&progress) {
-                    this.json_frames_seen.fetch_add(1, Ordering::Relaxed);
-                }
+                this.pending_progress = Some(bytes::Bytes::from(progress));
 
-                // Batch frame and its progress frame leave together; the consumer's shared frame
-                // decoder splits them. One chunk keeps the write count down without changing what
-                // crosses the wire.
-                let mut out = batch;
-                out.extend_from_slice(&progress);
-                Poll::Ready(Some(Ok(bytes::Bytes::from(out))))
+                // The payload arrives already framed and is handed to hyper unchanged; the `Bytes`
+                // clone shares storage, so no payload-sized copy or allocation happens here.
+                Poll::Ready(Some(Ok(payload)))
             }
             Poll::Ready(None) => {
                 // Producer channel closed: the operation ran to completion.
@@ -132,7 +139,7 @@ mod tests {
 
     #[tokio::test]
     async fn dropping_the_body_early_makes_cancellation_producer_visible() {
-        let (tx, rx) = mpsc::channel::<Vec<u8>>(4);
+        let (tx, rx) = mpsc::channel::<bytes::Bytes>(4);
         let state = StreamState::new(StreamId::new());
         let cps = Arc::new(Checkpoints::default());
         let body = BodyStream::new(
@@ -143,7 +150,7 @@ mod tests {
             Arc::new(AtomicU64::new(0)),
         );
 
-        tx.send(vec![0xff, 0xff, 0xff, 0xff]).await.unwrap();
+        tx.send(bytes::Bytes::from_static(&[0xff, 0xff, 0xff, 0xff])).await.unwrap();
         // Box::pin, not pin_mut!: pin_mut! shadows the binding with a `Pin<&mut _>`, so dropping it
         // would drop the *reference* and leave the stream alive until end of scope — the drop under
         // test would never actually run.
@@ -163,7 +170,7 @@ mod tests {
 
     #[tokio::test]
     async fn clean_completion_is_not_reported_as_cancellation() {
-        let (tx, rx) = mpsc::channel::<Vec<u8>>(4);
+        let (tx, rx) = mpsc::channel::<bytes::Bytes>(4);
         let state = StreamState::new(StreamId::new());
         let cps = Arc::new(Checkpoints::default());
         let body = BodyStream::new(
@@ -173,11 +180,15 @@ mod tests {
             1,
             Arc::new(AtomicU64::new(0)),
         );
-        tx.send(vec![0xff, 0xff, 0xff, 0xff]).await.unwrap();
+        tx.send(bytes::Bytes::from_static(&[0xff, 0xff, 0xff, 0xff])).await.unwrap();
         drop(tx);
 
+        // Batch, then its progress frame as a separate chunk, then the terminal frame. Progress is
+        // no longer concatenated onto the batch: doing so would allocate a payload-sized buffer
+        // inside Phase 2's timed interval, which §16.8 makes an invalidator.
         let mut body = Box::pin(body);
         let _batch = body.next().await.expect("batch chunk");
+        let _progress = body.next().await.expect("progress chunk");
         let _terminal = body.next().await.expect("terminal frame");
         assert!(body.next().await.is_none());
         drop(body);
