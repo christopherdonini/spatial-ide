@@ -53,6 +53,64 @@ fn should_run_m4() -> bool {
     std::env::var("RUN_M4").map(|v| v == "1").unwrap_or(false)
 }
 
+/// Freeze forensics (not a milestone): dual heartbeat to localize which side
+/// of the JS/Rust boundary stops first when the reproducible stall hits.
+/// `rust-heartbeat.txt` is written by a plain OS thread (see run()) with no
+/// dependency on the webview at all -- it proves the *process* is still
+/// being scheduled. `js-heartbeat.txt` is written here, invoked fire-and-
+/// forget from a JS setInterval -- it proves the JS event loop is still
+/// ticking *and* the IPC round trip still completes. On the next freeze,
+/// whichever file's timestamp stops moving first (or both, simultaneously)
+/// tells us whether this is a JS-side stall (occlusion/throttling), an
+/// IPC/Rust-side stall (e.g. a held Mutex), or a whole-process suspension.
+/// Written to the OS temp dir, deliberately *not* the CWD (src-tauri):
+/// `tauri dev`'s file watcher watches that whole tree for rebuild triggers,
+/// and a 1 Hz write loop inside it would retrigger a rebuild-and-restart
+/// every second -- a self-inflicted restart loop indistinguishable, from
+/// the outside, from the very freeze this instrumentation exists to
+/// diagnose. Found by hitting exactly that loop while first wiring this up.
+fn heartbeat_path(filename: &str) -> std::path::PathBuf {
+    std::env::temp_dir().join(filename)
+}
+
+fn write_heartbeat(filename: &str, seq: u64) {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let _ = std::fs::write(heartbeat_path(filename), format!("seq={seq} ts_ms={now}\n"));
+}
+
+#[tauri::command]
+fn js_heartbeat(seq: u64) {
+    write_heartbeat("js-heartbeat.txt", seq);
+}
+
+/// Freeze forensics: a persistent, immediately-flushed BEGIN/END marker
+/// around every potentially-blocking Rust-side operation (lock acquisition,
+/// command bodies). Explicit flush matters because stdout is line-buffered
+/// under a terminal but can be block-buffered when piped to a log file --
+/// without it, a marker for an operation that then hangs might never
+/// actually reach disk, defeating the whole "last BEGIN without its END
+/// names the culprit" analysis. Rust's own heartbeat thread (above)
+/// acquires no application locks, so it staying alive while a checkpoint's
+/// BEGIN has no matching END points specifically at *that* lock/operation,
+/// not at the process being generally wedged.
+fn checkpoint(label: &str) {
+    use std::io::Write;
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    println!("[CHECKPOINT] {now} {label}");
+    let _ = std::io::stdout().flush();
+}
+
+#[tauri::command]
+fn js_checkpoint(label: String) {
+    checkpoint(&format!("JS:{label}"));
+}
+
 /// M3: GPU pick index -> exact source coordinate, resolved host-side in f64.
 ///
 /// This is ADR-003's prescribed picking path. The index arrives from the GPU
@@ -113,8 +171,12 @@ fn commit_vertex_edit(
         .0
         .as_ref()
         .ok_or("P2 not loaded -- RUN_M4 must be 1")?;
+    checkpoint(&format!("LOCK_BEGIN commit_vertex_edit id={id}"));
     let mut d = dataset.lock().map_err(|_| "P2 dataset lock poisoned")?;
-    d.commit_vertex(id, e, n)
+    checkpoint(&format!("LOCK_ACQUIRED commit_vertex_edit id={id}"));
+    let result = d.commit_vertex(id, e, n);
+    checkpoint(&format!("LOCK_END commit_vertex_edit id={id}"));
+    result
 }
 
 /// Read-back half of the M3-style bit-exact commit round trip: resolves a
@@ -129,8 +191,11 @@ fn resolve_p2_vertex(
         .0
         .as_ref()
         .ok_or("P2 not loaded -- RUN_M4 must be 1")?;
+    checkpoint(&format!("LOCK_BEGIN resolve_p2_vertex id={id}"));
     let d = dataset.lock().map_err(|_| "P2 dataset lock poisoned")?;
+    checkpoint(&format!("LOCK_ACQUIRED resolve_p2_vertex id={id}"));
     let (e, n) = d.resolve_vertex(id)?;
+    checkpoint(&format!("LOCK_END resolve_p2_vertex id={id}"));
     Ok(PickedCoordinate {
         crs: "EPSG:2056",
         e,
@@ -258,6 +323,25 @@ pub fn run() {
     // wait on) rather than unconditional: it costs ~1-2s and ~160MB (10M
     // vertices * 8 bytes * 2) that most runs (M0-M3) have no use for.
     let run_m4 = std::env::var("RUN_M4").map(|v| v == "1").unwrap_or(false);
+
+    // Freeze forensics (README diagnostic note): a plain OS thread, no
+    // Tauri/webview APIs at all, so this keeps ticking as long as the OS is
+    // scheduling this process's threads -- independent of whatever the
+    // webview/JS side is doing. Gated behind RUN_M4 for the same reason the
+    // JS heartbeat is (see main.ts): an unconditional periodic mechanism
+    // would run during any future M0-M3 rerun that never had this
+    // instrumentation present when its committed numbers were measured.
+    if run_m4 {
+        std::thread::spawn(|| {
+            let mut seq = 0u64;
+            loop {
+                write_heartbeat("rust-heartbeat.txt", seq);
+                seq += 1;
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        });
+    }
+
     let p2_dataset: Option<Arc<p2::SharedP2Dataset>> = if run_m4 {
         let d = p2::P2Dataset::generate();
         println!(
@@ -281,6 +365,8 @@ pub fn run() {
             should_run_m2,
             should_run_m3,
             should_run_m4,
+            js_heartbeat,
+            js_checkpoint,
             resolve_pick,
             commit_vertex_edit,
             resolve_p2_vertex,
@@ -357,22 +443,30 @@ pub fn run() {
                     // protocol handler thread, consistent with how
                     // commit_vertex_edit/resolve_p2_vertex handle the
                     // identical failure a few dozen lines above.
-                    Some(shared) => match shared.lock() {
-                        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Cow::Owned(Vec::new())),
-                        Ok(dataset) => match params.get("bbox") {
-                            Some(bbox_str) => {
-                                let parts: Vec<f64> =
-                                    bbox_str.split(',').filter_map(|s| s.parse().ok()).collect();
-                                match parts[..] {
-                                    [e_min, n_min, e_max, n_max] => (
-                                        StatusCode::OK,
-                                        Cow::Owned(dataset.arrow_ipc_bbox(e_min, n_min, e_max, n_max)),
-                                    ),
-                                    _ => (StatusCode::BAD_REQUEST, Cow::Owned(Vec::new())),
+                    Some(shared) => {
+                        checkpoint(&format!("LOCK_BEGIN /p2 bbox={:?}", params.get("bbox")));
+                        let result = match shared.lock() {
+                            Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Cow::Owned(Vec::new())),
+                            Ok(dataset) => {
+                                checkpoint(&format!("LOCK_ACQUIRED /p2 bbox={:?}", params.get("bbox")));
+                                match params.get("bbox") {
+                                    Some(bbox_str) => {
+                                        let parts: Vec<f64> =
+                                            bbox_str.split(',').filter_map(|s| s.parse().ok()).collect();
+                                        match parts[..] {
+                                            [e_min, n_min, e_max, n_max] => (
+                                                StatusCode::OK,
+                                                Cow::Owned(dataset.arrow_ipc_bbox(e_min, n_min, e_max, n_max)),
+                                            ),
+                                            _ => (StatusCode::BAD_REQUEST, Cow::Owned(Vec::new())),
+                                        }
+                                    }
+                                    None => (StatusCode::OK, Cow::Owned(dataset.full_arrow_ipc())),
                                 }
                             }
-                            None => (StatusCode::OK, Cow::Owned(dataset.full_arrow_ipc())),
-                        }
+                        };
+                        checkpoint(&format!("LOCK_END /p2 bbox={:?}", params.get("bbox")));
+                        result
                     }
                 }
             } else if let Some(chunk_str) = params.get("chunk") {

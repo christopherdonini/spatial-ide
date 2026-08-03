@@ -66,15 +66,42 @@ const MIN_CENTROID_WEIGHT = 500;
 const STATIC_COLOR: [number, number, number] = [200, 200, 200];
 const OVERLAY_COLOR: [number, number, number] = [255, 90, 90];
 
+/**
+ * Current phase's label, for the BEGIN/END checkpoint pairing below --
+ * module-scoped rather than a runM4() local because setStatus/checkpoint
+ * must keep working identically regardless of which function calls them.
+ */
+let currentCheckpointPhase: string | null = null;
+
 function setStatus(s: string) {
   const el = document.querySelector<HTMLParagraphElement>("#m4-status");
   if (el) el.textContent = s;
+  // Freeze forensics: each new phase implicitly ENDs the previous one and
+  // BEGINs itself. If a phase's operations hang, its BEGIN is the last
+  // checkpoint written (this setStatus call for the next phase never
+  // executes) -- "the last BEGIN without its END" directly names which of
+  // the 12 phases below was in flight when the freeze hit.
+  if (currentCheckpointPhase !== null) checkpoint(`END ${currentCheckpointPhase}`);
+  currentCheckpointPhase = s;
+  checkpoint(`BEGIN ${s}`);
 }
 
 function appendLog(line: string) {
   const el = document.querySelector<HTMLPreElement>("#m4-log");
   if (el) el.textContent = (el.textContent ? el.textContent + "\n" : "") + line;
   console.log("[M4]", line);
+}
+
+/**
+ * Freeze forensics: persistent BEGIN/END marker around every potentially-
+ * blocking JS-side operation, mirroring lib.rs's checkpoint(). Deliberately
+ * fire-and-forget (not awaited) -- if a future invoke() call itself hangs
+ * (e.g. Rust-side lock contention), this must not become another blocking
+ * point, or the very presence of the checkpoint would corrupt the
+ * "last BEGIN without its END" analysis it exists to enable.
+ */
+function checkpoint(label: string) {
+  void invoke("js_checkpoint", { label }).catch(() => {});
 }
 
 // ---- shared small helpers ------------------------------------------------
@@ -460,7 +487,10 @@ interface PickLatencyResult {
   p50Ms: number;
   samples: number;
   timeouts: number;
-  lastReturnedId: bigint | null;
+  // string, not bigint: this result is embedded directly in M4Report, and
+  // JSON.stringify throws TypeError on a raw bigint (silently killing runM4
+  // mid-promise-chain with no visible symptom -- see README diagnostic note).
+  lastReturnedId: string | null;
   lastLayerId: string | null;
 }
 
@@ -520,7 +550,13 @@ async function measurePickLatency(
     }
   }
   const sorted = [...times].sort((a, b) => a - b);
-  return { p50Ms: percentile(sorted, 50), samples: times.length, timeouts, lastReturnedId, lastLayerId };
+  return {
+    p50Ms: percentile(sorted, 50),
+    samples: times.length,
+    timeouts,
+    lastReturnedId: lastReturnedId === null ? null : lastReturnedId.toString(),
+    lastLayerId,
+  };
 }
 
 // ---- report shape -----------------------------------------------------
@@ -939,10 +975,15 @@ export async function runM4(): Promise<void> {
   const pickVisible = await measurePickLatency(pickDeck, resolveVisibleId, pickX, pickY, PICK_RADIUS_PX, PICK_LATENCY_SAMPLES);
   const overlayWinsCollision = pickVisible.lastLayerId === "m4-pick-visible-overlay";
 
-  // pickDeck stays alive (finalized after the commit-reupload step below,
-  // which reuses it) -- one fewer Deck instance across the session, a
-  // further mitigation for the hardware/driver stall in the README scope
-  // limits, on top of not being needed for anything else in the meantime.
+  // Reverted from an earlier "reuse pickDeck for the commit-reupload step
+  // too" change: freeze forensics (README diagnostic note) found the exact
+  // same stall reproduced with the window never minimized, foreground the
+  // whole time -- ruling out occlusion and pointing at this reuse itself
+  // (a 4th sequential layer-id swap on one Deck instance, after 3 prior
+  // pick-to-grab renders). Finalizing here and constructing a fresh Deck
+  // for the reupload step below is the confirming experiment, not just a
+  // reversion.
+  pickDeck.finalize();
   appendLog(
     `pick-to-grab: full-set p50 ${pickFullSet.p50Ms.toFixed(3)} ms, overlay p50 ${pickOverlay.p50Ms.toFixed(3)} ms, ` +
       `visible-subset p50 ${pickVisible.p50Ms.toFixed(3)} ms, overlay wins collision: ${overlayWinsCollision}`,
@@ -987,27 +1028,45 @@ export async function runM4(): Promise<void> {
   const fullPatchIdx = draggedVertexId;
   fullStaticPositions[fullPatchIdx * 2] = fullDrag.finalOverlayE - originE;
   fullStaticPositions[fullPatchIdx * 2 + 1] = fullDrag.finalOverlayN - originN;
-  // Reuses pickDeck (still alive, finalized right after this) rather than
-  // constructing yet another fresh Deck instance — cutting Deck-instance
-  // churn is a further mitigation for the hardware/driver stall documented
-  // in the README scope limits, on top of not needing a new one here.
+  // A fresh Deck instance, not a reuse of pickDeck (see the note above) --
+  // "m4-commit-reupload" is a layer id never rendered before on this Deck,
+  // so it's a first-time upload of the (in-place mutated) buffer, not a
+  // forced re-diff of an already-rendered layer under a stable id. deck.gl
+  // has no partial-attribute-update API either way, so the measured cost
+  // is still a reasonable proxy for "reupload the whole buffer after a
+  // one-vertex edit" -- but the specific scenario of a stable-id layer
+  // silently keeping a stale GPU buffer after its backing array is mutated
+  // without a prop change (the risk the reference-identity discipline
+  // elsewhere in this file exists to avoid) is not exercised here.
+  let reuploadRenderResolve: ((renderedInTime: boolean) => void) | null = null;
+  const reuploadDeck: Deck<OrthographicView> = new Deck({
+    canvas,
+    views: new OrthographicView({ id: "ortho", flipY: false }),
+    viewState: { target: [0, 0, 0], zoom: ZOOM },
+    controller: false,
+    useDevicePixels: false,
+    _animate: true,
+    layers: [],
+    onAfterRender: () => {
+      const r = reuploadRenderResolve;
+      reuploadRenderResolve = null;
+      r?.(true);
+    },
+  });
   const reuploadT0 = performance.now();
-  // "m4-commit-reupload" is a layer id pickDeck has never rendered before,
-  // so deck.gl has no prior instance to diff against and uploads
-  // unconditionally -- this is a first-time upload of the (in-place
-  // mutated) buffer, not a forced re-diff of an already-rendered layer
-  // under a stable id. deck.gl has no partial-attribute-update API either
-  // way, so the measured cost is still a reasonable proxy for "reupload
-  // the whole buffer after a one-vertex edit" -- but the specific scenario
-  // of a stable-id layer silently keeping a stale GPU buffer after its
-  // backing array is mutated without a prop change (the risk the
-  // reference-identity discipline elsewhere in this file exists to avoid)
-  // is not exercised by this measurement.
-  const reuploadRenderedInTime = await renderPickLayers([
-    vertexLayer("m4-commit-reupload", fullStaticData, STATIC_COLOR, false),
-  ]);
+  const reuploadRenderedInTime = await new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (renderedInTime: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(renderedInTime);
+    };
+    reuploadRenderResolve = finish;
+    reuploadDeck.setProps({ layers: [vertexLayer("m4-commit-reupload", fullStaticData, STATIC_COLOR, false)] });
+    setTimeout(() => finish(false), CAPTURE_TIMEOUT_MS);
+  });
   const patchAndReuploadMs = performance.now() - reuploadT0;
-  pickDeck.finalize();
+  reuploadDeck.finalize();
   const patchAndReuploadTimedOut = !reuploadRenderedInTime;
   appendLog(
     patchAndReuploadTimedOut
@@ -1145,4 +1204,5 @@ export async function runM4(): Promise<void> {
   }
   setStatus("M4: editing measurement complete");
   await invoke("log_m4_report", { reportJson: JSON.stringify(report, null, 2) });
+  checkpoint("END M4: editing measurement complete");
 }

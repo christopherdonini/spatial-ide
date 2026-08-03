@@ -215,7 +215,48 @@ async function runMilestones() {
   await maybeRunM15();
 }
 
+// Freeze forensics (README diagnostic note): fire-and-forget 1 Hz heartbeat,
+// deliberately NOT awaited -- if a future invoke() call hangs (e.g. Rust-side
+// lock contention), this loop must keep firing regardless, so js-heartbeat.txt
+// stopping is unambiguous evidence the JS event loop itself stopped ticking,
+// not just that one particular IPC round trip stalled. Gated behind RUN_M4
+// (reviewer finding: an unconditional periodic invoke() would run during any
+// future rerun of a precision-sensitive milestone like M2/M3, which never had
+// this instrumentation present when their committed PASS numbers were
+// measured) -- independent of Rust's own rust-heartbeat.txt thread
+// (src-tauri/src/lib.rs) -- whichever file's timestamp stops moving first on
+// the next freeze localizes which side of the JS/Rust boundary stopped.
+function startJsHeartbeat() {
+  let seq = 0;
+  setInterval(() => {
+    void invoke("js_heartbeat", { seq: seq++ }).catch(() => {});
+  }, 1000);
+}
+
+// Freeze forensics: reports any uncaught exception or unhandled promise
+// rejection via the same js_checkpoint sink used for the BEGIN/END phase
+// markers (src/m4-editing.ts). Event-driven, not a periodic timer, so safe
+// to leave unconditional (zero cost unless something actually throws) --
+// unlike the heartbeat above. Added after reviewing the freeze evidence: a
+// GPU-independent setTimeout inside the stalled phase never fired either,
+// which "the render loop specifically is stuck" doesn't explain but a
+// silently-swallowed synchronous exception in a Promise executor would --
+// this listener exists to catch that directly rather than infer it.
+function startErrorReporting() {
+  window.addEventListener("unhandledrejection", (ev) => {
+    const stack = ev.reason instanceof Error ? ev.reason.stack : undefined;
+    void invoke("js_checkpoint", { label: `UNHANDLED_REJECTION: ${String(ev.reason)} STACK: ${stack ?? "(none)"}` }).catch(() => {});
+  });
+  window.addEventListener("error", (ev) => {
+    void invoke("js_checkpoint", { label: `UNCAUGHT_ERROR: ${ev.message} @ ${ev.filename}:${ev.lineno}` }).catch(() => {});
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
+  startErrorReporting();
+  void (async () => {
+    if (await invoke<boolean>("should_run_m4").catch(() => false)) startJsHeartbeat();
+  })();
   void runM0Report();
   void runMilestones();
 });
