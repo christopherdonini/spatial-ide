@@ -112,8 +112,15 @@ export class OffsetFrame {
    * threshold trade-off needs.
    */
   readonly events: RecenterEvent[] = [];
+  // Not a constructor parameter property (`constructor(readonly thresholdM...)`)
+  // -- Node's native TypeScript type-stripping (used to run this file's CI
+  // tests with zero build step/dependency) doesn't support that shorthand,
+  // only plain field declarations. Behaviourally identical either way.
+  readonly thresholdM: number;
 
-  constructor(readonly thresholdM: number) {}
+  constructor(thresholdM: number) {
+    this.thresholdM = thresholdM;
+  }
 
   get originE(): number {
     return this.e;

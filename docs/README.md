@@ -24,7 +24,7 @@ Stable reference set for humans and AI assistants working on Spatial IDE. Read `
 
 ## Conventions
 
-- Architectural decisions are recorded as ADRs in `adr/` (numbered, immutable once accepted; amendments are appended, never rewritten). Accepted: ADR-001 (amended), ADR-002 (amended), ADR-004–008. **Proposed: ADR-003** (renderer + arbitrary CRS — blocked on the EPSG:2056 spike). **Open: ADR-009** (license and open-core boundary — see 14, before any public code).
+- Architectural decisions are recorded as ADRs in `adr/` (numbered, immutable once accepted; amendments are appended, never rewritten). Accepted: ADR-001 (amended), ADR-002 (amended), **ADR-003** (renderer + arbitrary CRS — accepted for Windows/WebView2 on the concluded EPSG:2056 spike evidence; macOS/Linux accepted at architecture level only, pending hardware validation — see 07), ADR-004–008. **Proposed: ADR-010** (render frames, origins, and boundary rules — drafted from spike M2/M3/M4 findings, awaiting review). **Open: ADR-009** (license and open-core boundary — see 14, before any public code).
 - Development-time AI practices live in `AI_DEVELOPMENT.md`, deliberately outside the constitution.
 - Unresolved decisions are marked inline as `> OPEN:` blocks. Each names the doc/phase where it must be resolved.
 - Changing 01 requires an ADR explaining why a first principle failed.

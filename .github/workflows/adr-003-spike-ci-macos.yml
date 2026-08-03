@@ -1,0 +1,85 @@
+name: ADR-003 spike CI (macOS)
+
+# Cross-platform regression coverage for the concluded ADR-003 spike
+# (spikes/adr-003-crs-rendering), added when the spike closed. This job
+# validates, on macOS, exactly:
+#   - builds and tests (cargo build/test, tsc --noEmit)
+#   - serialization and exact-ID behaviour (cargo test: p2/markers tests --
+#     Arrow IPC round trips, id-vs-ordinal divergence, commit/resolve
+#     exactness; plus the bit-pattern encoding tests, Rust and JS sides)
+#   - CRS/local-frame calculations (offset-frame.test.ts: recenter
+#     threshold derivation, f64-before-f32-narrowing order, OffsetFrame
+#     recenter/toLocal semantics)
+#   - editing and cancellation semantics (cargo test: P2 commit/resolve
+#     round trips and rejection of invalid input; cancellation.test.ts:
+#     generic AbortController-to-fetch-rejection behaviour against a plain
+#     Node http server)
+#   - report-schema validation (report-schema.test.ts: milestone report
+#     shapes checked against fixtures; also unit-tests the bit-pattern-hex
+#     checker used at the IPC boundary, though no report field currently
+#     carries that encoding directly)
+#
+# This does NOT validate, and cannot on a CI runner: native WebView
+# integration (WebView2/WKWebView/WebKitGTK), frame pacing, GPU
+# performance, picking latency, or driver behaviour. Those require real
+# hardware and a real webview -- see spikes/adr-003-crs-rendering/README.md
+# for the actual measured numbers (Windows/WebView2, two GPUs, this spike's
+# only hardware evidence) and ADR-003's Resolution for what "accepted at
+# architecture level only" means for macOS/Linux until that hardware
+# validation happens. A green run here is not evidence this spike's
+# frame-time/picking-latency/precision numbers hold on macOS -- only that
+# the platform-independent logic behind them is still correct there.
+
+on:
+  push:
+    paths:
+      - "spikes/adr-003-crs-rendering/**"
+      - ".github/workflows/adr-003-spike-ci-macos.yml"
+  pull_request:
+    paths:
+      - "spikes/adr-003-crs-rendering/**"
+      - ".github/workflows/adr-003-spike-ci-macos.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: spikes/adr-003-crs-rendering/app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: spikes/adr-003-crs-rendering/app/package-lock.json
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: TypeScript type-check (builds and tests)
+        run: npx tsc --noEmit
+
+      - name: Rust build (builds and tests)
+        working-directory: spikes/adr-003-crs-rendering/app/src-tauri
+        run: cargo build
+
+      - name: Rust unit tests (serialization/exact-ID/editing semantics)
+        working-directory: spikes/adr-003-crs-rendering/app/src-tauri
+        run: cargo test --lib
+
+      - name: CRS/local-frame calculation tests
+        run: node --test src/offset-frame.test.ts
+
+      - name: Bit-pattern serialization tests (JS side)
+        run: node --test src/bit-encoding.test.ts
+
+      - name: Cancellation-semantics tests
+        run: node --test src/cancellation.test.ts
+
+      - name: Report-schema validation tests
+        run: node --test src/report-schema.test.ts

@@ -2,7 +2,7 @@
 
 ## Performance budgets (CI-enforced; regressions fail the build)
 
-- 60 fps pan/zoom across the benchmark matrix below (06)
+- ≤ vsync interval, zero dropped frames, across the benchmark matrix below (06) — *(amended 2026-08-03, ADR-003 spike M4: a display's compositor cannot present faster than its own refresh tick regardless of how cheap a frame is to produce. M4's graded scenario measured consistently at 16.7 ms p50 on a 60 Hz display — 0.7 ms over a naive "≤16 ms" reading — which is the vsync floor being hit exactly, not a miss. Expressing the budget as a fixed millisecond figure fails well-behaved code the instant it touches a real compositor; expressing it as the display's own interval does not. "The display's own interval" means the fixed reference hardware profile's own refresh rate (already required below — "tested on fixed reference hardware profiles"), not whatever a runtime happens to negotiate — a renderer that let power-saving mode or variable refresh silently lower the target has not met this budget, only relocated the miss.)*
 - First pixels < 100 ms after query start (06)
 - Cold open of a 5 GB GeoParquet < 5 s (05)
 - Cancellation acknowledged < 100 ms, any operation (01)

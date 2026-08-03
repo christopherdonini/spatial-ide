@@ -12,7 +12,11 @@ Minimal kernel + engine + renderer + one frontend, all speaking SKP. This proves
 
 **Gate — resolved:** ADR-001 accepted (as amended). Rust core + Tauri shell; copy-minimized binary data plane (ADR-004).
 
-**Gate — open:** the **ADR-003 arbitrary-CRS spike** — interactively edit a large EPSG:2056 dataset at centimetre picking accuracy without converting to 3857, on all three webviews. The renderer is provisional until this passes; failure routes the projected canvas to a purpose-built WebGPU renderer without changing the shell.
+**Gate — resolved (2026-08-03):** the **ADR-003 arbitrary-CRS spike** — deck.gl custom layers accepted as the projected-canvas renderer architecture, on Windows/WebView2 evidence (`spikes/adr-003-crs-rendering/README.md`, M0–M5; see ADR-003's Resolution for the full decision). Kernel + engine + renderer modules may now begin against this architecture.
+
+**Gate — open, follow-up to the above:** **macOS/WKWebView and Linux/WebKitGTK hardware validation.** ADR-003's acceptance on those platforms is architecture-level only — every measured number in the spike (frame time, picking latency, precision, cancellation) is Windows/WebView2/ANGLE-D3D11 evidence, on one display's 60 Hz vsync, and does not transfer by assumption. CI (`.github/workflows/adr-003-spike-ci-{macos,linux}.yml`) covers the platform-independent logic only (builds/tests, serialization, CRS math, editing/cancellation semantics, report schemas) and explicitly does not touch native WebView integration, frame pacing, GPU performance, picking latency, or driver behaviour — this gate is not closed by CI going green. Required before claiming production support on those platforms.
+
+**Gate — open, follow-up to the above:** **the transport bake-off and server-side spatial indexing**, both named in the spike's Outcome as undesigned rather than done — a real streaming/backpressured binary transport (ADR-004's data-plane clause; the current custom-protocol prototype has no producer-side cancellation and no lower-level streamed-body option) and a spatial index for server-side viewport filtering (the spike's own bbox diagnostic used a deliberately crude unindexed linear scan). Both are engine/kernel-module work, not renderer work, and belong to this slice's build-out, not to a future spike.
 
 **Gate — open:** **ADR-009 license and open-core boundary** (14) — must be resolved before the repository goes public, at the latest by the end of Prototype.
 
