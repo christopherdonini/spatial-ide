@@ -148,7 +148,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if args.iter().any(|a| a == "--launch") {
-        launch_browser(&launch_url, &out_dir);
+        if launch_browser(&launch_url, &out_dir) {
+            // The browser already holds the URL in its argv, so the file has served its purpose.
+            // Leaving a cleartext credential on disk next to the reports would move the hole this
+            // fragment scheme closed rather than close it (docs/09). On the manual path the file
+            // must survive, and that residual is stated in ADR-012's threat model.
+            let _ = std::fs::remove_file(&url_file);
+            println!("[bakeoff] launch URL file removed after handoff");
+        }
     }
 
     axum::serve(listener, app).await?;
@@ -160,7 +167,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Uses an **isolated user-data directory** rather than the operator's default profile: any
 /// installed extension holding `127.0.0.1` host permissions could otherwise read the session token
 /// off the page. A launch failure is reported rather than silently discarded.
-fn launch_browser(url: &str, out_dir: &std::path::Path) {
+fn launch_browser(url: &str, out_dir: &std::path::Path) -> bool {
     let profile = out_dir.join("edge-profile");
     let mut candidates: Vec<std::path::PathBuf> = vec![
         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe".into(),
@@ -199,7 +206,7 @@ fn launch_browser(url: &str, out_dir: &std::path::Path) {
             Ok(_) => {
                 println!("[bakeoff] launched {} with an isolated profile", exe.display());
                 println!("[bakeoff] KEEP THE WINDOW VISIBLE AND FOCUSED for the whole run");
-                return;
+                return true;
             }
             // A failed launch is reported, never discarded: an earlier revision swallowed the
             // error and left the harness waiting forever with nothing on screen to explain why.
@@ -211,6 +218,7 @@ fn launch_browser(url: &str, out_dir: &std::path::Path) {
          in a VISIBLE, FOCUSED window",
         out_dir.join("launch-url.txt").display()
     );
+    false
 }
 
 fn router(state: Shared) -> Router {
@@ -869,6 +877,74 @@ mod security_tests {
             terminal,
             Some(wire::TERM_COMPLETED),
             "a completed stream must end in a Completed terminal frame"
+        );
+    }
+
+    /// Raw WebSocket handshake, returning the HTTP status of the upgrade response.
+    async fn ws_probe(port: u16, origin: Option<&str>, protocols: Option<&str>) -> u16 {
+        let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        let mut req = format!(
+            "GET /stream/ws HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n\
+             Upgrade: websocket\r\nConnection: Upgrade\r\n\
+             Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n"
+        );
+        if let Some(o) = origin {
+            req.push_str(&format!("Origin: {o}\r\n"));
+        }
+        if let Some(p) = protocols {
+            req.push_str(&format!("Sec-WebSocket-Protocol: {p}\r\n"));
+        }
+        req.push_str("\r\n");
+        s.write_all(req.as_bytes()).await.unwrap();
+        let mut buf = vec![0u8; 256];
+        let n = s.read(&mut buf).await.unwrap();
+        String::from_utf8_lossy(&buf[..n])
+            .split_whitespace()
+            .nth(1)
+            .and_then(|c| c.parse().ok())
+            .unwrap_or(0)
+    }
+
+    /// The WebSocket endpoint extracts its credential from the subprotocol list — a **different**
+    /// code path from the `Authorization` header the other endpoints use, and previously exercised
+    /// only by the positive case. Since ADR-012 recommends adopting this transport, a reject-side
+    /// bug here would sit directly under the recommendation.
+    #[tokio::test]
+    async fn websocket_upgrade_rejects_bad_credentials_and_origins() {
+        let (port, token) = spawn_server().await;
+        let origin = format!("http://127.0.0.1:{port}");
+
+        // Positive control first — without it the four negative cases below could all pass
+        // because the endpoint is simply broken.
+        assert_eq!(
+            ws_probe(port, Some(&origin), Some(&format!("bakeoff.v0, {token}"))).await,
+            101,
+            "a correctly credentialed same-origin upgrade must succeed"
+        );
+
+        // No credential at all: only the public subprotocol name is offered.
+        assert_eq!(ws_probe(port, Some(&origin), Some("bakeoff.v0")).await, 401);
+        // No Sec-WebSocket-Protocol header whatsoever.
+        assert_eq!(ws_probe(port, Some(&origin), None).await, 401);
+        // Wrong credential, correct length.
+        assert_eq!(
+            ws_probe(port, Some(&origin), Some(&format!("bakeoff.v0, {}", "0".repeat(64)))).await,
+            401
+        );
+        // Valid credential, foreign origin.
+        assert_eq!(
+            ws_probe(
+                port,
+                Some("http://evil.example"),
+                Some(&format!("bakeoff.v0, {token}"))
+            )
+            .await,
+            403
+        );
+        // Valid credential, `null` origin — the WebView2 opaque-origin shape.
+        assert_eq!(
+            ws_probe(port, Some("null"), Some(&format!("bakeoff.v0, {token}"))).await,
+            403
         );
     }
 

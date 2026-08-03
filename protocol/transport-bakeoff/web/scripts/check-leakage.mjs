@@ -141,18 +141,28 @@ for (const t of ['WebSocketTransport', 'HttpStreamTransport']) {
 }
 
 // Assertion 3: the canary. If a planted leak does not fail, the scan proves nothing.
+//
+// Leak placement is deliberate. An earlier canary put every planted leak *after* the lifetime pair,
+// so it scored identically against the broken quote-stripper it was meant to guard — the regression
+// it existed to catch went undetected. `SocketLike` now sits BETWEEN the two ticks, exactly where a
+// stripper that treats `'a` as a quote delimiter would swallow it.
 const CANARY = `
-  pub struct BatchStream<'a> { inner: &'a str }
+  fn drive<'a>(x: &SocketLike, y: &'a str) {}
   fn wsHandle() {}
   fn send_over_socket() {}
   let httpStatus = 1;
 `;
+const EXPECTED_CANARY = ['SocketLike', 'wsHandle', 'send_over_socket', 'httpStatus'];
 const canaryHits = scan(strip(CANARY), 'canary');
-const expected = ['wshandle', 'send_over_socket', 'httpstatus'];
-if (canaryHits.length < 3) {
+const caught = new Set(
+  canaryHits.flatMap((h) => EXPECTED_CANARY.filter((e) => h.includes(`"${e}"`))),
+);
+const missed = EXPECTED_CANARY.filter((e) => !caught.has(e));
+if (missed.length > 0) {
+  // Assert the exact set, not a count: a count passes while the one leak that matters is missed.
   failures.push(
-    `CANARY FAILED — planted leaks (${expected.join(', ')}) produced only ${canaryHits.length} ` +
-      'hit(s). The scan is vacuous and its PASS means nothing.',
+    `CANARY FAILED — planted leaks not detected: ${missed.join(', ')}. ` +
+      'The scan is vacuous for those shapes and its PASS means nothing.',
   );
 }
 
@@ -163,5 +173,5 @@ if (failures.length > 0) {
 }
 console.log(
   `check-leakage: PASS — neutral data interface is adapter-agnostic; one construction site; ` +
-    `canary caught ${canaryHits.length} planted leaks`,
+    `canary caught all ${EXPECTED_CANARY.length} planted leaks (${EXPECTED_CANARY.join(', ')})`,
 );

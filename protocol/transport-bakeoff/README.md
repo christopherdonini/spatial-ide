@@ -139,8 +139,10 @@ Each is a pass/fail predicate with a stated **observation point**. Failing any o
 > **9,753,376 B** (= 4 × 2,438,344) held flat across the whole 3,000 ms pause, in all four
 > candidate×invocation pairs — because `tx.reserve()` precedes generation, so the "+1 in
 > construction" the 5× ceiling allows for is never actually counted. The bound is slack in **either**
-> unit, the measured margin is 18.7 %, and **no verdict turns on this change**. It is corrected so
-> the stated bound means what it says, not to rescue a result.
+> unit — the measured headroom is **20.0 % against the amended bound** (2,438,344 B of 12,191,720 B;
+> it is 18.7 % against the superseded 12,000,000 B figure, and §15.5 quotes the former) — and **no
+> verdict turns on this change**. It is corrected so the stated bound means what it says, not to
+> rescue a result.
 
 ### H4 — Security posture (`docs/09`)
 - **Assertions, each individually checked:** the listener binds **127.0.0.1 only** (asserted not
@@ -189,6 +191,26 @@ Each is a pass/fail predicate with a stated **observation point**. Failing any o
 - **Observed:** repository scan + diff inspection, recorded in the results table.
 - **Failure looks like:** an error enum shaped `Http(u16) | WsClose(u16)`; an interface method
   meaning "pause the socket"; ids that embed a URL path segment or subprotocol string.
+
+> **Amendment to H6 (2026-08-03, during implementation — narrowing, recorded so the gate is not
+> passed against wording it does not meet).** As written, H6 claimed the scan covers the neutral
+> interface "**or from semantic-layer code**". It does not, and it should not: `main.ts` legitimately
+> speaks HTTP to the *control* endpoints (`/clock`, `/facts`, `/report`), which ADR-004 places on the
+> control plane, so scanning it for the word `fetch` would be theatre and would fail honestly-written
+> code. **The scan's actual scope is the transport-neutral *data* interface** (`web/src/transport.ts`,
+> `src/transport.rs`), plus the single-construction-site assertion over `main.ts`, plus a canary that
+> fails the build if planted leaks stop being caught. H6's PASS in §15 is recorded against that
+> narrower predicate. Two further corrections made at the same time: `\bword\b` matching missed every
+> realistic leak shape (`WebSocketTransport`, `httpStatus`, `ws_handle`) and now matches identifier
+> parts; and the quote-stripper corrupted Rust lifetimes, which would have silently made the whole
+> scan vacuous the day one was introduced — the canary now plants a leak *between* two lifetime ticks
+> specifically to catch that regression.
+>
+> **Also declared here rather than left implicit:** stream ids appear in the `/facts/{stream_id}`
+> telemetry path, which §5's "never a URL path segment" forbids as written. That rule is about the
+> **data channel** and the semantic API; `/facts` is out-of-band diagnostics that exists only because
+> the producer's own observations must be readable. The rule is narrowed to the data channel, and the
+> production transport must not expose stream ids in a URL at all.
 
 ### H7 — Progress and terminal error propagation
 - **Assertion:** progress is reported and monotonically non-decreasing; every stream ends in
@@ -443,15 +465,21 @@ Stated now so they cannot be read into the results later:
 > silently, because editing the preregistration body without a note is the failure mode the whole
 > document exists to prevent.
 >
-> **Amendment (2026-08-03, after the first measured runs) — the workload is generation-bound, and
-> that bounds what §12 can mean.** The tester measured producer generation at **95.0–98.9 % of every
-> run's wall time**: both transports idle behind a ~200 MB/s generator, and per-batch p50 throughput
-> came out *identical* between candidates (212.031 vs 212.031 MB/s) in one invocation. Consequence,
-> stated plainly: **this workload cannot discriminate the transports on throughput**, its MB/s
-> figures are a floor rather than a capability, and §12's tie-break is therefore reached by the
-> workload's design rather than by a discovered near-equality. Any throughput-based claim needs a
-> re-run with a pre-generated payload that decouples generation from transfer. This does not affect
+> **Amendment (2026-08-03) — the workload is generation-bound, and that bounds what §12 can mean.**
+> Producer generation dominates every run's wall-clock time, so both transports idle behind the
+> generator. Consequence, stated plainly: **this workload cannot discriminate the transports on
+> throughput**, its MB/s figures are a floor rather than a capability, and **§12's precondition — a
+> *measured* per-batch p50 near-equality — is therefore untested rather than satisfied**. Falling
+> back to the tie-break is a choice made after seeing the data, not the preregistration resolving;
+> §1 pre-declared only A, B, or neither-if-both-fail-a-gate. Any throughput-based claim needs a
+> re-run with a pre-generated payload that decouples generation from transfer. None of this affects
 > the H1–H7 eligibility gates, which are not throughput measurements.
+>
+> *(The figures for this are in §15, from the run of record. An earlier draft of this amendment
+> quoted 95.0–98.9 % and "212.031 vs 212.031 MB/s" from **pre-fix runs**, without the
+> inadmissibility qualifier §14 applies to every other pre-fix number, and they contradicted the run
+> of record. Removed — quoting inadmissible figures in the preregistration body is precisely what
+> this document exists to prevent.)*
 
 ---
 
@@ -658,7 +686,9 @@ The clearest single demonstration that the throughput figure tracks the *generat
 transport: A's per-batch generation cost happened to run slower in its three runs than B's did in its
 three (p50 12.289 ms vs 11.744 ms). Converted to a rate, that alone predicts 198.4 vs 207.6 MB/s —
 and the measured per-batch p50s are 208.406 vs 212.031 MB/s. **A's apparent 1.739 % throughput
-deficit is explained by the generator being slower during its runs, not by the socket.**
+deficit is more than accounted for by the generator being slower during its runs, not by the socket** —
+the generator alone predicts a 4.6 % gap where 1.739 % was measured, so the residual runs the other
+way.
 
 So: the two candidates' per-batch p50 figures are **1.739 % apart**, far inside §12's 10 % band, and
 **§12's tie-break is therefore reached by the workload's design rather than by a discovered
