@@ -7,10 +7,10 @@
  */
 
 import { tableFromIPC } from 'apache-arrow';
-import { HttpStreamTransport } from './adapter-http.js';
-import { WebSocketTransport } from './adapter-ws.js';
+import { makeTransport, type Candidate } from './make-transport.js';
+import { runPhase2, SCHEDULE, pct, bootstrapCI, orderEffect, type Manifest } from './phase2.js';
 import { PointRenderer } from './render.js';
-import type { BatchTransport, Terminal } from './transport.js';
+import type { Terminal } from './transport.js';
 import { FRAME_PREFIX_LEN } from './wire.js';
 
 /**
@@ -194,16 +194,6 @@ function percentile(xs: number[], p: number): number {
   return s[Math.min(s.length - 1, Math.floor((p / 100) * s.length))];
 }
 
-// -------------------------------------------------------------------------------------------
-// The single construction site H6 is about. Swapping candidates touches this function and nothing
-// else — no semantic code below knows which transport it is talking to.
-// -------------------------------------------------------------------------------------------
-type Candidate = 'websocket' | 'http-stream';
-function makeTransport(c: Candidate): BatchTransport {
-  return c === 'websocket'
-    ? new WebSocketTransport(BASE, TOKEN)
-    : new HttpStreamTransport(BASE, TOKEN);
-}
 
 async function hex(b: ArrayBuffer): Promise<string> {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -287,7 +277,7 @@ async function fullRun(
 ): Promise<RunMetrics> {
   begin(`full:${candidate}:${run}`);
   renderer.reset();
-  const t = makeTransport(candidate);
+  const t = makeTransport(candidate, BASE, TOKEN);
   const digests: Uint8Array[] = [];
   const arrivals: number[] = [];
   const batchWireBytes: number[] = [];
@@ -447,7 +437,7 @@ async function fullRun(
 
 /** H2 — producer-side cancellation. Measured on the PRODUCER's clock, never client-side. */
 async function cancelTrial(candidate: Candidate, offsetMs: number) {
-  const t = makeTransport(candidate);
+  const t = makeTransport(candidate, BASE, TOKEN);
   const tStart = performance.now();
   let streamId = '';
   let abortedAt = 0;
@@ -482,7 +472,7 @@ async function cancelTrial(candidate: Candidate, offsetMs: number) {
 
 /** H3 — bounded memory under a deliberately paused consumer. */
 async function backpressureTrial(candidate: Candidate) {
-  const t = makeTransport(candidate);
+  const t = makeTransport(candidate, BASE, TOKEN);
   let streamId = '';
   let seen = 0;
   let pauseStart = 0;
@@ -512,7 +502,7 @@ async function backpressureTrial(candidate: Candidate) {
 async function errorBehaviour(candidate: Candidate) {
   const results: any[] = [];
   for (const phase of ['production', 'transfer', 'decode'] as const) {
-    const t = makeTransport(candidate);
+    const t = makeTransport(candidate, BASE, TOKEN);
     let streamId = '';
     let seen = 0;
     let terminal: Terminal | null = null;
@@ -579,6 +569,105 @@ async function securityNegativeTests() {
   };
 }
 
+/**
+ * Phase 2 — transfer-isolated (§16). The full counterbalanced block completes **before** any
+ * per-metric comparison is computed (§16.5's no-optional-stopping rule), and an invalid run
+ * invalidates the whole block rather than being replaced individually.
+ */
+async function runPhase2Flow(manifest: Manifest, renderer: PointRenderer) {
+  const c = manifest.corpus!;
+  log(`PHASE 2 — config ${c.config}: ${c.batchCount} x ${c.rowsPerBatch} rows, ${c.totalWireBytes} wire bytes`);
+  log(`  corpus built in ${c.buildMs} ms · wire ${c.wireDigest.slice(0, 16)} · column ${c.columnDigest.slice(0, 16)}`);
+  log(`  schedule ${SCHEDULE.map((s) => (s === 'websocket' ? 'A' : 'B')).join('')} (counterbalanced)`);
+
+  begin('phase2-block');
+  const results = await runPhase2(BASE, TOKEN, manifest, log);
+  end('phase2-block');
+
+  // Block-level validity FIRST. §16.5: a single invalid run invalidates the block.
+  const invalidReasons: string[] = [];
+  for (const r of results) invalidReasons.push(...r.invalid);
+  if (document.hidden) invalidReasons.push('document hidden at completion');
+  if (watchdogFired) invalidReasons.push('watchdog fired');
+  if (fatalErrors.length) invalidReasons.push(`uncaught errors: ${fatalErrors.join('; ')}`);
+  const dangling = danglingCheckpoint();
+  if (dangling) invalidReasons.push(`dangling checkpoint: ${dangling}`);
+
+  const byCandidate = (cand: Candidate) => results.filter((r) => r.candidate === cand);
+  const summarize = (cand: Candidate) => {
+    const rs = byCandidate(cand);
+    const t1 = rs.map((r) => r.t1TransportMs);
+    const mbs = rs.map((r) => r.transportMBs);
+    return {
+      candidate: cand,
+      runs: rs.length,
+      t1Ms: { p50: pct(t1, 50), p95: pct(t1, 95), p99: pct(t1, 99) },
+      transportMBs: { p50: pct(mbs, 50), p95: pct(mbs, 95), p99: pct(mbs, 99) },
+      transportMBsCI95: bootstrapCI(mbs),
+      checksumMs: { p50: pct(rs.map((r) => r.t2ChecksumMs - r.t1TransportMs), 50) },
+      decodeMs: { p50: pct(rs.map((r) => r.decodeOnlyMs), 50) },
+      endToUsableMs: { p50: pct(rs.map((r) => r.t3DecodedMs), 50) },
+      firstBatchMs: { p50: pct(rs.map((r) => r.firstBatchMs), 50) },
+      reassemblyCopiesPerRun: [...new Set(rs.map((r) => r.reassemblyCopies))],
+      arrowParseSharesBuffer: [...new Set(rs.map((r) => r.arrowParseSharesBuffer))],
+      peakJsHeapBytes: Math.max(...rs.map((r) => r.peakJsHeapBytes)),
+    };
+  };
+
+  const order = orderEffect(results, (r) => r.transportMBs);
+  if (order > 0.05) {
+    invalidReasons.push(
+      `order effect ${(order * 100).toFixed(1)}% exceeds the declared 5% threshold — block confounded`,
+    );
+  }
+
+  const report = {
+    schema: 'transport-bakeoff/phase2/v1',
+    preregistration: 'protocol/transport-bakeoff/README.md §16',
+    timestamp: new Date().toISOString(),
+    valid: invalidReasons.length === 0,
+    invalidReasons,
+    environment: {
+      userAgent: navigator.userAgent,
+      gpu: renderer.gpuInfo(),
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      documentHiddenAtEnd: document.hidden,
+      rafThrottleEvents,
+      becameHiddenDuringRun,
+      smokeMode: SMOKE,
+    },
+    manifest,
+    schedule: SCHEDULE,
+    orderEffectRatio: order,
+    summary: [summarize('websocket'), summarize('http-stream')],
+    runs: results,
+    // §16.4: the artifact carries the declared assertions themselves, not just their outcomes.
+    declaredAssertions: {
+      decisionRule: '§16.9 — hard gate disqualifies; >10% transfer-isolated throughput selects faster; within 10% apply §12 ordering on measured end-to-end cost; unknown internal copy count is not a win; batch-size-dependent results mean no transport-independent winner',
+      analysisPlan: 'p50/p95/p99 by sort-and-index; percentile bootstrap over run-level means, 10000 resamples; per-batch samples are not independent and are not pooled for CIs',
+      counterbalancing: 'ABBA BAAB ABBA; whole-block replacement; no optional stopping',
+      orderEffectThreshold: 0.05,
+      ceilings: {
+        maxFrameBytes: c.maxFrameBytesCeiling,
+        maxInflightBatches: manifest.maxInflightBatches,
+        creditWindowBytes: manifest.creditWindowBytes,
+      },
+      unknownCopies: 'WebView2-internal WebSocket message assembly is opaque; its copy count is UNKNOWN and is not counted as a win',
+    },
+    log: logLines,
+  };
+
+  const res = await fetch(`${BASE}/report`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(report),
+  });
+  log(`report POST ${res.status}`);
+  log(`PHASE 2 DONE — valid=${report.valid} ${invalidReasons.join(' | ')}`);
+  (window as any).__BAKEOFF_REPORT__ = report;
+  (window as any).__BAKEOFF_DONE__ = true;
+}
+
 async function main() {
   const canvas = document.getElementById('gl') as HTMLCanvasElement;
   const renderer = new PointRenderer(canvas);
@@ -604,6 +693,18 @@ async function main() {
     } else {
       becameHiddenDuringRun = false; // it started hidden, not interrupted mid-run
     }
+  }
+
+  // Phase 2 (§16) if the server built a corpus; otherwise Phase 1's generation-bound path, which
+  // is retained unchanged so the earlier phase stays reproducible.
+  const manifestRes = await fetch(`${BASE}/manifest`, {
+    headers: { Authorization: `Bearer ${TOKEN}` },
+    cache: 'no-store',
+  });
+  const manifest = (await manifestRes.json()) as Manifest;
+  if (manifest.phase === 2 && manifest.corpus) {
+    await runPhase2Flow(manifest, renderer);
+    return;
   }
 
   const clock = await clockSync();

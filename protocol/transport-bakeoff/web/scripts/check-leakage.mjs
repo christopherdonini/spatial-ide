@@ -19,7 +19,7 @@
  * here specifically because the error taxonomy confines adapter detail to an opaque `detail`
  * string — the design's intended escape hatch.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -121,23 +121,34 @@ for (const file of NEUTRAL) {
   failures.push(...scan(strip(readFileSync(file, 'utf8')), file));
 }
 
-// Assertion 2: exactly one construction site.
-const mainSrc = strip(readFileSync(resolve(web, 'src/main.ts'), 'utf8'));
-const constructions = [...mainSrc.matchAll(/new\s+(WebSocketTransport|HttpStreamTransport)\b/g)];
-const sites = new Set(
-  constructions.map((m) => mainSrc.slice(0, m.index).split('makeTransport').length),
-);
-if (constructions.length !== 2 || sites.size !== 1) {
-  failures.push(
-    `adapters constructed at ${constructions.length} places across ${sites.size} sites; ` +
-      'expected both inside the single makeTransport() construction site',
-  );
-}
-
-// The semantic half of main.ts must not name an adapter type.
-const afterFactory = mainSrc.slice(mainSrc.indexOf('async function hex'));
-for (const t of ['WebSocketTransport', 'HttpStreamTransport']) {
-  if (afterFactory.includes(t)) failures.push(`semantic code references adapter type "${t}"`);
+// Assertion 2: exactly ONE construction site, across the whole source tree.
+//
+// Scoped to `main.ts` originally; Phase 2 added a second consumer, and a per-file check would have
+// let a second construction site appear without failing. The claim H6 makes is tree-wide, so the
+// check is too.
+const FACTORY = 'src/make-transport.ts';
+for (const file of readdirSync(resolve(web, 'src')).filter((f) => f.endsWith('.ts'))) {
+  const rel = `src/${file}`;
+  const src = strip(readFileSync(resolve(web, rel), 'utf8'));
+  const constructions = [...src.matchAll(/new\s+(WebSocketTransport|HttpStreamTransport)\b/g)];
+  if (rel === FACTORY) {
+    if (constructions.length !== 2) {
+      failures.push(
+        `${rel}: expected exactly 2 adapter constructions in the single factory, found ` +
+          `${constructions.length}`,
+      );
+    }
+  } else if (constructions.length > 0) {
+    failures.push(
+      `${rel}: constructs an adapter outside ${FACTORY} — H6 claims exactly one construction site`,
+    );
+  }
+  // No file outside the adapters and the factory may even name an adapter type.
+  if (rel !== FACTORY && !rel.startsWith('src/adapter-')) {
+    for (const t of ['WebSocketTransport', 'HttpStreamTransport']) {
+      if (src.includes(t)) failures.push(`${rel}: semantic code references adapter type "${t}"`);
+    }
+  }
 }
 
 // Assertion 3: the canary. If a planted leak does not fail, the scan proves nothing.

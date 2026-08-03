@@ -51,6 +51,17 @@ export class FrameDecoder {
   private available = 0;
   readonly stats: DecoderStats = { reassemblyCopies: 0, jsonFramesSeen: 0 };
 
+  /**
+   * Called with the raw bytes of every BATCH frame, **in order, as slices, without concatenation**
+   * (Phase 2, §16.4). This is what lets the checksum be computed chunk-wise: hashing a contiguous
+   * buffer would require assembling one first, which for Candidate B would move the reassembly copy
+   * into the raw-receipt segment and erase the difference being measured.
+   *
+   * Includes each frame's 8-byte prefix, so the resulting digest equals the producer's corpus wire
+   * digest and can be checked against `/manifest` rather than merely compared between candidates.
+   */
+  onBatchBytes: ((slice: Uint8Array) => void) | null = null;
+
   push(chunk: Uint8Array): Frame[] {
     this.chunks.push(chunk);
     this.available += chunk.length;
@@ -62,7 +73,8 @@ export class FrameDecoder {
         ((prefix[4] << 24) | (prefix[5] << 16) | (prefix[6] << 8) | prefix[7]) >>> 0;
       const total = FRAME_PREFIX_LEN + len;
       if (this.available < total) break;
-      const { bytes, contiguous } = this.take(total);
+      const sink = prefix[0] === TAG.BATCH ? this.onBatchBytes : null;
+      const { bytes, contiguous } = this.take(total, sink);
       const payload = bytes.subarray(FRAME_PREFIX_LEN);
       // H5, byte-level: assert no frame on the data channel is JSON.
       const first = payload.length > 0 ? payload[0] : 0;
@@ -86,14 +98,23 @@ export class FrameDecoder {
     return out;
   }
 
-  /** Removes `n` bytes from the front. `contiguous` is false when reassembly was required. */
-  private take(n: number): { bytes: Uint8Array; contiguous: boolean } {
+  /**
+   * Removes `n` bytes from the front. `contiguous` is false when reassembly was required.
+   *
+   * `sink`, when present, receives the source slices in order **before** any assembly, so a
+   * consumer can hash the frame without a contiguous copy existing for its benefit.
+   */
+  private take(
+    n: number,
+    sink: ((slice: Uint8Array) => void) | null,
+  ): { bytes: Uint8Array; contiguous: boolean } {
     if (this.chunks[0].length >= n) {
       const head = this.chunks[0];
       const bytes = head.subarray(0, n);
       if (head.length === n) this.chunks.shift();
       else this.chunks[0] = head.subarray(n);
       this.available -= n;
+      sink?.(bytes);
       return { bytes, contiguous: true };
     }
     const out = new Uint8Array(n);
@@ -101,7 +122,9 @@ export class FrameDecoder {
     while (off < n) {
       const c = this.chunks[0];
       const take = Math.min(n - off, c.length);
-      out.set(c.subarray(0, take), off);
+      const piece = c.subarray(0, take);
+      sink?.(piece);
+      out.set(piece, off);
       off += take;
       if (take === c.length) this.chunks.shift();
       else this.chunks[0] = c.subarray(take);

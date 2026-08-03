@@ -19,10 +19,13 @@ export class WebSocketTransport implements BatchTransport {
   private ws: WebSocket | null = null;
   private decoder = new FrameDecoder();
   readonly stats = this.decoder.stats;
+  /** See BatchTransport.batchByteSink — forwarded to the decoder when the stream opens. */
+  batchByteSink: ((slice: Uint8Array) => void) | null = null;
 
   constructor(private base: string, private token: string) {}
 
   async *frames(): AsyncGenerator<Frame> {
+    this.decoder.onBatchBytes = this.batchByteSink;
     const url = `${this.base.replace('http', 'ws')}/stream/ws`;
     // The credential rides in the subprotocol list, validated at handshake before the upgrade
     // completes, so an unauthenticated peer never reaches the data path. Never a query string.

@@ -65,6 +65,15 @@ export interface DecoderStats {
 export interface BatchTransport {
   readonly candidate: string;
   readonly stats: DecoderStats;
+  /**
+   * Optional sink receiving raw batch bytes in order, as slices, before any assembly. Lets a caller
+   * checksum the payload without a contiguous copy being made for its benefit — which is what keeps
+   * the checksum segment from absorbing one candidate's reassembly cost.
+   *
+   * Deliberately expressed in bytes and ordering only: it names no adapter concept, so it does not
+   * widen the surface H6 protects.
+   */
+  batchByteSink: ((slice: Uint8Array) => void) | null;
   frames(): AsyncGenerator<Frame>;
   cancel(): void;
 }

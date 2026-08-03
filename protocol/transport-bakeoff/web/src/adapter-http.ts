@@ -18,10 +18,13 @@ export class HttpStreamTransport implements BatchTransport {
   private controller = new AbortController();
   private decoder = new FrameDecoder();
   readonly stats = this.decoder.stats;
+  /** See BatchTransport.batchByteSink — forwarded to the decoder when the stream opens. */
+  batchByteSink: ((slice: Uint8Array) => void) | null = null;
 
   constructor(private base: string, private token: string) {}
 
   async *frames(): AsyncGenerator<Frame> {
+    this.decoder.onBatchBytes = this.batchByteSink;
     const res = await fetch(`${this.base}/stream/http`, {
       // Credential in a request header, never a query string (docs/09).
       headers: { Authorization: `Bearer ${this.token}` },
