@@ -62,7 +62,18 @@ export class FrameDecoder {
    */
   onBatchBytes: ((slice: Uint8Array) => void) | null = null;
 
+  /**
+   * Declared maximum frame size the consumer will accept (§16.3). **Declared, not discovered** —
+   * ADR-010 rule 6. A frame claiming more than this is rejected at the limit and surfaced, rather
+   * than being buffered until something else breaks; R5 drives past it deliberately.
+   */
+  maxFrameBytes = 16 * 1024 * 1024;
+
+  /** Set once a protocol violation is detected. The stream is finished, not merely paused. */
+  fault: string | null = null;
+
   push(chunk: Uint8Array): Frame[] {
+    if (this.fault) return [];
     this.chunks.push(chunk);
     this.available += chunk.length;
     const out: Frame[] = [];
@@ -72,6 +83,16 @@ export class FrameDecoder {
       const len =
         ((prefix[4] << 24) | (prefix[5] << 16) | (prefix[6] << 8) | prefix[7]) >>> 0;
       const total = FRAME_PREFIX_LEN + len;
+      // R5: reject at the declared ceiling instead of accumulating an unbounded buffer.
+      if (len > this.maxFrameBytes) {
+        this.fault = `frame declares ${len} bytes, over the declared ${this.maxFrameBytes} ceiling`;
+        return [
+          { t: 'terminal', terminal: { kind: 'DecodeFailed', detail: this.fault } },
+        ];
+      }
+      // R1/R3: a frame whose declared length has not arrived is incomplete, never complete-so-far.
+      // Returning here (rather than emitting what is present) is what makes a truncated tail a
+      // detectable fault instead of a short-but-plausible stream.
       if (this.available < total) break;
       const sink = prefix[0] === TAG.BATCH ? this.onBatchBytes : null;
       const { bytes, contiguous } = this.take(total, sink);

@@ -8,7 +8,8 @@
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "check-leakage": "node scripts/check-leakage.mjs",
-    "verify": "npm run typecheck && npm run check-leakage && npm run build"
+    "verify": "npm run typecheck && npm run test && npm run check-leakage && npm run build",
+    "test": "node --experimental-strip-types --no-warnings scripts/run-tests.mjs"
   },
   "dependencies": {
     "apache-arrow": "^18.1.0"

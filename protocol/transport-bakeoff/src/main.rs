@@ -760,7 +760,7 @@ mod security_tests {
         )
         .unwrap();
 
-        let (port, token) = spawn_server_with(Some(web.clone())).await;
+        let (port, token, _) = spawn_server_with(Some(web.clone())).await;
 
         let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
         s.write_all(
@@ -782,10 +782,15 @@ mod security_tests {
     }
 
     async fn spawn_server() -> (u16, String) {
-        spawn_server_with(None).await
+        let (p, t, _) = spawn_server_with(None).await;
+        (p, t)
     }
 
-    async fn spawn_server_with(web_dir: Option<std::path::PathBuf>) -> (u16, String) {
+    /// Returns the live `Shared` state too, so a test can inspect what the **producer** observed
+    /// rather than inferring it from client-side behaviour.
+    async fn spawn_server_with(
+        web_dir: Option<std::path::PathBuf>,
+    ) -> (u16, String, Shared) {
         let listener = tokio::net::TcpListener::bind(SocketAddr::new(
             IpAddr::V4(Ipv4Addr::LOCALHOST),
             0,
@@ -805,11 +810,11 @@ mod security_tests {
             corpus: None,
         });
         let token = state.session.token_for_injection().to_string();
-        let app = router(state);
+        let app = router(state.clone());
         tokio::spawn(async move {
             let _ = axum::serve(listener, app).await;
         });
-        (local.port(), token)
+        (local.port(), token, state)
     }
 
     /// Returns the numeric HTTP status of a `GET /clock`.
@@ -1049,6 +1054,60 @@ mod security_tests {
         assert_eq!(
             ws_probe(port, Some("null"), Some(&format!("bakeoff.v0, {token}"))).await,
             403
+        );
+    }
+
+    /// **R4 — mid-stream disconnect must be producer-visible**, end to end, without a browser.
+    ///
+    /// The unit test on `BodyStream::drop` proves the guard fires; this proves the guard is
+    /// actually reached when a *real* peer vanishes mid-transfer, which is the case that matters
+    /// and the one F4 showed can go unnoticed.
+    #[tokio::test]
+    async fn mid_stream_disconnect_is_observed_by_the_producer() {
+        let (port, token, app_state) = spawn_server_with(None).await;
+        let origin = format!("http://127.0.0.1:{port}");
+
+        let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        s.write_all(
+            format!(
+                "GET /stream/http HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n\
+                 Origin: {origin}\r\nAuthorization: Bearer {token}\r\n\r\n"
+            )
+            .as_bytes(),
+        )
+        .await
+        .unwrap();
+
+        // Read enough to be genuinely mid-stream, then drop the connection on the floor.
+        let mut buf = vec![0u8; 64 * 1024];
+        let mut got = 0usize;
+        while got < 256 * 1024 {
+            match s.read(&mut buf).await {
+                Ok(0) | Err(_) => break,
+                Ok(n) => got += n,
+            }
+        }
+        assert!(got > 0, "expected to receive some of the stream before disconnecting");
+        drop(s);
+
+        // The producer must notice through its own transport. Poll its own record, not the client's.
+        let mut observed = false;
+        for _ in 0..200 {
+            tokio::time::sleep(Duration::from_millis(25)).await;
+            let seen = app_state
+                .states
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .values()
+                .any(|st| st.is_cancelled());
+            if seen {
+                observed = true;
+                break;
+            }
+        }
+        assert!(
+            observed,
+            "a peer disappearing mid-stream must become visible to the producer"
         );
     }
 
