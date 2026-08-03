@@ -15,13 +15,15 @@ Spatial Kernel semantic API
 
 ## Module map
 
-| Module | Responsibility | Notes |
-|---|---|---|
-| `kernel` | Orchestration, dataset registry, lineage DAG, permissions, undo | Rust |
-| `data-engine` | DuckDB + Arrow, connectors, CRS engine, data doctor | See 05 |
-| `renderer` | GPU map rendering, labels, style compilation | See 06 |
-| `protocol` | SKP control/data plane + MCP adapter | See 04, 10 |
-| `frontends` | Desktop app, CLI, notebook UI | Clients only — no logic |
+| Module | Directory | Responsibility | Notes |
+|---|---|---|---|
+| `kernel` | `kernel/` | Orchestration, dataset registry, lineage DAG, permissions, undo | Rust |
+| `data-engine` | `engine/` | DuckDB + Arrow, connectors, CRS engine, data doctor | See 05 |
+| `renderer` | `renderer/` | GPU map rendering, labels, style compilation | See 06 |
+| `protocol` | `protocol/` | SKP control/data plane + MCP adapter | See 04, 10 |
+| `frontends` | `frontends/` | Desktop app, CLI, notebook UI | Clients only — no logic |
+
+**Directory naming** *(added 2026-08-03 to resolve a docs/02-vs-CLAUDE.md conflict; module set unchanged)*: the five modules map one-to-one onto five top-level directories. The only name that differs is `data-engine` → `engine/`, and `engine/` holds the **data-engine module and nothing else** — render code lives in `renderer/`, orchestration and workflow execution in `kernel/`. `protocol/` is a directory in its own right, not a subtree of `kernel/`: collapsing it is how the SKP surface gets absorbed into the kernel and the ADR-004 control/data-plane split stops being structural. Directories are **scaffolded per vertical slice as the slice needs them**, not created empty up front — 07's method rule is vertical slices, never every module built in parallel to 20 %.
 
 ## Resource type system
 
@@ -63,9 +65,11 @@ Architectural decisions live in `adr/`, numbered, immutable once accepted.
 
 - **ADR-001 (accepted, amended)** — Tauri as desktop shell; DuckDB-WASM browser path. Renderer portion reopened by ADR-003; "zero-copy" superseded by ADR-004's copy-minimized data plane.
 - **ADR-002 (accepted, amended)** — Phased editing (1.0 safe → 2.x professional → 3.x enterprise) as a plugin; 1.0 includes minimal snapping; consent-based geometry repair; print composer post-1.0.
-- **ADR-003 (proposed)** — Renderer + arbitrary-CRS strategy: dual canvas (projected working canvas + web publishing canvas). Blocked on the EPSG:2056 spike; renderer is provisional until it passes.
+- **ADR-003 (accepted for Windows/WebView2, 2026-08-03)** — Renderer + arbitrary-CRS strategy: dual canvas (projected working canvas + web publishing canvas), with deck.gl custom layers as the projected canvas. The EPSG:2056 spike concluded; macOS/WKWebView and Linux/WebKitGTK are accepted at **architecture level only**, pending hardware validation (07) — the "all three system webviews" gate is not met, so the renderer stays provisional on those two platforms.
 - **ADR-004 (accepted)** — One semantic API, multiple bindings; control/data plane split; MCP as adapter, never bulk data.
 - **ADR-005 (accepted)** — Typed resources, ResourceRef, reproducibility levels; rewords principle 1.
 - **ADR-006 (accepted)** — Lineage vs undo vs external side effects: three operation classes with distinct machinery.
 - **ADR-007 (accepted)** — Local mutable store (SQLite/GeoPackage) for edits; DuckDB analytical; PostGIS remote system of record.
 - **ADR-008 (accepted)** — Static publishing bundle through 1.0; managed sharing service is a separate future ADR.
+- **ADR-010 (proposed)** — Render frames, origins, and boundary rules: discriminated coordinate spaces, authoritative lookup vs. scoped cursor unprojection, f64-before-f32 narrowing, the static/dynamic editing boundary, renderer caches as derived state, declared capacity ceilings, and an observable failure/recovery contract. Measured invariants from the ADR-003 spike; **architect-blockable in review while Proposed** (CLAUDE.md).
+- **ADR-011 (proposed)** — Tiled render batches and GPU cache lifecycle: per-tile static buffers with local origins, partial GPU range updates, tile-spanning fragmentation, cache versioning, async consolidation, multi-origin precision. **Unmeasured design direction** split out of ADR-010; binds nothing and is not architect-blockable until its acceptance gates are met.

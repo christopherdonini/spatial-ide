@@ -22,13 +22,15 @@ The style DSL (03) compiles to renderer state. Deterministic: same style + same 
 
 2D first. Terrain, 3D tiles, and globe view are post-1.0 (07) unless the hero slice demands otherwise.
 
-## Stack (ADR-001 amended; ADR-003 pending its spike)
+## Stack (ADR-001 amended; ADR-003 resolved 2026-08-03 for Windows/WebView2)
 
 **Dual canvas** behind one renderer interface (ADR-003):
 
-- **Projected 2D canvas** — the working canvas: current project CRS, Cartesian/projected coordinates, offset-relative rendering for float32 precision at national-grid magnitudes. deck.gl custom views/layers, or a purpose-built WebGPU renderer if the spike fails.
+- **Projected 2D canvas** — the working canvas: current project CRS, Cartesian/projected coordinates, offset-relative rendering for float32 precision at national-grid magnitudes. **deck.gl custom views/layers**, accepted on the concluded spike's evidence; the purpose-built WebGPU fallback was not triggered.
 - **Web publishing canvas** — MapLibre: Web Mercator/globe, basemaps, PMTiles/vector tiles, published bundles (ADR-008).
 
-**Acceptance gate:** interactively edit a large EPSG:2056 dataset without permanently converting it to EPSG:3857, at centimetre-level picking accuracy, at budget, on all three system webviews. Until this passes, the renderer choice is *provisional*.
+**Acceptance gate:** interactively edit a large EPSG:2056 dataset without permanently converting it to EPSG:3857, at centimetre-level picking accuracy, at budget, on all three system webviews. **Met on Windows/WebView2. Not met on macOS/WKWebView or Linux/WebKitGTK** — every measured number in the spike is Windows/ANGLE-D3D11 evidence and does not transfer by assumption, and CI on those platforms covers platform-independent logic only. The renderer choice therefore remains *provisional on macOS and Linux* until their hardware validation gates close (07).
+
+**Boundary rules:** renderer coordinate spaces, authoritative-lookup picking, f64-before-f32 narrowing, the static/dynamic editing split, caches as derived state, declared capacity ceilings, and the failure/recovery contract are governed by **ADR-010** (Proposed, architect-blockable). The *tiled* buffer/cache implementation — per-tile origins, partial GPU range updates, multi-origin precision — is **ADR-011** (Proposed, unmeasured, binds nothing until its gates are met); its benchmark rows land in 08 with the measurements, not before.
 
 **Data plane:** binary, chunked, backpressured, JSON-free; copies are measured and minimized — not assumed absent (ADR-004). VRAM ceilings and cross-platform webview differences are part of the CI budgets (08).
