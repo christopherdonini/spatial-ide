@@ -41,6 +41,11 @@ pub async fn drive(
     checkpoints: Arc<Checkpoints>,
     total_batches: u64,
     json_frames_seen: Arc<std::sync::atomic::AtomicU64>,
+    // An opaque resource released once this stream is functionally over — the admission slot
+    // (§19.7). It must be dropped after the terminal frame is sent but **before** the peer-drain
+    // below, which waits up to 30 s for the client to close: holding a capacity slot across that
+    // makes the ceiling a function of client shutdown timing rather than of load.
+    release_when_done: Option<Box<dyn Send + Sync>>,
 ) -> Terminal {
     let (mut sink, mut stream) = socket.split();
     let credit = Arc::new(Semaphore::new(0));
@@ -167,6 +172,10 @@ pub async fn drive(
     };
     let tf = wire::frame(wire::TAG_TERMINAL, &wire::terminal_payload(code, &detail));
     let _ = sink.send(Message::Binary(tf.into())).await;
+
+    // The stream is finished as far as capacity is concerned: every batch and the terminal frame
+    // have been handed to the transport. Anything still to come is the peer's shutdown, not ours.
+    drop(release_when_done);
 
     // **The producer never initiates the close.** It sends its terminal frame and then waits for
     // the consumer to close, draining whatever arrives meanwhile.

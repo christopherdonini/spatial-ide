@@ -782,13 +782,12 @@ async fn stream_ws(State(s): State<Shared>, headers: HeaderMap, ws: WebSocketUpg
     let t0 = s.t0;
 
     ws.protocols(["bakeoff.v0"]).on_upgrade(move |mut socket| async move {
-        // Held until the stream is functionally over. Deliberately dropped BEFORE `drive` returns
-        // its peer-drain: a stream that has sent its terminal frame is finished as far as capacity
-        // is concerned, and holding the slot across a drain that waits up to 30 s for the peer to
-        // close would make the ceiling a function of client shutdown timing rather than of load.
-        // Measured consequence of getting this wrong: at N=2 the next run's second stream was
-        // refused by a slot the previous run had not yet released.
-        let mut slot = Some(slot);
+        // Handed to the adapter, which releases it once the terminal frame is sent and before its
+        // peer-drain. Dropping it here instead — after `drive` returns — would hold a capacity slot
+        // across a drain that waits up to 30 s for the client to close. Measured consequence of
+        // getting that wrong: at N=2 the next run's streams were refused by slots the previous run
+        // had not yet released, and the block hung.
+        let slot: Box<dyn Send + Sync> = Box::new(slot);
         // Ids travel in band as opaque UTF-8 — never a URL segment or a header (H6).
         let open = wire::frame(
             wire::TAG_OPEN,
@@ -810,9 +809,9 @@ async fn stream_ws(State(s): State<Shared>, headers: HeaderMap, ws: WebSocketUpg
             checkpoints.clone(),
             total,
             json_seen.clone(),
+            Some(slot),
         )
         .await;
-        drop(slot.take());
         finish(&facts, &state, &checkpoints, &json_seen, t0, terminal);
     })
 }
