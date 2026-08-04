@@ -1394,6 +1394,88 @@ mod security_tests {
         }
     }
 
+    /// **R7 — bounded-memory backpressure, including §19.6's aggregate case.**
+    ///
+    /// Phase 2 exercised H3 not at all (§17.8 item 7) and N=2 not at all (item 8), so the aggregate
+    /// bound was only ever *derived* from "credit is per-stream". §19.7 requires it **measured**.
+    ///
+    /// Two concurrent streams, neither read. Each producer fills its bounded channel and then
+    /// blocks, and resident payload must plateau at or under the declared per-stream bound — with
+    /// the aggregate at or under twice it, which is the claim that has never been checked.
+    #[tokio::test]
+    async fn backpressure_bounds_resident_memory_per_stream_and_in_aggregate() {
+        let (port, token, shared) = spawn_server_with(None).await;
+
+        // Two streams, opened and then deliberately not read.
+        let mut held = Vec::new();
+        for _ in 0..MAX_CONCURRENT_STREAMS {
+            let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+            let req = format!(
+                "GET /stream/http HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n\
+                 Origin: http://127.0.0.1:{port}\r\nAuthorization: Bearer {token}\r\n\r\n"
+            );
+            s.write_all(req.as_bytes()).await.unwrap();
+            let mut one = [0u8; 1];
+            s.read_exact(&mut one).await.unwrap();
+            held.push(s);
+        }
+
+        let per_stream_bound = (MAX_INFLIGHT_BATCHES as u64 + 1) * shared.batch_wire_bytes as u64;
+
+        // Let both producers run until they are pinned against the bound, then watch a while: a
+        // bound that only holds momentarily is not a bound.
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(30);
+        let mut peak_aggregate = 0u64;
+        let mut observed_plateau = false;
+        while tokio::time::Instant::now() < deadline {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            let states: Vec<Arc<StreamState>> = shared
+                .states
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .values()
+                .cloned()
+                .collect();
+            if states.len() < MAX_CONCURRENT_STREAMS as usize {
+                continue;
+            }
+            let mut aggregate = 0u64;
+            for st in &states {
+                let r = st.resident_bytes() as u64;
+                assert!(
+                    r <= per_stream_bound,
+                    "per-stream resident {r} B exceeded the declared bound {per_stream_bound} B"
+                );
+                aggregate += r;
+            }
+            peak_aggregate = peak_aggregate.max(aggregate);
+            // The producers are genuinely backpressured once they have filled their channels.
+            if states.iter().all(|s| s.batches_generated() >= MAX_INFLIGHT_BATCHES as u64) {
+                observed_plateau = true;
+            }
+            if observed_plateau && peak_aggregate > 0 {
+                // Keep sampling a little past the plateau rather than stopping at first sight.
+                if tokio::time::Instant::now() + Duration::from_secs(25) < deadline {
+                    continue;
+                }
+                break;
+            }
+        }
+
+        assert!(
+            observed_plateau,
+            "neither producer reached its in-flight limit, so backpressure was never exercised"
+        );
+        assert!(
+            peak_aggregate <= MAX_CONCURRENT_STREAMS * per_stream_bound,
+            "aggregate resident {peak_aggregate} B exceeded {} B — the aggregate bound is derived, \
+             not real",
+            MAX_CONCURRENT_STREAMS * per_stream_bound
+        );
+        assert!(peak_aggregate > 0, "no resident payload was ever observed; the test measured nothing");
+        drop(held);
+    }
+
     /// Raw WebSocket handshake, returning the HTTP status of the upgrade response.
     async fn ws_probe(port: u16, origin: Option<&str>, protocols: Option<&str>) -> u16 {
         let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
