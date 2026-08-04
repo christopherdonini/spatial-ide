@@ -39,6 +39,11 @@ pub struct BodyStream {
     batches_sent: u64,
     finished: bool,
     began: bool,
+    /// An opaque resource whose lifetime must match the stream's — the admission slot (§19.7).
+    /// Held here rather than by the completion poller so it is released the moment the body ends or
+    /// is dropped; releasing it 25 ms late made back-to-back N=2 runs collide with the ceiling.
+    /// Typed as an opaque box so this adapter names no capacity concept.
+    held: Option<Box<dyn Send + Sync>>,
 }
 
 impl BodyStream {
@@ -59,7 +64,14 @@ impl BodyStream {
             batches_sent: 0,
             finished: false,
             began: false,
+            held: None,
         }
+    }
+
+    /// Ties an opaque resource to this body's lifetime.
+    pub fn holding(mut self, r: Box<dyn Send + Sync>) -> Self {
+        self.held = Some(r);
+        self
     }
 }
 

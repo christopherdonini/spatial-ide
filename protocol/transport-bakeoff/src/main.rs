@@ -782,8 +782,13 @@ async fn stream_ws(State(s): State<Shared>, headers: HeaderMap, ws: WebSocketUpg
     let t0 = s.t0;
 
     ws.protocols(["bakeoff.v0"]).on_upgrade(move |mut socket| async move {
-        // Held for the stream's whole lifetime; released on drop, including on the failure paths.
-        let _slot = slot;
+        // Held until the stream is functionally over. Deliberately dropped BEFORE `drive` returns
+        // its peer-drain: a stream that has sent its terminal frame is finished as far as capacity
+        // is concerned, and holding the slot across a drain that waits up to 30 s for the peer to
+        // close would make the ceiling a function of client shutdown timing rather than of load.
+        // Measured consequence of getting this wrong: at N=2 the next run's second stream was
+        // refused by a slot the previous run had not yet released.
+        let mut slot = Some(slot);
         // Ids travel in band as opaque UTF-8 — never a URL segment or a header (H6).
         let open = wire::frame(
             wire::TAG_OPEN,
@@ -807,6 +812,7 @@ async fn stream_ws(State(s): State<Shared>, headers: HeaderMap, ws: WebSocketUpg
             json_seen.clone(),
         )
         .await;
+        drop(slot.take());
         finish(&facts, &state, &checkpoints, &json_seen, t0, terminal);
     })
 }
@@ -836,13 +842,18 @@ async fn stream_http(State(s): State<Shared>, headers: HeaderMap) -> Response {
         format!("{} {}", operation.as_str(), stream_id.as_str()).as_bytes(),
     );
 
+    // The slot is bound to the response body, so it is released the instant the body completes or
+    // is dropped. Holding it in this function's frame would release it as soon as the headers were
+    // returned (no ceiling at all); handing it to the 25 ms completion poller released it late
+    // enough that back-to-back N=2 runs collided with it.
     let body_stream = adapter_http::BodyStream::new(
         rx,
         state.clone(),
         checkpoints.clone(),
         total,
         json_seen.clone(),
-    );
+    )
+    .holding(Box::new(slot));
 
     // Once the body is fully consumed or dropped, record the producer-side facts.
     let watch_state = state.clone();
@@ -850,11 +861,6 @@ async fn stream_http(State(s): State<Shared>, headers: HeaderMap) -> Response {
     let watch_cp = checkpoints.clone();
     let watch_json = json_seen.clone();
     tokio::spawn(async move {
-        // The admission slot lives exactly as long as the stream does. This task runs until the
-        // stream completes or is cancelled, so moving the slot in releases the ceiling on both
-        // paths; holding it in `stream_http`'s frame would release it the instant the response
-        // headers were returned, and the ceiling would not bind at all.
-        let _slot = slot;
         loop {
             tokio::time::sleep(Duration::from_millis(25)).await;
             if watch_state.is_cancelled() {
