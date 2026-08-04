@@ -13,101 +13,143 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use axum::extract::ws::{Message, WebSocket};
-use tokio::sync::mpsc;
+use futures::{SinkExt, StreamExt};
+use tokio::sync::{mpsc, watch, Semaphore};
 
 use crate::transport::{Checkpoints, StreamState, Terminal};
 use crate::wire;
 
+/// **P1 — the control path is split from the send path.**
+///
+/// Phase 1's F7 finding was that coalescing the batch and its progress frame halved Candidate A's
+/// cancel-blind window. Phase 2 (`86df830`) split them back into two writes, because concatenating
+/// them would allocate a payload-sized buffer inside the timed interval — §16.8's invalidator. That
+/// traded a measurement invalidator for a *doubled* cancel-blind window, and §18 P1 records it.
+///
+/// Restoring the coalesced write would reintroduce the allocation. The window is removed at its
+/// source instead: the receive half runs in its own task, so a CANCEL frame is parsed and
+/// `observe_cancel` is stamped **while a send is still pending**. The single-select structure could
+/// never do this — `tokio::select!` cannot poll `recv()` while `send().await` holds the loop.
+///
+/// The H2 measurement point is now independent of send progress entirely, which is what
+/// `cancel_is_observed_while_a_send_is_pending` pins. §19.6 requires that test, not this comment,
+/// to be the evidence.
 pub async fn drive(
-    mut socket: WebSocket,
+    socket: WebSocket,
     mut rx: mpsc::Receiver<bytes::Bytes>,
     state: Arc<StreamState>,
     checkpoints: Arc<Checkpoints>,
     total_batches: u64,
     json_frames_seen: Arc<std::sync::atomic::AtomicU64>,
 ) -> Terminal {
-    let mut credit: u64 = 0;
+    let (mut sink, mut stream) = socket.split();
+    let credit = Arc::new(Semaphore::new(0));
+    let (halt_tx, mut halt_rx) = watch::channel::<Option<Terminal>>(None);
     let mut batches_sent: u64 = 0;
 
-    checkpoints.begin("send");
-    let terminal = loop {
-        // Only pull a batch from the producer when we actually hold credit. `biased` keeps the
-        // control path ahead of the data path so a cancel is never starved by a full send queue.
-        let can_send = credit > 0;
-        tokio::select! {
-            biased;
-
-            incoming = socket.recv() => {
-                match incoming {
-                    Some(Ok(Message::Binary(b))) => {
-                        match parse_control(&b) {
-                            Some(Control::Credit(n)) => credit = credit.saturating_add(n as u64),
-                            Some(Control::Cancel) => {
-                                // Producer-visible cancellation, observed on the producer's own
-                                // clock at the instant this adapter learns of it (H2).
-                                state.observe_cancel(Instant::now());
-                                break Terminal::Cancelled("control frame".into());
-                            }
-                            None => {
-                                break Terminal::TransportFailed("malformed control frame".into());
-                            }
+    // The receive half. Owns nothing the writer needs, so it can never be blocked by a pending send.
+    let reader = tokio::spawn({
+        let credit = credit.clone();
+        let state = state.clone();
+        async move {
+            loop {
+                match stream.next().await {
+                    Some(Ok(Message::Binary(b))) => match parse_control(&b) {
+                        Some(Control::Credit(n)) => credit.add_permits(n as usize),
+                        Some(Control::Cancel) => {
+                            // Producer-visible cancellation, stamped on the producer's own clock at
+                            // the instant this adapter learns of it (H2) — regardless of whether the
+                            // writer is mid-send.
+                            state.observe_cancel(Instant::now());
+                            let _ = halt_tx.send(Some(Terminal::Cancelled("control frame".into())));
+                            break;
                         }
-                    }
+                        None => {
+                            let _ = halt_tx
+                                .send(Some(Terminal::TransportFailed("malformed control frame".into())));
+                            break;
+                        }
+                    },
                     Some(Ok(Message::Close(_))) | None => {
                         state.observe_cancel(Instant::now());
-                        break Terminal::Cancelled("peer closed".into());
+                        let _ = halt_tx.send(Some(Terminal::Cancelled("peer closed".into())));
+                        break;
                     }
                     Some(Ok(_)) => { /* ignore non-binary control traffic */ }
                     Some(Err(e)) => {
                         state.observe_cancel(Instant::now());
-                        break Terminal::TransportFailed(format!("receive: {e}"));
+                        let _ = halt_tx.send(Some(Terminal::TransportFailed(format!("receive: {e}"))));
+                        break;
                     }
                 }
             }
+            // The writer must not be left waiting on credit that will never arrive.
+            credit.close();
+        }
+    });
 
-            maybe_batch = rx.recv(), if can_send => {
-                match maybe_batch {
-                    Some(payload) => {
-                        let len = payload.len();
+    checkpoints.begin("send");
+    let terminal = loop {
+        // `borrow_and_update` marks the current value seen, so the `changed()` arms below fire on
+        // the next transition. Cancel transitions once, so this cannot miss it.
+        if let Some(t) = halt_rx.borrow_and_update().clone() {
+            break t;
+        }
 
-                        // Accounted at handoff to the transport, matching Candidate B exactly.
-                        // Counting after the flush here and before it there would be unequal
-                        // instrumentation between adapters, which the preregistration's §8 makes
-                        // inadmissible outright.
-                        state.note_written(len);
-                        credit -= 1;
-                        batches_sent += 1;
+        // Only pull a batch from the producer when credit is actually held.
+        if credit.acquire().await.is_err() {
+            // Semaphore closed by the reader: the peer is gone and the reason is already published.
+            break halt_rx.borrow().clone().unwrap_or(Terminal::Cancelled("peer closed".into()));
+        }
 
-                        if wire::looks_like_json(&payload) {
-                            json_frames_seen.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                        }
+        let payload = tokio::select! {
+            biased;
+            _ = halt_rx.changed() => break halt_rx.borrow().clone().unwrap_or(Terminal::Completed),
+            m = rx.recv() => match m {
+                Some(p) => p,
+                None => break Terminal::Completed,
+            },
+        };
 
-                        // **The payload arrives already framed and is written through unchanged.**
-                        // Phase 1 concatenated the batch and its progress frame into one buffer;
-                        // under Phase 2's pre-generated corpus that concatenation would allocate a
-                        // payload-sized buffer *inside the timed interval*, which §16.8 makes an
-                        // invalidator. Both candidates therefore write the batch and its progress
-                        // frame as two separate writes — symmetric, and allocation-free for the
-                        // payload. `Bytes` clones share storage, so no copy happens here either.
-                        if let Err(e) = socket.send(Message::Binary(payload)).await {
-                            state.observe_cancel(Instant::now());
-                            break Terminal::TransportFailed(format!("send: {e}"));
-                        }
+        let len = payload.len();
+        // Accounted at handoff to the transport, matching Candidate B exactly. Counting after the
+        // flush here and before it there would be unequal instrumentation between adapters, which
+        // §8 makes inadmissible outright.
+        state.note_written(len);
+        batches_sent += 1;
 
-                        let progress = wire::frame(
-                            wire::TAG_PROGRESS,
-                            &wire::progress_payload(
-                                batches_sent,
-                                state.bytes_emitted(),
-                                total_batches,
-                            ),
-                        );
-                        if socket.send(Message::Binary(progress.into())).await.is_err() {
-                            state.observe_cancel(Instant::now());
-                            break Terminal::TransportFailed("send progress".into());
-                        }
-                    }
-                    None => break Terminal::Completed,
+        if wire::looks_like_json(&payload) {
+            json_frames_seen.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+
+        // **The payload arrives already framed and is written through unchanged**, and the batch and
+        // its progress frame remain two separate writes so nothing payload-sized is allocated inside
+        // the timed interval (§16.8). `Bytes` clones share storage, so no copy happens here either.
+        //
+        // Each send races the halt signal. This is the P1 fix: a CANCEL arriving while these bytes
+        // are still draining into the socket is observed now, not after the flush completes.
+        tokio::select! {
+            biased;
+            _ = halt_rx.changed() => break halt_rx.borrow().clone().unwrap_or(Terminal::Completed),
+            r = sink.send(Message::Binary(payload)) => {
+                if let Err(e) = r {
+                    state.observe_cancel(Instant::now());
+                    break Terminal::TransportFailed(format!("send: {e}"));
+                }
+            }
+        }
+
+        let progress = wire::frame(
+            wire::TAG_PROGRESS,
+            &wire::progress_payload(batches_sent, state.bytes_emitted(), total_batches),
+        );
+        tokio::select! {
+            biased;
+            _ = halt_rx.changed() => break halt_rx.borrow().clone().unwrap_or(Terminal::Completed),
+            r = sink.send(Message::Binary(progress.into())) => {
+                if r.is_err() {
+                    state.observe_cancel(Instant::now());
+                    break Terminal::TransportFailed("send progress".into());
                 }
             }
         }
@@ -124,7 +166,7 @@ pub async fn drive(
         Terminal::DecodeFailed(d) => (wire::TERM_DECODE_FAILED, d.clone()),
     };
     let tf = wire::frame(wire::TAG_TERMINAL, &wire::terminal_payload(code, &detail));
-    let _ = socket.send(Message::Binary(tf.into())).await;
+    let _ = sink.send(Message::Binary(tf.into())).await;
 
     // **The producer never initiates the close.** It sends its terminal frame and then waits for
     // the consumer to close, draining whatever arrives meanwhile.
@@ -140,10 +182,11 @@ pub async fn drive(
     // application-visible shutdown protocol that both ends must get right, and getting it wrong
     // truncates silently. Whether that counts against this candidate under §12 is the evidence's
     // call. `websocket_delivers_every_batch_and_a_terminal_frame` pins the behaviour either way.
-    let _ = tokio::time::timeout(std::time::Duration::from_secs(30), async {
-        while let Some(Ok(_)) = socket.recv().await {}
-    })
-    .await;
+    //
+    // Under the split structure the reader task *is* the drain: it runs until the peer closes the
+    // connection or errors. Waiting for it to finish is therefore the same wait as before, expressed
+    // where the receive half now lives.
+    let _ = tokio::time::timeout(std::time::Duration::from_secs(30), reader).await;
 
     terminal
 }

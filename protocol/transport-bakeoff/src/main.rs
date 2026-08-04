@@ -989,6 +989,142 @@ mod security_tests {
         );
     }
 
+    /// **R6 / §18 P1 — the cancel-blind window, demonstrated rather than asserted from the diff.**
+    ///
+    /// §19.4 and §19.6 require *this specific* demonstration, because the plausible-looking version
+    /// of the test proves nothing: showing that a cancel works *between* sends passes on the broken
+    /// structure too. What has to be shown is a CANCEL observed **while a batch send is still
+    /// draining into the socket**.
+    ///
+    /// Construction. The client grants credit and then **stops reading**. Its receive window closes,
+    /// the server's `sink.send` for the first batch pends part-way through, and the writer is parked
+    /// inside it. A CANCEL is then sent on the same connection — TCP is full-duplex, so it arrives
+    /// even though the server cannot make progress writing.
+    ///
+    /// Under Phase 2's structure (`86df830`) one `tokio::select!` owned both halves, and it cannot
+    /// poll `recv()` while `send().await` holds the loop. This cancel would have been invisible
+    /// until the flush completed — which, with the client never reading, is never. The split
+    /// structure sees it immediately. That difference is the whole of P1.
+    #[tokio::test]
+    async fn cancel_is_observed_while_a_send_is_pending() {
+        use futures_util::SinkExt;
+        use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+        use tokio_tungstenite::tungstenite::Message as TMessage;
+
+        let (port, token, shared) = spawn_server_with(None).await;
+
+        let mut req = format!("ws://127.0.0.1:{port}/stream/ws")
+            .into_client_request()
+            .unwrap();
+        req.headers_mut().insert(
+            "sec-websocket-protocol",
+            format!("bakeoff.v0, {token}").parse().unwrap(),
+        );
+        req.headers_mut()
+            .insert("origin", format!("http://127.0.0.1:{port}").parse().unwrap());
+        let (mut ws, _resp) = tokio_tungstenite::connect_async(req).await.unwrap();
+
+        let ctl = |tag: u8, p: &[u8]| TMessage::Binary(wire::frame(tag, p).into());
+        // Credit far in excess of what the client and kernel socket buffers can absorb. This matters:
+        // with credit merely "ample" the writer parks on `credit.acquire()` once the buffers fill,
+        // which is a *different* wait and would not exercise the window under test. The first
+        // attempt at this test granted 8 and the buffers swallowed 3 batches (~7 MB) before the
+        // stall, so the count is set well above that.
+        ws.send(ctl(wire::TAG_CREDIT, &64u32.to_be_bytes())).await.unwrap();
+
+        // Deliberately read nothing from here on.
+        let state = {
+            let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+            loop {
+                if let Some(s) = shared
+                    .states
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .values()
+                    .next()
+                    .cloned()
+                {
+                    break s;
+                }
+                assert!(tokio::time::Instant::now() < deadline, "stream never registered");
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        };
+
+        // Wait for the first batch to be handed to the transport. `note_written` runs *before*
+        // `sink.send`, so a non-zero count means the writer has entered a send.
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+        while state.bytes_emitted() == 0 {
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "producer never handed a batch to the transport"
+            );
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+
+        // Establish that the writer is genuinely *stalled inside* a send, not merely slow. The
+        // buffers absorb some prefix of the stream first, so wait for the count to plateau rather
+        // than assuming the first sample is already the stall point.
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(20);
+        let stalled_at = loop {
+            let a = state.bytes_emitted();
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            if a == state.bytes_emitted() && a > 0 {
+                break a;
+            }
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "the writer never stalled — the socket absorbed the whole stream, so this test \
+                 cannot exercise the window it exists to test"
+            );
+        };
+        tokio::time::sleep(Duration::from_millis(400)).await;
+        assert_eq!(
+            state.bytes_emitted(),
+            stalled_at,
+            "the writer must be parked inside a pending send for this test to mean anything — \
+             it is still making progress, so the socket never filled and the window was not exercised"
+        );
+        // ...and genuinely mid-stream, not stalled on the last batch of a nearly-finished corpus.
+        let total = BATCH_COUNT as u64 * shared.batch_wire_bytes as u64;
+        assert!(
+            stalled_at < total / 2,
+            "expected the stall well inside the stream, got {stalled_at} of {total} bytes"
+        );
+        assert!(
+            !state.is_cancelled(),
+            "nothing has been cancelled yet; a cancel observed here would invalidate the measurement"
+        );
+
+        // The measurement. H2's gate is < 100 ms, on the producer's own clock.
+        let sent_at = std::time::Instant::now();
+        ws.send(ctl(wire::TAG_CANCEL, &[])).await.unwrap();
+
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        let observed = loop {
+            if let Some(at) = state.observed_at() {
+                break at;
+            }
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "producer never observed the cancel — the send is still blind to the control path, \
+                 which is exactly the §18 P1 regression this test exists to catch"
+            );
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        };
+
+        let ack = observed.saturating_duration_since(sent_at);
+        assert!(
+            ack < Duration::from_millis(100),
+            "producer-visible cancellation took {ack:?}, over H2's 100 ms gate, with a send pending"
+        );
+        assert!(
+            state.batches_after_cancel() <= 1,
+            "H2 allows at most one further batch after cancellation, saw {}",
+            state.batches_after_cancel()
+        );
+    }
+
     /// Raw WebSocket handshake, returning the HTTP status of the upgrade response.
     async fn ws_probe(port: u16, origin: Option<&str>, protocols: Option<&str>) -> u16 {
         let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
