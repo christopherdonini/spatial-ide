@@ -9,6 +9,14 @@
 import { tableFromIPC } from 'apache-arrow';
 import { makeTransport, type Candidate } from './make-transport.js';
 import { runPhase2, SCHEDULE, pct, bootstrapCI, orderEffect, type Manifest } from './phase2.js';
+import {
+  runPhase3,
+  analyseBlock,
+  modeR as verifyTransfer,
+  SCHEDULE as SCHEDULE_P3,
+  PAIRS,
+  pct as pct3,
+} from './phase3.js';
 import { PointRenderer } from './render.js';
 import type { Terminal } from './transport.js';
 import { FRAME_PREFIX_LEN } from './wire.js';
@@ -45,7 +53,17 @@ const N_LO = 1_075_000;
 const N_HI = 1_296_000;
 const CLOCK_PROBES = 21;
 const CLOCK_BOUND_LIMIT_MS = 10;
-const WATCHDOG_MS = 180_000;
+/**
+ * **§18 P5 / §19.7.** Phase 2 bracketed all 12 runs in one begin/end pair with no heartbeat inside,
+ * so a block that outlived the interval tripped the watchdog with a healthy transport underneath —
+ * which is what consumed block 2. Phase 3 beats after every mode of every run, so this is now a
+ * genuine per-run liveness bound rather than a disguised block ceiling, and it is declared here
+ * **before measuring** because §16.8 forbids raising a ceiling mid-measurement.
+ */
+const WATCHDOG_MS = 60_000;
+/** Separate whole-block ceiling (§19.7), so a stalled block still terminates. */
+const BLOCK_CEILING_MS = 1_800_000;
+let blockStartedAt = Number.POSITIVE_INFINITY;
 
 // -------------------------------------------------------------------------------------------
 // ADR-010 rule 7 — observable failure and recovery.
@@ -75,10 +93,16 @@ const heartbeat = () => {
 };
 let watchdogFired = false;
 const watchdog = setInterval(() => {
-  if (performance.now() - lastHeartbeat > WATCHDOG_MS) {
+  const stalled = performance.now() - lastHeartbeat > WATCHDOG_MS;
+  const overran = performance.now() - blockStartedAt > BLOCK_CEILING_MS;
+  if (stalled || overran) {
     watchdogFired = true;
     clearInterval(watchdog);
-    log('WATCHDOG fired — no heartbeat within the declared interval');
+    log(
+      stalled
+        ? 'WATCHDOG fired — no heartbeat within the declared per-run interval'
+        : 'WATCHDOG fired — block exceeded the declared whole-block ceiling',
+    );
     // Declared policy is `none — fail visibly, mark the run invalid, and terminate with a surfaced
     // error`. Setting a flag and carrying on would not be that policy.
     void persistFailure('watchdog fired — no heartbeat within the declared interval');
@@ -238,10 +262,21 @@ async function clockSync() {
       bestRtt = rtt;
       // serverMs ~= clientPerfNow + offsetMs
       offsetMs = j.serverNanosSinceT0 / 1e6 - (t0 + rtt / 2);
+      lastClock = j;
     }
   }
-  return { offsetMs, boundMs: bestRtt / 2, minRttMs: bestRtt };
+  // §17.8 item 1 / §19.4: the build profile and the TCP_NODELAY state have to reach the artifact.
+  // Phase 2 discarded both — it never even called this — so §8's "a debug build measured as
+  // release" invalidator had no mechanism behind it and §19.8's nodelay invalidator would have none.
+  return {
+    offsetMs,
+    boundMs: bestRtt / 2,
+    minRttMs: bestRtt,
+    debugAssertions: lastClock?.debugAssertions ?? null,
+    tcpNoDelay: lastClock?.tcpNoDelay ?? null,
+  };
 }
+let lastClock: { debugAssertions?: boolean; tcpNoDelay?: unknown } | null = null;
 
 interface RunMetrics {
   candidate: Candidate;
@@ -668,6 +703,160 @@ async function runPhase2Flow(manifest: Manifest, renderer: PointRenderer) {
   (window as any).__BAKEOFF_DONE__ = true;
 }
 
+/**
+ * Phase 3 — repaired instrument (§19).
+ *
+ * Structurally the same discipline as Phase 2: the full schedule completes **before** any
+ * comparison is computed, and an invalid run invalidates the whole block. What changed is what is
+ * being measured (no hasher in the timed path, §19.5), how it is analysed (paired symmetric effect
+ * with a Student-t interval, §19.3) and that the block can no longer be rejected for the candidates
+ * being alike (§19.2).
+ */
+async function runPhase3Flow(manifest: Manifest, renderer: PointRenderer, n2: boolean) {
+  const c = manifest.corpus!;
+  const label = n2 ? `N=2 (batch ${c.config})` : `config ${c.config}`;
+  log(`PHASE 3 — ${label}: ${c.batchCount} x ${c.rowsPerBatch} rows, ${c.totalWireBytes} wire bytes`);
+  log(`  schedule ${SCHEDULE_P3.map((s) => (s === 'websocket' ? 'A' : 'B')).join('')} — ${PAIRS} pairs`);
+
+  const clock = await clockSync();
+  log(`  clock offset ${clock.offsetMs.toFixed(3)} ms +/-${clock.boundMs.toFixed(3)} · debug=${clock.debugAssertions}`);
+
+  // §19.5's verification transfer: same build, same decoder path, hasher as the only difference.
+  // Run before the timed schedule so a corpus-integrity failure stops the block rather than being
+  // discovered after 20 runs have been spent.
+  const verification: Record<string, unknown>[] = [];
+  if (!n2) {
+    for (const cand of ['websocket', 'http-stream'] as Candidate[]) {
+      const v = await verifyTransfer(cand, BASE, TOKEN, manifest, true);
+      heartbeat();
+      verification.push({
+        candidate: cand,
+        wireDigest: v.wireDigest,
+        matchesManifest: v.wireDigest === c.wireDigest,
+        structuralDigest: v.structuralDigest,
+        invalid: v.invalid,
+      });
+      log(`  verification ${cand}: digest ${v.wireDigest === c.wireDigest ? 'MATCHES' : 'DIFFERS FROM'} manifest`);
+    }
+  }
+
+  blockStartedAt = performance.now();
+  begin('phase3-block');
+  const results = await runPhase3(BASE, TOKEN, manifest, log, heartbeat, n2);
+  end('phase3-block');
+  blockStartedAt = Number.POSITIVE_INFINITY;
+
+  // Block-level validity FIRST, before any comparison exists to be tempted by.
+  const invalidReasons: string[] = [];
+  for (const r of results) invalidReasons.push(...(r.invalid ?? []));
+  if (document.hidden) invalidReasons.push('document hidden at completion');
+  if (watchdogFired) invalidReasons.push('watchdog fired');
+  if (fatalErrors.length) invalidReasons.push(`uncaught errors: ${fatalErrors.join('; ')}`);
+  const dangling = danglingCheckpoint();
+  if (dangling) invalidReasons.push(`dangling checkpoint: ${dangling}`);
+  for (const v of verification) {
+    if (v.matchesManifest === false) invalidReasons.push(`${v.candidate}: verification digest != manifest`);
+  }
+  // §19.8: absent or unequal TCP_NODELAY state is an invalidator, not a footnote.
+  const nd = clock.tcpNoDelay as { connectionsVerified?: number; connectionsFailed?: number } | null;
+  if (!nd) invalidReasons.push('TCP_NODELAY state absent from the record');
+  else if ((nd.connectionsFailed ?? 1) > 0) invalidReasons.push(`TCP_NODELAY failed on ${nd.connectionsFailed} connections`);
+  if (clock.debugAssertions !== false) invalidReasons.push('not a release build');
+
+  // §19.3 — computed only now, after the schedule has completed.
+  const analysis = analyseBlock(results);
+  invalidReasons.push(...analysis.invalid);
+
+  const byCandidate = (cand: Candidate) => results.filter((r) => r.candidate === cand);
+  const summarize = (cand: Candidate) => {
+    const rs = byCandidate(cand);
+    const t1 = rs.map((r) => r.t1TransportMs);
+    const mbs = rs.map((r) => r.transportMBs);
+    return {
+      candidate: cand,
+      runs: rs.length,
+      t1Ms: { p50: pct3(t1, 50), p95: pct3(t1, 95), p99: pct3(t1, 99) },
+      transportMBs: { p50: pct3(mbs, 50), p95: pct3(mbs, 95), p99: pct3(mbs, 99) },
+      decodeMs: { p50: pct3(rs.map((r) => r.decodeOnlyMs ?? NaN), 50) },
+      endToUsableMs: { p50: pct3(rs.map((r) => r.t3DecodedMs ?? NaN), 50) },
+      firstBatchMs: { p50: pct3(rs.map((r) => r.firstBatchMs ?? NaN), 50) },
+      reassemblyCopiesPerRun: [...new Set(rs.map((r) => r.reassemblyCopies))],
+      arrowParseSharesBuffer: [...new Set(rs.map((r) => r.arrowParseSharesBuffer))],
+      peakJsHeapBytes: Math.max(...rs.map((r) => r.peakJsHeapBytes ?? 0)),
+      producerResidentMax: Math.max(
+        ...rs.map((r) => Number((r.producerFacts as { resident_bytes_max?: number } | null)?.resident_bytes_max ?? 0)),
+      ),
+    };
+  };
+
+  const report = {
+    schema: 'transport-bakeoff/phase3/v1',
+    preregistration: 'protocol/transport-bakeoff/README.md §19',
+    timestamp: new Date().toISOString(),
+    configuration: n2 ? `N2-${c.config}` : c.config,
+    valid: invalidReasons.length === 0,
+    invalidReasons,
+    environment: {
+      userAgent: navigator.userAgent,
+      gpu: renderer.gpuInfo(),
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      documentHiddenAtEnd: document.hidden,
+      rafThrottleEvents,
+      becameHiddenDuringRun,
+      smokeMode: SMOKE,
+      debugAssertions: clock.debugAssertions,
+      tcpNoDelay: clock.tcpNoDelay,
+      clockOffsetMs: clock.offsetMs,
+      clockBoundMs: clock.boundMs,
+    },
+    manifest,
+    schedule: SCHEDULE_P3,
+    verification,
+    analysis,
+    summary: [summarize('websocket'), summarize('http-stream')],
+    runs: results,
+    declaredAssertions: {
+      decisionRule:
+        '§19.9 — hard gate disqualifies; CI entirely above +10% selects B; entirely below -10% selects A; entirely within +/-10% is performance-equivalent and falls through to §12 ordering on measured end-to-end cost; overlapping a boundary is inconclusive and ADR-012 stays Proposed; unknown internal copy count is not a win; rule 5 evaluated across admissible batch sizes',
+      estimator:
+        '§19.3 — per-pair symmetric relative effect 2(thrB-thrA)/(thrA+thrB) over the adjacent-pair decomposition; theta>0 means Candidate B faster; the symmetric denominator closes §18 P9',
+      interval:
+        '§19.3 — Student-t over pair-level theta is the DECISION interval (measured coverage 94.9-95.8%); percentile bootstrap with the declared 64-bit seed reported alongside; branches disagreeing makes the outcome inconclusive',
+      hashing:
+        '§19.5 — no cryptographic hasher in the timed path; O(batches) structural digest inside every timed run; cryptographic identity established on a separate untimed verification transfer, same build, hasher gated at runtime',
+      drift: '§19.3 — reported, not a gate; a block above 20% is flagged and may not decide alone',
+      counterbalancing: `${PAIRS} pairs, AB/BA alternating; whole-block replacement, at most once; no optional stopping`,
+      ceilings: {
+        maxFrameBytes: c.maxFrameBytesCeiling,
+        maxInflightBatches: manifest.maxInflightBatches,
+        creditWindowBytes: manifest.creditWindowBytes,
+        producerResidentBoundBytes: manifest.producerResidentBoundBytes,
+        maxConcurrentStreams: 2,
+        watchdogPerRunMs: WATCHDOG_MS,
+        watchdogPerBlockMs: BLOCK_CEILING_MS,
+      },
+      unknownCopies:
+        'WebView2-internal WebSocket message assembly is opaque; its copy count is UNKNOWN and is not counted as a win',
+    },
+    log: logLines,
+  };
+
+  const res = await fetch(`${BASE}/report`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(report),
+  });
+  log(`report POST ${res.status}`);
+  log(
+    `PHASE 3 DONE — valid=${report.valid} · theta ${(analysis.thetaMean * 100).toFixed(2)}% ` +
+      `CI [${(analysis.tCI[0] * 100).toFixed(2)}, ${(analysis.tCI[1] * 100).toFixed(2)}] ` +
+      `-> ${analysis.branch} · drift ${(analysis.driftFraction * 100).toFixed(1)}%`,
+  );
+  if (invalidReasons.length) log(`  invalid: ${invalidReasons.join(' | ')}`);
+  (window as any).__BAKEOFF_REPORT__ = report;
+  (window as any).__BAKEOFF_DONE__ = true;
+}
+
 async function main() {
   const canvas = document.getElementById('gl') as HTMLCanvasElement;
   const renderer = new PointRenderer(canvas);
@@ -702,6 +891,11 @@ async function main() {
     cache: 'no-store',
   });
   const manifest = (await manifestRes.json()) as Manifest;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('p3') === '1' && manifest.corpus) {
+    await runPhase3Flow(manifest, renderer, params.get('n2') === '1');
+    return;
+  }
   if (manifest.phase === 2 && manifest.corpus) {
     await runPhase2Flow(manifest, renderer);
     return;

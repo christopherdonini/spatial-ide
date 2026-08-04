@@ -50,6 +50,9 @@ export interface Manifest {
   } | null;
   maxInflightBatches?: number;
   creditWindowBytes?: number;
+  /** §18 P8: (4+1) x batch. Phase 2 shipped this value under `creditWindowBytes`. */
+  producerResidentBoundBytes?: number;
+  tcpNoDelay?: { requested: boolean; connectionsVerified: number; connectionsFailed: number };
 }
 
 export interface RunResult {

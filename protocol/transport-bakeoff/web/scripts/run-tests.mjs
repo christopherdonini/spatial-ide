@@ -5,14 +5,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const out = join(tmpdir(), `bakeoff-regression-${process.pid}.mjs`);
-await build({
-  entryPoints: ['src/regression.test.ts'],
-  bundle: true,
-  format: 'esm',
-  platform: 'node',
-  target: 'node20',
-  outfile: out,
-  logLevel: 'error',
-});
-await import(pathToFileURL(out).href);
+for (const suite of ['regression', 'analysis']) {
+  const out = join(tmpdir(), `bakeoff-${suite}-${process.pid}.mjs`);
+  await build({
+    entryPoints: [`src/${suite}.test.ts`],
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    target: 'node20',
+    outfile: out,
+    logLevel: 'error',
+  });
+  await import(pathToFileURL(out).href);
+}

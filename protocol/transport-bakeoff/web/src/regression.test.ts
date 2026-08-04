@@ -156,4 +156,6 @@ console.log('Framing invariants relied on by the copy measurement');
 }
 
 console.log(failures === 0 ? '\nregression: PASS' : `\nregression: FAILED (${failures})`);
-process.exit(failures ? 1 : 0);
+// Signal failure without exiting: the runner has further suites to execute, and exiting here would
+// silently skip them — a green run that never ran the analysis coverage at all.
+if (failures) process.exitCode = 1;

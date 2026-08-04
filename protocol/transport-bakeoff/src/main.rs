@@ -276,9 +276,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // at all, so an unauthenticated local process that scans loopback and fetches `/` gets nothing
     // it can use. Handing the token out of the page-serving endpoint would have made every other
     // gate decoration (docs/09).
+    // Phase 3 (§19) is selected in the page, so the server's corpus path stays byte-identical
+    // between phases — the corpus a Phase-3 block measures is the same corpus Phase 2 measured,
+    // built by the same code. The query rides before the fragment; the token stays in the fragment
+    // and so still reaches no request line (docs/09).
+    let query = if args.iter().any(|a| a == "--phase3") {
+        if args.iter().any(|a| a == "--n2") {
+            "?p3=1&n2=1"
+        } else {
+            "?p3=1"
+        }
+    } else {
+        ""
+    };
     let launch_url = format!(
-        "http://127.0.0.1:{}/#{}",
+        "http://127.0.0.1:{}/{}#{}",
         local.port(),
+        query,
         state.session.token_for_injection()
     );
     let url_file = out_dir.join("launch-url.txt");
