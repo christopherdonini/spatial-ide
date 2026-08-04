@@ -2632,3 +2632,126 @@ What Phase 3 does establish, and what survives all ten findings: the instrument 
 copy differential is real and re-measured at every configuration, and §19.3's estimator classified a
 near-perfect null as **equivalence** where §16.5's would have rejected it as confounded — which was
 the point of the phase.
+
+---
+
+# 22. Corrections and findings from the third review pass
+
+Recorded here rather than by editing §19 (the preregistration), §20 (the tester's execution record)
+or §21 (my post-review findings). Every item is a correction *to this study by its own reviewer*.
+**None changes §20's outcome** — no §19.9 branch selects a candidate and ADR-012 stays Proposed —
+but two of them change what the study may claim, and one refutes a causal story I had published.
+
+## 22.1 The §21 Q1 causal story was wrong, and the artifacts already contained the refutation
+
+§21 Q1 attributed the between-session shift at configuration L — a *valid* pre-fix block selecting A
+decisively, a post-fix block of record at θ = −5.26% — to the five-line admission-slot change,
+noting it sat outside the timed path and calling the asymmetry unexplained.
+
+**That is refuted by data the study had already recorded.** Every block runs untimed verification
+transfers, which are ~90% SHA-256 over a fixed corpus — a transport-insensitive, CPU-bound workload.
+Their durations, from the artifacts' own logs:
+
+| Configuration | verification A / B, earlier session | later session |
+|---|---|---|
+| S | 7.30 / 7.08 s | 9.43 / 9.29 s · 9.55 / 8.73 s |
+| M | 7.19 / 7.11 s | 9.69 / 9.57 s |
+| L | 7.32 / 7.20 s | 9.24 / 9.45 s |
+
+**The machine ran 26–35% slower on a fixed non-transport workload**, on both candidates, at every
+configuration. Candidate A's throughput ratio across those sessions is 1.34–1.37× and Candidate B's
+is 1.06–1.10×, so a machine-wide slowdown accounts for essentially all of A's fall. The question that
+actually needs an answer is the opposite of the one §21 Q1 asked: **why was Candidate B nearly
+insensitive to a machine-wide slowdown?**
+
+The limit stands — no single block should be treated as reproducible — but its cause is a session
+effect the design does not control for, not the code change. **The verification-transfer duration is
+already recorded in every block and should be a declared per-block canary in any Phase 4**: it costs
+nothing, it is transport-insensitive by construction, and it converts this from an unbounded worry
+into a testable one.
+
+## 22.2 The ±10 pp half-width invalidator changed no branch, and its only effect was to kill rule 7
+
+Structurally it is **not** §16.5's failure mode, and the reason should have been in §19.3 rather than
+left to be inferred: `halfWidth = t·SD(θ)/√n` contains no term for the effect, and under normality
+the sample mean and sample SD are independent, so admission does not condition on θ.
+
+But its realized effect in this phase is one-directional and must be stated:
+
+- Both S blocks were **already `inconclusive`** under §19.9 rules 2–5 on their own intervals. The
+  invalidator therefore **changed no verdict anywhere in the phase**. Its entire effect was to turn
+  "admissible but inconclusive at S" into "no admissible block at S" — which is the **sole** reason
+  rule 7 (batch-size dependence) is unevaluable for the second phase running.
+- The two blocks it removed are the only N=1 blocks with **θ > 0**; the two it kept are the only ones
+  with **θ < 0**. Together with the inadmissible N=2 block, **every Phase-3 result favouring
+  Candidate B is inadmissible and every admissible result favours Candidate A or nothing.** That is
+  not evidence of bias in the rule, but it is exactly the shape a biased rule would produce, and a
+  reader is entitled to see it stated rather than discover it.
+- The discarded configuration is plausibly the one with the **largest true effect** — θ point
+  estimates order L < M < S, and the diagnostic sweep orders the same way. That is the mirror image
+  of §16.5 discarding the *smallest* effects, arriving through variance instead of through the
+  estimator.
+
+**For a Phase 4:** size pairs per configuration on that configuration's own measured dispersion (S
+needs roughly 47–50 pairs for ±10 pp, not 10), and **demote imprecision from "block invalid" to
+"admissible, branch = inconclusive, may not decide alone"** — the same treatment §19.3 already gives
+drift. That keeps S inside rule 7's input set, which is the only thing rule 7 needs from it.
+
+## 22.3 §16.5's statistic, applied to Phase 3's blocks
+
+§19.1 forbids re-analysing Phase-2 blocks under the *new* statistic. It says nothing about the *old*
+statistic on *new* data, and that is a fair test §19.2 did not think to run:
+
+| Block | §16.5 ratio | verdict under the old gate |
+|---|---|---|
+| **M** — the only block whose decision rule fires | **1981.2%** | confounded |
+| L | 104.2% | confounded |
+| S / S-replacement | 93.8% / 246.9% | confounded |
+| **N2-M** — θ ≈ +38.6% | **1.9%** | **valid** |
+
+The old gate would have rejected **every N=1 block**, including the one carrying this study's only
+firing decision rule, and admitted **only** the two blocks with a large effect. That is §19.2's
+argument demonstrated on this phase's own measurements rather than on simulated ones.
+
+## 22.4 Configuration S's dispersion is Candidate B's, not the configuration's
+
+§20.7 attributes S's failure to "the configuration with 1000 batches per run being the one that
+exposes per-batch scheduling jitter". Run-level coefficient of variation says otherwise:
+
+| Block | A | B |
+|---|---|---|
+| S / S-replacement | 10.1% / 8.6% | **46.1% / 36.6%** |
+| M | 5.6% | 11.1% |
+| L | 5.3% | 9.2% |
+
+The variance that invalidated both S blocks is overwhelmingly **Candidate B's** — its per-run figures
+at S span 328.6–896.8 MB/s. That is a **candidate-asymmetric behaviour at small batch sizes**, which
+§12's ordering does not score and which this study has now discarded twice without naming it. If
+Candidate B is unstable at small batches on this platform, that is a transport-relevant property in
+its own right and a Phase 4 should measure it rather than treat it as noise.
+
+## 22.5 Factual corrections
+
+| Where | Claimed | Actually |
+|---|---|---|
+| §19.2 | drift rows "within ~1 pp of the zero-drift row **throughout**" | up to **8.1 pp** at the 20% effect row (44.2% vs 52.3%). The conclusion survives; "throughout" does not |
+| §19.3 | coverage "94.5–98.0% up to 50% drift" | the committed script prints **94.5–99.9%**; over-coverage is the safe direction, but the range was misquoted |
+| §20.3, §21 Q1 | "five lines and one moved `drop`" in `adapter_ws.rs` | **9 added lines** (2 functional), and the reordering is in `main.rs`, not `adapter_ws.rs` |
+| §20.4 | "eight untimed transfers — two per candidate per configuration" | one per candidate per **block**; S has two only because S ran twice |
+| §20.8 | diagnostic D1 "declared before running" | its script was committed **after** the diagnostic artifacts and after the record was read. The declaration is prose-only and post-hoc, and D1 is hypothesis-forming, not a preregistered measurement |
+| §19.7 | cites "`docs/01` principle 1" for honest disclosure | principle 1 is "everything is an addressable, typed resource"; the apt citation is **principle 3**, which §19.5 already uses correctly |
+| §21 Q2 | scopes the missing hasher flag to N=2 | verification records carry no hashing flag at **any** configuration, so §19.8's invalidator bites the verification transfers everywhere |
+
+## 22.6 Two things the measurement model still does not establish
+
+- **The equal-instrumentation test covers the decoder, not the adapters.** `analysis.test.ts` exercises
+  `FrameDecoder` + `StructuralDigest` over a synthetic in-memory stream; neither adapter appears in it.
+  §19.5's "the transport and decoder paths are byte-identical between the two modes" is discharged for
+  the decoder only.
+- **The certifying transfer runs in a different regime from the transfer it certifies** — roughly
+  17–20× slower (verification 8.73–9.69 s against timed t1 0.45–0.56 s). Every failure this harness has
+  actually suffered was rate- or shutdown-dependent, F4's silent WebSocket truncation being the
+  canonical one. **A rate-dependent corruption is invisible to this design**: the verification run is
+  too slow to provoke it and the structural digest covers only index, length and the first/last 8 bytes
+  per batch. §19.5's declared residual is accurate but understates this. A full-rate verification run
+  using `crypto.subtle.digest` after t1, in a separate discarded run, would close it cheaply.
