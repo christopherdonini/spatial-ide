@@ -29,11 +29,27 @@ Feature count alone is not a workload — 10M points and 10M polygon vertices ar
 
 - **Public data**: Overture Maps, OSM extracts, Sentinel/NAIP samples — real scale, redistributable.
 - **Dirty data zoo**: real-world broken shapefiles, wrong-encoding CSVs, mislabeled-CRS files, truncated columns. This is the data doctor's (05) test suite — every bug report that involves a weird file donates a specimen.
+- **Published control coordinates**: official reference points for CRS-transformation validation — for the Swiss fixture, swisstopo's LV95↔ETRS89 points — stored with their publication source and date. Used only as the PROJ oracle (see Correctness).
 
 ## Correctness
 
 - Geometry operations validated against PostGIS/GEOS reference results.
 - CRS transforms validated against authoritative PROJ values (05).
+- **Test-oracle separation.** Each oracle answers only the question it is authoritative for, and
+  neither substitutes for the other:
+  - **CRS transformation** is validated against **PROJ**, using *officially published control
+    coordinates* — for the Swiss fixture, swisstopo's published LV95↔ETRS89 reference points, held as
+    the third regression-corpus category above.
+  - **Geometry predicates, nearest-point, snapping and post-edit topology** are validated against
+    **GEOS**. **GEOS is never used as a CRS oracle.**
+  - **PostGIS is not an independent CRS oracle either**, because it embeds PROJ: a PostGIS result
+    that depends on `ST_Transform` is the same oracle reached by a longer path.
+- **Round-trip tolerance is not declared accuracy.** Forward/inverse round-trip determinism is
+  validated against a strict **computational** tolerance. That number is different from, and far
+  tighter than, an operation's **declared real-world accuracy**. The two must never be conflated in
+  any test, budget row, or claim — a tight round-trip figure is not evidence about picking or
+  digitizing accuracy, and a declared accuracy is not a licence for loose arithmetic. Both numbers
+  land with their measurements; neither is written here in advance (`no numbers, no claim`).
 - Style compilation: same style + data → identical style/layout decisions; raster output compared within declared platform tolerances (06).
 
 ## Protocol conformance

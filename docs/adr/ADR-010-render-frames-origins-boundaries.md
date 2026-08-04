@@ -111,6 +111,18 @@ Rules 1–7 contain **no unmeasured performance or precision claim**. Everything
 - Nothing here commits the project to a tiled renderer. If ADR-011 is rejected, rules 1–7 stand unchanged.
 
 > **OPEN:** *Typed coordinate provenance and candidate-to-authoritative promotion.* Rule 1 discriminates three **spatial** spaces, but authoritative-vs-derived is an **orthogonal** axis: a cursor-derived f64 and a surveyed f64 in the same CRS are, today, the same type. Rule 2's promotion and snap clauses therefore rest on discipline rather than on the type system — exactly what "CRS is a type" exists to prevent. What is undecided: whether provenance becomes a typed attribute alongside CRS (`authoritative` | `derived(method, declared accuracy)`), recorded per feature in metadata under 11's stable-ID policy, constraining the reproducibility grade the containing workflow may claim (ADR-005), and adding a provenance column to the ADR-007 delta store. **Must be resolved before the editing plugin's digitizing path is built (ADR-002, 1.0; 07)** — a new ADR is the expected vehicle. Raised by the architect review of this revision.
+>
+> **Appended 2026-08-04 — vehicle assigned, not a rewrite of the above.** **ADR-013 — Typed
+> Coordinate Spaces and Provenance (Proposed)** is the ADR this block calls for. It proposes the
+> typed provenance attribute, its recording granularity, and the ADR-007 delta-store column. On the
+> ADR-005 clause in this block and in rule 2's promotion clause, ADR-013 **proposes** reading
+> "constrains the reproducibility grade" as **bounds the accuracy claim, displayed alongside the
+> reproducibility grade** — declared accuracy becoming a second, parallel attribute with its own
+> weakest-input composition rule, leaving ADR-005's ladder intact and unamended. **That reading
+> contradicts rule 2's clause as written, so it is a proposal and not a resolution: rule 2 stands as
+> written, and accepting ADR-013 will require an appended amendment to this ADR revising that
+> clause, approved as its own decision.** This note assigns a vehicle and records the proposal; the
+> OPEN block's text above is unchanged and the block stays open until ADR-013 is accepted.
 
 ## Reconciliation — old rule numbers to new locations
 
