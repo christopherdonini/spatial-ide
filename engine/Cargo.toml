@@ -1,0 +1,23 @@
+[package]
+name = "spatial-engine"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "data-engine module (docs/02, docs/05): DuckDB + Arrow, GeoParquet, CRS as a type."
+
+[features]
+# Seeded GeoParquet fixture writer. Test support only — gated so it cannot be reached from the
+# shipped path by accident (docs/02 does not scope a synthetic generator to this module).
+fixture = ["dep:parquet"]
+
+[dependencies]
+arrow = { workspace = true }
+# `bundled` builds DuckDB from vendored sources (no cmake on the reference profile); `parquet`
+# builds in the parquet reader, without which `read_parquet` does not exist.
+duckdb = { version = "1.10505.0", features = ["bundled", "parquet"] }
+serde_json = "1"
+parquet = { version = "58", optional = true, default-features = false, features = ["arrow", "snap"] }
+
+[dev-dependencies]
+# Enables the fixture writer for this crate's own tests without putting it in the shipped surface.
+spatial-engine = { path = ".", features = ["fixture"] }

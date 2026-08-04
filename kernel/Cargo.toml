@@ -1,0 +1,25 @@
+[package]
+name = "spatial-kernel"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Composition root for the first engine slice: engine → data-plane binding. Nothing else."
+
+[lib]
+name = "spatial_kernel"
+path = "src/lib.rs"
+
+[[bin]]
+name = "slice-host"
+path = "src/main.rs"
+
+[dependencies]
+spatial-engine = { path = "../engine" }
+spatial-data-plane = { path = "../protocol/data-plane" }
+tokio = { workspace = true }
+
+[dev-dependencies]
+arrow = { workspace = true }
+spatial-engine = { path = "../engine", features = ["fixture"] }
+tokio-tungstenite = "0.29"
+futures-util = "0.3"

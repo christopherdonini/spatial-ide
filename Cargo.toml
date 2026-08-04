@@ -1,0 +1,51 @@
+# Workspace root for the modules docs/02 maps to top-level directories.
+#
+# Scaffolded per vertical slice, as the slice needs them (docs/07 Method; CLAUDE.md) — this file
+# lists exactly the crates the first `engine/` cut needs and nothing else. `renderer/` and
+# `frontends/` hold no Rust today; `frontends/canvas-probe/` is TypeScript.
+#
+# `protocol/transport-bakeoff` is deliberately **excluded**, not a member: it is decision evidence
+# for ADR-012 (a standalone crate, pinned to the trees its phases were measured on), not a module.
+# Folding it into this workspace would let a dependency bump silently change a measured artifact.
+[workspace]
+resolver = "2"
+members = [
+    "engine",
+    "protocol/data-plane",
+    "kernel",
+]
+exclude = [
+    "protocol/transport-bakeoff",
+    "spikes/adr-003-crs-rendering/app/src-tauri",
+]
+
+[workspace.dependencies]
+# One Arrow version across the workspace. Pinned to what `duckdb` 1.10505 itself depends on — a
+# second arrow major in the tree would make `RecordBatch` two incompatible types and force a
+# re-encode at the engine/protocol boundary that ADR-004's copy-minimized clause would then have to
+# account for.
+arrow = { version = "58", default-features = false, features = ["ipc"] }
+bytes = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "fs", "signal"] }
+
+[profile.release]
+# Kept for profiling the workspace's own crates, as the bake-off crate does.
+debug = true
+
+# …but not for dependencies. DuckDB is a vendored C++ tree, and its debug info alone runs to
+# gigabytes: with it on, one `cargo build --release` filled this machine's disk. Nobody steps
+# through libduckdb-sys here.
+[profile.release.package."*"]
+debug = false
+
+# DuckDB is compiled from vendored C++ sources. With debug info on — cargo's default for the dev
+# profile, which `cc` picks up — the resulting static library and its object files run to several
+# gigabytes and filled this machine's disk. Dependencies are not what anyone steps through here, so
+# they build without it; workspace crates keep theirs.
+[profile.dev.package."*"]
+debug = false
+
+[profile.dev.package.libduckdb-sys]
+debug = false
+# Optimizing the vendored C++ costs build time once and buys it back on every query in every test.
+opt-level = 2

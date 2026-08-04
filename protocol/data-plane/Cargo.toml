@@ -1,0 +1,23 @@
+[package]
+name = "spatial-data-plane"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "protocol module (docs/02, docs/10): the data-plane binding. One provisional adapter."
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+tokio = { workspace = true }
+bytes = { workspace = true }
+futures = "0.3"
+# OS CSPRNG for session tokens. ADR-012's threat model records that the bake-off's splitmix64
+# minting "is **not** adequate for the production transport"; this crate is not the bake-off.
+getrandom = "0.3"
+subtle = "2"
+hex = "0.4"
+
+[dev-dependencies]
+# A real WebSocket client, so delivery, cancellation and admission can be tested without a browser.
+tokio-tungstenite = "0.29"
+futures-util = "0.3"
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "sync", "time"] }

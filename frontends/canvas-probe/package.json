@@ -1,0 +1,21 @@
+{
+  "name": "spatial-canvas-probe",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal canvas consumer for the first engine slice. Vanilla TypeScript — this does NOT decide ADR-001's open React-vs-Svelte question.",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "apache-arrow": "^18.1.0"
+  },
+  "allowScripts": { "esbuild@0.24.2": true },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0",
+    "ws": "^8.18.0"
+  }
+}
