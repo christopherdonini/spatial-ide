@@ -1,9 +1,33 @@
 # ADR-012 — Data-Plane Transport
 
-**Status:** Proposed — **awaiting human approval. Not accepted.** A status change was pre-approved conditional on Phase 2 selecting a winner; it is **withheld** — Phase 2 returned confounded blocks at two of three batch sizes and §16.9 rule 5 could not be evaluated. See "Phase 2 outcome".
+**Status:** Proposed — **awaiting human approval. Not accepted.** A status change was pre-approved conditional on a phase selecting a winner. It is **withheld for the second time**: Phase 2 returned confounded blocks at two of three batch sizes, and Phase 3 — run on a repaired instrument — returned **no §19.9 branch that selects a candidate**. See "Phase 3 outcome", then "Phase 2 outcome".
 **Scope of any evidence below:** Windows 10 Pro 22H2 / WebView2-class engine only. Nothing here says anything about macOS/WKWebView or Linux/WebKitGTK, the same limit `docs/07` already places on ADR-003.
-**Sources:** `protocol/transport-bakeoff/README.md` — §1–§13 preregistration (committed before the harness), §14 Implementation findings, **§15 Results** (Phase 1, tester-filled), §16 Phase 2 preregistration (committed before Phase-2 code), **§17 Phase 2 results** (tester-filled), §18 Phase 2 instrument findings
+**Sources:** `protocol/transport-bakeoff/README.md` — §1–§13 preregistration (committed before the harness), §14 Implementation findings, **§15 Results** (Phase 1, tester-filled), §16 Phase 2 preregistration (committed before Phase-2 code), **§17 Phase 2 results** (tester-filled), §18 Phase 2 instrument findings, §19 Phase 3 preregistration (committed before Phase-3 code), **§20 Phase 3 results** (tester-filled), §21 Phase 3 instrument findings
 **Related:** **ADR-004** (+ 2026-08-03 amendments — this ADR *implements* its deferred choice and does not modify it), ADR-003 spike M1.5/M5 findings, ADR-010 rules 1/3/5/7, `docs/07`, `docs/09`, `docs/10`, `docs/11`
+
+## Phase 3 outcome (2026-08-04) — status change **withheld again**
+
+Phase 3 ran the repaired-instrument benchmark preregistered in `protocol/transport-bakeoff/README.md` §19, which exists because §18 recorded nine instrument defects in Phase 2 — including two declared controls that were never in force — and because §16.5's order-effect gate was shown to be degenerate: at a true null with zero drift it rejects **98.4 %** of blocks, and its rejection rate tracks the *effect under test* rather than drift. Results: §20. Instrument defects found in review of Phase 3: §21.
+
+**What Phase 3 fixed, and what it then found.** The consumer-side SHA-256 left the timed path, and measured throughput rose from Phase 2's 33–35 MB/s to 449–830 MB/s — confirming §17.7's diagnosis that Phase 2 measured a hasher, not a transport. §19.3's paired symmetric estimator did what §16.5's could not: it classified a near-perfect null at configuration M as **equivalence** instead of rejecting it as confounded.
+
+**The outcome under §19.9, applied in order:**
+
+| Configuration | Verdict | §19.9 branch |
+|---|---|---|
+| **M** — 2,438,344 B batches | valid | CI [−6.69 %, +6.23 %] → **rule 4, performance-equivalent** |
+| **L** — ~12.2 MB batches | valid | CI [−13.40 %, +2.89 %] overlaps the boundary → **rule 5, inconclusive** |
+| **S** — ~244 KB batches | **failed twice** | realized half-widths ±24.62 pp and ±21.87 pp against the declared ±10 pp; §19.7 forbids a third attempt |
+| **N=2** — concurrency | **inadmissible** | §19.8's own invalidators bind: no producer facts and no hashing flag in the artifact, no verification transfer, and the aggregate resident bound vacuous by construction (§21 Q2–Q4) |
+
+**No branch selects a candidate.** Rule 4 fires at M alone; its fall-through to §12's ordering selects **Candidate A** on re-measured copies and allocation pressure — but that is the ordering's verdict at one configuration, not a transport decision. **Rule 7 (batch-size dependence) remains not evaluable**, for the second phase running: §19.7 requires S plus one of M/L admissible, and S failed.
+
+**The N=2 result is recorded and is explicitly not evidence.** That block measured θ = +38.58 %, CI [+32.47 %, +44.69 %] — a decisive win for Candidate B on aggregate throughput with two concurrent streams, inverting the N=1 ranking. A declared mechanism diagnostic eliminated the credit window (a 50× sweep moved A's aggregate only 13 %), the JS main thread, and the Rust producer, leaving the cause inside **WebView2's opaque WebSocket receive path** — §19.9 rule 6's UNKNOWN region. The effect reproduced across three batch sizes and two orders. It cannot select a candidate, because the block fails §19.8; it is the strongest open question this study has produced, and it points the opposite way from every other measurement here.
+
+**Two limits a reader must carry forward, both from §21:**
+
+- **No Phase-3 block should be treated as reproducible between sessions.** A *valid* pre-fix L block selects A decisively at [−38.10 %, −21.09 %]; the post-fix L block of record is inconclusive at θ = −5.26 %. The functional difference is five lines and one moved `drop`, entirely outside the timed path, and Candidate A's throughput fell 25–27 % between sessions while Candidate B's fell 5–9 % — asymmetric, so a ratio does not cancel it. §19 has no control for this (§21 Q1).
+- **The ≈14× throughput gain may not be credited to the hasher removal alone.** At least 2,317.9 ms per run at S is unexplained by §17.7's own hasher figure. The leading candidate is `TCP_NODELAY` — declared in §16.2, found absent in §18 P2, and fixed in the same phase. Two changes, one measurement (§21 Q6).
 
 ## Phase 2 outcome (2026-08-04) — status change **withheld**
 
@@ -31,7 +55,7 @@ The reasoning is *a fortiori*, and is stated that way rather than claiming more 
 
 Before this ADR can reach Accepted, the following must land: admissible M and L blocks (which requires removing the consumer-side hashing cost from the timed path, or measuring it out of band), the N=2 configuration, and §16.9 rule 5 actually evaluated.
 
-## Recommended status change — **none, as of Phase 2**
+## Recommended status change — **none, as of Phase 3**
 
 **Remain Proposed.** This section previously recommended Proposed → Accepted on Phase 1's evidence. **That recommendation is withdrawn**, not because the candidate changed — it did not — but because Phase 2 showed the evidence base is narrower than the recommendation assumed: the batch-size dependence question that rule 5 exists to answer returned no admissible data at two of three configurations, and the one configuration that did produce a block was not transfer-bound.
 
@@ -98,7 +122,7 @@ The preregistration fixes seven hard requirements as pass/fail gates, evaluated 
 
 | | Requirement | Why it is a gate and not a preference |
 |---|---|---|
-| H1 | Payload correctness — identical digest across adapters and runs, exact row count, CRS tag on every batch | A transport that delivers a *different* payload has not delivered the payload |
+| H1 | Payload correctness — exact row count, CRS tag on every batch, and digest identity. **Grade changed by Phase 3 (§19.5):** cryptographic digest identity is established **per candidate per configuration on a dedicated untimed verification transfer** (8/8 at S, M, L; **not established at N=2**), tied to the timed runs by an identical structural digest. It is no longer asserted on every timed run, because the hasher that made that possible was consuming 61–63 % of the measurement. A timed run detects truncation, reordering, frame-boundary corruption and a lying length field; it does **not** detect interior byte corruption | A transport that delivers a *different* payload has not delivered the payload |
 | H2 | Producer-visible cancellation < 100 ms, and the producer stops producing | ADR-004 amendment 2 + `docs/01` principle 7 + `docs/08`. This is the exact requirement that disqualified the custom protocol |
 | H3 | Bounded-memory backpressure under a deliberately paused consumer | ADR-004's data-plane clause |
 | H4 | Loopback-only, ephemeral port, per-session auth, origin validation, redacted credentials | `docs/09` |

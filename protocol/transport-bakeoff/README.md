@@ -1893,3 +1893,742 @@ winner, so acceptance depends on work that must be built before acceptance can h
 hero-slice confirmation falsifies the provisional choice, step 3 is rework. That risk is real, is
 accepted deliberately rather than designed away, and belongs in ADR-012's consequences.
 
+
+---
+
+# 20. Phase 3 results
+
+*Filled by the tester agent from its own independent validation of the artifacts written against
+commit `7fab1e6` and committed at `0ab4061`, 2026-08-04. Every figure is transcribed from a report
+artifact whose SHA256 was checked, or from a diagnostic script named beside it. Every statistic in
+every artifact's `analysis` block was **recomputed from the raw per-run `transportMBs` values by a
+second implementation** before being quoted (20.5). Nothing is rounded to flatter, extrapolated or
+estimated, and no figure from an invalid, superseded or diagnostic block is used as evidence for a
+conclusion.*
+
+**Headline, before any table. Phase 3 does not close the transport decision either, and the reason is
+not the one Phase 2 gave.** The instrument repairs worked — throughput rose ~14×, producer facts
+reach the artifact, `TCP_NODELAY` is set and recorded, the seed holds 64 bits, the watchdog never
+fired. But of four preregistered configurations, **two produced admissible blocks and they disagree**
+(M returns equivalence, L returns inconclusive); **configuration S failed twice on realized
+imprecision**, so §19.9 rule 7 — the batch-size question §19.0 named as "the one question that
+determines whether a transport decision is possible at all" — is **not evaluable for the second phase
+running**; and **the N=2 block, the only decisive result in the set, is inadmissible under §19.8**
+because its artifact carries neither producer facts nor the hasher flag. ADR-012 stays **Proposed**.
+Detail in 20.11.
+
+## 20.1 Gate — verified before reading any result (§19.6)
+
+§19.6 makes R1–R8 an admissibility gate on the repaired tree. Re-run here, on `0ab4061`, by the
+tester rather than taken from a commit message.
+
+| Check | Result |
+|---|---|
+| `cargo test --release` | **37 passed, 0 failed, 0 ignored** (7.22 s) |
+| `cd web && npm test` | **72 consumer checks, all PASS** — regression (R1, R2, R3, R5 + framing invariants) and analysis (§19.3 estimator/interval/drift, §18 P7 seed, §19.9 branch classification, §19.5 structural digest + equal instrumentation) |
+| `npm run verify` | typecheck clean · `check-leakage: PASS — canary caught all 4 planted leaks (SocketLike, wsHandle, send_over_socket, httpStatus)` · bundle rebuilt |
+| Bundle reproducibility | `web/dist/app.js` rebuilds from HEAD sources **byte-identically** — SHA256 `f443ed5d244db5bb5691fa16b9a733ad239140cf31a9101455237d39cf031331` before and after `npm run build`. The instrument on disk is the instrument that produced the artifacts. |
+| **P1, proven by test not by diff (§19.6)** | `cancel_is_observed_while_a_send_is_pending` passes — the test grants credit past what the socket can absorb, verifies the writer is genuinely parked mid-stream, then delivers CANCEL on the same full-duplex connection. That is the specific window `86df830` reintroduced. |
+| P2 | `tcp_nodelay_is_set_on_accepted_connections_and_recorded` passes; every artifact carries `tcpNoDelay {requested: true, connectionsVerified: 3, connectionsFailed: 0}` in **both** `environment` and `manifest` |
+| R7 aggregate case (§19.6) | `backpressure_bounds_resident_memory_per_stream_and_in_aggregate` passes — asserts per-stream ≤ (4+1)×batch and aggregate ≤ 2× that, sampled past the plateau. **On the HTTP path, at the Phase-1 batch size** — not inside the N=2 block; see 20.8. |
+| N+1 admission (§19.7) | `a_stream_over_the_declared_ceiling_is_refused_and_surfaced` passes — third stream refused, terminal frame `TERM_TRANSPORT_FAILED`, detail contains `admission ceiling`, and slots are shown to be released again. **HTTP path only**; the WebSocket refusal exists in `main.rs` but has no test. |
+| Preregistration ordering | `git log` places `080e1d4` (§19 plus the two justification scripts, README-only otherwise) **before** every Phase-3 harness commit — `69e343b`, `3e5f080`, `9c7bc93`, `2805d30`, `574a96c`, `7fab1e6`. §19's void clause is **not** triggered. |
+| Artifact integrity | `sha256sum -c` passes on **5/5** blocks of record and **4/4** superseded blocks |
+| Build profile | `debugAssertions: false` **in every artifact** — §17.8 item 1 is closed; this no longer needs out-of-band verification |
+
+## 20.2 Reference profile actually measured
+
+| Item | Value (recorded per block, not assumed) |
+|---|---|
+| OS | Windows 10 Pro 22H2, build 19045 |
+| Webview | Edge / WebView2; UA `Chrome/150.0.0.0 Edg/150.0.0.0`, isolated profile, fresh process per block. **The exact build number is in no Phase-3 artifact** — only the UA major. §2's reference profile therefore cannot be pinned from the record; see 20.10 item 6. |
+| GPU | `ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11 vs_5_0 ps_5_0, D3D11)` — real hardware, so §8's software-rasterizer bar is cleared. Rendering is outside Phase 3's timed path. |
+| CPU | `hardwareConcurrency: 16` |
+| Rust / Node | `rustc 1.97.1 (8bab26f4f 2026-07-14)` MSVC · Node v24.18.1 |
+| Clock relation, per block | offset **418.288 / 416.727 / 412.710 / 415.085 / 377.198 ms**, bound **±0.450 / ±0.400 / ±0.350 / ±0.400 / ±0.450 ms** (S, S-replacement, M, L, N2-M) — all far under §8's 10 ms invalidator. §17.8 item 1's second half is closed: Phase 3 fetches `/clock`. |
+| Backgrounding | `documentHiddenAtEnd: false`, `becameHiddenDuringRun: false`, `rafThrottleEvents: 0`, `smokeMode: false` on **5/5** blocks |
+| Watchdog | 60 s/run, 1800 s/block, declared in advance (§19.4 P5). **Never fired** — no block carries `"watchdog fired"`. |
+| Block wall clock | S **40.74 s** · S-replacement **40.46 s** · M **38.21 s** · L **40.09 s** · N2-M **15.27 s**, of which the two verification transfers occupied the first **19.08 / 18.67 / 19.60 / 19.08 s** and none at N=2. Corpus build 2612 / 2697 / 3122 / 2776 / 2577 ms, outside every timed interval. |
+| Session total | Five blocks of record between 18:04:03Z and 18:07:33Z — **~3.5 minutes against §19.7's 90-minute bound.** |
+
+## 20.3 Every block attempted, and its verdict
+
+Nine blocks exist on disk: five of record and four superseded. `invalidReasons` verbatim.
+
+| # | Config | Artifact | `valid` | `invalidReasons` (verbatim) | Tester's verdict |
+|---|---|---|---|---|---|
+| 1 | **S** | `bakeoff-report-1785866643.json` | **false** | `"realized CI half-width ±24.62 pp exceeds the declared ±10 pp"` | agree — invalid |
+| 2 | **M** | `bakeoff-report-1785866688.json` | **true** | `[]` | agree — admissible |
+| 3 | **L** | `bakeoff-report-1785866735.json` | **true** | `[]` | agree — admissible |
+| 4 | **N2-M** | `bakeoff-report-1785866765.json` | **true** | `[]` | **DISAGREE — invalid under §19.8**; see 20.8 |
+| 5 | **S** (whole-block replacement of #1) | `bakeoff-report-1785866853.json` | **false** | `"realized CI half-width ±21.87 pp exceeds the declared ±10 pp"` | agree — invalid |
+
+**Whole-block replacement only, and only once.** Block 5 replaces block 1 entirely; no run was
+replaced individually or dropped from any block, and every block contains exactly 20 runs in the
+declared `ABBAABBAABBAABBAABBA` order with 5 `AB` and 5 `BA` pairs — verified per artifact against the
+`schedule` field and the per-run `position`/`pair` fields (20.5). §19.7 forbids a third S attempt and
+none was made.
+
+### The four superseded blocks — the record, **not evidence**
+
+> **Inadmissible in a second sense.** These four were measured on a **different tree** — before
+> `7fab1e6` fixed Candidate A's admission-slot lifetime. §8 forbids comparing measurements taken under
+> unequal instrumentation, and §19.9 rule 7 compares *across* batch sizes, so a mixed set is not
+> repairable by dropping one block. They are printed because §19.0's discipline is that what was run is
+> reported, and because **what they show about the instrument is itself a finding**. **No conclusion in
+> 20.11 rests on any number below, and no signed effect from them enters ADR-012.**
+
+| Config | Artifact | `valid` | θ | t CI | half-width | drift | branch |
+|---|---|---|---|---|---|---|---|
+| S | `superseded/bakeoff-report-1785829475.json` | false | +4.25% | [−29.43, +37.93] | ±33.68 pp | 57.60% | inconclusive |
+| M | `superseded/bakeoff-report-1785829577.json` | false | −31.21% | [−51.63, −10.80] | ±20.42 pp | 38.51% | A-wins |
+| **L** | `superseded/bakeoff-report-1785829624.json` | **true** | **−29.60%** | **[−38.10, −21.09]** | **±8.51 pp** | 29.40% | **A-wins** |
+| N2-M | `superseded/bakeoff-report-1785829642.json` | false | +31.63% | [+16.56, +46.70] | ±15.07 pp | 24.79% | B-wins |
+
+**The finding this forces, reported loudly rather than filed under "superseded".** The superseded L
+block is **valid on every one of §19.8's criteria** — 10 pairs, balanced, realized half-width ±8.51 pp
+inside the declared bound, t and bootstrap agreeing, producer facts and both verification transfers
+present — and it selects **Candidate A** with a CI entirely below −10%. The L block of record, run
+about ten hours later on the same machine with the same corpus (`ac048081…`) and the same browser
+major, returns **inconclusive** at θ = −5.26%. The only functional change between the two trees is the
+admission-slot lifetime: `git diff 574a96c 7fab1e6 -w` over `src/adapter_ws.rs` is **five added lines
+and one moved `drop`**, entirely outside the timed path, on a ceiling that an N=1 block cannot reach.
+The candidates' absolute throughputs moved with it anyway — Candidate A p50 at M **744.8 → 542.2 MB/s**
+and at L **633.0 → 473.9 MB/s**; Candidate B at M **578.9 → 526.1** and at L **481.9 → 456.8**.
+
+That is a **between-session shift of 25.1–27.2% for Candidate A and 5.2–9.1% for Candidate B, in the
+same instrument** — asymmetric, and therefore not a machine-wide slowdown that a ratio would cancel. It
+moved the §19.9 branch at L from a decisive A-wins to inconclusive. §19 has no control for it: §19.3's drift figure is
+*within*-block, §19.7's precision check is sized on *within*-block dispersion, and the schedule runs at
+most two blocks per configuration — so between-block variance is uncharacterised at every
+configuration, the same gap §17.10 recorded for Phase 2. **No §19.9 conclusion here may be treated as
+reproducible until a configuration has been measured in two independent sessions and agreed.**
+
+## 20.4 Corpus identity and the verification transfers (§19.5)
+
+| Config | Wire digest (SHA-256 over framed wire bytes) | Column digest | Batches × rows | Wire bytes | Batch wire bytes | Structural digest |
+|---|---|---|---|---|---|---|
+| **S** | `078b1b1fb1c5d6a990b640de3fdfe0a1ad6209ad3176990e656832f728e9d6dc` | `ba687a44…94974` | 1000 × 10,000 | 244,560,000 | 244,560 | `669eff395689aec5` |
+| **M** | `13cc89914b520f90cb6d91f6e161e1ea9292e8dded492b7913ba5ddf98ecc73a` | `ba687a44…94974` | 100 × 100,000 | 243,835,200 | 2,438,352 | `f140d9effaf912a5` |
+| **L** | `ac048081b2a389dd1bd252301ef8a8fdea2503018c2a21adb52edb53f9abfefe` | `ba687a44…94974` | 20 × 500,000 | 243,766,080 | 12,188,304 | `f605aef9d51a5dd5` |
+
+- **The verification transfers did what §19.5 declared, at S, M and L.** Eight untimed transfers — two
+  per candidate per configuration across the four non-N2 blocks — and **8/8 carry a consumer-computed
+  wire digest equal to the manifest**, with `matchesManifest: true` and `invalid: []`. Each is
+  byte-for-byte the digest in the table above.
+- **The verification transfer and the timed runs are the same delivered stream.** Every verification
+  transfer's `structuralDigest` equals the digest carried by **all 20 timed runs of its block** —
+  `669eff395689aec5`, `f140d9effaf912a5`, `f605aef9d51a5dd5`. That is what ties §19.5's cryptographic
+  claim to the timed runs it is meant to cover, and it holds on 4/4 non-N2 blocks.
+- **The identical corpus was rebuilt across process lifetimes**: S's wire digest is identical between
+  block 1 and its replacement, and M's is identical between the M block and N2-M, which builds M's
+  corpus in a separate process.
+- §16.7's re-chunking invariant holds again: **one** column digest across all three configurations
+  while the three wire digests differ.
+- Rows decoded **10,000,000 on 80/80** non-N2 timed runs. **CRS envelope `crs=EPSG:2056` +
+  `frame=authoritative-project-crs` present on every batch of every run** — 1000/1000, 100/100, 20/20 —
+  so ADR-010 rule 1's per-batch binding survives all three granularities on the repaired instrument.
+- **JSON frames on the data path: 0** on **100/100** timed runs consumer-side, and
+  `json_frames_on_data_path: 0` producer-side on all 80 runs that carry facts.
+- **Terminal `Completed` on 100/100** timed runs; `batches_after_cancel_observed: 0` on all 80.
+- **H4 byte-scan of all nine artifacts:** exactly **two** 64-hex strings per artifact — the column
+  digest and that block's own wire digest. **No token in any artifact**, and no `Bearer` string.
+
+> **H1's grade for Phase 3, stated as §19.5 requires.** Cryptographic digest identity is established
+> **per candidate per configuration on a dedicated untimed verification transfer** at S, M and L —
+> **not on every timed run, and not at all at N=2**. The timed runs carry only the O(batches)
+> structural digest, which the committed test suite pins as detecting truncation, drops, reordering,
+> frame-boundary corruption and a lying length field, and as **not** detecting interior byte
+> corruption. ADR-012's evidence sentence *"digest identical across both adapters and all runs"* does
+> **not** survive Phase 3 and must be replaced with the sentence above.
+
+**One producer-side claim does not carry the weight it appears to.** Every run's
+`producerFacts.payload_sha256` equals the manifest wire digest — but in the corpus path that field is
+assigned `c.wire_digest.clone()`, a constant echo of the manifest rather than a per-stream hash of what
+was emitted. It confirms nothing about a transfer and is **not** counted toward H1 here. What *are*
+measured producer counters, and do confirm the producer emitted the whole corpus on every run:
+`bytes_emitted` = **244,560,000 / 243,835,200 / 243,766,080** exactly, and `batches_generated` =
+**1000 / 100 / 20** exactly, on 80/80 runs.
+
+## 20.5 Independent re-derivation of every statistic
+
+`scripts/validate-phase3.mjs` recomputes θ, the Student-t interval, the percentile bootstrap, the drift
+figure, the branch classification and the block verdict from the raw per-run `transportMBs` and
+`candidate` values. It shares no code with `web/src/phase3.ts`, and it deliberately does not use a
+tabulated t quantile: it **computes** t<sub>0.975</sub> from a Lanczos log-Γ plus a continued-fraction
+regularized incomplete beta, by bisection, and it **self-tests splitmix64 against the published
+reference vector for seed 0** (`e220a8397b1dcdaf, 6e789e6aa1b965f4, 06c45d188009454f`) before using it.
+
+**Result: no disagreement with any artifact's `analysis` block, on any of the nine artifacts.**
+
+- All 90 pair-level θ values reproduce to full double precision.
+- All nine bootstrap intervals reproduce **exactly**, which is a measured demonstration that the
+  declared seed `0x5EED305100000001` is held through all 64 bits — §18 P7 closed as a fact rather than
+  a claim.
+- The computed quantile is t<sub>0.975,9</sub> = **2.262157**; the harness's table carries **2.262**.
+  The difference moves every half-width by ≤0.002 pp (S: ±24.6265 computed vs ±24.6248 recorded) and
+  **changes no branch and no ±10 pp verdict on any block.** Checked explicitly rather than assumed.
+- Declared assertions verified from the artifact rather than from the summary: realized run order
+  equals the declared schedule on 9/9 blocks; `position`/`pair` fields consistent on every run;
+  `transportMBs` equals `wireBytes ÷ t1` to within 1e-9 on all 180 runs; `hashingEnabled: false` on
+  every timed run of every non-N2 block; `contiguousBatches + reassemblyCopies == batches` on 80/80.
+- The harness's own per-candidate `summary` p50s for `transportMBs`, `t1Ms`, `decodeMs`,
+  `endToUsableMs` and `firstBatchMs` reproduce exactly from the per-run values, with **one systematic
+  exception**: `producerResidentMax`, which is `0` in all nine artifacts and is a summariser defect
+  (20.10 item 2).
+
+**The one thing this cannot re-derive is the stability of the drift denominator**, because a single
+block is one sample of it. See 20.3.
+
+## 20.6 Evidence table — the two admissible blocks
+
+Blocks 2 (M) and 3 (L). Ten pairs, 20 timed runs each, `ABBAABBAABBAABBAABBA`. p50/p95 by
+sort-and-index over run-level values, n = 10 per candidate. **θ, its interval and its branch are the
+only decision statistics; the per-candidate rows are descriptive** — §19.3 makes pair-level θ the unit
+of analysis, and per-batch samples are never pooled for any interval.
+
+### Configuration M — 100 × 100,000 rows, 2,438,352 B per batch
+
+| Metric | A — binary WebSocket | B — loopback HTTP streaming | Method / note |
+|---|---|---|---|
+| **t1 — raw transport receipt** (mode R) | p50 **451.7** · p95 489.5 ms | p50 **469.2** · p95 512.8 ms | Consumer `performance.now()`, last payload byte. **No cryptographic hasher in this path** (§19.5). |
+| **Transport throughput to t1** | p50 **542.22** · p95 589.12 MB/s · range 498.13–589.12 | p50 **526.07** · p95 662.42 MB/s · range 475.50–662.42 | `totalWireBytes ÷ t1`, one sample per run |
+| **Arrow decode** (mode F, summed per batch) | p50 **17.20** · p95 24.20 ms | p50 **19.00** · p95 22.00 ms | `tableFromIPC` + column access per batch |
+| **t3 — end-to-usable** (mode F) | p50 **482.5** · p95 547.8 ms | p50 **463.9** · p95 579.6 ms | Mode F is a **separate transfer** from mode R, so t3 is that transfer's end-to-usable, not `t1 + decode` on one timeline |
+| **First-batch latency** | p50 **11.30** · p95 16.50 ms | p50 **8.00** · p95 15.00 ms | **B is faster here at M** — the reverse of Phase 2's S-configuration finding |
+| **Peak consumer JS heap** | p50 **71,416,179** · max **75,736,979** B | p50 **82,251,505** · max **102,133,435** B | `usedJSHeapSize`, sampled per batch in mode F. §6's `ArrayBuffer`-accounting limitation applies; WebView2 child-process totals are not summed. |
+| **Peak producer memory** | **249,868,288 B** `PrivateUsage` | **247,209,984 B** | `GetProcessMemoryInfo`, now from the artifact rather than out-of-band |
+| **θ (§19.3), pair-level** | mean **−0.23%**, SD **9.03 pp**, n = 10 | | per pair: −0.29, −0.90, +20.40, −4.98, −8.24, +2.72, −13.11, +2.14, +4.52, −4.57 |
+| **Student-t CI — the decision interval** | **[−6.69, +6.23]** → **equivalent** | | realized half-width **±6.46 pp** against the declared ±10 pp |
+| **Percentile bootstrap CI** | **[−5.27, +5.60]** → equivalent | | 10,000 resamples, seed `0x5EED305100000001`. **Agrees with t**, so §19.3's interval-disagreement invalidator does not fire. |
+| **Observed drift** | **19.40%** | | 20% flag **not raised — by 0.60 pp** |
+
+### Configuration L — 20 × 500,000 rows, 12,188,304 B per batch
+
+| Metric | A — binary WebSocket | B — loopback HTTP streaming | Method / note |
+|---|---|---|---|
+| **t1 — raw transport receipt** | p50 **518.3** · p95 535.5 ms | p50 **556.2** · p95 624.1 ms | as above |
+| **Transport throughput to t1** | p50 **473.88** · p95 528.66 MB/s · range 455.21–528.66 | p50 **456.83** · p95 526.04 MB/s · range 390.59–526.04 | |
+| **Arrow decode** | p50 **5.10** · p95 10.40 ms | p50 **4.80** · p95 5.50 ms | |
+| **t3 — end-to-usable** | p50 **495.4** · p95 532.8 ms | p50 **544.9** · p95 667.8 ms | |
+| **First-batch latency** | p50 **55.40** · p95 60.70 ms | p50 **42.80** · p95 53.60 ms | Both dominated by the 12.19 MB batch itself |
+| **Peak consumer JS heap** | p50 **99,912,695** · max **100,538,387** B | p50 **136,869,323** · max **138,348,559** B | |
+| **Peak producer memory** | **259,059,712 B** `PrivateUsage` | **246,714,368 B** | |
+| **θ (§19.3), pair-level** | mean **−5.26%**, SD **11.38 pp**, n = 10 | | per pair: −13.61, +10.54, −4.44, −8.86, −21.80, −19.27, −9.87, +1.32, +9.22, +4.20 |
+| **Student-t CI — the decision interval** | **[−13.40, +2.89]** → **inconclusive** (overlaps −10%) | | realized half-width **±8.14 pp** against the declared ±10 pp |
+| **Percentile bootstrap CI** | **[−11.89, +1.44]** → inconclusive | | **Agrees with t** |
+| **Observed drift** | **15.06%** | | 20% flag not raised |
+
+### Copy accounting — §7 stage 3 and stage 5, live-asserted per run at every configuration
+
+§19.9 rule 4 requires the decisive input to be **re-measured at every configuration, not inherited**.
+It was.
+
+| Quantity | A | B |
+|---|---|---|
+| **M** — frames needing reassembly (stage 3, mode R) | **0** of 100, all 10 runs | **100** of 100, all 10 runs |
+| **M** — contiguous frames | 100/100 | **0**/100 |
+| **M** — Arrow parse shares the wire buffer (stage 5, mode F) | **100 / 100**, all 10 runs | **100 / 100**, all 10 runs |
+| **M** — whole-payload copies per transfer | **0** | **100** = **1.00 per batch** ≈ **243.8 MB** |
+| **L** — reassembly · contiguous · shares | **0** of 20 · 20/20 · 20/20 | **20** of 20 · 0/20 · 20/20 |
+| **L** — whole-payload copies per transfer | **0** | **20** = **1.00 per batch** ≈ **243.8 MB** |
+| **S** (the record only) — reassembly, mode R | **0** of 1000, all 20 runs | **260–292** (block 1) · **256–284** (block 5) = **0.256–0.292 per batch** |
+| **S** — contiguous, mode R | 1000/1000 | 708–740 · 716–744 |
+| **S** — Arrow parse shares, mode F | **1000 / 1000** | **138–205** · **123–224** of 1000 |
+| **N2-M** (the record only) — reassembly | **0** of 200 per run, all 10 runs | **200** of 200 per run, all 10 runs = **1.00 per batch** ≈ **487.7 MB** |
+
+**What the S numbers mean per batch — stated carefully, because the two counters come from two
+different transfers.** `reassemblyCopies` is measured in **mode R**'s transfer and
+`arrowParseSharesBuffer` in **mode F**'s, a separate connection with its own chunk boundaries. The two
+must **not** be added as though they described one transfer. Read per transfer:
+
+- In mode R at S, B reassembles **25.6–29.2% of batches** across the two blocks; the rest arrive
+  contiguous.
+- In mode F at S, B's Arrow parse **shares** on 12.3–22.4% of batches and therefore **copies on
+  77.6–87.7%**. Phase 2's measured alignment law (`web/scripts/bench-arrow-alignment.mjs`: Arrow JS
+  hands out a view only when the payload's byte offset inside its `ArrayBuffer` is a multiple of 8)
+  explains the pairing — a reassembled frame is a fresh allocation with the payload at offset 8 and so
+  shares; a contiguous frame shares only if its chunk's own base offset happens to be aligned. Across
+  the two transfers the share count and the reassembly count track each other to within the chunking
+  difference.
+- **Net, and this is the line that matters: B pays one whole-payload copy per batch at every
+  configuration measured, and A pays zero application-level copies at every configuration.** At M, L
+  and N=2 that copy is 100% explicit reassembly. At S it splits between an explicit reassembly and a
+  copy hidden inside the Arrow parse, so counting the reassembly counter alone would under-report B's
+  copies at S by roughly **3.6×** (1000 ÷ ~275) — the same failure mode §17.6 measured at 8.6×.
+
+**§19.9 rule 6 is honoured explicitly. A's `0` is 0 *application-level* copies, not zero copies.**
+WebView2-internal WebSocket message assembly is opaque and its copy count is **UNKNOWN**; WebView2's
+internal assembly of HTTP body chunks is equally opaque and equally **UNKNOWN**. No zero-copy claim is
+made for either candidate (ADR-004). 20.8 shows this unknown segment is not a footnote in Phase 3 —
+it is where the largest measured effect in the whole phase lives.
+
+### Allocation pressure and producer-resident bytes
+
+| Side | A | B | How established |
+|---|---|---|---|
+| **Producer-resident payload bytes — measured, from the artifact** | S **978,240** · M **9,753,408** · L **48,753,216** B | identical figures | `producerFacts.resident_samples`, per run, for **both candidates** — §17.6 could report this only for B and only out of band. Each is **exactly 4 × batch wire bytes** against declared bounds of 1,222,800 / 12,191,760 / 60,941,520 B (5 ×): the same one-batch-below-bound construction §15.5 records, now holding for both candidates at all three granularities. |
+| **Consumer, inside the timed interval** | **0** payload-sized allocations at every configuration | **100/run at M · 20/run at L · 260–292/run at S · 200/run at N=2** | Live-asserted per run by the decoder's reassembly counter and the per-batch buffer-identity check |
+| **Producer, inside the timed interval** | 0 payload-sized allocations | 0 payload-sized allocations | Still **source-read and test-pinned, not live-asserted per run** (`cloning_a_batch_shares_storage_rather_than_copying`). §17.8 item 2 is **not** closed: the artifact carries no producer allocation counter. |
+
+### The three-timestamp segments — what §19.5 deleted, said plainly
+
+§16.4's model was t1 (transport receipt) → **t2 (checksum complete)** → t3 (end-to-usable). **Phase 3
+has no t2.** §19.5 removed the cryptographic hasher from the timed path, so no artifact contains a t2
+field and no `t2 − t1` segment is reported here. What the artifacts carry per run is `firstBatchMs`
+and `t1TransportMs` from mode R's transfer, and `decodeOnlyMs` and `t3DecodedMs` from mode F's separate
+transfer. Anyone constructing a Phase-2-to-Phase-3 t2 comparison is comparing against a segment that
+no longer exists.
+
+### Memory sampling — the *actual* cadence, per §19.4 P6
+
+Now **in the artifact** for every non-N2 run, closing §17.8 item 3 for S, M and L. Computed from the
+producer's own recorded `sample_gaps_us`.
+
+| Block | samples | gap mean | gap p50 | gap p95 | gap max | declared |
+|---|---|---|---|---|---|---|
+| S | 185 | **53.34 ms** | 51.16 | 63.00 | 65.61 | 50 ms |
+| S-replacement | 188 | **53.48 ms** | 51.15 | 62.98 | 64.05 | 50 ms |
+| M | 159 | **53.81 ms** | 52.36 | 63.01 | 65.00 | 50 ms |
+| L | 175 | **56.70 ms** | 55.91 | 64.01 | 65.83 | 50 ms |
+| **N2-M** | **0 — no producer facts at all** | — | — | — | — | 50 ms |
+
+**The overrun found in Phase 1 (~62.6 ms) and Phase 2 (55.7–61.0 ms) persists but has narrowed: mean
+gaps run 6.7–13.4% over the declared 50 ms**, p50s 2.3–11.8% over, and every p95 still sits 12.98 ms or
+more above the declared interval. Reported, not excused — the declared cadence is still not met, and
+at N=2 it is not recorded at all.
+
+### Realized precision against the declared bound, and drift
+
+| Block | pairs | θ SD | realized half-width | §19.8's ±10 pp bound | drift | 20% flag |
+|---|---|---|---|---|---|---|
+| S | 10 | 34.43 pp | **±24.62 pp** | **EXCEEDED** | **82.41%** | **FLAGGED** |
+| S-replacement | 10 | 30.58 pp | **±21.87 pp** | **EXCEEDED** | **68.52%** | **FLAGGED** |
+| M | 10 | 9.03 pp | ±6.46 pp | within | 19.40% | not raised — **by 0.60 pp** |
+| L | 10 | 11.38 pp | ±8.14 pp | within | 15.06% | not raised |
+| N2-M | 10 | 8.54 pp | ±6.11 pp | within | 11.97% | not raised |
+
+**§19.7's precision check is scored against what happened, as §19.7 said it would be.** It predicted
+±1.25 pp on the cleanest Phase-2 dispersion basis and ±9.04 pp on the noisiest, and declared the
+noisiest basis "not reassuring even though it passes". Realized: M, L and N2-M all landed *between* the
+two predicted bases, which is the check working as designed. **Configuration S blew past even the
+pessimistic basis by 2.4–2.7×, twice.** §19.7's own warning was that the budget "is sufficient to be
+*capable* of a decision; it does not guarantee one". At configuration S it was not even capable.
+
+**And the block that reaches §19.9's equivalence branch cleared the drift flag by 0.60 pp.** That is
+the same shape as §18 P4 — Phase 2's sole admissible block cleared its gate by 0.4 pp — and it is
+recorded here for the same reason: the one block a conclusion rests on survived narrowly.
+
+## 20.7 Configuration S — failed twice, and what that costs
+
+Both S blocks are **inadmissible**, on a §19.8 criterion pre-declared before any Phase-3 measuring:
+"realized CI half-width exceeding ±10 pp — the block is too imprecise to decide, pre-declared rather
+than discovered". §19.7 forbids a third attempt in this phase, and none was made.
+
+Their per-run figures are in the committed artifacts and appear nowhere in this section as
+measurements. What can be said without quoting them as evidence: both blocks carry drift of **82.41%
+and 68.52%** — four and three times the flag threshold — so the machine's own throughput swung by far
+more than the effect under test *within a single 20-run block lasting about 20 seconds*. A pair-level
+SD of 34.43 and 30.58 pp against M's 9.03 and L's 11.38 is not a candidate difference; it is the
+configuration with 1000 batches per run being the one that exposes per-batch scheduling jitter.
+
+**The cost is rule 7.** §19.7 declares rule 7 "not evaluable unless at least S plus one of M/L are
+admissible", and it gave the reason S is required rather than substitutable: Phase 2's S block carried
+the hasher in the timed path, so comparing it against Phase 3's M and L "would confound an instrument
+change with a batch-size effect and produce a rule-5 answer that is an artifact of the repair". That
+reasoning is unchanged and still binds. **There is no admissible S measurement on the repaired
+instrument, so the batch-size question is unanswerable for the second phase running.**
+
+## 20.8 N=2 — inadmissible as a block, and the mechanism diagnosed anyway
+
+### The block is invalid under §19.8, and the harness's `valid: true` is wrong
+
+`bakeoff-report-1785866765.json` reports `valid: true`, `invalidReasons: []`. **It trips two of
+§19.8's own pre-declared invalidators**, both verified directly against the artifact:
+
+1. **"producer facts absent from an artifact (§19.4 P6)"** — **0 of 20** N=2 runs carry a
+   `producerFacts` object. `runN2` fetches `/facts` at runtime and checks the result, so the harness's
+   runtime check passes; it simply never writes the facts into the run record. The invalidator §19.4 P6
+   exists to make bindable therefore does not bind, and every producer-side assertion at N=2 is
+   unverifiable from the artifact — the exact §18 P6 defect Phase 3 was built to close, surviving at
+   the one configuration that most needed it.
+2. **"the hasher flag absent from an artifact (§19.5)"** — the per-run `hashingEnabled` field is absent
+   from all 20 N=2 runs. Only the prose in `declaredAssertions.hashing` remains, which is a declaration,
+   not a record.
+
+Three further §19.7 obligations are **not discharged** by the block, and none is a footnote:
+
+3. **`verification: []` — zero verification transfers.** §19.5 requires "a separate untimed
+   verification run per candidate" alongside **every** configuration, and §19.7 budgets two per
+   configuration; the consumer's flow gates them behind `if (!n2)`. **No cryptographic digest identity
+   is established at N=2 at all.** The partial bridge that does exist: all 20 N=2 runs carry structural
+   digest `f140d9effaf912a5`, which is exactly the M block's, and the M block's verification transfers
+   matched the manifest — so N=2's delivered batch sequence is tied to a cryptographically verified one
+   on a different transfer. That is a real but weaker claim than §19.5 declared, and it is not the one
+   ADR-012 may cite.
+4. **The declared aggregate producer-resident bound was never measured.** `aggregateResidentBytes` is
+   **0 on all 20 runs**, because the consumer sums a field named `residentBytesMax` that the `/facts`
+   payload does not contain — it carries `resident_samples`. The bound check
+   `resident > 2 × producerResidentBoundBytes` is therefore **vacuous by construction**: it can never
+   fire. §19.7 specifically demanded this be "asserted as **measured**, not derived from 'credit is
+   per-stream'", and it was not. What does exist is the Rust regression
+   `backpressure_bounds_resident_memory_per_stream_and_in_aggregate` — on the HTTP path, at the Phase-1
+   batch size. A real control, but not the one §19.7 declared.
+5. **The N+1 admission exercise appears nowhere in the block.** It is discharged by the Rust test
+   `a_stream_over_the_declared_ceiling_is_refused_and_surfaced`: HTTP path, third stream refused at
+   open, terminal frame `TERM_TRANSPORT_FAILED`, detail `"stream admission ceiling: 2 concurrent
+   streams"`, and slots shown to be released again. §19.8's invalidator "the third stream being admitted
+   rather than refused" therefore does not fire — but the exercise §19.7 wrote as part of the N=2
+   configuration was not performed inside it, and the WebSocket refusal path has no test at all.
+
+**Consequence: θ = +38.58%, t CI [+32.47, +44.69], bootstrap [+33.56, +43.51] is the record and is not
+evidence.** It may not be quoted as a Phase-3 result, may not select a candidate, and may not enter
+ADR-012.
+
+### The mechanism, diagnosed — because "inadmissible" must not become "unexamined"
+
+The recorded N=2 figures are large enough that leaving their mechanism unexamined would be its own
+failure. Descriptively, from the record: Candidate A's **aggregate** p50 at N=2 is **560.73 MB/s**
+against **542.22 MB/s** single-stream at the same batch size — **+3.4%, which is no concurrency gain at
+all** — with per-stream throughput at almost exactly half (per-run `perStreamMBs` cluster at
+251.3–316.3 MB/s, and the two streams finish within **3.4–24.0 ms** of each other, so they are genuinely
+interleaved rather than serialized). Candidate B goes **526.07 → 830.08 MB/s, +57.8%**.
+
+The obvious suspicion is that this is the harness, not the transport: **Candidate A is the only
+candidate with an application credit protocol; its window is 4 batches; and credit is renewed only when
+the consumer's single-threaded JS event loop comes back for the next batch — which at N=2 it must now
+do for two streams.** §19.7 fixed N=2 at batch size M, so the record contains exactly one concurrency
+point and cannot test that.
+
+**Diagnostic D1, declared before running and labelled as a diagnostic.** The credit window in *bytes* is
+4 × batch: **978,240 B at S, 9,753,408 B at M, 48,753,216 B at L** — a 50× sweep. If A's flat aggregate
+came from that window emptying while the shared JS thread serviced the other stream, A's N=2 aggregate
+must rise steeply with batch size. If instead the ceiling sits in WebView2's own WebSocket receive path,
+A's N=2 aggregate is flat — as its N=1 throughput already is across a 49.8× batch-size range.
+`scripts/diag-n2-window.mjs` runs the **unmodified committed release binary and bundle** at batch sizes
+§19.7 did not schedule for N=2, writing to `results/phase3-diagnostic/` so the artifacts can never be
+mistaken for blocks of record. Two full sweeps, run in **opposite orders**, fresh browser per point.
+
+| Sweep | Config | Artifact (`results/phase3-diagnostic/`) | Credit window (4 × batch) | A aggregate p50 | B aggregate p50 | θ | t CI | drift |
+|---|---|---|---|---|---|---|---|---|
+| 1 (L→M→S) | N2-L | `bakeoff-report-1785869287.json` | 48,753,216 B | **565.4** MB/s | 702.1 MB/s | +22.45% | [+17.09, +27.81] | 15.3% |
+| 1 | N2-M | `bakeoff-report-1785869343.json` | 9,753,408 B | **541.3** | 793.5 | +35.94% | [+30.09, +41.80] | 18.2% |
+| 1 | N2-S | `bakeoff-report-1785869363.json` | 978,240 B | **533.1** | 923.9 | +55.50% | [+48.24, +62.77] | 8.3% |
+| 2 (S→M→L) | N2-S | `bakeoff-report-1785869474.json` | 978,240 B | **508.9** | 867.7 | +52.57% | [+47.36, +57.78] | 11.2% |
+| 2 | N2-M | `bakeoff-report-1785869496.json` | 9,753,408 B | **534.3** | 795.8 | +40.37% | [+34.31, +46.43] | 10.8% |
+| 2 | N2-L | `bakeoff-report-1785869519.json` | 48,753,216 B | **575.2** | 728.0 | +26.86% | [+21.49, +32.22] | 8.9% |
+
+All six carry `valid: true`, `invalidReasons: []`, `documentHiddenAtEnd: false` and `rafThrottleEvents: 0`,
+and are committed with their own `SHA256SUMS`. **Sweep 1's M and S points reused a browser session**
+("Opening in existing browser session"), which §8 would make inadmissible for a block of record; sweep 2
+adds a targeted pre-launch kill of the isolated-profile Edge processes and reproduces the same pattern in
+the opposite order. That is another reason these are diagnostics.
+
+**Three conclusions, in the order the evidence supports them.**
+
+1. **The credit-protocol explanation is refuted, in both of its forms.** Across a **50× sweep of credit
+   window bytes**, Candidate A's N=2 aggregate moves only from 508.9 to 575.2 MB/s — **a 13% spread
+   where a window-limited pipeline would have to move by roughly 2×**. The *latency* form is refuted by
+   the L point specifically: at L the window holds 48.75 MB, which is roughly **170 ms of data per
+   stream** at the observed rate, so a credit round trip measured in single-digit milliseconds through
+   the JS event loop cannot be what starves it. And A's N=1 throughput is already flat across the same
+   batch-size range (500.3 / 542.2 / 473.9 MB/s at S / M / L), so the per-batch control cost is not
+   dominant there either.
+2. **The JS main thread is not A's ceiling.** Candidate B sustains **867.7–923.9 MB/s aggregate on the
+   same single main thread** while doing strictly *more* per-byte work on it — one whole-payload
+   reassembly memcpy per batch, 487.7 MB per run at N=2, plus the same frame decoding. A, which copies
+   nothing, caps at ~509–575. A renderer main thread that can move 924 MB/s of B's heavier work is not
+   what caps A at 560.
+3. **The Rust producer is not A's ceiling either.** Streams are independent `tokio::spawn` tasks on a
+   multi-threaded runtime (16 cores), the corpus is shared by refcount with no per-byte shared work, and
+   any per-connection producer cost would show as A's *per-stream* rate holding at its N=1 value. It
+   halves instead.
+
+**What remains is the segment this instrument declares UNKNOWN.** By elimination, Candidate A's N=2
+ceiling sits in WebView2's own WebSocket receive and message-assembly path — the opaque region §19.9
+rule 6 and ADR-004 forbid scoring as a win for anyone, and which this harness cannot instrument. So:
+**the effect is real, it reproduces across three batch sizes, two run orders and a different browser
+build, and its cause is not measured.** It is a property of *these two candidates as built, on
+WebView2*, and it may not be reported as a property of WebSocket-versus-HTTP as protocol classes.
+
+**Limits of D1, so it is not over-read.** It is **not a block of record and decides nothing under
+§19.9.** It ran on **Edge 151.0.4129.59** while the blocks of record ran on Edge 150 — the machine's
+browser auto-updated in between — so D1's absolute figures are not comparable to 20.6's, and only its
+internal across-batch-size comparison is sound. One block per point beyond the two sweeps, and no
+producer-side facts, since it exercises the same `runN2` gap. Its value is entirely in **refuting** a
+hypothesis, which is the direction in which a diagnostic can carry weight.
+
+## 20.9 Hashing off the timed path — the jump is real, and too large for §17.7 to explain
+
+§19.5's repair worked in direction and overshot in magnitude, and that has to be said plainly rather
+than banked.
+
+| | Phase 2, configuration S | Phase 3, configuration S (blocks 1 / 5) |
+|---|---|---|
+| t1 p50, Candidate A | **7299.30 ms** | **524.6 / 550.8 ms** |
+| t1 p50, Candidate B | **7055.70 ms** | **552.3 / 506.5 ms** |
+| Throughput p50, A | **33.60 MB/s** | **500.33 / 449.15 MB/s** |
+| Throughput p50, B | **35.01 MB/s** | **491.58 / 486.98 MB/s** |
+
+Same corpus — wire digest `078b1b1f…` in both phases — same batch count, same machine. The improvement
+is **13.4–14.9×**.
+
+**§17.7's own prediction does not reach it.** §17.7 measured the harness's `Sha256Stream` at
+**4456.8 ms p50** over the S payload and computed the hasher at **61–63% of t1**. Subtract that in full,
+which is §17.7's own first-order correction, and Phase 2's S figures become **A 2842.5 ms / 86.04 MB/s**
+and **B 2598.9 ms / 94.10 MB/s**. Phase 3 measures **449.15–500.33 MB/s**. So **after crediting §17.7's
+hasher estimate in full, Phase 3's S transfer is still 5.18–5.82× faster than the corrected Phase-2
+figure** (A 5.82× and 5.22× in blocks 1 and 5; B 5.22× and 5.18×). Put on the clock instead: of the
+**6774.7 ms** removed from Candidate A's t1 at S, at most **4456.8 ms** is attributable to the hasher —
+**at least 2317.9 ms per run is not.**
+
+**Stated as an answer rather than a hedge: no, this is not consistent with §17.7's prediction, and
+something else changed too.** Two candidate explanations, neither of which Phase 3 measures:
+
+- **`TCP_NODELAY`, absent in Phase 2 and set in Phase 3** (§18 P2 → §19.4 P2). §18 P2 named the shape
+  precisely: "a 32-byte progress write issued immediately after a large batch write, with Nagle live, is
+  exactly the shape where delayed-ACK interaction appears" — and at configuration S that shape repeats
+  1000 times per run. This is the leading hypothesis and it fits the residual's size.
+- **§17.7's hasher share is itself understated**, because it was benchmarked on Node's V8 rather than
+  WebView2's — a method limit §17.7 declared for itself. But it cannot absorb the whole residual on its
+  own terms: a hasher costing 6774.7 ms of a 7299.3 ms t1 would be **93%** of t1, not the 61–63% §17.7
+  reported.
+
+**No Phase-3 block was run with Nagle re-enabled, so this is a hypothesis, not a measurement.** The
+consequence for ADR-012 is concrete: **the ~14× improvement may not be attributed to §19.5 alone**, and
+no Phase-3 throughput figure may be quoted as a transport ceiling for either candidate. What Phase 3
+does establish is narrower and still worth having — that Phase 2's 33–35 MB/s was an instrument floor by
+more than an order of magnitude, which is what §17.7 claimed and what §19.5 set out to remove.
+
+## 20.10 Harness gaps still open after `0ab4061`
+
+Recorded so ADR-012 does not over-read this evidence.
+
+1. **The N=2 run record omits producer facts, the hasher flag, and both verification transfers**
+   (20.8). This is the gap that makes the only decisive block in Phase 3 inadmissible, and it is the
+   first thing a Phase 4 must fix.
+2. **`summary[].producerResidentMax` is `0` in all five blocks of record and all four superseded ones.**
+   The summariser reads `producerFacts.resident_bytes_max`; the `/facts` payload carries
+   `resident_samples`. The artifact's own summary of the producer-resident figure is therefore wrong
+   everywhere. The raw samples are present for S, M and L, so the real figure is recoverable — 20.6
+   quotes it from those — but a reader trusting the summary would record 0.
+3. **The N=2 aggregate resident-bound check is vacuous** (20.8 item 4) — the same field-name mismatch,
+   in a position where it silently disables a declared ceiling assertion rather than merely misreporting
+   one.
+4. **Producer facts are a mid-teardown snapshot.** `/facts` is fetched immediately after t1, so
+   **5/20 (S), 5/20 (S-replacement) and 4/20 (M)** runs record no producer terminal, and
+   **3/20 (M) and 7/20 (L)** record a dangling `"send"` checkpoint. Nothing is wrong with the values
+   quoted here — resident plateaus, byte counts and sample gaps are all stable within a run — but the
+   snapshot is not a final producer record and must not be read as one.
+5. **§16.2's "zero payload-sized producer allocations inside the timed interval, reported per run" is
+   still not reported per run.** §17.8 item 2 remains open: source-read plus one unit test.
+6. **The exact Edge/WebView2 build reaches no artifact.** Only the UA major (`Edg/150.0.0.0`) is
+   recorded, so §2's reference profile cannot be pinned from the record — a live concern, not a
+   theoretical one, since the machine's Edge moved to 151.0.4129.59 between the blocks of record and
+   this validation.
+7. **`producerFacts.payload_sha256` is a constant echo of the corpus manifest** in the corpus path, not
+   a per-stream producer hash (20.4). It reads like an independent producer-side confirmation and is not
+   one.
+8. **H2, H3 and H4 are not exercised inside any Phase-3 block.** They stand on Phase 1's §15 record plus
+   the repaired Rust regressions. The producer-resident plateaus in 20.6 are the only in-block
+   bounded-memory evidence.
+9. **Report filenames still have one-second resolution and silently overwrite** — §17.8 item 5,
+   unchanged.
+10. **Between-session variance is uncharacterised at every configuration** (20.3). This is the largest
+    open gap, and it is not a coding defect: it is a missing control in the design.
+
+## 20.11 §19.9's decision rule, applied exactly as written
+
+Applied in order, on the **symmetric ±10% scale** §19.3 defines, quoting only figures from the two
+admissible blocks.
+
+**1. "A failed hard gate disqualifies the candidate, regardless of throughput. H1–H7 retained; H1 at
+the grade §19.5 declares."**
+Within Phase 3's scope: **H1** at §19.5's grade — a verification transfer per candidate per
+configuration, digest equal to the manifest, 8/8 at S, M and L, tied to the timed runs by an identical
+structural digest; **not established at N=2** (20.8), which is one of the reasons the N=2 block cannot
+decide anything. **H5** — 0 JSON frames on the data path at both endpoints, 100/100 runs. **H6** —
+leakage scan PASS with a live 4-leak canary. **H7** — one terminal per stream, `Completed` 100/100.
+**H2**, **H3** and **H4** stand on Phase 1's §15 verdicts plus the repaired regressions, with P1 now
+demonstrated by test rather than asserted from the diff (20.1). **Both candidates remain eligible.
+Rule 1 disqualifies neither.**
+
+**2. "CI entirely above +10% → Candidate B is selected."**
+**Does not fire on any admissible block.** M's CI is [−6.69, +6.23]; L's is [−13.40, +2.89]. The only
+interval in the set that lies entirely above +10% belongs to N2-M, which is **inadmissible under
+§19.8** (20.8) and therefore cannot fire a rule.
+
+**3. "CI entirely below −10% → Candidate A is selected."**
+**Does not fire.** L's lower bound is −13.40 but its upper bound is +2.89. The only interval entirely
+below −10% anywhere in the Phase-3 set belongs to the **superseded** L block, measured on a different
+tree (20.3), and it cannot fire a rule either.
+
+**4. "CI entirely within ±10% → performance-equivalent. Fall through to §12's ordering, applied on
+measured end-to-end cost."**
+**Fires at configuration M, and only there.** t CI [−6.69, +6.23]; bootstrap [−5.27, +5.60]; both
+inside ±10% and both selecting the same branch. Falling through to §12's ordering, on measurements
+**re-taken at M rather than inherited from S**, exactly as rule 4 requires:
+
+| Criterion 1 — copies and allocation pressure, at configuration M | A | B |
+|---|---|---|
+| Whole-payload copies per transfer | **0** | **100** (1.00 per batch) |
+| Bytes copied per transfer | **0 B** | ~**243.8 MB** |
+| Payload-sized consumer allocations per run | **0** | **100** |
+| Peak consumer JS heap, p50 / max | **71.4 / 75.7 MB** | **82.3 / 102.1 MB** |
+| Producer-resident payload bytes | 9,753,408 B | 9,753,408 B |
+
+**Criterion 1 selects Candidate A at configuration M**, on the same mechanism §17.9 recorded at S and
+now re-measured at a 10× larger batch: B copies one whole payload per batch that A does not, and
+carries 1.15× A's peak JS heap at p50 (1.35× at max). Criterion 1 being decisive, criteria 2 and 3 are
+not reached. Recorded as context only and unchanged from §15.7 and §17.9: criterion 3 **favours B**,
+which has no consumer→producer channel at all.
+
+**5. "CI overlapping either boundary → inconclusive. ADR-012 stays Proposed."**
+**Fires at configuration L.** [−13.40, +2.89] overlaps the −10% boundary; the bootstrap [−11.89, +1.44]
+agrees, so §19.3's interval-disagreement rule adds nothing. L's point estimate θ = −5.26% leans toward
+Candidate A, and the interval cannot separate it from zero or from −10%.
+
+**6. "An unknown internal copy count is not a win."**
+Honoured, and load-bearing this time rather than formal. A's **0** is 0 **application-level** copies.
+WebView2-internal WebSocket message assembly is **UNKNOWN**, as is WebView2's internal HTTP chunk
+delivery. Neither candidate is claimed zero-copy. 20.8 shows the unknown segment is where the entire
+N=2 effect lives — by elimination, Candidate A's concurrency ceiling is inside it — so **the single
+largest measured effect in Phase 3 has its mechanism in the region this study declares it cannot see.**
+
+**7. "Rule 5 — batch-size dependence… Rule 5 is not evaluable unless at least S plus one of M/L are
+admissible."**
+**NOT EVALUABLE.** Configuration S produced no admissible block across its two permitted attempts
+(20.7), and §19.7's own reasoning forbids substituting Phase 2's S block, which carried the hasher in
+the timed path. The two admissible configurations that do exist **do not agree**: M returns equivalence
+and L returns inconclusive, with point estimates θ = −0.23% and −5.26%. That is a hint of batch-size
+dependence in Candidate A's favour at larger batches, and it is **not** reportable as a finding, because
+rule 7's own precondition is unmet.
+
+### Outcome
+
+**Phase 3 does not close the transport decision. ADR-012 stays Proposed.**
+
+- **No §19.9 branch resolves the study.** Rule 4 fires at M and its fall-through selects **Candidate A**
+  on re-measured copies and allocation pressure. Rule 5 fires at L. Rules 2 and 3 fire nowhere on
+  admissible evidence. Rule 7 — the one §19.0 named as determining "whether a transport decision is
+  possible at all" — is **not evaluable**, for the second phase running.
+- **The strongest result in the set cannot be used.** N2-M's decisive B-wins is inadmissible under
+  §19.8 for two pre-declared reasons (20.8). Diagnostic D1 shows the underlying phenomenon is real and
+  reproducible, and that the obvious harness explanation for it is false — but a diagnostic is not
+  evidence under §19.9 either, and D1 ran on a different browser build. **What Phase 3 has at N=2 is a
+  strong reason to measure concurrency properly, not a result.**
+- **The instrument repairs are real and are this phase's main contribution.** §19.5 removed an
+  instrument floor worth more than an order of magnitude; producer facts, `TCP_NODELAY`, the 64-bit
+  seed, the per-run heartbeat and `debugAssertions` all now reach the artifact; and §19.3's estimator did
+  what §19.2 said §16.5's could not — **a near-perfect null at M was classified as equivalence rather
+  than rejected as confounded**, which is precisely the failure mode Phase 3 existed to remove.
+- **But the phase also uncovered a control §19 does not have.** A valid pre-fix L block selects A
+  decisively; the post-fix L block is inconclusive; the diff between them is five lines outside the
+  timed path (20.3). **Nothing in Phase 3's design would have caught that**, and it bounds how much any
+  single block may be trusted.
+- **The ~14× throughput gain may not be attributed to §19.5 alone** (20.9). At least 2317.9 ms per run
+  at S is unexplained by §17.7's own hasher figure, and the leading candidate — `TCP_NODELAY`, a control
+  that was declared but absent in Phase 2 — was never measured in isolation.
+
+**What this recommends to ADR-012, put to the human rather than decided here.** ADR-012 stays
+**Proposed**. Its evidence basis should record: configuration **M** as a measured performance
+equivalence whose §12 fall-through selects **Candidate A** on copies and allocation pressure;
+configuration **L** as **inconclusive**; configuration **S** as **failed twice** on realized imprecision;
+and **N=2** as **attempted and inadmissible**, with the concurrency asymmetry recorded as an open
+question whose cause is diagnosed to — but not measured inside — WebView2's opaque WebSocket path. Its
+H1 evidence sentence must be replaced with §19.5's grade as stated in 20.4, and no throughput figure in
+it may be quoted as a transport ceiling for either candidate.
+
+**The batch-size policy question §19.9 rule 7 asks the product to answer stays open**, deliberately and
+for the second time. Naming a policy from two configurations that disagree, with the third unmeasured,
+is exactly the inference rule 7 forbids.
+
+## 20.12 Scope limits
+
+§19.10's pre-declared limits all hold. Additionally, and specific to this execution:
+
+- **Only configurations M and L have admissible numbers.** S appears in 20.3 and 20.7 solely as the
+  record of what the gate caught; N2-M appears in 20.3 and 20.8 as the record of what the gate should
+  have caught and did not. Their per-run figures are in the committed artifacts and are **inadmissible
+  as measurements** (§8), exactly as §14's pre-fix figures are.
+- **The four superseded blocks are not evidence and are not re-analysed** — different tree, §8's
+  unequal-instrumentation bar. They are quoted only as evidence *about the instrument* (20.3), never
+  about a candidate, and no signed effect from them enters any conclusion or ADR-012.
+- **`results/phase3-diagnostic/` is not evidence.** Six blocks, mechanism diagnostic D1 only, run on a
+  different browser build and after the record had been read. They refute a hypothesis about the record;
+  they decide nothing under §19.9.
+- **One machine, one GPU, one browser major, one session.** No configuration has two agreeing blocks in
+  independent sessions, and 20.3 shows why that matters here more than usual.
+- **Rendering is excluded from Phase 3 entirely**, so this section reports **no** first-pixel,
+  frame-time or VRAM figure. Phase 1's §15.3 remains the only measured first-pixel evidence.
+- **The corpus is synthetic and structurally regular** — fixed-width, non-nullable, `u64` plus two `f64`
+  columns. The copy and alignment results are **conditional on that shape**; GeoArrow variable-width
+  geometry, dictionary/string columns and nulls are not exercised and could change the Arrow-parse copy
+  result in either direction.
+- **N=2 is two synthetic streams and is not query concurrency**, per §19.7's own warning.
+- Windows/WebView2 only. Loopback only. No GeoParquet, no DuckDB, no spatial index, no picking, no
+  editing, no reprojection, no WAN path. Interruptible Tauri IPC channels — ADR-004 amendment 2's third
+  transport class — remain **unmeasured**, and ADR-012 must keep recording that exclusion.
+
+## 20.13 Reproducing this
+
+```sh
+cd protocol/transport-bakeoff
+cargo test --release && cd web && npm run verify && cd ..
+cargo build --release
+
+node scripts/run-phase3.mjs S      # one configuration = one 10-pair block + 2 verification transfers
+node scripts/run-phase3.mjs M
+node scripts/run-phase3.mjs L
+node scripts/run-phase3.mjs N2
+
+cd results/phase3 && sha256sum -c SHA256SUMS && cd ../..
+node scripts/validate-phase3.mjs results/phase3/*.json             # 20.5's independent re-derivation
+node scripts/validate-phase3.mjs results/phase3/superseded/*.json
+
+node scripts/diag-n2-window.mjs L  # 20.8's mechanism diagnostic — NOT a block of record
+node scripts/diag-n2-window.mjs M
+node scripts/diag-n2-window.mjs S
+```
+
+Artifacts for the five blocks of record are committed at `results/phase3/` with `SHA256SUMS`, and the
+four superseded blocks at `results/phase3/superseded/` with their own. `scripts/validate-phase3.mjs`
+shares no code with the harness and computes its own Student-t quantile and its own splitmix64 — the
+latter checked against the published reference vector before use — so a defect in `web/src/phase3.ts`
+cannot be reproduced by re-running it.
+
+---
+
+# 21. Phase 3 instrument findings — recorded by the harness author, post-review
+
+§20 is the tester's record of what the runs produced. This section records defects in **the
+instrument**, found in review of Phase 3, in the same place and for the same reason §18 records
+Phase 2's: so the tester's execution record stays its own, and so §19 — the preregistration — is not
+edited after the fact.
+
+**None of these change §20's outcome**, which is that no §19.9 branch resolves the study and ADR-012
+stays Proposed. They change what a Phase 4 would have to fix before it could.
+
+| # | Finding | Status |
+|---|---|---|
+| Q1 | **Between-session non-reproducibility, and §19 has no control for it.** The **superseded** L block is `valid: true` on every §19.8 criterion and selects **A-wins** at [−38.10, −21.09]; the L block **of record** is inconclusive at θ = −5.26%. The only functional difference is five lines and one moved `drop` in the admission-slot lifetime, entirely **outside** the timed path. Candidate A's throughput fell 25.1–27.2% between the two sessions while Candidate B's fell only 5.2–9.1% — **asymmetric, so a ratio does not cancel it**. No configuration in this phase has two agreeing blocks from independent sessions, and nothing in §19's design would have detected this. It is the single largest threat to any Phase-3 figure. | **Open** — a Phase 4 must repeat at least one configuration in an independent session and treat disagreement as an invalidator |
+| Q2 | **§19.8's "producer facts absent from an artifact" invalidator was not mechanized for N=2.** `runN2` fetches `/facts` at runtime and checks it there, but never writes it into the artifact, so the block reported `valid: true` while carrying **0/20** producer-fact records. The same holds for the hashing flag. The consumer's own validity check trusted a runtime fetch where §19.8 binds the **record**. Caught by the tester, not by the harness. | **Open** — every declared invalidator must be evaluated against the artifact, never against a live value |
+| Q3 | **The N=2 aggregate producer-resident assertion is vacuous by construction.** The consumer sums `residentBytesMax`, a field `/facts` does not emit (it carries `resident_samples`), so `aggregateResidentBytes` is `0` on all 20 runs and the comparison against the declared bound passes trivially. §19.7 required this bound **measured, not derived**; it is currently neither. The same field-name error zeroes `summary[].producerResidentMax` in **all nine** artifacts. | **Open** |
+| Q4 | **The N=2 block ran no verification transfer at all.** §19.5's cryptographic identity check is gated behind `if (!n2)`, so H1 is not established for the one configuration whose result would have changed a decision. | **Open** |
+| Q5 | **The N+1 admission refusal appears in no measurement artifact.** It is discharged by a Rust test, on the HTTP path only. ADR-010 rule 6's "declared, then driven past" is satisfied in code, not in the record, and not at all for Candidate A. | **Open** |
+| Q6 | **The ~14× throughput gain cannot be credited to §19.5 alone.** §17.7's own correction predicts 86.04/94.10 MB/s at S after removing the hasher; Phase 3 measured 449.15–500.33 MB/s, **5.18–5.82× more**, leaving **≥2317.9 ms per run** unexplained. The leading candidate is `TCP_NODELAY` — a control §16.2 declared and §18 P2 found absent — which was fixed in the same phase and **never measured in isolation**. Two changes, one measurement. | **Open** — attribute by measuring one change at a time |
+| Q7 | **`producerFacts.payload_sha256` is a constant echo of the corpus manifest**, not a per-stream hash: the producer clones `c.wire_digest` regardless of what it sent. It reads like independent producer-side confirmation of stream integrity and is not one. | **Open** — either compute it per stream or remove the field |
+| Q8 | **Producer facts are mid-teardown snapshots.** 5/20 (S), 5/20 (S-replacement) and 4/20 (M) runs carry no producer terminal, and 3/20 (M) and 7/20 (L) carry a dangling `send` checkpoint — because the consumer fetches `/facts` immediately after t1, before the producer's own teardown has completed. The facts are present, per Q2's requirement, but they are a snapshot of an unfinished stream. | **Open** |
+| Q9 | **The exact browser build reaches no artifact.** The user-agent records `Edg/150.0.0.0` only, and the machine has since moved to 151.0.4129.59 — so §2's reference profile cannot be pinned from the record, and the N=2 mechanism diagnostic necessarily ran on a different browser build than the blocks it diagnoses. | **Open** |
+| Q10 | **Configuration M cleared the 20% drift flag by 0.60 pp** (19.40% against 20%). Recorded for the same reason §18 P4 recorded S clearing the old gate by 0.4 pp: the one block that carries the study's only firing decision rule cleared its nearest control narrowly. No verdict turns on it — drift is not an invalidator (§19.3) — but a reader should not take M as comfortable. | Recorded |
+
+**Consequence, stated plainly.** Q1 is the one that matters most: it means **no single Phase-3 block
+should be treated as reproducible**, including the block that fired rule 4. Q2–Q5 mean the N=2
+configuration was never really measured — it produced numbers, and §19.8's own rules correctly refuse
+them. Q6 means this phase cannot say how much of its own headline improvement came from the change it
+was designed around.
+
+What Phase 3 does establish, and what survives all ten findings: the instrument repairs are real, the
+copy differential is real and re-measured at every configuration, and §19.3's estimator classified a
+near-perfect null as **equivalence** where §16.5's would have rejected it as confounded — which was
+the point of the phase.
