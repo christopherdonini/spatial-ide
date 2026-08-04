@@ -33,6 +33,109 @@ use producer::{BATCH_COUNT, MAX_INFLIGHT_BATCHES, ROWS_PER_BATCH, TOTAL_ROWS};
 use session::Session;
 use transport::{Checkpoints, OperationId, StreamState, Terminal};
 
+/// **§18 P2 — `TCP_NODELAY`, actually set and actually recorded.**
+///
+/// §16.2 declared it "set identically and recorded". It was neither: the listener set no socket
+/// options and no artifact field carried the state, while §17 presented itself as the compliance
+/// record. It matters beyond bookkeeping — a 32-byte progress write issued immediately after a
+/// multi-megabyte batch write, with Nagle live, is the exact shape where delayed-ACK interaction
+/// shows up, and under §19.7's N=2 it is a plausible generator of the within-block drift the paired
+/// estimator assumes is roughly linear.
+///
+/// Set on **every accepted connection**, so it applies identically to both candidates — they share
+/// one listener. Read back after setting, because a declaration that something was set is worth
+/// exactly as much as Phase 2's was.
+mod nodelay {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    pub static VERIFIED: AtomicU64 = AtomicU64::new(0);
+    pub static FAILED: AtomicU64 = AtomicU64::new(0);
+
+    /// Sets `TCP_NODELAY` and reads it back. Returns the observed value.
+    pub fn apply(stream: &tokio::net::TcpStream) {
+        match stream.set_nodelay(true).and_then(|()| stream.nodelay()) {
+            Ok(true) => {
+                VERIFIED.fetch_add(1, Ordering::Relaxed);
+            }
+            _ => {
+                FAILED.fetch_add(1, Ordering::Relaxed);
+            }
+        }
+    }
+
+    pub fn report() -> serde_json::Value {
+        serde_json::json!({
+            "requested": true,
+            "connectionsVerified": VERIFIED.load(Ordering::Relaxed),
+            "connectionsFailed": FAILED.load(Ordering::Relaxed),
+        })
+    }
+}
+
+/// **§19.7 — the declared concurrency ceiling (ADR-010 rule 6).**
+///
+/// Declared before measuring, and deliberately driven past: the N+1 exercise opens a third stream
+/// and requires a *surfaced refusal*, never a silent admit-and-degrade and never a silent queue.
+const MAX_CONCURRENT_STREAMS: u64 = 2;
+
+/// Holds one admission slot for the lifetime of a stream. Releasing on `Drop` is what makes the
+/// ceiling hold under cancellation and transport failure, not only on the clean path.
+struct StreamSlot(Shared);
+
+impl Drop for StreamSlot {
+    fn drop(&mut self) {
+        self.0.active_streams.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+/// Admission. Returns `None` when the ceiling is already held.
+fn try_admit(s: &Shared) -> Option<StreamSlot> {
+    let mut cur = s.active_streams.load(Ordering::SeqCst);
+    loop {
+        if cur >= MAX_CONCURRENT_STREAMS {
+            return None;
+        }
+        match s.active_streams.compare_exchange_weak(
+            cur,
+            cur + 1,
+            Ordering::SeqCst,
+            Ordering::SeqCst,
+        ) {
+            Ok(_) => return Some(StreamSlot(s.clone())),
+            Err(actual) => cur = actual,
+        }
+    }
+}
+
+/// The refusal frame for an over-ceiling stream.
+///
+/// **Deliberately not a new error variant and not a new control frame.** §5 declares the taxonomy
+/// `Cancelled | ProducerFailed | TransportFailed | DecodeFailed`; the refusal maps into
+/// `TransportFailed` with an opaque `detail`. Minting a variant here would be the data plane
+/// acquiring control-plane vocabulary, blurring the docs/02 split inside scaffolding — and admission
+/// semantics belong to docs/10's SKP checklist, not to a bake-off harness.
+fn admission_refusal_frame() -> Vec<u8> {
+    wire::frame(
+        wire::TAG_TERMINAL,
+        &wire::terminal_payload(
+            wire::TERM_TRANSPORT_FAILED,
+            &format!("stream admission ceiling: {MAX_CONCURRENT_STREAMS} concurrent streams"),
+        ),
+    )
+}
+
+/// Batches this configuration will actually send.
+///
+/// §17.8 item 6: Phase 2 handed both adapters Phase 1's `BATCH_COUNT` regardless of configuration,
+/// so progress frames announced `total=100` for a 1000-batch stream and the HTTP facts watcher
+/// declared `Completed` early at configuration S.
+fn total_batches(s: &Shared) -> u64 {
+    s.corpus
+        .as_ref()
+        .map(|c| c.batches.len() as u64)
+        .unwrap_or(BATCH_COUNT as u64)
+}
+
 /// Everything the producer side observed for one stream. This — not anything the client reports —
 /// is the evidence for H2 and H3.
 #[derive(Default, serde::Serialize)]
@@ -87,6 +190,8 @@ struct AppState {
     /// Phase 2 (§16): the pre-generated immutable corpus. `None` means Phase 1's generate-on-demand
     /// path, which is retained unchanged so the generation-bound phase stays reproducible.
     corpus: Option<Arc<corpus::Corpus>>,
+    /// §19.7: streams currently admitted. The ceiling is `MAX_CONCURRENT_STREAMS`.
+    active_streams: AtomicU64,
 }
 
 type Shared = Arc<AppState>;
@@ -161,6 +266,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(|c| c.max_batch_wire_bytes)
             .unwrap_or_else(producer::batch_wire_bytes),
         corpus,
+        active_streams: AtomicU64::new(0),
     });
 
     let app = router(state.clone());
@@ -199,6 +305,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // §18 P2: applied to every accepted connection, so both candidates get identical socket options.
+    let listener = axum::serve::ListenerExt::tap_io(listener, |s| nodelay::apply(s));
     axum::serve(listener, app).await?;
     Ok(())
 }
@@ -358,6 +466,9 @@ async fn clock(State(s): State<Shared>, headers: HeaderMap) -> Response {
         // profile, so the invalidator had no mechanism behind it. Now the consumer can check.
         "debugAssertions": cfg!(debug_assertions),
         "batchWireBytes": s.batch_wire_bytes,
+        // §18 P2 / §19.8: absent or unequal `TCP_NODELAY` state is a Phase-3 invalidator, so the
+        // consumer must be able to read it and put it in the artifact.
+        "tcpNoDelay": nodelay::report(),
     }))
     .into_response()
 }
@@ -369,11 +480,16 @@ async fn manifest(State(s): State<Shared>, headers: HeaderMap) -> Response {
         return r;
     }
     match &s.corpus {
+        // §18 P8: Phase 2's `creditWindowBytes` carried (4+1)x batch — the *producer-resident*
+        // bound, not the credit window, and §16.3's credit-window figure appeared in no artifact
+        // under its own name. Both are now emitted, each holding what its name says.
         Some(c) => Json(serde_json::json!({
             "phase": 2,
             "corpus": c.manifest(),
             "maxInflightBatches": MAX_INFLIGHT_BATCHES,
-            "creditWindowBytes": (MAX_INFLIGHT_BATCHES + 1) * c.max_batch_wire_bytes,
+            "creditWindowBytes": MAX_INFLIGHT_BATCHES * c.max_batch_wire_bytes,
+            "producerResidentBoundBytes": (MAX_INFLIGHT_BATCHES + 1) * c.max_batch_wire_bytes,
+            "tcpNoDelay": nodelay::report(),
         }))
         .into_response(),
         None => Json(serde_json::json!({ "phase": 1, "corpus": serde_json::Value::Null }))
@@ -637,11 +753,23 @@ async fn stream_ws(State(s): State<Shared>, headers: HeaderMap, ws: WebSocketUpg
         return r;
     }
 
+    // §19.7's ceiling, enforced before any producer work is started.
+    let Some(slot) = try_admit(&s) else {
+        return ws.protocols(["bakeoff.v0"]).on_upgrade(|mut socket| async move {
+            let _ = socket
+                .send(axum::extract::ws::Message::Binary(admission_refusal_frame().into()))
+                .await;
+        });
+    };
+
+    let total = total_batches(&s);
     let (rx, state, checkpoints, facts, json_seen, operation) = start_stream(&s, "websocket");
     let stream_id = state.stream.clone();
     let t0 = s.t0;
 
     ws.protocols(["bakeoff.v0"]).on_upgrade(move |mut socket| async move {
+        // Held for the stream's whole lifetime; released on drop, including on the failure paths.
+        let _slot = slot;
         // Ids travel in band as opaque UTF-8 — never a URL segment or a header (H6).
         let open = wire::frame(
             wire::TAG_OPEN,
@@ -661,7 +789,7 @@ async fn stream_ws(State(s): State<Shared>, headers: HeaderMap, ws: WebSocketUpg
             rx,
             state.clone(),
             checkpoints.clone(),
-            BATCH_COUNT as u64,
+            total,
             json_seen.clone(),
         )
         .await;
@@ -677,6 +805,14 @@ async fn stream_http(State(s): State<Shared>, headers: HeaderMap) -> Response {
     if let Err(r) = check(&s, &headers, bearer(&headers)) {
         return r;
     }
+    // §19.7's ceiling. Refused in the declared taxonomy, as a frame the shared decoder already
+    // understands, so the refusal is symmetric with Candidate A's rather than an HTTP status the
+    // other candidate has no analogue for.
+    let Some(slot) = try_admit(&s) else {
+        return Body::from(admission_refusal_frame()).into_response();
+    };
+
+    let total = total_batches(&s);
     let (rx, state, checkpoints, facts, json_seen, operation) = start_stream(&s, "http-stream");
     let stream_id = state.stream.clone();
     let t0 = s.t0;
@@ -690,7 +826,7 @@ async fn stream_http(State(s): State<Shared>, headers: HeaderMap) -> Response {
         rx,
         state.clone(),
         checkpoints.clone(),
-        BATCH_COUNT as u64,
+        total,
         json_seen.clone(),
     );
 
@@ -700,6 +836,11 @@ async fn stream_http(State(s): State<Shared>, headers: HeaderMap) -> Response {
     let watch_cp = checkpoints.clone();
     let watch_json = json_seen.clone();
     tokio::spawn(async move {
+        // The admission slot lives exactly as long as the stream does. This task runs until the
+        // stream completes or is cancelled, so moving the slot in releases the ceiling on both
+        // paths; holding it in `stream_http`'s frame would release it the instant the response
+        // headers were returned, and the ceiling would not bind at all.
+        let _slot = slot;
         loop {
             tokio::time::sleep(Duration::from_millis(25)).await;
             if watch_state.is_cancelled() {
@@ -707,7 +848,7 @@ async fn stream_http(State(s): State<Shared>, headers: HeaderMap) -> Response {
                        Terminal::Cancelled("connection closed".into()));
                 break;
             }
-            if watch_state.batches_generated() >= BATCH_COUNT as u64
+            if watch_state.batches_generated() >= total
                 && watch_state.resident_bytes() == 0
             {
                 finish(&watch_facts, &watch_state, &watch_cp, &watch_json, t0,
@@ -808,13 +949,37 @@ mod security_tests {
             states: Mutex::new(HashMap::new()),
             batch_wire_bytes: producer::batch_wire_bytes(),
             corpus: None,
+            active_streams: AtomicU64::new(0),
         });
         let token = state.session.token_for_injection().to_string();
         let app = router(state.clone());
         tokio::spawn(async move {
+            // Same socket-option path as production (§18 P2), so the tests exercise what runs.
+            let listener = axum::serve::ListenerExt::tap_io(listener, |s| nodelay::apply(s));
             let _ = axum::serve(listener, app).await;
         });
         (local.port(), token, state)
+    }
+
+    /// **§18 P2.** Phase 2 declared `TCP_NODELAY` "set identically and recorded" while setting
+    /// nothing. A declaration is worth what Phase 2's was unless something checks it, so this reads
+    /// the option back off the accepted socket rather than trusting `set_nodelay`'s return.
+    #[tokio::test]
+    async fn tcp_nodelay_is_set_on_accepted_connections_and_recorded() {
+        let before = nodelay::VERIFIED.load(Ordering::Relaxed);
+        let (port, token) = spawn_server().await;
+        let origin = format!("http://127.0.0.1:{port}");
+        assert_eq!(probe(port, Some(&origin), Some(&token)).await, 200);
+
+        assert!(
+            nodelay::VERIFIED.load(Ordering::Relaxed) > before,
+            "no accepted connection had TCP_NODELAY verified — the tap is not wired in"
+        );
+        assert_eq!(
+            nodelay::FAILED.load(Ordering::Relaxed),
+            0,
+            "TCP_NODELAY failed to apply on at least one connection"
+        );
     }
 
     /// Returns the numeric HTTP status of a `GET /clock`.
@@ -1123,6 +1288,96 @@ mod security_tests {
             "H2 allows at most one further batch after cancellation, saw {}",
             state.batches_after_cancel()
         );
+    }
+
+    /// **§19.7 — the N+1 admission exercise (ADR-010 rule 6).**
+    ///
+    /// Rule 6's point is that "we are comfortably under it today" is not a strategy: the ceiling is
+    /// declared and then deliberately driven past. The third concurrent stream must be **refused and
+    /// the refusal surfaced**, never silently queued and never admitted-and-degraded — which is the
+    /// wrong-but-plausible result rule 7 forbids.
+    ///
+    /// The refusal arrives as a `TransportFailed` terminal frame, in the taxonomy §5 already
+    /// declares. No new error variant and no new control frame: minting either would be the data
+    /// plane acquiring control-plane vocabulary.
+    #[tokio::test]
+    async fn a_stream_over_the_declared_ceiling_is_refused_and_surfaced() {
+        async fn open_stream(port: u16, token: &str) -> TcpStream {
+            let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+            // `Connection: close` so the refused response reaches EOF. Without it keep-alive holds
+            // the socket open and `read_to_end` blocks on a connection the server is done with.
+            let req = format!(
+                "GET /stream/http HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\
+                 Origin: http://127.0.0.1:{port}\r\nAuthorization: Bearer {token}\r\n\r\n"
+            );
+            s.write_all(req.as_bytes()).await.unwrap();
+            s
+        }
+
+        let (port, token) = spawn_server().await;
+
+        // Hold the ceiling. Read at least one byte from each so the handler has certainly run and
+        // taken its slot before the third connection is opened.
+        let mut held = Vec::new();
+        for _ in 0..MAX_CONCURRENT_STREAMS {
+            let mut s = open_stream(port, &token).await;
+            let mut one = [0u8; 1];
+            s.read_exact(&mut one).await.unwrap();
+            held.push(s);
+        }
+
+        // N+1.
+        let mut third = open_stream(port, &token).await;
+        let mut buf = Vec::new();
+        tokio::time::timeout(Duration::from_secs(10), third.read_to_end(&mut buf))
+            .await
+            .expect("the refused stream must terminate, not hang")
+            .unwrap();
+
+        let sep = buf
+            .windows(4)
+            .position(|w| w == b"\r\n\r\n")
+            .expect("response head");
+        let body = &buf[sep + 4..];
+        assert_eq!(
+            body[0],
+            wire::TAG_TERMINAL,
+            "a refused stream must surface a terminal frame, not silence or a partial stream"
+        );
+        assert_eq!(
+            body[wire::FRAME_PREFIX_LEN],
+            wire::TERM_TRANSPORT_FAILED,
+            "the refusal must map into the declared taxonomy"
+        );
+        let detail = String::from_utf8_lossy(&body[wire::FRAME_PREFIX_LEN + 1..]);
+        assert!(
+            detail.contains("admission ceiling"),
+            "the refusal must say why it was refused, got {detail:?}"
+        );
+
+        // And the ceiling must be released again, or it is a leak rather than a ceiling.
+        drop(held);
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+        loop {
+            let mut s = open_stream(port, &token).await;
+            let mut one = [0u8; 1];
+            if tokio::time::timeout(Duration::from_millis(500), s.read_exact(&mut one))
+                .await
+                .is_ok()
+            {
+                let mut head = vec![0u8; 200];
+                let n = s.read(&mut head).await.unwrap_or(0);
+                let text = String::from_utf8_lossy(&head[..n]).to_string();
+                if !text.contains("admission ceiling") {
+                    break;
+                }
+            }
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "admission slots were never released — the ceiling leaks"
+            );
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
     }
 
     /// Raw WebSocket handshake, returning the HTTP status of the upgrade response.
