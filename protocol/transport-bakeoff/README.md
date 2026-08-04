@@ -1475,3 +1475,421 @@ counterbalanced block is worth running, and P3 and P9 have to be closed before �
 anything at all. Phase 2's contribution is therefore narrower than "it measured the transports": it
 established that the S configuration behaves as Phase 1 suggested, and it established that this
 instrument is not yet capable of answering the batch-size question the decision turns on.
+
+---
+
+# 19. Phase 3 addendum — repaired instrument, re-measurement (preregistered)
+
+> **Void clause, mirroring §0 and §16.** This addendum is written and committed **before any Phase-3
+> harness code exists**. Git history is the proof: **if any Phase-3 harness commit precedes this §19
+> commit, §19 is void.** Two files are committed *with* §19 and are covered by this clause rather
+> than excepted from it: `scripts/sim-order-statistic.mjs` (§19.2's operating-characteristic
+> simulation) and `scripts/precision-check.mjs` (§19.7's budget check). Neither touches a transport,
+> an adapter, a consumer or a corpus; both are justification for the design and are committed here so
+> the reasoning is auditable at the moment it is declared, not reconstructed later.
+
+## 19.0 Why there is a Phase 3, and what it can and cannot contribute
+
+Phase 2 returned one admissible block of five. §18 records nine instrument defects, two of which are
+**declared controls that were never in force**. Phase 3 repairs the instrument and re-measures.
+
+**Stated against myself, because the chronology matters.** §16.5's order-effect gate was declared
+before Phase 2 ran. It fired on four of five blocks. Its defect was identified **afterwards**, in
+post-review, and recorded as §18 P3. A reader must not have to infer that ordering: I am removing a
+preregistered invalidator **after seeing it reject most of my data**. That is the exact shape of
+result-shopping, and no amount of good faith on my part distinguishes it from the real thing. What
+distinguishes it is that the defect is **algebraic and demonstrable without any data at all**
+(§19.2), and that the demonstration is committed as a seeded simulation anyone can re-run. If the
+argument in §19.2 does not stand on its own, this change should be rejected regardless of what
+Phase 3 measures.
+
+**What Phase 3 can contribute, declared before measuring so it cannot be inflated afterwards.** At
+the precision this budget buys (§19.7), the CI for the candidate effect will most likely sit
+**entirely inside ±10%**, which routes to the equivalence branch, which falls through to the
+copies-first ordering, which currently favours Candidate A. **Phase 3 is therefore not primarily a
+race, and must not be reported as one.** Its informational contribution is:
+
+1. **Whether the ranking depends on batch size** — §16.9 rule 5, unevaluable in Phase 2, and the one
+   question that determines whether a transport decision is possible at all.
+2. **Whether the copy differential persists** once the consumer-side hasher is out of the timed path
+   and at every configuration, not just at S.
+3. **Whether N=2 changes anything**, and whether the declared aggregate ceilings hold.
+
+Saying this in advance is the honest disclosure required by `docs/01` principle 1: a design that can
+only confirm its expected answer is not a study. The branch that keeps this falsifiable is
+**inconclusive** (§19.9), and it is retained at its declared width rather than widened to make a
+decision more likely.
+
+## 19.1 What is superseded, enumerated
+
+§16 is **left byte-identical**. Nothing in §1–§18 is edited. The following named clauses are
+superseded **for Phase 3 only**, dated **2026-08-04**; Phase 2's verdicts under them stand unchanged.
+
+| Superseded clause | Text | Replaced by | Ground |
+|---|---|---|---|
+| §16.5 bullet 4 | "Order effects are reported … if it exceeds **5%** of the candidate main effect, the block is reported as confounded and invalid." | §19.3 | §18 P3 / §19.2 — the statistic is degenerate for its stated purpose |
+| §16.8 bullet 7 | "order effect exceeding the declared 5% threshold" (as an invalidator) | §19.3 + §19.8 | as above; the invalidator count does not decrease — see §19.8 |
+| §16.4 sentence 2 | "**t2 — checksum complete.** Fed by a streaming, chunk-by-chunk hasher on both candidates" | §19.5 | §17.7 — the hasher consumed 61–63% of t1, so t1 was not a transport figure |
+| §16.4 analysis plan | "Confidence intervals by percentile bootstrap over run-level means" | §19.3 | measured under-coverage (86.9–90.8%) at these sample sizes; see §19.3 |
+| §16.3 watchdog row | "180 s / 600 s" | §19.7 | §18 P5 — one begin/end per block with no heartbeat; a 20-run block trips it with a healthy transport |
+| §16.9 rules 2–3 | "differs by more than 10%" (denominator undefined) | §19.9 | §18 P9 — undefined denominator is a researcher degree of freedom |
+
+**Phase-2 blocks are not re-analysed under any of this.** §16.1's discipline carries forward: the
+four invalid Phase-2 blocks stay invalid, the new statistic is **not** applied to them, and no signed
+effect estimate derived from them appears in this document, in any Phase-3 results table, or in
+ADR-012. §19.7 uses **dispersion** from those blocks as declared design input, which is a different
+thing and is labelled as such where it is used.
+
+## 19.2 The defect in §16.5's statistic — algebra first, simulation second
+
+As implemented in `web/src/phase2.ts::orderEffect`:
+
+```
+ratio = |earlyGap − lateGap| / |(earlyGap + lateGap) / 2|
+```
+
+The numerator is the **drift × candidate interaction** — the quantity an order-effect gate should
+measure. The denominator is the **candidate main effect** — the quantity the entire study exists to
+estimate. As the two candidates converge, the denominator → 0 and `ratio` → ∞ **for any non-zero
+interaction noise whatever**. The gate therefore rejects most strongly exactly when the candidates
+are most alike. "The transports are indistinguishable" — a legitimate and pre-declared outcome of
+this study (§16.9 rule 3) — is mechanically converted into "the block is inadmissible."
+
+This holds independent of any measurement. `scripts/sim-order-statistic.mjs` (seed
+`0x5eed305100000001`, 4000 blocks per cell) makes the operating characteristic concrete:
+
+| True candidate effect | §16.5 invalidation rate, **zero drift** |
+|---|---|
+| 0.0% (true null) | **98.4%** |
+| 1.0% | 96.4% |
+| 5.0% | 83.5% |
+| 10.0% | 68.9% |
+| 20.0% | 44.2% |
+
+**At zero drift the gate rejects 98.4% of blocks.** Its rejection rate is driven almost entirely by
+the effect size and barely at all by drift — the rows at 1%, 3% and 5% drift are within ~1 pp of the
+zero-drift row throughout. For a gate whose declared purpose is detecting drift, that is the
+diagnosis: it is not measuring what it was declared to measure.
+
+## 19.3 The replacement — paired symmetric effect, with drift reported separately
+
+**Estimator.** The `ABBA BAAB ABBA` schedule already decomposes into adjacent pairs, each holding one
+A run and one B run, alternating `AB`/`BA` so the decomposition is order-balanced by construction.
+Phase 3 keeps that property at its own length (§19.7). For each pair *i*:
+
+```
+θ_i = 2 · (thr_B − thr_A) / (thr_A + thr_B)
+```
+
+where `thr` is throughput (bytes ÷ t1), so **higher is better** and **θ > 0 means Candidate B is
+faster**. Pair-level θ values are the unit of analysis — one number per pair, more conservative than
+run-level means, and per-batch samples are never pooled (§16.4's pseudo-replication discipline
+carries forward unchanged).
+
+**This closes §18 P9, and that is stated here rather than left to be noticed.** §16.9 rules 2–3 said
+"differs by more than 10%" without saying 10% *of what*: the Phase-2 S gap was 4.02% of B or 4.20%
+of A, and the hasher-corrected gap 8.57% of B or 9.37% of A — a spread that straddled a decision
+boundary purely by choice of denominator. The symmetric form takes the denominator to be the **mean
+of the two candidates**, `(A + B)/2`, which is fixed by the formula and cannot be chosen after the
+fact. §19.9's ±10% is on this symmetric scale. **Conversion, so the redefinition is visible rather
+than inferred:** a symmetric θ of 10% corresponds to B being 10.53% faster than A when expressed
+against A, or 9.52% when expressed against B. The band is therefore marginally *stricter* than the
+more permissive of the two readings §16.9 allowed, not looser.
+
+**Interval — Student-t, chosen on measured coverage, not convention.** §16.4 declared a percentile
+bootstrap. At these sample sizes it under-covers, and the direction of the error matters: an
+under-covering interval is too narrow, which systematically over-selects "entirely within ±10%" —
+the branch that falls through to the copies ordering and selects Candidate A. An anti-conservative
+interval would bias this study toward its own expected answer. Measured coverage of a nominal 95%
+interval (same simulation, 4000 blocks, true effect 2%, drift 3%, noise SD 1%):
+
+| Pairs | Percentile bootstrap | **Student-t** | BCa |
+|---|---|---|---|
+| 6 | 86.9% | **95.8%** | 87.1% |
+| 8 | 88.4% | **94.9%** | 88.4% |
+| 10 | 90.0% | **95.1%** | 90.1% |
+| 12 | 90.8% | **95.3%** | 90.6% |
+
+**The Student-t interval over pair-level θ is the decision interval.** The percentile bootstrap is
+retained and reported alongside it — 10,000 resamples, declared seed `0x5EED305100000001`, **held at
+full 64 bits through splitmix64**, closing §18 P7. It is reported because the human directed the
+bootstrap discipline be carried forward, and because a disagreement between the two is itself
+informative: **if the t interval and the bootstrap interval select different §19.9 branches, the
+outcome is inconclusive**, regardless of which branch the t interval alone would pick. That rule is
+declared here, before measuring.
+
+**Drift is reported, and — contrary to what I expected when designing this — is not a gate.** The
+adjacent-pair decomposition cancels drift exactly when drift is linear in position; I assumed
+non-linear drift would degrade the estimator and that a drift gate would therefore be the
+replacement control. The simulation falsifies that. Across four drift shapes (linear, quadratic,
+step, transient spike) at 10 pairs, measured coverage stays within **94.5–98.0% up to 50% drift**:
+drift inflates the between-pair SD, which *widens* the interval, which is the conservative
+direction. Inventing a drift invalidator anyway would repeat §16.5's error — discarding sound blocks
+to look rigorous.
+
+So the declared control is weaker than an invalidator, deliberately, and says so:
+
+- **Observed drift** is defined as `(max pair-mean throughput − min pair-mean throughput) / grand
+  mean of pair-means`, reported per block.
+- **Above 20%**, a block is **flagged**: reported with its drift stated, and **its result may not be
+  the sole basis for a §19.9 decision** — it may corroborate other blocks but not decide alone. The
+  ground is not estimator bias (there is none up to 50%) but that a 20% swing in machine throughput
+  within a single block means the §2 reference profile was not held, which is a §8 concern in its own
+  right.
+- **The residual assumption is stated:** pair-level cancellation is exact only for drift linear in
+  position, and the simulation covers four shapes, not all shapes. An adversarial drift correlated
+  with the AB/BA alternation itself would defeat it; nothing in the design rules that out, and the
+  counterbalanced alternation is what makes it unlikely rather than impossible.
+
+**§19.8 shows the invalidator count does not silently decrease.**
+
+## 19.4 Instrument repairs required before any Phase-3 measurement
+
+Every §18 finding is closed here. **No Phase-3 measurement is admissible until all of these are
+committed and R1–R8 pass on the repaired tree (§19.6).**
+
+| # | Repair | Verified by |
+|---|---|---|
+| P1 | Candidate A's control path is split from its send path, so a CANCEL frame is observed **while a send is pending**. F7's fix is not merely restored — the two-write structure stays (it is what keeps the timed interval allocation-free) and the cancel-blind window is removed instead. | **R6 must demonstrate it.** A source diff is not acceptable evidence; the regression must show the window is gone against a send deliberately held in flight. |
+| P2 | `TCP_NODELAY` set on every accepted connection for **both** candidates, and its state written into every artifact. | Assertion in the artifact; a test that reads the socket option back |
+| P3 | §16.5's gate replaced per §19.3 | `scripts/sim-order-statistic.mjs` |
+| P4 | (recorded observation, no repair — configuration S cleared the old gate by 0.4 pp) | n/a |
+| P5 | Per-run watchdog heartbeat. Declared intervals raised **in advance** (§19.7): **60 s per run**, **1800 s per block**, replacing §16.3's 180 s/600 s. | A block of the declared length must not trip it with a healthy transport |
+| P6 | The consumer reads the stream id from the OPEN frame and fetches `/facts`, so **producer-side facts reach the artifact**: resident bytes, memory samples, the actual sampling cadence, the producer's own digest, allocation counters. | Artifact contains a non-empty producer facts block for every run |
+| P7 | Declared 64-bit seed held through splitmix64; no 32-bit truncation anywhere. | Unit test: the declared seed's first outputs match a reference vector |
+| P8 | `creditWindowBytes` renamed to what it holds. The artifact carries **both** `producerResidentBoundBytes` = (4+1)×batch and `creditWindowBytes` = 4×batch, under their own names. | Artifact field assertion |
+| P9 | Closed by §19.3's symmetric denominator — see the explicit statement there. | n/a |
+
+Additionally, two Phase-2 gaps recorded in §17.8 are closed because Phase 3's assertions depend on
+them: `debugAssertions`/build profile and clock-offset bound must reach the artifact (§17.8 item 1),
+and the progress frame's `total_batches` must carry the **configuration's** batch count rather than
+Phase 1's constant (§17.8 item 6).
+
+## 19.5 Hashing off the timed path — and what H1 no longer claims
+
+§17.7 established that a pure-JS streaming SHA-256 inside the frame decoder consumed **61–63% of t1**
+at configuration S, making "33–35 MB/s" a floor of the instrument rather than a capability of either
+transport. Phase 3 removes it from the timed path.
+
+**Design.** Timed runs carry **no cryptographic hasher**. Correctness is established two ways:
+
+1. **Inside every timed run — a structural digest, O(batches) not O(bytes).** For each batch: its
+   index, its declared length, and its first and last 8 bytes, folded into a 64-bit accumulator.
+   Cost is independent of payload size, so it cannot become §17.7's defect at reduced amplitude.
+2. **Alongside every configuration — a separate untimed verification run per candidate**, which
+   hashes the entire stream and asserts the wire digest against the server manifest.
+
+**What this detects, and what it does not — stated plainly rather than papered over with a
+loopback-TCP argument.** The timed run detects truncation, dropped or reordered batches, frame
+boundary corruption, and a length field that lies. It does **not** detect silent corruption of
+payload interior bytes. That is covered by the untimed verification run, on a different transfer of
+the same corpus. `docs/01` principle 3 permits a claim at a declared level; it does not permit
+carrying the old claim's wording. Accordingly:
+
+> **H1's grade for Phase 3, declared:** cryptographic digest identity is established **per candidate
+> per configuration, on a dedicated verification transfer** — not on every timed run. ADR-012's
+> evidence sentence "digest identical across both adapters and all runs" does not survive Phase 3
+> unamended and must be corrected when Phase-3 evidence is written.
+
+**Equal instrumentation, which is the §8 hazard this creates.** The verification run and the timed
+runs must be **the same build**, with hashing gated by a runtime flag. The flag's value is written
+into every artifact. A test pins that the transport and decoder paths are byte-identical between the
+two modes apart from the hasher call itself — otherwise the thing verified is not the thing measured,
+which is §8's "unequal instrumentation" in a new location.
+
+**Why not the alternative.** Retaining every batch and hashing after t1 with native
+`crypto.subtle.digest` would keep H1 same-run, which is better on its face. It is rejected because
+retaining 240 MB inside the timed window contaminates peak JS heap and allocation pressure — and
+those are precisely the measurements §19.9's equivalence branch decides on. Trading the decisive
+metric to improve a metric that is already covered is the wrong trade. A per-byte non-cryptographic
+checksum (CRC32) is rejected outright: it reintroduces a per-byte cost of the same order as the
+figure being measured.
+
+## 19.6 R1–R8 re-run — the admissibility gate, restated
+
+§16.7's R1–R8 are retained verbatim and **must all pass on the repaired tree before any Phase-3
+measurement is admissible**. Passing them in Phase 2 does not carry over: the tree has changed, and
+P1 changes an adapter's control path.
+
+**R6 carries an additional, explicit obligation.** P1's fix may not be asserted from the diff. R6
+must demonstrate, browser-free, that Candidate A observes a CANCEL frame **while a batch send is
+pending** — the specific window `86df830` reintroduced. A regression that only shows cancellation
+working between sends does not discharge P1 and leaves Phase 3 inadmissible.
+
+**R7 gains the aggregate case:** bounded memory must hold at N=2 against the declared aggregate
+bound (§19.7), measured, not derived.
+
+## 19.7 Budget, schedule, restart policy, stopping rule, and the precision check
+
+**Configurations.** Four: **S**, **M**, **L** (§16.2's sizes, unchanged) and **N=2**.
+
+**Configuration S is included, and the reason is a rule-5 requirement rather than thoroughness.**
+§19.9 rule 5 compares across batch sizes. Phase 2's S block carried the hasher in the timed path;
+Phase 3's M and L will not. Comparing the two would confound an instrument change with a batch-size
+effect and produce a rule-5 answer that is an artifact of the repair. S is also the cheapest
+configuration to run.
+
+**N=2, fully specified — an underspecified concurrency configuration would be §18 P9 repeating one
+section later.**
+
+| Parameter | Value | Why |
+|---|---|---|
+| Batch size | **M** (2,438,344 B) | N=2 tests concurrency, not batch size; holding batch size at M makes the concurrency delta attributable by comparison against the M block |
+| Candidates | **Both streams the same candidate** | The comparison is A vs B; a mixed pair measures neither |
+| Start offset | **Simultaneous** — the second stream opens as soon as the first's OPEN frame is received | `docs/05`/`docs/06`'s justifying case is a publish/export read running *while* the canvas streams (`docs/01`'s never-block-the-canvas rule, `docs/03`/ADR-008) — genuine overlap, not a stagger |
+| Payload | Each stream sends the **full corpus**; 480 MB aggregate | Halving per stream would make per-stream behaviour differ from the M block and destroy the comparison |
+| θ denominator | **Aggregate** throughput: total bytes across both streams ÷ (first open → last t1) | The ceiling is declared on the aggregate; per-stream figures are reported as descriptive |
+| Corpus residency | One shared corpus, built once — both streams send the same immutable bytes | 244 MB corpus + 2 × 12,191,720 B producer-resident, not 2 × 244 MB |
+
+**Declared aggregate ceilings (ADR-010 rule 6), and the exercise that drives past them.**
+
+| Ceiling | Value |
+|---|---|
+| Max concurrent streams | **2** |
+| Producer-resident bound, aggregate | **2 × (4+1) × batch wire bytes** = 24,383,440 B at M — asserted as **measured**, not derived from "credit is per-stream" |
+| Consumer decoder buffer high-water, aggregate | ≤ 2 × 2 × batch wire bytes |
+| Watchdog | **60 s per run** (heartbeat), **1800 s per block** — raised here, in advance, replacing §16.3's 180 s/600 s |
+
+**The N+1 exercise.** A third concurrent stream is opened. It must be **refused at open**, surfaced
+as a declared terminal outcome, never admitted-and-degraded and never silently queued. Two
+constraints follow, and they are limits on this harness's authority as much as on its code:
+
+- **No new error variant, no new control frame.** §5 declares the taxonomy
+  `Cancelled | ProducerFailed | TransportFailed | DecodeFailed`. The refusal maps into
+  `TransportFailed` with an opaque `detail`. Minting a variant would be the data plane acquiring
+  control-plane vocabulary, blurring the `docs/02` split inside scaffolding.
+- **The harness declares its own recovery policy only.** ADR-010 rule 7 binds long-lived sessions to
+  declare a recovery policy; §10 already declares `none` for this harness, and that is what is
+  declared for the refused third stream: surfaced as a terminal outcome, no retry, run invalid if not
+  surfaced. **What a real client should do on an admission refusal — retry, back off, queue — is not
+  declared here and must not be inferred from this harness.** That is SKP surface design, which
+  `docs/10`'s specification checklist owns and §5 puts outside this directory. The concurrency and
+  admission decision is owed and is **not** ADR-012's; it is recorded as an open item, not resolved.
+
+**Sample count.** **10 pairs = 20 timed runs per configuration**, in `AB BA AB BA AB BA AB BA AB BA`
+— 5 `AB` and 5 `BA`, order-balanced at the pair level. Plus **2 untimed verification runs** per
+configuration (one per candidate, §19.5). Total: 80 timed runs, 8 verification runs.
+
+**Process-restart schedule.** Fresh server process and fresh browser profile **per configuration
+block**; fresh connection **per run** (§16.2, unchanged). **No restart within a block** — a mid-block
+restart is itself an order effect, and it is what §16.5's whole-block-replacement rule exists to
+prevent.
+
+**Stopping rule, bounded in advance.** No optional stopping: every block runs its full 20 runs before
+any comparison is computed. An invalidated block is replaced **whole**, and **at most once**. A block
+that fails twice is reported as failed and **not attempted a third time in this phase**. Total wall
+clock is bounded at **90 minutes**; if exceeded, the session stops and reports what completed. This
+is what "one bounded schedule" means, and it is fixed here so that a disappointing result cannot buy
+another attempt.
+
+**Precision check — run and reported before the schedule, per the human's directive.**
+`scripts/precision-check.mjs` computes the predicted CI half-width for θ at the declared budget.
+
+Its dispersion input is **pair-level SD from the Phase-2 blocks, including the invalid ones**, and
+that provenance is declared rather than hidden (`docs/01` principle 8). This is legitimate where a
+signed effect estimate would not be: a run-count choice cannot select a candidate, only widen or
+narrow an interval, and the inconclusive branch already absorbs the consequence. **No signed effect
+from those blocks is computed, reported, or carried into ADR-012.** Sizing is against the **largest**
+observed dispersion, not the mean.
+
+The check must also carry the hasher correction: removing a large common per-byte cost rescales both
+θ and its SD by `t1_mean / (t1_mean − hasher_ms)`, measured at **2.18–2.67×** across the Phase-2
+blocks. Predicted half-widths at 10 pairs (t, 9 df = 2.262), as the script actually computes them:
+
+| Dispersion basis | Pair-level SD, projected | Predicted half-width | Fits ±10%? |
+|---|---|---|---|
+| Cleanest Phase-2 block | 1.75 pp | **±1.25 pp** | yes, comfortably |
+| Noisiest Phase-2 block | 12.64 pp | **±9.04 pp** | yes — by under 1 pp |
+
+**Verdict rule, declared before the check is run:** if the predicted half-width cannot fit inside
+±10% **even on the optimistic basis**, the budget is insufficient, and the session stops for the
+human rather than being spent. On the pessimistic basis it need not fit — that outcome is
+**inconclusive**, which §19.9 already treats as legitimate.
+
+**Read honestly, the pessimistic basis is not reassuring even though it passes.** A block as noisy as
+the worst Phase-2 block would produce a ±9.04 pp interval, which clears the ±10% band by under a
+percentage point — meaning almost any non-trivial effect would put a boundary inside the interval and
+return **inconclusive**. The budget is sufficient to be *capable* of a decision; it does not
+guarantee one, and no run count within this bound would. The noisiest Phase-2 blocks were noisy in
+part *because of* defects Phase 3 repairs (P5's watchdog firing mid-block, P2's absent
+`TCP_NODELAY`), so post-repair dispersion is likely nearer the optimistic basis — but Phase 3 does
+not assume that, and §19.8 checks the **realized** half-width against the same ±10% after the fact.
+
+## 19.8 Phase-3 invalidators
+
+Every §8 invalidator and every §16.8 invalidator carries forward **except §16.8 bullet 7**, which
+§19.1 supersedes. To make plain that the control count does not silently decrease, the following are
+**added**:
+
+- a pair whose two runs are not one A and one B — the decomposition is broken
+- `AB`/`BA` imbalance: the block must contain exactly half of each
+- fewer than the declared 10 pairs completing, for any reason
+- **realized** CI half-width exceeding ±10 pp — the block is too imprecise to decide, pre-declared
+  rather than discovered
+- the t interval and the bootstrap interval selecting different §19.9 branches (§19.3)
+- the hasher flag absent from an artifact, or differing between runs being compared (§19.5)
+- a verification run whose cryptographic digest does not match the manifest (§19.5)
+- `TCP_NODELAY` state absent from an artifact, or unequal between candidates (§19.4 P2)
+- producer facts absent from an artifact (§19.4 P6)
+- at N=2: measured aggregate producer-resident bytes exceeding the declared aggregate bound, or the
+  third stream being admitted rather than refused (§19.7)
+
+A block flagged for drift >20% (§19.3) is **not** invalid; it is constrained in what it may decide.
+
+## 19.9 Decision rule — fixed before viewing any Phase-3 result
+
+Applied in order. **±10% is on §19.3's symmetric scale**, with the conversion stated there.
+
+1. **A failed hard gate disqualifies the candidate**, regardless of throughput. H1–H7 retained;
+   H1 at the grade §19.5 declares.
+2. **CI entirely above +10%** → **Candidate B** is selected.
+3. **CI entirely below −10%** → **Candidate A** is selected.
+4. **CI entirely within ±10%** → **performance-equivalent**. Fall through to §12's existing ordering,
+   applied on **measured end-to-end cost**: copies and allocation pressure, then cancellation
+   simplicity, then security surface.
+   - **This branch's outcome is foreseeable and that is disclosed, not hidden.** Candidate A leads on
+     measured application-level copies. Retaining an ordering fixed in §12 *before Phase 1 measured
+     anything* is legitimate; changing it now that its outcome is known would not be. The asymmetry is
+     the whole answer to "the design knows where this branch lands."
+   - **The decisive input must be re-measured, not inherited.** Copies and allocation pressure are
+     live-asserted **per run at every configuration**, including M and L, where §17.5 records the
+     mechanism differs from S. Deciding on a copy differential measured at one batch size would be
+     rule 5's own failure committed inside the branch meant to survive it.
+5. **CI overlapping either boundary** → **inconclusive**. ADR-012 stays **Proposed**.
+6. **An unknown internal copy count is not a win.** WebView2-internal WebSocket message assembly
+   remains opaque and is reported as **unknown**. **No zero-copy claim is made for either candidate**
+   (ADR-004: copies are "measured and minimized, not assumed absent").
+7. **Rule 5 — batch-size dependence**, evaluated across the admissible configurations. If the ranking
+   or the decisive copy differential changes materially with batch size, **no transport-independent
+   winner exists**; ADR-012 records the **batch-size policy requirement** the product must satisfy
+   and **stays Proposed**. Rule 5 is not evaluable unless at least S plus one of M/L are admissible.
+
+## 19.10 Scope, and the sequencing Phase 3 does not shortcut
+
+Windows/WebView2 only. **Candidate A versus Candidate B only** — the interruptible Tauri IPC-channel
+class named by ADR-004 amendment 2 stays outside the decision and unmeasured. Corpus remains
+synthetic and structurally regular (fixed-width, non-nullable, numeric); GeoArrow variable-width
+geometry, dictionary/string columns and nulls are **not** exercised, so any buffer-sharing result is
+conditional on that shape. No GeoParquet, no DuckDB, no spatial index, no picking, no editing, no
+reprojection, no WAN path. **N=2 is two synthetic streams and must never be reported as query
+concurrency.**
+
+**The hero-slice / real-SKP confirmation is not part of Phase 3**, and the architect's block on
+attempting it here stands — harder than before, because Phase 3 adds an admission exercise, the
+closest this harness has come to authoring protocol semantics. `docs/02` places DuckDB and GeoParquet
+in `engine/`; a real SKP surface requires `docs/10`'s specification checklist and `docs/08`'s
+normative conformance suite. The sequencing, recorded so it is not rediscovered:
+
+1. **Phase 3, this directory** — repair, re-measure S/M/L/N=2, evaluate rule 5, produce a
+   **provisional** winner and the batch-size policy *requirement*.
+2. **ADR-012 amended by appended dated note.** Status stays **Proposed**.
+3. **`protocol/` data plane plus first `engine/` scaffolding, as one vertical slice** (`docs/07`
+   method) — not a longer bake-off.
+4. **Hero-slice confirmation** across `engine/` + `protocol/` + `renderer/` against `docs/08` budgets.
+5. **ADR-012 → Accepted**, Windows/WebView2 only; macOS/Linux stays `docs/07`'s separate open gate.
+
+**The circular gate, named because nobody has named it.** Step 3 builds against a *provisional*
+winner, so acceptance depends on work that must be built before acceptance can happen. If the
+hero-slice confirmation falsifies the provisional choice, step 3 is rework. That risk is real, is
+accepted deliberately rather than designed away, and belongs in ADR-012's consequences.
+
