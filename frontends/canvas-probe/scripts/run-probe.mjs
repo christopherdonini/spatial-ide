@@ -182,13 +182,41 @@ const userAgent = await evaluate('navigator.userAgent').catch(() => 'unknown');
 
 ws.close();
 
-// **Kill the process tree, not just the parent.** On Windows a browser's renderer, GPU and utility
-// processes survive `child.kill()` and linger indefinitely — an earlier version of this script left
-// eighteen headless processes running on the machine. `taskkill /T` takes the children with it.
-try {
-  spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
-} catch {
-  child.kill();
+// **Kill the process tree, not just the parent — and then wait for it to actually be gone.** On
+// Windows a browser's renderer, GPU and utility processes survive `child.kill()` and linger
+// indefinitely; an earlier version of this script left eighteen headless processes running.
+// `taskkill /T` takes the children with it.
+//
+// It was fire-and-forget, and that was the defect underneath the profile leak: `taskkill` was
+// spawned with its exit unobserved, so the removal below raced a browser that still held every file
+// in the profile open. `EPERM` on 21 of 21 directories in one run, ~6 GB of litter over a session,
+// and — worse than the disk — a canary reading taken while twenty zombie process trees were still
+// being reaped, which read as the machine drifting.
+await new Promise((r) => {
+  try {
+    const killer = spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+    killer.on('exit', r);
+    killer.on('error', () => {
+      child.kill();
+      r();
+    });
+  } catch {
+    child.kill();
+    r();
+  }
+});
+// `taskkill` returning is not the process being gone. Signal 0 asks "does this pid exist" without
+// sending anything; when it throws, it does not.
+{
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    try {
+      process.kill(child.pid, 0);
+    } catch {
+      break;
+    }
+    await sleep(100);
+  }
 }
 /**
  * **Delete the throwaway profile, and report it if that fails.**
