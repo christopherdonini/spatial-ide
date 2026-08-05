@@ -102,19 +102,27 @@ Both refusals are **ADR-015 (Proposed)** policy, and both happen at open, in fro
 - **A source with no CRS**, and a caller assertion over a source that has one — the four-row table in
   ADR-015 §1–§6.
 - **A source with no stable per-feature identity** — concretely, no 64-bit column named `id`
-  (ADR-015 §8). ADR-010 rule 2 resolves picking through a stable feature ID and `docs/11` requires
+  (**ADR-016**, Proposed — split out of ADR-015 §8). ADR-010 rule 2 resolves picking through a
+  stable feature ID and `docs/11` requires
   one for editing and lineage; synthesizing a row ordinal is the M3 hazard rule 2 exists to prevent.
   **This bounds which real GeoParquet the hero slice can open more tightly than anything in
   `docs/07`** — most files in the wild carry no such column — and the source-key-to-identity mapping
-  that would fix it is an OPEN item on ADR-015, not something implemented here.
+  that would fix it is an OPEN item on ADR-016, not something implemented here. **ADR-016's own
+  Context states what this check does not establish** — dataset-wide uniqueness, and stability
+  across reopen — so the words "stable feature identity" are not read as stronger than the code.
 
-## Deviation from `docs/05`, named rather than buried
+## Axis order: a conflict with `docs/05`, resolved rather than buried
 
 `docs/05` requires ingestion to **normalize** axis order to the internal (E, N) convention and to
 record the normalization performed. This engine performs no normalization: a non-x-first source is
-**refused**. Deliberate, and in the safe direction — refusing cannot silently mislabel coordinates
-where an unimplemented normalization could — but it is a gap against `docs/05`, not a satisfied
-requirement. Recorded in ADR-015 (Proposed) §5 and its second OPEN block.
+**refused**.
+
+That is a real conflict between two constitution documents, and it resolves: `docs/README.md` is
+**lower-number-wins**, so `docs/01` principle 8 (no silent conversion) governs and `docs/05`'s
+normalization clause yields. Refusing is the **resolved** behaviour, not an unmet requirement — an
+unimplemented normalization could silently mislabel coordinates, and refusing cannot. Recorded in
+ADR-015 (Proposed) §5, whose OPEN block is only about whether normalizing *later* should replace
+refusing.
 
 ## Declared recovery policy (ADR-010 rule 7)
 

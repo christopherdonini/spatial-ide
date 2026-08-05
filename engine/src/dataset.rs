@@ -171,6 +171,12 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
 
 /// The two columns this slice needs, checked at open so a stream cannot fail halfway for a reason
 /// that was knowable up front.
+///
+/// **What the id check establishes, and what it does not** — ADR-016 (Proposed), whose Context says
+/// this in full. It establishes that a 64-bit column named `id` exists. It does **not** establish
+/// dataset-wide uniqueness (values are never compared), nor stability across reopen, nor that the
+/// values mean anything — an exporter's invented row number is admitted here. Read as a narrow
+/// structural precondition, not as a guarantee of the stable identity ADR-010 rule 2 consumes.
 fn check_columns(schema: &SchemaRef, geometry_column: &str) -> Result<()> {
     let id = schema
         .fields()

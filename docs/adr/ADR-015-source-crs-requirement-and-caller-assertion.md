@@ -13,8 +13,7 @@ and is not decided here."*
 ADR-005 (grades — untouched); ADR-013 (Proposed — **not** cited as authority anywhere below);
 `docs/11`.
 **Implemented by:** `engine/src/crs.rs`, `engine/src/geoparquet.rs`, `engine/src/envelope.rs`,
-`engine/src/stream.rs` (§7), `engine/src/dataset.rs` (§8); exercised against real files by
-`engine/tests/slice.rs`.
+`engine/src/stream.rs` (§7); exercised against real files by `engine/tests/slice.rs`.
 
 ## Context
 
@@ -59,20 +58,20 @@ simple — an engine that cannot compare two CRS definitions must not pretend to
    the envelope records `axis_normalization = none-performed`, so the record says what was done
    rather than what was assumed (`docs/05`).
 
-   > **This is a deviation from `docs/05`, and is named as one rather than left to an OPEN block.**
+   > **This departs from `docs/05`'s letter, and the conflict resolves in favour of refusing.**
    > `docs/05` says: *"Axis-order normalization happens first. Ingestion normalizes to the declared
    > internal **(E, N)** convention *before* the equivalence decision, and the normalization
    > performed is recorded."* This engine **refuses** a non-x-first source instead of normalizing it.
-   > The deviation is deliberate and in the safe direction — refusing cannot silently mislabel
-   > coordinates, whereas an unimplemented normalization could — but it is a gap against an
-   > *Evolves*-stability constitution doc, not a satisfied requirement, and this ADR is where a
-   > reader should find that said. Closing it is the second OPEN block below.
    >
-   > **Precedence, added after architect review.** The safety argument stands but understates the
-   > case. `docs/README.md` resolves conflicts **lower-number-wins**, so `docs/01` principle 8 (no
-   > silent conversion) beats `docs/05`'s normalization clause on precedence alone. This is
-   > therefore a *resolved conflict*, not an unjustified gap — the OPEN block below stays because
-   > normalizing is still the more useful behaviour, not because refusing needs an excuse.
+   > That is a genuine conflict between two constitution documents, and `docs/README.md` resolves
+   > conflicts **lower-number-wins**: `docs/01` principle 8 (no silent conversion) governs, and
+   > `docs/05`'s normalization clause yields to it. Refusing is therefore the **resolved** behaviour,
+   > not a gap or an unmet requirement — an unimplemented normalization could silently mislabel
+   > coordinates, and refusing cannot.
+   >
+   > What remains open is **not** whether refusing is permitted. It is whether normalizing *later* —
+   > which is the more useful behaviour once it can be done correctly and recorded — should replace
+   > it, and where that would happen. That question, and only that question, is the OPEN block below.
 6. **No guessing, no default, no fallback, at any point.**
 
 ### 7. A viewport's CRS is a caller assertion about the query, never an equivalence judgement
@@ -106,24 +105,11 @@ agree, and it licenses no later code to assume so. The moment reprojection exist
 definitional-equivalence machinery `docs/05` describes is owed here and identifier matching is
 retired, not promoted.
 
-### 8. Stable feature identity is an admission requirement, and is recorded here
-
-**Context.** The first cut also refuses any GeoParquet lacking a 64-bit column named `id`. Refusing
-is right — ADR-010 rule 2 resolves picking through **stable feature ID**, and synthesizing a row
-ordinal is the M3 hazard that rule exists to prevent, while `docs/11` requires stable per-feature
-identity for editing and lineage. But it was written down nowhere, and it bounds which real files
-the hero slice can open far more tightly than anything in `docs/07` does: most GeoParquet in the
-world carries no such column.
-
-**Decision.** The requirement is an **admission policy of the same class as §1–§6** and is stated
-with them: a source is admitted only if it carries a per-feature identity the engine can use, and
-this slice recognises exactly one form of it. A source without one is refused with a typed error at
-open — in front of an operator, per the catalog's open-at-startup rule — rather than being given
-synthesized ordinals.
-
-**Consequences.** `docs/11` says ID assignment is "per dataset and recorded in metadata"; this
-policy is that record for this slice. **The mapping from an arbitrary source key to the engine's
-identity column is not decided** — see the OPEN block below.
+> **Feature identity moved out, 2026-08-05.** This ADR carried a §8 on stable feature identity as an
+> admission requirement, plus an OPEN block on source-key mapping. Both are now
+> **ADR-016 — Stable Feature Identity Admission and Source-Key Mapping (Proposed)**, unchanged in
+> policy. They travelled together only because both are decided at open; CRS admission and identity
+> admission are different subjects, and accepting one must not silently accept the other.
 
 ## Consequences
 
@@ -160,15 +146,7 @@ identity column is not decided** — see the OPEN block below.
 > service's declared CRS. Whether those count as "the file declares" or as an assertion is undecided,
 > and the answer changes what a connector may admit.
 
-> **OPEN:** *Source-key to identity-column mapping* (§8). This slice recognises exactly one form of
-> stable identity: a 64-bit column named `id`. Real sources carry theirs under other names, other
-> widths, and sometimes as a composite. Whether a connector may *map* one to the engine's identity
-> column, and what makes such a mapping stable enough for `docs/11`'s editing and lineage
-> requirements, is undecided — and it is what stands between this engine and most GeoParquet in the
-> world.
-
-> **OPEN:** *Axis-order normalization.* This ADR refuses a non-x-first source rather than normalizing
-> it. `docs/05` requires normalization to (E, N) at ingestion **and** that the normalization
-> performed be recorded. Refusing satisfies the record clause vacuously; performing the
-> normalization is the more useful behaviour and needs its own decision about where it happens and
-> how it is recorded.
+> **OPEN:** *Axis-order normalization — the normalize-later question only.* Whether refusing a
+> non-x-first source is *permitted* is settled in §5: the `docs/05` conflict resolves lower-number-
+> wins in favour of `docs/01` principle 8. What is undecided is whether normalizing should replace
+> refusing once it can be done correctly, and where that would happen and how it would be recorded.
