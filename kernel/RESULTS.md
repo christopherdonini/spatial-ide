@@ -318,3 +318,375 @@ figure, it is not a figure.
 | `kernel/scripts/run-slice-probe.mjs` | slice-host + browser probe + producer-process memory sampler, composed |
 | `kernel/scripts/sample-process-memory.ps1` | the 50 ms private-commit / working-set sampler |
 | `kernel/scripts/pin-tree.mjs` | source-tree pin and `--compare` |
+
+---
+---
+
+# Second section — 2026-08-05, the index-in-path pass over pieces 1–4a
+
+**Everything above this line describes an earlier tree measured in an earlier session and is left
+exactly as it was.** Nothing below is compared with anything above it. The same canary instrument
+read 129.4–136.5 ms in that session and 68.6 ms in another, so a diff across the two would report a
+change that is entirely session effect. **The unindexed baseline this section needs was therefore
+re-measured here, in this session, from this binary.**
+
+Governed by `kernel/PROBE-PREREGISTRATION.md`, committed **before** the instruments were built and
+before any result of this pass was looked at. It declares the sample counts, what every segment
+means, and the invalidators. Six amendments are appended to it; **A4, A5 and A6 were written after
+results had been seen**, each after a declared invalidator fired, and each says so.
+
+## Scope carried by every number below
+
+| | |
+|---|---|
+| **Hardware** | Intel Core i9-9980HK @ 2.40 GHz · 8 cores / 16 threads · 63.7 GiB RAM · Windows 10 Pro 22H2 build 19045 |
+| **Build** | `release`, `debug_assertions` **off** (both harnesses refuse to run otherwise), `CARGO_PROFILE_RELEASE_DEBUG=false`; workspace crates rebuilt **from clean** |
+| **Tree** | branch `measure/pieces-1-4a`, whose **product tree is exactly `87644cb`** (pieces 1–4a) and whose only additions are the instruments and the preregistration. Source pin `eb7e96a2…` over 52 files, taken **before** the build and re-verified after it and after every phase |
+| **Binaries** | pinned by SHA-256 and re-verified after every phase: `slice-host.exe` `c11c8bb5…`, harness `ac8aea6e…`, `dist/app.js` `8548649f…` |
+| **Dataset** | `docs/08` Polygons: 100,000 features / **10,467,093 vertices** / 114,286 rings / 151,812,642 B; seed `0x5EED205600000002` |
+| **Correctness gate at this pin** | `cargo test --release --workspace` — **130 passed, 0 failed, 2 ignored** (the two measurement harnesses) |
+| **Excluded** | macOS/Linux · cold-cache anything · 5 GB · any between-session comparison · any throughput figure · frame time · VRAM. Nothing here cites ADR-012 |
+
+**Where the numbers come from.** Two instruments on two different paths, and **they are never
+subtracted from one another**:
+
+- `kernel/tests/indexed_budgets.rs` — in-process, both ends in one process, therefore one clock.
+  Cancellation, memory, the index, and the unindexed/indexed selectivity comparison.
+- `kernel/scripts/run-slice-probe.mjs` + `frontends/canvas-probe` — a real browser consumer against
+  `slice-host` in its own process. First pixels.
+
+---
+
+## What moved underneath this pass — read this before any number
+
+Three things went wrong, all of them found rather than guessed at, and each changed what may be
+claimed.
+
+### 1. The branch moved mid-pass, so this section does not describe the branch tip
+
+`fba323e` — *"fix: close the reviewer's blocking findings on pieces 1-2"* — landed on
+`engine-first-cut` **between two of this pass's own instrument commits**, changing
+`engine/src/index.rs` (115 lines), `dataset.rs` and `stream.rs`. Measuring the tip would have
+described 87644cb's product code plus reviewer fixes, under the name of 87644cb. A measurement branch
+was cut from `87644cb` instead. **Every figure here describes `87644cb` and none of them describes
+the branch tip.** A re-run against the tip is outstanding work and is not attempted here.
+
+### 2. A shared `CARGO_TARGET_DIR` linked another checkout's code into a binary while the source pin verified clean
+
+The first harness run was invalidated after the fact. Its binary contained the string
+`"identity min: "`, which exists only in another checkout's *uncommitted* `engine/src/dataset.rs`
+and **nowhere in the pinned tree**; the pin verified clean before and after. Two checkouts shared one
+target directory.
+
+**A source pin does not pin a build.** `kernel/scripts/pin-tree.mjs` now records the SHA-256 of every
+binary that produces a number and compares them, and its header states the two disciplines that go
+with it: pin **before** the build so the build window is bracketed at all (the first attempt pinned
+*after* the build, so a source change during it was invisible), and build from clean. The
+contamination is visible in the numbers too: attempt 1 reported the index's declared memory as
+5,073,144 B, the pinned tree reports **4,800,000 B**.
+
+### 3. The probe leaked ~6 GB of browser profiles and filled the disk during its own measurement
+
+`run-probe.mjs` deleted its throwaway Edge profile with a single `rmSync` after a 500 ms sleep and
+documented the cleanup as "best-effort". **At n = 1 page load per compositor path that was true and
+harmless. At the sample count a preregistered measurement needs, it is neither**: 63 trials left
+**73 profile directories and about 6 GB** in the OS temp directory. Free space fell from 5.4 GiB to
+1.9 GiB during the pass and returned to 7.9 GiB when they were deleted. Every timing taken after the
+disk filled describes a thrashing machine, one browser failed to launch at all, and the corruption
+arrived disguised as *the machine drifted*.
+
+The root cause is that `taskkill /T` was spawned fire-and-forget, so the profile removal raced a
+browser that still held every file in it open. That is now awaited and the pid polled; the driver
+sweeps leftovers, records free disk at both ends, and **refuses to start below 3 GiB of headroom**.
+**It is not fully fixed:** 21 of 21 profiles still resisted removal in the final attempts, because
+Edge's child processes outlive the pid being polled. The leak is now *reported* rather than silent,
+which is the difference between a known limitation and a corrupted measurement.
+
+---
+
+## Every attempt, and which invalidator each fired
+
+**More attempts were made than the preregistration permits** (it allows one re-run per phase). All of
+them are listed; none is deleted; and the multiple-attempt selection risk this creates is the reason
+the probe's point estimates below are reported as **recorded, not established** rather than being
+represented by the best-looking run.
+
+| Attempt | Phase | Outcome |
+|---|---|---|
+| 1 | in-process harness | **invalidated, twice**: canary spread 21.72 % across the four minima (declared 10 %), and build provenance (§2 above) |
+| 2 | in-process harness | **all gates met.** Canary spread **5.76 %** across minima, 10.80 % across all raw readings. This is the harness run of record |
+| 1 | probe, headless | **invalidated**: canary 226.3 / 261.8 / **367.4** / 259.9 ms — the end point was taken immediately after `host.kill()` |
+| 2 | probe, headless + headed | **invalidated**: canary again, and the disk filled (§3). The headed cell failed outright — *"browser never reported a debugging endpoint"* |
+| 3 | probe, headless | **invalidated**: canary spread beyond 10 % |
+| 4 | probe, headless | **invalidated**: canary spread **14.4 %** — the closest any pre-warm-on cell came |
+| 4 | probe, headed | **invalidated**: canary spread 15.6 % |
+| 4 | probe, headless **no-prewarm** | **held.** Canary spread **2.8 %**, pin and binaries unchanged, 7 admitted / 0 dropped. **The only probe cell this pass establishes** |
+
+The probe artifacts are overwritten per invocation, so attempts 1–3's raw JSON no longer exists;
+only their printed summaries survive. That is another instrument shortcoming and is recorded as one.
+
+---
+
+## Results
+
+| `docs/08` row | Verdict | Measured | Trials | Scope |
+|---|---|---|---|---|
+| **Cancellation < 100 ms — mid-stream, index in path** | **met** | **p50 0.083 ms · p95 0.089 ms** (min 0.067, max 0.099). **Batches generated after cancel: 0 in all 30** | 30 | Quarter-extent viewport against a **built index** (`IndexNarrowed`), so the index is genuinely in the path — a whole-file query never reaches it. Producer-side, stamped inside the adapter as it parses the CANCEL frame; both ends in one process, **same clock, no clock-relation bound claimed** |
+| **Cancellation < 100 ms — before the first batch** | **met** | **p50 0.132 ms · p95 0.211 ms** (min 0.111, max 0.217). Batches after cancel: **0 in all 30** | 30 | No credit granted, so nothing was ever delivered and the query was running when CANCEL arrived. Reaches DuckDB's interrupt, not a loop flag |
+| **Cancellation < 100 ms — during an index build** | **met, for one of the two phases only** | **p50 2.147 ms · p95 4.356 ms** (min 0.584, max 4.356) | 12 | **All 12 delays (10–400 ms) landed in the SHA-256 content-hash phase**, which runs 610 ms before the DuckDB scan starts. The scan phase (30 ms) was **never sampled** — see the gap named below |
+| **Cancellation < 100 ms — during the identity uniqueness scan** | **met** | **p50 16.233 ms · p95 22.393 ms** (min 2.195, max 22.393) | 7 of 15 | ADR-016's whole-column scan on the open path. **8 of 15 trials completed before the cancel arrived** and are reported, not dropped and not counted as samples. The split is structural, not noise — see below |
+| **First pixels < 100 ms after query start** | **missed** | **The only established cell** (headless, no pre-warm, whole file): **p50 216.6 ms · p95 231.6 ms** (min 214.4). Full payload, always beside it: **p50 7956.1 ms · p95 9079.7 ms**. Every other cell is *recorded, not established* — table below | 7 admitted / 0 dropped per cell | **The verdict survives every invalidation.** The budget is 100 ms; the **smallest single-trial value observed in any cell of any attempt was 160.3 ms**, and every one of the 112 admitted trials across all attempts exceeded the budget. No plausible drift carries a 160 ms minimum under 100 ms. The point estimates are not so robust and are not presented as though they were |
+| **Memory — producer-resident counter vs declared bound** | **met** | **peak 1,730,272 B against a declared bound of 83,886,080 B** = `(MAX_INFLIGHT_BATCHES + 1) × MAX_FRAME_BYTES`. **2.06 % of bound** | 42 wire runs | **This percentage describes the batch shape it was taken under.** Piece 3 makes early batches small and `MAX_INFLIGHT_BATCHES` counts *batches*, so the same window now holds fewer bytes: the bound stays a valid **upper** bound and is looser than before |
+| **Memory — the index's own bound** | **met, and it is per dataset** | **4,800,000 B declared** = 100,000 features × 48 B, reported by `IndexReport::declared_memory_bytes` | 1 | **Not per stream.** One index serves every stream over that file, so it is added **once** to the composed process bound and **must not be multiplied by `MAX_CONCURRENT_STREAMS`** |
+| **Memory — process private commit** | **recorded** | in-process harness: baseline 4,796,416 B → **peak 113,999,872 B** (670 samples @ 50 ms). Producer-only (`slice-host`, browser consumer in another process): baseline 9,535,488 B → **peak 89,882,624 B** private / 86,089,728 B working set (3,293 samples) | 2 | The harness figure covers **both ends plus the index plus the fixture writer**, which wrote two 145 MB files; it is not a per-stream number. WebView2/Chromium child-process totals are **not** summed — declared gap |
+| **Index build cost** | **recorded, and it is dominated by hashing** | **content hash 610.2 ms · index build 30.2 ms · wall 654.2 ms** for 100,000 features / 100,000 rows scanned | 1 build + 3 reuses | **A cache hit still costs the full hash**: three reuses took 610.5 / 622.8 / 665.4 ms wall, of which the build was **0.0 ms every time**. Build cost and query benefit are kept apart and are never netted into "pays for itself after N queries" |
+| **Cold open of a 5 GB GeoParquet < 5 s** | **unmeasured** | — | — | Unchanged and for the same two independent reasons. Free disk moved between 1.9 and 8.2 GiB during this pass and a 5 GB fixture plus a release build does not fit; and with 63.7 GiB of RAM and no cache-purge mechanism, "cold" could not be established even with the space |
+| **Frame time p50/p95 · VRAM** | **excluded, deliberately** | — | — | There is still no renderer module. The 2D canvas probe is not one, and a figure from it would answer a different question than the budget it appears to answer |
+| **Reproducibility (ADR-005 grade)** | **no grade claimed** | — | — | The slice still persists nothing, so there is no workflow to replay and nothing to assert a grade at |
+
+---
+
+## The finding this pass exists to report: the index made every filtered query slower
+
+Same session, same binary, same file, same process. The unindexed measurements ran **before any index
+existed in the process** — the index cache is process-wide and keyed by path, so this ordering is
+the measurement, not a convenience.
+
+| Viewport | Plan | Rows | Wire: time to **first batch** | Wire: **total** | Engine-direct first | Engine-direct total |
+|---|---|---|---|---|---|---|
+| whole file, no index | `WholeFile` | 100,000 | p50 **84.1** / p95 89.1 ms | p50 466.2 / p95 486.8 | p50 84.3 / p95 89.5 | p50 441.8 / p95 447.0 |
+| whole file, index built | `WholeFile` | 100,000 | p50 **81.6** / p95 96.7 ms | p50 457.9 / p95 493.9 | p50 83.4 / p95 84.8 | p50 434.8 / p95 454.5 |
+| quarter extent, no index | `ScanOnly` | 25,281 | p50 **140.2** / p95 143.4 ms | p50 197.7 / p95 199.8 | p50 141.7 / p95 151.9 | p50 187.5 / p95 199.0 |
+| quarter extent, index built | `IndexNarrowed { ranges: 159, candidates: 25281 }` | 25,281 | p50 **190.1** / p95 209.1 ms | p50 240.5 / p95 264.4 | p50 182.7 / p95 190.2 | p50 225.8 / p95 235.8 |
+| 1/64 extent, no index | `ScanOnly` | 1,600 | p50 **49.7** / p95 58.2 ms | p50 54.0 / p95 62.5 | p50 55.1 / p95 58.8 | p50 59.2 / p95 63.0 |
+| 1/64 extent, index built | `IndexNarrowed { ranges: 40, candidates: 1600 }` | 1,600 | p50 **58.4** / p95 61.2 ms | p50 62.4 / p95 65.4 | p50 57.1 / p95 61.7 | p50 60.7 / p95 65.5 |
+
+n = 7 per point per path. `FilterPlan` is observed on an **engine-direct stream with identical
+parameters** — the wire carries no plan.
+
+**With the index in the path, the quarter extent's first batch is 35.6 % slower (140.2 → 190.1 ms)
+and its total is 21.7 % slower (197.7 → 240.5 ms). The 1/64 extent is 17.5 % slower to first batch
+and 15.5 % slower in total.** The whole-file case is unchanged, as it must be: no viewport means the
+index is never consulted.
+
+**Both halves are reported because reporting either alone would manufacture a result.** The previous
+section's non-monotonicity finding — the quarter extent's *first* batch arriving later than a full
+scan's — is exactly the mechanism an index is supposed to fix. It is not fixed; it is worse. Quoting
+only "total time fell" would have been available if the index had helped, and would have been the
+wrong number anyway, because first-batch time is what the first-pixels budget depends on.
+
+**The mechanism is visible in the plan, and it is not a tuning problem.** `engine/src/index.rs`
+answers the predicate `covering-bbox-intersects`, and `build_sql` deliberately keeps the bbox
+comparison *alongside* the candidate-id ranges so the indexed result set is provably identical to
+the unindexed one — which it is: **identical row counts and byte-identical payload totals at every
+point** (25,281 rows / 44,018,088 B; 1,600 rows / 2,798,952 B). But because the index answers
+*exactly the predicate the scan already computes*, the range predicate cannot exclude a single row
+the bbox test would have kept. It is 159 OR-ed `BETWEEN` comparisons of pure added work per row, on
+top of a scan that still runs in full. At this data shape the index cannot win, and this is a
+property of what it answers rather than of how it is built.
+
+This is a **regression against the same-session unindexed baseline**, and it is reported as one.
+Nothing here says the index is wrong — `an_indexed_query_returns_exactly_what_the_scan_returns`
+holds, and the equality above confirms it on the measured file. It says the index does not currently
+pay for itself on this shape, and that the first-pixels budget is not what it improves.
+
+---
+
+## First pixels, decomposed into the segments the budget is actually spent in
+
+`t_query_start` is taken immediately before `startStream(...)` — the moment the application decides
+to run the query. Every instant is the consumer's own `performance.now()`, so all segments are on one
+clock.
+
+**Established cell** (headless, **no pre-warm**, whole file, canary spread 2.8 %, 7 admitted / 0
+dropped):
+
+| Segment | p50 | p95 | min | max |
+|---|---|---|---|---|
+| S2 `query start → OPEN` — socket open + handshake + **producer accept** | **92.6 ms** | 100.4 | 85.9 | 100.4 |
+| S3 `OPEN → first bytes in JS` — engine scanning until the first batch is full, plus the wire | **119.1 ms** | 132.1 | 111.0 | 132.1 |
+| S4 `first bytes → decoded` — JS Arrow decode | 6.1 ms | 6.8 | 4.9 | 6.8 |
+| S5 `decoded → first pixels` — rAF wait plus canvas draw | 2.4 ms | 2.7 | 1.7 | 2.7 |
+| **first pixels after query start** | **216.6 ms** | 231.6 | 214.4 | 231.6 |
+| **full payload after query start** | **7956.1 ms** | 9079.7 | 7341.2 | 9079.7 |
+
+**Recorded, not established** — every one of these cells failed the declared canary threshold, and
+they are shown so the dispersion between attempts is visible rather than hidden behind one run:
+
+| Cell | first pixels p50 / p95 | full payload p50 | S2 p50 | S3 p50 | S4 p50 | S5 p50 |
+|---|---|---|---|---|---|---|
+| headless, pre-warm, whole file | 205.3 / 249.9 | 8647.2 | 67.8 | 125.3 | 6.1 | 2.5 |
+| headless, pre-warm, quarter | 320.3 / 354.8 | 2278.6 | 92.9 | 226.6 | 6.5 | 2.5 |
+| headless, pre-warm, 1/64 | 222.0 / 236.2 | 360.0 | 88.2 | 94.3 | 8.4 | 24.1 |
+| headed, pre-warm, whole file | 224.8 / 259.7 | 8372.7 | 78.1 | 119.3 | 6.2 | 9.0 |
+| headed, pre-warm, quarter | 301.7 / 309.7 | 2107.2 | 87.6 | 211.4 | 5.9 | 2.3 |
+| headed, pre-warm, 1/64 | 253.1 / 333.1 | 372.3 | 103.7 | 82.6 | 7.4 | 64.3 |
+
+Earlier attempts of the same headless pre-warm cells, all invalidated, for the same reason: whole
+file **185.0 / 176.2 / 205.3** p50 across attempts 1 / 3 / 4; quarter **306.0 / 270.8 / 320.3**; 1/64
+**202.0 / 172.7 / 222.0**. **That between-attempt spread — up to 29 ms on a p50 — is the honest
+uncertainty on every "recorded, not established" figure above.**
+
+At n = 7 the nearest-rank p95 **is** the maximum sample. Every raw sample is in the artifacts.
+
+### What the decomposition says, which is the point of doing it
+
+`engine/README.md` recorded that no claim about the first-pixels budget could follow from piece 3
+"until the two are decomposed, because if start-up alone is ≥ 100 ms, no batch size reaches it."
+**They are now decomposed, and start-up alone is 68–93 ms.**
+
+- **S2 is 67.8 ms p50 even with a pre-warmed socket.** With the socket already open, that is the
+  producer accepting the stream — `EngineSourceFactory::create` → `stream_with_cancel` → a **new
+  in-memory DuckDB connection per stream** plus `SET enable_geoparquet_conversion=false` plus
+  `build_sql`. Two thirds of the entire 100 ms budget is spent before the query has looked at a row.
+- **S3 is 94–227 ms** and tracks selectivity the same way the in-process harness does: the quarter
+  extent's first batch is the *slowest* of the three viewports on both instruments. The two
+  instruments agreeing on that shape, on different paths, is the strongest single corroboration in
+  this pass.
+- **S4 + S5 together are under 11 ms** in four of the seven cells (8.5, 8.6, 9.0, 8.2 ms). **The
+  browser is not the problem.** Decode is ~6 ms and the draw ~2.4 ms; the budget is gone before
+  either runs. The three exceptions are the two **1/64 cells** (32.5 ms headless, 71.7 ms headed) and
+  the headed whole-file cell (15.2 ms), all of it in S5 — with only 5 batches in the stream the
+  `requestAnimationFrame` cadence, not the drawing, is what S5 is measuring there.
+- **Piece 3's progressive sizing is visible and is doing exactly what it says**: the first batch is
+  **55,944 B in every cell of every attempt**, against `FIRST_TARGET_BATCH_BYTES` = 64 KiB, and the
+  whole-file stream is 203 batches for 173,807,128 B. The policy is in force. It cannot reach a
+  budget that S2 has already spent.
+- **JSON frames on the data path: 0**, in every cell of every attempt.
+
+### The pre-warm A/B is inconclusive, and that is the finding
+
+Piece 4a's pre-warmed connection is a consumer-side toggle over identical product code, so it is the
+one before/after this pass can run honestly. Whole file, headless, n = 7 each:
+
+| | S2 `query start → OPEN` p50 | first pixels p50 |
+|---|---|---|
+| pre-warm **on** (recorded, not established) | 67.8 ms | 205.3 ms |
+| pre-warm **off** (established) | 92.6 ms | 216.6 ms |
+
+The 24.8 ms S2 difference is in the direction piece 4a predicts and lands in the segment it targets.
+**No effect is claimed**: the pre-warm-on cell failed its canary, and the 11.3 ms first-pixels
+difference is well inside the 29 ms between-attempt spread of that same cell. **Piece 4a's benefit is
+smaller than this instrument can resolve on this machine under this session's contention.**
+
+**Piece 3 cannot be A/B-ed at all** — the batch-size policy is a compile-time constant — so no
+before/after for it is claimed anywhere, only the batch shape it produces.
+
+---
+
+## Cancellation, in more detail than the verdict row
+
+### The identity-scan split is structural, not noise
+
+| Delay before cancel | Trials | Observed latency |
+|---|---|---|
+| 5 ms | 3 | 20.674, 22.393, 21.682 ms |
+| 15 ms | 3 | 2.195, 2.306, 16.233 ms |
+| 30 ms | 1 of 3 cancelled | 3.430 ms |
+| 30 / 50 / 80 ms | **8 of 15 completed before the cancel arrived** | — |
+
+**`Dataset::open` is only interruptible once it reaches the identity scan.** Reading the `geo`
+key/value metadata, probing the schema and admitting the CRS all happen first and contain no
+cancellation point; `cancel.attach` is called immediately before the scan. So a cancel issued at 5 ms
+waits out the remaining prelude — hence ~21 ms — while one issued at 15 ms, closer to or inside the
+scan, is observed in ~2 ms. Whole opens took **26.7–39.9 ms** (5 samples), consistent with a
+~20–25 ms uninterruptible prelude followed by a short scan. Everything is far inside the 100 ms
+budget at this file size; **at `docs/07`'s 5 GB the scan grows and the prelude does not, so this
+ratio is not portable.**
+
+### A gap this pass could not close, named rather than papered over
+
+**The DuckDB covering-bbox scan phase of an index build was never sampled.** All 12 ladder delays
+(10–400 ms) fell inside the 610 ms SHA-256 content hash, which runs first; the scan is only 30 ms and
+starts after it. The mechanism exists — `SpatialIndex::scan` checks the token per chunk and DuckDB's
+interrupt handle is attached — but it is unmeasured here.
+
+**And one that is a code fact, not a timing.** After `SpatialIndex::build` finishes the scan and
+performs its last `is_cancelled()` check, the extent pass and the grid-construction loops contain
+**no cancellation point at all**. A cancel arriving in that window is not observed and the build
+completes. At 100,000 features that window is a few milliseconds and nothing is at stake; at
+`MAX_INDEXED_FEATURES` = 20,000,000 it is the same code with 200× the work. This is reported as a
+property of the code, and **no measured number is offered for it**.
+
+---
+
+## What could not be measured honestly on this machine
+
+| | |
+|---|---|
+| **Cold anything** | 63.7 GiB RAM, no cache-purge mechanism in either harness. Every open, every scan and every index build here read a **warm** Windows file cache |
+| **5 GB** | Free disk oscillated between 1.9 and 8.2 GiB during this pass, partly because of the probe's own leak. A 5 GB fixture plus a from-clean release build does not fit, and even given the space the file would be cache-resident |
+| **Between-session anything** | Forbidden here and not attempted. The unindexed baseline was re-measured in-session for exactly this reason |
+| **macOS / Linux** | `docs/07`'s open follow-up. Nothing in this section says anything about either |
+| **The branch tip** | This section describes `87644cb`. `fba323e` landed during the pass and is not measured |
+| **Throughput** | Byte totals and durations appear side by side and are never divided |
+| **The index in the browser path** | **`slice-host` never calls `Dataset::build_index`.** The index is unreachable from the shipped binary, so every browser trial ran `ScanOnly` or `WholeFile`. The index segment is *structurally absent* on that path, not zero. This is scope, not a defect: `kernel/README.md` already says "when built" |
+
+---
+
+## Reproducing this
+
+```bash
+# The measurement branch: 87644cb's product code plus the instruments, nothing else.
+git checkout measure/pieces-1-4a
+
+# 0. Clean, so no cached unit from another checkout can be linked in, then pin BEFORE the build.
+cargo clean --release -p spatial-engine -p spatial-kernel -p spatial-data-plane
+node kernel/scripts/pin-tree.mjs > target/slice-evidence/index-pass/tree-pin-before.json
+
+# 1. Build, then confirm the build window was quiet.
+CARGO_PROFILE_RELEASE_DEBUG=false cargo build --release --workspace --tests
+(cd frontends/canvas-probe && npm install && npm run build)
+node kernel/scripts/pin-tree.mjs --compare target/slice-evidence/index-pass/tree-pin-before.json
+
+# 2. Pin the BINARIES, not just the sources.
+node kernel/scripts/pin-tree.mjs --binaries \
+  "target/release/slice-host.exe,target/release/deps/indexed_budgets-<hash>.exe,frontends/canvas-probe/dist/app.js" \
+  > target/slice-evidence/index-pass/tree-pin-before.json
+
+# 3. Correctness gate on the same build.
+CARGO_PROFILE_RELEASE_DEBUG=false cargo test --release --workspace
+
+# 4. The index-in-path harness. Run the BINARY, from a private copy, so nothing can replace it.
+cp target/release/deps/indexed_budgets-<hash>.exe /some/private/harness.exe
+/some/private/harness.exe --ignored --nocapture --test-threads=1
+
+# 5. The probe. Cells are (compositor path x viewport x pre-warm); each trial is its own page load.
+node kernel/scripts/run-slice-probe.mjs \
+  --data target/fixtures/slice-budgets/polygons-100k.parquet \
+  --out-prefix target/slice-evidence/index-pass/polygons-100k \
+  --extent 2600000,1200000,2612680,1212680 \
+  --viewports 'full=;quarter=2600000,1200000,2606340,1206340;sixtyfourth=2600000,1200000,2601585,1201585' \
+  --trials 7 --pin target/slice-evidence/index-pass/tree-pin-before.json   # [--headed] [--no-prewarm]
+
+# 6. Confirm nothing moved — sources AND binaries.
+node kernel/scripts/pin-tree.mjs --compare target/slice-evidence/index-pass/tree-pin-before.json
+```
+
+Both harnesses refuse to run on a debug build, and the probe driver now exits non-zero when the
+canary or the pin invalidator fires — the first probe attempt exited 0 while its own artifact said
+`INVALIDATED`.
+
+### Raw artifacts (`target/slice-evidence/`, gitignored)
+
+| File | What it holds |
+|---|---|
+| `indexed-budgets.json` | the harness run of record: every raw cancellation, selectivity, index and memory sample, plus all four canary points |
+| `index-pass/polygons-100k-probe-headless.json` | headless probe, pre-warm on — per-trial segments, admitted/dropped, canary, pin, disk |
+| `index-pass/polygons-100k-probe-headless-noprewarm.json` | **the one established probe cell** |
+| `index-pass/polygons-100k-probe-headed.json` | windowed, all three viewports |
+| `index-pass/polygons-100k-trials-*/` | the per-trial browser artifacts behind every summary |
+| `index-pass/tree-pin-before.json`, `tree-pin-probe.json` | the 52-file source pin **and the binary SHA-256s** |
+| `index-pass/correctness-gate.txt` | 130 passed / 0 failed / 2 ignored at this pin |
+| `index-pass/session-context.txt` | session start/end, free disk, git head |
+
+### Instrument sources (committed)
+
+| File | Role |
+|---|---|
+| `kernel/PROBE-PREREGISTRATION.md` | the preregistration and its six amendments |
+| `kernel/tests/indexed_budgets.rs` | the index-in-path harness; `#[ignore]`d, release-only, asserts the hard gates **and the canary threshold** |
+| `kernel/tests/slice_budgets.rs` | the earlier harness, unchanged, describing the pre-index tree |
+| `kernel/scripts/run-slice-probe.mjs` | n-trial probe driver: cells, segments, p50/p95, enforced invalidators, disk guard |
+| `kernel/scripts/pin-tree.mjs` | source pin, **binary pin**, and `--compare` |
+| `frontends/canvas-probe/scripts/run-probe.mjs` | one trial: one browser, one page load, one stream |
