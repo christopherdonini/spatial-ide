@@ -62,14 +62,47 @@ for deciding the mapping question below.
    (`docs/05`: detect → propose → preview → apply, with confidence scores), Alpha work, and this ADR
    is its floor: the data doctor may propose an identity column with a preview; it may never
    silently supply one.
-4. **Uniqueness is verified at open, over the whole dataset, and the verification is recorded.** A
-   declared mapping whose values are not distinct is refused. This closes the first gap above for
-   mapped identities — and the same verification applies to a native `id` column, which was
-   previously trusted without it.
-5. **The envelope records the identity's provenance, not just its presence.** A consumer can tell a
-   **mapped** identity from a **native** one without asking the engine, in the way ADR-015's
-   `crs_source` lets it tell a caller's CRS claim from a file fact, and per ADR-010 rule 1's
-   tag-on-envelope clause. What is recorded is settled at acceptance — see the OPEN block.
+4. **Only a deterministic, value-preserving mapping is admitted.**
+   - **Deterministic**, meaning a pure function of file content and the declared mapping: the same
+     file opened twice, in two processes, with DuckDB free to reach row groups in a different order,
+     yields a bit-identical identity per feature. Anything derived from **scan order or a dictionary
+     index is a synthesized ordinal wearing a mapping's clothes** and is refused — §2 refuses
+     synthesized ordinals, and a mapping may not readmit them under another name.
+   - Determinism is also what keeps this **orthogonal to ADR-005**. A deterministic mapping is
+     recipe material: replay returns the same feature for the same id, so Exact stays reachable and
+     no grade is capped. A nondeterministic one is *not* orthogonal — it would cap the grade under
+     principle 3 — so orthogonality is obtained **by construction**, by refusing the rest, rather
+     than asserted.
+5. **Uniqueness is verified over the mapped values, at open, over the whole dataset, and what was
+   verified is recorded.**
+   - **On the mapped values, not the source column.** For anything but a value-preserving widening,
+     `COUNT(DISTINCT source_key) = COUNT(*)` proves nothing about the identity the engine emits;
+     collision in the *mapped* space is the same wrong-but-plausible hazard ADR-010 rule 2 exists to
+     prevent, reached through a different door.
+   - The same verification applies to a **native** `id` column, which §"Context" records as
+     previously trusted without it.
+   - **Verifying uniqueness reads a whole column, so it is an operation**, not a lookup: cancellable
+     and progress-reporting per `docs/01` principle 7, and its cost measurable on its own. At
+     `docs/07`'s 5 GB it lands on the same `docs/08` cold-open budget `kernel/RESULTS.md` records as
+     unmeasured.
+6. **The envelope records the identity's provenance and what was checked** — never a bare claim.
+   - A consumer can tell a **mapped** identity from a **native** one without asking the engine, in
+     the way ADR-015 §3's `crs_source` lets it tell a caller's claim from a file fact. That is the
+     *form* precedent.
+   - The **basis** is `docs/11` — "the ID-assignment policy is per dataset and recorded in
+     metadata" — together with `docs/01` principle 8. **It is not ADR-010 rule 1**, whose
+     tag-on-envelope clause is about *coordinate space*; citing rule 1 here would enlarge an
+     Accepted, architect-blockable rule by analogy, which is what ADR-013 §7 refuses to do for
+     rule 3 and what this ADR must not do for rule 1.
+   - Following ADR-015 §5's `axis_normalization = none-performed` discipline, the record says what
+     was *checked*, not what is hoped — a uniqueness state distinguishing verified-over-the-whole-
+     file from verified-over-a-query-result from declared-but-unverified. **Never the bare word
+     "unique" as a fact.** Exact field names are settled at acceptance — see the OPEN block.
+7. **The identity's width is part of the contract.** It reaches consumers exact or not at all. A JS
+   consumer reading ids as `BigUint64Array` is correct only while values stay below 2⁵³; a mapping
+   that emits larger values makes any narrowing to a JS `Number` a rule-2 violation — and an
+   unhandled BigInt serialization is literally the M4 root cause behind ADR-010 rule 7. A mapping
+   whose range this engine cannot carry exactly is refused rather than narrowed.
 
 ## Consequences
 
@@ -79,10 +112,17 @@ for deciding the mapping question below.
   here; the cost is measured against `docs/08`'s dataset classes when the code exists, and `docs/08`
   gains a correctness case for a duplicate-id source being refused.
 - **Nothing here claims a reproducibility grade** (ADR-005). The slice persists nothing.
-- **A mapped identity is not a licence to edit.** ADR-007's delta store needs identities stable
-  across edits, snapshots and compaction; this ADR establishes uniqueness within one immutable
-  source at one open, which is strictly less. Anything the editing path needs beyond that is owed
-  before ADR-002's 1.0 digitizing path, not here.
+- **A mapped identity is not a licence to edit, and this ADR does not claim `docs/11` is satisfied.**
+  It satisfies the **read-path** half — the stable id ADR-010 rule 2's indirection consumes. It does
+  **not** satisfy the editing and lineage half: ADR-007's delta store needs identities stable across
+  edits, snapshots and compaction, and it needs source-derived identities not to collide with
+  identities minted for features *created* in the delta store. That namespace question is not solved
+  here and is owed before ADR-002's 1.0 digitizing path.
+- **Identity is a function of (file, declared mapping), so two callers declaring different columns
+  get two identity spaces over the same bytes.** Until anything is persisted, the envelope naming
+  the mapping is the only thing that stops a consumer being handed a different identity space on
+  reopen without noticing. That is a reason the envelope record in §6 is load-bearing rather than
+  informational.
 
 ## What this ADR does not decide
 
