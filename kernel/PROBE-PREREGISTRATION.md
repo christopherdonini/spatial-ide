@@ -178,6 +178,23 @@ page to be able to *skip* `prewarm()`; the page as committed at `87644cb` always
 instrument commit adds a `prewarm=0` URL parameter to the probe page for this purpose. Declared here
 because it is a change to the consumer that is under measurement, not only to the driver around it.
 
+**A3 — 2026-08-05, before the build, before any result.** Two changes to the cancellation ladders in
+§1b, both forced by how the code under test is actually shaped, and both declared before a single
+trial ran.
+
+- **Index-build ladder terminates on the first completed build.** A build that is *not* cancelled
+  inserts an index into the process-wide cache, and every later `build_index` on that file is then a
+  cache hit that never scans — so trials after it would be timing a different operation under the
+  same name. The ladder therefore runs its delays in ascending order and **stops at the first trial
+  that completes**, and the artifact records how many trials that left. This can reduce n below the
+  declared 12; the actual n is reported, and a reduced n is reported as reduced.
+- **The identity-scan ladder becomes 5, 15, 30, 50, 80 ms × 3 (n = 15).** `Dataset::open` does
+  several uninterruptible things — read `geo` key/value metadata, probe the schema, admit the CRS —
+  *before* the identity scan is the thing running, and a ladder that lands entirely inside that
+  prelude cannot show where the observation point is. The wider ladder is chosen to straddle it.
+  **The prelude being uninterruptible is a property to report, not one to design the ladder around
+  hiding.**
+
 **A2 — 2026-08-05, before the build, before any result.** The probe page as committed at `87644cb`
 sends **no bbox** — its `--extent` argument only sets the *display* transform, so every trial in the
 existing artifacts streamed the whole file regardless of the extent passed. The instrument commit

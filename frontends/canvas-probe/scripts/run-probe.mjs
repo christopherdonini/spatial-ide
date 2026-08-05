@@ -204,11 +204,23 @@ if (!results) {
   process.exit(1);
 }
 
+/**
+ * The admissibility label is a **fact about the run**, not decoration, so it is derived rather than
+ * hardcoded. A run governed by a committed preregistration and a run improvised at a console are
+ * different kinds of evidence, and the artifact has to be able to say which one it is — the label
+ * used to read "hypothesis-forming" unconditionally, which was right when nothing was preregistered
+ * and would be wrong now.
+ */
+const prereg = arg('--preregistered', null);
+
 const artifact = {
   kind: 'in-situ browser probe',
-  status: 'hypothesis-forming, NOT a preregistered measurement',
-  admissibility:
-    'may not be cited in ADR-012 and may not re-open it; raw material for the reserved ADR-014',
+  status: prereg
+    ? `preregistered measurement, governed by ${prereg}`
+    : 'hypothesis-forming, NOT a preregistered measurement',
+  admissibility: prereg
+    ? `governed by ${prereg}, which was committed before this instrument was built and before any result was looked at; still within-session only, and still no transport conclusion`
+    : 'may not be cited in ADR-012 and may not re-open it; raw material for the reserved ADR-014',
   comparison_scope:
     'within-session only — the machine drifts between sessions asymmetrically (bake-off README §21 Q1 / §22.1)',
   throughput_claim: 'none; no figure here is a transport throughput result',

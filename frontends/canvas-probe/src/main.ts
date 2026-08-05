@@ -29,10 +29,20 @@ interface StreamRecord {
   rows: number;
   vertices: number;
   payloadBytes: number;
+  /**
+   * **The budget's zero.** Taken immediately before `startStream(...)` — the moment the application
+   * decides to run this query. `docs/08` says "first pixels < 100 ms after **query start**", and
+   * page setup is not query start; see `kernel/PROBE-PREREGISTRATION.md` §1a.
+   */
+  queryStartMs?: number;
   openedMs?: number;
   firstBatchMs?: number;
+  /** `decodeBatch` has returned for batch 0 — the JS decode segment ends here. */
+  firstDecodedMs?: number;
   firstPixelsMs?: number;
   lastPixelsMs?: number;
+  /** Payload bytes of batch 0 alone, so the progressive first-batch policy is visible in the record. */
+  firstBatchBytes?: number;
   terminal?: Terminal;
   /** Batches whose Arrow buffers were views into the delivered bytes rather than realigned copies. */
   batchesSharingWireBuffer: number;
@@ -123,6 +133,31 @@ const EXTENT: [number, number, number, number] = [
   Number(params.get('ymax') ?? 1_208_000),
 ];
 
+/**
+ * The **query** viewport, which is a different thing from the **display** extent above.
+ *
+ * Until this existed the `--extent` argument set only the draw transform, so every trial streamed
+ * the whole file no matter what extent was passed — and a selectivity figure taken from this probe
+ * would have described the full scan three times over. Both sides of the wire already carried a
+ * bbox; the page simply never sent one. (`kernel/PROBE-PREREGISTRATION.md` amendment A2.)
+ *
+ * Absent, the request carries no bbox and the producer streams the whole file.
+ */
+const QUERY_BBOX = ((): [number, number, number, number] | undefined => {
+  const raw = params.get('bbox');
+  if (!raw) return undefined;
+  const v = raw.split(',').map(Number);
+  if (v.length !== 4 || v.some((n) => !Number.isFinite(n))) return undefined;
+  return [v[0], v[1], v[2], v[3]];
+})();
+/** The query bbox's own CRS. It travels with the bbox or the bbox does not travel (ADR-010 rule 1). */
+const QUERY_BBOX_CRS = params.get('bbox_crs') ?? EXTENT_CRS;
+
+/** `prewarm=0` skips the pre-warmed socket, so piece 4a can be A/B-ed against itself in one session. */
+const PREWARM = params.get('prewarm') !== '0';
+/** `scenario=solo` runs one measured stream and stops; the default keeps the supersede scenario. */
+const SCENARIO = params.get('scenario') ?? 'supersede';
+
 const view: Viewport = fitViewport(EXTENT, canvas.width, canvas.height);
 
 const STYLES = {
@@ -157,9 +192,14 @@ function run(
   let resolve!: () => void;
   const done = new Promise<void>((r) => (resolve = r));
 
+  // The budget's clock starts here and nowhere else.
+  rec.queryStartMs = performance.now() - t0;
+
   const stream = startStream({
     token: TOKEN,
-    request: { dataset: DATASET },
+    request: QUERY_BBOX
+      ? { dataset: DATASET, bbox: QUERY_BBOX, bboxCrs: QUERY_BBOX_CRS }
+      : { dataset: DATASET },
     sink: {
       onOpen(handle) {
         rec.handle = handle;
@@ -169,8 +209,15 @@ function run(
       },
       onBatch(payload, contiguous) {
         const now = performance.now();
-        if (rec.firstBatchMs === undefined) rec.firstBatchMs = now - t0;
+        const first = rec.firstBatchMs === undefined;
+        if (first) {
+          rec.firstBatchMs = now - t0;
+          rec.firstBatchBytes = payload.length;
+        }
         const batch = decodeBatch(payload, EXTENT_CRS);
+        // Stamped after the decode returns, so "bytes arrived" and "bytes are usable" are two
+        // instants rather than one. They were one before, and the difference is the JS decode.
+        if (first) rec.firstDecodedMs = performance.now() - t0;
         // ADR-015 §3: a consumer can tell a claim from a fact without asking the engine — but only
         // if it looks. A caller-asserted CRS is marked on the canvas the same way a partial layer
         // is, because "someone told us this is LV95" and "the file says so" are different grounds
@@ -224,6 +271,28 @@ function run(
   return { record: rec, done, cancel: () => stream.cancel() };
 }
 
+/**
+ * The declared segment decomposition for one trial (`kernel/PROBE-PREREGISTRATION.md` §1a).
+ *
+ * S1 is deliberately **outside** the budget's clock and is reported anyway, so a reader can see it
+ * is not hiding inside the number. The four that are inside must sum to the budget figure, and the
+ * driver treats a mismatch beyond 0.5 ms as a declared invalidator: segments that do not sum mean
+ * the record describes something other than the run it claims to.
+ */
+function segments(rec: StreamRecord): Record<string, number | null> {
+  const q = rec.queryStartMs;
+  const n = (a?: number, b?: number) => (a === undefined || b === undefined ? null : a - b);
+  return {
+    s1_scenario_to_query_start_ms: q ?? null,
+    s2_query_start_to_open_ms: n(rec.openedMs, q),
+    s3_open_to_first_bytes_ms: n(rec.firstBatchMs, rec.openedMs),
+    s4_first_bytes_to_decoded_ms: n(rec.firstDecodedMs, rec.firstBatchMs),
+    s5_decoded_to_first_pixels_ms: n(rec.firstPixelsMs, rec.firstDecodedMs),
+    first_pixels_after_query_start_ms: n(rec.firstPixelsMs, q),
+    full_payload_after_query_start_ms: n(rec.lastPixelsMs, q),
+  };
+}
+
 async function scenario(): Promise<void> {
   t0 = performance.now();
   const results: Record<string, unknown> = { scenario: 'superseded-query cancel', dataset: DATASET };
@@ -234,17 +303,57 @@ async function scenario(): Promise<void> {
     return;
   }
 
+  results.query = {
+    bbox: QUERY_BBOX ?? null,
+    bbox_crs: QUERY_BBOX ? QUERY_BBOX_CRS : null,
+    display_extent: EXTENT,
+    display_extent_crs: EXTENT_CRS,
+    prewarm: PREWARM,
+    note:
+      'the query bbox and the display extent are different things: the display extent is held fixed ' +
+      'across query viewports so only the query changes and the draw transform does not',
+  };
+
+  if (SCENARIO === 'solo') {
+    // One measured stream, run to completion. The supersede scenario below is a different
+    // experiment and its second stream would land inside this one's full-payload figure.
+    results.scenario = 'preregistered first-pixels trial (solo)';
+    if (PREWARM) prewarm(TOKEN);
+    note(`trial: solo stream, prewarm=${PREWARM}, bbox=${QUERY_BBOX ? 'yes' : 'none'}`);
+    const trial = run('trial', STYLES.survivor, () => {});
+    await trial.done;
+    // The terminal frame arrives before the last rAF has run. Waiting for one more frame is what
+    // makes `lastPixelsMs` mean "the final batch was drawn" rather than "the final batch arrived".
+    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    results.trial = { ...trial.record };
+    results.segments = segments(trial.record);
+    results.admissibility =
+      'preregistered: kernel/PROBE-PREREGISTRATION.md, committed before this instrument was built ' +
+      'and before any result of this pass was looked at. Within-session only. No throughput claim; ' +
+      'nothing here may cite ADR-012.';
+    results.done = true;
+    const status = document.getElementById('status');
+    if (status) {
+      status.textContent =
+        `trial done — ${trial.record.rows} features, ${trial.record.batches} batches, ` +
+        `${trial.record.terminal?.kind}`;
+    }
+    note('trial complete');
+    return;
+  }
+
   // Open and authenticate a socket before the first query needs one, so the WebSocket open and the
   // credential handshake leave the per-query path. Still one stream per connection: this holds a
   // spare, it does not multiplex — the wire format carries no stream id, so two live streams on one
   // socket would make CANCEL ambiguous.
-  prewarm(TOKEN);
+  if (PREWARM) prewarm(TOKEN);
 
   // ---- S1: a single stream, nothing else running. The within-session baseline. --------------
   note('S1: solo stream');
   const solo = run('solo', STYLES.survivor, () => {});
   await solo.done;
   results.s1_solo = { ...solo.record };
+  results.s1_solo_segments = segments(solo.record);
   const soloCompletedMs = solo.record.lastPixelsMs;
 
   // Clear the canvas between scenarios; a leftover layer would be a stale view.
