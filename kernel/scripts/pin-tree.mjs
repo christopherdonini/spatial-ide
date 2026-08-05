@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Records a content hash of every source file a measurement depends on.
+ * Records a content hash of every source file a measurement depends on — **and, with
+ * `--binaries`, of the binaries that were actually built from them.**
  *
  * Why this exists: a measurement is a claim about a *tree*, not about a wall-clock moment. This
  * repository is worked on by more than one agent at a time, and during the first pass of the
@@ -8,14 +9,35 @@
  * server were all edited while numbers were being taken. Numbers that cannot be attributed to a
  * specific tree are not measurements.
  *
+ * ## Why the source pin alone turned out not to be enough
+ *
+ * On 2026-08-05 a run of `kernel/tests/indexed_budgets.rs` was invalidated after the fact: the
+ * source pin verified clean before and after, and the harness binary nonetheless contained
+ * `"identity min: "` — a string that exists only in *another checkout's uncommitted*
+ * `engine/src/dataset.rs` and nowhere in the pinned tree. The two checkouts shared one
+ * `CARGO_TARGET_DIR`, so a cached compilation unit built elsewhere was linked into a binary built
+ * here.
+ *
+ * **A source pin does not pin a build, and a shared target directory defeats it.** Hence
+ * `--binaries`: the pin now records the SHA-256 of each named artifact, so a run can state which
+ * bytes produced its numbers and can prove they did not change underneath it. Two disciplines go
+ * with it and neither is optional:
+ *
+ *   1. **Pin before the build, compare after it.** A pin taken after the build brackets nothing —
+ *      a source edit during the build is invisible to it. That was the second half of the same
+ *      failure.
+ *   2. **Build the workspace crates from clean into a directory nothing else writes to**, or accept
+ *      that the binary hash proves only "unchanged since I hashed it", not "built from these
+ *      sources".
+ *
  * Usage:
  *   node kernel/scripts/pin-tree.mjs > target/slice-evidence/tree-pin-before.json
- *   ... measure ...
- *   node kernel/scripts/pin-tree.mjs > target/slice-evidence/tree-pin-after.json
+ *   ... build ...
  *   node kernel/scripts/pin-tree.mjs --compare target/slice-evidence/tree-pin-before.json
+ *   node kernel/scripts/pin-tree.mjs --binaries target/release/slice-host.exe,... > pin-binaries.json
  *
  * `--compare` exits non-zero and names every file that moved, so a run that raced an edit fails
- * loudly instead of being written up as if it had not.
+ * loudly instead of being written up as if it had not. With `--binaries` it compares those too.
  */
 
 import { createHash } from 'node:crypto';
@@ -63,6 +85,22 @@ function walk(p, out) {
 const files = {};
 for (const r of ROOTS) walk(r, files);
 
+/**
+ * The built artifacts this pin also covers, as a comma-separated list of repo-relative paths.
+ *
+ * Hashed **in full**, not sampled: the point is to be able to say which bytes produced a number.
+ */
+const binariesIdx = process.argv.indexOf('--binaries');
+const binaries = {};
+if (binariesIdx >= 0) {
+  for (const rel of (process.argv[binariesIdx + 1] ?? '').split(',').filter(Boolean)) {
+    const abs = join(repoRoot, rel.trim());
+    binaries[rel.trim().replaceAll('\\', '/')] = existsSync(abs)
+      ? createHash('sha256').update(readFileSync(abs)).digest('hex')
+      : '(absent)';
+  }
+}
+
 const pin = {
   kind: 'source tree pin',
   taken_at: new Date().toISOString(),
@@ -78,6 +116,11 @@ const pin = {
       .digest('hex')
       .slice(0, 32),
   files,
+  binaries,
+  binaries_note:
+    'a source pin does not pin a build. These are the SHA-256s of the artifacts that produced the ' +
+    'numbers, recorded because a shared CARGO_TARGET_DIR once linked another checkout\'s cached ' +
+    'compilation unit into a binary built here while the source pin verified clean.',
 };
 
 const compareIdx = process.argv.indexOf('--compare');
@@ -90,15 +133,28 @@ if (compareIdx >= 0) {
       moved.push(`${k}: ${other.files[k] ?? '(absent)'} -> ${files[k] ?? '(absent)'}`);
     }
   }
+  // Binaries are compared only when the earlier pin recorded some. A pin that recorded none says
+  // nothing about them, and reporting "unchanged" for something never observed would be worse than
+  // reporting nothing.
+  const binKeys = new Set([...Object.keys(other.binaries ?? {}), ...Object.keys(binaries)]);
+  for (const k of binKeys) {
+    const before = (other.binaries ?? {})[k];
+    if (before !== undefined && before !== binaries[k]) {
+      moved.push(`BINARY ${k}: ${before} -> ${binaries[k] ?? '(not hashed this time)'}`);
+    }
+  }
   if (moved.length) {
-    console.error(`TREE MOVED during the measurement — ${moved.length} file(s):`);
+    console.error(`TREE MOVED during the measurement — ${moved.length} item(s):`);
     for (const m of moved) console.error(`  ${m}`);
     console.error(
       '\nThe numbers taken across this window are not attributable to a single tree. Re-run.',
     );
     process.exit(1);
   }
-  console.log(`tree unchanged: ${pin.file_count} files, combined ${pin.combined}`);
+  console.log(
+    `tree unchanged: ${pin.file_count} files, combined ${pin.combined}` +
+      (binKeys.size ? `, ${binKeys.size} binary/binaries unchanged` : ''),
+  );
   process.exit(0);
 }
 

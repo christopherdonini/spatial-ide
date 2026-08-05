@@ -178,6 +178,44 @@ page to be able to *skip* `prewarm()`; the page as committed at `87644cb` always
 instrument commit adds a `prewarm=0` URL parameter to the probe page for this purpose. Declared here
 because it is a change to the consumer that is under measurement, not only to the driver around it.
 
+**A4 — 2026-08-05, after attempt 1 was invalidated on declared grounds. Read this one carefully,
+because it is the amendment that costs the most.**
+
+Attempt 1 of the in-process harness ran and **fired two declared invalidators**. It is reported, not
+deleted, and none of its numbers are quoted as results anywhere:
+
+1. **Canary spread 21.72 % across the four minima**, against the declared 10 % threshold
+   (readings: start 142.9 ms, mid 117.4, end 118.2, settled 137.9).
+2. **Build provenance.** The harness binary contained the string `"identity min: "`, which exists
+   only in *another checkout's uncommitted* `engine/src/dataset.rs` and **nowhere in the pinned
+   tree**. The source pin verified clean before and after. The two checkouts shared one
+   `CARGO_TARGET_DIR`, so a compilation unit built elsewhere reached a binary built here. A source
+   pin does not pin a build.
+
+**The honesty cost, stated rather than buried: attempt 2 is not blind.** Attempt 1's numbers have
+been seen. That is a real weakening of this preregistration and it is disclosed here instead of
+being papered over by presenting attempt 2 as if it were the first.
+
+What changes for attempt 2 — **and the 10 % canary threshold is not among them.** Moving a threshold
+after seeing it fire is the exact move a preregistration exists to prevent:
+
+- **Build provenance becomes part of the protocol.** The workspace crates are rebuilt **from clean**;
+  the source pin is taken **before** the build and compared **after** it (attempt 1 pinned after the
+  build, so the build window was unbracketed); `pin-tree.mjs --binaries` records the SHA-256 of every
+  binary that produces a number, checked again after the run; and the harness is executed from a
+  **private copy** of its binary so no other process can replace it mid-run.
+- **Each canary point gets a discard warm-up** — one 100 M-iteration reading, thrown away, taken
+  immediately before that point's three timed readings. This is an instrument correction, not a
+  threshold change: attempt 1's *settled* point was the second-slowest of the four, and a reading
+  taken on a CPU that has been idle for 20 s measures how fast the governor ramps, not how fast the
+  machine is. The same correction applies to the JS canary in the probe driver.
+- **A quiescence check before the run**: no `cargo`, `rustc` or `link.exe` belonging to another
+  process may be running when a phase starts. Attempt 1 raced at least one.
+
+If the canary invalidator fires again at 10 %, the affected rows are reported as **not established**
+and the canary's own behaviour is reported as a finding. That is a legitimate outcome of this pass
+and it will not be converted into a result by relaxing the threshold.
+
 **A3 — 2026-08-05, before the build, before any result.** Two changes to the cancellation ladders in
 §1b, both forced by how the code under test is actually shaped, and both declared before a single
 trial ran.

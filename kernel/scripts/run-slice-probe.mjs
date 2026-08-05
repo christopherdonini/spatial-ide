@@ -116,6 +116,9 @@ function canaryMs() {
   return ms;
 }
 function canaryPoint(label) {
+  // Discarded warm-up. A reading taken on a CPU that has been idle measures how fast the governor
+  // ramps, not how fast the machine is; see kernel/PROBE-PREREGISTRATION.md amendment A4.
+  canaryMs();
   const raw = [canaryMs(), canaryMs(), canaryMs()];
   const min = Math.min(...raw);
   console.log(`canary [${label}] min ${min.toFixed(1)} ms  raw ${raw.map((v) => v.toFixed(1)).join(', ')}`);

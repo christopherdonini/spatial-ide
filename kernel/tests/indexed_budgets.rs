@@ -108,8 +108,15 @@ struct Canary {
     long: Vec<f64>,
 }
 
+/// Discarded before every canary point. **A reading taken on a CPU that has been idle measures how
+/// fast the governor ramps, not how fast the machine is** — attempt 1's *settled* point (taken after
+/// 20 s of idle) came back slower than two points taken mid-run, which is the frequency-transition
+/// window `RESULTS.md`'s instrument finding already named, showing up one scale higher.
+const CANARY_WARMUP_ITERS: u64 = 100_000_000;
+
 impl Canary {
     fn take(label: &str) -> Self {
+        std::hint::black_box(canary_ms(CANARY_WARMUP_ITERS));
         let short: Vec<f64> = (0..5).map(|_| canary_ms(CANARY_ITERS_SHORT)).collect();
         let long: Vec<f64> = (0..3).map(|_| canary_ms(CANARY_ITERS_LONG)).collect();
         let c = Self { label: label.into(), short, long };
