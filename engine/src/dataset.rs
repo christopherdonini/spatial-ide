@@ -10,8 +10,10 @@ use std::sync::Arc;
 use arrow::datatypes::{DataType, SchemaRef};
 use duckdb::Connection;
 
+use crate::cancel::CancelToken;
 use crate::crs::{self, CrsAssertion, DatasetCrs};
 use crate::envelope::{BatchEnvelope, ID_COLUMN};
+use crate::identity::{self, DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
 use crate::error::{EngineError, Result};
 use crate::geoparquet::{CoveringBbox, GeoMeta};
 
@@ -27,7 +29,7 @@ pub struct Dataset {
 impl Dataset {
     /// Open a GeoParquet file whose CRS the file itself declares.
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        Self::open_inner(path.as_ref(), None)
+        Self::open_inner(path.as_ref(), None, None, &CancelToken::new())
     }
 
     /// Open a GeoParquet file, supplying a CRS for the case where the file declares none.
@@ -35,10 +37,30 @@ impl Dataset {
     /// The assertion is consulted **only** if the file declares nothing. If the file declares a
     /// CRS, this refuses rather than overriding — see `crs::admit`.
     pub fn open_with_asserted_crs(path: impl AsRef<Path>, assertion: CrsAssertion) -> Result<Self> {
-        Self::open_inner(path.as_ref(), Some(assertion))
+        Self::open_inner(path.as_ref(), Some(assertion), None, &CancelToken::new())
     }
 
-    fn open_inner(path: &Path, assertion: Option<CrsAssertion>) -> Result<Self> {
+    /// Open a file whose feature identity lives in a column this engine does not name `id`
+    /// (**ADR-016 §3**).
+    ///
+    /// The declaration is explicit, per dataset, and never inferred. The uniqueness scan runs over
+    /// the **mapped** values and reads a whole column, so it is an *operation* rather than a lookup
+    /// — `cancel` is honoured throughout (`docs/01` principle 7), and at `docs/07`'s 5 GB it lands
+    /// on the same `docs/08` cold-open budget `kernel/RESULTS.md` records as unmeasured.
+    pub fn open_with_declared_identity(
+        path: impl AsRef<Path>,
+        identity: IdentityDeclaration,
+        cancel: &CancelToken,
+    ) -> Result<Self> {
+        Self::open_inner(path.as_ref(), None, Some(identity), cancel)
+    }
+
+    fn open_inner(
+        path: &Path,
+        assertion: Option<CrsAssertion>,
+        declared_identity: Option<IdentityDeclaration>,
+        cancel: &CancelToken,
+    ) -> Result<Self> {
         if !path.is_file() {
             return Err(EngineError::Source(format!("{} is not a readable file", path.display())));
         }
@@ -86,15 +108,23 @@ impl Dataset {
         }
 
         let file_schema = probe_schema(&conn, &path_str)?;
-        check_columns(&file_schema, &geo.primary_column)?;
+        check_geometry_column(&file_schema, &geo.primary_column)?;
+
+        // Identity admission (ADR-016). Native `id` unless the caller declared a mapping; the
+        // uniqueness scan runs either way, so a native column is no longer trusted without it.
+        let identity = admit_identity(&conn, &path_str, &file_schema, declared_identity, cancel)?;
 
         Ok(Self {
             path: path.to_path_buf(),
-            envelope: BatchEnvelope::new(crs, geo.primary_column.clone()),
+            envelope: BatchEnvelope::new(crs, geo.primary_column.clone(), identity),
             covering: geo.covering.clone(),
             geo,
             file_schema,
         })
+    }
+
+    pub fn identity(&self) -> &DatasetIdentity {
+        self.envelope.identity()
     }
 
     pub fn path(&self) -> &Path {
@@ -169,31 +199,126 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
     Ok(arrow.get_schema())
 }
 
-/// The two columns this slice needs, checked at open so a stream cannot fail halfway for a reason
-/// that was knowable up front.
+/// Admit the dataset's feature identity — **ADR-016 §3–§6**.
 ///
-/// **What the id check establishes, and what it does not** — ADR-016 (Proposed), whose Context says
-/// this in full. It establishes that a 64-bit column named `id` exists. It does **not** establish
-/// dataset-wide uniqueness (values are never compared), nor stability across reopen, nor that the
-/// values mean anything — an exporter's invented row number is admitted here. Read as a narrow
-/// structural precondition, not as a guarantee of the stable identity ADR-010 rule 2 consumes.
-fn check_columns(schema: &SchemaRef, geometry_column: &str) -> Result<()> {
-    let id = schema
-        .fields()
-        .iter()
-        .find(|f| f.name() == ID_COLUMN)
-        .ok_or_else(|| {
-            EngineError::Source(format!(
-                "no `{ID_COLUMN}` column: stable per-feature identity is required (docs/11)"
-            ))
-        })?;
-    if !matches!(id.data_type(), DataType::UInt64 | DataType::Int64) {
-        return Err(EngineError::Source(format!(
-            "`{ID_COLUMN}` is {}; expected a 64-bit integer",
-            id.data_type()
-        )));
+/// Refusal is the default: absent a declaration, the engine looks for its own `id` column and
+/// refuses if it is not there. A declaration redirects identity to a named source column, and
+/// **changes nothing else** — in particular it does not weaken any check.
+///
+/// The uniqueness scan is what turns "a column exists" into "an id identifies one feature", and it
+/// runs for a **native** column too: ADR-016's Context records that the native column was
+/// previously trusted without it, which is the gap this closes.
+fn admit_identity(
+    conn: &Connection,
+    path: &str,
+    schema: &SchemaRef,
+    declared: Option<IdentityDeclaration>,
+    cancel: &CancelToken,
+) -> Result<DatasetIdentity> {
+    let (source, column, skip) = match declared {
+        Some(d) => {
+            let col = d.column.clone();
+            (IdSource::Mapped { column: col.clone(), by: d.by, at: d.at }, col, d.skip_uniqueness_check)
+        }
+        None => (IdSource::File, ID_COLUMN.to_string(), false),
+    };
+
+    let field = schema.fields().iter().find(|f| f.name() == &column).ok_or_else(|| {
+        EngineError::IdentityUnusable {
+            column: column.clone(),
+            detail: if matches!(source, IdSource::File) {
+                "the file has no such column, and no identity mapping was declared. Stable \
+                 per-feature identity is required (docs/11); declare a mapping to a column that \
+                 carries it"
+                    .to_string()
+            } else {
+                "the file has no such column".to_string()
+            },
+        }
+    })?;
+
+    // §4's value-preserving test. A type needing a transform to reach u64 is refused outright.
+    identity::admit_column_type(&column, field.data_type())?;
+
+    if skip {
+        // Recorded, not hidden. A caller may take responsibility for uniqueness; it may not make
+        // that invisible to the consumer downstream of it.
+        return Ok(DatasetIdentity::new(source, IdUniqueness::DeclaredNotVerified, None, None));
     }
 
+    // **One pass, three questions.** Row count, distinct count and the extreme values come from a
+    // single scan because each extra pass over a 5 GB column is another cold-open cost. `MIN` is
+    // here because a signed source column widens into u64 exactly only if it holds no negative
+    // value — §4 admits the *type* and this refuses the *values*.
+    let sql = format!(
+        "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\") \
+         FROM read_parquet('{p}')",
+        c = column.replace('"', "\"\""),
+        p = path.replace('\'', "''")
+    );
+
+    // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
+    // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).
+    cancel.attach(std::sync::Arc::clone(&conn.interrupt_handle()))?;
+    let scan = run_identity_scan(conn, &sql);
+    cancel.detach();
+    if cancel.is_cancelled() {
+        return Err(EngineError::Cancelled);
+    }
+    let (rows, distinct, min, max) = scan?;
+
+    if let Some(m) = min {
+        if m < 0 {
+            return Err(EngineError::IdentityUnusable {
+                column: column.clone(),
+                detail: format!(
+                    "holds a negative value ({m}); identity is carried as u64 and a negative \
+                     source value cannot widen into it without changing the value"
+                ),
+            });
+        }
+    }
+    if distinct != rows {
+        return Err(EngineError::IdentityUnusable {
+            column: column.clone(),
+            detail: format!(
+                "{rows} rows carry only {distinct} distinct values, so at least two features share \
+                 an identity. ADR-010 rule 2 resolves a pick through this id, and a shared id \
+                 returns a wrong-but-plausible feature with nothing raised"
+            ),
+        });
+    }
+
+    Ok(DatasetIdentity::new(
+        source,
+        IdUniqueness::VerifiedAtOpenFullFile,
+        Some(rows),
+        max.map(|m| m as u64),
+    ))
+}
+
+fn run_identity_scan(conn: &Connection, sql: &str) -> Result<(u64, u64, Option<i64>, Option<i64>)> {
+    let mut stmt = conn
+        .prepare(sql)
+        .map_err(|e| EngineError::Query(format!("identity scan prepare: {e}")))?;
+    let mut rows = stmt
+        .query([])
+        .map_err(|e| EngineError::Query(format!("identity scan: {e}")))?;
+    let row = rows
+        .next()
+        .map_err(|e| EngineError::Query(format!("identity scan: {e}")))?
+        .ok_or_else(|| EngineError::Query("identity scan returned no row".into()))?;
+    let count: i64 = row.get(0).map_err(|e| EngineError::Query(format!("count: {e}")))?;
+    let distinct: i64 = row.get(1).map_err(|e| EngineError::Query(format!("distinct: {e}")))?;
+    // MIN/MAX are NULL for an empty file, which is not an error — it is zero features.
+    let min: Option<i64> = row.get(2).ok();
+    let max: Option<i64> = row.get(3).ok();
+    Ok((count as u64, distinct as u64, min, max))
+}
+
+/// The geometry column, checked at open so a stream cannot fail halfway for a reason that was
+/// knowable up front.
+fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()> {
     let geom = schema
         .fields()
         .iter()

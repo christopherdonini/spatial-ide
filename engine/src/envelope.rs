@@ -14,6 +14,7 @@ use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use arrow::ipc::writer::{IpcWriteOptions, StreamWriter};
 
 use crate::crs::{CrsSource, DatasetCrs};
+use crate::identity::DatasetIdentity;
 use crate::error::{EngineError, Result};
 use crate::geoarrow;
 
@@ -28,11 +29,16 @@ pub const ID_COLUMN: &str = "id";
 pub struct BatchEnvelope {
     crs: DatasetCrs,
     geometry_column: String,
+    identity: DatasetIdentity,
     schema: SchemaRef,
 }
 
 impl BatchEnvelope {
-    pub(crate) fn new(crs: DatasetCrs, geometry_column: String) -> Self {
+    pub(crate) fn new(
+        crs: DatasetCrs,
+        geometry_column: String,
+        identity: DatasetIdentity,
+    ) -> Self {
         let mut md = HashMap::new();
 
         // The space this buffer is in (rule 1) …
@@ -54,6 +60,30 @@ impl BatchEnvelope {
         // normalized to get there (docs/05: the normalization performed is recorded).
         md.insert("axis_order".to_string(), crs.axis_order().as_str().to_string());
         md.insert("axis_normalization".to_string(), "none-performed".to_string());
+        // … where the feature identity came from, and **what was actually checked about it**.
+        //
+        // ADR-016 §6. The basis is `docs/11`'s "the ID-assignment policy is per dataset and
+        // recorded in metadata" plus `docs/01` principle 8 — **not** ADR-010 rule 1, which is about
+        // coordinate space. The *form* follows `crs_source` above: a caller's declaration and a
+        // file fact stay distinguishable, and the record says what was verified rather than
+        // asserting the word "unique".
+        md.insert("id_source".to_string(), identity.source().as_envelope_value());
+        md.insert("id_uniqueness".to_string(), identity.uniqueness().as_str().to_string());
+        if let Some(rows) = identity.verified_rows() {
+            md.insert("id_verified_rows".to_string(), rows.to_string());
+        }
+        // Width is part of the contract (§7): a JS consumer narrowing to `Number` is exact only
+        // below 2^53, so a consumer can see from the envelope whether that would have been lossy
+        // instead of discovering it per value. Absent when nothing was verified — which is the
+        // honest answer, not `true`.
+        if let Some(exact) = identity.js_exact() {
+            md.insert("id_js_exact".to_string(), exact.to_string());
+        }
+        if let crate::identity::IdSource::Mapped { by, at, .. } = identity.source() {
+            md.insert("id_declared_by".to_string(), by.clone());
+            md.insert("id_declared_at".to_string(), at.clone());
+        }
+
         md.insert("geometry_column".to_string(), geometry_column.clone());
         md.insert("geometry_encoding".to_string(), geoarrow::EXT_NAME_POLYGON.to_string());
         md.insert("coordinate_layout".to_string(), "interleaved-xy".to_string());
@@ -66,7 +96,7 @@ impl BatchEnvelope {
             md,
         ));
 
-        Self { crs, geometry_column, schema }
+        Self { crs, geometry_column, identity, schema }
     }
 
     pub fn crs(&self) -> &DatasetCrs {
@@ -75,6 +105,10 @@ impl BatchEnvelope {
 
     pub fn geometry_column(&self) -> &str {
         &self.geometry_column
+    }
+
+    pub fn identity(&self) -> &DatasetIdentity {
+        &self.identity
     }
 
     pub fn schema(&self) -> SchemaRef {
@@ -137,6 +171,16 @@ mod tests {
     use crate::wkb::{encode_polygon, PolygonBuilder};
     use arrow::array::UInt64Array;
 
+    /// A verified native identity, for tests that are about something else.
+    fn test_identity() -> DatasetIdentity {
+        DatasetIdentity::new(
+            crate::identity::IdSource::File,
+            crate::identity::IdUniqueness::VerifiedAtOpenFullFile,
+            Some(1),
+            Some(0),
+        )
+    }
+
     fn file_crs() -> DatasetCrs {
         DatasetCrs::from_file(
             "EPSG:2056".into(),
@@ -159,7 +203,7 @@ mod tests {
 
     #[test]
     fn every_batch_carries_frame_crs_and_axis_order() {
-        let env = BatchEnvelope::new(file_crs(), "geometry".into());
+        let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
         let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon())
             .unwrap();
         let md = b.schema().metadata().clone();
@@ -181,6 +225,7 @@ mod tests {
         let env = BatchEnvelope::new(
             DatasetCrs::from_assertion(&a, AxisOrder::EastingNorthing),
             "geometry".into(),
+            test_identity(),
         );
         let md = env.schema().metadata().clone();
         assert_eq!(md.get("crs_source").unwrap(), "caller_asserted");
@@ -190,7 +235,7 @@ mod tests {
 
     #[test]
     fn the_tag_survives_ipc_serialization() {
-        let env = BatchEnvelope::new(file_crs(), "geometry".into());
+        let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
         let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![7u64])), one_polygon())
             .unwrap();
 
@@ -208,7 +253,7 @@ mod tests {
 
     #[test]
     fn ipc_bytes_are_appended_so_a_caller_may_reserve_a_prefix() {
-        let env = BatchEnvelope::new(file_crs(), "geometry".into());
+        let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
         let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon())
             .unwrap();
         let mut buf = vec![0xAAu8; 8];
@@ -221,7 +266,7 @@ mod tests {
     #[test]
     fn a_geometry_array_of_the_wrong_shape_cannot_be_assembled_into_a_batch() {
         use arrow::array::Float64Array;
-        let env = BatchEnvelope::new(file_crs(), "geometry".into());
+        let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
         let wrong: ArrayRef = Arc::new(Float64Array::from(vec![1.0]));
         let e = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), wrong).unwrap_err();
         assert!(matches!(e, EngineError::EncodingMismatch { .. }));

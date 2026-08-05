@@ -83,6 +83,14 @@ pub enum EngineError {
     /// A declared ceiling was reached (ADR-010 rule 6: declared, not discovered).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
 
+    /// The declared or native identity column cannot serve as stable feature identity.
+    ///
+    /// ADR-016. Covers a missing column, a type that cannot widen into `u64` without a transform,
+    /// a negative value, and a column that is not unique. All four are the same failure from a
+    /// consumer's side — the id it is handed does not identify one feature — so they share a
+    /// variant and are distinguished by `detail`.
+    IdentityUnusable { column: String, detail: String },
+
     /// One feature alone is larger than the largest batch this engine will emit.
     ///
     /// Separate from `CeilingExceeded` because the remedy differs and the diagnosis has to name a
@@ -143,6 +151,11 @@ impl fmt::Display for EngineError {
             Self::CeilingExceeded { ceiling, limit, saw } => {
                 write!(f, "declared ceiling {ceiling} exceeded: limit {limit}, saw {saw}")
             }
+            Self::IdentityUnusable { column, detail } => write!(
+                f,
+                "refused: `{column}` cannot serve as stable feature identity — {detail}. \
+                 Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"
+            ),
             Self::FeatureTooLarge { id, limit, saw } => write!(
                 f,
                 "feature {id} needs about {saw} B on its own, above the declared per-batch \

@@ -267,8 +267,14 @@ impl Dataset {
 
     fn build_sql(&self, q: &ViewportQuery) -> Result<String> {
         let geom = quote_ident(self.geometry_column());
+        // **The identity's source column, aliased to the engine's identity name** (ADR-016 §3).
+        // A declared mapping changes which column is read and nothing else: everything downstream
+        // — the envelope's non-nullable `id` field, the null and negative checks, ADR-010 rule 2's
+        // indirection — is identical for a native and a mapped identity, which is what makes the
+        // mapping a redirection rather than a second code path with its own bugs.
+        let source_column = quote_ident(self.identity().source().source_column());
         let id = quote_ident(ID_COLUMN);
-        let mut sql = format!("SELECT {id}, {geom} FROM read_parquet(?)");
+        let mut sql = format!("SELECT {source_column} AS {id}, {geom} FROM read_parquet(?)");
 
         if q.bbox.is_some() {
             let c = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {

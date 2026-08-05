@@ -74,6 +74,29 @@ pub struct FixtureSpec {
     pub with_covering_bbox: bool,
     /// Rows per parquet row group / write call.
     pub chunk: usize,
+    /// How the fixture carries feature identity. Exists so ADR-016's admission policy is exercised
+    /// against real files rather than against hand-written schemas.
+    pub identity: IdentityMode,
+}
+
+/// How the fixture carries feature identity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IdentityMode {
+    /// A unique `id` column. The ordinary case.
+    NativeUnique,
+    /// A unique key under a different name (`parcel_key`), and **no `id` column at all** — the
+    /// shape most real GeoParquet has, which the engine refuses unless a mapping is declared.
+    ForeignKeyColumn,
+    /// An `id` column that repeats a value. Legal parquet, admitted by a
+    /// column-exists-and-is-an-integer check, and fatal to ADR-010 rule 2's indirection.
+    DuplicateIds,
+    /// An `id` column holding a **string**. No transform reaches u64 without inventing one.
+    StringIds,
+    /// A signed `id` column holding negative values.
+    NegativeIds,
+    /// A unique `id` column whose values exceed 2^53, so a JS consumer narrowing to `Number`
+    /// would collide (ADR-016 §7).
+    HugeIds,
 }
 
 impl Default for FixtureSpec {
@@ -86,6 +109,7 @@ impl Default for FixtureSpec {
             crs_mode: CrsMode::DeclaredLv95,
             with_covering_bbox: true,
             chunk: 4_096,
+            identity: IdentityMode::NativeUnique,
         }
     }
 }
@@ -130,8 +154,14 @@ impl SplitMix64 {
     }
 }
 
-fn schema(with_bbox: bool) -> Arc<Schema> {
-    let mut fields = vec![Arc::new(Field::new("id", DataType::UInt64, false))];
+fn schema(with_bbox: bool, identity: IdentityMode) -> Arc<Schema> {
+    let id_field = match identity {
+        IdentityMode::ForeignKeyColumn => Field::new("parcel_key", DataType::UInt64, false),
+        IdentityMode::StringIds => Field::new("id", DataType::Utf8, false),
+        IdentityMode::NegativeIds => Field::new("id", DataType::Int64, false),
+        _ => Field::new("id", DataType::UInt64, false),
+    };
+    let mut fields = vec![Arc::new(id_field)];
     if with_bbox {
         fields.push(Arc::new(Field::new("bbox", DataType::Struct(bbox_fields()), false)));
     }
@@ -194,7 +224,7 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
     }
     let file = File::create(path).map_err(|e| EngineError::Source(format!("create: {e}")))?;
 
-    let schema = schema(spec.with_covering_bbox);
+    let schema = schema(spec.with_covering_bbox, spec.identity);
     let props = WriterProperties::builder()
         .set_compression(Compression::SNAPPY)
         .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo_metadata(spec))]))
@@ -214,6 +244,8 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
         let n = spec.chunk.min(spec.features - written);
 
         let mut ids = UInt64Builder::with_capacity(n);
+        let mut signed_ids = arrow::array::Int64Builder::with_capacity(n);
+        let mut string_ids = arrow::array::StringBuilder::new();
         let mut geoms = BinaryBuilder::new();
         let (mut xmin_b, mut ymin_b, mut xmax_b, mut ymax_b) = (
             Float64Builder::with_capacity(n),
@@ -249,7 +281,15 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
             facts.extent[2] = facts.extent[2].max(xmax);
             facts.extent[3] = facts.extent[3].max(ymax);
 
-            ids.append_value(id);
+            match spec.identity {
+                // The value written is what makes each mode's refusal real: a duplicate is a
+                // constant, a huge id is above 2^53, a negative is below zero.
+                IdentityMode::DuplicateIds => ids.append_value(7),
+                IdentityMode::HugeIds => ids.append_value((1u64 << 53) + id),
+                IdentityMode::NegativeIds => signed_ids.append_value(-(id as i64) - 1),
+                IdentityMode::StringIds => string_ids.append_value(format!("key-{id}")),
+                _ => ids.append_value(id),
+            }
             geoms.append_value(encode_polygon(&rings));
             xmin_b.append_value(xmin);
             ymin_b.append_value(ymin);
@@ -257,7 +297,11 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
             ymax_b.append_value(ymax);
         }
 
-        let mut cols: Vec<ArrayRef> = vec![Arc::new(ids.finish())];
+        let mut cols: Vec<ArrayRef> = vec![match spec.identity {
+            IdentityMode::NegativeIds => Arc::new(signed_ids.finish()) as ArrayRef,
+            IdentityMode::StringIds => Arc::new(string_ids.finish()) as ArrayRef,
+            _ => Arc::new(ids.finish()) as ArrayRef,
+        }];
         if spec.with_covering_bbox {
             let bbox = StructArray::new(
                 bbox_fields(),
