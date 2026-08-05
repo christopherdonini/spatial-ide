@@ -404,27 +404,30 @@ impl Dataset {
             // provably identical to the unindexed one; and a wrong index then costs time, not
             // correctness. Removing the predicate would make the index the system of record, which
             // ADR-006 says a pure transformation's cached output is not.
-            if let Some(idx) = self.admitted_index() {
-                let candidates = idx.candidates(view);
+            // `None` from `candidates` means the index cannot narrow *this* query — a degenerate
+            // grid, a bbox it will not reason about. Falling through to the scan is the only safe
+            // reading: a derived structure that cannot answer must not answer.
+            if let Some(candidates) = self.admitted_index().and_then(|idx| idx.candidates(view)) {
                 match crate::index::compress_to_ranges(&candidates, crate::index::MAX_ID_RANGES) {
+                    // **An empty candidate set falls through to the scan; it does not decide.**
+                    // Encoding it as `WHERE 1=0` made the index the system of record, which ADR-006
+                    // says a pure transformation's cached output is not — and when a degenerate
+                    // grid produced an empty set, every viewport query returned zero rows while the
+                    // unindexed query returned the right ones.
                     Some(ranges) if ranges.is_empty() => {
-                        // The index is certain nothing matches. `1=0` is the honest encoding of
-                        // that: DuckDB still opens the file and returns no rows.
-                        // The bbox predicate is kept even though `1=0` already decides the
-                        // result: the statement's parameter arity must not depend on what the
-                        // index happened to find, or the binding below silently goes wrong on
-                        // exactly the queries that return nothing.
-                        sql.push_str(&format!(
-                            " WHERE 1=0 AND {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
-                            xmin = c.xmin.to_sql(),
-                            xmax = c.xmax.to_sql(),
-                            ymin = c.ymin.to_sql(),
-                            ymax = c.ymax.to_sql(),
-                        ));
-                        return Ok((sql, FilterPlan::IndexNarrowed { ranges: 0, candidates: 0 }));
+                        plan = FilterPlan::ScanOnly;
                     }
                     Some(ranges) => {
-                        let id = quote_ident(ID_COLUMN);
+                        // **Range predicates name the *source* column, never the alias.**
+                        //
+                        // DuckDB resolves a WHERE reference to a base column when one of that name
+                        // exists, not to the select alias. With a declared mapping the projection
+                        // is `"parcel_key" AS "id"`, so filtering on `"id"` bound the file's own
+                        // `id` column instead — measured returning the empty set on a file carrying
+                        // both, and a wrong-but-plausible set whenever the ranges happened to
+                        // overlap. Filtering on the column the ids actually came from removes the
+                        // ambiguity rather than working around it.
+                        let id = source_column.clone();
                         let preds: Vec<String> = ranges
                             .iter()
                             .map(|(lo, hi)| {

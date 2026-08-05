@@ -57,7 +57,16 @@ pub const MAX_INDEXED_FEATURES: usize = 20_000_000;
 /// than it needs the best structure, and a grid's build cost is one pass with no rebalancing.
 pub const GRID_AXIS_CELLS: usize = 256;
 /// Bytes of index payload per feature, for the declared memory bound below.
-pub const BYTES_PER_INDEXED_FEATURE: usize = 8 + 32 + 8; // id + bbox + one grid slot
+pub const BYTES_PER_INDEXED_FEATURE: usize = 8 + 32; // id + bbox
+/// Bytes per grid-bucket entry.
+pub const BYTES_PER_CELL_ENTRY: usize = 4;
+/// Most cells one feature may occupy before it is held in a coarse list instead.
+///
+/// A feature spanning the extent would otherwise be pushed into every one of
+/// `GRID_AXIS_CELLS^2` buckets -- 65 536 entries for one row, which one national boundary in a
+/// parcel file produces. That is unbounded build time and memory hiding behind a per-feature
+/// constant.
+pub const MAX_CELLS_PER_FEATURE: usize = 1_024;
 
 /// The identity of a derived artifact: what it was built **from**, **by**, and **for**.
 ///
@@ -74,15 +83,21 @@ pub struct IndexKey {
     pub answers: String,
     /// The index's own build parameters. Two grids at different resolutions are different objects.
     pub grid_axis_cells: usize,
+    /// **The column the stored ids came from.** Without this, two `Dataset`s over the same file
+    /// with different declared identities share one index and the second is handed candidate ids
+    /// from the other's column -- the same wrong-but-plausible answer ADR-010 rule 2 exists to
+    /// prevent. The identity is part of what the index *is*, not a detail of how it was used.
+    pub id_column: String,
 }
 
 impl IndexKey {
-    pub fn new(content_hash: impl Into<String>) -> Self {
+    pub fn new(content_hash: impl Into<String>, id_column: impl Into<String>) -> Self {
         Self {
             content_hash: content_hash.into(),
             builder_version: BUILDER_VERSION,
             answers: ANSWERS_PREDICATE.to_string(),
             grid_axis_cells: GRID_AXIS_CELLS,
+            id_column: id_column.into(),
         }
     }
 }
@@ -142,6 +157,9 @@ pub struct SpatialIndex {
     /// Grid extent and cell → feature-slot buckets.
     extent: [f64; 4],
     cells: HashMap<(u32, u32), Vec<u32>>,
+    /// Features too broad to bucket; considered by every query so none is ever missed.
+    spanning: Vec<u32>,
+    cell_entries: usize,
     build_millis: f64,
     scanned_rows: u64,
 }
@@ -162,8 +180,14 @@ impl SpatialIndex {
         self.scanned_rows
     }
     /// Declared memory bound for this index, in bytes (ADR-010 rule 6: declared, not discovered).
+    /// Declared memory bound, over **actual occupancy** rather than a per-feature constant.
+    ///
+    /// The first figure counted one grid slot per feature and ignored the buckets entirely, so a
+    /// feature spanning many cells was understated by orders of magnitude -- and that wrong
+    /// figure had already been propagated into the composed process bound. Bucket entries are
+    /// counted now, and per-feature coverage is capped, so this is bounded by construction.
     pub fn declared_memory_bound(&self) -> usize {
-        self.ids.len() * BYTES_PER_INDEXED_FEATURE
+        self.ids.len() * BYTES_PER_INDEXED_FEATURE + self.cell_entries * BYTES_PER_CELL_ENTRY
     }
 
     /// Build from the source's covering-bbox columns.
@@ -198,12 +222,21 @@ impl SpatialIndex {
         }
         let (ids, bboxes, scanned_rows) = built?;
 
-        if ids.len() > MAX_INDEXED_FEATURES {
-            return Err(EngineError::CeilingExceeded {
-                ceiling: "MAX_INDEXED_FEATURES",
-                limit: MAX_INDEXED_FEATURES as u64,
-                saw: ids.len() as u64,
-            });
+        // **A bbox this engine cannot reason about makes the index unusable, not approximate.**
+        // A NaN bound compares false in Rust and true on one side in SQL; an inverted bbox
+        // produces an empty cell range and lands in no cell at all. Either way the index would
+        // exclude a row the scan returns, which is the one thing it must never do.
+        for (i, b) in bboxes.iter().enumerate() {
+            if !b.iter().all(|v| v.is_finite()) {
+                return Err(EngineError::Source(format!(
+                    "feature at row {i} has a non-finite covering bbox ({b:?}); this engine                      will not index a bound it cannot compare"
+                )));
+            }
+            if b[0] > b[2] || b[1] > b[3] {
+                return Err(EngineError::Source(format!(
+                    "feature at row {i} has an inverted covering bbox ({b:?})"
+                )));
+            }
         }
 
         let mut extent = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
@@ -215,10 +248,18 @@ impl SpatialIndex {
         }
 
         let mut cells: HashMap<(u32, u32), Vec<u32>> = HashMap::new();
+        let mut spanning: Vec<u32> = Vec::new();
         if !bboxes.is_empty() && extent[2] > extent[0] && extent[3] > extent[1] {
             for (slot, b) in bboxes.iter().enumerate() {
                 let (c0, r0) = cell_of(&extent, b[0], b[1]);
                 let (c1, r1) = cell_of(&extent, b[2], b[3]);
+                let covered = (c1 - c0 + 1) as usize * (r1 - r0 + 1) as usize;
+                if covered > MAX_CELLS_PER_FEATURE {
+                    // Too broad to bucket. Held in a list every query considers, so it is never
+                    // *missed* -- the index stays a narrowing structure and the cost is bounded.
+                    spanning.push(slot as u32);
+                    continue;
+                }
                 for c in c0..=c1 {
                     for r in r0..=r1 {
                         cells.entry((c, r)).or_default().push(slot as u32);
@@ -233,7 +274,9 @@ impl SpatialIndex {
             ids,
             bboxes,
             extent,
+            cell_entries: cells.values().map(Vec::len).sum::<usize>() + spanning.len(),
             cells,
+            spanning,
             build_millis: started.elapsed().as_secs_f64() * 1000.0,
             scanned_rows,
         })
@@ -270,6 +313,16 @@ impl SpatialIndex {
                     .ok_or_else(|| EngineError::Query(format!("index: column {i} is not f64")))
             };
             let (xmin, ymin, xmax, ymax) = (f(1)?, f(2)?, f(3)?, f(4)?);
+            if rows + chunk.num_rows() as u64 > MAX_INDEXED_FEATURES as u64 {
+                // Enforced **while** reading, not after. Checking once the whole column had been
+                // materialized meant a file past the ceiling allocated everything first and then
+                // reported the limit -- a ceiling that describes rather than bounds.
+                return Err(EngineError::CeilingExceeded {
+                    ceiling: "MAX_INDEXED_FEATURES",
+                    limit: MAX_INDEXED_FEATURES as u64,
+                    saw: rows + chunk.num_rows() as u64,
+                });
+            }
             for r in 0..chunk.num_rows() {
                 ids.push(idc.value(r));
                 bboxes.push([xmin.value(r), ymin.value(r), xmax.value(r), ymax.value(r)]);
@@ -284,14 +337,46 @@ impl SpatialIndex {
     /// Returns candidates, not answers: the caller still applies whatever stronger predicate it
     /// needs. Naming it `candidates` rather than `matches` is the same discipline as putting the
     /// predicate in the key.
-    pub fn candidates(&self, view: &Bbox) -> Vec<u64> {
-        if self.ids.is_empty() {
-            return Vec::new();
+    /// `None` means **"this index cannot narrow this query"** -- the caller falls back to the
+    /// scan.
+    ///
+    /// That distinction is a correction to this file's first design and it matters more than it
+    /// looks. An empty candidate list used to be encoded as `WHERE 1=0`, which made the index
+    /// *decide* the result rather than narrow it: a degenerate extent -- every feature sharing an
+    /// x or a y, which a point layer, a single feature or duplicated bboxes all produce -- built
+    /// an empty grid, and every viewport query then returned zero rows while the same query
+    /// without an index returned the right ones. A pure transformation's cached output may not be
+    /// the system of record (ADR-006), so whatever this structure cannot answer confidently falls
+    /// through to the scan.
+    pub fn candidates(&self, view: &Bbox) -> Option<Vec<u64>> {
+        if self.ids.is_empty() || self.cells.is_empty() {
+            return None;
+        }
+        let finite = view.xmin.is_finite()
+            && view.ymin.is_finite()
+            && view.xmax.is_finite()
+            && view.ymax.is_finite();
+        if !finite || view.xmin > view.xmax || view.ymin > view.ymax {
+            return None;
         }
         let (c0, r0) = cell_of(&self.extent, view.xmin, view.ymin);
         let (c1, r1) = cell_of(&self.extent, view.xmax, view.ymax);
         let mut seen = vec![false; self.ids.len()];
         let mut out = Vec::new();
+        let mut consider = |s: usize, out: &mut Vec<u64>, seen: &mut Vec<bool>| {
+            if seen[s] {
+                return;
+            }
+            seen[s] = true;
+            let b = &self.bboxes[s];
+            // The exact predicate named in the key -- bbox intersection, nothing stronger.
+            if b[0] <= view.xmax && b[2] >= view.xmin && b[1] <= view.ymax && b[3] >= view.ymin {
+                out.push(self.ids[s]);
+            }
+        };
+        for &slot in &self.spanning {
+            consider(slot as usize, &mut out, &mut seen);
+        }
         for c in c0..=c1 {
             for r in r0..=r1 {
                 let Some(slots) = self.cells.get(&(c, r)) else { continue };
@@ -311,7 +396,7 @@ impl SpatialIndex {
             }
         }
         out.sort_unstable();
-        out
+        Some(out)
     }
 
     /// Whether this index may serve a request, or the reason it may not.
@@ -468,7 +553,7 @@ mod tests {
     use super::*;
 
     fn key(hash: &str) -> IndexKey {
-        IndexKey::new(hash)
+        IndexKey::new(hash, "id")
     }
 
     #[test]
@@ -490,6 +575,8 @@ mod tests {
         let mut other_grid = key("abc");
         other_grid.grid_axis_cells = GRID_AXIS_CELLS * 2;
         assert_ne!(base, other_grid);
+        // Different identity column — the ids stored *are* that column's values.
+        assert_ne!(base, IndexKey::new("abc", "parcel_key"));
     }
 
     #[test]

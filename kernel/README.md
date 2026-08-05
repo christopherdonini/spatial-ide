@@ -48,7 +48,7 @@ crate's bound as the process's bound will be wrong:
 |---|---|
 | `engine` | `(MAX_QUEUED_BATCHES + 1) × MAX_BATCH_BYTES` = (2 + 1) × 4 MiB = **12 MiB** |
 | `protocol/data-plane` | `(MAX_INFLIGHT_BATCHES + 1) × MAX_FRAME_BYTES` = (4 + 1) × 16 MiB = **80 MiB** |
-| `engine` spatial index, when built | `features × 48 B` — **not per stream**: one index is shared by every stream over that dataset, and it is declared per index by `IndexReport` |
+| `engine` spatial index, when built | `features × 40 B` + 4 B per grid-bucket entry, capped per feature — **not per stream**: one index is shared by every stream over that dataset, and it is declared per index by `IndexReport`. *(The earlier `features × 48 B` counted one slot per feature and ignored the buckets; it was wrong and is corrected here.)* |
 | **composed, per stream** | **92 MiB**, plus the shared index |
 | × `MAX_CONCURRENT_STREAMS` (4) | **368 MiB** |
 

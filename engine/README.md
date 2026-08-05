@@ -130,8 +130,14 @@ reports `IndexTooFragmented` rather than `ScanOnly` — "there was no index" and
 help" are different facts, and a timing that cannot tell them apart cannot be attributed.
 
 **Declared ceilings:** `MAX_INDEXED_FEATURES` 20 M · `GRID_AXIS_CELLS` 256 · `MAX_ID_RANGES` 4 096 ·
-memory `features × 48 B` (id + bbox + one grid slot), declared per index and reported by
-`build_index`.
+memory `features × 40 B` (id + bbox) **plus 4 B per grid-bucket entry**, with per-feature cell
+coverage capped at `MAX_CELLS_PER_FEATURE` 1 024 so the buckets cannot grow without limit.
+Reported per index by `build_index`.
+
+*(Corrected in review: the first figure counted one grid slot per feature and ignored the buckets
+entirely. A feature spanning the extent occupies up to 256×256 cells — one national boundary in a
+parcel file does exactly that — so the bound understated real occupancy by orders of magnitude, and
+the wrong figure had already been propagated into the composed process bound.)*
 
 **Not persisted, deliberately.** Writing it to disk is the trigger `kernel/README.md` names for
 `docs/11`'s ResourceRef model and ADR-005's grades; that is its own decision, not a side effect of a

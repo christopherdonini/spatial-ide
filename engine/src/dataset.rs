@@ -164,7 +164,7 @@ impl Dataset {
         })?;
 
         let (content_hash, hash_millis) = index::content_hash(self.path(), cancel)?;
-        let key = index::IndexKey::new(content_hash);
+        let key = index::IndexKey::new(content_hash, self.identity().source().source_column());
         let validity = index::ValidityHeuristic::of(self.path());
 
         match INDEX_CACHE.get(self.path(), &key, validity.as_ref()) {
@@ -212,7 +212,7 @@ impl Dataset {
     /// admissible now.
     pub(crate) fn admitted_index(&self) -> Option<std::sync::Arc<index::SpatialIndex>> {
         let hash = INDEX_CACHE.hash_for(self.path())?;
-        let key = index::IndexKey::new(hash);
+        let key = index::IndexKey::new(hash, self.identity().source().source_column());
         INDEX_CACHE.get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref()).ok()
     }
 
@@ -382,11 +382,14 @@ fn admit_identity(
         source,
         IdUniqueness::VerifiedAtOpenFullFile,
         Some(rows),
-        max.map(|m| m as u64),
+        max.and_then(|m| u64::try_from(m).ok()),
     ))
 }
 
-fn run_identity_scan(conn: &Connection, sql: &str) -> Result<(u64, u64, Option<i64>, Option<i64>)> {
+fn run_identity_scan(
+    conn: &Connection,
+    sql: &str,
+) -> Result<(u64, u64, Option<i128>, Option<i128>)> {
     let mut stmt = conn
         .prepare(sql)
         .map_err(|e| EngineError::Query(format!("identity scan prepare: {e}")))?;
@@ -399,9 +402,24 @@ fn run_identity_scan(conn: &Connection, sql: &str) -> Result<(u64, u64, Option<i
         .ok_or_else(|| EngineError::Query("identity scan returned no row".into()))?;
     let count: i64 = row.get(0).map_err(|e| EngineError::Query(format!("count: {e}")))?;
     let distinct: i64 = row.get(1).map_err(|e| EngineError::Query(format!("distinct: {e}")))?;
-    // MIN/MAX are NULL for an empty file, which is not an error — it is zero features.
-    let min: Option<i64> = row.get(2).ok();
-    let max: Option<i64> = row.get(3).ok();
+    // **NULL and "did not convert" are different answers and must not share a branch.**
+    //
+    // `Option<i64>` distinguishes them: MIN/MAX are NULL for an empty file, which is zero features
+    // and not an error. Swallowing the error with `.ok()` instead meant that a UBIGINT column whose
+    // max exceeds `i64::MAX` — precisely the values ADR-016 §7's width contract exists to flag —
+    // read as `None`, so `id_js_exact` was omitted from an envelope that still claimed
+    // `verified-at-open-full-file`. The consumer was told "verified, width unknown" about a file
+    // provably not JS-exact. Unsigned is tried first for that reason.
+    let (min, max) = match (row.get::<_, Option<u64>>(2), row.get::<_, Option<u64>>(3)) {
+        (Ok(lo), Ok(hi)) => (lo.map(|v| v as i128), hi.map(|v| v as i128)),
+        _ => {
+            let lo: Option<i64> =
+                row.get(2).map_err(|e| EngineError::Query(format!("identity min: {e}")))?;
+            let hi: Option<i64> =
+                row.get(3).map_err(|e| EngineError::Query(format!("identity max: {e}")))?;
+            (lo.map(i128::from), hi.map(i128::from))
+        }
+    };
     Ok((count as u64, distinct as u64, min, max))
 }
 
