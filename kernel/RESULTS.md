@@ -186,6 +186,18 @@ No PROJ/PostGIS validation applies to this slice: it performs **no transform** a
 fixture's PROJJSON is a fixture and is not treated as a CRS oracle anywhere (`docs/08`, test-oracle
 separation).
 
+> **Addendum (2026-08-05, after the R8 deadlock fix).** The count above describes the pin, not HEAD.
+> Two commits landed after these measurements: `0116c67` (gate-pass findings) and `2c64cf3` (R8
+> deadlock fix). At `2c64cf3` the workspace suite is **100 passed, 0 failed, 1 ignored** (fixing
+> session, two clean-process runs). The deadlock was a **product regression introduced inside the
+> gate-pass layer itself**: a credit clamp conflated the in-flight window with cumulative grant
+> credit, silently discarding 96 conforming credits — caught by R8
+> (`every_batch_and_a_terminal_frame_are_delivered`), diagnosed from a minidump's thread shape,
+> proven by lone revert. The clamp existed only between those two commits and **never during any
+> measurement**, so every figure above remains attributed to its pin, unchanged. The test was
+> independently defective — an unbounded await that hangs instead of failing — and every blocking
+> wait in the suite now carries a deadline that names its property.
+
 ---
 
 ## Reported loudly: two things this session found
