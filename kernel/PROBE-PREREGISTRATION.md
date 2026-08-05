@@ -178,6 +178,34 @@ page to be able to *skip* `prewarm()`; the page as committed at `87644cb` always
 instrument commit adds a `prewarm=0` URL parameter to the probe page for this purpose. Declared here
 because it is a change to the consumer that is under measurement, not only to the driver around it.
 
+**A6 — 2026-08-05, after the second probe attempt was invalidated. The cause was the instrument's
+own litter.**
+
+The second headless attempt fired the canary invalidator again and the headed cell failed outright
+("browser never reported a debugging endpoint"). The cause was found rather than guessed at: **the
+probe leaked 73 browser profile directories, about 6 GB, into the OS temp directory and filled the
+disk part-way through the run** — free space went from 5.4 GiB at session start to 1.9 GiB, and
+deleting the leaked profiles returned it to 7.9 GiB.
+
+`run-probe.mjs` deleted its throwaway profile with a single `rmSync` after a 500 ms sleep and
+documented the cleanup as "best-effort". **At n = 1 per compositor path that was true and harmless.
+At the sample count a preregistered measurement needs, it is neither**: 63 trials filled the volume,
+and every timing taken after that point describes a thrashing machine. An instrument corrupted the
+measurement it exists to enable, and the corruption arrived as "the machine drifted".
+
+Corrections, all instrument defects and none a threshold change:
+
+- `run-probe.mjs` retries the profile removal with backoff, checks it actually went, and **prints
+  and records a leak** when it did not.
+- The driver **sweeps leftover profiles before and after each run**, records free disk at both ends,
+  and **refuses to start below 3 GiB of headroom** — a run that fills the disk part-way cannot say
+  which of its trials that affected.
+- The sweep happens *before* the end-of-run canary, so disk pressure the instrument itself created
+  cannot be read as the machine drifting.
+
+Attempts 1 and 2 of the probe are both reported. Neither is deleted, and no figure from either is
+promoted to a result.
+
 **A5 — 2026-08-05, after the first headless probe attempt was invalidated on declared grounds.**
 
 The first headless probe attempt produced **21 admitted trials with 0 dropped** and was then

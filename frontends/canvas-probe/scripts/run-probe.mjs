@@ -190,12 +190,36 @@ try {
 } catch {
   child.kill();
 }
-await sleep(500);
-try {
-  rmSync(profile, { recursive: true, force: true });
-} catch {
-  /* the browser may still hold a lock; the profile is in the OS temp directory either way, and the
-     README records that this cleanup is best-effort rather than pretending otherwise */
+/**
+ * **Delete the throwaway profile, and report it if that fails.**
+ *
+ * This used to be one `rmSync` after a 500 ms sleep, with a comment saying the cleanup was
+ * best-effort. At n = 1 page load per compositor path a leaked profile was invisible. At the sample
+ * count a preregistered measurement needs it is not: a run of 63 trials left **73 profile
+ * directories and about 6 GB** in the OS temp directory, filled the disk mid-measurement, and
+ * degraded every timing taken after that — including the canary that then invalidated the run. A
+ * cleanup that fails silently is how an instrument corrupts the thing it was built to measure.
+ *
+ * The fix is to wait for the process to actually be gone (a lock is held until it is) and retry,
+ * then say so in the artifact when it still could not be removed.
+ */
+let profileRemoved = false;
+let profileError = null;
+for (const wait of [400, 800, 1500, 3000]) {
+  await sleep(wait);
+  try {
+    rmSync(profile, { recursive: true, force: true });
+    profileRemoved = !existsSync(profile);
+    if (profileRemoved) break;
+  } catch (e) {
+    profileError = e instanceof Error ? e.message : String(e);
+  }
+}
+if (!profileRemoved) {
+  console.error(
+    `LEAKED browser profile ${profile}${profileError ? ` (${profileError})` : ''} — ` +
+      'this fills the disk over a multi-trial run and silently degrades every later timing',
+  );
 }
 
 if (!results) {
@@ -225,6 +249,7 @@ const artifact = {
     'within-session only — the machine drifts between sessions asymmetrically (bake-off README §21 Q1 / §22.1)',
   throughput_claim: 'none; no figure here is a transport throughput result',
   browser: { userAgent, headless: !flag('--headed') },
+  profile_removed: profileRemoved,
   note: flag('--headed')
     ? 'windowed run'
     : 'headless run — the compositor and GPU path differ from a windowed session, so pixel timings are indicative only',

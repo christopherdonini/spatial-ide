@@ -42,8 +42,9 @@
  *     --trials 7 [--headed] [--no-prewarm] [--pin target/slice-evidence/tree-pin-before.json]
  */
 
-import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { spawn, execFileSync } from 'node:child_process';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
 const args = process.argv.slice(2);
@@ -137,6 +138,41 @@ async function canaryPoint(label) {
   return { label, raw_ms: raw, min_ms: min };
 }
 
+/**
+ * Free bytes on the volume, and a sweep of the browser profiles the per-trial driver failed to
+ * remove.
+ *
+ * Both exist because of the same incident: a 63-trial run leaked 73 profile directories and about
+ * 6 GB, filled the disk *during* the measurement, and left every later timing describing a machine
+ * that was thrashing. **Free space is therefore recorded at the start and the end of every run, and
+ * a run that starts without headroom refuses rather than producing numbers nobody can attribute.**
+ */
+function freeBytes() {
+  try {
+    return Number(
+      execFileSync('powershell', ['-NoProfile', '-Command', '(Get-PSDrive C).Free'], {
+        encoding: 'utf8',
+      }).trim(),
+    );
+  } catch {
+    return null;
+  }
+}
+function sweepLeakedProfiles() {
+  let removed = 0;
+  let resisted = 0;
+  for (const e of readdirSync(tmpdir(), { withFileTypes: true })) {
+    if (!e.isDirectory() || !e.name.startsWith('canvas-probe-')) continue;
+    try {
+      rmSync(join(tmpdir(), e.name), { recursive: true, force: true });
+      removed += 1;
+    } catch {
+      resisted += 1;
+    }
+  }
+  return { removed, resisted };
+}
+
 /** Nearest rank over a sorted copy — the same sort-and-index method every earlier figure used. */
 function pct(values, p) {
   if (!values.length) return null;
@@ -173,6 +209,24 @@ async function pinCompare(when) {
 }
 
 // ---------------------------------------------------------------------------------------------
+
+/**
+ * Declared headroom. Each trial's browser profile is worth roughly 100 MB while it is alive, and a
+ * run that begins near the edge finishes on a full disk with no way to tell which trials that
+ * affected. Refusing is the only honest option: the numbers a thrashing machine produces look like
+ * measurements.
+ */
+const MIN_FREE_BYTES = 3 * 1024 * 1024 * 1024;
+const freeAtStart = freeBytes();
+const sweptBefore = sweepLeakedProfiles();
+if (freeAtStart !== null && freeAtStart < MIN_FREE_BYTES) {
+  console.error(
+    `refusing to run: ${(freeAtStart / 2 ** 30).toFixed(2)} GiB free, below the declared ` +
+      `${(MIN_FREE_BYTES / 2 ** 30).toFixed(0)} GiB headroom. A run that fills the disk part-way ` +
+      'degrades every timing after that point and cannot say which ones.',
+  );
+  process.exit(2);
+}
 
 const canaryStart = await canaryPoint('start');
 const pinBefore = await pinCompare('before the trials');
@@ -409,6 +463,16 @@ sampler.kill();
 host.kill();
 await new Promise((r) => setTimeout(r, 400));
 
+// Sweep before the end-of-run canary: a leaked profile is disk pressure, and disk pressure is
+// exactly what the canary would otherwise mistake for the machine drifting.
+const sweptAfter = sweepLeakedProfiles();
+const freeAtEnd = freeBytes();
+if (sweptAfter.removed || sweptAfter.resisted) {
+  console.error(
+    `swept ${sweptAfter.removed} leaked browser profile(s), ${sweptAfter.resisted} resisted removal`,
+  );
+}
+
 const canaryEnd = await canaryPoint('end');
 await new Promise((r) => setTimeout(r, 20_000));
 const canarySettled = await canaryPoint('settled — after 20 s idle');
@@ -470,6 +534,15 @@ const artifact = {
           : 'the session held: spread across the four minima is within the declared 10 %',
   },
   tree_pin: { before: pinBefore, after: pinAfter },
+  disk: {
+    free_bytes_at_start: freeAtStart,
+    free_bytes_at_end: freeAtEnd,
+    declared_minimum_headroom_bytes: MIN_FREE_BYTES,
+    leaked_profiles_swept_before: sweptBefore,
+    leaked_profiles_swept_after: sweptAfter,
+    why_this_is_recorded:
+      'a 63-trial run once leaked 73 browser profile directories and about 6 GB, filled the disk mid-measurement, and degraded every timing taken after that — including the canary that then invalidated the run',
+  },
   baseline_before_any_stream: baseline,
   peak_during_probe: peak,
   probe_wall_ms: Date.now() - probeStartedAt,
