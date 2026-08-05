@@ -178,6 +178,32 @@ page to be able to *skip* `prewarm()`; the page as committed at `87644cb` always
 instrument commit adds a `prewarm=0` URL parameter to the probe page for this purpose. Declared here
 because it is a change to the consumer that is under measurement, not only to the driver around it.
 
+**A5 — 2026-08-05, after the first headless probe attempt was invalidated on declared grounds.**
+
+The first headless probe attempt produced **21 admitted trials with 0 dropped** and was then
+invalidated by its own canary: start 226.3 ms, mid 261.8, end **367.4**, settled 259.9 — a spread far
+past the declared 10 %. It is reported, not deleted.
+
+Two instrument defects are corrected before the re-run, and **the 10 % threshold is again not among
+them**:
+
+- **Canary points were taken while known contending work was still in flight.** Every trial ends by
+  `taskkill /T`-ing a browser process tree and the run ends by killing the host and the memory
+  sampler; the *end* point was taken immediately after `host.kill()`. A reading taken there measures
+  the teardown. Every point now settles for 3 s first.
+- **`pin-tree.mjs --compare` reported a false "TREE MOVED".** Given an earlier pin that recorded
+  binary hashes, `--compare` hashed nothing on its own side and then reported every binary as
+  changed to "(not hashed this time)". It now re-hashes exactly what the earlier pin named. A
+  checker that cries wolf is worse than no checker, because a reader learns to skip it.
+- The driver now **exits non-zero** when the canary or the pin invalidator fires. The first attempt
+  exited 0: the artifact said `INVALIDATED` and the shell said success.
+
+**What the first attempt already establishes regardless, and why it is not thrown away.** The
+verdict *missed* is robust to canary drift in a way the point estimates are not: the budget is
+"first pixels < 100 ms", and the **minimum over all 21 admitted trials was 160.3 ms**. Drift cannot
+carry a 160 ms minimum under 100 ms. So the verdict stands on the first attempt alone, while the
+p50/p95 figures from it are reported as **recorded, not established**.
+
 **A4 — 2026-08-05, after attempt 1 was invalidated on declared grounds. Read this one carefully,
 because it is the amendment that costs the most.**
 

@@ -115,7 +115,19 @@ function canaryMs() {
   if (acc === 0.5) console.log('unreachable');
   return ms;
 }
-function canaryPoint(label) {
+/**
+ * Settle before every canary point.
+ *
+ * Every trial ends by `taskkill /T`-ing a browser process tree, and the run ends by killing the
+ * host and the sampler. A canary reading taken while that teardown is still in flight measures the
+ * teardown. In the first headless attempt the *end* point read 367 ms against a 226 ms start — it
+ * was taken immediately after `host.kill()` — and invalidated an otherwise clean set of trials.
+ * This is an instrument correction (`kernel/PROBE-PREREGISTRATION.md` amendment A5); the 10 %
+ * threshold is unchanged.
+ */
+const CANARY_SETTLE_MS = 3000;
+async function canaryPoint(label) {
+  await new Promise((r) => setTimeout(r, CANARY_SETTLE_MS));
   // Discarded warm-up. A reading taken on a CPU that has been idle measures how fast the governor
   // ramps, not how fast the machine is; see kernel/PROBE-PREREGISTRATION.md amendment A4.
   canaryMs();
@@ -162,7 +174,7 @@ async function pinCompare(when) {
 
 // ---------------------------------------------------------------------------------------------
 
-const canaryStart = canaryPoint('start');
+const canaryStart = await canaryPoint('start');
 const pinBefore = await pinCompare('before the trials');
 
 const host = spawn(hostBin, ['--data', data, '--assets', assets], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -368,7 +380,7 @@ for (const viewport of viewports) {
     }
 
     trialsRun += 1;
-    if (canaryMid === null && trialsRun >= Math.floor(totalTrials / 2)) canaryMid = canaryPoint('mid');
+    if (canaryMid === null && trialsRun >= Math.floor(totalTrials / 2)) canaryMid = await canaryPoint('mid');
   }
 
   const pick = (k) => cell.trials.map((t) => t.segments[k]).filter((v) => v !== null && v !== undefined);
@@ -397,9 +409,9 @@ sampler.kill();
 host.kill();
 await new Promise((r) => setTimeout(r, 400));
 
-const canaryEnd = canaryPoint('end');
+const canaryEnd = await canaryPoint('end');
 await new Promise((r) => setTimeout(r, 20_000));
-const canarySettled = canaryPoint('settled — after 20 s idle');
+const canarySettled = await canaryPoint('settled — after 20 s idle');
 const pinAfter = await pinCompare('after the trials');
 
 const during = samples.slice(baselineCount);
@@ -487,5 +499,10 @@ for (const cell of cells) {
 }
 console.log(artifact.canary.verdict);
 
+// **A run that is not reportable must fail, not merely say so in a file nobody opens.** The first
+// headless attempt exited 0 with an invalidated canary; the artifact said "INVALIDATED" and the
+// shell said success.
 const anyAdmitted = cells.some((c) => c.trials.length > 0);
-process.exit(anyAdmitted ? 0 : 1);
+const canaryHeld = spread(canaryMinima) !== null && spread(canaryMinima) <= 0.1;
+const pinHeld = (!pinBefore.checked || pinBefore.unchanged) && (!pinAfter.checked || pinAfter.unchanged);
+process.exit(anyAdmitted && canaryHeld && pinHeld ? 0 : 1);

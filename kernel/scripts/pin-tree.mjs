@@ -126,6 +126,17 @@ const pin = {
 const compareIdx = process.argv.indexOf('--compare');
 if (compareIdx >= 0) {
   const other = JSON.parse(readFileSync(process.argv[compareIdx + 1], 'utf8'));
+  // **A comparison must re-measure what the earlier pin measured.** Without this, `--compare`
+  // without `--binaries` hashed nothing and then reported every recorded binary as changed to
+  // "(not hashed this time)" — a false alarm that is worse than no check, because a reader who has
+  // seen the checker cry wolf stops reading it. Re-hash exactly what the earlier pin named.
+  for (const rel of Object.keys(other.binaries ?? {})) {
+    if (binaries[rel] !== undefined) continue;
+    const abs = join(repoRoot, rel);
+    binaries[rel] = existsSync(abs)
+      ? createHash('sha256').update(readFileSync(abs)).digest('hex')
+      : '(absent)';
+  }
   const moved = [];
   const keys = new Set([...Object.keys(other.files), ...Object.keys(files)]);
   for (const k of keys) {
