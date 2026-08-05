@@ -12,7 +12,7 @@ never every module built in parallel to 20 %.
 | | |
 |---|---|
 | **Reads** | GeoParquet (WKB geometry, GeoParquet 1.1 metadata) through **DuckDB** |
-| **Filters** | SQL over the covering `bbox` columns — a **linear scan**, not an index |
+| **Filters** | SQL over the covering `bbox` columns, **narrowed by a revision-keyed in-memory index** when one is admissible |
 | **Emits** | GeoArrow polygons, `List<rings: List<vertices: FixedSizeList<xy: double>[2]>>`, as Arrow IPC |
 | **Tags** | every batch envelope with frame, CRS, CRS source and axis order (ADR-010 rule 1) |
 | **Cancels** | through DuckDB's own interrupt, not just a flag between batches |
@@ -94,6 +94,51 @@ this slice does not make.
 landing on an almost-full batch pushed the total past the ceiling and killed the stream — the batch
 size was a function of its last feature, and `docs/08`'s Polygons class at 50–200 vertices per
 feature could never produce the case.)*
+
+## Spatial index — keying, ceilings, and what it is not
+
+`docs/07`'s open gate, closed for this slice's shape. An in-memory grid over the covering-bbox
+columns, built by one cancellable scan.
+
+**Authority, because the obvious citation is the wrong one.** This is derived state, but *not* by
+ADR-010 rule 5 — rule 5 binds "every **renderer** cache", and ADR-013 §7's test (delete this index
+and rule 5 still says what it says) makes citing it here an enlargement of an Accepted rule by
+analogy. What binds is **ADR-006** (an index build is a pure transformation: input snapshot +
+parameters → derived output, no transaction boundary, no undo), **ADR-007** (it owns no mutation, so
+it cannot gate one), `docs/02`/`docs/05`'s content-addressed DAG intermediates, and `docs/01`
+principle 8 for staleness.
+
+**The key is four things, and a mismatch on any one is a different derived object:**
+
+| Component | Why it is in the key |
+|---|---|
+| **content hash** of the source | `docs/05`'s grid rule one level up — "a grid substituted under the same name is a different transformation". A filename is not an identity |
+| **builder version** | Two indexes over the same bytes from different code are different objects |
+| **answered predicate** — `covering-bbox-intersects` | So a bbox index can **never** be silently promoted to answer true geometry intersection, which would be a wrong-but-plausible result set |
+| **build parameters** (grid resolution) | Two grids at different resolutions answer at different costs and are not interchangeable |
+
+**path + mtime + size is a validity heuristic, never an identity**, and it **fails closed**: anything
+it cannot confirm — an unreadable file, a filesystem with no mtime — discards the index rather than
+serving it. Treating unknown as unchanged is the silent staleness principle 8 forbids.
+
+**The index narrows; it never decides.** Candidate ids are added *alongside* the bbox predicate, not
+instead of it, so an indexed result set is provably identical to the unindexed one and a wrong index
+costs time rather than correctness. `an_indexed_query_returns_exactly_what_the_scan_returns` pins
+that. When candidates are too scattered to express as ranges the scan runs instead, and the stream
+reports `IndexTooFragmented` rather than `ScanOnly` — "there was no index" and "the index could not
+help" are different facts, and a timing that cannot tell them apart cannot be attributed.
+
+**Declared ceilings:** `MAX_INDEXED_FEATURES` 20 M · `GRID_AXIS_CELLS` 256 · `MAX_ID_RANGES` 4 096 ·
+memory `features × 48 B` (id + bbox + one grid slot), declared per index and reported by
+`build_index`.
+
+**Not persisted, deliberately.** Writing it to disk is the trigger `kernel/README.md` names for
+`docs/11`'s ResourceRef model and ADR-005's grades; that is its own decision, not a side effect of a
+latency fix.
+
+**Build cost and query benefit are separate quantities** and `IndexReport` keeps them apart —
+content-hash time, build time, rows scanned, features indexed. Nothing here nets them into "pays for
+itself after N queries".
 
 ## Admission: what this module refuses to open
 

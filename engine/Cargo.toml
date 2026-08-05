@@ -16,6 +16,9 @@ arrow = { workspace = true }
 # builds in the parquet reader, without which `read_parquet` does not exist.
 duckdb = { version = "1.10505.0", features = ["bundled", "parquet"] }
 serde_json = "1"
+# Content-addressed identity for derived artifacts (docs/02, docs/05): a spatial index is keyed by
+# the content hash of what it was built from, never by a filename.
+sha2 = "0.10"
 parquet = { version = "58", optional = true, default-features = false, features = ["arrow", "snap"] }
 
 [dev-dependencies]

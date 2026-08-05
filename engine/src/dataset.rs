@@ -14,8 +14,27 @@ use crate::cancel::CancelToken;
 use crate::crs::{self, CrsAssertion, DatasetCrs};
 use crate::envelope::{BatchEnvelope, ID_COLUMN};
 use crate::identity::{self, DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
+use crate::index;
 use crate::error::{EngineError, Result};
 use crate::geoparquet::{CoveringBbox, GeoMeta};
+
+/// Process-wide, in-memory index cache. Not persisted — persisting is the trigger
+/// `kernel/README.md` names for `docs/11`'s ResourceRef model and ADR-005's grades, and that needs
+/// its own decision rather than arriving as a side effect of a latency fix.
+static INDEX_CACHE: std::sync::LazyLock<index::IndexCache> =
+    std::sync::LazyLock::new(index::IndexCache::default);
+
+/// What one `build_index` call cost and produced. Build cost and query benefit stay separate.
+#[derive(Clone, Debug)]
+pub struct IndexReport {
+    /// `None` when a cached index was reused; otherwise why it could not be.
+    pub miss: Option<index::IndexMiss>,
+    pub content_hash_millis: f64,
+    pub build_millis: f64,
+    pub indexed_features: usize,
+    pub declared_memory_bytes: usize,
+    pub scanned_rows: u64,
+}
 
 /// Everything the engine established about a file at open time.
 pub struct Dataset {
@@ -125,6 +144,76 @@ impl Dataset {
 
     pub fn identity(&self) -> &DatasetIdentity {
         self.envelope.identity()
+    }
+
+    /// Build (or reuse) this dataset's spatial index — `docs/07`'s open gate.
+    ///
+    /// **Build cost and query benefit are different quantities and are returned separately.** The
+    /// report carries the content-hash cost, the index build cost and the row count as their own
+    /// numbers; nothing here nets them into "pays for itself after N queries", which would be a
+    /// claim neither figure supports on its own.
+    ///
+    /// The index is per-process and in-memory (`index::IndexCache`). A cached index is *found* by
+    /// path and *admitted* by content hash, builder version, answered predicate, build parameters
+    /// and a fail-closed validity heuristic — so a stale index cannot serve a newer revision; it is
+    /// found, rejected, and the reason is in the report.
+    pub fn build_index(&self, cancel: &CancelToken) -> Result<IndexReport> {
+        let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
+            detail: "the file's `geo` metadata declares no covering.bbox, so there is nothing to                      index in this slice"
+                .into(),
+        })?;
+
+        let (content_hash, hash_millis) = index::content_hash(self.path(), cancel)?;
+        let key = index::IndexKey::new(content_hash);
+        let validity = index::ValidityHeuristic::of(self.path());
+
+        match INDEX_CACHE.get(self.path(), &key, validity.as_ref()) {
+            Ok(existing) => Ok(IndexReport {
+                miss: None,
+                content_hash_millis: hash_millis,
+                build_millis: 0.0,
+                indexed_features: existing.feature_count(),
+                declared_memory_bytes: existing.declared_memory_bound(),
+                scanned_rows: existing.scanned_rows(),
+            }),
+            Err(miss) => {
+                let path_str = self
+                    .path()
+                    .to_str()
+                    .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?;
+                let conn = open_connection()?;
+                let built = index::SpatialIndex::build(
+                    &conn,
+                    path_str,
+                    covering,
+                    self.identity().source().source_column(),
+                    key,
+                    validity,
+                    cancel,
+                )?;
+                let report = IndexReport {
+                    miss: Some(miss),
+                    content_hash_millis: hash_millis,
+                    build_millis: built.build_millis(),
+                    indexed_features: built.feature_count(),
+                    declared_memory_bytes: built.declared_memory_bound(),
+                    scanned_rows: built.scanned_rows(),
+                };
+                INDEX_CACHE.insert(self.path().to_path_buf(), std::sync::Arc::new(built));
+                Ok(report)
+            }
+        }
+    }
+
+    /// The index that may serve this dataset right now, if any.
+    ///
+    /// Re-checks admission on every call rather than caching the answer: the file can change under
+    /// a long-lived process, and an index that was admissible a minute ago is not thereby
+    /// admissible now.
+    pub(crate) fn admitted_index(&self) -> Option<std::sync::Arc<index::SpatialIndex>> {
+        let hash = INDEX_CACHE.hash_for(self.path())?;
+        let key = index::IndexKey::new(hash);
+        INDEX_CACHE.get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref()).ok()
     }
 
     pub fn path(&self) -> &Path {

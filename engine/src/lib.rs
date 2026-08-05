@@ -53,6 +53,7 @@
 pub mod cancel;
 pub mod crs;
 pub mod identity;
+pub mod index;
 pub mod dataset;
 pub mod envelope;
 pub mod error;
@@ -69,6 +70,7 @@ pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
 pub use stream::{
+    FilterPlan,
     BatchInfo, BatchStream, Bbox, StreamStats, ViewportQuery, MAX_BATCH_BYTES,
     MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, TARGET_BATCH_BYTES,
 };

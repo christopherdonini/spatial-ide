@@ -10,9 +10,12 @@
 //!    consumer that stops reading stops the producer (H3), and nothing is generated ahead of need.
 //! 3. Cancellation reaches DuckDB itself (`cancel.rs`), not just the loop around it.
 //!
-//! **No spatial index.** The viewport filter is a linear scan over the GeoParquet 1.1 covering-bbox
-//! columns. Server-side spatial indexing is `docs/07`'s other open gate and is deliberately
-//! untouched — this filter is honest about being a scan.
+//! **The spatial index narrows; it never decides.** `docs/07`'s open gate is closed for this
+//! slice's shape by `index.rs`: an in-memory, revision-keyed index over the GeoParquet 1.1
+//! covering-bbox columns. When one is admissible its candidate ids are added *alongside* the bbox
+//! predicate, never instead of it, so the result set is provably identical to the unindexed one and
+//! a wrong index costs time rather than correctness. Without an admissible index the filter is the
+//! same linear scan it always was, and says so.
 
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
@@ -89,6 +92,21 @@ pub struct BatchInfo {
     pub payload_bytes: usize,
 }
 
+/// How the viewport predicate was built for one stream — reported, never inferred from timings.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FilterPlan {
+    /// No viewport: the whole file.
+    WholeFile,
+    /// An admissible index supplied candidate ids, narrowing the scan.
+    IndexNarrowed { ranges: usize, candidates: usize },
+    /// No admissible index; the covering-bbox scan alone.
+    ScanOnly,
+    /// An index existed and produced too many disjoint ranges to express, so the scan ran instead.
+    /// Distinct from `ScanOnly` because "there was no index" and "the index could not help" are
+    /// different facts, and a reader deserves to know which one a timing describes.
+    IndexTooFragmented { candidates: usize },
+}
+
 /// Counters the producer keeps about itself. H2 and H3 rest on these rather than on OS readings.
 #[derive(Default)]
 pub struct StreamStats {
@@ -121,6 +139,7 @@ pub struct BatchStream {
     stats: Arc<StreamStats>,
     finished: bool,
     envelope: BatchEnvelope,
+    filter_plan: FilterPlan,
 }
 
 impl BatchStream {
@@ -167,6 +186,15 @@ impl BatchStream {
 
     pub fn envelope(&self) -> &BatchEnvelope {
         &self.envelope
+    }
+
+    /// How this stream's viewport predicate was built.
+    ///
+    /// Reported rather than inferred: "the index narrowed this" and "there was no index" and "the
+    /// index could not help" produce similar timings and are different facts, and a measurement
+    /// that cannot tell them apart cannot attribute what it measured.
+    pub fn filter_plan(&self) -> FilterPlan {
+        self.filter_plan
     }
 }
 
@@ -218,7 +246,7 @@ impl Dataset {
             }
         }
 
-        let sql = self.build_sql(q)?;
+        let (sql, filter_plan) = self.build_sql(q)?;
         let path = self
             .path()
             .to_str()
@@ -262,10 +290,11 @@ impl Dataset {
             })
             .map_err(|e| EngineError::Source(format!("spawn producer thread: {e}")))?;
 
-        Ok(BatchStream { rx, cancel, stats, finished: false, envelope })
+        Ok(BatchStream { rx, cancel, stats, finished: false, envelope, filter_plan })
     }
 
-    fn build_sql(&self, q: &ViewportQuery) -> Result<String> {
+    fn build_sql(&self, q: &ViewportQuery) -> Result<(String, FilterPlan)> {
+        let mut plan = FilterPlan::WholeFile;
         let geom = quote_ident(self.geometry_column());
         // **The identity's source column, aliased to the engine's identity name** (ADR-016 §3).
         // A declared mapping changes which column is read and nothing else: everything downstream
@@ -276,10 +305,76 @@ impl Dataset {
         let id = quote_ident(ID_COLUMN);
         let mut sql = format!("SELECT {source_column} AS {id}, {geom} FROM read_parquet(?)");
 
-        if q.bbox.is_some() {
+        if let Some(view) = q.bbox.as_ref() {
             let c = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
                 detail: "the file's `geo` metadata declares no covering.bbox".into(),
             })?;
+
+            // **The index narrows; it never decides.** When an admissible index exists, its
+            // candidate ids are added as a range predicate *alongside* the bbox comparison rather
+            // than instead of it. Two reasons, both about not trusting derived state further than
+            // it has been shown to be right: the index answers `covering-bbox-intersects`, which is
+            // exactly what the bbox predicate answers, so keeping both makes the result set
+            // provably identical to the unindexed one; and a wrong index then costs time, not
+            // correctness. Removing the predicate would make the index the system of record, which
+            // ADR-006 says a pure transformation's cached output is not.
+            if let Some(idx) = self.admitted_index() {
+                let candidates = idx.candidates(view);
+                match crate::index::compress_to_ranges(&candidates, crate::index::MAX_ID_RANGES) {
+                    Some(ranges) if ranges.is_empty() => {
+                        // The index is certain nothing matches. `1=0` is the honest encoding of
+                        // that: DuckDB still opens the file and returns no rows.
+                        // The bbox predicate is kept even though `1=0` already decides the
+                        // result: the statement's parameter arity must not depend on what the
+                        // index happened to find, or the binding below silently goes wrong on
+                        // exactly the queries that return nothing.
+                        sql.push_str(&format!(
+                            " WHERE 1=0 AND {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
+                            xmin = c.xmin.to_sql(),
+                            xmax = c.xmax.to_sql(),
+                            ymin = c.ymin.to_sql(),
+                            ymax = c.ymax.to_sql(),
+                        ));
+                        return Ok((sql, FilterPlan::IndexNarrowed { ranges: 0, candidates: 0 }));
+                    }
+                    Some(ranges) => {
+                        let id = quote_ident(ID_COLUMN);
+                        let preds: Vec<String> = ranges
+                            .iter()
+                            .map(|(lo, hi)| {
+                                if lo == hi {
+                                    format!("{id} = {lo}")
+                                } else {
+                                    format!("{id} BETWEEN {lo} AND {hi}")
+                                }
+                            })
+                            .collect();
+                        plan = FilterPlan::IndexNarrowed {
+                            ranges: ranges.len(),
+                            candidates: candidates.len(),
+                        };
+                        sql.push_str(&format!(" WHERE ({})", preds.join(" OR ")));
+                        sql.push_str(&format!(
+                            " AND {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
+                            xmin = c.xmin.to_sql(),
+                            xmax = c.xmax.to_sql(),
+                            ymin = c.ymin.to_sql(),
+                            ymax = c.ymax.to_sql(),
+                        ));
+                        if let Some(n) = q.limit {
+                            sql.push_str(&format!(" LIMIT {n}"));
+                        }
+                        return Ok((sql, plan));
+                    }
+                    // Too many disjoint ranges to express. Falling back is correct — and it is
+                    // *recorded*, because an index that silently stopped being used would surface
+                    // only as a performance mystery (principle 8: signalled, never absorbed).
+                    None => plan = FilterPlan::IndexTooFragmented { candidates: candidates.len() },
+                }
+            }
+            if plan == FilterPlan::WholeFile {
+                plan = FilterPlan::ScanOnly;
+            }
             // Intersection, not containment: a feature whose bbox overlaps the viewport is in.
             sql.push_str(&format!(
                 " WHERE {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
@@ -294,7 +389,7 @@ impl Dataset {
         if let Some(n) = q.limit {
             sql.push_str(&format!(" LIMIT {n}"));
         }
-        Ok(sql)
+        Ok((sql, plan))
     }
 }
 

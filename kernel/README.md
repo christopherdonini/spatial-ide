@@ -48,11 +48,14 @@ crate's bound as the process's bound will be wrong:
 |---|---|
 | `engine` | `(MAX_QUEUED_BATCHES + 1) × MAX_BATCH_BYTES` = (2 + 1) × 4 MiB = **12 MiB** |
 | `protocol/data-plane` | `(MAX_INFLIGHT_BATCHES + 1) × MAX_FRAME_BYTES` = (4 + 1) × 16 MiB = **80 MiB** |
-| **composed, per stream** | **92 MiB** |
+| `engine` spatial index, when built | `features × 48 B` — **not per stream**: one index is shared by every stream over that dataset, and it is declared per index by `IndexReport` |
+| **composed, per stream** | **92 MiB**, plus the shared index |
 | × `MAX_CONCURRENT_STREAMS` (4) | **368 MiB** |
 
 **Outside all of it, and not claimed to be inside:** DuckDB's own streaming buffer, and the OS and
-webview allocations the process does not control. The producer-resident *counter* sees only the
+webview allocations the process does not control. The spatial index is *inside* the process and
+declares its own bound, but it is **per dataset, not per stream**, so multiplying it by
+`MAX_CONCURRENT_STREAMS` would overstate it. The producer-resident *counter* sees only the
 data-plane window — that is what it is instrumented to see — so the counter and these bounds answer
 different questions, and `RESULTS.md` says which.
 
