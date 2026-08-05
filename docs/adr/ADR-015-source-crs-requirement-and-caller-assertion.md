@@ -1,9 +1,10 @@
 # ADR-015 — Source CRS Requirement and Caller Assertion
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. The engine's first
-cut **implements** this policy today because an engine that opens a file must do *something* at
-open, and refusal is the only option that cannot be silently wrong; if this ADR is rejected, that
-implementation changes.
+**Status:** Accepted — 2026-08-05, after the stable-identity content (§8) was split into ADR-016 and
+the axis-order conflict wording was resolved, per the human's stated condition. Architect-blockable
+from acceptance. The engine's first cut implemented this policy ahead of acceptance because an
+engine that opens a file must do *something* at open, and refusal is the only option that cannot be
+silently wrong.
 **Resolves:** the question **ADR-013** explicitly hands over — *"The asserted-CRS path. `asserted(by,
 at)` appears in the provenance type because a user-supplied CRS is not a file fact, but the*
 ***admission policy*** *for undeclared or mismatched source CRS belongs with the engine's first cut
