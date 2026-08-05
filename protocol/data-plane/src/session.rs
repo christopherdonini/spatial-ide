@@ -16,6 +16,25 @@
 //! persists across sessions here, so an in-memory ephemeral token is strictly stronger than a stored
 //! one — and **peer authentication on loopback** (ADR-012 open risk 8): the token authenticates a
 //! session, not a process. This slice also has **no capability-grant model** and claims none.
+//!
+//! ## The session is per-process, and the keychain deferral depends on that
+//!
+//! Stated explicitly because pre-warmed connections make it easy to assume otherwise. A pre-warmed
+//! spare is a **connection** held open ahead of a query; it is **not** a session that outlives the
+//! process. The session — this token — is minted at startup, lives in memory, and dies with the
+//! process. Nothing is resumable and nothing is stored.
+//!
+//! **The keychain deferral above is conditional on exactly that**, and the condition is the whole
+//! argument: an ephemeral in-memory secret cannot be stolen from disk, so not storing it is
+//! stronger than storing it well. **The moment a session becomes resumable or is persisted, that
+//! justification is void** and `docs/09`'s keychain storage, an expiry, revocation and
+//! attributability all become live requirements rather than deferred ones. A future change that
+//! makes sessions outlive the process must retire this paragraph, not inherit it.
+//!
+//! What pre-warming *does* change is exposure duration: a token held by an idle authenticated
+//! socket is reachable for as long as that socket is allowed to idle, which is why
+//! `server::START_TIMEOUT` and `server::MAX_IDLE_CONNECTIONS` are declared ceilings rather than
+//! incidental values.
 
 use subtle::ConstantTimeEq;
 

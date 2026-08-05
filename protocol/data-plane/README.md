@@ -109,6 +109,30 @@ so the honest framing is the one this repo already uses for Candidate A: **provi
 reversible, not a decision.** ADR-014 may replace it, and nothing here may be cited as evidence that
 it should not.
 
+## Pre-warmed connections, and the ceilings that keep them bounded
+
+A consumer may open and authenticate a socket **before** a query needs one, so the WebSocket open
+and the credential handshake leave the per-query path. Still **one stream per connection**: this
+holds spares, it does not multiplex.
+
+That boundary is a correctness matter, not taste. The wire format carries no stream id and CANCEL
+has an empty payload, so two live streams on one socket would make a cancel **ambiguous**; fixing
+that means a framing change ADR-012 reserves as its own decision, and an admission unit **ADR-014**
+is reserved for. The slice's real concurrency shape does not need it — a superseded query cancelling
+while its replacement starts is two connections, and a cancel on either is unambiguous.
+
+**Declared ceilings** (rule 6): `MAX_IDLE_CONNECTIONS` 4 · `START_TIMEOUT` 120 s ·
+`CROWDED_START_TIMEOUT` 5 s.
+
+**The idle ceiling bounds loitering, never connecting.** An earlier version gated every connection
+on an idle permit; a test caught what that costs — with the pool full, the next connection, the one
+that actually wanted to stream, was refused before it could send START, so pre-warming starved the
+streams it exists to serve. Every connection is now admitted, and the ceiling decides only how
+patient the producer is with one that has not started anything.
+
+**A spare holds no admission slot**, because the slot is taken after START is read. That is what
+keeps this a latency change rather than an admission-policy change.
+
 ## Security posture (`docs/09`)
 
 Loopback-only bind asserted at startup · ephemeral port · **session token from the OS CSPRNG** ·

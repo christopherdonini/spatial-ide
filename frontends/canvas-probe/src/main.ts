@@ -17,7 +17,7 @@
  * between sessions asymmetrically (README §21 Q1 / §22.1), so only within-session comparisons appear.
  */
 
-import { startStream } from './adapter-ws.js';
+import { prewarm, startStream } from './adapter-ws.js';
 import { decodeBatch, type DecodedBatch } from './geoarrow.js';
 import { drawBatch, drawIncompleteBanner, fitViewport, type Viewport } from './render.js';
 import { UNKNOWN_TOTAL, type Progress, type StreamHandle, type Terminal } from './transport.js';
@@ -233,6 +233,12 @@ async function scenario(): Promise<void> {
     fail('no session credential in the URL fragment');
     return;
   }
+
+  // Open and authenticate a socket before the first query needs one, so the WebSocket open and the
+  // credential handshake leave the per-query path. Still one stream per connection: this holds a
+  // spare, it does not multiplex — the wire format carries no stream id, so two live streams on one
+  // socket would make CANCEL ambiguous.
+  prewarm(TOKEN);
 
   // ---- S1: a single stream, nothing else running. The within-session baseline. --------------
   note('S1: solo stream');

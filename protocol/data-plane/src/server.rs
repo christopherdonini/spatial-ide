@@ -60,7 +60,30 @@ pub const MAX_INFLIGHT_BATCHES: usize = 4;
 /// Largest payload the producer will put in one frame.
 pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 /// How long a connection may sit without starting an operation.
-pub const START_TIMEOUT: Duration = Duration::from_secs(10);
+///
+/// **This bound exists because a connection that never starts one costs a descriptor and a task.**
+/// A *pre-warmed spare* idles by design — that is the point of it, since it moves the socket open
+/// and the credential handshake off the per-query path — so the bound is not removed, it is
+/// declared at the length a spare is allowed to wait and paired with a ceiling on how many spares
+/// may exist (ADR-010 rule 6: declared, not discovered). Removing it silently would have traded a
+/// latency win for an unbounded idle-connection count.
+pub const START_TIMEOUT: Duration = Duration::from_secs(120);
+
+/// How many connections may sit pre-warmed, authenticated, and not yet carrying an operation.
+///
+/// **A spare holds no admission slot.** The slot is taken after START is read and released before
+/// the peer drain, so spares cannot exhaust `MAX_CONCURRENT_STREAMS` — which is what lets this be
+/// a latency change rather than an admission-policy change. Whether concurrent *streams* should be
+/// queued remains the question **ADR-014 is reserved for**, and nothing here touches it: this is a
+/// ceiling on idle sockets, not on streams.
+pub const MAX_IDLE_CONNECTIONS: usize = 4;
+
+/// How long a connection beyond the idle ceiling may wait before starting an operation.
+///
+/// Short, because it is over the declared budget — but non-zero, because a connection arriving at a
+/// crowded moment and starting an operation immediately is exactly the behaviour pre-warming is for
+/// and must not be punished for the pool being full.
+pub const CROWDED_START_TIMEOUT: Duration = Duration::from_secs(5);
 /// How long the producer waits for the consumer to close after its terminal frame.
 ///
 /// The producer never closes first (see `adapter_ws`), so this is the bound on how long a finished
@@ -74,6 +97,7 @@ pub const PEER_DRAIN_TIMEOUT: Duration = Duration::from_secs(30);
 const _: () = assert!(MAX_CONCURRENT_STREAMS >= 1);
 const _: () = assert!(MAX_INFLIGHT_BATCHES >= 1);
 const _: () = assert!(MAX_FRAME_BYTES >= 1024 * 1024);
+const _: () = assert!(MAX_IDLE_CONNECTIONS >= 1);
 
 pub struct DataPlaneConfig {
     pub factory: Arc<dyn SourceFactory>,
@@ -121,6 +145,9 @@ struct AppState {
     session: Session,
     factory: Arc<dyn SourceFactory>,
     admission: Arc<Semaphore>,
+    /// Connections that are authenticated but have not yet started an operation. Counted so the
+    /// declared idle ceiling is enforced rather than merely stated.
+    idle: Arc<Semaphore>,
     registry: Arc<StreamRegistry>,
     json_frames_seen: Arc<AtomicU64>,
     static_dir: Option<PathBuf>,
@@ -171,6 +198,7 @@ pub async fn serve(config: DataPlaneConfig) -> std::io::Result<RunningDataPlane>
         session: session.clone(),
         factory: config.factory,
         admission: Arc::new(Semaphore::new(MAX_CONCURRENT_STREAMS)),
+        idle: Arc::new(Semaphore::new(MAX_IDLE_CONNECTIONS)),
         registry: registry.clone(),
         json_frames_seen: json_frames_seen.clone(),
         static_dir: config.static_dir,
@@ -267,11 +295,27 @@ async fn upgrade(State(st): State<AppState>, headers: HeaderMap, ws: WebSocketUp
 }
 
 async fn handle(st: AppState, mut socket: WebSocket) {
+    // **The idle ceiling bounds how long a connection may *loiter*, never whether it may connect.**
+    //
+    // The first version of this gated every connection on an idle permit, and a test caught what
+    // that costs: with the spare pool full, the next connection — the one that actually wants to
+    // stream — was refused before it could send START. Pre-warming would have starved the streams
+    // it exists to serve. Bounding idle sockets and admitting streams are different jobs and the
+    // ceiling must only do the first.
+    //
+    // So every connection is admitted, and the ceiling decides how patient the producer is with a
+    // connection that has not started anything: a spare within the pool may wait `START_TIMEOUT`;
+    // one beyond it gets `CROWDED_START_TIMEOUT` and is then told why. Idle sockets stay bounded,
+    // and stream capacity is untouched — which is what keeps this a latency change rather than an
+    // admission-policy change (ADR-014's reserved question).
+    let idle_permit = st.idle.clone().try_acquire_owned().ok();
+    let start_budget = if idle_permit.is_some() { START_TIMEOUT } else { CROWDED_START_TIMEOUT };
+
     // **The operation is read before a capacity slot is taken.** Admission is about *streams*, and a
     // connection that never starts one must not hold a slot: with the slot taken first,
     // `MAX_CONCURRENT_STREAMS` idle connections could exhaust the declared ceiling for
     // `START_TIMEOUT` and cause visible refusals of legitimate streams.
-    let request = match tokio::time::timeout(START_TIMEOUT, read_start(&mut socket)).await {
+    let request = match tokio::time::timeout(start_budget, read_start(&mut socket)).await {
         Ok(Ok(Some(r))) => r,
         Ok(Ok(None)) => return, // the peer left before starting anything
         Ok(Err(detail)) => {
@@ -283,16 +327,22 @@ async fn handle(st: AppState, mut socket: WebSocket) {
             return;
         }
         Err(_) => {
-            terminal_and_drain(
-                socket,
-                wire::TERM_TRANSPORT_FAILED,
-                "no operation started",
-                &st.json_frames_seen,
-            )
-            .await;
+            let detail = if idle_permit.is_some() {
+                "no operation started".to_string()
+            } else {
+                format!(
+                    "no operation started, and the declared ceiling                      MAX_IDLE_CONNECTIONS={MAX_IDLE_CONNECTIONS} was already reached, so this                      connection was held for {CROWDED_START_TIMEOUT:?} rather than                      {START_TIMEOUT:?}"
+                )
+            };
+            terminal_and_drain(socket, wire::TERM_TRANSPORT_FAILED, &detail, &st.json_frames_seen)
+                .await;
             return;
         }
     };
+
+    // The connection is no longer idle: it has an operation. The idle slot goes back here, before
+    // the stream's own admission, so a running stream never also occupies spare capacity.
+    drop(idle_permit);
 
     // Admission. Refusal is visible and typed; there is no queue.
     let permit: OwnedSemaphorePermit = match st.admission.clone().try_acquire_owned() {

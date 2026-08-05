@@ -14,6 +14,13 @@ const FORBIDDEN: &[&str] = &[
     // "close code" could never match one and would sit here looking like coverage.
     "socket", "websocket", "http", "url", "header", "fetch", "port", "close", "opcode", "tcp",
     "axum", "tungstenite",
+    // **Connection-lifecycle vocabulary, added with pre-warmed connections.** A *connection* is a
+    // transport concept: the neutral interface knows operations, streams, batches, cancellation,
+    // progress, terminal errors and demand — and nothing about how many sockets carry them or how
+    // long one is held open. Without these entries the pre-warming work could have leaked the
+    // concept upward and the mechanical "swapping the adapter changes one construction site" claim
+    // would have decayed silently, which is the whole reason this scan exists.
+    "connection", "connect", "prewarm", "warm", "reconnect", "spare", "idle", "pool", "keepalive",
 ];
 
 /// Words that name what the interface *is* allowed to talk about, asserted so the scan cannot pass

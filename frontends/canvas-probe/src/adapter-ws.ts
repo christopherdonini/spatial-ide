@@ -26,10 +26,59 @@ export interface ConnectOptions {
   sink: StreamSink;
 }
 
+/**
+ * A socket opened and authenticated ahead of a query, so the open and the credential handshake
+ * leave the per-query path.
+ *
+ * **One stream per connection still.** This holds *spare* sockets; it does not multiplex. That
+ * boundary is deliberate and not a matter of taste: the wire format carries no stream id — CANCEL
+ * has an empty payload — so two live streams on one socket would make a cancel ambiguous, which is
+ * a correctness defect rather than a tuning question. Multiplexing also needs a framing change that
+ * ADR-012 reserves as its own decision, and an admission unit that ADR-014 is reserved for.
+ *
+ * The engine's real concurrency shape does not need multiplexing anyway: a superseded query
+ * cancelling while its replacement starts is two connections, and a cancel on either is
+ * unambiguous.
+ */
+let spare: WebSocket | null = null;
+let spareToken: string | null = null;
+
+/** Open a socket and hold it authenticated until a query needs it. */
+export function prewarm(token: string): void {
+  if (spare && spare.readyState <= WebSocket.OPEN) return;
+  spareToken = token;
+  const s = new WebSocket(`ws://${location.host}/stream`, [SUBPROTOCOL, `tok.${token}`]);
+  s.binaryType = 'arraybuffer';
+  // A spare that dies before use must not be handed out. Clearing on close/error is what keeps
+  // "there is a warm socket" from meaning "there was one, once".
+  const forget = () => {
+    if (spare === s) spare = null;
+  };
+  s.addEventListener('close', forget);
+  s.addEventListener('error', forget);
+  spare = s;
+}
+
+/** Take the warm socket if one is usable, and immediately start warming its replacement. */
+function takeSpare(token: string): WebSocket | null {
+  const s = spare;
+  spare = null;
+  if (!s || s.readyState > WebSocket.OPEN || spareToken !== token) {
+    // A socket in CLOSING/CLOSED, or one authenticated with a different credential, is not a
+    // usable spare. Falling back to a fresh open is always correct — pre-warming is an
+    // optimisation, never a precondition.
+    prewarm(token);
+    return null;
+  }
+  prewarm(token);
+  return s;
+}
+
 export function startStream(opts: ConnectOptions): RunningStream {
   const decoder = new FrameDecoder();
   const url = `ws://${location.host}/stream`;
-  const ws = new WebSocket(url, [SUBPROTOCOL, `tok.${opts.token}`]);
+  const warm = takeSpare(opts.token);
+  const ws = warm ?? new WebSocket(url, [SUBPROTOCOL, `tok.${opts.token}`]);
   ws.binaryType = 'arraybuffer';
 
   let outstanding = 0;
@@ -42,10 +91,17 @@ export function startStream(opts: ConnectOptions): RunningStream {
     }
   };
 
-  ws.addEventListener('open', () => {
+  // A warm socket is already open, so its `open` event fired before this listener existed. Sending
+  // immediately in that case is the whole point of pre-warming; a cold socket still waits.
+  const begin = () => {
     ws.send(startFrame(OPERATION, opts.request));
     grant(CREDIT_WINDOW);
-  });
+  };
+  if (ws.readyState === WebSocket.OPEN) {
+    begin();
+  } else {
+    ws.addEventListener('open', begin);
+  }
 
   ws.addEventListener('message', (ev) => {
     const chunk = new Uint8Array(ev.data as ArrayBuffer);

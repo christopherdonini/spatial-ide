@@ -663,3 +663,42 @@ async fn a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_nam
     c.close(None).await.ok();
     dp.shutdown().await;
 }
+
+#[tokio::test]
+async fn an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own() {
+    // **What makes pre-warming a latency change rather than an admission-policy change.** A spare
+    // is authenticated and idle; it must not consume `MAX_CONCURRENT_STREAMS`, or holding sockets
+    // ready would starve the streams they exist to serve — and choosing how streams share capacity
+    // is the question ADR-014 is reserved for, which this must not decide by accident.
+    let f = factory(4, 4096, 0);
+    let dp = start(f.clone()).await;
+
+    // Fill the idle ceiling with connections that never start anything.
+    let mut spares = Vec::new();
+    for _ in 0..spatial_data_plane::server::MAX_IDLE_CONNECTIONS {
+        spares.push(connect(&dp).await.expect("spare connects"));
+    }
+
+    // Streams are entirely unaffected: a full spare pool leaves stream capacity untouched.
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    grant(&mut c, 10).await;
+    let r = drain(&mut c).await;
+    assert_eq!(r.batches, 4, "idle spares must not consume stream capacity");
+    assert_eq!(r.terminal.unwrap().0, wire::TERM_COMPLETED);
+
+    // …and a connection *beyond* the ceiling that starts an operation immediately is served
+    // normally. The ceiling bounds loitering, not connecting: refusing here would have starved the
+    // streams pre-warming exists to serve, which is what the first version of this did.
+    let mut over = connect(&dp).await.expect("the socket opens");
+    send_start(&mut over).await;
+    grant(&mut over, 10).await;
+    let served = drain(&mut over).await;
+    assert_eq!(served.batches, 4, "a crowded-pool connection that starts work is still served");
+
+    for mut s in spares {
+        s.close(None).await.ok();
+    }
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
