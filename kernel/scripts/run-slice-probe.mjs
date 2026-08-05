@@ -78,6 +78,11 @@ const launchUrl = await new Promise((resolveUrl, rejectUrl) => {
 // The probe has no metadata endpoint (there is no control plane in this slice), so the dataset's
 // extent is handed to it. The fixture tiles a ceil(sqrt(features)) grid of 40 m cells from the
 // LV95 origin the generator declares.
+/// The session credential, so it can be redacted out of anything this script writes. It lives in
+/// the launch URL's fragment, which browsers never transmit — but this script also captures the
+/// host's stdout, where that URL was printed.
+const token = new URL(launchUrl).hash.replace(/^#/, '');
+
 const extentArg = arg('--extent', null);
 const url = (() => {
   const u = new URL(launchUrl);
@@ -177,12 +182,21 @@ const artifact = {
   probe_wall_ms: Date.now() - probeStartedAt,
   probe_exit_code: probeCode,
   probe_artifact: probeOut,
-  host_stdout: hostOut.split('\n').filter((l) => !l.includes('#')),
+  // The host prints its launch URL, whose fragment is the session credential. Dropping every line
+  // containing a '#' filtered on the *shape* the host happens to print today: change that format
+  // and the credential lands in this artifact. Redact the token itself instead, and refuse to write
+  // if it survives — the rule `frontends/canvas-probe/scripts/run-probe.mjs` already follows.
+  host_stdout: hostOut.split('\n').map((l) => (token ? l.replaceAll(token, '<redacted>') : l)),
 };
 
 const memOut = `${outPrefix}-host-memory${headed ? '-headed' : '-headless'}.json`;
 mkdirSync(dirname(memOut), { recursive: true });
-writeFileSync(memOut, JSON.stringify(artifact, null, 2) + '\n');
+const memText = JSON.stringify(artifact, null, 2) + '\n';
+if (token && memText.includes(token)) {
+  console.error('refusing to write an artifact containing the session credential');
+  process.exit(1);
+}
+writeFileSync(memOut, memText);
 console.log(`wrote ${memOut}`);
 console.log(JSON.stringify({ baseline, peak, probe_exit_code: probeCode }, null, 2));
 process.exit(probeCode === 0 ? 0 : 1);
