@@ -179,10 +179,28 @@ fn absorb(c: &mut Collected, payload: &[u8]) {
     }
 }
 
+/// Generous upper bound on any single blocking wait in this suite.
+///
+/// **A test that can hang forever is itself a defect.** When a product regression stopped a
+/// producer mid-stream, the equivalent unbounded loop in `protocol/data-plane`'s suite did not
+/// fail — it blocked forever, took the binary down with `exit code 0xffffffff`, and named no
+/// property. These streams read a real 2,000-feature GeoParquet through DuckDB, so the bound is set
+/// well above any honest wait and can only fire on a genuine stall.
+const RECV_DEADLINE: Duration = Duration::from_secs(60);
+
+/// One receive, bounded. Panics with the waiting context rather than hanging.
+async fn recv_by(client: &mut Client, what: &str) -> Option<Message> {
+    match tokio::time::timeout(RECV_DEADLINE, client.next()).await {
+        Ok(Some(Ok(m))) => Some(m),
+        Ok(Some(Err(_))) | Ok(None) => None,
+        Err(_) => panic!("timed out after {RECV_DEADLINE:?} waiting for {what}"),
+    }
+}
+
 /// Read frames until the terminal arrives (or the connection ends).
 async fn drain(client: &mut Client, c: &mut Collected) {
     c.one_frame_per_message = true;
-    while let Some(Ok(msg)) = client.next().await {
+    while let Some(msg) = recv_by(client, "a frame, or the connection to end").await {
         let Message::Binary(b) = msg else { continue };
         let len = wire::payload_len(&b).expect("length");
         let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
@@ -317,7 +335,8 @@ async fn h2_cancellation_is_observed_by_the_producer_inside_the_budget() {
 
     // Wait until the stream is genuinely producing.
     let mut seen = 0;
-    while let Some(Ok(Message::Binary(b))) = client.next().await {
+    while let Some(Message::Binary(b)) = recv_by(&mut client, "the stream to start producing").await
+    {
         if b[0] == wire::TAG_BATCH {
             seen += 1;
             if seen == 2 {

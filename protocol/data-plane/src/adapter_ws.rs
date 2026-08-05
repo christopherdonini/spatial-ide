@@ -105,18 +105,24 @@ pub(crate) async fn drive(
                         note_if_json(&json_frames_seen, &b);
                         match parse_control(&b) {
                         Some(Control::Credit(n)) => {
-                            // **Clamped to the declared window, not trusted from the peer.**
-                            // `Semaphore::add_permits` panics past `MAX_PERMITS`, and
-                            // `server::MAX_INFLIGHT_BATCHES` is documented as "credit window, in
-                            // batches" — that should be true on the receive side too, not only
-                            // where the pump's channel capacity happens to enforce it. A
-                            // well-behaved consumer never reaches this clamp.
-                            let room = crate::server::MAX_INFLIGHT_BATCHES
-                                .saturating_sub(credit.available_permits());
-                            let grant = (n as usize).min(room);
-                            if grant > 0 {
-                                credit.add_permits(grant);
-                            }
+                            // **Credit is granted as sent.** The only thing clamped is the
+                            // arithmetic overflow `Semaphore::add_permits` panics on.
+                            //
+                            // An earlier version of this clamped the *cumulative* permits to
+                            // `server::MAX_INFLIGHT_BATCHES`, reasoning that the constant is
+                            // documented as "credit window, in batches". That conflated two
+                            // different quantities and deadlocked the transport: the window bounds
+                            // how many batches may be **in flight**, which the pump's bounded
+                            // channel already enforces, whereas a grant says how many the consumer
+                            // is willing to receive **in total from here**. A conforming peer that
+                            // grants 100 up front and then waits — which is exactly what
+                            // `every_batch_and_a_terminal_frame_are_delivered` does — had 96 of
+                            // those credits silently discarded and waited forever for batches this
+                            // loop would never send. Discarding credit a peer legitimately issued
+                            // is a worse failure than the overflow it was guarding against.
+                            let room =
+                                tokio::sync::Semaphore::MAX_PERMITS - credit.available_permits();
+                            credit.add_permits((n as usize).min(room));
                         }
                         Some(Control::Cancel) => {
                             // Producer-visible cancellation, stamped on the producer's own clock at

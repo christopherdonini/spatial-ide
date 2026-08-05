@@ -40,6 +40,14 @@ use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 
+/// Generous upper bound on any single blocking wait here.
+///
+/// **A test or instrument that can hang forever is itself a defect.** An unbounded receive
+/// turned a stalled producer into a hung binary that exited `0xffffffff` and named nothing;
+/// a deadline turns the same stall into a failure that says which wait it was. Set far above
+/// any honest wait on these fixtures, so it can only fire on a genuine stall.
+const RECV_DEADLINE: Duration = Duration::from_secs(60);
+
 const DATASET: &str = "parcels";
 const FEATURES: usize = 40_000;
 
@@ -118,16 +126,24 @@ async fn pump(
                 return;
             }
         }
-        let msg = match c.next().await {
-            Some(Ok(m)) => m,
-            Some(Err(e)) => {
+        // Bounded, and loud on elapse. An unbounded wait here would turn a stalled producer into a
+        // hung instrument that reports nothing — and this file's whole job is to *observe* a
+        // concurrency pattern, so a silent stall is the one failure it must never have. The bound
+        // is far above any honest wait on these fixtures.
+        let msg = match tokio::time::timeout(RECV_DEADLINE, c.next()).await {
+            Ok(Some(Ok(m))) => m,
+            Ok(Some(Err(e))) => {
                 eprintln!("stream ended with a transport error after {} batches: {e}", run.batches);
                 break;
             }
-            None => {
+            Ok(None) => {
                 eprintln!("stream ended with no terminal after {} batches", run.batches);
                 break;
             }
+            Err(_) => panic!(
+                "timed out after {RECV_DEADLINE:?} waiting for a frame ({} batches in)",
+                run.batches
+            ),
         };
         let Message::Binary(b) = msg else { continue };
         let len = wire::payload_len(&b).expect("len");

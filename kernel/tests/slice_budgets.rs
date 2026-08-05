@@ -41,6 +41,14 @@ use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 
+/// Generous upper bound on any single blocking wait here.
+///
+/// **A test or instrument that can hang forever is itself a defect.** An unbounded receive
+/// turned a stalled producer into a hung binary that exited `0xffffffff` and named nothing;
+/// a deadline turns the same stall into a failure that says which wait it was. Set far above
+/// any honest wait on these fixtures, so it can only fire on a genuine stall.
+const RECV_DEADLINE: Duration = Duration::from_secs(60);
+
 const DATASET: &str = "parcels";
 
 // ---- Declared before measuring (docs/08: sample counts are declared, not chosen afterwards) ----
@@ -308,9 +316,15 @@ async fn drain(c: &mut Client, col: &mut Collected, t0: Instant, stop_after: Opt
                 return;
             }
         }
-        let msg = match c.next().await {
-            Some(Ok(m)) => m,
-            _ => break,
+        // Bounded, and loud on elapse. A measurement harness that hangs produces no artifact and no
+        // verdict — strictly worse than one that fails and says which wait stalled.
+        let msg = match tokio::time::timeout(RECV_DEADLINE, c.next()).await {
+            Ok(Some(Ok(m))) => m,
+            Ok(_) => break,
+            Err(_) => panic!(
+                "timed out after {RECV_DEADLINE:?} waiting for a frame ({} batches in)",
+                col.batches
+            ),
         };
         let Message::Binary(b) = msg else { continue };
         let Some(len) = wire::payload_len(&b) else { continue };

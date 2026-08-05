@@ -174,6 +174,27 @@ struct Received {
     payload_offsets: Vec<usize>,
 }
 
+/// Generous upper bound on any single blocking wait in this suite.
+///
+/// **A test that can hang forever is itself a defect**, however correct the property it asserts.
+/// `every_batch_and_a_terminal_frame_are_delivered` pins the silent-truncation race, and when a
+/// product regression stopped the producer mid-stream the test did not fail — it blocked forever on
+/// `c.next()`, took the whole binary down with `exit code 0xffffffff`, and reported nothing about
+/// which property had broken. A deadline turns that into a named failure.
+///
+/// It is deliberately far above any real wait here (whole streams complete in under a second) so it
+/// can only fire on a genuine stall, never on a slow machine.
+const RECV_DEADLINE: Duration = Duration::from_secs(30);
+
+/// One receive, bounded. Panics with the waiting context rather than hanging.
+async fn recv_by(c: &mut Client, what: &str) -> Option<Message> {
+    match tokio::time::timeout(RECV_DEADLINE, c.next()).await {
+        Ok(Some(Ok(m))) => Some(m),
+        Ok(Some(Err(_))) | Ok(None) => None,
+        Err(_) => panic!("timed out after {RECV_DEADLINE:?} waiting for {what}"),
+    }
+}
+
 /// Read until a terminal frame arrives or the connection ends.
 async fn drain(c: &mut Client) -> Received {
     let mut r = Received {
@@ -184,7 +205,7 @@ async fn drain(c: &mut Client) -> Received {
         one_frame_per_message: true,
         payload_offsets: Vec::new(),
     };
-    while let Some(Ok(msg)) = c.next().await {
+    while let Some(msg) = recv_by(c, "a frame, or the connection to end").await {
         let Message::Binary(b) = msg else { continue };
         let tag = b[0];
         let len = wire::payload_len(&b).expect("length");
@@ -265,7 +286,7 @@ async fn a_cancel_control_frame_reaches_the_source_and_is_observed_producer_side
 
     // Wait until the stream is actually producing before cancelling it.
     let mut seen = 0;
-    while let Some(Ok(msg)) = c.next().await {
+    while let Some(msg) = recv_by(&mut c, "the stream to start producing").await {
         if let Message::Binary(b) = msg {
             if b[0] == wire::TAG_BATCH {
                 seen += 1;
@@ -616,8 +637,8 @@ async fn a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_nam
 
     let mut terminal: Option<(u8, String)> = None;
     let mut batches = 0;
-    while let Ok(Some(Ok(Message::Binary(b)))) =
-        tokio::time::timeout(Duration::from_secs(5), c.next()).await
+    while let Some(Message::Binary(b)) =
+        recv_by(&mut c, "a terminal naming the frame ceiling").await
     {
         match b[0] {
             wire::TAG_BATCH => batches += 1,

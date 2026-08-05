@@ -53,6 +53,51 @@ fn wait_for_plateau(deadline: Duration, stable_samples: u32, mut read: impl FnMu
     None
 }
 
+/// A generous, loud deadline for a whole test.
+///
+/// **A test that can hang forever is itself a defect.** `BatchStream::next_into` blocks on a
+/// channel `recv()` and has no timeout form, so unlike the async suites this bound is applied per
+/// *test* rather than per wait — which bounds every blocking wait inside it.
+///
+/// If it fires the process is aborted with the test named. libtest cannot fail a test that never
+/// returns, so the only two honest options are "hang" and "abort loudly", and a hang tells a reader
+/// nothing at all: the transport suite's equivalent stall surfaced only as `exit code 0xffffffff`
+/// with no indication of which property had broken.
+struct Watchdog(std::sync::Arc<std::sync::atomic::AtomicBool>);
+
+const TEST_DEADLINE: Duration = Duration::from_secs(120);
+
+impl Watchdog {
+    fn new(label: &'static str) -> Self {
+        let done = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let flag = done.clone();
+        std::thread::spawn(move || {
+            let deadline = Instant::now() + TEST_DEADLINE;
+            while Instant::now() < deadline {
+                if flag.load(std::sync::atomic::Ordering::SeqCst) {
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            if !flag.load(std::sync::atomic::Ordering::SeqCst) {
+                eprintln!(
+                    "WATCHDOG: `{label}` exceeded {TEST_DEADLINE:?} without finishing — a \
+                     blocking wait never returned. That is a defect in the test or in what it \
+                     exercises, not a slow machine."
+                );
+                std::process::abort();
+            }
+        });
+        Self(done)
+    }
+}
+
+impl Drop for Watchdog {
+    fn drop(&mut self) {
+        self.0.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
 fn small() -> FixtureSpec {
     FixtureSpec { features: 2_000, avg_vertices: 20, ..Default::default() }
 }
@@ -113,6 +158,7 @@ fn coord_bits(geometry: &Arc<dyn Array>) -> u64 {
 
 #[test]
 fn a_declared_crs_is_admitted_as_a_file_fact() {
+    let _wd = Watchdog::new("a_declared_crs_is_admitted_as_a_file_fact");
     let (path, _) = write("declared", &small());
     let ds = Dataset::open(&path).expect("open");
     assert_eq!(ds.crs().identifier(), "EPSG:2056");
@@ -127,6 +173,7 @@ fn a_declared_crs_is_admitted_as_a_file_fact() {
 
 #[test]
 fn a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied() {
+    let _wd = Watchdog::new("a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied");
     let (path, _) = write(
         "absent-crs",
         &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..small() },
@@ -148,6 +195,7 @@ fn a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied() {
 
 #[test]
 fn a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked() {
+    let _wd = Watchdog::new("a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked");
     let (path, _) = write(
         "assertable",
         &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..small() },
@@ -168,6 +216,7 @@ fn a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked()
 
 #[test]
 fn an_assertion_over_a_file_that_declares_a_crs_is_refused() {
+    let _wd = Watchdog::new("an_assertion_over_a_file_that_declares_a_crs_is_refused");
     let (path, _) = write("declared-2", &small());
     let assertion = CrsAssertion {
         identifier: "EPSG:2056".into(),
@@ -185,6 +234,7 @@ fn an_assertion_over_a_file_that_declares_a_crs_is_refused() {
 
 #[test]
 fn a_definition_that_establishes_no_axis_order_is_refused() {
+    let _wd = Watchdog::new("a_definition_that_establishes_no_axis_order_is_refused");
     let (path, _) = write(
         "no-cs",
         &FixtureSpec { crs_mode: CrsMode::NoCoordinateSystem, ..small() },
@@ -197,6 +247,7 @@ fn a_definition_that_establishes_no_axis_order_is_refused() {
 
 #[test]
 fn a_latitude_first_source_is_refused_rather_than_reinterpreted() {
+    let _wd = Watchdog::new("a_latitude_first_source_is_refused_rather_than_reinterpreted");
     // The EPSG:4326 trap docs/05 names. This slice normalizes nothing, so it refuses.
     let (path, _) = write(
         "latlon",
@@ -216,6 +267,7 @@ fn a_latitude_first_source_is_refused_rather_than_reinterpreted() {
 
 #[test]
 fn streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates() {
+    let _wd = Watchdog::new("streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates");
     let spec = small();
     let (path, facts) = write("whole", &spec);
     let ds = Dataset::open(&path).expect("open");
@@ -237,6 +289,7 @@ fn streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates
 
 #[test]
 fn the_payload_is_variable_width_geoarrow_with_holes() {
+    let _wd = Watchdog::new("the_payload_is_variable_width_geoarrow_with_holes");
     let spec = FixtureSpec { features: 400, avg_vertices: 16, hole_every: 5, ..small() };
     let (path, facts) = write("shape", &spec);
     assert!(
@@ -280,6 +333,7 @@ fn the_payload_is_variable_width_geoarrow_with_holes() {
 
 #[test]
 fn a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it() {
+    let _wd = Watchdog::new("a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it");
     let spec = small();
     let (path, facts) = write("viewport", &spec);
     let ds = Dataset::open(&path).expect("open");
@@ -305,17 +359,50 @@ fn a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it()
 
 #[test]
 fn a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects() {
+    let _wd = Watchdog::new("a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects");
     let (path, _) = write("viewport-crs", &small());
     let ds = Dataset::open(&path).expect("open");
     let view = Bbox { xmin: 7.0, ymin: 46.0, xmax: 8.0, ymax: 47.0 };
+    // **`ViewportCrsMismatch`, not `CrsAssertionConflict`** (ADR-015 §7). The two refusals were one
+    // variant, so a caller who asserted nothing was handed a message about caller assertions. They
+    // are separate now, and this asserts the specific one — `matches!` on the wrong variant still
+    // compiles, so only a run catches a regression here.
     assert!(matches!(
         ds.stream(&ViewportQuery::viewport(view, "EPSG:4326")),
-        Err(EngineError::CrsAssertionConflict { .. })
+        Err(EngineError::ViewportCrsMismatch { .. })
     ));
 }
 
 #[test]
+fn a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing() {
+    let _wd = Watchdog::new("a_viewport_cannot_name_a_definition_only_crs");
+    // ADR-015 §7.3. Every definition-only dataset carries the same placeholder identifier, so
+    // matching a caller's echo of it would be a name comparison over a string that is not a name.
+    let (path, _) = write(
+        "definition-only-viewport",
+        &FixtureSpec { crs_mode: CrsMode::DefinitionOnlyNoId, ..small() },
+    );
+    let ds = Dataset::open(&path).expect("open");
+    assert_eq!(ds.crs().identifier(), spatial_engine::crs::DEFINITION_ONLY);
+
+    let view = Bbox {
+        xmin: spatial_engine::fixture::E_LO,
+        ymin: spatial_engine::fixture::N_LO,
+        xmax: spatial_engine::fixture::E_LO + 100.0,
+        ymax: spatial_engine::fixture::N_LO + 100.0,
+    };
+    assert!(matches!(
+        ds.stream(&ViewportQuery::viewport(view, spatial_engine::crs::DEFINITION_ONLY)),
+        Err(EngineError::ViewportCrsUnidentifiable)
+    ));
+    // …and the same viewport with no CRS named is admitted: that declares it to be in the
+    // dataset's own CRS, which is the escape hatch §7.3 leaves open.
+    assert!(ds.stream(&ViewportQuery { bbox: Some(view), bbox_crs: None, limit: None }).is_ok());
+}
+
+#[test]
 fn a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned() {
+    let _wd = Watchdog::new("a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned");
     let (path, _) = write(
         "no-covering",
         &FixtureSpec { with_covering_bbox: false, ..small() },
@@ -337,6 +424,7 @@ fn a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned() {
 
 #[test]
 fn every_batch_carries_the_envelope_not_just_the_first() {
+    let _wd = Watchdog::new("every_batch_carries_the_envelope_not_just_the_first");
     let (path, _) = write("tagging", &FixtureSpec { features: 6_000, ..small() });
     let ds = Dataset::open(&path).expect("open");
     let mut s = ds.stream(&ViewportQuery::all()).expect("stream");
@@ -364,6 +452,7 @@ fn every_batch_carries_the_envelope_not_just_the_first() {
 
 #[test]
 fn cancelling_before_the_first_batch_stops_the_stream_without_producing_anything() {
+    let _wd = Watchdog::new("cancelling_before_the_first_batch_stops_the_stream_without_producing_anything");
     // The property: a stream cancelled before it produced anything terminates as cancelled, and
     // does not quietly run the query to completion first. That is the case a between-batches flag
     // check cannot serve, and it is what this test exists to pin.
@@ -417,6 +506,7 @@ fn cancelling_before_the_first_batch_stops_the_stream_without_producing_anything
 
 #[test]
 fn cancelling_mid_stream_stops_production_promptly() {
+    let _wd = Watchdog::new("cancelling_mid_stream_stops_production_promptly");
     let (path, _) = write("cancel-mid", &FixtureSpec { features: 40_000, ..small() });
     let ds = Dataset::open(&path).expect("open");
     let cancel = CancelToken::new();
@@ -448,6 +538,7 @@ fn cancelling_mid_stream_stops_production_promptly() {
 
 #[test]
 fn dropping_the_stream_cancels_the_query() {
+    let _wd = Watchdog::new("dropping_the_stream_cancels_the_query");
     let (path, _) = write("cancel-drop", &FixtureSpec { features: 40_000, ..small() });
     let ds = Dataset::open(&path).expect("open");
     let cancel;
@@ -461,6 +552,7 @@ fn dropping_the_stream_cancels_the_query() {
 
 #[test]
 fn a_paused_consumer_bounds_producer_resident_memory() {
+    let _wd = Watchdog::new("a_paused_consumer_bounds_producer_resident_memory");
     // H3, on the producer's own counter rather than an OS reading — the same basis the bake-off's
     // bounded-memory claim rested on.
     let (path, _) = write("backpressure", &FixtureSpec { features: 40_000, ..small() });
@@ -499,6 +591,7 @@ fn a_paused_consumer_bounds_producer_resident_memory() {
 
 #[test]
 fn the_first_batch_is_handed_over_before_the_result_is_materialized() {
+    let _wd = Watchdog::new("the_first_batch_is_handed_over_before_the_result_is_materialized");
     // The property that separates streaming from collect-then-chunk. `docs/08`'s "First pixels
     // < 100 ms after query start" cannot be met by an engine that materializes first.
     //
@@ -555,6 +648,7 @@ fn the_first_batch_is_handed_over_before_the_result_is_materialized() {
 /// coverage with the test still green — a scan that passes by looking at less is not a gate.
 #[test]
 fn h6_the_engine_module_names_no_transport() {
+    let _wd = Watchdog::new("h6_the_engine_module_names_no_transport");
     let forbidden = [
         "socket", "websocket", "http", "url", "header", "port", "opcode", "axum", "tungstenite",
         "frame_prefix", "credit",

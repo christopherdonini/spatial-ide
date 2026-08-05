@@ -54,6 +54,12 @@ pub enum CrsMode {
     NoCoordinateSystem,
     /// EPSG:4326 with its official (latitude, longitude) axis order.
     DeclaredLatLonFirst,
+    /// A complete, usable LV95 definition with **no `id`** — no authority and no code.
+    ///
+    /// Legal PROJJSON, and the case that makes `crs::DEFINITION_ONLY` exist: the engine can read
+    /// the definition and establish axis order, but has no identifier to name it by. Every such
+    /// dataset shares the same placeholder, so ADR-015 §7.3 refuses a viewport that echoes it.
+    DefinitionOnlyNoId,
 }
 
 #[derive(Clone, Debug)]
@@ -146,6 +152,13 @@ fn geo_metadata(spec: &FixtureSpec) -> String {
     let crs_fragment = match spec.crs_mode {
         CrsMode::DeclaredLv95 => format!(",\"crs\":{LV95_PROJJSON}"),
         CrsMode::AbsentKey => String::new(),
+        CrsMode::DefinitionOnlyNoId => {
+            // The LV95 definition with its `id` member removed, so the identifier cannot be formed.
+            let v: serde_json::Value = serde_json::from_str(LV95_PROJJSON).expect("lv95 projjson");
+            let mut o = v.as_object().expect("projjson object").clone();
+            o.remove("id");
+            format!(",\"crs\":{}", serde_json::Value::Object(o))
+        }
         CrsMode::ExplicitNull => ",\"crs\":null".to_string(),
         CrsMode::NoCoordinateSystem => {
             ",\"crs\":{\"type\":\"ProjectedCRS\",\"name\":\"CH1903+ / LV95\",\
