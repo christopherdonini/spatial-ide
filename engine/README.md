@@ -76,7 +76,8 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
 
 ## Declared ceilings (ADR-010 rule 6)
 
-`MAX_BATCH_BYTES` 4 MiB · `TARGET_BATCH_BYTES` 1 MiB · `MAX_ROWS_PER_BATCH` 65 536 ·
+`MAX_BATCH_BYTES` 4 MiB · `TARGET_BATCH_BYTES` 1 MiB · `FIRST_TARGET_BATCH_BYTES` 64 KiB ·
+`MIN_BATCH_BYTES` 32 KiB · `BATCH_GROWTH_FACTOR` 4 · `MAX_ROWS_PER_BATCH` 65 536 ·
 `MAX_QUEUED_BATCHES` 2. Producer-resident payload is bounded by
 `(MAX_QUEUED_BATCHES + 1) × MAX_BATCH_BYTES`, **plus DuckDB's own streaming buffer, which this
 counter does not see and does not claim to**.
@@ -139,6 +140,37 @@ latency fix.
 **Build cost and query benefit are separate quantities** and `IndexReport` keeps them apart —
 content-hash time, build time, rows scanned, features indexed. Nothing here nets them into "pays for
 itself after N queries".
+
+## Progressive first-batch sizing
+
+The first batch is cut at `FIRST_TARGET_BATCH_BYTES` and grows by `BATCH_GROWTH_FACTOR` per batch
+until `TARGET_BATCH_BYTES`, so pixels can land sooner without leaving the steady state small.
+
+- **The bound is structural, not tested.** `target_for` is `min(first × factor^n, TARGET)` with
+  saturating arithmetic, and four `const` assertions make
+  `MIN ≤ FIRST ≤ target_n ≤ TARGET < MAX` hold for **every** n. ADR-010 rule 6 asks a ceiling to
+  stay a ceiling; a test would only cover the states someone thought of.
+- **The floor is declared and justified.** Every batch is a complete self-contained Arrow IPC
+  stream, because that is what puts the rule 1 tag on *every* batch — so the envelope repeats per
+  batch, and below the floor a batch is mostly envelope. `MIN_BATCH_BYTES` is asserted to exceed a
+  real one-feature batch rather than assumed to.
+- **Declared once per stream, not per batch.** `BatchStream::size_policy()` reports the policy;
+  `BatchInfo` carries `batch_index` and `target_bytes` as two integers. The batch **schema metadata
+  is deliberately unchanged** — putting a varying value there would make the envelope
+  batch-dependent and hollow out the assertion that every batch carries the same envelope. This is
+  a `docs/01` principle 8 visibility obligation; ADR-010 rule 1 is about coordinate space and is
+  not cited for it.
+- **What it may not be claimed to do.** `docs/08`'s first-pixels budget is missed at 334 ms, and
+  `kernel/RESULTS.md` attributes p50 109.7 ms to the producer *before any browser*. That figure is
+  query start-up **plus** scan-until-full, and this policy attacks only the second. Until the two
+  are decomposed, no claim about the budget follows from this change — if start-up alone is
+  ≥ 100 ms, no batch size reaches it.
+
+**Consequence for the credit window, stated because it is easy to miss.**
+`protocol/data-plane`'s `MAX_INFLIGHT_BATCHES` counts *batches*, not bytes. Smaller early batches
+mean the same window holds fewer bytes, so the composed per-stream bound in `kernel/README.md`
+remains a valid **upper** bound but a looser one. Any previously measured "percentage of bound"
+figure describes the pre-change shape and may not be carried across this change.
 
 ## Admission: what this module refuses to open
 

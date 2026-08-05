@@ -38,6 +38,25 @@ use crate::wkb::PolygonBuilder;
 pub const MAX_BATCH_BYTES: usize = 4 * 1024 * 1024;
 /// Batches are cut at this size; `MAX_BATCH_BYTES` is the hard ceiling above it.
 pub const TARGET_BATCH_BYTES: usize = 1024 * 1024;
+
+/// **Progressive first-batch sizing.** The first batch is cut small so pixels can land sooner, and
+/// subsequent batches grow to `TARGET_BATCH_BYTES`.
+///
+/// `docs/08`'s "First pixels < 100 ms after query start" is missed today at this dataset class, and
+/// `kernel/RESULTS.md` attributes p50 109.7 ms of it to the producer *before any browser*. That
+/// 109.7 ms is two components — query start-up, and scanning until a batch is full — and this
+/// policy attacks only the second. **It therefore cannot be claimed to meet the budget until the
+/// two are decomposed**, because if start-up alone is ≥ 100 ms no batch size reaches it.
+///
+/// **The floor is declared, not discovered.** Every batch is a complete self-contained Arrow IPC
+/// stream — schema, metadata, one record batch, EOS — so the whole envelope is repeated per batch
+/// (that repetition is deliberate: it is what puts the ADR-010 rule 1 tag on *every* batch). Below
+/// the floor a batch is mostly envelope, and the extra round trip buys nothing.
+pub const MIN_BATCH_BYTES: usize = 32 * 1024;
+/// Target size of the **first** batch.
+pub const FIRST_TARGET_BATCH_BYTES: usize = 64 * 1024;
+/// Multiplier applied per batch until `TARGET_BATCH_BYTES` is reached.
+pub const BATCH_GROWTH_FACTOR: usize = 4;
 pub const MAX_ROWS_PER_BATCH: usize = 65_536;
 /// Batches the producer may hold ahead of the consumer. Producer-resident payload is bounded by
 /// `(MAX_QUEUED_BATCHES + 1) * MAX_BATCH_BYTES`, plus DuckDB's own streaming buffer, which this
@@ -48,6 +67,14 @@ pub const MAX_QUEUED_BATCHES: usize = 2;
 // these were constant-folded and could not fail — a check that cannot fail is not a check. Here an
 // edit that breaks the relationship stops the build instead.
 const _: () = assert!(TARGET_BATCH_BYTES < MAX_BATCH_BYTES);
+// **The progressive policy's bounds hold structurally, for every state it can be in.** Not by
+// test: a test covers the states someone thought of, and ADR-010 rule 6 asks that a ceiling stay a
+// ceiling. `target_for` is `min(first * factor^n, TARGET)`, so these four facts are jointly enough
+// to guarantee `MIN <= FIRST <= target_n <= TARGET < MAX` for all n.
+const _: () = assert!(MIN_BATCH_BYTES <= FIRST_TARGET_BATCH_BYTES);
+const _: () = assert!(FIRST_TARGET_BATCH_BYTES <= TARGET_BATCH_BYTES);
+const _: () = assert!(BATCH_GROWTH_FACTOR >= 1);
+const _: () = assert!(MIN_BATCH_BYTES > 0);
 const _: () = assert!(MAX_QUEUED_BATCHES >= 1);
 
 /// A viewport in the dataset's own CRS. There is no reprojection in this slice, so a bbox in any
@@ -90,6 +117,53 @@ pub struct BatchInfo {
     pub rows: usize,
     pub vertices: usize,
     pub payload_bytes: usize,
+    /// 0-based position in the stream, and the target this batch was cut at. Two integers, so a
+    /// consumer or a measurement can attribute a batch's size to the policy without parsing one.
+    pub batch_index: u64,
+    pub target_bytes: usize,
+}
+
+/// The batch-size policy in force for a stream, and the whole of it.
+///
+/// **Declared once per stream, not per batch.** Putting a varying value in the batch *schema*
+/// metadata would make the envelope batch-dependent and hollow out the assertion that every batch
+/// carries the same envelope — so the policy is reported here and the per-batch numbers ride on
+/// `BatchInfo` as two integers, never as a policy string. (This is a `docs/01` principle 8
+/// visibility obligation; ADR-010 rule 1 is about coordinate space and is deliberately not cited.)
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BatchSizePolicy {
+    pub first_target_bytes: usize,
+    pub growth_factor: usize,
+    pub target_bytes: usize,
+    pub min_bytes: usize,
+}
+
+impl Default for BatchSizePolicy {
+    fn default() -> Self {
+        Self {
+            first_target_bytes: FIRST_TARGET_BATCH_BYTES,
+            growth_factor: BATCH_GROWTH_FACTOR,
+            target_bytes: TARGET_BATCH_BYTES,
+            min_bytes: MIN_BATCH_BYTES,
+        }
+    }
+}
+
+impl BatchSizePolicy {
+    /// Target size for the batch at `index` (0-based).
+    ///
+    /// Monotone non-decreasing and clamped to `target_bytes` **by construction** — saturating
+    /// arithmetic, so no growth factor and no index can carry it past the ceiling or wrap.
+    pub fn target_for(&self, index: u64) -> usize {
+        let mut t = self.first_target_bytes;
+        for _ in 0..index {
+            if t >= self.target_bytes {
+                return self.target_bytes;
+            }
+            t = t.saturating_mul(self.growth_factor);
+        }
+        t.min(self.target_bytes).max(self.min_bytes)
+    }
 }
 
 /// How the viewport predicate was built for one stream — reported, never inferred from timings.
@@ -131,6 +205,8 @@ struct Item {
     batch: TaggedBatch,
     est_bytes: usize,
     vertices: usize,
+    batch_index: u64,
+    target_bytes: usize,
 }
 
 pub struct BatchStream {
@@ -140,6 +216,7 @@ pub struct BatchStream {
     finished: bool,
     envelope: BatchEnvelope,
     filter_plan: FilterPlan,
+    policy: BatchSizePolicy,
 }
 
 impl BatchStream {
@@ -163,6 +240,8 @@ impl BatchStream {
                     rows: item.batch.num_rows(),
                     vertices: item.vertices,
                     payload_bytes: out.len() - before,
+                    batch_index: item.batch_index,
+                    target_bytes: item.target_bytes,
                 }))
             }
             Ok(Err(e)) => {
@@ -195,6 +274,11 @@ impl BatchStream {
     /// that cannot tell them apart cannot attribute what it measured.
     pub fn filter_plan(&self) -> FilterPlan {
         self.filter_plan
+    }
+
+    /// The batch-size policy in force, declared once for the stream rather than per batch.
+    pub fn size_policy(&self) -> BatchSizePolicy {
+        self.policy
     }
 }
 
@@ -247,6 +331,7 @@ impl Dataset {
         }
 
         let (sql, filter_plan) = self.build_sql(q)?;
+        let policy = BatchSizePolicy::default();
         let path = self
             .path()
             .to_str()
@@ -279,6 +364,7 @@ impl Dataset {
                     &thread_cancel,
                     &thread_stats,
                     &tx,
+                    policy,
                 );
                 if let Err(e) = outcome {
                     // Best-effort: if the consumer is gone there is nobody to tell, which is not an
@@ -290,7 +376,7 @@ impl Dataset {
             })
             .map_err(|e| EngineError::Source(format!("spawn producer thread: {e}")))?;
 
-        Ok(BatchStream { rx, cancel, stats, finished: false, envelope, filter_plan })
+        Ok(BatchStream { rx, cancel, stats, finished: false, envelope, filter_plan, policy })
     }
 
     fn build_sql(&self, q: &ViewportQuery) -> Result<(String, FilterPlan)> {
@@ -409,6 +495,7 @@ fn produce(
     cancel: &CancelToken,
     stats: &Arc<StreamStats>,
     tx: &std::sync::mpsc::SyncSender<std::result::Result<Item, EngineError>>,
+    policy: BatchSizePolicy,
 ) -> Result<()> {
     // Checked before anything is prepared or executed: DuckDB does not latch an interrupt raised on
     // an idle connection (see `cancel.rs`), so a stream cancelled before it started is stopped
@@ -444,6 +531,8 @@ fn produce(
         .map_err(|e| classify(cancel, format!("execute: {e}")))?;
 
     let mut pending = Pending::new();
+    // Batches handed over so far — the policy's input, and the `batch_index` a consumer sees.
+    let mut emitted: u64 = 0;
 
     loop {
         if cancel.is_cancelled() {
@@ -496,8 +585,13 @@ fn produce(
             // vertex plus a per-ring header, so `wkb.len() / 16` cannot under-count the vertices
             // this feature will contribute. An over-estimate only cuts a batch slightly early.
             let incoming = estimate_bytes(1, wkb.len() / 16);
-            if !pending.ids.is_empty() && pending.est_bytes + incoming > TARGET_BATCH_BYTES {
-                flush(&mut pending, envelope, cancel, stats, tx)?;
+            // The target this batch is being cut at, from the progressive policy. Early batches
+            // are small so pixels land sooner; later ones grow to `TARGET_BATCH_BYTES` so the
+            // per-batch envelope stops being a significant share of the payload.
+            let target = policy.target_for(emitted);
+            if !pending.ids.is_empty() && pending.est_bytes + incoming > target {
+                flush(&mut pending, envelope, cancel, stats, tx, emitted, target)?;
+                emitted += 1;
             }
 
             let before = pending.builder.vertices();
@@ -507,14 +601,16 @@ fn produce(
             pending.est_bytes = estimate_bytes(pending.ids.len(), pending.builder.vertices());
             pending.first_id.get_or_insert(*id);
 
-            if pending.est_bytes >= TARGET_BATCH_BYTES || pending.ids.len() >= MAX_ROWS_PER_BATCH {
-                flush(&mut pending, envelope, cancel, stats, tx)?;
+            if pending.est_bytes >= target || pending.ids.len() >= MAX_ROWS_PER_BATCH {
+                flush(&mut pending, envelope, cancel, stats, tx, emitted, target)?;
+                emitted += 1;
             }
         }
     }
 
     if !pending.ids.is_empty() {
-        flush(&mut pending, envelope, cancel, stats, tx)?;
+        let target = policy.target_for(emitted);
+        flush(&mut pending, envelope, cancel, stats, tx, emitted, target)?;
     }
     Ok(())
 }
@@ -553,6 +649,8 @@ fn flush(
     cancel: &CancelToken,
     stats: &Arc<StreamStats>,
     tx: &std::sync::mpsc::SyncSender<std::result::Result<Item, EngineError>>,
+    batch_index: u64,
+    target_bytes: usize,
 ) -> Result<()> {
     let mut p = std::mem::replace(pending, Pending::new());
 
@@ -592,8 +690,14 @@ fn flush(
 
     // Blocks when the consumer is behind: this is the backpressure (H3). A disconnected receiver
     // means the consumer is gone, which is a cancellation, not a producer failure.
-    tx.send(Ok(Item { batch, est_bytes: p.est_bytes, vertices: p.vertices }))
-        .map_err(|_| EngineError::Cancelled)
+    tx.send(Ok(Item {
+        batch,
+        est_bytes: p.est_bytes,
+        vertices: p.vertices,
+        batch_index,
+        target_bytes,
+    }))
+    .map_err(|_| EngineError::Cancelled)
 }
 
 fn classify(cancel: &CancelToken, detail: String) -> EngineError {

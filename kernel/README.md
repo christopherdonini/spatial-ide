@@ -52,6 +52,12 @@ crate's bound as the process's bound will be wrong:
 | **composed, per stream** | **92 MiB**, plus the shared index |
 | × `MAX_CONCURRENT_STREAMS` (4) | **368 MiB** |
 
+**These stay valid upper bounds across progressive batch sizing, and get looser.**
+`MAX_INFLIGHT_BATCHES` counts batches, not bytes, so a window of early, deliberately small batches
+holds fewer bytes than the same window of steady-state ones. A measured "percentage of bound"
+figure therefore describes the batch shape it was taken under and may not be carried across a
+sizing-policy change.
+
 **Outside all of it, and not claimed to be inside:** DuckDB's own streaming buffer, and the OS and
 webview allocations the process does not control. The spatial index is *inside* the process and
 declares its own bound, but it is **per dataset, not per stream**, so multiplying it by
