@@ -70,7 +70,15 @@ const launchUrl = await new Promise((resolveUrl, rejectUrl) => {
       resolveUrl(m[1]);
     } else if (Date.now() > deadline || host.exitCode !== null) {
       clearInterval(tick);
-      rejectUrl(new Error(`the host never printed a URL.\nstdout:\n${hostOut}\nstderr:\n${hostErr}`));
+      // `hostOut` may already hold a launch URL, and therefore the credential — the token is not
+      // yet in scope here to redact with, so the captured streams are deliberately not echoed.
+      rejectUrl(
+        new Error(
+          'the host never printed a URL within 30 s ' +
+            `(stdout ${hostOut.length} B, stderr ${hostErr.length} B, both withheld: they may ` +
+            'contain the session credential)',
+        ),
+      );
     }
   }, 100);
 });
@@ -84,6 +92,10 @@ const launchUrl = await new Promise((resolveUrl, rejectUrl) => {
 const token = new URL(launchUrl).hash.replace(/^#/, '');
 
 const extentArg = arg('--extent', null);
+// The extent's CRS travels with the extent. ADR-010 rule 1: these are authoritative project-CRS
+// coordinates, and they may cross a boundary only carrying CRS identity — the consumer refuses any
+// batch whose envelope names a different one rather than drawing it into the wrong frame.
+const extentCrs = arg('--extent-crs', 'EPSG:2056');
 const url = (() => {
   const u = new URL(launchUrl);
   if (extentArg) {
@@ -93,6 +105,7 @@ const url = (() => {
     u.searchParams.set('xmax', xmax);
     u.searchParams.set('ymax', ymax);
   }
+  u.searchParams.set('extent_crs', extentCrs);
   return u.toString();
 })();
 

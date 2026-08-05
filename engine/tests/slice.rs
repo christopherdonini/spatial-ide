@@ -363,9 +363,21 @@ fn every_batch_carries_the_envelope_not_just_the_first() {
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn cancelling_before_the_first_batch_stops_the_stream_inside_the_budget() {
-    // docs/08: "Cancellation acknowledged < 100 ms, any operation" — including one that has not
-    // produced anything yet, which is the case a between-batches flag check cannot serve.
+fn cancelling_before_the_first_batch_stops_the_stream_without_producing_anything() {
+    // The property: a stream cancelled before it produced anything terminates as cancelled, and
+    // does not quietly run the query to completion first. That is the case a between-batches flag
+    // check cannot serve, and it is what this test exists to pin.
+    //
+    // **It does not assert `docs/08`'s <100 ms budget, and the earlier version that did was
+    // wrong to.** `next_into` here is `rx.recv()` on the producer *thread*, so the interval this
+    // test can see is `cancel → the consumer is scheduled again`, not `cancel → the producer
+    // observed it`. Under this binary's own 16-way parallelism that scheduling hop was measured
+    // failing 6 times in 57 runs, overshooting by up to 20× (1.962 s against 100 ms). Raising the
+    // threshold would not fix it: the quantity is scheduling latency, not cancellation latency.
+    //
+    // The budget is asserted where the clock means something — on the producer's own observation
+    // instant, in `kernel/tests/end_to_end.rs` (H2) and `kernel/tests/slice_budgets.rs`. What
+    // remains here is a generous liveness bound, so a genuine hang still fails.
     let (path, _) = write("cancel-early", &FixtureSpec { features: 40_000, ..small() });
     let ds = Dataset::open(&path).expect("open");
 
@@ -386,8 +398,16 @@ fn cancelling_before_the_first_batch_stops_the_stream_inside_the_budget() {
         other => panic!("expected a cancelled terminal, got {other:?}"),
     }
     assert!(
-        elapsed < Duration::from_millis(100),
-        "cancellation took {elapsed:?}, over the docs/08 budget"
+        elapsed < Duration::from_secs(5),
+        "the stream did not unwind at all ({elapsed:?}) — a liveness bound, not the docs/08 budget"
+    );
+    // The substantive assertion, and the one a wall clock was standing in for: nothing was
+    // produced. A stream that ran the query to completion and *then* noticed the flag would have
+    // generated batches.
+    assert_eq!(
+        s.stats().batches_generated.load(std::sync::atomic::Ordering::SeqCst),
+        0,
+        "a stream cancelled before its first batch must produce none"
     );
     assert!(
         s.stats().batches_after_cancel.load(std::sync::atomic::Ordering::SeqCst) <= 1,
@@ -460,19 +480,19 @@ fn a_paused_consumer_bounds_producer_resident_memory() {
     .expect("a backpressured producer stops; this one never did");
 
     let peak = stats.peak_resident_bytes.load(std::sync::atomic::Ordering::SeqCst);
-    let bound = (spatial_engine::MAX_INFLIGHT_BATCHES + 1) * spatial_engine::MAX_BATCH_BYTES;
+    let bound = (spatial_engine::MAX_QUEUED_BATCHES + 1) * spatial_engine::MAX_BATCH_BYTES;
     assert!(peak > 0, "the producer did generate something");
     assert!(
         peak <= bound,
         "producer-resident payload {peak} exceeded the declared bound {bound}"
     );
 
-    // The discriminating assertion. One batch was taken, the channel holds `MAX_INFLIGHT_BATCHES`,
+    // The discriminating assertion. One batch was taken, the channel holds `MAX_QUEUED_BATCHES`,
     // and one more may be complete and blocked on the send — so a backpressured producer stops at
     // that, while one without backpressure runs to the end of the file (this fixture is 40 000
     // features, tens of batches).
     assert!(
-        plateau <= 1 + (spatial_engine::MAX_INFLIGHT_BATCHES + 1) as u64,
+        plateau <= 1 + (spatial_engine::MAX_QUEUED_BATCHES + 1) as u64,
         "generated {plateau} batches while the consumer was paused"
     );
 }
@@ -515,8 +535,72 @@ fn the_first_batch_is_handed_over_before_the_result_is_materialized() {
     );
     // Sharper still: the producer may only be as far ahead as its declared window allows.
     assert!(
-        generated_when_first_arrived <= (spatial_engine::MAX_INFLIGHT_BATCHES + 2) as u64,
+        generated_when_first_arrived <= (spatial_engine::MAX_QUEUED_BATCHES + 2) as u64,
         "the producer ran {generated_when_first_arrived} batches ahead of a window of {}",
-        spatial_engine::MAX_INFLIGHT_BATCHES
+        spatial_engine::MAX_QUEUED_BATCHES
     );
+}
+
+// ---------------------------------------------------------------------------------------------
+// H6 — the engine names no transport
+// ---------------------------------------------------------------------------------------------
+
+/// The engine half of H6, asserted **by the engine, over its own source**.
+///
+/// The protocol crate scans the neutral interface; this scans the other side of the same boundary.
+/// ADR-004's control/data-plane split is only structural if neither half knows the other exists.
+///
+/// **The walk is recursive.** It used to live in `kernel/tests/` and use a flat `read_dir`, so the
+/// first `engine/src/connectors/` or `engine/src/crs/` subdirectory would have dropped out of
+/// coverage with the test still green — a scan that passes by looking at less is not a gate.
+#[test]
+fn h6_the_engine_module_names_no_transport() {
+    let forbidden = [
+        "socket", "websocket", "http", "url", "header", "port", "opcode", "axum", "tungstenite",
+        "frame_prefix", "credit",
+    ];
+
+    fn rust_sources(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        for entry in std::fs::read_dir(dir).expect("read engine src") {
+            let path = entry.expect("entry").path();
+            if path.is_dir() {
+                rust_sources(&path, out);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+                out.push(path);
+            }
+        }
+    }
+
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let mut files = Vec::new();
+    rust_sources(&root, &mut files);
+
+    // Guard against the scan going vacuous by finding nothing — the failure mode a recursive walk
+    // trades for the one it fixes.
+    assert!(files.len() >= 8, "expected the engine's sources, found {}", files.len());
+
+    for path in files {
+        let body = std::fs::read_to_string(&path).expect("read");
+        let code: String = body
+            .lines()
+            .filter(|l| {
+                let t = l.trim_start();
+                !t.starts_with("//") && !t.starts_with("*")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        for identifier in code.split(|c: char| !(c.is_alphanumeric() || c == '_')) {
+            let lower = identifier.to_ascii_lowercase();
+            if lower.starts_with("fetch_") {
+                continue; // Rust's atomics, not a transport
+            }
+            for word in forbidden {
+                assert_ne!(
+                    lower, word,
+                    "`{word}` appears in {}; the engine must not know a transport exists",
+                    path.display()
+                );
+            }
+        }
+    }
 }

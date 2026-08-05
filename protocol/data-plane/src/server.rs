@@ -47,7 +47,8 @@ use crate::wire;
 ///
 /// **The N+1 case is a refusal, not a queue.** Whether concurrent streams should be queued, and on
 /// what policy, is the question ADR-014 is *reserved* for; implementing a queue here would decide it
-/// by accident. A declared ceiling with a visible refusal decides nothing.
+/// by accident. Refusing is itself an admission policy and consumers will be written against it, so
+/// it is **provisional and reversible** — the same standing Candidate A has here — not a decision.
 ///
 /// A slot is taken **after** the operation is read and released as soon as the stream's last frame
 /// is handed to the transport — never across the peer's shutdown. Both matter: taking it earlier
@@ -271,8 +272,16 @@ async fn handle(st: AppState, mut socket: WebSocket) {
     // `MAX_CONCURRENT_STREAMS` idle connections could exhaust the declared ceiling for
     // `START_TIMEOUT` and cause visible refusals of legitimate streams.
     let request = match tokio::time::timeout(START_TIMEOUT, read_start(&mut socket)).await {
-        Ok(Some(r)) => r,
-        Ok(None) => return, // the peer left before starting anything
+        Ok(Ok(Some(r))) => r,
+        Ok(Ok(None)) => return, // the peer left before starting anything
+        Ok(Err(detail)) => {
+            // A START this producer cannot parse is a transport failure and says so. Returning
+            // here instead would drop the socket with no terminal frame — the silent truncation
+            // `lib.rs` declares a correctness failure, reached on the parse path.
+            terminal_and_drain(socket, wire::TERM_TRANSPORT_FAILED, detail, &st.json_frames_seen)
+                .await;
+            return;
+        }
         Err(_) => {
             terminal_and_drain(
                 socket,
@@ -319,11 +328,19 @@ async fn handle(st: AppState, mut socket: WebSocket) {
             // A refusal from the module that owns the operation — a CRS that cannot be admitted,
             // for instance — reaches the consumer as a typed terminal carrying its own words, not
             // as a dropped connection.
+            //
+            // **The slot goes back before the drain, not after.** No stream started, so there is
+            // nothing to account for; holding it across `terminal_and_drain`'s up-to-30 s wait for
+            // the peer to close would make the declared ceiling a function of client shutdown
+            // timing rather than of load — the exact property this file's ceiling comment claims,
+            // and ADR-010 rule 6's "declared, not discovered".
+            drop(permit);
             terminal_and_drain(socket, wire::TERM_PRODUCER_FAILED, &detail, &st.json_frames_seen)
                 .await;
             return;
         }
         Err(join) => {
+            drop(permit);
             terminal_and_drain(
                 socket,
                 wire::TERM_PRODUCER_FAILED,
@@ -340,13 +357,28 @@ async fn handle(st: AppState, mut socket: WebSocket) {
     let checkpoints = Arc::new(Checkpoints::default());
     let total = adapter_ws::total_or_unknown(source.total_batches());
 
-    let rx = pump::spawn(
+    let rx = match pump::spawn(
         source,
         state.clone(),
         tokio::runtime::Handle::current(),
         MAX_INFLIGHT_BATCHES,
         MAX_FRAME_BYTES,
-    );
+    ) {
+        Ok(rx) => rx,
+        Err(e) => {
+            // The producer never got a thread. Nothing was streamed, so the slot goes back before
+            // the drain, and the peer is told why rather than having its socket dropped.
+            drop(permit);
+            terminal_and_drain(
+                socket,
+                wire::TERM_PRODUCER_FAILED,
+                &format!("could not start the producer: {e}"),
+                &st.json_frames_seen,
+            )
+            .await;
+            return;
+        }
+    };
 
     let stream_id = state.stream.clone();
     let terminal = adapter_ws::drive(
@@ -395,17 +427,30 @@ async fn terminal_and_drain(
     .await;
 }
 
-async fn read_start(socket: &mut WebSocket) -> Option<OpenRequest> {
+/// Read the START frame.
+///
+/// **Three outcomes, kept distinct.** An operation was started (`Ok(Some)`); the peer left without
+/// starting one (`Ok(None)`); or the peer sent a START this producer cannot parse (`Err`). The
+/// third used to collapse into the second, which dropped the socket with no terminal frame — a
+/// silent truncation reached through the parser rather than through the writer, and `lib.rs` makes
+/// that a correctness failure either way.
+async fn read_start(
+    socket: &mut WebSocket,
+) -> std::result::Result<Option<OpenRequest>, &'static str> {
     while let Some(Ok(msg)) = socket.recv().await {
         if let Message::Binary(b) = msg {
             if b.first() == Some(&wire::TAG_START) {
-                let len = wire::payload_len(&b)?;
-                let payload = b.get(wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len)?;
-                let (operation, params) = wire::parse_start(payload)?;
-                return Some(OpenRequest { operation, params });
+                let len = wire::payload_len(&b)
+                    .ok_or("malformed START frame: prefix shorter than the frame header")?;
+                let payload = b
+                    .get(wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len)
+                    .ok_or("malformed START frame: payload shorter than its declared length")?;
+                let (operation, params) = wire::parse_start(payload)
+                    .ok_or("malformed START frame: operation and parameters did not parse")?;
+                return Ok(Some(OpenRequest { operation, params }));
             }
         }
     }
-    None
+    Ok(None)
 }
 

@@ -24,6 +24,38 @@ control/data-plane split structural rather than stylistic (`docs/02` warns that 
   refuse a mismatch it is told about.
 - **`slice-host`** — the binary that runs it end to end.
 
+## Declared recovery policy (ADR-010 rule 7)
+
+**`slice-host`: `none` — fail visibly and terminate with a surfaced error.** No restart, no
+supervision, no watchdog.
+
+Rule 7 makes this a *required declaration*, not optional documentation: "`none — fail visibly and
+terminate with a surfaced error` is a valid declaration; *not declaring* is not." The other three
+modules each declare theirs; the kernel is the composition root, so the composed policy is the one
+that governs the process and it belongs here.
+
+What follows from choosing `none`: no heartbeat and no watchdog are required (rule 7 attaches those
+to policies that promise recovery, and a policy that promises none has nothing to detect *when* to
+do). What is still required, and is implemented: a failed stream surfaces a typed terminal to its
+consumer rather than dropping a connection, and one stream's failure never terminates another's.
+
+## Declared composed ceilings (ADR-010 rule 6)
+
+The two crates each declare their own, and the composition adds them — a reader who takes either
+crate's bound as the process's bound will be wrong:
+
+| | |
+|---|---|
+| `engine` | `(MAX_QUEUED_BATCHES + 1) × MAX_BATCH_BYTES` = (2 + 1) × 4 MiB = **12 MiB** |
+| `protocol/data-plane` | `(MAX_INFLIGHT_BATCHES + 1) × MAX_FRAME_BYTES` = (4 + 1) × 16 MiB = **80 MiB** |
+| **composed, per stream** | **92 MiB** |
+| × `MAX_CONCURRENT_STREAMS` (4) | **368 MiB** |
+
+**Outside all of it, and not claimed to be inside:** DuckDB's own streaming buffer, and the OS and
+webview allocations the process does not control. The producer-resident *counter* sees only the
+data-plane window — that is what it is instrumented to see — so the counter and these bounds answer
+different questions, and `RESULTS.md` says which.
+
 ## What is deliberately absent
 
 - **No lineage DAG, no undo, no command/event log.** The operation is a **pure transformation**

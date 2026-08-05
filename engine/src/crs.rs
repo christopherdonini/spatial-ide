@@ -12,6 +12,14 @@
 
 use crate::error::{EngineError, Result};
 
+/// The identifier used when a CRS definition carries no authority and code.
+///
+/// **It is a marker, not a name.** Every definition-only dataset shares this string, so it can
+/// never be compared against anything to decide identity — the full definition travels alongside
+/// it and is the only thing that identifies such a CRS. Named as a constant rather than written as
+/// a literal so the places that must *refuse* to compare it are greppable.
+pub const DEFINITION_ONLY: &str = "(definition-only)";
+
 /// Where the dataset's CRS came from. A file fact and a caller's assertion are different things and
 /// stay distinguishable all the way onto the wire.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

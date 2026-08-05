@@ -69,5 +69,5 @@ pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
 pub use stream::{
     BatchInfo, BatchStream, Bbox, StreamStats, ViewportQuery, MAX_BATCH_BYTES,
-    MAX_INFLIGHT_BATCHES, MAX_ROWS_PER_BATCH, TARGET_BATCH_BYTES,
+    MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, TARGET_BATCH_BYTES,
 };

@@ -104,7 +104,20 @@ pub(crate) async fn drive(
                     Some(Ok(Message::Binary(b))) => {
                         note_if_json(&json_frames_seen, &b);
                         match parse_control(&b) {
-                        Some(Control::Credit(n)) => credit.add_permits(n as usize),
+                        Some(Control::Credit(n)) => {
+                            // **Clamped to the declared window, not trusted from the peer.**
+                            // `Semaphore::add_permits` panics past `MAX_PERMITS`, and
+                            // `server::MAX_INFLIGHT_BATCHES` is documented as "credit window, in
+                            // batches" — that should be true on the receive side too, not only
+                            // where the pump's channel capacity happens to enforce it. A
+                            // well-behaved consumer never reaches this clamp.
+                            let room = crate::server::MAX_INFLIGHT_BATCHES
+                                .saturating_sub(credit.available_permits());
+                            let grant = (n as usize).min(room);
+                            if grant > 0 {
+                                credit.add_permits(grant);
+                            }
+                        }
                         Some(Control::Cancel) => {
                             // Producer-visible cancellation, stamped on the producer's own clock at
                             // the instant this adapter learns of it — and propagated to the source
@@ -274,7 +287,16 @@ pub(crate) async fn drive(
     // The wait is only a real drain because the reader task keeps running after a CANCEL. If it
     // returned on the cancel, this `await` would complete instantly and dropping the socket would
     // abort the connection with the terminal frame still in flight.
-    let _ = tokio::time::timeout(crate::server::PEER_DRAIN_TIMEOUT, reader).await;
+    // **On timeout the reader is aborted, not dropped.** Dropping a `JoinHandle` *detaches* its
+    // task rather than cancelling it: it would keep looping on `stream.next()` against a peer that
+    // stays connected and silent, still owning the receive half of the socket (the sink half
+    // dropping does not close it — `split` shares the socket through a `BiLock`) and still holding
+    // this stream's state, source-cancel handle and credit semaphore alive. That is one leaked
+    // task, socket and descriptor per such connection, with nothing bounding the count.
+    let drain = reader.abort_handle();
+    if tokio::time::timeout(crate::server::PEER_DRAIN_TIMEOUT, reader).await.is_err() {
+        drain.abort();
+    }
 
     terminal
 }

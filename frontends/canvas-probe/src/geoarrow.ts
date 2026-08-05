@@ -45,7 +45,13 @@ export interface DecodedBatch {
 export const EXPECTED_FRAME = 'authoritative-project-crs';
 export const EXPECTED_ENCODING = 'geoarrow.polygon';
 
-export function decodeBatch(payload: Uint8Array): DecodedBatch {
+/**
+ * @param expectedCrs the CRS this consumer's viewport is expressed in. Every batch's envelope must
+ *   name it. Passing it is not optional decoration: without it a dataset in a different projected
+ *   CRS is fitted into this viewport's extent and drawn silently, which is the frame error ADR-010
+ *   rule 1 records at 3 116 272 m arriving through the display path instead of the query path.
+ */
+export function decodeBatch(payload: Uint8Array, expectedCrs: string): DecodedBatch {
   const table = tableFromIPC(payload);
   const meta = table.schema.metadata;
 
@@ -66,6 +72,18 @@ export function decodeBatch(payload: Uint8Array): DecodedBatch {
     throw new Error(`batch envelope names frame "${envelope.frame}", expected "${EXPECTED_FRAME}"`);
   }
   if (!envelope.crs) throw new Error('batch envelope carries no CRS');
+  if (envelope.crs !== expectedCrs) {
+    throw new Error(
+      `batch is in CRS "${envelope.crs}" but this viewport is expressed in "${expectedCrs}"; ` +
+        'this consumer performs no reprojection',
+    );
+  }
+  // A definition-only CRS names nothing — every such dataset carries the same placeholder, and the
+  // actual definition lives in the geometry field's extension metadata, which this consumer does
+  // not read. Matching the placeholder against itself would be a comparison of two non-names.
+  if (envelope.crs === '(definition-only)') {
+    throw new Error('batch envelope carries a definition-only CRS, which this consumer cannot match');
+  }
   if (envelope.axisOrder !== 'easting,northing') {
     throw new Error(`unexpected axis order "${envelope.axisOrder}"`);
   }

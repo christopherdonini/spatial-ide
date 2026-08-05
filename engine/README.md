@@ -63,9 +63,11 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
 ## What it deliberately does not do
 
 - **No transport.** Nothing here names a socket, a URL, a port or a frame; there is no dependency on
-  `protocol/data-plane`. `kernel/tests/end_to_end.rs` scans this crate's source to keep it that way.
+  `protocol/data-plane`. `tests/slice.rs` scans this crate's own source — recursively — to keep it
+  that way, symmetric with `protocol/data-plane` scanning its own.
 - **No reprojection**, no PROJ, no definitional-equivalence check. A viewport in another CRS is
-  refused, not transformed.
+  refused, not transformed — and per ADR-015 §7 the identifier check that does this is a **caller
+  assertion about the query**, never a finding that two CRS definitions agree.
 - **No spatial index.** `docs/07`'s other open gate, untouched.
 - **No provenance column.** ADR-013 is Proposed and binds nothing; its own OPEN block says the
   per-feature-versus-per-vertex choice must be made "explicitly at acceptance, not inherited".
@@ -75,16 +77,36 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
 ## Declared ceilings (ADR-010 rule 6)
 
 `MAX_BATCH_BYTES` 4 MiB · `TARGET_BATCH_BYTES` 1 MiB · `MAX_ROWS_PER_BATCH` 65 536 ·
-`MAX_INFLIGHT_BATCHES` 2. Producer-resident payload is bounded by
-`(MAX_INFLIGHT_BATCHES + 1) × MAX_BATCH_BYTES`, **plus DuckDB's own streaming buffer, which this
+`MAX_QUEUED_BATCHES` 2. Producer-resident payload is bounded by
+`(MAX_QUEUED_BATCHES + 1) × MAX_BATCH_BYTES`, **plus DuckDB's own streaming buffer, which this
 counter does not see and does not claim to**.
 
 **The consequence of `MAX_BATCH_BYTES`, stated because a ceiling that surprises you is not
-declared:** batches are cut at `TARGET_BATCH_BYTES`, so the ceiling is normally unreachable — but a
-**single feature** larger than 4 MiB (roughly 262 000 vertices) cannot be split and terminates the
-stream with `CeilingExceeded`. Real cadastral parcels are nowhere near that; a dissolved
-country-level multipolygon would be. Raising the ceiling, or splitting a feature's rings across
-batches, is a design decision this slice does not make.
+declared:** batches are cut **before** a feature is appended, not after, so an ordinary payload
+cannot reach the ceiling no matter how full the current batch is when a large feature arrives. What
+remains is the irreducible case — a **single feature** larger than 4 MiB (roughly 262 000 vertices)
+cannot be split, and terminates the stream with `FeatureTooLarge`, **naming the feature's id** so it
+can be found. Real cadastral parcels are nowhere near that; a dissolved country-level multipolygon
+would be. Raising the ceiling, or splitting one feature's rings across batches, is a design decision
+this slice does not make.
+
+*(Cut-before-append replaced cut-after-append in review. With the old ordering a large feature
+landing on an almost-full batch pushed the total past the ceiling and killed the stream — the batch
+size was a function of its last feature, and `docs/08`'s Polygons class at 50–200 vertices per
+feature could never produce the case.)*
+
+## Admission: what this module refuses to open
+
+Both refusals are **ADR-015 (Proposed)** policy, and both happen at open, in front of an operator:
+
+- **A source with no CRS**, and a caller assertion over a source that has one — the four-row table in
+  ADR-015 §1–§6.
+- **A source with no stable per-feature identity** — concretely, no 64-bit column named `id`
+  (ADR-015 §8). ADR-010 rule 2 resolves picking through a stable feature ID and `docs/11` requires
+  one for editing and lineage; synthesizing a row ordinal is the M3 hazard rule 2 exists to prevent.
+  **This bounds which real GeoParquet the hero slice can open more tightly than anything in
+  `docs/07`** — most files in the wild carry no such column — and the source-key-to-identity mapping
+  that would fix it is an OPEN item on ADR-015, not something implemented here.
 
 ## Deviation from `docs/05`, named rather than buried
 

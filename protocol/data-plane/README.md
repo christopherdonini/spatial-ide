@@ -102,7 +102,12 @@ load.
 
 **The N+1 case is a refusal, not a queue.** Whether concurrent streams should be queued, and on what
 policy, is the question **ADR-014 is reserved for**; implementing a queue here would decide it by
-accident. A declared ceiling with a visible, typed refusal decides nothing.
+accident.
+
+Refuse-don't-queue is itself an admission policy, though, and consumers will be written against it —
+so the honest framing is the one this repo already uses for Candidate A: **provisional and
+reversible, not a decision.** ADR-014 may replace it, and nothing here may be cited as evidence that
+it should not.
 
 ## Security posture (`docs/09`)
 

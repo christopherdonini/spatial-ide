@@ -440,7 +440,16 @@ async fn measure_the_slice_against_docs_08() {
     let canary_start = Canary::take("start");
 
     // ---- The fixture, shaped to docs/08's Polygons class ------------------------------------
-    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");
+    // **The harness keeps its fixtures apart from the ordinary suite's.**
+    //
+    // Every other test writes into `target/fixtures/` under a fixed name. This harness runs for
+    // minutes and is normally started by hand, so it can easily overlap an ordinary
+    // `cargo test --workspace` — and two processes writing the same `.parquet` path produce
+    // "File too small to be a Parquet file" in whichever one reads mid-write. In a document whose
+    // own finding #2 is "the source tree moved underneath the measurement", the measurement sharing
+    // a fixture directory with the test suite is the same hazard one level down.
+    let dir =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/slice-budgets");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join("polygons-100k.parquet");
     let t = Instant::now();
@@ -658,7 +667,7 @@ async fn measure_the_slice_against_docs_08() {
     "instrument": "fixed transport-insensitive integer loop; touches no socket and no database",
     "short_iterations": {canary_short_iters},
     "long_iterations": {canary_long_iters},
-    "instrument_finding": "the 40M-iteration canary that kernel/tests/concurrency_in_situ.rs uses lands near 7 ms on this hardware, which is inside the CPU's own frequency-transition window; consecutive readings on an IDLE machine disagreed by up to 3x. It is too short to be a stable instrument here. The 400M-iteration reading is carried alongside it and is the one a reader should use.",
+    "instrument_finding": "the 40M-iteration canary that kernel/tests/concurrency_in_situ.rs uses is too short to be a stable instrument on this hardware: it sits inside the CPU's own frequency-transition window. Read the dispersion of the canary_40m_ms samples in this artifact rather than any figure quoted in prose -- an earlier version of this string quoted 'near 7 ms' and 'up to 3x', neither of which was a measurement taken from any run. The 400M-iteration reading is carried alongside it and is the one a reader should use.",
     "start": {canary_start},
     "mid_after_cancel_trials": {canary_mid},
     "end": {canary_end},
@@ -825,7 +834,35 @@ async fn measure_the_slice_against_docs_08() {
         println!("evidence: {}", out.display());
     };
 
-    write_artifact("see RESULTS.md for the per-row verdicts");
+    // **The verdict is computed before the artifact is written, and written into it.**
+    //
+    // The artifact used to be emitted with a fixed "see RESULTS.md" note and *then* the assertions
+    // ran, so a run that blew a budget left a file indistinguishable from a passing one — and the
+    // panic meant nobody went looking. An artifact that cannot tell you whether its own run passed
+    // is the kind of evidence this project spent three bake-off phases learning to distrust.
+    let mut misses: Vec<String> = Vec::new();
+    if pct(&mid_sorted, 0.95) >= 100.0 {
+        misses.push(format!("mid-stream cancel p95 {:.3} ms >= 100 ms", pct(&mid_sorted, 0.95)));
+    }
+    if pct(&early_sorted, 0.95) >= 100.0 {
+        misses.push(format!(
+            "cancel-before-first p95 {:.3} ms >= 100 ms",
+            pct(&early_sorted, 0.95)
+        ));
+    }
+    if *mid_after.iter().max().unwrap() > 1 || *early_after.iter().max().unwrap() > 1 {
+        misses.push("more than one batch generated after cancellation was observed".to_string());
+    }
+    if worst_resident > resident_bound {
+        misses.push(format!(
+            "producer-resident peak {worst_resident} B exceeded the declared bound {resident_bound} B"
+        ));
+    }
+    write_artifact(&if misses.is_empty() {
+        "all hard gates met; see RESULTS.md for the per-row verdicts".to_string()
+    } else {
+        format!("REGRESSION - hard gates missed: {}", misses.join("; "))
+    });
 
     println!(
         "cancel mid-stream   p50 {:.3} ms  p95 {:.3} ms  (n={CANCEL_TRIALS}, max batches after cancel {})",

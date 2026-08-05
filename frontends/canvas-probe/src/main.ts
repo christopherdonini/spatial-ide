@@ -88,16 +88,34 @@ function emptyRecord(label: string): StreamRecord {
 
 const params = new URLSearchParams(location.search);
 const DATASET = params.get('dataset') ?? 'parcels';
-/** The token is delivered in the URL fragment, which browsers never transmit. */
+/**
+ * The token is delivered in the URL fragment, which browsers never transmit.
+ *
+ * It is stripped from the address bar the moment it is read. A fragment left in place lives in the
+ * tab's history entry and in whatever session-restore state the browser writes to disk — so
+ * ADR-012's threat-model requirement that the production transport "must not write the credential
+ * to disk" would be satisfied by the producer and then undone by the consumer.
+ */
 const TOKEN = location.hash.replace(/^#/, '');
+history.replaceState(null, '', location.pathname + location.search);
 
 const canvas = document.getElementById('map') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 
 /**
- * The dataset's extent, in its own CRS. Hardcoded to the fixture's domain because this probe has no
- * metadata endpoint — the control plane that would carry an extent does not exist in this slice.
+ * The dataset's extent, **in the CRS named by `EXTENT_CRS`**. Hardcoded to the fixture's domain
+ * because this probe has no metadata endpoint — the control plane that would carry an extent does
+ * not exist in this slice.
+ *
+ * **The CRS travels with it, and is checked against every batch's envelope.** These four numbers
+ * are ADR-010 rule 1 row-1 values — authoritative project-CRS coordinates — and rule 1 permits them
+ * to cross a boundary *only* carrying CRS identity: "a value that does not carry its space's tag
+ * does not leave the module that produced it." Untagged, a dataset in any other projected CRS would
+ * be fitted into an LV95-shaped viewport and drawn without complaint, which is the silent-frame
+ * error rule 1 exists to prevent. The query path already gets this right (`kernel/src/params.rs`
+ * makes the viewport name its own CRS); this is the display path doing the same.
  */
+const EXTENT_CRS = params.get('extent_crs') ?? 'EPSG:2056';
 const EXTENT: [number, number, number, number] = [
   Number(params.get('xmin') ?? 2_600_000),
   Number(params.get('ymin') ?? 1_200_000),
@@ -113,6 +131,8 @@ const STYLES = {
 } as const;
 
 const incomplete: string[] = [];
+/** Latched so the caller-asserted CRS notice is raised once, not once per batch. */
+let assertedNoted = false;
 
 /** Draw a batch inside a rAF and time when the pixels actually landed. */
 function drawSoon(batch: DecodedBatch, style: (typeof STYLES)[keyof typeof STYLES], rec: StreamRecord) {
@@ -150,7 +170,18 @@ function run(
       onBatch(payload, contiguous) {
         const now = performance.now();
         if (rec.firstBatchMs === undefined) rec.firstBatchMs = now - t0;
-        const batch = decodeBatch(payload);
+        const batch = decodeBatch(payload, EXTENT_CRS);
+        // ADR-015 §3: a consumer can tell a claim from a fact without asking the engine — but only
+        // if it looks. A caller-asserted CRS is marked on the canvas the same way a partial layer
+        // is, because "someone told us this is LV95" and "the file says so" are different grounds
+        // for everything drawn from here on.
+        if (batch.envelope.crsSource === 'caller_asserted' && !assertedNoted) {
+          assertedNoted = true;
+          incomplete.push(
+            `CRS ${batch.envelope.crs} was asserted by ${batch.envelope.crsAssertedBy ?? 'a caller'}` +
+              ', not read from the file',
+          );
+        }
         rec.batches += 1;
         rec.rows += batch.features;
         rec.vertices += batch.vertices;

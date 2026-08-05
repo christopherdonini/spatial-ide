@@ -28,13 +28,19 @@ pub(crate) enum PumpItem {
 }
 
 /// Spawn the pump. Returns the receiving half; the sending half lives on the pump thread.
+///
+/// **Thread-spawn failure is returned, not panicked.** It is reachable under thread or handle
+/// exhaustion, on a per-connection path, and a panic here unwinds the connection's task and leaves
+/// the peer with an aborted socket and no terminal frame — the same silent truncation the rest of
+/// this crate treats as a correctness failure. `engine`'s equivalent call site already returns a
+/// typed error; this one was the outlier.
 pub(crate) fn spawn(
     mut source: Box<dyn BatchSource>,
     state: Arc<StreamState>,
     handle: tokio::runtime::Handle,
     capacity: usize,
     max_frame_bytes: usize,
-) -> mpsc::Receiver<PumpItem> {
+) -> std::io::Result<mpsc::Receiver<PumpItem>> {
     let (tx, rx) = mpsc::channel::<PumpItem>(capacity);
 
     std::thread::Builder::new()
@@ -80,8 +86,7 @@ pub(crate) fn spawn(
                     }
                 }
             }
-        })
-        .expect("spawn pump thread");
+        })?;
 
-    rx
+    Ok(rx)
 }

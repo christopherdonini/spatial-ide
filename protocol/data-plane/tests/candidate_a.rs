@@ -398,6 +398,34 @@ async fn batches_until_quiet(c: &mut Client, settle: Duration) -> usize {
     n
 }
 
+/// Wait for exactly `want` batches, then confirm no further batch arrives.
+///
+/// **The two halves need different clocks and used to share one.** `batches_until_quiet` with a
+/// fixed settle window conflates "the producer sent no more" with "the producer had not sent them
+/// *yet*": under load the arrival of a batch the grant does license can slip past the window, and
+/// the test fails claiming credit was under-consumed. Measured at 1 failure in 33 runs.
+///
+/// So the *at least* half gets a generous deadline — a shortfall there is a real defect and a slow
+/// machine cannot manufacture one — and only the *no more than* half keeps a settle window, where
+/// a longer wait can only make the assertion stricter.
+async fn expect_exactly(c: &mut Client, want: usize, deadline: Duration, quiet: Duration) -> usize {
+    let mut n = 0;
+    let until = tokio::time::Instant::now() + deadline;
+    while n < want {
+        match tokio::time::timeout_at(until, c.next()).await {
+            Ok(Some(Ok(Message::Binary(b)))) => {
+                if b[0] == wire::TAG_BATCH {
+                    n += 1;
+                }
+            }
+            Ok(Some(Ok(_))) => {}
+            Ok(Some(Err(_))) | Ok(None) => return n,
+            Err(_) => return n, // fewer than `want` arrived: a real shortfall
+        }
+    }
+    n + batches_until_quiet(c, quiet).await
+}
+
 #[tokio::test]
 async fn withholding_credit_bounds_producer_memory() {
     // H3. The producer may work ahead into its declared window and must then stop.
@@ -450,11 +478,11 @@ async fn a_grant_of_n_moves_exactly_n_batches() {
 
     send_start(&mut c).await;
     grant(&mut c, 3).await;
-    let first = batches_until_quiet(&mut c, Duration::from_millis(400)).await;
+    let first = expect_exactly(&mut c, 3, Duration::from_secs(5), Duration::from_millis(400)).await;
     assert_eq!(first, 3, "a grant of 3 must move exactly 3 batches, not {first}");
 
     grant(&mut c, 2).await;
-    let second = batches_until_quiet(&mut c, Duration::from_millis(400)).await;
+    let second = expect_exactly(&mut c, 2, Duration::from_secs(5), Duration::from_millis(400)).await;
     assert_eq!(second, 2, "a further grant of 2 must move exactly 2 batches, not {second}");
 
     c.close(None).await.ok();
@@ -568,5 +596,49 @@ async fn a_completed_stream_is_recorded_with_its_terminal_outcome() {
 
     assert_eq!(recorded.len(), 1);
     assert_eq!(recorded[0].1, Terminal::Completed);
+    dp.shutdown().await;
+}
+
+#[tokio::test]
+async fn a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_named() {
+    // ADR-010 rule 6 again, on the branch that had no test at all. `pump.rs` claims the frame
+    // ceiling is "declared, and then actually enforced at the limit" — but nothing drove a payload
+    // past it, so the enforcement arm had never executed. The bake-off had this coverage
+    // (`web/src/regression.test.ts` sets a 1 KiB ceiling); it was not carried over with the rest.
+    //
+    // A ceiling nothing has ever crossed is a constant, not a ceiling.
+    let f = factory(4, spatial_data_plane::MAX_FRAME_BYTES + 1, 0);
+    let dp = start(f.clone()).await;
+    let mut c = connect(&dp).await.expect("connect");
+
+    send_start(&mut c).await;
+    grant(&mut c, 4).await;
+
+    let mut terminal: Option<(u8, String)> = None;
+    let mut batches = 0;
+    while let Ok(Some(Ok(Message::Binary(b)))) =
+        tokio::time::timeout(Duration::from_secs(5), c.next()).await
+    {
+        match b[0] {
+            wire::TAG_BATCH => batches += 1,
+            wire::TAG_TERMINAL => {
+                let payload = &b[wire::FRAME_PREFIX_LEN..];
+                terminal =
+                    Some((payload[0], String::from_utf8_lossy(&payload[1..]).into_owned()));
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    let (code, detail) = terminal.expect("an over-ceiling batch must produce a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.contains("frame ceiling") && detail.contains(&spatial_data_plane::MAX_FRAME_BYTES.to_string()),
+        "the terminal must name the ceiling it hit, got: {detail}"
+    );
+    assert_eq!(batches, 0, "no over-ceiling batch may reach the consumer");
+
+    c.close(None).await.ok();
     dp.shutdown().await;
 }

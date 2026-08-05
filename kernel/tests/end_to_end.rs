@@ -501,44 +501,11 @@ async fn a_viewport_in_the_wrong_crs_is_refused_end_to_end() {
 // H6 — no transport vocabulary anywhere it does not belong
 // ---------------------------------------------------------------------------------------------
 
-#[test]
-fn h6_the_engine_module_names_no_transport() {
-    // The protocol crate scans its own neutral interface; this scans the *other* side of the
-    // boundary. ADR-004's split is only structural if neither half knows the other.
-    let forbidden = [
-        "socket", "websocket", "http", "url", "header", "port", "opcode", "axum", "tungstenite",
-        "frame_prefix", "credit",
-    ];
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../engine/src");
-    for entry in std::fs::read_dir(&dir).expect("engine src") {
-        let path = entry.expect("entry").path();
-        if path.extension().and_then(|e| e.to_str()) != Some("rs") {
-            continue;
-        }
-        let body = std::fs::read_to_string(&path).expect("read");
-        let code: String = body
-            .lines()
-            .filter(|l| {
-                let t = l.trim_start();
-                !t.starts_with("//") && !t.starts_with("*")
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        for identifier in code.split(|c: char| !(c.is_alphanumeric() || c == '_')) {
-            let lower = identifier.to_ascii_lowercase();
-            if lower.starts_with("fetch_") {
-                continue; // Rust's atomics, not a transport
-            }
-            for word in forbidden {
-                assert_ne!(
-                    lower, word,
-                    "`{word}` appears in {}; the engine must not know a transport exists",
-                    path.display()
-                );
-            }
-        }
-    }
-}
+// H6's engine-side scan lives in `engine/tests/slice.rs`, next to the source it protects — each
+// module asserts its own hygiene, symmetric with `protocol/data-plane/tests/no_transport_leakage.rs`
+// scanning the neutral interface. It ran from here until it was noticed that a non-recursive
+// `read_dir` would silently stop covering the engine the first time anyone added a subdirectory
+// under `engine/src/`, which is a test that passes by looking at less.
 
 #[test]
 fn the_engine_does_not_depend_on_the_data_plane_or_the_other_way_round() {

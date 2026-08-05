@@ -54,12 +54,27 @@ impl CancelToken {
     /// performs **before** executing is not redundant belt-and-braces; it is the only thing that
     /// stops a query that was cancelled before it started. See
     /// `an_interrupt_on_an_idle_connection_is_not_latched`.
-    pub(crate) fn attach(&self, handle: Arc<InterruptHandle>) {
+    /// **One token, one live stream — a second binding is refused, never silently swapped.**
+    ///
+    /// The slot holds a single handle, so overwriting it would disarm the stream already bound to
+    /// this token: that stream's `cancel()` would stop poking DuckDB and degrade to the
+    /// between-batches flag this module exists not to rely on, with nothing raised. It is
+    /// reachable — `Dataset::stream_with_cancel` is public and takes a caller-held token precisely
+    /// so a binding can hold one, and nothing stopped a caller passing the same one twice.
+    pub(crate) fn attach(&self, handle: Arc<InterruptHandle>) -> crate::error::Result<()> {
         let mut slot = self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner());
+        if slot.is_some() {
+            return Err(crate::error::EngineError::Source(
+                "this cancellation token is already bound to a running stream; each stream needs \
+                 its own token"
+                    .into(),
+            ));
+        }
         if self.inner.cancelled.load(Ordering::SeqCst) {
             handle.interrupt();
         }
         *slot = Some(handle);
+        Ok(())
     }
 
     /// Release the connection when the stream is over, so a later `cancel()` cannot poke a
@@ -72,6 +87,21 @@ impl CancelToken {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_token_refuses_a_second_stream_rather_than_disarming_the_first() {
+        // Overwriting the slot would leave the first stream cancellable only between batches, with
+        // nothing raised — the silent degradation this module's whole premise rejects.
+        let a = duckdb::Connection::open_in_memory().unwrap();
+        let b = duckdb::Connection::open_in_memory().unwrap();
+        let t = CancelToken::new();
+        t.attach(a.interrupt_handle()).unwrap();
+        assert!(t.attach(b.interrupt_handle()).is_err(), "a second binding must be refused");
+
+        // And the refusal is not permanent: the token is reusable once its stream releases it.
+        t.detach();
+        assert!(t.attach(b.interrupt_handle()).is_ok());
+    }
 
     #[test]
     fn cancellation_is_visible_and_sticky() {
@@ -90,7 +120,7 @@ mod tests {
         // between batches would not stop it — only the interrupt does.
         let conn = duckdb::Connection::open_in_memory().unwrap();
         let t = CancelToken::new();
-        t.attach(conn.interrupt_handle());
+        t.attach(conn.interrupt_handle()).unwrap();
 
         let canceller = {
             let t = t.clone();
@@ -123,7 +153,7 @@ mod tests {
         let conn = duckdb::Connection::open_in_memory().unwrap();
         let t = CancelToken::new();
         t.cancel();
-        t.attach(conn.interrupt_handle());
+        t.attach(conn.interrupt_handle()).unwrap();
 
         let mut stmt = conn.prepare("SELECT count(*) FROM range(0, 1000) t(i)").unwrap();
         assert!(

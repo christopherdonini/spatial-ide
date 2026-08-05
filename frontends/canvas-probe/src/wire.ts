@@ -179,15 +179,31 @@ export class FrameDecoder {
   }
 }
 
+/** A frame this consumer could not decode, reported inside the shared terminal taxonomy. */
+function malformed(detail: string): Frame {
+  return { t: 'terminal', terminal: { kind: 'DecodeFailed', detail } };
+}
+
 function decode(tag: number, payload: Uint8Array, contiguous: boolean): Frame {
   switch (tag) {
     case TAG.OPEN: {
       const [operationId, streamId] = new TextDecoder().decode(payload).split(' ');
+      // Both ids or neither. Without this a malformed OPEN yields `streamId === undefined` and
+      // every later log line and artifact silently records a handle that is half missing.
+      if (!operationId || !streamId) {
+        return malformed(`OPEN frame did not carry both ids (${payload.byteLength} B)`);
+      }
       return { t: 'open', handle: { operationId, streamId } };
     }
     case TAG.BATCH:
       return { t: 'batch', payload, contiguous };
     case TAG.PROGRESS: {
+      // The frame's own length is validated by the decoder; the *payload's* fixed layout is not,
+      // and reading past it throws a bare `RangeError` from `DataView` rather than a typed
+      // outcome. Three big-endian u64s is 24 bytes, and anything shorter is a malformed frame.
+      if (payload.byteLength < 24) {
+        return malformed(`PROGRESS payload is ${payload.byteLength} B, expected 24`);
+      }
       const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
       // Integers, never JSON floats (ADR-004 amendment 1). The unknown-total sentinel is compared
       // as a BigInt *before* any narrowing — `u64::MAX` is not exactly representable as a JS
@@ -203,13 +219,18 @@ function decode(tag: number, payload: Uint8Array, contiguous: boolean): Frame {
       };
     }
     case TAG.TERMINAL: {
+      if (payload.byteLength < 1) return malformed('TERMINAL frame carried no outcome code');
+      const kind = TERMINAL_KINDS[payload[0]];
       const detail = new TextDecoder().decode(payload.subarray(1));
-      return {
-        t: 'terminal',
-        terminal: { kind: TERMINAL_KINDS[payload[0]] ?? 'TransportFailed', detail },
-      };
+      // An unrecognised code is a frame this consumer could not decode — not a transport failure.
+      // Reporting it as `TransportFailed` would attribute a version or framing mismatch to the
+      // socket and send the next reader looking in the wrong place.
+      if (kind === undefined) {
+        return malformed(`unknown terminal code ${payload[0]}${detail ? `: ${detail}` : ''}`);
+      }
+      return { t: 'terminal', terminal: { kind, detail } };
     }
     default:
-      return { t: 'terminal', terminal: { kind: 'DecodeFailed', detail: `unknown frame tag ${tag}` } };
+      return malformed(`unknown frame tag ${tag}`);
   }
 }

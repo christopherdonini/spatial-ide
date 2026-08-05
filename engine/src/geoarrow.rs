@@ -16,7 +16,7 @@ use arrow::array::{Array, ArrayRef, FixedSizeListArray, Float64Array, ListArray}
 use arrow::buffer::{OffsetBuffer, ScalarBuffer};
 use arrow::datatypes::{DataType, Field, FieldRef};
 
-use crate::crs::{CrsSource, DatasetCrs};
+use crate::crs::DatasetCrs;
 use crate::error::{EngineError, Result};
 use crate::wkb::PolygonBuilder;
 
@@ -58,7 +58,7 @@ pub fn build_polygon_array(b: PolygonBuilder) -> Result<ArrayRef> {
 
     let rings = ListArray::try_new(
         vertices_field(),
-        OffsetBuffer::new(ScalarBuffer::from(b.ring_offsets)),
+        checked_offsets(b.ring_offsets, "ring offsets")?,
         Arc::new(coords),
         None,
     )
@@ -66,7 +66,7 @@ pub fn build_polygon_array(b: PolygonBuilder) -> Result<ArrayRef> {
 
     let polygons = ListArray::try_new(
         rings_field(),
-        OffsetBuffer::new(ScalarBuffer::from(b.geom_offsets)),
+        checked_offsets(b.geom_offsets, "geometry offsets")?,
         Arc::new(rings),
         None,
     )
@@ -75,23 +75,26 @@ pub fn build_polygon_array(b: PolygonBuilder) -> Result<ArrayRef> {
     Ok(Arc::new(polygons))
 }
 
-/// The geometry field, carrying the GeoArrow extension name and the CRS **as the file states it**.
+/// The geometry field, carrying the GeoArrow extension name and whatever CRS the dataset carries.
 ///
-/// When the file declared a CRS, its own PROJJSON travels verbatim (`crs_type: projjson`) — the
-/// definition, not a name. When the CRS was asserted by the caller for a file that declared none,
-/// what travels is the assertion, marked as such (`crs_type: authority_code`), so a consumer can
-/// tell a file fact from a caller's claim without asking this engine.
+/// **This field says what the CRS *is*, not where it came from.** A definition travels verbatim as
+/// `crs_type: projjson`; a bare identifier travels as `crs_type: authority_code`. Both forms occur
+/// for both a file fact and a caller's assertion — a caller who supplies a definition produces
+/// output byte-identical to a file that declared the same one, and that is correct: GeoArrow's
+/// field metadata is a CRS carrier, not a provenance carrier.
+///
+/// The file-fact-versus-claim distinction lives on the **schema-level `crs_source` key** written by
+/// `envelope.rs`, and only there. An earlier version of this comment claimed the two `crs_type`
+/// values carried it, which was never true of the `Some(definition)` path and gave a reader licence
+/// to infer provenance from a field that does not carry it.
 pub fn geometry_field(name: &str, crs: &DatasetCrs) -> FieldRef {
     let mut md = HashMap::new();
     md.insert(EXT_NAME_KEY.to_string(), EXT_NAME_POLYGON.to_string());
 
-    let crs_meta = match (crs.definition_json(), crs.source()) {
-        (Some(def), _) => format!(r#"{{"crs":{def},"crs_type":"projjson"}}"#),
-        (None, CrsSource::CallerAsserted) => {
-            format!(r#"{{"crs":"{}","crs_type":"authority_code"}}"#, escape(crs.identifier()))
-        }
-        (None, CrsSource::File) => {
-            format!(r#"{{"crs":"{}","crs_type":"authority_code"}}"#, escape(crs.identifier()))
+    let crs_meta = match crs.definition_json() {
+        Some(def) => format!(r#"{{"crs":{def},"crs_type":"projjson"}}"#),
+        None => {
+            format!(r#"{{"crs":{},"crs_type":"authority_code"}}"#, json_string(crs.identifier()))
         }
     };
     md.insert(EXT_META_KEY.to_string(), crs_meta);
@@ -99,8 +102,43 @@ pub fn geometry_field(name: &str, crs: &DatasetCrs) -> FieldRef {
     Arc::new(Field::new(name, polygon_storage_type(), false).with_metadata(md))
 }
 
-fn escape(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('"', "\\\"")
+/// Build an `OffsetBuffer`, checking the invariant instead of asserting it.
+///
+/// **`OffsetBuffer::new` panics on non-monotonic offsets, and arrow-buffer 58 exposes no checked
+/// constructor** — `try_new` arrived later. These offsets are accumulated from `as i32`
+/// truncations over ring and part counts read out of untrusted WKB, so the one input that could
+/// violate the invariant is the one input this engine does not control. A panic here would take
+/// the producer thread with it and turn a malformed file into a lost stream instead of a typed
+/// refusal.
+fn checked_offsets(v: Vec<i32>, what: &str) -> Result<OffsetBuffer<i32>> {
+    match v.first() {
+        None => return Err(EngineError::Arrow(format!("{what}: buffer is empty"))),
+        Some(&first) if first != 0 => {
+            return Err(EngineError::Arrow(format!("{what}: start at {first}, not 0")))
+        }
+        Some(_) => {}
+    }
+    if let Some(w) = v.windows(2).find(|w| w[1] < w[0]) {
+        return Err(EngineError::Arrow(format!(
+            "{what}: not monotonically increasing ({} then {})",
+            w[0], w[1]
+        )));
+    }
+    Ok(OffsetBuffer::new(ScalarBuffer::from(v)))
+}
+
+/// JSON-quote a string, escaping **everything** JSON requires — including the C0 control characters
+/// a hand-rolled quote-and-backslash pair passes through untouched.
+///
+/// `crs.identifier()` is assembled from the `authority` and `code` strings read straight out of the
+/// file's PROJJSON, so it is untrusted input on every stream's schema. A raw control byte inside a
+/// JSON string is invalid JSON, and `ARROW:extension:metadata` that will not parse is a batch no
+/// GeoArrow-aware reader can use — the same defect the evidence-artifact escaping fix closed one
+/// file over, on the path that actually ships.
+fn json_string(s: &str) -> String {
+    // Serializing a `&str` cannot fail. The fallback exists so this returns valid JSON even if that
+    // ever stops being true, rather than unwrapping on a hot path.
+    serde_json::to_string(s).unwrap_or_else(|_| String::from(r#""""#))
 }
 
 /// Assert that what was built is what is being claimed.

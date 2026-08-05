@@ -26,6 +26,22 @@ pub enum EngineError {
     /// operation (`docs/05` detect → propose → preview → apply), which is Alpha work (`docs/07`).
     CrsAssertionConflict { declared: String, asserted: String },
 
+    /// A query's viewport names a CRS other than the dataset's.
+    ///
+    /// **Deliberately a separate variant from `CrsAssertionConflict`.** The two refusals are
+    /// unrelated — one is about admitting a *source*, the other about admitting a *query* — and
+    /// sharing a variant meant a caller who asserted nothing received a message about caller
+    /// assertions. A typed terminal has to say which refusal happened for the consumer to act on
+    /// it.
+    ViewportCrsMismatch { dataset: String, viewport: String },
+
+    /// A viewport named the dataset's CRS by an identifier that identifies nothing.
+    ///
+    /// A definition-only CRS (PROJJSON with no authority and code) has no name to match against.
+    /// Accepting a caller's echo of the placeholder would be a name comparison over a string that
+    /// is not a name — the weakest possible form of the check `docs/05` already forbids.
+    ViewportCrsUnidentifiable,
+
     /// The CRS is present but its axis order could not be established from the file.
     ///
     /// ADR-010 rule 1's tag has to *mean* something: `docs/05` requires that the normalization
@@ -66,6 +82,14 @@ pub enum EngineError {
 
     /// A declared ceiling was reached (ADR-010 rule 6: declared, not discovered).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
+
+    /// One feature alone is larger than the largest batch this engine will emit.
+    ///
+    /// Separate from `CeilingExceeded` because the remedy differs and the diagnosis has to name a
+    /// feature: this is not a batch that grew past a ceiling by accumulating rows, it is a single
+    /// geometry that cannot be carried whole. Without the id there is no way to find it in a file
+    /// with millions of rows.
+    FeatureTooLarge { id: u64, limit: u64, saw: u64 },
 }
 
 impl fmt::Display for EngineError {
@@ -81,6 +105,18 @@ impl fmt::Display for EngineError {
                 f,
                 "refused: the file declares CRS {declared} and the caller asserted {asserted}. \
                  A caller assertion is admissible only for a file that declares nothing"
+            ),
+            Self::ViewportCrsMismatch { dataset, viewport } => write!(
+                f,
+                "refused: the viewport is expressed in {viewport} and the dataset is in {dataset}. \
+                 This slice performs no reprojection, so a viewport in another CRS cannot be \
+                 honoured (docs/05: mixing CRS without a declared transform is an error)"
+            ),
+            Self::ViewportCrsUnidentifiable => write!(
+                f,
+                "refused: the dataset's CRS is definition-only and carries no authority and code, \
+                 so a viewport cannot name it. Send the viewport without a CRS to declare it is \
+                 expressed in the dataset's own CRS"
             ),
             Self::AxisOrderUnestablished { detail } => write!(
                 f,
@@ -107,6 +143,11 @@ impl fmt::Display for EngineError {
             Self::CeilingExceeded { ceiling, limit, saw } => {
                 write!(f, "declared ceiling {ceiling} exceeded: limit {limit}, saw {saw}")
             }
+            Self::FeatureTooLarge { id, limit, saw } => write!(
+                f,
+                "feature {id} needs about {saw} B on its own, above the declared per-batch \
+                 ceiling of {limit} B; it cannot be carried in one batch"
+            ),
         }
     }
 }

@@ -37,15 +37,15 @@ pub const MAX_BATCH_BYTES: usize = 4 * 1024 * 1024;
 pub const TARGET_BATCH_BYTES: usize = 1024 * 1024;
 pub const MAX_ROWS_PER_BATCH: usize = 65_536;
 /// Batches the producer may hold ahead of the consumer. Producer-resident payload is bounded by
-/// `(MAX_INFLIGHT_BATCHES + 1) * MAX_BATCH_BYTES`, plus DuckDB's own streaming buffer, which this
+/// `(MAX_QUEUED_BATCHES + 1) * MAX_BATCH_BYTES`, plus DuckDB's own streaming buffer, which this
 /// counter does not see and does not claim to.
-pub const MAX_INFLIGHT_BATCHES: usize = 2;
+pub const MAX_QUEUED_BATCHES: usize = 2;
 
 // Relationships between the declared ceilings, checked **at compile time**. As runtime assertions
 // these were constant-folded and could not fail — a check that cannot fail is not a check. Here an
 // edit that breaks the relationship stops the build instead.
 const _: () = assert!(TARGET_BATCH_BYTES < MAX_BATCH_BYTES);
-const _: () = assert!(MAX_INFLIGHT_BATCHES >= 1);
+const _: () = assert!(MAX_QUEUED_BATCHES >= 1);
 
 /// A viewport in the dataset's own CRS. There is no reprojection in this slice, so a bbox in any
 /// other CRS is the caller's error and cannot be detected here — which is why `ViewportQuery`
@@ -189,13 +189,31 @@ impl Dataset {
     /// As `stream`, with a caller-held token — the shape a binding needs, because the thing that
     /// observes a cancellation (the transport) is not the thing that started the stream.
     pub fn stream_with_cancel(&self, q: &ViewportQuery, cancel: CancelToken) -> Result<BatchStream> {
+        // **A viewport CRS is a caller assertion about the query, not an equivalence judgement
+        // about two definitions.** ADR-015 §7. The engine does not decide that the caller's CRS
+        // and the dataset's "agree" — it has no PROJ and cannot — it only refuses a viewport that
+        // names something other than what the dataset declares. Identifier equality is admitted as
+        // the caller's own claim that the viewport was authored against this dataset's CRS, and it
+        // is recorded as a claim rather than treated as a fact.
+        //
+        // The distinction matters because `docs/05` forbids deciding CRS *identity* by name-string
+        // comparison, and ADR-015 §4 refuses that judgement on the source path even when the two
+        // strings are identical. Calling this an assertion is what keeps the two paths consistent
+        // instead of applying opposite rules to the same question.
         if let (Some(_), Some(bbox_crs)) = (q.bbox.as_ref(), q.bbox_crs.as_ref()) {
-            if bbox_crs != self.crs().identifier() {
+            let dataset_crs = self.crs().identifier();
+            // A definition-only CRS has no authority and code, so `identifier()` is a placeholder
+            // that names nothing and is shared by every such dataset. A caller echoing it asserts
+            // nothing, and admitting it would be a name comparison over a non-name.
+            if dataset_crs == crate::crs::DEFINITION_ONLY {
+                return Err(EngineError::ViewportCrsUnidentifiable);
+            }
+            if bbox_crs != dataset_crs {
                 // No reprojection exists in this slice, so a viewport in another CRS cannot be
                 // honoured. docs/05: mixing CRS without a declared transform is an error.
-                return Err(EngineError::CrsAssertionConflict {
-                    declared: self.crs().identifier().to_string(),
-                    asserted: bbox_crs.clone(),
+                return Err(EngineError::ViewportCrsMismatch {
+                    dataset: dataset_crs.to_string(),
+                    viewport: bbox_crs.clone(),
                 });
             }
         }
@@ -211,7 +229,7 @@ impl Dataset {
         let envelope = self.envelope().clone();
         let geometry_column = self.geometry_column().to_string();
         let stats = Arc::new(StreamStats::default());
-        let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_INFLIGHT_BATCHES);
+        let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
 
         let bbox = q.bbox;
         let limit = q.limit;
@@ -362,11 +380,31 @@ fn produce(
                 return Err(EngineError::Cancelled);
             }
             let wkb = binary_value(&geoms, row)?;
+
+            // **Cut before appending, not after.**
+            //
+            // Appending first and cutting afterwards makes a batch's final size a function of its
+            // *last* feature: one large geometry landing on an almost-full batch pushes the total
+            // past `MAX_BATCH_BYTES`, and the whole stream dies on a ceiling that the payload as a
+            // whole never approached. Real cadastral parcels and administrative boundaries reach
+            // that size; `docs/08`'s Polygons class is 50–200 vertices per feature and never does,
+            // which is why the tests did not catch it. ADR-010 rule 6 wants a ceiling that normal
+            // payload cannot reach — cutting first is what makes that true.
+            //
+            // The incoming size is bounded without parsing the geometry: WKB spends 16 B on every
+            // vertex plus a per-ring header, so `wkb.len() / 16` cannot under-count the vertices
+            // this feature will contribute. An over-estimate only cuts a batch slightly early.
+            let incoming = estimate_bytes(1, wkb.len() / 16);
+            if !pending.ids.is_empty() && pending.est_bytes + incoming > TARGET_BATCH_BYTES {
+                flush(&mut pending, envelope, cancel, stats, tx)?;
+            }
+
             let before = pending.builder.vertices();
             pending.builder.push_wkb(wkb)?;
             pending.vertices += pending.builder.vertices() - before;
             pending.ids.push(*id);
             pending.est_bytes = estimate_bytes(pending.ids.len(), pending.builder.vertices());
+            pending.first_id.get_or_insert(*id);
 
             if pending.est_bytes >= TARGET_BATCH_BYTES || pending.ids.len() >= MAX_ROWS_PER_BATCH {
                 flush(&mut pending, envelope, cancel, stats, tx)?;
@@ -386,11 +424,20 @@ struct Pending {
     builder: PolygonBuilder,
     vertices: usize,
     est_bytes: usize,
+    /// The first id in this batch — carried so an over-ceiling single feature can be *named*. An
+    /// error that says only "4 MiB exceeded" cannot be acted on in a file with millions of rows.
+    first_id: Option<u64>,
 }
 
 impl Pending {
     fn new() -> Self {
-        Self { ids: Vec::new(), builder: PolygonBuilder::new(), vertices: 0, est_bytes: 0 }
+        Self {
+            ids: Vec::new(),
+            builder: PolygonBuilder::new(),
+            vertices: 0,
+            est_bytes: 0,
+            first_id: None,
+        }
     }
 }
 
@@ -409,11 +456,22 @@ fn flush(
     let mut p = std::mem::replace(pending, Pending::new());
 
     if p.est_bytes > MAX_BATCH_BYTES {
-        return Err(EngineError::CeilingExceeded {
-            ceiling: "MAX_BATCH_BYTES",
-            limit: MAX_BATCH_BYTES as u64,
-            saw: p.est_bytes as u64,
-        });
+        // Because the loop cuts *before* appending, a batch holding more than one feature can
+        // never reach here: it is cut while it still fits. So an over-ceiling batch is always a
+        // single feature too large to carry, and the error names it. The multi-row arm remains for
+        // the estimator being wrong, and says so rather than silently naming an arbitrary id.
+        return match (p.ids.len(), p.first_id) {
+            (1, Some(id)) => Err(EngineError::FeatureTooLarge {
+                id,
+                limit: MAX_BATCH_BYTES as u64,
+                saw: p.est_bytes as u64,
+            }),
+            _ => Err(EngineError::CeilingExceeded {
+                ceiling: "MAX_BATCH_BYTES",
+                limit: MAX_BATCH_BYTES as u64,
+                saw: p.est_bytes as u64,
+            }),
+        };
     }
 
     let rows = p.ids.len();
@@ -449,6 +507,18 @@ fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>>
     let col = chunk
         .column_by_name(name)
         .ok_or_else(|| EngineError::Query(format!("result has no `{name}` column")))?;
+    // **Checked before `values()` is read.** `values()` returns the raw buffer and ignores the
+    // validity bitmap, so a NULL would arrive as whatever byte pattern occupies its slot —
+    // normally 0 — and be emitted into a field the envelope declares non-nullable. That is a
+    // wrong-but-plausible feature identity, which is the failure ADR-010 rule 2's id indirection
+    // exists to prevent, against a stable-identity requirement `docs/11` makes of every dataset.
+    // A malformed GeoParquet is untrusted input; the geometry path below already checks.
+    if col.null_count() > 0 {
+        return Err(EngineError::Query(format!(
+            "`{name}` holds {} null value(s); every feature must carry a stable identity",
+            col.null_count()
+        )));
+    }
     if let Some(a) = col.as_any().downcast_ref::<UInt64Array>() {
         return Ok(a.values().to_vec());
     }

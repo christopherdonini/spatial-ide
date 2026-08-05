@@ -141,9 +141,9 @@ pub fn identifier_from_projjson(crs: &Value) -> String {
         (Some(auth), Some(code)) => match code {
             Value::String(s) => format!("{auth}:{s}"),
             Value::Number(n) => format!("{auth}:{n}"),
-            _ => "(definition-only)".to_string(),
+            _ => crate::crs::DEFINITION_ONLY.to_string(),
         },
-        _ => "(definition-only)".to_string(),
+        _ => crate::crs::DEFINITION_ONLY.to_string(),
     }
 }
 

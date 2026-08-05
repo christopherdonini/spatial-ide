@@ -49,28 +49,52 @@ export function startStream(opts: ConnectOptions): RunningStream {
 
   ws.addEventListener('message', (ev) => {
     const chunk = new Uint8Array(ev.data as ArrayBuffer);
-    for (const frame of decoder.push(chunk)) {
-      switch (frame.t) {
-        case 'open':
-          opts.sink.onOpen(frame.handle);
-          break;
-        case 'batch':
-          outstanding -= 1;
-          opts.sink.onBatch(frame.payload, frame.contiguous);
-          // Demand is renewed as work is consumed, which is what keeps the producer's window —
-          // and therefore its memory — bounded by something this consumer controls.
-          if (outstanding <= CREDIT_WINDOW / 2) grant(CREDIT_WINDOW - outstanding);
-          break;
-        case 'progress':
-          opts.sink.onProgress(frame.progress);
-          break;
-        case 'terminal':
-          finished = true;
-          opts.sink.onTerminal(frame.terminal);
-          // The consumer closes; the producer never does. A producer-initiated close races the
-          // frames still in this peer's receive path and truncates silently.
-          ws.close();
-          break;
+    // **Decoding is inside the taxonomy, not outside it.** Frame decoding and envelope checking
+    // both throw — a batch whose envelope is missing or wrong, an Arrow layout that contradicts
+    // the metadata, a fixed-layout payload shorter than its fields. Uncaught, such a throw
+    // abandoned the frames already parsed out of this chunk, produced no terminal at all, and left
+    // the producer streaming to a consumer that had stopped reading: `docs/01` principle 7's
+    // failure mode, and the silent async death ADR-010 rule 7 exists to forbid. `DecodeFailed` is
+    // in the shared taxonomy for exactly this and was never being constructed.
+    try {
+      for (const frame of decoder.push(chunk)) {
+        switch (frame.t) {
+          case 'open':
+            opts.sink.onOpen(frame.handle);
+            break;
+          case 'batch':
+            outstanding -= 1;
+            opts.sink.onBatch(frame.payload, frame.contiguous);
+            // Demand is renewed as work is consumed, which is what keeps the producer's window —
+            // and therefore its memory — bounded by something this consumer controls.
+            if (outstanding <= CREDIT_WINDOW / 2) grant(CREDIT_WINDOW - outstanding);
+            break;
+          case 'progress':
+            opts.sink.onProgress(frame.progress);
+            break;
+          case 'terminal':
+            finished = true;
+            opts.sink.onTerminal(frame.terminal);
+            // The consumer closes; the producer never does. A producer-initiated close races the
+            // frames still in this peer's receive path and truncates silently.
+            ws.close();
+            break;
+        }
+      }
+    } catch (err) {
+      if (!finished) {
+        finished = true;
+        opts.sink.onTerminal({
+          kind: 'DecodeFailed',
+          detail: err instanceof Error ? err.message : String(err),
+        });
+      }
+      // Tell the producer to stop before going away. A consumer that dies quietly leaves the
+      // kernel computing work nobody will read — the exact behaviour ADR-004 amendment 2
+      // disqualified a transport over.
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(cancelFrame());
+        ws.close();
       }
     }
   });

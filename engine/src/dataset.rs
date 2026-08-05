@@ -236,6 +236,6 @@ fn open_connection() -> Result<Connection> {
 /// window in which a cancel could arrive before anything is interruptible.
 pub(crate) fn connect_for_stream(cancel: &crate::cancel::CancelToken) -> Result<Connection> {
     let conn = open_connection()?;
-    cancel.attach(Arc::clone(&conn.interrupt_handle()));
+    cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
     Ok(conn)
 }
