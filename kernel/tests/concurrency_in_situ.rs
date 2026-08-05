@@ -175,10 +175,19 @@ fn new_run() -> Run {
 ///
 /// §22.1's recommendation, adopted: it converts "the machine drifts between sessions" from an
 /// unbounded worry into something a reader can check. It touches no socket and no database.
+///
+/// **The iteration count is load-bearing.** At 40 M iterations this lands near 7–15 ms on the
+/// reference machine — inside the CPU's own frequency-transition window, where consecutive readings
+/// on an *idle* machine were measured disagreeing by up to 3x. A canary that noisy certifies
+/// nothing and would flag a steady session as drifting. 400 M lands near 130 ms, where the
+/// measured spread across a session was 5.5 %. Found by the `docs/08` measurement pass; see
+/// `kernel/RESULTS.md`.
+const CANARY_ITERATIONS: u64 = 400_000_000;
+
 fn canary_ms() -> f64 {
     let t = Instant::now();
     let mut acc = 0u64;
-    for i in 0..40_000_000u64 {
+    for i in 0..CANARY_ITERATIONS {
         acc = acc.wrapping_add(i.rotate_left(7) ^ 0x9e37_79b9_7f4a_7c15);
     }
     std::hint::black_box(acc);
@@ -296,7 +305,7 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
   "comparison_scope": "within-session only (README §21 Q1 / §22.1) — no figure here may be compared with one from another session or another phase",
   "throughput_claim": "none made; no figure here is a transport throughput result",
   "profile": {{ "os": "Windows 10 Pro 22H2", "consumer": "in-process Rust client, not a browser", "note": "the WebView2 receive path §20.8 diagnosed by elimination is NOT exercised here" }},
-  "canary_ms": {{ "before": {canary_before:.3}, "after": {canary_after:.3}, "purpose": "fixed transport-insensitive workload; if these two disagree, the session itself moved" }},
+  "canary_ms": {{ "before": {canary_before:.3}, "after": {canary_after:.3}, "iterations": {CANARY_ITERATIONS}, "purpose": "fixed transport-insensitive workload; if these two disagree, the session itself moved" }},
   "fixture": {{ "features": {}, "vertices": {}, "rings": {}, "bytes": {} }},
   "s1_sequential": {{ "batches": {}, "rows": {}, "bytes": {}, "first_batch_ms": {:.3}, "completed_ms": {:.3} }},
   "s2_overlapped": {{
