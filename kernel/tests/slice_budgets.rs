@@ -360,6 +360,26 @@ fn evidence_dir() -> std::path::PathBuf {
     d
 }
 
+/// Escape a captured string for embedding in the JSON artifact.
+///
+/// The hardware string comes from another process's stdout, and this artifact is assembled by
+/// string interpolation. A quote or a backslash in a CPU name would produce a file that no reader
+/// can parse — an evidence artifact that cannot be read is not evidence.
+fn json_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            // Control characters become spaces rather than escapes: this field is a one-line
+            // identity string, and a literal newline inside it would be a different kind of wrong.
+            c if c.is_control() => out.push(' '),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
 /// Hardware and OS identity, captured into the artifact so no figure travels without it.
 fn hardware_profile() -> String {
     let out = std::process::Command::new("powershell")
@@ -410,7 +430,7 @@ fn refuse_debug() {
 async fn measure_the_slice_against_docs_08() {
     refuse_debug();
 
-    let hardware = hardware_profile();
+    let hardware = json_escape(&hardware_profile());
     let free_before = free_bytes_on_c();
     println!("hardware: {hardware}");
 
