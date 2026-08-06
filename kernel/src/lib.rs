@@ -31,6 +31,7 @@ use spatial_engine::{BatchStream, CancelToken, CrsAssertion, Dataset, PoolConfig
 
 pub mod bundle;
 pub mod params;
+pub mod publish;
 
 pub use params::{StreamParams, OPERATION};
 
