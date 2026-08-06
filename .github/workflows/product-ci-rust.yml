@@ -21,29 +21,44 @@ name: Product CI — Rust workspace
 #     that drifts between and within sessions, which the bake-off README §21/§22 records as
 #     asymmetric and uncancellable by ratio. A number taken here would not be a smaller number, it
 #     would not be a measurement. Nothing in this workflow may fill a results table.
-#   - **Nothing about macOS or Linux.** This runs on Windows only — see the runner note below.
+#   - **Nothing about macOS, and nothing about Windows.** It runs on Linux only, which is *not* the
+#     reference profile — see the runner note below for why, and for what that leaves uncovered.
 #   - **Nothing about the ADR-003 hardware-validation gate** (`docs/07`), which is about native
 #     WebView integration, frame pacing, GPU behaviour and picking latency on real hardware. No
 #     amount of green here advances it.
 #
-# ## Runner choice, and the cost being managed
+# ## Runner choice — what was wanted, what was observed, and what this therefore does
 #
-# **windows-latest, and only that.** `engine/` builds DuckDB from vendored C++ (`bundled`), and
-# `Cargo.toml` compiles `libduckdb-sys` at `opt-level = 2` even in the dev profile — deliberately,
-# because it buys the time back on every query in every test. That makes the first build of any
-# fresh runner the dominant cost of this workflow, and it is paid per platform.
+# **`windows-latest` was the first choice and is not what runs here.** The reference profile in
+# `CLAUDE.md` is Windows 10 / MSVC / WebView2 and every claim this repository makes is scoped to it,
+# so the reference platform is the one a regression suite most wants to cover.
 #
-# The reference profile in `CLAUDE.md` is Windows 10 / MSVC / WebView2, and every claim this
-# repository makes is scoped to it. Spending the vendored-DuckDB build twice to also cover a
-# platform the constitution explicitly does not claim is the wrong trade for a first cut. Adding
-# `ubuntu-latest` to the matrix below is a one-line change and is worth making the moment a
-# platform-independence claim is actually owed — it would catch path-separator and case-sensitivity
-# assumptions, which `kernel/src/publish/viewer_assets.rs` genuinely has surface for. It is not owed
-# yet, and pretending otherwise by running it would invite a green Linux job to be read as evidence
-# for a gate it says nothing about.
+# **What was observed, stated as an observation rather than as a diagnosis.** On 2026-08-06 a
+# `windows-latest` job on this repository (run 31125488081) sat **queued for 15 minutes without ever
+# being assigned a runner** and was then cancelled, having executed no step. A `ubuntu-latest` job on
+# the same repository minutes earlier reached `in_progress` within about two minutes. **Why** the
+# Windows job was never scheduled is *not* established here — plan entitlement, a spending limit and
+# a transient capacity incident all fit one data point, and this file does not claim to know which.
 #
-# The build cost is managed by caching rather than by dropping coverage: `Swatinem/rust-cache`
-# keyed on the lockfile, so the vendored C++ tree is rebuilt only when a dependency actually moves.
+# **The consequence, which is a real gap and is not being papered over.** The suite runs on
+# `ubuntu-latest`, so **CI does not cover the reference profile.** Windows-shaped behaviour is
+# therefore exercised only by a developer running the suite locally: `publish/mod.rs`'s
+# `replace('\\', "/")` on a staged path, `viewer_assets.rs`'s backslash rejection, and every
+# `std::path` separator assumption underneath them. A green run here is evidence about the *logic*,
+# on a platform this constitution does not make claims for. Restoring Windows is a one-line change to
+# the matrix below and should be attempted again — the observation above is a fact about one
+# afternoon, not a permanent property.
+#
+# ## The cost being managed
+#
+# `engine/` builds DuckDB from vendored C++ (`bundled`), and `Cargo.toml` compiles `libduckdb-sys`
+# at `opt-level = 2` even in the dev profile — deliberately, because it buys the time back on every
+# query in every test. That makes the first build on any fresh runner the dominant cost of this
+# workflow, and it is paid **per platform in the matrix**, which is the reason a second entry is a
+# decision rather than a freebie.
+#
+# The cost is managed by caching rather than by dropping coverage: `Swatinem/rust-cache` keyed on
+# the lockfile, so the vendored C++ tree is rebuilt only when a dependency actually moves.
 
 on:
   push:
@@ -88,9 +103,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # One entry today. It is a matrix rather than a bare `runs-on` so adding a platform is a
-        # line here and not a restructure — see the runner note above for when that is owed.
-        os: [windows-latest]
+        # One entry today, and **not the one this project would choose** — see the runner note
+        # above. It stays a matrix rather than a bare `runs-on` precisely because restoring
+        # `windows-latest` should be a line here and not a restructure.
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     # The vendored DuckDB build dominates a cold run. Bounded so a hung job is killed rather than
     # burning the default six hours.
