@@ -12,12 +12,20 @@
     "they agree.",
     "",
     "SCOPE: key sets only. This artifact says which members an object has, never what type each",
-    "one holds, so two sets being identical here does NOT mean the members are identically typed.",
+    "one holds, so two sets being identical here does NOT mean the members are identically typed,",
+    "and this file cannot catch a type drifting between the reader and the writer.",
     "The live case, ADR-017 Corrigendum 1 (2026-08-06): license_declared_by_source.license is",
     "string-or-null -- a source may declare attribution and/or redistribution and name no license,",
     "and null is that absence -- while license_declared_by_operator.license is a non-empty string,",
     "because an operator states a license or makes no declaration at all. Neither set changed.",
-    "Per-member types live in the ADR and are enforced by each side's own reader/writer tests."
+    "Per-member types are the ADR's, and each side enforces them in its own code, at these sites:",
+    "  writer  kernel/src/publish/mod.rs::admit_license (refuses a blank operator license) and",
+    "          kernel/src/bundle/mod.rs (DeclaredByOperator holds a String, so a null is not",
+    "          representable), asserted by kernel/tests/publish.rs and the modules' unit tests;",
+    "  reader  renderer/bundle-viewer/src/manifest.ts::licenseBlock via nonEmptyStr, asserted by",
+    "          scripts/manifest.test.mjs.",
+    "That is two enforcements of one rule written down in the ADR, not one shared artifact -- a",
+    "weaker guarantee than the key sets have, and named here rather than left to be assumed."
   ],
   "key_sets": {
     "$": [

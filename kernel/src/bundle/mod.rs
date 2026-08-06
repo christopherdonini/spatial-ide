@@ -257,19 +257,6 @@ pub struct LicenseTerms {
 }
 
 impl License {
-    /// The redistribution term, whoever declared it. `None` when nothing was declared at all.
-    ///
-    /// Replaces an earlier `terms()` that handed back a shared `LicenseTerms` for both declared
-    /// states; the two states no longer share one, and the only thing every caller wanted from it
-    /// was this.
-    pub fn redistribution(&self) -> Option<Redistribution> {
-        match self {
-            Self::NotDeclared => None,
-            Self::DeclaredBySource(t) => Some(t.redistribution),
-            Self::DeclaredByOperator { redistribution, .. } => Some(*redistribution),
-        }
-    }
-
     fn to_json(&self) -> Json {
         match self {
             Self::NotDeclared => Json::obj([

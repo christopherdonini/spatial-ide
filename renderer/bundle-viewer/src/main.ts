@@ -39,7 +39,12 @@
  */
 
 import { BundleFailure, showFailure } from './failure.js';
-import { parseManifest, type FetchableAsset, type Manifest } from './manifest.js';
+import {
+  licenseSummary,
+  parseManifest,
+  type FetchableAsset,
+  type Manifest,
+} from './manifest.js';
 import { decodePartition, type Partition } from './partition.js';
 import {
   drawAll,
@@ -209,21 +214,11 @@ function renderProvenance(m: Manifest): void {
   text('grade', `reproducibility: ${m.reproducibilityGrade}`);
   text('bounds-basis', `bounds: ${m.boundsBasis}`);
 
-  const licenceState = String(m.license.state ?? 'unknown');
-  const licenceName = typeof m.license.license === 'string' ? m.license.license : null;
-  const attribution = typeof m.license.attribution === 'string' ? m.license.attribution : null;
-  // **An absent license name is rendered as an absence, not as a name.** This line used to print
-  // `(unnamed)`, which is the manifest's old `"(unnamed)"` placeholder relocated to the pixel layer:
-  // a bundle whose manifest correctly says "no license was named" would still show a parenthesized
-  // token in the position a license name occupies, and a reader could take it for one. The manifest
-  // carries `null` here (ADR-017 Corrigendum 1); the viewer says so in words.
-  const licenceLabel = licenceName ?? 'not named by the source';
-  text(
-    'license',
-    licenceState === 'not-declared'
-      ? 'license and attribution: unknown / not-declared'
-      : `license: ${licenceLabel}${attribution ? ` · ${attribution}` : ''} (${licenceState})`,
-  );
+  // The wording is `licenseSummary`'s, in `manifest.ts`, because it is a pure function of the
+  // manifest and is unit-tested there. It used to be an inline expression here that printed
+  // `(unnamed)` for an unnamed license — the old manifest placeholder, relocated to the pixels,
+  // with no test in reach of it.
+  text('license', licenseSummary(m.license));
 }
 
 function redraw(): void {

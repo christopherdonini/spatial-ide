@@ -193,6 +193,75 @@ fn publishing_twice_from_identical_inputs_gives_a_byte_identical_manifest() {
     assert_eq!(read(&d.join("a"), bundle::STYLE_PATH), read(&d.join("b"), bundle::STYLE_PATH));
 }
 
+/// **The operator-declared branch is inside the determinism guarantee, and `license.at` is why.**
+///
+/// ADR-017 §12 scopes byte-identity to "identical source bytes, style bytes, declared projection,
+/// publish parameters and viewer asset bytes" — and §10 places `license.at` among the *parameters*,
+/// because it describes the **request** (an operator declared terms at an instant) rather than the
+/// **execution**. Both halves of that are asserted here, and both were unasserted before: the
+/// shared `request()` helper sets `license: None`, so the determinism test above never reached this
+/// branch at all.
+///
+/// It is not a hypothetical gap. `publish-bundle` passed its own build clock as `license.at`, so
+/// every operator-declared publish produced a different manifest — the guarantee was false for the
+/// whole branch and no test could see it. The binary now requires `--license-at`.
+#[test]
+fn two_operator_declared_publishes_agree_byte_for_byte_and_a_different_instant_is_a_different_publish()
+{
+    let d = workspace("operator-license-determinism");
+    let src = fixture(&d, 800);
+    let v = viewer();
+
+    let declaration = |at: &str| OperatorLicense {
+        license: "CC-BY-4.0".into(),
+        attribution: Some("© Example Cadastre".into()),
+        redistribution: bundle::Redistribution::Permitted,
+        by: "operator".into(),
+        at: at.into(),
+    };
+
+    let ds_a = pinned(&src);
+    let mut a = request(&ds_a, &v, d.join("a"));
+    a.license = Some(declaration("2026-08-06T09:00:00Z"));
+    publish(&a, &CancelToken::new(), None).unwrap();
+
+    // Same declaration, a second open, and a **later build** — the sidecar's instants differ.
+    let ds_b = pinned(&src);
+    let mut b = request(&ds_b, &v, d.join("b"));
+    b.license = Some(declaration("2026-08-06T09:00:00Z"));
+    b.started_at = "2027-01-01T00:00:00Z".into();
+    b.finished_at = &LATER_FINISH;
+    publish(&b, &CancelToken::new(), None).unwrap();
+
+    assert_eq!(
+        read(&d.join("a"), bundle::MANIFEST_PATH),
+        read(&d.join("b"), bundle::MANIFEST_PATH),
+        "build timing reached the manifest through the operator-declared license branch"
+    );
+    assert_ne!(
+        read(&d.join("a"), bundle::BUILD_INFO_PATH),
+        read(&d.join("b"), bundle::BUILD_INFO_PATH),
+        "the two builds were not actually distinguishable, so the assertion above proves nothing"
+    );
+
+    // …and the other half: a **different declaration instant is a different request**, so it must
+    // produce a different manifest. Without this, `license.at` could be silently dropped from the
+    // manifest entirely and the assertion above would still pass.
+    let ds_c = pinned(&src);
+    let mut c = request(&ds_c, &v, d.join("c"));
+    c.license = Some(declaration("2026-08-06T17:30:00Z"));
+    publish(&c, &CancelToken::new(), None).unwrap();
+    assert_ne!(
+        read(&d.join("a"), bundle::MANIFEST_PATH),
+        read(&d.join("c"), bundle::MANIFEST_PATH),
+        "two different operator declarations produced one manifest; `license.at` is not carried"
+    );
+
+    let m: serde_json::Value =
+        serde_json::from_slice(&read(&d.join("c"), bundle::MANIFEST_PATH)).unwrap();
+    assert_eq!(m["license"]["at"], "2026-08-06T17:30:00Z");
+}
+
 #[test]
 fn the_sidecar_is_what_differs_between_two_publishes_and_it_is_excluded_by_design() {
     // If the wall-clock facts lived in the manifest, the assertion above would be false. This test

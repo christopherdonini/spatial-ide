@@ -930,7 +930,6 @@ mod tests {
     fn a_source_declaring_nothing_publishes_as_not_declared_and_invents_nothing() {
         let l = admit_license(&Default::default(), None).unwrap();
         assert_eq!(l, License::NotDeclared);
-        assert!(l.redistribution().is_none());
     }
 
     #[test]
@@ -941,7 +940,8 @@ mod tests {
             redistribution: Some("ask us first".into()),
         };
         let l = admit_license(&source, None).unwrap();
-        assert_eq!(l.redistribution(), Some(Redistribution::Unknown));
+        let License::DeclaredBySource(terms) = &l else { panic!("got {l:?}") };
+        assert_eq!(terms.redistribution, Redistribution::Unknown);
     }
 
     /// An operator who declares a blank license is refused, so ADR-017 §5's "non-empty string"

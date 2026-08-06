@@ -16,10 +16,6 @@ settled design for persisting identity, which is one of its own OPEN questions a
 walks into.
 **Implemented by:** `kernel/src/bundle/`, `kernel/src/publish/`, `renderer/src/canonical.rs`,
 `renderer/bundle-viewer/`.
-**Corrigenda (appended below, nothing above or in the body rewritten):** **Corrigendum 1**
-(2026-08-06) amends §5/§6/§10 — `license.license` is `string or null` under `declared-by-source`.
-**Corrigendum 2** (2026-08-06) corrects two stale cross-references, one of them the "§15/§18" in the
-Status line above: this document has sixteen sections and no §18. Read both before citing this ADR.
 
 ## Context
 
@@ -661,10 +657,16 @@ interior ring reads as a hole in both regardless of winding, which the engine do
 
 ## Corrigenda
 
-*Appended, not merged. Everything above this heading is the document as accepted on 2026-08-06 and
-is unchanged apart from the `Corrigenda:` pointer added to the Status block, which alters no
-sentence. Where a corrigendum and the body disagree, the corrigendum governs and says which section
-it amends.*
+*Appended, not merged. **Everything above this heading is the document as accepted on 2026-08-06,
+byte for byte** — no sentence is altered, not even the Status line one of these corrigenda corrects.
+An earlier draft of this change added a pointer to the Status block on the reasoning that an
+insertion "alters no sentence"; that distinction is not one `docs/02`'s "immutable once accepted" or
+CLAUDE.md's "append amendments, never rewrite" makes, and the immediately preceding commit set the
+opposite precedent by applying ADR-003's amendment as a pure append and leaving its Status line
+untouched. The pointer lives in the mutable indices instead — `docs/README.md` and `docs/02`.*
+
+*Where a corrigendum and the body disagree, the corrigendum governs and says which section it
+amends.*
 
 ### Corrigendum 1 — 2026-08-06 — `license.license` under `declared-by-source`
 
@@ -723,12 +725,16 @@ Corrects two pointers. **No decision in this document changes**, and both correc
 here rather than by editing the sentences, which stand as accepted.
 
 **1. The Status block's "the §15/§18 obligations" names a section that does not exist.** This
-document has **sixteen** sections. The three obligations the human's acceptance condition attaches —
-a scoped publish grant, explicit approval, and a **redacted** audit record — live in **§15** (which
-records that this slice has no permission model, and that explicit approval and an audit log are
-both *owed and absent*) and **§13** (redaction, and the two stated limits on what a byte scan can
-establish). **Read "the §15/§18 obligations" as "the §15 and §13 obligations."** The acceptance
-condition itself — scope, content and the Prototype-exit deadline — is unchanged in every respect.
+document has sections **1–16** (plus §5a, the style document). There is no §18.
+
+**All three** of the obligations the human's acceptance condition attaches — a scoped publish grant,
+explicit approval, and a **redacted** audit record — are §15's: it quotes `docs/09`'s "Export and
+publish are distinct capabilities, never implied by write" for the grant, and records explicit
+approval and an audit log as *owed and absent*. **§13** supplies only what "redacted" **means** — the
+no-path/username/machine-identifier rule and the two stated limits on what a byte scan can establish
+— and says nothing about audit records. So the accurate reading is **"the §15 obligations, with §13
+defining redaction"**, and `§13/§15` is the closest short form. The acceptance condition itself —
+scope, content and the Prototype-exit deadline — is unchanged in every respect.
 
 **2. The first Consequence calls the ADR-003 amendment "separate, unapplied".** It was applied on
 2026-08-06 and is now part of ADR-003 as *Amendment (2026-08-06) — the projected publishing canvas*;

@@ -164,6 +164,24 @@ function str(v: unknown, at: string): string {
   return v;
 }
 
+/**
+ * A string that is not empty and not only whitespace.
+ *
+ * Used where ADR-017 types a member as a **non-empty** string rather than merely a string — today
+ * that is `license.license` in both declared states (§5, §10, Corrigendum 1). `""` is not an
+ * absence and not a claim: §10 spells out that the absence is `null` under `declared-by-source` and
+ * does not exist at all under `declared-by-operator`, and that no placeholder, `"unknown"` or empty
+ * string may stand in for one. A reader that accepted `""` would accept a bundle asserting somebody
+ * declared terms while naming none, which is the `"(unnamed)"` defect wearing a shorter disguise.
+ */
+function nonEmptyStr(v: unknown, at: string): string {
+  const s = str(v, at);
+  if (s.trim().length === 0) {
+    fail('manifest-schema-invalid', `${at} is empty; an absent value is null, never a blank string`);
+  }
+  return s;
+}
+
 function num(v: unknown, at: string): number {
   if (typeof v !== 'number' || !Number.isFinite(v)) {
     fail('manifest-schema-invalid', `${at} must be a finite number`);
@@ -327,7 +345,7 @@ function licenseBlock(v: unknown, at: string): Record<string, unknown> {
       // redistribution and name no license; `null` is that absence. It is unambiguous without a
       // basis because the enclosing `state` already carries the claimant — "does not apply" is not
       // an available reading inside a block that exists because the source declared something.
-      if (l.license !== null) str(l.license, `${at}.license`);
+      if (l.license !== null) nonEmptyStr(l.license, `${at}.license`);
       break;
     case 'declared-by-operator':
       // `at` here is the instant the **operator made the declaration** — part of the claim, and a
@@ -338,9 +356,11 @@ function licenseBlock(v: unknown, at: string): Record<string, unknown> {
       // an oversight: an operator states a license or makes no declaration at all, so there is no
       // state in which this member is absent. A reader that accepted `null` here would accept a
       // manifest claiming an operator declared terms while naming none.
-      str(l.license, `${at}.license`);
-      str(l.by, `${at}.by`);
-      str(l.at, `${at}.at`);
+      nonEmptyStr(l.license, `${at}.license`);
+      // `by` and `at` carry the same weight: a claim with a blank claimant or a blank instant is
+      // not a claim, and §10 makes both part of the declaration rather than decoration.
+      nonEmptyStr(l.by, `${at}.by`);
+      nonEmptyStr(l.at, `${at}.at`);
       break;
     default:
       fail('manifest-schema-invalid', `${at}.state "${state}" is not a state this version defines`);
@@ -423,6 +443,31 @@ function schemaColumn(v: unknown, at: string): ManifestColumn {
     arrowType: str(o.arrow_type, `${at}.arrow_type`),
     nullable: bool(o.nullable, `${at}.nullable`),
   };
+}
+
+/**
+ * The one-line license summary a viewer shows, as a **pure function of the manifest's license
+ * block** — so it can be tested without a DOM.
+ *
+ * It lives here rather than in `main.ts` because it is manifest *interpretation*, not rendering,
+ * and because the value it used to produce was wrong in a way nothing could catch: `main.ts`
+ * printed `(unnamed)` when no license was named, which is the manifest's old `"(unnamed)"`
+ * placeholder relocated to the pixel layer. A bundle whose manifest correctly says "the source
+ * named none" would still show a parenthesised token in the position a license name occupies, and a
+ * reader could take it for one. **An absence is rendered as an absence, in words.**
+ */
+export function licenseSummary(license: Record<string, unknown>): string {
+  const state = String(license.state ?? 'unknown');
+  if (state === 'not-declared') return 'license and attribution: unknown / not-declared';
+  const name =
+    typeof license.license === 'string' && license.license.trim().length > 0
+      ? license.license
+      : 'not named by the source';
+  const attribution =
+    typeof license.attribution === 'string' && license.attribution.length > 0
+      ? ` · ${license.attribution}`
+      : '';
+  return `license: ${name}${attribution} (${state})`;
 }
 
 export function parseManifest(text: string): Manifest {

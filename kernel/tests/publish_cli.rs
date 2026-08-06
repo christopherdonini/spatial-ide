@@ -146,6 +146,20 @@ fn assert_bbox_filter_carries_no_caller_assertion(bundle: &Path) {
         "`bbox_crs` echoes an assertion the operator never made: {}",
         filter["bbox_crs"]
     );
+    // **The window the operator typed is the window the manifest records.** Checked because the
+    // defect this file covers was in argument handling, and `--bbox` parsing is where a component
+    // can go missing — see `a_bbox_with_an_unparseable_component_is_refused_rather_than_dropped`.
+    let (e, n) = (spatial_engine::fixture::E_LO, spatial_engine::fixture::N_LO);
+    for (member, want) in
+        [("xmin", e), ("ymin", n), ("xmax", e + WINDOW), ("ymax", n + WINDOW)]
+    {
+        assert_eq!(
+            filter[member].as_f64().unwrap(),
+            want,
+            "the manifest's filter.{member} is not the value `--bbox` was given"
+        );
+    }
+
     // The filter really ran: some rows were excluded, and some survived. Without both halves a
     // `bbox_crs` of `null` could be true of a publish that quietly ignored `--bbox` entirely.
     let rows = m["data"]["rows"].as_u64().unwrap();
@@ -220,6 +234,140 @@ fn a_bbox_publish_on_a_definition_only_source_is_possible_at_all() {
         "this fixture is not the definition-only source kind, so this test asserts nothing"
     );
     assert_bbox_filter_carries_no_caller_assertion(&dest);
+}
+
+/// **A `--bbox` component that is not a number refuses the publish rather than being dropped.**
+///
+/// The parser was `split(',').filter_map(|s| s.parse().ok())` followed by a length check, so a
+/// malformed component vanished and any four surviving numbers became the window: `--bbox
+/// junk,A,B,C,D` published `A,B,C,D` — a query the operator never asked for, irreversibly, with no
+/// word said. A dropped argument is a different operation, and this binary performs a class-3
+/// external side effect.
+#[test]
+fn a_bbox_with_an_unparseable_component_is_refused_rather_than_dropped() {
+    let d = workspace("bbox-malformed");
+    let src = fixture(&d, CrsMode::DeclaredLv95);
+    let style = style_file(&d);
+    let viewer = viewer_dir(&d);
+    let (e, n) = (spatial_engine::fixture::E_LO, spatial_engine::fixture::N_LO);
+
+    // Five fields, one of them junk: exactly the shape that used to collapse to a valid-looking
+    // four-number window.
+    let smuggled = format!("junk,{e},{n},{},{}", e + WINDOW, n + WINDOW);
+    for bad in [smuggled.as_str(), "1,2,3", "1,2,3,4,5", "1,2,3,x", ""] {
+        let dest = d.join(format!("bundle-{}", bad.len()));
+        let out = publish_bundle(&[
+            "--data",
+            src.to_str().unwrap(),
+            "--style",
+            style.to_str().unwrap(),
+            "--viewer",
+            viewer.to_str().unwrap(),
+            "--out",
+            dest.to_str().unwrap(),
+            "--attributes",
+            "zone",
+            "--bbox",
+            bad,
+        ]);
+        assert!(
+            !out.status.success(),
+            "`--bbox {bad}` was accepted; stdout:\n{}",
+            String::from_utf8_lossy(&out.stdout)
+        );
+        assert!(!dest.exists(), "`--bbox {bad}` wrote a bundle before failing");
+    }
+}
+
+/// **`--license` without `--license-at` is refused, and the tool never substitutes its own clock.**
+///
+/// ADR-017 §10 makes `license.at` the instant the **operator made the declaration** and §12 keeps
+/// **build** timing out of the manifest entirely. This binary passed its own `started_at` — the
+/// build clock — as `license.at`, which put a value the manifest cannot support into the manifest
+/// *and* made every operator-declared publish produce different bytes on every run, breaking §12's
+/// byte-identity guarantee for that whole branch.
+#[test]
+fn an_operator_license_requires_its_declaration_instant_and_never_borrows_the_build_clock() {
+    let d = workspace("license-at");
+    let src = fixture(&d, CrsMode::DeclaredLv95);
+    let style = style_file(&d);
+    let viewer = viewer_dir(&d);
+    let base = |dest: &str| -> Vec<String> {
+        vec![
+            "--data".into(),
+            src.to_str().unwrap().into(),
+            "--style".into(),
+            style.to_str().unwrap().into(),
+            "--viewer".into(),
+            viewer.to_str().unwrap().into(),
+            "--out".into(),
+            d.join(dest).to_str().unwrap().into(),
+            "--attributes".into(),
+            "zone".into(),
+        ]
+    };
+    let run = |args: Vec<String>| {
+        publish_bundle(&args.iter().map(String::as_str).collect::<Vec<_>>())
+    };
+
+    // Refused, and nothing is written.
+    let mut without = base("no-at");
+    without.extend(["--license".into(), "CC-BY-4.0".into()]);
+    let out = run(without);
+    assert!(!out.status.success(), "--license without --license-at published anyway");
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("--license-at"),
+        "the refusal does not name the missing flag"
+    );
+    assert!(!d.join("no-at").exists());
+
+    // The reverse is refused too: there is no manifest state for "declared nothing, at 09:00".
+    let mut orphan = base("orphan-at");
+    orphan.extend(["--license-at".into(), "2026-08-06T09:00:00Z".into()]);
+    assert!(!run(orphan).status.success(), "--license-at without --license published anyway");
+
+    // A blank license is refused at the library choke point as well as here.
+    let mut blank = base("blank");
+    blank.extend([
+        "--license".into(),
+        "   ".into(),
+        "--license-at".into(),
+        "2026-08-06T09:00:00Z".into(),
+    ]);
+    assert!(!run(blank).status.success(), "a blank --license published anyway");
+
+    // …and a complete declaration publishes, carrying **the declared instant**, not the build's.
+    let mut ok = base("declared");
+    ok.extend([
+        "--license".into(),
+        "CC-BY-4.0".into(),
+        "--license-at".into(),
+        "2026-08-06T09:00:00Z".into(),
+        "--attribution".into(),
+        "(c) Example Cadastre".into(),
+        "--redistribution".into(),
+        "permitted".into(),
+    ]);
+    let out = run(ok);
+    assert_ok(&out, "a complete operator declaration");
+    let m = manifest(&d.join("declared"));
+    assert_eq!(m["license"]["state"].as_str().unwrap(), "declared-by-operator");
+    assert_eq!(m["license"]["license"].as_str().unwrap(), "CC-BY-4.0");
+    assert_eq!(
+        m["license"]["at"].as_str().unwrap(),
+        "2026-08-06T09:00:00Z",
+        "`license.at` is not the instant the operator declared"
+    );
+    // The build clock lives in the sidecar, and the two are different values. A build that started
+    // at the declared instant to the second would make this vacuous, which no real run does.
+    let sidecar: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(d.join("declared").join("build-info.json")).unwrap())
+            .unwrap();
+    assert_ne!(
+        sidecar["started_at"].as_str().unwrap(),
+        "2026-08-06T09:00:00Z",
+        "the build clock and the declaration instant are the same value again"
+    );
 }
 
 /// A publish with no `--bbox` still records `whole-file`, so the fix did not turn every publish into

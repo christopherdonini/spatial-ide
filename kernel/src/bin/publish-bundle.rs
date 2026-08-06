@@ -8,9 +8,13 @@
 //! publish-bundle --data <file.parquet> --style <style.json> --viewer <dir> --out <bundle-dir>
 //!                [--name parcels] [--attributes zone,area]
 //!                [--bbox xmin,ymin,xmax,ymax] [--limit N]
-//!                [--license SPDX --license-by who --redistribution permitted|forbidden|unknown]
-//!                [--attribution "..."]
+//!                [--license SPDX --license-at <RFC-3339> [--license-by who]
+//!                 [--redistribution permitted|forbidden|unknown] [--attribution "..."]]
 //! ```
+//!
+//! `--bbox` carries **no CRS**, which declares its coordinates to be in the dataset's own
+//! (ADR-015 §7.3). `--license-at` is **required with `--license`** and is *when the operator made
+//! the declaration* — a semantic input, never this run's build clock (ADR-017 §10, §12).
 //!
 //! **Publishing is a class-3 external side effect (ADR-006) and there is no approval gate in this
 //! slice.** The binary says so on every run rather than letting the absence be discovered: `docs/09`
@@ -56,6 +60,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut bbox: Option<Bbox> = None;
     let mut limit: Option<u64> = None;
     let mut license: Option<String> = None;
+    // The instant the operator made the declaration. **Supplied, never read from a clock here** —
+    // see the `--license-at` arm.
+    let mut license_at: Option<String> = None;
     let mut license_by = "operator".to_string();
     let mut attribution: Option<String> = None;
     let mut redistribution = Redistribution::Unknown;
@@ -77,15 +84,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .filter(|s| !s.is_empty())
                     .collect();
             }
+            // **Four fields, each of which must parse.** This was `filter_map(…parse().ok())`
+            // followed by a length check, which **silently dropped** anything unparseable: a
+            // five-field `--bbox junk,a,b,c,d` collapsed to four numbers and published a window the
+            // operator never typed. A dropped component is a different query, and a publish is
+            // irreversible.
             "--bbox" => {
-                let v: Vec<f64> = args
-                    .next()
-                    .unwrap_or_default()
-                    .split(',')
-                    .filter_map(|s| s.trim().parse().ok())
-                    .collect();
-                if v.len() != 4 {
-                    return Err("--bbox needs xmin,ymin,xmax,ymax".into());
+                let raw = args.next().ok_or("--bbox needs xmin,ymin,xmax,ymax")?;
+                let fields: Vec<&str> = raw.split(',').map(str::trim).collect();
+                if fields.len() != 4 {
+                    return Err(format!(
+                        "--bbox needs exactly four comma-separated values \
+                         (xmin,ymin,xmax,ymax); `{raw}` has {}",
+                        fields.len()
+                    )
+                    .into());
+                }
+                let mut v = [0.0_f64; 4];
+                for (slot, field) in v.iter_mut().zip(&fields) {
+                    *slot = field
+                        .parse()
+                        .map_err(|_| format!("--bbox component `{field}` is not a number"))?;
                 }
                 bbox = Some(Bbox { xmin: v[0], ymin: v[1], xmax: v[2], ymax: v[3] });
             }
@@ -106,7 +125,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 license = Some(raw);
             }
-            "--license-by" => license_by = args.next().unwrap_or(license_by),
+            // **When the operator declared it** — a semantic input, not build timing.
+            //
+            // ADR-017 §10 and §12 draw the line this flag exists to respect: `license.at` describes
+            // **the request** (an operator made a declaration at an instant, exactly as `by` says
+            // who), so it belongs inside §12's determinism surface; when a build began describes
+            // **the execution** and lives in `build-info.json`, outside every hash.
+            //
+            // This binary used to pass its own `started_at` — the build clock — as `license.at`,
+            // collapsing precisely those two. It put a value the manifest cannot support into the
+            // manifest, and it broke §12's byte-identity guarantee for every operator-declared
+            // publish, because a fresh clock reading on each run made two publishes of one request
+            // differ. Supplying it is the only way it can be true.
+            //
+            // **The value is carried verbatim and its format is not interpreted**, on the same
+            // ground §10 gives for the license string itself: this operation parses no license
+            // metadata. Non-empty is checked; RFC-3339 conformance is the caller's to state.
+            "--license-at" => {
+                let raw = args.next().ok_or("--license-at needs an RFC-3339 UTC instant")?;
+                if raw.trim().is_empty() {
+                    return Err("--license-at needs a non-empty value".into());
+                }
+                license_at = Some(raw);
+            }
+            "--license-by" => {
+                let raw = args.next().ok_or("--license-by needs a value")?;
+                if raw.trim().is_empty() {
+                    return Err("--license-by needs a non-empty value; omit the flag to accept \
+                                the default"
+                        .into());
+                }
+                license_by = raw;
+            }
             "--attribution" => attribution = args.next(),
             "--redistribution" => {
                 redistribution = match args.next().as_deref() {
@@ -124,6 +174,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let style_path = style_path.ok_or("--style is required")?;
     let viewer_dir = viewer_dir.ok_or("--viewer is required")?;
     let out = out.ok_or("--out is required")?;
+
+    // **An operator declaration is a claim, and a claim carries who made it and when.** `by` has a
+    // default because "operator" is a truthful stand-in for a tool with no identity model; `at` has
+    // none, because the only value this binary could invent is its own build clock — which is the
+    // one thing ADR-017 §12 says must never reach the manifest.
+    let license_at = match (&license, license_at) {
+        (Some(_), Some(at)) => Some(at),
+        (Some(_), None) => {
+            return Err("--license requires --license-at <RFC-3339 instant>: `license.at` is when \
+                        the operator made the declaration (ADR-017 §10), a semantic input inside \
+                        the manifest's determinism surface. This tool will not substitute its own \
+                        build clock for it — that is execution timing, it belongs in \
+                        build-info.json, and it would make two publishes of one request differ"
+                .into())
+        }
+        (None, Some(_)) => {
+            return Err("--license-at was given without --license. An operator declaration is \
+                        all-or-nothing; there is no manifest state that records when somebody \
+                        declared nothing"
+                .into())
+        }
+        (None, None) => None,
+    };
 
     eprintln!(
         "[publish] reversibility class: {REVERSIBILITY_CLASS}. Publishing is a class-3 external \
@@ -199,12 +272,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         attributes,
         style_source: &style_source,
         viewer: &viewer,
+        // `at` is `license_at`, **never `started_at`**. The two are different kinds of instant and
+        // the whole of ADR-017 §10's box exists to keep them apart; the `--license-at` arm above
+        // carries the argument. `license_at` is `Some` exactly when `license` is, by the check
+        // above, so the `expect` is discharged there rather than being a hope.
         license: license.map(|l| OperatorLicense {
             license: l,
             attribution,
             redistribution,
             by: license_by,
-            at: started_at.clone(),
+            at: license_at.expect("--license without --license-at is refused above"),
         }),
         destination: out,
         started_at,
