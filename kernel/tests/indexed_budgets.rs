@@ -38,7 +38,7 @@
 //!   "pays for itself after N queries".
 
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
 use futures_util::{SinkExt, StreamExt};
@@ -47,6 +47,7 @@ use spatial_data_plane::session::SUBPROTOCOL;
 use spatial_data_plane::{wire, RunningDataPlane};
 use spatial_engine::fixture::{write_geoparquet, FixtureFacts, FixtureSpec};
 use spatial_engine::identity::IdentityDeclaration;
+use spatial_engine::index::{IndexPhase, IndexPhaseObserver};
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -71,6 +72,15 @@ const SELECTIVITY_RUNS: usize = 7;
 /// then be timing a cache hit under the same name (preregistration amendment A3).
 const INDEX_CANCEL_DELAYS_MS: [u64; 6] = [10, 25, 50, 100, 200, 400];
 const INDEX_CANCEL_REPEATS: usize = 2;
+/// Delay ladder for cancelling **inside the DuckDB covering-bbox scan**, measured from the moment
+/// the build reports that it has entered that phase (preregistration amendment A7).
+///
+/// **The previous pass sampled this phase zero times.** All twelve of its delays fell inside the
+/// 610 ms SHA-256 content hash, which runs first; the scan is about 30 ms and starts after it. A
+/// wall-clock ladder cannot aim at a phase that short — so this one does not try. It waits for the
+/// phase observer to report `DuckDbScan`, and only then starts counting.
+const SCAN_CANCEL_DELAYS_MS: [u64; 6] = [0, 1, 2, 5, 10, 20];
+const SCAN_CANCEL_REPEATS: usize = 2;
 /// Delay ladder for cancelling **during the identity uniqueness scan**, chosen to straddle the
 /// uninterruptible prelude of `Dataset::open` rather than to land inside it (amendment A3).
 const IDENTITY_CANCEL_DELAYS_MS: [u64; 5] = [5, 15, 30, 50, 80];
@@ -231,6 +241,66 @@ impl MemorySampler {
     }
 }
 
+/// Watches an index build's phase transitions so a cancel can be aimed at one of them.
+///
+/// **This is what closes the gap `RESULTS.md` reports as never sampled.** A wall-clock ladder
+/// cannot aim at a 30 ms phase that begins after a 610 ms one; waiting for the phase to be
+/// *announced* can. The build announces on its own thread as it enters each phase.
+///
+/// **It does not move the observation instant.** The cancellation latency reported below is still
+/// stamped inside the thread doing the work, the moment that thread has observed the cancel. This
+/// object only decides *when the cancel is issued*, which is the canceller's side of the
+/// measurement and always was.
+struct ScanPhaseWatch {
+    entered_scan: Mutex<Option<Instant>>,
+    signal: Condvar,
+    phases: Mutex<Vec<&'static str>>,
+}
+
+impl ScanPhaseWatch {
+    fn new() -> Self {
+        Self {
+            entered_scan: Mutex::new(None),
+            signal: Condvar::new(),
+            phases: Mutex::new(Vec::new()),
+        }
+    }
+
+    /// Block until the build reports it has entered the DuckDB scan, or give up.
+    fn wait_for_scan(&self, deadline: Duration) -> Option<Instant> {
+        let guard = self.entered_scan.lock().unwrap_or_else(|e| e.into_inner());
+        let (guard, _) = self
+            .signal
+            .wait_timeout_while(guard, deadline, |seen| seen.is_none())
+            .unwrap_or_else(|e| e.into_inner());
+        *guard
+    }
+
+    /// The most recent phase announced — what the build was doing at this instant.
+    fn last_phase(&self) -> &'static str {
+        self.phases
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .last()
+            .copied()
+            .unwrap_or("none")
+    }
+
+    fn seen(&self) -> Vec<&'static str> {
+        self.phases.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+}
+
+impl IndexPhaseObserver for ScanPhaseWatch {
+    fn phase(&self, phase: IndexPhase) {
+        self.phases.lock().unwrap_or_else(|e| e.into_inner()).push(phase.as_str());
+        if phase == IndexPhase::DuckDbScan {
+            *self.entered_scan.lock().unwrap_or_else(|e| e.into_inner()) = Some(Instant::now());
+            self.signal.notify_all();
+        }
+    }
+}
+
 /// Nearest rank over a sorted slice — the same sort-and-index method every earlier figure used.
 fn pct(sorted: &[f64], p: f64) -> f64 {
     if sorted.is_empty() {
@@ -248,6 +318,10 @@ fn sorted(v: &[f64]) -> Vec<f64> {
 
 fn json_f64s(v: &[f64]) -> String {
     format!("[{}]", v.iter().map(|x| format!("{x:.3}")).collect::<Vec<_>>().join(", "))
+}
+
+fn json_strs(v: &[&str]) -> String {
+    format!("[{}]", v.iter().map(|s| format!("\"{}\"", json_escape(s))).collect::<Vec<_>>().join(", "))
 }
 
 fn json_u64s(v: &[u64]) -> String {
@@ -555,11 +629,31 @@ async fn measure_the_indexed_slice_against_docs_08() {
     // cache, and this file is 1/34th of that size. It is the open path timed at the size this disk
     // had room for. **This now includes ADR-016's identity uniqueness scan**, which reads a whole
     // column, so it is a different quantity from the same row in the earlier harness.
+    // **Both connection configurations are timed**, because this cut changed what `Dataset::open`
+    // does and the brief requires the cost to be recorded rather than assumed. What was added is
+    // one trivial drained statement before the connection is handed to the pool; what was *not*
+    // added is a connection — open created exactly one before this cut and creates exactly one
+    // now. The two configurations differ only in whether that connection is then kept.
+    //
+    // **This is an absolute figure in this session and not a before/after.** The 26.7–39.9 ms in
+    // the previous `RESULTS.md` section came from another session and is not a baseline for it.
     let mut open_ms = Vec::new();
     for _ in 0..5 {
         let t = Instant::now();
         let ds = Dataset::open(&path_a).expect("open");
         open_ms.push(t.elapsed().as_secs_f64() * 1000.0);
+        drop(ds);
+    }
+    let mut open_ms_fresh = Vec::new();
+    for _ in 0..5 {
+        let t = Instant::now();
+        let ds = Dataset::open_with_connections(
+            &path_a,
+            None,
+            spatial_engine::PoolConfig::fresh_per_query(),
+        )
+        .expect("open");
+        open_ms_fresh.push(t.elapsed().as_secs_f64() * 1000.0);
         drop(ds);
     }
 
@@ -599,6 +693,80 @@ async fn measure_the_indexed_slice_against_docs_08() {
             }
         }
     }
+
+    // ---- Cancellation INSIDE the DuckDB scan phase (amendment A7) ------------------------------
+    //
+    // **The gap the previous pass named and could not close.** All twelve of its delays fell inside
+    // the 610 ms content hash and the ~30 ms scan was never sampled. This ladder does not guess at a
+    // wall-clock offset: it waits for the build to announce that it has entered `DuckDbScan`, and
+    // measures the delay from there.
+    //
+    // A **third copy** of the fixture, because a cancelled build inserts nothing into the cache but
+    // a completed one does — running this on B would leave B's cache populated and make the delay
+    // ladder below a series of cache hits timed under the wrong name. The copy is deleted when this
+    // phase is over, because disk headroom is itself an invalidator here.
+    let path_c = dir.join("polygons-100k-scan-c.parquet");
+    let facts_c: FixtureFacts = write_geoparquet(&path_c, &spec).expect("fixture C");
+    assert_eq!(facts.coord_bits_xor, facts_c.coord_bits_xor, "C must be the same bytes as A");
+    let ds_c = Arc::new(Dataset::open(&path_c).expect("open C"));
+
+    let mut scan_latency = Vec::new();
+    let mut scan_delays = Vec::new();
+    let mut scan_issued_in = Vec::new();
+    let mut scan_observed_in = Vec::new();
+    let mut scan_completed_first = 0usize;
+    let mut scan_never_started = 0usize;
+    let mut scan_stopped_at: Option<u64> = None;
+    'scan_ladder: for delay in SCAN_CANCEL_DELAYS_MS {
+        for _ in 0..SCAN_CANCEL_REPEATS {
+            let watch = Arc::new(ScanPhaseWatch::new());
+            let cancel = CancelToken::new();
+            let ds = Arc::clone(&ds_c);
+            let observer = Arc::clone(&watch);
+            let c2 = cancel.clone();
+            let worker = std::thread::spawn(move || {
+                let r = ds.build_index_observed(&c2, Some(&*observer));
+                // Stamped **inside the thread doing the work**, the moment it has observed the
+                // cancel — never after a handoff back to the caller.
+                (Instant::now(), r.is_ok(), observer.last_phase(), observer.seen())
+            });
+
+            if watch.wait_for_scan(Duration::from_secs(30)).is_none() {
+                // The build never reached the scan. Counted and reported; never silently retried.
+                scan_never_started += 1;
+                cancel.cancel();
+                let _ = worker.join();
+                continue;
+            }
+            std::thread::sleep(Duration::from_millis(delay));
+            let issued_in = watch.last_phase();
+            let sent = Instant::now();
+            cancel.cancel();
+            let (observed, ok, observed_in, seen) = worker.join().expect("scan worker");
+            if ok {
+                // The scan finished before the cancel arrived. Reported separately — it is not a
+                // latency sample, and it populates C's cache, so the ladder stops here.
+                scan_completed_first += 1;
+                scan_stopped_at = Some(delay);
+                println!(
+                    "scan-phase cancel ladder: a build completed at delay {delay} ms (phases {seen:?}) — stopping"
+                );
+                break 'scan_ladder;
+            }
+            scan_latency.push(observed.duration_since(sent).as_secs_f64() * 1000.0);
+            scan_delays.push(delay);
+            scan_issued_in.push(issued_in);
+            scan_observed_in.push(observed_in);
+        }
+    }
+    println!(
+        "scan-phase cancellation: {} samples, {} completed first, {} never reached the scan",
+        scan_latency.len(),
+        scan_completed_first,
+        scan_never_started
+    );
+    drop(ds_c);
+    let _ = std::fs::remove_file(&path_c);
 
     // ---- Cancellation during an index build ---------------------------------------------------
     //
@@ -847,6 +1015,12 @@ async fn measure_the_indexed_slice_against_docs_08() {
             pct(&sorted(&idx_latency), 0.95)
         ));
     }
+    if !scan_latency.is_empty() && pct(&sorted(&scan_latency), 0.95) >= 100.0 {
+        misses.push(format!(
+            "duckdb-scan-phase cancel p95 {:.3} ms >= 100 ms",
+            pct(&sorted(&scan_latency), 0.95)
+        ));
+    }
     if *mid_after.iter().max().unwrap() > 1 || *early_after.iter().max().unwrap() > 1 {
         misses.push("more than one batch generated after cancellation was observed".to_string());
     }
@@ -895,7 +1069,10 @@ async fn measure_the_indexed_slice_against_docs_08() {
   "dataset_open": {{
     "note": "NOT docs/08's 5 GB cold-open row: nothing purges the Windows file cache and this file is 1/34th of that size. This figure now INCLUDES ADR-016's identity uniqueness scan, which reads a whole column, so it is a different quantity from the same row in the earlier harness.",
     "file_bytes": {file_bytes},
-    "samples_ms": {open_samples}
+    "samples_ms": {open_samples},
+    "samples_ms_fresh_connections": {open_samples_fresh},
+    "what_this_cut_added_to_open": "one trivial drained statement (SELECT 1) before the connection open already created is handed to the pool. No connection is created that was not created before: open used one configured connection for parquet_kv_metadata, the schema probe and the identity scan, and it now returns that same one instead of dropping it. Both connection configurations are timed because the difference between them is whether the connection is KEPT, not whether it is made.",
+    "this_is_not_a_before_after": "these are absolute figures in THIS session. The 26.7-39.9 ms in the previous RESULTS.md section came from another session and is not a baseline for them; the preregistration forbids between-session comparison."
   }},
   "index": {{
     "build_cost_and_query_benefit": "separate quantities, never netted into 'pays for itself after N queries'",
@@ -929,6 +1106,18 @@ async fn measure_the_indexed_slice_against_docs_08() {
       "summary": {idx_summary},
       "phase_attribution": "delays below the content-hash time landed in the SHA-256 pass; delays above it landed in the DuckDB covering-bbox scan. The split for this file is in index.on_the_measured_file above (measured on the second copy: hash {b_hash:.1} ms, build {b_build:.1} ms)."
     }},
+    "inside_the_duckdb_scan_phase": {{
+      "note": "The gap the previous pass named and could not close: all twelve of its delays fell inside the 610 ms content hash and the ~30 ms scan was sampled zero times. This ladder does not guess a wall-clock offset — it waits for the build to ANNOUNCE that it has entered the DuckDbScan phase and measures the delay from there. Run on a THIRD copy of the fixture, so a completed build cannot populate the cache the other ladders use.",
+      "aiming": "phase-observer signalled; the delay is measured from the announcement of DuckDbScan, not from the start of build_index",
+      "observation_instant_unmoved": "the latency below is still stamped INSIDE the thread doing the work, at the moment it observed the cancel. The observer decides only when the cancel is ISSUED, which is the canceller's side and always was.",
+      "delays_after_scan_start_ms": {scan_delays},
+      "ladder_stopped_at_delay_ms": {scan_stop},
+      "summary": {scan_summary},
+      "phase_cancellation_was_issued_in": {scan_issued},
+      "phase_cancellation_was_observed_in": {scan_observed},
+      "trials_where_the_scan_completed_before_the_cancel": {scan_completed},
+      "trials_where_the_build_never_reached_the_scan": {scan_never}
+    }},
     "during_identity_uniqueness_scan": {{
       "note": "ADR-016's whole-column scan on the open path. Trials in which the cancel arrived after the scan had already finished are counted here and are NOT latency samples.",
       "delays_ms": {ident_delays},
@@ -940,6 +1129,7 @@ async fn measure_the_indexed_slice_against_docs_08() {
   "selectivity": {{
     "note": "time to first batch AND total are both reported at every point. Quoting only 'total fell' would manufacture an improvement: RESULTS.md's non-monotonicity finding is about the FIRST batch, which is the figure the first-pixels budget depends on.",
     "filter_plan_provenance": "observed on an engine-direct stream with identical parameters — the wire carries no plan",
+    "what_the_indexed_half_means_after_this_cut": "The product planner no longer consults the index (piece 1), so the rows labelled 'indexed' below describe a dataset with a BUILT BUT UNUSED index. They are EXPECTED to report ScanOnly and to equal the unindexed rows, and that expectation is the check: a difference here would mean the index is still reaching the product path. The index-in-path cost itself is the previous RESULTS.md section's finding and is deliberately NOT re-measured here.",
     "runs_per_point_per_path": {runs},
     "unindexed": [{unindexed}],
     "indexed": [{indexed}]
@@ -997,6 +1187,7 @@ async fn measure_the_indexed_slice_against_docs_08() {
         vmin = facts.min_vertices_per_feature,
         vmax = facts.max_vertices_per_feature,
         open_samples = json_f64s(&open_ms),
+        open_samples_fresh = json_f64s(&open_ms_fresh),
         a_hash = a_report.content_hash_millis,
         a_build = a_report.build_millis,
         a_wall = a_build_wall_ms,
@@ -1017,6 +1208,13 @@ async fn measure_the_indexed_slice_against_docs_08() {
         idx_delays = json_u64s(&idx_delays),
         idx_stop = idx_completed_at.map(|v| v.to_string()).unwrap_or("null".into()),
         idx_summary = summary_json("cancel observed, during an index build", &idx_latency),
+        scan_delays = json_u64s(&scan_delays),
+        scan_stop = scan_stopped_at.map(|v| v.to_string()).unwrap_or("null".into()),
+        scan_summary = summary_json("cancel observed, inside the DuckDB scan phase", &scan_latency),
+        scan_issued = json_strs(&scan_issued_in),
+        scan_observed = json_strs(&scan_observed_in),
+        scan_completed = scan_completed_first,
+        scan_never = scan_never_started,
         ident_delays = json_u64s(&ident_delays),
         ident_summary = summary_json("cancel observed, during the identity uniqueness scan", &ident_latency),
         ident_completed = ident_completed,
@@ -1046,6 +1244,21 @@ async fn measure_the_indexed_slice_against_docs_08() {
         pct(&early_sorted, 0.50),
         pct(&early_sorted, 0.95)
     );
+    if !scan_latency.is_empty() {
+        println!(
+            "cancel duckdb-scan  p50 {:.3} p95 {:.3} (n={}, {} scans completed first, {} never reached the scan)",
+            pct(&sorted(&scan_latency), 0.50),
+            pct(&sorted(&scan_latency), 0.95),
+            scan_latency.len(),
+            scan_completed_first,
+            scan_never_started
+        );
+    } else {
+        println!(
+            "cancel duckdb-scan  NO SAMPLES ({} completed first, {} never reached the scan)",
+            scan_completed_first, scan_never_started
+        );
+    }
     if !ident_latency.is_empty() {
         println!(
             "cancel identity-scan p50 {:.3} p95 {:.3} (n={}, {} opens completed first)",

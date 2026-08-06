@@ -12,10 +12,11 @@ never every module built in parallel to 20 %.
 | | |
 |---|---|
 | **Reads** | GeoParquet (WKB geometry, GeoParquet 1.1 metadata) through **DuckDB** |
-| **Filters** | SQL over the covering `bbox` columns, **narrowed by a revision-keyed in-memory index** when one is admissible |
+| **Filters** | SQL over the covering `bbox` columns — a linear scan. The fixed-grid index is built and tested but **deliberately not in the product planner**; see below |
 | **Emits** | GeoArrow polygons, `List<rings: List<vertices: FixedSizeList<xy: double>[2]>>`, as Arrow IPC |
 | **Tags** | every batch envelope with frame, CRS, CRS source and axis order (ADR-010 rule 1) |
 | **Cancels** | through DuckDB's own interrupt, not just a flag between batches |
+| **Connects** | through a bounded per-dataset lease pool: configured once per connection, not once per query |
 
 ## The five things worth knowing before reading the code
 
@@ -96,10 +97,54 @@ landing on an almost-full batch pushed the total past the ceiling and killed the
 size was a function of its last feature, and `docs/08`'s Polygons class at 50–200 vertices per
 feature could never produce the case.)*
 
+## Why the fixed-grid index is **not** in the default planner
+
+`Dataset::stream` and `stream_with_cancel` plan `ScanOnly` for every bbox query, even when an
+admissible index is sitting in the process cache. The index is reachable only through
+`Dataset::stream_indexed_experimental`, which is `#[doc(hidden)]` and which no product path calls.
+
+**This is a measured decision, and the measurement is named.** `kernel/RESULTS.md`, second section,
+"The finding this pass exists to report: the index made every filtered query slower" — same session,
+same binary, same file, against an unindexed baseline re-measured beside it:
+
+| Viewport | Time to first batch | Total |
+|---|---|---|
+| quarter extent | 140.2 → **190.1 ms** (35.6 % slower) | 197.7 → 240.5 ms (21.7 % slower) |
+| 1/64 extent | 49.7 → **58.4 ms** (17.5 % slower) | 54.0 → 62.4 ms (15.5 % slower) |
+
+**The mechanism, because a number without one is a tuning excuse.** Candidate-ID ranges add work
+while DuckDB still scans the GeoParquet bbox columns. The index answers `covering-bbox-intersects`,
+which is *exactly* the predicate the scan already computes, and the bbox comparison is deliberately
+kept alongside the ranges so the result set stays provably identical — so the ranges cannot exclude
+a single row the bbox test would have kept. They are pure added work per row on top of a scan that
+still runs in full. **Until an index prunes actual IO, `ScanOnly` is the preferred product plan.**
+
+**None of this says the index is wrong.** It is not:
+`an_indexed_query_returns_exactly_what_the_scan_returns` holds, and the measured payload totals were
+byte-identical at every point (25 281 rows / 44 018 088 B; 1 600 rows / 2 798 952 B). It says this
+index does not pay for itself on this shape, and that time to *first batch* — the figure the
+first-pixels budget depends on — is not what it improves.
+
+**What is kept, and why it is kept rather than deleted.** The structure, the cache admission checks,
+`IndexNarrowed`, `IndexTooFragmented` and every correctness test remain, reached through the
+experimental seam. Deleting the only call site would have deleted the tests with it, and the
+property those tests pin — that a derived structure returns exactly what the scan returns — is the
+one that has to survive into whatever replaces this index.
+
+**The seam cannot be entered by accident, and that is proved rather than asserted.**
+`Dataset::admitted_index` counts its calls; `engine/tests/planner_seam.rs` builds an index, runs an
+ordinary query, and asserts the counter did not move — deterministically, in its own test process,
+never on a timing.
+
+**An index that prunes IO is a separate design.** It gets its own architect-first decision and its
+own preregistered pass, and its gate is written down before it is built: on one pinned binary in one
+admissible session it must beat `ScanOnly` at quarter-extent time to first batch while returning
+exactly the same rows and payload. Nothing here is evidence for or against it.
+
 ## Spatial index — keying, ceilings, and what it is not
 
 `docs/07`'s open gate, closed for this slice's shape. An in-memory grid over the covering-bbox
-columns, built by one cancellable scan.
+columns, built by one cancellable scan. Reached only through the experimental seam above.
 
 **Authority, because the obvious citation is the wrong one.** This is derived state, but *not* by
 ADR-010 rule 5 — rule 5 binds "every **renderer** cache", and ADR-013 §7's test (delete this index
@@ -129,6 +174,26 @@ that. When candidates are too scattered to express as ranges the scan runs inste
 reports `IndexTooFragmented` rather than `ScanOnly` — "there was no index" and "the index could not
 help" are different facts, and a timing that cannot tell them apart cannot be attributed.
 
+**Every phase of a build is cancellable, at a declared cadence.** The DuckDB scan, bbox validation,
+extent reduction and grid population each poll the token every `CANCEL_POLL_INTERVAL` items —
+counted over **cell insertions** in the grid phase, because one feature may fill up to
+`MAX_CELLS_PER_FEATURE` buckets and a per-feature poll would leave a window a thousand times longer
+than the constant claims. In those phases the token flag is the only mechanism and that is correct:
+DuckDB's interrupt handle is detached the moment the scan returns, because there is no query left to
+interrupt. A cancelled build returns `Cancelled`, inserts nothing into the cache, releases its
+connection lease and leaves the next operation healthy.
+
+*(Closed in this cut. `kernel/RESULTS.md` reported it as a property of the code rather than a
+timing: after the scan's last check, the extent pass and the grid loops contained no cancellation
+point at all. At 100 000 features that window is a few milliseconds; at `MAX_INDEXED_FEATURES` it is
+the same code with 200× the work.)*
+
+**Phase attribution is a test and measurement seam**, not a public protocol: an
+`IndexPhaseObserver` is notified as a build enters `ContentHash → DuckDbScan → ValidateBboxes →
+ComputeExtent → PopulateGrid → Complete`, and the public `build_index` passes none. It exists
+because a delay ladder cannot aim at a phase it cannot see — the previous pass fired all twelve of
+its delays inside the 610 ms content hash and sampled the 30 ms scan zero times.
+
 **Declared ceilings:** `MAX_INDEXED_FEATURES` 20 M · `GRID_AXIS_CELLS` 256 · `MAX_ID_RANGES` 4 096 ·
 memory `features × 40 B` (id + bbox) **plus 4 B per grid-bucket entry**, with per-feature cell
 coverage capped at `MAX_CELLS_PER_FEATURE` 1 024 so the buckets cannot grow without limit.
@@ -146,6 +211,71 @@ latency fix.
 **Build cost and query benefit are separate quantities** and `IndexReport` keeps them apart —
 content-hash time, build time, rows scanned, features indexed. Nothing here nets them into "pays for
 itself after N queries".
+
+## DuckDB connections: one owner, bounded capacity, one query each
+
+`kernel/RESULTS.md` decomposed the first-pixels budget and found **S2 — query start to OPEN — at
+67.8–92.6 ms**, of which the producer's share was accepting the stream: SQL construction, **a new
+in-memory DuckDB connection per stream**, and `SET enable_geoparquet_conversion=false`. Two thirds
+of the whole 100 ms budget went before the query looked at a row. `src/pool.rs` keeps configured
+connections instead of making one per query.
+
+**Authority, and again the obvious citation is the wrong one.** A pool holds *execution resources*,
+not derived results, so **ADR-010 rule 5 does not bind it** — ADR-013 §7's test applies exactly as
+it does for the index: delete the pool and rule 5 says what it said. What binds is `docs/05` (DuckDB
+is this module's), **ADR-007** (DuckDB owns no mutation, so a pooled connection cannot run, extend,
+gate or delay a transaction), **ADR-006** (a stream is a pure transformation; a connection is the
+resource it runs on), and **`docs/01` principle 7** (the lease lifecycle exists so cancellation
+keeps reaching the *query*). ADR-010 rule 6 is cited only for the declared-ceiling discipline.
+
+| | |
+|---|---|
+| **Owner** | the `Dataset`. Never a process-wide path-keyed cache — that would let a connection outlive the CRS (ADR-015) and identity (ADR-016) facts admitted beside it |
+| **Capacity** | `MAX_STREAM_CONNECTIONS` 4 + `MAX_MAINTENANCE_CONNECTIONS` 1 = `MAX_PHYSICAL_CONNECTIONS` **5 per dataset** |
+| **Classes** | two bounded classes over one physical pool, so four admitted streams can never make an index build impossible and a build can never take a stream's connection |
+| **One query per connection** | a lease *moves* the connection out of the pool; no lock is held across a query |
+| **Exhaustion** | a typed `ConnectionsExhausted` refusal. **Never a queue** |
+| **Prepared at open** | `Dataset::open` runs on a lease and returns it, so a configured connection is ready before the first query — adding no connection and no new prelude work, only one drained verification statement |
+| **Dataset drop** | closes its idle connections; a lease in flight keeps the pool alive until its query is over |
+
+**The lifecycle, and where cancellation lives in it.** Lease → attach the connection's interrupt
+handle to the stream's token → run → detach → decide the lease. **Cancellation belongs to the active
+lease, never permanently to the connection or the dataset.**
+
+**The producer thread decides its own lease's fate, and it is the only thing that can.**
+`BatchStream`'s `Drop` cancels the token on *every* drop, including a stream that completed and was
+then let go — so the token's flag, read from the consumer side, cannot tell "cancelled" from
+"finished". The producer holds the `Result` and therefore knows. Any error, cancellation included,
+**discards and replaces**: a cancelled query interrupted DuckDB on that connection, and this engine
+**has not established** a post-interrupt health guarantee for DuckDB, so discard-and-replace is the
+declared bounded behaviour rather than an optimisation. A completed query returns its connection
+after a trivial **drained** statement — `probe_schema` abandons a result iterator, and
+`read_geo_metadata`'s own comment records what that used to surface as two calls later; while a
+connection died at the end of every open, that latent state died with it, and it no longer does.
+
+**Consequence, stated because it bounds what any measurement may claim:** a cancelled stream
+forfeits its connection, so the supersession pattern — a superseded query cancelled while its
+replacement starts — degrades to the fresh-connection path. Any S2 improvement is a claim about
+**completed** streams only.
+
+**This is not an admission policy, and must not be read as one.** How many streams a consumer may
+run concurrently is decided upstream, in the binding, before a request reaches this module; this is
+a resource ceiling downstream of a decision already made. `try_acquire` semantics only — no queue,
+no wait, no timeout, no fairness. Because `MAX_STREAM_CONNECTIONS` equals the concurrent-stream
+ceiling the shipped binding happens to declare, `ConnectionsExhausted { class: "stream" }` is
+**unreachable through the composed product path** (see `kernel/README.md`); it is asserted anyway,
+because this module is not entitled to assume the composition it is used in. **Provisional and
+reversible, not a decision** — the same standing `protocol/data-plane/README.md` gives its own N+1
+refusal, and nothing here may be cited as evidence about how that question should be resolved.
+
+**Connection identity and lease generation are instrument facts** on this crate's Rust API
+(`BatchStream::connection_facts()`), never SKP fields and never on the wire — authority for that is
+ADR-004 and `docs/10`, the semantic API surface, not ADR-010 rule 1. `physical_id` is a monotonic
+per-dataset counter and never an address.
+
+**What is outside the declared bound**, and larger than it was: DuckDB's own per-connection memory.
+There may now be up to five resident in-memory instances per dataset rather than one per live
+stream. That remainder is not claimed to be inside any ceiling here — see `kernel/README.md`.
 
 ## Progressive first-batch sizing
 

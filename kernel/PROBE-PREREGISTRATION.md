@@ -293,3 +293,143 @@ existing artifacts streamed the whole file regardless of the extent passed. The 
 adds a `bbox`/`bbox_crs` URL parameter that is forwarded into the START request, so the three query
 viewports in §1a can be issued at all. Both sides of the wire already support a bbox; only the probe
 page did not use it.
+
+---
+
+**A7 — 2026-08-06, before the build, before any result of this pass. The reused-connection cut.**
+
+*(Appended at the end of the file. A1–A6 above run A1 then descending, which was an accident of how
+they were written; this one is placed where an appended amendment belongs and the inconsistency is
+noted rather than silently tidied, because renumbering an amendment block is exactly the kind of
+edit a preregistration exists to prevent.)*
+
+This amendment governs a **new pass on a new tree** and declares everything about it before any of
+its numbers exist. Three product changes precede it — the fixed-grid index is out of the default
+planner, configured DuckDB connections are reused per open dataset, and every O(N) index-build
+phase now polls cancellation — and their code and tests were committed before this text was written.
+
+**Tree under measurement.** Branch `cut/scanonly-reuse-cancellation`, based on `a64b861` (`main`).
+**This is a different product tree from the one §"Tree under measurement" at the top of this file
+names.** That pass measured `87644cb` on a measurement branch that deliberately excluded
+`fba323e`'s reviewer fixes; this one is built on `main`, which contains them. Nothing in this pass
+may be compared with anything in that one.
+
+### A7.1 — The reused-connection S2 contrast
+
+**What is being contrasted.** Two DuckDB connection configurations on one binary: `reuse` (the
+product default — a configured connection is kept for the life of the open dataset) and `fresh`
+(the measurement control — nothing is kept, so every query creates and configures a connection, as
+this engine did before). The selector is a `slice-host` flag, `--duckdb-connections`. It does not
+touch `StreamParams`, SKP or the wire format, and the control is a **capacity of zero on the same
+code path**, not a second implementation — so the contrast measures reuse rather than two branches.
+
+**Declared cell.** Headless · pre-warm **off** · whole-file query (`full=`, no bbox) · the same
+`docs/08` Polygons fixture (100 000 features / ~10M vertices) · one solo stream per page load ·
+**n = 7 admitted trials per mode**.
+
+**Declared interleaving, fixed now:**
+`off, on, on, off, off, on, on, off, off, on, on, off, off, on`.
+Running one mode and then the other would confound the mode with time and order drift on a machine
+this repository has already caught drifting mid-session.
+
+**One `slice-host` process per trial, in both modes.** The mode is a host-level setting, so
+interleaving requires a restart at every switch; restarting only at switches would give the two
+modes different treatments. Restarting every time makes the restart a constant rather than a
+variable. Host start→ready is recorded separately and is outside every segment.
+
+**What this cell can establish, stated before it runs.** It measures **connection preparation at
+open**, *not* reuse across streams: one host per trial and one solo stream per page load means no
+browser trial here ever runs on a connection a previous *stream* used. What reuse-on buys in this
+cell is that a configured connection existed before `t_query_start`. **Reuse across streams is
+established by `engine/tests/connection_reuse.rs`, in process, and not by this cell**, and the
+write-up must say so in those words.
+
+**Lease generation is defined here, before any artifact exists.** Generation counts every lease of a
+physical connection **including the one `Dataset::open` takes** for the `geo` metadata read, the
+schema probe and ADR-016's identity scan. So a connection prepared at open and handed to the first
+stream reports generation **2**; a connection created for a query reports **1**. Fixing this now is
+the point: "the artifact proves reuse" must not turn on a definition chosen after seeing the
+artifact.
+
+**Metrics.** Per mode, every raw sample retained, nearest-rank p50/p95 for S1, S2, S3, S4, S5, first
+pixels after query start, and full payload after query start — **full payload always reported beside
+first pixels, never alone**. Then the signed delta `reuse-on − reuse-off` in milliseconds.
+Producer-side connection facts (physical connections created, lease generation, whether the query
+received an already-configured connection) are **supporting facts on the producer's own clock and
+counters and are never subtracted from browser S2**.
+
+**No minimum improvement is declared, and none is implied.** Correctness and admissibility are the
+gates. The result may be improved, tied, or worse; if it is tied or worse that is reported without
+changing the protocol or the threshold. **An S2 improvement is not progress toward the first-pixels
+budget**: S3 alone was 119.1 ms p50 in the established cell, so the budget verdict stays *missed*
+unless the whole figure goes under 100 ms with every invalidator clear.
+
+**No comparison with the existing 92.6 ms S2 figure is claimed, for three independent reasons:** it
+came from a different session; from a different product tree; and from a different procedure (one
+host process served every trial there).
+
+### A7.2 — Cancellation inside the DuckDB scan phase
+
+The previous pass **sampled this phase zero times**: all twelve of its delays fell inside the 610 ms
+SHA-256 content hash, and the scan is about 30 ms and starts after it. A wall-clock ladder cannot
+aim at a phase that short.
+
+**Declared method.** The build reports its phase transitions to a test-only observer. The ladder
+waits for `DuckDbScan` to be announced and measures the delay **from that announcement**:
+delays **0, 1, 2, 5, 10, 20 ms, twice each (n = 12)**, ascending, on a **third copy** of the fixture
+so a completed build cannot populate the cache the other ladders use. The ladder **stops at the
+first trial that completes**, because a completed build populates the cache and every later trial
+would then time a cache hit under the same name; the reduced n is reported as reduced.
+
+Recorded separately and never as latency samples: trials where the scan finished before the cancel
+arrived, and trials where the build never reached the scan. The phase cancellation was **issued in**
+and the phase it was **observed in** are both recorded.
+
+**The observation instant does not move.** The latency is still stamped inside the thread doing the
+work, at the moment that thread observed the cancel. The observer decides only *when the cancel is
+issued*, which is the canceller's side of the measurement and always was. Phase targeting must not
+relocate the observation to a convenient thread.
+
+The headline remains producer-observed cancellation acknowledgement against `docs/08`'s < 100 ms
+budget.
+
+### A7.3 — Open-time cost
+
+`Dataset::open` now returns its connection to the pool instead of dropping it. What that adds is one
+trivial **drained** statement; what it does not add is a connection — open used exactly one
+configured connection before and uses exactly one now. Open is timed in **both** connection
+configurations, n = 5 each.
+
+**These are absolute figures in this session, not a before/after.** The 26.7–39.9 ms recorded in the
+previous `RESULTS.md` section came from another session and is not a baseline for them; §3 of this
+document forbids between-session comparison and that rule is not suspended because it would be
+convenient here.
+
+### A7.4 — Invalidators
+
+Every invalidator in §2 carries forward unchanged, together with the disk-headroom, profile-leak and
+teardown-settling rules amendments A5 and A6 added. **The 10 % canary threshold is not modified.**
+
+Two more, specific to this cut:
+
+- **14 — the artifact cannot prove which DuckDB connection mode actually ran.** A flag records
+  intent; only the producer's observed facts record what happened. Discharged when every admitted
+  reuse-off trial reports a connection that was **not** already configured and every admitted
+  reuse-on trial reports one that **was**. If it fires, **no S2 delta is established.**
+- **15 — `t_open` semantics or timestamp placement changed.** `frontends/canvas-probe` and
+  `kernel/scripts/run-slice-probe.mjs` are untouched by this cut; `t_query_start` and `t_open` are
+  defined and placed exactly as §1a states. The new driver is a **separate** file
+  (`kernel/scripts/run-connection-ab.mjs`) precisely so the established cell stays reproducible by
+  the instrument that produced it.
+
+### A7.5 — Declared out of scope for this pass
+
+- **Index v2.** Nothing here builds, measures or claims anything about an index that prunes IO. The
+  fixed-grid index's own correctness tests still run; its *cost* is not re-measured, because the
+  product planner no longer reaches it.
+- **Everything in §3** — cold anything, 5 GB, between-session comparison, throughput, frame time,
+  VRAM, macOS and Linux — stays out, on the same grounds.
+- **The supersession pattern.** A cancelled stream forfeits its connection by design, so a
+  superseded query degrades to the fresh-connection path. Any S2 result here is a claim about
+  **completed** streams only. This is raw material for the reserved ADR-014 and may not be cited as
+  evidence about it.

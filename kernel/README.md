@@ -65,6 +65,47 @@ declares its own bound, but it is **per dataset, not per stream**, so multiplyin
 data-plane window — that is what it is instrumented to see — so the counter and these bounds answer
 different questions, and `RESULTS.md` says which.
 
+### DuckDB connections, and the coincidence that is not a decision
+
+`engine` owns a bounded connection pool **per open dataset**: `MAX_STREAM_CONNECTIONS` 4 +
+`MAX_MAINTENANCE_CONNECTIONS` 1 = **5 physical connections per dataset**. `slice-host` opens one
+dataset, so the composed process figure is **5**. One query per physical connection; a lease moves
+the connection out of the pool and no lock is held across a query. A stream that completes returns
+its connection after a drained verification statement; a stream that fails or is cancelled discards
+and replaces it, because this engine has established no post-interrupt health guarantee for DuckDB.
+
+**The engine's stream ceiling and this crate's `MAX_CONCURRENT_STREAMS` are both 4, and this file is
+the only one entitled to notice that.** The engine names no constant belonging to a binding —
+`docs/02` makes that split structural and `engine/tests/slice.rs` scans that crate's own source to
+keep it so — and it justifies its own ceiling by what it will serve over one dataset. The
+composition is the fact, and it is recorded here.
+
+Two consequences follow from the equality, and both matter in review:
+
+- **The engine's `ConnectionsExhausted { class: "stream" }` refusal is unreachable through this
+  composition.** The data plane admits at most 4 concurrent streams process-wide, so a fifth stream
+  lease cannot be requested. A ceiling that cannot be reached in composition is not an admission
+  policy. The engine asserts it anyway, because a module is not entitled to assume its composition.
+- **Neither ceiling is evidence about the other, and neither decides ADR-014.** Refuse-don't-queue at
+  admission is provisional and reversible (`protocol/data-plane/README.md`), and the engine's pool
+  says the same of itself. Three independently chosen bounds now coincide with no decision behind the
+  coincidence; that is raw material for **ADR-014**, not a finding, and may not be cited as evidence
+  that the reserved question is settled.
+
+**What this enlarges, stated here rather than discovered later.** DuckDB's own per-connection memory
+was already outside every bound in the table. It is now a **larger** remainder: up to 5 resident
+in-memory DuckDB instances per open dataset, rather than one per live stream. Nothing above covers
+it and no figure here claims to. The measured process private commit is recorded in `RESULTS.md`
+beside the bound, as it always was, and the two answer different questions.
+
+**The session and credential posture is unchanged by any of this.** A DuckDB connection opens no
+socket, mints no credential and persists nothing (`open_in_memory`). Connection reuse creates no
+credential store: loopback-only bind and ephemeral port, OS-CSPRNG session token, constant-time
+comparison and the existing Origin checks, the credential carried as a WebSocket subprotocol entry
+and never in a query string, nothing written to disk by the data-plane crate, and the OS keychain
+still deferred because the token is ephemeral and nothing persists across sessions. `physical_id` is
+a monotonic counter and never a pointer value, so no address reaches an evidence artifact.
+
 ## What is deliberately absent
 
 - **No lineage DAG, no undo, no command/event log.** The operation is a **pure transformation**
@@ -88,7 +129,17 @@ cd frontends/canvas-probe && npm install && npm run build && cd ../..
 # 3. the slice
 cargo run -p spatial-kernel --bin slice-host -- \
     --data target/fixtures/probe.parquet --assets frontends/canvas-probe/dist
+
+# …and the measurement control, which is NOT a product mode:
+#   --duckdb-connections fresh   keeps no configured connection between queries
 ```
+
+**`--duckdb-connections` defaults to `reuse` and that is the product behaviour.** `fresh` exists
+only as the control for the reused-connection contrast in `RESULTS.md` — it is a capacity of zero on
+the same code path, not a second implementation, so the contrast measures reuse rather than two
+branches. It is an operator-facing flag on the binary that composes the modules, deliberately not a
+stream parameter: `StreamParams` is the operation's SKP-facing surface, and putting a storage-engine
+setting there would enlarge that surface and change the wire format in order to run an experiment.
 
 It prints the URL to open. **The credential is in that URL's fragment**, which browsers never
 transmit, and it is printed rather than written — ADR-012's threat model requires that the production
