@@ -60,6 +60,21 @@ pub const GRID_AXIS_CELLS: usize = 256;
 pub const BYTES_PER_INDEXED_FEATURE: usize = 8 + 32; // id + bbox
 /// Bytes per grid-bucket entry.
 pub const BYTES_PER_CELL_ENTRY: usize = 4;
+/// How often the post-scan build phases check for cancellation (ADR-010 rule 6: declared).
+///
+/// **Declared as a cadence rather than polled per item**, because an atomic load per feature on a
+/// 20-million-feature build is measurable work in the phase it is protecting, and declared rather
+/// than tuned because `MAX_INDEXED_FEATURES` is the number this has to hold at. At the ceiling this
+/// bounds the unpolled window to 4 096 bbox validations, 4 096 extent reductions, 4 096 feature
+/// placements or 4 096 cell insertions — microseconds each, against `docs/08`'s 100 ms budget.
+///
+/// It is counted over **cell insertions** in the grid phase, not over features: one feature may
+/// occupy up to `MAX_CELLS_PER_FEATURE` buckets, so a per-feature poll would leave a window a
+/// thousand times longer than the constant says.
+pub const CANCEL_POLL_INTERVAL: usize = 4_096;
+
+const _: () = assert!(CANCEL_POLL_INTERVAL >= 1);
+
 /// Most cells one feature may occupy before it is held in a coarse list instead.
 ///
 /// A feature spanning the extent would otherwise be pushed into every one of
@@ -67,6 +82,61 @@ pub const BYTES_PER_CELL_ENTRY: usize = 4;
 /// parcel file produces. That is unbounded build time and memory hiding behind a per-feature
 /// constant.
 pub const MAX_CELLS_PER_FEATURE: usize = 1_024;
+
+/// The phases one index build passes through, in order.
+///
+/// **A test and measurement fact, not a public engine protocol and not an SKP addition.** It exists
+/// because the previous cancellation pass fired all twelve of its delays inside the 610 ms content
+/// hash and obtained zero samples of the 30 ms DuckDB scan — a delay ladder cannot aim at a phase
+/// it cannot see, and `kernel/RESULTS.md` records that gap rather than papering over it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IndexPhase {
+    /// SHA-256 of the whole source file — the index's identity, and the dominant cost.
+    ContentHash,
+    /// The DuckDB scan of the covering-bbox columns.
+    DuckDbScan,
+    /// Every bbox checked for finiteness and orientation.
+    ValidateBboxes,
+    /// One reduction over every bbox for the grid's extent.
+    ComputeExtent,
+    /// Every feature placed into its cells.
+    PopulateGrid,
+    /// The build finished, or a cached index was reused.
+    Complete,
+}
+
+impl IndexPhase {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ContentHash => "content-hash",
+            Self::DuckDbScan => "duckdb-scan",
+            Self::ValidateBboxes => "validate-bboxes",
+            Self::ComputeExtent => "compute-extent",
+            Self::PopulateGrid => "populate-grid",
+            Self::Complete => "complete",
+        }
+    }
+}
+
+/// Notified as a build enters each phase.
+///
+/// Called **on the building thread**, so an instrument can act on the transition — but the
+/// observation instant for any cancellation measurement stays stamped inside the thread doing the
+/// work, never on the observer's. A threshold asserted across a thread handoff measures scheduling
+/// rather than the property (`kernel/PROBE-PREREGISTRATION.md` §1b, finding 1).
+///
+/// The observer sees **phases only, never per-feature data** — a data-bearing observer would be a
+/// second bulk path out of this module, which is not what a test seam is for.
+pub trait IndexPhaseObserver: Send + Sync {
+    fn phase(&self, phase: IndexPhase);
+}
+
+/// Report a phase, if anyone is listening. Zero cost when nobody is.
+pub(crate) fn observe(observer: Option<&dyn IndexPhaseObserver>, phase: IndexPhase) {
+    if let Some(o) = observer {
+        o.phase(phase);
+    }
+}
 
 /// The identity of a derived artifact: what it was built **from**, **by**, and **for**.
 ///
@@ -203,6 +273,33 @@ impl SpatialIndex {
         validity: Option<ValidityHeuristic>,
         cancel: &CancelToken,
     ) -> Result<Self> {
+        Self::build_observed(conn, path, covering, id_column, key, validity, cancel, None)
+    }
+
+    /// As `build`, reporting each phase to an observer. See [`IndexPhaseObserver`].
+    ///
+    /// **Every phase below the DuckDB scan is O(N) and every one of them polls cancellation.**
+    /// That is the gap `kernel/RESULTS.md` names as a code fact rather than a timing: after the
+    /// scan's last check, the extent pass and the grid loops used to contain no cancellation point
+    /// at all. At 100 000 features that window is a few milliseconds and nothing is at stake; at
+    /// `MAX_INDEXED_FEATURES` = 20 000 000 it is the same code with 200× the work, against
+    /// `docs/08`'s "cancellation acknowledged < 100 ms, **any operation**" and `docs/01`
+    /// principle 7.
+    ///
+    /// **In these phases the token flag is the only mechanism, and that is correct.** DuckDB's
+    /// interrupt handle is detached the moment the scan returns — there is no query left to
+    /// interrupt — so what stops the work here is the poll, not the interrupt.
+    #[allow(clippy::too_many_arguments)]
+    pub fn build_observed(
+        conn: &Connection,
+        path: &str,
+        covering: &crate::geoparquet::CoveringBbox,
+        id_column: &str,
+        key: IndexKey,
+        validity: Option<ValidityHeuristic>,
+        cancel: &CancelToken,
+        observer: Option<&dyn IndexPhaseObserver>,
+    ) -> Result<Self> {
         let started = std::time::Instant::now();
         let sql = format!(
             "SELECT \"{id}\", {xmin}, {ymin}, {xmax}, {ymax} FROM read_parquet('{p}')",
@@ -215,6 +312,7 @@ impl SpatialIndex {
         );
 
         cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
+        observe(observer, IndexPhase::DuckDbScan);
         let built = Self::scan(conn, &sql, cancel);
         cancel.detach();
         if cancel.is_cancelled() {
@@ -226,7 +324,11 @@ impl SpatialIndex {
         // A NaN bound compares false in Rust and true on one side in SQL; an inverted bbox
         // produces an empty cell range and lands in no cell at all. Either way the index would
         // exclude a row the scan returns, which is the one thing it must never do.
+        observe(observer, IndexPhase::ValidateBboxes);
         for (i, b) in bboxes.iter().enumerate() {
+            if i % CANCEL_POLL_INTERVAL == 0 && cancel.is_cancelled() {
+                return Err(EngineError::Cancelled);
+            }
             if !b.iter().all(|v| v.is_finite()) {
                 return Err(EngineError::Source(format!(
                     "feature at row {i} has a non-finite covering bbox ({b:?}); this engine                      will not index a bound it cannot compare"
@@ -239,18 +341,33 @@ impl SpatialIndex {
             }
         }
 
+        observe(observer, IndexPhase::ComputeExtent);
         let mut extent = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
-        for b in &bboxes {
+        for (i, b) in bboxes.iter().enumerate() {
+            if i % CANCEL_POLL_INTERVAL == 0 && cancel.is_cancelled() {
+                return Err(EngineError::Cancelled);
+            }
             extent[0] = extent[0].min(b[0]);
             extent[1] = extent[1].min(b[1]);
             extent[2] = extent[2].max(b[2]);
             extent[3] = extent[3].max(b[3]);
         }
 
+        observe(observer, IndexPhase::PopulateGrid);
         let mut cells: HashMap<(u32, u32), Vec<u32>> = HashMap::new();
         let mut spanning: Vec<u32> = Vec::new();
         if !bboxes.is_empty() && extent[2] > extent[0] && extent[3] > extent[1] {
+            // Counted over **insertions**, not features: one feature may fill
+            // `MAX_CELLS_PER_FEATURE` buckets, so a per-feature poll would leave an unpolled
+            // window a thousand times longer than `CANCEL_POLL_INTERVAL` claims.
+            let mut since_poll = 0usize;
             for (slot, b) in bboxes.iter().enumerate() {
+                if since_poll >= CANCEL_POLL_INTERVAL {
+                    since_poll = 0;
+                    if cancel.is_cancelled() {
+                        return Err(EngineError::Cancelled);
+                    }
+                }
                 let (c0, r0) = cell_of(&extent, b[0], b[1]);
                 let (c1, r1) = cell_of(&extent, b[2], b[3]);
                 let covered = (c1 - c0 + 1) as usize * (r1 - r0 + 1) as usize;
@@ -258,11 +375,20 @@ impl SpatialIndex {
                     // Too broad to bucket. Held in a list every query considers, so it is never
                     // *missed* -- the index stays a narrowing structure and the cost is bounded.
                     spanning.push(slot as u32);
+                    since_poll += 1;
                     continue;
                 }
                 for c in c0..=c1 {
                     for r in r0..=r1 {
+                        // The inner loop, which is where a single wide feature spends its time.
+                        if since_poll >= CANCEL_POLL_INTERVAL {
+                            since_poll = 0;
+                            if cancel.is_cancelled() {
+                                return Err(EngineError::Cancelled);
+                            }
+                        }
                         cells.entry((c, r)).or_default().push(slot as u32);
+                        since_poll += 1;
                     }
                 }
             }
@@ -363,7 +489,7 @@ impl SpatialIndex {
         let (c1, r1) = cell_of(&self.extent, view.xmax, view.ymax);
         let mut seen = vec![false; self.ids.len()];
         let mut out = Vec::new();
-        let mut consider = |s: usize, out: &mut Vec<u64>, seen: &mut Vec<bool>| {
+        let consider = |s: usize, out: &mut Vec<u64>, seen: &mut Vec<bool>| {
             if seen[s] {
                 return;
             }

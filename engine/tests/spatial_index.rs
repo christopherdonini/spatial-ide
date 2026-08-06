@@ -4,12 +4,24 @@
 //!
 //! Authority for treating it as derived state is ADR-006 (pure transformation) and ADR-007 (owns no
 //! mutation), **not** ADR-010 rule 5 — see `engine/src/index.rs`.
+//!
+//! ## Why every indexed query here goes through `stream_indexed_experimental`
+//!
+//! **The index is no longer in the product planner**, and that is a measured decision recorded in
+//! `kernel/RESULTS.md`'s second section: with the index in the path every filtered query was
+//! slower, by 15.5–35.6 %, against an unindexed baseline taken in the same session from the same
+//! binary. The planner comment in `engine/src/stream.rs` carries the mechanism.
+//!
+//! What did **not** change is that the index answers correctly, and these tests are what say so.
+//! Reaching it through the explicitly-named experimental entry point is what lets both facts hold
+//! at once: the shipped planner never consults it, and its correctness properties stay asserted by
+//! the ordinary suite rather than deleted along with the call site.
 
 use std::path::PathBuf;
 
 use spatial_engine::fixture::{write_geoparquet, FixtureFacts, FixtureSpec};
 use spatial_engine::index::{
-    compress_to_ranges, IndexKey, IndexMiss, ValidityHeuristic, ANSWERS_PREDICATE, BUILDER_VERSION,
+    compress_to_ranges, IndexKey, ValidityHeuristic, ANSWERS_PREDICATE, BUILDER_VERSION,
 };
 use spatial_engine::stream::FilterPlan;
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
@@ -26,8 +38,17 @@ fn small() -> FixtureSpec {
     FixtureSpec { features: 4_000, avg_vertices: 16, ..Default::default() }
 }
 
+/// Drain the **product** planner's answer — `ScanOnly` or `WholeFile`, never the index.
 fn drain_ids(ds: &Dataset, q: &ViewportQuery) -> (Vec<u64>, FilterPlan) {
-    let mut s = ds.stream(q).expect("stream");
+    drain(ds.stream(q).expect("stream"))
+}
+
+/// Drain the **experimental** planner's answer, with the index in the path.
+fn drain_ids_indexed(ds: &Dataset, q: &ViewportQuery) -> (Vec<u64>, FilterPlan) {
+    drain(ds.stream_indexed_experimental(q, CancelToken::new()).expect("indexed stream"))
+}
+
+fn drain(mut s: spatial_engine::BatchStream) -> (Vec<u64>, FilterPlan) {
     let plan = s.filter_plan();
     let mut ids = Vec::new();
     let mut buf = Vec::new();
@@ -70,12 +91,18 @@ fn an_indexed_query_returns_exactly_what_the_scan_returns() {
     assert_eq!(report.indexed_features, facts.features);
     assert!(report.miss.is_some(), "the first build cannot be a cache hit");
 
-    let (indexed_ids, indexed_plan) = drain_ids(&indexed, &q);
+    let (indexed_ids, indexed_plan) = drain_ids_indexed(&indexed, &q);
     assert!(
         matches!(indexed_plan, FilterPlan::IndexNarrowed { .. }),
         "the index should have been used, got {indexed_plan:?}"
     );
     assert_eq!(indexed_ids, scan_ids, "indexed and unindexed result sets must be identical");
+
+    // And the product planner, on the same dataset with the same index built and admissible,
+    // still scans — the whole of piece 1 in one assertion.
+    let (product_ids, product_plan) = drain_ids(&indexed, &q);
+    assert_eq!(product_plan, FilterPlan::ScanOnly, "the shipped planner does not use the index");
+    assert_eq!(product_ids, scan_ids, "and returns the same rows it always did");
 }
 
 #[test]
@@ -92,7 +119,10 @@ fn a_viewport_that_selects_nothing_is_answered_without_inventing_rows() {
         xmax: e[2] + 20_000.0,
         ymax: e[3] + 20_000.0,
     };
-    let (ids, plan) = drain_ids(&ds, &ViewportQuery::viewport(away, "EPSG:2056"));
+    // Asked of the **experimental** planner, because that is the only one that consults the index
+    // at all: asking the product planner would assert `ScanOnly` for a reason that has nothing to
+    // do with what this test is about, and the test would pass with the index deleted.
+    let (ids, plan) = drain_ids_indexed(&ds, &ViewportQuery::viewport(away, "EPSG:2056"));
     assert!(ids.is_empty());
     // **Falls through to the scan rather than deciding.** An empty candidate set used to become
     // `WHERE 1=0`, which is the index acting as the system of record — and which returned zero rows
@@ -258,7 +288,7 @@ fn a_mapped_identity_and_an_index_agree_with_the_unindexed_scan() {
     let indexed =
         Dataset::open_with_declared_identity(&path, declaration, &CancelToken::new()).expect("open");
     indexed.build_index(&CancelToken::new()).expect("build index");
-    let (indexed_ids, indexed_plan) = drain_ids(&indexed, &q);
+    let (indexed_ids, indexed_plan) = drain_ids_indexed(&indexed, &q);
     assert!(
         matches!(indexed_plan, FilterPlan::IndexNarrowed { .. }),
         "the index should have been used, got {indexed_plan:?}"

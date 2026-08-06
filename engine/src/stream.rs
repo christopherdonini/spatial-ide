@@ -10,12 +10,9 @@
 //!    consumer that stops reading stops the producer (H3), and nothing is generated ahead of need.
 //! 3. Cancellation reaches DuckDB itself (`cancel.rs`), not just the loop around it.
 //!
-//! **The spatial index narrows; it never decides.** `docs/07`'s open gate is closed for this
-//! slice's shape by `index.rs`: an in-memory, revision-keyed index over the GeoParquet 1.1
-//! covering-bbox columns. When one is admissible its candidate ids are added *alongside* the bbox
-//! predicate, never instead of it, so the result set is provably identical to the unindexed one and
-//! a wrong index costs time rather than correctness. Without an admissible index the filter is the
-//! same linear scan it always was, and says so.
+//! **The fixed-grid spatial index is not in the product planner, and the reason is measured.** See
+//! the planner comment on `build_sql`. `index.rs` still builds and answers correctly; it is reached
+//! only through `stream_indexed_experimental`, which no product path calls.
 
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
@@ -26,7 +23,7 @@ use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, La
 use duckdb::ToSql;
 
 use crate::cancel::CancelToken;
-use crate::dataset::{connect_for_stream, Dataset};
+use crate::dataset::{lease_for_stream, Dataset};
 use crate::envelope::{BatchEnvelope, TaggedBatch, ID_COLUMN};
 use crate::error::{EngineError, Result};
 use crate::geoarrow::build_polygon_array;
@@ -181,6 +178,37 @@ pub enum FilterPlan {
     IndexTooFragmented { candidates: usize },
 }
 
+/// Whether a plan may consult the spatial index.
+///
+/// **Not a `bool` and not an `Option`, deliberately.** The product answer is one variant of a named
+/// type, so a reader of a call site sees which policy is in force without knowing which way round
+/// the flag goes, and adding a third policy later is a compile error at every site rather than a
+/// silent reinterpretation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum IndexUse {
+    /// The product planner. The index seam is not consulted at all.
+    Off,
+    /// The experimental seam, reached only through `Dataset::stream_indexed_experimental`.
+    Experimental,
+}
+
+/// Facts about the DuckDB connection one stream is running on.
+///
+/// **Instrument surface, on the engine's Rust API only.** These are never SKP fields, never on the
+/// wire, and never in any type belonging to a binding — the crate that carries batches knows
+/// nothing about what a batch contains, and a storage-engine detail crossing it would be exactly
+/// the leakage the boundary tests gate. Authority for keeping them off the wire is ADR-004 and
+/// `docs/10` (the semantic API surface), not ADR-010 rule 1, which is about coordinate space.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ConnectionFacts {
+    /// Which physical connection — a monotonic per-dataset counter, never an address.
+    pub physical_id: u64,
+    /// Which use of that connection this stream is. `1` is a connection created for this stream.
+    pub lease_generation: u64,
+    /// Whether this query received a connection that already existed and was already configured.
+    pub reused_an_existing_connection: bool,
+}
+
 /// Counters the producer keeps about itself. H2 and H3 rest on these rather than on OS readings.
 #[derive(Default)]
 pub struct StreamStats {
@@ -217,6 +245,7 @@ pub struct BatchStream {
     envelope: BatchEnvelope,
     filter_plan: FilterPlan,
     policy: BatchSizePolicy,
+    connection: ConnectionFacts,
 }
 
 impl BatchStream {
@@ -280,6 +309,15 @@ impl BatchStream {
     pub fn size_policy(&self) -> BatchSizePolicy {
         self.policy
     }
+
+    /// Which physical connection this stream leased, and whether it already existed.
+    ///
+    /// Reported rather than inferred, for the same reason `filter_plan` is: "this query reused a
+    /// configured connection" and "this query created one" produce similar timings and are
+    /// different facts. A measurement that cannot tell them apart cannot say which mode it ran in.
+    pub fn connection_facts(&self) -> ConnectionFacts {
+        self.connection
+    }
 }
 
 impl Drop for BatchStream {
@@ -299,8 +337,35 @@ impl Dataset {
     }
 
     /// As `stream`, with a caller-held token — the shape a binding needs, because the thing that
-    /// observes a cancellation (the transport) is not the thing that started the stream.
+    /// observes a cancellation is not the thing that started the stream.
     pub fn stream_with_cancel(&self, q: &ViewportQuery, cancel: CancelToken) -> Result<BatchStream> {
+        self.stream_inner(q, cancel, IndexUse::Off)
+    }
+
+    /// The same query, planned **with the fixed-grid index in the path**.
+    ///
+    /// **Experimental and measurement-only. No product path calls this**, and it is not what
+    /// `slice-host` or `kernel/` reach for. It exists so the index's correctness properties stay
+    /// asserted by the ordinary test suite — `an_indexed_query_returns_exactly_what_the_scan_
+    /// returns` is the property that matters most about the index, and deleting the only way to
+    /// reach the index would delete the test with it.
+    ///
+    /// Why it is not the default is measured, not assumed: see the planner comment on `build_sql`.
+    #[doc(hidden)]
+    pub fn stream_indexed_experimental(
+        &self,
+        q: &ViewportQuery,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        self.stream_inner(q, cancel, IndexUse::Experimental)
+    }
+
+    fn stream_inner(
+        &self,
+        q: &ViewportQuery,
+        cancel: CancelToken,
+        index_use: IndexUse,
+    ) -> Result<BatchStream> {
         // **A viewport CRS is a caller assertion about the query, not an equivalence judgement
         // about two definitions.** ADR-015 §7. The engine does not decide that the caller's CRS
         // and the dataset's "agree" — it has no PROJ and cannot — it only refuses a viewport that
@@ -330,7 +395,7 @@ impl Dataset {
             }
         }
 
-        let (sql, filter_plan) = self.build_sql(q)?;
+        let (sql, filter_plan) = self.build_sql(q, index_use)?;
         let policy = BatchSizePolicy::default();
         let path = self
             .path()
@@ -338,7 +403,12 @@ impl Dataset {
             .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?
             .to_string();
 
-        let conn = connect_for_stream(&cancel)?;
+        let lease = lease_for_stream(self, &cancel)?;
+        let connection = ConnectionFacts {
+            physical_id: lease.physical_id(),
+            lease_generation: lease.generation(),
+            reused_an_existing_connection: lease.reused_an_existing_connection(),
+        };
         let envelope = self.envelope().clone();
         let geometry_column = self.geometry_column().to_string();
         let stats = Arc::new(StreamStats::default());
@@ -354,7 +424,7 @@ impl Dataset {
             .name("engine-geoparquet-stream".into())
             .spawn(move || {
                 let outcome = produce(
-                    &conn,
+                    lease.connection(),
                     &sql,
                     &path,
                     bbox,
@@ -366,20 +436,49 @@ impl Dataset {
                     &tx,
                     policy,
                 );
-                if let Err(e) = outcome {
-                    // Best-effort: if the consumer is gone there is nobody to tell, which is not an
-                    // error in itself. H7's "no partial view presented as complete" is enforced on
-                    // the consumer side by the terminal frame, not by this send succeeding.
-                    let _ = tx.send(Err(e));
-                }
+                // **Detach before the lease is decided**, so a `cancel()` arriving after this
+                // stream is over cannot reach a connection that has been handed back — the reason
+                // `CancelToken::detach` exists. Cancellation belongs to the *active lease*, never
+                // permanently to the connection or the dataset.
                 thread_cancel.detach();
+
+                // **The producer decides its own connection's fate, and it is the only thing that
+                // can.** `BatchStream`'s `Drop` cancels the token on *every* drop, including a
+                // stream that completed and was then let go — so the token's flag, read from the
+                // consumer side, cannot tell "cancelled" from "finished". This thread knows which
+                // one happened because it holds the result.
+                //
+                // Any error, cancellation included, discards: a cancelled query interrupted DuckDB
+                // on this connection, and this engine has established no post-interrupt health
+                // guarantee, so discard-and-replace is the declared bounded behaviour rather than
+                // an optimisation. A completed query returns its connection, verified first.
+                match outcome {
+                    Ok(()) => lease.release_healthy(),
+                    Err(e) => {
+                        drop(lease);
+                        // Best-effort: if the consumer is gone there is nobody to tell, which is
+                        // not an error in itself. H7's "no partial view presented as complete" is
+                        // enforced on the consumer side by the terminal frame, not by this send
+                        // succeeding.
+                        let _ = tx.send(Err(e));
+                    }
+                }
             })
             .map_err(|e| EngineError::Source(format!("spawn producer thread: {e}")))?;
 
-        Ok(BatchStream { rx, cancel, stats, finished: false, envelope, filter_plan, policy })
+        Ok(BatchStream {
+            rx,
+            cancel,
+            stats,
+            finished: false,
+            envelope,
+            filter_plan,
+            policy,
+            connection,
+        })
     }
 
-    fn build_sql(&self, q: &ViewportQuery) -> Result<(String, FilterPlan)> {
+    fn build_sql(&self, q: &ViewportQuery, index_use: IndexUse) -> Result<(String, FilterPlan)> {
         let mut plan = FilterPlan::WholeFile;
         let geom = quote_ident(self.geometry_column());
         // **The identity's source column, aliased to the engine's identity name** (ADR-016 §3).
@@ -396,18 +495,48 @@ impl Dataset {
                 detail: "the file's `geo` metadata declares no covering.bbox".into(),
             })?;
 
-            // **The index narrows; it never decides.** When an admissible index exists, its
-            // candidate ids are added as a range predicate *alongside* the bbox comparison rather
-            // than instead of it. Two reasons, both about not trusting derived state further than
-            // it has been shown to be right: the index answers `covering-bbox-intersects`, which is
-            // exactly what the bbox predicate answers, so keeping both makes the result set
-            // provably identical to the unindexed one; and a wrong index then costs time, not
-            // correctness. Removing the predicate would make the index the system of record, which
-            // ADR-006 says a pure transformation's cached output is not.
+            // ---------------------------------------------------------------------------------
+            // **The product planner is `ScanOnly`, and the index is not consulted. This is the
+            // measured decision, not a preference.**
+            //
+            // `kernel/RESULTS.md`, second section, "The finding this pass exists to report: the
+            // index made every filtered query slower": with the index in the path the quarter
+            // extent's time to *first batch* was 35.6 % slower and its total 21.7 % slower, and the
+            // 1/64 extent 17.5 % and 15.5 % slower — same session, same binary, same file, against
+            // an unindexed baseline re-measured beside it.
+            //
+            // **The mechanism, because a number without one is a tuning excuse:** candidate-ID
+            // ranges add work while DuckDB still scans the GeoParquet bbox columns. The index
+            // answers `covering-bbox-intersects`, which is exactly the predicate the scan already
+            // computes, and the bbox comparison is deliberately kept alongside the ranges so the
+            // result set stays provably identical — so the ranges cannot exclude a single row the
+            // bbox test would have kept. They are pure added work per row on top of a scan that
+            // still runs in full. **Until an index prunes actual IO, `ScanOnly` is the preferred
+            // product plan.**
+            //
+            // Nothing here says the index is wrong. It is not:
+            // `an_indexed_query_returns_exactly_what_the_scan_returns` holds, and the measured
+            // payload totals were byte-identical at every point. It says this index does not pay
+            // for itself on this shape, and that first-batch time — which is what the first-pixels
+            // budget depends on — is not what it improves. An index that prunes IO is a separate,
+            // architect-first design with its own preregistered gate; no claim is made for it here.
+            // ---------------------------------------------------------------------------------
+            //
+            // **The index narrows; it never decides.** When the experimental seam admits an index,
+            // its candidate ids are added as a range predicate *alongside* the bbox comparison
+            // rather than instead of it. Two reasons, both about not trusting derived state further
+            // than it has been shown to be right: keeping both makes the result set provably
+            // identical to the unindexed one; and a wrong index then costs time, not correctness.
+            // Removing the predicate would make the index the system of record, which ADR-006 says
+            // a pure transformation's cached output is not.
             // `None` from `candidates` means the index cannot narrow *this* query — a degenerate
             // grid, a bbox it will not reason about. Falling through to the scan is the only safe
             // reading: a derived structure that cannot answer must not answer.
-            if let Some(candidates) = self.admitted_index().and_then(|idx| idx.candidates(view)) {
+            let admitted = match index_use {
+                IndexUse::Off => None,
+                IndexUse::Experimental => self.admitted_index(),
+            };
+            if let Some(candidates) = admitted.and_then(|idx| idx.candidates(view)) {
                 match crate::index::compress_to_ranges(&candidates, crate::index::MAX_ID_RANGES) {
                     // **An empty candidate set falls through to the scan; it does not decide.**
                     // Encoding it as `WHERE 1=0` made the index the system of record, which ADR-006

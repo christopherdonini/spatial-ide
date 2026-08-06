@@ -61,6 +61,7 @@ pub mod error;
 pub mod fixture;
 pub mod geoarrow;
 pub mod geoparquet;
+pub mod pool;
 pub mod stream;
 pub mod wkb;
 
@@ -69,8 +70,12 @@ pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
+pub use pool::{
+    ConnectionPool, LeaseClass, PoolConfig, MAX_MAINTENANCE_CONNECTIONS, MAX_PHYSICAL_CONNECTIONS,
+    MAX_STREAM_CONNECTIONS,
+};
 pub use stream::{
-    FilterPlan,
+    ConnectionFacts, FilterPlan,
     BatchInfo, BatchStream, Bbox, StreamStats, ViewportQuery, MAX_BATCH_BYTES,
     MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, TARGET_BATCH_BYTES,
 };

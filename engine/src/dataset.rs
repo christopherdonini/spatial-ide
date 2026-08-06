@@ -5,6 +5,7 @@
 //! second parquet implementation, so there is one reader in the shipped path.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
 use arrow::datatypes::{DataType, SchemaRef};
@@ -17,12 +18,32 @@ use crate::identity::{self, DatasetIdentity, IdSource, IdUniqueness, IdentityDec
 use crate::index;
 use crate::error::{EngineError, Result};
 use crate::geoparquet::{CoveringBbox, GeoMeta};
+use crate::pool::{ConnectionPool, Lease, LeaseClass, PoolConfig};
 
 /// Process-wide, in-memory index cache. Not persisted — persisting is the trigger
 /// `kernel/README.md` names for `docs/11`'s ResourceRef model and ADR-005's grades, and that needs
 /// its own decision rather than arriving as a side effect of a latency fix.
 static INDEX_CACHE: std::sync::LazyLock<index::IndexCache> =
     std::sync::LazyLock::new(index::IndexCache::default);
+
+/// How many times the index seam has been consulted in this process.
+///
+/// **An instrument fact, unconditional, and deliberately not behind `cfg(test)` or a feature.** The
+/// property under test is "the *shipped* planner never reaches the index", and a counter compiled
+/// only into a test build would prove that about a build nobody runs — the same objection
+/// `kernel/PROBE-PREREGISTRATION.md` invalidator 1 makes of a figure from a debug build. It costs
+/// one relaxed-contended atomic on a path the product no longer takes at all, and it makes the
+/// claim checkable rather than asserted (`docs/01` principle 8). `StreamStats` and the binding's
+/// own stream registry are the same pattern.
+static INDEX_CONSULTATIONS: AtomicU64 = AtomicU64::new(0);
+
+/// Times any `Dataset` in this process has asked whether an index may serve a query.
+///
+/// Never an SKP field and never on the wire: it exists so a test can prove a negative
+/// deterministically instead of inferring it from a timing.
+pub fn index_consultations() -> u64 {
+    INDEX_CONSULTATIONS.load(Ordering::SeqCst)
+}
 
 /// What one `build_index` call cost and produced. Build cost and query benefit stay separate.
 #[derive(Clone, Debug)]
@@ -43,12 +64,20 @@ pub struct Dataset {
     covering: Option<CoveringBbox>,
     geo: GeoMeta,
     file_schema: SchemaRef,
+    /// This dataset's own bounded DuckDB connections.
+    ///
+    /// **Owned here and nowhere else.** A process-wide, path-keyed connection cache would outlive
+    /// the `Dataset` holding the admitted CRS (ADR-015) and identity (ADR-016) facts, and a later
+    /// caller could then run against a connection admitted under a different dataset's policy.
+    /// Dropping this `Dataset` closes its idle connections; a lease still in flight keeps the pool
+    /// alive until the query it is running is over.
+    pool: Arc<ConnectionPool>,
 }
 
 impl Dataset {
     /// Open a GeoParquet file whose CRS the file itself declares.
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        Self::open_inner(path.as_ref(), None, None, &CancelToken::new())
+        Self::open_inner(path.as_ref(), None, None, &CancelToken::new(), PoolConfig::default())
     }
 
     /// Open a GeoParquet file, supplying a CRS for the case where the file declares none.
@@ -56,7 +85,13 @@ impl Dataset {
     /// The assertion is consulted **only** if the file declares nothing. If the file declares a
     /// CRS, this refuses rather than overriding — see `crs::admit`.
     pub fn open_with_asserted_crs(path: impl AsRef<Path>, assertion: CrsAssertion) -> Result<Self> {
-        Self::open_inner(path.as_ref(), Some(assertion), None, &CancelToken::new())
+        Self::open_inner(
+            path.as_ref(),
+            Some(assertion),
+            None,
+            &CancelToken::new(),
+            PoolConfig::default(),
+        )
     }
 
     /// Open a file whose feature identity lives in a column this engine does not name `id`
@@ -71,7 +106,22 @@ impl Dataset {
         identity: IdentityDeclaration,
         cancel: &CancelToken,
     ) -> Result<Self> {
-        Self::open_inner(path.as_ref(), None, Some(identity), cancel)
+        Self::open_inner(path.as_ref(), None, Some(identity), cancel, PoolConfig::default())
+    }
+
+    /// Open with an explicit connection configuration.
+    ///
+    /// **The product default is `PoolConfig::reuse()` and every other constructor uses it.** This
+    /// entry point exists so a *measurement* can run the same code with `max_idle = 0` — the
+    /// control for the reuse contrast recorded in `kernel/RESULTS.md`. It is a capacity, not a
+    /// second code path: the acquire, attach, detach, verify and refusal paths are identical in
+    /// both configurations, so the contrast measures reuse rather than two implementations.
+    pub fn open_with_connections(
+        path: impl AsRef<Path>,
+        assertion: Option<CrsAssertion>,
+        connections: PoolConfig,
+    ) -> Result<Self> {
+        Self::open_inner(path.as_ref(), assertion, None, &CancelToken::new(), connections)
     }
 
     fn open_inner(
@@ -79,6 +129,7 @@ impl Dataset {
         assertion: Option<CrsAssertion>,
         declared_identity: Option<IdentityDeclaration>,
         cancel: &CancelToken,
+        connections: PoolConfig,
     ) -> Result<Self> {
         if !path.is_file() {
             return Err(EngineError::Source(format!("{} is not a readable file", path.display())));
@@ -88,9 +139,20 @@ impl Dataset {
             .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?
             .to_string();
 
-        let conn = open_connection()?;
+        // **Open runs on a lease, and that is what prepares the pool at no extra cost.**
+        //
+        // `kernel/RESULTS.md` records a ~20–25 ms uninterruptible prelude before `cancel.attach`,
+        // and this cut must not silently double `Dataset::open`. Opening already needed one
+        // configured connection — for `parquet_kv_metadata`, the schema probe and ADR-016's
+        // identity scan — so instead of dropping it at the end of open, it is *returned* to the
+        // pool. Nothing new is created and no new statement runs in the prelude; the first stream
+        // then finds a configured connection already there. If open fails, the lease is dropped and
+        // the connection discarded, because a `Dataset` that does not exist owns nothing.
+        let pool = ConnectionPool::new(connections);
+        let lease = pool.acquire(LeaseClass::Maintenance)?;
+        let conn = lease.connection();
 
-        let geo_json = read_geo_metadata(&conn, &path_str)?;
+        let geo_json = read_geo_metadata(conn, &path_str)?;
         let geo = GeoMeta::parse(&geo_json)?;
 
         if !geo.encoding.eq_ignore_ascii_case("WKB") {
@@ -126,12 +188,20 @@ impl Dataset {
             });
         }
 
-        let file_schema = probe_schema(&conn, &path_str)?;
+        let file_schema = probe_schema(conn, &path_str)?;
         check_geometry_column(&file_schema, &geo.primary_column)?;
 
         // Identity admission (ADR-016). Native `id` unless the caller declared a mapping; the
         // uniqueness scan runs either way, so a native column is no longer trusted without it.
-        let identity = admit_identity(&conn, &path_str, &file_schema, declared_identity, cancel)?;
+        let identity = admit_identity(conn, &path_str, &file_schema, declared_identity, cancel)?;
+
+        // Verified, then kept. `probe_schema` abandons a result iterator mid-flight and
+        // `read_geo_metadata`'s own comment records what that used to cost two calls later; while
+        // the connection died at the end of every open, the latent state died with it. It no longer
+        // does, so `release_healthy` runs a trivial drained statement first, uniformly, rather than
+        // this code reasoning about which of open's paths happen to have proven health. A
+        // connection that fails it is discarded and open still succeeds — with an empty pool.
+        lease.release_healthy();
 
         Ok(Self {
             path: path.to_path_buf(),
@@ -139,7 +209,16 @@ impl Dataset {
             covering: geo.covering.clone(),
             geo,
             file_schema,
+            pool,
         })
+    }
+
+    /// This dataset's connections — capacity, counters and current occupancy.
+    ///
+    /// Instrument surface only: these are Rust-API facts for tests and measurement, never SKP
+    /// fields and never on the wire.
+    pub fn connections(&self) -> &Arc<ConnectionPool> {
+        &self.pool
     }
 
     pub fn identity(&self) -> &DatasetIdentity {
@@ -158,39 +237,78 @@ impl Dataset {
     /// and a fail-closed validity heuristic — so a stale index cannot serve a newer revision; it is
     /// found, rejected, and the reason is in the report.
     pub fn build_index(&self, cancel: &CancelToken) -> Result<IndexReport> {
+        self.build_index_observed(cancel, None)
+    }
+
+    /// As `build_index`, reporting each phase it enters to an observer.
+    ///
+    /// **A test and measurement seam, not a new engine protocol.** The previous cancellation pass
+    /// fired all twelve of its delays inside the SHA-256 content hash and obtained *zero* samples
+    /// of the DuckDB scan phase, because a delay ladder cannot aim at a phase it cannot see. The
+    /// observer sees phase transitions and nothing else — never per-feature data, which would be a
+    /// second bulk path — and the public `build_index` passes none, so this costs nothing when
+    /// unused.
+    pub fn build_index_observed(
+        &self,
+        cancel: &CancelToken,
+        observer: Option<&dyn index::IndexPhaseObserver>,
+    ) -> Result<IndexReport> {
         let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
             detail: "the file's `geo` metadata declares no covering.bbox, so there is nothing to                      index in this slice"
                 .into(),
         })?;
 
+        index::observe(observer, index::IndexPhase::ContentHash);
         let (content_hash, hash_millis) = index::content_hash(self.path(), cancel)?;
         let key = index::IndexKey::new(content_hash, self.identity().source().source_column());
         let validity = index::ValidityHeuristic::of(self.path());
 
         match INDEX_CACHE.get(self.path(), &key, validity.as_ref()) {
-            Ok(existing) => Ok(IndexReport {
-                miss: None,
-                content_hash_millis: hash_millis,
-                build_millis: 0.0,
-                indexed_features: existing.feature_count(),
-                declared_memory_bytes: existing.declared_memory_bound(),
-                scanned_rows: existing.scanned_rows(),
-            }),
+            Ok(existing) => {
+                index::observe(observer, index::IndexPhase::Complete);
+                Ok(IndexReport {
+                    miss: None,
+                    content_hash_millis: hash_millis,
+                    build_millis: 0.0,
+                    indexed_features: existing.feature_count(),
+                    declared_memory_bytes: existing.declared_memory_bound(),
+                    scanned_rows: existing.scanned_rows(),
+                })
+            }
             Err(miss) => {
                 let path_str = self
                     .path()
                     .to_str()
                     .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?;
-                let conn = open_connection()?;
-                let built = index::SpatialIndex::build(
-                    &conn,
+                // An index build is a whole-file pass, so it takes a **maintenance** lease rather
+                // than a stream one: four admitted streams must not make a build impossible, and a
+                // build must not consume the capacity a stream needs.
+                let lease = self.pool.acquire(LeaseClass::Maintenance)?;
+                let built = index::SpatialIndex::build_observed(
+                    lease.connection(),
                     path_str,
                     covering,
                     self.identity().source().source_column(),
                     key,
                     validity,
                     cancel,
-                )?;
+                    observer,
+                );
+                // **The lease's fate is decided from the build's own outcome, before the `?`.** A
+                // cancelled build interrupted DuckDB on this connection, so it is discarded and
+                // replaced rather than handed on; and the capacity slot is freed either way, or the
+                // single maintenance slot would leak and every later `build_index` in the process
+                // would refuse.
+                let built = match built {
+                    Ok(b) => {
+                        lease.release_healthy();
+                        b
+                    }
+                    Err(e) => {
+                        drop(lease);
+                        return Err(e);
+                    }
+                };
                 let report = IndexReport {
                     miss: Some(miss),
                     content_hash_millis: hash_millis,
@@ -199,7 +317,10 @@ impl Dataset {
                     declared_memory_bytes: built.declared_memory_bound(),
                     scanned_rows: built.scanned_rows(),
                 };
+                // Reached only on a completed build: a cancelled one returned above, so no partial
+                // index is ever inserted.
                 INDEX_CACHE.insert(self.path().to_path_buf(), std::sync::Arc::new(built));
+                index::observe(observer, index::IndexPhase::Complete);
                 Ok(report)
             }
         }
@@ -210,7 +331,11 @@ impl Dataset {
     /// Re-checks admission on every call rather than caching the answer: the file can change under
     /// a long-lived process, and an index that was admissible a minute ago is not thereby
     /// admissible now.
+    ///
+    /// **The ordinary planner does not call this.** See `stream.rs`'s planner comment: the only
+    /// caller is the explicitly-named experimental stream entry point.
     pub(crate) fn admitted_index(&self) -> Option<std::sync::Arc<index::SpatialIndex>> {
+        INDEX_CONSULTATIONS.fetch_add(1, Ordering::SeqCst);
         let hash = INDEX_CACHE.hash_for(self.path())?;
         let key = index::IndexKey::new(hash, self.identity().source().source_column());
         INDEX_CACHE.get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref()).ok()
@@ -444,36 +569,20 @@ fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()
     Ok(())
 }
 
-/// Every DuckDB connection this module opens, configured identically.
+/// A leased DuckDB connection for one stream, with its interrupt handle already bound to `cancel`.
 ///
-/// **`enable_geoparquet_conversion` is turned off deliberately, and it is not only a workaround.**
-/// DuckDB (v1.5.5 on the reference profile) will, by default, interpret a file's `geo` metadata and
-/// hand back a converted geometry type. That would put a **second CRS policy** in the path — one
-/// this engine did not write, whose admission rules are not ADR-015's, and whose conversions are
-/// invisible here. `docs/05` allows exactly one: no silent conversion, CRS decided once, by the
-/// engine that owns the dataset's type. This engine therefore reads the raw WKB and decides for
-/// itself.
+/// **The lease is taken here — on the caller's thread — rather than inside the producer thread**,
+/// so there is no window in which a cancel could arrive before anything is interruptible. The
+/// configuration statement no longer runs here at all: it ran once when this physical connection
+/// was created, which is the whole of what this cut removes from the query's critical path.
 ///
-/// It also avoids an upstream defect found while building this slice, recorded here because it will
-/// otherwise be rediscovered: with the conversion enabled, `read_parquet` on a GeoParquet file whose
-/// `geo` metadata has **no `crs` key** fails with an internal error
-/// (`TransactionContext::ActiveTransaction called without active transaction`) rather than a
-/// diagnosable one. Files without a declared CRS are precisely the ones this engine has an
-/// admission policy for, so that path is not exotic here.
-fn open_connection() -> Result<Connection> {
-    let conn = Connection::open_in_memory()
-        .map_err(|e| EngineError::Source(format!("duckdb open: {e}")))?;
-    conn.execute_batch("SET enable_geoparquet_conversion=false")
-        .map_err(|e| EngineError::Source(format!("duckdb configure: {e}")))?;
-    Ok(conn)
-}
-
-/// A DuckDB connection for one stream, with its interrupt handle already bound to `cancel`.
-///
-/// Created here — on the caller's thread — rather than inside the producer thread, so there is no
-/// window in which a cancel could arrive before anything is interruptible.
-pub(crate) fn connect_for_stream(cancel: &crate::cancel::CancelToken) -> Result<Connection> {
-    let conn = open_connection()?;
-    cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
-    Ok(conn)
+/// If the attach fails the lease is dropped rather than returned: a connection whose cancellation
+/// binding did not take is one this engine has established nothing about.
+pub(crate) fn lease_for_stream(
+    dataset: &Dataset,
+    cancel: &crate::cancel::CancelToken,
+) -> Result<Lease> {
+    let lease = dataset.pool.acquire(LeaseClass::Stream)?;
+    cancel.attach(Arc::clone(&lease.connection().interrupt_handle()))?;
+    Ok(lease)
 }

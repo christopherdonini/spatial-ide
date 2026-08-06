@@ -98,6 +98,21 @@ pub enum EngineError {
     /// geometry that cannot be carried whole. Without the id there is no way to find it in a file
     /// with millions of rows.
     FeatureTooLarge { id: u64, limit: u64, saw: u64 },
+
+    /// A DuckDB connection could not be created or configured.
+    ///
+    /// Separate from `Source` because the two name different things: `Source` is about the file,
+    /// this is about the execution resource the query would have run on. A caller that cannot tell
+    /// them apart cannot tell "this file is unreadable" from "this process is out of connections".
+    ConnectionSetup { detail: String },
+
+    /// A dataset's bounded connection capacity is fully leased.
+    ///
+    /// **A refusal, never a queue.** Waiting for a connection would be an admission policy wearing
+    /// a pool's clothes, and `protocol/data-plane/README.md` reserves the queue-versus-refuse
+    /// question for **ADR-014**. This ceiling is provisional and reversible, exactly as that
+    /// crate's own N+1 refusal is, and nothing here may be cited as evidence about ADR-014.
+    ConnectionsExhausted { class: &'static str, capacity: usize },
 }
 
 impl fmt::Display for EngineError {
@@ -160,6 +175,15 @@ impl fmt::Display for EngineError {
                 f,
                 "feature {id} needs about {saw} B on its own, above the declared per-batch \
                  ceiling of {limit} B; it cannot be carried in one batch"
+            ),
+            Self::ConnectionSetup { detail } => {
+                write!(f, "duckdb connection could not be prepared: {detail}")
+            }
+            Self::ConnectionsExhausted { class, capacity } => write!(
+                f,
+                "refused: this dataset's {class} connection capacity ({capacity}) is fully leased. \
+                 The engine refuses rather than queueing; queueing would decide an admission \
+                 policy that is reserved elsewhere"
             ),
         }
     }

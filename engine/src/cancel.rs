@@ -82,6 +82,18 @@ impl CancelToken {
     pub(crate) fn detach(&self) {
         *self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()) = None;
     }
+
+    /// Whether a running query's interrupt handle is currently bound to this token.
+    ///
+    /// **An instrument fact, and the observable form of two properties that would otherwise rest on
+    /// reading the code.** That a stream's connection was bound *at all* is what makes cancellation
+    /// reach DuckDB rather than only the loop around it — and it is the specific thing that could
+    /// regress when a connection is recycled rather than freshly created. That it is *unbound*
+    /// afterwards is what says a cancelled token was not left attached to a connection that has
+    /// been handed back to the pool.
+    pub fn is_bound(&self) -> bool {
+        self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()).is_some()
+    }
 }
 
 #[cfg(test)]

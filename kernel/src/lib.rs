@@ -27,16 +27,40 @@ use std::sync::Arc;
 use spatial_data_plane::transport::{
     BatchMeta, BatchSource, OpenRequest, SourceCancel, SourceFactory,
 };
-use spatial_engine::{BatchStream, CancelToken, CrsAssertion, Dataset, ViewportQuery};
+use spatial_engine::{BatchStream, CancelToken, CrsAssertion, Dataset, PoolConfig, ViewportQuery};
 
 pub mod params;
 
 pub use params::{StreamParams, OPERATION};
 
+/// What one finished stream ran on — an instrument record, emitted **after** the stream is over.
+///
+/// **The kernel is where this can be read at all**, because it is the only module that knows both
+/// the engine and the binding. It is deliberately not part of `BatchMeta` or of any type in the
+/// data-plane crate: that crate knows nothing about what a batch contains, and a storage-engine
+/// detail crossing it would be the leakage its own boundary test gates. Nothing here reaches SKP or
+/// the wire.
+#[derive(Clone, Debug)]
+pub struct StreamConnectionRecord {
+    pub dataset: String,
+    /// Whether this dataset was opened keeping connections between queries.
+    pub dataset_reuses_connections: bool,
+    pub physical_id: u64,
+    pub lease_generation: u64,
+    /// Whether this query received a connection that already existed and was already configured.
+    pub reused_an_existing_connection: bool,
+}
+
 /// Datasets opened at startup, addressable by name.
-#[derive(Default)]
 pub struct Catalog {
     datasets: HashMap<String, Arc<Dataset>>,
+    connections: PoolConfig,
+}
+
+impl Default for Catalog {
+    fn default() -> Self {
+        Self { datasets: HashMap::new(), connections: PoolConfig::default() }
+    }
 }
 
 impl Catalog {
@@ -44,20 +68,32 @@ impl Catalog {
         Self::default()
     }
 
+    /// A catalog whose datasets are opened with an explicit connection configuration.
+    ///
+    /// **The product default keeps connections; the alternative exists as a measurement control.**
+    /// It is a capacity on the same code path, not a second implementation — see
+    /// `spatial_engine::PoolConfig`.
+    pub fn with_connections(connections: PoolConfig) -> Self {
+        Self { datasets: HashMap::new(), connections }
+    }
+
+    pub fn connections(&self) -> PoolConfig {
+        self.connections
+    }
+
     /// Open a dataset and register it under `name`.
     ///
     /// Opening here means the CRS admission decision (ADR-015) happens **at startup**, in the open
-    /// where an operator sees it, rather than on a consumer's first request.
+    /// where an operator sees it, rather than on a consumer's first request. It is also where the
+    /// dataset's first configured DuckDB connection is prepared, so the first query does not pay
+    /// for one — the segment `kernel/RESULTS.md` measured as two thirds of the first-pixels budget.
     pub fn open(
         &mut self,
         name: impl Into<String>,
         path: impl AsRef<Path>,
         assertion: Option<CrsAssertion>,
     ) -> spatial_engine::Result<()> {
-        let ds = match assertion {
-            Some(a) => Dataset::open_with_asserted_crs(path, a)?,
-            None => Dataset::open(path)?,
-        };
+        let ds = Dataset::open_with_connections(path, assertion, self.connections)?;
         self.datasets.insert(name.into(), Arc::new(ds));
         Ok(())
     }
@@ -74,11 +110,29 @@ impl Catalog {
 /// Turns an operation request into an engine stream. This is the whole composition.
 pub struct EngineSourceFactory {
     catalog: Catalog,
+    /// Where finished streams report what they ran on, when anyone is listening.
+    ///
+    /// **Unbounded, deliberately.** A bounded channel would let a stalled reporter block a producer
+    /// thread, which is an instrument changing the thing it measures.
+    connection_reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
 }
 
 impl EngineSourceFactory {
     pub fn new(catalog: Catalog) -> Self {
-        Self { catalog }
+        Self { catalog, connection_reports: None }
+    }
+
+    /// As `new`, reporting each finished stream's connection facts.
+    ///
+    /// **The report is emitted when the stream is dropped — after it is over — and never on the
+    /// accept path.** `create` runs before the OPEN frame, so anything done there lands inside the
+    /// `t_query_start → t_open` segment a measurement is trying to read. The same facts are
+    /// available at stream end, where they cost the measurement nothing.
+    pub fn with_connection_reports(
+        catalog: Catalog,
+        reports: std::sync::mpsc::Sender<StreamConnectionRecord>,
+    ) -> Self {
+        Self { catalog, connection_reports: Some(reports) }
     }
 }
 
@@ -119,12 +173,42 @@ impl SourceFactory for EngineSourceFactory {
             .stream_with_cancel(&query, cancel.clone())
             .map_err(|e| e.to_string())?;
 
-        Ok((Box::new(EngineSource { stream }), Arc::new(EngineCancel(cancel))))
+        let source = EngineSource {
+            stream,
+            dataset: p.dataset,
+            dataset_reuses_connections: ds.connections().config().reuses_connections(),
+            reports: self.connection_reports.clone(),
+        };
+        Ok((Box::new(source), Arc::new(EngineCancel(cancel))))
     }
 }
 
 struct EngineSource {
     stream: BatchStream,
+    dataset: String,
+    dataset_reuses_connections: bool,
+    reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+}
+
+impl Drop for EngineSource {
+    /// Report what this stream ran on, once it is over.
+    ///
+    /// **Here rather than in `create`** — see `with_connection_reports`. The binding drops the
+    /// source when the stream terminates, however it terminated, so a cancelled or failed stream
+    /// reports the same facts a completed one does and a measurement cannot silently describe only
+    /// its successes.
+    fn drop(&mut self) {
+        let Some(reports) = self.reports.as_ref() else { return };
+        let facts = self.stream.connection_facts();
+        // A closed receiver means nobody is recording, which is not an error.
+        let _ = reports.send(StreamConnectionRecord {
+            dataset: self.dataset.clone(),
+            dataset_reuses_connections: self.dataset_reuses_connections,
+            physical_id: facts.physical_id,
+            lease_generation: facts.lease_generation,
+            reused_an_existing_connection: facts.reused_an_existing_connection,
+        });
+    }
 }
 
 impl BatchSource for EngineSource {
