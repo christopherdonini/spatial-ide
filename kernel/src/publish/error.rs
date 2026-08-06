@@ -52,6 +52,15 @@ pub enum PublishError {
     /// judgement this operation is not equipped to make.
     LicenseDeclaredTwice { source: String, operator: String },
 
+    /// An operator declared a license that is empty or only whitespace.
+    ///
+    /// ADR-017 §5 (Corrigendum 1) types `license` under `declared-by-operator` as a **non-empty
+    /// string**, on the grounds that an operator states a license or makes no declaration at all.
+    /// That is only true if the empty one is refused: a blank would sit in the state whose entire
+    /// meaning is that somebody claimed something, and `""` is not a claim. Refused here rather than
+    /// only at the command line, because the library is a surface too.
+    OperatorLicenseEmpty,
+
     /// A viewer asset's path is not a safe bundle-relative path.
     ViewerAssetPathRejected { path: String, detail: String },
 
@@ -121,6 +130,12 @@ impl std::fmt::Display for PublishError {
                  `{operator}`. An operator declaration is admissible only over a source that \
                  declares nothing — deciding which of two declarations governs is not this \
                  operation's judgement to make (the same rule ADR-015 §4 applies to CRS)"
+            ),
+            Self::OperatorLicenseEmpty => write!(
+                f,
+                "refused: the operator declared an empty license. `declared-by-operator` means \
+                 somebody claimed something (ADR-017 §5, Corrigendum 1) — declare a license, or \
+                 declare nothing and let the manifest record `not-declared`"
             ),
             Self::ViewerAssetPathRejected { path, detail } => write!(
                 f,

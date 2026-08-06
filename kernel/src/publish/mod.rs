@@ -476,6 +476,13 @@ fn admit_license(
             }))
         }
         (false, Some(op)) => {
+            // **The empty declaration is refused, which is what makes §5's "non-empty string" a
+            // property rather than an aspiration.** `declared-by-operator` exists to say somebody
+            // claimed something; `""` is not a claim, and the CLI's own check does not cover a
+            // caller using the library directly.
+            if op.license.trim().is_empty() {
+                return Err(PublishError::OperatorLicenseEmpty);
+            }
             if op.redistribution == Redistribution::Forbidden {
                 return Err(PublishError::LicenseNotCarryable {
                     declared_by: "operator",
@@ -935,6 +942,37 @@ mod tests {
         };
         let l = admit_license(&source, None).unwrap();
         assert_eq!(l.redistribution(), Some(Redistribution::Unknown));
+    }
+
+    /// An operator who declares a blank license is refused, so ADR-017 §5's "non-empty string"
+    /// under `declared-by-operator` holds for every caller and not only for the CLI.
+    #[test]
+    fn an_operator_declaring_a_blank_license_is_refused_rather_than_recorded() {
+        for blank in ["", "   ", "\t\n"] {
+            let op = OperatorLicense {
+                license: blank.into(),
+                attribution: Some("© Example Cadastre".into()),
+                redistribution: Redistribution::Permitted,
+                by: "operator".into(),
+                at: "2026-08-06T00:00:00Z".into(),
+            };
+            assert!(
+                matches!(
+                    admit_license(&Default::default(), Some(&op)),
+                    Err(PublishError::OperatorLicenseEmpty)
+                ),
+                "a license of {blank:?} was admitted"
+            );
+        }
+        // …and a real one still is, so the check is not simply refusing every operator.
+        let ok = OperatorLicense {
+            license: "CC-BY-4.0".into(),
+            attribution: None,
+            redistribution: Redistribution::Permitted,
+            by: "operator".into(),
+            at: "2026-08-06T00:00:00Z".into(),
+        };
+        assert!(admit_license(&Default::default(), Some(&ok)).is_ok());
     }
 
     /// **A source that declares attribution and names no license.**
