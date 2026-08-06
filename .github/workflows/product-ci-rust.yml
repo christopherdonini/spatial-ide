@@ -51,6 +51,11 @@ on:
       - "kernel/**"
       - "engine/**"
       - "renderer/**"
+      # …but not the viewer's TypeScript, which no Rust target reads. Without this exclusion a pure
+      # front-end edit spends a vendored DuckDB build, which is the exact waste the two-workflow
+      # split exists to avoid. The Rust side reads `renderer/tests/data/**` — the shared style and
+      # key-set artifacts — and that stays covered by `renderer/**` above.
+      - "!renderer/bundle-viewer/**"
       - "protocol/data-plane/**"
       - "Cargo.toml"
       - "Cargo.lock"
@@ -60,6 +65,11 @@ on:
       - "kernel/**"
       - "engine/**"
       - "renderer/**"
+      # …but not the viewer's TypeScript, which no Rust target reads. Without this exclusion a pure
+      # front-end edit spends a vendored DuckDB build, which is the exact waste the two-workflow
+      # split exists to avoid. The Rust side reads `renderer/tests/data/**` — the shared style and
+      # key-set artifacts — and that stays covered by `renderer/**` above.
+      - "!renderer/bundle-viewer/**"
       - "protocol/data-plane/**"
       - "Cargo.toml"
       - "Cargo.lock"
