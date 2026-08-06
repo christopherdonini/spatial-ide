@@ -214,6 +214,7 @@ impl Redistribution {
 /// Absence is `not-declared` — the brief's own vocabulary — and **no attribution is invented to
 /// satisfy a checklist**. `docs/14` says published bundles *surface* license metadata "when known";
 /// it does not say refuse when absent.
+///
 /// **The two declared states carry different member types, and that is the format's rule rather
 /// than an exception to it** (ADR-017 §5; Corrigendum 1). `by` and `at` already exist in one state
 /// only, and `viewer[]` omits `rows` outright rather than nulling it. So the `license` member is

@@ -176,6 +176,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => ViewportQuery { bbox: None, bbox_crs: None, limit },
     };
 
+    // **A dropped flag is said out loud rather than dropped quietly.** An operator declaration is
+    // all-or-nothing: `OperatorLicense` is built only when `--license` was given, so `--attribution`
+    // on its own reaches nothing. That is correct — ADR-017 §10 defines no operator state that
+    // declares attribution without a license, and inventing one here would be deciding a schema
+    // question at a command line. What was wrong is that it happened in silence, which is the same
+    // failure class as the `"(unnamed)"` this cut removes: the operator believed they had recorded
+    // something the bundle does not contain.
+    if license.is_none() && attribution.is_some() {
+        eprintln!(
+            "[publish] --attribution was given without --license and is NOT carried into the \
+             bundle: an operator declaration is all-or-nothing, and the manifest defines no \
+             attribution-without-license state. Supply --license as well, or expect `license: \
+             {{\"state\":\"not-declared\"}}`."
+        );
+    }
+
     let request = PublishRequest {
         dataset: &dataset,
         dataset_name: &name,
