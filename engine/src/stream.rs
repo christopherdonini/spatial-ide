@@ -464,7 +464,16 @@ impl Dataset {
                     }
                 }
             })
-            .map_err(|e| EngineError::Source(format!("spawn producer thread: {e}")))?;
+            .map_err(|e| {
+                // **Unbind the token, or it is permanently unusable.** `lease_for_stream` attached
+                // this connection's interrupt handle, and `attach` refuses a second binding rather
+                // than disarming the first — so a caller who retried with the same token would be
+                // refused forever, and `is_bound()` would report true for a connection that no
+                // longer exists. The lease itself is inside the closure being dropped here, so its
+                // capacity is already freed.
+                cancel.detach();
+                EngineError::Source(format!("spawn producer thread: {e}"))
+            })?;
 
         Ok(BatchStream {
             rx,

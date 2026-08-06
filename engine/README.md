@@ -167,7 +167,8 @@ principle 8 for staleness.
 it cannot confirm — an unreadable file, a filesystem with no mtime — discards the index rather than
 serving it. Treating unknown as unchanged is the silent staleness principle 8 forbids.
 
-**The index narrows; it never decides.** Candidate ids are added *alongside* the bbox predicate, not
+**The index narrows; it never decides** — *when it is consulted at all, which on the product path it
+is not.* Through the experimental seam, candidate ids are added *alongside* the bbox predicate, not
 instead of it, so an indexed result set is provably identical to the unindexed one and a wrong index
 costs time rather than correctness. `an_indexed_query_returns_exactly_what_the_scan_returns` pins
 that. When candidates are too scattered to express as ranges the scan runs instead, and the stream
@@ -261,12 +262,22 @@ replacement starts — degrades to the fresh-connection path. Any S2 improvement
 **This is not an admission policy, and must not be read as one.** How many streams a consumer may
 run concurrently is decided upstream, in the binding, before a request reaches this module; this is
 a resource ceiling downstream of a decision already made. `try_acquire` semantics only — no queue,
-no wait, no timeout, no fairness. Because `MAX_STREAM_CONNECTIONS` equals the concurrent-stream
-ceiling the shipped binding happens to declare, `ConnectionsExhausted { class: "stream" }` is
-**unreachable through the composed product path** (see `kernel/README.md`); it is asserted anyway,
-because this module is not entitled to assume the composition it is used in. **Provisional and
-reversible, not a decision** — the same standing `protocol/data-plane/README.md` gives its own N+1
-refusal, and nothing here may be cited as evidence about how that question should be resolved.
+no wait, no timeout, no fairness. **Provisional and reversible, not a decision** — the same standing
+`protocol/data-plane/README.md` gives its own N+1 refusal, and nothing here may be cited as evidence
+about how that question should be resolved.
+
+**Where the two ceilings do not line up, stated rather than assumed away.** `MAX_STREAM_CONNECTIONS`
+equals the concurrent-stream ceiling the shipped binding declares, so on the **natural-completion**
+path `ConnectionsExhausted { class: "stream" }` cannot be reached in composition: the producer
+resolves its lease before it drops the batch channel, so a consumer that has seen a stream end has
+already seen its lease returned. **On the cancel path it can be reached.** The admission permit and
+the lease are released by different, unsynchronized threads and the permit goes back first, so at
+the ceiling a consumer that cancels and immediately re-requests — ordinary pan/zoom supersession —
+can be admitted by the binding and refused here. That is a typed, visible refusal rather than a
+wrong result, it is **new** with this module, and it is not closed by adding slack: N cancelled
+streams can leave N leases in flight. Closing it means ordering the two releases, which is an
+**admission** decision and belongs to the reserved ADR-014. Recorded as raw material for that, and
+as evidence for nothing else.
 
 **Connection identity and lease generation are instrument facts** on this crate's Rust API
 (`BatchStream::connection_facts()`), never SKP fields and never on the wire — authority for that is

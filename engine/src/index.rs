@@ -62,15 +62,21 @@ pub const BYTES_PER_INDEXED_FEATURE: usize = 8 + 32; // id + bbox
 pub const BYTES_PER_CELL_ENTRY: usize = 4;
 /// How often the post-scan build phases check for cancellation (ADR-010 rule 6: declared).
 ///
-/// **Declared as a cadence rather than polled per item**, because an atomic load per feature on a
-/// 20-million-feature build is measurable work in the phase it is protecting, and declared rather
-/// than tuned because `MAX_INDEXED_FEATURES` is the number this has to hold at. At the ceiling this
-/// bounds the unpolled window to 4 096 bbox validations, 4 096 extent reductions, 4 096 feature
-/// placements or 4 096 cell insertions — microseconds each, against `docs/08`'s 100 ms budget.
+/// **Declared as a cadence rather than polled per item**, because a `SeqCst` load per item on a
+/// 20-million-feature build is work inside the phase it is protecting. It is *declared* rather than
+/// tuned: `MAX_INDEXED_FEATURES` is the scale it has to hold at, and no timing is offered for it
+/// here — `docs/08`'s rule is no numbers, no claim, and the cancellation latency this bounds is
+/// measured by `kernel/tests/indexed_budgets.rs` rather than asserted in a comment. What is claimed
+/// is the *bound*: the unpolled window is at most 4 096 bbox validations, extent reductions,
+/// feature placements or cell insertions on every branch.
 ///
 /// It is counted over **cell insertions** in the grid phase, not over features: one feature may
 /// occupy up to `MAX_CELLS_PER_FEATURE` buckets, so a per-feature poll would leave a window a
 /// thousand times longer than the constant says.
+///
+/// The validation and extent phases poll on `i % INTERVAL == 0`, so their first check is at `i = 0`;
+/// the grid phase counts insertions and so first checks at 4 096. The asymmetry is deliberate and
+/// harmless — both are bounded by the same constant — and is noted so it does not read as a defect.
 pub const CANCEL_POLL_INTERVAL: usize = 4_096;
 
 const _: () = assert!(CANCEL_POLL_INTERVAL >= 1);
@@ -392,6 +398,20 @@ impl SpatialIndex {
                     }
                 }
             }
+        }
+
+        // **The last check, and it is unconditional.**
+        //
+        // Every phase above polls at a cadence, which bounds how long a cancel waits *inside* a
+        // phase — it does not cover the tail. Two ways a cancelled build would otherwise return
+        // `Ok` and be inserted into the cache: fewer than `CANCEL_POLL_INTERVAL` insertions
+        // remained after the last poll, or the grid loop was skipped entirely because the extent is
+        // degenerate (every feature sharing an x or a y — a point layer, a single feature,
+        // duplicated bboxes; `candidates` names those shapes), in which case `PopulateGrid`
+        // contains no poll at all. The scan phase already has its own unconditional check after it
+        // returns; this is the same discipline applied to everything after it.
+        if cancel.is_cancelled() {
+            return Err(EngineError::Cancelled);
         }
 
         Ok(Self {

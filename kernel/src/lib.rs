@@ -85,8 +85,12 @@ impl Catalog {
     ///
     /// Opening here means the CRS admission decision (ADR-015) happens **at startup**, in the open
     /// where an operator sees it, rather than on a consumer's first request. It is also where the
-    /// dataset's first configured DuckDB connection is prepared, so the first query does not pay
-    /// for one — the segment `kernel/RESULTS.md` measured as two thirds of the first-pixels budget.
+    /// dataset's first configured DuckDB connection is prepared, so the first query does not create
+    /// one inside **S2** — the `query start → OPEN` segment `kernel/RESULTS.md` measured at p50
+    /// 92.6 ms. **How much of S2 that creation accounts for is not known**: S2 also carries socket
+    /// acquisition, the handshake, SQL construction and the configuration statement, and no
+    /// measurement has yet divided it. Producing that division is what the reused-connection pass
+    /// is for; nothing here claims its answer in advance.
     pub fn open(
         &mut self,
         name: impl Into<String>,

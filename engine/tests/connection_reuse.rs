@@ -69,18 +69,20 @@ fn until(what: &str, f: impl Fn() -> bool) {
     }
 }
 
-/// A viewport so small that DuckDB must read the whole file before it can fill a batch — the shape
-/// a "cancel before the first batch" test needs, since the producer cannot run ahead of a scan that
-/// has not yet matched anything.
-fn pinhole(facts: &FixtureFacts) -> ViewportQuery {
+/// A viewport **outside the data entirely**, so the query matches no row at all.
+///
+/// This is what makes the "cancel before the first batch" assertion structural rather than a race.
+/// A batch is only flushed when the pending payload reaches the size target or when the scan ends
+/// with something pending; a query that matches nothing can never satisfy either, so **zero
+/// batches is true whether or not the cancel wins**. What the cancel then decides is only the
+/// terminal, which is the one thing that test asserts about timing — and it asserts it with a
+/// message that names the race rather than leaving a reader to guess.
+fn matches_nothing(facts: &FixtureFacts) -> ViewportQuery {
     let e = facts.extent;
+    let w = e[2] - e[0];
+    let h = e[3] - e[1];
     ViewportQuery::viewport(
-        Bbox {
-            xmin: e[2] - (e[2] - e[0]) * 0.002,
-            ymin: e[3] - (e[3] - e[1]) * 0.002,
-            xmax: e[2],
-            ymax: e[3],
-        },
+        Bbox { xmin: e[2] + w, ymin: e[3] + h, xmax: e[2] + w * 2.0, ymax: e[3] + h * 2.0 },
         "EPSG:2056",
     )
 }
@@ -134,7 +136,7 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
     until("the warm-up lease to come back", || ds.connections().idle_connections() == 1);
 
     let cancel = CancelToken::new();
-    let mut stream = ds.stream_with_cancel(&pinhole(&facts), cancel.clone()).expect("stream");
+    let mut stream = ds.stream_with_cancel(&matches_nothing(&facts), cancel.clone()).expect("stream");
     let f = stream.connection_facts();
     assert_eq!(f.lease_generation, 3, "generation exercised: 3");
     assert!(f.reused_an_existing_connection, "this test needs a recycled connection");
@@ -147,15 +149,22 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
     cancel.cancel();
 
     let mut buf = Vec::new();
-    match stream.next_into(&mut buf) {
-        Some(Err(EngineError::Cancelled)) | None => {}
-        other => panic!("expected a cancelled terminal, got {:?}", other.map(|r| r.map(|_| ()))),
-    }
+    let terminal = stream.next_into(&mut buf);
+    // **Structural, not a race.** The query matches no row, so no batch can be flushed on any
+    // interleaving — this assertion holds whether the cancel arrived before the scan ended or not.
     assert_eq!(
         stream.stats().batches_generated.load(Ordering::SeqCst),
         0,
         "nothing may be produced when the cancel arrives before the first batch"
     );
+    match terminal {
+        Some(Err(EngineError::Cancelled)) => {}
+        None => panic!(
+            "the scan completed before the cancel was issued, so this trial says nothing about \
+             cancellation. It is reported as inconclusive rather than counted as a pass"
+        ),
+        other => panic!("expected a cancelled terminal, got {:?}", other.map(|r| r.map(|_| ()))),
+    }
 }
 
 #[test]
@@ -363,6 +372,39 @@ fn the_measurement_control_creates_a_connection_for_every_query() {
     assert_eq!(b_facts.lease_generation, 1);
     assert!(!a_facts.reused_an_existing_connection);
     assert!(!b_facts.reused_an_existing_connection);
+}
+
+#[test]
+fn a_connection_that_skipped_the_identity_scan_is_still_safe_to_reuse() {
+    // **The one open path where the verification statement is the *first* thing to run after
+    // `probe_schema` abandons its result iterator.**
+    //
+    // `read_geo_metadata`'s own comment records what that abandonment used to cost: DuckDB
+    // reporting `ActiveTransaction called without active transaction` **two calls later**, an
+    // internal error surfacing as an unrelated failure. On the ordinary path ADR-016's identity
+    // scan runs in between, so `release_healthy`'s `SELECT 1` is the second call. With
+    // `skip_uniqueness_check` the scan returns before running any SQL, so the verification is the
+    // first call and the *next stream's* `prepare` is the second — exactly the position the old
+    // failure surfaced at. While the connection died at the end of every open this was
+    // unreachable; reuse makes it reachable, so it is tested rather than reasoned about.
+    use spatial_engine::identity::IdentityDeclaration;
+
+    let (path, facts) = write("skip-uniqueness", &spec());
+    let mut declaration =
+        IdentityDeclaration::new("id", "connection-reuse test", "2026-08-06T00:00:00Z");
+    declaration.skip_uniqueness_check = true;
+    let ds = Dataset::open_with_declared_identity(&path, declaration, &CancelToken::new())
+        .expect("open");
+    assert_eq!(ds.connections().idle_connections(), 1, "the connection was verified and kept");
+
+    let mut first = ds.stream(&ViewportQuery::all()).expect("first stream after a skipped scan");
+    assert_eq!(first.connection_facts().lease_generation, 2, "generation exercised: 2");
+    assert_eq!(drain_to_end(&mut first), facts.features);
+    drop(first);
+    until("the lease to come back", || ds.connections().idle_connections() == 1);
+
+    let mut second = ds.stream(&ViewportQuery::all()).expect("second stream");
+    assert_eq!(drain_to_end(&mut second), facts.features, "and the one after it");
 }
 
 #[test]

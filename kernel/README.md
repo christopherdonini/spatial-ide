@@ -68,8 +68,11 @@ different questions, and `RESULTS.md` says which.
 ### DuckDB connections, and the coincidence that is not a decision
 
 `engine` owns a bounded connection pool **per open dataset**: `MAX_STREAM_CONNECTIONS` 4 +
-`MAX_MAINTENANCE_CONNECTIONS` 1 = **5 physical connections per dataset**. `slice-host` opens one
-dataset, so the composed process figure is **5**. One query per physical connection; a lease moves
+`MAX_MAINTENANCE_CONNECTIONS` 1 = **5 physical connections per dataset**. The composed process
+ceiling is therefore **`open datasets × MAX_PHYSICAL_CONNECTIONS`**, and it scales with the catalog
+rather than with the concurrent-stream ceiling — a reader who takes 5 as the process figure will be
+wrong the moment a second dataset is registered. `slice-host` opens exactly one, so **5** today.
+One query per physical connection; a lease moves
 the connection out of the pool and no lock is held across a query. A stream that completes returns
 its connection after a drained verification statement; a stream that fails or is cancelled discards
 and replaces it, because this engine has established no post-interrupt health guarantee for DuckDB.
@@ -82,10 +85,22 @@ composition is the fact, and it is recorded here.
 
 Two consequences follow from the equality, and both matter in review:
 
-- **The engine's `ConnectionsExhausted { class: "stream" }` refusal is unreachable through this
-  composition.** The data plane admits at most 4 concurrent streams process-wide, so a fifth stream
-  lease cannot be requested. A ceiling that cannot be reached in composition is not an admission
-  policy. The engine asserts it anyway, because a module is not entitled to assume its composition.
+- **The engine's `ConnectionsExhausted { class: "stream" }` refusal is unreachable on the
+  natural-completion path, and reachable on the cancel path.** On completion the producer resolves
+  its lease before it drops the batch channel, so a consumer that has seen a stream end has already
+  seen its lease returned. **On a cancel the two ceilings are released by different, unsynchronized
+  threads and the admission permit goes back first** — `drive` returns on CANCEL, the pump drops the
+  source, that cancels the token, and only then does the engine's producer thread observe it, detach
+  and discard. So at the concurrency ceiling a consumer that cancels and immediately re-requests
+  (the ordinary pan/zoom supersession shape) can be **admitted here and refused by the engine**.
+
+  This is a typed, visible refusal of a request this crate had already admitted — not a wrong
+  result, not a silent degradation — and it is **new** with the connection pool: before it, every
+  stream simply made its own connection. Adding slack does not close it, because N cancelled streams
+  can leave N leases in flight; closing it means ordering the two releases, which is a decision about
+  **admission**. It is therefore recorded as raw material for the reserved **ADR-014** and is not
+  fixed by inventing capacity here. `frontends/canvas-probe`'s supersede scenario runs two streams,
+  well under the ceiling, so nothing measured in this repository has met it.
 - **Neither ceiling is evidence about the other, and neither decides ADR-014.** Refuse-don't-queue at
   admission is provisional and reversible (`protocol/data-plane/README.md`), and the engine's pool
   says the same of itself. Three independently chosen bounds now coincide with no decision behind the

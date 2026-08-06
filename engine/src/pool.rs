@@ -2,12 +2,17 @@
 //!
 //! ## Why this exists, and what it is answering
 //!
-//! `kernel/RESULTS.md`'s second section decomposed the first-pixels budget and found that
-//! **S2 — query start to OPEN — is 67.8–92.6 ms**, of which the producer's share is
-//! `EngineSourceFactory::create` accepting the stream: SQL construction plus **a new in-memory
-//! DuckDB connection per stream** plus `SET enable_geoparquet_conversion=false`. Two thirds of the
-//! whole 100 ms budget was spent before the query had looked at a row. This module removes the
-//! connection creation and the configuration statement from that path by keeping configured
+//! `kernel/RESULTS.md`'s second section decomposed the first-pixels budget and found
+//! **S2 — query start to OPEN — at p50 92.6 ms / p95 100.4 ms in the one established cell.** (A
+//! pre-warmed-socket cell read 67.8 ms, but it failed its canary and that section marks it
+//! *recorded, not established*; it is named here only so the range is not misread as one figure.)
+//!
+//! S2 contains socket acquisition and the handshake **and** the producer accepting the stream: SQL
+//! construction, **a new in-memory DuckDB connection per stream**, and
+//! `SET enable_geoparquet_conversion=false`. **How S2 divides between those has not been
+//! measured** — producing that decomposition is what the reused-connection pass exists to do — so
+//! nothing here attributes a share of it to connection creation. What this module does is remove
+//! the connection creation and the configuration statement from that path, by keeping configured
 //! connections alive for the life of the `Dataset` that owns them.
 //!
 //! ## Authority — stated because the obvious citation is the wrong one
@@ -48,11 +53,26 @@
 //! 2. **The ceilings are the engine's own**, justified by what this engine will serve over one
 //!    dataset. This module names no constant belonging to a binding: `docs/02` makes that split
 //!    structural, and `engine/tests/slice.rs` scans this crate's own source to keep it that way.
-//! 3. Because `MAX_STREAM_CONNECTIONS` equals the concurrent-stream ceiling the shipped binding
-//!    happens to declare, **`ConnectionsExhausted { class: "stream" }` is unreachable through the
-//!    composed product path.** A ceiling that cannot be reached in composition is not an admission
-//!    policy. It is still asserted, because the engine is not entitled to assume the composition it
-//!    is used in — see `kernel/README.md` for the composed figure.
+//! 3. `MAX_STREAM_CONNECTIONS` equals the concurrent-stream ceiling the shipped binding happens to
+//!    declare, so on the **natural-completion** path `ConnectionsExhausted { class: "stream" }` is
+//!    unreachable in composition: the producer resolves its lease before it drops the channel, so a
+//!    consumer that has seen the stream end has already seen the lease returned.
+//!
+//!    **On the cancel path it is reachable, and that is stated rather than assumed away.** The
+//!    binding's admission permit and this lease are released by different, unsynchronized threads,
+//!    and on a cancel the permit goes back first: the binding's reader returns on CANCEL, the
+//!    source is then dropped, which cancels the token, and only then does the producer thread
+//!    observe it, detach and discard. So at the ceiling a consumer that cancels and immediately
+//!    re-requests — the ordinary pan/zoom supersession shape — can be admitted by the binding and
+//!    refused here.
+//!
+//!    **What that is and is not.** It is a typed, visible refusal of a request the binding had
+//!    already admitted, not a wrong result and not a silent degradation. It is *new* with this
+//!    module: before it, every stream simply made its own connection. It is not closed by adding
+//!    slack, because N cancelled streams can leave N leases in flight; closing it properly means
+//!    ordering the two releases, which is a decision about **admission** and belongs to the
+//!    reserved **ADR-014**. Recorded here as raw material for that decision and citable as evidence
+//!    for nothing else.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -230,6 +250,12 @@ impl ConnectionPool {
     /// **Never blocks and never queues** — see this module's header. The lock is held for the
     /// bookkeeping only; connection creation happens outside it, so one slow creation cannot
     /// serialize the other classes, and a query never runs with the lock held.
+    ///
+    /// **Not part of this crate's intended surface.** It is `pub` so a test in `engine/tests/` can
+    /// exercise the class bounds directly, which needs a lease without a stream. A caller taking
+    /// `Stream` leases out of band could starve the product path, so `Dataset::stream*` is the way
+    /// in and this is hidden from the documented API rather than offered as an alternative.
+    #[doc(hidden)]
     pub fn acquire(self: &Arc<Self>, class: LeaseClass) -> Result<Lease> {
         enum Take {
             Existing(Physical),
@@ -378,7 +404,10 @@ pub struct Lease {
 }
 
 impl Lease {
-    pub fn connection(&self) -> &Connection {
+    /// `pub(crate)`: the connection itself never leaves this crate, so the invariant behind the
+    /// `expect` below — a live lease holds its connection, because `physical` is only taken as the
+    /// lease ends — cannot be broken from outside.
+    pub(crate) fn connection(&self) -> &Connection {
         &self.physical.as_ref().expect("a live lease holds its connection").conn
     }
 
@@ -411,14 +440,30 @@ impl Lease {
     /// died at the end of every open, that latent state died with it. It no longer does, so it is
     /// checked once, uniformly, on every return rather than reasoned about per call site.
     pub fn release_healthy(mut self) {
+        // **Verified while the lease still owns the connection, and taken only after.**
+        //
+        // Taking it first disarms `Drop`: an unwind inside `verify` would then leave a lease whose
+        // `physical` is already `None`, so `Drop` frees nothing and this dataset loses a slot of
+        // capacity permanently. Four of those exhaust the stream class for the life of the process,
+        // and one exhausts the maintenance class — `Dataset::open` calls this method, so a single
+        // unwind there would make `build_index` on that dataset refuse forever.
+        //
+        // That is not a hypothetical panic. `stream.rs` records that duckdb-rs **panics** rather
+        // than returning an error when a fetch fails, including when it was interrupted by our own
+        // cancel, and `verify` runs `prepare` + `query` + drain on a connection that may have taken
+        // an interrupt in the window before `detach`. Leaving `Drop` armed is what makes the
+        // failing case discard rather than leak. ADR-010 rule 6: a ceiling that drifts is not a
+        // declared ceiling.
+        let healthy = match self.physical.as_ref() {
+            Some(p) => verify(&p.conn).is_ok(),
+            None => return,
+        };
+        if !healthy {
+            // Leave `physical` in place: `Drop` discards it and frees the slot.
+            return;
+        }
         if let Some(p) = self.physical.take() {
-            match verify(&p.conn) {
-                Ok(()) => self.pool.return_healthy(self.class, p),
-                Err(_) => {
-                    self.pool.discard(self.class);
-                    drop(p);
-                }
-            }
+            self.pool.return_healthy(self.class, p);
         }
     }
 }

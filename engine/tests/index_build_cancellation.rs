@@ -182,6 +182,40 @@ fn the_inner_cell_insertion_loop_polls_too() {
 }
 
 #[test]
+fn a_cancel_after_the_last_poll_still_refuses_and_caches_nothing() {
+    // **The tail, which a cadence cannot cover.** Polling every N items bounds how long a cancel
+    // waits *inside* a phase; it says nothing about a cancel arriving after the final poll, or
+    // about a phase whose loop did not run at all. Both are reachable: fewer than the cadence
+    // remaining after the last check, and a **degenerate extent** — every feature sharing an x or a
+    // y, which a point layer, a single feature or duplicated bboxes all produce — which skips grid
+    // population entirely and leaves it with no cancellation point.
+    //
+    // Without the unconditional check before the index is constructed, such a build returns `Ok`
+    // and is inserted into the cache. A cancelled operation that succeeds is worse than a slow one.
+    //
+    // Cancelled at the *last* phase transition, so every in-loop poll has already run.
+    let (path, _) = write("tail", &FixtureSpec { features: 64, avg_vertices: 8, ..Default::default() });
+    let ds = Dataset::open(&path).expect("open");
+    let cancel = CancelToken::new();
+    let observer = CancelAtPhase::new(IndexPhase::PopulateGrid, cancel.clone());
+
+    match ds.build_index_observed(&cancel, Some(&observer)) {
+        Err(EngineError::Cancelled) => {}
+        Ok(_) => panic!(
+            "a build cancelled after its last poll completed anyway and was cached. Phases: {:?}",
+            observer.phases()
+        ),
+        Err(e) => panic!("expected Cancelled, got {e}"),
+    }
+    assert!(!observer.phases().contains(&IndexPhase::Complete));
+
+    // And nothing reached the cache: the rebuild is a miss, not a hit.
+    let after = Dataset::open(&path).expect("reopen");
+    let report = after.build_index(&CancelToken::new()).expect("rebuild");
+    assert!(report.miss.is_some(), "a cancelled build left an entry in the cache");
+}
+
+#[test]
 fn an_uncancelled_build_passes_every_phase_in_order_and_still_produces_the_same_index() {
     // The control. Adding cancellation points must not change what a build produces, and the phase
     // sequence is asserted so a future edit cannot silently drop a phase and make the cancellation
