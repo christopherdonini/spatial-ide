@@ -10,6 +10,16 @@
 
 Budgets are tested on fixed reference hardware profiles so numbers are comparable across commits.
 
+> **State of that enforcement, 2026-08-06.** The heading says what these budgets are *for*; it is not
+> yet a description of a running pipeline, and the distinction is worth one line now that CI exists.
+> `.github/workflows/product-ci-*.yml` run the ordinary Rust and viewer suites and **deliberately do
+> not run the budget harnesses** (`kernel/tests/slice_budgets.rs`, `kernel/tests/indexed_budgets.rs`,
+> both `#[ignore]`d and both refusing a debug build outright). A shared CI runner is not a fixed
+> reference hardware profile, and a figure taken on one would not be a worse number — it would not be
+> a measurement. The harnesses are committed and re-runnable by an operator, which is what
+> `kernel/RESULTS.md`'s figures come from. **"Regressions fail the build" is therefore owed, not
+> operating**, and it stays owed until budgets run somewhere comparable across commits.
+
 ## Benchmark matrix
 
 Feature count alone is not a workload — 10M points and 10M polygon vertices are different problems. Budgets are defined per dataset class:
