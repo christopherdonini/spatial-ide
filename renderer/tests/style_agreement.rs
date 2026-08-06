@@ -65,7 +65,18 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
     assert_eq!(compiled.style_hash(), sha256_hex(compiled.canonical_json().as_bytes()));
 
     // 2. Resolution, branch by branch. `null` is a NULL key, not an absent probe.
-    for probe in v["probes"].as_array().unwrap() {
+    //
+    // **The non-empty assertion is the point of this line, not decoration.** Every resolution check
+    // below lives inside this loop, so an empty `probes` array makes the whole cross-implementation
+    // agreement vacuous while both languages' tests still report green — the agreement would then
+    // rest on constants hardcoded separately in each. Demonstrated by emptying the vector: both
+    // sides passed, resolving nothing.
+    let probes = v["probes"].as_array().unwrap();
+    assert!(
+        !probes.is_empty(),
+        "the shared vector declares no probes, so this test would assert nothing about resolution"
+    );
+    for probe in probes {
         let key = probe["key"].as_str();
         let d = compiled.resolve(key);
         let label = probe["key"].to_string();

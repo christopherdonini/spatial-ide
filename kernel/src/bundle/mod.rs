@@ -752,13 +752,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn partition_names_are_zero_padded_contiguous_and_content_independent() {
+    fn a_partition_name_is_a_function_of_its_ordinal_and_nothing_else() {
         assert_eq!(partition_path(0), "data/part-00000.arrows");
         assert_eq!(partition_path(7), "data/part-00007.arrows");
         assert_eq!(partition_path(99_999), "data/part-99999.arrows");
-        // The width covers the declared ceiling exactly; one more digit would mean the ceiling and
-        // the naming scheme had drifted apart.
-        assert_eq!(partition_path(spatial_engine::MAX_PUBLISH_PARTITIONS - 1).len(), "data/part-99999.arrows".len());
+
+        // Fixed width across the whole declared range: the padding covers the ceiling exactly, and
+        // one more digit would mean the ceiling and the naming scheme had drifted apart.
+        let width = partition_path(0).len();
+        for i in [0, 1, 9, 10, 999, 1_000, spatial_engine::MAX_PUBLISH_PARTITIONS - 1] {
+            assert_eq!(partition_path(i).len(), width, "index {i} changed the name's width");
+        }
+
+        // Contiguous and collision-free over a real run of ordinals — the property the manifest's
+        // partition list depends on. *(The previous version of this test claimed "contiguous" and
+        // "content-independent" in its name and checked neither; the second is now a property of the
+        // signature — `partition_path` takes only an ordinal, so there is no content it could
+        // depend on — and the first is checked here.)*
+        let names: std::collections::BTreeSet<String> = (0..2_000).map(partition_path).collect();
+        assert_eq!(names.len(), 2_000, "two ordinals produced the same name");
+        assert!(names.contains("data/part-00000.arrows"));
+        assert!(names.contains("data/part-01999.arrows"));
     }
 
     #[test]

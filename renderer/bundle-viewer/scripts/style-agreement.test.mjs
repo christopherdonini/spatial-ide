@@ -30,6 +30,14 @@ test('typescript resolves every branch exactly as the shared vector says', () =>
   const style = Style.parse(vector.expected_canonical_json, 'style.json');
   assert.equal(style.matchColumn, 'zone');
 
+  // **The non-empty assertion is load-bearing.** Every check below is inside this loop, so an empty
+  // `probes` array makes the cross-implementation agreement vacuous while this test still reports
+  // green — and the same is true of its Rust counterpart. Demonstrated by emptying the vector:
+  // both sides passed, resolving nothing.
+  assert.ok(
+    vector.probes.length > 0,
+    'the shared vector declares no probes, so this test would assert nothing about resolution',
+  );
   for (const probe of vector.probes) {
     const d = style.resolve(probe.key);
     const label = JSON.stringify(probe.key);

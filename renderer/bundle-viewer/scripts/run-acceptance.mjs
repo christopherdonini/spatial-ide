@@ -25,6 +25,7 @@
  * ```
  */
 
+import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -40,6 +41,7 @@ const flag = (name) => argv.includes(name);
 const url = arg('--url');
 const out = arg('--out');
 const expectFailure = arg('--expect-failure');
+const expectManifestHash = arg('--expect-manifest-hash');
 const timeoutMs = Number(arg('--timeout-ms', '180000'));
 if (!url) {
   console.error('--url is required');
@@ -215,6 +217,9 @@ const PROBE_HOVER = `(() => {
 const artifact = {
   url,
   expect_failure: expectFailure,
+  /** SHA-256 of the `manifest.json` actually served, so a run names the bundle it tested. */
+  served_manifest_hash: null,
+  manifest_url: null,
   // Deliberately no timing of any kind: this cut measures nothing, and a duration in an artifact
   // invites exactly the citation the write-up is forbidden to make.
   browser: null,
@@ -225,6 +230,23 @@ const artifact = {
 };
 
 try {
+  // **Identify the bundle before driving anything.** `../manifest.json` relative to the viewer URL
+  // is where the viewer itself resolves it, so this asks for the same bytes the page will.
+  const manifestUrl = new URL('../manifest.json', url).href;
+  artifact.manifest_url = manifestUrl;
+  const manifestResponse = await fetch(manifestUrl, { cache: 'no-store' });
+  if (!manifestResponse.ok) {
+    throw new Error(`no manifest at ${manifestUrl}: HTTP ${manifestResponse.status}`);
+  }
+  const manifestBytes = Buffer.from(await manifestResponse.arrayBuffer());
+  artifact.served_manifest_hash = `sha256:${createHash('sha256').update(manifestBytes).digest('hex')}`;
+  if (expectManifestHash && artifact.served_manifest_hash !== expectManifestHash) {
+    throw new Error(
+      `the server is not serving the expected bundle: asked for ${expectManifestHash}, ` +
+        `${manifestUrl} is ${artifact.served_manifest_hash}`,
+    );
+  }
+
   const endpoint = await devtoolsEndpoint();
   artifact.browser = endpoint.product;
   const socket = new WebSocket(endpoint.ws);
