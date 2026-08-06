@@ -121,14 +121,42 @@ and never in a query string, nothing written to disk by the data-plane crate, an
 still deferred because the token is ephemeral and nothing persists across sessions. `physical_id` is
 a monotonic counter and never a pointer value, so no address reaches an evidence artifact.
 
+## Publishing, and the trigger this file named in advance
+
+This README used to say: *"No persistence. Nothing is written. The moment this caches a result to
+disk, names datasets by URI, or emits a bundle, `docs/11`'s ResourceRef model and ADR-005's grades
+are owed and this file stops being honest. The slice claims no reproducibility grade."*
+
+**A bundle is emitted now**, so that sentence has come due and is settled rather than deleted:
+
+| What was owed | What discharges it |
+|---|---|
+| `docs/11`'s ResourceRef model | The manifest carries **three** ResourceRefs — bundle, source, style — each with all six members named, and an unknown member recorded as a typed state carrying its basis rather than a bare null |
+| Datasets named by URI | `spatial://dataset/<name>`, from a **validated** catalog name. A name carrying a path separator, a drive letter or `..` is refused rather than escaped, because escaping would let a filesystem path through in encoded form |
+| ADR-005's grades | Every bundle claims one. It is **Snapshot**, with its basis in the manifest and the reason Exact is not claimed written beside it: the inputs are content-hashed but their immutability is not established, and a crate version is not a pinned build |
+
+**Publishing is a class-3 external side effect and there is no approval gate.** ADR-006 classes it;
+`docs/09` says "Export and publish are distinct capabilities, never implied by write. Class-3 side
+effects always require approval." The operation declares its reversibility class (`irreversible`) on
+its own API, and the gate is recorded as **owed and absent**. Shipping it ungated while saying
+nothing would be the silent version of the same gap.
+
+Two consequences worth stating here rather than leaving to the module:
+
+- **Re-publishing over an existing bundle is a typed refusal**, not a replace. The alternative never
+  exposes a *partial* bundle, but its failure mode destroys a published artifact as a side effect of
+  re-running a command — which is what the class-3 gate exists to prevent.
+- **The source must be pinned explicitly first.** Hashing a whole file is ~600 ms on the 100 000
+  feature fixture and `docs/07` opens a 5 GB one, so `Dataset::open` does not do it; the caller that
+  needs the check pays for it at a call site that can be grepped. Publishing an unpinned source is
+  refused, because a bundle claiming Snapshot on a basis nobody established is a grade claimed and
+  not honored.
+
 ## What is deliberately absent
 
 - **No lineage DAG, no undo, no command/event log.** The operation is a **pure transformation**
   (ADR-006) — an input snapshot plus parameters produce a derived output — so no transaction boundary
   and no undo machinery is owed.
-- **No persistence.** Nothing is written. The moment this caches a result to disk, names datasets by
-  URI, or emits a bundle, `docs/11`'s ResourceRef model and ADR-005's grades are owed and this file
-  stops being honest. **The slice claims no reproducibility grade.**
 - **No permission model.** `docs/09`'s capability grants do not exist here, and none is claimed.
 
 ## Running it

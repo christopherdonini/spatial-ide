@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spatial IDE — published bundle</title>
+    <style>
+      /* Every style is inline. No font, no CDN, no external stylesheet: this page makes zero
+         external requests, and a webfont would be the easiest way to break that without noticing. */
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        height: 100vh;
+      }
+      header { padding: 8px 12px; border-bottom: 1px solid #8884; }
+      h1 { font-size: 13px; margin: 0 0 2px; }
+      .sub { opacity: 0.72; }
+      main { display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+      canvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+      aside {
+        border-left: 1px solid #8884;
+        overflow: auto;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      section > h2 { font-size: 12px; margin: 0 0 6px; text-transform: uppercase; opacity: 0.6; }
+      .legend-heading { font-weight: bold; margin-bottom: 4px; }
+      .legend-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+      .swatch {
+        width: 16px; height: 16px; display: inline-block;
+        border: 1px solid; flex: 0 0 auto;
+      }
+      .note { opacity: 0.62; font-size: 12px; margin-top: 6px; }
+      .hover-id { font-weight: bold; margin-bottom: 4px; }
+      .attr-name { opacity: 0.7; }
+      .attr-null { opacity: 0.55; font-style: italic; }
+      #status { padding: 6px 12px; border-top: 1px solid #8884; }
+      #banner {
+        background: #8b1420; color: #fff; padding: 10px 12px;
+        border-bottom: 2px solid #ff4d5e;
+      }
+      #banner strong { display: block; margin-bottom: 4px; }
+      #banner .consequence { margin-top: 6px; opacity: 0.92; }
+      #log {
+        margin: 0; font-size: 11px; opacity: 0.6; white-space: pre-wrap;
+        max-height: 140px; overflow: auto;
+      }
+      dl { margin: 0; }
+      .fact { margin: 2px 0; word-break: break-word; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Published bundle — projected canvas, rendered in the source CRS</h1>
+      <div class="sub">
+        Static and self-contained: everything on this page came from this bundle, and every asset was
+        verified against the manifest's content hashes before it was drawn. Zero external requests.
+      </div>
+    </header>
+
+    <div id="banner" hidden></div>
+
+    <main>
+      <canvas id="map" width="1280" height="900"></canvas>
+      <aside>
+        <section>
+          <h2>Feature</h2>
+          <div id="hover"><span class="note">Hover a feature to identify it.</span></div>
+          <div class="note">
+            Identification is a lookup through the stable feature id carried in the bundle, never a
+            reconstruction from the cursor. No cursor-derived coordinate is shown here, by design.
+          </div>
+        </section>
+
+        <section>
+          <h2>Legend</h2>
+          <div id="legend"></div>
+        </section>
+
+        <section>
+          <h2>Provenance</h2>
+          <div class="fact" id="crs"></div>
+          <div class="fact" id="identity"></div>
+          <div class="fact note" id="identity-caveat"></div>
+          <div class="fact" id="grade"></div>
+          <div class="fact" id="bounds-basis"></div>
+          <div class="fact" id="license"></div>
+          <div class="note">
+            No basemap. This bundle renders in its own projected CRS with no reprojection, and
+            basemap tiles are Web Mercator — showing one would mean either reprojecting the data,
+            which this bundle deliberately does not do, or drawing two coordinate systems on one
+            canvas. This is the recorded consequence of the publishing path, not a missing feature.
+          </div>
+          <div class="note">
+            This page verifies every asset the manifest lists. It cannot verify the code that is
+            already running: the manifest's viewer hashes are for an external verifier, and the chain
+            of trust does not close inside the browser.
+          </div>
+        </section>
+
+        <section>
+          <h2>Session log</h2>
+          <pre id="log">starting…</pre>
+          <div class="note">
+            Declared recovery policy: none — fail visibly and terminate. Persisted in-page for this
+            session only; a static bundle has no durable log sink and none is invented.
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <div id="status">loading…</div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

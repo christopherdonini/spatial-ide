@@ -1,0 +1,20 @@
+{
+  "name": "spatial-bundle-viewer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The static bundle viewer: the renderer module's projected publishing canvas. Vanilla TypeScript \u2014 this does NOT decide ADR-001's open React-vs-Svelte question.",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"scripts/**/*.test.mjs\"",
+    "verify": "npm run typecheck && npm run build && npm test"
+  },
+  "dependencies": {
+    "apache-arrow": "^18.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0"
+  }
+}

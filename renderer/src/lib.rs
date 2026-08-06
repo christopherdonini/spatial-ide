@@ -23,8 +23,11 @@
 //!   schema, and it takes that schema as `arrow::datatypes::DataType` — a third-party type — rather
 //!   than by depending on `spatial-engine`. `renderer -> engine` would invert `docs/02`'s module map
 //!   and the kernel's stated role as the only module that knows two others.
-//! - **No promoted probe code.** `frontends/canvas-probe` is an *instrument*, not a predecessor
-//!   implementation, and nothing here is copied from it. See `README.md`.
+//! - **No promoted instrument code.** Nothing in this module was copied from any harness or probe
+//!   elsewhere in the repository; its behaviour is derived from ADR-010 and cites the ADR by rule
+//!   number. `README.md` states the relationship in full, and it is the only file in this module
+//!   permitted to name the instrument in question — a citation anywhere else would be the first
+//!   step of the promotion the rule forbids.
 //!
 //! ## Declared recovery policy (ADR-010 rule 7)
 //!

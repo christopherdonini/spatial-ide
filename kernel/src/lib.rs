@@ -12,10 +12,19 @@
 //! - **No lineage DAG, no undo, no command/event log.** The operation is a **pure transformation**
 //!   under ADR-006 — an input snapshot plus parameters produce a derived output — so no transaction
 //!   boundary and no undo machinery is owed.
-//! - **No persistence.** Nothing is written. The moment this caches a result to disk, names
-//!   datasets by URI, or emits a bundle, `docs/11`'s ResourceRef model and ADR-005's reproducibility
-//!   grades are owed and this file is no longer honest. **This slice claims no reproducibility
-//!   grade.**
+//! - **Persistence arrived, and it is exactly the trigger this file named in advance.** The text
+//!   here used to read: "Nothing is written. The moment this caches a result to disk, names datasets
+//!   by URI, or emits a bundle, `docs/11`'s ResourceRef model and ADR-005's reproducibility grades
+//!   are owed and this file is no longer honest." [`publish`] emits a bundle, so all three are now
+//!   owed and all three are paid: the manifest carries **three** `docs/11` ResourceRefs (bundle,
+//!   source, style) with every member named, datasets are addressed by a validated
+//!   `spatial://dataset/<name>` logical URI, and each bundle claims an ADR-005 grade —
+//!   **Snapshot**, with its basis stated and the reason Exact is not claimed written down beside it.
+//!   Nothing else in this crate persists anything; a stream still writes nothing.
+//! - **No approval gate, and publishing is a class-3 external side effect.** ADR-006 and `docs/09`
+//!   require one ("Export and publish are distinct capabilities, never implied by write");
+//!   [`publish`] declares its reversibility class on its own API and records that the gate is
+//!   **owed and absent** rather than shipping ungated and silent.
 //! - **No permission model.** `docs/09`'s capability grants do not exist here, and none is claimed.
 //! - **No dataset registry beyond a name → open dataset map** fixed at startup. Names, never paths:
 //!   a client-supplied path on a listening socket is an arbitrary-file-read primitive.

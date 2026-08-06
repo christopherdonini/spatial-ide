@@ -13,7 +13,7 @@ never every module built in parallel to 20 %.
 |---|---|
 | **Reads** | GeoParquet (WKB geometry, GeoParquet 1.1 metadata) through **DuckDB** |
 | **Filters** | SQL over the covering `bbox` columns — a linear scan. The fixed-grid index is built and tested but **deliberately not in the product planner**; see below |
-| **Emits** | GeoArrow polygons, `List<rings: List<vertices: FixedSizeList<xy: double>[2]>>`, as Arrow IPC |
+| **Emits** | GeoArrow polygons, `List<rings: List<vertices: FixedSizeList<xy: double>[2]>>`, as Arrow IPC — `[id, geometry]`, plus a **declared attribute projection** on the publish path |
 | **Tags** | every batch envelope with frame, CRS, CRS source and axis order (ADR-010 rule 1) |
 | **Cancels** | through DuckDB's own interrupt, not just a flag between batches |
 | **Connects** | through a bounded per-dataset lease pool: configured once per connection, not once per query |
@@ -318,6 +318,77 @@ until `TARGET_BATCH_BYTES`, so pixels can land sooner without leaving the steady
 mean the same window holds fewer bytes, so the composed per-stream bound in `kernel/README.md`
 remains a valid **upper** bound but a looser one. Any previously measured "percentage of bound"
 figure describes the pre-change shape and may not be carried across this change.
+
+## The publish path: a declared projection, a declared order, fixed partition ceilings
+
+`Dataset::stream_for_publish` is a **separate, named entry point**, not a flag on `stream`. A reader
+of a call site sees which discipline is in force without knowing which way round a boolean goes, and
+the viewport path cannot acquire an `ORDER BY` by accident.
+
+**Attributes.** Until this cut the engine emitted exactly `[id, geometry]`. A categorical style needs
+a column to match on and a hover panel needs something to show, so the batch schema widens by an
+**explicit, caller-declared, ordered projection** — never "all attributes", for three separate
+reasons: `docs/09` (an unbounded projection publishes unreviewed columns into a redistributable
+artifact), determinism (the emitted schema would become a function of the file's column order), and
+size. Admissible types are utf8, boolean, the 8/16/32/64-bit integers and float64; everything else is
+a typed refusal, and **nothing is cast, widened or stringified to make a column fit**. A
+dictionary-encoded column is refused rather than decoded — a dictionary index is an ordinal, which
+ADR-016 §4 names explicitly.
+
+**Every published attribute is nullable**, whatever the source said. A source NULL is a value; a
+schema that could not carry one would force a substitution. NULL travels: Arrow validity bit →
+partition → viewer → the style's declared `on_null` branch. The identity column is the exception and
+is not an attribute — `id` stays non-nullable, because a NULL identity is the wrong-but-plausible
+feature ADR-010 rule 2 exists to prevent. The geometry column and the identity source column are both
+refused as attributes.
+
+**`attribute_columns` on the envelope is recorded on `docs/11` and `docs/01` principle 8's
+authority — not ADR-010 rule 1's.** Rule 1's tag-on-envelope clause is about *coordinate space*, and
+citing it for a projection would enlarge an Accepted, architect-blockable rule by analogy, which
+ADR-016 §6 refuses to do for exactly this reason. `TaggedBatch` **checks** the attribute arrays
+against the declared fields rather than trusting them, or the envelope's claim would be an assertion
+about the payload instead of a check.
+
+**Ordering, and a correction to the reasoning that produced it.** The publish path adds
+`ORDER BY <source column> ASC`, because a bundle's byte-identical-rebuild guarantee cannot rest on
+DuckDB's freedom to reach row groups in any order. The viewport path is untouched: its "no ORDER BY"
+comment is a `docs/08` first-pixels argument, and publishing has no first-pixels budget.
+
+The clause names the **source** column rather than the `id` alias — but *not* for the reason the
+range predicates below give, and the difference is measured rather than assumed. Against a table
+carrying both columns, projected as `"parcel_key" AS "id"`
+(`duckdb_resolves_order_by_and_where_in_opposite_directions`):
+
+| clause | a bare `"id"` binds to | |
+|---|---|---|
+| `ORDER BY "id"` | the **select alias** | so it happens to be right |
+| `WHERE "id" >= …` | the **base column** | so it is wrong — the hazard already documented below |
+
+So naming the source column here is **independence from which rule applies**, not a bug fix. It is
+correct under either resolution and reads the same as the predicate twenty lines away. *(An earlier
+version of this reasoning asserted the hazard carried across from `WHERE`; injecting `ORDER BY "id"`
+into the product path did not fail the ordering test, which is how the asymmetry was found. The test
+that claimed to catch it has been replaced by one that pins what DuckDB actually does.)*
+
+**What ordering does not bound:** DuckDB sorts before the first row arrives, and that sort's memory
+and its silence are DuckDB's own — outside `MAX_QUEUED_BATCHES` and outside every ceiling this module
+declares, exactly as the streaming buffer already is. The caller reports progress across it.
+
+**Declared publish ceilings (ADR-010 rule 6):** `PUBLISH_PARTITION_TARGET_BYTES` 1 MiB ·
+`PUBLISH_PARTITION_ROWS` 8 192 · `MAX_PUBLISH_PARTITIONS` 100 000 · `MAX_PUBLISHED_ATTRIBUTES` 32,
+with compile-time assertions tying them to `MAX_BATCH_BYTES` and to the five-digit partition naming
+width. A **partition is exactly one `TaggedBatch`** — re-batching in a publisher would produce bytes
+that never passed through the single constructor, and the rule 1 envelope would then be on each
+partition by care rather than by construction. The size ceiling is also what bounds cancellation:
+**the uninterruptible window is one partition's encode and write.**
+
+**Pinning.** `Dataset::pin_content` is an explicit, cancellable whole-file SHA-256. It is deliberately
+not part of `open`: `kernel/RESULTS.md` measures the hash at ~603–610 ms on the 100 000-feature
+fixture, and `docs/07` opens a 5 GB file whose cold-open cost that same file records as unmeasured,
+so an unconditional hash at open would spend it on every viewport query's dataset to serve a check
+only publishing needs. A pin is a statement about **bytes at a moment** and nothing more — it does
+not establish immutability and it pins no *revision*, which is why a bundle built on one claims
+ADR-005 **Snapshot** rather than Exact.
 
 ## Admission: what this module refuses to open
 

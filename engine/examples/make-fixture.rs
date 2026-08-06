@@ -5,11 +5,12 @@
 //! cargo run -p spatial-engine --features fixture --example make-fixture -- \
 //!     --out target/fixtures/probe.parquet --features 40000 [--vertices 24] [--seed 1]
 //!     [--crs declared|absent|null|no-coordinate-system|latlon] [--no-covering]
+//!     [--attributes none|zone]
 //! ```
 //!
 //! The file it writes is never committed (`.gitignore`); the generator and its seed are.
 
-use spatial_engine::fixture::{write_geoparquet, CrsMode, FixtureSpec};
+use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut spec = FixtureSpec::default();
@@ -25,6 +26,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "--holes-every" => spec.hole_every = next()?.parse()?,
             "--seed" => spec.seed = next()?.parse()?,
             "--no-covering" => spec.with_covering_bbox = false,
+            // `zone` adds a nullable categorical column derived from `(seed, id)`. It consumes no
+            // geometry randomness, so the polygons are bit-identical to a fixture without it.
+            "--attributes" => {
+                spec.attributes = match next()?.as_str() {
+                    "none" => AttributeMode::None,
+                    "zone" => AttributeMode::CategoricalZone,
+                    other => return Err(format!("unknown --attributes `{other}`").into()),
+                }
+            }
             "--crs" => {
                 spec.crs_mode = match next()?.as_str() {
                     "declared" => CrsMode::DeclaredLv95,
@@ -51,6 +61,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!("  coord_bits_xor      : {:#018x}", facts.coord_bits_xor);
     println!("  seed                : {:#018x}", spec.seed);
+    if spec.attributes == AttributeMode::CategoricalZone {
+        // Counted while writing, never predicted — the same doctrine as every other fact here.
+        println!(
+            "  zone counts         : {:?} + {} null",
+            facts.zone_counts, facts.zone_nulls
+        );
+    }
     // Printed in the shape the probe wants, because this slice has no control plane for a consumer
     // to ask an extent from, and a viewer pointed at the wrong window looks like a broken stream.
     println!(
