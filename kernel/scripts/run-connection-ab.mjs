@@ -395,8 +395,13 @@ for (let i = 0; i < SEQUENCE.length; i++) {
     if (code !== 0) reasons.push(`probe exit ${code}`);
     // **Cut-specific invalidator 14**, per trial: an artifact that cannot say which connection mode
     // actually ran establishes nothing about connection mode.
+    // The producer names the mode the way the engine does (`reuse`/`fresh`); this driver names it
+    // the way the sequence does (`on`/`off`). Comparing them without the translation would fire
+    // invalidator 14 on every trial and look like a real finding.
     if (!facts) reasons.push('the producer reported no connection facts');
-    else if (facts.mode !== mode) reasons.push(`producer reported mode ${facts.mode}, expected ${mode}`);
+    else if (facts.mode !== MODE_FLAG[mode]) {
+      reasons.push(`producer reported mode ${facts.mode}, expected ${MODE_FLAG[mode]}`);
+    }
 
     Object.assign(entry, {
       terminal: rec?.terminal?.kind ?? null,
