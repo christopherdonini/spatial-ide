@@ -774,7 +774,33 @@ p95 is reported as it came out.
 **This cell measures connection *preparation at open*, not reuse across streams** — declared in A7
 before the run and true by construction: one host per trial and one solo stream per page load means
 no browser trial here ran on a connection a previous *stream* had used. Reuse across streams is
-established in process by `engine/tests/connection_reuse.rs`, and by nothing above.
+established *functionally* in process by `engine/tests/connection_reuse.rs`; its **performance is
+measured nowhere in this pass**.
+
+### The number that has to travel with the −18.4 ms
+
+**`S2 + S3` is the boundary-independent quantity, and it moved −10.9 ms with no rank separation.**
+
+`t_open` is a boundary inside the producer's work. Any work that merely moved across it cancels in
+`S2 + S3` and does not cancel in S2 alone — so `S2 + S3` is what survives if part of the S2 gain is a
+boundary shift rather than work removed. Per-trial p50: **166.3 (off) → 155.4 (on), −10.9 ms**, and
+the reuse-on values are *not* separated from reuse-off's on rank (16 of 49 pairwise comparisons
+favour reuse-off). **No difference in time to first bytes is established.** The −18.4 ms is a claim
+about S2, and only about S2.
+
+### An instrument asymmetry that lands on one arm by construction
+
+The mid-run canary fires when `i + 1 >= 7`, which in this sequence is **between trial 6 (`on`) and
+trial 7 (`off`)** — and each canary point ends with roughly a second of CPU-saturating loop
+immediately before the next trial starts. **Trial 7 produced 82.6 ms, the reuse-off maximum and
+therefore the reuse-off p95.**
+
+This is small, deterministic, and it lands on one mode because of where the midpoint falls, not
+because of anything about connections. It is disclosed rather than corrected: **dropping trial 7
+would put reuse-off's p50 at 71.7 ms and the delta at −16.1 ms instead of −18.4 ms**, so the effect
+on the headline is about 2 ms and in the direction that *flatters* the result. The trial is not
+dropped — the same rule that keeps the 184.3 ms trial keeps this one — but a reader is entitled to
+know that ~2 ms of the −18.4 is an artefact of where the canary sits.
 
 ### The producer's own account of which mode actually ran
 
@@ -794,9 +820,18 @@ browser S2**.
 ### What the S2 result does *not* mean
 
 - **It is not progress toward `docs/08`'s first-pixels budget.** S3 alone is 92.7–102.3 ms p50
-  against a 100 ms budget for the whole figure. The verdict below is **missed**.
+  against a 100 ms budget for the whole figure. The verdict below is **missed**, and the
+  first-pixels difference between the modes is **not established**: −8.0 ms p50 with no rank
+  separation at all (32 of 49 pairwise comparisons favour reuse-on, which is close to the 24.5 a
+  coin would give).
 - **S3 moved the wrong way** — +9.6 ms p50 — and this pass offers **no explanation for it**. It is
-  reported because quoting only the segment that improved would manufacture a result.
+  reported because quoting only the segment that improved would manufacture a result. **Its
+  separation is stronger than S2's, not weaker**: reuse-off is faster in 45 of 49 pairwise
+  comparisons, against 42 of 49 for S2's improvement. Whatever weight the S2 separation carries, the
+  S3 one carries more — so "S3 is noise" is not available while "S2 improved" is being claimed.
+  *(These pairwise counts are descriptive and **post hoc**. A7 declared p50, p95 and a signed delta
+  and no test of any kind; the counts are stated so a reader can see the shape of the samples, and
+  they are not a preregistered result.)*
 - **No comparison with the 92.6 ms S2 in the second section is claimed**, for three independent
   reasons: a different session, a different product tree, and a different procedure — one host
   served every trial there; here one host serves each trial.
@@ -812,8 +847,9 @@ browser S2**.
 | **First pixels < 100 ms after query start** | **missed** | reuse-on **p50 163.9 · p95 514.2 · min 148.8**; reuse-off **p50 171.9 · p95 190.7 · min 165.4**. Full payload, always beside it: **7099.7 / 7623.5 ms p50** | 7 + 7 admitted, 0 dropped | **The verdict is robust in a way the point estimates are not.** The budget is 100 ms and the **smallest single value in any of the 14 admitted trials was 148.8 ms**. No plausible drift carries a 148.8 ms minimum under 100 ms |
 | **Cancellation < 100 ms — mid-stream** | **met** | **p50 0.080 · p95 0.115 ms** (min 0.050, max 0.129). Batches generated after cancel: **0 in all 30** | 30 | Producer-side, stamped inside the thread doing the work; both ends in one process, one clock, no clock-relation bound claimed |
 | **Cancellation < 100 ms — before the first batch** | **met** | **p50 0.138 · p95 0.398 ms** (min 0.115, max 0.458). Batches after cancel: **0 in all 30** | 30 | No credit granted, so nothing was ever delivered and the query was running when CANCEL arrived |
-| **Cancellation < 100 ms — inside the DuckDB scan phase** | **met, and sampled at all for the first time** | **p50 4.201 · p95 14.686 ms** (min 1.992). **12 of 12 trials produced a sample; 0 completed before the cancel; 0 failed to reach the scan** | 12 | The gap the second section named and could not close — see below |
-| **Cancellation < 100 ms — during an index build (delay ladder)** | **met** | **p50 1.618 · p95 4.707 ms** (min 0.180) | 12 | The ladder ran all twelve declared delays without a build completing, so n is the full 12 rather than a reduced one |
+| **Cancellation < 100 ms — inside the DuckDB scan phase** | **met, and sampled at all for the first time** | **p50 4.974 · p95 14.686 ms** (min 1.992, max 14.686) | **10** | The gap the second section named and could not close. **n is 10, not the 12 the artifact prints** — two trials are reclassified below under the rule A7.2 declared in advance. 0 trials failed to reach the scan |
+| **Cancellation < 100 ms — in grid population, incidentally** | **met** | **3.956 and 4.201 ms** | 2 | The two 20 ms trials, in which the ~30 ms scan had already finished. Reported here rather than folded into the row above. They are the only direct evidence in this pass that piece 3's *grid-population* polling works |
+| **Cancellation < 100 ms — during an index build (delay ladder)** | **met** | **p50 1.618 · p95 4.707 ms** (min 0.180) | 12 | The ladder ran all twelve declared delays without a build completing, so n is the full 12. **All twelve landed in the SHA-256 content hash again** — the ladder's 10–400 ms delays against a ~603 ms hash — so this row does *not* sample the scan a second time, and the row above is the only cell that does |
 | **Cancellation < 100 ms — during the identity uniqueness scan** | **met** | **p50 2.524 · p95 22.049 ms** (min 1.896) | 7 of 15 | **8 of 15 trials completed before the cancel arrived**, reported and not counted as latency samples — the same structural split the second section explains |
 | **Memory — producer-resident counter vs declared bound** | **met** | peak **1,729,952 B** against a declared bound of **83,886,080 B** = `(MAX_INFLIGHT_BATCHES + 1) × MAX_FRAME_BYTES`. **2.06 % of bound** | all runs | The percentage describes the batch shape it was taken under; the bound stays a valid **upper** bound and is looser under progressive sizing |
 | **Memory — process private commit** | **recorded** | baseline 5,472,256 B → peak **196,546,560 B** | 1 | Covers **both ends plus the index plus the fixture writer**, which wrote three 145 MB files. Not a per-stream number, and not comparable with the second section's figure |
@@ -839,15 +875,44 @@ the fixture so a completed build could not populate the cache the other ladders 
 | 0, 0, 1, 1, 2, 2, 5, 5, 10, 10 ms | `duckdb-scan` | `duckdb-scan` | 14.686, 11.870, 7.450, 7.637, 4.974, 5.432, 3.474, 2.143, 3.550, 1.992 ms |
 | 20, 20 ms | `populate-grid` | `populate-grid` | 4.201, 3.956 ms |
 
-**The two 20 ms trials are reported as what they are.** By 20 ms the ~30 ms scan had already
-finished and the build had moved on, so those cancels were issued and observed in grid population,
-not in the scan. They are latency samples for *a* post-scan phase and are labelled as such rather
-than counted silently toward "the scan phase". **Ten of twelve trials are scan-phase samples**, and
-that is the number the row above rests on.
+### The instrument miscounted this cell, and the preregistration is what corrects it
+
+**`indexed-budgets.json` prints this cell as n = 12, p50 4.201 ms, and
+`trials_where_the_scan_completed_before_the_cancel: 0`. All three are wrong, and the last one is the
+defect that caused the other two.**
+
+`scan_completed_first` only increments when the whole **build** returns `Ok` — not when the **scan**
+finishes. In the two 20 ms trials the scan demonstrably finished: by then the ~30 ms scan was over
+and the build had moved on, which is why both cancels were issued *and* observed in
+`populate-grid`. The counter read 0 anyway, and both trials were kept as scan-phase latency samples.
+
+**A7.2 declared the opposite before the run:** *"Recorded separately and never as latency samples:
+trials where the scan finished before the cancel arrived."* Applying that declared rule to the
+recorded per-trial phase fields — which exist precisely so this is possible — gives the corrected
+cell:
+
+| | n | p50 | p95 | min | max |
+|---|---|---|---|---|---|
+| **`duckdb-scan`** | **10** | **4.974** | 14.686 | 1.992 | 14.686 |
+| `populate-grid` (the two 20 ms trials) | 2 | — | — | 3.956 | 4.201 |
+
+**This is honouring the preregistration, not amending it after the fact.** The rule was written down
+before the run; the instrument failed to implement it; the phase attribution it *did* record makes
+the reclassification mechanical rather than a judgement.
+
+**The published p50 of 4.201 ms was itself one of the two grid-population samples.** Quoting it as
+the scan phase's median would have been a grid-population measurement wearing the scan's name — the
+precise error class the phase attribution was added to prevent. Both corrected figures stay two
+orders of magnitude inside the 100 ms budget, so no verdict changes; only the label, the n and the
+p50 do. **The harness is not edited to fix the counter**, for the same reason as the memory label
+below: it would be a post-result protocol change.
 
 **The observation instant did not move.** The latency is still stamped inside the thread doing the
 work, at the moment it observed the cancel. The observer decides only when the cancel is *issued*,
 which is the canceller's side of the measurement and always was.
+
+**One thing this cell does not explain and this text will not narrate:** latency falls monotonically
+with delay across the ladder (14.7 ms at 0 ms down to ~2 ms at 10 ms). No mechanism is offered.
 
 ### The other gap in that section — a code fact, now a tested one
 
@@ -876,13 +941,24 @@ one was built. **After this cut the two halves must agree, and they do.**
 | 1/64 extent | `ScanOnly` | **`ScanOnly`** | 1,600 | 38.2 → 38.7 ms | 41.3 → 41.7 ms |
 
 n = 7 per point per path. Payload totals byte-identical across both halves at every point
-(173,807,128 / 44,018,088 / 2,798,952 B).
+(173,807,128 / 44,018,088 / 2,798,952 B). The artifact declares this expectation **before** the rows,
+so the agreement is a check rather than a finding after the fact.
+
+**The two halves are not claimed to "match" — they show no difference beyond the envelope.** All
+three first-batch figures drifted the same direction (+0.9 % to +4.9 %), and the ordering is
+**forced**: the index cache is process-wide, so the unindexed half must run first, which perfectly
+confounds "indexed" with "later in the session". This instrument's own canary rose 5.75 % across
+exactly that boundary. The differences sit inside that envelope; nothing is established either way at
+n = 7.
 
 **In the second section those same rows read `IndexNarrowed { ranges: 159, candidates: 25281 }` and
-190.1 ms.** They now read `ScanOnly` on a dataset whose index is built, cached and admissible — which
-is piece 1, observed on the wire instead of argued from the source. The 35.6 % first-batch regression
-that motivated the change is **not re-measured here**: reproducing it would mean routing the
-experimental seam into a measurement, and this pass is not about the index's cost.
+190.1 ms.** They now read `ScanOnly` on a dataset whose index is built, cached and admissible.
+**That is a structural result, not a measured improvement**: the 35.6 % regression that motivated the
+change came from another session and another tree, and comparing it with anything here is forbidden.
+What this pass establishes is that the product planner returns `ScanOnly` — proven deterministically
+by `planner_seam.rs`, corroborated on the wire — and that the two halves agree within the envelope.
+**The index's cost is deliberately not re-measured**, and removing it is not shown here to have made
+anything faster.
 
 `engine/tests/planner_seam.rs` proves the stronger statement a timing cannot — that the seam is not
 merely unhelpful but **unreached** — deterministically, on a call counter, in its own process.
@@ -900,12 +976,30 @@ configured connection before and uses exactly one now.
 | `PoolConfig::reuse()` — the product default | 30.464, 24.170, 23.395, 23.581, 25.655 ms | **23.4 – 30.5 ms** |
 | `PoolConfig::fresh_per_query()` — the control | 27.415, 26.272, 25.837, 26.296, 25.423 ms | **25.4 – 27.4 ms** |
 
-**These are absolute figures in this session and are not a before/after.** The 26.7–39.9 ms in the
-second section came from another session and is not a baseline for them; the preregistration forbids
-that comparison and it is not suspended because it would be convenient here. What can be said without
-crossing sessions: **open did not acquire a second connection, the two configurations overlap, and
-the added work is one statement.** The brief's concern was that connection preparation might silently
-double open. Nothing in either column is consistent with a doubling, and the mechanism says why.
+**These are absolute figures in this session, and — this is the part that matters — neither column is
+a "before".** Two independent reasons the guard cannot be discharged by measurement here:
+
+1. **Between-session comparison is forbidden.** The 26.7–39.9 ms in the second section came from
+   another session and is not a baseline for these. Nor is "well, it did not *double*" a safe weaker
+   claim: this repository has recorded the *same* canary instrument reading 129.4–136.5 ms in one
+   session and 68.6 ms in another — roughly a factor of two. **Session drift here is the same size as
+   the effect the guard is looking for.**
+2. **The control does not control for the thing this cut added.** `Lease::release_healthy` runs the
+   drained `SELECT 1` **before** it consults `max_idle`, so the `fresh_per_query()` column pays the
+   added statement too and then throws the connection away. That column is a control for *keeping* a
+   connection, not for the statement. **The added cost was never isolated by any measurement in this
+   pass.**
+
+So the guard is discharged **structurally, not numerically**, and the honest form is: open created
+exactly one configured connection before this cut and creates exactly one now — that is a code fact —
+and what was added is one drained statement. The two columns overlap and nothing distinguishes them
+at n = 5. Nothing here measures what the statement costs.
+
+A7.3's other claim — that preparation does not extend `Dataset::open`'s uninterruptible prelude — is
+likewise a code fact and is **unmeasured here**. The identity-scan ladder is *consistent* with a
+~20 ms prelude (the three 5 ms trials read 22.0 / 19.5 / 20.0 ms, the cancel waiting the prelude out,
+against 1.9–2.2 ms at 15 ms), but that is an inference from a ladder built for a different purpose,
+not a measurement of the prelude.
 
 ---
 
@@ -920,32 +1014,63 @@ double open. Nothing in either column is consistent with a doubling, and the mec
 
 Declared invalidators, each with what discharged it:
 
-1. **Debug build** — clear: the artifact records `debug_assertions: false`, and both harnesses refuse
-   to run otherwise.
-2. **The tree moved mid-run** — clear: pin `0a2a45cc…` over 57 files matched before the build, after
-   the build, and after the browser cell; the three binary hashes matched throughout.
+1. **Debug build** — **clear for the in-process rows, and asserted rather than self-evidenced for the
+   browser cell.** `indexed-budgets.json` records `debug_assertions: false`, which is the measured
+   binary reporting on itself, and `refuse_debug()` is the first statement of the measured function.
+   **`slice-host` has no such guard**: the browser cell's release status rests on the build command,
+   the `target/release/` path and the pinned SHA-256, not on a self-report. Earlier sections' phrase
+   "both harnesses refuse to run on a debug build" is true of the two Rust harnesses and is **not**
+   true of `slice-host`, which is what produced every browser number here.
+2. **The tree moved mid-run** — **clear over the window the artifacts bracket, which is not the build
+   window.** `tree_pin.before` and `tree_pin.after` in the A/B artifact both report
+   `unchanged: true` for all 57 files and all three binaries, bracketing everything from before the
+   first trial to after the last — which contains every number in this section. The retained
+   `tree-pin-before.json` was *overwritten* with the binary-carrying pin after the build, so **no
+   surviving artifact brackets the build itself**; that the sources were pinned before the build and
+   compared clean after it is recorded here as an operator account, not as something a reader of
+   `target/slice-evidence/` can verify. Retaining the pre-build pin as its own file is an instrument
+   correction for the next pass.
 3. **Canary spread beyond 10 %** — clear on both instruments: 5.75 % and 6.91 % across the four
    minima. The raw spreads (16.26 %, 15.08 %) are disclosed either way, as this file's convention
    requires.
 4. **Segments that do not sum, a negative segment, last pixels before first** — clear: **0 of 14**
-   browser trials dropped.
+   browser trials dropped; every residual is exactly 0.0 ms. **That check is close to tautological on
+   this instrument and is not offered as corroboration of clock integrity**: both sides are derived
+   by subtraction from the same five `performance.now()` stamps, so an exact zero is what the
+   arithmetic must produce. What it does catch — a missing, reordered or negative instant — it caught
+   nothing of.
 5. **A stream that did not complete, or the wrong row count** — clear: all 14 terminal `Completed`,
    all 14 at exactly **100,000 rows**, 203 batches, first batch 55,944 B, and **0 JSON frames on the
    data path** in every trial.
-6. **A cancellation trial whose producer never observed the cancel** — clear: every trial in all five
-   cancellation cases produced an observation, and **0 batches were generated after cancel in all 60**
-   stream trials.
-7. **More than one dropped trial in a cell** — clear: zero dropped in either cell.
-8. **At least 3 GiB free disk before launch** — clear: **5.54 GiB** at start, **4.21 GiB** at end.
-9. **Browser-profile cleanup verified and leaks recorded** — **recorded, not clean: 16 of 16 profiles
-   resisted removal**, the same known limitation the second section reports (Edge's child processes
-   outlive the pid being polled). Free disk fell 1.33 GiB across the run and stayed far above the
-   floor. The leak is *reported* rather than silent, which is the difference between a known
-   limitation and a corrupted measurement.
+6. **A cancellation trial whose producer never observed the cancel** — clear for the identity ladder,
+   which checks the error text and reports `trials_with_an_unexpected_error: 0`, and **not verified**
+   for the scan and index-build ladders: both count *any* `Err` as an observed cancellation, so a
+   non-cancellation failure would have been counted as a latency sample. No evidence one occurred;
+   the instrument simply would not have said. Recorded as an instrument gap.
+   **0 batches were generated after cancel in all 60** stream trials.
+7. **More than one dropped trial in a cell** — clear: zero dropped in either cell. Note the driver's
+   own `ESTABLISHED` verdict checks only `admitted >= 1` per cell, not the declared n = 7; the 7/7
+   here comes from the artifact, not from the driver's word.
+8. **At least 3 GiB free disk before launch** — clear: **5.54 GiB** at start, **4.21 GiB** at end,
+   against a declared 3 GiB floor the driver enforces by refusing to start.
+9. **Browser-profile cleanup verified and leaks recorded** — **half-fired: recording held,
+   verification did not.** All **14 of 14** trial artifacts record `profile_removed: false`, and the
+   end-of-run sweep removed **0 and found 16 resisted**. Free disk fell **1.42 GB across the run,
+   about 101 MB per trial**, so the last trials ran with materially less headroom than the first —
+   though never near the floor. This is the same unfixed root cause the second section records
+   ("Edge's child processes outlive the pid being polled"), and "cleanup verified" is simply false
+   here. **The A/B driver's own summary line — "every declared invalidator is clear" — does not
+   consider the leak at all and must not be quoted as though it did.**
 10. **Teardown settled before the final canary** — clear: every canary point settles 3 s and discards
-    a warm-up reading first.
-11. **No competing Cargo/rustc/linker process at phase start** — clear: checked and none running.
-12. **One re-run maximum per invalidated phase** — not needed; no phase was invalidated.
+    a warm-up reading first, and the profile sweep runs *before* the end canary so pressure the
+    instrument created cannot read as the machine drifting.
+11. **No competing Cargo/rustc/linker process at phase start** — **operator-asserted, not
+    instrumented.** It was checked, and nothing was running. Neither instrument implements the check
+    amendment A4 declared, and no artifact field records one, so a reader cannot verify it. An
+    instrument correction for the next pass.
+12. **One re-run maximum per invalidated phase** — not needed; no phase was invalidated. Note that
+    the per-trial filenames are fixed, so a prior attempt would have been overwritten without trace —
+    the same instrument shortcoming the second section already names.
 13. **(14) The artifact cannot prove which DuckDB connection mode actually ran** — clear, by observed
     producer facts, in both arms, as tabulated above.
 14. **(15) `t_open` semantics or timestamp placement changed** — clear: `frontends/canvas-probe` and
@@ -955,16 +1080,33 @@ Declared invalidators, each with what discharged it:
 
 ---
 
-## An instrument defect found while reading the artifact, and deliberately not fixed here
+## Three stale strings in the artifact, deliberately not fixed here
 
-`indexed-budgets.json` reports the index's declared memory bound as **5,073,144 B** under the label
-`"features x 48 B (id + bbox + one grid slot)"`. **The value is right and the label is stale.**
-`fba323e` changed the formula to `features × 40 B + cell_entries × 4 B`, and
-`100,000 × 40 + 268,286 × 4 = 5,073,144`; the old formula would give `100,000 × 48 = 4,800,000`.
+**None of them is a wrong number; all three are prose that stopped describing the code.** They are
+recorded rather than edited because editing a harness after its results have been seen is a
+post-result protocol change, and a stale description is worth less than that discipline. All three
+are corrected in a later cut.
 
-**It is not fixed in this pass on purpose.** Editing the harness after its results have been seen is
-a post-result protocol change, and a stale description is worth less than that discipline. The
-correct expression is stated here; the label is corrected in a later cut.
+**1. The index memory expression.** `indexed-budgets.json` reports the bound as **5,073,144 B** under
+the label `"features x 48 B (id + bbox + one grid slot)"`. **The value is right and the label is
+stale.** `fba323e` changed the formula to `features × 40 B + cell_entries × 4 B`, so
+`100,000 × 40 + 268,286 × 4 = 5,073,144`, where **268,286 is the bucket-entry count** — a figure the
+artifact never prints, and which has to appear somewhere for the expression to be checkable at all.
+The old formula would give `100,000 × 48 = 4,800,000`.
+
+**When this figure is read beside the second section's 4,800,000, it is a formula correction, not
+5.7 % of memory growth** — `fba323e` stopped ignoring bucket entries and understating multi-cell
+features. And the bound is *declared*, not observed: nothing in this pass measured the index's actual
+heap occupancy.
+
+**2. `cancellation.index_in_path`** still reads *"yes for the two stream cases: they run the
+quarter-extent viewport against a built index"*. **After piece 1 that cannot be true**, and the same
+artifact contradicts it: `selectivity.indexed[1].filter_plan` reads `ScanOnly`. The harness contains
+no reference to the experimental seam, so those streams went through the product planner. The correct
+statement is that the cancellation stream cases ran **`ScanOnly` on a dataset with a built-but-unused
+index in the process cache**.
+
+**3. `trials_where_the_scan_completed_before_the_cancel: 0`** — wrong, and corrected above.
 
 ### And it independently corroborates the second section's contamination finding
 
@@ -988,7 +1130,11 @@ committed. The two agree, and neither was constructed to.
 | **Reuse *across streams*, in the browser** | Structurally absent from this cell: one host per trial, one stream per page load. Established in process by `engine/tests/connection_reuse.rs`; by **no** number above |
 | **A decomposition of S2** | The −18.4 ms p50 is the effect of removing connection creation and configuration from S2. It is **not** a measurement of what fraction of S2 those were: S2 still contains socket acquisition, the handshake, SQL construction and producer accept, and nothing here divides it |
 | **Why S3 rose 9.6 ms** | Unexplained. Reported anyway |
-| **Anything about the p95 beyond the number itself** | At n = 7 the p95 *is* the maximum sample. One reuse-on trial stalled across every segment; the p95 carries it, and the cell was not re-run to remove it |
+| **Anything about the p95 beyond the number itself** | At n = 7 the p95 *is* the maximum sample. One reuse-on trial stalled across every segment; the p95 carries it, and the cell was not re-run to remove it. What excluding it would manufacture is worth stating: at n = 6 reuse-on's p95 becomes 59.1 ms and the **+101.7 ms p95 delta flips to −23.5 ms** — a sign change conjured out of a rule invented after seeing which sample it removes |
+| **Time to first bytes** | `S2 + S3` moved −10.9 ms p50 with no rank separation. **No difference in first bytes is established**, and the −18.4 ms may not be restated as one |
+| **That removing the index made anything faster** | Structural only. The two selectivity halves agree within the drift envelope; the index's cost is not re-measured, and the second section's regression figures are another session and another tree |
+| **Any browser-side memory or VRAM figure** | The A/B driver runs no memory sampler. **Absent, not zero** |
+| **Anything about concurrency or supersession on the browser path** | One solo stream per page load; `MAX_CONCURRENT_STREAMS = 4` is not exercised in this cell at all |
 | **The supersession path under reuse** | A cancelled stream forfeits its connection by design, so it degrades to fresh-connection behaviour. Unmeasured here. Raw material for the reserved **ADR-014**, and citable as evidence for nothing else |
 | **The engine/binding admission race** | On a cancel, the binding's admission permit is released before the engine's lease, so at the concurrency ceiling a cancel-and-immediately-re-request can be admitted by one and refused by the other. A **code fact found in review**; no measured number is offered for it, and nothing in this repository has met it |
 | **Index v2** | **Neither built nor measured.** No row-group summaries, no sidecars, no partition pruning, no spatial clustering, no new structure, no new planner heuristic. Its gate stands as written: on one pinned binary in one admissible session it must beat `ScanOnly` at quarter-extent time to first batch while returning exactly the same rows and payload |
@@ -1035,8 +1181,10 @@ node kernel/scripts/run-connection-ab.mjs \
 node kernel/scripts/pin-tree.mjs --compare target/slice-evidence/connection-ab/tree-pin-before.json
 ```
 
-Both harnesses refuse to run on a debug build, and both drivers exit non-zero when a declared
-invalidator fires.
+The **in-process harness** refuses to run on a debug build and records `debug_assertions` in its own
+artifact; **`slice-host` has no such guard**, so the browser cell's release status rests on the build
+command, the path and the pinned hash. Both drivers exit non-zero when a declared invalidator fires —
+with the exception recorded above, that the A/B driver's verdict does not consider the profile leak.
 
 ### Raw artifacts (`target/slice-evidence/`, gitignored)
 
