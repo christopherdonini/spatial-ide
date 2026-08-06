@@ -657,8 +657,9 @@ interior ring reads as a hole in both regardless of winding, which the engine do
 
 ## Corrigenda
 
-*Appended, not merged. **Everything above this heading is the document as accepted on 2026-08-06,
-byte for byte** — no sentence is altered, not even the Status line one of these corrigenda corrects.
+*Appended, not merged. **Everything above this heading is the document as accepted on 2026-08-06** —
+not one sentence is altered, not even the Status line one of these corrigenda corrects, and the only
+character added above is the blank line separating the body from this heading.
 An earlier draft of this change added a pointer to the Status block on the reasoning that an
 insertion "alters no sentence"; that distinction is not one `docs/02`'s "immutable once accepted" or
 CLAUDE.md's "append amendments, never rewrite" makes, and the immediately preceding commit set the
