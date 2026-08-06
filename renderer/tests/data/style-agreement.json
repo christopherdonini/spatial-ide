@@ -1,0 +1,39 @@
+{
+  "note": "Shared style-resolution vector. Read by renderer/tests/style_agreement.rs (Rust) and renderer/bundle-viewer/scripts/style-agreement.test.mjs (TypeScript). Neither implementation generates it from its own output.",
+  "schema": [
+    {"name": "id", "type": "uint64"},
+    {"name": "zone", "type": "utf8"},
+    {"name": "area", "type": "float64"}
+  ],
+  "published": ["zone", "area"],
+  "style": {
+    "style_version": 1,
+    "layer": {
+      "geometry": "polygon",
+      "fill_color": {
+        "match": {
+          "column": "zone",
+          "cases": [
+            {"when": "residential", "then": "#aa3333"},
+            {"when": "industrial", "then": "#333388"}
+          ],
+          "on_null": "#888888",
+          "on_unmatched": "#cccccc"
+        }
+      },
+      "fill_opacity": {"literal": 0.8},
+      "outline_color": {"literal": "#202020"},
+      "outline_width": {"literal": 1.0}
+    }
+  },
+  "expected_canonical_json": "{\"style_version\":1,\"layer\":{\"geometry\":\"polygon\",\"fill_color\":{\"match\":{\"column\":\"zone\",\"cases\":[{\"when\":\"residential\",\"then\":\"#aa3333\"},{\"when\":\"industrial\",\"then\":\"#333388\"}],\"on_null\":\"#888888\",\"on_unmatched\":\"#cccccc\"}},\"fill_opacity\":{\"literal\":0.8},\"outline_color\":{\"literal\":\"#202020\"},\"outline_width\":{\"literal\":1.0}}}",
+  "expected_style_hash": "sha256:eea4baa331b073c9a7d1af5d05d9290006af6c21081e1f8e861c8d4cd218fb11",
+  "expected_legend_rows": 4,
+  "probes": [
+    {"key": "residential",  "fill_color": "#aa3333", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0},
+    {"key": "industrial",   "fill_color": "#333388", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0},
+    {"key": "agricultural", "fill_color": "#cccccc", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0},
+    {"key": "civic",        "fill_color": "#cccccc", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0},
+    {"key": null,           "fill_color": "#888888", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0}
+  ]
+}

@@ -1599,6 +1599,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spatial-renderer"
+version = "0.0.0"
+dependencies = [
+ "arrow",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "strum"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

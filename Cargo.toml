@@ -12,6 +12,7 @@ resolver = "2"
 members = [
     "engine",
     "protocol/data-plane",
+    "renderer",
     "kernel",
 ]
 exclude = [
