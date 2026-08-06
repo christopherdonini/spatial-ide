@@ -51,3 +51,17 @@ Evidence (`spikes/adr-003-crs-rendering/README.md`; Intel UHD 630 reference prof
 - CI (macOS + Linux) covers: builds and tests, serialization and exact-ID behaviour, CRS/local-frame calculations, editing and cancellation semantics, report-schema validation.
 - CI explicitly does **not** validate: native WebView integration, frame pacing, GPU performance, picking latency, driver behaviour.
 - **Hardware validation on macOS/WKWebView and Linux/WebKitGTK are follow-up gates, required before claiming production support on those platforms** (tracked in 07). Until then, macOS/Linux acceptance is at architecture level only.
+
+## Amendment (2026-08-06) — the projected publishing canvas
+
+*Approved by the human on 2026-08-06 after a correction pass; drafted and argued in `PROPOSED-amendment-to-ADR-003-projected-canvas-publishing.md`, retained as the decision record. Evidence scope of the cut that motivated it: Windows 10 + headless Chrome 151, functional correctness only — no measurement.*
+
+> **A third canvas is named: the *projected publishing canvas*.** It renders a published static bundle **in the bundle's source CRS, with no reprojection**. It is **not** the deck.gl *projected working canvas* and must not be conflated with it: the working canvas is an interactive editing surface inside the application, and this is a self-contained viewer shipped inside a distributed artifact. They share a coordinate discipline — ADR-010 rule 3's offset-relative narrowing — and nothing else: not a renderer, not a dependency, not a lifecycle, not a platform commitment. **MapLibre remains the *web publishing canvas*** for sources that are web-ready, and this amendment neither replaces it nor changes ADR-003's dual-canvas decision for the working canvas.
+>
+> **Which canvas publishes a given source is an explicit, declared decision — never inferred from a CRS identifier string.** Selection is made against a **declared supported-CRS contract**: an enumerated set of CRS the web publishing canvas is known to render correctly, together with a **definitional-equivalence check** against that set. The binding authority is `docs/05` (CRS identity by comparing normalized definitions, never by name-string comparison), carried into code by ADR-015 §7's closing clause — a matching identifier licenses no later code to assume two definitions agree. Until the engine can perform the equivalence check, **the set of sources routed to the web publishing canvas is empty by construction**, which is the only honest way to have an unimplemented branch.
+>
+> **What v1 actually does: every published bundle uses the projected source-CRS viewer, always. The MapLibre branch is unimplemented.** There is no selection code, no supported-CRS set, and no equivalence check in the product; this amendment describes the architecture those must fit into when they are written.
+>
+> **Publish-time reprojection becomes an explicit, recorded operation** when the engine gains transforms (`docs/05`). Until then a bundle records `transform: none — rendered in source CRS` as a **fact**, not as a placeholder for a transform that was skipped.
+>
+> **The consequence, stated rather than apologised for: such a bundle has no basemap.** That is not a missing feature; it is what "no reprojection" means when basemap tiles are Web Mercator.

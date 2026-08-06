@@ -27,7 +27,8 @@ The style DSL (03) compiles to renderer state. Deterministic: same style + same 
 **Dual canvas** behind one renderer interface (ADR-003):
 
 - **Projected 2D canvas** — the working canvas: current project CRS, Cartesian/projected coordinates, offset-relative rendering for float32 precision at national-grid magnitudes. **deck.gl custom views/layers**, accepted on the concluded spike's evidence; the purpose-built WebGPU fallback was not triggered.
-- **Web publishing canvas** — MapLibre: Web Mercator/globe, basemaps, PMTiles/vector tiles, published bundles (ADR-008).
+- **Web publishing canvas** — MapLibre: Web Mercator/globe, basemaps, PMTiles/vector tiles, published bundles from web-ready sources (ADR-008).
+- **Projected publishing canvas** (ADR-003 amendment, 2026-08-06) — a published bundle whose source CRS is not web-ready renders in its source CRS in a self-contained viewer, no basemap. Canvas selection is explicit, against a declared supported-CRS contract with definitional equivalence — never a CRS identifier string. v1 always uses this canvas; the MapLibre branch is unimplemented.
 
 **Acceptance gate:** interactively edit a large EPSG:2056 dataset without permanently converting it to EPSG:3857, at centimetre-level picking accuracy, at budget, on all three system webviews. **Met on Windows/WebView2. Not met on macOS/WKWebView or Linux/WebKitGTK** — every measured number in the spike is Windows/ANGLE-D3D11 evidence and does not transfer by assumption, and CI on those platforms covers platform-independent logic only. The renderer choice therefore remains *provisional on macOS and Linux* until their hardware validation gates close (07).
 

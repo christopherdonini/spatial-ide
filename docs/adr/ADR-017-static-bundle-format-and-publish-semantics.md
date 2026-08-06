@@ -1,8 +1,10 @@
 # ADR-017 — Static Bundle Format and Publish Semantics
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. The publish
-operation implements this format today because a bundle that is written must have *some* shape, and
-writing one down is the only option that lets a third party read it.
+**Status:** Accepted — 2026-08-06, after the reader-conformance correction pass. Architect-blockable.
+**Acceptance condition attached by the human:** before publish is exposed through SKP, any shipped
+CLI/UI, MCP, plugin, notebook or AI surface — and **no later than Prototype exit** — the kernel must
+enforce a **scoped publish grant, explicit approval, and a redacted audit record** (the §15/§18
+obligations). Until then `publish-bundle` remains developer/test tooling only.
 **Related:** ADR-008 (static publishing first — Accepted; this is the format that clause names);
 ADR-005 (ResourceRef, reproducibility grades — Accepted); ADR-006 (operation classes — Accepted);
 ADR-010 rules 1, 2, 5, 6, 7 (Accepted, architect-blockable); ADR-015 (CRS admission — Accepted);

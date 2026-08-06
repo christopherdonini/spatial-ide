@@ -1,8 +1,8 @@
 # Proposed amendment to ADR-003 — the publishing canvas for non-web-ready CRS
 
-**Status:** **Proposal. NOT APPLIED.** ADR-003 is Accepted and its text is untouched; this document
-is a drafted amendment awaiting the human's approval, and until then **projected-canvas publishing is
-provisional**. Nothing in this repository may cite it as settled.
+**Status:** **Applied — 2026-08-06.** The human approved this amendment after the correction pass;
+its text is appended to ADR-003. This file is retained as the decision record — the argument lives
+here, the decision lives there.
 **Would amend:** ADR-003 (renderer + arbitrary-CRS strategy — Accepted 2026-08-03 for
 Windows/WebView2), by **appended amendment**, never by rewriting.
 **Related:** ADR-008 (static publishing first), ADR-017 (static bundle format — Proposed),

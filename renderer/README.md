@@ -192,7 +192,7 @@ zero-external-request guarantee forbids and which `docs/09` would make a capabil
 **visible on the page, and persisted in-page for the session only.** That is a declared limit of the
 artifact, not an omission.
 
-## This is a third canvas — the *projected publishing canvas* — and it is provisional
+## This is a third canvas — the *projected publishing canvas* (ADR-003 amendment, 2026-08-06)
 
 ADR-003 names two: a deck.gl **projected working canvas** and a MapLibre **web publishing canvas**.
 This is neither, and it has a name of its own so the distinction survives being repeated: the
@@ -211,9 +211,9 @@ normalized definitions and never by name comparison, and ADR-015 §7's closing c
 later code to assume a matching identifier means two definitions agree. A mislabelled source routed
 to a Web Mercator canvas would be drawn in the wrong place, silently.
 
-Its existence rests on that proposal, which is **unapplied and awaits the human's approval**. Until
-then this path is provisional, and nothing here is evidence for or against deck.gl — this is a 2D
-canvas, and it measures nothing.
+That proposal was **approved and applied on 2026-08-06** (ADR-003, appended amendment) — this path
+is architecture. Nothing here is evidence for or against deck.gl — this is a 2D canvas, and it
+measures nothing.
 
 ## Running
 
