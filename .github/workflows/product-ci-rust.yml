@@ -21,33 +21,39 @@ name: Product CI — Rust workspace
 #     that drifts between and within sessions, which the bake-off README §21/§22 records as
 #     asymmetric and uncancellable by ratio. A number taken here would not be a smaller number, it
 #     would not be a measurement. Nothing in this workflow may fill a results table.
-#   - **Nothing about macOS, and nothing about Windows.** It runs on Linux only, which is *not* the
-#     reference profile — see the runner note below for why, and for what that leaves uncovered.
+#   - **Nothing about macOS or Linux.** It runs on the Windows reference profile only — see the
+#     runner note below.
 #   - **Nothing about the ADR-003 hardware-validation gate** (`docs/07`), which is about native
 #     WebView integration, frame pacing, GPU behaviour and picking latency on real hardware. No
 #     amount of green here advances it.
 #
-# ## Runner choice — what was wanted, what was observed, and what this therefore does
+# ## Runner choice
 #
-# **`windows-latest` was the first choice and is not what runs here.** The reference profile in
-# `CLAUDE.md` is Windows 10 / MSVC / WebView2 and every claim this repository makes is scoped to it,
-# so the reference platform is the one a regression suite most wants to cover.
+# **`windows-latest`.** The reference profile in `CLAUDE.md` is Windows 10 / MSVC / WebView2, every
+# claim this repository makes is scoped to it, and it is the platform the workspace suite is actually
+# known to pass on. Running the only job somewhere else would mean CI covering a platform the
+# constitution makes no claims for while leaving the one it does claim untested, and would do it on
+# a platform nothing has yet verified the suite on.
 #
-# **What was observed, stated as an observation rather than as a diagnosis.** On 2026-08-06 a
-# `windows-latest` job on this repository (run 31125488081) sat **queued for 15 minutes without ever
-# being assigned a runner** and was then cancelled, having executed no step. A `ubuntu-latest` job on
-# the same repository minutes earlier reached `in_progress` within about two minutes. **Why** the
-# Windows job was never scheduled is *not* established here — plan entitlement, a spending limit and
-# a transient capacity incident all fit one data point, and this file does not claim to know which.
+# Adding `ubuntu-latest` to the matrix below is a line, and is worth doing: it would catch
+# path-separator and case-sensitivity assumptions, which `publish/mod.rs`'s `replace('\\', "/")` and
+# `viewer_assets.rs`'s backslash rejection genuinely have surface for. It is not added here because
+# **nothing has yet established that the suite passes on Linux** — see the note below on why that
+# could not be settled — and a matrix entry that has never run is a red build waiting to happen
+# rather than coverage.
 #
-# **The consequence, which is a real gap and is not being papered over.** The suite runs on
-# `ubuntu-latest`, so **CI does not cover the reference profile.** Windows-shaped behaviour is
-# therefore exercised only by a developer running the suite locally: `publish/mod.rs`'s
-# `replace('\\', "/")` on a staged path, `viewer_assets.rs`'s backslash rejection, and every
-# `std::path` separator assumption underneath them. A green run here is evidence about the *logic*,
-# on a platform this constitution does not make claims for. Restoring Windows is a one-line change to
-# the matrix below and should be attempted again — the observation above is a fact about one
-# afternoon, not a permanent property.
+# > **Unverified by CI as of 2026-08-06, and the reason is environmental.** Neither of this
+# > workflow's runs on that date was ever assigned a GitHub-hosted runner. A `windows-latest` job
+# > (run 31125488081) sat queued 15 minutes and was cancelled having executed no step; an
+# > `ubuntu-latest` job (run 31127603650) and the viewer workflow's `ubuntu-latest` job
+# > (run 31127603658) were still `runner=unassigned` ten minutes in. **The constraint is not
+# > platform-specific** — an earlier `ubuntu-latest` dispatch of the ADR-003 spike workflow on this
+# > same repository did start within about two minutes, so something changed during the session.
+# > **Why is not established**: plan entitlement, an Actions spending limit and a capacity incident
+# > all fit, and this file does not claim to know which. What *is* established is local: the suite
+# > below passes on the reference profile — 261 passed, 0 failed, 2 ignored (the two `docs/08`
+# > harnesses). **Until a run here goes green, this workflow is configuration that has not been
+# > exercised end to end, and it should not be treated as a gate.**
 #
 # ## The cost being managed
 #
@@ -103,10 +109,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # One entry today, and **not the one this project would choose** — see the runner note
-        # above. It stays a matrix rather than a bare `runs-on` precisely because restoring
-        # `windows-latest` should be a line here and not a restructure.
-        os: [ubuntu-latest]
+        # One entry today — the reference profile. It stays a matrix rather than a bare `runs-on`
+        # precisely because adding `ubuntu-latest` should be a line here and not a restructure; see
+        # the runner note above for what has to be true first.
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
     # The vendored DuckDB build dominates a cold run. Bounded so a hung job is killed rather than
     # burning the default six hours.
