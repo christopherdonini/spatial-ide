@@ -212,11 +212,17 @@ function renderProvenance(m: Manifest): void {
   const licenceState = String(m.license.state ?? 'unknown');
   const licenceName = typeof m.license.license === 'string' ? m.license.license : null;
   const attribution = typeof m.license.attribution === 'string' ? m.license.attribution : null;
+  // **An absent license name is rendered as an absence, not as a name.** This line used to print
+  // `(unnamed)`, which is the manifest's old `"(unnamed)"` placeholder relocated to the pixel layer:
+  // a bundle whose manifest correctly says "no license was named" would still show a parenthesized
+  // token in the position a license name occupies, and a reader could take it for one. The manifest
+  // carries `null` here (ADR-017 Corrigendum 1); the viewer says so in words.
+  const licenceLabel = licenceName ?? 'not named by the source';
   text(
     'license',
     licenceState === 'not-declared'
       ? 'license and attribution: unknown / not-declared'
-      : `license: ${licenceName ?? '(unnamed)'}${attribution ? ` · ${attribution}` : ''} (${licenceState})`,
+      : `license: ${licenceLabel}${attribution ? ` · ${attribution}` : ''} (${licenceState})`,
   );
 }
 

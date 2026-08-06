@@ -93,7 +93,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let raw = args.next().ok_or("--limit needs a value")?;
                 limit = Some(raw.parse().map_err(|_| format!("--limit `{raw}` is not a number"))?);
             }
-            "--license" => license = args.next(),
+            // **Non-empty, checked here.** `declared-by-operator` types `license` as a string and
+            // never `null` (ADR-017 §5, Corrigendum 1), and that is only true if an operator cannot
+            // declare an empty one: `--license ""` would otherwise put a blank where a claim
+            // belongs, in the state whose whole point is that somebody claimed something.
+            "--license" => {
+                let raw = args.next().ok_or("--license needs a value")?;
+                if raw.trim().is_empty() {
+                    return Err("--license needs a non-empty value; omit the flag to declare \
+                                nothing rather than declaring a blank"
+                        .into());
+                }
+                license = Some(raw);
+            }
             "--license-by" => license_by = args.next().unwrap_or(license_by),
             "--attribution" => attribution = args.next(),
             "--redistribution" => {
@@ -141,13 +153,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let viewer = ViewerAssets::from_dir(&viewer_dir)?;
 
     let query = match bbox {
-        // A viewport CRS is a caller assertion about the query (ADR-015 §7), so it names the
-        // dataset's own identifier rather than being assumed to agree with it.
-        Some(b) => ViewportQuery {
-            bbox: Some(b),
-            bbox_crs: Some(dataset.crs().identifier().to_string()),
-            limit,
-        },
+        // **`bbox_crs` is `None`, and that is the meaning `--bbox` has.** ADR-015 §7.3, in its own
+        // words: *"A caller may still send a viewport with **no** CRS, which declares it to be in
+        // the dataset's own."* That is exactly this CLI's case — an operator typing coordinates for
+        // a file they just named is stating them in that file's CRS, not asserting anything about
+        // it.
+        //
+        // Echoing `dataset.crs().identifier()` back was wrong twice. It manufactured a **caller
+        // assertion the caller never made**, out of the very value it would then be compared
+        // against — a comparison that cannot fail and therefore establishes nothing, while writing
+        // a claim into `operation.filter.bbox_crs` that no operator had made. And on a
+        // **definition-only** source every dataset shares the `(definition-only)` placeholder,
+        // which §7.3 refuses outright (`ViewportCrsUnidentifiable`), so the echo made `--bbox`
+        // unusable on that whole source kind for a reason no operator could read off the command
+        // line.
+        //
+        // **There is deliberately no `--bbox-crs` flag.** With no reprojection in this cut the only
+        // admissible value is the one string that matches, so the flag's whole reachable effect
+        // would be letting an operator opt into a refusal. When a caller genuinely needs to assert
+        // a viewport CRS, the assertion arrives through SKP.
+        Some(b) => ViewportQuery { bbox: Some(b), bbox_crs: None, limit },
         None => ViewportQuery { bbox: None, bbox_crs: None, limit },
     };
 

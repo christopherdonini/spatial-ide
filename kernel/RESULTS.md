@@ -1512,3 +1512,37 @@ and delivers nothing.
 | `renderer/bundle-viewer/scripts/serve-bundle.mjs` | a deliberately ordinary static file server, path-contained and loopback-only |
 | `renderer/bundle-viewer/scripts/boundaries.test.mjs` | scans the **built** bundle for absolute URLs and `crypto.subtle`, and `renderer/` for any reference to the probe |
 | `kernel/src/bundle/redaction.rs` | the `docs/09` scan, run over the emitted bundle rather than believed about it |
+
+## Post-run note — 2026-08-06 — the provisional canvas decision was resolved
+
+*Appended after the run. **Nothing above this heading is edited**: every number, every defect and
+every "not established" row is the record as the run left it, including the rows that describe the
+canvas decision as provisional. This note says what changed **afterwards**, and changes no evidence.*
+
+The row above reading *"The projected publishing canvas is provisional — pending the human's
+approval of the drafted, unapplied ADR-003 amendment proposal"* described the state at run time. The
+human approved the amendment on **2026-08-06** after a correction pass, and it is now appended to
+ADR-003 as *Amendment (2026-08-06) — the projected publishing canvas*; the proposal file is retained
+as the decision record rather than as pending work. **The projected publishing canvas is therefore
+decided, not provisional.** ADR-017 was accepted the same day, carrying the human's acceptance
+condition on the class-3 gate.
+
+**What that does and does not change about this section:**
+
+- **It changes no measurement, because this run produced none of the kind at issue.** The canvas
+  decision was always an architectural question; this section's own scope line says the run measures
+  nothing, and approving an amendment cannot retroactively make it evidence. Every "not established"
+  row still stands as written.
+- **The neighbouring rows are still true.** Canvas selection is still unimplemented and v1 still uses
+  the projected source-CRS viewer always, with the MapLibre branch absent — the amendment *decides*
+  that architecture rather than implementing it, and says so itself. ADR-008's two stated
+  Consequences are still both unmet, which ADR-008's own appended clarification (2026-08-06) now
+  records from its side.
+- **The class-3 approval gate is still owed and absent.** Nothing in the amendment or in ADR-017's
+  acceptance discharges it; ADR-017's acceptance condition sets its deadline and does not close it.
+- **The three `docs/07` gates above are still open.** The gate text for the transport bake-off and
+  server-side spatial indexing was corrected on 2026-08-06 — it had claimed producer-side
+  cancellation and indexing were wholly undesigned, when cancellation is implemented and asserted
+  end-to-end and an index exists but is deliberately disabled on this section's own measured finding.
+  **That is a correction to how the gate was described, not a gate closing**, and the finding it
+  rests on is the one recorded in this file's second section, unchanged.

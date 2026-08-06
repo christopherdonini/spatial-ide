@@ -322,12 +322,23 @@ function licenseBlock(v: unknown, at: string): Record<string, unknown> {
       break;
     case 'declared-by-source':
       exactKeys(l, at, MANIFEST_KEY_SETS.license_declared_by_source);
+      // **`license` may be `null` here and only here** (ADR-017 Corrigendum 1, amending §5/§6/§10).
+      // The three source metadata keys are independent, so a source may declare attribution and/or
+      // redistribution and name no license; `null` is that absence. It is unambiguous without a
+      // basis because the enclosing `state` already carries the claimant — "does not apply" is not
+      // an available reading inside a block that exists because the source declared something.
+      if (l.license !== null) str(l.license, `${at}.license`);
       break;
     case 'declared-by-operator':
       // `at` here is the instant the **operator made the declaration** — part of the claim, and a
       // semantic input to the manifest. It is not build-execution timing, which lives outside the
-      // hashed surface in `build-info.json`. See ADR-017 §10 and §12.
+      // determinism surface in `build-info.json`. See ADR-017 §10 and §12.
       exactKeys(l, at, MANIFEST_KEY_SETS.license_declared_by_operator);
+      // **A string, never `null`**, and the asymmetry with `declared-by-source` is the schema, not
+      // an oversight: an operator states a license or makes no declaration at all, so there is no
+      // state in which this member is absent. A reader that accepted `null` here would accept a
+      // manifest claiming an operator declared terms while naming none.
+      str(l.license, `${at}.license`);
       str(l.by, `${at}.by`);
       str(l.at, `${at}.at`);
       break;
@@ -335,7 +346,6 @@ function licenseBlock(v: unknown, at: string): Record<string, unknown> {
       fail('manifest-schema-invalid', `${at}.state "${state}" is not a state this version defines`);
   }
   if (state !== 'not-declared') {
-    str(l.license, `${at}.license`);
     if (l.attribution !== null) str(l.attribution, `${at}.attribution`);
     str(l.redistribution, `${at}.redistribution`);
   }

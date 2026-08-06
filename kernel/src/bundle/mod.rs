@@ -214,28 +214,58 @@ impl Redistribution {
 /// Absence is `not-declared` — the brief's own vocabulary — and **no attribution is invented to
 /// satisfy a checklist**. `docs/14` says published bundles *surface* license metadata "when known";
 /// it does not say refuse when absent.
+/// **The two declared states carry different member types, and that is the format's rule rather
+/// than an exception to it** (ADR-017 §5; Corrigendum 1). `by` and `at` already exist in one state
+/// only, and `viewer[]` omits `rows` outright rather than nulling it. So the `license` member is
+/// modelled per state instead of through one shared struct: `Option<String>` where a source may
+/// have named none, `String` where an operator must have.
+///
+/// Sharing one `LicenseTerms` across both would make `license: None` *representable* under
+/// `declared-by-operator`, and a writer could then emit a manifest every conforming reader refuses.
+/// A shape that cannot be built wrongly is worth more than a comment saying it will not be.
 #[derive(Clone, Debug, PartialEq)]
 pub enum License {
     NotDeclared,
     DeclaredBySource(LicenseTerms),
-    DeclaredByOperator { terms: LicenseTerms, by: String, at: String },
+    DeclaredByOperator {
+        /// **Never absent.** An operator states a license or makes no declaration at all.
+        license: String,
+        attribution: Option<String>,
+        redistribution: Redistribution,
+        by: String,
+        at: String,
+    },
 }
 
+/// The terms a **source** declares, carried verbatim.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LicenseTerms {
-    /// Carried **verbatim**. No SPDX parsing, no interpretation of license text — that would be
-    /// this module deciding a legal question from a string.
-    pub license: String,
+    /// Carried **verbatim**, and `None` when there is nothing to carry.
+    ///
+    /// No SPDX parsing, no interpretation of license text — that would be this module deciding a
+    /// legal question from a string. **And no placeholder**: the three source metadata keys are
+    /// independent, so a source may declare attribution and/or redistribution while naming no
+    /// license, and this is `None` in exactly that case (ADR-017 Corrigendum 1, amending §5/§6/§10).
+    ///
+    /// It was once `String` with a `"(unnamed)"` fallback — text no source wrote, sitting in the one
+    /// member whose entire contract is verbatim carriage, and *plausible-looking* enough that a
+    /// consumer could read it as a license name. `null` is the absence, not a value.
+    pub license: Option<String>,
     pub attribution: Option<String>,
     pub redistribution: Redistribution,
 }
 
 impl License {
-    pub fn terms(&self) -> Option<&LicenseTerms> {
+    /// The redistribution term, whoever declared it. `None` when nothing was declared at all.
+    ///
+    /// Replaces an earlier `terms()` that handed back a shared `LicenseTerms` for both declared
+    /// states; the two states no longer share one, and the only thing every caller wanted from it
+    /// was this.
+    pub fn redistribution(&self) -> Option<Redistribution> {
         match self {
             Self::NotDeclared => None,
-            Self::DeclaredBySource(t) => Some(t),
-            Self::DeclaredByOperator { terms, .. } => Some(terms),
+            Self::DeclaredBySource(t) => Some(t.redistribution),
+            Self::DeclaredByOperator { redistribution, .. } => Some(*redistribution),
         }
     }
 
@@ -253,7 +283,18 @@ impl License {
             ]),
             Self::DeclaredBySource(t) => Json::obj([
                 ("state", Json::str("declared-by-source")),
-                ("license", Json::str(t.license.clone())),
+                // **`null`, in the same shape as `attribution` two members down**, and for the same
+                // reason ADR-017 §6 gives: the enclosing `state` already carries the claimant, so
+                // "does not apply" is not an available reading and the absence needs no basis. A
+                // `{state, basis}` named-unknown here would nest a second state inside a block that
+                // already has one, and §6 scopes that shape to ResourceRef members.
+                (
+                    "license",
+                    match &t.license {
+                        Some(l) => Json::str(l.clone()),
+                        None => Json::Null,
+                    },
+                ),
                 (
                     "attribution",
                     match &t.attribution {
@@ -263,20 +304,25 @@ impl License {
                 ),
                 ("redistribution", Json::str(t.redistribution.as_str())),
             ]),
-            Self::DeclaredByOperator { terms, by, at } => Json::obj([
-                ("state", Json::str("declared-by-operator")),
-                ("license", Json::str(terms.license.clone())),
-                (
-                    "attribution",
-                    match &terms.attribution {
-                        Some(a) => Json::str(a.clone()),
-                        None => Json::Null,
-                    },
-                ),
-                ("redistribution", Json::str(terms.redistribution.as_str())),
-                ("by", Json::str(by.clone())),
-                ("at", Json::str(at.clone())),
-            ]),
+            // **`declared-by-operator` never nulls `license`** — and this arm cannot, because the
+            // variant holds a `String`. Declaring a member nullable that the writer is incapable of
+            // nulling would be a schema saying something untrue about the format.
+            Self::DeclaredByOperator { license, attribution, redistribution, by, at } => {
+                Json::obj([
+                    ("state", Json::str("declared-by-operator")),
+                    ("license", Json::str(license.clone())),
+                    (
+                        "attribution",
+                        match attribution {
+                            Some(a) => Json::str(a.clone()),
+                            None => Json::Null,
+                        },
+                    ),
+                    ("redistribution", Json::str(redistribution.as_str())),
+                    ("by", Json::str(by.clone())),
+                    ("at", Json::str(at.clone())),
+                ])
+            }
         }
     }
 }
@@ -879,6 +925,63 @@ mod tests {
         // Nothing that looks like a substituted default.
         assert!(!s.to_lowercase().contains("cc-by"));
         assert!(!s.to_lowercase().contains("public domain"));
+    }
+
+    /// A source that declared license-adjacent metadata and named **no** license serializes
+    /// `"license":null` — the absence, not a placeholder (ADR-017 Corrigendum 1).
+    ///
+    /// The shape it must match is `attribution`'s, two members along, which the same test checks so
+    /// the two cannot drift into different spellings of "absent".
+    #[test]
+    fn a_source_declared_license_with_no_name_is_null_and_never_a_placeholder() {
+        let s = canonical::to_canonical_string(
+            &License::DeclaredBySource(LicenseTerms {
+                license: None,
+                attribution: Some("© Example Cadastre".into()),
+                redistribution: Redistribution::Permitted,
+            })
+            .to_json(),
+        )
+        .unwrap();
+        assert!(s.contains(r#""state":"declared-by-source""#), "{s}");
+        assert!(s.contains(r#""license":null"#), "{s}");
+        // Not a placeholder, an empty string, or a word a consumer could read as a license name.
+        assert!(!s.contains("unnamed"), "{s}");
+        assert!(!s.contains(r#""license":"""#), "{s}");
+        assert!(!s.contains(r#""license":"unknown""#), "{s}");
+
+        // The other absence in the same block uses the identical spelling.
+        let both_absent = canonical::to_canonical_string(
+            &License::DeclaredBySource(LicenseTerms {
+                license: None,
+                attribution: None,
+                redistribution: Redistribution::Unknown,
+            })
+            .to_json(),
+        )
+        .unwrap();
+        assert!(both_absent.contains(r#""license":null,"attribution":null"#), "{both_absent}");
+    }
+
+    /// **An operator's license cannot be null, and the type is what guarantees it.**
+    ///
+    /// `DeclaredByOperator` holds a `String`, so there is no way to construct the manifest ADR-017
+    /// §5 forbids. This test records the guarantee; the compiler enforces it.
+    #[test]
+    fn an_operator_declared_license_is_always_a_string() {
+        let s = canonical::to_canonical_string(
+            &License::DeclaredByOperator {
+                license: "CC-BY-4.0".into(),
+                attribution: None,
+                redistribution: Redistribution::Permitted,
+                by: "operator".into(),
+                at: "2026-08-06T09:00:00Z".into(),
+            }
+            .to_json(),
+        )
+        .unwrap();
+        assert!(s.contains(r#""license":"CC-BY-4.0""#), "{s}");
+        assert!(!s.contains(r#""license":null"#), "{s}");
     }
 
     fn sample_operation() -> Operation {

@@ -1,0 +1,115 @@
+name: Product CI — Rust workspace
+
+# The **product** modules' regression suite: kernel/, engine/, renderer/, protocol/data-plane.
+#
+# ## Why this file exists
+#
+# The two adr-003-spike-ci-* workflows are path-filtered to `spikes/adr-003-crs-rendering/**` and
+# validate the concluded spike. Nothing watched the product modules, so every commit that built the
+# engine, the publish path and the bundle format landed on `main` **without ever having been built
+# or tested by CI** — including b17deca. This closes that, and nothing more.
+#
+# ## What a green run here means, stated narrowly
+#
+# It means: the workspace compiles on the reference profile and its ordinary test suite passes.
+#
+# It does **not** mean any of the following, and must never be cited for them:
+#
+#   - **No performance claim.** The `docs/08` budget harnesses (`kernel/tests/slice_budgets.rs`,
+#     `kernel/tests/indexed_budgets.rs`) are `#[ignore]`d and are NOT run here. They take minutes,
+#     refuse to run on a debug build, and write evidence artifacts; a shared CI runner is a machine
+#     that drifts between and within sessions, which the bake-off README §21/§22 records as
+#     asymmetric and uncancellable by ratio. A number taken here would not be a smaller number, it
+#     would not be a measurement. Nothing in this workflow may fill a results table.
+#   - **Nothing about macOS or Linux.** This runs on Windows only — see the runner note below.
+#   - **Nothing about the ADR-003 hardware-validation gate** (`docs/07`), which is about native
+#     WebView integration, frame pacing, GPU behaviour and picking latency on real hardware. No
+#     amount of green here advances it.
+#
+# ## Runner choice, and the cost being managed
+#
+# **windows-latest, and only that.** `engine/` builds DuckDB from vendored C++ (`bundled`), and
+# `Cargo.toml` compiles `libduckdb-sys` at `opt-level = 2` even in the dev profile — deliberately,
+# because it buys the time back on every query in every test. That makes the first build of any
+# fresh runner the dominant cost of this workflow, and it is paid per platform.
+#
+# The reference profile in `CLAUDE.md` is Windows 10 / MSVC / WebView2, and every claim this
+# repository makes is scoped to it. Spending the vendored-DuckDB build twice to also cover a
+# platform the constitution explicitly does not claim is the wrong trade for a first cut. Adding
+# `ubuntu-latest` to the matrix below is a one-line change and is worth making the moment a
+# platform-independence claim is actually owed — it would catch path-separator and case-sensitivity
+# assumptions, which `kernel/src/publish/viewer_assets.rs` genuinely has surface for. It is not owed
+# yet, and pretending otherwise by running it would invite a green Linux job to be read as evidence
+# for a gate it says nothing about.
+#
+# The build cost is managed by caching rather than by dropping coverage: `Swatinem/rust-cache`
+# keyed on the lockfile, so the vendored C++ tree is rebuilt only when a dependency actually moves.
+
+on:
+  push:
+    paths:
+      - "kernel/**"
+      - "engine/**"
+      - "renderer/**"
+      - "protocol/data-plane/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/product-ci-rust.yml"
+  pull_request:
+    paths:
+      - "kernel/**"
+      - "engine/**"
+      - "renderer/**"
+      - "protocol/data-plane/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/product-ci-rust.yml"
+  workflow_dispatch:
+
+# A superseded push is cancelled rather than left to finish a vendored C++ build nobody is waiting
+# for. `main` is exempt: its runs are the ones a later bisect reads.
+concurrency:
+  group: product-ci-rust-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  workspace:
+    name: cargo test --workspace
+    strategy:
+      fail-fast: false
+      matrix:
+        # One entry today. It is a matrix rather than a bare `runs-on` so adding a platform is a
+        # line here and not a restructure — see the runner note above for when that is owed.
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    # The vendored DuckDB build dominates a cold run. Bounded so a hung job is killed rather than
+    # burning the default six hours.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Keyed on the lockfile: the vendored C++ tree is rebuilt only when a dependency moves, which
+      # is the whole cost this workflow has to manage.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-workspace
+
+      # Split from the test step so a compile failure is reported as one, rather than as a test
+      # run that never started. `--tests` builds the integration targets too, including the
+      # `#[ignore]`d harnesses — they must keep *compiling* even though they never run here, or
+      # they would rot silently between measurement passes.
+      - name: Build the workspace and every test target
+        run: cargo build --workspace --tests --locked
+
+      # **No `--ignored`, deliberately.** `cargo test` skips `#[ignore]`d tests by default, which is
+      # exactly what excludes the two `docs/08` measurement harnesses. The count appears in this
+      # step's own output as "N ignored", so a reader can see they were skipped rather than absent.
+      #
+      # `protocol/transport-bakeoff` is not a workspace member and is therefore not built here. That
+      # is deliberate and is stated in `Cargo.toml`: it is pinned decision evidence for ADR-012, and
+      # folding it into the workspace would let a dependency bump silently change a measured
+      # artifact.
+      - name: Run the ordinary suite
+        run: cargo test --workspace --locked

@@ -90,6 +90,13 @@ pub enum LicenseMode {
     NotDeclared,
     /// `license`, `attribution` and `redistribution: permitted`.
     DeclaredBySource,
+    /// **`attribution` and `redistribution`, and no `license` key at all.**
+    ///
+    /// The three keys are independent, so this is an ordinary real-world shape rather than a corner
+    /// — and it is the one the publisher used to answer with an invented `"(unnamed)"` license name.
+    /// ADR-017 Corrigendum 1 makes it `license: null`, and this mode is how that arm is reached
+    /// through a real footer instead of a hand-built `SourceLicense`.
+    AttributionWithoutLicenseName,
     /// `redistribution: forbidden`, which publishing must refuse: a static bundle is a
     /// redistributed copy.
     ForbidsRedistribution,
@@ -314,6 +321,11 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
         LicenseMode::NotDeclared => {}
         LicenseMode::DeclaredBySource => {
             kv.push(KeyValue::new("license".to_string(), "CC-BY-4.0".to_string()));
+            kv.push(KeyValue::new("attribution".to_string(), "(c) Example Cadastre".to_string()));
+            kv.push(KeyValue::new("redistribution".to_string(), "permitted".to_string()));
+        }
+        LicenseMode::AttributionWithoutLicenseName => {
+            // No `license` key. The publisher must carry the absence rather than name it.
             kv.push(KeyValue::new("attribution".to_string(), "(c) Example Cadastre".to_string()));
             kv.push(KeyValue::new("redistribution".to_string(), "permitted".to_string()));
         }

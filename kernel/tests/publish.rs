@@ -767,6 +767,49 @@ fn the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares() {
     // Carried verbatim: the engine reads a declared set of keys and interprets no license text.
     assert_eq!(l["license"]["license"], "CC-BY-4.0");
     assert_eq!(l["license"]["redistribution"], "permitted");
+
+    // **A source that declares attribution and names no license.**
+    //
+    // The three footer keys are independent, so this is an ordinary shape rather than a corner, and
+    // the same member set applies to it — only the *value* differs. It used to publish the invented
+    // string `"(unnamed)"`; ADR-017 Corrigendum 1 makes it `null`, the absence itself.
+    let unnamed_src = d.join("attribution-only.parquet");
+    write_geoparquet(
+        &unnamed_src,
+        &FixtureSpec {
+            features: 200,
+            attributes: AttributeMode::CategoricalZone,
+            license: LicenseMode::AttributionWithoutLicenseName,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let unnamed_ds = pinned(&unnamed_src);
+    let unnamed = d.join("bundle-attribution-only");
+    publish(&request(&unnamed_ds, &v, unnamed.clone()), &CancelToken::new(), None).unwrap();
+    let u: serde_json::Value =
+        serde_json::from_slice(&read(&unnamed, bundle::MANIFEST_PATH)).unwrap();
+    assert_eq!(
+        got(&u["license"], "license"),
+        want("license_declared_by_source"),
+        "an unnamed source license changed the member set rather than only the value"
+    );
+    assert_eq!(u["license"]["state"], "declared-by-source");
+    assert_eq!(
+        u["license"]["license"],
+        serde_json::Value::Null,
+        "a placeholder was substituted for a license the source never named"
+    );
+    // The attribution that *was* declared survives — which is the whole reason this is a `null`
+    // rather than a refusal.
+    assert_eq!(u["license"]["attribution"], "(c) Example Cadastre");
+    assert_eq!(u["license"]["redistribution"], "permitted");
+    // …and nothing resembling a substituted name reached any byte of the manifest.
+    let unnamed_text = String::from_utf8(read(&unnamed, bundle::MANIFEST_PATH)).unwrap();
+    assert!(
+        !unnamed_text.contains("unnamed"),
+        "an invented license name reached the manifest"
+    );
 }
 
 /// A source whose own terms forbid redistribution is refused, because a static bundle **is** a

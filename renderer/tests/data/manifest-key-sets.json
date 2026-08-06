@@ -9,7 +9,15 @@
     "every real bundle becomes unreadable; editing the writer and its own table keeps the Rust suite",
     "green while the reader still refuses. Two tables guarantee only that neither side can move",
     "without its own test failing, which is not the same as the two agreeing. This file is where",
-    "they agree."
+    "they agree.",
+    "",
+    "SCOPE: key sets only. This artifact says which members an object has, never what type each",
+    "one holds, so two sets being identical here does NOT mean the members are identically typed.",
+    "The live case, ADR-017 Corrigendum 1 (2026-08-06): license_declared_by_source.license is",
+    "string-or-null -- a source may declare attribution and/or redistribution and name no license,",
+    "and null is that absence -- while license_declared_by_operator.license is a non-empty string,",
+    "because an operator states a license or makes no declaration at all. Neither set changed.",
+    "Per-member types live in the ADR and are enforced by each side's own reader/writer tests."
   ],
   "key_sets": {
     "$": [

@@ -369,7 +369,7 @@ test('the license block is checked against the member set its own state implies'
     redistribution: 'permitted',
     by: 'operator',
     // The instant the operator made the declaration — part of the claim, and a semantic input to
-    // the manifest. Not build-execution timing, which lives outside the hashed surface.
+    // the manifest. Not build-execution timing, which lives outside the determinism surface.
     at: '2026-08-06T09:00:00Z',
   };
   assert.doesNotThrow(() => parse(operator));
@@ -409,6 +409,76 @@ test('a source-declared license parses, not only an operator-declared one', () =
   const missing = validManifest();
   missing.license = { state: 'declared-by-source', license: 'CC-BY-4.0', redistribution: 'permitted' };
   assert.throws(() => parse(missing), /manifest-schema-invalid/, 'attribution may be null, not absent');
+});
+
+test('a source-declared license may name nothing, and only a source-declared one may', () => {
+  // **ADR-017 Corrigendum 1.** The three source metadata keys are independent, so a source can
+  // declare attribution and/or redistribution and name no license. `null` is that absence — the
+  // writer used to substitute `"(unnamed)"`, text no source wrote, in the one member whose contract
+  // is verbatim carriage.
+  const noName = validManifest();
+  noName.license = {
+    state: 'declared-by-source',
+    license: null,
+    attribution: '(c) Example Cadastre',
+    redistribution: 'permitted',
+  };
+  const parsed = parse(noName);
+  assert.equal(parsed.license.license, null);
+
+  // Both absences at once — the shape a source declaring only `redistribution` produces.
+  const neither = validManifest();
+  neither.license = {
+    state: 'declared-by-source',
+    license: null,
+    attribution: null,
+    redistribution: 'permitted',
+  };
+  assert.doesNotThrow(() => parse(neither));
+
+  // **The asymmetry is the schema, not an oversight.** An operator states a license or makes no
+  // declaration at all, so a null here would be a manifest claiming somebody declared terms while
+  // naming none. A reader that accepted it would make §5's per-state typing decoration.
+  const operatorNull = validManifest();
+  operatorNull.license = {
+    state: 'declared-by-operator',
+    license: null,
+    attribution: '© Example',
+    redistribution: 'permitted',
+    by: 'operator',
+    at: '2026-08-06T09:00:00Z',
+  };
+  assert.throws(
+    () => parse(operatorNull),
+    /manifest-schema-invalid/,
+    'an operator-declared license with no name was accepted',
+  );
+
+  // `null` is the only admissible non-string. Anything else is still refused, so widening the type
+  // did not turn the member into an unchecked one.
+  for (const bad of [42, {}, [], true, { state: 'no-license', basis: 'x' }]) {
+    const m = validManifest();
+    m.license = {
+      state: 'declared-by-source',
+      license: bad,
+      attribution: null,
+      redistribution: 'permitted',
+    };
+    assert.throws(
+      () => parse(m),
+      /manifest-schema-invalid/,
+      `a source license of ${JSON.stringify(bad)} was accepted`,
+    );
+  }
+
+  // The member is still **required**: `null` is a value, absence is not.
+  const absent = validManifest();
+  absent.license = {
+    state: 'declared-by-source',
+    attribution: null,
+    redistribution: 'permitted',
+  };
+  assert.throws(() => parse(absent), /manifest-schema-invalid/, 'license may be null, not absent');
 });
 
 test('the operation filter has exactly the two shapes ADR-017 s8 gives it', () => {

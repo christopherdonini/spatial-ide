@@ -16,6 +16,10 @@ settled design for persisting identity, which is one of its own OPEN questions a
 walks into.
 **Implemented by:** `kernel/src/bundle/`, `kernel/src/publish/`, `renderer/src/canonical.rs`,
 `renderer/bundle-viewer/`.
+**Corrigenda (appended below, nothing above or in the body rewritten):** **Corrigendum 1**
+(2026-08-06) amends §5/§6/§10 — `license.license` is `string or null` under `declared-by-source`.
+**Corrigendum 2** (2026-08-06) corrects two stale cross-references, one of them the "§15/§18" in the
+Status line above: this document has sixteen sections and no §18. Read both before citing this ADR.
 
 ## Context
 
@@ -654,3 +658,84 @@ interior ring reads as a hole in both regardless of winding, which the engine do
 - **Whether a bundle should be signed**, and by what. Content hashes establish integrity against
   accidental corruption; they establish nothing against a party who can rewrite the manifest too.
 - **Anything about macOS or Linux**, and **any performance number**. This cut measures nothing.
+
+## Corrigenda
+
+*Appended, not merged. Everything above this heading is the document as accepted on 2026-08-06 and
+is unchanged apart from the `Corrigenda:` pointer added to the Status block, which alters no
+sentence. Where a corrigendum and the body disagree, the corrigendum governs and says which section
+it amends.*
+
+### Corrigendum 1 — 2026-08-06 — `license.license` under `declared-by-source`
+
+Amends **§5** (the `license` row of the nested-object table), **§6** (the enumerated bare-`null`
+members) and **§10** (the `declared-by-source` bullet). Nothing else in this ADR is altered; §15's
+class-3 obligations and §16's ceilings are untouched.
+
+**§5.** `declared-by-source` → `license` (string or `null`) · `attribution` (string or `null`) ·
+`redistribution`. Under `declared-by-operator`, `license` remains a **non-empty string**: the
+operator states a license or makes no declaration at all, so no state exists in which that member is
+absent.
+
+**§6.** `license.license` joins the enumerated members where a bare `null` means "absent". It
+qualifies on §6's own test — absence unambiguous, no basis needed — because the enclosing `state`
+already carries the claimant: inside `declared-by-source`, "does not apply" is not an available
+reading, so `null` can only mean "the source's license key was absent while another license-adjacent
+key was present". §6's `{state, basis}` named-unknown shape remains **scoped to ResourceRef
+members** and is not introduced here.
+
+**§10.** The three source keys are independent. A source may declare attribution and/or
+redistribution and name no license; when it does, `license` is `null`. **`null` is the absence, not
+a value** — no placeholder, no `"(unnamed)"`, no `"unknown"`, no empty string. This is "no license
+text is parsed and no SPDX is interpreted" applied to the empty case: a member whose contract is
+verbatim carriage may carry nothing, but may never carry text no source wrote. A missing license
+name is **not** a refusal. §10 refuses only where the publisher would otherwise adjudicate between
+two claims or redistribute against a declared prohibition, and this is neither; refusing would make
+a source that declared attribution unpublishable while a source declaring nothing publishes,
+destroying the attribution `docs/14` requires published bundles to preserve.
+
+**Schema change without a version increment — justified, and dated.** This widens one member's
+admissible *type*; §3's unknown-**key** rule is untouched and the key set is unchanged. A
+`bundle_version` increment exists to protect readers that exist. **As of 2026-08-06,
+`bundle_version` 1 has no external readers and no bundle distributed outside this repository**; the
+only conforming readers are `renderer/bundle-viewer/` and `kernel/`, amended in the same change. A
+bump would spend the format's one compatibility lever on a population of zero and would turn every
+in-repo fixture into a v1 artifact a v2 reader must then carry. **This justification is a claim
+about a fact with an expiry**: it holds only while both conditions above are true. The first bundle
+published outside this repository, or the first external reader written against v1, ends it — after
+which §3's version rule governs a type widening exactly as it governs a key addition, with no
+equivalent exception.
+
+> **What this corrigendum must not be read as deciding.** It is not a general license to widen
+> manifest member types without a version bump — the expiry above bounds it. It neither generalises
+> nor narrows §6's `{state, basis}` shape, whose ResourceRef scoping stands as written. It changes
+> nothing in §15: explicit approval and the audit record remain **owed**, and the human's acceptance
+> condition in the Status block is untouched — this changes what a manifest may *say*, not what a
+> publish is permitted to *do*. It decides no license semantics: no SPDX, no text parsing, no
+> inference from a URL, and specifically **attribution-without-license must never later be read as
+> implying any license**. It does not decide that `declared-by-operator` may ever carry a null
+> license, nor anything about a future attribution-only operator path. It touches nothing in
+> ADR-009, which stays open and stays a precondition for public code.
+
+### Corrigendum 2 — 2026-08-06 — two stale cross-references
+
+Corrects two pointers. **No decision in this document changes**, and both corrections are recorded
+here rather than by editing the sentences, which stand as accepted.
+
+**1. The Status block's "the §15/§18 obligations" names a section that does not exist.** This
+document has **sixteen** sections. The three obligations the human's acceptance condition attaches —
+a scoped publish grant, explicit approval, and a **redacted** audit record — live in **§15** (which
+records that this slice has no permission model, and that explicit approval and an audit log are
+both *owed and absent*) and **§13** (redaction, and the two stated limits on what a byte scan can
+establish). **Read "the §15/§18 obligations" as "the §15 and §13 obligations."** The acceptance
+condition itself — scope, content and the Prototype-exit deadline — is unchanged in every respect.
+
+**2. The first Consequence calls the ADR-003 amendment "separate, unapplied".** It was applied on
+2026-08-06 and is now part of ADR-003 as *Amendment (2026-08-06) — the projected publishing canvas*;
+the proposal file is retained as the decision record, not as pending work. The Consequence's
+substance is unaffected and still holds: ADR-008's two stated consequences remain unmet by this cut.
+What changed is only the status of the document that resolves the first of them — the projected
+publishing canvas is now the **decided** architecture for a v1 bundle rather than a proposal about
+it, and ADR-003's amendment records that every published bundle uses the projected source-CRS viewer
+while the MapLibre branch is unimplemented. **Read "the separate, unapplied ADR-003 amendment
+proposal" as "ADR-003's Amendment (2026-08-06), applied."**

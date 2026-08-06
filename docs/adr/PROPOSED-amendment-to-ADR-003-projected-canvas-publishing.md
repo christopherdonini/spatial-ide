@@ -5,8 +5,16 @@ its text is appended to ADR-003. This file is retained as the decision record �
 here, the decision lives there.
 **Would amend:** ADR-003 (renderer + arbitrary-CRS strategy — Accepted 2026-08-03 for
 Windows/WebView2), by **appended amendment**, never by rewriting.
-**Related:** ADR-008 (static publishing first), ADR-017 (static bundle format — Proposed),
-`docs/06` (dual canvas), `docs/05` (analytical vs display reprojection), `docs/07`.
+**Related:** ADR-008 (static publishing first — Accepted; clarified 2026-08-06 against this
+amendment), ADR-017 (static bundle format — **Accepted 2026-08-06**, after this file was written;
+its Consequences and Corrigendum 2 record the same reconciliation from the other side), `docs/06`
+(the canvases — **three** since this amendment was applied, not the two this file argues from),
+`docs/05` (analytical vs display reprojection), `docs/07`.
+
+*The body below is the argument as it stood when the amendment was proposed and is deliberately left
+as written — it is the decision record, and rewriting it would destroy what was argued from. Where it
+describes `docs/06` as naming two canvases, or ADR-017 as Proposed, it is describing the state before
+this amendment was applied.*
 
 ## Why an amendment is needed
 

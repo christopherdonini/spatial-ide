@@ -463,8 +463,14 @@ fn admit_license(
                     redistribution: source.redistribution.clone().unwrap_or_default(),
                 });
             }
+            // **Carried through, with no fallback.** The three source keys are independent, so a
+            // source declaring only `attribution` (or only `redistribution`) reaches here with no
+            // license name — and `license` is then `null`, the absence itself. This arm used to
+            // substitute `"(unnamed)"`, which put text no source wrote into the one member whose
+            // whole contract is verbatim carriage, and put it there in a form plausible enough to
+            // be read as a license name. ADR-017 Corrigendum 1 settles the shape.
             Ok(License::DeclaredBySource(LicenseTerms {
-                license: source.license.clone().unwrap_or_else(|| "(unnamed)".into()),
+                license: source.license.clone(),
                 attribution: source.attribution.clone(),
                 redistribution,
             }))
@@ -477,11 +483,9 @@ fn admit_license(
                 });
             }
             Ok(License::DeclaredByOperator {
-                terms: LicenseTerms {
-                    license: op.license.clone(),
-                    attribution: op.attribution.clone(),
-                    redistribution: op.redistribution,
-                },
+                license: op.license.clone(),
+                attribution: op.attribution.clone(),
+                redistribution: op.redistribution,
                 by: op.by.clone(),
                 at: op.at.clone(),
             })
@@ -919,7 +923,7 @@ mod tests {
     fn a_source_declaring_nothing_publishes_as_not_declared_and_invents_nothing() {
         let l = admit_license(&Default::default(), None).unwrap();
         assert_eq!(l, License::NotDeclared);
-        assert!(l.terms().is_none());
+        assert!(l.redistribution().is_none());
     }
 
     #[test]
@@ -930,6 +934,46 @@ mod tests {
             redistribution: Some("ask us first".into()),
         };
         let l = admit_license(&source, None).unwrap();
-        assert_eq!(l.terms().unwrap().redistribution, Redistribution::Unknown);
+        assert_eq!(l.redistribution(), Some(Redistribution::Unknown));
+    }
+
+    /// **A source that declares attribution and names no license.**
+    ///
+    /// The three source metadata keys are independent, so this is an ordinary shape rather than a
+    /// corner: `declares_anything()` is true, `license` is not. It used to become the invented
+    /// string `"(unnamed)"` in a manifest member whose contract is verbatim carriage; ADR-017
+    /// Corrigendum 1 makes it `null` — the absence, not a value.
+    ///
+    /// It is deliberately **not** a refusal. Refusing would make a source that bothered to declare
+    /// attribution unpublishable while a source declaring nothing publishes fine, destroying the
+    /// attribution `docs/14` requires published bundles to preserve, in the name of protecting it.
+    #[test]
+    fn a_source_that_names_no_license_but_declares_attribution_carries_a_null_not_a_placeholder() {
+        let source = spatial_engine::dataset::SourceLicense {
+            license: None,
+            attribution: Some("© Example Cadastre".into()),
+            redistribution: Some("permitted".into()),
+        };
+        let l = admit_license(&source, None).unwrap();
+        let License::DeclaredBySource(terms) = &l else {
+            panic!("a source that declares attribution is `declared-by-source`, got {l:?}")
+        };
+        assert_eq!(terms.license, None, "a placeholder was substituted for an absent license");
+        assert_eq!(terms.attribution.as_deref(), Some("© Example Cadastre"));
+        assert_eq!(terms.redistribution, Redistribution::Permitted);
+        // What this becomes in the manifest is asserted where the serializer lives
+        // (`bundle::tests`) and against a real parquet footer in `kernel/tests/publish.rs`.
+
+        // The same source declaring **only** redistribution — no license, no attribution — is the
+        // other way into this arm, and behaves identically.
+        let only_terms = spatial_engine::dataset::SourceLicense {
+            license: None,
+            attribution: None,
+            redistribution: Some("permitted".into()),
+        };
+        let l = admit_license(&only_terms, None).unwrap();
+        let License::DeclaredBySource(terms) = &l else { panic!("got {l:?}") };
+        assert_eq!(terms.license, None);
+        assert_eq!(terms.attribution, None);
     }
 }
