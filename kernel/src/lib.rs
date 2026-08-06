@@ -9,9 +9,19 @@
 //!
 //! ## What is deliberately absent
 //!
-//! - **No lineage DAG, no undo, no command/event log.** The operation is a **pure transformation**
-//!   under ADR-006 — an input snapshot plus parameters produce a derived output — so no transaction
-//!   boundary and no undo machinery is owed.
+//! - **No lineage DAG, no undo, no command/event log — and the reason differs per operation, which the
+//!   single sentence that used to sit here hid.** This crate now orchestrates **two** operations with
+//!   **different ADR-006 classes**:
+//!   - **Streaming a query** is a **pure transformation**: an input snapshot plus parameters produce a
+//!     derived output, it writes nothing, so no transaction boundary and no undo machinery is owed.
+//!   - **Publishing a bundle** is a **class-3 external side effect**: it writes files outside any
+//!     transaction, in a location it does not own. It is **not undoable and is never described as
+//!     undoable** — ADR-006 requires a declared reversibility class instead, and publish declares
+//!     `irreversible` on its own API. Undo machinery is not "not owed" here; it is **impossible**, and
+//!     those are different reasons for the same absence.
+//!
+//!   Calling both a pure transformation would put the wrong ADR-006 class on the one operation in this
+//!   crate that actually has external effects.
 //! - **Persistence arrived, and it is exactly the trigger this file named in advance.** The text
 //!   here used to read: "Nothing is written. The moment this caches a result to disk, names datasets
 //!   by URI, or emits a bundle, `docs/11`'s ResourceRef model and ADR-005's reproducibility grades

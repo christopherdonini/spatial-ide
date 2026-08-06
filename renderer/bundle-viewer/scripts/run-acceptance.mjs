@@ -76,8 +76,16 @@ function findBrowser() {
 
 const browserPath = arg('--browser', findBrowser());
 if (!browserPath) {
-  console.error('no Edge binary found; pass --browser <path>');
+  console.error('no Chromium-family browser found; pass --browser <path>');
   process.exit(2);
+}
+// **Which browser ran is recorded, never assumed.** The search above prefers Edge, so on a machine
+// with Edge installed this produces Edge evidence — and a scope line elsewhere claiming "headless
+// Chrome" would then describe a run that never happened. Every artifact carries the browser's own
+// version string, and a scope claim must be read from there rather than from what a previous run
+// happened to find. `--browser` pins it.
+if (!arg('--browser')) {
+  console.error(`[acceptance] browser not pinned; using ${browserPath}. The artifact records which.`);
 }
 
 const profile = join(process.env.TEMP ?? '/tmp', `bundle-viewer-acceptance-${Date.now()}`);
@@ -226,8 +234,27 @@ const artifact = {
   page: null,
   hover: null,
   console_errors: [],
+  /**
+   * Console errors this driver recognises and can account for.
+   *
+   * Every passing run carries one entry: a 404 for `/favicon.ico`. It is **browser-initiated** — the
+   * page requests exactly one resource, `./app.js` — and every static host answers it with a 404
+   * once per page load. Left in `console_errors` rather than filtered out, because a driver that
+   * silently drops errors it thinks it understands is one that will drop the one it does not; but
+   * annotated here, so a reader of a green artifact is not left wondering whether the run was
+   * really clean.
+   */
+  console_errors_accounted_for: [],
   verdict: null,
 };
+
+/** Whether an error line is one this driver recognises, with the reason it is benign. */
+function accountFor(text) {
+  if (/favicon/i.test(text) || (/404/.test(text) && /Failed to load resource/i.test(text))) {
+    return 'browser-initiated /favicon.ico request; the page references only ./app.js';
+  }
+  return null;
+}
 
 try {
   // **Identify the bundle before driving anything.** `../manifest.json` relative to the viewer URL
@@ -262,11 +289,16 @@ try {
   await rpc(socket, 'Log.enable', {}, sessionId);
   socket.on('message', (raw) => {
     const msg = JSON.parse(String(raw));
+    const record = (text) => {
+      artifact.console_errors.push(text);
+      const reason = accountFor(text);
+      if (reason) artifact.console_errors_accounted_for.push({ text, reason });
+    };
     if (msg.method === 'Runtime.exceptionThrown') {
-      artifact.console_errors.push(msg.params.exceptionDetails.text ?? 'exception');
+      record(msg.params.exceptionDetails.text ?? 'exception');
     }
     if (msg.method === 'Log.entryAdded' && msg.params.entry.level === 'error') {
-      artifact.console_errors.push(msg.params.entry.text);
+      record(msg.params.entry.text);
     }
   });
 
@@ -315,8 +347,14 @@ try {
   } else {
     const rendered = !page.bannerVisible && /partitions verified/.test(page.status);
     const hovered = (artifact.hover?.resolved ?? 0) > 0;
-    artifact.verdict =
-      rendered && hovered ? 'rendered-and-hover-resolved' : 'DID-NOT-RENDER-OR-HOVER-FAILED';
+    // An error this driver cannot account for is a failed run, not a footnote — ADR-010 rule 7's
+    // whole point is that an async failure must not pass unnoticed.
+    const unexplained = artifact.console_errors.filter((e) => !accountFor(e));
+    artifact.verdict = !rendered || !hovered
+      ? 'DID-NOT-RENDER-OR-HOVER-FAILED'
+      : unexplained.length > 0
+        ? `UNEXPLAINED-CONSOLE-ERROR: ${unexplained[0]}`
+        : 'rendered-and-hover-resolved';
   }
 
   // **Closed through the protocol, not by killing a pid.** The launched process is a launcher whose

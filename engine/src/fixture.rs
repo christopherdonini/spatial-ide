@@ -79,6 +79,22 @@ pub enum AttributeMode {
     CategoricalZone,
 }
 
+/// Whether the fixture's parquet footer declares license metadata.
+///
+/// Same reason `CrsMode` and `IdentityMode` exist: an admission path is exercised against a **real
+/// file** rather than a hand-written metadata map. The publisher's `declared-by-source` branch was
+/// unreachable from any test before this, because it reads keys only a real footer can carry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LicenseMode {
+    /// No license keys at all — the common case, and what every earlier fixture wrote.
+    NotDeclared,
+    /// `license`, `attribution` and `redistribution: permitted`.
+    DeclaredBySource,
+    /// `redistribution: forbidden`, which publishing must refuse: a static bundle is a
+    /// redistributed copy.
+    ForbidsRedistribution,
+}
+
 /// The `zone` column's values. Four, so an acceptance style declaring cases for **two** of them
 /// exercises matched, unmatched and NULL in one run.
 pub const ZONE_VALUES: [&str; 4] = ["residential", "industrial", "agricultural", "civic"];
@@ -127,6 +143,8 @@ pub struct FixtureSpec {
     /// Whether a categorical attribute column is written. Defaults to `None`, so every existing
     /// spec produces the file it always produced.
     pub attributes: AttributeMode,
+    /// Whether the footer declares license metadata. Defaults to `NotDeclared`.
+    pub license: LicenseMode,
 }
 
 /// How the fixture carries feature identity.
@@ -161,6 +179,7 @@ impl Default for FixtureSpec {
             chunk: 4_096,
             identity: IdentityMode::NativeUnique,
             attributes: AttributeMode::None,
+            license: LicenseMode::NotDeclared,
         }
     }
 }
@@ -288,9 +307,24 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
     let file = File::create(path).map_err(|e| EngineError::Source(format!("create: {e}")))?;
 
     let schema = schema(spec.with_covering_bbox, spec.identity, spec.attributes);
+    // `geo` always; the license keys only when the mode asks. The engine reads a closed, declared
+    // set of keys and carries their values verbatim — it parses no license text.
+    let mut kv = vec![KeyValue::new("geo".to_string(), geo_metadata(spec))];
+    match spec.license {
+        LicenseMode::NotDeclared => {}
+        LicenseMode::DeclaredBySource => {
+            kv.push(KeyValue::new("license".to_string(), "CC-BY-4.0".to_string()));
+            kv.push(KeyValue::new("attribution".to_string(), "(c) Example Cadastre".to_string()));
+            kv.push(KeyValue::new("redistribution".to_string(), "permitted".to_string()));
+        }
+        LicenseMode::ForbidsRedistribution => {
+            kv.push(KeyValue::new("license".to_string(), "internal-only".to_string()));
+            kv.push(KeyValue::new("redistribution".to_string(), "forbidden".to_string()));
+        }
+    }
     let props = WriterProperties::builder()
         .set_compression(Compression::SNAPPY)
-        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo_metadata(spec))]))
+        .set_key_value_metadata(Some(kv))
         .build();
     let mut writer = ArrowWriter::try_new(file, schema.clone(), Some(props))
         .map_err(|e| EngineError::Source(format!("parquet writer: {e}")))?;

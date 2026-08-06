@@ -31,18 +31,58 @@ quietly contradicts an Accepted ADR.
 
 ## The proposed amendment text
 
-> **Appended 2026-08-06 — publishing canvas for sources that are not web-Mercator-ready.**
+> **Appended 2026-08-06 — the projected publishing canvas.**
 >
-> A **published static bundle renders on the projected canvas, in the source CRS**, when the source
-> CRS is not web-Mercator-ready. **MapLibre remains the publishing canvas for web-ready sources**,
-> and this amendment neither replaces it nor changes ADR-003's dual-canvas decision for the working
-> canvas.
+> **A third canvas is named: the *projected publishing canvas*.** It renders a published static
+> bundle **in the bundle's source CRS, with no reprojection**. It is **not** the deck.gl *projected
+> working canvas* and must not be conflated with it: the working canvas is an interactive editing
+> surface inside the application, and this is a self-contained viewer shipped inside a distributed
+> artifact. They share a coordinate discipline — ADR-010 rule 3's offset-relative narrowing — and
+> nothing else: not a renderer, not a dependency, not a lifecycle, not a platform commitment.
+> **MapLibre remains the *web publishing canvas*** for sources that are web-ready, and this amendment
+> neither replaces it nor changes ADR-003's dual-canvas decision for the working canvas.
+>
+> **Which canvas publishes a given source is an explicit, declared decision — never inferred from a
+> CRS identifier string.** Selection is made against a **declared supported-CRS contract**: an
+> enumerated set of CRS the web publishing canvas is known to render correctly, together with a
+> **definitional-equivalence check** against that set.
+>
+> **The binding authority is `docs/05`, and ADR-015 supplies the clause that carries it into code.**
+> `docs/05` decides CRS identity "by **comparing normalized definitions** ... and **never by
+> name-string comparison**", on datum, ellipsoid, prime meridian, projection method and parameters,
+> and unit. Choosing a canvas from an identifier is a name-string comparison deciding a definitional
+> question, which is what that sentence forbids -- and here it decides *where the coordinates are
+> drawn*, so a source labelled `EPSG:3857` whose definition differs would be routed to a Web
+> Mercator canvas and drawn in the wrong place, silently.
+>
+> Two ADR-015 clauses bear on this, and they bear differently -- separated here because the obvious
+> citation is the weaker one:
+>
+> - **ADR-015 §7's closing sentence is what binds later code.** Having admitted an identifier
+>   comparison as *"a caller assertion about the query"*, it adds: *"It does not decide that a
+>   matching identifier means the definitions agree, **and it licenses no later code to assume
+>   so.**"* Canvas selection would be exactly such later code.
+> - **§4 is the precedent for the *shape* of the answer, not a clause that literally covers this
+>   case.** It governs admitting a caller's assertion over a source that already declares, and its
+>   rule is to refuse *without comparing* -- establishing that where this project cannot make a
+>   definitional judgement correctly it **refuses rather than approximates**. That posture is what is
+>   adopted here; it is not a prohibition that reaches canvas choice on its own terms, and an earlier
+>   draft of this document claimed it did.
+>
+> Until the engine can perform the equivalence check, **the set of sources routed to the web
+> publishing canvas is empty by construction**, which is the only honest way to have an unimplemented
+> branch.
+>
+> **What v1 actually does, stated so that nothing here reads as describing shipped behaviour: every
+> published bundle uses the projected source-CRS viewer, always. The MapLibre branch is
+> unimplemented.** There is no selection code, no supported-CRS set, and no equivalence check in the
+> product; this amendment describes the *architecture* those would fit into, and the second paragraph
+> is the contract they must satisfy when they are written.
 >
 > **Publish-time reprojection becomes an explicit, recorded operation** when the engine gains
 > transforms (`docs/05`: analytical reprojection is always an explicit workflow operation, and every
-> transform is recorded). Until then a bundle from a non-web-ready source records
-> `transform: none — rendered in source CRS` as a **fact**, not as a placeholder for a transform that
-> was skipped.
+> transform is recorded). Until then a bundle records `transform: none — rendered in source CRS` as a
+> **fact**, not as a placeholder for a transform that was skipped.
 >
 > **The consequence, stated rather than apologised for: such a bundle has no basemap.** That is not
 > a missing feature; it is what "no reprojection" means when basemap tiles are Web Mercator.
@@ -52,7 +92,14 @@ quietly contradicts an Accepted ADR.
 Being specific here is the whole value of the document, because the easy version of this amendment
 would read as though a renderer had been validated.
 
-**Established, on Windows/WebView2-class hardware, one browser, one machine:**
+**Established on Windows 10 Pro 22H2 with headless Chrome 151 — one machine, one browser, and
+neither of them WebView2:**
+
+That scope line is load-bearing and is stated before the list rather than after it. **ADR-003's own
+acceptance is Windows/WebView2 evidence**, and every measured number in the spike behind it came from
+WebView2/ANGLE-D3D11. Nothing below was observed on WebView2. Describing this run as
+"Windows/WebView2-class" — as an earlier draft of this document did — would borrow ADR-003's platform
+scope for a run that never touched that platform.
 
 - A projected 2D canvas in EPSG:2056 renders a published bundle **functionally and correctly** at
   100 000 polygons: every partition verified against the manifest, the style's four declared branches
@@ -72,6 +119,9 @@ section says so.
   measures nothing. No figure from it bears on `docs/08`'s budgets.
 - **Nothing at 5 GB.** `docs/07`'s hero slice names a 5 GB GeoParquet; this is 100 000 features.
 - **Nothing about macOS or Linux** — the same limit `docs/07` already places on ADR-003.
+- **Nothing about WebView2**, which is the platform ADR-003 is actually accepted on. This ran in
+  headless Chrome 151. A Tauri shell embeds a system webview, so the viewer's behaviour inside one is
+  unobserved here.
 - **This viewer is a 2D canvas, not deck.gl.** It is therefore **not evidence about ADR-003's chosen
   projected-canvas implementation**, in either direction. The dual-canvas decision, the deck.gl
   choice, and ADR-003's per-platform acceptance status are all untouched by it.
@@ -89,8 +139,10 @@ the human's explicit deferral of in-browser query to v1, with only the manifest 
 ## If approved
 
 - ADR-003 gains the appended text above, and nothing else changes in it.
-- `docs/06`'s dual-canvas section gains a sentence noting the publishing canvas is chosen by whether
-  the source CRS is web-ready.
+- `docs/06`'s dual-canvas section becomes a **three**-canvas section: the deck.gl projected *working*
+  canvas, the MapLibre *web publishing* canvas, and the *projected publishing* canvas — with the note
+  that selection between the two publishing canvases is explicit and contract-driven, never inferred
+  from a CRS identifier.
 - ADR-017 and `renderer/README.md` drop the word "provisional" from their descriptions of the
   publishing canvas.
 

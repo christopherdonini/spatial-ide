@@ -714,6 +714,22 @@ impl Manifest {
 /// Closed deliberately: this is where "built by", "built from" and a hostname want to live, and
 /// `docs/09` forbids all three anywhere in the bundle. Nothing here is a filesystem path, a user, a
 /// machine, or a process id.
+///
+/// ## What belongs here versus in the manifest, because a timestamp alone does not decide it
+///
+/// The rule is **not** "timestamps go in the sidecar". It is that a value describing **this
+/// execution** goes here, outside every hash, while a value describing **the request** stays in the
+/// manifest, inside the determinism surface.
+///
+/// Everything in this struct is the first kind: when a build began and ended, how long it took, how
+/// much it produced. Two publishes of the *same* request differ in all of it, which is exactly why
+/// none of it may reach a hashed byte.
+///
+/// `License::DeclaredByOperator`'s `at` is the second kind and lives in the manifest. It is the
+/// instant an operator made a declaration — part of the claim, like `by` — so two publishes that
+/// declare different instants *are* different publishes and correctly produce different manifests.
+/// Moving it here would make a declared fact unverifiable; moving build timing to the manifest would
+/// make byte-identical rebuild impossible. ADR-017 §10 and §12 state the same split.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BuildInfo {
     pub started_at: String,

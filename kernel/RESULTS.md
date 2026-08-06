@@ -1281,7 +1281,8 @@ cold-open budget, ADR-011, ADR-012, ADR-014, the index question, or the transpor
 | **Hardware** | Windows 10 Pro 22H2 build 19045 |
 | **Tree** | branch `cut/style-publish` at **`9c63c84`**, based on **`4c67dc6` (`main`)** |
 | **Build** | `release` for the publish and fixture runs; `cargo test --workspace` in the ordinary profile |
-| **Browser** | **Chrome/151.0.7922.76**, `--headless=new`, one machine, one browser. **No Edge run** |
+| **Browser** | **headless Chrome 151.0.7922.76** (`--headless=new`), one machine, one browser. **No Edge run** |
+| **Not WebView2, which is the platform ADR-003 is accepted on** | Every viewer observation below is **Windows 10 + headless Chrome 151**. ADR-003's acceptance rests on Windows/WebView2/ANGLE-D3D11 evidence, and nothing here touched that platform. A Tauri shell embeds a system webview, so how this viewer behaves inside one is **unobserved** |
 | **Dataset** | **The fixture generator's default polygon spec** at seed `0x5EED205600000002`, plus a nullable categorical `zone` column: 100 000 features / **2 508 699 vertices** / 114 286 rings / 39 049 894 B; 12–48 vertices per feature; zone counts `[20 252, 19 794, 19 999, 20 036]` + 19 919 null |
 | **The dataset is NOT `docs/08`'s Polygons class, and must not be described as it** | That class is "100k features / **10M vertices**", and the file the third section pins has 10 467 093 of them. This one has **roughly a quarter of that geometry** — the feature count matches and the vertex count does not. The difference from the third section's file is therefore *not* only the added column. Nothing here is comparable with any earlier section, on this ground as well as the session rule |
 | **Free disk** | **15 GB at start, 13 GB at end.** `target/` had filled the volume earlier in the session and was cleaned before this run |
@@ -1294,19 +1295,53 @@ cold-open budget, ADR-011, ADR-012, ADR-014, the index question, or the transpor
 the diff is two test files, one instrument, and one `#[cfg(test)]` module — so the artifacts
 described here are unchanged by it. That is a code fact read from the diff, not a re-run.
 
-**A later commit does change product code, and that is re-verified rather than argued.** Closing the
-write-up review's findings added an **unknown-key refusal to the viewer's manifest reader** and
-removed a silent unit-square fallback when a bundle declares no bounds. A stricter reader could in
-principle reject the very manifests this section reports as accepted, so the 100k bundle was
-**re-published and re-driven end to end at the changed tree**:
+**Later commits do change product code, and that is re-verified rather than argued.** Closing the
+write-up review, and then a correction pass, made the viewer's manifest reader **strictly conformant
+with ADR-017 §§3/5/14** — exact key sets on every object the document defines, `bytes` and `rows` as
+mandatory non-negative integers on partition entries, `rows` forbidden on viewer assets, the version
+gate ahead of the key check — and removed a silent unit-square fallback when a bundle declares no
+bounds.
 
-> `51/51 partitions verified · 100000 features drawn`, no banner, all four legend rows, **67 of 256**
-> hover probes resolving — the same counts as the run below, down to the same sampled ids
-> (98 273, 90 982, 88 446) — with the manifest-hash binding now enforced **inside** the driver.
+**A stricter reader can reject the very manifests this section reports as accepted**, which is not a
+risk that can be reasoned away. So the 100k bundle was republished and re-driven at the correction
+tree, and this time the run has its own artifact rather than being described:
 
-The one figure that moved is **bundle size: 44 590 715 B → 44 591 873 B**, entirely the viewer
-asset growing by 1 158 B with the added check. The size row below is the acceptance run's; this is
-the delta and its cause.
+> `target/acceptance/viewer-correction-pass.json` — served manifest
+> `sha256:3e7f9f84…`, browser `Chrome/151.0.7922.76`, verdict `rendered-and-hover-resolved`:
+> **51/51 partitions verified · 100 000 features drawn**, no banner, all four legend rows, **67 of
+> 256** hover probes resolving. Same counts as the acceptance run, down to the same sampled ids.
+>
+> The product redaction scanner, re-run over that bundle: **56 files, 44 601 149 bytes, 0 findings**,
+> with the machine's real username and hostname both available and both scanned for.
+
+**An earlier draft of this paragraph quoted an artifact from the *previous* tree** — the write-up
+review's bundle, not the correction pass's — while quoting a size figure from the correction pass's.
+That is the same defect the driver's own manifest-hash binding exists to prevent, committed in prose
+instead of in code. Both figures above now come from one bundle, and the artifact names the manifest
+hash that identifies it.
+
+**What moved, exactly:**
+
+| | acceptance run | correction pass | delta |
+|---|---|---|---|
+| `viewer/app.js` | 427 155 B | 437 588 B | **+10 433** — the reader's conformance checks |
+| `build-info.json` | 394 B | 395 B | +1 — a wall-clock digit, in the file §12 excludes |
+| **bundle total** | 44 590 715 B | 44 601 149 B | **+10 434** |
+
+**Every other figure in this section is the acceptance run's and was not re-taken**, and that is
+stated rather than implied: the build wall times below are from the acceptance run's publishes and a
+republish necessarily produces different ones; the partition sizes, row counts, hashes and
+determinism comparison are unchanged because no partition byte changed. Saying "every other figure is
+unchanged" — as an earlier draft did — would have claimed a re-measurement that did not happen.
+
+The writer is held to the same contract from its own side by
+`kernel/tests/publish.rs::the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares`. **Both
+tests read one shared artifact, `renderer/tests/data/manifest-key-sets.json`, and neither generates
+it** — the discipline `style-agreement.json` already applies to style resolution. That matters
+because two hand-maintained tables, each with its own test, guarantee only that neither side moves
+without *its own* test failing: editing the reader and its table keeps the JS suite green while every
+real bundle becomes unreadable. Anchoring both to one artifact is what makes "writer and reader
+agree" a checked property rather than a hope.
 
 ---
 
@@ -1323,7 +1358,7 @@ the delta and its cause.
 | **Cancelling mid-publish leaves no partial bundle** | **met** | With a genuine `CTRL_C_EVENT` at **3, 25 and 51 partitions already on disk**: all three runs reported cancelling, exited non-zero, and left **nothing under the final name, no staging directory, and nothing matching `*staging*` anywhere under `target/`** |
 | **Redaction grep passes on the emitted bundle** | **met** | The **product scanner**, run over the 100k bundle: **56 files, 44 590 715 bytes, 0 findings**. The machine's real username and hostname were both available and both scanned for, so this is not a silent gap. A planted-path control fired |
 | **Attribution/license and grade present with stated basis** | **met** | `license: {state: "not-declared", basis: …}` — nothing invented. `reproducibility: {grade: "Snapshot"}` with a four-item basis and a `why_not_higher` naming what Exact would require |
-| **Ordinary workspace suite green** | **met** | `cargo test --workspace`: **249 passed, 0 failed, 2 ignored** (the two measurement harnesses, ignored by design). Viewer: **33 tests pass** |
+| **Ordinary workspace suite green** | **met** | At the acceptance run: `cargo test --workspace` **249 passed, 0 failed, 2 ignored** (the two measurement harnesses, ignored by design), viewer **33 tests**. **At the correction tree the same suites are 251 / 0 / 2 and 42** — the counts moved because the correction pass added tests, not because anything changed underneath, and this row gives both rather than a figure no tree produces |
 | **Viewer build reproducible** | **met, three ways** | Rebuild in place → identical; `rm -rf dist` then rebuild → identical; **whole source tree copied to a different absolute path and built there → `dist/app.js` and `dist/index.html` byte-identical**. No absolute path leaks into the output |
 
 ### Attribute alignment — the check that mattered most
@@ -1408,7 +1443,8 @@ of them and states why the other is a property of the signature rather than pret
 | **The hero slice is not complete** | `docs/07`'s Prototype names **a 5 GB GeoParquet**. This is validated at 100 000 features / 39 MB. The slice's second half is implemented and correct at that scale; **the slice is not complete**, and the word "complete" does not apply to it without that qualifier |
 | **DuckDB-WASM in-browser queryability** | Deferred to v1 by the human's decision. ADR-008's Consequences clause on it is **unmet**; only the manifest surface is reserved |
 | **ADR-008's other Consequences clause** | *"The web publishing canvas (ADR-003) renders these bundles"* is **also unmet**: this viewer is a projected 2D canvas — not MapLibre, not deck.gl. **Both** of ADR-008's stated consequences are outstanding |
-| **Projected-canvas publishing is provisional** | Pending the human's approval of the drafted, unapplied ADR-003 amendment proposal. Nothing here is evidence for or against deck.gl: this is a 2D canvas, and it measures nothing |
+| **The projected publishing canvas is provisional** | Pending the human's approval of the drafted, unapplied ADR-003 amendment proposal. It is a **third** canvas — deliberately distinct from ADR-003's deck.gl projected *working* canvas, which it shares a coordinate discipline with and nothing else. Nothing here is evidence for or against deck.gl: this is a 2D canvas, and it measures nothing |
+| **Canvas selection is unimplemented, and v1 does not choose** | Every bundle uses the projected source-CRS viewer, always; the MapLibre branch does not exist. The amendment proposal states that any future selection must be explicit and rest on a declared supported-CRS contract with a definitional-equivalence check — **never inferred from a CRS identifier string** -- `docs/05` decides CRS identity by comparing normalized definitions and never by name comparison, and ADR-015 §7's closing clause licenses no later code to assume a matching identifier means the definitions agree. Inferring would route a mislabelled source to the wrong canvas and draw it in the wrong place, silently |
 | **Any performance property whatsoever** | No frame time, no picking latency, no precision measurement, no throughput. The viewer's hashing cost is **not** measured and may never be quoted as a rendering figure. The ordered publish path may never be cited about first pixels |
 | **The cancellation *cadence*** | Cancellation was proved to land cleanly at three points during partition writing. The **uninterruptible window was not measured**, and the partition-size bound that is meant to make it a bound rather than a hope is unverified here |
 | **Network blocking was partial, and exactly this much** | DNS blackholing plus a full CDP request log: **56 requests, all 56 to `127.0.0.1`**, zero elsewhere, zero failures. **A request to a literal external IP would still have gone out**, and no OS-level firewall rule was applied. The separate static scan of the built bundle found zero absolute URLs, zero protocol-relative URLs, and no `crypto.subtle` |

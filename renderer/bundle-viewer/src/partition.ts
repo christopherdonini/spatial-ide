@@ -19,7 +19,7 @@
 import { tableFromIPC } from 'apache-arrow';
 
 import { BundleFailure } from './failure.js';
-import type { Manifest, ManifestAsset } from './manifest.js';
+import type { Manifest, PartitionAsset } from './manifest.js';
 
 export const EXPECTED_FRAME = 'authoritative-project-crs';
 export const EXPECTED_ENCODING = 'geoarrow.polygon';
@@ -76,7 +76,7 @@ function displayValue(v: unknown): string | null {
 }
 
 export function decodePartition(
-  asset: ManifestAsset,
+  asset: PartitionAsset,
   index: number,
   bytes: Uint8Array,
   manifest: Manifest,
@@ -153,7 +153,7 @@ export function decodePartition(
   const ids = (idVector.data[0] as unknown as ArrowPrimitiveData).values as BigUint64Array;
   const features = polygonOffsets.length - 1;
 
-  if (asset.rows !== undefined && features !== asset.rows) {
+  if (features !== asset.rows) {
     throw new BundleFailure(
       'partition-row-count-mismatch',
       asset.path,

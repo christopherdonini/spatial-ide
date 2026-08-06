@@ -192,13 +192,28 @@ zero-external-request guarantee forbids and which `docs/09` would make a capabil
 **visible on the page, and persisted in-page for the session only.** That is a declared limit of the
 artifact, not an omission.
 
-## This viewer is a third canvas, and it is provisional
+## This is a third canvas — the *projected publishing canvas* — and it is provisional
 
-ADR-003 names two canvases: a deck.gl **projected working canvas** and a MapLibre **web publishing
-canvas**. A projected 2D canvas rendering a published bundle is neither. Its existence rests on the
-ADR-003 amendment proposal drafted in this cut, which is **unapplied and awaits the human's
-approval**. Until then the projected-canvas publishing path is provisional, and nothing here is
-evidence for or against deck.gl — this is a 2D canvas, not deck.gl, and it measures nothing.
+ADR-003 names two: a deck.gl **projected working canvas** and a MapLibre **web publishing canvas**.
+This is neither, and it has a name of its own so the distinction survives being repeated: the
+**projected publishing canvas**.
+
+**It is not the deck.gl working canvas.** They share ADR-010 rule 3's offset-relative coordinate
+discipline and nothing else — not a renderer, not a dependency, not a lifecycle, not a platform
+commitment. The working canvas is an interactive surface inside the application; this is a
+self-contained viewer shipped inside a distributed artifact.
+
+**v1 does not choose between publishing canvases: every bundle uses this one, always, and the
+MapLibre branch is unimplemented.** The amendment proposal states what a future selection must look
+like — explicit, against a declared supported-CRS contract with a definitional-equivalence check, and
+**never inferred from a CRS identifier string**: `docs/05` decides CRS identity by comparing
+normalized definitions and never by name comparison, and ADR-015 §7's closing clause licenses no
+later code to assume a matching identifier means two definitions agree. A mislabelled source routed
+to a Web Mercator canvas would be drawn in the wrong place, silently.
+
+Its existence rests on that proposal, which is **unapplied and awaits the human's approval**. Until
+then this path is provisional, and nothing here is evidence for or against deck.gl — this is a 2D
+canvas, and it measures nothing.
 
 ## Running
 
@@ -220,5 +235,15 @@ artifact.
 
 ## Scope of anything this module says
 
-Windows 10 Pro 22H2 / WebView2 and Edge. Nothing here says anything about macOS or Linux — the same
-limit `docs/07` places on ADR-003 — and nothing here is a performance measurement of any kind.
+**Windows 10 Pro 22H2 with headless Chrome 151 — not WebView2, and not Edge.** That matters because
+ADR-003 is accepted on Windows/WebView2 evidence, and describing this module's evidence as
+"WebView2-class" would borrow a platform scope it never touched. A Tauri shell embeds a system
+webview, so how this viewer behaves inside one is unobserved.
+
+**That sentence is a reading of an artifact, not a standing property of the harness.**
+`run-acceptance.mjs` searches for Edge *before* Chrome, so on a machine with Edge installed the next
+run produces Edge evidence. Every artifact records the browser's own version string; a scope claim
+must be read from there, and `--browser` pins it.
+
+Nothing here says anything about macOS or Linux — the same limit `docs/07` places on ADR-003 — and
+nothing here is a performance measurement of any kind.

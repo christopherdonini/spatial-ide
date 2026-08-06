@@ -13,9 +13,16 @@
 //!
 //! **This slice has no permission model and no approval gate**, exactly as `kernel/README.md`
 //! already records for capability grants generally. So the operation declares its reversibility
-//! class in its own API ([`REVERSIBILITY_CLASS`]), records it in the manifest, and this comment says
-//! plainly that the gating `docs/09` requires is **owed and absent**. Shipping an ungated class-3
-//! operation while saying nothing would be the silent version of the same gap.
+//! class **on this API** — [`REVERSIBILITY_CLASS`] — and this comment says plainly that the gating
+//! `docs/09` requires is **owed and absent**. Shipping an ungated class-3 operation while saying
+//! nothing would be the silent version of the same gap.
+//!
+//! **The class is not recorded in the manifest, and is not claimed to be.** ADR-006's declaration
+//! is addressed to the *caller deciding whether to invoke the operation*, and by the time a bundle
+//! exists that decision has been made. A field in the manifest would tell a bundle's reader
+//! something about an act they did not perform and cannot undo. Adding one is a live option — it
+//! would document how the artifact came to exist — but it is a different thing from the ADR-006
+//! declaration and would not discharge it.
 //!
 //! ## The order of operations, and why it is that order
 //!

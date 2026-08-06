@@ -140,6 +140,21 @@ are owed and this file stops being honest. The slice claims no reproducibility g
 effects always require approval." The operation declares its reversibility class (`irreversible`) on
 its own API, and the gate is recorded as **owed and absent**. Shipping it ungated while saying
 nothing would be the silent version of the same gap.
+**ADR-006's row for external side effects requires three things, and only one of them exists.** The
+row is: *audit log · explicit approval · declared reversible / compensatable / irreversible.*
+
+| ADR-006 requires | Status here |
+|---|---|
+| a declared reversibility class | **done** — `irreversible`, on the operation's own API |
+| explicit approval | **owed and absent** — there is no permission model in this slice |
+| an **audit log** | **owed and absent** — nothing here records that a publish happened, to what destination, by whom, or with what result |
+
+The audit log is the one this crate is most likely to be assumed to have, because the bullet above
+lists "no command/event log" as a deliberate absence — that log is the *workspace-mutation*
+machinery ADR-006 assigns to a different class, and it would not serve as an audit record for an
+external side effect even if it existed. Naming the gap is the same discipline the approval gate
+already gets; a class-3 operation that is silent about two of its three obligations is worse than
+one that is silent about none, because the third makes it look handled.
 
 Two consequences worth stating here rather than leaving to the module:
 
@@ -154,9 +169,19 @@ Two consequences worth stating here rather than leaving to the module:
 
 ## What is deliberately absent
 
-- **No lineage DAG, no undo, no command/event log.** The operation is a **pure transformation**
-  (ADR-006) — an input snapshot plus parameters produce a derived output — so no transaction boundary
-  and no undo machinery is owed.
+- **No lineage DAG, no undo, no command/event log — and the reason differs per operation, which the
+  single sentence that used to sit here hid.** This crate now orchestrates **two** operations with
+  **different ADR-006 classes**:
+  - **Streaming a query** is a **pure transformation**: an input snapshot plus parameters produce a
+    derived output, it writes nothing, so no transaction boundary and no undo machinery is owed.
+  - **Publishing a bundle** is a **class-3 external side effect**: it writes files outside any
+    transaction, in a location it does not own. It is **not undoable and is never described as
+    undoable** — ADR-006 requires a declared reversibility class instead, and publish declares
+    `irreversible` on its own API. Undo machinery is not "not owed" here; it is **impossible**, and
+    those are different reasons for the same absence.
+
+  Calling both a pure transformation would put the wrong ADR-006 class on the one operation in this
+  crate that actually has external effects.
 - **No permission model.** `docs/09`'s capability grants do not exist here, and none is claimed.
 
 ## Running it

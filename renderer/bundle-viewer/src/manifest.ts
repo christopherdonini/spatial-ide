@@ -1,10 +1,33 @@
 /**
  * Reading the manifest, and refusing one this build does not implement.
  *
- * The manifest is the bundle's contract (ADR-017). This reader treats it as one: it refuses an
- * unknown `bundle_version` rather than reading it best-effort, and it checks the shape of everything
- * it goes on to rely on, so a malformed manifest fails here with a named state instead of surfacing
- * three layers down as an undefined property.
+ * The manifest is the bundle's contract (ADR-017). This reader treats it as one.
+ *
+ * ## Exact key sets, not merely "no unknown keys"
+ *
+ * ADR-017 §5 says every member it defines is **required**, and §3 says a conforming reader
+ * **refuses an unknown key** in any object the document defines. Together those make each object's
+ * key set *exactly* the declared set — so this reader checks both directions at once, per object,
+ * with [`exactKeys`].
+ *
+ * **A reader looser than its specification makes the specification a lie**, and in two distinct
+ * ways. A missing member that this reader tolerates is a member a writer can stop emitting without
+ * anyone noticing, so the "required" in §5 becomes decoration. An extra member it tolerates makes
+ * adding a key a non-breaking change — which destroys §9's whole reason for reserving
+ * `derived_caches` and `query_surface` in v1, because reserving a slot only buys anything if
+ * occupying an *unreserved* one would have been refused.
+ *
+ * The strictness is therefore not fastidiousness; it is the thing several of the format's stated
+ * guarantees actually rest on. `scripts/manifest.test.mjs` mutates every object in both directions
+ * — one field removed, one field added — and asserts each is refused, because a check nobody has
+ * seen fail is a check nobody has tested.
+ *
+ * ## What it does not check
+ *
+ * It validates **shape**, not truth: that `content_hash` is a string, never that it is the right
+ * hash. Hashes are verified against fetched bytes in `main.ts`, and the envelope facts against the
+ * decoded partition in `partition.ts`. Splitting it that way is deliberate — this file can be run
+ * against a string, and is.
  */
 
 import { BundleFailure, type FailureState } from './failure.js';
@@ -12,12 +35,91 @@ import { BundleFailure, type FailureState } from './failure.js';
 /** The one manifest version this build implements. */
 export const SUPPORTED_BUNDLE_VERSION = 1;
 
-export interface ManifestAsset {
+/**
+ * **The single table of ADR-017 §5's member sets, used by this reader and read by both sides' tests.**
+ *
+ * Before this existed, the reader's sets and the writer's assertion lived in two independently
+ * hand-maintained tables, and passing both proved less than it looked: editing the reader *and* its
+ * own test kept JS green while every real bundle became unreadable, and editing the writer *and* its
+ * own table kept Rust green while the reader still refused. What that arrangement guarantees is
+ * "neither side can move without **its own** table failing" — which is not the same as the two
+ * agreeing.
+ *
+ * So the sets live in `renderer/tests/data/manifest-key-sets.json`, this constant is checked against
+ * that file by `scripts/manifest.test.mjs`, and
+ * `kernel/tests/publish.rs::the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares` checks
+ * the **emitted** manifest against the same file. Neither side generates it from its own output —
+ * the discipline `renderer/tests/data/style-agreement.json` already uses for style resolution.
+ */
+export const MANIFEST_KEY_SETS: Readonly<Record<string, readonly string[]>> = {
+  $: [
+    'bundle_version', 'bundle', 'source', 'source_verification', 'style', 'software', 'operation',
+    'crs', 'identity', 'schema', 'bounds', 'data', 'viewer', 'license', 'reproducibility',
+    'derived_caches', 'query_surface', 'sidecar',
+  ],
+  resource_ref: [
+    'logical_uri', 'content_hash', 'source_revision', 'locators', 'cache_status',
+    'portability_policy',
+  ],
+  locator: ['kind', 'at'],
+  unknown_state: ['state', 'basis'],
+  '$.style': ['resource', 'style_version', 'match_column'],
+  '$.software': [
+    'engine_crate_version', 'kernel_crate_version', 'renderer_crate_version',
+    'arrow_crate_version_requirement', 'duckdb_library_version', 'bundle_writer_version', 'note',
+  ],
+  '$.operation': [
+    'digest_version', 'operation', 'source_logical_uri', 'source_content_hash', 'id_source',
+    'id_uniqueness', 'id_verified_rows', 'crs_identifier', 'crs_source', 'axis_order',
+    'axis_normalization', 'crs_definition_hash', 'filter', 'limit', 'projection', 'ordering',
+    'format', 'style_hash', 'digest',
+  ],
+  filter_whole_file: ['kind'],
+  filter_covering_bbox: ['kind', 'xmin', 'ymin', 'xmax', 'ymax', 'bbox_crs'],
+  format: [
+    'framing', 'compression', 'dictionaries', 'geometry_encoding', 'coordinate_layout',
+    'partition_target_bytes', 'partition_max_rows', 'partition_boundary_rule', 'max_partitions',
+  ],
+  '$.crs': [
+    'source', 'source_definition', 'display', 'transform', 'crs_source', 'axis_order',
+    'axis_normalization',
+  ],
+  '$.identity': ['id_source', 'id_uniqueness', 'id_verified_rows', 'id_js_exact', 'caveat'],
+  column: ['name', 'arrow_type', 'nullable'],
+  '$.bounds': ['xmin', 'ymin', 'xmax', 'ymax', 'crs', 'basis'],
+  '$.data': ['rows', 'format', 'partitions'],
+  partition: ['path', 'bytes', 'content_hash', 'rows'],
+  viewer_asset: ['path', 'bytes', 'content_hash'],
+  license_not_declared: ['state', 'basis'],
+  license_declared_by_source: ['state', 'license', 'attribution', 'redistribution'],
+  license_declared_by_operator: [
+    'state', 'license', 'attribution', 'redistribution', 'by', 'at',
+  ],
+  '$.reproducibility': ['grade', 'basis', 'why_not_higher'],
+  '$.query_surface': ['available', 'reserved_for'],
+  '$.sidecar': ['path', 'hashed', 'verified', 'note'],
+} as const;
+
+/** Anything this reader may fetch and hash: a partition, a viewer asset, or the style. */
+export interface FetchableAsset {
   path: string;
-  /** `null` where the manifest lists no byte count — the style. Never `0` as a stand-in. */
+  /**
+   * `null` **only** for the style, which ADR-017 lists with a content hash and no byte count. For
+   * partitions and viewer assets this is always an integer, because §5 makes `bytes` required
+   * there. Never `0` as a stand-in for "unknown".
+   */
   bytes: number | null;
   contentHash: string;
-  rows?: number;
+}
+
+export interface PartitionAsset extends FetchableAsset {
+  bytes: number;
+  /** Required on a partition entry (§5). Absent here means the manifest is malformed, not empty. */
+  rows: number;
+}
+
+export interface ViewerAsset extends FetchableAsset {
+  bytes: number;
 }
 
 export interface ManifestColumn {
@@ -37,9 +139,9 @@ export interface Manifest {
   schema: ManifestColumn[];
   attributeColumns: string[];
   bounds: { xmin: number; ymin: number; xmax: number; ymax: number } | null;
-  boundsBasis: string;
+  boundsBasis: string | null;
   rows: number;
-  partitions: ManifestAsset[];
+  partitions: PartitionAsset[];
   /**
    * The viewer's own assets, as the manifest lists them.
    *
@@ -47,8 +149,8 @@ export interface Manifest {
    * fetched or hashed by this page**: it *is* those assets. The hashes are for an external verifier
    * — the chain of trust does not close inside the browser.
    */
-  viewerAssets: ManifestAsset[];
-  style: ManifestAsset & { styleVersion: number; matchColumn: string | null };
+  viewerAssets: ViewerAsset[];
+  style: FetchableAsset & { styleVersion: number; matchColumn: string | null };
   license: Record<string, unknown>;
   reproducibilityGrade: string;
 }
@@ -69,6 +171,25 @@ function num(v: unknown, at: string): number {
   return v;
 }
 
+/**
+ * A **non-negative** integer — ADR-017 types `bytes`, `rows`, the versions and the ceilings as
+ * counts.
+ *
+ * Negative is refused here rather than surfacing later as a byte-count mismatch against a fetched
+ * asset, which would name the wrong thing: the manifest is malformed, not the bytes.
+ */
+function int(v: unknown, at: string): number {
+  if (typeof v !== 'number' || !Number.isInteger(v) || v < 0) {
+    fail('manifest-schema-invalid', `${at} must be a non-negative integer`);
+  }
+  return v;
+}
+
+function bool(v: unknown, at: string): boolean {
+  if (typeof v !== 'boolean') fail('manifest-schema-invalid', `${at} must be a boolean`);
+  return v;
+}
+
 function obj(v: unknown, at: string): Record<string, unknown> {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) {
     fail('manifest-schema-invalid', `${at} must be an object`);
@@ -82,47 +203,216 @@ function arr(v: unknown, at: string): unknown[] {
 }
 
 /**
- * Refuse a key this version does not define.
+ * The key set of this object must be **exactly** `required` — no extras, none missing.
  *
- * **ADR-017 §9's reservation argument rests on this.** `derived_caches` and `query_surface` are
- * declared empty in v1 so that filling them later is a *fill* rather than a format revision — and
- * that reasoning only holds if a reader would otherwise have **refused** the new key. A reader that
- * silently tolerated unknown keys would make adding one non-breaking, and reserving the slots would
- * buy nothing but documentation of intent.
- *
- * It is also the ordinary no-silent-anything discipline: a manifest carrying a key this build does
- * not understand is a manifest this build does not understand, and guessing at the rest of it is
- * how a reader ends up confidently rendering something the writer did not describe.
+ * Both halves matter and they fail for different reasons, so both are reported distinctly.
  */
-function knownKeys(map: Record<string, unknown>, at: string, allowed: readonly string[]): void {
-  for (const key of Object.keys(map)) {
-    if (!allowed.includes(key)) {
-      fail('manifest-schema-invalid', `${at} carries key "${key}", which bundle_version 1 does not define`);
+function exactKeys(map: Record<string, unknown>, at: string, required: readonly string[]): void {
+  const present = Object.keys(map);
+  for (const key of present) {
+    if (!required.includes(key)) {
+      fail(
+        'manifest-schema-invalid',
+        `${at} carries key "${key}", which bundle_version ${SUPPORTED_BUNDLE_VERSION} does not define`,
+      );
+    }
+  }
+  for (const key of required) {
+    if (!present.includes(key)) {
+      fail(
+        'manifest-schema-invalid',
+        `${at} is missing required key "${key}"; bundle_version ${SUPPORTED_BUNDLE_VERSION} defines every member as required`,
+      );
     }
   }
 }
 
-function asset(v: unknown, at: string): ManifestAsset {
+/**
+ * A member that is either a plain string or a named-unknown state (ADR-017 §6).
+ *
+ * The `{state, basis}` shape is checked exactly, because "an unknown member carries its basis" is
+ * only a guarantee if a basis-less state is refused.
+ */
+function stringOrUnknownState(v: unknown, at: string): void {
+  if (typeof v === 'string') return;
   const o = obj(v, at);
-  knownKeys(o, at, ['path', 'bytes', 'content_hash', 'rows']);
-  const a: ManifestAsset = {
-    path: str(o.path, `${at}.path`),
-    bytes: o.bytes === null ? null : num(o.bytes, `${at}.bytes`),
+  exactKeys(o, at, MANIFEST_KEY_SETS.unknown_state);
+  str(o.state, `${at}.state`);
+  str(o.basis, `${at}.basis`);
+}
+
+/** A `docs/11` ResourceRef: all six members, in the shapes §6 gives them. */
+function resourceRef(v: unknown, at: string): Record<string, unknown> {
+  const r = obj(v, at);
+  exactKeys(r, at, MANIFEST_KEY_SETS.resource_ref);
+  str(r.logical_uri, `${at}.logical_uri`);
+  stringOrUnknownState(r.content_hash, `${at}.content_hash`);
+  stringOrUnknownState(r.source_revision, `${at}.source_revision`);
+  const locators = arr(r.locators, `${at}.locators`);
+  if (locators.length === 0) {
+    fail('manifest-schema-invalid', `${at}.locators is empty; docs/11 requires one or more`);
+  }
+  locators.forEach((l, i) => {
+    const lo = obj(l, `${at}.locators[${i}]`);
+    exactKeys(lo, `${at}.locators[${i}]`, MANIFEST_KEY_SETS.locator);
+    str(lo.kind, `${at}.locators[${i}].kind`);
+    str(lo.at, `${at}.locators[${i}].at`);
+  });
+  str(r.cache_status, `${at}.cache_status`);
+  str(r.portability_policy, `${at}.portability_policy`);
+  return r;
+}
+
+/**
+ * A path that would escape the bundle is refused rather than fetched.
+ *
+ * The publisher validates on the way out; a reader that trusted the manifest for this would be
+ * trusting a file it was handed.
+ */
+function safeRelativePath(path: string, at: string): string {
+  if (
+    path.length === 0 ||
+    path.startsWith('/') ||
+    path.includes('..') ||
+    path.includes('\\') ||
+    /^[A-Za-z]:/.test(path)
+  ) {
+    fail('manifest-schema-invalid', `${at} "${path}" is not a safe bundle-relative path`);
+  }
+  return path;
+}
+
+/** A partition entry: `path`, `bytes`, `content_hash`, `rows` — all four, all required (§5). */
+function partitionAsset(v: unknown, at: string): PartitionAsset {
+  const o = obj(v, at);
+  exactKeys(o, at, MANIFEST_KEY_SETS.partition);
+  return {
+    path: safeRelativePath(str(o.path, `${at}.path`), `${at}.path`),
+    bytes: int(o.bytes, `${at}.bytes`),
+    contentHash: str(o.content_hash, `${at}.content_hash`),
+    rows: int(o.rows, `${at}.rows`),
+  };
+}
+
+/**
+ * A viewer entry: `path`, `bytes`, `content_hash` — and **`rows` is forbidden**, not optional.
+ *
+ * §5 says `rows` is *omitted* on a viewer asset because it does not apply. A reader that tolerated
+ * it would accept a manifest asserting a row count for a JavaScript file, which is a claim the
+ * format does not have a meaning for.
+ */
+function viewerAsset(v: unknown, at: string): ViewerAsset {
+  const o = obj(v, at);
+  exactKeys(o, at, MANIFEST_KEY_SETS.viewer_asset);
+  return {
+    path: safeRelativePath(str(o.path, `${at}.path`), `${at}.path`),
+    bytes: int(o.bytes, `${at}.bytes`),
     contentHash: str(o.content_hash, `${at}.content_hash`),
   };
-  if (typeof o.rows === 'number') a.rows = o.rows;
-  // A path that escapes the bundle is refused rather than fetched. The publisher validates on the
-  // way out; a reader that trusted the manifest for this would be trusting a file it was handed.
-  if (
-    a.path.length === 0 ||
-    a.path.startsWith('/') ||
-    a.path.includes('..') ||
-    a.path.includes('\\') ||
-    /^[A-Za-z]:/.test(a.path)
-  ) {
-    fail('manifest-schema-invalid', `${at}.path "${a.path}" is not a safe bundle-relative path`);
+}
+
+/** The license block, whose member set depends on its declared state (§10). */
+function licenseBlock(v: unknown, at: string): Record<string, unknown> {
+  const l = obj(v, at);
+  const state = str(l.state, `${at}.state`);
+  switch (state) {
+    case 'not-declared':
+      exactKeys(l, at, MANIFEST_KEY_SETS.license_not_declared);
+      str(l.basis, `${at}.basis`);
+      break;
+    case 'declared-by-source':
+      exactKeys(l, at, MANIFEST_KEY_SETS.license_declared_by_source);
+      break;
+    case 'declared-by-operator':
+      // `at` here is the instant the **operator made the declaration** — part of the claim, and a
+      // semantic input to the manifest. It is not build-execution timing, which lives outside the
+      // hashed surface in `build-info.json`. See ADR-017 §10 and §12.
+      exactKeys(l, at, MANIFEST_KEY_SETS.license_declared_by_operator);
+      str(l.by, `${at}.by`);
+      str(l.at, `${at}.at`);
+      break;
+    default:
+      fail('manifest-schema-invalid', `${at}.state "${state}" is not a state this version defines`);
   }
-  return a;
+  if (state !== 'not-declared') {
+    str(l.license, `${at}.license`);
+    if (l.attribution !== null) str(l.attribution, `${at}.attribution`);
+    str(l.redistribution, `${at}.redistribution`);
+  }
+  return l;
+}
+
+/** The operation block: §8's eighteen digest inputs plus the digest taken over them. */
+function operationBlock(v: unknown): void {
+  const at = '$.operation';
+  const o = obj(v, at);
+  exactKeys(o, at, MANIFEST_KEY_SETS['$.operation']);
+  int(o.digest_version, `${at}.digest_version`);
+  for (const k of [
+    'operation',
+    'source_logical_uri',
+    'source_content_hash',
+    'id_source',
+    'id_uniqueness',
+    'crs_identifier',
+    'crs_source',
+    'axis_order',
+    'axis_normalization',
+    'ordering',
+    'style_hash',
+    'digest',
+  ]) {
+    str(o[k], `${at}.${k}`);
+  }
+  if (o.id_verified_rows !== null) int(o.id_verified_rows, `${at}.id_verified_rows`);
+  if (o.limit !== null) int(o.limit, `${at}.limit`);
+  stringOrUnknownState(o.crs_definition_hash, `${at}.crs_definition_hash`);
+
+  // §8 gives `filter` exactly two shapes, and a third would be an operation this reader cannot
+  // describe — so it is refused rather than ignored.
+  const f = obj(o.filter, `${at}.filter`);
+  const kind = str(f.kind, `${at}.filter.kind`);
+  if (kind === 'whole-file') {
+    exactKeys(f, `${at}.filter`, MANIFEST_KEY_SETS.filter_whole_file);
+  } else if (kind === 'covering-bbox-intersects') {
+    exactKeys(f, `${at}.filter`, MANIFEST_KEY_SETS.filter_covering_bbox);
+    for (const k of ['xmin', 'ymin', 'xmax', 'ymax']) num(f[k], `${at}.filter.${k}`);
+    if (f.bbox_crs !== null) str(f.bbox_crs, `${at}.filter.bbox_crs`);
+  } else {
+    fail('manifest-schema-invalid', `${at}.filter.kind "${kind}" is not a filter this version defines`);
+  }
+
+  arr(o.projection, `${at}.projection`).forEach((c, i) => schemaColumn(c, `${at}.projection[${i}]`));
+  formatBlock(o.format, `${at}.format`);
+}
+
+/** The partition format declaration — the same object in `data.format` and `operation.format`. */
+function formatBlock(v: unknown, at: string): void {
+  const f = obj(v, at);
+  exactKeys(f, at, MANIFEST_KEY_SETS.format);
+  for (const k of [
+    'framing',
+    'compression',
+    'dictionaries',
+    'geometry_encoding',
+    'coordinate_layout',
+    'partition_boundary_rule',
+  ]) {
+    str(f[k], `${at}.${k}`);
+  }
+  for (const k of ['partition_target_bytes', 'partition_max_rows', 'max_partitions']) {
+    int(f[k], `${at}.${k}`);
+  }
+}
+
+function schemaColumn(v: unknown, at: string): ManifestColumn {
+  const o = obj(v, at);
+  exactKeys(o, at, MANIFEST_KEY_SETS.column);
+  return {
+    name: str(o.name, `${at}.name`),
+    arrowType: str(o.arrow_type, `${at}.arrow_type`),
+    nullable: bool(o.nullable, `${at}.nullable`),
+  };
 }
 
 export function parseManifest(text: string): Manifest {
@@ -133,16 +423,15 @@ export function parseManifest(text: string): Manifest {
     throw new BundleFailure('manifest-unparseable', 'manifest.json', String(e));
   }
   const m = obj(root, '$');
-  knownKeys(m, '$', [
-    'bundle_version', 'bundle', 'source', 'source_verification', 'style', 'software', 'operation',
-    'crs', 'identity', 'schema', 'bounds', 'data', 'viewer', 'license', 'reproducibility',
-    'derived_caches', 'query_surface', 'sidecar',
-  ]);
 
-  const version = m.bundle_version;
-  if (typeof version !== 'number') {
-    fail('manifest-schema-invalid', '$.bundle_version must be a number');
-  }
+  // **The version gate runs before any other check, and the order is load-bearing.**
+  //
+  // ADR-017 §3 says additive evolution proceeds by incrementing the version — so a v2 manifest *is*
+  // a v1 manifest with members added. Judging the key set first would report `manifest-schema-invalid`
+  // for a document whose actual problem is that this build does not implement its version, and §14
+  // lists those as two distinct named states precisely so a reader is told which one it hit. An
+  // earlier version of this function checked the key set first and did exactly that.
+  const version = int(m.bundle_version, '$.bundle_version');
   if (version !== SUPPORTED_BUNDLE_VERSION) {
     throw new BundleFailure(
       'manifest-unsupported-version',
@@ -152,60 +441,109 @@ export function parseManifest(text: string): Manifest {
     );
   }
 
-  const crs = obj(m.crs, '$.crs');
-  knownKeys(crs, '$.crs', [
-    'source', 'source_definition', 'display', 'transform', 'crs_source', 'axis_order',
-    'axis_normalization',
-  ]);
-  const identity = obj(m.identity, '$.identity');
-  knownKeys(identity, '$.identity', [
-    'id_source', 'id_uniqueness', 'id_verified_rows', 'id_js_exact', 'caveat',
-  ]);
-  const data = obj(m.data, '$.data');
-  knownKeys(data, '$.data', ['rows', 'format', 'partitions']);
-  // Parsed to validate its shape; the encoding a partition actually carries is checked against its
-  // own envelope in `decodePartition`, which is where a mismatch can be caught against real bytes.
-  obj(data.format, '$.data.format');
+  exactKeys(m, '$', MANIFEST_KEY_SETS['$']);
+
+  // The three ResourceRefs ADR-005 and docs/11 make owed: the bundle, the source, and the style.
+  resourceRef(m.bundle, '$.bundle');
+  resourceRef(m.source, '$.source');
+  str(m.source_verification, '$.source_verification');
+
   const styleBlock = obj(m.style, '$.style');
-  const styleResource = obj(styleBlock.resource, '$.style.resource');
-  const repro = obj(m.reproducibility, '$.reproducibility');
+  exactKeys(styleBlock, '$.style', MANIFEST_KEY_SETS['$.style']);
+  const styleResource = resourceRef(styleBlock.resource, '$.style.resource');
 
-  const schema: ManifestColumn[] = arr(m.schema, '$.schema').map((c, i) => {
-    const o = obj(c, `$.schema[${i}]`);
-    return {
-      name: str(o.name, `$.schema[${i}].name`),
-      arrowType: str(o.arrow_type, `$.schema[${i}].arrow_type`),
-      nullable: o.nullable === true,
-    };
-  });
+  const software = obj(m.software, '$.software');
+  exactKeys(software, '$.software', MANIFEST_KEY_SETS['$.software']);
+  int(software.bundle_writer_version, '$.software.bundle_writer_version');
+  for (const k of MANIFEST_KEY_SETS['$.software']) {
+    if (k !== 'bundle_writer_version') str(software[k], `$.software.${k}`);
+  }
 
-  const boundsRaw = m.bounds;
+  operationBlock(m.operation);
+
+  const crs = obj(m.crs, '$.crs');
+  exactKeys(crs, '$.crs', MANIFEST_KEY_SETS['$.crs']);
+  if (crs.source_definition !== null) str(crs.source_definition, '$.crs.source_definition');
+  // Every other `crs` member is a string. Presence was checked above; these are the types,
+  // which were missing — `axis_order: 42` parsed before this line existed.
+  for (const k of ['source', 'display', 'transform', 'crs_source', 'axis_order', 'axis_normalization']) {
+    str(crs[k], `$.crs.${k}`);
+  }
+
+  const identity = obj(m.identity, '$.identity');
+  exactKeys(identity, '$.identity', MANIFEST_KEY_SETS['$.identity']);
+  if (identity.id_verified_rows !== null) int(identity.id_verified_rows, '$.identity.id_verified_rows');
+  if (identity.id_js_exact !== null) bool(identity.id_js_exact, '$.identity.id_js_exact');
+
+  const schema = arr(m.schema, '$.schema').map((c, i) => schemaColumn(c, `$.schema[${i}]`));
+  if (schema.length < 2) {
+    fail(
+      'manifest-schema-invalid',
+      '$.schema has fewer than two columns; every bundle carries `id` and a geometry column',
+    );
+  }
+
+  // `bounds` is the one top-level member that may be `null` — a filter can legitimately select no
+  // rows. When present its six members are all required.
   let bounds: Manifest['bounds'] = null;
-  if (boundsRaw !== null && boundsRaw !== undefined) {
-    const b = obj(boundsRaw, '$.bounds');
+  let boundsBasis: string | null = null;
+  if (m.bounds !== null) {
+    const b = obj(m.bounds, '$.bounds');
+    exactKeys(b, '$.bounds', MANIFEST_KEY_SETS['$.bounds']);
     bounds = {
       xmin: num(b.xmin, '$.bounds.xmin'),
       ymin: num(b.ymin, '$.bounds.ymin'),
       xmax: num(b.xmax, '$.bounds.xmax'),
       ymax: num(b.ymax, '$.bounds.ymax'),
     };
+    str(b.crs, '$.bounds.crs');
+    boundsBasis = str(b.basis, '$.bounds.basis');
   }
 
-  // **The style's path is its locator, not its logical URI.** Validating the URI and then
-  // overwriting the field would run the path checks on a string that is never fetched — the
-  // validation would pass while the thing actually requested went unchecked.
-  const locators = arr(styleResource.locators, '$.style.resource.locators');
-  const firstLocator = obj(locators[0], '$.style.resource.locators[0]');
-  const styleAsset = asset(
-    {
-      path: str(firstLocator.at, '$.style.resource.locators[0].at'),
-      // The manifest lists no byte count for the style, so there is none to check. Its content hash
-      // covers length as well as content, which is why `bytes` is `null` here rather than `0` — a
-      // zero would be a length assertion nobody made.
-      bytes: null,
-      content_hash: styleResource.content_hash,
-    },
-    '$.style.resource',
+  const data = obj(m.data, '$.data');
+  exactKeys(data, '$.data', MANIFEST_KEY_SETS['$.data']);
+  formatBlock(data.format, '$.data.format');
+
+  const license = licenseBlock(m.license, '$.license');
+
+  const repro = obj(m.reproducibility, '$.reproducibility');
+  exactKeys(repro, '$.reproducibility', MANIFEST_KEY_SETS['$.reproducibility']);
+  arr(repro.basis, '$.reproducibility.basis').forEach((b, i) =>
+    str(b, `$.reproducibility.basis[${i}]`),
+  );
+  str(repro.why_not_higher, '$.reproducibility.why_not_higher');
+
+  // The two reservations. Empty in v1, and checked so that a bundle claiming to carry a derived
+  // cache this build cannot read is refused rather than half-rendered.
+  const caches = arr(m.derived_caches, '$.derived_caches');
+  if (caches.length > 0) {
+    fail(
+      'manifest-schema-invalid',
+      `$.derived_caches has ${caches.length} entries; bundle_version ${SUPPORTED_BUNDLE_VERSION} reserves the slot and defines no entry shape`,
+    );
+  }
+  const query = obj(m.query_surface, '$.query_surface');
+  exactKeys(query, '$.query_surface', MANIFEST_KEY_SETS['$.query_surface']);
+  if (bool(query.available, '$.query_surface.available')) {
+    fail(
+      'manifest-schema-invalid',
+      `$.query_surface.available is true; bundle_version ${SUPPORTED_BUNDLE_VERSION} reserves the surface and implements none`,
+    );
+  }
+  str(query.reserved_for, '$.query_surface.reserved_for');
+
+  const sidecar = obj(m.sidecar, '$.sidecar');
+  exactKeys(sidecar, '$.sidecar', MANIFEST_KEY_SETS['$.sidecar']);
+  str(sidecar.path, '$.sidecar.path');
+  bool(sidecar.hashed, '$.sidecar.hashed');
+  bool(sidecar.verified, '$.sidecar.verified');
+  str(sidecar.note, '$.sidecar.note');
+
+  // **The style's path is its locator, not its logical URI.** The URI is not a fetchable path, and
+  // validating it while fetching something else would leave the fetched thing unchecked.
+  const firstLocator = obj(
+    arr(styleResource.locators, '$.style.resource.locators')[0],
+    '$.style.resource.locators[0]',
   );
 
   return {
@@ -217,24 +555,37 @@ export function parseManifest(text: string): Manifest {
     idUniqueness: str(identity.id_uniqueness, '$.identity.id_uniqueness'),
     identityCaveat: str(identity.caveat, '$.identity.caveat'),
     schema,
-    // Everything after `id` and `geometry` is the declared projection, in declared order.
+    // Everything after `id` and `geometry` is the declared projection, in declared order (§5).
     attributeColumns: schema.slice(2).map((c) => c.name),
     bounds,
-    boundsBasis: str(m.bounds_basis ?? (boundsRaw ? obj(boundsRaw, '$.bounds').basis : ''), '$.bounds.basis'),
-    rows: num(data.rows, '$.data.rows'),
+    boundsBasis,
+    rows: int(data.rows, '$.data.rows'),
     partitions: arr(data.partitions, '$.data.partitions').map((p, i) =>
-      asset(p, `$.data.partitions[${i}]`),
+      partitionAsset(p, `$.data.partitions[${i}]`),
     ),
-    viewerAssets: arr(m.viewer, '$.viewer').map((v, i) => asset(v, `$.viewer[${i}]`)),
+    viewerAssets: arr(m.viewer, '$.viewer').map((v, i) => viewerAsset(v, `$.viewer[${i}]`)),
     style: {
-      ...styleAsset,
-      styleVersion: num(styleBlock.style_version, '$.style.style_version'),
+      path: safeRelativePath(
+        str(firstLocator.at, '$.style.resource.locators[0].at'),
+        '$.style.resource.locators[0].at',
+      ),
+      // ADR-017 lists no byte count for the style, so there is none to check. `null` says that,
+      // where a `0` would be a length assertion nobody made. Its content hash covers length anyway.
+      bytes: null,
+      contentHash:
+        typeof styleResource.content_hash === 'string'
+          ? styleResource.content_hash
+          : fail(
+              'manifest-schema-invalid',
+              '$.style.resource.content_hash is a named-unknown state; a style with no content hash cannot be verified',
+            ),
+      styleVersion: int(styleBlock.style_version, '$.style.style_version'),
       matchColumn:
-        styleBlock.match_column === null || styleBlock.match_column === undefined
+        styleBlock.match_column === null
           ? null
           : str(styleBlock.match_column, '$.style.match_column'),
     },
-    license: obj(m.license, '$.license'),
+    license,
     reproducibilityGrade: str(repro.grade, '$.reproducibility.grade'),
   };
 }

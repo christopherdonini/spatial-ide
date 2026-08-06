@@ -396,8 +396,18 @@ Four things about it are decisions rather than details:
 
 ### 9. Reservations, present in v1 on purpose
 
-Because a reader refuses unknown keys, a format that gained these later would be a breaking change.
-Declaring them empty now makes adding either a **fill** rather than a format revision.
+Because a reader refuses unknown keys, a format that gained these members later would break every
+existing reader at the *key* level. Declaring them now means occupying them is not that kind of
+break.
+
+**What reserving actually buys, stated narrowly because the obvious phrasing overstates it.** It is
+*not* that a v1 reader will accept a filled slot: a conforming v1 reader refuses a non-empty
+`derived_caches` and an `available: true` query surface, because v1 defines no entry shape and no
+surface, and rendering half of something it cannot describe is worse than refusing. **Filling either
+still requires a version increment.** What the reservation buys is that the increment is the *only*
+thing needed — the key is already part of the format, so no reader has to be taught that
+`derived_caches` is a legitimate member rather than the unknown-key error it would otherwise be, and
+the slot cannot be claimed by something else in the meantime.
 
 - **`derived_caches: []`.** PMTiles is an optional derived display cache and is **not built in this
   cut**. The canonical source of truth is and remains the partitioned query data.
@@ -415,7 +425,26 @@ consumer can tell a file fact from an operator's declaration without asking the 
   license metadata "when known"; it does not say refuse when absent.
 - `declared-by-source` — read verbatim from one named source metadata key. **No license text is
   parsed and no SPDX is interpreted.**
-- `declared-by-operator` — with who and when.
+- `declared-by-operator` — with who (`by`) and when (`at`).
+
+> **`license.at` is a semantic input, not build timing, and the distinction is the one place these
+> two could be confused.** It is the instant the **operator made the declaration** — part of the
+> claim itself, exactly as `by` is — so it sits **inside the manifest and inside §12's determinism
+> surface**: two publishes that declare different `at` values are two different publishes and
+> produce two different manifests, correctly. That is not a violation of "wall-clock values live in
+> the sidecar"; §12's rule is about **build-execution** timing — when *this run* started and
+> finished — which is a property of the run rather than of the request, and which is why it lives
+> outside every hash in `build-info.json`.
+>
+> The test is what the value describes. A timestamp describing **the input** belongs in the
+> determinism surface; a timestamp describing **the execution** does not. `license.at` is the first;
+> every field in the sidecar is the second.
+>
+> **"Determinism surface", not "hashed surface", and the difference is real.** The manifest carries
+> no hash of itself (§6 makes the bundle's own `content_hash` `not-applicable`), and §8's digest
+> input set does not include `license` at all. So `license.at` is covered by **neither** a hash nor
+> the operation digest — what covers it is §12's byte-identity guarantee over `manifest.json`.
+> Saying "hashed" would invite a reader to think a hash somewhere protects it.
 - **Source declares *and* operator declares → typed refusal**, on ADR-015 §4's precedent exactly: an
   assertion is admissible only over a source that declares nothing.
 - **A declared `redistribution: forbidden` → typed refusal.** A static bundle *is* a redistributed
@@ -443,8 +472,18 @@ than asserting the conclusion.
 **Not claimed:** across Arrow, DuckDB or toolchain versions; across machines; or for the sidecar.
 `software` records what ran so a reader can tell whether two bundles are comparable at all.
 
-**Wall-clock values live in `build-info.json`, a separate file** that is not hash-listed, not
-verified, and excluded from the determinism assertion. Its absence must not break a reader.
+**Build-execution wall-clock values live in `build-info.json`, a separate file** that is not
+hash-listed, not verified, and excluded from the determinism assertion. Its absence must not break a
+reader.
+
+**"Wall-clock values" here means values describing *this run*, and the rule is not "no timestamp may
+appear in the manifest".** `license.at` — the instant an operator declared license terms — is a
+manifest member and is inside the determinism surface, because it describes an **input** rather than
+an execution: changing it changes the request, and two publishes that make different declarations
+*should* produce different manifests. What must never enter the manifest is when a build began, how
+long it took, or anything else that varies between two runs of the **same** request. See §10 — which
+also records that "determinism surface" is the accurate phrase, since the manifest carries no hash
+of itself and the operation digest does not cover `license`.
 
 > **This is a reading of the brief, recorded so it can be corrected at acceptance.** The brief asked
 > both for a "separate non-hashed sidecar field" *and* for a byte-identical manifest. A field inside
@@ -522,13 +561,30 @@ reader less — ADR-010 rule 5 asks for a visible signal, not erasure. The named
   publish, an inadmissible projection, and a style that does not match the dataset or the projection.
   **Insufficient space is detected at write time, never predicted** — the bundle's size is not known
   before the stream is read, and a prediction that can be wrong is worse than a detection that cannot.
-- **Reversibility class: `irreversible`**, declared on the operation's own API and recorded here.
+- **Reversibility class: `irreversible`.** It is declared **on the publish operation's own API**
+  (a `REVERSIBILITY_CLASS` constant) and stated in this ADR. **It is not a manifest field**, and
+  earlier drafts of this section wrongly said it was recorded in the manifest. ADR-006's declaration
+  is addressed to the caller deciding whether to invoke the operation; a bundle's reader has already
+  been handed the result and cannot undo it, so putting the class in the manifest would describe an
+  act they did not perform. Recording it there is a live option and would be a *different* thing
+  from the ADR-006 declaration, not a discharge of it.
 
-> **The approval gate `docs/09` requires does not exist.** "Export and publish are distinct
-> capabilities, never implied by write. Class-3 side effects always require approval." This slice has
-> no permission model, exactly as `kernel/README.md` already records for capability grants generally.
-> The operation declares its class and this ADR records the gap; shipping an ungated class-3
-> operation while saying nothing would be the silent version of the same problem. **Owed.**
+> **Two of ADR-006's three class-3 obligations do not exist.** The row is *audit log · explicit
+> approval · declared reversible / compensatable / irreversible*, and only the third is met.
+>
+> - **Explicit approval — owed and absent.** `docs/09`: "Export and publish are distinct
+>   capabilities, never implied by write. Class-3 side effects always require approval." This slice
+>   has no permission model, exactly as `kernel/README.md` already records for capability grants
+>   generally.
+> - **An audit log — owed and absent.** Nothing records that a publish happened, to what
+>   destination, by whom, or with what result. This is the obligation most easily assumed handled,
+>   because the kernel does discuss a command/event log — but that is the *workspace-mutation*
+>   machinery ADR-006 assigns to a different class, and it would not serve as an audit record for an
+>   external side effect even if it existed.
+>
+> Declaring the class satisfies one obligation, not the row. Both gaps are named here rather than
+> left for a reader to notice that a class-3 operation is silent about two thirds of what its class
+> requires. **Owed.**
 
 ### 16. Declared ceilings (ADR-010 rule 6), and the behaviour at each
 

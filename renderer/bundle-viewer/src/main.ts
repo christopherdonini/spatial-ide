@@ -39,7 +39,7 @@
  */
 
 import { BundleFailure, showFailure } from './failure.js';
-import { parseManifest, type Manifest, type ManifestAsset } from './manifest.js';
+import { parseManifest, type FetchableAsset, type Manifest } from './manifest.js';
 import { decodePartition, type Partition } from './partition.js';
 import {
   drawAll,
@@ -126,7 +126,7 @@ function text(id: string, value: string): void {
   if (el) el.textContent = value;
 }
 
-async function fetchAsset(asset: ManifestAsset): Promise<Uint8Array> {
+async function fetchAsset(asset: FetchableAsset): Promise<Uint8Array> {
   let response: Response;
   try {
     // Resolved against the bundle root, which was itself derived from this page's location — so

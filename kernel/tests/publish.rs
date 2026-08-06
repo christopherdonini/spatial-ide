@@ -8,7 +8,9 @@
 use arrow::array::Array as _;
 use std::path::{Path, PathBuf};
 
-use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{
+    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, LicenseMode,
+};
 use spatial_engine::{CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::{self, redaction};
 use spatial_kernel::publish::{
@@ -574,4 +576,227 @@ fn ids_ascend_across_partitions_and_the_null_branch_reaches_the_bundle() {
     // bundle rather than only by a unit test.
     assert!(saw_null, "no NULL zone reached the bundle");
     assert!(saw_value, "no non-NULL zone reached the bundle");
+}
+
+/// The **emitted** manifest's key sets, checked against the shared artifact — not against a table
+/// in this file.
+///
+/// **The shared artifact is the point.** Before it existed, the writer's expected sets lived here
+/// and the reader's lived in `renderer/bundle-viewer/src/manifest.ts`, each with a test over its
+/// own table. Passing both proved less than it looked: editing the reader and its own test kept the
+/// JS suite green while every real bundle became unreadable, and editing the writer and this table
+/// kept Rust green while the reader still refused. Two hand-maintained tables guarantee only that
+/// neither side moves without *its own* test failing, which is not agreement.
+///
+/// So both sides now read `renderer/tests/data/manifest-key-sets.json`, and **neither generates it
+/// from its own output** — the discipline `renderer/tests/data/style-agreement.json` already
+/// applies to style resolution. A writer that drifts fails here; a reader that drifts fails in
+/// `scripts/manifest.test.mjs`; a change made to both without touching the artifact fails in both.
+#[test]
+fn the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares() {
+    const SHARED: &str = include_str!("../../renderer/tests/data/manifest-key-sets.json");
+    let shared: serde_json::Value = serde_json::from_str(SHARED).expect("shared key sets are JSON");
+    let want = |name: &str| -> Vec<String> {
+        let mut v: Vec<String> = shared["key_sets"][name]
+            .as_array()
+            .unwrap_or_else(|| panic!("the shared artifact has no key set named `{name}`"))
+            .iter()
+            .map(|k| k.as_str().unwrap().to_string())
+            .collect();
+        v.sort();
+        v
+    };
+    let got = |node: &serde_json::Value, at: &str| -> Vec<String> {
+        let mut v: Vec<String> = node
+            .as_object()
+            .unwrap_or_else(|| panic!("{at} is not an object"))
+            .keys()
+            .cloned()
+            .collect();
+        v.sort();
+        v
+    };
+
+    let d = workspace("manifest-key-sets");
+    let ds = pinned(&fixture(&d, 400));
+    let v = viewer();
+    let dest = d.join("bundle");
+
+    // An **operator-declared license** and a **bbox filter**, so the two shapes that appear only
+    // under those options are covered here rather than only in the default case. `license.at` is
+    // the declaration instant — a semantic input inside the determinism surface, not build timing.
+    let mut req = request(&ds, &v, dest.clone());
+    req.query = ViewportQuery::viewport(
+        spatial_engine::Bbox {
+            xmin: 2_600_000.0,
+            ymin: 1_200_000.0,
+            xmax: 2_612_000.0,
+            ymax: 1_212_000.0,
+        },
+        "EPSG:2056",
+    );
+    req.license = Some(OperatorLicense {
+        license: "CC-BY-4.0".into(),
+        attribution: Some("(c) Example Cadastre".into()),
+        redistribution: bundle::Redistribution::Permitted,
+        by: "operator".into(),
+        at: "2026-08-06T09:00:00Z".into(),
+    });
+    publish(&req, &CancelToken::new(), None).unwrap();
+    let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
+
+    // Objects addressed by path.
+    for (path, set) in [
+        ("$", "$"),
+        ("bundle", "resource_ref"),
+        ("source", "resource_ref"),
+        ("style", "$.style"),
+        ("style/resource", "resource_ref"),
+        ("software", "$.software"),
+        ("operation", "$.operation"),
+        ("operation/format", "format"),
+        ("crs", "$.crs"),
+        ("identity", "$.identity"),
+        ("bounds", "$.bounds"),
+        ("data", "$.data"),
+        ("data/format", "format"),
+        ("license", "license_declared_by_operator"),
+        ("reproducibility", "$.reproducibility"),
+        ("query_surface", "$.query_surface"),
+        ("sidecar", "$.sidecar"),
+    ] {
+        let node = if path == "$" {
+            &m
+        } else {
+            path.split('/').fold(&m, |n, step| {
+                n.get(step).unwrap_or_else(|| panic!("{path} is missing from the manifest"))
+            })
+        };
+        assert_eq!(got(node, path), want(set), "{path} does not match the shared key set `{set}`");
+    }
+
+    // Repeating shapes, one element each — one code path emits them all.
+    for (path, set) in [
+        ("data/partitions", "partition"),
+        ("viewer", "viewer_asset"),
+        ("schema", "column"),
+        ("operation/projection", "column"),
+        ("bundle/locators", "locator"),
+        ("source/locators", "locator"),
+        ("style/resource/locators", "locator"),
+    ] {
+        let arr = path
+            .split('/')
+            .fold(&m, |n, step| &n[step])
+            .as_array()
+            .unwrap_or_else(|| panic!("{path} is not an array"));
+        let first =
+            arr.first().unwrap_or_else(|| panic!("{path} is empty, so it establishes nothing"));
+        assert_eq!(got(first, path), want(set), "{path}[0] does not match `{set}`");
+    }
+
+    // The named-unknown state, wherever one appears. The reader enforces this shape exactly, so a
+    // writer emitting `{state}` without a basis would be refused by every conforming reader.
+    for path in ["bundle/content_hash", "bundle/source_revision", "source/source_revision"] {
+        let node = path.split('/').fold(&m, |n, step| &n[step]);
+        assert_eq!(got(node, path), want("unknown_state"), "{path} is not a named-unknown state");
+    }
+
+    // The bbox filter's shape, which the default whole-file case never exercises.
+    assert_eq!(m["operation"]["filter"]["kind"], "covering-bbox-intersects");
+    assert_eq!(
+        got(&m["operation"]["filter"], "operation/filter"),
+        want("filter_covering_bbox"),
+        "the bbox filter does not match the shared key set"
+    );
+
+    // **`rows` is omitted on a viewer asset, not null.** The format has no meaning for a row count
+    // on a JavaScript file, so the reader refuses one — which only works if the writer omits it.
+    for asset in m["viewer"].as_array().unwrap() {
+        assert!(asset.get("rows").is_none(), "a viewer asset carries `rows`");
+    }
+    // …and every partition carries one, as a non-negative integer, as does `bytes`.
+    for p in m["data"]["partitions"].as_array().unwrap() {
+        assert!(p["rows"].is_u64(), "a partition's `rows` is not a non-negative integer");
+        assert!(p["bytes"].is_u64(), "a partition's `bytes` is not a non-negative integer");
+    }
+
+    // The reservations are empty and unavailable in v1, which is what makes them reservations.
+    assert!(m["derived_caches"].as_array().unwrap().is_empty());
+    assert_eq!(m["query_surface"]["available"], serde_json::Value::Bool(false));
+
+    // And the two shapes the first publish could not show, from a second with neither option.
+    let plain = d.join("bundle-whole-file");
+    publish(&request(&ds, &v, plain.clone()), &CancelToken::new(), None).unwrap();
+    let w: serde_json::Value = serde_json::from_slice(&read(&plain, bundle::MANIFEST_PATH)).unwrap();
+    assert_eq!(
+        got(&w["operation"]["filter"], "operation/filter"),
+        want("filter_whole_file"),
+        "the whole-file filter does not match the shared key set"
+    );
+    assert_eq!(got(&w["license"], "license"), want("license_not_declared"));
+
+    // **The third license shape, from a source that declares its own terms.**
+    //
+    // It was reachable in the writer and exercised by nothing: no test constructed it, so the shape
+    // could have drifted in the artifact and the reader together with both suites staying green and
+    // a real source-declared bundle being misjudged. It needs a real footer, which is why the
+    // fixture generator has a `LicenseMode` — the same reason it has `CrsMode` and `IdentityMode`.
+    let src = d.join("licensed.parquet");
+    write_geoparquet(
+        &src,
+        &FixtureSpec {
+            features: 200,
+            attributes: AttributeMode::CategoricalZone,
+            license: LicenseMode::DeclaredBySource,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let licensed_ds = pinned(&src);
+    let licensed = d.join("bundle-source-licensed");
+    publish(&request(&licensed_ds, &v, licensed.clone()), &CancelToken::new(), None).unwrap();
+    let l: serde_json::Value =
+        serde_json::from_slice(&read(&licensed, bundle::MANIFEST_PATH)).unwrap();
+    assert_eq!(
+        got(&l["license"], "license"),
+        want("license_declared_by_source"),
+        "a source-declared license does not match the shared key set"
+    );
+    assert_eq!(l["license"]["state"], "declared-by-source");
+    // Carried verbatim: the engine reads a declared set of keys and interprets no license text.
+    assert_eq!(l["license"]["license"], "CC-BY-4.0");
+    assert_eq!(l["license"]["redistribution"], "permitted");
+}
+
+/// A source whose own terms forbid redistribution is refused, because a static bundle **is** a
+/// redistributed copy (ADR-006 class 3; `docs/09`).
+///
+/// The refusal existed and was unit-tested against a hand-built `SourceLicense`; this is the first
+/// test that reaches it through a **real parquet footer**, which is the path a real source takes.
+#[test]
+fn a_source_that_forbids_redistribution_is_refused_before_anything_is_written() {
+    let d = workspace("license-forbidden");
+    let src = d.join("forbidden.parquet");
+    write_geoparquet(
+        &src,
+        &FixtureSpec {
+            features: 100,
+            attributes: AttributeMode::CategoricalZone,
+            license: LicenseMode::ForbidsRedistribution,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let ds = pinned(&src);
+    let v = viewer();
+    let dest = d.join("bundle");
+    match publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err() {
+        PublishError::LicenseNotCarryable { declared_by, redistribution } => {
+            assert_eq!(declared_by, "source");
+            assert_eq!(redistribution, "forbidden");
+        }
+        other => panic!("expected LicenseNotCarryable, got {other}"),
+    }
+    assert!(!dest.exists(), "a bundle was written for a source that forbids redistribution");
 }
