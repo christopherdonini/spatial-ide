@@ -153,3 +153,28 @@ test('a bundle with no bounds parses, because a filter can select nothing', () =
   const m = parseManifest(manifest({ bounds: null }));
   assert.equal(m.bounds, null);
 });
+
+test('an unknown key is refused, which is what ADR-017 s9 reservation argument rests on', () => {
+  // `derived_caches` and `query_surface` are declared empty in v1 so that filling them later is a
+  // *fill* rather than a format revision — and that only holds if a reader would otherwise have
+  // refused the new key. A tolerant reader makes adding one non-breaking and the reservation
+  // pointless, so the refusal is the property, not the strictness.
+  assert.throws(
+    () => parseManifest(manifest({ something_from_v2: 1 })),
+    /manifest-schema-invalid/,
+    'an unknown top-level key was tolerated',
+  );
+  // …and nested, where a version bump is just as likely to add one.
+  for (const [where, override] of [
+    ['crs', { crs: { source: 'EPSG:2056', source_definition: null, display: 'EPSG:2056', transform: 't', crs_source: 'file', axis_order: 'a', axis_normalization: 'n', datum_shift: 'x' } }],
+    ['data', { data: { rows: 0, format: {}, partitions: [], tiles: [] } }],
+  ]) {
+    assert.throws(
+      () => parseManifest(manifest(override)),
+      /manifest-schema-invalid/,
+      `an unknown key in ${where} was tolerated`,
+    );
+  }
+  // The reserved slots themselves are of course accepted — they are part of v1.
+  assert.doesNotThrow(() => parseManifest(manifest()));
+});

@@ -1251,3 +1251,228 @@ with the exception recorded above, that the A/B driver's verdict does not consid
 | `kernel/scripts/run-slice-probe.mjs` | the earlier probe driver, **unchanged**, describing the earlier cell |
 | `kernel/scripts/pin-tree.mjs` | source pin, binary pin, and `--compare` |
 | `frontends/canvas-probe/scripts/run-probe.mjs` | one trial: one browser, one page load, one stream — **unchanged** |
+
+---
+---
+
+# Fourth section — 2026-08-06, the style v0 and static-bundle-publish cut
+
+**Everything above this line describes earlier trees measured in earlier sessions and is left exactly
+as it was.** Nothing below is compared with anything above it, and no figure crosses in either
+direction. That rule matters more than usual here, because this section contains **no measurement at
+all** in the sense the three sections above use the word.
+
+## What kind of section this is, stated first because it changes how everything below should be read
+
+**This is a correctness pass, not a measurement campaign.** There was no preregistration, because
+there is nothing to preregister: no hypothesis, no budget, no percentile, no A/B, no canary, no
+invalidator ladder. `kernel/PROBE-PREREGISTRATION.md` governs measurement passes and **does not
+govern this one**.
+
+Two numbers are recorded — **build wall time** and **bundle size** — and the brief that commissioned
+this cut attaches **no budget to either**. They appear as individual observations, not as
+distributions. **Nothing in this section may be cited about `docs/08`'s first-pixels budget, the
+cold-open budget, ADR-011, ADR-012, ADR-014, the index question, or the transport bake-off.**
+
+## Scope carried by everything below
+
+| | |
+|---|---|
+| **Hardware** | Windows 10 Pro 22H2 build 19045 |
+| **Tree** | branch `cut/style-publish` at **`9c63c84`**, based on **`4c67dc6` (`main`)** |
+| **Build** | `release` for the publish and fixture runs; `cargo test --workspace` in the ordinary profile |
+| **Browser** | **Chrome/151.0.7922.76**, `--headless=new`, one machine, one browser. **No Edge run** |
+| **Dataset** | **The fixture generator's default polygon spec** at seed `0x5EED205600000002`, plus a nullable categorical `zone` column: 100 000 features / **2 508 699 vertices** / 114 286 rings / 39 049 894 B; 12–48 vertices per feature; zone counts `[20 252, 19 794, 19 999, 20 036]` + 19 919 null |
+| **The dataset is NOT `docs/08`'s Polygons class, and must not be described as it** | That class is "100k features / **10M vertices**", and the file the third section pins has 10 467 093 of them. This one has **roughly a quarter of that geometry** — the feature count matches and the vertex count does not. The difference from the third section's file is therefore *not* only the added column. Nothing here is comparable with any earlier section, on this ground as well as the session rule |
+| **Free disk** | **15 GB at start, 13 GB at end.** `target/` had filled the volume earlier in the session and was cleaned before this run |
+| **Excluded** | macOS · Linux · Edge · 5 GB · frame time · picking latency · precision · VRAM · anything cold · any percentile |
+
+**The acceptance run and the tree it describes.** Everything in the table below was observed at
+`9c63c84`.
+
+`f6f7034` follows it and closes three defects the run itself found. **It changes no product code** —
+the diff is two test files, one instrument, and one `#[cfg(test)]` module — so the artifacts
+described here are unchanged by it. That is a code fact read from the diff, not a re-run.
+
+**A later commit does change product code, and that is re-verified rather than argued.** Closing the
+write-up review's findings added an **unknown-key refusal to the viewer's manifest reader** and
+removed a silent unit-square fallback when a bundle declares no bounds. A stricter reader could in
+principle reject the very manifests this section reports as accepted, so the 100k bundle was
+**re-published and re-driven end to end at the changed tree**:
+
+> `51/51 partitions verified · 100000 features drawn`, no banner, all four legend rows, **67 of 256**
+> hover probes resolving — the same counts as the run below, down to the same sampled ids
+> (98 273, 90 982, 88 446) — with the manifest-hash binding now enforced **inside** the driver.
+
+The one figure that moved is **bundle size: 44 590 715 B → 44 591 873 B**, entirely the viewer
+asset growing by 1 158 B with the added check. The size row below is the acceptance run's; this is
+the delta and its cause.
+
+---
+
+## What the run established
+
+| Checklist item | Outcome | What was actually observed |
+|---|---|---|
+| **Publish the 100k fixture, serve it, visibly styled result with legend and hover** | **met** | `51/51 partitions verified · 100000 features drawn`, no failure banner. All four legend rows present, including both fallbacks. 67 of 256 hover grid probes resolved to a stable id and its attributes |
+| **Style actually applied** | **met, and checked in pixels rather than in text** | Canvas read back with `getImageData`: after zooming, the four declared fills are the four dominant colours at **exact L1 distance 0** from the style document (`#cfc9bd`, `#7a7a7a`, `#c2553f`, `#3f5fc2`) |
+| **Publishing twice → byte-identical manifest and identical hashes** | **met** | `manifest.json` byte-identical (16 020 B), **all 51 partitions byte-identical**, `style.json` and both viewer assets identical. `diff -r` over the two bundles reports **exactly one** differing file: `build-info.json`, the non-hashed sidecar, excluded by design |
+| **Corrupting a partition → named failure state** | **met** | Bytes flipped in place, length preserved → `asset-hash-mismatch`, banner naming the asset and both hashes, loading stopped at `25/51` with 25 partitions still drawn beneath it |
+| **Corrupting a manifest entry → named failure state** | **met** | One recorded `content_hash` altered by one hex digit, manifest length unchanged → `asset-hash-mismatch` at `7/51`. **This is the case only re-hashing can detect**, which is why the viewer re-hashes |
+| *(beyond the checklist)* **Truncated partition** | **met** | → `partition-byte-count-mismatch`, a *different* named state, at `3/51` |
+| **Cancelling mid-publish leaves no partial bundle** | **met** | With a genuine `CTRL_C_EVENT` at **3, 25 and 51 partitions already on disk**: all three runs reported cancelling, exited non-zero, and left **nothing under the final name, no staging directory, and nothing matching `*staging*` anywhere under `target/`** |
+| **Redaction grep passes on the emitted bundle** | **met** | The **product scanner**, run over the 100k bundle: **56 files, 44 590 715 bytes, 0 findings**. The machine's real username and hostname were both available and both scanned for, so this is not a silent gap. A planted-path control fired |
+| **Attribution/license and grade present with stated basis** | **met** | `license: {state: "not-declared", basis: …}` — nothing invented. `reproducibility: {grade: "Snapshot"}` with a four-item basis and a `why_not_higher` naming what Exact would require |
+| **Ordinary workspace suite green** | **met** | `cargo test --workspace`: **249 passed, 0 failed, 2 ignored** (the two measurement harnesses, ignored by design). Viewer: **33 tests pass** |
+| **Viewer build reproducible** | **met, three ways** | Rebuild in place → identical; `rm -rf dist` then rebuild → identical; **whole source tree copied to a different absolute path and built there → `dist/app.js` and `dist/index.html` byte-identical**. No absolute path leaks into the output |
+
+### Attribute alignment — the check that mattered most
+
+The concern was that a partition's attribute column could be misaligned against its geometry by a row
+or two: every length would still match, the batch constructor's length check would still pass, and
+the result would be **the right feature wearing its neighbour's attributes**, with nothing raised.
+That is the ADR-010 rule 2 failure class arriving one level up.
+
+It was not spot-checked. **All 51 partitions were decoded and all 100 000 `(id, zone)` pairs compared
+against an independent transcription of the generator's oracle**, itself validated against the
+generator's own printed counts before being used as an oracle.
+
+**100 000 features decoded · 100 000 distinct ids · strictly ascending across partitions · 51/51
+partitions verifying their manifest hash and byte count · published zone counts identical to the
+generator's · 0 mismatches.** Decoded vertex count matched the fixture exactly and decoded bounds
+matched the manifest's to three decimal places.
+
+## Facts, with no budget and no distribution
+
+The brief attaches no budget to either quantity. These are **individual observations from named
+runs**, printed as such rather than aggregated — there is no p50, no p95, and nothing to compare them
+with.
+
+| | |
+|---|---|
+| Bundle total | **44 590 715 B** |
+| `data/` — 51 partitions | 44 141 400 B |
+| Partition size range | 120 840 – 880 712 B |
+| `manifest.json` | 16 020 B |
+| `viewer/app.js` · `viewer/index.html` | 427 155 B · 5 419 B |
+| `style.json` · `build-info.json` | 327 B · 394 B |
+| Rows / partitions | 100 000 / 51 |
+| Source fixture | 39 049 894 B |
+| **Build wall time**, individual observations | 641.8, 617.3, 624.9, 712.3 ms. Separately, 770.3 and 759.6 ms in two publishes running concurrently — **the two conditions are recorded, and no comparison between them is claimed or implied** |
+| **Content-hash time**, individual observations | 149.6, 151.0, 150.2, 166.7 ms |
+
+## Three defects the run found, all of which reported something confidently false
+
+Recorded because each is the class of thing that invalidates a pass rather than failing one — and two
+of the three were in this cut's own instruments, which is exactly where they are hardest to notice.
+
+**1. The acceptance driver did not bind a run to the bundle it tested.** Its first use reported
+`rendered-and-hover-resolved` with "2/2 partitions verified · 3000 features drawn" — against a bundle
+with 51 partitions and 100 000 features. The intended server had died with `EADDRINUSE` and **a
+leftover server from an earlier session was answering on that port with a different bundle**. Nothing
+in the artifact distinguished that from a correct run; the URL was all it recorded. Fixed in
+`f6f7034`: the driver fetches `manifest.json` itself, records its SHA-256 in every artifact, and
+refuses when `--expect-manifest-hash` does not match.
+
+**That fix is *not* what protected the runs reported above, and saying otherwise would repeat the
+defect's own lesson.** `--expect-manifest-hash` does not exist at `9c63c84`. What protected them was
+an **out-of-band** check: before each reported run the tester compared the SHA-256 of the served
+`manifest.json` against the bundle on disk by hand. In-driver enforcement landed afterwards, so a
+future run gets the guarantee without anyone having to remember.
+
+**2. The shared style vector could declare zero probes and both languages would still report
+green.** `renderer/tests/data/style-agreement.json` exists so the Rust compiler and the TypeScript
+viewer agree on what a style *means*; every resolution assertion on both sides sits inside
+`for probe in probes`. Emptying the array leaves both tests passing while resolving **nothing**, and
+the cross-implementation agreement would then rest on constants hardcoded separately in each language
+— the exact failure the vector was written to prevent. Found by mutation. Both sides now assert the
+vector is non-empty.
+
+**3. `kill -INT` never cancelled anything, and the first cancellation attempt was a false pass.**
+Sending `SIGINT` from a POSIX-emulating shell to a native Windows process does not become a console
+control event: the publish **ran to completion and wrote a full valid bundle** while the shell
+reported 130. A second attempt through `GenerateConsoleCtrlEvent` also failed, because **a process
+created in a new process group inherits a NULL handler that disables CTRL+C** — the API reported
+success and the child ignored it. Only after `SetConsoleCtrlHandler(NULL, FALSE)` before the spawn
+did a real `CTRL_C_EVENT` arrive. Had the tester not checked stderr for the operation's own
+"cancelling" line, all three attempts would have been recorded as passes. **The cancellation result
+above rests on the third harness only.**
+
+A fourth, cosmetic: one test name claimed two properties it did not check. Renamed; it now checks one
+of them and states why the other is a property of the signature rather than pretending to exercise it.
+
+## What is **not** established, and is not claimed
+
+| | |
+|---|---|
+| **The hero slice is not complete** | `docs/07`'s Prototype names **a 5 GB GeoParquet**. This is validated at 100 000 features / 39 MB. The slice's second half is implemented and correct at that scale; **the slice is not complete**, and the word "complete" does not apply to it without that qualifier |
+| **DuckDB-WASM in-browser queryability** | Deferred to v1 by the human's decision. ADR-008's Consequences clause on it is **unmet**; only the manifest surface is reserved |
+| **ADR-008's other Consequences clause** | *"The web publishing canvas (ADR-003) renders these bundles"* is **also unmet**: this viewer is a projected 2D canvas — not MapLibre, not deck.gl. **Both** of ADR-008's stated consequences are outstanding |
+| **Projected-canvas publishing is provisional** | Pending the human's approval of the drafted, unapplied ADR-003 amendment proposal. Nothing here is evidence for or against deck.gl: this is a 2D canvas, and it measures nothing |
+| **Any performance property whatsoever** | No frame time, no picking latency, no precision measurement, no throughput. The viewer's hashing cost is **not** measured and may never be quoted as a rendering figure. The ordered publish path may never be cited about first pixels |
+| **The cancellation *cadence*** | Cancellation was proved to land cleanly at three points during partition writing. The **uninterruptible window was not measured**, and the partition-size bound that is meant to make it a bound rather than a hope is unverified here |
+| **Network blocking was partial, and exactly this much** | DNS blackholing plus a full CDP request log: **56 requests, all 56 to `127.0.0.1`**, zero elsewhere, zero failures. **A request to a literal external IP would still have gone out**, and no OS-level firewall rule was applied. The separate static scan of the built bundle found zero absolute URLs, zero protocol-relative URLs, and no `crypto.subtle` |
+| **The opening view of a 100k bundle is a dark mesh, not a categorical map** | At fit-to-bounds each parcel is ~3.8 px and the fills do not appear among the canvas's dominant colours at all. That is 100 000 parcels on a 1280×900 canvas rather than a defect — but "visibly styled" was confirmed **after zooming**, and saying otherwise would overstate it |
+| **The viewer cannot verify its own executing code** | The manifest's viewer-asset hashes are for an **external** verifier. They were checked externally and match; the chain does not close in-page |
+| **Identity stability across reopen** | Unestablished, as the manifest's own caveat says. A bundle persists identity while that question is open, and records what it does and does not know |
+| **The redaction scan is a necessary condition only** | 0 findings means the named classes are absent, not that the bundle carries nothing sensitive. Its 12-byte printable-run threshold means a short path, or one surrounded by non-printable bytes, is not reported |
+| **The class-3 approval gate** | `docs/09` requires approval for publish. There is none. Declared in the operation's API, in ADR-017 and here — **owed and absent** |
+| **The viewer build's byte-identity is established on this machine only** | `npm ci` warned that esbuild's postinstall was skipped. The build and all 33 tests worked — the platform binary arrives through an optional dependency rather than that script — so the three-way identity result stands **here**. Whether it holds on a machine where that optional package resolves differently is **unestablished** |
+| **No CRS oracle was consulted, and none was owed** | Nothing in this cut reprojects, so there was no transform to validate against PROJ or PostGIS. The CRS travels as an opaque tag and `transform: none — rendered in source CRS` is the recorded fact. Stated because a repository whose first principle makes CRS a type should not leave a reader wondering whether it was checked |
+| **macOS · Linux · Edge · cold anything · between-session anything** | Out of scope, on the same grounds as every section above |
+
+## The three `docs/07` gates are untouched
+
+macOS/Linux hardware validation; the transport bake-off and server-side spatial indexing; ADR-009.
+**All three remain open**, and nothing in this cut advanced or closed any of them. ADR-009 is not
+*triggered* by publishing a bundle to a directory — but viewer code embedded in a distributed bundle
+is distributed code, and its licensing is ADR-009's question.
+
+## Reproducing this
+
+```bash
+git checkout cut/style-publish            # 9c63c84 for the run above; f6f7034 adds only test fixes
+
+CARGO_PROFILE_RELEASE_DEBUG=false cargo build --release --workspace
+(cd renderer/bundle-viewer && npm ci && npm run verify)
+
+# 1. the fixture: the generator's DEFAULT polygon spec (12-48 vertices per feature) plus the
+#    nullable categorical column. This is NOT docs/08's Polygons class, which is 10M vertices.
+cargo run --release -p spatial-engine --features fixture --example make-fixture -- \
+    --out target/acceptance/parcels-100k.parquet --features 100000 --attributes zone
+
+# 2. publish twice, to two destinations, from identical inputs
+cargo run --release -p spatial-kernel --bin publish-bundle -- \
+    --data target/acceptance/parcels-100k.parquet --style <style.json> \
+    --viewer renderer/bundle-viewer/dist --out target/acceptance/bundle-a \
+    --name parcels --attributes zone
+#   …and again to bundle-b. Only build-info.json may differ.
+
+# 3. serve and drive. --expect-manifest-hash is what stops a stale server passing quietly.
+node renderer/bundle-viewer/scripts/serve-bundle.mjs target/acceptance/bundle-a 8842
+node renderer/bundle-viewer/scripts/run-acceptance.mjs \
+    --url http://127.0.0.1:8842/viewer/index.html \
+    --expect-manifest-hash sha256:<manifest hash> \
+    --out target/acceptance/viewer-ok.json
+
+# 4. the corruption cases, each into its own copy of the bundle, then the same driver with
+#    --expect-failure asset-hash-mismatch (and partition-byte-count-mismatch for a truncation)
+
+# 5. the suites
+cargo test --workspace                                   # 249 passed, 0 failed, 2 ignored
+(cd renderer/bundle-viewer && npm test)                  # 33 passed
+```
+
+**Cancellation needs a real `CTRL_C_EVENT`.** `kill -INT` from a POSIX-emulating shell will let the
+publish run to completion and then report success; see defect 3 above, including the
+`SetConsoleCtrlHandler(NULL, FALSE)` detail without which `GenerateConsoleCtrlEvent` reports success
+and delivers nothing.
+
+### Instruments (committed)
+
+| File | Role |
+|---|---|
+| `renderer/bundle-viewer/scripts/run-acceptance.mjs` | headless browser driver; writes a JSON artifact, binds the run to a manifest hash, exits non-zero on a wrong or missing outcome |
+| `renderer/bundle-viewer/scripts/serve-bundle.mjs` | a deliberately ordinary static file server, path-contained and loopback-only |
+| `renderer/bundle-viewer/scripts/boundaries.test.mjs` | scans the **built** bundle for absolute URLs and `crypto.subtle`, and `renderer/` for any reference to the probe |
+| `kernel/src/bundle/redaction.rs` | the `docs/09` scan, run over the emitted bundle rather than believed about it |

@@ -371,6 +371,16 @@ async function load(): Promise<void> {
   renderLegend(style);
 
   // ---- view -------------------------------------------------------------------------------
+  //
+  // **`bounds: null` is stated, never silently substituted.** A bundle whose filter selected nothing
+  // legitimately has no bounds; quietly fitting a unit square would open on an empty canvas that
+  // looks exactly like a rendering fault, which is the silent-partial-map failure one level up.
+  if (manifest.bounds === null) {
+    text(
+      'status',
+      'this bundle declares no bounds, which means it published no rows — there is nothing to draw',
+    );
+  }
   const bounds = manifest.bounds ?? { xmin: 0, ymin: 0, xmax: 1, ymax: 1 };
   state.view = fitView(bounds, canvas.width, canvas.height);
   installInteraction();

@@ -81,8 +81,30 @@ function arr(v: unknown, at: string): unknown[] {
   return v;
 }
 
+/**
+ * Refuse a key this version does not define.
+ *
+ * **ADR-017 §9's reservation argument rests on this.** `derived_caches` and `query_surface` are
+ * declared empty in v1 so that filling them later is a *fill* rather than a format revision — and
+ * that reasoning only holds if a reader would otherwise have **refused** the new key. A reader that
+ * silently tolerated unknown keys would make adding one non-breaking, and reserving the slots would
+ * buy nothing but documentation of intent.
+ *
+ * It is also the ordinary no-silent-anything discipline: a manifest carrying a key this build does
+ * not understand is a manifest this build does not understand, and guessing at the rest of it is
+ * how a reader ends up confidently rendering something the writer did not describe.
+ */
+function knownKeys(map: Record<string, unknown>, at: string, allowed: readonly string[]): void {
+  for (const key of Object.keys(map)) {
+    if (!allowed.includes(key)) {
+      fail('manifest-schema-invalid', `${at} carries key "${key}", which bundle_version 1 does not define`);
+    }
+  }
+}
+
 function asset(v: unknown, at: string): ManifestAsset {
   const o = obj(v, at);
+  knownKeys(o, at, ['path', 'bytes', 'content_hash', 'rows']);
   const a: ManifestAsset = {
     path: str(o.path, `${at}.path`),
     bytes: o.bytes === null ? null : num(o.bytes, `${at}.bytes`),
@@ -111,6 +133,11 @@ export function parseManifest(text: string): Manifest {
     throw new BundleFailure('manifest-unparseable', 'manifest.json', String(e));
   }
   const m = obj(root, '$');
+  knownKeys(m, '$', [
+    'bundle_version', 'bundle', 'source', 'source_verification', 'style', 'software', 'operation',
+    'crs', 'identity', 'schema', 'bounds', 'data', 'viewer', 'license', 'reproducibility',
+    'derived_caches', 'query_surface', 'sidecar',
+  ]);
 
   const version = m.bundle_version;
   if (typeof version !== 'number') {
@@ -126,8 +153,16 @@ export function parseManifest(text: string): Manifest {
   }
 
   const crs = obj(m.crs, '$.crs');
+  knownKeys(crs, '$.crs', [
+    'source', 'source_definition', 'display', 'transform', 'crs_source', 'axis_order',
+    'axis_normalization',
+  ]);
   const identity = obj(m.identity, '$.identity');
+  knownKeys(identity, '$.identity', [
+    'id_source', 'id_uniqueness', 'id_verified_rows', 'id_js_exact', 'caveat',
+  ]);
   const data = obj(m.data, '$.data');
+  knownKeys(data, '$.data', ['rows', 'format', 'partitions']);
   // Parsed to validate its shape; the encoding a partition actually carries is checked against its
   // own envelope in `decodePartition`, which is where a mismatch can be caught against real bytes.
   obj(data.format, '$.data.format');
