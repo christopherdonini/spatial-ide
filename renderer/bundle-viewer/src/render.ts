@@ -122,10 +122,27 @@ function rgba(hex: string, opacity: number): string {
 /**
  * Draw every loaded partition.
  *
- * Features are batched by **style group** — at most one group per declared case plus the two
- * fallbacks — so one path is built and filled per distinct appearance rather than one per feature.
- * The parameters drawn are exactly what the style resolves to; grouping changes the number of
- * canvas calls and nothing about the result.
+ * **Painter's order is identity order**: partitions in manifest order, features in array order
+ * within a partition, and since the publish path orders rows by ascending identity that means the
+ * highest id is drawn last and wins where footprints overlap. `pick` searches backwards through
+ * exactly this order, so what is picked is what is visible.
+ *
+ * **Each feature is filled on its own path**, and that is a correctness decision rather than an
+ * oversight. Batching every feature of one style group into a single path and filling it once is
+ * cheaper — six fills instead of one per feature — but even-odd over a merged path **cancels the
+ * intersection of two overlapping features**, so two same-coloured neighbours that overlap would
+ * render a hole between them that no feature has. It would also make painter's order group-major,
+ * so a feature in a later style group would cover an earlier one regardless of identity, and `pick`
+ * would then return a feature the pixels do not show. Both are wrong-but-plausible results of
+ * exactly the kind ADR-010 rule 2's indirection exists to prevent, one level up.
+ *
+ * *(An earlier version of this function did batch by group, and both defects were live. The
+ * fixture's polygons tile a grid and never overlap, so nothing in the acceptance run would have
+ * surfaced either.)*
+ *
+ * The cost is stated rather than defended: one `fill` and one `stroke` per visible feature, on top
+ * of a path walk that is O(vertices) either way. **No frame-time figure is claimed, measured or
+ * met.**
  */
 export function drawAll(
   ctx: CanvasRenderingContext2D,
@@ -137,49 +154,49 @@ export function drawAll(
   const [vxmin, vymin, vxmax, vymax] = visibleBounds(view);
   let drawn = 0;
   let culled = 0;
+  let currentGroup = -1;
+  let params: DrawParameters = style.groups[0];
 
-  for (let g = 0; g < style.groups.length; g++) {
-    const params: DrawParameters = style.groups[g];
-    ctx.beginPath();
-    let any = false;
-
-    for (const p of partitions) {
-      const { coords, ringOffsets, polygonOffsets, bboxes, groups } = p;
-      for (let f = 0; f < p.features; f++) {
-        if (groups[f] !== g) continue;
-        const b = f * 4;
-        if (bboxes[b] > vxmax || bboxes[b + 2] < vxmin || bboxes[b + 1] > vymax || bboxes[b + 3] < vymin) {
-          if (g === 0) culled++;
-          continue;
-        }
-        if (g === 0) drawn++;
-        any = true;
-        for (let r = polygonOffsets[f]; r < polygonOffsets[f + 1]; r++) {
-          const start = ringOffsets[r];
-          const end = ringOffsets[r + 1];
-          if (end - start < 2) continue;
-          for (let v = start; v < end; v++) {
-            // ---- ADR-010 rule 3: subtract in f64 first, then let the canvas narrow ------------
-            const px = (coords[v * 2] - view.centerX) * view.scale + view.width / 2;
-            const py = view.height / 2 - (coords[v * 2 + 1] - view.centerY) * view.scale;
-            if (v === start) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-        }
+  for (const p of partitions) {
+    const { coords, ringOffsets, polygonOffsets, bboxes, groups } = p;
+    for (let f = 0; f < p.features; f++) {
+      const b = f * 4;
+      if (bboxes[b] > vxmax || bboxes[b + 2] < vxmin || bboxes[b + 1] > vymax || bboxes[b + 3] < vymin) {
+        culled++;
+        continue;
       }
-    }
+      drawn++;
 
-    if (!any) continue;
-    ctx.fillStyle = rgba(params.fillColor, params.fillOpacity);
-    // Even-odd, declared: a point inside an interior ring is outside the polygon, so a hole reads as
-    // a hole rather than as fill. The pick test below uses the same rule, so what is drawn and what
-    // is picked cannot disagree.
-    ctx.fill('evenodd');
-    if (params.outlineWidth > 0) {
-      ctx.strokeStyle = params.outlineColor;
-      ctx.lineWidth = params.outlineWidth;
-      ctx.stroke();
+      // Style state changes only when the group does. That is the whole of the batching that
+      // survives, and it changes no pixel.
+      if (groups[f] !== currentGroup) {
+        currentGroup = groups[f];
+        params = style.groups[currentGroup];
+        ctx.fillStyle = rgba(params.fillColor, params.fillOpacity);
+        ctx.strokeStyle = params.outlineColor;
+        ctx.lineWidth = params.outlineWidth;
+      }
+
+      ctx.beginPath();
+      for (let r = polygonOffsets[f]; r < polygonOffsets[f + 1]; r++) {
+        const start = ringOffsets[r];
+        const end = ringOffsets[r + 1];
+        if (end - start < 2) continue;
+        for (let v = start; v < end; v++) {
+          // ---- ADR-010 rule 3: subtract in f64 first, then let the canvas narrow --------------
+          const px = (coords[v * 2] - view.centerX) * view.scale + view.width / 2;
+          const py = view.height / 2 - (coords[v * 2 + 1] - view.centerY) * view.scale;
+          if (v === start) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      }
+      // Even-odd **per feature**, which is what makes an interior ring a hole regardless of its
+      // winding — the engine repairs nothing and guarantees no winding order. `containsEvenOdd`
+      // applies the identical rule to the identical rings, so what is drawn and what is picked
+      // cannot disagree.
+      ctx.fill('evenodd');
+      if (params.outlineWidth > 0) ctx.stroke();
     }
   }
 
@@ -205,10 +222,12 @@ export interface Pick {
  *
  * **Draw order decides overlaps, declared rather than discovered:** partitions in manifest order,
  * features in array order within a partition, last drawn winning. Since the publish path orders rows
- * by ascending identity, that means the **highest id wins** where footprints overlap. The search
- * below runs backwards for exactly that reason, so what is picked is what is visible.
+ * by ascending identity, that means the **highest id wins** where footprints overlap. This search
+ * runs backwards through the identical order for exactly that reason, so what is picked is what is
+ * visible — and `drawAll` is written to keep that true, which is why it does not batch by style
+ * group.
  */
-export function pick(partitions: Partition[], style: Style, x: number, y: number): Pick | null {
+export function pick(partitions: Partition[], x: number, y: number): Pick | null {
   for (let pi = partitions.length - 1; pi >= 0; pi--) {
     const p = partitions[pi];
     for (let f = p.features - 1; f >= 0; f--) {
@@ -231,7 +250,6 @@ export function pick(partitions: Partition[], style: Style, x: number, y: number
       };
     }
   }
-  void style;
   return null;
 }
 

@@ -90,7 +90,6 @@ interface State {
   expectedPartitions: number;
   residentBytes: number;
   view: View | null;
-  failed: boolean;
 }
 
 const state: State = {
@@ -100,7 +99,6 @@ const state: State = {
   expectedPartitions: 0,
   residentBytes: 0,
   view: null,
-  failed: false,
 };
 
 const canvas = document.getElementById('map') as HTMLCanvasElement;
@@ -141,7 +139,7 @@ async function fetchAsset(asset: ManifestAsset): Promise<Uint8Array> {
     throw new BundleFailure('asset-missing', asset.path, `HTTP ${response.status}`);
   }
   const bytes = new Uint8Array(await response.arrayBuffer());
-  if (asset.bytes > 0 && bytes.length !== asset.bytes) {
+  if (asset.bytes !== null && bytes.length !== asset.bytes) {
     throw new BundleFailure(
       'partition-byte-count-mismatch',
       asset.path,
@@ -285,7 +283,7 @@ function hover(px: number, py: number): void {
   // Cursor unprojection, permitted by ADR-010 rule 2 for hover feedback. Its result selects a
   // candidate and is then discarded — it is never shown and never stored.
   const [wx, wy] = unproject(px, py, state.view);
-  const hit = pick(state.partitions, state.style, wx, wy);
+  const hit = pick(state.partitions, wx, wy);
 
   el.textContent = '';
   if (!hit) {
@@ -365,7 +363,7 @@ async function load(): Promise<void> {
   // ---- style ------------------------------------------------------------------------------
   const styleBytes = await fetchAsset({
     path: manifest.style.path,
-    bytes: 0,
+    bytes: null,
     contentHash: manifest.style.contentHash,
   });
   const style = Style.parse(new TextDecoder().decode(styleBytes), manifest.style.path);
@@ -409,7 +407,6 @@ async function load(): Promise<void> {
 }
 
 load().catch((e) => {
-  state.failed = true;
   fatal(e instanceof BundleFailure ? e : new BundleFailure('unhandled-error', 'viewer', String(e)));
   // Whatever verified is still on the canvas, and the banner says the map is incomplete.
   redraw();

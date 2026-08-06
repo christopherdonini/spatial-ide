@@ -135,13 +135,19 @@ pub struct PublishRequest<'a> {
     /// refused.
     pub license: Option<OperatorLicense>,
     pub destination: PathBuf,
-    /// UTC instants, supplied by the caller rather than read from a clock here.
+    /// When the caller considers the operation to have started, as an RFC-3339 UTC string.
     ///
-    /// The operation stays a pure function of its inputs, which is what lets a determinism test
-    /// publish twice and compare bytes without the second run differing by a timestamp. They reach
-    /// only the sidecar, which is excluded from every hash.
+    /// Supplied rather than read from a clock here, so the operation stays a function of its inputs
+    /// and a determinism test can publish twice and compare bytes. It reaches only the sidecar,
+    /// which is excluded from every hash.
     pub started_at: String,
-    pub finished_at: String,
+    /// The clock for `finished_at`, **called once after the bundle is written**.
+    ///
+    /// A `String` here would be read before `publish` ran, so `finished_at − started_at` would
+    /// measure whatever the caller did before calling rather than the build — a wall-clock fact
+    /// that quietly described something else. A closure keeps the instant honest and still keeps
+    /// the clock out of this module, so a test can supply a fixed one.
+    pub finished_at: &'a dyn Fn() -> String,
 }
 
 /// What one publish produced. Facts, with **no budget attached and no comparison implied**.
@@ -186,7 +192,10 @@ pub fn publish(
             // **Cleanup is reported, never swallowed** (ADR-010 rule 7).
             if let Err(io) = staging.remove() {
                 return Err(PublishError::StagingNotRemoved {
-                    after: e.to_string(),
+                    // The original error is carried whole, not flattened to a string: a caller
+                    // matching on `Cancelled` must still be able to, or a cleanup failure would
+                    // silently change what the operation reports going wrong.
+                    after: Box::new(e),
                     path: staging.path().display().to_string(),
                     detail: io.to_string(),
                 });
@@ -217,20 +226,20 @@ fn run(
     let content_hash_millis = pin.verify_by_rehash(ds.path(), cancel)?;
 
     // ---- projection and style -----------------------------------------------------------------
-    let fields = ds.resolve_projection(&req.attributes)?;
+    let projection = ds.resolve_projection(&req.attributes)?;
     let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
         .file_schema()
         .fields()
         .iter()
         .map(|f| (f.name().clone(), f.data_type().clone()))
         .collect();
-    let published_names: Vec<String> = fields.iter().map(|f| f.name().clone()).collect();
+    let published_names = projection.names();
     let style: CompiledStyle =
         spatial_renderer::compile(req.style_source, &schema_for_style, &published_names)?;
 
     // ---- partitions ---------------------------------------------------------------------------
     progress.phase(PublishPhase::Querying);
-    let mut stream = ds.stream_for_publish(&req.query, &fields, cancel.clone())?;
+    let mut stream = ds.stream_for_publish(&req.query, &projection, cancel.clone())?;
 
     staging.create_dir(bundle::DATA_DIR)?;
     progress.phase(PublishPhase::WritingPartitions);
@@ -273,8 +282,10 @@ fn run(
 
     // ---- style ---------------------------------------------------------------------------------
     progress.phase(PublishPhase::WritingStyle);
+    // `staging.write` hashes the bytes it wrote, and those bytes are `style.canonical_json()`, so
+    // this equals `style.style_hash()` by construction. It is used rather than the compiled value so
+    // the manifest lists a hash of **what is on disk** — which is the property a reader verifies.
     let style_hash = staging.write(bundle::STYLE_PATH, style.canonical_json().as_bytes())?;
-    debug_assert_eq!(style_hash, style.style_hash());
 
     // ---- viewer --------------------------------------------------------------------------------
     progress.phase(PublishPhase::WritingViewer);
@@ -297,7 +308,7 @@ fn run(
 
     // ---- manifest ------------------------------------------------------------------------------
     progress.phase(PublishPhase::WritingManifest);
-    let operation = build_operation(ds, req, logical_uri, &pin, &fields, &style)?;
+    let operation = build_operation(ds, req, logical_uri, &pin, projection.fields(), &style)?;
     let operation_digest = operation.digest()?;
     let manifest = build_manifest(
         ds,
@@ -307,7 +318,7 @@ fn run(
         &style_hash,
         operation,
         &operation_digest,
-        &fields,
+        projection.fields(),
         bounds,
         rows_total,
         partitions,
@@ -327,13 +338,16 @@ fn run(
     pin.verify_by_heuristic(ds.path())?;
 
     let build_millis = started.elapsed().as_secs_f64() * 1000.0;
-    let total_bytes = staging.total_bytes()?;
+    // Measured before the sidecar exists, and the sidecar records that this is what it means: two
+    // numbers under one name in one operation would be worse than either.
+    let bytes_before_sidecar = staging.total_bytes()?;
     let build_info = BuildInfo {
         started_at: req.started_at.clone(),
-        finished_at: req.finished_at.clone(),
+        // Sampled here, after every byte of the bundle is on disk.
+        finished_at: (req.finished_at)(),
         build_millis,
         content_hash_millis,
-        total_bytes,
+        total_bytes: bytes_before_sidecar,
         partition_count: manifest.partitions.len() as u64,
         rows: rows_total,
     };
@@ -342,6 +356,7 @@ fn run(
         canonical::to_canonical_string(&build_info.to_json())?.as_bytes(),
     )?;
 
+    // The figure the caller is handed covers the whole bundle, sidecar included.
     let total_bytes = staging.total_bytes()?;
     staging.finalize(&req.destination)?;
 
@@ -629,7 +644,7 @@ fn build_manifest(
             engine: spatial_engine::CRATE_VERSION.to_string(),
             kernel: env!("CARGO_PKG_VERSION").to_string(),
             renderer: spatial_renderer::CRATE_VERSION.to_string(),
-            arrow: spatial_engine::ARROW_CRATE_VERSION.to_string(),
+            arrow: spatial_engine::ARROW_CRATE_VERSION_REQUIREMENT.to_string(),
             duckdb: ds.duckdb_version().unwrap_or_else(|_| "unavailable".to_string()),
             bundle_writer: bundle::BUNDLE_VERSION,
         },
@@ -776,6 +791,31 @@ impl Staging {
             std::fs::remove_dir_all(&self.path)?;
         }
         Ok(())
+    }
+}
+
+impl Drop for Staging {
+    /// Best-effort cleanup for the one path the explicit handling cannot reach: a **panic** inside
+    /// the operation.
+    ///
+    /// The declared recovery policy is "fail visibly, remove the staging directory, terminate with a
+    /// typed error", and every `Err` return already does that and reports the outcome. A panic
+    /// returns no error to report, so without this a partial staging directory would survive with
+    /// nothing said — which is the silent termination ADR-010 rule 7 forbids.
+    ///
+    /// It is deliberately quiet on success and deliberately does **not** panic on failure: a
+    /// `Drop` that panics during unwinding aborts the process, replacing a diagnosable failure with
+    /// one that has no message at all.
+    fn drop(&mut self) {
+        if !self.path.exists() {
+            return;
+        }
+        if let Err(e) = std::fs::remove_dir_all(&self.path) {
+            eprintln!(
+                "[publish] the staging directory {} could not be removed: {e}",
+                self.path.display()
+            );
+        }
     }
 }
 

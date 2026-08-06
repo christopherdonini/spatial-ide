@@ -88,9 +88,23 @@ fn request<'a>(
         // Fixed instants: the operation is a pure function of its inputs, and these reach only the
         // sidecar, which no hash covers.
         started_at: "2026-08-06T09:00:00Z".into(),
-        finished_at: "2026-08-06T09:00:01Z".into(),
+        // A fixed clock: the sidecar is excluded from every hash, and a test that let a real one in
+        // would be asserting determinism against a value designed to differ.
+        finished_at: &FIXED_FINISH,
     }
 }
+
+/// The clock the tests hand to `publish`. Named so a test that wants a *different* instant can say
+/// so, which `the_sidecar_is_what_differs_between_two_publishes_and_it_is_excluded_by_design` does.
+fn fixed_finish() -> String {
+    "2026-08-06T09:00:01Z".to_string()
+}
+static FIXED_FINISH: fn() -> String = fixed_finish;
+
+fn later_finish() -> String {
+    "2027-01-01T00:00:05Z".to_string()
+}
+static LATER_FINISH: fn() -> String = later_finish;
 
 fn read(bundle: &Path, rel: &str) -> Vec<u8> {
     std::fs::read(bundle.join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
@@ -192,7 +206,7 @@ fn the_sidecar_is_what_differs_between_two_publishes_and_it_is_excluded_by_desig
 
     req.destination = d.join("b");
     req.started_at = "2027-01-01T00:00:00Z".into();
-    req.finished_at = "2027-01-01T00:00:05Z".into();
+    req.finished_at = &LATER_FINISH;
     publish(&req, &CancelToken::new(), None).unwrap();
 
     assert_eq!(

@@ -59,8 +59,9 @@
     <header>
       <h1>Published bundle — projected canvas, rendered in the source CRS</h1>
       <div class="sub">
-        Static and self-contained: everything on this page came from this bundle, and every asset was
-        verified against the manifest's content hashes before it was drawn. Zero external requests.
+        Static and self-contained. Zero external requests. Every partition and the style are checked
+        against the manifest's content hashes before anything is drawn — see Provenance for what is
+        verified and what is only carried.
       </div>
     </header>
 
@@ -98,9 +99,16 @@
             canvas. This is the recorded consequence of the publishing path, not a missing feature.
           </div>
           <div class="note">
-            This page verifies every asset the manifest lists. It cannot verify the code that is
-            already running: the manifest's viewer hashes are for an external verifier, and the chain
-            of trust does not close inside the browser.
+            Verified before drawing: the manifest's version and asset paths; the style's content
+            hash and version; and for every partition its byte count, content hash, row count,
+            coordinate-space envelope and declared attribute columns.
+          </div>
+          <div class="note">
+            Carried but not checked: the identity facts above are the publisher's claims, shown as
+            claims — nothing here re-verifies uniqueness. Attribute presence is checked; Arrow types
+            are not. And this page cannot verify the code that is already running: the manifest's
+            viewer-asset hashes are for an external verifier, and the chain of trust does not close
+            inside the browser.
           </div>
         </section>
 

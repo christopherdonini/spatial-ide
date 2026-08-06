@@ -301,6 +301,20 @@ mod tests {
         )
     }
 
+    fn two_polygons() -> ArrayRef {
+        let mut b = PolygonBuilder::new();
+        for offset in [0.0, 100.0] {
+            b.push_wkb(&encode_polygon(&[vec![
+                [2_600_000.0 + offset, 1_200_000.0],
+                [2_600_010.0 + offset, 1_200_000.0],
+                [2_600_010.0 + offset, 1_200_010.0],
+                [2_600_000.0 + offset, 1_200_000.0],
+            ]]))
+            .unwrap();
+        }
+        crate::geoarrow::build_polygon_array(b).unwrap()
+    }
+
     fn one_polygon() -> ArrayRef {
         let mut b = PolygonBuilder::new();
         b.push_wkb(&encode_polygon(&[vec![
@@ -343,6 +357,33 @@ mod tests {
         assert_eq!(md.get("crs_source").unwrap(), "caller_asserted");
         assert_eq!(md.get("crs_asserted_by").unwrap(), "operator");
         assert_eq!(md.get("crs_asserted_at").unwrap(), "2026-08-04T12:00:00Z");
+    }
+
+    #[test]
+    fn two_envelopes_built_separately_serialize_to_identical_bytes() {
+        // **A published bundle's byte-identical-rebuild guarantee runs through here.** The envelope's
+        // metadata is a `HashMap`, whose iteration order differs between instances; what makes the
+        // emitted IPC deterministic is that the Arrow writer sorts those keys before serializing.
+        // That is a property of a dependency and nothing in this repository asserted it — so an
+        // Arrow that stopped sorting would silently make two publishes of the same data differ, and
+        // the failure would surface as a determinism test in another crate, three layers from the
+        // cause.
+        let one = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
+        let two = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
+
+        let bytes = |env: &BatchEnvelope| {
+            let b = TaggedBatch::assemble(
+                env,
+                Arc::new(UInt64Array::from(vec![1u64, 2])),
+                two_polygons(),
+                Vec::new(),
+            )
+            .unwrap();
+            let mut buf = Vec::new();
+            b.write_ipc_into(&mut buf).unwrap();
+            buf
+        };
+        assert_eq!(bytes(&one), bytes(&two), "envelope serialization is not deterministic");
     }
 
     #[test]

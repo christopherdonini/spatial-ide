@@ -18,6 +18,11 @@ fn dir(name: &str) -> std::path::PathBuf {
     d
 }
 
+/// The empty projection, built through the admission path like any other.
+fn empty_projection(ds: &Dataset) -> spatial_engine::PublishedProjection {
+    ds.resolve_projection(&[]).unwrap()
+}
+
 fn zoned_spec(features: usize) -> FixtureSpec {
     FixtureSpec {
         features,
@@ -132,16 +137,23 @@ fn the_zone_of_a_feature_is_a_function_of_the_feature_and_not_of_its_position() 
 
 #[test]
 fn the_publish_stream_emits_the_declared_projection_in_declared_order() {
+    // **20 000 features, not 2 000, and the count is the point.** DuckDB hands the producer ~2 048
+    // rows per chunk, and attribute columns are carried as *slices of each chunk's arrays* stitched
+    // together at each partition cut. At 2 000 features every partition fits inside one chunk, so
+    // `runs.len() == 1` always and the concatenation path — the one where an off-by-one would
+    // attach the right geometry to a neighbouring feature's attribute, silently — was never
+    // executed at all. This count guarantees many chunks and many multi-run partitions.
     let d = dir("projection");
     let path = d.join("p.parquet");
-    write_geoparquet(&path, &zoned_spec(2_000)).unwrap();
+    write_geoparquet(&path, &zoned_spec(20_000)).unwrap();
     let ds = Dataset::open(&path).unwrap();
 
     let fields = ds.resolve_projection(&["zone".to_string()]).unwrap();
     assert_eq!(fields.len(), 1);
-    assert_eq!(fields[0].name(), "zone");
-    assert!(fields[0].is_nullable(), "a published attribute is always nullable");
+    assert_eq!(fields.fields()[0].name(), "zone");
+    assert!(fields.fields()[0].is_nullable(), "a published attribute is always nullable");
 
+    let concat_before = spatial_engine::stream::attribute_concatenations();
     let mut s = ds.stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new()).unwrap();
     // The envelope names the projection — on docs/11 and principle 8's authority, not ADR-010
     // rule 1's, which is about coordinate space.
@@ -149,17 +161,67 @@ fn the_publish_stream_emits_the_declared_projection_in_declared_order() {
     assert_eq!(md.get("attribute_columns").unwrap(), r#"["zone"]"#);
     assert_eq!(md.get("frame").unwrap(), spatial_engine::FRAME_AUTHORITATIVE);
 
-    let (ids, zones, _) = drain(&mut s);
-    assert_eq!(ids.len(), 2_000);
-    assert_eq!(zones.len(), 2_000);
+    let (ids, zones, rows) = drain(&mut s);
+    assert_eq!(ids.len(), 20_000);
+    assert_eq!(zones.len(), 20_000);
     // Every value matches what the generator says that feature's zone is — so the column that
-    // arrives is the column that was written, row for row, after ordering.
+    // arrives is the column that was written, row for row, after ordering. A shifted run would
+    // survive a length check and die here.
     let seed = zoned_spec(1).seed;
     for (id, zone) in ids.iter().zip(zones.iter()) {
         let expected = spatial_engine::fixture::zone_for(seed, *id).map(|s| s.to_string());
         assert_eq!(*zone, expected, "feature {id}");
     }
     assert!(zones.iter().any(|z| z.is_none()), "the NULL branch never travelled");
+
+    // And the shape that makes the assertion above meaningful actually occurred — **read from the
+    // producer's own counter, not inferred from the row counts.**
+    //
+    // The inference is the trap: a published partition is ~2 000 rows and a DuckDB chunk is ~2 048,
+    // so a partition never *exceeds* a chunk while most of them *cross* one. A check for "a
+    // partition larger than a chunk" concludes the concatenation path was untaken while it is in
+    // fact running for nearly every partition. (That check was written first, and failed here,
+    // which is how the counter came to exist.)
+    assert!(rows.len() >= 3, "expected several partitions, got {}", rows.len());
+    assert!(
+        spatial_engine::stream::attribute_concatenations() > concat_before,
+        "no attribute run was concatenated, so the multi-chunk path was never exercised: {rows:?}"
+    );
+}
+
+#[test]
+fn an_attribute_run_that_is_shifted_by_one_row_would_be_caught() {
+    // The test above is only worth having if it can fail, so this establishes that it discriminates
+    // rather than merely passes. It performs the same pairing the producer does — but against a
+    // deliberately shifted zone column — and asserts the comparison rejects it.
+    //
+    // A run-alignment bug produces exactly this: ids and geometry correct, attribute values off by
+    // some number of rows, every length still matching, and `TaggedBatch::assemble`'s length check
+    // still satisfied.
+    let d = dir("shift-detection");
+    let path = d.join("s.parquet");
+    write_geoparquet(&path, &zoned_spec(6_000)).unwrap();
+    let ds = Dataset::open(&path).unwrap();
+    let fields = ds.resolve_projection(&["zone".to_string()]).unwrap();
+    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new()).unwrap();
+    let (ids, zones, _) = drain(&mut s);
+
+    let seed = zoned_spec(1).seed;
+    let expected = |id: u64| spatial_engine::fixture::zone_for(seed, id).map(|s| s.to_string());
+
+    // The real pairing holds …
+    assert!(ids.iter().zip(zones.iter()).all(|(id, z)| *z == expected(*id)));
+    // … and a one-row shift does not, so the assertion has teeth.
+    let shifted: Vec<_> = zones[1..].to_vec();
+    let mismatches = ids
+        .iter()
+        .zip(shifted.iter())
+        .filter(|(id, z)| **z != expected(**id))
+        .count();
+    assert!(
+        mismatches > 0,
+        "a one-row shift produced no disagreement, so the pairing assertion proves nothing"
+    );
 }
 
 #[test]
@@ -170,7 +232,7 @@ fn the_publish_stream_orders_by_identity_and_the_query_path_still_does_not() {
     let ds = Dataset::open(&path).unwrap();
 
     let mut published =
-        ds.stream_for_publish(&ViewportQuery::all(), &[], CancelToken::new()).unwrap();
+        ds.stream_for_publish(&ViewportQuery::all(), &empty_projection(&ds), CancelToken::new()).unwrap();
     let (ids, _, _) = drain(&mut published);
     assert_eq!(ids.len(), 3_000);
     assert!(ids.windows(2).all(|w| w[0] < w[1]), "publish rows are not ascending by identity");
@@ -245,7 +307,7 @@ fn a_mapped_identity_orders_by_the_identity_the_stream_actually_emits() {
     )
     .unwrap();
 
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &[], CancelToken::new()).unwrap();
+    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &empty_projection(&ds), CancelToken::new()).unwrap();
     let (ids, _, _) = drain(&mut s);
     assert_eq!(ids.len(), 500);
     assert!(
@@ -320,7 +382,8 @@ fn a_publish_stream_is_cancellable_like_any_other() {
     let ds = Dataset::open(&path).unwrap();
     let cancel = CancelToken::new();
     cancel.cancel();
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &[], cancel).unwrap();
+    let proj = empty_projection(&ds);
+    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &proj, cancel).unwrap();
     let mut buf = Vec::new();
     match s.next_into(&mut buf) {
         Some(Err(EngineError::Cancelled)) => {}
@@ -338,7 +401,7 @@ fn a_batch_reports_the_bounds_of_the_rows_it_actually_carries() {
     let facts = write_geoparquet(&path, &zoned_spec(4_000)).unwrap();
     let ds = Dataset::open(&path).unwrap();
 
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &[], CancelToken::new()).unwrap();
+    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &empty_projection(&ds), CancelToken::new()).unwrap();
     let mut union = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
     let mut buf = Vec::new();
     let mut seen = 0usize;

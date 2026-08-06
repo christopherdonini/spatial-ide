@@ -13,7 +13,7 @@
 // themselves.
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -87,8 +87,11 @@ test('no source in renderer/ refers to the canvas probe', () => {
   for (const path of walk('..')) {
     if (!/\.(ts|mjs|js|rs|json|html|toml|md)$/.test(path)) continue;
     // `renderer/README.md` is the one place the relationship is described, and this test is the
-    // place the rule is written down. Everything else must be silent about the probe.
-    if (path.endsWith('README.md') || path.endsWith('boundaries.test.mjs')) continue;
+    // place the rule is written down. Everything else must be silent about the probe — including
+    // `bundle-viewer/README.md`, should one ever exist, which is why this matches the exact path
+    // rather than any file called README.
+    const normalized = path.split(sep).join('/');
+    if (normalized === '../README.md' || normalized.endsWith('/boundaries.test.mjs')) continue;
     if (readFileSync(path, 'utf8').includes('canvas-probe')) offenders.push(path);
   }
   assert.deepEqual(offenders, [], `renderer/ refers to the probe outside its README`);

@@ -93,6 +93,34 @@ pub fn admit_attribute_type(column: &str, ty: &DataType) -> Result<()> {
     }
 }
 
+/// A projection that has passed [`admit_projection`].
+///
+/// **The single-constructor discipline `BatchEnvelope` uses, applied to the projection.** Without
+/// it, `stream_for_publish` would take a bare `&[Field]` on a public API, so a caller could hand it
+/// a `Float32` column, the geometry column, or a duplicate — bypassing every typed refusal in this
+/// module and reaching a DuckDB error or an `EncodingMismatch` instead. The refusals are the
+/// module's whole point; a type that can only be built by passing them is what makes them
+/// unavoidable rather than merely available.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PublishedProjection {
+    fields: Vec<Field>,
+}
+
+impl PublishedProjection {
+    pub fn fields(&self) -> &[Field] {
+        &self.fields
+    }
+    pub fn names(&self) -> Vec<String> {
+        self.fields.iter().map(|f| f.name().clone()).collect()
+    }
+    pub fn len(&self) -> usize {
+        self.fields.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.fields.is_empty()
+    }
+}
+
 /// Validate a caller's projection against the dataset's own columns.
 ///
 /// `resolved` are the fields as the reader actually reports them, in the caller's declared order.
@@ -104,7 +132,7 @@ pub fn admit_projection(
     resolved: &[Field],
     geometry_column: &str,
     identity_column: &str,
-) -> Result<Vec<Field>> {
+) -> Result<PublishedProjection> {
     if resolved.len() > MAX_PUBLISHED_ATTRIBUTES {
         return Err(EngineError::CeilingExceeded {
             ceiling: "MAX_PUBLISHED_ATTRIBUTES",
@@ -144,7 +172,7 @@ pub fn admit_projection(
         // deliberately not consulted.
         out.push(Field::new(name, f.data_type().clone(), true));
     }
-    Ok(out)
+    Ok(PublishedProjection { fields: out })
 }
 
 #[cfg(test)]
@@ -178,7 +206,7 @@ mod tests {
         // A source NULL is a value; a schema that could not carry it would force a substitution.
         let resolved = vec![Field::new("zone", DataType::Utf8, false)];
         let out = admit_projection(&resolved, "geometry", "id").unwrap();
-        assert!(out[0].is_nullable(), "publishing must not be able to lose a NULL");
+        assert!(out.fields()[0].is_nullable(), "publishing must not be able to lose a NULL");
     }
 
     #[test]

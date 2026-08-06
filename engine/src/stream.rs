@@ -304,6 +304,27 @@ pub struct ConnectionFacts {
     pub reused_an_existing_connection: bool,
 }
 
+/// How many times a batch's attribute column has been assembled from **more than one** chunk run.
+///
+/// **An instrument fact, unconditional, and deliberately not behind `cfg(test)`** — the same pattern
+/// and the same reasoning as `dataset::INDEX_CONSULTATIONS`. The property a test needs is that the
+/// *shipped* producer took the concatenation path, and a counter compiled only into a test build
+/// would prove that about a build nobody runs.
+///
+/// It exists because the alternative is inferring the path from partition row counts, and that
+/// inference is wrong: a published partition is ~2 000 rows and a DuckDB chunk is ~2 048, so a
+/// partition never *exceeds* a chunk while most of them *cross* one. A test that looked for a
+/// partition larger than a chunk would conclude the path was untaken while it was running every
+/// time. One relaxed atomic makes the claim checkable instead (`docs/01` principle 8).
+static ATTRIBUTE_CONCATENATIONS: AtomicU64 = AtomicU64::new(0);
+
+/// Times any stream in this process has concatenated a multi-chunk attribute run.
+///
+/// Never an SKP field and never on the wire.
+pub fn attribute_concatenations() -> u64 {
+    ATTRIBUTE_CONCATENATIONS.load(Ordering::SeqCst)
+}
+
 /// Counters the producer keeps about itself. H2 and H3 rest on these rather than on OS readings.
 #[derive(Default)]
 pub struct StreamStats {
@@ -464,14 +485,14 @@ impl Dataset {
     pub fn stream_for_publish(
         &self,
         q: &ViewportQuery,
-        attributes: &[arrow::datatypes::Field],
+        attributes: &crate::attributes::PublishedProjection,
         cancel: CancelToken,
     ) -> Result<BatchStream> {
         let envelope = BatchEnvelope::with_attributes(
             self.crs().clone(),
             self.geometry_column().to_string(),
             self.identity().clone(),
-            attributes.to_vec(),
+            attributes.fields().to_vec(),
         );
         self.stream_inner(
             q,
@@ -494,7 +515,7 @@ impl Dataset {
     pub fn resolve_projection(
         &self,
         names: &[String],
-    ) -> Result<Vec<arrow::datatypes::Field>> {
+    ) -> Result<crate::attributes::PublishedProjection> {
         let mut resolved = Vec::with_capacity(names.len());
         for name in names {
             let f = self
@@ -1088,6 +1109,13 @@ fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
         // One validity bit per value, plus the value itself. Rounded to a byte, which over-counts
         // slightly and can only cut a batch marginally early.
         total += 1;
+        // **A null slot's contents are unspecified in Arrow, so they are never read.** Reading one
+        // would make a partition boundary — and therefore every partition hash — a function of
+        // whatever bytes happen to occupy the slot, which is precisely the non-determinism this
+        // function's own contract rules out. A null costs its validity bit and nothing else.
+        if col.is_null(row) {
+            continue;
+        }
         total += if let Some(a) = col.as_any().downcast_ref::<StringArray>() {
             a.value(row).len() + 4
         } else if let Some(a) = col.as_any().downcast_ref::<LargeStringArray>() {
@@ -1163,9 +1191,16 @@ fn flush(
     let attributes: Vec<ArrayRef> = p
         .attrs
         .iter()
+        // **A single run is kept as a slice rather than copied** — ADR-004 asks for copies to be
+        // minimized rather than assumed absent, and this is the common case. The consequence, stated
+        // because `est_bytes` does not see it: a slice retains its whole DuckDB chunk's buffers
+        // until the batch is dropped, so producer-resident memory can exceed the estimate by up to
+        // one chunk per attribute column. It is bounded by the chunk, so no declared ceiling is
+        // breached, but the ceiling arithmetic in `MAX_QUEUED_BATCHES` does not account for it.
         .map(|runs| match runs.len() {
             1 => Ok(Arc::clone(&runs[0])),
             _ => {
+                ATTRIBUTE_CONCATENATIONS.fetch_add(1, Ordering::SeqCst);
                 let refs: Vec<&dyn Array> = runs.iter().map(|a| a.as_ref()).collect();
                 arrow::compute::concat(&refs)
                     .map_err(|e| EngineError::Arrow(format!("attribute concat: {e}")))

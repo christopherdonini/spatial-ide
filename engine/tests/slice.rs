@@ -724,8 +724,8 @@ fn the_recorded_arrow_version_is_the_one_the_workspace_pins() {
         .expect("a version string");
     assert_eq!(
         pinned,
-        spatial_engine::ARROW_CRATE_VERSION,
+        spatial_engine::ARROW_CRATE_VERSION_REQUIREMENT,
         "the workspace pins arrow {pinned} but the engine records {}",
-        spatial_engine::ARROW_CRATE_VERSION
+        spatial_engine::ARROW_CRATE_VERSION_REQUIREMENT
     );
 }

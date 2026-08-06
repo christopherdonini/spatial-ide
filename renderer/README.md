@@ -30,9 +30,10 @@ alone.
 
 Where the two converge on the same arithmetic — `f32(coord − origin)` is one line however you write
 it — that convergence is the rule doing its job, not promotion. Where they diverge, they diverge
-because the jobs differ: this viewer's envelope check is *stronger* than the probe's, because it also
-verifies the declared attribute projection, the identity facts and the manifest-declared schema,
-none of which the probe knows about.
+because the jobs differ: this viewer additionally checks the declared **attribute-column list** and
+the manifest's byte count, content hash and row count for every partition, none of which the probe
+knows about. See "What is verified" below for the exact set, stated because "stronger" is not a
+specification.
 
 **`frontends/canvas-probe` is byte-identical to `a64b861` and stays that way.**
 `kernel/RESULTS.md`'s third section discharges its invalidator 14 on exactly that fact, so editing
@@ -101,12 +102,36 @@ itself, and the `(partition, feature index)` pair is never flattened into a glob
 cursor-derived coordinate is displayed at all** — stronger than rule 2's requirement that one be
 visibly marked.
 
-**Verification, and what it cannot cover.** Every manifest-listed asset is re-hashed before it is
-drawn, with a pure-JS SHA-256 as the single unconditional path: `crypto.subtle` needs a secure
-context, and ADR-008's targets include plain-HTTP and `file://` hosts, so branching on availability
-would make *whether verification happens* depend on the origin. Hashing is chunked and yielded so it
-cannot block the canvas. The viewer **cannot verify the code already executing** — the manifest's
-viewer hashes are for an external verifier, and the chain of trust does not close inside the browser.
+### What is verified, exactly
+
+Stated as a list rather than as an adjective, because a reader deciding how much to trust a rendered
+map needs the set and not a summary of it.
+
+**Checked, before anything is drawn:**
+
+| | |
+|---|---|
+| `manifest.json` | parses; `bundle_version` is one this build implements; every asset path is bundle-relative with no `..`, no drive letter and no leading `/` |
+| `style.json` | content hash matches the manifest; parses; `style_version` is one this build implements; the geometry is `polygon` and all four properties are style values |
+| every partition | byte count matches the manifest; **content hash** matches the manifest; decodes; row count matches the manifest; the envelope's `frame`, `crs` (against the manifest's), `axis_order`, `geometry_encoding` and `attribute_columns` (against the manifest's) all match; every declared attribute column is present |
+| ceilings | features, partitions, resident bytes and attribute columns are all inside the declared ceilings |
+
+**Carried but not checked, and this is the part an adjective would hide:**
+
+- **The identity facts.** `id_source`, `id_uniqueness`, `id_verified_rows` and the caveat are read
+  from the manifest and **displayed**. They are never compared against the partition envelopes, and
+  nothing here re-verifies uniqueness — it is a claim the publisher made, shown as one.
+- **The schema, beyond column names.** Attribute presence is checked; **Arrow types are not
+  compared** against the manifest's `schema` block.
+- **The viewer's own assets.** `manifest.viewer` lists a hash for each, and this page **does not
+  fetch or hash them**. It cannot: it *is* them. Those hashes are for an **external** verifier, and
+  the chain of trust does not close inside the browser.
+- **`build-info.json`.** Not hash-listed, not fetched, not trusted, and its absence changes nothing.
+
+**How it is verified.** Pure-JS SHA-256 as the single unconditional path: `crypto.subtle` needs a
+secure context, and ADR-008's targets include plain-HTTP and `file://` hosts, so branching on
+availability would make *whether verification happens* depend on the origin. Hashing is chunked and
+yielded so it cannot block the canvas.
 
 **On failure: stop, keep what is drawn, name the state.** Loading halts, the canvas keeps every
 partition that passed its hash, and a non-dismissable banner names the failure state and the asset,
@@ -134,9 +159,18 @@ tolerance.** Two consequences are declared rather than discovered:
 
 **Overlap is resolved by draw order, declared:** partitions in manifest order, features in array
 order within a partition, last drawn winning — which, since the publish path orders rows by ascending
-identity, means the **highest id wins**. The pick search runs backwards for exactly that reason, so
-what is picked is what is visible. Fill and hit test both use the **even-odd** rule, so a point
-inside a hole reads as a hole in both.
+identity, means the **highest id wins**. The pick search runs backwards through the identical order,
+so what is picked is what is visible.
+
+Keeping that true is why **each feature is filled on its own path** rather than batched by style
+group. Batching is cheaper, and it breaks the claim twice over: even-odd over a merged path cancels
+the intersection of two overlapping features, rendering a hole no feature has; and it makes painter's
+order group-major, so a feature in a later style group covers an earlier one regardless of identity
+while `pick` still returns the higher id. *(An earlier version did batch, and both defects were live.
+The fixture's polygons tile a grid and never overlap, so the acceptance run would not have surfaced
+either — it took a reviewer reading the two functions against each other.)* Fill and hit test both
+apply **even-odd per feature**, so a point inside an interior ring reads as a hole in both,
+regardless of winding, which the engine does not guarantee.
 
 **Every frame is drawn from the authoritative coordinates** — no cached raster, no level of detail,
 no tiles. Showing a scaled copy of the previous frame during a drag would be cheaper and would

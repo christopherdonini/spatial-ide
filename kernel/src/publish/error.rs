@@ -74,7 +74,7 @@ pub enum PublishError {
     /// would lose the thing that actually went wrong — and reporting only the original would leave
     /// a directory on disk that nobody was told about (ADR-010 rule 7: an operation may not
     /// terminate silently).
-    StagingNotRemoved { after: String, path: String, detail: String },
+    StagingNotRemoved { after: Box<PublishError>, path: String, detail: String },
 
     Engine(EngineError),
     Style(StyleError),

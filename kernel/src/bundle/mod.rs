@@ -475,7 +475,7 @@ impl Software {
             ("engine_crate_version", Json::str(self.engine.clone())),
             ("kernel_crate_version", Json::str(self.kernel.clone())),
             ("renderer_crate_version", Json::str(self.renderer.clone())),
-            ("arrow_crate_version", Json::str(self.arrow.clone())),
+            ("arrow_crate_version_requirement", Json::str(self.arrow.clone())),
             ("duckdb_library_version", Json::str(self.duckdb.clone())),
             ("bundle_writer_version", Json::Int(self.bundle_writer)),
             (

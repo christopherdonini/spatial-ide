@@ -36,9 +36,12 @@
 //! JSON files — which are printable throughout — the condition is satisfied everywhere and changes
 //! nothing.
 //!
-//! **This is a filter on noise, and it is a real limit on the guarantee**: a path deliberately
-//! embedded in binary surrounded by non-printable bytes would not be reported. The scan is a
-//! necessary condition, not a sufficient one, and this is one of the places that is true.
+//! **Two real limits on the guarantee, both stated rather than glossed.** A path deliberately
+//! embedded in binary and surrounded by non-printable bytes is not reported. And a short path in a
+//! short printable run is not reported either — `C:/tmp/x` is 8 bytes, below the threshold. The
+//! honest statement is therefore **"a printable run of at least [`MIN_PRINTABLE_RUN`] bytes
+//! containing one of the named shapes"**, not "any path". The scan is a necessary condition, never
+//! a sufficient one, and these are two of the places that is true.
 
 /// One thing the scan found, with enough context to act on it.
 #[derive(Clone, Debug, PartialEq)]
@@ -109,8 +112,15 @@ const CREDENTIAL_NEEDLES: &[(&str, &str)] = &[
 
 /// The shortest run of printable ASCII a match must sit inside to be reported.
 ///
-/// Twelve: long enough that a 3-byte coincidence in a float buffer essentially never qualifies,
-/// short enough that any real path fragment does.
+/// **Twelve, and the trade runs in both directions.** A 3-byte drive-letter pattern matches by
+/// chance roughly once per 2^24 positions, so a 44 MB partition of IEEE-754 coordinates yields a
+/// handful — which is exactly what a real bundle produced. Requiring the match to sit inside a run
+/// of printable ASCII removes those, because a float buffer is not printable for twelve consecutive
+/// bytes except by an accident far rarer than the one being filtered.
+///
+/// The cost, stated because it is the other half of the trade: **a short path in a short run is
+/// missed.** `C:/tmp/x` is 8 bytes and would not be reported; a 16-byte path is. The threshold is a
+/// declared filter on noise, not a proof of absence.
 pub const MIN_PRINTABLE_RUN: usize = 12;
 
 /// Whether `bytes[offset..offset+len]` sits inside a long enough run of printable ASCII.
@@ -265,13 +275,36 @@ mod tests {
 
     #[test]
     fn it_does_not_fire_on_the_things_a_manifest_legitimately_contains() {
-        // These are the false positives that would make the scan unusable, so they are pinned:
-        // a hash prefix, an RFC-3339 instant, a logical URI, and a bundle-relative asset path.
-        let clean = br#"{"content_hash":"sha256:ab12","started_at":"2026-08-06T12:30:45Z",
+        // These are the false positives that would make the scan unusable, so they are pinned: a
+        // hash prefix, an RFC-3339 instant, a logical URI, and a bundle-relative asset path. The
+        // transform string carries the manifest's real **em dash**, not an ASCII hyphen, so the
+        // test exercises the bytes a real bundle actually holds — a non-ASCII byte is not
+        // "printable" to this scan and therefore splits a run, which is worth having covered.
+        let clean = r#"{"content_hash":"sha256:ab12","started_at":"2026-08-06T12:30:45Z",
             "logical_uri":"spatial://dataset/parcels","path":"data/part-00000.arrows",
-            "crs":"EPSG:2056","transform":"none - rendered in source CRS"}"#;
-        let f = scan("manifest.json", clean, &machine());
+            "crs":"EPSG:2056","transform":"none — rendered in source CRS"}"#;
+        let f = scan("manifest.json", clean.as_bytes(), &machine());
         assert!(f.is_empty(), "false positives: {f:#?}");
+    }
+
+    #[test]
+    fn the_printable_run_threshold_is_where_the_constant_says_it_is() {
+        // The threshold is a real limit on the guarantee, so it is pinned **at the boundary** rather
+        // than only demonstrated far from it — one byte either side of `MIN_PRINTABLE_RUN`. Without
+        // this, the constant could drift and the only symptom would be findings quietly vanishing.
+        let needle = b"/home/";
+        for (run_len, expected) in [(MIN_PRINTABLE_RUN - 1, false), (MIN_PRINTABLE_RUN, true)] {
+            let mut buf = vec![0u8; 256];
+            let mut run = vec![b'x'; run_len];
+            run[..needle.len()].copy_from_slice(needle);
+            buf[64..64 + run_len].copy_from_slice(&run);
+            let found = !scan("x", &buf, &machine()).is_empty();
+            assert_eq!(
+                found, expected,
+                "a printable run of {run_len} bytes should {}be reported",
+                if expected { "" } else { "not " }
+            );
+        }
     }
 
     #[test]

@@ -21,6 +21,13 @@
  *   "that part never loaded".
  * - **The legend is unaffected**, because it is a function of the style and not of the data. It
  *   shows what the style declares, which is true whether or not every partition arrived.
+ *
+ * ## Every state below is reachable
+ *
+ * There is deliberately no `style-hash-mismatch` and no `style-unreachable`. The style is fetched
+ * through the same path as every other asset, so its hash and availability failures surface as
+ * `asset-hash-mismatch` and `asset-missing`, naming the style's own path — which is the accurate
+ * report. A declared state no code can raise reads as coverage that does not exist.
  */
 
 export type FailureState =
@@ -28,10 +35,8 @@ export type FailureState =
   | 'manifest-unparseable'
   | 'manifest-unsupported-version'
   | 'manifest-schema-invalid'
-  | 'style-unreachable'
   | 'style-unparseable'
   | 'style-unsupported-version'
-  | 'style-hash-mismatch'
   | 'asset-missing'
   | 'asset-hash-mismatch'
   | 'partition-byte-count-mismatch'

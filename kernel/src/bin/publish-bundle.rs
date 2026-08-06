@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "--attributes" => {
                 attributes = args
                     .next()
-                    .unwrap_or_default()
+                    .ok_or("--attributes needs a comma-separated column list")?
                     .split(',')
                     .map(|s| s.trim().to_string())
                     .filter(|s| !s.is_empty())
@@ -89,7 +89,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 bbox = Some(Bbox { xmin: v[0], ymin: v[1], xmax: v[2], ymax: v[3] });
             }
-            "--limit" => limit = args.next().and_then(|s| s.parse().ok()),
+            "--limit" => {
+                let raw = args.next().ok_or("--limit needs a value")?;
+                limit = Some(raw.parse().map_err(|_| format!("--limit `{raw}` is not a number"))?);
+            }
             "--license" => license = args.next(),
             "--license-by" => license_by = args.next().unwrap_or(license_by),
             "--attribution" => attribution = args.next(),
@@ -164,16 +167,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }),
         destination: out,
         started_at,
-        finished_at: String::new(),
+        // A **clock**, not an instant. `publish` calls it once, after every byte of the bundle is
+        // on disk, so `finished_at − started_at` is the build rather than whatever happened before
+        // this call.
+        finished_at: &rfc3339_utc_now,
     };
 
-    // `finished_at` is stamped after the work, not before, and reaches only the sidecar.
-    let mut request = request;
-    let outcome = {
-        let finished_placeholder = rfc3339_utc_now();
-        request.finished_at = finished_placeholder;
-        publish(&request, &cancel, Some(&Console))?
-    };
+    let outcome = publish(&request, &cancel, Some(&Console))?;
 
     // Facts. No budget, no percentile, no comparison with anything.
     println!("bundle            {}", outcome.bundle_path.display());
@@ -219,11 +219,12 @@ fn rfc3339_utc_now() -> String {
     )
 }
 
-/// Install a Ctrl-C handler without a dependency.
+/// Install a Ctrl-C handler.
 ///
-/// `tokio::signal` is already in this crate's tree, and using it here would mean starting a runtime
-/// for a synchronous operation. This spawns one thread that waits on the platform's console control
-/// handler through `tokio`'s portable wrapper instead.
+/// `tokio::signal` is already in this crate's tree and is the portable way to wait on a console
+/// control event, so it is what this uses — on **its own thread with its own current-thread
+/// runtime**, so the publish itself stays an ordinary synchronous call rather than being dragged
+/// into an async context to get one signal.
 fn ctrlc_handler(on_signal: impl FnOnce() + Send + 'static) {
     std::thread::spawn(move || {
         let rt = match tokio::runtime::Builder::new_current_thread().enable_all().build() {

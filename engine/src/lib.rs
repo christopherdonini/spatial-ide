@@ -54,14 +54,19 @@
 /// identity** — ADR-005's Exact grade wants pinned software and a crate version is not that.
 pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// The Arrow crate version this workspace pins.
+/// The Arrow **version requirement** this workspace declares — not the resolved version.
 ///
-/// Partition bytes — and therefore every partition hash a bundle records — are a function of the
-/// Arrow IPC writer, so a bundle that did not name it would be claiming byte-identity across
-/// versions it has never seen. There is no runtime accessor for a dependency's version, so this is
-/// a constant, and `engine/tests/slice.rs` asserts it against the workspace manifest rather than
-/// leaving the two to drift.
-pub const ARROW_CRATE_VERSION: &str = "58";
+/// Partition bytes, and therefore every partition hash a bundle records, are a function of the Arrow
+/// IPC writer, so a bundle that named nothing would be claiming byte-identity across writers it has
+/// never seen.
+///
+/// **The distinction is load-bearing and the manifest field is named for it.** This is the semver
+/// requirement from the workspace manifest (`58`), which `engine/tests/slice.rs` asserts against so
+/// the two cannot drift. It is **not** the resolved patch version — `Cargo.lock` currently says
+/// 58.4.0 — and there is no runtime accessor for one. So byte-identity is claimed **within** a
+/// resolved Arrow version and is not claimed across a patch bump, and the manifest says so rather
+/// than implying otherwise by recording a number that looks more precise than it is.
+pub const ARROW_CRATE_VERSION_REQUIREMENT: &str = "58";
 
 pub mod attributes;
 pub mod cancel;
@@ -80,7 +85,7 @@ pub mod pool;
 pub mod stream;
 pub mod wkb;
 
-pub use attributes::MAX_PUBLISHED_ATTRIBUTES;
+pub use attributes::{PublishedProjection, MAX_PUBLISHED_ATTRIBUTES};
 pub use cancel::CancelToken;
 pub use pin::ContentPin;
 pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
