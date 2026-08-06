@@ -141,6 +141,32 @@ fn json_string(s: &str) -> String {
     serde_json::to_string(s).unwrap_or_else(|_| String::from(r#""""#))
 }
 
+/// The interleaved `x, y, x, y…` run this array's features actually occupy.
+///
+/// **Walks the offsets rather than reaching for the flat child buffer**, because the two are not the
+/// same thing the moment an array has been sliced: `values()` returns the whole child, including
+/// coordinates belonging to features outside the slice window. Reading them would put vertices from
+/// rows that are not in this batch into any bound computed from it — a wrong-but-plausible extent,
+/// with nothing raised.
+///
+/// Returns `None` when the array is not a polygon array or the nesting cannot be walked; the caller
+/// treats that as "no bound established", never as an empty one.
+pub fn coordinate_values(array: &ArrayRef) -> Option<&[f64]> {
+    let polys = array.as_any().downcast_ref::<ListArray>()?;
+    let poly_offsets = polys.value_offsets();
+    let ring_lo = *poly_offsets.first()? as usize;
+    let ring_hi = *poly_offsets.last()? as usize;
+
+    let rings = polys.values().as_any().downcast_ref::<ListArray>()?;
+    let ring_offsets = rings.value_offsets();
+    let vertex_lo = *ring_offsets.get(ring_lo)? as usize;
+    let vertex_hi = *ring_offsets.get(ring_hi)? as usize;
+
+    let fsl = rings.values().as_any().downcast_ref::<FixedSizeListArray>()?;
+    let flat = fsl.values().as_any().downcast_ref::<Float64Array>()?;
+    flat.values().get(vertex_lo * 2..vertex_hi * 2)
+}
+
 /// Assert that what was built is what is being claimed.
 ///
 /// ADR-010 rule 1's tag rides on the envelope; a tag nobody checks against the data is decoration.

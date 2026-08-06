@@ -50,6 +50,20 @@
 //! Windows 10 Pro 22H2 / MSVC / bundled DuckDB. Nothing here says anything about macOS or Linux —
 //! the same limit `docs/07` places on ADR-003.
 
+/// This crate's version, for a manifest's software block. **A recorded version, not a build
+/// identity** — ADR-005's Exact grade wants pinned software and a crate version is not that.
+pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// The Arrow crate version this workspace pins.
+///
+/// Partition bytes — and therefore every partition hash a bundle records — are a function of the
+/// Arrow IPC writer, so a bundle that did not name it would be claiming byte-identity across
+/// versions it has never seen. There is no runtime accessor for a dependency's version, so this is
+/// a constant, and `engine/tests/slice.rs` asserts it against the workspace manifest rather than
+/// leaving the two to drift.
+pub const ARROW_CRATE_VERSION: &str = "58";
+
+pub mod attributes;
 pub mod cancel;
 pub mod crs;
 pub mod identity;
@@ -61,11 +75,14 @@ pub mod error;
 pub mod fixture;
 pub mod geoarrow;
 pub mod geoparquet;
+pub mod pin;
 pub mod pool;
 pub mod stream;
 pub mod wkb;
 
+pub use attributes::MAX_PUBLISHED_ATTRIBUTES;
 pub use cancel::CancelToken;
+pub use pin::ContentPin;
 pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
@@ -75,7 +92,8 @@ pub use pool::{
     MAX_STREAM_CONNECTIONS,
 };
 pub use stream::{
-    ConnectionFacts, FilterPlan,
-    BatchInfo, BatchStream, Bbox, StreamStats, ViewportQuery, MAX_BATCH_BYTES,
-    MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, TARGET_BATCH_BYTES,
+    BatchInfo, BatchSizePolicy, BatchStream, Bbox, ConnectionFacts, FilterPlan, RowOrdering,
+    StreamStats, ViewportQuery, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS, MAX_QUEUED_BATCHES,
+    MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS, PUBLISH_PARTITION_TARGET_BYTES,
+    TARGET_BATCH_BYTES,
 };

@@ -698,3 +698,34 @@ fn h6_the_engine_module_names_no_transport() {
         }
     }
 }
+
+/// `ARROW_CRATE_VERSION` is a constant, so it can drift from what the workspace actually pins. This
+/// is what stops it.
+///
+/// A published bundle records the Arrow version because partition bytes — and therefore every
+/// partition hash it lists — are a function of the IPC writer. A constant that quietly disagreed
+/// with the linked library would put a wrong version in a reproducibility basis, which is worse than
+/// recording none: it would look like the question had been answered.
+#[test]
+fn the_recorded_arrow_version_is_the_one_the_workspace_pins() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("workspace root")
+        .join("Cargo.toml");
+    let manifest = std::fs::read_to_string(&root).expect("read workspace manifest");
+    let line = manifest
+        .lines()
+        .find(|l| l.trim_start().starts_with("arrow = "))
+        .expect("the workspace pins arrow");
+    let pinned = line
+        .split("version = \"")
+        .nth(1)
+        .and_then(|s| s.split('"').next())
+        .expect("a version string");
+    assert_eq!(
+        pinned,
+        spatial_engine::ARROW_CRATE_VERSION,
+        "the workspace pins arrow {pinned} but the engine records {}",
+        spatial_engine::ARROW_CRATE_VERSION
+    );
+}

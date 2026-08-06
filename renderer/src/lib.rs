@@ -33,6 +33,10 @@
 //! requires none. The viewer declares its own policy in its own README, because it *is* a
 //! long-lived session.
 
+/// This crate's version, for a manifest's software block. **A recorded version, not a build
+/// identity** — ADR-005's Exact grade wants pinned software, and a crate version is not that.
+pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub mod canonical;
 pub mod compiled;
 pub mod style;

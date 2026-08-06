@@ -16,10 +16,16 @@ path = "src/main.rs"
 [dependencies]
 spatial-engine = { path = "../engine" }
 spatial-data-plane = { path = "../protocol/data-plane" }
+# Style compilation and the canonical-JSON grammar. The manifest and the style document share one
+# number grammar on purpose — two would be two things to specify and two to re-implement.
+spatial-renderer = { path = "../renderer" }
+arrow = { workspace = true }
 tokio = { workspace = true }
 
 [dev-dependencies]
 arrow = { workspace = true }
+serde_json = "1"
+spatial-renderer = { path = "../renderer" }
 spatial-engine = { path = "../engine", features = ["fixture"] }
 tokio-tungstenite = "0.29"
 futures-util = "0.3"

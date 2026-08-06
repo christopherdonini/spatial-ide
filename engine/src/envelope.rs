@@ -30,6 +30,7 @@ pub struct BatchEnvelope {
     crs: DatasetCrs,
     geometry_column: String,
     identity: DatasetIdentity,
+    attributes: Vec<Field>,
     schema: SchemaRef,
 }
 
@@ -38,6 +39,28 @@ impl BatchEnvelope {
         crs: DatasetCrs,
         geometry_column: String,
         identity: DatasetIdentity,
+    ) -> Self {
+        Self::with_attributes(crs, geometry_column, identity, Vec::new())
+    }
+
+    /// As [`Self::new`], carrying a **declared attribute projection** after the geometry column.
+    ///
+    /// The schema widens to `[id, geometry, ...attributes]` and the envelope names the projection.
+    /// Nothing about the frame tag changes: `TaggedBatch` still has exactly one constructor, it
+    /// still takes a `BatchEnvelope`, which still takes a `DatasetCrs` that has no public
+    /// constructor — so the ADR-010 rule 1 property is untouched, and widening the schema is not a
+    /// change to it.
+    ///
+    /// **`attribute_columns` is recorded on the authority of `docs/11` and `docs/01` principle 8,
+    /// not ADR-010 rule 1.** Rule 1's tag-on-envelope clause is about *coordinate space*; citing it
+    /// for a projection would enlarge an Accepted, architect-blockable rule by analogy — which is
+    /// what ADR-016 §6 refuses to do for exactly this reason. `docs/11` requires a resource to carry
+    /// its schema; principle 8 requires the record to say what is actually there.
+    pub(crate) fn with_attributes(
+        crs: DatasetCrs,
+        geometry_column: String,
+        identity: DatasetIdentity,
+        attributes: Vec<Field>,
     ) -> Self {
         let mut md = HashMap::new();
 
@@ -88,15 +111,30 @@ impl BatchEnvelope {
         md.insert("geometry_encoding".to_string(), geoarrow::EXT_NAME_POLYGON.to_string());
         md.insert("coordinate_layout".to_string(), "interleaved-xy".to_string());
 
-        let schema = Arc::new(Schema::new_with_metadata(
-            vec![
-                Arc::new(Field::new(ID_COLUMN, DataType::UInt64, false)),
-                geoarrow::geometry_field(&geometry_column, &crs),
-            ],
-            md,
-        ));
+        // The declared projection, in declared order, as a JSON array of names. JSON is admissible
+        // *here* and nowhere near the payload: this is schema metadata, which is already a string
+        // key/value map, and ADR-004's prohibition is on JSON in the **data** path.
+        md.insert(
+            "attribute_columns".to_string(),
+            serde_json::Value::Array(
+                attributes.iter().map(|f| serde_json::Value::String(f.name().clone())).collect(),
+            )
+            .to_string(),
+        );
 
-        Self { crs, geometry_column, identity, schema }
+        let mut fields: Vec<Arc<Field>> = Vec::with_capacity(2 + attributes.len());
+        fields.push(Arc::new(Field::new(ID_COLUMN, DataType::UInt64, false)));
+        fields.push(geoarrow::geometry_field(&geometry_column, &crs));
+        fields.extend(attributes.iter().cloned().map(Arc::new));
+
+        let schema = Arc::new(Schema::new_with_metadata(fields, md));
+
+        Self { crs, geometry_column, identity, attributes, schema }
+    }
+
+    /// The declared attribute projection, in declared order. Empty on the streaming query path.
+    pub fn attributes(&self) -> &[Field] {
+        &self.attributes
     }
 
     pub fn crs(&self) -> &DatasetCrs {
@@ -123,13 +161,87 @@ pub struct TaggedBatch {
 }
 
 impl TaggedBatch {
-    /// The one way to make a batch. Validates the geometry encoding against the array actually
-    /// handed in, so the claim on the envelope is checked rather than asserted.
-    pub(crate) fn assemble(env: &BatchEnvelope, ids: ArrayRef, geometry: ArrayRef) -> Result<Self> {
+    /// **The one way to make a batch**, and still the only one now that the schema can widen — a
+    /// second constructor taking "just id and geometry" would make the sentence at the top of this
+    /// module false, so the empty projection is spelled `Vec::new()` at the call site instead.
+    ///
+    /// Validates the geometry encoding against the array actually handed in, so the claim on the
+    /// envelope is checked rather than asserted.
+    ///
+    /// **The attribute arrays are checked against the declared fields, not trusted to match them.**
+    /// Count, order and type are all verified here, and a mismatch is a typed engine error rather
+    /// than an Arrow string surfacing three layers up. Without this, `attribute_columns` on the
+    /// envelope would be an *assertion* about the payload — and an envelope whose claims are
+    /// unchecked is exactly what the single-constructor discipline exists to prevent, surviving in
+    /// form while being hollow in substance.
+    pub(crate) fn assemble(
+        env: &BatchEnvelope,
+        ids: ArrayRef,
+        geometry: ArrayRef,
+        attributes: Vec<ArrayRef>,
+    ) -> Result<Self> {
         geoarrow::validate_polygon_encoding(&geometry)?;
-        let batch = RecordBatch::try_new(env.schema(), vec![ids, geometry])
+
+        let declared = env.attributes();
+        if attributes.len() != declared.len() {
+            return Err(EngineError::EncodingMismatch {
+                claimed: format!("{} declared attribute column(s)", declared.len()),
+                found: format!("{} array(s)", attributes.len()),
+            });
+        }
+        for (field, array) in declared.iter().zip(attributes.iter()) {
+            if field.data_type() != array.data_type() {
+                return Err(EngineError::EncodingMismatch {
+                    claimed: format!("attribute `{}` is {}", field.name(), field.data_type()),
+                    found: array.data_type().to_string(),
+                });
+            }
+            if array.len() != ids.len() {
+                return Err(EngineError::EncodingMismatch {
+                    claimed: format!("attribute `{}` has {} row(s)", field.name(), ids.len()),
+                    found: format!("{} row(s)", array.len()),
+                });
+            }
+        }
+
+        let mut columns: Vec<ArrayRef> = Vec::with_capacity(2 + attributes.len());
+        columns.push(ids);
+        columns.push(geometry);
+        columns.extend(attributes);
+
+        let batch = RecordBatch::try_new(env.schema(), columns)
             .map_err(|e| EngineError::Arrow(format!("record batch: {e}")))?;
         Ok(Self { batch })
+    }
+
+    /// The bounding box of every vertex in this batch, in the dataset's CRS, as
+    /// `[xmin, ymin, xmax, ymax]`. `None` for a batch with no vertices.
+    ///
+    /// **Here rather than in the publisher** because walking the GeoArrow nesting is this module's
+    /// knowledge, and because it is what lets a bundle's `bounds` be computed over the rows actually
+    /// published. The file's own `covering.bbox` is the wrong source for that: under a filter it
+    /// describes rows the bundle does not contain, and a viewer fitted to it opens on a mostly-empty
+    /// map that looks like a rendering fault.
+    ///
+    /// The values are the **authoritative f64 coordinates**, untouched — no origin, no narrowing.
+    /// A render origin is renderer-local state (ADR-010 rule 1) and never leaves the renderer, so
+    /// nothing derived from one appears here or in anything built from this.
+    pub fn xy_bounds(&self) -> Option<[f64; 4]> {
+        let coords = geoarrow::coordinate_values(self.batch.column(1))?;
+        if coords.is_empty() {
+            return None;
+        }
+        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        for pair in coords.chunks_exact(2) {
+            b[0] = b[0].min(pair[0]);
+            b[1] = b[1].min(pair[1]);
+            b[2] = b[2].max(pair[0]);
+            b[3] = b[3].max(pair[1]);
+        }
+        // A non-finite coordinate would poison every bound derived from it, and the manifest's
+        // canonical JSON has no spelling for one. Refusing to report a bound is honest; reporting
+        // an infinity as a bound is not.
+        b.iter().all(|v| v.is_finite()).then_some(b)
     }
 
     pub fn num_rows(&self) -> usize {
@@ -204,7 +316,7 @@ mod tests {
     #[test]
     fn every_batch_carries_frame_crs_and_axis_order() {
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
-        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon())
+        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon(), Vec::new())
             .unwrap();
         let md = b.schema().metadata().clone();
         assert_eq!(md.get("frame").unwrap(), FRAME_AUTHORITATIVE);
@@ -236,7 +348,7 @@ mod tests {
     #[test]
     fn the_tag_survives_ipc_serialization() {
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
-        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![7u64])), one_polygon())
+        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![7u64])), one_polygon(), Vec::new())
             .unwrap();
 
         let mut buf = Vec::new();
@@ -254,7 +366,7 @@ mod tests {
     #[test]
     fn ipc_bytes_are_appended_so_a_caller_may_reserve_a_prefix() {
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
-        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon())
+        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon(), Vec::new())
             .unwrap();
         let mut buf = vec![0xAAu8; 8];
         b.write_ipc_into(&mut buf).unwrap();
@@ -268,7 +380,7 @@ mod tests {
         use arrow::array::Float64Array;
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
         let wrong: ArrayRef = Arc::new(Float64Array::from(vec![1.0]));
-        let e = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), wrong).unwrap_err();
+        let e = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), wrong, Vec::new()).unwrap_err();
         assert!(matches!(e, EngineError::EncodingMismatch { .. }));
     }
 }

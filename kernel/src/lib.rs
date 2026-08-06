@@ -29,6 +29,7 @@ use spatial_data_plane::transport::{
 };
 use spatial_engine::{BatchStream, CancelToken, CrsAssertion, Dataset, PoolConfig, ViewportQuery};
 
+pub mod bundle;
 pub mod params;
 
 pub use params::{StreamParams, OPERATION};

@@ -72,6 +72,50 @@ pub struct Dataset {
     /// Dropping this `Dataset` closes its idle connections; a lease still in flight keeps the pool
     /// alive until the query it is running is over.
     pool: Arc<ConnectionPool>,
+    /// The source's content pin, if a caller took one. `None` until [`Dataset::pin_content`] is
+    /// called — never computed on demand, because a hash taken at the moment of comparison compares
+    /// the file with itself.
+    pin: std::sync::Mutex<Option<crate::pin::ContentPin>>,
+    /// License and attribution as the **file** declares them, read once at open and carried
+    /// verbatim.
+    source_license: SourceLicense,
+}
+
+/// License and attribution as a source file declares them — **verbatim, uninterpreted**.
+///
+/// `docs/14` requires published bundles to surface license metadata "when known". Knowing means the
+/// file said so: nothing here parses SPDX, reads license text, or infers terms from a URL. A source
+/// that declares nothing produces `SourceLicense::default()`, and the publisher records that as
+/// `not-declared` rather than inventing attribution to fill a field.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SourceLicense {
+    pub license: Option<String>,
+    pub attribution: Option<String>,
+    /// The source's own redistribution term, verbatim. The publisher's carryability test reads
+    /// exactly this one field and refuses a bundle whose source says `forbidden` — a static bundle
+    /// *is* a redistributed copy.
+    pub redistribution: Option<String>,
+}
+
+impl SourceLicense {
+    fn from_kv(kv: &[(String, Vec<u8>)]) -> Self {
+        let get = |key: &str| -> Option<String> {
+            kv.iter()
+                .find(|(k, _)| k == key)
+                .and_then(|(_, v)| String::from_utf8(v.clone()).ok())
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+        };
+        Self {
+            license: get(LICENSE_KEY),
+            attribution: get(ATTRIBUTION_KEY),
+            redistribution: get(REDISTRIBUTION_KEY),
+        }
+    }
+
+    pub fn declares_anything(&self) -> bool {
+        self.license.is_some() || self.attribution.is_some() || self.redistribution.is_some()
+    }
 }
 
 impl Dataset {
@@ -152,8 +196,12 @@ impl Dataset {
         let lease = pool.acquire(LeaseClass::Maintenance)?;
         let conn = lease.connection();
 
-        let geo_json = read_geo_metadata(conn, &path_str)?;
+        // One footer read serves both the `geo` key and the declared license keys. A second read
+        // would be a second chance for the two to disagree about the same file.
+        let kv = read_kv_metadata(conn, &path_str)?;
+        let geo_json = geo_from_kv(&kv, &path_str)?;
         let geo = GeoMeta::parse(&geo_json)?;
+        let source_license = SourceLicense::from_kv(&kv);
 
         if !geo.encoding.eq_ignore_ascii_case("WKB") {
             return Err(EngineError::GeoMetadata(format!(
@@ -210,7 +258,61 @@ impl Dataset {
             geo,
             file_schema,
             pool,
+            pin: std::sync::Mutex::new(None),
+            source_license,
         })
+    }
+
+    /// License and attribution as the source file declares them. Verbatim, uninterpreted.
+    pub fn source_license(&self) -> &SourceLicense {
+        &self.source_license
+    }
+
+    /// The DuckDB library version actually linked into this process.
+    ///
+    /// **Asked at runtime rather than hardcoded.** DuckDB produced the result set and its ordering,
+    /// so a bundle that records a reproducibility grade has to name which DuckDB — and a constant
+    /// would record the version someone typed rather than the version that ran.
+    ///
+    /// Runs on a maintenance lease, so it neither creates a connection nor takes one a stream needs.
+    pub fn duckdb_version(&self) -> Result<String> {
+        let lease = self.pool.acquire(LeaseClass::Maintenance)?;
+        let version: std::result::Result<String, _> =
+            lease.connection().query_row("SELECT version()", [], |r| r.get(0));
+        match version {
+            Ok(v) => {
+                lease.release_healthy();
+                Ok(v)
+            }
+            Err(e) => {
+                drop(lease);
+                Err(EngineError::Query(format!("duckdb version: {e}")))
+            }
+        }
+    }
+
+    /// Pin this source's bytes — an **explicit** whole-file SHA-256, cancellable throughout.
+    ///
+    /// Deliberately not part of `open`. `kernel/RESULTS.md` measures the hash at ~603–610 ms on the
+    /// 100 000-feature fixture, and `docs/07`'s hero slice opens a 5 GB file whose cold-open cost
+    /// that same file records as **unmeasured** — so an unconditional hash at open would spend that
+    /// on every viewport query's dataset to serve a check only publishing needs. The caller that
+    /// needs the pin pays for it, visibly, at a call site that can be grepped.
+    ///
+    /// Idempotent: a second call re-reads and replaces the pin rather than returning a stale one,
+    /// because "the pin I took a while ago" is precisely the thing this exists to stop trusting.
+    /// Returns the pin and the milliseconds the hash took, as separate quantities.
+    pub fn pin_content(&self, cancel: &CancelToken) -> Result<(crate::pin::ContentPin, f64)> {
+        let (pin, millis) = crate::pin::ContentPin::take(self.path(), cancel)?;
+        *self.pin.lock().unwrap_or_else(|e| e.into_inner()) = Some(pin.clone());
+        Ok((pin, millis))
+    }
+
+    /// The pin taken by [`Self::pin_content`], if one was. `None` is the honest answer for a
+    /// dataset nobody pinned — never a pin computed on demand, which would defeat the check by
+    /// hashing the file at exactly the moment the comparison happens.
+    pub fn content_pin(&self) -> Option<crate::pin::ContentPin> {
+        self.pin.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     /// This dataset's connections — capacity, counters and current occupancy.
@@ -370,8 +472,32 @@ impl Dataset {
     }
 }
 
-/// The `geo` key from the parquet file's key/value metadata, read through DuckDB.
-fn read_geo_metadata(conn: &Connection, path: &str) -> Result<String> {
+/// Keys the engine reads from a source's parquet key/value metadata besides `geo`.
+///
+/// **A closed, declared list.** Carrying every key a file happens to hold into a published artifact
+/// would publish unreviewed metadata (`docs/09`), and guessing which key means "license" is exactly
+/// the inference ADR-016 §3 refuses for identity and `docs/05` assigns to the data doctor's
+/// propose-with-preview path. Values are carried **verbatim** and never parsed: no SPDX
+/// interpretation, no reading of license text.
+pub const LICENSE_KEY: &str = "license";
+pub const ATTRIBUTION_KEY: &str = "attribution";
+pub const REDISTRIBUTION_KEY: &str = "redistribution";
+
+/// The `geo` key out of an already-read footer.
+fn geo_from_kv(kv: &[(String, Vec<u8>)], path: &str) -> Result<String> {
+    for (k, v) in kv {
+        if k == "geo" {
+            return String::from_utf8(v.clone())
+                .map_err(|e| EngineError::GeoMetadata(format!("`geo` is not UTF-8: {e}")));
+        }
+    }
+    Err(EngineError::GeoMetadata(format!(
+        "{path} carries no `geo` key: it is a parquet file, but not a GeoParquet file"
+    )))
+}
+
+/// Every key/value pair in the parquet footer, read once.
+fn read_kv_metadata(conn: &Connection, path: &str) -> Result<Vec<(String, Vec<u8>)>> {
     let mut stmt = conn
         .prepare("SELECT key, value FROM parquet_kv_metadata(?)")
         .map_err(|e| EngineError::Source(format!("prepare kv metadata: {e}")))?;
@@ -391,16 +517,10 @@ fn read_geo_metadata(conn: &Connection, path: &str) -> Result<String> {
         .collect::<std::result::Result<Vec<_>, _>>()
         .map_err(|e| EngineError::Source(format!("kv metadata row: {e}")))?;
 
-    for (k, v) in pairs {
-        if k == b"geo" {
-            return String::from_utf8(v)
-                .map_err(|e| EngineError::GeoMetadata(format!("`geo` is not UTF-8: {e}")));
-        }
-    }
-
-    Err(EngineError::GeoMetadata(format!(
-        "{path} carries no `geo` key: it is a parquet file, but not a GeoParquet file"
-    )))
+    Ok(pairs
+        .into_iter()
+        .map(|(k, v)| (String::from_utf8_lossy(&k).to_string(), v))
+        .collect())
 }
 
 fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {

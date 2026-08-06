@@ -106,6 +106,21 @@ pub enum EngineError {
     /// them apart cannot tell "this file is unreadable" from "this process is out of connections".
     ConnectionSetup { detail: String },
 
+    /// A column cannot be carried in a published bundle's partitions.
+    ///
+    /// Covers a column that is not in the file, a type outside the admissible set, the geometry or
+    /// identity column named as an attribute, and a column named twice. They share a variant
+    /// because from a caller's side they are one failure — this projection cannot be published —
+    /// and `detail` says which.
+    AttributeUnpublishable { column: String, detail: String },
+
+    /// The source's bytes are not the bytes that were pinned.
+    ///
+    /// `detected_by` names **which check found it**, because the two checks establish different
+    /// things: a content-hash re-read is a statement about the bytes, and the length/modification
+    /// heuristic is a fail-closed guard that is not a content hash and must never be read as one.
+    SourceChangedUnderPublish { pinned: String, observed: String, detected_by: &'static str },
+
     /// A dataset's bounded connection capacity is fully leased.
     ///
     /// **A refusal, never a queue.** Waiting for a connection would be an admission policy wearing
@@ -179,6 +194,18 @@ impl fmt::Display for EngineError {
             Self::ConnectionSetup { detail } => {
                 write!(f, "duckdb connection could not be prepared: {detail}")
             }
+            Self::AttributeUnpublishable { column, detail } => write!(
+                f,
+                "refused: `{column}` cannot be published as an attribute — {detail}. Nothing is \
+                 cast, widened or stringified to make a column fit; a conversion the caller did \
+                 not ask for is the silent conversion docs/01 principle 8 forbids"
+            ),
+            Self::SourceChangedUnderPublish { pinned, observed, detected_by } => write!(
+                f,
+                "refused: the source is not what was pinned — pinned {pinned}, observed {observed} \
+                 ({detected_by}). A bundle built across a changing source would carry a content \
+                 hash describing bytes it does not contain"
+            ),
             Self::ConnectionsExhausted { class, capacity } => write!(
                 f,
                 "refused: this dataset's {class} connection capacity ({capacity}) is fully leased. \

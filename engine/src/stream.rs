@@ -60,6 +60,37 @@ pub const MAX_ROWS_PER_BATCH: usize = 65_536;
 /// counter does not see and does not claim to.
 pub const MAX_QUEUED_BATCHES: usize = 2;
 
+/// **Publish partition ceilings — declared, not discovered (ADR-010 rule 6).**
+///
+/// A published partition is **exactly one `TaggedBatch`**. That is the whole design and it is worth
+/// stating as a decision rather than as an implementation detail: re-batching in the publisher —
+/// concatenating IPC streams, or calling `RecordBatch::try_new` there — would produce partition
+/// bytes that never passed through `TaggedBatch`'s single constructor, and the ADR-010 rule 1
+/// envelope would then be on the partition by *care* rather than by construction.
+///
+/// The size ceiling is also what bounds cancellation. Between-partition polling alone says nothing
+/// about how long one partition takes to encode and write; with these ceilings, **the
+/// uninterruptible window is one partition's encode and write**, and that sentence is the bound.
+///
+/// Progressive sizing is deliberately **not** used here: it exists for `docs/08`'s first-pixels
+/// budget, nobody is waiting for a first pixel during a publish, and a fixed rule makes the
+/// determinism argument short enough to audit.
+pub const PUBLISH_PARTITION_TARGET_BYTES: usize = 1024 * 1024;
+/// Rows per published partition, whichever ceiling binds first.
+pub const PUBLISH_PARTITION_ROWS: usize = 8_192;
+/// Partitions one bundle may contain. The zero-padded width of `data/part-NNNNN.arrows` is derived
+/// from this, so raising it is a **format change** and not a tuning knob.
+pub const MAX_PUBLISH_PARTITIONS: usize = 100_000;
+
+// A partition must fit inside the batch ceiling, or the publish policy would be quietly asking for
+// batches the producer refuses to build.
+const _: () = assert!(PUBLISH_PARTITION_TARGET_BYTES < MAX_BATCH_BYTES);
+const _: () = assert!(PUBLISH_PARTITION_ROWS <= MAX_ROWS_PER_BATCH);
+const _: () = assert!(MIN_BATCH_BYTES <= PUBLISH_PARTITION_TARGET_BYTES);
+// Five digits of zero padding, contiguous from 0. Asserted so the naming scheme and the ceiling
+// cannot drift apart silently.
+const _: () = assert!(MAX_PUBLISH_PARTITIONS == 100_000);
+
 // Relationships between the declared ceilings, checked **at compile time**. As runtime assertions
 // these were constant-folded and could not fail — a check that cannot fail is not a check. Here an
 // edit that breaks the relationship stops the build instead.
@@ -118,6 +149,17 @@ pub struct BatchInfo {
     /// consumer or a measurement can attribute a batch's size to the policy without parsing one.
     pub batch_index: u64,
     pub target_bytes: usize,
+    /// `[xmin, ymin, xmax, ymax]` over this batch's own vertices, in the dataset's CRS.
+    ///
+    /// **`None` means "not computed", never "empty".** It is computed only on the publish path,
+    /// which asks for it because a bundle's `bounds` must describe the rows the bundle actually
+    /// contains. The viewport path does not ask, so it does not pay: this is one extra pass over the
+    /// coordinate buffer, and adding unmeasured work to the path `docs/08`'s first-pixels budget is
+    /// measured on is not something to do for a consumer that has no use for the answer.
+    ///
+    /// Authoritative f64 throughout — no origin, no narrowing. A render origin is renderer-local
+    /// state (ADR-010 rule 1) and nothing derived from one appears here.
+    pub xy_bounds: Option<[f64; 4]>,
 }
 
 /// The batch-size policy in force for a stream, and the whole of it.
@@ -133,6 +175,10 @@ pub struct BatchSizePolicy {
     pub growth_factor: usize,
     pub target_bytes: usize,
     pub min_bytes: usize,
+    /// Row ceiling per batch. Part of the policy rather than a global constant because the publish
+    /// policy declares a lower one, and a ceiling that lives in two places is a ceiling that can
+    /// disagree with itself.
+    pub max_rows: usize,
 }
 
 impl Default for BatchSizePolicy {
@@ -142,6 +188,23 @@ impl Default for BatchSizePolicy {
             growth_factor: BATCH_GROWTH_FACTOR,
             target_bytes: TARGET_BATCH_BYTES,
             min_bytes: MIN_BATCH_BYTES,
+            max_rows: MAX_ROWS_PER_BATCH,
+        }
+    }
+}
+
+impl BatchSizePolicy {
+    /// The publish policy: **fixed**, so every partition boundary is a pure function of the row
+    /// sequence and the declared ceilings. `growth_factor` is 1 and first equals target, which is
+    /// what makes "one partition is one batch" hold for every partition rather than for all but the
+    /// first few.
+    pub fn publish() -> Self {
+        Self {
+            first_target_bytes: PUBLISH_PARTITION_TARGET_BYTES,
+            growth_factor: 1,
+            target_bytes: PUBLISH_PARTITION_TARGET_BYTES,
+            min_bytes: MIN_BATCH_BYTES,
+            max_rows: PUBLISH_PARTITION_ROWS,
         }
     }
 }
@@ -192,6 +255,38 @@ pub(crate) enum IndexUse {
     Experimental,
 }
 
+/// Whether a stream's rows arrive in a declared order.
+///
+/// **Two paths, two reasons, and they do not compromise with each other.**
+///
+/// The viewport path is `Unordered` and the comment on `build_sql` says why: an `ORDER BY` would
+/// materialize the whole result before the first batch and turn a streaming query into a batch one,
+/// which is a `docs/08` first-pixels argument.
+///
+/// The publish path is `ByIdentityAscending`, because a bundle's determinism guarantee — two
+/// publishes of the same inputs producing byte-identical partitions and hashes — cannot rest on
+/// DuckDB's freedom to reach row groups in whatever order it likes. Publishing has **no
+/// first-pixels budget**: nobody is watching a canvas, so the argument that governs the other path
+/// does not reach this one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RowOrdering {
+    Unordered,
+    /// `ORDER BY` the identity's **source column**, ascending.
+    ByIdentityAscending,
+}
+
+/// Everything one stream's plan fixes before the producer starts.
+pub(crate) struct StreamPlan {
+    pub(crate) index_use: IndexUse,
+    pub(crate) ordering: RowOrdering,
+    pub(crate) policy: BatchSizePolicy,
+    /// The envelope this stream's batches carry — the dataset's own, or a widened one bearing a
+    /// declared attribute projection.
+    pub(crate) envelope: BatchEnvelope,
+    /// Whether each batch reports its own extent. See [`BatchInfo::xy_bounds`].
+    pub(crate) report_bounds: bool,
+}
+
 /// Facts about the DuckDB connection one stream is running on.
 ///
 /// **Instrument surface, on the engine's Rust API only.** These are never SKP fields, never on the
@@ -235,6 +330,7 @@ struct Item {
     vertices: usize,
     batch_index: u64,
     target_bytes: usize,
+    xy_bounds: Option<[f64; 4]>,
 }
 
 pub struct BatchStream {
@@ -271,6 +367,7 @@ impl BatchStream {
                     payload_bytes: out.len() - before,
                     batch_index: item.batch_index,
                     target_bytes: item.target_bytes,
+                    xy_bounds: item.xy_bounds,
                 }))
             }
             Ok(Err(e)) => {
@@ -339,7 +436,91 @@ impl Dataset {
     /// As `stream`, with a caller-held token — the shape a binding needs, because the thing that
     /// observes a cancellation is not the thing that started the stream.
     pub fn stream_with_cancel(&self, q: &ViewportQuery, cancel: CancelToken) -> Result<BatchStream> {
-        self.stream_inner(q, cancel, IndexUse::Off)
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::Off,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::default(),
+                envelope: self.envelope().clone(),
+                report_bounds: false,
+            },
+        )
+    }
+
+    /// The **publish** stream: a declared attribute projection, a declared row order, and fixed
+    /// partition ceilings.
+    ///
+    /// Deliberately its own entry point rather than a flag on `stream`. A reader of a call site can
+    /// see which discipline is in force without knowing which way round a boolean goes, and the
+    /// viewport path cannot acquire an `ORDER BY` by accident — which matters, because the ordering
+    /// costs exactly what `build_sql`'s comment says it costs.
+    ///
+    /// **What this does not bound.** Ordering makes DuckDB sort before the first row arrives, and
+    /// that sort's memory is DuckDB's own — outside `MAX_QUEUED_BATCHES` and outside every ceiling
+    /// this module declares, exactly as the engine's streaming buffer already is. The silence before
+    /// the first batch is likewise DuckDB's; the caller is what reports progress across it.
+    pub fn stream_for_publish(
+        &self,
+        q: &ViewportQuery,
+        attributes: &[arrow::datatypes::Field],
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        let envelope = BatchEnvelope::with_attributes(
+            self.crs().clone(),
+            self.geometry_column().to_string(),
+            self.identity().clone(),
+            attributes.to_vec(),
+        );
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::Off,
+                ordering: RowOrdering::ByIdentityAscending,
+                policy: BatchSizePolicy::publish(),
+                envelope,
+                report_bounds: true,
+            },
+        )
+    }
+
+    /// Resolve a caller's projection to the fields the stream will actually emit.
+    ///
+    /// Types come from the dataset's own schema, which is DuckDB's arrow schema for this file, so
+    /// the declared fields cannot disagree with the arrays the producer hands over. Nullability is
+    /// **not** taken from the source — see `attributes::admit_projection`.
+    pub fn resolve_projection(
+        &self,
+        names: &[String],
+    ) -> Result<Vec<arrow::datatypes::Field>> {
+        let mut resolved = Vec::with_capacity(names.len());
+        for name in names {
+            let f = self
+                .file_schema()
+                .fields()
+                .iter()
+                .find(|f| f.name() == name)
+                .ok_or_else(|| EngineError::AttributeUnpublishable {
+                    column: name.clone(),
+                    detail: format!(
+                        "the file has no such column (it has: {})",
+                        self.file_schema()
+                            .fields()
+                            .iter()
+                            .map(|f| f.name().as_str())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                })?;
+            resolved.push(f.as_ref().clone());
+        }
+        crate::attributes::admit_projection(
+            &resolved,
+            self.geometry_column(),
+            self.identity().source().source_column(),
+        )
     }
 
     /// The same query, planned **with the fixed-grid index in the path**.
@@ -357,15 +538,26 @@ impl Dataset {
         q: &ViewportQuery,
         cancel: CancelToken,
     ) -> Result<BatchStream> {
-        self.stream_inner(q, cancel, IndexUse::Experimental)
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::Experimental,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::default(),
+                envelope: self.envelope().clone(),
+                report_bounds: false,
+            },
+        )
     }
 
     fn stream_inner(
         &self,
         q: &ViewportQuery,
         cancel: CancelToken,
-        index_use: IndexUse,
+        plan: StreamPlan,
     ) -> Result<BatchStream> {
+        let StreamPlan { index_use, ordering, policy, envelope, report_bounds } = plan;
         // **A viewport CRS is a caller assertion about the query, not an equivalence judgement
         // about two definitions.** ADR-015 §7. The engine does not decide that the caller's CRS
         // and the dataset's "agree" — it has no PROJ and cannot — it only refuses a viewport that
@@ -395,8 +587,7 @@ impl Dataset {
             }
         }
 
-        let (sql, filter_plan) = self.build_sql(q, index_use)?;
-        let policy = BatchSizePolicy::default();
+        let (sql, filter_plan) = self.build_sql(q, index_use, envelope.attributes(), ordering)?;
         let path = self
             .path()
             .to_str()
@@ -409,7 +600,6 @@ impl Dataset {
             lease_generation: lease.generation(),
             reused_an_existing_connection: lease.reused_an_existing_connection(),
         };
-        let envelope = self.envelope().clone();
         let geometry_column = self.geometry_column().to_string();
         let stats = Arc::new(StreamStats::default());
         let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
@@ -435,6 +625,7 @@ impl Dataset {
                     &thread_stats,
                     &tx,
                     policy,
+                    report_bounds,
                 );
                 // **Detach before the lease is decided**, so a `cancel()` arriving after this
                 // stream is over cannot reach a connection that has been handed back — the reason
@@ -487,7 +678,13 @@ impl Dataset {
         })
     }
 
-    fn build_sql(&self, q: &ViewportQuery, index_use: IndexUse) -> Result<(String, FilterPlan)> {
+    fn build_sql(
+        &self,
+        q: &ViewportQuery,
+        index_use: IndexUse,
+        attributes: &[arrow::datatypes::Field],
+        ordering: RowOrdering,
+    ) -> Result<(String, FilterPlan)> {
         let mut plan = FilterPlan::WholeFile;
         let geom = quote_ident(self.geometry_column());
         // **The identity's source column, aliased to the engine's identity name** (ADR-016 §3).
@@ -497,7 +694,36 @@ impl Dataset {
         // mapping a redirection rather than a second code path with its own bugs.
         let source_column = quote_ident(self.identity().source().source_column());
         let id = quote_ident(ID_COLUMN);
-        let mut sql = format!("SELECT {source_column} AS {id}, {geom} FROM read_parquet(?)");
+        let mut projection = format!("{source_column} AS {id}, {geom}");
+        for f in attributes {
+            projection.push_str(", ");
+            projection.push_str(&quote_ident(f.name()));
+        }
+        let mut sql = format!("SELECT {projection} FROM read_parquet(?)");
+
+        // **`ORDER BY` names the *source* column, never the `id` alias — and the reason is not the
+        // one the range predicates below give.**
+        //
+        // It is tempting to carry the `WHERE` hazard across to `ORDER BY` by analogy. **Measured,
+        // it does not carry**, and the two clauses resolve a bare name in opposite directions.
+        // Against a table holding `id` and `parcel_key`, projected as `"parcel_key" AS "id"`
+        // (pinned by `duckdb_resolves_order_by_and_where_in_opposite_directions`):
+        //
+        // | clause | bare `"id"` binds to | |
+        // |---|---|---|
+        // | `ORDER BY "id"` | the **select alias** | so it happens to be right |
+        // | `WHERE "id" >= …` | the **base column** | so it is wrong, which is the paragraph below |
+        //
+        // So naming the source column here is not a bug fix; it is **independence from which rule
+        // applies**. It is correct under either resolution, it reads the same as the predicate
+        // twenty lines down, and it means a reader does not have to know that one SQL clause
+        // resolves aliases and its neighbour does not. Every partition boundary, every partition
+        // hash and the whole determinism guarantee sit on this clause, which is reason enough not
+        // to spend them on a resolution rule that has to be looked up.
+        let order_clause = match ordering {
+            RowOrdering::Unordered => String::new(),
+            RowOrdering::ByIdentityAscending => format!(" ORDER BY {source_column} ASC"),
+        };
 
         if let Some(view) = q.bbox.as_ref() {
             let c = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
@@ -588,6 +814,7 @@ impl Dataset {
                             ymin = c.ymin.to_sql(),
                             ymax = c.ymax.to_sql(),
                         ));
+                        sql.push_str(&order_clause);
                         if let Some(n) = q.limit {
                             sql.push_str(&format!(" LIMIT {n}"));
                         }
@@ -611,8 +838,11 @@ impl Dataset {
                 ymax = c.ymax.to_sql(),
             ));
         }
-        // Deliberately no ORDER BY: ordering would materialize the whole result before the first
-        // batch and turn a streaming query into a batch one.
+        // **`RowOrdering::Unordered` emits nothing here, and that is the viewport path's whole
+        // point:** ordering would materialize the entire result before the first batch and turn a
+        // streaming query into a batch one, which is what `docs/08`'s first-pixels budget is
+        // measured against. The publish path pays that cost deliberately and has no such budget.
+        sql.push_str(&order_clause);
         if let Some(n) = q.limit {
             sql.push_str(&format!(" LIMIT {n}"));
         }
@@ -637,6 +867,7 @@ fn produce(
     stats: &Arc<StreamStats>,
     tx: &std::sync::mpsc::SyncSender<std::result::Result<Item, EngineError>>,
     policy: BatchSizePolicy,
+    report_bounds: bool,
 ) -> Result<()> {
     // Checked before anything is prepared or executed: DuckDB does not latch an interrupt raised on
     // an idle connection (see `cancel.rs`), so a stream cancelled before it started is stopped
@@ -671,7 +902,8 @@ fn produce(
         .stream_arrow(params.as_slice())
         .map_err(|e| classify(cancel, format!("execute: {e}")))?;
 
-    let mut pending = Pending::new();
+    let attribute_fields = envelope.attributes().to_vec();
+    let mut pending = Pending::new(attribute_fields.len());
     // Batches handed over so far — the policy's input, and the `batch_index` a consumer sees.
     let mut emitted: u64 = 0;
 
@@ -706,6 +938,32 @@ fn produce(
             .ok_or_else(|| EngineError::Query(format!("result has no `{geometry_column}` column")))?
             .clone();
 
+        // The declared projection's arrays for this chunk, in declared order, with the type the
+        // envelope promises checked against what actually arrived. A mismatch here would otherwise
+        // surface as an Arrow string when the batch is assembled, several frames from the column
+        // that caused it.
+        let chunk_attrs: Vec<ArrayRef> = attribute_fields
+            .iter()
+            .map(|f| {
+                let col = chunk.column_by_name(f.name()).ok_or_else(|| {
+                    EngineError::Query(format!("result has no `{}` column", f.name()))
+                })?;
+                if col.data_type() != f.data_type() {
+                    return Err(EngineError::EncodingMismatch {
+                        claimed: format!("attribute `{}` is {}", f.name(), f.data_type()),
+                        found: col.data_type().to_string(),
+                    });
+                }
+                Ok(col.clone())
+            })
+            .collect::<Result<_>>()?;
+
+        // First row of this chunk that belongs to the batch currently being accumulated. Attribute
+        // columns are carried as **slices of the chunk's own arrays**, one run per cut, rather than
+        // as per-row copies: a run is one slice regardless of how many rows it covers, and ADR-004
+        // asks for copies to be minimized rather than assumed absent.
+        let mut run_start = 0usize;
+
         for (row, id) in ids.iter().enumerate().take(chunk.num_rows()) {
             if cancel.is_cancelled() {
                 return Err(EngineError::Cancelled);
@@ -725,13 +983,19 @@ fn produce(
             // The incoming size is bounded without parsing the geometry: WKB spends 16 B on every
             // vertex plus a per-ring header, so `wkb.len() / 16` cannot under-count the vertices
             // this feature will contribute. An over-estimate only cuts a batch slightly early.
-            let incoming = estimate_bytes(1, wkb.len() / 16);
+            // The attribute contribution is a pure function of this row's content — a fixed width,
+            // or a string's own byte length — never of allocator state, so two publishes of the
+            // same rows cut in the same places.
+            let incoming = estimate_bytes(1, wkb.len() / 16) + attr_row_bytes(&chunk_attrs, row);
             // The target this batch is being cut at, from the progressive policy. Early batches
             // are small so pixels land sooner; later ones grow to `TARGET_BATCH_BYTES` so the
-            // per-batch envelope stops being a significant share of the payload.
+            // per-batch envelope stops being a significant share of the payload. The publish policy
+            // is flat, so every publish partition is cut at the same target.
             let target = policy.target_for(emitted);
             if !pending.ids.is_empty() && pending.est_bytes + incoming > target {
-                flush(&mut pending, envelope, cancel, stats, tx, emitted, target)?;
+                pending.push_attr_run(&chunk_attrs, run_start, row);
+                run_start = row;
+                flush(&mut pending, envelope, cancel, stats, tx, emitted, target, report_bounds)?;
                 emitted += 1;
             }
 
@@ -739,19 +1003,25 @@ fn produce(
             pending.builder.push_wkb(wkb)?;
             pending.vertices += pending.builder.vertices() - before;
             pending.ids.push(*id);
-            pending.est_bytes = estimate_bytes(pending.ids.len(), pending.builder.vertices());
+            pending.attr_bytes += attr_row_bytes(&chunk_attrs, row);
+            pending.est_bytes =
+                estimate_bytes(pending.ids.len(), pending.builder.vertices()) + pending.attr_bytes;
             pending.first_id.get_or_insert(*id);
 
-            if pending.est_bytes >= target || pending.ids.len() >= MAX_ROWS_PER_BATCH {
-                flush(&mut pending, envelope, cancel, stats, tx, emitted, target)?;
+            if pending.est_bytes >= target || pending.ids.len() >= policy.max_rows {
+                pending.push_attr_run(&chunk_attrs, run_start, row + 1);
+                run_start = row + 1;
+                flush(&mut pending, envelope, cancel, stats, tx, emitted, target, report_bounds)?;
                 emitted += 1;
             }
         }
+        // Whatever of this chunk is still accumulating carries over into the next batch.
+        pending.push_attr_run(&chunk_attrs, run_start, chunk.num_rows());
     }
 
     if !pending.ids.is_empty() {
         let target = policy.target_for(emitted);
-        flush(&mut pending, envelope, cancel, stats, tx, emitted, target)?;
+        flush(&mut pending, envelope, cancel, stats, tx, emitted, target, report_bounds)?;
     }
     Ok(())
 }
@@ -765,16 +1035,34 @@ struct Pending {
     /// The first id in this batch — carried so an over-ceiling single feature can be *named*. An
     /// error that says only "4 MiB exceeded" cannot be acted on in a file with millions of rows.
     first_id: Option<u64>,
+    /// One run list per declared attribute column: the slices of successive DuckDB chunks that this
+    /// batch's rows occupy, concatenated once at flush.
+    attrs: Vec<Vec<ArrayRef>>,
+    /// Attribute bytes accumulated, so the cut decision sees the whole row and not only its
+    /// geometry.
+    attr_bytes: usize,
 }
 
 impl Pending {
-    fn new() -> Self {
+    fn new(attribute_columns: usize) -> Self {
         Self {
             ids: Vec::new(),
             builder: PolygonBuilder::new(),
             vertices: 0,
             est_bytes: 0,
             first_id: None,
+            attrs: vec![Vec::new(); attribute_columns],
+            attr_bytes: 0,
+        }
+    }
+
+    /// Record that rows `start..end` of the current chunk belong to the batch being accumulated.
+    fn push_attr_run(&mut self, chunk_attrs: &[ArrayRef], start: usize, end: usize) {
+        if end <= start {
+            return;
+        }
+        for (runs, col) in self.attrs.iter_mut().zip(chunk_attrs.iter()) {
+            runs.push(col.slice(start, end - start));
         }
     }
 }
@@ -782,6 +1070,57 @@ impl Pending {
 fn estimate_bytes(rows: usize, vertices: usize) -> usize {
     // 16 B per interleaved xy pair, 8 B per id, 4 B per offset entry, both offset levels.
     vertices * 16 + rows * 8 + (rows + vertices) * 4
+}
+
+/// One row's attribute contribution, as a function of the row's content only.
+///
+/// Deliberately not `get_array_memory_size` or anything else that reports an allocation: a batch
+/// boundary derived from how much capacity a buffer happens to have reserved would move between two
+/// runs over identical data, and every partition hash in a bundle depends on where the boundaries
+/// fall.
+fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
+    use arrow::array::{
+        BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, LargeStringArray,
+        StringArray, StringViewArray, UInt16Array, UInt32Array, UInt8Array,
+    };
+    let mut total = 0usize;
+    for col in chunk_attrs {
+        // One validity bit per value, plus the value itself. Rounded to a byte, which over-counts
+        // slightly and can only cut a batch marginally early.
+        total += 1;
+        total += if let Some(a) = col.as_any().downcast_ref::<StringArray>() {
+            a.value(row).len() + 4
+        } else if let Some(a) = col.as_any().downcast_ref::<LargeStringArray>() {
+            a.value(row).len() + 8
+        } else if let Some(a) = col.as_any().downcast_ref::<StringViewArray>() {
+            a.value(row).len() + 16
+        } else if col.as_any().downcast_ref::<BooleanArray>().is_some() {
+            1
+        } else if col.as_any().downcast_ref::<Int8Array>().is_some()
+            || col.as_any().downcast_ref::<UInt8Array>().is_some()
+        {
+            1
+        } else if col.as_any().downcast_ref::<Int16Array>().is_some()
+            || col.as_any().downcast_ref::<UInt16Array>().is_some()
+        {
+            2
+        } else if col.as_any().downcast_ref::<Int32Array>().is_some()
+            || col.as_any().downcast_ref::<UInt32Array>().is_some()
+        {
+            4
+        } else if col.as_any().downcast_ref::<Int64Array>().is_some()
+            || col.as_any().downcast_ref::<UInt64Array>().is_some()
+            || col.as_any().downcast_ref::<Float64Array>().is_some()
+        {
+            8
+        } else {
+            // Unreachable: `attributes::admit_attribute_type` is the gate, and it admits exactly the
+            // types above. Costing an unknown type at 8 B keeps the estimator total rather than
+            // panicking on a path that would only be reached if the two lists drifted apart.
+            8
+        };
+    }
+    total
 }
 
 fn flush(
@@ -792,8 +1131,9 @@ fn flush(
     tx: &std::sync::mpsc::SyncSender<std::result::Result<Item, EngineError>>,
     batch_index: u64,
     target_bytes: usize,
+    report_bounds: bool,
 ) -> Result<()> {
-    let mut p = std::mem::replace(pending, Pending::new());
+    let mut p = std::mem::replace(pending, Pending::new(pending.attrs.len()));
 
     if p.est_bytes > MAX_BATCH_BYTES {
         // Because the loop cuts *before* appending, a batch holding more than one feature can
@@ -817,7 +1157,24 @@ fn flush(
     let rows = p.ids.len();
     let ids: ArrayRef = Arc::new(UInt64Array::from(std::mem::take(&mut p.ids)));
     let geometry = build_polygon_array(std::mem::take(&mut p.builder))?;
-    let batch = TaggedBatch::assemble(envelope, ids, geometry)?;
+
+    // One run needs no concatenation — the common case when a batch is cut inside a single DuckDB
+    // chunk, and the copy ADR-004 asks to be avoided rather than assumed away.
+    let attributes: Vec<ArrayRef> = p
+        .attrs
+        .iter()
+        .map(|runs| match runs.len() {
+            1 => Ok(Arc::clone(&runs[0])),
+            _ => {
+                let refs: Vec<&dyn Array> = runs.iter().map(|a| a.as_ref()).collect();
+                arrow::compute::concat(&refs)
+                    .map_err(|e| EngineError::Arrow(format!("attribute concat: {e}")))
+            }
+        })
+        .collect::<Result<_>>()?;
+
+    let batch = TaggedBatch::assemble(envelope, ids, geometry, attributes)?;
+    let xy_bounds = report_bounds.then(|| batch.xy_bounds()).flatten();
 
     stats.batches_generated.fetch_add(1, Ordering::SeqCst);
     stats.rows_generated.fetch_add(rows as u64, Ordering::SeqCst);
@@ -837,6 +1194,7 @@ fn flush(
         vertices: p.vertices,
         batch_index,
         target_bytes,
+        xy_bounds,
     }))
     .map_err(|_| EngineError::Cancelled)
 }

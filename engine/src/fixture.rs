@@ -62,6 +62,53 @@ pub enum CrsMode {
     DefinitionOnlyNoId,
 }
 
+/// Whether the fixture carries a categorical attribute column.
+///
+/// **An enum, not a bool**, on the `IndexUse` precedent in `stream.rs`: a call site reads which
+/// policy is in force without knowing which way round a flag goes, and adding a second attribute
+/// shape later is a compile error at every site rather than a silent reinterpretation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AttributeMode {
+    /// `[id, bbox?, geometry]` — the shape every earlier fixture had, byte for byte.
+    None,
+    /// Adds a nullable `zone` text column: four declared values and NULL, five outcomes.
+    ///
+    /// **NULL is not optional.** A style must declare `on_null` and `on_unmatched`, and a fixture
+    /// whose acceptance run never produces a NULL would leave a mandatory declaration with no
+    /// evidence behind it — the standing this repository refuses everywhere else.
+    CategoricalZone,
+}
+
+/// The `zone` column's values. Four, so an acceptance style declaring cases for **two** of them
+/// exercises matched, unmatched and NULL in one run.
+pub const ZONE_VALUES: [&str; 4] = ["residential", "industrial", "agricultural", "civic"];
+
+/// Salt separating the categorical stream from the geometry stream.
+const ZONE_SALT: u64 = 0x2056_5A4F_4E45_0001;
+
+/// The zone of feature `id`, as a **pure function of `(seed, id)`**.
+///
+/// This is the load-bearing property and it is not a style preference. Drawing the category from the
+/// generator's shared `SplitMix64` would consume draws and shift every subsequent `parcel()` — the
+/// vertex counts, the jitter, the interior rings, `coord_bits_xor` and `extent` — so a fixture with
+/// a `zone` column would no longer carry the geometry of the fixture without one, and
+/// `kernel/RESULTS.md`'s third section pins that geometry by seed and by exact vertex and byte
+/// counts. Deriving from `(seed, id)` alone keeps the geometry **bit-identical by construction**.
+///
+/// It also makes the value a function of the *feature* rather than of its position, so it survives
+/// chunk boundaries, row-group order, and the `ORDER BY` the publish path adds — the same property
+/// ADR-016 §4 requires of anything identity-adjacent, for the same reason.
+pub fn zone_for(seed: u64, id: u64) -> Option<&'static str> {
+    let mut z = (seed ^ ZONE_SALT).wrapping_add(id.wrapping_mul(0x9E37_79B9_7F4A_7C15));
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^= z >> 31;
+    match (z % 5) as usize {
+        4 => None,
+        k => Some(ZONE_VALUES[k]),
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct FixtureSpec {
     pub features: usize,
@@ -77,6 +124,9 @@ pub struct FixtureSpec {
     /// How the fixture carries feature identity. Exists so ADR-016's admission policy is exercised
     /// against real files rather than against hand-written schemas.
     pub identity: IdentityMode,
+    /// Whether a categorical attribute column is written. Defaults to `None`, so every existing
+    /// spec produces the file it always produced.
+    pub attributes: AttributeMode,
 }
 
 /// How the fixture carries feature identity.
@@ -110,6 +160,7 @@ impl Default for FixtureSpec {
             with_covering_bbox: true,
             chunk: 4_096,
             identity: IdentityMode::NativeUnique,
+            attributes: AttributeMode::None,
         }
     }
 }
@@ -128,6 +179,13 @@ pub struct FixtureFacts {
     pub coord_bits_xor: u64,
     pub min_vertices_per_feature: usize,
     pub max_vertices_per_feature: usize,
+    /// Observed `zone` values, in `ZONE_VALUES` order, and the observed NULL count.
+    ///
+    /// **Counted while writing, never predicted.** A test that asserted "about a fifth are NULL"
+    /// against the generator's own intention would be checking the comment; these are what the file
+    /// actually holds, in the same doctrine the rest of `FixtureFacts` already follows.
+    pub zone_counts: [usize; 4],
+    pub zone_nulls: usize,
     /// `(xmin, ymin, xmax, ymax)` in the fixture's CRS — the union of every feature's bbox.
     ///
     /// Reported because a consumer has no metadata endpoint to ask: this slice has no control
@@ -154,7 +212,7 @@ impl SplitMix64 {
     }
 }
 
-fn schema(with_bbox: bool, identity: IdentityMode) -> Arc<Schema> {
+fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) -> Arc<Schema> {
     let id_field = match identity {
         IdentityMode::ForeignKeyColumn => Field::new("parcel_key", DataType::UInt64, false),
         IdentityMode::StringIds => Field::new("id", DataType::Utf8, false),
@@ -164,6 +222,11 @@ fn schema(with_bbox: bool, identity: IdentityMode) -> Arc<Schema> {
     let mut fields = vec![Arc::new(id_field)];
     if with_bbox {
         fields.push(Arc::new(Field::new("bbox", DataType::Struct(bbox_fields()), false)));
+    }
+    // Column order is declared, and geometry stays last. File bytes depend on it, so it is a
+    // decision rather than an accident of where the code was edited.
+    if attributes == AttributeMode::CategoricalZone {
+        fields.push(Arc::new(Field::new("zone", DataType::Utf8, true)));
     }
     fields.push(Arc::new(Field::new("geometry", DataType::Binary, false)));
     Arc::new(Schema::new(fields))
@@ -224,7 +287,7 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
     }
     let file = File::create(path).map_err(|e| EngineError::Source(format!("create: {e}")))?;
 
-    let schema = schema(spec.with_covering_bbox, spec.identity);
+    let schema = schema(spec.with_covering_bbox, spec.identity, spec.attributes);
     let props = WriterProperties::builder()
         .set_compression(Compression::SNAPPY)
         .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo_metadata(spec))]))
@@ -247,6 +310,7 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
         let mut signed_ids = arrow::array::Int64Builder::with_capacity(n);
         let mut string_ids = arrow::array::StringBuilder::new();
         let mut geoms = BinaryBuilder::new();
+        let mut zones = arrow::array::StringBuilder::new();
         let (mut xmin_b, mut ymin_b, mut xmax_b, mut ymax_b) = (
             Float64Builder::with_capacity(n),
             Float64Builder::with_capacity(n),
@@ -290,6 +354,21 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
                 IdentityMode::StringIds => string_ids.append_value(format!("key-{id}")),
                 _ => ids.append_value(id),
             }
+            if spec.attributes == AttributeMode::CategoricalZone {
+                // Derived from `(seed, id)` and **not** from `rng`, so the geometry above is
+                // untouched by this column's existence.
+                match zone_for(spec.seed, id) {
+                    Some(v) => {
+                        zones.append_value(v);
+                        let k = ZONE_VALUES.iter().position(|z| *z == v).expect("declared value");
+                        facts.zone_counts[k] += 1;
+                    }
+                    None => {
+                        zones.append_null();
+                        facts.zone_nulls += 1;
+                    }
+                }
+            }
             geoms.append_value(encode_polygon(&rings));
             xmin_b.append_value(xmin);
             ymin_b.append_value(ymin);
@@ -314,6 +393,9 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
                 None,
             );
             cols.push(Arc::new(bbox));
+        }
+        if spec.attributes == AttributeMode::CategoricalZone {
+            cols.push(Arc::new(zones.finish()) as ArrayRef);
         }
         cols.push(Arc::new(geoms.finish()));
 
