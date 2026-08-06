@@ -42,18 +42,28 @@ name: Product CI — Rust workspace
 # could not be settled — and a matrix entry that has never run is a red build waiting to happen
 # rather than coverage.
 #
-# > **Unverified by CI as of 2026-08-06, and the reason is environmental.** Neither of this
-# > workflow's runs on that date was ever assigned a GitHub-hosted runner. A `windows-latest` job
-# > (run 31125488081) sat queued 15 minutes and was cancelled having executed no step; an
-# > `ubuntu-latest` job (run 31127603650) and the viewer workflow's `ubuntu-latest` job
-# > (run 31127603658) were still `runner=unassigned` ten minutes in. **The constraint is not
-# > platform-specific** — an earlier `ubuntu-latest` dispatch of the ADR-003 spike workflow on this
-# > same repository did start within about two minutes, so something changed during the session.
-# > **Why is not established**: plan entitlement, an Actions spending limit and a capacity incident
-# > all fit, and this file does not claim to know which. What *is* established is local: the suite
-# > below passes on the reference profile — 261 passed, 0 failed, 2 ignored (the two `docs/08`
-# > harnesses). **Until a run here goes green, this workflow is configuration that has not been
-# > exercised end to end, and it should not be treated as a gate.**
+# > **Unverified by CI as of 2026-08-06, and the reason is environmental — not this file.** No run
+# > of either product workflow on that date was ever assigned a GitHub-hosted runner. Three runs,
+# > both labels, each **cancelled at exactly 15 minutes queued having executed no step**:
+# >
+# > | run | label | queued | cancelled |
+# > |---|---|---|---|
+# > | 31125488081 (rust) | `windows-latest` | 18:14:32Z | 18:29:32Z |
+# > | 31127603650 (rust) | `ubuntu-latest` | 20:26:13Z | 20:41:15Z |
+# > | 31127603658 (viewer) | `ubuntu-latest` | 20:26:13Z | 20:41:17Z |
+# >
+# > **The constraint is therefore not platform-specific and not a transient stall** — an identical
+# > 15-minute cancellation on two different labels is a rule firing, not capacity. An
+# > `ubuntu-latest` dispatch of the ADR-003 spike workflow on this same repository *did* start within
+# > about two minutes earlier the same day, so it is also not a permanent property of the repository.
+# > **Why is not established here**: an Actions spending limit, plan entitlement and a policy on
+# > queue time all fit, and this file does not claim to know which. Checking
+# > `Settings → Billing → Actions` is the first thing to try.
+# >
+# > What *is* established is local, on the reference profile: **261 passed, 0 failed, 2 ignored**
+# > (the two `docs/08` harnesses), plus the viewer's 45. **Until a run here goes green this workflow
+# > is configuration that has never been exercised end to end, and it must not be treated as a
+# > gate.** Nothing in this repository may cite it as one until then.
 #
 # ## The cost being managed
 #
