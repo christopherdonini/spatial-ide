@@ -87,6 +87,20 @@ name: Product CI — Rust workspace
 # macOS or Linux, nothing about the ADR-003 hardware-validation gate — is unchanged and still bounds
 # what green means.
 #
+# **All three triggers have since been exercised green**, which is worth recording separately because
+# each is a different code path through this file:
+#
+#   | trigger | first green | duration |
+#   |---|---|---|
+#   | `push` | `31156155408` (`de6ad08`) | 41 min — cold, vendored DuckDB built from source |
+#   | `workflow_dispatch` | `31163428520` | **5m08s** |
+#   | `pull_request` | `31199038972` (PR #3) | 6m54s |
+#
+# **The 41 min → ~5–7 min drop is `Swatinem/rust-cache` doing what it was added for**, not the
+# workspace getting smaller. It is the measured answer to the "cost being managed" section below, and
+# it is the number to check against before adding a second matrix entry — a new platform pays the
+# 41-minute build once and the cached figure thereafter.
+#
 # ## The cost being managed
 #
 # `engine/` builds DuckDB from vendored C++ (`bundled`), and `Cargo.toml` compiles `libduckdb-sys`

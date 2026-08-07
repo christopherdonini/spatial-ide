@@ -103,10 +103,24 @@ git log --format='%H %s' <base>..HEAD               # every commit signed off?
 ```
 
 Two workflows watch the product modules (`.github/workflows/product-ci-*.yml`) and one watches
-sign-off (`dco.yml`). **All three currently carry a recorded caveat: no run of any of them has ever
-been assigned a GitHub-hosted runner, so none has gone green and none may be cited as a gate.** The
-reason is environmental and is documented in `product-ci-rust.yml`. Until that is resolved, the
-local commands above are the check that actually establishes anything.
+sign-off (`dco.yml`). **All three have now gone green and may be cited as gates.** The runner
+constraint that kept them unexercised until 2026-08-07 was environmental and is gone; the evidence
+is retained in `product-ci-rust.yml` rather than deleted, so a recurrence can be compared against it.
+
+| workflow | first green run | trigger | what it established |
+|---|---|---|---|
+| `product-ci-rust.yml` | `31156155408` | `push` (`de6ad08`) | workspace builds and the ordinary suite passes on `windows-latest`, all nine steps |
+| `product-ci-viewer.yml` | `31156155406` | `push` (`de6ad08`) | the viewer typechecks, builds and tests |
+| `dco.yml` | `31199038936` | `pull_request` (#3) | **checked 11 non-merge commits, 0 failed** — the check examines a real range, not an empty one |
+
+Two limits on what that green means. `product-ci-viewer.yml` **has never run on a `pull_request`** —
+it is path-filtered to `renderer/**` and no pull request has yet touched those paths, so its
+pull-request behaviour is still unexercised. And a green Rust run makes **no performance claim**: the
+two `docs/08` budget harnesses are `#[ignore]`d and are not run there, deliberately — see that file's
+own "What a green run here means".
+
+The local commands above remain the check that establishes the most, because they run the full suite
+on the reference profile without a shared runner's drift.
 
 ## Security
 

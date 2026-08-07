@@ -33,25 +33,27 @@ name: DCO sign-off
 # them is what every DCO implementation does; the commits that carry contributed code are the
 # non-merge ones, and those are all checked.
 #
-# > **Not a gate until it has gone green.** As of 2026-08-07 no run of any workflow in this
-# > repository has been assigned a GitHub-hosted runner: three runs on 2026-08-06, across both
-# > `windows-latest` and `ubuntu-latest`, were each cancelled at exactly 15 minutes queued having
-# > executed no step. See the runner note in `product-ci-rust.yml` for the evidence and for what to
-# > check first (`Settings → Billing → Actions`). **Until a run here goes green this workflow is
-# > configuration that has never been exercised end to end, and nothing in this repository may cite
-# > it as a gate.** The sign-off requirement itself is real and is stated in `CONTRIBUTING.md`; what
-# > is unproven is that this file enforces it.
-# >
-# > **2026-08-07 — the caveat stays here, and the shared-cause sentence it used to open with is
-# > gone.** Both product CI workflows went green that morning on `de6ad08` (`31156155408` rust,
-# > `31156155406` viewer), so their caveats are lifted and this one can no longer be justified by
-# > pointing at theirs. **This workflow has still never run at all: zero runs, green or otherwise.**
-# > The reason is its trigger, not the runner supply: it fires on `pull_request`, and the two pull
-# > requests this repository has had (#1, #2) both merged **before this file was committed**
-# > (`0487a4e`, 2026-08-07T08:19:50Z). Nothing has opened one since. So the gap is now narrower and
-# > better understood than it was — what is unproven is no longer "can this repository get a runner"
-# > but "does this specific check do what it says" — and the way to find out is one pull request, or
-# > a `workflow_dispatch` on a branch that has one to diff against.
+# ## Green as of 2026-08-07 — the not-a-gate caveat is lifted, its history kept
+#
+# **First run, and first green run: `31199038936`** — `pull_request` on PR #3 (`cut/scale-pass`),
+# head `24c48fda`, 2026-08-07T16:44:45Z, complete in 10 s. It reported
+# `Checked 11 non-merge commit(s); 0 failed.` and `git rev-list --no-merges main..cut/scale-pass`
+# counts 11, so **the check read a real commit range** rather than passing on an empty one — which
+# matters more here than a green tick, because a check that passes having examined nothing is the
+# failure mode this file warns about twice. **This workflow may now be cited as a gate.**
+#
+# The history is retained rather than deleted, so a recurrence can be compared against it. Until that
+# morning no run of any workflow in this repository had been assigned a GitHub-hosted runner: three
+# runs on 2026-08-06, across both `windows-latest` and `ubuntu-latest`, were each cancelled at
+# exactly 15 minutes queued having executed no step (evidence table in `product-ci-rust.yml`). Both
+# product CI workflows went green on `de6ad08` that morning — `31156155408` rust, `31156155406`
+# viewer — which lifted their caveats but not this one, because **this file's gap was never runner
+# supply**: it fires on `pull_request`, and the repository's first two pull requests (#1, #2) both
+# merged *before* this file was committed (`0487a4e`, 2026-08-07T08:19:50Z). The remedy recorded at
+# the time was "one pull request", and one pull request is what closed it.
+#
+# What a green run here does **not** establish is unchanged and still bounds it: that a trailer is
+# present and matches an identity, and nothing about whether the signer had the right to submit.
 
 on:
   pull_request:
@@ -92,10 +94,11 @@ jobs:
           set -euo pipefail
 
           # **Not an error.** `workflow_dispatch` has no pull request and therefore no commit range,
-          # and failing here would make the one manual way to get a green run guaranteed red — which
-          # matters precisely because no run of any workflow in this repository has ever started
-          # (see the header). A dispatch is how somebody checks that this file *runs at all*, so it
-          # succeeds and says what it did not do.
+          # and failing here would make the one manual way to get a green run guaranteed red. That
+          # escape hatch was added when no run of any workflow here had ever started; it was never
+          # needed in the end — the first green run was a real `pull_request` over 11 commits (see
+          # the header) — and it stays because a dispatch is still how somebody checks that this file
+          # *runs at all*. So it succeeds and says what it did not do.
           if [ -z "${BASE:-}" ] || [ -z "${HEAD:-}" ]; then
             echo "No pull-request commit range: this run has no commits to check."
             echo "The sign-off check runs on pull_request events. A manual dispatch exercises the"

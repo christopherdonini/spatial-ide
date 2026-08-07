@@ -15,7 +15,7 @@ need a human. What is open is stated per item below.
 | # | Item | Status |
 |---|---|---|
 | 1 | `LICENSE`, per-package declarations, SPDX headers | **PARTIAL** — two license texts deferred (no-downloads) |
-| 2 | DCO 1.1, `CONTRIBUTING.md`, sign-off CI | **DONE** — one caveat, below |
+| 2 | DCO 1.1, `CONTRIBUTING.md`, sign-off CI | **DONE** — caveat lifted 2026-08-07, run `31199038936` |
 | 3 | ADR-017 corrigendum: bundle license notice + corresponding source | **DONE** |
 | 4 | Dependency-license audit | **DONE** — 9 entries flagged, awaiting a human |
 | 5 | Project-name collision check; trademark policy stub | **OPEN — the human's own task.** Not performed |
@@ -78,12 +78,15 @@ one fails; one signed by neither its author nor its committer fails; a merge com
 > written from memory rather than deferred, and the reason is that `CONTRIBUTING.md` cannot say
 > "sign off per the DCO" while the DCO is absent.
 
-> **Not a gate until it has gone green.** `dco.yml` carries the same recorded caveat as the two
-> product CI workflows, for the same environmental reason: as of 2026-08-07 **no run of any workflow
-> in this repository has ever been assigned a GitHub-hosted runner.** Three runs on 2026-08-06,
-> across both `windows-latest` and `ubuntu-latest`, were each cancelled at exactly 15 minutes queued
-> having executed no step. `Settings → Billing → Actions` is the first thing to check. Until a run
-> goes green, the sign-off requirement is real but this file is unproven configuration.
+> **Green — the caveat is lifted, 2026-08-07.** `dco.yml`'s first run ever is `31199038936`:
+> `pull_request` on PR #3, head `24c48fda`, 16:44:45Z, green in 10 s. It **checked 11 non-merge
+> commits and failed 0** — the count matches the range exactly, so the check examined a real range
+> rather than passing on an empty one, which this file's own header names as the failure mode worse
+> than no check. The workflow may now be cited as a gate.
+>
+> What it establishes is still only what its header claims: that a `Signed-off-by` trailer is present
+> and matches the commit's author or committer. That the signer had the right to submit the code is
+> an affirmation by a person and no CI job can check it.
 
 ## 3. ADR-017 corrigendum — DONE
 
@@ -227,8 +230,9 @@ Local, on the `CLAUDE.md` reference profile (Windows 10 / MSVC / WebView2), 2026
 The two ignored tests are the `docs/08` budget harnesses, unchanged and deliberately not run — they
 are measurement instruments, and **nothing in this branch measures anything or claims a number**.
 
-**No CI run happened, on this branch or any other.** See item 2's caveat: no workflow in this
-repository has ever been assigned a runner. Every result above is local.
+**No CI run happened on this branch**, and at the time none had happened on any other — the runner
+constraint recorded under item 2 was still in force. Every result above is local, and stays recorded
+as a local result: the workflows went green later the same day and none of them re-ran this branch.
 
 ---
 
@@ -328,13 +332,26 @@ green run.
 **Which of the three candidate causes it was is still not established**, and the evidence table is
 kept rather than deleted so a recurrence can be compared against it.
 
-### Item 2's DCO caveat — **stays**, for a narrower and better-understood reason
+### Item 2's DCO caveat — **settled**, by the one pull request it asked for
 
-`dco.yml` has **zero runs, green or otherwise**. The cause is not runner supply: it fires on
-`pull_request`, and both of this repository's pull requests (#1, #2) merged *before* the file was
-committed (`0487a4e`, 2026-08-07T08:19:50Z). What is unproven is no longer "can this repository get
-a runner" but "does this specific check do what it says" — and one pull request settles it.
-`CONTRIBUTING.md`'s sign-off requirement is real regardless; what is untested is the enforcement.
+This section previously read "**stays**", and recorded that `dco.yml` had zero runs because it fires
+on `pull_request` while both of this repository's pull requests (#1, #2) merged *before* the file was
+committed (`0487a4e`, 2026-08-07T08:19:50Z). It named the remedy: *"one pull request settles it."*
+
+**PR #3 is that pull request, and it settled it.** Run `31199038936`, 2026-08-07T16:44:45Z, head
+`24c48fda`, green in 10 s — the first run of this workflow in the repository's history. It reported
+`Checked 11 non-merge commit(s); 0 failed.`, and `git rev-list --no-merges main..cut/scale-pass`
+counts 11, so the check read the real range. That is the part that was actually unproven: not "can
+this repository get a runner" but "does this specific check do what it says."
+
+**A third runner fact, recorded because it dates the recovery more precisely than the two push runs
+do.** `31163428520` — `workflow_dispatch`, `windows-latest`, green in 5m08s, 08:51:17Z — is the
+first *dispatched* green run, and its 5m08s against `31156155408`'s 41 minutes on the same workflow
+is the `Swatinem/rust-cache` hit doing what it was added for, not a change in the workspace.
+
+**Still unexercised:** `product-ci-viewer.yml` has never run on a `pull_request`. It is path-filtered
+to `renderer/**`; PR #3 touches no such path, so it did not trigger. Three `push` greens establish
+the workflow runs, and nothing yet establishes its pull-request behaviour.
 
 ### What remains before the public flip
 
@@ -342,7 +359,8 @@ a runner" but "does this specific check do what it says" — and one pull reques
 |---|---|
 | **Item 1** — two license texts | the human's, unchanged |
 | **Item 5** — name collision check + trademark stub | the human's, unchanged. **Not performed** |
-| `dco.yml` unexercised | one pull request settles it |
+| ~~`dco.yml` unexercised~~ | **settled** — PR #3, run `31199038936`, 11 commits checked |
+| `product-ci-viewer.yml` on `pull_request` | unexercised; needs a PR touching `renderer/**` |
 
 Post-public obligations are unchanged: counsel review before the first outside contribution;
 `protocol/transport-bakeoff/web` audit when off the metered connection; full trademark-register
