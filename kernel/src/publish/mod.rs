@@ -495,7 +495,12 @@ fn run(
     progress.phase(PublishPhase::VerifyingSource);
     watch.check()?;
     spatial_engine::trace::mark(trace_names::VERIFY_START, 0, 0);
-    let content_hash_millis = pin.verify_by_rehash(ds.path(), cancel)?;
+    // **`verify_by_rehash` polls the token itself**, so a cancel during the 5 GB rehash is observed
+    // *there* and comes back as an engine error, never passing through `CancelWatch::check`. Without
+    // this the `VerifyingSource` cell could never produce a `cancel_observed` instant at all — and
+    // the harness filters on that instant, so the miss would not look like a missing stamp, it would
+    // look like a smaller sample with no explanation.
+    let content_hash_millis = pin.verify_by_rehash(ds.path(), cancel).inspect_err(|_| watch.observe_if_cancelled())?;
     spatial_engine::trace::mark(trace_names::VERIFY_END, 0, 0);
 
     // ---- partitions ---------------------------------------------------------------------------
@@ -525,13 +530,29 @@ fn run(
         let info = loop {
             match stream.next_into_timeout(&mut payload, spatial_engine::PUBLISH_STREAM_POLL_INTERVAL)
             {
-                spatial_engine::BatchPoll::Ready(info) => break Some(info?),
+                // **The producer can win the race.** A cancel raised while this thread is parked
+                // reaches DuckDB's interrupt first, so the producer may fail the stream and send the
+                // error before this thread wakes. That arrives here as `Ready(Err(Cancelled))` and
+                // returns straight out of `run` — past every `watch.check()`. The outcome is
+                // correctly `Cancelled` either way; what would be missing is the instant, and only
+                // for the cell whose cancel is fired off-thread, which is a selection effect rather
+                // than a measurement.
+                spatial_engine::BatchPoll::Ready(info) => {
+                    break Some(info.inspect_err(|_| watch.observe_if_cancelled())?)
+                }
                 spatial_engine::BatchPoll::Ended => break None,
                 spatial_engine::BatchPoll::WouldBlock => {
                     // Reachable only with a batch demanded and none delivered: the sort. Reported
                     // once, because a phase that re-announces itself every 10 ms is a log, not a
                     // phase.
-                    if !reported_query_running {
+                    // **Gated on `!reported_writing`, and that gate is load-bearing.** Without
+                    // it this phase means "the producer was quiet for one poll interval", which
+                    // is also true of a stall *between* partitions — the fifth section measured
+                    // an inter-partition cadence max of 999.924 ms against a p50 of 8.573 ms, so
+                    // the gap is real and routine. An observer would then be told the query is
+                    // running during partition writing: the exact defect this phase was added to
+                    // fix, inverted.
+                    if !reported_writing && !reported_query_running {
                         reported_query_running = true;
                         progress.phase(PublishPhase::QueryRunning);
                         spatial_engine::trace::mark(trace_names::QUERY_RUNNING_OBSERVED, 0, 0);
@@ -724,6 +745,19 @@ impl<'a> CancelWatch<'a> {
             return Err(PublishError::Cancelled);
         }
         Ok(())
+    }
+
+    /// Stamp the observation for a cancellation that was noticed **somewhere other than
+    /// [`check`](Self::check)** — the rehash loop, or the producer thread winning the race to the
+    /// interrupt.
+    ///
+    /// Guarded on the token rather than on the error kind, so an unrelated I/O failure that happens
+    /// to arrive during a cancelled operation cannot mint a false instant, and so a genuine
+    /// cancellation is never missed because it was classified one layer down.
+    fn observe_if_cancelled(&self) {
+        if self.cancel.is_cancelled() {
+            self.observe();
+        }
     }
 
     /// Stamp the acknowledgement, at most once per operation.

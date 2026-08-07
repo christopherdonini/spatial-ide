@@ -45,8 +45,34 @@ impl CancelToken {
     /// advancing — what `docs/08` budgets) and `cancel_acknowledged` (the operation quiescent).
     /// A latency quoted without naming which pair of instants it spans is not a latency.
     pub fn cancel(&self) {
-        crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
-        self.inner.cancelled.store(true, Ordering::SeqCst);
+        self.cancel_inner(true);
+    }
+
+    /// Cancel **without** stamping a cancellation instant.
+    ///
+    /// **Exists for exactly one caller: [`BatchStream`](crate::stream::BatchStream)'s `Drop`**,
+    /// which cancels on *every* drop including a stream that ran to completion — that is what stops
+    /// an abandoned stream, and this module's own header explains why it must. But it means a
+    /// successful run also calls `cancel()`, and a trace that stamped there would record a
+    /// cancellation request in an operation nobody cancelled. Confirmed in a real artifact during
+    /// review: `producer_finished` at 169.68 ms followed by `cancellation_requested` at 170.32 ms,
+    /// on a run with no cancel in it.
+    ///
+    /// `Drop`'s comment already records that the flag "cannot tell 'cancelled' from 'finished'". A
+    /// stamp inherits that ambiguity, and the frozen semantics in `kernel/CANCELLATION-AND-TRACING.md`
+    /// §2 assert the opposite — so the stamp has to come from the caller that meant it.
+    pub(crate) fn cancel_for_drop(&self) {
+        self.cancel_inner(false);
+    }
+
+    /// **Stamps at most once, on the false→true transition.** A token cancelled twice is one
+    /// cancellation request; two stamps would give a summarizer two candidate origins for the same
+    /// interval, and `Trace::first` would pick whichever was pushed first rather than the earliest.
+    fn cancel_inner(&self, stamp: bool) {
+        let already = self.inner.cancelled.swap(true, Ordering::SeqCst);
+        if stamp && !already {
+            crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
+        }
         if let Some(h) = self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
             h.interrupt();
         }

@@ -382,8 +382,11 @@ pub const SPAN_SOURCE_TO_FIRST_BATCH: &str = "source_to_first_batch";
 /// `consumer_decode` (consumer-side, and a consumer's clock is never differenced against a
 /// producer's). Adding a name here without the events to back it would produce a span that is
 /// always absent, which reads as "did not happen" rather than "not built".
+/// **`lease_acquire` is reserved, not derived.** Its opening event [`REQUEST_ACCEPTED`] is stamped
+/// by the caller that admits an operation, and no site in this workspace does so yet — so listing it
+/// here would produce exactly the always-absent span this doc warns against. It moves into the table
+/// on the commit that emits the event, not before.
 pub const SPANS: &[(&str, &str, &str)] = &[
-    (SPAN_LEASE_ACQUIRE, REQUEST_ACCEPTED, LEASE_ACQUIRED),
     (SPAN_QUERY, SQL_PREPARED, FIRST_SOURCE_ROW),
     (SPAN_SOURCE_TO_FIRST_BATCH, FIRST_SOURCE_ROW, FIRST_BATCH_FULL),
 ];

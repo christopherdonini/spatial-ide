@@ -105,10 +105,21 @@ pub const MAX_PUBLISH_PARTITIONS: usize = 100_000;
 /// The Windows default tick is 15.625 ms and `timeBeginPeriod` is a dependency this workspace does
 /// not take, so that slop is a **declared floor, not a fixable**:
 ///
-/// > 10 ms + 15.625 ms = **25.625 ms** to observe a cancel that arrives at the worst moment.
+/// > 10 ms + 15.625 ms = **25.625 ms** before this loop next *looks*.
 ///
-/// That is the acknowledgement bound for the whole pre-first-batch window, and it no longer depends
-/// on DuckDB honouring the interrupt at all.
+/// **That is a cadence, not an acknowledgement bound, and an earlier revision of this comment
+/// claimed the latter. It is withdrawn for the same reason the `262,144 B ÷ 10 MB/s` claim on
+/// `PUBLISH_WRITE_CHUNK_BYTES` was withdrawn.** Two terms it excludes:
+///
+/// - **The OS scheduler.** `recv_timeout` guarantees a *lower* bound on the park. Waking on time
+///   requires the scheduler to run this thread, and on a machine saturated by a 5 GB publish that
+///   is an unbounded external section — the very class this cadence may not be netted against.
+/// - **The rest of the window.** "Pre-first-batch" also contains `pool.acquire`'s connection open
+///   and PRAGMA configuration, a `create_dir`, and — when the producer wins the race and the stream
+///   ends — a style file written and **fsynced** before the next check. None of those poll.
+///
+/// So: **the cadence is exact and this code controls it; the latency it produces is measured, never
+/// derived.** The number above may be cited as "how often the loop looks" and never as a bound.
 pub const PUBLISH_STREAM_POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 // A partition must fit inside the batch ceiling, or the publish policy would be quietly asking for
@@ -522,7 +533,10 @@ impl Drop for BatchStream {
     /// scanning a file nobody is reading — the "kernel keeps computing cancelled work" failure
     /// ADR-004 amendment 2 disqualified a transport over.
     fn drop(&mut self) {
-        self.cancel.cancel();
+        // `cancel_for_drop`, not `cancel`: this fires on *every* drop, a completed stream
+        // included, so stamping a cancellation instant here would record a request in an
+        // operation nobody cancelled. See `CancelToken::cancel_for_drop`.
+        self.cancel.cancel_for_drop();
     }
 }
 
@@ -702,11 +716,12 @@ impl Dataset {
         };
         // Stamped on the caller's thread, before the producer starts — the same place the token is
         // bound to the connection, which is what makes this the boundary a trace wants.
-        crate::trace::mark(
-            crate::trace::LEASE_ACQUIRED,
-            connection.physical_id,
-            connection.lease_generation,
-        );
+        // `0, 0` — **not** the physical id and lease generation. Those fields are declared as
+        // `rows` and `bytes` on `Event`, and review caught an artifact reading `"rows":1,"bytes":2`
+        // for connection 1 generation 2: any summarizer summing rows or bytes across events would
+        // have got a wrong number with nothing raised. The identity belongs to `TraceKey`, which is
+        // where it already is.
+        crate::trace::mark(crate::trace::LEASE_ACQUIRED, 0, 0);
         let geometry_column = self.geometry_column().to_string();
         let stats = Arc::new(StreamStats::default());
         let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
@@ -734,11 +749,6 @@ impl Dataset {
                     policy,
                     report_bounds,
                 );
-                // With the consumer's wait now bounded, `boundary::execute` can return while this
-                // thread is still here — so "the producer stopped" is a separate fact from "the
-                // call returned", and this is the span that carries it.
-                crate::trace::mark(crate::trace::PRODUCER_FINISHED, 0, 0);
-
                 // **Detach before the lease is decided**, so a `cancel()` arriving after this
                 // stream is over cannot reach a connection that has been handed back — the reason
                 // `CancelToken::detach` exists. Cancellation belongs to the *active lease*, never
@@ -766,6 +776,15 @@ impl Dataset {
                         let _ = tx.send(Err(e));
                     }
                 }
+
+                // **Stamped here, below the lease's fate, and the position is the whole point.**
+                // This is the producer's `cancel_acknowledged`, and
+                // `kernel/CANCELLATION-AND-TRACING.md` §3 classifies DuckDB connection teardown as
+                // an unbounded class-(b) term on the cancel path. An earlier revision stamped it
+                // *above* the `detach` and the `match` — review measured it at 33 µs after the last
+                // batch, i.e. covering none of the teardown, so any acknowledgement figure derived
+                // from it would have systematically excluded the term the taxonomy says dominates.
+                crate::trace::mark(crate::trace::PRODUCER_FINISHED, 0, 0);
             })
             .map_err(|e| {
                 // **Unbind the token, or it is permanently unusable.** `lease_for_stream` attached

@@ -171,9 +171,21 @@ Fixed inputs, or the test measures the wrong thing: same fixture, same `Viewport
 - **One traced stream per traced run.** `trace::CURRENT` is a single slot; a second `start` is
   refused rather than silently replacing the first. The consistency demonstration is a single-stream
   run, so the limit costs nothing today.
-- **`TRACE_BUFFER_RECORDS` is reached in normal use.** `BATCH_FULL` fires per batch and the
-  hero-slice fixture streams 6,637 of them. Every segment the demonstration needs is a *first*
-  occurrence, and first occurrences are never what gets dropped — but the drop count travels with the
-  artifact and must be printed beside any derived figure.
+- **`TRACE_BUFFER_RECORDS` is reached in normal use, and on the publish path it truncates in a
+  *biased* way.** For the 145 MB consistency cell the earlier statement holds: every segment it needs
+  is a *first* occurrence, and first occurrences are never what gets dropped.
+
+  **On the publish path it does not hold, and this bounds what the sixth section may claim.**
+  `write_inner` stamps four marks per partition (`partition_create_start`, `partition_write_start`,
+  `partition_sync_start`, `partition_sync_end`) plus one `batch_full` — five records per partition.
+  At a 4,096-record ceiling that is roughly the **first 819 partitions of the fifth section's
+  ~5,700**, and they are the *earliest* ones: the cold-writeback-cache end of the run. The C2/C3
+  cancellation cells deliberately fire after `PARTITION_FLOOR = 100`, with the cache loaded — **the
+  opposite population.**
+
+  So a "which term dominates the 418 ms" figure derived from `partition_sync_*` describes early,
+  cold-cache partitions and **may not be generalised to the run**. `dropped()` reports how many
+  records were refused but not which. Any such figure must be printed with that scope attached, or it
+  is unfalsifiable in exactly the way this instrument exists to prevent.
 - **§5d's `temp_directory` control remains unimplemented and unreachable** (`Lease::connection()` is
   `pub(crate)`). Out of this cut's scope; a ~7 GB sort can still spill somewhere unrecorded.
