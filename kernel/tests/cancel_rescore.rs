@@ -67,6 +67,18 @@ const TRIAL_CEILING: Duration = Duration::from_secs(900);
 /// §3: seven usable samples per cancellation cell.
 const TRIALS: usize = 7;
 
+/// **Amendment A1: the machine rests before it is asked whether it is still itself.**
+///
+/// Attempt 3 exceeded the declared 10 % canary bound in five of six phases. The 400 M canary's long
+/// minimum climbed 105.7 -> 116.5 -> 134.7 -> 162.6 ms and then fell back to 119.8 as the load
+/// lightened: thermal drift under 28 cancelled publishes reading 5 GB each, not a step change and
+/// not a competing process. A reading taken straight off a hot phase measures the phase, not the
+/// machine's baseline.
+///
+/// This changes no trigger, no ceiling, no sample count and no verdict rule — only how long the
+/// machine rests before each reading.
+const CANARY_SETTLE: Duration = Duration::from_secs(60);
+
 /// §3 C5: six pairs per arm, ABBA, after a discarded warm-up.
 const OVERHEAD_PAIRS: usize = 3;
 
@@ -561,6 +573,13 @@ fn measure_the_cancellation_rescore() {
     std::thread::sleep(Duration::from_secs(120));
     let mut canaries = vec![Canary::take("start")];
 
+    // Every later reading is preceded by `CANARY_SETTLE` (amendment A1).
+    fn settled_canary(label: &str) -> Canary {
+        println!("settling {}s before the [{label}] canary…", CANARY_SETTLE.as_secs());
+        std::thread::sleep(CANARY_SETTLE);
+        Canary::take(label)
+    }
+
     // ---- C1–C4 ------------------------------------------------------------------------------
     let mut trials: Vec<Trial> = Vec::new();
     for cell in [Cell::InsideSort, Cell::MidWrite, Cell::PreSync, Cell::A6Continuity] {
@@ -582,7 +601,7 @@ fn measure_the_cancellation_rescore() {
             );
             trials.push(t);
         }
-        canaries.push(Canary::take(&format!("after-{}", cell.label())));
+        canaries.push(settled_canary(&format!("after-{}", cell.label())));
     }
 
     // ---- C5: tracing overhead at 145 MB, ABBA after a discarded warm-up ----------------------
@@ -604,12 +623,12 @@ fn measure_the_cancellation_rescore() {
         on_ms.extend([b1, b2]);
         off_ms.extend([a1, a2]);
     }
-    canaries.push(Canary::take("after-overhead"));
+    canaries.push(settled_canary("after-overhead"));
 
     // ---- C6: consistency --------------------------------------------------------------------
     println!("\n=== c6-consistency ===");
     let consistency = consistency_cell(&ctl);
-    canaries.push(Canary::take("after-consistency"));
+    canaries.push(settled_canary("after-consistency"));
 
     // ---- Verdicts ---------------------------------------------------------------------------
     let spreads = phase_spreads(&canaries);

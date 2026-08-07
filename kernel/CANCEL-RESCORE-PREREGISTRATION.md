@@ -248,3 +248,68 @@ engineered around, and not reframed into a pass.
 - presenting C4's re-run as evidence about intra-partition cancellation;
 - re-tuning a declared trigger after seeing where it landed;
 - reporting a cell's p50 while omitting that its n is below 7.
+
+---
+
+## 9. Amendments
+
+### A1 — 2026-08-07 — attempt 3 invalidated by its own canary; a per-phase settle is added
+
+**This amendment was written after a result was seen.** Attempt 3 produced 28 on-target trials and a
+full set of timing numbers, and I looked at them before writing this. That is disclosed in the first
+line because the discipline this pass inherits requires it, and because a reader must be able to ask
+whether the amendment was shaped by what the numbers said.
+
+**What fired.** §6 invalidator 2, in five of six phases:
+
+| phase | canary spread | declared bound |
+|---|---|---|
+| after-c1-inside-sort | 10.15 % | 10 % |
+| after-c2-mid-write | 15.70 % | 10 % |
+| after-c3-pre-sync | 20.67 % | 10 % |
+| after-c4-a6-continuity | 23.28 % | 10 % |
+| after-overhead | 11.98 % | 10 % |
+| after-consistency | 1.75 % | 10 % — **within** |
+
+**The cause is not in dispute and is visible in the readings themselves.** The 400 M canary's long
+minimum climbed 105.7 → 116.5 → 134.7 → **162.6** ms and then *fell back* to 131.9 → 117.8 → 119.8 as
+the load lightened. That is thermal drift under sustained work — 28 cancelled publishes, each reading
+5 GB, over about 25 minutes — not a step change and not a competing process. The machine stopped
+being itself, which is precisely what the instrument is for.
+
+**What is invalidated:** every timing number from C1–C5. **What survives**, per A5's rule carried
+forward from the scale pass — the canary gates a phase whose output is a timing number used against a
+budget or in a comparison, not a correctness claim:
+
+- 28 of 28 trials fired on target and ended as `Cancelled`;
+- 28 of 28 left nothing on disk — no destination, no staging directory;
+- C6's exact counts, whose phase was within bound anyway, and which no clock decides.
+
+**The fix, declared now and applied before the re-run:** a **60-second settle immediately before
+every canary reading**, so each reading is taken from a machine that has been given a chance to
+return toward baseline rather than one still hot from the phase it just ran. §5's existing 120 s
+settle before the *first* canary is unchanged; this extends the same idea to the rest, which attempt
+3 shows was needed and the original §5 did not anticipate.
+
+**What this amendment does not do, stated so it can be checked.** It changes no trigger, no ceiling,
+no sample count, no verdict rule and no cell definition. It changes only how long the machine rests
+before it is asked whether it is still itself. **No number from attempt 3 is carried forward** — the
+re-run's numbers stand alone, and attempt 3's artifact is retained as
+`attempt-3-invalidated-by-canary.json` so this claim can be checked rather than believed.
+
+**One thing a re-run cannot fix, and it is not a canary problem.** C2, C3 and C4 fire their triggers
+*inline*, from a callback the publishing thread itself invokes — so the very next statement that
+thread runs is a cancellation check, and `cancel_requested → cancel_observed` is ~0 **by
+construction**. Attempt 3 measured 0.001–0.002 ms in all three, which is that artifact and not a
+property of the code being fast. This is the **same defect `CANCELLATION-AND-TRACING.md` §1 identified
+in A6's cell**, and §3 of this file asserted that C2 escaped it. **That assertion was wrong.** It is
+recorded here rather than quietly dropped, and the consequence binds the write-up:
+
+> **Only C1 carries a real acknowledgement-latency measurement**, because only C1 cancels from
+> another thread while the publishing thread is parked. C2/C3/C4's `observed` figures may not be
+> quoted as latencies, and their `MET` verdicts against the 100 ms budget are **vacuous** — a
+> comparison of an artifact against a budget. What C2 and C3 do establish is unchanged and real: a
+> cancel raised inside a partition write ends the operation and leaves nothing.
+
+Fixing that would mean re-declaring C2's and C3's triggers after seeing where they landed, which §8
+forbids. They are re-run as declared, and the limitation is reported.
