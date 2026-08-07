@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The viewer's files, as an **explicit input** to publishing.
 //!
 //! ## Why the publisher does not go and find them
@@ -152,6 +155,26 @@ impl ViewerAssets {
     }
 }
 
+/// Whether `path` begins with an RFC 3986 scheme — `scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )`.
+///
+/// Covers `https:`, `data:`, `javascript:`, `file:` **and** a Windows drive letter `C:`, which is
+/// the single-letter case of the same grammar. One rule instead of two that disagree.
+pub(crate) fn scheme_prefixed(path: &str) -> bool {
+    let mut chars = path.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() => {}
+        _ => return false,
+    }
+    for c in chars {
+        match c {
+            ':' => return true,
+            c if c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.' => {}
+            _ => return false,
+        }
+    }
+    false
+}
+
 /// The path rules, in one place so the refusal and the reason stay together.
 pub(crate) fn validate_relative_path(path: &str) -> Result<(), PublishError> {
     let reject = |detail: &str| {
@@ -169,8 +192,22 @@ pub(crate) fn validate_relative_path(path: &str) -> Result<(), PublishError> {
     if path.starts_with('/') {
         return reject("is absolute");
     }
-    if path.len() >= 2 && path.as_bytes()[1] == b':' {
-        return reject("names a drive letter");
+    // **Any URI scheme, not only a drive letter.** This was `path.as_bytes()[1] == b':'` — a single
+    // letter then a colon — which catches `C:/evil` and admits `https://evil.invalid/x` and
+    // `data:text/html,…`, whose second character is not a colon.
+    //
+    // On this side the practical exposure is small, because viewer asset paths come from a
+    // directory walk. It matters anyway: the reader applies the same rule to every path in the
+    // manifest, and there a scheme is a live request-forgery primitive (`new URL` resolves an
+    // absolute URL by ignoring the base, so the page fetches from the attacker's origin before any
+    // hash can reject the bytes). A writer and a reader enforcing *different* definitions of
+    // "bundle-relative" is exactly the drift `renderer/tests/data/manifest-key-sets.json` exists to
+    // prevent one level up.
+    //
+    // RFC 3986's scheme grammar, anchored, so an ordinary relative path with a colon later in it is
+    // unaffected.
+    if scheme_prefixed(path) {
+        return reject("begins with a URI scheme (or a drive letter); bundle paths are relative");
     }
     if path.ends_with('/') {
         return reject("names a directory rather than a file");
@@ -205,13 +242,32 @@ mod tests {
             "",
             "a//b.js",
             "dir/",
+            // **A URI scheme, not only a drive letter.** The rule was `bytes[1] == b':'`, which
+            // admitted every one of these: their second character is not a colon. The reader
+            // applies the same rule to every manifest path, and there an absolute URL is a live
+            // request-forgery primitive — `new URL(p, base)` ignores the base when `p` is absolute.
+            "https://evil.invalid/x",
+            "http://evil.invalid/x",
+            "data:text/html,<script>alert(1)</script>",
+            "javascript:alert(1)",
+            "file:///C:/dev/spatial-ide",
+            "blob:http://x/y",
         ] {
             assert!(
                 validate_relative_path(bad).is_err(),
                 "`{bad}` must be refused as a viewer asset path"
             );
         }
-        for good in ["index.html", "app.js", "assets/app.js", "a/b/c.css"] {
+        for good in [
+            "index.html",
+            "app.js",
+            "assets/app.js",
+            "a/b/c.css",
+            "NOTICE.txt",
+            // A colon *later* in the name is not a scheme, and the anchored grammar must not
+            // over-refuse: the rule is about how a path begins.
+            "assets/report-12:30.txt",
+        ] {
             assert!(validate_relative_path(good).is_ok(), "`{good}` should be admissible");
         }
     }

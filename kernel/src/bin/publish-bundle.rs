@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! `publish-bundle` — run the publish operation from a command line.
 //!
 //! The operator-facing entry point for the hero slice's second half, and what the acceptance run
@@ -6,6 +9,9 @@
 //!
 //! ```text
 //! publish-bundle --data <file.parquet> --style <style.json> --viewer <dir> --out <bundle-dir>
+//!                --viewer-program <name> --viewer-copyright <notice> --viewer-license <SPDX>
+//!                --viewer-notice <path-within-viewer-dir>
+//!                (--corresponding-source-url <http(s) URL> | --corresponding-source-offer <text>)
 //!                [--name parcels] [--attributes zone,area]
 //!                [--bbox xmin,ymin,xmax,ymax] [--limit N]
 //!                [--license SPDX --license-at <RFC-3339> [--license-by who]
@@ -15,6 +21,14 @@
 //! `--bbox` carries **no CRS**, which declares its coordinates to be in the dataset's own
 //! (ADR-015 §7.3). `--license-at` is **required with `--license`** and is *when the operator made
 //! the declaration* — a semantic input, never this run's build clock (ADR-017 §10, §12).
+//!
+//! **The five `--viewer-*` / `--corresponding-source-*` arguments are required, not optional.** A
+//! published bundle distributes the viewer's code, so ADR-009 item 7 makes carrying that code's
+//! notice and a corresponding-source route a condition of publishing at all (ADR-017 Corrigendum
+//! 3). They are arguments rather than defaults for the same reason `--viewer` is one: this binary
+//! does not know what viewer it was handed, and a default would assert a copyright over bytes it
+//! did not author. **The two `--license*` families are different things** — `--license` is the
+//! *data*'s terms, `--viewer-license` is the *program*'s.
 //!
 //! **Publishing is a class-3 external side effect (ADR-006) and there is no approval gate in this
 //! slice.** The binary says so on every run rather than letting the absence be discovered: `docs/09`
@@ -26,9 +40,31 @@ use std::path::PathBuf;
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::Redistribution;
 use spatial_kernel::publish::{
-    publish, OperatorLicense, PublishPhase, PublishProgress, PublishRequest, ViewerAssets,
-    REVERSIBILITY_CLASS,
+    publish, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishPhase,
+    PublishProgress, PublishRequest, ViewerAssets, ViewerLicenseInput, REVERSIBILITY_CLASS,
 };
+
+/// Refusing both route flags rather than letting the second silently win.
+const CORRESPONDING_SOURCE_TWICE: &str =
+    "--corresponding-source-url and --corresponding-source-offer are mutually exclusive: a bundle \
+     carries one route, and choosing which of two operator statements governs is not this tool's \
+     judgement to make";
+
+/// Read the next argument, refusing a blank one.
+///
+/// Flags whose whole purpose is to carry a claim (`--viewer-program`, `--viewer-copyright`, the two
+/// route flags) cannot accept `""`: a blank is not a claim, and it would reach the library only to
+/// be refused there with a message that names the field rather than the flag the operator typed.
+fn nonempty(
+    args: &mut impl Iterator<Item = String>,
+    flag: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let raw = args.next().ok_or_else(|| format!("{flag} needs a value"))?;
+    if raw.trim().is_empty() {
+        return Err(format!("{flag} needs a non-empty value").into());
+    }
+    Ok(raw)
+}
 
 /// Progress to stderr, so a long publish is not silent (ADR-010 rule 7) and stdout stays parseable.
 struct Console;
@@ -66,6 +102,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut license_by = "operator".to_string();
     let mut attribution: Option<String> = None;
     let mut redistribution = Redistribution::Unknown;
+    // The **distributed code's** terms — a different thing from `--license` above, which is the
+    // data's. All five are required; see the module docs.
+    let mut viewer_program: Option<String> = None;
+    let mut viewer_copyright: Option<String> = None;
+    let mut viewer_license_id: Option<String> = None;
+    let mut viewer_notice: Option<String> = None;
+    let mut corresponding_source: Option<CorrespondingSource> = None;
 
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
@@ -158,6 +201,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 license_by = raw;
             }
             "--attribution" => attribution = args.next(),
+
+            // ---- the distributed code's terms (ADR-009 item 7; ADR-017 Corrigendum 3) ----------
+            //
+            // Non-emptiness is enforced by the library for every caller, not only for this one
+            // (`admit_viewer_license`). It is checked again here so the operator is told which flag
+            // was blank at the point they typed it, rather than being handed a library refusal.
+            "--viewer-program" => viewer_program = Some(nonempty(&mut args, "--viewer-program")?),
+            "--viewer-copyright" => {
+                viewer_copyright = Some(nonempty(&mut args, "--viewer-copyright")?)
+            }
+            "--viewer-license" => {
+                viewer_license_id = Some(nonempty(&mut args, "--viewer-license")?)
+            }
+            // Relative to `--viewer`'s directory, because that is the namespace the operator is
+            // already in. The publisher prefixes `viewer/` when it writes the manifest.
+            "--viewer-notice" => viewer_notice = Some(nonempty(&mut args, "--viewer-notice")?),
+            // **The two route kinds are mutually exclusive**, and giving both is refused rather
+            // than resolved by position — the same discipline `--license` and the source's own
+            // declaration get. A bundle carries one route, and picking for the operator would be
+            // choosing which of their two statements governs.
+            "--corresponding-source-url" => {
+                let at = nonempty(&mut args, "--corresponding-source-url")?;
+                if corresponding_source.is_some() {
+                    return Err(CORRESPONDING_SOURCE_TWICE.into());
+                }
+                corresponding_source =
+                    Some(CorrespondingSource { kind: CorrespondingSourceKind::Url, at });
+            }
+            "--corresponding-source-offer" => {
+                let at = nonempty(&mut args, "--corresponding-source-offer")?;
+                if corresponding_source.is_some() {
+                    return Err(CORRESPONDING_SOURCE_TWICE.into());
+                }
+                corresponding_source =
+                    Some(CorrespondingSource { kind: CorrespondingSourceKind::WrittenOffer, at });
+            }
             "--redistribution" => {
                 redistribution = match args.next().as_deref() {
                     Some("permitted") => Redistribution::Permitted,
@@ -174,6 +253,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let style_path = style_path.ok_or("--style is required")?;
     let viewer_dir = viewer_dir.ok_or("--viewer is required")?;
     let out = out.ok_or("--out is required")?;
+
+    // **Required, because ADR-009 item 7 makes carrying these a condition of publishing.** The
+    // refusal names what the flag is *for*, not merely that it is absent: an operator who has just
+    // met these five arguments for the first time needs to know they are discharging a license
+    // obligation, not filling in metadata.
+    let viewer_license = ViewerLicenseInput {
+        program: viewer_program.ok_or(
+            "--viewer-program is required: a published bundle distributes the viewer's code, and \
+             ADR-009 item 7 requires every bundle to name that code and carry its notice",
+        )?,
+        copyright: viewer_copyright.ok_or(
+            "--viewer-copyright is required: the distributed code's copyright notice, carried \
+             verbatim into the bundle (ADR-009 item 7)",
+        )?,
+        license: viewer_license_id.ok_or(
+            "--viewer-license is required (ADR-009 item 7): the distributed code's license \
+             identifier, e.g. AGPL-3.0-or-later. This is the *program's* license — `--license` is \
+             the *data's*",
+        )?,
+        notice_path: viewer_notice.ok_or(
+            "--viewer-notice is required: the path, relative to --viewer, of the notice file the \
+             bundle will carry. It must be one of the files in that directory, and it carries the \
+             program's own notice plus the retained notices of every third-party work compiled \
+             into it (ADR-017 Corrigendum 3)",
+        )?,
+        corresponding_source: corresponding_source.ok_or(
+            "one of --corresponding-source-url or --corresponding-source-offer is required: \
+             ADR-009 item 7 requires every bundle to carry a durable route to the corresponding \
+             source of the code it distributes",
+        )?,
+    };
 
     // **An operator declaration is a claim, and a claim carries who made it and when.** `by` has a
     // default because "operator" is a truthful stand-in for a tool with no identity model; `at` has
@@ -272,6 +382,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         attributes,
         style_source: &style_source,
         viewer: &viewer,
+        viewer_license,
         // `at` is `license_at`, **never `started_at`**. The two are different kinds of instant and
         // the whole of ADR-017 §10's box exists to keep them apart; the `--license-at` arm above
         // carries the argument. `license_at` is `Some` exactly when `license` is, by the check

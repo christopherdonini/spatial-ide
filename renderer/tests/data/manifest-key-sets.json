@@ -25,13 +25,29 @@
     "  reader  renderer/bundle-viewer/src/manifest.ts::licenseBlock via nonEmptyStr, asserted by",
     "          scripts/manifest.test.mjs.",
     "That is two enforcements of one rule written down in the ADR, not one shared artifact -- a",
-    "weaker guarantee than the key sets have, and named here rather than left to be assumed."
+    "weaker guarantee than the key sets have, and named here rather than left to be assumed.",
+    "",
+    "A THIRD CLASS this artifact cannot express, added with ADR-017 Corrigendum 3 (2026-08-07):",
+    "REFERENTIAL INTEGRITY. viewer_license.notice_path must equal the `path` of one entry in",
+    "viewer[] -- a relation between two members, not a key set and not a type. Both sides enforce",
+    "it in their own code and each has its own negative test, at these sites:",
+    "  writer  kernel/src/publish/mod.rs::admit_viewer_license, against the supplied ViewerAssets.",
+    "          This is the refusal that fires, and kernel/tests/publish.rs asserts it. A second,",
+    "          unreachable backstop in `run` re-checks against the EMITTED viewer[] list: both",
+    "          sites share one `viewer_bundle_path`, and the emission maps 1:1 over the same",
+    "          assets, so the early check passing implies the later one passing. NO TEST covers",
+    "          that branch -- reaching it needs a code change that breaks the 1:1 mapping -- and",
+    "          saying so is better than implying coverage that does not exist;",
+    "  reader  renderer/bundle-viewer/src/manifest.ts::viewerLicenseBlock, asserted by",
+    "          scripts/manifest.test.mjs.",
+    "The mutation sweep in manifest.test.mjs walks key sets, so it would NOT catch a notice_path",
+    "naming no viewer asset. That is why the dedicated negative tests exist."
   ],
   "key_sets": {
     "$": [
       "bundle_version", "bundle", "source", "source_verification", "style", "software", "operation",
-      "crs", "identity", "schema", "bounds", "data", "viewer", "license", "reproducibility",
-      "derived_caches", "query_surface", "sidecar"
+      "crs", "identity", "schema", "bounds", "data", "viewer", "viewer_license", "license",
+      "reproducibility", "derived_caches", "query_surface", "sidecar"
     ],
     "resource_ref": [
       "logical_uri", "content_hash", "source_revision", "locators", "cache_status",
@@ -66,6 +82,8 @@
     "$.data": ["rows", "format", "partitions"],
     "partition": ["path", "bytes", "content_hash", "rows"],
     "viewer_asset": ["path", "bytes", "content_hash"],
+    "viewer_license": ["program", "copyright", "license", "notice_path", "corresponding_source"],
+    "viewer_license_corresponding_source": ["kind", "at", "note"],
     "license_not_declared": ["state", "basis"],
     "license_declared_by_source": ["state", "license", "attribution", "redistribution"],
     "license_declared_by_operator": [

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! **Publish a static bundle** — the hero slice's last operation (`docs/07`, ADR-008).
 //!
 //! Cancellable, progress-reporting, streaming (`docs/01` principle 7). Stages into a sibling
@@ -54,6 +57,7 @@ use spatial_renderer::CompiledStyle;
 use crate::bundle::{
     self, Asset, BuildInfo, Column, Filter, FormatDeclaration, Known, License, LicenseTerms,
     Locator, Manifest, Operation, Redistribution, Reproducibility, ResourceRef, Software, Unknown,
+    ViewerLicense,
 };
 
 pub mod error;
@@ -61,6 +65,11 @@ pub mod viewer_assets;
 
 pub use error::PublishError;
 pub use viewer_assets::{ViewerAsset, ViewerAssets, MAX_VIEWER_ASSETS, MAX_VIEWER_ASSET_BYTES};
+
+// Re-exported so a caller building a `PublishRequest` does not have to reach into `bundle` for the
+// two types one of its required fields is made of. This is also how they reach this module's own
+// code — a second private `use` of the same names would shadow the re-export.
+pub use crate::bundle::{CorrespondingSource, CorrespondingSourceKind};
 
 /// ADR-006's reversibility class for this operation, declared on the API rather than implied.
 ///
@@ -127,6 +136,23 @@ pub struct OperatorLicense {
     pub at: String,
 }
 
+/// The caller's `viewer_license` declaration, in the caller's own namespace.
+///
+/// Distinct from [`crate::bundle::ViewerLicense`] by one member: `notice_path` here is
+/// **viewer-relative** (`NOTICE.txt`), matching the [`ViewerAsset`] paths the caller supplies, and
+/// the manifest's is **bundle-relative** (`viewer/NOTICE.txt`). Two types rather than one comment,
+/// because a single type would make the two namespaces one field that is right in one place and
+/// wrong in the other — and nothing in a signature would say which.
+#[derive(Clone, Debug)]
+pub struct ViewerLicenseInput {
+    pub program: String,
+    pub copyright: String,
+    pub license: String,
+    /// Relative to the viewer asset directory, as [`ViewerAsset::path`] is.
+    pub notice_path: String,
+    pub corresponding_source: CorrespondingSource,
+}
+
 /// One publish.
 pub struct PublishRequest<'a> {
     pub dataset: &'a Dataset,
@@ -138,6 +164,18 @@ pub struct PublishRequest<'a> {
     /// The style document source. Compiled here against the dataset schema and this projection.
     pub style_source: &'a str,
     pub viewer: &'a ViewerAssets,
+    /// The **distributed code's** notice and corresponding-source route — required, no default.
+    ///
+    /// ADR-009 item 7; ADR-017 Corrigendum 3. **Required rather than optional**, because "every
+    /// bundle carries it" is only true of the operation if a bundle without it cannot be built.
+    /// `notice_path` is **viewer-relative here** — the namespace the caller is already in, since
+    /// they hand over `ViewerAssets` — and the publisher prefixes `viewer/` when it emits.
+    ///
+    /// **Not defaulted to the reference viewer's own values.** The publisher does not know what
+    /// viewer it was handed: `ViewerAssets` is an explicit input precisely so the operation never
+    /// goes and finds one. A default would be this module asserting a copyright over bytes it did
+    /// not author.
+    pub viewer_license: ViewerLicenseInput,
     /// Terms for a source that declares none. Supplying these for a source that *does* declare is
     /// refused.
     pub license: Option<OperatorLicense>,
@@ -225,6 +263,10 @@ fn run(
 
     // ---- license, before any work is spent on a bundle that may not be publishable -------------
     let license = admit_license(ds.source_license(), req.license.as_ref())?;
+    // The distributed code's own terms (ADR-009 item 7). Admitted here, beside the data's license
+    // and before the source hash, so a bundle that cannot legally be handed to anyone is refused in
+    // milliseconds rather than after a whole-file read.
+    let viewer_license = admit_viewer_license(&req.viewer_license, req.viewer)?;
 
     // ---- source pin ---------------------------------------------------------------------------
     progress.phase(PublishPhase::VerifyingSource);
@@ -300,7 +342,7 @@ fn run(
     let mut viewer_assets = Vec::with_capacity(req.viewer.len());
     for asset in req.viewer.iter() {
         check_cancel(cancel)?;
-        let rel = format!("{}/{}", bundle::VIEWER_DIR, asset.path);
+        let rel = viewer_bundle_path(&asset.path);
         if let Some(parent) = Path::new(&rel).parent() {
             staging.create_dir(&parent.to_string_lossy().replace('\\', "/"))?;
         }
@@ -310,6 +352,30 @@ fn run(
             bytes: asset.bytes.len() as u64,
             content_hash: hash,
             rows: None,
+        });
+    }
+
+    // **A backstop, and unreachable today — stated as what it is rather than as "the real check".**
+    //
+    // `admit_viewer_license` already refused a `notice_path` naming no supplied asset, and that
+    // early refusal is the one that fires: the loop above maps 1:1 over the same `ViewerAssets`
+    // through the same [`viewer_bundle_path`], with no filter and no dedup, so check one passing
+    // implies check two passing. Since both sites now share one function, there is no longer a
+    // second spelling for them to disagree about — which is what made this reachable in the first
+    // draft and is why that draft called it authoritative.
+    //
+    // It is kept because it asserts the invariant a conforming reader actually enforces —
+    // `notice_path` equals the `path` of some entry in the emitted `viewer[]` — against the emitted
+    // list rather than against the input it was derived from. A future edit that filtered, renamed
+    // or deduplicated assets between admission and emission would land here.
+    //
+    // **No test covers this branch**, because reaching it requires a code change that breaks the
+    // 1:1 mapping. Saying so is better than implying a test exists.
+    if !viewer_assets.iter().any(|a| a.path == viewer_license.notice_path) {
+        return Err(PublishError::ViewerLicenseNoticeMissing {
+            notice_path: req.viewer_license.notice_path.clone(),
+            bundle_relative: viewer_license.notice_path.clone(),
+            available: viewer_assets.iter().map(|a| a.path.clone()).collect(),
         });
     }
 
@@ -330,6 +396,7 @@ fn run(
         rows_total,
         partitions,
         viewer_assets,
+        viewer_license,
         license,
     );
     let manifest_json = manifest.canonical()?;
@@ -503,6 +570,96 @@ fn admit_license(
     }
 }
 
+/// A viewer-relative asset path (`NOTICE.txt`) as the manifest carries it (`viewer/NOTICE.txt`).
+///
+/// **One function rather than two `format!`s that must agree.** The prefixing happens in two places
+/// — where the assets are written and where `viewer_license.notice_path` is translated — and a
+/// reader cross-checks the two results against each other. Two spellings of the same rule is
+/// exactly the arrangement `renderer/tests/data/manifest-key-sets.json` exists to prevent one level
+/// up: each site can be individually correct and the pair still disagree.
+fn viewer_bundle_path(viewer_relative: &str) -> String {
+    format!("{}/{}", bundle::VIEWER_DIR, viewer_relative)
+}
+
+/// Admit the caller's `viewer_license` and translate it into the manifest's namespace.
+///
+/// ADR-009 item 7, via ADR-017 Corrigendum 3. Three refusals, all of them before any work is spent:
+/// a blank member, a `notice_path` that names no supplied viewer asset, and a `url` route that is
+/// not `http`/`https`.
+///
+/// **The path translation is the substance of this function.** The caller works in viewer-relative
+/// paths because that is the namespace `ViewerAssets` is in; the manifest carries bundle-relative
+/// paths because ADR-017 §14 requires every asset path to be one and because a reader can only
+/// cross-check against what it was given. Doing the translation here, once, is what keeps the two
+/// from being conflated at the call site — where the mistake would produce a manifest whose
+/// `notice_path` matches nothing and which every conforming reader refuses.
+///
+/// **What this does not check**, stated because the refusals invite the stronger reading: nothing
+/// here opens the notice file or looks at a byte of it. A `notice_path` naming `app.js` passes.
+/// Accuracy is the publisher's claim, exactly as `license.state` is (ADR-017 Corrigendum 3).
+fn admit_viewer_license(
+    input: &ViewerLicenseInput,
+    viewer: &ViewerAssets,
+) -> Result<ViewerLicense, PublishError> {
+    for (member, value) in [
+        ("program", &input.program),
+        ("copyright", &input.copyright),
+        ("license", &input.license),
+        ("notice_path", &input.notice_path),
+        ("corresponding_source.at", &input.corresponding_source.at),
+    ] {
+        if value.trim().is_empty() {
+            return Err(PublishError::ViewerLicenseIncomplete { member });
+        }
+    }
+
+    let at = input.corresponding_source.at.trim();
+    match input.corresponding_source.kind {
+        // A `url` route must be followable by a recipient.
+        CorrespondingSourceKind::Url => {
+            if !(at.starts_with("http://") || at.starts_with("https://")) {
+                return Err(PublishError::CorrespondingSourceNotDurable { at: at.to_string() });
+            }
+        }
+        // **A written offer is prose, and is checked for being prose rather than for its scheme.**
+        //
+        // It is free text by design — a postal address, terms, a validity period — so there is no
+        // scheme to validate. But an offer that *is* a bare URI is not prose: it is the same
+        // `file:///C:/…` the `url` arm refuses, reaching the manifest through the other flag.
+        // Identical bytes, identical leak, different argument, so it gets the same refusal.
+        //
+        // The check is anchored, so an offer that *mentions* a URL mid-sentence is untouched —
+        // policing prose is not this operation's job, and an offer that names a repository is
+        // ordinary.
+        CorrespondingSourceKind::WrittenOffer => {
+            if viewer_assets::scheme_prefixed(at) {
+                return Err(PublishError::CorrespondingSourceNotDurable { at: at.to_string() });
+            }
+        }
+    }
+
+    // The caller's path is viewer-relative; validate it in that namespace first, so a traversal is
+    // refused with the same message any other viewer path would get.
+    viewer_assets::validate_relative_path(&input.notice_path)?;
+
+    let bundle_relative = viewer_bundle_path(&input.notice_path);
+    if !viewer.iter().any(|a| a.path == input.notice_path) {
+        return Err(PublishError::ViewerLicenseNoticeMissing {
+            notice_path: input.notice_path.clone(),
+            bundle_relative,
+            available: viewer.iter().map(|a| a.path.clone()).collect(),
+        });
+    }
+
+    Ok(ViewerLicense {
+        program: input.program.clone(),
+        copyright: input.copyright.clone(),
+        license: input.license.clone(),
+        notice_path: bundle_relative,
+        corresponding_source: input.corresponding_source.clone(),
+    })
+}
+
 fn format_declaration() -> FormatDeclaration {
     FormatDeclaration {
         framing: "arrow-ipc-stream-per-partition",
@@ -602,6 +759,7 @@ fn build_manifest(
     rows: u64,
     partitions: Vec<Asset>,
     viewer: Vec<Asset>,
+    viewer_license: ViewerLicense,
     license: License,
 ) -> Manifest {
     let identity = ds.identity();
@@ -692,6 +850,7 @@ fn build_manifest(
         rows,
         partitions,
         viewer,
+        viewer_license,
         license,
         reproducibility: Reproducibility::snapshot(&source_hash, style_hash, operation_digest),
         source_verification: "content hash taken at publish start and compared with the pin; NOT \

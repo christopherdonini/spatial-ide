@@ -746,3 +746,211 @@ publishing canvas is now the **decided** architecture for a v1 bundle rather tha
 it, and ADR-003's amendment records that every published bundle uses the projected source-CRS viewer
 while the MapLibre branch is unimplemented. **Read "the separate, unapplied ADR-003 amendment
 proposal" as "ADR-003's Amendment (2026-08-06), applied."**
+
+### Corrigendum 3 — 2026-08-07 — `viewer_license`: the distributed code's notice and its corresponding-source route
+
+Amends **§5** (adds one top-level member and its nested objects), **§14** (adds to what a conforming
+reader must verify and must display), **§15** (adds three typed refusals) and this document's first
+Consequence. It discharges **ADR-009 item 7**, which the Consequences named as open: *"viewer code
+embedded in a distributed bundle **is** distributed code, and its licensing is ADR-009's question,
+unsettled here."* ADR-009 was accepted on 2026-08-07 and settles it.
+
+Nothing in §1–§4, §6–§13 or §16 is altered. The ceilings stand; the canonical grammar stands; the
+operation digest's input set is **unchanged** (see below).
+
+#### The member
+
+`viewer_license`, **required**, in canonical key order **between `viewer` and `license`**.
+
+| Member | Contents |
+|---|---|
+| `program` | non-empty string — what is distributed, named |
+| `copyright` | non-empty string — the copyright notice, verbatim |
+| `license` | non-empty string — the license identifier, e.g. `AGPL-3.0-or-later` |
+| `notice_path` | string — bundle-relative, and **must equal the `path` of one entry in `viewer[]`** |
+| `corresponding_source` | `{kind, at, note}` |
+
+`corresponding_source.kind` is **exactly one of `url` or `written-offer`**; a third is refused rather
+than carried, on §8's precedent for `filter`. `at` is a non-empty string. **When `kind` is `url`,
+`at` must have an `http` or `https` scheme** — see the redaction note below.
+
+`note` is a **fixed writer constant**, quoted here verbatim so this member adds nothing to the set of
+strings an independent implementer cannot reproduce:
+
+> `a route recorded, not a guarantee. This format records where corresponding source was said to be available; it cannot establish that the route resolves, that it serves the source of this bundle's viewer, or that it will outlive this bundle. Verify by following it.`
+
+**The position is between `viewer` and `license` for a mechanical reason, not for how it reads.**
+`notice_path`'s referent is `viewer[]`, so a reader parsing top to bottom already holds the list it
+must check against. That `license` (the *data*'s terms) then sits immediately after `viewer_license`
+(the *distributed code*'s) is a welcome second-order effect and not the argument.
+
+**Emitted key order was, until this corrigendum, asserted nowhere.** Both conformance tests sort
+before comparing, so a writer emitting this member last would have passed every check. An **ordered**
+assertion on `$`'s emitted key sequence lands with this change; without it the placement above would
+be a preference rather than a property.
+
+#### `notice_path` names a notice **set**, and the contract is stated rather than assumed
+
+The file it names carries the distributed program's own copyright and license notice **and the
+retained notices of every third-party work compiled into it**.
+
+This is not hypothetical padding for a future case. `renderer/bundle-viewer/build.mjs` runs esbuild
+with `bundle: true`, and the built `dist/app.js` contains **`apache-arrow` and `flatbuffers`
+(Apache-2.0, and Arrow ships a `NOTICE.txt` whose contents Apache-2.0 §4(d) requires to travel) and
+`tslib` (0BSD)**. Every bundle published before this corrigendum distributed that code carrying no
+notice at all. A single-license declaration would have been a shape that could not hold what the
+artifact actually owes, and it would have been unfixable later: the format's one free schema change
+at `bundle_version` 1 is being spent here (below), so a second member added afterwards would need the
+increment this corrigendum exists to avoid.
+
+**Two limits on what this establishes, stated because the obvious phrasing overstates both**
+(`docs/01` principle 3):
+
+- **The format checks that a declaration is present and points at a hash-listed file. It cannot
+  check what is in it.** A `notice_path` naming `viewer/app.js` satisfies every mechanical rule
+  here. What is true by construction is that a bundle without a *declaration* does not exist; that
+  the declaration is *accurate* is the publisher's claim, exactly as `license.state` is.
+- **The notice cannot be stripped without an *external* verifier noticing — not without the bundle's
+  own viewer noticing.** §14 already says a viewer shipped inside a bundle **cannot verify itself**,
+  and the reference reader deliberately never fetches or hashes `viewer[]` entries. Delete the notice
+  file from a distributed bundle and the reference viewer still loads. The hash coverage is real and
+  is worth having; its audience is the external verifier §14 already names.
+
+#### `bundle_version` stays 1 — and this is a breaking change at a constant version
+
+**Not "additive evolution".** §9 describes exactly what this does: *"a format that gained these
+members later would break every existing reader at the **key** level."* A conforming v1 reader
+computes exact key sets, so this corrigendum breaks **every** such reader on **every** bundle,
+immediately. Calling it additive would be false.
+
+It stays at 1 because **the population it breaks is empty**, as a dated fact:
+
+> **As of 2026-08-07, `bundle_version` 1 has no external readers and no bundle has been distributed
+> outside this repository.** The only conforming readers are `renderer/bundle-viewer/` and
+> `kernel/`, both amended in this same change. The only manifests on disk are build output under
+> `target/`, which is git-ignored and has never left the machine. Nothing in this repository
+> uploads, hosts or serves a bundle; ADR-017's own Status confines `publish-bundle` to developer and
+> test tooling. The repository is not public — ADR-009's pre-public checklist gates that, and this
+> corrigendum is item 3 of it.
+
+**Corrigendum 1 is not cited as precedent, and does not authorise this.** C1 widened one member's
+*type* and said so in as many words — *"§3's unknown-**key** rule is untouched and the key set is
+unchanged"* — and closed by declining to generalise itself. A key addition was not before it. What
+this corrigendum shares with C1 is **the fact**, not the reasoning, and the fact is re-established
+above rather than inherited.
+
+**C1's cost argument is deliberately not reused, because it does not survive §3.** C1 argued a bump
+"would turn every in-repo fixture into a v1 artifact a v2 reader must then carry". Under §3 a reader
+*refuses* a version it does not implement, so a v2 reader carries nothing: the fixtures are
+regenerated and the v1 path is deleted. The argument that does hold is a different one —
+**`bundle_version` records the format's *public* evolution. Incrementing it before any v1 artifact
+existed outside this repository would make the version number a log of internal drafts, and would
+spend the format's one compatibility signal on a population of zero.**
+
+**§9's reservations are untouched by this.** Filling `derived_caches` or turning on `query_surface`
+still requires an increment, for §9's own reason and not for the population's: v1 defines no entry
+shape and no query surface, so a v1 reader refusing them is refusing something it genuinely cannot
+describe. That argument is independent of who is reading.
+
+**This exception is now spent.** No further schema change — key, type, or nested member — is
+available at `bundle_version` 1. The fact both corrigenda rest on ends at the first bundle published
+outside this repository or the first external reader written against v1, and **this corrigendum's own
+purpose is to unblock the event that ends it**. After this, §3's version rule governs without
+exception.
+
+#### What is *not* changed, said explicitly
+
+- **§8's digest input set is unchanged, and `viewer_license` is outside it.** §8 excludes `license`
+  entirely and answers "what was asked for" about the **data operation**. A corresponding-source
+  route is distribution packaging: including it would make two bundles of an identical operation
+  digest differently because their route text differs — the same failure §8 avoids by excluding
+  software versions. What covers `viewer_license` is §12's byte-identity over `manifest.json`, the
+  "determinism surface, not hashed surface" distinction §10 already draws. The **bytes** at
+  `notice_path` are hash-covered through `viewer[]`; the **declaration about them** is not.
+- **§12 needs no amendment.** Its guarantee already reads on "publish parameters", and this is a new
+  required parameter.
+- **§2 needs no amendment**, and its list of four free-prose members is left as accepted. `program`,
+  `copyright` and `corresponding_source.at` are **operator inputs** in the same class as
+  `license.attribution` and `license.by`, which §2 does not list either; `note` is quoted verbatim
+  above and so is fully specified. *Recorded as an observation, not a correction:* §2's list of four
+  is already under-inclusive — `software.note`, `sidecar.note`, `query_surface.reserved_for` and the
+  `not-declared` `basis` are writer constants whose wording the body does not fix, and none appears
+  in it. This corrigendum does not widen that set and does not repair it.
+- **§6 owes no ResourceRef here.** `docs/11`'s typed-artifact list does not include a program's
+  notice file, and the consistency test is short: if this file owed a ResourceRef, `viewer/app.js`
+  would owe one too, and §6 asked for three refs, not one per asset. The notice is a viewer asset and
+  is carried as one, with path, bytes and content hash.
+- **§15's class-3 position is unchanged.** Publishing stays `irreversible`, declared on the API. The
+  scoped publish grant, explicit approval and redacted audit record the Status block's acceptance
+  condition attaches remain **owed and absent**. This changes what a manifest must *say*, not what a
+  publish is permitted to *do*.
+
+#### §14 — what a reader must now verify, and must now display
+
+**Verify:** `viewer_license`'s key sets exactly, its four string members non-empty,
+`corresponding_source.kind` one of the two, and **`notice_path` equal to the `path` of some entry in
+`viewer[]`**. A reader **must not fetch or hash the notice file**: §14 already establishes that a
+viewer inside a bundle cannot verify itself, and hashing its own notice in-browser would be that
+same failure wearing a licence.
+
+**Failure state: `manifest-schema-invalid`**, reusing an existing state rather than adding one, so
+§14's normative list stays closed. The precedent is inside the accepted body — a non-empty
+`derived_caches` and an `available: true` query surface are **semantic** refusals already reported
+under it. **The consequence is owned rather than discovered: a defect in licensing metadata stops
+loading before anything is drawn, so it means no map at all.** That is the correct fail-closed
+direction for a term the recipient is subject to, and it is a decision, not a detail.
+
+**Display:** `program`, `copyright`, `license`, and resolvable references to `notice_path` and
+`corresponding_source.at`, in the same surface as the data license (§10's block, which the reference
+viewer already renders). Carrying the code's license and never showing it would leave a bundle
+displaying the *data*'s terms while silent about the terms of the *code the recipient is running* —
+and §14 is "what a conforming reader must verify, **and do**", already carrying a display obligation
+for the identity facts.
+
+#### §15 — three typed refusals
+
+- **`viewer_license` absent or any member blank** → refused. This is what makes "every bundle carries
+  it" a property of the operation rather than a convention.
+- **`notice_path` naming no entry in the emitted `viewer[]`** → refused. **The namespaces are the
+  trap here**: `ViewerAssets` paths are viewer-relative (`NOTICE.txt`), manifest `viewer[]` paths are
+  bundle-relative (`viewer/NOTICE.txt`, prefixed by the publisher). The manifest carries the
+  bundle-relative form, because §14 requires every asset path to be bundle-relative and a reader can
+  cross-check only what the manifest carries.
+- **`kind: "url"` whose `at` is not `http`/`https`** → refused. A `file:///C:/…` route is both a §13
+  redaction leak and not a durable route in ADR-009 item 7's sense.
+
+#### `docs/09` and §13 — a new operator-controlled channel into the manifest
+
+`corresponding_source.at` and `copyright` are operator text landing in a redistributable artifact.
+Three things are named rather than left to be discovered:
+
+- The `http`/`https` refusal above closes the obvious filesystem-path leak. It does not close every
+  one.
+- **`kind: "written-offer"` will ordinarily carry a name and a postal address** — personal data
+  entering a redistributable artifact, which is the class ADR-009's own checklist item 6 flags.
+- **A required copyright notice forces this document's own vocabulary to grow one class.**
+  `kernel/src/bundle/redaction.rs` scans for the *machine's* username; ADR-009 item 7 requires every
+  manifest to carry a copyright notice; a copyright notice names a person; and on a
+  single-maintainer machine that person's name **is** the login name. The scan cannot tell a leaked
+  identity from a declared one by looking at bytes, so the **caller supplies the strings it
+  deliberately published** and a match lying *wholly inside one of them* is reported under a new
+  class, `operator-declared`, instead of `username`. It is re-classed, never suppressed: a finding
+  that vanished would make the copyright member a place for a real leak to hide.
+  - **The re-class reaches identity classes only — `username` and `machine-identifier`.** A
+    `credential` or a `local-filesystem-path` inside a declared string keeps its own class and stays
+    a leak. The argument above is about *identity* and does not reach a secret; `docs/09` makes
+    credential redaction unconditional. The concrete case: a route of
+    `https://example.org/src?api_key=…` puts a real credential wholly inside a declaration, and
+    excusing it would let the redaction test pass with a live secret in the bundle.
+  - A declared string shorter than §13's printable-run floor is ignored, so the mechanism cannot be
+    used to switch the scan off.
+- §13's stated limits still apply and are not weakened: a byte scan is a necessary and never a
+  sufficient condition, and an email address or a personal name is not a class it knows.
+
+#### Consequence corrected
+
+This document's first Consequence says `docs/14` is satisfied for the format and **"ADR-009 is not
+triggered by publishing a bundle to a directory. But viewer code embedded in a distributed bundle
+*is* distributed code, and its licensing is ADR-009's question, unsettled here."** The second half is
+now settled: ADR-009 (Accepted 2026-08-07) item 7 requires the notice and the route, and this
+corrigendum is the format's discharge of it. The first half is unaffected.

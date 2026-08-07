@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * The bundle viewer: load a static bundle from the directory it is served from, verify it, and draw
  * it on a projected canvas in the source CRS.
@@ -41,6 +44,7 @@
 import { BundleFailure, showFailure } from './failure.js';
 import {
   licenseSummary,
+  viewerLicenseSummary,
   parseManifest,
   type FetchableAsset,
   type Manifest,
@@ -219,6 +223,44 @@ function renderProvenance(m: Manifest): void {
   // `(unnamed)` for an unnamed license — the old manifest placeholder, relocated to the pixels,
   // with no test in reach of it.
   text('license', licenseSummary(m.license));
+
+  // **The code's own terms, displayed rather than merely carried** (§14 as ADR-017 Corrigendum 3
+  // amends it, discharging ADR-009 item 7). One line per fact, because collapsing a copyright, a
+  // license and a corresponding-source route onto one line is how a notice becomes decoration.
+  //
+  // `notice_path` and an `http(s)` route are rendered as links, so "durable route" means something
+  // a reader can follow rather than a string they must retype. A `written-offer` route carries no
+  // `href` and is shown as text — there is nothing to link to, and linkifying it would invent a
+  // destination.
+  const el = document.getElementById('viewer-license');
+  if (el) {
+    el.replaceChildren();
+    for (const line of viewerLicenseSummary(m.viewerLicense)) {
+      const row = document.createElement('div');
+      if (line.href === undefined) {
+        row.textContent = line.text;
+      } else {
+        // **`bundleUrl` for a bundle-relative href, the value as-is for an absolute one.**
+        // `notice_path` is *bundle*-relative (`viewer/NOTICE.txt`) while this page lives at
+        // `viewer/index.html`, so a bare relative href would resolve to `viewer/viewer/NOTICE.txt`
+        // and the one link in the notice would 404. `bundleUrl` is the same resolution `fetchAsset`
+        // uses for every other asset.
+        //
+        // The scheme was already checked in `parseManifest`, which refuses a `url` route that is
+        // not `http`/`https` — so a `javascript:` route never reaches this line. That check lives
+        // there rather than here because a manifest is untrusted input and the refusal belongs
+        // where the document is judged, not where it is drawn.
+        const a = document.createElement('a');
+        // `textContent`, never `innerHTML`: a copyright notice is operator-controlled manifest text
+        // and `docs/09` names manifest metadata as untrusted input.
+        a.textContent = line.text;
+        a.href = /^https?:\/\//.test(line.href) ? line.href : bundleUrl(line.href);
+        a.rel = 'noopener noreferrer';
+        row.appendChild(a);
+      }
+      el.appendChild(row);
+    }
+  }
 }
 
 function redraw(): void {

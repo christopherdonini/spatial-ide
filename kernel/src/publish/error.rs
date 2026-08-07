@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Typed refusals for publishing.
 //!
 //! `docs/05`: a refusal is "an **error**, not a warning". Every way this operation can decline is a
@@ -63,6 +66,29 @@ pub enum PublishError {
 
     /// A viewer asset's path is not a safe bundle-relative path.
     ViewerAssetPathRejected { path: String, detail: String },
+
+    /// A required `viewer_license` member is empty or only whitespace.
+    ///
+    /// ADR-009 item 7 requires **every** bundle to carry the distributed code's notice and a
+    /// corresponding-source route, and ADR-017 Corrigendum 3 types all four string members as
+    /// non-empty. That is a property of the operation only if the blank one is refused — a bundle
+    /// declaring a program with no name, or a route with no destination, would satisfy the schema's
+    /// shape while carrying nothing a recipient can act on.
+    ViewerLicenseIncomplete { member: &'static str },
+
+    /// `viewer_license.notice_path` names no viewer asset.
+    ///
+    /// The notice must be a file the bundle actually contains and the manifest actually hashes,
+    /// or the declaration points at nothing. **Both namespaces are reported** because they are the
+    /// trap: the caller supplies a viewer-relative path (`NOTICE.txt`) and the manifest carries the
+    /// bundle-relative one (`viewer/NOTICE.txt`).
+    ViewerLicenseNoticeMissing { notice_path: String, bundle_relative: String, available: Vec<String> },
+
+    /// A `url` corresponding-source route whose scheme is not `http` or `https`.
+    ///
+    /// A `file:///C:/…` route is a `docs/09` redaction leak *and* is not durable in ADR-009 item 7's
+    /// sense — it names a location on the publisher's own machine, which no recipient can follow.
+    CorrespondingSourceNotDurable { at: String },
 
     /// The dataset name cannot become a logical URI.
     ///
@@ -137,10 +163,36 @@ impl std::fmt::Display for PublishError {
                  somebody claimed something (ADR-017 §5, Corrigendum 1) — declare a license, or \
                  declare nothing and let the manifest record `not-declared`"
             ),
+            // The trailing clause names the *asset* case, which is the one with a write primitive
+            // behind it. `admit_viewer_license` reuses this variant for `notice_path`, which is
+            // compared and prefixed rather than joined onto a staging root — so the sentence is
+            // scoped rather than stated flatly, and both callers' messages stay true.
             Self::ViewerAssetPathRejected { path, detail } => write!(
                 f,
-                "refused: viewer asset path `{path}` {detail}. An unvalidated asset path joined \
-                 onto a staging root writes wherever the caller likes"
+                "refused: bundle path `{path}` {detail}. Bundle paths are relative, and for a \
+                 viewer asset an unvalidated one joined onto a staging root writes wherever the \
+                 caller likes"
+            ),
+            Self::ViewerLicenseIncomplete { member } => write!(
+                f,
+                "refused: `viewer_license.{member}` is empty. A published bundle distributes the \
+                 viewer's code, so ADR-009 item 7 requires it to carry that code's copyright and \
+                 license notice and a durable corresponding-source route — every member of the \
+                 declaration is non-empty (ADR-017 Corrigendum 3), because a blank is not a notice"
+            ),
+            Self::ViewerLicenseNoticeMissing { notice_path, bundle_relative, available } => write!(
+                f,
+                "refused: `viewer_license.notice_path` is `{notice_path}` (which would be \
+                 `{bundle_relative}` in the bundle), and no viewer asset has that path. The notice \
+                 must be a file the bundle carries and the manifest hashes, or the declaration \
+                 points at nothing. Viewer assets supplied: {available:?}"
+            ),
+            Self::CorrespondingSourceNotDurable { at } => write!(
+                f,
+                "refused: corresponding-source route `{at}` is declared as a URL but is not http or \
+                 https. A route on the publisher's own machine is one no recipient can follow, and \
+                 it walks a filesystem path into a redistributable artifact (docs/09, ADR-017 §13). \
+                 Use an http(s) URL, or declare `written-offer` instead"
             ),
             Self::DatasetNameRejected { name, detail } => write!(
                 f,

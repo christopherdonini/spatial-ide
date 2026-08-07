@@ -1,4 +1,7 @@
 <!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors -->
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -110,6 +113,22 @@
             viewer-asset hashes are for an external verifier, and the chain of trust does not close
             inside the browser.
           </div>
+        </section>
+
+        <!--
+          The terms of the CODE this page is, as distinct from the terms of the DATA it draws.
+          Required in every bundle by ADR-009 item 7 and made a normative display obligation by
+          ADR-017 Corrigendum 3: a bundle that showed the data's license while staying silent about
+          the license of the program the recipient is running is exactly what the obligation exists
+          to prevent. Its own section rather than another line under Provenance, because it is not
+          provenance — it is a notice addressed to the reader.
+
+          `#viewer-license` is filled by `renderProvenance` in main.ts, which fails silently if this
+          id is absent — so `boundaries.test.mjs` asserts the id is here and that main.ts asks for it.
+        -->
+        <section>
+          <h2>This viewer</h2>
+          <div class="fact" id="viewer-license"></div>
         </section>
 
         <section>

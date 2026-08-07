@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // Two boundaries this module has to hold, checked mechanically rather than remembered.
 //
 // 1. **Zero external requests.** The brief requires the viewer to work from any generic static file
@@ -95,4 +98,35 @@ test('no source in renderer/ refers to the canvas probe', () => {
     if (readFileSync(path, 'utf8').includes('canvas-probe')) offenders.push(path);
   }
   assert.deepEqual(offenders, [], `renderer/ refers to the probe outside its README`);
+});
+
+test('the viewer notice has somewhere to render, and the page asks for it', () => {
+  // §14 as ADR-017 Corrigendum 3 amends it makes **displaying** the distributed code's terms
+  // normative — carrying them and never showing them is the thing ADR-009 item 7 exists to prevent.
+  //
+  // `main.ts` does `const el = document.getElementById('viewer-license'); if (el) { … }`, which
+  // **fails silently**: rename the id in either file and the notice quietly stops rendering while
+  // every other test stays green, because `viewerLicenseSummary` is a pure function and knows
+  // nothing about the DOM. This is the only check that ties the two ends together.
+  const html = readFileSync('dist/index.html', 'utf8');
+  const app = readFileSync('dist/app.js', 'utf8');
+
+  assert.match(html, /id="viewer-license"/, 'index.html has no element for the viewer notice');
+  assert.ok(
+    app.includes('viewer-license'),
+    'the built viewer never looks up the notice element, so the notice would never render',
+  );
+
+  // The notice belongs in its own section, not folded into Provenance: it is a notice addressed to
+  // the reader rather than a fact about the data. Asserted because an edit that merged the two
+  // would lose that distinction silently.
+  assert.match(html, /<h2>This viewer<\/h2>\s*<div class="fact" id="viewer-license">/,
+    'the viewer notice is not the content of its own section');
+
+  // …and Provenance keeps the three notes that describe the *data*. An earlier edit moved the
+  // section boundary and swallowed them into the viewer notice.
+  const provenance = html.slice(html.indexOf('<h2>Provenance</h2>'), html.indexOf('<h2>This viewer</h2>'));
+  for (const fragment of ['No basemap', 'Verified before drawing', 'Carried but not checked']) {
+    assert.ok(provenance.includes(fragment), `Provenance lost its "${fragment}" note`);
+  }
 });

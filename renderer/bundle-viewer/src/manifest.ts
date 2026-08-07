@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Reading the manifest, and refusing one this build does not implement.
  *
@@ -54,8 +57,8 @@ export const SUPPORTED_BUNDLE_VERSION = 1;
 export const MANIFEST_KEY_SETS: Readonly<Record<string, readonly string[]>> = {
   $: [
     'bundle_version', 'bundle', 'source', 'source_verification', 'style', 'software', 'operation',
-    'crs', 'identity', 'schema', 'bounds', 'data', 'viewer', 'license', 'reproducibility',
-    'derived_caches', 'query_surface', 'sidecar',
+    'crs', 'identity', 'schema', 'bounds', 'data', 'viewer', 'viewer_license', 'license',
+    'reproducibility', 'derived_caches', 'query_surface', 'sidecar',
   ],
   resource_ref: [
     'logical_uri', 'content_hash', 'source_revision', 'locators', 'cache_status',
@@ -90,6 +93,8 @@ export const MANIFEST_KEY_SETS: Readonly<Record<string, readonly string[]>> = {
   '$.data': ['rows', 'format', 'partitions'],
   partition: ['path', 'bytes', 'content_hash', 'rows'],
   viewer_asset: ['path', 'bytes', 'content_hash'],
+  viewer_license: ['program', 'copyright', 'license', 'notice_path', 'corresponding_source'],
+  viewer_license_corresponding_source: ['kind', 'at', 'note'],
   license_not_declared: ['state', 'basis'],
   license_declared_by_source: ['state', 'license', 'attribution', 'redistribution'],
   license_declared_by_operator: [
@@ -128,6 +133,23 @@ export interface ManifestColumn {
   nullable: boolean;
 }
 
+/**
+ * The notice a bundle carries for **the code it is running**, as opposed to the data it is drawing.
+ *
+ * ADR-017 Corrigendum 3, discharging ADR-009 item 7. A viewer that carried this and never showed it
+ * would leave a page displaying the *data*'s terms while silent about the terms of the *program the
+ * recipient is running*, which is the thing the obligation exists to prevent — so §14 makes
+ * displaying it normative and `main.ts` renders every field below.
+ */
+export interface ViewerLicenseNotice {
+  program: string;
+  copyright: string;
+  license: string;
+  /** Bundle-relative, and guaranteed to be one of the `viewer[]` entries. */
+  noticePath: string;
+  correspondingSource: { kind: 'url' | 'written-offer'; at: string };
+}
+
 export interface Manifest {
   bundleVersion: number;
   crsSource: string;
@@ -151,7 +173,10 @@ export interface Manifest {
    */
   viewerAssets: ViewerAsset[];
   style: FetchableAsset & { styleVersion: number; matchColumn: string | null };
+  /** The **data**'s terms (§10). */
   license: Record<string, unknown>;
+  /** The **distributed code**'s terms (Corrigendum 3). A different question from `license`. */
+  viewerLicense: ViewerLicenseNotice;
   reproducibilityGrade: string;
 }
 
@@ -293,7 +318,25 @@ function safeRelativePath(path: string, at: string): string {
     path.startsWith('/') ||
     path.includes('..') ||
     path.includes('\\') ||
-    /^[A-Za-z]:/.test(path)
+    // **Any URI scheme, not just a drive letter.** This rule used to be `/^[A-Za-z]:/` — a *single*
+    // letter then a colon — which catches `C:/evil` and lets an absolute `http(s)` URL, a `data:`
+    // payload or a `javascript:` value straight through, because their second character is not a
+    // colon.
+    //
+    // That was not cosmetic. Every path this function blesses is handed to `bundleUrl`, which is
+    // `new URL(path, BUNDLE_BASE)` — and `new URL` resolves an absolute URL by *ignoring the base*.
+    // So a manifest listing a partition at an attacker's origin made this page `fetch()` from it,
+    // before any hash check could reject the bytes: the request has already been sent by the time
+    // the content hash fails. A manifest is untrusted input in the `docs/09` sense, and ADR-017 §14
+    // requires every asset path to be bundle-relative — an absolute URL is not one.
+    //
+    // *(No example URL is written literally in this comment, because `boundaries.test.mjs` refuses
+    // any absolute URL anywhere in the built `dist/app.js` and esbuild keeps comments. That test is
+    // right to have no allowlist; the cases live in `manifest.test.mjs` instead.)*
+    //
+    // The scheme grammar is RFC 3986's: a letter followed by letters, digits, `+`, `-` or `.`, then
+    // a colon. Anchored, so an ordinary relative path with a colon later in it is unaffected.
+    /^[A-Za-z][A-Za-z0-9+.-]*:/.test(path)
   ) {
     fail('manifest-schema-invalid', `${at} "${path}" is not a safe bundle-relative path`);
   }
@@ -327,6 +370,90 @@ function viewerAsset(v: unknown, at: string): ViewerAsset {
     bytes: int(o.bytes, `${at}.bytes`),
     contentHash: str(o.content_hash, `${at}.content_hash`),
   };
+}
+
+/**
+ * The **distributed code's** terms (ADR-017 Corrigendum 3, discharging ADR-009 item 7).
+ *
+ * Not to be confused with [`licenseBlock`] below, which carries the terms of the **data**. This
+ * page is the code; that block is about what the page draws.
+ *
+ * ## The cross-check is the part the mutation sweep cannot reach
+ *
+ * `notice_path` must equal the `path` of one entry in `viewer[]` — a relation between two members
+ * rather than a key set or a type, which is the one class
+ * `renderer/tests/data/manifest-key-sets.json` cannot express and the sweep in
+ * `scripts/manifest.test.mjs` does not walk. It has its own negative test for exactly that reason.
+ *
+ * **What is deliberately not done: the notice file is not fetched and not hashed.** §14 establishes
+ * that a viewer shipped inside a bundle cannot verify itself, and the manifest's viewer-asset hashes
+ * are for an *external* verifier. A page hashing its own notice would be that same broken chain of
+ * trust wearing a licence — it would prove only that the bytes it was served match the manifest it
+ * was served alongside.
+ */
+function viewerLicenseBlock(
+  v: unknown,
+  viewerPaths: readonly string[],
+): ViewerLicenseNotice {
+  const at = '$.viewer_license';
+  const o = obj(v, at);
+  exactKeys(o, at, MANIFEST_KEY_SETS.viewer_license);
+
+  const program = nonEmptyStr(o.program, `${at}.program`);
+  const copyright = nonEmptyStr(o.copyright, `${at}.copyright`);
+  const license = nonEmptyStr(o.license, `${at}.license`);
+  const noticePath = safeRelativePath(
+    nonEmptyStr(o.notice_path, `${at}.notice_path`),
+    `${at}.notice_path`,
+  );
+
+  if (!viewerPaths.includes(noticePath)) {
+    fail(
+      'manifest-schema-invalid',
+      `${at}.notice_path "${noticePath}" names no entry in $.viewer; the notice must be a file ` +
+        `this bundle carries and the manifest hashes, or the declaration points at nothing`,
+    );
+  }
+
+  const cs = obj(o.corresponding_source, `${at}.corresponding_source`);
+  exactKeys(
+    cs,
+    `${at}.corresponding_source`,
+    MANIFEST_KEY_SETS.viewer_license_corresponding_source,
+  );
+  const kind = nonEmptyStr(cs.kind, `${at}.corresponding_source.kind`);
+  // Two kinds, closed. A third is an offer this reader cannot describe to the person reading it,
+  // and describing it wrongly is worse than refusing — the same argument §8's `filter` makes.
+  if (kind !== 'url' && kind !== 'written-offer') {
+    fail(
+      'manifest-schema-invalid',
+      `${at}.corresponding_source.kind "${kind}" is not a route kind this version defines`,
+    );
+  }
+  const routeAt = nonEmptyStr(cs.at, `${at}.corresponding_source.at`);
+
+  // **A `url` route's scheme is checked here too, not only in the publisher.**
+  //
+  // The publisher refuses anything but `http`/`https` — but a manifest arrives from wherever the
+  // bundle was served from and is untrusted input in the `docs/09` sense, exactly as
+  // `safeRelativePath` says of asset paths one function up: "a reader that trusted the manifest for
+  // this would be trusting a file it was handed". A reader that skipped this would render
+  // `javascript:…` as a clickable link in a page holding the viewer's own origin, because
+  // `main.ts` puts this value straight into an `href`. Writer-side validation does not reach a
+  // bundle the writer did not produce.
+  //
+  // `file://` is refused for the same reason it is on the writing side: it is not a route any
+  // recipient can follow, and it names a location on somebody's disk.
+  if (kind === 'url' && !/^https?:\/\/\S/.test(routeAt)) {
+    fail(
+      'manifest-schema-invalid',
+      `${at}.corresponding_source.at "${routeAt}" is declared a url but is not http or https`,
+    );
+  }
+
+  str(cs.note, `${at}.corresponding_source.note`);
+
+  return { program, copyright, license, noticePath, correspondingSource: { kind, at: routeAt } };
 }
 
 /** The license block, whose member set depends on its declared state (§10). */
@@ -470,6 +597,49 @@ export function licenseSummary(license: Record<string, unknown>): string {
   return `license: ${name}${attribution} (${state})`;
 }
 
+/** One line of the viewer's own notice, and where it points if it points anywhere. */
+export interface NoticeLine {
+  text: string;
+  /**
+   * A **bundle-relative** path or an absolute `http(s)` URL, or `undefined` for a line that is
+   * prose. Never a resolved URL: resolving is the page's job, because only the page knows where the
+   * bundle root is.
+   */
+  href?: string;
+}
+
+/**
+ * The lines a viewer must show about **the code it is running** (§14, as Corrigendum 3 amends it).
+ *
+ * A pure function of the parsed block, for the same reason [`licenseSummary`] is one: it can be
+ * tested without a DOM, and the thing being tested is what a recipient is actually told.
+ *
+ * Returned as lines rather than one string because this is a notice and not a status field —
+ * collapsing a copyright, a license and a source route onto one line is how a notice becomes
+ * decoration.
+ *
+ * **Each line carries its own `href` rather than the page re-deriving one by matching the text.**
+ * The first version returned plain strings and `main.ts` looked each one up in a map keyed by the
+ * exact rendered sentence — so rewording a line here would have silently turned its link back into
+ * text, with nothing failing. A link that quietly stops being a link is the wrong failure mode for
+ * the one route a recipient has to the source.
+ */
+export function viewerLicenseSummary(v: ViewerLicenseNotice): NoticeLine[] {
+  const url = v.correspondingSource.kind === 'url';
+  return [
+    { text: `${v.program} — ${v.license}` },
+    { text: v.copyright },
+    { text: `notices: ${v.noticePath}`, href: v.noticePath },
+    {
+      text: url
+        ? `corresponding source: ${v.correspondingSource.at}`
+        : `corresponding source, by written offer: ${v.correspondingSource.at}`,
+      // A written offer is prose with no destination. Linkifying it would invent one.
+      href: url ? v.correspondingSource.at : undefined,
+    },
+  ];
+}
+
 export function parseManifest(text: string): Manifest {
   let root: unknown;
   try {
@@ -559,6 +729,15 @@ export function parseManifest(text: string): Manifest {
   exactKeys(data, '$.data', MANIFEST_KEY_SETS['$.data']);
   formatBlock(data.format, '$.data.format');
 
+  // Hoisted above `viewer_license`, because that member's `notice_path` must name one of these and
+  // a reader cannot cross-check against a list it has not parsed yet. This is the mechanical reason
+  // `viewer_license` sits immediately after `viewer` in the key order (Corrigendum 3).
+  const viewerAssets = arr(m.viewer, '$.viewer').map((v, i) => viewerAsset(v, `$.viewer[${i}]`));
+  const viewerLicense = viewerLicenseBlock(
+    m.viewer_license,
+    viewerAssets.map((a) => a.path),
+  );
+
   const license = licenseBlock(m.license, '$.license');
 
   const repro = obj(m.reproducibility, '$.reproducibility');
@@ -618,7 +797,7 @@ export function parseManifest(text: string): Manifest {
     partitions: arr(data.partitions, '$.data.partitions').map((p, i) =>
       partitionAsset(p, `$.data.partitions[${i}]`),
     ),
-    viewerAssets: arr(m.viewer, '$.viewer').map((v, i) => viewerAsset(v, `$.viewer[${i}]`)),
+    viewerAssets,
     style: {
       path: safeRelativePath(
         str(firstLocator.at, '$.style.resource.locators[0].at'),
@@ -641,6 +820,7 @@ export function parseManifest(text: string): Manifest {
           : str(styleBlock.match_column, '$.style.match_column'),
     },
     license,
+    viewerLicense,
     reproducibilityGrade: str(repro.grade, '$.reproducibility.grade'),
   };
 }

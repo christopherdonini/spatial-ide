@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The **static bundle format**: layout, manifest, and the guarantees the manifest is allowed to
 //! make. Proposed as **ADR-017**.
 //!
@@ -315,6 +318,105 @@ impl License {
     }
 }
 
+/// Where the corresponding source of the distributed code was said to be available.
+///
+/// **Exactly two kinds, and a third is refused rather than carried** — the same closed-enumeration
+/// discipline [`Filter`] applies below, for the same reason: a shape a reader cannot describe is
+/// worse carried than refused.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CorrespondingSourceKind {
+    /// `at` is an `http`/`https` URL. Any other scheme is refused by the publisher: a `file:///…`
+    /// route is both a `docs/09` redaction leak and not a durable route in ADR-009 item 7's sense.
+    Url,
+    /// `at` is the text of a written offer. **Ordinarily carries a name and a postal address**, so
+    /// it is personal data entering a redistributable artifact — ADR-017 Corrigendum 3 names the
+    /// interaction with `redaction.rs` rather than leaving it to be discovered.
+    WrittenOffer,
+}
+
+impl CorrespondingSourceKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Url => "url",
+            Self::WrittenOffer => "written-offer",
+        }
+    }
+}
+
+/// The corresponding-source route ADR-009 item 7 requires every bundle to carry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CorrespondingSource {
+    pub kind: CorrespondingSourceKind,
+    pub at: String,
+}
+
+/// **A route recorded, not a guarantee**, and the wording is fixed here rather than left to a
+/// writer.
+///
+/// Quoted verbatim in ADR-017 Corrigendum 3, which is what keeps this member out of §2's set of
+/// strings an independent implementer cannot reproduce. Changing it here without changing it there
+/// makes the ADR wrong about its own format.
+pub const CORRESPONDING_SOURCE_NOTE: &str =
+    "a route recorded, not a guarantee. This format records where corresponding source was said to \
+     be available; it cannot establish that the route resolves, that it serves the source of this \
+     bundle's viewer, or that it will outlive this bundle. Verify by following it.";
+
+/// The **distributed code's** copyright notice, license, and corresponding-source route.
+///
+/// ADR-017 Corrigendum 3, discharging ADR-009 item 7. This is *not* [`License`]: that member carries
+/// the terms of the **data**, and this one carries the terms of the **program the recipient is
+/// running**. They sit next to each other in the manifest so the distinction is unmissable.
+///
+/// ## What this type establishes, and what it does not
+///
+/// The publisher refuses to build a bundle without one, and refuses a `notice_path` that does not
+/// name a hash-listed viewer asset — so a bundle with no declaration does not exist, and the notice
+/// file's bytes are covered by a content hash.
+///
+/// It cannot check what is *in* the notice file. A `notice_path` of `viewer/app.js` satisfies every
+/// mechanical rule here. Accuracy is the publisher's claim, exactly as `license.state` is, and
+/// ADR-017 Corrigendum 3 says so rather than letting the refusals imply more than they check.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ViewerLicense {
+    /// What is distributed, named. Non-empty.
+    pub program: String,
+    /// The copyright notice, verbatim. Non-empty.
+    pub copyright: String,
+    /// The license identifier, e.g. `AGPL-3.0-or-later`. Non-empty.
+    pub license: String,
+    /// **Bundle-relative** (`viewer/NOTICE.txt`), and equal to the `path` of one entry in `viewer[]`.
+    ///
+    /// The namespace is the trap: [`crate::publish::ViewerAsset`] paths are *viewer*-relative and
+    /// the publisher prefixes `viewer/` on the way out. The manifest carries the bundle-relative
+    /// form because §14 requires every asset path to be bundle-relative, and because a reader can
+    /// cross-check only against what the manifest actually carries.
+    ///
+    /// It names a notice **set**: the program's own notice *and* the retained notices of every
+    /// third-party work compiled into it. The built viewer bundles `apache-arrow` and `flatbuffers`
+    /// (Apache-2.0, with a NOTICE whose contents §4(d) requires to travel) and `tslib` (0BSD).
+    pub notice_path: String,
+    pub corresponding_source: CorrespondingSource,
+}
+
+impl ViewerLicense {
+    fn to_json(&self) -> Json {
+        Json::obj([
+            ("program", Json::str(self.program.clone())),
+            ("copyright", Json::str(self.copyright.clone())),
+            ("license", Json::str(self.license.clone())),
+            ("notice_path", Json::str(self.notice_path.clone())),
+            (
+                "corresponding_source",
+                Json::obj([
+                    ("kind", Json::str(self.corresponding_source.kind.as_str())),
+                    ("at", Json::str(self.corresponding_source.at.clone())),
+                    ("note", Json::str(CORRESPONDING_SOURCE_NOTE)),
+                ]),
+            ),
+        ])
+    }
+}
+
 /// The filter the operation applied, **named for what it is**.
 ///
 /// The engine filters on GeoParquet's covering-bbox columns. That is neither arbitrary SQL nor
@@ -599,6 +701,10 @@ pub struct Manifest {
     pub rows: u64,
     pub partitions: Vec<Asset>,
     pub viewer: Vec<Asset>,
+    /// The **distributed code's** terms (ADR-017 Corrigendum 3). Immediately before [`Self::license`]
+    /// — the *data*'s terms — because a reader parsing in order already holds `viewer` when it
+    /// reaches the member that must cross-check against it.
+    pub viewer_license: ViewerLicense,
     pub license: License,
     pub reproducibility: Reproducibility,
     pub source_verification: String,
@@ -697,6 +803,7 @@ impl Manifest {
                 ]),
             ),
             ("viewer", Json::Arr(self.viewer.iter().map(Asset::to_json).collect())),
+            ("viewer_license", self.viewer_license.to_json()),
             ("license", self.license.to_json()),
             ("reproducibility", self.reproducibility.to_json()),
             // **Reserved slots, present in v1 on purpose.** A reader refuses unknown keys, so a

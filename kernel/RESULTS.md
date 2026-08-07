@@ -1499,6 +1499,23 @@ cargo test --workspace                                   # 249 passed, 0 failed,
 (cd renderer/bundle-viewer && npm test)                  # 33 passed
 ```
 
+> **This recipe no longer runs unmodified on HEAD, as of 2026-08-07 — and it is left as written
+> because it is the recipe for the run recorded above, not a maintained script.** ADR-017
+> **Corrigendum 3** made five `publish-bundle` arguments required, so step 2 now needs them appended:
+>
+> ```sh
+>     --viewer-program "Spatial IDE bundle viewer" \
+>     --viewer-copyright "Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors" \
+>     --viewer-license AGPL-3.0-or-later \
+>     --viewer-notice NOTICE.txt \
+>     --corresponding-source-url https://<the public repository URL>
+> ```
+>
+> `NOTICE.txt` is generated into `renderer/bundle-viewer/dist/` by `npm run verify` in step 0, so it
+> is present wherever `--viewer` points. **The numbers above are unaffected**: they were taken on
+> the tree at `9c63c84` and describe it. Re-running on HEAD would be a different measurement of a
+> different tree and is not performed here.
+
 **Cancellation needs a real `CTRL_C_EVENT`.** `kill -INT` from a POSIX-emulating shell will let the
 publish run to completion and then report success; see defect 3 above, including the
 `SetConsoleCtrlHandler(NULL, FALSE)` detail without which `GenerateConsoleCtrlEvent` reports success
