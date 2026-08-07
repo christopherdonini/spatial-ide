@@ -1,0 +1,42 @@
+Spatial IDE documentation — the constitution (docs/00–14), the SKP protocol
+specification (docs/10), and the Architecture Decision Records in docs/adr/.
+
+Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+Licensed under the Creative Commons Attribution 4.0 International License
+(CC-BY-4.0).  You may copy, redistribute, remix, transform and build upon this
+material for any purpose, including commercially, provided you give appropriate
+credit, provide a link to the license, and indicate if changes were made.
+
+    https://creativecommons.org/licenses/by/4.0/
+
+SPDX-License-Identifier: CC-BY-4.0
+
+Per ADR-009 items 3 and 4: the SKP specification and documentation are
+CC-BY-4.0.  docs/14 makes the protocol specification and all file formats open
+permanently and unconditionally, and this license is how that promise is
+expressed for the documents themselves.
+
+Source code in this repository is AGPL-3.0-or-later, not CC-BY-4.0.  See
+/LICENSE and /LICENSES/README.md.
+
+
+================================================================================
+INCOMPLETE — THE VERBATIM LICENSE TEXT IS NOT YET IN THIS REPOSITORY
+================================================================================
+
+The grant above is real; the copy of the license that must accompany it is not
+here.  The verbatim CC-BY-4.0 legal code belongs at:
+
+    LICENSES/CC-BY-4.0.txt
+
+It is absent because the session that wrote this file was under a binding
+no-downloads constraint and the text exists nowhere on the machine — checked,
+not assumed.  It was deliberately not reproduced from memory.  LICENSES/README.md
+records what was searched.
+
+To finish this:
+
+    curl -o LICENSES/CC-BY-4.0.txt https://creativecommons.org/licenses/by/4.0/legalcode.txt
+
+Then delete this notice, from the line of `=` above to the end of the file.
