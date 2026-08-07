@@ -33,6 +33,7 @@ use parquet::basic::Compression;
 use parquet::file::properties::WriterProperties;
 use parquet::file::metadata::KeyValue;
 
+use crate::cancel::CancelToken;
 use crate::error::{EngineError, Result};
 use crate::wkb::encode_polygon;
 
@@ -145,8 +146,24 @@ pub struct FixtureSpec {
     pub seed: u64,
     pub crs_mode: CrsMode,
     pub with_covering_bbox: bool,
-    /// Rows per parquet row group / write call.
+    /// Rows per **write call**. Bounds the uninterruptible window during generation.
+    ///
+    /// **Not the row-group size** — that is [`Self::row_group_rows`], and conflating the two is the
+    /// mistake this comment used to invite: `chunk` says how much is built in memory before a
+    /// `write`, and the parquet writer buffers *across* writes until its own row-group limit.
     pub chunk: usize,
+    /// Rows per parquet **row group**, passed to `WriterProperties::set_max_row_group_size`.
+    ///
+    /// **This is a memory decision, not a layout preference.** `ArrowWriter` defaults to 1 048 576
+    /// rows per row group and buffers every column's encoded data until it flushes — so at the 5 GB
+    /// class that default holds well over a gigabyte before the first flush, which no bound in this
+    /// file could honour.
+    ///
+    /// **Defaulted to the writer's own 1 048 576 so every existing fixture stays byte-identical.**
+    /// `kernel/RESULTS.md` pins fixture geometry by exact byte counts, and silently changing the
+    /// row-group size would move those bytes for reasons unrelated to any measurement. A cut that
+    /// needs a different value registers it.
+    pub row_group_rows: usize,
     /// How the fixture carries feature identity. Exists so ADR-016's admission policy is exercised
     /// against real files rather than against hand-written schemas.
     pub identity: IdentityMode,
@@ -187,6 +204,8 @@ impl Default for FixtureSpec {
             crs_mode: CrsMode::DeclaredLv95,
             with_covering_bbox: true,
             chunk: 4_096,
+            // The `ArrowWriter` default, restated rather than left implicit — see the field.
+            row_group_rows: 1_048_576,
             identity: IdentityMode::NativeUnique,
             attributes: AttributeMode::None,
             license: LicenseMode::NotDeclared,
@@ -308,9 +327,106 @@ fn geo_metadata(spec: &FixtureSpec) -> String {
     )
 }
 
+/// Progress from a running generation, as an observer rather than a log line.
+///
+/// **The same shape as `PublishProgress` one crate up**, deliberately: the tree gets one progress
+/// idiom rather than two that a reader has to learn separately. A caller drives a UI, a heartbeat,
+/// or a silence watchdog from it — ADR-010 rule 7 requires a long-running operation's silence to be
+/// *detectable*, and a generation that reports nothing for 400 seconds is indistinguishable from a
+/// hang.
+pub trait FixtureProgress: Send + Sync {
+    /// One chunk is on its way to the writer.
+    ///
+    /// `bytes_written` is the writer's own count, **not** a `metadata()` call: at 403 chunks a
+    /// syscall per chunk would be an instrument that touches the filesystem it is measuring.
+    fn chunk_written(
+        &self,
+        chunk_index: usize,
+        features_written: usize,
+        features_total: usize,
+        bytes_written: u64,
+    );
+}
+
+/// A no-op observer, so the generation never branches on `Option` internally.
+struct SilentFixture;
+impl FixtureProgress for SilentFixture {
+    fn chunk_written(&self, _: usize, _: usize, _: usize, _: u64) {}
+}
+
 /// Write the fixture. Returns what was written.
+///
+/// Uncancellable and silent, for the hundreds of small fixtures in this workspace's tests that want
+/// neither. [`write_geoparquet_cancellable`] is the same operation with the two `docs/01` principle
+/// 7 properties attached; this is a wrapper over it, not a second implementation, so there is no
+/// second code path to keep in step.
 pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<FixtureFacts> {
+    write_geoparquet_cancellable(path, spec, &CancelToken::new(), None)
+}
+
+/// Write the fixture, **cancellable and progress-reporting** (`docs/01` principle 7).
+///
+/// ## Why an instrument gets principle 7 at all
+///
+/// Generating the `docs/07` 5 GB fixture takes minutes and writes gigabytes. `docs/01` principle 7
+/// is not conditioned on an operation being product code, and a test-support generator that could
+/// not be interrupted would leave a multi-gigabyte orphan on any Ctrl-C — which is the side effect,
+/// not the interruption, that matters.
+///
+/// **It is not a class-3 operation and deliberately acquires no grant, approval or audit record.**
+/// It writes only where its caller says, it is feature-gated test support, and routing an
+/// instrument through the authorization model would be the inverse of the argument that keeps
+/// `kernel/tests/publish.rs` on the unguarded path.
+///
+/// ## The uninterruptible window, named rather than implied
+///
+/// Cancellation is observed at the top of each chunk, **per row** inside the build loop, and after
+/// each `write`. So the uninterruptible window is **one chunk's encode, compress and row-group
+/// write** — and, separately and smaller, `ArrowWriter::close`, which writes the footer. Both are
+/// bounded by [`FixtureSpec::chunk`] and [`FixtureSpec::row_group_rows`]; neither is claimed to be
+/// zero.
+///
+/// ## On cancel the partial file is removed, and the removal outcome is reported
+///
+/// The same discipline `publish`'s staging directory gets (ADR-010 rule 7): a cleanup failure is
+/// carried out to the caller rather than swallowed, because a 5 GB orphan nobody was told about is
+/// worse than an error.
+pub fn write_geoparquet_cancellable(
+    path: impl AsRef<Path>,
+    spec: &FixtureSpec,
+    cancel: &CancelToken,
+    progress: Option<&dyn FixtureProgress>,
+) -> Result<FixtureFacts> {
     let path = path.as_ref();
+    let silent = SilentFixture;
+    let progress: &dyn FixtureProgress = progress.unwrap_or(&silent);
+
+    match generate(path, spec, cancel, progress) {
+        Ok(facts) => Ok(facts),
+        Err(e) => {
+            // The partial file is the side effect; removing it is the recovery policy, and its
+            // outcome is reported rather than swallowed.
+            if path.exists() {
+                if let Err(io) = std::fs::remove_file(path) {
+                    return Err(EngineError::Source(format!(
+                        "fixture generation failed ({e}) and the partial file `{}` could not then \
+                         be removed ({io}). Both are reported: the first is what went wrong, the \
+                         second is what is still on disk",
+                        path.display()
+                    )));
+                }
+            }
+            Err(e)
+        }
+    }
+}
+
+fn generate(
+    path: &Path,
+    spec: &FixtureSpec,
+    cancel: &CancelToken,
+    progress: &dyn FixtureProgress,
+) -> Result<FixtureFacts> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| EngineError::Source(format!("mkdir: {e}")))?;
     }
@@ -340,6 +456,9 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
     let props = WriterProperties::builder()
         .set_compression(Compression::SNAPPY)
         .set_key_value_metadata(Some(kv))
+        // See `FixtureSpec::row_group_rows`. Defaulted to the writer's own value, so this line
+        // changes no existing fixture's bytes.
+        .set_max_row_group_row_count(Some(spec.row_group_rows))
         .build();
     let mut writer = ArrowWriter::try_new(file, schema.clone(), Some(props))
         .map_err(|e| EngineError::Source(format!("parquet writer: {e}")))?;
@@ -352,7 +471,12 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
     };
 
     let mut written = 0usize;
+    let mut chunk_index = 0usize;
     while written < spec.features {
+        // Before any building: a cancel observed here costs nothing at all.
+        if cancel.is_cancelled() {
+            return Err(EngineError::Cancelled);
+        }
         let n = spec.chunk.min(spec.features - written);
 
         let mut ids = UInt64Builder::with_capacity(n);
@@ -368,6 +492,12 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
         );
 
         for i in 0..n {
+            // **Per row, not only per chunk.** One feature is ~1 µs of geometry, so an atomic load
+            // here is free — and at the 5 GB class a chunk is 8 192 features, which is long enough
+            // that per-chunk alone would be a visibly unresponsive window.
+            if cancel.is_cancelled() {
+                return Err(EngineError::Cancelled);
+            }
             let id = (written + i) as u64;
             let rings = parcel(&mut rng, spec, id);
 
@@ -454,8 +584,25 @@ pub fn write_geoparquet(path: impl AsRef<Path>, spec: &FixtureSpec) -> Result<Fi
 
         written += n;
         facts.features += n;
+        // The writer's own count, not a `metadata()` syscall — an instrument that stat'ed the file
+        // once per chunk would be touching the filesystem it is measuring.
+        progress.chunk_written(chunk_index, written, spec.features, writer.bytes_written() as u64);
+        chunk_index += 1;
+
+        // Observed on both sides of the write, which is what makes the uninterruptible window "one
+        // chunk" rather than "however long the rest of the file takes".
+        if cancel.is_cancelled() {
+            return Err(EngineError::Cancelled);
+        }
     }
 
+    // **Unconditional, before `close`.** A cancel arriving during the final chunk must not produce
+    // a complete, valid, closed file that the caller then caches as a successful generation — the
+    // degenerate case where an interrupted build returns `Ok`. `close` itself is the second, smaller
+    // uninterruptible window: it writes the footer.
+    if cancel.is_cancelled() {
+        return Err(EngineError::Cancelled);
+    }
     writer.close().map_err(|e| EngineError::Source(format!("parquet close: {e}")))?;
     facts.bytes = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
     Ok(facts)
