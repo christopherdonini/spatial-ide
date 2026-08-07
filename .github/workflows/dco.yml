@@ -1,0 +1,156 @@
+name: DCO sign-off
+
+# **Every commit in a pull request carries a `Signed-off-by` trailer**, per ADR-009 item 2 and the
+# pre-public checklist's item 2. The Developer Certificate of Origin 1.1 text is in `/DCO`;
+# `CONTRIBUTING.md` says what signing off means and how to fix a commit that is missing it.
+#
+# ## What this checks, stated narrowly
+#
+# That a `Signed-off-by:` trailer is **present** on each non-merge commit in the pull request, and
+# that its `Name <email>` matches the commit's own author or committer identity.
+#
+# It does **not** establish that the signer had the right to submit the code — nothing mechanical
+# can. The DCO is an affirmation by a person; this workflow checks that the affirmation was made,
+# which is the only part a CI job is capable of.
+#
+# ## "External commits", and why the trigger is `pull_request` only
+#
+# ADR-009 item 2 says the check runs on "every external commit". Pull requests are the path an
+# external contribution takes, so that is the trigger, and **every** commit in the PR is checked
+# rather than only those from non-maintainers.
+#
+# The alternative — an allowlist of maintainer emails that skips their commits — is deliberately not
+# implemented. It would be a list to maintain, a hole to widen, and it would exempt exactly the
+# commits nobody else reviews. A maintainer typing `git commit -s` costs nothing.
+#
+# Pushes directly to a branch are not checked, because there is no base to diff against that means
+# anything, and because a repository with branch protection routes contributions through pull
+# requests anyway.
+#
+# ## Merge commits are skipped, and that is not a hole
+#
+# GitHub generates merge commits with no trailer and no author who could have signed one. Skipping
+# them is what every DCO implementation does; the commits that carry contributed code are the
+# non-merge ones, and those are all checked.
+#
+# > **Not a gate until it has gone green — the same caveat the two product CI workflows carry, and
+# > for the same reason.** As of 2026-08-07 no run of any workflow in this repository has been
+# > assigned a GitHub-hosted runner: three runs on 2026-08-06, across both `windows-latest` and
+# > `ubuntu-latest`, were each cancelled at exactly 15 minutes queued having executed no step. See
+# > the runner note in `product-ci-rust.yml` for the evidence and for what to check first
+# > (`Settings → Billing → Actions`). **Until a run here goes green this workflow is configuration
+# > that has never been exercised end to end, and nothing in this repository may cite it as a
+# > gate.** The sign-off requirement itself is real and is stated in `CONTRIBUTING.md`; what is
+# > unproven is that this file enforces it.
+
+on:
+  pull_request:
+    # `synchronize` matters: a contributor who force-pushes a fix must be re-checked, and the
+    # default event set does not include it.
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
+
+concurrency:
+  group: dco-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  signed-off-by:
+    name: every commit is signed off
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # `fetch-depth: 0` because the check reads a commit *range*. A shallow clone has no base
+      # commit to diff against, and the range would silently be empty — a check that passes because
+      # it examined nothing is worse than no check.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The script below is a YAML block scalar, so its indentation is stripped by 10 columns before
+      # bash sees it. **The `MSG` heredoc terminator sits at column 10 for exactly that reason** —
+      # it must land at column 0 in the stripped text, and `<<'MSG'` (not `<<-`) accepts no leading
+      # whitespace. Reindenting this block by any amount breaks it silently.
+      - name: Check Signed-off-by on every non-merge commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          # **Not an error.** `workflow_dispatch` has no pull request and therefore no commit range,
+          # and failing here would make the one manual way to get a green run guaranteed red — which
+          # matters precisely because no run of any workflow in this repository has ever started
+          # (see the header). A dispatch is how somebody checks that this file *runs at all*, so it
+          # succeeds and says what it did not do.
+          if [ -z "${BASE:-}" ] || [ -z "${HEAD:-}" ]; then
+            echo "No pull-request commit range: this run has no commits to check."
+            echo "The sign-off check runs on pull_request events. A manual dispatch exercises the"
+            echo "workflow's setup — checkout, shell, git availability — and nothing more."
+            exit 0
+          fi
+
+          # `--no-merges`: see the header. `%H` alone, so the loop body controls the formatting.
+          commits=$(git rev-list --no-merges "$BASE..$HEAD")
+
+          if [ -z "$commits" ]; then
+            echo "No non-merge commits in $BASE..$HEAD — nothing to check."
+            exit 0
+          fi
+
+          failed=0
+          checked=0
+          while read -r sha; do
+            checked=$((checked + 1))
+            subject=$(git log -1 --format='%s' "$sha")
+            author="$(git log -1 --format='%an <%ae>' "$sha")"
+            committer="$(git log -1 --format='%cn <%ce>' "$sha")"
+
+            # `%(trailers:key=Signed-off-by,valueonly)` uses git's own trailer parser rather than a
+            # grep over the message body. A grep would match the string anywhere — including inside
+            # a quoted diff or a code block in the commit body — and would miss the folded
+            # continuation lines the trailer syntax allows.
+            trailers=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly,unfold)' "$sha")
+
+            if [ -z "$(printf '%s' "$trailers" | tr -d '[:space:]')" ]; then
+              echo "::error::${sha} is not signed off — ${subject}"
+              failed=$((failed + 1))
+              continue
+            fi
+
+            # The trailer must match the author or the committer. Requiring a match is what stops a
+            # sign-off standing in somebody else's name; accepting *either* is what lets a
+            # maintainer rebase or cherry-pick a contributor's signed commit without invalidating
+            # the contributor's own affirmation.
+            if printf '%s\n' "$trailers" | grep -qxF "$author"; then
+              :
+            elif printf '%s\n' "$trailers" | grep -qxF "$committer"; then
+              :
+            else
+              echo "::error::${sha} is signed off, but by nobody who wrote or committed it — ${subject}"
+              echo "  author:      ${author}"
+              echo "  committer:   ${committer}"
+              echo "  signed off:  $(printf '%s' "$trailers" | tr '\n' ';')"
+              failed=$((failed + 1))
+            fi
+          done <<< "$commits"
+
+          echo
+          echo "Checked ${checked} non-merge commit(s); ${failed} failed."
+          if [ "$failed" -ne 0 ]; then
+            cat <<'MSG'
+
+          Every commit needs a Signed-off-by trailer (see CONTRIBUTING.md and /DCO).
+
+            git commit -s                  # when making a commit
+            git commit --amend -s          # fix the most recent one
+            git rebase --signoff <base>    # fix every commit since <base>
+
+          The DCO is an affirmation that you have the right to submit the contribution.
+          It is not a copyright assignment: you keep the copyright in what you write.
+          MSG
+            exit 1
+          fi
