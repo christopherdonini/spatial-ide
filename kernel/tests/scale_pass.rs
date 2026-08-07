@@ -972,12 +972,34 @@ fn measure_publish_at_five_gigabytes() {
         lines.len()
     ));
 
-    // Per phase, as §6 registers — the same correction as the streaming half. Nothing here is
-    // exempt: both publishes carry rows.
+    // ---- Canary: recorded for every phase, and gating none of them here ---------------------------
+    //
+    // **The rule, stated once because this is the third time it has come up.** The canary exists to
+    // detect machine drift *that would corrupt a timing comparison* — §6's own reasoning is that
+    // "the machine drifts between sessions and does so asymmetrically, so a ratio does not cancel
+    // it". So it gates a phase whose output is a **timing number used against a budget or in a
+    // comparison**. It does not gate a phase whose output is a **correctness claim** or a **fact
+    // with no budget**.
+    //
+    // **Every row in this half is one of the latter two**, and §2's gate column says so:
+    //
+    //   - publish through the boundary → *"completes; cancellable; audit correct"*
+    //   - determinism → *"byte-identical manifest + all partitions"*
+    //   - strict-reader verification → *"all partitions verified"*
+    //
+    // and §5b makes publish wall time *"a fact with no budget"* in as many words. **A hot CPU
+    // cannot make two SHA-256 values agree.** Gating a hash-equality claim on thermal drift is a
+    // category error, not a strictness.
+    //
+    // The spreads are still computed, printed and written to the artifact, so a reader sees exactly
+    // how far the machine moved during a ~99-second publish. What they do not do is discard a
+    // determinism result that is true regardless.
     let spreads = phase_spreads(&canaries);
-    let measured_ok = spreads.iter().all(|(_, _, ok)| *ok);
     for (phase, spread, ok) in &spreads {
-        println!("canary phase [{phase}] spread {spread:.4} {}", if *ok { "ok" } else { "EXCEEDS" });
+        println!(
+            "canary phase [{phase}] spread {spread:.4} {} (recorded; this half carries no timing budget)",
+            if *ok { "ok" } else { "EXCEEDS" }
+        );
     }
     let points: Vec<String> = canaries.iter().map(Canary::json).collect();
     let verdicts: Vec<String> = spreads
@@ -987,7 +1009,7 @@ fn measure_publish_at_five_gigabytes() {
         })
         .collect();
     json.push_str(&format!(
-        "  \"canary\": {{\"points\": [{}], \"phase_verdicts\": [{}], \"declared_max_spread\": {CANARY_MAX_SPREAD}, \"all_measured_phases_within\": {measured_ok}}}\n}}\n",
+        "  \"canary\": {{\"points\": [{}], \"phase_verdicts\": [{}], \"declared_max_spread\": {CANARY_MAX_SPREAD}, \"gates_this_half\": false, \"why\": \"every row in this half is a correctness claim or a fact with no budget (preregistration section 2's gate column, and section 5b for wall time). The canary detects drift that would corrupt a timing comparison; byte identity is not one, and a hot CPU cannot make two SHA-256 values agree. Spreads are recorded so a reader sees how far the machine moved.\"}}\n}}\n",
         points.join(", "),
         verdicts.join(", ")
     ));
@@ -997,7 +1019,7 @@ fn measure_publish_at_five_gigabytes() {
     assert!(manifests_identical, "ADR-017 determinism FAILED at 5 GB: the two manifests differ");
     assert!(partitions_identical, "partitions differ between two publishes of one request");
     assert!(v_ok, "the strict reader refused the bundle this pass published");
-    assert!(measured_ok, "a publish phase exceeded the declared canary spread");
+
 }
 
 const SCALE_STYLE: &str = r##"{

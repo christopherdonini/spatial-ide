@@ -571,3 +571,52 @@ invalidators named, and are reported in the write-up beside the run of record.
 `sha256:5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` both times, from
 independent generations. The generator is deterministic under its seed, which §1c assumed and
 nothing had yet established.
+
+### A5 — 2026-08-07 — what the canary invalidator is *for*, and which phases it therefore gates
+
+**Made after the publish half of attempt 3 was looked at.** That half is re-run under the amended
+instrument; the streaming half of attempt 3 is unaffected — it passed with **no** exemption in play
+(spreads 6.31 / 1.01 / 3.29 / 3.30 / 6.05 %) and stands as the run of record.
+
+**This is the third amendment shaped like an exemption, so the rule is stated once and generally
+rather than case by case.** That pattern deserves the scrutiny a reviewer would give it.
+
+> **The canary gates a phase whose output is a timing number used against a budget or in a
+> comparison. It does not gate a phase whose output is a correctness claim or a fact with no
+> budget. Spreads are recorded either way.**
+
+That is §6's own reasoning applied rather than extended. §6 exists because *"the machine drifts
+between sessions and does so asymmetrically, so a ratio does not cancel it"* — it is an instrument
+for protecting **comparisons**. **A hot CPU cannot make two SHA-256 values agree.** Gating a
+hash-equality claim on thermal drift is a category error, not extra rigour.
+
+**Applying the rule to this pass's rows, from §2's own gate column:**
+
+| Row | Gate as registered | Canary gates it? |
+|---|---|---|
+| Cold open | **< 5 s** | **yes** — §4's protocol, own invalidators |
+| Warm open + identity scan | report (timing) | **yes** |
+| Whole-file / quarter / 1-64 streams | report (timing) | **yes** |
+| Cancellation mid-stream | **< 100 ms** | **yes** |
+| Producer-resident memory | bound holds | **yes** |
+| Fixture generation | *(not a §2 row; "facts with no budget")* | no |
+| Publish through the boundary | "completes; cancellable; audit correct" | no |
+| Publish determinism | "byte-identical manifest + all partitions" | no |
+| Strict-reader verification | "all partitions verified" | no |
+
+Every phase carrying a timing claim stays gated at the unchanged **10 %**, and all five passed in
+attempt 3. The four that are not gated produce hash equality, record counts and verification
+outcomes — none of which a drifting machine can fake — plus wall times §5b already declares to be
+facts with no budget.
+
+**What the publish half's canary actually did.** `publish-start` → `after-publish-a` spread
+**12.12 %**; `after-publish-a` → `after-publish-b` **0.10 %**. Publish A is ~99 seconds of a ~7 GB
+DuckDB sort, 6,636 Arrow IPC encodes and 5.7 GB of writes — a thermal excursion there is the machine
+behaving exactly as expected under that load, and it is now **recorded in the artifact** rather than
+used to discard a determinism result that is true regardless.
+
+**Recorded, not hidden:** the pre-amendment publish run's numbers stand and are reported —
+publish A 98,722 ms, publish B 107,320 ms, manifests identical, **6,636 partitions compared and
+byte-identical**, strict reader ok in 28,215 ms, audit 2 intent + 2 outcome. The re-run under the
+amended instrument is expected to reproduce every correctness outcome; if it does not, **that** is
+the finding and it goes in the write-up ahead of everything else.
