@@ -7,6 +7,19 @@
 //! against the code's intentions: determinism is two publishes compared byte for byte, redaction is
 //! a scan over every byte of every emitted file, and "no partial bundle" is a directory listing
 //! after a cancel.
+//!
+//! ## Why this file calls `publish_unguarded` and not the permission boundary
+//!
+//! These are **format** tests. Routing them through the class-3 boundary would mean every one of
+//! them minting a grant, supplying an approval and pointing an audit log somewhere — and a bug in
+//! the authorization model would then fail thirty tests about manifests and partitions, with
+//! nothing in the output saying which property actually broke.
+//!
+//! The gated path has its own suite (`kernel/tests/permission_boundary.rs`), which is where "no
+//! publish happens without a grant" is asserted, and which also proves structurally that nothing in
+//! `kernel/src` reaches this entry point except the boundary. The residual — that an *external*
+//! caller can still reach an ungated publish — is real, is why the function carries that name, and
+//! is flagged for the human in `kernel/PERMISSION-BOUNDARY.md` rather than left to be discovered.
 
 use arrow::array::Array as _;
 use std::path::{Path, PathBuf};
@@ -17,7 +30,7 @@ use spatial_engine::fixture::{
 use spatial_engine::{CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::{self, redaction};
 use spatial_kernel::publish::{
-    publish, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishError,
+    publish_unguarded, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishError,
     PublishPhase, PublishProgress, PublishRequest, ViewerAsset, ViewerAssets, ViewerLicenseInput,
 };
 
@@ -144,7 +157,7 @@ fn a_published_bundle_has_the_declared_layout_and_lists_every_asset_it_contains(
     let ds = pinned(&fixture(&d, 3_000));
     let v = viewer();
     let dest = d.join("bundle");
-    let out = publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    let out = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
 
     assert!(dest.join(bundle::MANIFEST_PATH).is_file());
     assert!(dest.join(bundle::STYLE_PATH).is_file());
@@ -197,11 +210,11 @@ fn publishing_twice_from_identical_inputs_gives_a_byte_identical_manifest() {
     let v = viewer();
 
     let ds_a = pinned(&src);
-    let a = publish(&request(&ds_a, &v, d.join("a")), &CancelToken::new(), None).unwrap();
+    let a = publish_unguarded(&request(&ds_a, &v, d.join("a")), &CancelToken::new(), None).unwrap();
     // A second *open* as well as a second publish: the manifest must not depend on process state
     // that happens to survive between the two.
     let ds_b = pinned(&src);
-    let b = publish(&request(&ds_b, &v, d.join("b")), &CancelToken::new(), None).unwrap();
+    let b = publish_unguarded(&request(&ds_b, &v, d.join("b")), &CancelToken::new(), None).unwrap();
 
     let ma = read(&d.join("a"), bundle::MANIFEST_PATH);
     let mb = read(&d.join("b"), bundle::MANIFEST_PATH);
@@ -249,7 +262,7 @@ fn two_operator_declared_publishes_agree_byte_for_byte_and_a_different_instant_i
     let ds_a = pinned(&src);
     let mut a = request(&ds_a, &v, d.join("a"));
     a.license = Some(declaration("2026-08-06T09:00:00Z"));
-    publish(&a, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&a, &CancelToken::new(), None).unwrap();
 
     // Same declaration, a second open, and a **later build** — the sidecar's instants differ.
     let ds_b = pinned(&src);
@@ -257,7 +270,7 @@ fn two_operator_declared_publishes_agree_byte_for_byte_and_a_different_instant_i
     b.license = Some(declaration("2026-08-06T09:00:00Z"));
     b.started_at = "2027-01-01T00:00:00Z".into();
     b.finished_at = &LATER_FINISH;
-    publish(&b, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&b, &CancelToken::new(), None).unwrap();
 
     assert_eq!(
         read(&d.join("a"), bundle::MANIFEST_PATH),
@@ -276,7 +289,7 @@ fn two_operator_declared_publishes_agree_byte_for_byte_and_a_different_instant_i
     let ds_c = pinned(&src);
     let mut c = request(&ds_c, &v, d.join("c"));
     c.license = Some(declaration("2026-08-06T17:30:00Z"));
-    publish(&c, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&c, &CancelToken::new(), None).unwrap();
     assert_ne!(
         read(&d.join("a"), bundle::MANIFEST_PATH),
         read(&d.join("c"), bundle::MANIFEST_PATH),
@@ -299,12 +312,12 @@ fn the_sidecar_is_what_differs_between_two_publishes_and_it_is_excluded_by_desig
 
     let ds = pinned(&src);
     let mut req = request(&ds, &v, d.join("a"));
-    publish(&req, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&req, &CancelToken::new(), None).unwrap();
 
     req.destination = d.join("b");
     req.started_at = "2027-01-01T00:00:00Z".into();
     req.finished_at = &LATER_FINISH;
-    publish(&req, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&req, &CancelToken::new(), None).unwrap();
 
     assert_eq!(
         read(&d.join("a"), bundle::MANIFEST_PATH),
@@ -326,7 +339,7 @@ fn the_redaction_scan_passes_over_every_byte_of_an_emitted_bundle() {
     let ds = pinned(&fixture(&d, 2_000));
     let v = viewer();
     let dest = d.join("bundle");
-    publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
 
     // **The operator's own declarations are supplied**, so a match inside one is attributed rather
     // than reported as a leak (ADR-017 Corrigendum 3). ADR-009 item 7 makes a copyright notice a
@@ -396,7 +409,7 @@ fn cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory() {
 
     let cancel = CancelToken::new();
     let obs = CancelAfter { cancel: cancel.clone(), after: 2 };
-    let e = publish(&request(&ds, &v, dest.clone()), &cancel, Some(&obs)).unwrap_err();
+    let e = publish_unguarded(&request(&ds, &v, dest.clone()), &cancel, Some(&obs)).unwrap_err();
     assert!(matches!(e, PublishError::Cancelled), "got {e}");
 
     assert!(!dest.exists(), "a bundle exists under the destination name after a cancel");
@@ -416,10 +429,10 @@ fn an_existing_destination_is_refused_rather_than_replaced() {
     let ds = pinned(&fixture(&d, 500));
     let v = viewer();
     let dest = d.join("bundle");
-    publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
 
     let before = read(&dest, bundle::MANIFEST_PATH);
-    let e = publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
+    let e = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
     assert!(matches!(e, PublishError::DestinationExists { .. }), "got {e}");
     assert_eq!(read(&dest, bundle::MANIFEST_PATH), before, "the existing bundle was touched");
 }
@@ -430,7 +443,7 @@ fn an_unpinned_source_is_refused_before_anything_is_written() {
     let ds = Dataset::open(fixture(&d, 200)).unwrap(); // deliberately not pinned
     let v = viewer();
     let dest = d.join("bundle");
-    let e = publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
+    let e = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
     assert!(matches!(e, PublishError::SourceNotPinned), "got {e}");
     assert!(!dest.exists());
 }
@@ -454,7 +467,7 @@ fn a_source_that_changed_since_the_pin_is_detected_and_refused() {
 
     let v = viewer();
     let dest = d.join("bundle");
-    let e = publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
+    let e = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
     match e {
         PublishError::Engine(spatial_engine::EngineError::SourceChangedUnderPublish {
             detected_by,
@@ -472,7 +485,7 @@ fn a_style_whose_match_column_is_not_published_is_refused_at_publish_not_at_view
     let v = viewer();
     let mut req = request(&ds, &v, d.join("bundle"));
     req.attributes = vec![]; // `zone` exists in the dataset but is not published
-    let e = publish(&req, &CancelToken::new(), None).unwrap_err();
+    let e = publish_unguarded(&req, &CancelToken::new(), None).unwrap_err();
     assert!(
         matches!(
             e,
@@ -489,7 +502,7 @@ fn the_manifest_carries_the_docs_11_resource_refs_the_grade_and_the_transform_fa
     let ds = pinned(&fixture(&d, 600));
     let v = viewer();
     let dest = d.join("bundle");
-    publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
     let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
 
     // Three ResourceRefs, each with all six docs/11 members named.
@@ -571,7 +584,7 @@ fn a_filtered_publish_records_the_filter_and_bounds_the_rows_it_actually_wrote()
         },
         "EPSG:2056",
     );
-    let out = publish(&req, &CancelToken::new(), None).unwrap();
+    let out = publish_unguarded(&req, &CancelToken::new(), None).unwrap();
     assert!(out.rows > 0 && out.rows < 4_000, "the viewport selected {} of 4000", out.rows);
 
     let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
@@ -603,7 +616,7 @@ fn an_operator_may_declare_a_license_for_a_source_that_declares_none() {
         by: "operator".into(),
         at: "2026-08-06T09:00:00Z".into(),
     });
-    publish(&req, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&req, &CancelToken::new(), None).unwrap();
 
     let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
     // A claim carries its claimant — the crs_source / id_source shape, applied to license.
@@ -624,7 +637,7 @@ fn a_viewer_asset_path_that_escapes_the_bundle_is_refused() {
     assert!(matches!(bad, Err(PublishError::ViewerAssetPathRejected { .. })));
     // And a valid set still publishes, so the check is not simply refusing everything.
     let v = viewer();
-    publish(&request(&ds, &v, d.join("ok")), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, d.join("ok")), &CancelToken::new(), None).unwrap();
 }
 
 #[test]
@@ -633,7 +646,7 @@ fn every_partition_carries_the_adr_010_rule_1_envelope_and_the_declared_projecti
     let ds = pinned(&fixture(&d, 5_000));
     let v = viewer();
     let dest = d.join("bundle");
-    let out = publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    let out = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
     assert!(out.partitions > 1, "expected several partitions, got {}", out.partitions);
 
     // Every one, not just the first: the envelope repeats per partition precisely so a reader that
@@ -662,7 +675,7 @@ fn ids_ascend_across_partitions_and_the_null_branch_reaches_the_bundle() {
     let ds = pinned(&fixture(&d, 6_000));
     let v = viewer();
     let dest = d.join("bundle");
-    let out = publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    let out = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
 
     let mut previous: Option<u64> = None;
     let mut saw_null = false;
@@ -767,7 +780,7 @@ fn the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares() {
         by: "operator".into(),
         at: "2026-08-06T09:00:00Z".into(),
     });
-    publish(&req, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&req, &CancelToken::new(), None).unwrap();
     let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
 
     // Objects addressed by path.
@@ -854,7 +867,7 @@ fn the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares() {
 
     // And the two shapes the first publish could not show, from a second with neither option.
     let plain = d.join("bundle-whole-file");
-    publish(&request(&ds, &v, plain.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, plain.clone()), &CancelToken::new(), None).unwrap();
     let w: serde_json::Value = serde_json::from_slice(&read(&plain, bundle::MANIFEST_PATH)).unwrap();
     assert_eq!(
         got(&w["operation"]["filter"], "operation/filter"),
@@ -882,7 +895,7 @@ fn the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares() {
     .unwrap();
     let licensed_ds = pinned(&src);
     let licensed = d.join("bundle-source-licensed");
-    publish(&request(&licensed_ds, &v, licensed.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&licensed_ds, &v, licensed.clone()), &CancelToken::new(), None).unwrap();
     let l: serde_json::Value =
         serde_json::from_slice(&read(&licensed, bundle::MANIFEST_PATH)).unwrap();
     assert_eq!(
@@ -913,7 +926,7 @@ fn the_emitted_manifest_has_exactly_the_key_sets_adr_017_declares() {
     .unwrap();
     let unnamed_ds = pinned(&unnamed_src);
     let unnamed = d.join("bundle-attribution-only");
-    publish(&request(&unnamed_ds, &v, unnamed.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&unnamed_ds, &v, unnamed.clone()), &CancelToken::new(), None).unwrap();
     let u: serde_json::Value =
         serde_json::from_slice(&read(&unnamed, bundle::MANIFEST_PATH)).unwrap();
     assert_eq!(
@@ -956,7 +969,7 @@ fn the_manifest_emits_its_top_level_members_in_the_order_adr_017_declares() {
     let ds = pinned(&fixture(&d, 60));
     let v = viewer();
     let dest = d.join("bundle");
-    publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
 
     // Read as raw text, not through a map: `serde_json::Value` is a `BTreeMap` by default and would
     // hand back the members alphabetically, testing serde's ordering rather than the writer's.
@@ -1020,7 +1033,7 @@ fn the_viewer_licence_notice_names_a_hash_listed_asset_in_the_bundle_relative_na
     let ds = pinned(&fixture(&d, 60));
     let v = viewer();
     let dest = d.join("bundle");
-    publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
+    publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap();
     let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
 
     let vl = &m["viewer_license"];
@@ -1091,7 +1104,7 @@ fn a_bundle_that_cannot_carry_the_distributed_codes_terms_is_not_produced_at_all
             3 => req.viewer_license.notice_path = String::new(),
             _ => req.viewer_license.corresponding_source.at = "  ".into(),
         }
-        let e = publish(&req, &CancelToken::new(), None).unwrap_err();
+        let e = publish_unguarded(&req, &CancelToken::new(), None).unwrap_err();
         assert!(
             matches!(e, PublishError::ViewerLicenseIncomplete { member } if member == n),
             "a blank `{n}` produced {e:?}"
@@ -1104,7 +1117,7 @@ fn a_bundle_that_cannot_carry_the_distributed_codes_terms_is_not_produced_at_all
     let dest = d.join("missing-notice");
     let mut req = request(&ds, &v, dest.clone());
     req.viewer_license.notice_path = "NOTICE-THAT-IS-NOT-THERE.txt".into();
-    let e = publish(&req, &CancelToken::new(), None).unwrap_err();
+    let e = publish_unguarded(&req, &CancelToken::new(), None).unwrap_err();
     match &e {
         PublishError::ViewerLicenseNoticeMissing { notice_path, bundle_relative, available } => {
             // **Both namespaces are reported**, because confusing them is the mistake this refusal
@@ -1123,7 +1136,7 @@ fn a_bundle_that_cannot_carry_the_distributed_codes_terms_is_not_produced_at_all
         let dest = d.join("bad-route");
         let mut req = request(&ds, &v, dest.clone());
         req.viewer_license.corresponding_source.at = bad.into();
-        let e = publish(&req, &CancelToken::new(), None).unwrap_err();
+        let e = publish_unguarded(&req, &CancelToken::new(), None).unwrap_err();
         assert!(
             matches!(e, PublishError::CorrespondingSourceNotDurable { .. }),
             "`{bad}` was admitted as a url route: {e:?}"
@@ -1140,7 +1153,7 @@ fn a_bundle_that_cannot_carry_the_distributed_codes_terms_is_not_produced_at_all
         at: "Write to the address in the notice file for a copy of the source, valid three years."
             .into(),
     };
-    publish(&req, &CancelToken::new(), None).unwrap();
+    publish_unguarded(&req, &CancelToken::new(), None).unwrap();
     let m: serde_json::Value = serde_json::from_slice(&read(&dest, bundle::MANIFEST_PATH)).unwrap();
     assert_eq!(m["viewer_license"]["corresponding_source"]["kind"], "written-offer");
 }
@@ -1167,7 +1180,7 @@ fn a_source_that_forbids_redistribution_is_refused_before_anything_is_written() 
     let ds = pinned(&src);
     let v = viewer();
     let dest = d.join("bundle");
-    match publish(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err() {
+    match publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err() {
         PublishError::LicenseNotCarryable { declared_by, redistribution } => {
             assert_eq!(declared_by, "source");
             assert_eq!(redistribution, "forbidden");

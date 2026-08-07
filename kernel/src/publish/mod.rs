@@ -7,18 +7,31 @@
 //! directory and finalizes with a single rename, so a bundle under the destination name is either
 //! complete and valid or absent — never partial.
 //!
-//! ## This is a class-3 external side effect, and the permission model for it does not exist
+//! ## This is a class-3 external side effect, and this module is the **unguarded** half of it
 //!
 //! ADR-006 classes an operation that writes outside the workspace as an external side effect:
 //! approval-gated, and **never called undoable**. `docs/09` is more specific — "Export and publish
 //! are distinct capabilities, never implied by write. Class-3 side effects always require
 //! approval."
 //!
-//! **This slice has no permission model and no approval gate**, exactly as `kernel/README.md`
-//! already records for capability grants generally. So the operation declares its reversibility
-//! class **on this API** — [`REVERSIBILITY_CLASS`] — and this comment says plainly that the gating
-//! `docs/09` requires is **owed and absent**. Shipping an ungated class-3 operation while saying
-//! nothing would be the silent version of the same gap.
+//! The gate now exists, and it is **not here**. [`crate::permission::boundary::execute`] is what
+//! checks a scoped grant, obtains an explicit approval and writes the two audit records; the
+//! entry point in this module is named [`publish_unguarded`] because that is what it is. Every
+//! non-test caller inside this crate goes through the boundary, and
+//! `kernel/tests/permission_boundary.rs` asserts that structurally rather than by convention.
+//!
+//! **[`publish_unguarded`] stays `pub`, and the residual is stated rather than hidden.** The bundle
+//! format's own suite (`kernel/tests/publish.rs`) drives this operation directly, some thirty times,
+//! to assert things about manifests and partitions. Routing all of it through the authorization
+//! model would mean a grant bug failing thirty *format* tests with no way to tell which property
+//! broke. So an external caller can still reach an ungated publish, the name says so, and this
+//! paragraph is the record of the trade. It is flagged for the human in
+//! `kernel/PERMISSION-BOUNDARY.md`.
+//!
+//! The operation still declares its reversibility class on this API — [`REVERSIBILITY_CLASS`] and
+//! [`OPERATION_CLASS`] — because ADR-006's declaration is addressed to the caller deciding whether
+//! to invoke it, and that is true of a caller who has been through the boundary as well as one who
+//! has not.
 //!
 //! **The class is not recorded in the manifest, and is not claimed to be.** ADR-006's declaration
 //! is addressed to the *caller deciding whether to invoke the operation*, and by the time a bundle
@@ -76,6 +89,13 @@ pub use crate::bundle::{CorrespondingSource, CorrespondingSourceKind};
 /// A published bundle is files written outside any transaction, in a location the operation does not
 /// own. Nothing here can undo that, and nothing here will claim it can.
 pub const REVERSIBILITY_CLASS: &str = "irreversible";
+
+/// ADR-006's operation class for this operation: **3, external side effect**.
+///
+/// A constant rather than a literal in a prompt string. The approval prompt must present "the
+/// operation's declared class", and a `3` typed into a UI message would be a number backed by
+/// nothing — it could drift from ADR-006's table with no compiler and no test noticing.
+pub const OPERATION_CLASS: u8 = 3;
 
 /// The operation identifier carried in the manifest's operation digest.
 pub const OPERATION: &str = "publish-static-bundle";
@@ -211,17 +231,101 @@ pub struct PublishOutcome {
     pub reproducibility_grade: &'static str,
 }
 
-/// Publish a static bundle.
-pub fn publish(
+/// Everything a publish can decide **before it writes anything at all**.
+///
+/// This exists because the permission boundary needs two of these facts — the source's content hash
+/// and the style hash — in order to check a grant, and it must have them *before* a staging
+/// directory exists. Computing them twice would be two spellings of one rule, which is the
+/// arrangement [`viewer_bundle_path`] exists one level down to prevent: each site individually
+/// correct and the pair still able to disagree.
+///
+/// **It is pure with respect to the filesystem's contents**: it opens and reads, and it creates
+/// nothing. `verify_by_rehash` — the expensive whole-file read — is deliberately **not** here; it
+/// stays in the operation, where it still runs before a single partition is written.
+pub struct PublishPreflight {
+    pub logical_uri: String,
+    pub pin: spatial_engine::ContentPin,
+    pub style: CompiledStyle,
+    projection: spatial_engine::attributes::PublishedProjection,
+    license: License,
+    viewer_license: ViewerLicense,
+}
+
+impl PublishPreflight {
+    /// `sha256:<hex>` of the source, as the manifest and the grant check both spell it.
+    pub fn source_content_hash(&self) -> String {
+        format!("sha256:{}", self.pin.hash())
+    }
+
+    pub fn style_hash(&self) -> &str {
+        self.style.style_hash()
+    }
+}
+
+/// Resolve, admit and compile everything that can be decided before any byte is written.
+///
+/// Every refusal here happens before a staging directory exists, which is what lets the permission
+/// boundary refuse an unauthorized publish with **no side effect of any kind** — the property
+/// required test 1 asserts.
+///
+/// **This changes the observable order of two refusals**, and that is intended: a request that is
+/// both licensed wrongly *and* aimed at an occupied destination now reports the license first,
+/// because `DestinationExists` is checked after this runs. The module's own stated order already
+/// puts admission before expense; this makes it true of the destination check too.
+pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishError> {
+    let ds = req.dataset;
+    let logical_uri = dataset_logical_uri(req.dataset_name)?;
+
+    // ---- license, before any work is spent on a bundle that may not be publishable -------------
+    let license = admit_license(ds.source_license(), req.license.as_ref())?;
+    // The distributed code's own terms (ADR-009 item 7). Admitted here, beside the data's license
+    // and before the source hash, so a bundle that cannot legally be handed to anyone is refused in
+    // milliseconds rather than after a whole-file read.
+    let viewer_license = admit_viewer_license(&req.viewer_license, req.viewer)?;
+
+    let pin = ds.content_pin().ok_or(PublishError::SourceNotPinned)?;
+
+    let projection = ds.resolve_projection(&req.attributes)?;
+    let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
+        .file_schema()
+        .fields()
+        .iter()
+        .map(|f| (f.name().clone(), f.data_type().clone()))
+        .collect();
+    let published_names = projection.names();
+    let style: CompiledStyle =
+        spatial_renderer::compile(req.style_source, &schema_for_style, &published_names)?;
+
+    Ok(PublishPreflight { logical_uri, pin, style, projection, license, viewer_license })
+}
+
+/// Publish a static bundle, **with no grant, no approval and no audit record**.
+///
+/// The name is the warning. [`crate::permission::boundary::execute`] is the gated path and is the
+/// only caller inside this crate; see this module's header for why this stays public and what the
+/// residual is.
+pub fn publish_unguarded(
     req: &PublishRequest<'_>,
+    cancel: &CancelToken,
+    progress: Option<&dyn PublishProgress>,
+) -> Result<PublishOutcome, PublishError> {
+    let pre = preflight(req)?;
+    publish_prepared(req, pre, cancel, progress)
+}
+
+/// As [`publish_unguarded`], reusing a [`PublishPreflight`] the caller already computed.
+///
+/// `pub(crate)` on purpose: it exists so the boundary does not compile the style twice, and it is
+/// not a second public entry point into an ungated publish.
+pub(crate) fn publish_prepared(
+    req: &PublishRequest<'_>,
+    pre: PublishPreflight,
     cancel: &CancelToken,
     progress: Option<&dyn PublishProgress>,
 ) -> Result<PublishOutcome, PublishError> {
     let started = std::time::Instant::now();
     let silent = Silent;
     let progress: &dyn PublishProgress = progress.unwrap_or(&silent);
-
-    let logical_uri = dataset_logical_uri(req.dataset_name)?;
 
     // Destination first, staging created before anything expensive runs.
     if req.destination.exists() {
@@ -231,7 +335,7 @@ pub fn publish(
     }
     let staging = Staging::create(&req.destination)?;
 
-    match run(req, cancel, progress, &staging, &logical_uri, started) {
+    match run(req, cancel, progress, &staging, &pre, started) {
         Ok(outcome) => Ok(outcome),
         Err(e) => {
             // **Cleanup is reported, never swallowed** (ADR-010 rule 7).
@@ -256,39 +360,31 @@ fn run(
     cancel: &CancelToken,
     progress: &dyn PublishProgress,
     staging: &Staging,
-    logical_uri: &str,
+    pre: &PublishPreflight,
     started: std::time::Instant,
 ) -> Result<PublishOutcome, PublishError> {
     let ds = req.dataset;
 
-    // ---- license, before any work is spent on a bundle that may not be publishable -------------
-    let license = admit_license(ds.source_license(), req.license.as_ref())?;
-    // The distributed code's own terms (ADR-009 item 7). Admitted here, beside the data's license
-    // and before the source hash, so a bundle that cannot legally be handed to anyone is refused in
-    // milliseconds rather than after a whole-file read.
-    let viewer_license = admit_viewer_license(&req.viewer_license, req.viewer)?;
+    // Admitted in `preflight`, before the staging directory existed.
+    let PublishPreflight { logical_uri, pin, style, projection, license, viewer_license } = pre;
+    let logical_uri = logical_uri.as_str();
+    let license = license.clone();
+    let viewer_license = viewer_license.clone();
 
     // ---- source pin ---------------------------------------------------------------------------
+    //
+    // **The pin was taken before the boundary ran; this is where its continued truth is
+    // established.** The grant was checked against `pin.hash()`, which is the hash read at pin
+    // time — nothing in the boundary re-hashed anything, and nothing here claims it did. The
+    // whole-file re-read below is what turns that into a checked fact, and it still happens before
+    // a single partition is written.
     progress.phase(PublishPhase::VerifyingSource);
-    let pin = ds.content_pin().ok_or(PublishError::SourceNotPinned)?;
     check_cancel(cancel)?;
     let content_hash_millis = pin.verify_by_rehash(ds.path(), cancel)?;
 
-    // ---- projection and style -----------------------------------------------------------------
-    let projection = ds.resolve_projection(&req.attributes)?;
-    let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
-        .file_schema()
-        .fields()
-        .iter()
-        .map(|f| (f.name().clone(), f.data_type().clone()))
-        .collect();
-    let published_names = projection.names();
-    let style: CompiledStyle =
-        spatial_renderer::compile(req.style_source, &schema_for_style, &published_names)?;
-
     // ---- partitions ---------------------------------------------------------------------------
     progress.phase(PublishPhase::Querying);
-    let mut stream = ds.stream_for_publish(&req.query, &projection, cancel.clone())?;
+    let mut stream = ds.stream_for_publish(&req.query, projection, cancel.clone())?;
 
     staging.create_dir(bundle::DATA_DIR)?;
     progress.phase(PublishPhase::WritingPartitions);
@@ -381,13 +477,13 @@ fn run(
 
     // ---- manifest ------------------------------------------------------------------------------
     progress.phase(PublishPhase::WritingManifest);
-    let operation = build_operation(ds, req, logical_uri, &pin, projection.fields(), &style)?;
+    let operation = build_operation(ds, req, logical_uri, pin, projection.fields(), style)?;
     let operation_digest = operation.digest()?;
     let manifest = build_manifest(
         ds,
         logical_uri,
-        &pin,
-        &style,
+        pin,
+        style,
         &style_hash,
         operation,
         &operation_digest,
@@ -996,12 +1092,16 @@ impl Drop for Staging {
     }
 }
 
-/// A random suffix for the staging directory name.
+/// A random suffix for the staging directory name, and the audit record's attempt id.
 ///
 /// Not a pid, not a timestamp, not a counter — see [`Staging::create`]. Address-derived entropy is
 /// deliberately mixed with the system clock so two publishes in the same millisecond in the same
 /// process still differ.
-fn random_suffix() -> String {
+///
+/// **Reused rather than re-spelled** by the audit record, which needs to correlate an intent with
+/// its outcome and has no uuid crate available. Its properties are declared honestly there: a
+/// 64-bit mix, not a UUID, with no cross-process or cross-machine uniqueness claimed.
+pub(crate) fn random_suffix() -> String {
     use std::hash::{BuildHasher, Hasher};
     let mut h = std::collections::hash_map::RandomState::new().build_hasher();
     h.write_usize(&h as *const _ as usize);
