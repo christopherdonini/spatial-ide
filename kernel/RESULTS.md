@@ -2348,3 +2348,265 @@ powershell -NoProfile -ExecutionPolicy Bypass -File run-cold-open.ps1
 | `run-cold-open.ps1` | the operator wrapper: checks preconditions before a reboot is spent |
 | `kernel/examples/time-open.rs` | `Instant` around `Dataset::open` and nothing else |
 | `kernel/examples/verify-bundle.rs` | the strict reader |
+
+---
+
+# Sixth section — 2026-08-07 — publish cancellation re-scored, and the sort located
+
+**Contract:** `kernel/CANCEL-RESCORE-PREREGISTRATION.md`, committed before the harness existed.
+**Semantics:** `kernel/CANCELLATION-AND-TRACING.md`, committed before the preregistration — so that a
+preregistration could not quietly redefine an interval while declaring a measurement of it.
+**Nothing above this line is edited.** The fifth section stands as its tree's record.
+
+## What this section may not claim, stated before any number
+
+**No figure here may be differenced against the fifth section's.** Different tree, different session.
+That is the standing within-session rule, and there is a second reason that bites harder:
+
+> The fifth section's **3,920.251 ms** and **418.321 ms** measure `cancel()` → `boundary::execute`
+> returns. This section's budget-bearing figures measure `cancel_requested → cancel_observed`.
+> **These are different intervals.** Neither is a baseline for the other in any direction.
+
+So "cancellation got faster" is not a claim this section makes, and the word "improvement" does not
+appear below. What it does is take a verdict against the same `docs/08` budget, independently, on a
+tree where the consumer can now look at its own token.
+
+## Scope
+
+| | |
+|---|---|
+| Fixture | the scale pass's own 5 GB file, unmodified, re-hashed before the run: `sha256:5ae955c5…1788`. The harness **refuses to generate one** |
+| Whole-file rehash, measured | **20,046.3 ms** — paid once per trial, before any trigger can fire |
+| Control | the same 145 MB in-session control |
+| Hardware | Intel i9-9980HK, 8 cores / 16 threads, 63.7 GiB, SSD |
+| Attempts | **4, of which 3 invalidated** — see below |
+| Canary | all six phases **within** the declared 10 % bound |
+| Tree / binary pin | `27d412d2…` over 90 files; binary `eeca7a4d…` **re-verified after the run: match** |
+
+## Every attempt, and what invalidated it
+
+**Three of four attempts were thrown away, and two of them were my instrument's fault rather than the
+machine's.** Stated first because a pass that reports only its successful run is not reporting.
+
+| # | outcome | cause | artifact |
+|---|---|---|---|
+| 1 | **invalidated** | no trigger fired in 28 trials, and the harness recorded *that* each trial was not cancelled without recording *why* | `attempt-1-invalidated-no-trigger-fired.json` |
+| 2 | **invalidated** | same cause, now visible: the request asked to publish a `zone` attribute the 5 GB fixture does not have | `attempt-2-invalidated-wrong-attribute.json` |
+| 3 | **invalidated** | §6 invalidator 2 — canary spread exceeded 10 % in **five of six phases** | `attempt-3-invalidated-by-canary.json` |
+| 4 | **run of record** | all six phases within bound, 28 of 28 trials on target | `cancel-rescore.json` |
+
+**Attempt 1's real defect was the reporting, not the request.** It failed and could not say why, which
+is the same uninformative-artifact problem this pass was written to argue against — written into the
+pass's own instrument. Every trial row now carries the operation's actual outcome, which is why
+attempt 2 diagnosed itself in one line.
+
+**Attempt 2's cause is the engine being right.** Publish refused with *"`zone` cannot be published as
+an attribute — the file has no such column… a conversion the caller did not ask for is the silent
+conversion `docs/01` principle 8 forbids."* The 5 GB fixture is `AttributeMode::None`; the helper was
+copied from a small-fixture test. A non-negotiable caught a harness bug.
+
+**Attempt 3 was the machine, and the canary said so before any number was believed.** The 400 M
+instrument's long minimum climbed 105.7 → 116.5 → 134.7 → **162.6** ms and fell back to 119.8 as load
+lightened — thermal drift under 28 publishes reading 5 GB each. Amendment **A1** added a 60 s settle
+before every canary reading; it declares in its first line that it was written after a result was
+seen, changes no trigger, ceiling, sample count or verdict rule, and carries **no number forward**.
+Attempt 4's spreads: **0.11 / 0.55 / 2.43 / 6.68 / 6.90 / 1.65 %**.
+
+## Results
+
+| Cell | Trigger | n | `observed` p50 / p95 / max | `acknowledged` p50 / max | Verdict vs 100 ms |
+|---|---|---|---|---|---|
+| **C1 — inside the sort** | `QueryRunning` + 250 ms, **off-thread** | 7/7 | **2.180 / 14.964 / 14.964 ms** | 6.579 / 21.941 ms | **MET** |
+| C2 — mid partition write | first partial-write callback, inline | 7/7 | 0.001 / 0.001 / 0.001 ms | 24.774 / 29.778 ms | **vacuous — see below** |
+| C3 — immediately pre-fsync | final write callback, inline | 7/7 | 0.001 / 0.002 / 0.002 ms | 27.910 / 32.841 ms | **vacuous** |
+| C4 — A6's trigger, continuity | `partition_written`, inline | 7/7 | 0.001 / 0.001 / 0.001 ms | 26.347 / 29.115 ms | **vacuous** |
+
+**28 of 28 trials fired on target, ended as `Cancelled`, and left nothing on disk** — no destination,
+no staging directory, every one checked. That is a correctness result and the canary does not gate it.
+
+### Only C1 measures a latency, and the reason is a finding against this pass's own preregistration
+
+**§3 of the preregistration asserted that C2 was "THE ONLY cell that establishes anything about
+intra-partition polling", explicitly contrasting it with A6's cell. That assertion was wrong, and C2
+as declared has the same defect it was written to avoid.**
+
+C2, C3 and C4 fire **inline**, from a callback the publishing thread itself invokes. The very next
+statement that thread executes is a cancellation check. So `cancel_requested → cancel_observed` is
+**~0 by construction** — the 0.001 ms is the cost of an atomic swap and a `Cell::replace`, not a
+property of the code being quick. This is exactly what `CANCELLATION-AND-TRACING.md` §1 established
+about A6's cell, and it applies unchanged to two cells this pass declared as its answer to it.
+
+**Their `MET` verdicts are therefore vacuous** — an artifact compared against a budget — and are
+printed above only because the preregistration forbids reporting a cell without its verdict column.
+
+**The triggers are not re-tuned.** §8 forbids re-declaring a trigger after seeing where it landed, and
+that is the same discipline under which the fifth section refused to re-tune its own overshooting
+`Querying` trigger. What C2 and C3 do establish is real and unchanged: **a cancel raised inside a
+partition write, and one raised immediately before the fsync, both end the operation and leave
+nothing** — the intra-partition seam is reachable and acted upon, 14 of 14.
+
+Measuring intra-partition *latency* needs an off-thread trigger, as C1 has. That is declared future
+work, not something to fix here by moving a declared line.
+
+### C1, the one real measurement
+
+Seven samples: **0.101, 1.024, 2.016, 2.180, 11.925, 13.870, 14.964 ms.**
+
+The shape is the mechanism. Four samples land under 2.2 ms and three between 11.9 and 15.0 ms —
+which is what a **10 ms poll cadence** produces: a cancel arriving just before a wakeup is seen at
+once, one arriving just after waits out the interval plus scheduling. The distribution is the
+`PUBLISH_STREAM_POLL_INTERVAL` constant, visible.
+
+**This is the window the fifth section could enter only by timing luck, 1 trial in 7.** It is now
+reachable on purpose, 7 of 7, because `QueryRunning` is emitted only when a batch has been demanded
+and none has arrived. The budget is **met with ~6.7× headroom on the maximum**.
+
+**What it is not.** 14.964 ms is a *measurement*, not a bound. `CANCELLATION-AND-TRACING.md` §3 is
+explicit that the 10 ms cadence is exact while the latency it produces is not derivable — waking on
+time needs the OS scheduler, which is an unbounded external section on a machine saturated by a 5 GB
+publish. **No figure here may be quoted as a ceiling.**
+
+## Tracing overhead — below noise, and the sign proves it
+
+145 MB control, ABBA after a discarded warm-up, six runs per arm:
+
+| arm | p50 | p95 | all samples (ms) |
+|---|---|---|---|
+| tracing **off** | 756.924 ms | 857.110 ms | 732.545 · 744.924 · 756.924 · 786.217 · 808.240 · 857.110 |
+| tracing **on** | 743.433 ms | 896.491 ms | 702.092 · 721.264 · 743.433 · 771.997 · 833.066 · 896.491 |
+
+Delta at p50: **−13.491 ms, −1.78 %** — tracing *on* is nominally faster, which is the clearest
+available evidence that the difference is noise rather than a cost. The ranges overlap almost
+completely. **No overhead is measurable at this scale**, and because the number is negative it is
+reported as "below noise" rather than as a speedup, which would be the same error in the other
+direction.
+
+This is what the brief's condition asks for: if enabling tracing had shifted p50 beyond noise, that
+figure would have to be printed beside every trace-derived number below. It did not.
+
+## The consistency demonstration, and the question it settled
+
+Trace-derived values against the instruments that already measure the same thing, **same run**,
+`dropped_records: 0` so the exact comparisons are valid to make:
+
+| | traced | `StreamStats` | consumer | |
+|---|---|---|---|---|
+| batches | 204 | 204 | 204 | **exact** |
+| rows | 100,000 | 100,000 | 100,000 | **exact** |
+| time to first batch | 57.759 ms | — | wall 58.087 ms | **contained**, as designed |
+
+Containment rather than equality on the timing pair is deliberate: the outer clock starts before the
+lease is acquired and stops after the batch is serialized, so demanding equality would be demanding
+that the code between them cost nothing.
+
+**Agreement validates both instruments.** `StreamStats` is the counter every earlier section of this
+file rests on, and the spans now agree with it exactly.
+
+### Where the sort actually happens — previously unestablished anywhere in this repository
+
+`CANCELLATION-AND-TRACING.md` §2 named this an open question: with an `ORDER BY`, does DuckDB sort
+inside `stream_arrow`, or inside the first `next()`? The fifth section's window sits on one side of
+that line and no measurement said which. Two spans one line apart now do:
+
+| segment | ms | share |
+|---|---|---|
+| `sql_prepared → execute_returned` | **55.109** | **96.3 %** |
+| `execute_returned → first_source_row` | 2.127 | 3.7 % |
+
+**The sort is inside `stream_arrow`.** The call that returns the iterator does the work; the first
+fetch from it is nearly free. The ratio held at roughly 25:1 across all three attempts that ran this
+cell, on differing absolute values — so the *location* is robust even where the durations are not.
+
+**Scope, stated because it is easy to over-read:** this is the 145 MB control, not 5 GB. It says
+*where* the work happens, which was the open question. It says nothing about how long the sort takes
+at hero-slice scale, and the 5 GB figure is not derivable from it.
+
+## Findings
+
+### 1. The sort window is cancellable, measured, and the mechanism is visible in the distribution
+
+C1: p50 2.180 ms, max 14.964 ms, 7 of 7 on target, against a 100 ms budget. The bimodal shape is the
+10 ms poll cadence rather than a curiosity. The fifth section's own diagnosis — that the interrupt had
+always been attached and the *consumer* was the thing that could not look — is what this closes.
+
+### 2. Two of this pass's own cells cannot measure what they were declared to measure
+
+C2 and C3 fire inline and therefore report ~0 by construction. Recorded as a finding against the
+preregistration rather than presented as a success, because the preregistration named C2 as the cell
+that would settle intra-partition polling and it does not. **An off-thread trigger is required, and
+declaring one now would be re-tuning after seeing the result.**
+
+### 3. `acknowledged` is uniformly 22–33 ms across every write-path cell, and that is the interesting half
+
+C2/C3/C4's acknowledged windows cluster tightly (22.961–32.841 ms across 21 trials) despite three
+different trigger points. That window contains staging removal over ~100 partition files and the audit
+record's fsync — the class-(b) sections that carry no budget by declaration. **The consistency of the
+number across trigger points is evidence that it is dominated by the teardown rather than by where the
+cancel landed**, which is the same conclusion the design note reached from the source.
+
+### 4. The engine's own refusal caught a harness bug that two attempts could not
+
+Attempt 2 died on principle 8 refusing a silent conversion. A harness asking for a column that does
+not exist got a typed refusal naming the columns that do. Recorded because the non-negotiables are
+usually discussed as constraints on the product, and here one worked as a diagnostic.
+
+### 5. The canary earned its cost
+
+Attempt 3 produced 28 on-target trials and a complete, plausible, internally coherent set of numbers —
+p50s in the right places, a bimodal C1, sensible acknowledged windows. **It was wrong**, and the only
+thing that said so was an instrument measuring the machine rather than the code. A pass without it
+would have published those numbers with no way to know.
+
+## What could not be measured, and why
+
+- **Intra-partition cancellation *latency*.** Needs an off-thread trigger; the declared ones fire
+  inline. Future work, declared rather than retrofitted.
+- **The sort's duration at 5 GB.** C6 runs on the 145 MB control. Where the sort lives is established;
+  how long it takes at scale is not.
+- **`temp_directory` / `memory_limit`.** Still unreachable — `Lease::connection()` is `pub(crate)` by
+  design. A ~7 GB sort can still spill somewhere unrecorded. Carried forward from the fifth section as
+  an open ADR-010 rule 6 gap, closed by nothing here.
+- **Anything on macOS or Linux.** Windows reference profile only.
+- **The data-plane half of the span model.** `protocol/data-plane` does not depend on the engine, and
+  giving it that dependency would create the coupling `engine/tests/slice.rs` exists to forbid.
+
+## Reproducing this
+
+```bash
+# 0. The contract, then the semantics. Both committed before the harness existed.
+#    kernel/CANCEL-RESCORE-PREREGISTRATION.md  (incl. amendment A1)
+#    kernel/CANCELLATION-AND-TRACING.md
+
+# 1. Pin, then build. A source pin does not pin a build.
+node kernel/scripts/pin-tree.mjs > target/slice-evidence/cancel-rescore/tree-pin-attempt4.json
+cargo build --release --workspace --tests --locked
+
+# 2. Correctness gate on the same build.
+cargo test --release --locked
+
+# 3. The six cells. REFUSES to generate a fixture; re-hashes the 5 GB file and refuses on mismatch.
+#    Runs ~35 min: 28 trials x a 20 s whole-file rehash, plus a 120 s settle and six 60 s
+#    canary settles (A1).   -> target/slice-evidence/cancel-rescore/cancel-rescore.json
+cargo test --release --test cancel_rescore -- --ignored --nocapture --test-threads=1
+```
+
+## Raw artifacts (`target/slice-evidence/cancel-rescore/`, gitignored)
+
+`cancel-rescore.json` (run of record) · `attempt-1-invalidated-no-trigger-fired.json` ·
+`attempt-2-invalidated-wrong-attribute.json` · `attempt-3-invalidated-by-canary.json` · the three
+invalidated attempts' consoles · `tree-pin.json` (attempt 3) · `tree-pin-attempt4.json` (run of
+record) · `tree-pin-discrepancy.json` · `binary-pin.json`
+
+**The two tree pins differ by exactly one file**, `kernel/tests/cancel_rescore.rs`, which is amendment
+A1's settle. Recorded in `tree-pin-discrepancy.json` rather than repaired, so the difference is
+checkable rather than asserted. The binary pin was **re-verified after the run and matched**.
+
+## Instrument sources (committed)
+
+`kernel/tests/cancel_rescore.rs` — the six cells. A new file: `kernel/tests/scale_pass_a6.rs` is
+**byte-identical** to the source that produced the fifth section's A6 phases, for the reason that file
+gave for leaving `scale_pass.rs` alone.
+
+`engine/src/trace.rs` · `engine/src/stream.rs` · `kernel/src/publish/mod.rs` — the instrument and the
+code it measures. `kernel/tests/publish_cancellation.rs`, `trace_spans.rs`, `wire_bytes_invariant.rs`
+— the deterministic tests, which run in the ordinary suite and assert no latency.
