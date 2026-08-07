@@ -2375,13 +2375,85 @@ tree where the consumer can now look at its own token.
 
 | | |
 |---|---|
-| Fixture | the scale pass's own 5 GB file, unmodified, re-hashed before the run: `sha256:5ae955c5…1788`. The harness **refuses to generate one** |
-| Whole-file rehash, measured | **20,046.3 ms** — paid once per trial, before any trigger can fire |
+| Fixture | the scale pass's own 5 GB file, unmodified, re-hashed **once, before the run** — `sha256:5ae955c5…1788`. The harness **refuses to generate one** |
+| Whole-file rehash, measured | **not recorded for the run of record** — see the provenance gaps below |
 | Control | the same 145 MB in-session control |
 | Hardware | Intel i9-9980HK, 8 cores / 16 threads, 63.7 GiB, SSD |
 | Attempts | **4, of which 3 invalidated** — see below |
 | Canary | all six phases **within** the declared 10 % bound |
-| Tree / binary pin | `27d412d2…` over 90 files; binary `eeca7a4d…` **re-verified after the run: match** |
+| Tree pin | `27d412d2…` over 90 files (`tree-pin-attempt4.json`) — **taken after the run, not before, so it cannot exclude a source edit during it** |
+| Binary pin | `eeca7a4d…`, **confirmed 2026-08-08 from build order and binary content** to be the run of record's; its `source_pin` field names the wrong tree pin — see the provenance gaps below |
+
+### Two provenance gaps in this pass's own record, found in review and recorded rather than repaired
+
+Both were found by the write-up review, after the run. Neither is repairable without re-running, and
+neither is quietly dropped.
+
+**1. The whole-file rehash duration was never recorded for the run of record.** `cancel-rescore.json`
+carries no rehash figure at all. A draft of this section printed **20,046.3 ms** for it; that figure
+is from `attempt-2-invalidated-console.txt`, an **invalidated** attempt, and it is withdrawn here
+rather than laundered into the run of record. The same draft said the rehash was *"paid once per
+trial"* — that is also wrong: `kernel/tests/cancel_rescore.rs` calls `pin_content` **once, before the
+trial loop**, so it is paid once per run. The correct statement is the narrow one: **the fixture was
+hashed once before the run and matched the preregistration's `sha256:5ae955c5…1788`, and how long
+that took is not on record for attempt 4.**
+
+**2. The binary pin names the wrong tree pin — but the hash itself is the run of record's, and that
+was established by re-verification rather than by argument.** `binary-pin.json` records `eeca7a4d…`
+with `source_pin: "tree-pin.json, combined 76fd7b69…"`, and `tree-pin.json` is **attempt 3's** tree.
+Review read that field and concluded the pinned binary was attempt 3's build — which would have meant
+A1's settle never ran. **That conclusion is wrong, and the check that settles it is cheap enough that
+asserting either way would have been inexcusable:**
+
+Filesystem timestamps, to the second, local time (`+02:00`; the tree pins record the same instants in
+`Z` — `tree-pin-attempt4.json`'s `19:40:56.958Z` is the `21:40:56` below):
+
+| | |
+|---|---|
+| attempt 3's artifacts written | **21:17:03** — attempt 3 is over |
+| `kernel/tests/cancel_rescore.rs` last modified | **21:17:55** — A1 applied; the file contains `CANARY_SETTLE` |
+| `cancel_rescore-040613f5bbbd8610.exe` built | **21:18:01** — 6 s *after* that edit |
+| `binary-pin.json` taken | **21:18:11** — 10 s after that build |
+| run of record written | **21:39:28** |
+| `tree-pin-attempt4.json` taken | **21:40:56** — *after* the run, which is why `binary-pin.json` could not name it |
+
+The order is unambiguous at second resolution: attempt 3 finished, A1 was applied, the binary was
+rebuilt, and only then was it pinned. `binary-pin.json`'s `taken_before: "the re-score run"` is
+therefore accurate — it means attempt 4 — while its `source_pin` is stale.
+
+**The decisive check is a content check, and it depends on no clock at all.** A1's `settled_canary`
+prints `settling {}s before the [{label}] canary…`, so the literal **`s before the [`** exists in a
+post-A1 build and cannot exist in a pre-A1 one. It is **present in the pinned binary** (1 occurrence),
+and attempt 3's console contains **zero** per-phase settle lines — only the pre-A1 opening
+`settling 120 s before the first canary…`. **Bytes against behaviour: the pinned binary contains code
+attempt 3 demonstrably did not run.**
+
+**What the weaker checks do and do not add, stated so they can be attacked.** `cargo build --release
+--test cancel_rescore --locked` finishes with **nothing to do** (0.32 s) and the binary still hashes
+to `eeca7a4d…` — but cargo's freshness verdict is *mtime-derived*, so it is **not independent of the
+table above** and is not counted as a second line of evidence. `pin-tree.mjs`'s own header says the
+rest: a binary hash proves *"unchanged since I hashed it", not "built from these sources"*. The hash
+establishes that the artifact on disk today is the one that was pinned; the **content** check
+establishes which sources it came from.
+
+**So `eeca7a4d…` is the binary that ran the run of record**, and A1's settle was compiled into it.
+Attempt 4's canary spreads are **consistent with** a settled machine — they cannot witness which code
+ran, since a quieter machine yields the same spreads, and `cancel-rescore.json` records no settle.
+
+**This section is the retained record of that.** The mtimes, the hash and the content check all live
+in `target/`, which is gitignored and which any `cargo clean` erases; printing them here is what makes
+the closure checkable by a later reader rather than something to take on trust. And "re-verified" is
+the wrong verb, so it is not used: **no post-run hash was ever recorded**, so there was nothing to
+verify *against*. What happened is **confirmed from build order and binary content**.
+
+**What is genuinely defective is the pin's label, not its hash.** `binary-pin.json` points at the
+only tree pin that existed when it was written, and that pin is the wrong one; the tree pin that does
+describe attempt 4 was taken **after** the run rather than before it, contrary to this section's own
+"pin, then build" instruction. Both are recording-order defects and both are fixed the same way:
+**take the tree pin before the run, take the binary pin after the last source edit, and have the
+binary pin name the tree pin it belongs to.** The fifth section's own reproduce block put the reason
+in one line — *"A source pin does not pin a build"* — and this pass took the binary pin it asks for;
+the pin here is real, its provenance label is not.
 
 ## Every attempt, and what invalidated it
 
@@ -2390,15 +2462,17 @@ machine's.** Stated first because a pass that reports only its successful run is
 
 | # | outcome | cause | artifact |
 |---|---|---|---|
-| 1 | **invalidated** | no trigger fired in 28 trials, and the harness recorded *that* each trial was not cancelled without recording *why* | `attempt-1-invalidated-no-trigger-fired.json` |
+| 1 | **invalidated** | no trigger fired in 28 trials; the harness recorded the *trigger's* view of why (`"QueryRunning never fired: the sort finished inside one poll interval"`) but not the *operation's* outcome — and the trigger's view was actively misleading | `attempt-1-invalidated-no-trigger-fired.json` |
 | 2 | **invalidated** | same cause, now visible: the request asked to publish a `zone` attribute the 5 GB fixture does not have | `attempt-2-invalidated-wrong-attribute.json` |
 | 3 | **invalidated** | §6 invalidator 2 — canary spread exceeded 10 % in **five of six phases** | `attempt-3-invalidated-by-canary.json` |
 | 4 | **run of record** | all six phases within bound, 28 of 28 trials on target | `cancel-rescore.json` |
 
-**Attempt 1's real defect was the reporting, not the request.** It failed and could not say why, which
-is the same uninformative-artifact problem this pass was written to argue against — written into the
-pass's own instrument. Every trial row now carries the operation's actual outcome, which is why
-attempt 2 diagnosed itself in one line.
+**Attempt 1's real defect was the reporting, not the request.** It could say why its *trigger* had not
+fired but not what the *operation* had done, and the trigger's explanation pointed at a fast sort when
+the truth was that publish had refused the request outright. A wrong answer is worse than none, and
+this was the pass's own instrument committing the uninformative-artifact failure the pass was written
+to argue against. Every trial row now carries the operation's actual outcome, which is why attempt 2
+diagnosed itself in one line.
 
 **Attempt 2's cause is the engine being right.** Publish refused with *"`zone` cannot be published as
 an attribute — the file has no such column… a conversion the caller did not ask for is the silent
@@ -2406,8 +2480,9 @@ conversion `docs/01` principle 8 forbids."* The 5 GB fixture is `AttributeMode::
 copied from a small-fixture test. A non-negotiable caught a harness bug.
 
 **Attempt 3 was the machine, and the canary said so before any number was believed.** The 400 M
-instrument's long minimum climbed 105.7 → 116.5 → 134.7 → **162.6** ms and fell back to 119.8 as load
-lightened — thermal drift under 28 publishes reading 5 GB each. Amendment **A1** added a 60 s settle
+instrument's long minimum climbed 105.7 → 116.5 → 134.7 → **162.6** ms and then fell back
+131.9 → 117.8 → 119.8 as the load lightened — a rise and a recovery, which is thermal drift under 28
+publishes reading 5 GB each and not a step change. Amendment **A1** added a 60 s settle
 before every canary reading; it declares in its first line that it was written after a result was
 seen, changes no trigger, ceiling, sample count or verdict rule, and carries **no number forward**.
 Attempt 4's spreads: **0.11 / 0.55 / 2.43 / 6.68 / 6.90 / 1.65 %**.
@@ -2417,18 +2492,55 @@ Attempt 4's spreads: **0.11 / 0.55 / 2.43 / 6.68 / 6.90 / 1.65 %**.
 | Cell | Trigger | n | `observed` p50 / p95 / max | `acknowledged` p50 / max | Verdict vs 100 ms |
 |---|---|---|---|---|---|
 | **C1 — inside the sort** | `QueryRunning` + 250 ms, **off-thread** | 7/7 | **2.180 / 14.964 / 14.964 ms** | 6.579 / 21.941 ms | **MET** |
-| C2 — mid partition write | first partial-write callback, inline | 7/7 | 0.001 / 0.001 / 0.001 ms | 24.774 / 29.778 ms | **vacuous — see below** |
-| C3 — immediately pre-fsync | final write callback, inline | 7/7 | 0.001 / 0.002 / 0.002 ms | 27.910 / 32.841 ms | **vacuous** |
-| C4 — A6's trigger, continuity | `partition_written`, inline | 7/7 | 0.001 / 0.001 / 0.001 ms | 26.347 / 29.115 ms | **vacuous** |
+| C2 — mid partition write | first partial-write callback, inline | 7/7 | 0.001 / 0.001 / 0.001 ms | 24.774 / 29.778 ms | **MET — vacuous, see below** |
+| C3 — immediately pre-fsync | final write callback, inline | 7/7 | 0.001 / 0.002 / 0.002 ms | 27.910 / 32.841 ms | **MET — vacuous** |
+| C4 — A6's trigger, continuity | `partition_written`, inline | 7/7 | 0.001 / 0.001 / 0.001 ms | 26.347 / 29.115 ms | **MET — vacuous** |
+
+The verdict column prints what `cancel-rescore.json` recorded — `verdict_on_observed_vs_100ms: "MET"`
+for all four cells — beside this section's reading of it. **Where the artifact and the write-up
+differ, both are shown**, rather than the write-up silently overwriting the recorded field.
 
 **28 of 28 trials fired on target, ended as `Cancelled`, and left nothing on disk** — no destination,
 no staging directory, every one checked. That is a correctness result and the canary does not gate it.
 
+### The fifth section's numbers, printed beside these
+
+`NEXT-CUT.md` rev 2 requires the old figures printed next to the new ones so the evidence chain reads
+without a cross-reference. They are below. **Every figure carries its interval label, because the two
+columns are not the same interval and three of the four pairings are not even the same quantity.**
+
+| the fifth section recorded | its interval | n | this section's counterpart | its interval | n |
+|---|---|---|---|---|---|
+| sort window **3,920.251 ms** | `cancel_requested → execute returns` — **quiescent-interval** (`acknowledged`-class) | **1 — recorded, not established** | **C1** `acknowledged` **6.579** p50 / **21.941** max — and, separately, `observed` **2.180** p50 / **14.964** max | `acknowledged` / **`observed`** = `cancel_requested → cancel_observed` | **7 — established** |
+| `WritingPartitions` p50 **25.475** / p95 **418.321 ms** | quiescent-interval (`acknowledged`-class) | 7 | **C4**, the same trigger *definition* re-implemented (`partition_written`, inline, after 100 partitions): `acknowledged` p50 **26.347** / max **29.115 ms**; `observed` p50 **0.001 ms** | `acknowledged` / `observed` | 7 |
+| `VerifyingSource` p50 **13.700 ms** | quiescent-interval (`acknowledged`-class) | 7 | **not re-measured** — no cell in this pass triggers in that phase | — | — |
+| inter-partition cadence p50 **8.573** / p95 **10.836** / **max 999.924 ms** | a cadence, not a cancellation figure at all | 7 | **not re-measured** — out of scope per the preregistration's §7 | — | — |
+
+**These columns are printed side by side and are never differenced.** Not subtracted, not divided,
+not called faster or slower. Two independent reasons, either sufficient:
+
+1. **Interval.** The fifth section's **3,920.251 ms** and **418.321 ms** are quiescent-interval
+   figures — they run to `boundary::execute` returning. This section's budget-bearing figures are
+   `cancel_requested → cancel_observed`. **Differencing a quiescent-interval figure against an
+   `observed` figure is a category error**, and it is the specific error this pass was built to make
+   impossible to commit by accident.
+2. **Session.** Even the `acknowledged`-to-`acknowledged` pairings above — 3,920.251 against 21.941,
+   418.321 against 29.115 — are **not** differenced. Different tree, different build, different
+   session; the preregistration's §1 forbids it, and the within-session rule that has governed every
+   section of this file forbids it independently of anything this cut did.
+
+What the table is for is the thing a reader can legitimately do with it: **see two verdicts against
+the same `docs/08` budget, each standing on its own evidence.** The fifth section scored `MISSED` on
+its tree. This section scores what it scores on this one. Neither is evidence about the other.
+
 ### Only C1 measures a latency, and the reason is a finding against this pass's own preregistration
 
-**§3 of the preregistration asserted that C2 was "THE ONLY cell that establishes anything about
-intra-partition polling", explicitly contrasting it with A6's cell. That assertion was wrong, and C2
-as declared has the same defect it was written to avoid.**
+**§3 of the preregistration declared C2 "the cell that tests intra-partition polling", explicitly
+contrasting it with A6's cell and closing "C2 is that evidence or nothing is". That declaration was
+wrong, and C2 as declared has the same defect it was written to avoid.** (The harness's own C2
+`caveat` field put it more strongly still — *"THE ONLY cell that establishes anything about
+intra-partition polling"* — and that string is the instrument's, not the contract's; a draft of this
+section quoted it as though it were §3's. Corrected here.)
 
 C2, C3 and C4 fire **inline**, from a callback the publishing thread itself invokes. The very next
 statement that thread executes is a cancellation check. So `cancel_requested → cancel_observed` is
@@ -2436,8 +2548,13 @@ statement that thread executes is a cancellation check. So `cancel_requested →
 property of the code being quick. This is exactly what `CANCELLATION-AND-TRACING.md` §1 established
 about A6's cell, and it applies unchanged to two cells this pass declared as its answer to it.
 
-**Their `MET` verdicts are therefore vacuous** — an artifact compared against a budget — and are
-printed above only because the preregistration forbids reporting a cell without its verdict column.
+**Their `MET` verdicts are therefore vacuous** — an artifact compared against a budget. They are
+printed above because the artifact recorded them and this section does not edit the artifact's
+fields; the authority for calling them vacuous is amendment **A1**, which states it in the
+preregistration itself: *"C2/C3/C4's `observed` figures may not be quoted as latencies, and their
+`MET` verdicts against the 100 ms budget are **vacuous**."* (A draft of this section instead cited a
+preregistration rule "forbidding reporting a cell without its verdict column". **No such rule
+exists** — that citation is withdrawn.)
 
 **The triggers are not re-tuned.** §8 forbids re-declaring a trigger after seeing where it landed, and
 that is the same discipline under which the fifth section refused to re-tune its own overshooting
@@ -2450,23 +2567,48 @@ work, not something to fix here by moving a declared line.
 
 ### C1, the one real measurement
 
-Seven samples: **0.101, 1.024, 2.016, 2.180, 11.925, 13.870, 14.964 ms.**
+Seven `observed` samples: **0.101, 1.024, 2.016, 2.180, 11.925, 13.870, 14.964 ms** — and beside
+them, as §3 requires and in the same sentence rather than later in the subsection, the same seven
+trials' `acknowledged`: **3.957, 6.069, 6.137, 6.579, 15.667, 20.961, 21.941 ms** (p50 **6.579**,
+max **21.941 ms**).
 
-The shape is the mechanism. Four samples land under 2.2 ms and three between 11.9 and 15.0 ms —
-which is what a **10 ms poll cadence** produces: a cancel arriving just before a wakeup is seen at
-once, one arriving just after waits out the interval plus scheduling. The distribution is the
-`PUBLISH_STREAM_POLL_INTERVAL` constant, visible.
+The shape is the mechanism. Four `observed` samples land under 2.2 ms and three between 11.9 and
+15.0 ms — which is what a **10 ms poll cadence** produces: a cancel arriving just before a wakeup is
+seen at once, one arriving just after waits out the interval plus scheduling. The gap between the two
+clusters is 9.7 ms. That is **consistent with** the `PUBLISH_STREAM_POLL_INTERVAL` constant at n = 7;
+it is not an identity, and this section does not claim the distribution *is* the constant.
 
 **This is the window the fifth section could enter only by timing luck, 1 trial in 7.** It is now
 reachable on purpose, 7 of 7, because `QueryRunning` is emitted only when a batch has been demanded
-and none has arrived. The budget is **met with ~6.7× headroom on the maximum**.
+and none has arrived. **That pairing is a comparison of trigger determinism, not of latency** — it
+counts how often a declared trigger reached its window, which no clock decides and the canary does
+not gate. No timing figure of the fifth section's is compared with any timing figure here.
+
+Against the budget: `observed` max **14.964 ms** against 100 ms — **met by ~6.7× on the measured
+maximum**, with `acknowledged` max **21.941 ms** beside it and carrying no budget.
 
 **What it is not.** 14.964 ms is a *measurement*, not a bound. `CANCELLATION-AND-TRACING.md` §3 is
 explicit that the 10 ms cadence is exact while the latency it produces is not derivable — waking on
 time needs the OS scheduler, which is an unbounded external section on a machine saturated by a 5 GB
 publish. **No figure here may be quoted as a ceiling.**
 
-## Tracing overhead — below noise, and the sign proves it
+**The sort-window caution, carried verbatim from `CANCELLATION-AND-TRACING.md` §3** because this is
+the section where a reader would otherwise reach for the withdrawn number:
+
+> **An earlier revision of this table called 25.625 ms "the acknowledgement bound for the whole
+> pre-first-batch window". It is withdrawn**, for the same reason the `262,144 B ÷ 10 MB/s = 25.0 ms`
+> claim on `PUBLISH_WRITE_CHUNK_BYTES` was withdrawn: it netted a code-controlled cadence against
+> unbounded external sections, and "the whole window" was false besides. **No figure in the sixth
+> section may cite it as a bound.**
+
+**And one place this pass tripped over its own withdrawal, recorded rather than tidied away.** The
+preregistration's C1 predicted *"`observed` ≤ 25.625 ms (the derived bound)"* — citing as a bound the
+figure the semantics file had **already withdrawn** one commit earlier. The prediction came in true
+(max 14.964 ms), and **that agreement may not be read as the withdrawn bound holding.** A measurement
+landing under a number that was never a bound says nothing about the number. The prediction is
+reported as what it was — a guess that happened to be right — and the withdrawal stands.
+
+## Tracing overhead — below noise, and the sign is why
 
 145 MB control, ABBA after a discarded warm-up, six runs per arm:
 
@@ -2475,14 +2617,31 @@ publish. **No figure here may be quoted as a ceiling.**
 | tracing **off** | 756.924 ms | 857.110 ms | 732.545 · 744.924 · 756.924 · 786.217 · 808.240 · 857.110 |
 | tracing **on** | 743.433 ms | 896.491 ms | 702.092 · 721.264 · 743.433 · 771.997 · 833.066 · 896.491 |
 
-Delta at p50: **−13.491 ms, −1.78 %** — tracing *on* is nominally faster, which is the clearest
-available evidence that the difference is noise rather than a cost. The ranges overlap almost
-completely. **No overhead is measurable at this scale**, and because the number is negative it is
-reported as "below noise" rather than as a speedup, which would be the same error in the other
-direction.
+**Both order estimates, reported separately and deliberately not averaged**, as §3 C5 requires and A2
+item 2 required of the earlier A/B:
 
-This is what the brief's condition asks for: if enabling tracing had shifted p50 beyond noise, that
-figure would have to be printed beside every trace-derived number below. It did not.
+| order | samples (ms) | p50 |
+|---|---|---|
+| **off first** | 786.217 · 756.924 · 808.240 | 786.217 |
+| **on first** | 702.092 · 771.997 · 833.066 | 771.997 |
+
+Delta at p50 over the pooled arms: **−13.491 ms, −1.78 %** — tracing *on* is nominally faster, which
+is the clearest available evidence that the difference is noise rather than a cost. It is evidence,
+not proof: at n = 6 per arm with ranges that overlap almost completely, a negative sign is what a
+null effect looks like, not a demonstration of one. **No overhead is measurable at this scale**, and
+because the number is negative it is reported as "below noise" rather than as a speedup, which would
+be the same error in the other direction.
+
+**A declared deviation, disclosed rather than left to a reader to notice.** `NEXT-CUT.md` rev 2 asks
+for the overhead cell at **n ≥ 7 per state**; the preregistration declared **n = 6** and the harness
+ran 6. This section scores the cell as declared, because the preregistration was committed before the
+run — but **which document wins is not this section's call to make.** `NEXT-CUT.md` rev 2's own header
+says the tighter form binds where it tightened a claim, and a preregistration that loosened a brief's
+sample floor without saying so is exactly the drift that document exists to stop. **Flagged for the
+human rather than decided here.** Either way the cell does **not** meet the brief's floor, and the
+sentence below is
+therefore weaker than "what the brief asked for": if enabling tracing had shifted p50 beyond noise,
+that figure would have to be printed beside every trace-derived number below. It did not, at n = 6.
 
 ## The consistency demonstration, and the question it settled
 
@@ -2499,8 +2658,14 @@ Containment rather than equality on the timing pair is deliberate: the outer clo
 lease is acquired and stops after the batch is serialized, so demanding equality would be demanding
 that the code between them cost nothing.
 
-**Agreement validates both instruments.** `StreamStats` is the counter every earlier section of this
-file rests on, and the spans now agree with it exactly.
+**Agreement corroborates both instruments against the preregistered boundary definitions — it does
+not "validate" them in the abstract**, which is the wording `NEXT-CUT.md` rev 2 requires and the
+distinction it requires it for. `StreamStats` is the counter every earlier section of this file rests
+on, and the spans agree with it exactly *where the preregistration declared the two to be counting
+the same events*. Two instruments agreeing is evidence that neither miscounts what both were pointed
+at; it is not evidence that the boundary they were pointed at is the right one. **No unexplained
+disagreement arose, so this cut carries no unresolved instrumentation discrepancy** — the condition
+rev 2 attached to piece 2's validation claim.
 
 ### Where the sort actually happens — previously unestablished anywhere in this repository
 
@@ -2508,26 +2673,79 @@ file rests on, and the spans now agree with it exactly.
 inside `stream_arrow`, or inside the first `next()`? The fifth section's window sits on one side of
 that line and no measurement said which. Two spans one line apart now do:
 
+Both segments are trace-derived, so the preregistration's §C6 requires the drop count printed beside
+them regardless of whether it is zero: **`dropped_records: 0`.**
+
 | segment | ms | share |
 |---|---|---|
 | `sql_prepared → execute_returned` | **55.109** | **96.3 %** |
 | `execute_returned → first_source_row` | 2.127 | 3.7 % |
 
 **The sort is inside `stream_arrow`.** The call that returns the iterator does the work; the first
-fetch from it is nearly free. The ratio held at roughly 25:1 across all three attempts that ran this
-cell, on differing absolute values — so the *location* is robust even where the durations are not.
+fetch from it is nearly free.
+
+**Both segments are n = 1 — recorded, not established**, by this file's own standing rule that one
+sample gives an order of magnitude and not a distribution. What makes the *location* claim more than
+one sample is a direction rather than a number: **the first segment dominated in every attempt that
+ran this cell, including the three invalidated ones.** That is a qualitative statement and it is
+deliberately kept qualitative — A1 forbids carrying any attempt-3 number forward, attempts 1 and 2
+are invalidated artifacts, and the canary gates timing numbers rather than directions. **A draft of
+this section said "the ratio held at roughly 25:1 across all three attempts". That is withdrawn:**
+four attempts ran the cell, not three, and their ratios are not all roughly 25:1. The magnitudes of
+the invalidated attempts are not quoted here, and the ratio of the run of record — 25.9:1 — carries
+n = 1 like the segments it comes from.
 
 **Scope, stated because it is easy to over-read:** this is the 145 MB control, not 5 GB. It says
 *where* the work happens, which was the open question. It says nothing about how long the sort takes
 at hero-slice scale, and the 5 GB figure is not derivable from it.
 
+### The figure this section deliberately does not print, and the caveat that stops it
+
+The instrument stamps `partition_sync_start` / `partition_sync_end`, so a *"which term dominates the
+418 ms"* decomposition is mechanically available. **It is not printed, and the reason is a limit the
+design note declared before the run rather than one discovered after it.** Carried verbatim from
+`CANCELLATION-AND-TRACING.md` §7:
+
+> **`TRACE_BUFFER_RECORDS` is reached in normal use, and on the publish path it truncates in a
+> *biased* way.** The 145 MB consistency cell is safe **because it does not fill the buffer at all**
+> — its own harness asserts `dropped == 0` before making any exact claim, and the claim rests on that
+> assertion rather than on any property of first occurrences.
+>
+> An earlier revision of this bullet said "first occurrences are never what gets dropped". **That is
+> false and it was load-bearing, so it is withdrawn.** Drop-with-count is *positional*, not
+> name-aware: once the buffer is full, every later record goes, first occurrence or not — including
+> `publish_cancel_observed` and `publish_staging_removed`, which is to say the cancellation instant
+> the instrument exists to time. **The rule that replaces it: no segment whose endpoint occurs after
+> the buffer filled may be derived from a trace with `dropped > 0`.**
+>
+> **On the publish path it does not hold, and this bounds what the sixth section may claim.**
+> `write_inner` stamps four marks per partition (`partition_create_start`, `partition_write_start`,
+> `partition_sync_start`, `partition_sync_end`) plus one `batch_full` — five records per partition.
+> At a 4,096-record ceiling that is roughly the **first 819 partitions of the fifth section's
+> ~5,700**, and they are the *earliest* ones: the cold-writeback-cache end of the run. The C2/C3
+> cancellation cells deliberately fire after `PARTITION_FLOOR = 100`, with the cache loaded — **the
+> opposite population.**
+>
+> So a "which term dominates the 418 ms" figure derived from `partition_sync_*` describes early,
+> cold-cache partitions and **may not be generalised to the run**. `dropped()` reports how many
+> records were refused but not which. Any such figure must be printed with that scope attached, or it
+> is unfalsifiable in exactly the way this instrument exists to prevent.
+
+The 145 MB consistency cell escapes this entirely — it reports `dropped_records: 0`, so its exact
+comparisons rest on an assertion the harness makes before it claims anything, not on a property of
+which records survive. **The publish-path decomposition has no such escape at 5 GB and is therefore
+left unmeasured rather than published with a scope caveat that would swallow the figure whole.**
+
 ## Findings
 
 ### 1. The sort window is cancellable, measured, and the mechanism is visible in the distribution
 
-C1: p50 2.180 ms, max 14.964 ms, 7 of 7 on target, against a 100 ms budget. The bimodal shape is the
-10 ms poll cadence rather than a curiosity. The fifth section's own diagnosis — that the interrupt had
-always been attached and the *consumer* was the thing that could not look — is what this closes.
+C1, both intervals together as §3 requires: `observed` p50 **2.180** / max **14.964 ms** — the
+budget-bearing one — beside `acknowledged` p50 **6.579** / max **21.941 ms**. 7 of 7 on target,
+against a 100 ms budget. The bimodal shape is consistent with the 10 ms poll cadence rather than a
+curiosity — at n = 7 that is a reading of the distribution, not an identity. The
+fifth section's own diagnosis — that the interrupt had always been attached and the *consumer* was the
+thing that could not look — is what this closes.
 
 ### 2. Two of this pass's own cells cannot measure what they were declared to measure
 
@@ -2557,18 +2775,57 @@ p50s in the right places, a bimodal C1, sensible acknowledged windows. **It was 
 thing that said so was an instrument measuring the machine rather than the code. A pass without it
 would have published those numbers with no way to know.
 
+### 6. This pass recorded its failures better than its success — and its own record misled a reviewer
+
+**All three invalidated attempts retained a console; the run of record did not.** The whole-file
+rehash duration existed only as console output, so for attempt 4 it is simply gone — while the same
+quantity remains readable for **two of the three** thrown-away attempts (attempt 1's console was
+captured only from mid-run and has no rehash line either). A draft of this section quietly filled that
+hole with **attempt 2's** figure. Review caught it, and it is withdrawn rather than corrected, because
+there is nothing to correct it to.
+
+**The second half is the more instructive one, because the recording defect propagated into the
+review itself.** `binary-pin.json` names attempt 3's tree pin in its `source_pin` field — not because
+the binary is attempt 3's, but because attempt 4's tree pin was taken *after* the run and did not yet
+exist. Review read that field, concluded the pinned binary predated A1's settle, and marked it
+blocking. **A mis-labelled pin produced a confident, wrong conclusion about which code ran** — which
+is precisely the failure mode this pass argues instruments exist to prevent, occurring in the pass's
+own instrument metadata. **What resolved it was reading outside the retained artifact set** — the
+pinned binary's own bytes, which still carry A1's format literal that attempt 3's console never
+printed. Nothing in `target/slice-evidence/cancel-rescore/` could have separated the two readings,
+which sharpens the lesson rather than softening it: the evidence set was complete enough to record
+the numbers and not complete enough to say which build produced them.
+
+The corrections are procedural and cost nothing: **retain the run of record's console; take the tree
+pin before the run; take the binary pin after the last source edit and have it name the tree pin it
+belongs to.** The general lesson is narrower and worth more than the three: **a provenance field that
+is merely stale is more dangerous than one that is missing**, because a missing field prompts a
+check and a stale one answers the question wrongly.
+
 ## What could not be measured, and why
 
 - **Intra-partition cancellation *latency*.** Needs an off-thread trigger; the declared ones fire
   inline. Future work, declared rather than retrofitted.
-- **The sort's duration at 5 GB.** C6 runs on the 145 MB control. Where the sort lives is established;
-  how long it takes at scale is not.
+- **The sort's duration at 5 GB.** C6 runs on the 145 MB control. Where the sort lives is *located* —
+  at n = 1, with the direction robust across every attempt that ran the cell — and how long it takes
+  at scale is neither located nor derivable from it. "Established" is this file's word for n ≥ 7 and
+  is not used of either segment.
+- **Which term dominates the publish write path at 5 GB.** The spans exist; the trace buffer's
+  positional drop makes any such figure describe the first ~819 of ~5,700 partitions — the cold-cache
+  population, and the opposite one from where the cancellation cells fire. Declared as a limit before
+  the run, quoted verbatim above, and left unmeasured rather than published with a caveat larger than
+  the claim.
 - **`temp_directory` / `memory_limit`.** Still unreachable — `Lease::connection()` is `pub(crate)` by
   design. A ~7 GB sort can still spill somewhere unrecorded. Carried forward from the fifth section as
   an open ADR-010 rule 6 gap, closed by nothing here.
 - **Anything on macOS or Linux.** Windows reference profile only.
 - **The data-plane half of the span model.** `protocol/data-plane` does not depend on the engine, and
   giving it that dependency would create the coupling `engine/tests/slice.rs` exists to forbid.
+- **The run of record's own whole-file rehash duration.** A provenance gap in this pass's record
+  rather than a measurement limit — see gap 1 above. All three *invalidated* attempts retained a
+  console; **the run of record did not**, which is why this one cannot be closed from the artifacts.
+  A pass that keeps a console for its failures and not for its success has the retention policy
+  backwards. (The binary pin, gap 2, *was* closable and is closed: see finding 6.)
 
 ## Reproducing this
 
@@ -2577,35 +2834,51 @@ would have published those numbers with no way to know.
 #    kernel/CANCEL-RESCORE-PREREGISTRATION.md  (incl. amendment A1)
 #    kernel/CANCELLATION-AND-TRACING.md
 
-# 1. Pin, then build. A source pin does not pin a build.
-node kernel/scripts/pin-tree.mjs > target/slice-evidence/cancel-rescore/tree-pin-attempt4.json
+# 1. Pin the TREE first -- this pass took attempt 4's tree pin AFTER the run, which brackets
+#    nothing (pin-tree.mjs's own header: "A pin taken after the build brackets nothing").
+node kernel/scripts/pin-tree.mjs > target/slice-evidence/cancel-rescore/tree-pin-before.json
 cargo build --release --workspace --tests --locked
+
+# 1b. Compare the tree after the build, then pin the BINARY -- after the last source edit and
+#     after the build, naming the tree pin it belongs to. This pass's binary pin named a stale
+#     tree pin, and a reviewer read it as the wrong build.
+node kernel/scripts/pin-tree.mjs --compare target/slice-evidence/cancel-rescore/tree-pin-before.json
+node kernel/scripts/pin-tree.mjs --binaries target/release/deps/cancel_rescore-*.exe \
+  > target/slice-evidence/cancel-rescore/binary-pin-before.json
 
 # 2. Correctness gate on the same build.
 cargo test --release --locked
 
-# 3. The six cells. REFUSES to generate a fixture; re-hashes the 5 GB file and refuses on mismatch.
-#    Runs ~35 min: 28 trials x a 20 s whole-file rehash, plus a 120 s settle and six 60 s
-#    canary settles (A1).   -> target/slice-evidence/cancel-rescore/cancel-rescore.json
-cargo test --release --test cancel_rescore -- --ignored --nocapture --test-threads=1
+# 3. The six cells. REFUSES to generate a fixture; re-hashes the 5 GB file ONCE, before the trial
+#    loop, and refuses on mismatch. Attempt 3's console recorded 968.81 s for the whole test --
+#    the 120 s opening settle included -- and A1's six 60 s settles add ~6 min: budget ~22 min.
+#    TEE THE CONSOLE -- this pass did not, and its rehash duration is unrecoverable because of it.
+#    -> target/slice-evidence/cancel-rescore/cancel-rescore.json
+cargo test --release --test cancel_rescore -- --ignored --nocapture --test-threads=1 2>&1 \
+  | tee target/slice-evidence/cancel-rescore/run-of-record-console.txt
 ```
 
 ## Raw artifacts (`target/slice-evidence/cancel-rescore/`, gitignored)
 
 `cancel-rescore.json` (run of record) · `attempt-1-invalidated-no-trigger-fired.json` ·
 `attempt-2-invalidated-wrong-attribute.json` · `attempt-3-invalidated-by-canary.json` · the three
-invalidated attempts' consoles · `tree-pin.json` (attempt 3) · `tree-pin-attempt4.json` (run of
-record) · `tree-pin-discrepancy.json` · `binary-pin.json`
+invalidated attempts' consoles — **and no console for the run of record** · `tree-pin.json`
+(attempt 3) · `tree-pin-attempt4.json` (run of record) · `tree-pin-discrepancy.json` ·
+`binary-pin.json` (**correct hash, wrong `source_pin` label — see the provenance gaps**)
 
 **The two tree pins differ by exactly one file**, `kernel/tests/cancel_rescore.rs`, which is amendment
 A1's settle. Recorded in `tree-pin-discrepancy.json` rather than repaired, so the difference is
-checkable rather than asserted. The binary pin was **re-verified after the run and matched**.
+checkable rather than asserted. That same file compiles into the pinned test binary — which is what
+makes `binary-pin.json`'s stale `source_pin` field misleading, and what makes the rebuild check that
+resolved it decisive.
 
 ## Instrument sources (committed)
 
-`kernel/tests/cancel_rescore.rs` — the six cells. A new file: `kernel/tests/scale_pass_a6.rs` is
-**byte-identical** to the source that produced the fifth section's A6 phases, for the reason that file
-gave for leaving `scale_pass.rs` alone.
+`kernel/tests/cancel_rescore.rs` — **the new file**, holding all six cells of this pass.
+`kernel/tests/scale_pass_a6.rs` is untouched by this cut and remains **byte-identical** to the source
+that produced the fifth section's A6 phases, for the reason that file gave for leaving
+`scale_pass.rs` alone. C4 re-implements A6's trigger *definition* inside `cancel_rescore.rs`; it does
+not re-run `scale_pass_a6.rs`.
 
 `engine/src/trace.rs` · `engine/src/stream.rs` · `kernel/src/publish/mod.rs` — the instrument and the
 code it measures. `kernel/tests/publish_cancellation.rs`, `trace_spans.rs`, `wire_bytes_invariant.rs`
