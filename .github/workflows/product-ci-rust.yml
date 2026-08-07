@@ -64,6 +64,12 @@ name: Product CI — Rust workspace
 # > (the two `docs/08` harnesses), plus the viewer's 45. **Until a run here goes green this workflow
 # > is configuration that has never been exercised end to end, and it must not be treated as a
 # > gate.** Nothing in this repository may cite it as one until then.
+# >
+# > **2026-08-07, on the `pre-public-checklist` branch: 268 passed, 0 failed, 2 ignored, plus the
+# > viewer's 52.** The counts moved because ADR-017 Corrigendum 3 added tests on both sides; the two
+# > `docs/08` harnesses are still the ignored pair and are still not run here. **The runner
+# > constraint above is unchanged and no run of this workflow has gone green**, so this line records
+# > a local result and advances nothing about CI.
 #
 # ## The cost being managed
 #

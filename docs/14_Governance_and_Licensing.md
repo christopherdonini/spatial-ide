@@ -16,6 +16,7 @@ Constitution-level because three things depend on it: a plugin ecosystem needs l
 - **The open-core boundary is declared, not discovered.** Forever-open: kernel, data engine, renderer, editing plugin, static publishing (ADR-008). Candidate-commercial: managed sharing service, enterprise editing (3.x), org-level administration.
 - **CLA vs DCO is decided up front**, before the first external contribution — retrofitting a CLA is a community wound.
 - **Trademark policy is separate from the code license.** The name "Spatial IDE" (or its successor) is governed independently so forks can exist without identity confusion.
+  > **Owed and open (ADR-009 item 5), as of 2026-08-07.** The policy itself is **not written here**, and a stub asserting terms nobody has decided would be worse than this sentence. Its content depends on the **project-name collision check**, which ADR-009 makes a precondition for going public and which has not been performed — it needs trademark registers and a package-namespace search, and the judgement is a human's. `PRE-PUBLIC-CHECKLIST.md` tracks both as open.
 
 ## Governance
 
