@@ -289,3 +289,66 @@ Remaining before the public flip: CI green (environmental — `Settings → Bill
 Post-public obligations, named: counsel review before the first outside contribution;
 `protocol/transport-bakeoff/web` audit when off the metered connection; full trademark-register
 search pre-1.0.
+
+---
+
+## Custodian update — 2026-08-07, later the same day
+
+**Nothing above is edited.** The rows and the run table above record what was true when the
+pre-public pass finished; this note records what changed after the human's decisions were acted on.
+Two items close, one stays open for a narrower reason than before.
+
+### Item 4 — dependency-license audit: **the nine are recorded; the report flags zero**
+
+Decision 1 above is discharged. The nine accepted rows are now in a **package-scoped** decision list
+in `scripts/audit-dependency-licenses.mjs`, keyed on *(tree, package, exact version, exact declared
+expression)* and each carrying a dated comment citing that decision.
+
+**They are deliberately not on `RECOGNISED_PERMISSIVE`.** The nine rows resolve to only three SPDX
+identifiers, so the identifier list would have produced three entries carrying three comments — and,
+worse, would have silently recognised **every future package** declaring them. The human's decision
+scoped the five MPL-2.0 crates to *spike-only, transitive via Tauri*; a global `MPL-2.0` entry would
+have passed an MPL-2.0 crate appearing tomorrow in the workspace — the shipped `AGPL-3.0-or-later`
+core — which is a different question nobody has been asked. The tree key makes that qualifier
+mechanical rather than a sentence in prose.
+
+Re-run offline: **721 audited, 712 recognised, 9 decided, 0 needing review, 1 tree not auditable**
+(`protocol/transport-bakeoff/web`, unchanged — installing its `node_modules` is a download). The
+report gains a "Decided packages" section printing all nine with dates, reasons and citation, and an
+"Unused decisions" section so a stale entry becomes visible rather than accumulating.
+
+### CI green — **achieved**, and it was environmental as suspected
+
+Both product workflows went green on `de6ad08`, 2026-08-07: `31156155408` (Rust workspace,
+`windows-latest`, 41 min, all nine steps) and `31156155406` (bundle viewer, 15 s). A runner was
+assigned within seconds in both cases. The not-a-gate caveats in `product-ci-rust.yml` are lifted
+with the evidence retained; `product-ci-viewer.yml` never carried one and now records its first
+green run.
+
+**Which of the three candidate causes it was is still not established**, and the evidence table is
+kept rather than deleted so a recurrence can be compared against it.
+
+### Item 2's DCO caveat — **stays**, for a narrower and better-understood reason
+
+`dco.yml` has **zero runs, green or otherwise**. The cause is not runner supply: it fires on
+`pull_request`, and both of this repository's pull requests (#1, #2) merged *before* the file was
+committed (`0487a4e`, 2026-08-07T08:19:50Z). What is unproven is no longer "can this repository get
+a runner" but "does this specific check do what it says" — and one pull request settles it.
+`CONTRIBUTING.md`'s sign-off requirement is real regardless; what is untested is the enforcement.
+
+### What remains before the public flip
+
+| | |
+|---|---|
+| **Item 1** — two license texts | the human's, unchanged |
+| **Item 5** — name collision check + trademark stub | the human's, unchanged. **Not performed** |
+| `dco.yml` unexercised | one pull request settles it |
+
+Post-public obligations are unchanged: counsel review before the first outside contribution;
+`protocol/transport-bakeoff/web` audit when off the metered connection; full trademark-register
+search pre-1.0.
+
+**Unrelated to the flip, recorded because it moved the same day:** ADR-006's class-3 obligations for
+publish — a scoped grant, explicit approval, and a redacted audit record — are now implemented
+(`kernel/PERMISSION-BOUNDARY.md`). That is ADR-017's acceptance condition, not ADR-009's checklist,
+and it gates nothing here.

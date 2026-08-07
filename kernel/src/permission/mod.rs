@@ -19,20 +19,22 @@
 //! ## What this is not
 //!
 //! **It is not a permission system, and nothing here is exposed.** There is no authentication, no
-//! client, no extension surface, and no SKP message. ADR-017's acceptance condition forbids exposing
-//! publish through SKP, a shipped CLI, MCP, a plugin, a notebook or an AI surface until the
-//! machinery exists *and* an exposure surface passes review; this cut builds the machinery and
-//! **does not flip the condition**. `kernel/PERMISSION-BOUNDARY.md` lists what exposure still
-//! requires — seven things, none of them in this cut.
+//! client, no extension surface, and no SKP message. ADR-017's acceptance condition requires this
+//! machinery before publish is exposed through SKP, a shipped CLI, MCP, a plugin, a notebook or an
+//! AI surface; this cut builds the machinery and exposes nothing.
+//! `kernel/PERMISSION-BOUNDARY.md` lists what exposure would still require — seven things, none of
+//! them in this cut — and flags for the custodian the question of what that condition's "until
+//! then" now means.
 //!
 //! ## The single-user reality
 //!
 //! The grantor and the operator are the same OS user today, and at the command line the tool mints
-//! its own grant. That is stated plainly in [`grant`] and in the write-up rather than obscured: what
-//! actually gates a command-line publish is the **approval** and the **audit record**; the grant's
-//! contribution there is that it exists, carries a grantor, expires, constrains the destination
-//! class, and forces the single path. The grant mechanism's teeth are at the library boundary, where
-//! a caller supplies a [`grant::GrantSet`] it did not derive from the request.
+//! its own grant **from the request it is about to authorize** — so in the default invocation both
+//! halves of the scope are tautologies and the grant checks nothing. (`--grant-destination` is the
+//! one part that is a real check.) What gates a command-line publish is the **approval** and the
+//! **audit record**; the grant's contribution there is that it exists, carries a grantor, expires,
+//! and forces the single path. The grant mechanism's teeth are at the library boundary, where a
+//! caller supplies a [`grant::GrantSet`] it did not derive from the request.
 //!
 //! The object model deliberately does not *assume* the single-user case — a grant carries its
 //! grantor and [`grant::PrincipalKind`] has room for kinds that do not exist — so multi-principal is

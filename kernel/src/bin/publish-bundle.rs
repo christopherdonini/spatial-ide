@@ -37,24 +37,28 @@
 //! approval that names the destination, and an append-only audit record written before the
 //! operation is authorized and again when it ends. An unauditable publish does not run.
 //!
-//! **The grant this binary uses is one it mints itself, and that is said plainly rather than dressed
-//! up.** Its *source* half is a tautology — the tool grants itself the dataset it just opened and
-//! pinned, so the check can only fail if the file changes underneath. Its *destination* half is not:
-//! `--grant-destination` is a separate argument from `--out`, so a grant can be scoped to a
-//! directory while the publish names one bundle inside it. So what actually gates a command-line
-//! publish is the **approval** and the **audit record**; the grant's contribution here is that it
-//! exists, carries a grantor, expires, bounds the destination class, and forces the single path.
-//! The grant mechanism's teeth are at the library boundary, where a caller supplies a `GrantSet` it
-//! did not derive from the request.
+//! **The grant this binary uses is one it mints itself from the very request it then authorizes**,
+//! and that is said plainly rather than dressed up. Its *source* half is a tautology — the tool
+//! grants itself the dataset it just opened and pinned, so the check can only fail if the file
+//! changes underneath. **In the default invocation the destination half is a tautology too**:
+//! without `--grant-destination` the scope is `exact(--out)`, checked against `--out`, and it cannot
+//! fail. So the ordinary command line's grant checks nothing.
+//!
+//! `--grant-destination <dir>` is the one part that is a real check: it scopes the grant to a
+//! directory named *separately* from `--out`, so a publish aimed outside it is refused.
+//!
+//! What gates a command-line publish is therefore the **approval** and the **audit record**; the
+//! grant's contribution here is that it exists, carries a grantor, expires, and forces the single
+//! path. The grant mechanism's teeth are at the library boundary, where a caller supplies a
+//! `GrantSet` it did not derive from the request.
 //!
 //! **`--approve <name>` is approval, not a `--yes`.** Its argument must equal the destination's
 //! final path component, so a script approves a *named* destination rather than whatever the command
 //! happens to do. Without it the binary prompts and requires the same name to be typed. This is the
 //! path the test harness uses, which is what keeps every existing publish test runnable.
 //!
-//! **Nothing here is an exposure surface.** ADR-017's acceptance condition keeps `publish-bundle`
-//! developer/test tooling until an exposure surface passes review; building the gate does not flip
-//! that, and this binary defines no SKP message and serves nothing.
+//! **Nothing here is an exposure surface.** This binary defines no SKP message and serves nothing;
+//! it is the same developer/test tool it was, now gated.
 
 use std::path::PathBuf;
 use std::time::Duration;

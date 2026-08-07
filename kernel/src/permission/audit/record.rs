@@ -20,6 +20,11 @@
 //! and this log's whole purpose is to survive the operation being interrupted. JSONL degrades to
 //! "one corrupt line" instead.
 //!
+//! **JSON here is not an ADR-004 violation.** ADR-004 forbids JSON on **data hot paths**; an audit
+//! record is a control-plane fact written twice per operation. It is the same distinction ADR-017
+//! already draws for the manifest — "a reader that mistook a JSON manifest for a data-plane
+//! violation would be reading the rule one level too high".
+//!
 //! Line framing does not rest on the escaper: every string admitted here is checked for control
 //! characters first ([`no_control`]), so a field cannot forge a record boundary even if the writer's
 //! escaping changed.

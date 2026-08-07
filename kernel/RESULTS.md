@@ -1512,9 +1512,22 @@ cargo test --workspace                                   # 249 passed, 0 failed,
 > ```
 >
 > `NOTICE.txt` is generated into `renderer/bundle-viewer/dist/` by `npm run verify` in step 0, so it
-> is present wherever `--viewer` points. **The numbers above are unaffected**: they were taken on
-> the tree at `9c63c84` and describe it. Re-running on HEAD would be a different measurement of a
-> different tree and is not performed here.
+> is present wherever `--viewer` points.
+>
+> **And as of 2026-08-07 the publish is gated** (ADR-006 class 3; `kernel/PERMISSION-BOUNDARY.md`).
+> Step 2 either prompts for the destination's name on stdin, or takes it as a flag — which is what a
+> scripted run wants:
+>
+> ```sh
+>     --approve bundle-a          # …and `--approve bundle-b` for the second publish
+> ```
+>
+> The argument must equal the destination's final path component, so the two publishes take
+> **different** values; that is the point of a named confirmation rather than a `--yes`. Each run
+> also appends two records to the per-user audit log, or to wherever `SPATIAL_IDE_AUDIT_LOG` points.
+>
+> **The numbers above are unaffected**: they were taken on the tree at `9c63c84` and describe it.
+> Re-running on HEAD would be a different measurement of a different tree and is not performed here.
 
 **Cancellation needs a real `CTRL_C_EVENT`.** `kill -INT` from a POSIX-emulating shell will let the
 publish run to completion and then report success; see defect 3 above, including the
@@ -1563,3 +1576,31 @@ condition on the class-3 gate.
   end-to-end and an index exists but is deliberately disabled on this section's own measured finding.
   **That is a correction to how the gate was described, not a gate closing**, and the finding it
   rests on is the one recorded in this file's second section, unchanged.
+
+---
+
+## Post-run note — 2026-08-07 — the class-3 gate exists; nothing above is edited
+
+**Nothing above this line is changed**, including the 2026-08-06 note whose bullet reads *"The
+class-3 approval gate is still owed and absent."* That was true when written and is the record of
+what was true then; it is answered here rather than rewritten, on the same discipline this file's
+earlier post-run note declares for itself.
+
+**ADR-006's class-3 row is now discharged for publish.** A scoped, expiring grant; an explicit
+approval that names the destination; and a two-phase append-only redacted audit record all exist in
+`kernel/src/permission/`, and an unauditable publish refuses. The design, its declared properties
+and ten findings flagged for the custodian are in `kernel/PERMISSION-BOUNDARY.md`; ADR-017 carries a
+dated progress note recording the same thing against its acceptance condition.
+
+**This changes no measurement in this file, and produces none.** The gate is a correctness change
+with no measurement campaign behind it: no number here moves, no budget is touched, and the two
+`docs/08` harnesses are untouched and still `#[ignore]`d. The one operational consequence for
+re-running anything in this file is that `publish-bundle` now requires an approval — the
+reproduction recipe above carries the `--approve` caveat.
+
+**One size figure is recorded, and it is a size rather than a budget.** A record pair measured from
+this repository's own boundary tests is **1 053 bytes** for a successful publish (555 intent + 498
+outcome, newlines included) and 915 bytes for a refused attempt. That is the basis for the retention
+arithmetic in `kernel/PERMISSION-BOUNDARY.md` — ~7 900 publishes per 8 MiB generation, ~39 000 across
+the five retained files. It is not a `docs/08` measurement, has no budget attached, and implies no
+comparison with anything.

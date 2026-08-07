@@ -954,3 +954,76 @@ triggered by publishing a bundle to a directory. But viewer code embedded in a d
 *is* distributed code, and its licensing is ADR-009's question, unsettled here."** The second half is
 now settled: ADR-009 (Accepted 2026-08-07) item 7 requires the notice and the route, and this
 corrigendum is the format's discharge of it. The first half is unaffected.
+
+---
+
+## Progress note — 2026-08-07 — the acceptance condition's machinery exists; the condition stands
+
+**Appended, not applied.** This ADR is Accepted and immutable; nothing above is edited, and in
+particular **the Status block's acceptance condition is unchanged and is not lifted.** This note
+records what has been built against it, so a later reader can tell how much of the condition is
+discharged without having to reconstruct it from commit history.
+
+### What now exists
+
+The Status block requires "a **scoped publish grant, explicit approval, and a redacted audit
+record** (the §15 obligations, with §13 defining redaction — see Corrigendum 2)". All three are
+implemented in `kernel/src/permission/`, and §15's box — *"Two of ADR-006's three class-3
+obligations do not exist"* — is now out of date in this respect:
+
+| §15's box says | As of this note |
+|---|---|
+| explicit approval — **owed and absent** | implemented: a confirmation naming the destination, refusal the default on non-matching input and on EOF, two implementations behind one comparison |
+| an audit log — **owed and absent** | implemented: two-phase (intent before authorization, outcome at every terminal), append-only, per-user, outside the bundle, with declared rotation and retention ceilings and §13's redaction applied to the record |
+| *(the scope both are checked against)* | a `PublishGrant` — operation kind, source scope (catalog name **and** content hash), destination scope, grantor, monotonic expiry — checked against execution-time facts, never the request's self-description |
+
+**An unauditable class-3 operation does not run**, which is the operative meaning of the gate.
+
+The design, its declared properties and its limits are written up in `kernel/PERMISSION-BOUNDARY.md`,
+which also carries eight findings flagged for the human. `kernel/README.md`'s three-row ADR-006 table
+is updated in the same change.
+
+### What has *not* happened, stated as plainly as the condition deserves
+
+**Nothing in this cut exposes anything: no SKP message is defined, nothing in `protocol/` is
+touched**, and no served surface reaches the operation. `publish-bundle` is unchanged in kind — it is
+the same developer/test tool, now gated.
+
+**On this document's own wording, the machinery half of the condition is met.** This note does not
+claim more than that, and specifically it does **not** read a second requirement into the Status
+block: the condition as written is *machinery before exposure*, and Corrigendum 2 confirms it
+unchanged in every respect. A further requirement — that an **exposure surface pass review** — was
+attached by the human in the brief for the cut that produced this note, and is recorded in
+`kernel/PERMISSION-BOUNDARY.md` because that brief is transient. **It is the human's, not this
+ADR's**, and conflating the two would put words into an accepted, immutable document.
+
+Whether *"until then `publish-bundle` remains developer/test tooling only"* has therefore lapsed of
+its own terms is a live question this note does not settle; it is flagged for the custodian as F-10
+in `kernel/PERMISSION-BOUNDARY.md`. Nothing in this cut acts on either reading.
+
+Independently of which reading governs, `kernel/PERMISSION-BOUNDARY.md` lists seven things that
+exposure would still require in engineering terms. The three that bear most directly on this ADR:
+
+1. an SKP control-plane message pair for the approval exchange, specified in `protocol/` and passing
+   `docs/10`'s conformance suite;
+2. **authentication** — the implemented principal is read from the environment and is explicitly not
+   verified, so recording an unauthenticated *remote* identity as a grantor would be the very
+   claim-versus-fact error ADR-015 refuses;
+3. a grant-issuing surface, and with it a decision on grant persistence and revocation — which
+   ADR-017's own "What this ADR does not decide" already leaves open.
+
+**The Prototype-exit deadline in the Status block is unaffected** and still governs.
+
+### Two things this note does not do
+
+It does **not** amend §15: that section's box is accurate as a record of what was true when this ADR
+was accepted, and rewriting it would erase the fact that the obligations were shipped owed. A reader
+should take §15 as the obligation and this note as its discharge status. **Two other places in this
+document say the same thing and are likewise left as written**, and are named here so the discharge
+status is findable from each: *What this ADR does not decide* — "The approval gate for a class-3
+publish (§15). **Owed.**" — and Corrigendum 3's note that explicit approval and the audit record
+"remain owed and absent". Both were true when written; this note is where they are answered.
+
+It does **not** decide the permission model. No ADR does. `kernel/PERMISSION-BOUNDARY.md` records
+that gap, and a drafted **ADR-018** is named there as owed rather than filed — accepting an ADR is
+the custodian's, and a Proposed ADR nobody asked for is a document that looks decided.

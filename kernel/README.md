@@ -135,26 +135,43 @@ are owed and this file stops being honest. The slice claims no reproducibility g
 | Datasets named by URI | `spatial://dataset/<name>`, from a **validated** catalog name. A name carrying a path separator, a drive letter or `..` is refused rather than escaped, because escaping would let a filesystem path through in encoded form |
 | ADR-005's grades | Every bundle claims one. It is **Snapshot**, with its basis in the manifest and the reason Exact is not claimed written beside it: the inputs are content-hashed but their immutability is not established, and a crate version is not a pinned build |
 
-**Publishing is a class-3 external side effect and there is no approval gate.** ADR-006 classes it;
-`docs/09` says "Export and publish are distinct capabilities, never implied by write. Class-3 side
-effects always require approval." The operation declares its reversibility class (`irreversible`) on
-its own API, and the gate is recorded as **owed and absent**. Shipping it ungated while saying
-nothing would be the silent version of the same gap.
-**ADR-006's row for external side effects requires three things, and only one of them exists.** The
-row is: *audit log · explicit approval · declared reversible / compensatable / irreversible.*
+**Publishing is a class-3 external side effect, and as of 2026-08-07 it is gated.** ADR-006 classes
+it; `docs/09` says "Export and publish are distinct capabilities, never implied by write. Class-3
+side effects always require approval."
+
+**ADR-006's row for external side effects requires three things. All three now exist.** The row is:
+*audit log · explicit approval · declared reversible / compensatable / irreversible.*
 
 | ADR-006 requires | Status here |
 |---|---|
 | a declared reversibility class | **done** — `irreversible`, on the operation's own API |
-| explicit approval | **owed and absent** — there is no permission model in this slice |
-| an **audit log** | **owed and absent** — nothing here records that a publish happened, to what destination, by whom, or with what result |
+| explicit approval | **done** — `permission/approval.rs`: a confirmation naming the destination, refusal the default on anything else and on EOF. There is deliberately **no timeout**; see the write-up for why `std` cannot give one honestly, and for what supplies the property a timeout would have |
+| an **audit log** | **done** — `permission/audit/`: two-phase (intent before authorization, outcome at every terminal), append-only, per-user, **outside the bundle**, with declared rotation and retention ceilings and `docs/09` redaction applied to the record itself. **An unauditable class-3 operation does not run** |
+| *(the scope both are checked against)* | `permission/grant.rs`: a scoped, expiring grant, checked against the operation's **actual** content hash and resolved destination rather than against what the request says about itself |
 
-The audit log is the one this crate is most likely to be assumed to have, because the bullet above
-lists "no command/event log" as a deliberate absence — that log is the *workspace-mutation*
-machinery ADR-006 assigns to a different class, and it would not serve as an audit record for an
-external side effect even if it existed. Naming the gap is the same discipline the approval gate
-already gets; a class-3 operation that is silent about two of its three obligations is worse than
-one that is silent about none, because the third makes it look handled.
+`permission/boundary.rs` is the only path through them, and `tests/permission_boundary.rs` asserts
+that with a scan over this crate's own source.
+
+**The full design, its declared properties, and eight findings flagged for the custodian are in
+[`PERMISSION-BOUNDARY.md`](PERMISSION-BOUNDARY.md).** Three things from it are worth repeating here,
+because each is a place this table could be read as claiming more than is true:
+
+- **Nothing is exposed.** No SKP message is defined, nothing in `protocol/` is touched, and no
+  served surface reaches the operation. Whether ADR-017's "developer/test tooling until then" has
+  lapsed now that the machinery exists is a question flagged for the custodian, not one this cut
+  answers.
+- **At the command line the grant is self-minted, and in the default invocation it checks nothing** —
+  both its halves are derived from the request it is authorizing. `--grant-destination` is the one
+  part that is a real check. What gates a command-line publish is the approval and the audit record;
+  the grant's teeth are at the library boundary.
+- **`publish_unguarded` is still `pub`**, so an external caller can reach an ungated publish. The
+  name is the mitigation and the residual is flagged (F-2).
+
+**This audit log is not the ADR-006 class-2 command/event log**, and the two must not be conflated in
+either direction. The bullet below lists "no command/event log" as a deliberate absence: that is the
+*workspace-mutation* machinery ADR-006 assigns to a different class, it would not serve as an audit
+record for an external side effect, and — the converse, which matters now that this log exists — this
+log is class-3 only, is not a transaction log, does not participate in undo, and replays nothing.
 
 Two consequences worth stating here rather than leaving to the module:
 
@@ -182,7 +199,12 @@ Two consequences worth stating here rather than leaving to the module:
 
   Calling both a pure transformation would put the wrong ADR-006 class on the one operation in this
   crate that actually has external effects.
-- **No permission model.** `docs/09`'s capability grants do not exist here, and none is claimed.
+- **Not `docs/09`'s permission model — a subset of it, with the boundary named.** What exists is one
+  operation kind, one principal kind, no authentication, no client, no extension surface, and grants
+  that die with the process. Where the subset stops being one is stated in
+  [`PERMISSION-BOUNDARY.md`](PERMISSION-BOUNDARY.md) (F-8): a default-deny store cannot express
+  "may do everything **except** publish", which is needed the moment a second class-3 operation
+  exists, and `docs/09`'s "grants attach to any client" becomes binding at exposure.
 
 ## Running it
 
