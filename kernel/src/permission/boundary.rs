@@ -36,9 +36,33 @@
 //! precedes anything being created. An empty `write_all(b"")` is deliberately not used as a probe:
 //! it proves nothing on either platform.
 //!
-//! **The one refusal that cannot be audited is `AuditError::Unwritable`**, because the log is what
-//! failed. Stated rather than papered over — an audit claim the mechanism cannot honor is exactly
-//! what `docs/01` principle 3 forbids.
+//! ## What is **not** audited, enumerated rather than summarized
+//!
+//! Everything before step 3 refuses with **no record at all**, and that is a longer list than the
+//! obvious one. It is written out here because an earlier draft of this comment said "the one
+//! refusal that cannot be audited is an unwritable log", which was false and would have let a
+//! reader believe the log sees every refusal:
+//!
+//! - **`AuditError::Unwritable`** — the log is what failed, so it cannot record its own
+//!   unavailability. This one is unavoidable.
+//! - **`AuditError::LogInsideDestination`** and **`AuditError::RotationFailed`** — raised while
+//!   establishing the log, before it is usable.
+//! - **`PermissionError::DestinationUnresolvable`** — there is no resolved destination to record.
+//! - **every refusal `publish::preflight` can make**: `SourceNotPinned`, `LicenseDeclaredTwice`,
+//!   `LicenseNotCarryable`, `OperatorLicenseEmpty`, the three `ViewerLicense*` refusals,
+//!   `CorrespondingSourceNotDurable`, `DatasetNameRejected`, and any `Style` or `Engine` error.
+//!
+//! **The ordering is deliberate and the omission is defensible, but only for a stated reason**:
+//! nothing on that list is an attempt to *do* the operation. Each one is a request that never
+//! became an attempt — malformed, unlicensable, or aimed at nowhere — and none of them can produce
+//! a side effect. What the log promises is that **every attempt that reached the gate is recorded,
+//! authorized or not**, which is the property required to answer "who published what". It does not
+//! promise a record of every command that was typed.
+//!
+//! The reason it cannot simply be fixed by moving the record earlier: an intent record carries the
+//! source content hash and the style hash, and `preflight` is what produces them. A record written
+//! before `preflight` would have to leave both null, which is a worse record of a real attempt in
+//! exchange for a record of a malformed one.
 //!
 //! ## Why `DestinationExists` is not hoisted up here
 //!
@@ -73,6 +97,7 @@ use crate::publish::{
 };
 
 use super::approval::{self, ApprovalPrompt, ApprovalSource};
+use super::audit::log::is_inside as log_is_inside;
 use super::audit::{
     ApprovalRoute, AuditLog, IntentRecord, Outcome, OutcomeRecord, normalize_destination,
 };
@@ -148,6 +173,11 @@ impl From<PublishError> for BoundaryError {
     }
 }
 
+/// A short alias for [`BoundaryError`], so the two exhaustive matches below fit on one line each.
+/// Declared here rather than after them, so a reader meeting `Self_::Permission` has already seen
+/// what it is.
+use BoundaryError as Self_;
+
 /// The stable variant name of a refusal, for the audit record's `error_kind`.
 ///
 /// **A variant name, never a rendered message.** A message is prose that can be reworded, and worse
@@ -198,8 +228,6 @@ fn error_kind(e: &BoundaryError) -> &'static str {
     }
 }
 
-use BoundaryError as Self_;
-
 /// Whether a terminal is a refusal, a cancellation or a failure.
 ///
 /// **Three outcomes rather than "not success"**, because they mean different things to whoever reads
@@ -207,6 +235,13 @@ use BoundaryError as Self_;
 /// failure is a broken machine.
 fn outcome_of(e: &BoundaryError) -> Outcome {
     match e {
+        // **`ApprovalUnavailable` is a failure, not a refusal**, and the distinction is the whole
+        // reason it is a separate variant. It means the approval *channel* broke — a closed pipe, a
+        // console that cannot be read — not that anyone declined. Filing it as `refused` would make
+        // the log say an operator turned the publish down when no operator was ever asked, which is
+        // precisely what `error.rs` splits the variant off to prevent; the split would have been
+        // discarded one function later.
+        Self_::Permission(PermissionError::ApprovalUnavailable { .. }) => Outcome::Failed,
         Self_::Permission(_) => Outcome::Refused,
         Self_::Publish(p) => publish_outcome(p),
         Self_::Audit(_) | Self_::OutcomeNotAudited { .. } => Outcome::Failed,
@@ -265,8 +300,23 @@ pub fn execute(
 
     // ---- 2/3. the audit log, then the intent record --------------------------------------------
     //
-    // The log was opened by the caller (`AuditLog::open_for`), which is where the probe, the
-    // inside-the-bundle refusal and the rotation happen. Both of those precede everything below.
+    // The log was opened by the **caller** (`AuditLog::open_for`), which is where the probe, the
+    // rotation and the inside-the-bundle refusal happen — all of them before anything below runs.
+    //
+    // **The inside-the-bundle check is re-run here, against this attempt's own destination.**
+    // `open_for` takes the destination it is told about, and every field of `PublishAttempt` is
+    // public, so a caller could hand `open_for` one path and `execute` another — which would leave
+    // ADR-017 §13's "the log ships nowhere" resting on the caller having passed the same value
+    // twice. Re-checking against the destination actually being published is what makes it a
+    // property of the boundary rather than of its callers.
+    if log_is_inside(attempt.audit.path(), &destination) {
+        return Err(AuditError::LogInsideDestination {
+            log: attempt.audit.display_path(),
+            destination: normalize_destination(&destination),
+        }
+        .into());
+    }
+
     let attempt_id = publish::random_suffix();
     let intent = IntentRecord {
         attempt: attempt_id.clone(),
@@ -290,14 +340,14 @@ pub fn execute(
         grantor_name: None,
         grant_lifetime_s: None,
         grant_remaining_s: None,
-        approval: None,
+        approval_route: None,
     };
 
     // ---- 4. the grant, before the operator is even shown the prompt ----------------------------
     let now = Instant::now();
     let grant = match attempt.grants.find(&facts, now) {
         Ok(g) => g,
-        Err(e) => return Err(finish(attempt, &ctx, Err(e.into()))),
+        Err(e) => return Err(finish(attempt, &ctx, e.into())),
     };
     ctx.note_grant(grant, now);
 
@@ -318,13 +368,13 @@ pub fn execute(
         ),
         grant_remaining_s: grant.remaining(now).as_secs(),
     };
-    ctx.approval = Some(attempt.approval.route());
+    ctx.approval_route = Some(attempt.approval.route());
     let given = match attempt.approval.respond(&prompt) {
         Ok(a) => a,
-        Err(e) => return Err(finish(attempt, &ctx, Err(e.into()))),
+        Err(e) => return Err(finish(attempt, &ctx, e.into())),
     };
     if let Err(e) = approval::check(&prompt, &given) {
-        return Err(finish(attempt, &ctx, Err(e.into())));
+        return Err(finish(attempt, &ctx, e.into()));
     }
 
     // ---- 6. the grant again, against a fresh clock ---------------------------------------------
@@ -336,7 +386,7 @@ pub fn execute(
     let now = Instant::now();
     let grant = match attempt.grants.find(&facts, now) {
         Ok(g) => g,
-        Err(e) => return Err(finish(attempt, &ctx, Err(e.into()))),
+        Err(e) => return Err(finish(attempt, &ctx, e.into())),
     };
     ctx.note_grant(grant, now);
 
@@ -356,7 +406,7 @@ pub fn execute(
                 grantor_name: ctx.grantor_name.clone(),
                 grant_lifetime_s: ctx.grant_lifetime_s,
                 grant_remaining_s: ctx.grant_remaining_s,
-                approval: ctx.approval,
+                approval_route: ctx.approval_route,
                 operation_digest: Some(outcome.operation_digest.clone()),
                 manifest_hash,
                 rows: Some(outcome.rows),
@@ -371,7 +421,7 @@ pub fn execute(
                 }),
             }
         }
-        Err(e) => Err(finish(attempt, &ctx, Err(e.into()))),
+        Err(e) => Err(finish(attempt, &ctx, e.into())),
     }
 }
 
@@ -382,7 +432,7 @@ struct OutcomeContext {
     grantor_name: Option<String>,
     grant_lifetime_s: Option<u64>,
     grant_remaining_s: Option<u64>,
-    approval: Option<ApprovalRoute>,
+    approval_route: Option<ApprovalRoute>,
 }
 
 impl OutcomeContext {
@@ -400,15 +450,7 @@ impl OutcomeContext {
 /// the caller needs; losing it in favour of "the log could not be written" would report the less
 /// important of two facts. The audit failure is surfaced on stderr instead, because a silent one
 /// would leave the log claiming an attempt had no ending.
-fn finish(
-    attempt: &PublishAttempt<'_>,
-    ctx: &OutcomeContext,
-    result: Result<(), BoundaryError>,
-) -> BoundaryError {
-    let e = match result {
-        Err(e) => e,
-        Ok(()) => unreachable!("finish is only called on a failing terminal"),
-    };
+fn finish(attempt: &PublishAttempt<'_>, ctx: &OutcomeContext, e: BoundaryError) -> BoundaryError {
     let record = OutcomeRecord {
         attempt: ctx.attempt_id.clone(),
         at: (attempt.clock)(),
@@ -418,7 +460,7 @@ fn finish(
         grantor_name: ctx.grantor_name.clone(),
         grant_lifetime_s: ctx.grant_lifetime_s,
         grant_remaining_s: ctx.grant_remaining_s,
-        approval: ctx.approval,
+        approval_route: ctx.approval_route,
         operation_digest: None,
         manifest_hash: None,
         rows: None,

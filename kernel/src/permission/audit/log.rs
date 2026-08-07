@@ -142,24 +142,43 @@ impl AuditLog {
     }
 
     pub fn append_intent(&self, r: &IntentRecord) -> Result<(), AuditError> {
-        let declared_from = [r.principal_name.clone()];
-        self.append(|residual| r.to_json(residual), &declared_from)
+        self.append(|residual| r.to_json(residual), &[("principal_name", r.principal_name.clone())])
     }
 
     pub fn append_outcome(&self, r: &OutcomeRecord) -> Result<(), AuditError> {
-        let declared_from: Vec<String> = r.grantor_name.iter().cloned().collect();
-        self.append(|residual| r.to_json(residual), &declared_from)
+        let declared: Vec<(&'static str, String)> = r
+            .grantor_name
+            .iter()
+            .map(|n| ("grantor_name", n.clone()))
+            .collect();
+        self.append(|residual| r.to_json(residual), &declared)
     }
 
     /// Render, scan, re-render with the scan's verdict, scan the final bytes, write.
     ///
     /// **Two passes, because `residual_classes` is a statement about the line it appears in.** The
     /// first render produces the bytes to scan; the classes found are then written into the second
-    /// render. The only text the second pass adds is class names from a fixed set — none of which is
-    /// a credential needle — and the final line is scanned again for `credential` anyway, so the
-    /// guarantee is about **the bytes actually written** rather than about a draft of them. That is
-    /// the same discipline `Staging::write` uses when it hashes what it wrote.
-    fn append<F>(&self, render: F, identity_fields: &[String]) -> Result<(), AuditError>
+    /// render, and the final line is scanned again.
+    ///
+    /// **What the second scan guarantees, precisely: no `credential` reaches the disk.** That is the
+    /// unconditional rule, and it holds over the bytes actually written rather than over a draft of
+    /// them — the same discipline `Staging::write` uses when it hashes what it wrote. None of the
+    /// class-name literals pass 2 injects is a `CREDENTIAL_NEEDLES` substring, so the second scan
+    /// cannot newly raise one; propagating its error is the whole of what it is for.
+    ///
+    /// **What it does not guarantee: that `residual_classes` is exhaustive over the final line.**
+    /// Pass 2 adds class-name literals, and if this machine's username or hostname happened to be a
+    /// substring of one of them — `USER=user`, `HOSTNAME=path` — pass 2 could find a class pass 1
+    /// did not, and the written list would understate by one entry. The field is a report on the
+    /// draft, not a proof about the line. Said here because the honest scope of a self-report is
+    /// smaller than it looks, and a reader treating `residual_classes` as complete would be
+    /// treating a `docs/09` scan as sufficient rather than necessary — which `redaction.rs` already
+    /// refuses to claim of itself.
+    fn append<F>(
+        &self,
+        render: F,
+        identity_fields: &[(&'static str, String)],
+    ) -> Result<(), AuditError>
     where
         F: Fn(&[&'static str]) -> Result<Json, AuditError>,
     {
@@ -198,12 +217,12 @@ impl AuditLog {
     fn classify(
         &self,
         line: &str,
-        identity_fields: &[String],
+        identity_fields: &[(&'static str, String)],
     ) -> Result<Vec<&'static str>, AuditError> {
         let machine = MachineIdentifiers {
             declared: identity_fields
                 .iter()
-                .filter_map(|name| declared_occurrence(line, name))
+                .filter_map(|(key, name)| declared_occurrence(line, key, name))
                 .collect(),
             ..MachineIdentifiers::from_environment()
         };
@@ -235,7 +254,14 @@ impl AuditLog {
     }
 }
 
-/// The rendered `"key":"value"` span containing `name`, for use as a `declared` string.
+/// The rendered `"key":"value"` span for **the named key**, when its value contains `name`.
+///
+/// **The key is a parameter rather than a search.** An earlier version scanned a fixed list of
+/// candidate keys and returned the first whose span merely *contained* the name — which matches on
+/// the key text as readily as on the value (a principal called `name` or `pal` matches
+/// `"principal_name"`), and picks whichever key comes first when a record carries two. Neither
+/// misfires with today's records, which carry exactly one identity member each; both become live
+/// the moment one record carries both. Passing the key the caller means removes the guesswork.
 ///
 /// **The rendered member, not the bare name — and that is load-bearing.**
 /// `redaction::declared_ranges` ignores any declared string shorter than `MIN_PRINTABLE_RUN` (12),
@@ -249,32 +275,33 @@ impl AuditLog {
 ///
 /// The span is located in the rendered line rather than rebuilt, so this never has to re-implement
 /// the writer's string escaping.
-fn declared_occurrence(line: &str, name: &str) -> Option<String> {
+fn declared_occurrence(line: &str, key: &str, name: &str) -> Option<String> {
     if name.trim().is_empty() {
         return None;
     }
     let b = line.as_bytes();
-    for key in ["principal_name", "grantor_name"] {
-        let needle = format!("\"{key}\":\"");
-        let Some(start) = line.find(&needle) else { continue };
-        let value_start = start + needle.len();
-        let mut i = value_start;
-        while i < b.len() {
-            match b[i] {
-                b'\\' => i += 2,
-                b'"' => break,
-                _ => i += 1,
-            }
-        }
-        if i >= b.len() {
-            continue;
-        }
-        let span = &line[start..=i];
-        if span.contains(name) {
-            return Some(span.to_string());
+    let needle = format!("\"{key}\":\"");
+    let start = line.find(&needle)?;
+    let value_start = start + needle.len();
+    let mut i = value_start;
+    while i < b.len() {
+        match b[i] {
+            // Skip an escaped byte. Cannot overrun: a rendered record always ends `}` after the
+            // closing quote, and the `i >= b.len()` check below covers it regardless.
+            b'\\' => i += 2,
+            b'"' => break,
+            _ => i += 1,
         }
     }
-    None
+    if i >= b.len() {
+        return None;
+    }
+    // The **value**, not the whole span, is what must contain the name — otherwise a principal id
+    // that is a substring of the key text would match on the key.
+    if !line[value_start..i].contains(name) {
+        return None;
+    }
+    Some(line[start..=i].to_string())
 }
 
 /// Where the log lives.
@@ -328,7 +355,7 @@ fn data_dir() -> Option<PathBuf> {
 /// the destination would defeat it — and the weakness is stated rather than implied. What it does
 /// catch is the case that actually occurs: an operator pointing `SPATIAL_IDE_AUDIT_LOG` somewhere
 /// under `--out`.
-fn is_inside(path: &Path, root: &Path) -> bool {
+pub(crate) fn is_inside(path: &Path, root: &Path) -> bool {
     let norm = |p: &Path| p.to_string_lossy().replace('\\', "/").trim_end_matches('/').to_string();
     let (p, r) = (norm(path), norm(root));
     #[cfg(windows)]
@@ -385,7 +412,7 @@ mod tests {
     #[test]
     fn a_short_username_is_still_attributable_because_the_member_is_declared_not_the_name() {
         let line = r#"{"principal_name":"bob","source_name":"parcels"}"#;
-        let span = declared_occurrence(line, "bob").expect("the member is found");
+        let span = declared_occurrence(line, "principal_name", "bob").expect("the member is found");
         assert_eq!(span, r#""principal_name":"bob""#);
         assert!(
             span.len() >= crate::bundle::redaction::MIN_PRINTABLE_RUN,
@@ -397,7 +424,27 @@ mod tests {
     #[test]
     fn a_name_that_is_not_in_the_record_declares_nothing() {
         let line = r#"{"principal_name":"bob"}"#;
-        assert!(declared_occurrence(line, "alice").is_none());
-        assert!(declared_occurrence(line, "").is_none());
+        assert!(declared_occurrence(line, "principal_name", "alice").is_none());
+        assert!(declared_occurrence(line, "principal_name", "").is_none());
+        assert!(declared_occurrence(line, "grantor_name", "bob").is_none());
+    }
+
+    /// The name must appear in the **value**, not merely somewhere in the rendered member — a
+    /// principal whose id is a substring of the key text must not attribute itself.
+    #[test]
+    fn a_name_matching_the_key_text_rather_than_the_value_declares_nothing() {
+        let line = r#"{"principal_name":"bob","grantor_name":"bob"}"#;
+        for impostor in ["name", "pal", "princi"] {
+            assert!(
+                declared_occurrence(line, "principal_name", impostor).is_none(),
+                "{impostor:?} matched the key rather than the value"
+            );
+        }
+        // …and each key is read independently, so a record carrying both members does not confuse
+        // them.
+        assert_eq!(
+            declared_occurrence(line, "grantor_name", "bob").unwrap(),
+            r#""grantor_name":"bob""#
+        );
     }
 }

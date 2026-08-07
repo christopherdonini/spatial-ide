@@ -68,7 +68,13 @@ impl Outcome {
     }
 }
 
-/// How the approval reached the boundary.
+/// The **channel** an approval was sought through — not evidence that one was given.
+///
+/// Recorded on refusals too, which is why it is `approval_route` and not `approval`: a record
+/// saying `approval: "interactive"` beside `outcome: "refused"` reads as "an interactive approval
+/// happened", when what happened is that the boundary asked interactively and was told no. The
+/// channel is worth recording for exactly that case — "was this refused at a prompt or by a stale
+/// script flag" is a question an audit reader has.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ApprovalRoute {
     /// Typed at a prompt.
@@ -120,7 +126,7 @@ pub struct OutcomeRecord {
     pub grantor_name: Option<String>,
     pub grant_lifetime_s: Option<u64>,
     pub grant_remaining_s: Option<u64>,
-    pub approval: Option<ApprovalRoute>,
+    pub approval_route: Option<ApprovalRoute>,
     pub operation_digest: Option<String>,
     pub manifest_hash: Option<String>,
     pub rows: Option<u64>,
@@ -214,7 +220,7 @@ impl OutcomeRecord {
             ("grantor_name", opt_str(self.grantor_name.as_ref())),
             ("grant_lifetime_s", opt_uint(self.grant_lifetime_s)),
             ("grant_remaining_s", opt_uint(self.grant_remaining_s)),
-            ("approval", opt_static(self.approval.map(|a| a.as_str()))),
+            ("approval_route", opt_static(self.approval_route.map(|a| a.as_str()))),
             ("operation_digest", opt_str(self.operation_digest.as_ref())),
             ("manifest_hash", opt_str(self.manifest_hash.as_ref())),
             ("rows", opt_uint(self.rows)),
@@ -296,7 +302,7 @@ mod tests {
             grantor_name: Some("someone".into()),
             grant_lifetime_s: Some(300),
             grant_remaining_s: Some(299),
-            approval: Some(ApprovalRoute::Flag),
+            approval_route: Some(ApprovalRoute::Flag),
             operation_digest: Some("sha256:cc".into()),
             manifest_hash: Some("sha256:dd".into()),
             rows: Some(10),
@@ -308,7 +314,7 @@ mod tests {
             keys,
             [
                 "schema", "attempt", "phase", "at", "outcome", "error_kind", "grantor_kind",
-                "grantor_name", "grant_lifetime_s", "grant_remaining_s", "approval",
+                "grantor_name", "grant_lifetime_s", "grant_remaining_s", "approval_route",
                 "operation_digest", "manifest_hash", "rows", "partitions", "residual_classes"
             ]
         );
@@ -327,7 +333,7 @@ mod tests {
             grantor_name: None,
             grant_lifetime_s: None,
             grant_remaining_s: None,
-            approval: None,
+            approval_route: None,
             operation_digest: None,
             manifest_hash: None,
             rows: None,

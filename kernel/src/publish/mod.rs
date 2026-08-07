@@ -18,7 +18,8 @@
 //! checks a scoped grant, obtains an explicit approval and writes the two audit records; the
 //! entry point in this module is named [`publish_unguarded`] because that is what it is. Every
 //! non-test caller inside this crate goes through the boundary, and
-//! `kernel/tests/permission_boundary.rs` asserts that structurally rather than by convention.
+//! `kernel/tests/permission_boundary.rs` asserts that with a scan over this crate's own source —
+//! a line-oriented one, whose two limits that test states rather than glosses.
 //!
 //! **[`publish_unguarded`] stays `pub`, and the residual is stated rather than hidden.** The bundle
 //! format's own suite (`kernel/tests/publish.rs`) drives this operation directly, some thirty times,

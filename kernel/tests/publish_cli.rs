@@ -156,15 +156,30 @@ fn out_basename(args: &[&str]) -> Option<String> {
 /// in `%LOCALAPPDATA%`, which is somebody's real record of real publishes and not a scratch file.
 fn publish_bundle_raw(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_publish-bundle"))
-        .env(
-            spatial_kernel::permission::AUDIT_LOG_ENV,
-            std::env::temp_dir()
-                .join("spatial-kernel-publish-cli-tests")
-                .join("audit.jsonl"),
-        )
+        .env(spatial_kernel::permission::AUDIT_LOG_ENV, audit_log_for(args))
         .args(args)
         .output()
         .expect("run publish-bundle")
+}
+
+/// A log path **inside this invocation's own workspace**, derived from `--out`.
+///
+/// Two things this avoids, both of which a single shared log would cause. It would land in the
+/// operator's `%LOCALAPPDATA%` if unset — somebody's real record of real publishes, not a scratch
+/// file. And a single shared path would accumulate across every `cargo test` run while libtest runs
+/// these tests in parallel processes: at the 8 MiB ceiling several of them would enter rotation at
+/// once, race on the rename, and one would refuse with `RotationFailed` — failing an unrelated CLI
+/// test with a message about log rotation. `log.rs` declares that cross-process case uncoordinated
+/// rather than closed, so the harness must not create it.
+fn audit_log_for(args: &[&str]) -> PathBuf {
+    match args.iter().position(|a| *a == "--out").and_then(|i| args.get(i + 1)) {
+        Some(out) => Path::new(out).with_extension("audit.jsonl"),
+        // A run with no `--out` refuses during argument parsing and never opens a log; the path is
+        // still set so an unexpected one cannot reach the operator's own file.
+        None => std::env::temp_dir()
+            .join("spatial-kernel-publish-cli-tests")
+            .join("no-out.audit.jsonl"),
+    }
 }
 
 fn assert_ok(out: &Output, what: &str) {
@@ -558,10 +573,7 @@ fn publish_bundle_with_stdin(args: &[&str], stdin: &str) -> Output {
     all.extend_from_slice(VIEWER_LICENSE_ARGS);
 
     let mut child = Command::new(env!("CARGO_BIN_EXE_publish-bundle"))
-        .env(
-            spatial_kernel::permission::AUDIT_LOG_ENV,
-            std::env::temp_dir().join("spatial-kernel-publish-cli-tests").join("audit.jsonl"),
-        )
+        .env(spatial_kernel::permission::AUDIT_LOG_ENV, audit_log_for(args))
         .args(&all)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

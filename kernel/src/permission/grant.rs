@@ -95,10 +95,12 @@ impl Principal {
     /// principal is not attributable (`docs/09`), and it is labelled `os-user` rather than
     /// `authenticated-user` because the second word would be false.
     pub fn from_environment() -> Self {
+        // The emptiness test lives **inside** the closure. Outside it, a set-but-empty `USERNAME`
+        // would satisfy `find_map`, short-circuit the search, and then fail the filter — yielding
+        // `(unknown)` while `USER` and `LOGNAME` sat there unread.
         let id = ["USERNAME", "USER", "LOGNAME"]
             .iter()
-            .find_map(|k| std::env::var(k).ok())
-            .filter(|v| !v.trim().is_empty())
+            .find_map(|k| std::env::var(k).ok().filter(|v| !v.trim().is_empty()))
             .unwrap_or_else(|| "(unknown)".to_string());
         Self { kind: PrincipalKind::OsUser, id }
     }
@@ -426,11 +428,17 @@ impl GrantSet {
         match in_scope.iter().find(|g| !g.expired(now)) {
             Some(g) => Ok(g),
             None => {
-                // Every in-scope grant has lapsed; report the one that lapsed most recently, which
-                // is the one an operator is most likely to be thinking of.
+                // Every in-scope grant has lapsed; report the one that lapsed **most recently**,
+                // which is the one an operator is most likely to be thinking of.
+                //
+                // That is `elapsed − lifetime`, not `elapsed`: a grant issued 100 s ago with a 90 s
+                // lifetime lapsed 10 s ago, while one issued 50 s ago with a 10 s lifetime lapsed
+                // 40 s ago. Ordering by age alone picks the second and reports the wrong numbers.
+                // Every grant here is expired, so the subtraction cannot wrap; `saturating_sub`
+                // says so without depending on the reader to check.
                 let g = in_scope
                     .iter()
-                    .min_by_key(|g| g.elapsed(now))
+                    .min_by_key(|g| g.elapsed(now).saturating_sub(g.lifetime))
                     .expect("in_scope is non-empty");
                 Err(PermissionError::GrantExpired {
                     lifetime_s: g.lifetime.as_secs(),

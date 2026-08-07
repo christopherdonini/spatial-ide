@@ -18,10 +18,19 @@
 //!
 //! - **The clock is injected.** `PublishAttempt::clock` is a closure, so every `at` in these logs is
 //!   a fixed string and a record can be compared exactly.
-//! - **The env var is set per process, not per test.** `std::env::set_var` is process-global and
-//!   Rust runs tests in threads, so a per-test `set_var` race is a real hazard. Every test here
-//!   instead gets its own log path through [`env_lock`], which serializes the set-var/run/read
-//!   window. This is stated rather than assumed because a flaky audit test would be worse than none.
+//! - **The env var is process-global, and the tests are threads.** `std::env::set_var` affects the
+//!   whole process, so a per-test `set_var` would race. Every test here holds [`env_lock`] across
+//!   its own set-var/run/read window, which is what makes the assertions deterministic.
+//!
+//!   **What that lock does not do is make `set_var` sound.** This binary also runs DuckDB's thread
+//!   pool and other suites concurrently, and `set_var` racing a `getenv` in another thread is the
+//!   known platform hazard that later editions make `unsafe` for. Nothing here reads the
+//!   environment except the code under test, which runs inside the lock — so the exposure is a
+//!   third-party read during the window, not a data race this suite creates. Said plainly rather
+//!   than left as "serialized, therefore fine".
+//!
+//!   `publish_cli.rs` has no such concern: it passes the variable per child through
+//!   `Command::env`, which never touches this process's environment.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -456,7 +465,7 @@ fn approval_refused_wrong_name_or_eof_each_refuse_audited_and_without_side_effec
         // The grant *was* found before the prompt, so the record names its grantor — which is what
         // distinguishes "refused at approval" from "refused at the grant" when reading the log.
         assert_eq!(outcome["grantor_name"], "test-operator", "{case}");
-        assert_eq!(outcome["approval"], "interactive", "{case}");
+        assert_eq!(outcome["approval_route"], "interactive", "{case}");
     }
 }
 
@@ -488,7 +497,7 @@ fn granted_and_approved_publishes_and_records_a_success_with_the_manifest_hash()
     let l = Log::read(&log);
     let (intent, record) = l.intent_and_outcome();
     assert_eq!(record["outcome"], "success");
-    assert_eq!(record["approval"], "flag");
+    assert_eq!(record["approval_route"], "flag");
     assert_eq!(record["rows"], outcome.rows);
     assert_eq!(record["operation_digest"], outcome.operation_digest);
 
@@ -656,13 +665,28 @@ fn a_destination_under_a_user_profile_path_is_normalized_in_the_record() {
     let (intent, _) = l.intent_and_outcome();
     let recorded = intent["destination"].as_str().unwrap();
 
-    // A token stands where the profile root was, and the raw root is gone.
-    assert!(
-        recorded.starts_with('<'),
-        "the destination was not normalized to a token: {recorded}"
-    );
     assert!(!recorded.contains('\\'), "a backslash survived normalization: {recorded}");
     assert!(recorded.ends_with("/out"), "the destination is unidentifiable: {recorded}");
+
+    // **The token assertion is conditional on a root actually matching, and that is not evasion.**
+    // `std::env::temp_dir()` is under a user-profile root on Windows (`%LOCALAPPDATA%\Temp`) and on
+    // a macOS or Linux machine with `TMPDIR` set — but a bare Linux runner returns `/tmp`, which is
+    // under no profile root at all and which normalization therefore leaves alone by design. An
+    // unconditional assertion here would go red on `ubuntu-latest` for a reason unrelated to the
+    // property, which is exactly the "matrix entry that is a red build waiting to happen" that
+    // `product-ci-rust.yml` declines to add. So the token is required only where a root exists to
+    // match, and the unconditional half of the guarantee is asserted below for every platform.
+    let roots = spatial_kernel::permission::audit::normalize::roots_from_environment();
+    let under_a_root = roots.iter().any(|(r, _)| {
+        let d = dest.to_string_lossy().replace('\\', "/");
+        d.to_ascii_lowercase().starts_with(&r.to_ascii_lowercase())
+    });
+    if under_a_root {
+        assert!(
+            recorded.starts_with('<'),
+            "the destination is under a known user-profile root and was not normalized: {recorded}"
+        );
+    }
 
     // And the operator's own username does not appear as a path component anywhere in the record.
     let raw = std::fs::read_to_string(&log).unwrap();
@@ -685,7 +709,7 @@ fn a_destination_under_a_user_profile_path_is_normalized_in_the_record() {
 /// normalization happened, this asserts that the unconditional rule fires. A test that only did the
 /// first would pass with the credential check deleted.
 #[test]
-fn a_credential_in_any_field_refuses_the_record_and_never_reaches_the_log() {
+fn a_credential_in_the_recorded_destination_refuses_before_the_record_is_written() {
     let d = workspace("redaction-credential");
     let ds = pinned(&fixture(&d));
     let v = viewer();
@@ -732,11 +756,18 @@ fn a_credential_in_any_field_refuses_the_record_and_never_reaches_the_log() {
 /// names the entry point. The precedent is `engine/tests/slice.rs`, which scans that crate's source
 /// for a boundary property for the same reason.
 ///
-/// **What this establishes and what it does not.** It establishes that nothing inside this crate —
-/// including `bin/publish-bundle.rs` — reaches an ungated publish. It does **not** establish that no
-/// *external* caller can: `publish_unguarded` is `pub`, `kernel/tests/publish.rs` calls it thirty
-/// times, and that residual is deliberate and flagged in `kernel/PERMISSION-BOUNDARY.md`. The
-/// function's name is the mitigation.
+/// **What this establishes and what it does not.** It establishes that no *line of code* in
+/// `kernel/src` — including `bin/publish-bundle.rs`, which the walk does cover — names either entry
+/// point outside the boundary. Two limits, stated because the assertion invites the stronger
+/// reading:
+///
+/// - It is a **line-oriented text scan**. An aliased import (`use … as go;`), a function pointer,
+///   or `publish_prepared (…)` with a space would all defeat it. What makes that acceptable is that
+///   the surface is small and the entry points are `pub(crate)`/named-to-warn, not that the scan is
+///   airtight.
+/// - It says nothing about **external** callers. `publish_unguarded` is `pub` and
+///   `kernel/tests/publish.rs` calls it thirty times; that residual is deliberate, is why the
+///   function carries that name, and is flagged for the human in `kernel/PERMISSION-BOUNDARY.md`.
 #[test]
 fn the_permission_boundary_is_the_only_caller_of_the_publish_operation_in_this_crate() {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
@@ -755,16 +786,27 @@ fn the_permission_boundary_is_the_only_caller_of_the_publish_operation_in_this_c
                 continue;
             }
             let rel = path.strip_prefix(&src).unwrap().to_string_lossy().replace('\\', "/");
-            // `publish/mod.rs` *is* the operation; it necessarily names its own functions.
-            if rel.starts_with("publish/") {
+            // `publish/mod.rs` *is* the operation and necessarily names its own functions.
+            //
+            // **The exclusion is that one file, not the directory.** `starts_with("publish/")`
+            // would silently exempt any future file added under `publish/`, which is the one place
+            // a new caller is most likely to appear.
+            if rel == "publish/mod.rs" {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap();
             for (n, line) in text.lines().enumerate() {
                 // Comments and doc comments name these functions freely — this cut's whole
-                // documentation does — so only code lines are considered.
+                // documentation does — so line comments are skipped.
+                //
+                // **Only `//`, and deliberately not `*`.** Skipping lines that begin with `*`
+                // would exempt block-comment continuations, and it would *also* exempt
+                // `*slot = publish_prepared(…)?;` — valid Rust, not a comment, and invisible to
+                // this scan. That is a hole that fails open. The `//` skip fails the safe way: a
+                // commented-out mention becomes a false offender, which is noise rather than a
+                // silent pass.
                 let code = line.trim_start();
-                if code.starts_with("//") || code.starts_with("*") {
+                if code.starts_with("//") {
                     continue;
                 }
                 for needle in ["publish_unguarded(", "publish_prepared("] {
@@ -791,6 +833,78 @@ fn the_permission_boundary_is_the_only_caller_of_the_publish_operation_in_this_c
         "no call to the publish operation was found in permission/boundary.rs — the scan's needle \
          is stale and this test is asserting nothing"
     );
+}
+
+/// **Rotation, the one function in this cut that deletes audit records.**
+///
+/// It implements a declared ADR-010 rule 6 ceiling and it removes the oldest generation, so leaving
+/// it unexercised would mean the retention table in `log.rs` was arithmetic about a code path
+/// nothing had ever run. Driven by writing a live log past the ceiling rather than by calling an
+/// internal — the trigger is `AuditLog::open_for`, and that is what an operator's next publish does.
+#[test]
+fn the_log_rotates_at_its_declared_ceiling_and_keeps_exactly_the_declared_generations() {
+    use spatial_kernel::permission::audit::{MAX_AUDIT_LOG_BYTES, MAX_AUDIT_LOG_GENERATIONS};
+
+    let d = workspace("rotation");
+    let dest = d.join("out");
+    let log = d.join("audit.jsonl");
+    let gen = |n: u32| d.join(format!("audit.jsonl.{n}"));
+
+    let _guard = env_lock();
+    std::env::set_var(AUDIT_LOG_ENV, &log);
+
+    // One generation more than the ceiling keeps, so the oldest must actually be deleted rather
+    // than merely renamed off the end.
+    for round in 0..=MAX_AUDIT_LOG_GENERATIONS {
+        // A file at the ceiling. `open_for` rotates on the *next* open, which is the real trigger.
+        std::fs::write(&log, vec![b'x'; MAX_AUDIT_LOG_BYTES as usize]).unwrap();
+        // Mark this generation so the shifting can be followed rather than assumed.
+        std::fs::write(&log, format!("round-{round}\n")).unwrap();
+        let padded = format!("round-{round}\n{}", "x".repeat(MAX_AUDIT_LOG_BYTES as usize));
+        std::fs::write(&log, padded).unwrap();
+
+        AuditLog::open_for(&dest).expect("rotation succeeds and the log reopens");
+        assert!(log.exists(), "the live log was not recreated after rotation");
+        assert!(
+            std::fs::metadata(&log).unwrap().len() < MAX_AUDIT_LOG_BYTES,
+            "the live log is still at the ceiling, so nothing rotated"
+        );
+    }
+
+    // Exactly the declared number of generations, and no more.
+    for n in 1..=MAX_AUDIT_LOG_GENERATIONS {
+        assert!(gen(n).exists(), "generation {n} is missing");
+    }
+    assert!(
+        !gen(MAX_AUDIT_LOG_GENERATIONS + 1).exists(),
+        "a generation beyond the declared ceiling survived — retention is not bounded"
+    );
+
+    // The oldest surviving generation is the oldest **kept** round, not the oldest ever written:
+    // rotation discards, and the test says so rather than only counting files.
+    let oldest = std::fs::read_to_string(gen(MAX_AUDIT_LOG_GENERATIONS)).unwrap();
+    assert!(
+        oldest.starts_with("round-1"),
+        "the surviving oldest generation is {:?}; round-0 should have been deleted",
+        oldest.lines().next()
+    );
+}
+
+/// A log below the ceiling is left alone — otherwise "rotate at the ceiling" would be "rotate
+/// always", and every publish would start a new generation.
+#[test]
+fn a_log_below_the_ceiling_is_not_rotated() {
+    let d = workspace("no-rotation");
+    let dest = d.join("out");
+    let log = d.join("audit.jsonl");
+
+    let _guard = env_lock();
+    std::env::set_var(AUDIT_LOG_ENV, &log);
+    std::fs::write(&log, b"a small existing log\n").unwrap();
+
+    AuditLog::open_for(&dest).unwrap();
+    assert!(!d.join("audit.jsonl.1").exists(), "a log below the ceiling was rotated");
+    assert_eq!(std::fs::read_to_string(&log).unwrap(), "a small existing log\n");
 }
 
 /// The two-phase shape's whole reason for existing: an interrupted attempt leaves an intent with no

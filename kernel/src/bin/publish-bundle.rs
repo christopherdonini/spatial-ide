@@ -129,6 +129,12 @@ impl PublishProgress for Console {
 /// warning; `docs/01` principle 8 forbids the black box), and returning from `main` threw all of
 /// that away at the last step. Every refusal message in `publish/error.rs` and
 /// `permission/error.rs` reaches an operator only because of this function.
+/// **One non-zero code covers a bundle that exists.** `BoundaryError::OutcomeNotAudited` means the
+/// publish *succeeded* and only its audit record failed, and this exits non-zero for it — which is
+/// right, because an unrecorded class-3 side effect is not a success. The consequence a script
+/// author must know: re-running after that exit meets `DestinationExists`, because the bundle is
+/// there. The error's own message says a bundle was produced; this note is here so the exit code
+/// alone is not read as "nothing happened".
 fn main() -> std::process::ExitCode {
     match run() {
         Ok(()) => std::process::ExitCode::SUCCESS,

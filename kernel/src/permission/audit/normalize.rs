@@ -114,6 +114,9 @@ pub fn roots_from_environment() -> Vec<(String, &'static str)> {
         ("APPDATA", APPDATA),
         ("TEMP", TEMP),
         ("TMP", TEMP),
+        // `TMPDIR` is the variable `std::env::temp_dir()` itself reads on Unix, so leaving it out
+        // meant the one temp root that actually gets used there was normalized by nothing.
+        ("TMPDIR", TEMP),
     ] {
         if let Ok(v) = std::env::var(key) {
             let v = v.replace('\\', "/");
@@ -138,8 +141,19 @@ fn usernames_from_environment() -> Vec<String> {
 ///
 /// The boundary condition is what stops `C:/Users/Christopher2` becoming `<user-home>2`: a prefix
 /// match alone is not a path-prefix match.
+///
+/// **`is_char_boundary` before `split_at`, and it is a correctness guard rather than a nicety.**
+/// `str::split_at` **panics** on an index that is not a UTF-8 code-point boundary, and `root` (an
+/// environment variable) and `s` (a resolved destination) are unrelated strings — nothing makes
+/// `root.len()` land on a boundary of `s`. A `USERPROFILE` ending in a non-ASCII name and a
+/// destination on another drive is enough: the loop tries every root, so one badly-sized root
+/// aborted the process even when a different root would have matched. A panic here would take out
+/// the intent record, the "unauditable operations refuse" path, and `PublishGrant`'s hand-written
+/// `Debug` — which exists precisely so that formatting a grant inside a panic handler is safe.
+///
+/// `is_char_boundary` also subsumes the length check: it is false for any index past the end.
 fn strip_component_prefix(s: &str, root: &str) -> Option<String> {
-    if s.len() < root.len() {
+    if !s.is_char_boundary(root.len()) {
         return None;
     }
     let (head, rest) = s.split_at(root.len());
@@ -236,6 +250,33 @@ mod tests {
     #[test]
     fn a_unc_path_keeps_its_share_form() {
         assert_eq!(norm(r"\\?\UNC\server\share\out"), "//server/share/out");
+    }
+
+    /// **A non-ASCII path must not abort the process.**
+    ///
+    /// `split_at` panics on an index that is not a code-point boundary, and a root read from the
+    /// environment has no relationship to the destination being normalized. This used to abort
+    /// inside the intent record, inside the unauditable-log refusal, and inside the `Debug` that
+    /// exists so a grant can be safely formatted in a panic handler.
+    #[test]
+    fn a_non_ascii_root_or_destination_normalizes_instead_of_panicking() {
+        let roots = vec![
+            ("C:/Users/José".to_string(), HOME),
+            ("C:/Users/José/AppData/Local/Temp".to_string(), TEMP),
+        ];
+        let users = vec!["José".to_string()];
+
+        // The root's byte length lands inside a multi-byte character of the destination.
+        let n = normalize_with(&PathBuf::from("D:/данные/bundle"), &roots, &users);
+        assert_eq!(n, "D:/данные/bundle");
+
+        // …and the matching case still matches, so the guard did not simply disable normalization.
+        let n = normalize_with(&PathBuf::from(r"C:\Users\José\out"), &roots, &users);
+        assert_eq!(n, "<user-home>/out");
+
+        // A username component that is itself non-ASCII is substituted as any other would be.
+        let n = normalize_with(&PathBuf::from(r"D:\archive\José\out"), &roots, &users);
+        assert_eq!(n, "D:/archive/<user>/out");
     }
 
     /// Two spellings of one destination normalize to one string, which is what makes two records
