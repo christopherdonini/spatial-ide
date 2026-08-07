@@ -1027,3 +1027,14 @@ publish (§15). **Owed.**" — and Corrigendum 3's note that explicit approval a
 It does **not** decide the permission model. No ADR does. `kernel/PERMISSION-BOUNDARY.md` records
 that gap, and a drafted **ADR-018** is named there as owed rather than filed — accepting an ADR is
 the custodian's, and a Proposed ADR nobody asked for is a document that looks decided.
+
+## Clarification to the acceptance condition — 2026-08-07, human decision
+
+The 2026-08-07 permission-boundary cut built the grant/approval/audit machinery the Status block's
+condition names (see `kernel/PERMISSION-BOUNDARY.md`). A literal reading of the condition would let
+"developer/test tooling only" lapse on that fact alone. **It does not lapse.** The human's ruling
+on finding F-10: exposure through SKP, any shipped CLI/UI, MCP, plugin, notebook or AI surface
+additionally requires that **the exposure surface itself pass review**, and that review must verify
+one rule in particular: **the requester must never mint the grant** (F-5). Until such a surface
+exists and passes, `publish-bundle` remains developer/test tooling. Appended, not rewritten; the
+Status block stands as accepted.

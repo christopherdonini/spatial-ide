@@ -464,3 +464,22 @@ head-of-branch figure, **318 passed / 0 failed / 2 ignored**, is correct and ind
 reproduced.
 
 Found by the tester during the acceptance run, not by the author.
+
+---
+
+## Human rulings on the two flagged findings — 2026-08-07, recorded by the custodian
+
+**F-10 — ruled: the stricter reading stands, and is made permanent.** ADR-017's literal wording
+would let "developer/test tooling only" lapse on the machinery half alone; the review half was a
+human instruction whose home (the cut brief) was deleted by design. A dated clarification is
+appended to ADR-017 restoring it as a recorded condition: exposure through SKP, any shipped CLI/UI,
+MCP, plugin, notebook or AI surface additionally requires that the exposure surface itself pass
+review. The machinery existing is necessary, not sufficient.
+
+**F-5 — ruled: accepted for v0, with one rule carried forward as binding.** The CLI's self-minted
+grant checks nothing because grantor and operator are the same human; the gate's teeth are the
+approval, the audit record, and the library boundary — which is where any future exposure calls.
+The binding rule for that future surface: **the requester must never mint the grant.** A surface
+that lets the caller manufacture its own authorization makes the boundary theater; grant issuance
+stays on the human side of whatever line the exposure surface draws. This rule is part of the
+review F-10 requires.
