@@ -377,9 +377,12 @@ pub fn require_disk(phase: &str) -> u64 {
     free
 }
 
+/// **`total_cmp`, not `partial_cmp().unwrap()`.** A zero-batch run legitimately produces a NaN
+/// first-batch time, and the unwrap turned that into a panic at the END of a phase -- losing the
+/// whole phase instead of reporting the empty run it was trying to describe.
 pub fn sorted(v: &[f64]) -> Vec<f64> {
     let mut s = v.to_vec();
-    s.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    s.sort_by(|a, b| a.total_cmp(b));
     s
 }
 

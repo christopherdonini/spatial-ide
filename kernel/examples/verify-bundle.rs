@@ -45,11 +45,12 @@
 //!
 //! ## Streaming, because the thing it verifies does not fit in memory
 //!
-//! Partitions are read and hashed **one at a time** and dropped. A verifier that held a 5.7 GB
-//! bundle to check it would be unable to check the bundles it exists for.
+//! Each partition is read **once**, hashed and decoded from that same buffer, and dropped before
+//! the next. A verifier that held a 5.7 GB bundle to check it would be unable to check the bundles
+//! it exists for -- and one that read every partition twice, once to hash and once to decode, would
+//! do ~11.5 GB of IO to verify 5.74 GB. Both were true of earlier drafts of this file.
 
 use std::collections::BTreeSet;
-use std::io::Read as _;
 use std::path::{Path, PathBuf};
 
 use spatial_renderer::canonical::sha256_hex;
@@ -196,7 +197,8 @@ fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
         .as_array()
         .ok_or_else(|| fail("manifest-schema-invalid", "viewer is not an array"))?;
     for asset in viewer {
-        verify_listed_asset(bundle, asset)?;
+        // A viewer asset with a wrong byte count is not a *partition* mismatch.
+        verify_listed_asset(bundle, asset, "asset-hash-mismatch")?;
     }
 
     // ---- partitions ------------------------------------------------------------------------------
@@ -205,7 +207,11 @@ fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
         .ok_or_else(|| fail("manifest-schema-invalid", "crs.source is absent"))?
         .to_string();
     // Nested under `crs`, with the rest of the coordinate-space record — not top-level.
-    let manifest_axis = m["crs"]["axis_order"].as_str().unwrap_or_default().to_string();
+    // Fails closed: a manifest with no axis_order would otherwise skip §14's axis-order check.
+    let manifest_axis = m["crs"]["axis_order"]
+        .as_str()
+        .ok_or_else(|| fail("manifest-schema-invalid", "crs.axis_order is absent"))?
+        .to_string();
     let declared_attributes: Vec<String> = m["schema"]
         .as_array()
         .map(|cols| {
@@ -227,7 +233,13 @@ fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
     let mut names = BTreeSet::new();
 
     for (i, asset) in partitions.iter().enumerate() {
-        let rel = verify_listed_asset(bundle, asset)?;
+        // **Read once, then hash and decode from the same buffer.**
+        //
+        // An earlier draft called `verify_listed_asset` here, which reads the file to hash it, and
+        // then read it a *second* time to decode — ~11.5 GB of IO to verify a 5.74 GB bundle, while
+        // two comments claimed it read once. At 6 633 partitions that is not a rounding error, and
+        // `strict_reader.wall_ms` would have described roughly double the necessary work.
+        let rel = admit_asset_path(asset)?;
         names.insert(rel.clone());
 
         let declared_rows = asset["rows"]
@@ -235,10 +247,9 @@ fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
             .ok_or_else(|| fail("manifest-schema-invalid", format!("{rel}: rows is absent")))?;
         let bytes = asset["bytes"].as_u64().unwrap_or(0);
 
-        // Read once, hash and decode from the same buffer, then drop it. At 6 600 partitions this
-        // is the difference between a bounded verifier and one that cannot check what it exists for.
         let payload = std::fs::read(bundle.join(&rel))
             .map_err(|e| fail("asset-missing", format!("{rel}: {e}")))?;
+        check_bytes_and_hash(&rel, &payload, asset, "partition-byte-count-mismatch")?;
         verify_partition(
             &rel,
             &payload,
@@ -285,57 +296,79 @@ fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
     })
 }
 
-/// Path safety, byte count and content hash for one listed asset. Returns its bundle-relative path.
-fn verify_listed_asset(bundle: &Path, asset: &serde_json::Value) -> Result<String, Failure> {
+/// Path safety, byte count and content hash for one listed asset — reading it once.
+///
+/// Used for viewer assets. Partitions go through [`admit_asset_path`] + [`check_bytes_and_hash`]
+/// directly, so the bytes they decode are the same bytes that were hashed.
+fn verify_listed_asset(
+    bundle: &Path,
+    asset: &serde_json::Value,
+    mismatch_state: &'static str,
+) -> Result<String, Failure> {
+    let rel = admit_asset_path(asset)?;
+    let payload = std::fs::read(bundle.join(&rel))
+        .map_err(|e| fail("asset-missing", format!("{rel}: {e}")))?;
+    check_bytes_and_hash(&rel, &payload, asset, mismatch_state)?;
+    Ok(rel)
+}
+
+/// ADR-017 §14's path rule, on its own so a caller that reads the file itself can still apply it.
+fn admit_asset_path(asset: &serde_json::Value) -> Result<String, Failure> {
     let rel = asset["path"]
         .as_str()
         .ok_or_else(|| fail("manifest-schema-invalid", "an asset has no path"))?
         .to_string();
 
-    // ADR-017 §14: bundle-relative, no `..`, no drive letter, no leading `/`. Backslash is refused
-    // too — on Windows it is a separator, so admitting it would make the same manifest mean two
-    // different things on two platforms.
+    // ADR-017 §14: bundle-relative, no `..`, no drive letter, no leading `/`. Three additions
+    // beyond §14's literal list, each closing a real hole on Windows:
+    //
+    //   - **backslash** is a separator there, so admitting it would make one manifest mean two
+    //     different things on two platforms;
+    //   - **a colon anywhere**, not only at index 1 — `data/part-00000.arrows:stream` names an NTFS
+    //     alternate data stream, which is a different byte sequence from the file it appears to be;
+    //   - **a `.` component**, which is redundant at best and a normalization difference at worst.
     let bad = rel.is_empty()
         || rel.starts_with('/')
         || rel.contains('\\')
-        || rel.split('/').any(|c| c == ".." || c.is_empty())
-        || rel.as_bytes().get(1) == Some(&b':');
+        || rel.contains(':')
+        || rel.split('/').any(|c| c == ".." || c == "." || c.is_empty());
     if bad {
         return Err(fail("manifest-schema-invalid", format!("unsafe asset path `{rel}`")));
     }
+    Ok(rel)
+}
 
-    let path = bundle.join(&rel);
-    let meta = std::fs::metadata(&path)
-        .map_err(|e| fail("asset-missing", format!("{rel}: {e}")))?;
-    if let Some(declared) = asset["bytes"].as_u64() {
-        if meta.len() != declared {
-            return Err(fail(
-                "partition-byte-count-mismatch",
-                format!("{rel}: {} bytes on disk, {declared} declared", meta.len()),
-            ));
-        }
+/// Byte count and content hash, over bytes the caller has already read.
+///
+/// **Fails closed on an absent `bytes` member.** The earlier version skipped the byte-count check
+/// when the manifest omitted it, which turns a malformed manifest into a passing verification —
+/// exactly backwards for a reader whose job is to refuse.
+///
+/// `mismatch_state` lets the caller name the right ADR-017 §14 state: a *viewer* asset with a wrong
+/// byte count is not a `partition-byte-count-mismatch`, and failing for the wrong reason is what
+/// this reader's own test suite exists to prevent.
+fn check_bytes_and_hash(
+    rel: &str,
+    payload: &[u8],
+    asset: &serde_json::Value,
+    mismatch_state: &'static str,
+) -> Result<(), Failure> {
+    let declared_bytes = asset["bytes"].as_u64().ok_or_else(|| {
+        fail("manifest-schema-invalid", format!("{rel}: bytes is absent"))
+    })?;
+    if payload.len() as u64 != declared_bytes {
+        return Err(fail(
+            mismatch_state,
+            format!("{rel}: {} bytes on disk, {declared_bytes} declared", payload.len()),
+        ));
     }
     let declared_hash = asset["content_hash"]
         .as_str()
         .ok_or_else(|| fail("manifest-schema-invalid", format!("{rel}: content_hash is absent")))?;
-
-    // Hashed in fixed-size blocks rather than by reading the file whole — the same reason the
-    // partition loop drops each payload.
-    let mut f = std::fs::File::open(&path)
-        .map_err(|e| fail("asset-missing", format!("{rel}: {e}")))?;
-    let mut buf = vec![0u8; 1 << 20];
-    let mut all = Vec::new();
-    loop {
-        let n = f.read(&mut buf).map_err(|e| fail("unhandled-error", format!("{rel}: {e}")))?;
-        if n == 0 {
-            break;
-        }
-        all.extend_from_slice(&buf[..n]);
+    if sha256_hex(payload) != declared_hash {
+        return Err(fail("asset-hash-mismatch", rel.to_string()));
     }
-    if sha256_hex(&all) != declared_hash {
-        return Err(fail("asset-hash-mismatch", rel));
-    }
-    Ok(rel)
+    Ok(())
 }
 
 /// Decode one partition and check everything ADR-017 §14 requires of it.
@@ -365,7 +398,7 @@ fn verify_partition(
             format!("{rel}: envelope `{}`, manifest `{manifest_crs}`", get("crs")),
         ));
     }
-    if !manifest_axis.is_empty() && get("axis_order") != manifest_axis {
+    if get("axis_order") != manifest_axis {
         return Err(fail(
             "envelope-axis-order-mismatch",
             format!("{rel}: envelope `{}`, manifest `{manifest_axis}`", get("axis_order")),
@@ -380,7 +413,11 @@ fn verify_partition(
 
     // The declared projection, and that every declared column is actually present. **Names only** —
     // §14 forbids claiming to verify Arrow types beyond column names, and this reader does not.
-    let declared: Vec<String> = serde_json::from_str(get("attribute_columns")).unwrap_or_default();
+    // Fails closed:  turned an unparseable list into , which passes
+    // whenever the manifest declares no attributes -- exactly this pass's configuration.
+    let declared: Vec<String> = serde_json::from_str(get("attribute_columns")).map_err(|e| {
+        fail("envelope-attributes-mismatch", format!("{rel}: attribute_columns is unparseable: {e}"))
+    })?;
     if declared != declared_attributes {
         return Err(fail(
             "envelope-attributes-mismatch",

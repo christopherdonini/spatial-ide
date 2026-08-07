@@ -68,14 +68,64 @@ const PREDICTED_ROW_GROUPS: usize = 403;
 const QUARTER_ROWS: u64 = 826_281;
 /// Exact: (⌊1817/8⌋+1)².
 const SIXTY_FOURTH_ROWS: u64 = 51_984;
-const GRID_COLS: f64 = 1817.0;
+/// The generator's grid, restated. `⌈√3_300_000⌉` and its 40 m cell are locals inside
+/// `fixture::parcel` and are not public, so these are duplicates — and a generator change would
+/// move the viewports silently. The row-count assertions below are what catches that.
+const GRID_COLS: usize = 1817;
 const CELL_M: f64 = 40.0;
+
+/// A viewport edge that lands **on a cell centre**, and the reason that matters.
+///
+/// A parcel's bbox always straddles its own centre, so an edge at a centre includes that column
+/// unconditionally — the covering-bbox filter's answer is then pure arithmetic and cannot depend on
+/// per-feature vertex jitter.
+///
+/// **This was a real defect, caught before the run.** The 1/64 edge was `1817/8 × 40 = +9085`,
+/// which lands 15 m *into* cell 227 whose centre is at +20 m. Inclusion then needed a parcel's
+/// leftward reach — `16.8 × jitter × −cos θ`, jitter ~ U[0.55, 1] — to be ≥ 15 m, which fails for
+/// roughly 7 % of parcels. The registered "exact" 51 984 would have come back as 51 953, and the
+/// preregistration says an exact-count mismatch stops the pass as an instrument failure. The
+/// quarter's `1817/2 × 40 = +36340` happened to equal `908 × 40 + 20` and so was already robust —
+/// by luck. This makes both deliberate.
+fn viewport_edge(divisor: usize) -> f64 {
+    let last_col = GRID_COLS / divisor; // integer division: the last column wholly inside
+    last_col as f64 * CELL_M + CELL_M / 2.0
+}
+
+/// Columns included by [`viewport_edge`], squared — the exact row count.
+fn viewport_rows(divisor: usize) -> u64 {
+    let cols = (GRID_COLS / divisor + 1) as u64;
+    cols * cols
+}
+
+/// **The computed viewports must equal the pre-registered numbers.**
+///
+/// Not #[ignore]d: it runs in the ordinary suite, costs nothing, and is what keeps the harness and
+/// `SCALE-PASS-PREREGISTRATION.md` §1b from drifting apart. Without it the registered constants are
+/// prose beside code that computes something else — which is exactly the defect the reviewer found
+/// in the 1/64 edge.
+#[test]
+fn the_viewports_match_the_preregistered_row_counts() {
+    assert_eq!(viewport_rows(2), QUARTER_ROWS, "the quarter viewport no longer matches §1b");
+    assert_eq!(viewport_rows(8), SIXTY_FOURTH_ROWS, "the 1/64 viewport no longer matches §1b");
+    // Both edges land on a cell centre, which is what makes the counts robust rather than lucky.
+    for divisor in [2usize, 8] {
+        let offset = viewport_edge(divisor);
+        let cells = (offset - CELL_M / 2.0) / CELL_M;
+        assert!(
+            (cells - cells.round()).abs() < 1e-9,
+            "the 1/{divisor} edge at +{offset} is not on a cell centre, so its row count depends on \n             per-feature vertex jitter"
+        );
+    }
+}
 
 // ---- Pre-registered sample counts (§6) ---------------------------------------------------------
 
 const WHOLE_FILE_RUNS: usize = 5;
 const VIEWPORT_RUNS: usize = 7;
 const CANCEL_TRIALS: usize = 7;
+/// Alternating ABBA pairs for the identity-scan A/B (each pair is two A and two B opens).
+const AB_PAIRS: usize = 3;
 
 // ---- Pre-registered watchdog ceilings (§3) -----------------------------------------------------
 
@@ -176,10 +226,13 @@ struct StreamRun {
     total_ms: f64,
     rows: u64,
     batches: usize,
+    /// The engine's own report of how the query was planned. Recorded rather than inferred: this
+    /// pass is framed throughout as "ScanOnly, no index", and  exists so that is a
+    /// fact in the artifact instead of an assumption in the prose.
+    filter_plan: String,
 }
 
-fn stream_once(ds: &Dataset, q: &ViewportQuery, dog: &Watchdog) -> StreamRun {
-    let cancel = CancelToken::new();
+fn stream_once(ds: &Dataset, q: &ViewportQuery, dog: &Watchdog, cancel: CancelToken) -> StreamRun {
     let t0 = Instant::now();
     let mut stream = ds.stream_with_cancel(q, cancel).expect("stream opens");
     let mut payload = Vec::new();
@@ -202,6 +255,7 @@ fn stream_once(ds: &Dataset, q: &ViewportQuery, dog: &Watchdog) -> StreamRun {
         total_ms: t0.elapsed().as_secs_f64() * 1000.0,
         rows,
         batches,
+        filter_plan: format!("{:?}", stream.filter_plan()),
     }
 }
 
@@ -269,15 +323,23 @@ fn measure_the_five_gigabyte_scale_pass() {
 
     // ---- Phase 2: warm open, and the identity scan isolated by A/B ------------------------------
     require_disk("open");
-    let (open_full_ms, open_prelude_ms) = open_ab(&fixture_path());
-    let scan_ms = open_full_ms - open_prelude_ms;
+    let (full_opens, prelude_opens, scan_a_first, scan_b_first) = open_ab(&fixture_path());
+    let full_p50 = pct(&sorted(&full_opens), 0.5);
+    let prelude_p50 = pct(&sorted(&prelude_opens), 0.5);
     println!(
-        "open: full {open_full_ms:.1} ms | prelude-only {open_prelude_ms:.1} ms | scan {scan_ms:.1} ms"
+        "open: full p50 {full_p50:.1} ms | prelude-only p50 {prelude_p50:.1} ms | scan estimate \
+         {scan_a_first:.1} ms (A-first) / {scan_b_first:.1} ms (B-first)"
     );
     json.push_str(&format!(
-        "  \"warm_open\": {{\"full_ms\": {open_full_ms:.3}, \"prelude_only_ms\": {open_prelude_ms:.3}, \
-         \"identity_scan_ms\": {scan_ms:.3}, \"basis\": \"A/B on two product paths \
-         (skip_uniqueness_check true/false), same session, same binary\"}},\n"
+        "  \"warm_open\": {{\"full\": {}, \"prelude_only\": {}, \
+         \"identity_scan_ms_a_first\": {scan_a_first:.3}, \
+         \"identity_scan_ms_b_first\": {scan_b_first:.3}, \
+         \"basis\": \"A/B on two product paths (skip_uniqueness_check true/false), same session, \
+         same binary, one discarded warm-up open, {AB_PAIRS} alternating ABBA pairs. The two order \
+         estimates are reported separately and NOT averaged: if they disagree, the order effect is \
+         the finding.\"}},\n",
+        summarize("open, full (with uniqueness scan)", &full_opens),
+        summarize("open, prelude only (scan skipped)", &prelude_opens),
     ));
     canaries.push(Canary::take("after-open"));
 
@@ -286,95 +348,140 @@ fn measure_the_five_gigabyte_scale_pass() {
     let ds = Dataset::open(fixture_path()).expect("open the 5 GB fixture");
 
     let whole = ViewportQuery { bbox: None, bbox_crs: None, limit: None };
-    let (whole_first, whole_total, whole_rows, whole_batches, whole_mem) =
+    let (whole_first, whole_total, whole_rows, whole_batches, whole_mem, whole_plan) =
         stream_phase(&ds, &whole, WHOLE_FILE_RUNS, CEIL_WHOLE_FILE, "whole-file");
     assert_eq!(whole_rows, FEATURES as u64, "the whole-file stream did not return every row");
 
     let e_lo = spatial_engine::fixture::E_LO;
     let n_lo = spatial_engine::fixture::N_LO;
-    let quarter = ViewportQuery {
+    // **`bbox_crs` names the dataset's own CRS rather than being `None`.** With `None` the engine's
+    // CRS-admission branch is never entered, so a row-count mismatch could not distinguish a filter
+    // fault from an admission fault — and the admission fault is one of the three things §1b claims
+    // these exact counts would reveal. Naming it costs nothing and exercises the branch.
+    let crs = ds.crs().identifier().to_string();
+    let viewport = |divisor: usize| ViewportQuery {
         bbox: Some(Bbox {
             xmin: e_lo,
             ymin: n_lo,
-            xmax: e_lo + GRID_COLS / 2.0 * CELL_M,
-            ymax: n_lo + GRID_COLS / 2.0 * CELL_M,
+            xmax: e_lo + viewport_edge(divisor),
+            ymax: n_lo + viewport_edge(divisor),
         }),
-        bbox_crs: None,
+        bbox_crs: Some(crs.clone()),
         limit: None,
     };
-    let (q_first, q_total, q_rows, q_batches, _) =
+
+    let quarter = viewport(2);
+    let (q_first, q_total, q_rows, q_batches, _, q_plan) =
         stream_phase(&ds, &quarter, VIEWPORT_RUNS, CEIL_VIEWPORT, "quarter");
 
-    let sixty_fourth = ViewportQuery {
-        bbox: Some(Bbox {
-            xmin: e_lo,
-            ymin: n_lo,
-            xmax: e_lo + GRID_COLS / 8.0 * CELL_M,
-            ymax: n_lo + GRID_COLS / 8.0 * CELL_M,
-        }),
-        bbox_crs: None,
-        limit: None,
-    };
-    let (s_first, s_total, s_rows, s_batches, _) =
+    let sixty_fourth = viewport(8);
+    let (s_first, s_total, s_rows, s_batches, _, s_plan) =
         stream_phase(&ds, &sixty_fourth, VIEWPORT_RUNS, CEIL_VIEWPORT, "sixty-fourth");
 
-    // **The strongest instrument check in the pass.** These are pure arithmetic over the
-    // generator's grid; a mismatch means the filter or the generator is wrong, not that the
-    // machine drifted. Recorded rather than asserted, because the covering-bbox filter is
-    // conservative by design (it selects candidates whose bbox intersects), so the exact identity
-    // is a prediction about the *grid*, and any difference is a finding worth reporting in full.
-    println!("quarter rows {q_rows} (predicted {QUARTER_ROWS}); 1/64 rows {s_rows} (predicted {SIXTY_FOURTH_ROWS})");
+    // **The strongest instrument check in the pass, and it is ASSERTED.**
+    //
+    // Both edges land on a cell centre (see `viewport_edge`), so a parcel's bbox always straddles
+    // the boundary column and the covering-bbox filter's answer is pure arithmetic over the grid —
+    // independent of per-feature vertex jitter. A mismatch therefore means the filter, the
+    // generator or the CRS admission is wrong, not that the machine drifted, and the
+    // preregistration §7 says that stops the pass rather than being reported as a result.
+    assert_eq!(
+        q_rows,
+        viewport_rows(2),
+        "the quarter viewport returned {q_rows} rows, not the exact {} the grid predicts",
+        viewport_rows(2)
+    );
+    assert_eq!(
+        s_rows,
+        viewport_rows(8),
+        "the 1/64 viewport returned {s_rows} rows, not the exact {} the grid predicts",
+        viewport_rows(8)
+    );
 
     json.push_str(&format!(
-        "  \"streaming\": {{\
+        "  \"streaming\": {{\"filter_plans\": {{\"whole_file\": {whole_plan:?}, \"quarter\": {q_plan:?}, \"sixty_fourth\": {s_plan:?}}}, \
          \"whole_file\": {{\"first_batch\": {}, \"total\": {}, \"rows\": {whole_rows}, \"batches\": {whole_batches}}},\
-         \"quarter\": {{\"first_batch\": {}, \"total\": {}, \"rows\": {q_rows}, \"predicted_rows\": {QUARTER_ROWS}, \"batches\": {q_batches}}},\
-         \"sixty_fourth\": {{\"first_batch\": {}, \"total\": {}, \"rows\": {s_rows}, \"predicted_rows\": {SIXTY_FOURTH_ROWS}, \"batches\": {s_batches}}}}},\n",
+         \"quarter\": {{\"first_batch\": {}, \"total\": {}, \"rows\": {q_rows}, \"predicted_rows\": {}, \"batches\": {q_batches}}},\
+         \"sixty_fourth\": {{\"first_batch\": {}, \"total\": {}, \"rows\": {s_rows}, \"predicted_rows\": {}, \"batches\": {s_batches}}}}},\n",
         summarize("whole-file first batch", &whole_first),
         summarize("whole-file total", &whole_total),
         summarize("quarter first batch", &q_first),
         summarize("quarter total", &q_total),
+        viewport_rows(2),
         summarize("1/64 first batch", &s_first),
         summarize("1/64 total", &s_total),
+        viewport_rows(8),
     ));
     canaries.push(Canary::take("after-streaming"));
 
-    // ---- Phase 4: the memory row, with its in-session control -----------------------------------
-    let control_ds = Dataset::open(control_path()).expect("open the control fixture");
-    let (_, _, _, _, control_mem) =
-        stream_phase(&control_ds, &whole, 1, CEIL_WHOLE_FILE, "control-whole-file");
-
-    let peak_5gb = whole_mem.iter().copied().max().unwrap_or(0);
-    let peak_control = control_mem.iter().copied().max().unwrap_or(0);
-    println!("private commit peak: 5 GB {peak_5gb} B | 145 MB control {peak_control} B");
-    json.push_str(&format!(
-        "  \"memory\": {{\"peak_private_commit_5gb\": {peak_5gb}, \
-         \"peak_private_commit_control\": {peak_control}, \
-         \"declared_composed_bound_bytes\": 83886080, \
-         \"caveat\": \"process private commit is NOT the bounded quantity. DuckDB's own streaming \
-         buffer sits outside every declared bound by design. The bounded claim is the data-plane \
-         window; these two figures are the two points the flatness statement needs, same session, \
-         same binary.\"}},\n"
-    ));
-    canaries.push(Canary::take("after-memory"));
-
-    // ---- Phase 5: cancellation mid-stream at scale ----------------------------------------------
+    // ---- Phase 4: cancellation mid-stream at scale ------------------------------------------------
+    //
+    // **Before the memory control, and that ordering is the fix for a real defect.** The control
+    // must not be sampled while the 5 GB `Dataset` — its pool, its DuckDB connection and its buffer
+    // manager — is still resident, or both points of the "flat with respect to file size" claim
+    // would be dominated by the same 5 GB residue and would look flat for a reason that has nothing
+    // to do with file size. So every phase that needs `ds` runs first, and `ds` is dropped before
+    // the control is opened.
     require_disk("cancel");
-    let cancel_samples = cancel_phase(&ds, &whole);
-    let cs = sorted(&cancel_samples);
+    let cancel = cancel_phase(&ds, &whole);
+    let cs = sorted(&cancel.ack_ms);
     let cancel_max = cs.last().copied().unwrap_or(f64::NAN);
     println!(
-        "cancellation: n={} p50 {:.2} ms p95 {:.2} ms max {:.2} ms (budget {CANCEL_BUDGET_MS} ms)",
+        "cancellation: n={} p50 {:.2} ms p95 {:.2} ms max {:.2} ms (budget {CANCEL_BUDGET_MS} ms) | batches after cancel max {}",
         cs.len(),
         pct(&cs, 0.5),
         pct(&cs, 0.95),
-        cancel_max
+        cancel_max,
+        cancel.batches_after_cancel.iter().copied().max().unwrap_or(0)
     );
     json.push_str(&format!(
-        "  \"cancellation_mid_stream\": {{\"summary\": {}, \"budget_ms\": {CANCEL_BUDGET_MS}, \"max_ms\": {cancel_max:.3}}},\n",
-        summarize("cancel mid-stream at 5 GB", &cancel_samples)
+        "  \"cancellation_mid_stream\": {{\"acknowledgement\": {}, \"drain_to_terminal\": {}, \
+         \"budget_ms\": {CANCEL_BUDGET_MS}, \"max_ack_ms\": {cancel_max:.3}, \
+         \"batches_after_cancel\": {}, \
+         \"definitions\": \"acknowledgement = cancel() until the FIRST next_into returns after it \
+         (what docs/08's budget is about); drain_to_terminal = cancel() until the stream is over, \
+         which includes IPC-encoding the batches already queued when the cancel arrived. The two \
+         are reported separately because the second is dominated by work produced BEFORE the \
+         cancel and is not the property the budget names.\"}},\n",
+        summarize("cancel acknowledgement", &cancel.ack_ms),
+        summarize("cancel drain to terminal", &cancel.drain_ms),
+        json_usizes(&cancel.batches_after_cancel),
     ));
     canaries.push(Canary::take("after-cancel"));
+
+    // ---- Phase 5: the memory row, with its in-session control ---------------------------------------
+    //
+    // `ds` is dropped here, before the control is opened, so the control's private-commit samples
+    // are not measuring the 5 GB dataset's residue. A baseline is taken immediately after the drop
+    // and recorded beside both peaks, because the allocator does not return everything to the OS
+    // and pretending it does would overstate the control.
+    let peak_5gb = whole_mem.iter().copied().max().unwrap_or(0);
+    drop(ds);
+    std::thread::sleep(Duration::from_secs(2));
+    let baseline_after_drop = procmem::sample().map(|c| c.private_usage).unwrap_or(0);
+
+    let control_ds = Dataset::open(control_path()).expect("open the control fixture");
+    let (_, _, _, _, control_mem, _) =
+        stream_phase(&control_ds, &whole, 1, CEIL_WHOLE_FILE, "control-whole-file");
+    let peak_control = control_mem.iter().copied().max().unwrap_or(0);
+    drop(control_ds);
+
+    println!(
+        "private commit: 5 GB peak {peak_5gb} B | baseline after drop {baseline_after_drop} B | control peak {peak_control} B"
+    );
+    json.push_str(&format!(
+        "  \"memory\": {{\"peak_private_commit_5gb\": {peak_5gb}, \
+         \"baseline_after_dropping_5gb_dataset\": {baseline_after_drop}, \
+         \"peak_private_commit_control\": {peak_control}, \
+         \"declared_composed_bound_bytes\": 83886080, \
+         \"caveat\": \"process private commit is NOT the bounded quantity. DuckDB's own streaming \
+         buffer sits outside every declared bound by design, and in publish an ORDER BY sort of \
+         ~7 GB does too. The bounded claim is the data-plane window. These two peaks are the two \
+         points the flatness statement needs -- same session, same binary, same row_group_rows -- \
+         and the baseline between them is recorded because the allocator does not return \
+         everything to the OS when the 5 GB dataset is dropped.\"}},\n"
+    ));
+    canaries.push(Canary::take("after-memory"));
 
     // ---- Close out -------------------------------------------------------------------------------
     let (spread, canary_ok) = canary_spread(&canaries);
@@ -385,7 +492,10 @@ fn measure_the_five_gigabyte_scale_pass() {
         points.join(", ")
     ));
     json.push_str(&format!("  \"free_bytes_after\": {free_after},\n"));
-    json.push_str("  \"note\": \"Publish, determinism and strict-reader phases are driven by kernel/scripts/run-scale-publish.mjs against the same frozen binaries; the cold-open row is kernel/scripts/cold-open.ps1 and runs last.\"\n}\n");
+    // **A provenance note goes into the artifact, so it must name things that exist.** An earlier
+    // draft pointed at `kernel/scripts/run-scale-publish.mjs`, which was never written — and this
+    // string is what a reader of RESULTS.md consults to find out how the numbers were taken.
+    json.push_str("  \"note\": \"Publish, determinism and strict-reader phases are `measure_publish_at_five_gigabytes` in kernel/tests/scale_pass.rs, run from these same frozen binaries. The cold-open row is kernel/scripts/cold-open.ps1 and runs last, after three operator-assisted restarts.\"\n}\n");
 
     let artifact = dir.join("scale-pass.json");
     std::fs::write(&artifact, &json).expect("write the evidence artifact");
@@ -435,30 +545,87 @@ fn generate(
     (facts, ms)
 }
 
-/// Open the dataset twice on two product paths, so the identity scan is a *difference* rather than
-/// an inference. Returns (full open ms, prelude-only ms).
-fn open_ab(path: &Path) -> (f64, f64) {
+/// Open the dataset on two product paths, so the identity scan is a **difference** rather than an
+/// inference. Returns (full open ms, prelude-only ms, per-order estimates).
+///
+/// ## Why alternating pairs and a discarded warm-up, rather than one A then one B
+///
+/// The first draft ran A once then B once and called `A − B` the scan. Three things made that
+/// unsound, and all three push the estimate the same way:
+///
+/// - **A was the first `Dataset::open` in the process**, so DuckDB's process-level initialization
+///   and first-connection cost landed entirely in A and therefore entirely in the "scan".
+/// - **One ordering, n = 1** — no way to see an order effect, let alone subtract it.
+/// - A reads the footer *plus the `id` column*; B reads only the footer. Whatever first-touch cost
+///   remains after the file is cached is asymmetric by construction and was attributed to the scan.
+///
+/// So: one discarded warm-up open, then `AB_PAIRS` alternating **ABBA** pairs. Both order estimates
+/// are reported. **If they disagree, the order effect is the finding** — not something to average
+/// away.
+fn open_ab(path: &Path) -> (Vec<f64>, Vec<f64>, f64, f64) {
     let cancel = CancelToken::new();
     let dog = Watchdog::start("open-ab", CEIL_OPEN, None, cancel);
 
-    let t0 = Instant::now();
-    let full = Dataset::open(path).expect("open with the uniqueness scan");
-    let full_ms = t0.elapsed().as_secs_f64() * 1000.0;
-    drop(full);
+    let open_full = |p: &Path| -> f64 {
+        let t = Instant::now();
+        let ds = Dataset::open(p).expect("open with the uniqueness scan");
+        let ms = t.elapsed().as_secs_f64() * 1000.0;
+        drop(ds);
+        ms
+    };
+    let open_prelude = |p: &Path| -> f64 {
+        let mut d = IdentityDeclaration::new("id", "scale-pass", "2026-08-07T00:00:00Z");
+        d.skip_uniqueness_check = true;
+        let t = Instant::now();
+        let ds = Dataset::open_with_declared_identity(p, d, &CancelToken::new())
+            .expect("open with the scan skipped");
+        let ms = t.elapsed().as_secs_f64() * 1000.0;
+        drop(ds);
+        ms
+    };
 
-    let mut declared = IdentityDeclaration::new("id", "scale-pass", "2026-08-07T00:00:00Z");
-    declared.skip_uniqueness_check = true;
-    let t1 = Instant::now();
-    let prelude = Dataset::open_with_declared_identity(path, declared, &CancelToken::new())
-        .expect("open with the scan skipped");
-    let prelude_ms = t1.elapsed().as_secs_f64() * 1000.0;
-    drop(prelude);
+    // Discarded: this pays for DuckDB's first instance in the process, and nothing else should.
+    let warmup = open_full(path);
+    println!("  [open-ab] warm-up (discarded): {warmup:.1} ms");
+
+    let mut full = Vec::with_capacity(AB_PAIRS * 2);
+    let mut prelude = Vec::with_capacity(AB_PAIRS * 2);
+    let mut a_first_deltas = Vec::with_capacity(AB_PAIRS);
+    let mut b_first_deltas = Vec::with_capacity(AB_PAIRS);
+
+    for i in 0..AB_PAIRS {
+        // ABBA: A,B then B,A. Each pair contributes one estimate in each order.
+        let a1 = open_full(path);
+        let b1 = open_prelude(path);
+        a_first_deltas.push(a1 - b1);
+
+        let b2 = open_prelude(path);
+        let a2 = open_full(path);
+        b_first_deltas.push(a2 - b2);
+
+        full.push(a1);
+        full.push(a2);
+        prelude.push(b1);
+        prelude.push(b2);
+        println!("  [open-ab] pair {}/{AB_PAIRS}: A {a1:.1} B {b1:.1} | B {b2:.1} A {a2:.1}", i + 1);
+    }
 
     assert!(!dog.finish(), "the open watchdog fired; this phase is unmeasured");
-    (full_ms, prelude_ms)
+    let a_first = pct(&sorted(&a_first_deltas), 0.5);
+    let b_first = pct(&sorted(&b_first_deltas), 0.5);
+    (full, prelude, a_first, b_first)
 }
 
-/// n runs of one query, under a declared ceiling, with private commit sampled throughout.
+/// n runs of one query, each under its own declared ceiling, with private commit sampled throughout.
+///
+/// **One watchdog per run, not per phase.** The preregistration declares the whole-file and
+/// viewport ceilings *per run*; a single watchdog spanning 5 or 7 runs would make the effective
+/// per-run ceiling 5× or 7× tighter than registered, in the direction of a spurious abort.
+///
+/// **The token the watchdog fires is the token the stream uses.** An earlier draft constructed one
+/// token for the watchdog and a different one inside the stream, so a fired watchdog reached
+/// nothing, the phase could not return inside the grace, and the process aborted — losing the whole
+/// run rather than marking one row unmeasured.
 #[allow(clippy::type_complexity)]
 fn stream_phase(
     ds: &Dataset,
@@ -466,17 +633,20 @@ fn stream_phase(
     runs: usize,
     ceiling: Duration,
     phase: &'static str,
-) -> (Vec<f64>, Vec<f64>, u64, usize, Vec<usize>) {
-    let cancel = CancelToken::new();
-    let dog = Watchdog::start(phase, ceiling, Some(SILENCE_STREAM), cancel);
+) -> (Vec<f64>, Vec<f64>, u64, usize, Vec<usize>, String) {
     let sampler = MemorySampler::start(CADENCE_LONG_MS);
-
     let mut first = Vec::with_capacity(runs);
     let mut total = Vec::with_capacity(runs);
     let (mut rows, mut batches) = (0u64, 0usize);
+    let mut plan = String::from("(unrecorded)");
 
     for i in 0..runs {
-        let r = stream_once(ds, q, &dog);
+        let cancel = CancelToken::new();
+        let dog = Watchdog::start(phase, ceiling, Some(SILENCE_STREAM), cancel.clone());
+        let r = stream_once(ds, q, &dog, cancel);
+        let fired = dog.finish();
+        assert!(!fired, "the {phase} watchdog fired on run {}; this phase is unmeasured", i + 1);
+
         println!(
             "  [{phase}] run {}/{runs}: first batch {:.1} ms, total {:.1} ms, {} rows, {} batches",
             i + 1,
@@ -487,18 +657,48 @@ fn stream_phase(
         );
         first.push(r.first_batch_ms);
         total.push(r.total_ms);
-        rows = r.rows;
-        batches = r.batches;
+        // **Every run's row count is checked against the first**, so an assertion on `rows` is an
+        // assertion about the phase rather than about whichever run happened to be last.
+        if i == 0 {
+            rows = r.rows;
+            batches = r.batches;
+            plan = r.filter_plan;
+        } else {
+            assert_eq!(r.rows, rows, "{phase} run {} returned a different row count", i + 1);
+        }
     }
 
     let samples = sampler.finish();
-    assert!(!dog.finish(), "the {phase} watchdog fired; this phase is unmeasured and is not re-run");
-    (first, total, rows, batches, samples)
+    (first, total, rows, batches, samples, plan)
+}
+
+/// What one cancellation trial measured.
+struct CancelPhase {
+    /// `cancel()` → the first `next_into` that returns after it. **This is what `docs/08`'s budget
+    /// is about**: how quickly the operation acknowledges.
+    ack_ms: Vec<f64>,
+    /// `cancel()` → the stream is over. Includes IPC-encoding whatever was already queued when the
+    /// cancel arrived, so it is dominated by work produced *before* the cancel.
+    drain_ms: Vec<f64>,
+    /// The engine's own count, the same H2 property every prior cancellation row carries.
+    batches_after_cancel: Vec<usize>,
 }
 
 /// Cancellation mid-stream, producer-observed, in one process so both observations share a clock.
-fn cancel_phase(ds: &Dataset, q: &ViewportQuery) -> Vec<f64> {
-    let mut samples = Vec::with_capacity(CANCEL_TRIALS);
+///
+/// ## Two numbers, because the first draft measured the wrong one
+///
+/// It timed from `cancel()` until the drain loop ended. With `MAX_QUEUED_BATCHES = 2` plus a
+/// producer blocked in `send`, up to **three already-generated batches** are in flight when the
+/// cancel lands, and `next_into` IPC-encodes each one before the terminal can arrive. So that
+/// interval is `3 × (recv + ~1 MiB encode)` — a real quantity, but not "acknowledged", and it would
+/// have gone into `RESULTS.md` against a budget it does not describe.
+fn cancel_phase(ds: &Dataset, q: &ViewportQuery) -> CancelPhase {
+    let mut out = CancelPhase {
+        ack_ms: Vec::with_capacity(CANCEL_TRIALS),
+        drain_ms: Vec::with_capacity(CANCEL_TRIALS),
+        batches_after_cancel: Vec::with_capacity(CANCEL_TRIALS),
+    };
 
     for trial in 0..CANCEL_TRIALS {
         let cancel = CancelToken::new();
@@ -508,9 +708,8 @@ fn cancel_phase(ds: &Dataset, q: &ViewportQuery) -> Vec<f64> {
         let mut stream = ds.stream_with_cancel(q, cancel.clone()).expect("stream opens");
         let mut payload = Vec::new();
 
-        // Let the stream reach steady state before cancelling — a cancel issued before the first
-        // batch measures a different thing, and that case has its own coverage in the ordinary
-        // suite. Two batches is enough at this size and keeps the trial short.
+        // Reach steady state first — a cancel before the first batch measures a different thing and
+        // has its own coverage in the ordinary suite.
         let mut seen = 0;
         while seen < 2 {
             match stream.next_into(&mut payload) {
@@ -525,21 +724,34 @@ fn cancel_phase(ds: &Dataset, q: &ViewportQuery) -> Vec<f64> {
 
         let t = Instant::now();
         cancel.cancel();
-        // Producer-observed acknowledgement: drain until the stream reports it is over.
+
+        // **Acknowledgement**: the very next return, whatever it is.
+        let _ = stream.next_into(&mut payload);
+        let ack_ms = t.elapsed().as_secs_f64() * 1000.0;
+        payload.clear();
+
+        // **Drain**: everything already in flight, to the terminal.
         while let Some(r) = stream.next_into(&mut payload) {
             payload.clear();
             if r.is_err() {
                 break;
             }
         }
-        let ms = t.elapsed().as_secs_f64() * 1000.0;
-        samples.push(ms);
-        println!("  [cancel] trial {}/{CANCEL_TRIALS}: {ms:.2} ms", trial + 1);
+        let drain_ms = t.elapsed().as_secs_f64() * 1000.0;
+        let after = stream.stats().batches_after_cancel.load(std::sync::atomic::Ordering::SeqCst) as usize;
+
+        println!(
+            "  [cancel] trial {}/{CANCEL_TRIALS}: ack {ack_ms:.2} ms, drain {drain_ms:.2} ms, {after} batches after cancel",
+            trial + 1
+        );
+        out.ack_ms.push(ack_ms);
+        out.drain_ms.push(drain_ms);
+        out.batches_after_cancel.push(after);
 
         let _ = sampler.finish();
         assert!(!dog.finish(), "the cancel watchdog fired on trial {trial}");
     }
-    samples
+    out
 }
 
 // ================================================================================================
@@ -793,14 +1005,23 @@ fn verify_bundle(bundle: &Path) -> (bool, f64, String) {
 fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
     let da = a.join("data");
     let db = b.join("data");
-    let mut names: Vec<String> = match std::fs::read_dir(&da) {
-        Ok(rd) => rd
-            .filter_map(|e| e.ok())
-            .map(|e| e.file_name().to_string_lossy().to_string())
-            .collect(),
-        Err(e) => return (0, false, Some(format!("bundle A has no data directory: {e}"))),
+    let list = |d: &Path| -> Result<std::collections::BTreeSet<String>, String> {
+        std::fs::read_dir(d)
+            .map_err(|e| format!("{}: {e}", d.display()))
+            .map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect())
     };
-    names.sort();
+    // **Name SETS, not A's listing.** Enumerating only A would miss a partition present in B and
+    // absent from A -- a difference the determinism row exists to catch.
+    let (na, nb) = match (list(&da), list(&db)) {
+        (Ok(a), Ok(b)) => (a, b),
+        (Err(e), _) | (_, Err(e)) => return (0, false, Some(e)),
+    };
+    if na != nb {
+        let only_a: Vec<_> = na.difference(&nb).cloned().collect();
+        let only_b: Vec<_> = nb.difference(&na).cloned().collect();
+        return (0, false, Some(format!("partition sets differ: only in A {only_a:?}, only in B {only_b:?}")));
+    }
+    let names: Vec<String> = na.into_iter().collect();
 
     let mut compared = 0usize;
     for name in &names {

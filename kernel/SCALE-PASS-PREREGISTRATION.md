@@ -62,7 +62,7 @@ flush at this size.
 | grid columns | **1817** | ⌈√3,300,000⌉ |
 | extent | ≈ `2600000, 1200000, 2672680, 1272680` | `E_LO`/`N_LO` + 1817 × 40 m |
 | **quarter viewport** `2600000,1200000,2636340,1236340` | **826,281 rows exactly** | (⌊1817/2⌋+1)² |
-| **1/64 viewport** `2600000,1200000,2609085,1209085` | **51,984 rows exactly** | (⌊1817/8⌋+1)² |
+| **1/64 viewport** `2600000,1200000,2609100,1209100` | **51,984 rows exactly** | (⌊1817/8⌋+1)² — edge amended by A1, count unchanged |
 | partitions | **6,633**, band **6,550–6,750** | (345,414,000×20 + 3,300,000×12) / 1 MiB = 6,626, +0.1 % for cut-before-append |
 | bundle `data/` | **≈5.74 GB** | 345,414,000 × 16.605 B/vertex measured wire density |
 | `manifest.json` | **1.3–2.0 MB** | 6,633 entries × ~200–300 B |
@@ -419,4 +419,64 @@ gains tiling, or the ceilings rise on evidence nobody has taken — are a decisi
 
 ## 10. Amendments
 
-*(none — this file was committed before the fixture, the instruments and any result.)*
+### A1 — 2026-08-07 — the 1/64 viewport edge moves to a cell centre
+
+**Made before the fixture exists, before any instrument has been run, and before any result of this
+pass has been looked at.** The amendment rule in this file's header is therefore satisfied: nothing
+here is a response to a number.
+
+**What changed.** §1b registered the 1/64 viewport as
+`2600000,1200000,2609085,1209085` → **51,984 rows exactly**. The edge is now
+`2600000,1200000,2609100,1209100` — `+9100` rather than `+9085` — and the count stays **51,984**.
+
+**Why.** The reviewer replayed the generator's `SplitMix64` and `parcel()`/`ring()` against the
+registered seed and showed the old edge returns **51,953**, not 51,984. `1817/8 = 227.125`, so
+`+9085` lands **15 m into cell 227**, whose centre is at `+20 m`. Inclusion then depends on a
+parcel's leftward reach — `16.8 × jitter × −cos θ`, with `jitter ~ U[0.55, 1]` — being ≥ 15 m, which
+fails for roughly 7 % of parcels, losing ~16 on each of the x and y edges.
+
+`+9100` is `227 × 40 + 20`: **the centre of cell 227**. A parcel's bbox always straddles its own
+centre, so that column is included unconditionally and the count is pure arithmetic over the grid,
+independent of vertex jitter.
+
+**The quarter viewport is unchanged and was already correct** — `1817/2 × 40 = +36340` happens to
+equal `908 × 40 + 20`, a cell centre. It was robust by luck; both are now robust by construction,
+computed from one function (`viewport_edge`) rather than from two hand-written expressions.
+
+**Why this is an amendment rather than a correction to §1b in place.** The number did not change,
+but the *edge that produces it* did, and §7 makes an exact-count mismatch an instrument failure that
+stops the pass. A reader comparing the artifact's `xmax` against §1b would otherwise find a
+discrepancy with no explanation. Recording it is cheaper than being trusted about it.
+
+**Consequence for §7's invalidator.** Unchanged and now meaningful: both viewport row counts are
+**asserted** by the harness, not merely printed. An earlier draft printed them and justified that by
+calling the covering-bbox filter "conservative by design" — which contradicted §7 and would have let
+the exact-count check pass silently while being wrong.
+
+### A2 — 2026-08-07 — instrument corrections found in review, before any run
+
+Recorded because each changes what a number *means*, and all were made before the fixture existed.
+None is a change to a registered value.
+
+1. **Cancellation is reported as two numbers, not one.** The registered row says
+   "producer-observed". The first instrument timed `cancel()` until the stream was fully drained —
+   with `MAX_QUEUED_BATCHES = 2` plus a producer blocked in `send`, that is up to three
+   already-generated batches, each IPC-encoded before the terminal can arrive, so it measured work
+   produced *before* the cancel. The row now carries **acknowledgement** (`cancel()` → the first
+   return after it — what `docs/08`'s budget names) and **drain-to-terminal** separately, plus the
+   engine's own `batches_after_cancel`.
+2. **The identity-scan A/B gains a discarded warm-up and alternating ABBA pairs.** One A then one B
+   put DuckDB's first-instance cost entirely into the "scan". Both order estimates are now reported
+   and **not averaged**: if they disagree, the order effect is the finding.
+3. **The memory control is measured after the 5 GB dataset is dropped**, with a baseline recorded
+   between them. Sampling it while the 5 GB pool was still resident would have made both points of
+   the flatness claim look flat for a reason unrelated to file size.
+4. **Watchdog ceilings apply per run**, as §3 registers, rather than one watchdog spanning all five
+   or seven runs — which would have made the effective per-run ceiling 5× or 7× tighter than
+   declared, in the direction of a spurious abort.
+5. **The watchdog now fires the token the phase actually uses.** In two phases it held a token
+   nothing was listening to, so a fire could not cancel anything and the process would have aborted
+   after the grace — losing the whole run instead of marking one row unmeasured.
+6. **The viewports name the dataset's CRS** rather than sending `bbox_crs: None`, so the engine's
+   CRS-admission branch is exercised and §1b's claim that a row-count mismatch would reveal an
+   admission fault is true.

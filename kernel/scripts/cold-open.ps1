@@ -113,11 +113,19 @@ Write-Host " done"
 
 function Read-DiskCounters {
     $d = Get-CimInstance Win32_PerfRawData_PerfDisk_PhysicalDisk -Filter "Name='_Total'"
+    # **Guarded, because the failure is silent and misdiagnoses the run.** With no _Total instance,
+    # [uint64]$null is 0, every delta is 0, and the cold-evidence check below would tell the
+    # operator the file was already cached -- burning a boot for a counter problem.
+    if ($null -eq $d) { Fail "the PhysicalDisk _Total performance counter is unavailable. The cold evidence rests on it, so no number is produced. Try: lodctr /R" }
     [pscustomobject]@{ Read = [uint64]$d.DiskReadBytesPersec; Write = [uint64]$d.DiskWriteBytesPersec }
 }
 
 Write-Host "  quiet gate: sampling $SampleSeconds s..."
 $diskA = Read-DiskCounters
+# The formatted counter's FIRST cooked reading after a fresh query can be 0, which would bias the
+# mean down and make the gate easier to pass. Taken and discarded.
+$null = (Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'").PercentProcessorTime
+Start-Sleep -Seconds 1
 $cpu = @()
 for ($i = 0; $i -lt $SampleSeconds; $i++) {
     $cpu += (Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'").PercentProcessorTime
@@ -144,6 +152,22 @@ if ($busy)                            { Fail "a build process is running ($($bus
 # ---- 3. The binary pin -- a small read, and the fixture is NOT hashed here -----------------------
 $binHash = (Get-FileHash -Algorithm SHA256 $TimeOpen).Hash.ToLower()
 Write-Host "  time-open sha256: $binHash"
+
+# **Compared, not merely computed.** Section 4a step 3 says VERIFY the binary pin; an earlier draft
+# hashed the binary and threw the value away, which establishes nothing. Boot 1 records the hash;
+# boots 2 and 3 must match it, or the binary moved between boots and the three samples are not of
+# one build.
+$pinFile = Join-Path $OutDir "time-open.sha256"
+if (Test-Path $pinFile) {
+    $expected = (Get-Content $pinFile -Raw).Trim()
+    if ($expected -ne $binHash) {
+        Fail "the time-open binary changed between boots: expected $expected, found $binHash. The three cold samples would not be of one build."
+    }
+    Write-Host "  binary pin: matches boot 1"
+} else {
+    Set-Content -Encoding ascii -Path $pinFile -Value $binHash
+    Write-Host "  binary pin: recorded for boots 2 and 3 to match"
+}
 
 # Cold-time integrity is length + mtime ONLY. Hashing the fixture would read 5 GB and warm the very
 # file being measured; the full hash is re-verified after the last cold sample, by the harness.
@@ -206,7 +230,9 @@ $record = [ordered]@{
     cold_over_warm       = $ratio
     note                 = 'Never pooled with another boot. The verdict against the 5 s budget is taken on the maximum of the three cold samples, declared before measuring.'
 }
-$record | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 $artifact
+# **No BOM.** Windows PowerShell 5.1's `-Encoding utf8` writes one, and both serde_json and
+# JSON.parse reject a leading BOM -- the artifact would be unreadable by every consumer of it.
+[System.IO.File]::WriteAllText($artifact, ($record | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding $false))
 
 Write-Host ""
 if (-not $coldEstablished) {
