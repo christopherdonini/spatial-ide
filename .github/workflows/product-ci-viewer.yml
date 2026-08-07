@@ -27,6 +27,18 @@ name: Product CI — bundle viewer
 # built bundle, and it is an operator-run instrument rather than a per-push check. `kernel/RESULTS.md`
 # records how to run it and what it established. Nothing here is a rendering, timing or precision
 # measurement of any kind.
+#
+# ## First green run — 2026-08-07
+#
+# **`31156155406`, push of `de6ad08` to `main`, started 2026-08-07T07:03:12Z, 15 seconds, every step
+# executed and succeeded.** This workflow has therefore been exercised end to end and may be cited
+# as a gate, within the narrow meaning stated above.
+#
+# **This file never carried a not-a-gate caveat of its own** — the caveat and its runner evidence
+# live in `product-ci-rust.yml`, whose table cites one *viewer* run (`31127603658`) among the three
+# that were cancelled at 15 minutes queued. That is why the record of it being lifted is there and
+# the record of this workflow's own first green run is here. Said plainly so a reader looking for a
+# caveat to check does not conclude one was quietly removed.
 
 on:
   push:

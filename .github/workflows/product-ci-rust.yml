@@ -71,6 +71,22 @@ name: Product CI — Rust workspace
 # > constraint above is unchanged and no run of this workflow has gone green**, so this line records
 # > a local result and advances nothing about CI.
 #
+# ## Resolved — 2026-08-07. The caveat above is lifted; the evidence is kept.
+#
+# **First green run: `31156155408`, `windows-latest`, push of `de6ad08` to `main`, started
+# 2026-08-07T07:03:04Z, 41 minutes, all nine steps executed and succeeded** — checkout, toolchain,
+# cache, `Build the workspace and every test target`, `Run the ordinary suite`. The bundle-viewer
+# workflow's first green run is `31156155406` on the same commit, 15 seconds, all steps executed.
+# A runner was assigned within seconds in both cases.
+#
+# So the runner constraint recorded above **was** environmental and **is** gone; which of the three
+# candidate causes it was is still not established here, and the note is retained rather than
+# deleted because a lifted caveat whose evidence has been erased cannot be checked. What changes is
+# only the status: **this workflow has now been exercised end to end, and it may be cited as a
+# gate.** Everything under "What a green run here means" — no performance claim, nothing about
+# macOS or Linux, nothing about the ADR-003 hardware-validation gate — is unchanged and still bounds
+# what green means.
+#
 # ## The cost being managed
 #
 # `engine/` builds DuckDB from vendored C++ (`bundled`), and `Cargo.toml` compiles `libduckdb-sys`
