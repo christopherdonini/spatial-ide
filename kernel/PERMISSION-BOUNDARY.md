@@ -29,6 +29,26 @@ not answer: whether *"until then"* has lapsed of its own terms and the tooling-o
 it. This file's position is that it has **not**, because the human's brief attaches the further
 condition above — but that is a reading, and the custodian owns it. Recorded as **F-10**.
 
+### The five design points this cut's brief sent to the architect
+
+Listed so the claim "all five were settled" is checkable against this file rather than against a
+commit message. Each links to where it is settled:
+
+| | Design point | Settled in |
+|---|---|---|
+| 1 | The grant object's **scope grammar** | [Grant and approval are different questions](#grant-and-approval-are-different-questions), [Scope is checked against facts](#scope-is-checked-against-facts-never-against-the-request) |
+| 2 | **Where grants live** in the kernel | [Non-persistence and the docs/11 boundary](#non-persistence-and-where-the-docs11-boundary-sits); `kernel/src/permission/grant.rs` |
+| 3 | The **approval flow**, interactive and non-interactive | [Grant and approval](#grant-and-approval-are-different-questions), [There is no approval timeout](#there-is-no-approval-timeout) |
+| 4 | The **audit record**'s schema, location, append-only mechanism and redaction rules | [The audit log's declared properties](#the-audit-logs-declared-properties) and its four subsections |
+| 5 | The **SKP-facing seam** future exposure uses without redesign | [What exposure still requires](#what-exposure-still-requires) |
+
+On point 5, concretely: the seam is `trait ApprovalSource` plus `boundary::execute`, both in
+`kernel/`. `ApprovalPrompt` is deliberately plain-data shaped — owned `String`s, no `Path`, no
+borrowed engine types — so a future SKP approval request is a transcription of it rather than a new
+type. **Nothing in `protocol/` is touched**, because `docs/02` puts permissions in the kernel and SKP
+in `protocol/`, and warns that collapsing the two is how the SKP surface gets absorbed. Authorization
+is kernel policy; transport is protocol mechanism.
+
 ---
 
 ## The model, in one pass
@@ -182,8 +202,10 @@ the manifest as well.
 ### Where the retention number comes from
 
 A record pair is **measured, not estimated**: 1 053 bytes for a successful publish (555 intent + 498
-outcome, newlines included), from this repo's own boundary-test logs. A refused attempt is smaller —
-915 bytes — because the outcome carries no digest, manifest hash or counts.
+outcome, newlines included), from this repo's own boundary-test logs. Refused attempts are smaller —
+**911–951 bytes across the eight refusal cases in that suite** — because the outcome carries no
+digest, manifest hash or counts. The success pair is used below because it is the larger, so the
+resulting count is the conservative one.
 
 ```
 8 MiB / 1 053 B  ≈  7 900 publishes per generation
@@ -418,3 +440,27 @@ of this section gave that reason and it contradicted the repo's own convention.
 
 **So: an ADR is owed, and this file is the interim record.** It is a worse home than `docs/adr/` —
 it is not numbered, not immutable, and not in the constitution index.
+
+---
+
+## Correction to a commit message in this cut
+
+**`7694b30` ("refactor: extract publish's preflight…") states `cargo test --workspace: 314 passed,
+0 failed, 2 ignored`. That number is wrong for that commit.** The correct figure there is **268
+passed, 0 failed, 2 ignored** — the same as `main`, because that commit adds and removes no tests
+(`git show 7694b30 -U0 -- kernel/tests/publish.rs` shows zero `#[test]` attributes added or removed;
+the static workspace test count is 247 at both `main` and `7694b30`).
+
+314 is `55c7683`'s figure — the commit that adds the 46 boundary and CLI tests — and that commit
+reports it correctly. The number was carried backward into the earlier message from a later tree
+state, so the refactor commit's evidence for "the full suite is green" is not reproducible **at that
+commit**, though the claim itself is true (268 passed there).
+
+**Recorded rather than rebased.** The branch is unpushed, so amending was available; it is not taken
+because this repository corrects by appending — accepted ADRs, `RESULTS.md`'s post-run notes, and
+`PRE-PUBLIC-CHECKLIST.md`'s custodian update all work that way — and rewriting four commits to hide
+a wrong number is a worse precedent than leaving the number with a correction beside it. The
+head-of-branch figure, **318 passed / 0 failed / 2 ignored**, is correct and independently
+reproduced.
+
+Found by the tester during the acceptance run, not by the author.

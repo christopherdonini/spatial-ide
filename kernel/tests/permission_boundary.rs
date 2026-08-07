@@ -702,8 +702,13 @@ fn a_destination_under_a_user_profile_path_is_normalized_in_the_record() {
     }
 }
 
-/// **Required test 8, second half.** A credential passed erroneously in any field **never reaches
-/// the log** — the record is refused and the operation does not run.
+/// **Required test 8, second half.** A credential reaching the record **never reaches the log** —
+/// the record is refused and the operation does not run.
+///
+/// **Covered here for one field, the destination**, which is the one an operator could most
+/// plausibly get a secret into. The *mechanism* is field-agnostic — `AuditLog::classify` scans the
+/// whole rendered line, not a list of members — but no test exercises a second field, so this test
+/// claims the destination and the code's own docs claim the rest.
 ///
 /// Both halves are pinned separately, as the bundle redaction tests do: the first asserts that
 /// normalization happened, this asserts that the unconditional rule fires. A test that only did the
