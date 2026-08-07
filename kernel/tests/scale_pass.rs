@@ -126,6 +126,9 @@ const VIEWPORT_RUNS: usize = 7;
 const CANCEL_TRIALS: usize = 7;
 /// Alternating ABBA pairs for the identity-scan A/B (each pair is two A and two B opens).
 const AB_PAIRS: usize = 3;
+/// Settle before the first measured phase. Matches the cold-open protocol's declared 120 s, so the
+/// attended and unattended halves of this pass ask the machine for the same quiet.
+const SETTLE_SECONDS: u64 = 120;
 
 // ---- Pre-registered watchdog ceilings (§3) -----------------------------------------------------
 
@@ -277,7 +280,26 @@ fn measure_the_five_gigabyte_scale_pass() {
         "  \"preregistration\": \"kernel/SCALE-PASS-PREREGISTRATION.md\",\n  \"cadence_short_ms\": {CADENCE_SHORT_MS},\n  \"cadence_long_ms\": {CADENCE_LONG_MS},\n"
     ));
 
+    // **A settle before the first canary, and the reason is attempt 1.**
+    //
+    // Attempt 1 was invalidated by its own declared canary invalidator: spread 0.1194 against a
+    // declared 0.10. The outlier was the START point (114.2 ms) taken seconds after a 12-minute
+    // clean release build and a 328-test correctness gate — the five points that actually bracket
+    // measured phases spanned 9.4 %, inside the bound. The machine had not settled, and the
+    // instrument recorded that faithfully.
+    //
+    // The pre-settle reading is taken and **recorded**, but is deliberately NOT one of the points
+    // the spread invalidator is computed over. That exclusion is narrow and is stated rather than
+    // assumed: the invalidator asks whether the machine moved *while numbers were being taken*, and
+    // no number is taken before the settle. A point that brackets no measurement cannot witness
+    // drift in one. Recording it anyway is what stops this being a way to dodge the invalidator —
+    // the artifact shows how far the machine was from settled, in the same units.
+    let pre_settle = Canary::take("pre-settle");
+    println!("  settling for {} s before the first measured phase...", SETTLE_SECONDS);
+    std::thread::sleep(Duration::from_secs(SETTLE_SECONDS));
     canaries.push(Canary::take("start"));
+    json.push_str(&format!("  \"pre_settle_canary\": {}, \"settle_seconds\": {SETTLE_SECONDS},
+", pre_settle.json()));
 
     // ---- Phase 1: the fixtures -----------------------------------------------------------------
     let free_before = require_disk("generate");

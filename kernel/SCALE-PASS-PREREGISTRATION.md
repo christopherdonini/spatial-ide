@@ -480,3 +480,47 @@ None is a change to a registered value.
 6. **The viewports name the dataset's CRS** rather than sending `bbox_crs: None`, so the engine's
    CRS-admission branch is exercised and §1b's claim that a row-count mismatch would reveal an
    admission fault is true.
+
+### A3 — 2026-08-07 — attempt 1 invalidated by its own canary; a settle is added and the run re-done
+
+**This amendment was made AFTER results of attempt 1 were looked at.** The header's rule is explicit
+about what follows: *"An amendment made after any result of this pass has been looked at invalidates
+the run, and the run is re-done rather than re-described."* That is exactly what happens here.
+Attempt 1 is invalidated, its numbers are **not** the run of record, and attempt 2 is re-run from
+the same frozen tree and binaries.
+
+**What fired.** §7's canary invalidator: long-instrument spread **0.1194** against the declared
+0.10. The instrument worked; the run did not.
+
+**What moved.** The `start` canary at **114.174 ms** is the outlier. The five points that bracket
+actually-measured phases were 121.005 / 123.300 / 120.570 / 127.803 / 116.805 — a spread of
+**9.4 %**, inside the declared bound. `start` was taken seconds after a 12-minute clean release
+build and a 328-test correctness gate; the machine was still hot and had not settled.
+
+**The change.** A **120 s settle** before the first canary — the same figure §4's cold-open protocol
+already declares, so the attended and unattended halves of this pass ask the machine for the same
+quiet. A **pre-settle canary is taken and recorded**, and is deliberately **not** one of the points
+the spread is computed over.
+
+**That exclusion is narrow, and stating it is the point.** The invalidator asks whether the machine
+moved *while numbers were being taken*; no number is taken before the settle, so a point bracketing
+no measurement cannot witness drift in one. Recording the pre-settle reading anyway is what keeps
+this from being a way to dodge the invalidator: the artifact shows, in the same units, how far from
+settled the machine was.
+
+**Attempt 1's numbers are recorded, not discarded** (§7: "the attempt is **recorded with the
+invalidator named**, never silently discarded"). Its artifact and console log are retained under
+`target/slice-evidence/scale-pass/attempt-1-invalidated/`, and the write-up reports them beside
+attempt 2's. Showing both is more honest than hiding an invalidated attempt whose numbers a reader
+could otherwise never check against the run of record.
+
+**The fixture is regenerated rather than reused.** Generation is seeded and deterministic and took
+40 s, so a fresh one is cheaper than an instrument change to permit reuse — and it keeps
+`generate()`'s refusal to reuse a file whose `FixtureFacts` it did not itself measure. Attempt 2's
+fixture SHA-256 is recorded; if it differs from attempt 1's
+(`sha256:5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788`) the generator is not
+deterministic and **that** is the finding.
+
+**Nothing else changed.** No ceiling, no sample count, no prediction, no viewport, no measured
+quantity. The instrument that produced attempt 1's numbers and the instrument that produces attempt
+2's differ by a `sleep` and one extra recorded canary reading.
