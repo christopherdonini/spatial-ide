@@ -271,3 +271,21 @@ the human's, with the custodian's engineering reads presented in conversation; *
 environmental (`Settings → Billing → Actions`); **`protocol/transport-bakeoff/web` audit** —
 deferred until off the metered connection (requires `npm install`); **counsel review** — per
 ADR-009's own caveat, before first outside contribution and before anything commercial.
+
+## Human decisions — 2026-08-07, recorded by the custodian
+
+1. **The nine flagged dependencies: accepted.** `ryu` under its Apache-2.0 OR-branch;
+   `webpki-roots` (CDLA-Permissive-2.0, permissive data license); the five MPL-2.0 crates
+   (spike-only, transitive via Tauri, compatible regardless). The recognised-list edit in
+   `scripts/audit-dependency-licenses.mjs` and the audit re-run are the next session's step 0 —
+   each entry gets a dated decision comment citing this note. Counsel confirms per ADR-009's
+   caveat before anything commercial.
+2. **Apache-2.0 layer membership: `frontends/canvas-probe/` and `protocol/transport-bakeoff/web/`
+   stay AGPL-3.0-or-later.** The layer is born with the first real SDK, written as one.
+3. **Copyright line confirmed as written:** `Copyright (C) 2026 Christopher Donini and the
+   Spatial IDE contributors`.
+
+Remaining before the public flip: CI green (environmental — `Settings → Billing → Actions`).
+Post-public obligations, named: counsel review before the first outside contribution;
+`protocol/transport-bakeoff/web` audit when off the metered connection; full trademark-register
+search pre-1.0.
