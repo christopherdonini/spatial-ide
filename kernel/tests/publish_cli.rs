@@ -122,19 +122,46 @@ const VIEWER_LICENSE_ARGS: &[&str] = &[
     "https://example.invalid/spatial-ide",
 ];
 
-/// Run the built binary with the mandatory viewer-license arguments appended.
+/// Run the built binary with the mandatory viewer-license arguments **and an approval** appended.
 ///
 /// **The binary, not a re-implementation of its argument handling** — the defect this file covers
 /// lived in argument handling.
+///
+/// The approval is spliced in for the same reason the viewer-license arguments are: publishing is a
+/// class-3 side effect and every run through this harness must pass the gate, but none of these
+/// tests is *about* the gate — `kernel/tests/permission_boundary.rs` is. The value is derived from
+/// `--out` rather than hardcoded, so a test that changes its destination cannot silently start
+/// approving the wrong one; that is exactly the staleness the named confirmation exists to catch,
+/// and a harness that defeated it would be testing nothing.
 fn publish_bundle(args: &[&str]) -> Output {
     let mut all: Vec<&str> = args.to_vec();
     all.extend_from_slice(VIEWER_LICENSE_ARGS);
+    let approve = out_basename(args)
+        .expect("every test that publishes passes --out, and the approval is derived from it");
+    all.push("--approve");
+    all.push(&approve);
     publish_bundle_raw(&all)
 }
 
+/// The final path component of this invocation's `--out`, which is what `--approve` must name.
+fn out_basename(args: &[&str]) -> Option<String> {
+    let i = args.iter().position(|a| *a == "--out")?;
+    Path::new(args.get(i + 1)?).file_name().map(|n| n.to_string_lossy().to_string())
+}
+
 /// Run the binary with **exactly** these arguments and nothing added.
+///
+/// The one thing that *is* always set is `SPATIAL_IDE_AUDIT_LOG`. It is not an argument — it is
+/// containment: without it a test run would append class-3 records to the operator's own audit log
+/// in `%LOCALAPPDATA%`, which is somebody's real record of real publishes and not a scratch file.
 fn publish_bundle_raw(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_publish-bundle"))
+        .env(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            std::env::temp_dir()
+                .join("spatial-kernel-publish-cli-tests")
+                .join("audit.jsonl"),
+        )
         .args(args)
         .output()
         .expect("run publish-bundle")
@@ -514,4 +541,167 @@ fn the_binary_refuses_to_publish_without_the_distributed_codes_terms() {
     assert!(!out.status.success(), "both route flags together were accepted");
     assert!(String::from_utf8_lossy(&out.stderr).contains("mutually exclusive"));
     assert!(!dest.exists());
+}
+
+// ---- the class-3 gate, at the binary ------------------------------------------------------------
+
+/// Run the binary with `stdin` scripted, so the **interactive** approval path is exercised for real.
+///
+/// `kernel/tests/permission_boundary.rs` drives `ApprovalSource` directly, which covers the
+/// comparison but not `StdinApproval` itself — the thing that actually reads a console. Piping is
+/// what makes that path deterministic: the process gets exactly these bytes and then EOF.
+fn publish_bundle_with_stdin(args: &[&str], stdin: &str) -> Output {
+    use std::io::Write as _;
+    use std::process::Stdio;
+
+    let mut all: Vec<&str> = args.to_vec();
+    all.extend_from_slice(VIEWER_LICENSE_ARGS);
+
+    let mut child = Command::new(env!("CARGO_BIN_EXE_publish-bundle"))
+        .env(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            std::env::temp_dir().join("spatial-kernel-publish-cli-tests").join("audit.jsonl"),
+        )
+        .args(&all)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn publish-bundle");
+    child
+        .stdin
+        .as_mut()
+        .expect("stdin is piped")
+        .write_all(stdin.as_bytes())
+        .expect("write stdin");
+    // Dropping the handle closes the pipe, so an empty `stdin` reaches the binary as EOF — which is
+    // the case the "refusal is the default on EOF" rule is about.
+    drop(child.stdin.take());
+    child.wait_with_output().expect("wait for publish-bundle")
+}
+
+/// **The interactive path, end to end.** Typing the destination's name approves; anything else, and
+/// end-of-input, refuse — with no bundle left behind.
+///
+/// Publishing is irreversible, so the default on every input that is not the exact phrase must be
+/// refusal (ADR-006 class 3; `docs/09`). The three refusal cases are the ones an operator or a
+/// script actually produces: the `y` reflex, a stale name, and a closed pipe.
+#[test]
+fn the_interactive_approval_requires_the_destination_name_and_refuses_everything_else() {
+    let d = workspace("interactive-approval");
+    let src = fixture(&d, CrsMode::DeclaredLv95);
+    let style = style_file(&d);
+    let viewer = viewer_dir(&d);
+
+    let args = |dest: &Path| -> Vec<String> {
+        vec![
+            "--data".into(), src.to_str().unwrap().into(),
+            "--style".into(), style.to_str().unwrap().into(),
+            "--viewer".into(), viewer.to_str().unwrap().into(),
+            "--out".into(), dest.to_str().unwrap().into(),
+            "--attributes".into(), "zone".into(),
+        ]
+    };
+
+    // ---- the refusals ----
+    for (case, typed) in [("bare-yes", "y\n"), ("wrong-name", "some-other-bundle\n"), ("eof", "")] {
+        let dest = d.join(format!("refused-{case}"));
+        let a = args(&dest);
+        let refs: Vec<&str> = a.iter().map(String::as_str).collect();
+        let out = publish_bundle_with_stdin(&refs, typed);
+
+        assert!(
+            !out.status.success(),
+            "{case}: the binary published on an input that is not the destination's name"
+        );
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(
+            stderr.contains("refused"),
+            "{case}: the refusal is not reported as one: {stderr}"
+        );
+        assert!(!dest.exists(), "{case}: a bundle exists despite the refusal");
+        // The prompt showed the operator what they were being asked about, before they answered.
+        assert!(
+            stderr.contains("irreversible") && stderr.contains("approval required"),
+            "{case}: the operator was not shown the class-3 prompt: {stderr}"
+        );
+    }
+
+    // ---- the approval ----
+    let dest = d.join("approved-bundle");
+    let a = args(&dest);
+    let refs: Vec<&str> = a.iter().map(String::as_str).collect();
+    let out = publish_bundle_with_stdin(&refs, "approved-bundle\n");
+    assert_ok(&out, "an interactive publish approved by naming the destination");
+    assert!(dest.join("manifest.json").exists(), "the approved publish produced no bundle");
+}
+
+/// `--approve` must name **this** destination, so a script that outlived an `--out` change is
+/// refused rather than silently approving something else.
+#[test]
+fn an_approve_flag_naming_a_different_destination_is_refused() {
+    let d = workspace("stale-approve");
+    let src = fixture(&d, CrsMode::DeclaredLv95);
+    let dest = d.join("bundle");
+
+    let mut args: Vec<String> = vec![
+        "--data".into(), src.to_str().unwrap().into(),
+        "--style".into(), style_file(&d).to_str().unwrap().into(),
+        "--viewer".into(), viewer_dir(&d).to_str().unwrap().into(),
+        "--out".into(), dest.to_str().unwrap().into(),
+        "--attributes".into(), "zone".into(),
+        // The name of a destination this run is not publishing to.
+        "--approve".into(), "yesterdays-bundle".into(),
+    ];
+    for a in VIEWER_LICENSE_ARGS {
+        args.push((*a).to_string());
+    }
+    let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    let out = publish_bundle_raw(&refs);
+
+    assert!(!out.status.success(), "a stale --approve was accepted");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(stderr.contains("bundle"), "the refusal does not name what was expected: {stderr}");
+    assert!(!dest.exists(), "a bundle exists despite a mismatched --approve");
+}
+
+/// A grant scoped to a **directory** covers a publish into it, which is the one part of the
+/// binary's self-minted grant that is not a tautology.
+#[test]
+fn a_directory_scoped_grant_covers_a_publish_into_that_directory() {
+    let d = workspace("grant-destination");
+    let src = fixture(&d, CrsMode::DeclaredLv95);
+    let target_dir = d.join("published");
+    std::fs::create_dir_all(&target_dir).unwrap();
+    let dest = target_dir.join("bundle");
+
+    let out = publish_bundle(&[
+        "--data", src.to_str().unwrap(),
+        "--style", style_file(&d).to_str().unwrap(),
+        "--viewer", viewer_dir(&d).to_str().unwrap(),
+        "--out", dest.to_str().unwrap(),
+        "--attributes", "zone",
+        "--grant-destination", target_dir.to_str().unwrap(),
+    ]);
+    assert_ok(&out, "a publish into a directory-scoped grant's directory");
+    assert!(dest.join("manifest.json").exists());
+
+    // …and the same grant does not cover a publish somewhere else. The grant names `published/`;
+    // this `--out` is a sibling of it, so the scope check refuses before anything is created.
+    let elsewhere = d.join("elsewhere");
+    let out = publish_bundle(&[
+        "--data", src.to_str().unwrap(),
+        "--style", style_file(&d).to_str().unwrap(),
+        "--viewer", viewer_dir(&d).to_str().unwrap(),
+        "--out", elsewhere.to_str().unwrap(),
+        "--attributes", "zone",
+        "--grant-destination", target_dir.to_str().unwrap(),
+    ]);
+    assert!(!out.status.success(), "a directory-scoped grant covered a publish outside it");
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("does not cover"),
+        "the refusal is not the scope one: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(!elsewhere.exists());
 }

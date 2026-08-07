@@ -34,11 +34,17 @@
 //!   `spatial://dataset/<name>` logical URI, and each bundle claims an ADR-005 grade —
 //!   **Snapshot**, with its basis stated and the reason Exact is not claimed written down beside it.
 //!   Nothing else in this crate persists anything; a stream still writes nothing.
-//! - **No approval gate, and publishing is a class-3 external side effect.** ADR-006 and `docs/09`
-//!   require one ("Export and publish are distinct capabilities, never implied by write");
-//!   [`publish`] declares its reversibility class on its own API and records that the gate is
-//!   **owed and absent** rather than shipping ungated and silent.
-//! - **No permission model.** `docs/09`'s capability grants do not exist here, and none is claimed.
+//! - **The approval gate exists now, and it is [`permission::boundary`].** ADR-006's class-3 row
+//!   asks for three things and two were owed; [`permission`] supplies both — a scoped, expiring
+//!   grant checked against execution-time facts, an explicit approval that names the destination,
+//!   and a two-phase append-only redacted audit record. An unauditable class-3 operation does not
+//!   run. **Nothing is exposed**: ADR-017's acceptance condition still forbids reaching publish
+//!   through SKP, MCP, a plugin, a notebook or an AI surface until an exposure surface passes
+//!   review, and this cut does not flip it.
+//! - **It is still not `docs/09`'s permission model.** One operation kind, one principal kind, no
+//!   authentication, no client, no extension surface, and grants that die with the process. What is
+//!   built is a subset with the same shape; what is missing is named in
+//!   `kernel/PERMISSION-BOUNDARY.md` rather than left for a reader to discover.
 //! - **No dataset registry beyond a name → open dataset map** fixed at startup. Names, never paths:
 //!   a client-supplied path on a listening socket is an arbitrary-file-read primitive.
 
@@ -53,6 +59,7 @@ use spatial_engine::{BatchStream, CancelToken, CrsAssertion, Dataset, PoolConfig
 
 pub mod bundle;
 pub mod params;
+pub mod permission;
 pub mod publish;
 
 pub use params::{StreamParams, OPERATION};

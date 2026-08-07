@@ -12,6 +12,7 @@
 //!                --viewer-program <name> --viewer-copyright <notice> --viewer-license <SPDX>
 //!                --viewer-notice <path-within-viewer-dir>
 //!                (--corresponding-source-url <http(s) URL> | --corresponding-source-offer <text>)
+//!                [--approve <destination name>] [--grant-destination <dir>] [--grant-ttl <seconds>]
 //!                [--name parcels] [--attributes zone,area]
 //!                [--bbox xmin,ymin,xmax,ymax] [--limit N]
 //!                [--license SPDX --license-at <RFC-3339> [--license-by who]
@@ -30,19 +31,53 @@
 //! did not author. **The two `--license*` families are different things** — `--license` is the
 //! *data*'s terms, `--viewer-license` is the *program*'s.
 //!
-//! **Publishing is a class-3 external side effect (ADR-006) and there is no approval gate in this
-//! slice.** The binary says so on every run rather than letting the absence be discovered: `docs/09`
-//! requires the gate, this cut does not implement one, and a tool that performed an irreversible
-//! action while silent about that would be the quiet version of the same gap.
+//! ## Publishing is a class-3 external side effect (ADR-006), and it now goes through a gate
+//!
+//! Every run passes `spatial_kernel::permission::boundary::execute`: a scoped grant, an explicit
+//! approval that names the destination, and an append-only audit record written before the
+//! operation is authorized and again when it ends. An unauditable publish does not run.
+//!
+//! **The grant this binary uses is one it mints itself, and that is said plainly rather than dressed
+//! up.** Its *source* half is a tautology — the tool grants itself the dataset it just opened and
+//! pinned, so the check can only fail if the file changes underneath. Its *destination* half is not:
+//! `--grant-destination` is a separate argument from `--out`, so a grant can be scoped to a
+//! directory while the publish names one bundle inside it. So what actually gates a command-line
+//! publish is the **approval** and the **audit record**; the grant's contribution here is that it
+//! exists, carries a grantor, expires, bounds the destination class, and forces the single path.
+//! The grant mechanism's teeth are at the library boundary, where a caller supplies a `GrantSet` it
+//! did not derive from the request.
+//!
+//! **`--approve <name>` is approval, not a `--yes`.** Its argument must equal the destination's
+//! final path component, so a script approves a *named* destination rather than whatever the command
+//! happens to do. Without it the binary prompts and requires the same name to be typed. This is the
+//! path the test harness uses, which is what keeps every existing publish test runnable.
+//!
+//! **Nothing here is an exposure surface.** ADR-017's acceptance condition keeps `publish-bundle`
+//! developer/test tooling until an exposure surface passes review; building the gate does not flip
+//! that, and this binary defines no SKP message and serves nothing.
 
 use std::path::PathBuf;
+use std::time::Duration;
 
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::Redistribution;
-use spatial_kernel::publish::{
-    publish, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishPhase,
-    PublishProgress, PublishRequest, ViewerAssets, ViewerLicenseInput, REVERSIBILITY_CLASS,
+use spatial_kernel::permission::audit::rfc3339_utc_now;
+use spatial_kernel::permission::{
+    boundary, ApprovalSource, AuditLog, DestinationScope, GrantSet, OperationKind, PreNamedApproval,
+    Principal, PublishAttempt, PublishGrant, SourceScope, StdinApproval, MAX_GRANT_LIFETIME,
 };
+use spatial_kernel::publish::{
+    CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishPhase, PublishProgress,
+    PublishRequest, ViewerAssets, ViewerLicenseInput, OPERATION_CLASS, REVERSIBILITY_CLASS,
+};
+
+/// How long a self-minted grant lives when `--grant-ttl` is not given.
+///
+/// **Five minutes, not the twenty-minute ceiling.** The ceiling is what `docs/09` illustrates as a
+/// reasonable *maximum*; a default should be the shortest span that comfortably covers one
+/// interactive publish of a large source, because a default is what almost every run uses. An
+/// operator publishing a 5 GB source with a slow hash can raise it, and raising it is a visible act.
+const DEFAULT_GRANT_TTL: Duration = Duration::from_secs(300);
 
 /// Refusing both route flags rather than letting the second silently win.
 const CORRESPONDING_SOURCE_TWICE: &str =
@@ -86,7 +121,25 @@ impl PublishProgress for Console {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// **`Display`, not `Debug`, and that is not cosmetic.**
+///
+/// A `main` returning `Result` prints the error's `Debug`, which for every typed refusal in this
+/// tree is the struct dump — `Permission(GrantScopeMismatch { detail: "…" })`. Each of those
+/// refusals was written to explain itself in a sentence (`docs/05`: a refusal is an error, not a
+/// warning; `docs/01` principle 8 forbids the black box), and returning from `main` threw all of
+/// that away at the last step. Every refusal message in `publish/error.rs` and
+/// `permission/error.rs` reaches an operator only because of this function.
+fn main() -> std::process::ExitCode {
+    match run() {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("[publish] {e}");
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut data: Option<PathBuf> = None;
     let mut style_path: Option<PathBuf> = None;
     let mut viewer_dir: Option<PathBuf> = None;
@@ -109,6 +162,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut viewer_license_id: Option<String> = None;
     let mut viewer_notice: Option<String> = None;
     let mut corresponding_source: Option<CorrespondingSource> = None;
+    // The class-3 gate's three operator-facing inputs.
+    let mut approve: Option<String> = None;
+    let mut grant_destination: Option<PathBuf> = None;
+    let mut grant_ttl = DEFAULT_GRANT_TTL;
 
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
@@ -237,6 +294,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 corresponding_source =
                     Some(CorrespondingSource { kind: CorrespondingSourceKind::WrittenOffer, at });
             }
+            // ---- the class-3 gate (ADR-006; docs/09) --------------------------------------------
+            //
+            // **Approval of *this* operation, never a blanket yes.** The argument must equal the
+            // destination's final path component, so a script that outlives an `--out` change is
+            // refused rather than silently approving a different destination. Omitting the flag is
+            // not "no approval" — it means the interactive prompt, which asks for the same name.
+            "--approve" => approve = Some(nonempty(&mut args, "--approve")?),
+            // Scopes the grant to a **directory** rather than to the one bundle. Separate from
+            // `--out` on purpose: it is the only part of a self-minted grant that is not a
+            // tautology, and it is what lets one grant cover a sequence of publishes into a
+            // directory without covering anything else.
+            "--grant-destination" => {
+                grant_destination = Some(PathBuf::from(nonempty(&mut args, "--grant-destination")?))
+            }
+            "--grant-ttl" => {
+                let raw = args.next().ok_or("--grant-ttl needs a value in seconds")?;
+                let secs: u64 = raw
+                    .parse()
+                    .map_err(|_| format!("--grant-ttl `{raw}` is not a number of seconds"))?;
+                if secs == 0 {
+                    return Err("--grant-ttl must be at least 1 second; a grant that has already \
+                                expired when it is issued is not an authorization"
+                        .into());
+                }
+                grant_ttl = Duration::from_secs(secs);
+            }
             "--redistribution" => {
                 redistribution = match args.next().as_deref() {
                     Some("permitted") => Redistribution::Permitted,
@@ -309,9 +392,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     eprintln!(
-        "[publish] reversibility class: {REVERSIBILITY_CLASS}. Publishing is a class-3 external \
-         side effect (ADR-006); docs/09 requires an approval gate and this slice implements none. \
-         Recorded, not implied."
+        "[publish] class {OPERATION_CLASS} external side effect (ADR-006), reversibility \
+         {REVERSIBILITY_CLASS}. Gated: scoped grant, explicit approval, audit record. Nothing here \
+         is exposed through SKP, MCP or any served surface."
     );
 
     let cancel = CancelToken::new();
@@ -329,7 +412,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let dataset = Dataset::open(&data)?;
     eprintln!("[publish] pinning the source (a whole-file hash; cancellable)");
-    let (_, hash_millis) = dataset.pin_content(&cancel)?;
+    let (pin, hash_millis) = dataset.pin_content(&cancel)?;
     eprintln!("[publish] pinned in {hash_millis:.1} ms");
 
     let style_source = std::fs::read_to_string(&style_path)?;
@@ -394,7 +477,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             by: license_by,
             at: license_at.expect("--license without --license-at is refused above"),
         }),
-        destination: out,
+        destination: out.clone(),
         started_at,
         // A **clock**, not an instant. `publish` calls it once, after every byte of the bundle is
         // on disk, so `finished_at − started_at` is the build rather than whatever happened before
@@ -402,7 +485,64 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         finished_at: &rfc3339_utc_now,
     };
 
-    let outcome = publish(&request, &cancel, Some(&Console))?;
+    // ---- the class-3 gate ------------------------------------------------------------------
+    //
+    // Everything below is assembled *before* `boundary::execute`, so a malformed grant or an
+    // unopenable log refuses without the operator having been prompted for anything.
+    let principal = Principal::from_environment();
+    let destination_scope = match &grant_destination {
+        Some(dir) => DestinationScope::direct_child_of(dir)?,
+        None => DestinationScope::exact(&out)?,
+    };
+    if grant_ttl > MAX_GRANT_LIFETIME {
+        return Err(format!(
+            "--grant-ttl {}s exceeds the declared ceiling of {}s (ADR-010 rule 6; docs/09's own \
+             \"expires in 20 minutes\")",
+            grant_ttl.as_secs(),
+            MAX_GRANT_LIFETIME.as_secs()
+        )
+        .into());
+    }
+
+    // **A self-minted grant, and the source half of it is a tautology.** See the module docs: the
+    // tool grants itself the dataset it just pinned. It is issued rather than skipped because the
+    // grant is what carries a grantor, an expiry and a destination class into the audit record, and
+    // because the boundary must have one to check — not because it establishes an authority that
+    // came from anywhere else.
+    let mut grants = GrantSet::new();
+    grants.add(PublishGrant::new(
+        OperationKind::Publish,
+        SourceScope {
+            dataset_name: name.clone(),
+            content_hash: format!("sha256:{}", pin.hash()),
+        },
+        destination_scope,
+        principal.clone(),
+        grant_ttl,
+    )?)?;
+
+    let approval: Box<dyn ApprovalSource> = match approve {
+        Some(a) => Box::new(PreNamedApproval(a)),
+        None => Box::new(StdinApproval),
+    };
+
+    // Opened before the prompt: an operator is never asked to approve an operation that could not
+    // have been recorded. This is also the point at which an unwritable log refuses, with no
+    // staging directory and no destination created.
+    let resolved_destination = spatial_kernel::permission::grant::resolve_destination(&out)?;
+    let audit = AuditLog::open_for(&resolved_destination)?;
+    eprintln!("[publish] audit log: {}", audit.display_path());
+
+    let attempt = PublishAttempt {
+        request: &request,
+        grants: &grants,
+        approval: approval.as_ref(),
+        principal: &principal,
+        audit: &audit,
+        clock: &rfc3339_utc_now,
+    };
+
+    let outcome = boundary::execute(&attempt, &cancel, Some(&Console))?;
 
     // Facts. No budget, no percentile, no comparison with anything.
     println!("bundle            {}", outcome.bundle_path.display());
@@ -416,36 +556,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("build ms          {:.1}", outcome.build_millis);
     println!("content hash ms   {:.1}", outcome.content_hash_millis);
     Ok(())
-}
-
-/// RFC-3339 UTC, computed here rather than inside the operation.
-///
-/// Keeping the clock out of `publish` is what lets a determinism test publish twice and compare
-/// bytes: the instants are inputs, and they reach only the non-hashed sidecar.
-fn rfc3339_utc_now() -> String {
-    let d = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default();
-    let secs = d.as_secs() as i64;
-    let days = secs.div_euclid(86_400);
-    let tod = secs.rem_euclid(86_400);
-    // Civil-from-days (Howard Hinnant's algorithm), so no date crate is pulled in for one string.
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
-    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let day = doy - (153 * mp + 2) / 5 + 1;
-    let month = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = if month <= 2 { y + 1 } else { y };
-    format!(
-        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
-        tod / 3_600,
-        (tod % 3_600) / 60,
-        tod % 60
-    )
 }
 
 /// Install a Ctrl-C handler.
