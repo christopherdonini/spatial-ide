@@ -139,7 +139,13 @@ fn request<'a>(
         dataset: ds,
         dataset_name: "parcels",
         query: ViewportQuery::all(),
-        attributes: vec!["zone".into()],
+        // **Empty, because the 5 GB fixture is `AttributeMode::None`** — its columns are `id`,
+        // `bbox`, `geometry` and nothing else (preregistration §1a of the scale pass). Attempt 1 of
+        // this pass asked for a `zone` attribute copied from a small-fixture helper, and the engine
+        // refused every trial before a single partition existed: *"`zone` cannot be published as an
+        // attribute — the file has no such column"*. That refusal is the engine being right — it is
+        // `docs/01` principle 8 declining a silent conversion — and it invalidated the attempt.
+        attributes: Vec::new(),
         style_source: STYLE,
         viewer: v,
         viewer_license: viewer_license(),
@@ -225,6 +231,11 @@ struct Trial {
     off_target_why: Option<String>,
     watchdog_fired: bool,
     outcome_is_cancelled: bool,
+    /// **What the operation actually returned.** A trial that ended as anything other than a
+    /// cancellation is a failed trial, and a harness that records only `cancelled: false` says the
+    /// trial failed without saying why — which is exactly the shape of uninformative artifact this
+    /// pass exists to argue against.
+    outcome_detail: String,
     left_nothing: bool,
     partitions_at_fire: usize,
 }
@@ -237,7 +248,7 @@ impl Trial {
     }
     fn json(&self) -> String {
         format!(
-            r#"{{"cell": {:?}, "index": {}, "on_target": {}, "off_target_why": {}, "watchdog_fired": {}, "cancelled": {}, "left_nothing": {}, "partitions_at_fire": {}, "observed_ms": {}, "acknowledged_ms": {}, "is_sample": {}}}"#,
+            r#"{{"cell": {:?}, "index": {}, "on_target": {}, "off_target_why": {}, "watchdog_fired": {}, "cancelled": {}, "outcome": {:?}, "left_nothing": {}, "partitions_at_fire": {}, "observed_ms": {}, "acknowledged_ms": {}, "is_sample": {}}}"#,
             self.cell.label(),
             self.index,
             self.on_target,
@@ -247,6 +258,7 @@ impl Trial {
             },
             self.watchdog_fired,
             self.outcome_is_cancelled,
+            self.outcome_detail,
             self.left_nothing,
             self.partitions_at_fire,
             f64_or_null(self.observed_ms),
@@ -461,6 +473,10 @@ fn run_trial(
     // also accept a permission or audit failure as "cancelled", which is a different outcome.
     let outcome_is_cancelled =
         matches!(result, Err(BoundaryError::Publish(PublishError::Cancelled)));
+    let outcome_detail = match &result {
+        Ok(o) => format!("published {} partitions, {} rows", o.partitions, o.rows),
+        Err(e) => format!("{e}"),
+    };
     let left_nothing = !destination.exists() && no_staging_beside(&destination);
 
     Trial {
@@ -472,6 +488,7 @@ fn run_trial(
         off_target_why,
         watchdog_fired,
         outcome_is_cancelled,
+        outcome_detail,
         left_nothing,
         partitions_at_fire,
     }
@@ -551,12 +568,13 @@ fn measure_the_cancellation_rescore() {
         for i in 0..TRIALS {
             let t = run_trial(&ds, &v, &dir, cell, i);
             println!(
-                "  [{}] {i}: on_target={} observed={} acknowledged={} partitions_at_fire={}",
+                "  [{}] {i}: on_target={} observed={} acknowledged={} partitions={} -> {}",
                 cell.label(),
                 t.on_target,
                 f64_or_null(t.observed_ms),
                 f64_or_null(t.acknowledged_ms),
-                t.partitions_at_fire
+                t.partitions_at_fire,
+                t.outcome_detail
             );
             assert!(
                 t.left_nothing,

@@ -1038,3 +1038,71 @@ additionally requires that **the exposure surface itself pass review**, and that
 one rule in particular: **the requester must never mint the grant** (F-5). Until such a surface
 exists and passes, `publish-bundle` remains developer/test tooling. Appended, not rewritten; the
 Status block stands as accepted.
+
+---
+
+## Corrigendum 4 — 2026-08-07 — §15's uninterruptible window is narrower than the accepted text, and the accepted text hid a term
+
+**Appended, not rewritten. The Status block stands as accepted and §15's original sentence stays
+where it is** — a reader who follows a citation to it must find what was accepted, with this note
+telling them what changed.
+
+### What §15 says
+
+> "the uninterruptible window is one partition's encode and write"
+
+### Why it needs a corrigendum
+
+Two independent reasons, and the second matters more than the first.
+
+**1. Shipped behaviour is now narrower than the accepted text.** `kernel/src/publish` writes a
+partition in `PUBLISH_WRITE_CHUNK_BYTES` (256 KiB) chunks and polls cancellation between them, so the
+window is no longer "one partition's write" but "one chunk's write". A narrowing is not a violation —
+an implementation may do better than its ADR — but ADR-017 is Accepted and immutable, and a sentence
+that no longer describes the code is a citation trap.
+
+**2. The sentence was never a bound, and it read like one.** This is the substantive part.
+"One partition's encode and write" names a *quantity of work*, and a quantity of work is only a
+latency bound if the rate is bounded. The rate here is a blocking filesystem's. `Staging`'s
+`File::create`, `write_all` and `sync_all` are single syscalls, and **`std` on Windows offers no
+interruptible file write** — `sync_all` is `FlushFileBuffers`, which against a saturated writeback
+cache can stall arbitrarily. `kernel/RESULTS.md`'s fifth section measured that directly: an
+inter-partition cadence **p50 of 8.573 ms and a max of 999.924 ms** on the same run.
+
+So the original sentence bounded the window in *bytes* while reading as if it bounded it in *time*,
+and the fifth section's `WritingPartitions` p95 of **418.321 ms** against `docs/08`'s 100 ms is what
+that gap looks like when measured.
+
+### The corrected statement
+
+Per the cancellation-bound taxonomy in `kernel/CANCELLATION-AND-TRACING.md` §3, the window
+decomposes into terms of two classes, and **the classes may not be netted against each other**:
+
+| Term | Class | Bound |
+|---|---|---|
+| bytes between cancellation polls inside a partition write | **code-controlled cadence** | `PUBLISH_WRITE_CHUNK_BYTES` = 256 KiB, exact |
+| one chunk's `write_all` | **unbounded external section** | none derivable |
+| `File::create` | **unbounded external section** | none derivable |
+| `sync_all` | **unbounded external section** | none derivable |
+| Arrow IPC encode of one partition | code-controlled quantity | ≤ `PUBLISH_PARTITION_TARGET_BYTES`; per-byte cost **unmeasured**, no claim |
+
+> **The uninterruptible window is one chunk's write, one `File::create` and one `sync_all` — bounded
+> in bytes exactly, and in time not at all.**
+
+**Attaching an external engine's interrupt establishes *reachability*, not a bound**, and may never be
+cited as one. That distinction is the subject of proposed ADR-018.
+
+### What does not change
+
+`bundle_version` stays **1**. Nothing here touches the format: partition hashes are taken over the
+in-memory bytes, so how many `write` calls produced a file changes no hash and no determinism
+property — the fifth section's **6,636 / 6,636 byte-identical partitions** result stands unaffected.
+Publish remains ADR-006 class 3, irreversible, with staging cleanup, no partial bundle, no cache
+entry, and audit intent + cancelled outcome all unchanged.
+
+### Consequence for anyone citing §15
+
+A latency claim may not rest on §15's sentence. **Cite a measurement, or cite this corrigendum's
+table and say which term you mean.** `docs/08`'s "cancellation acknowledged < 100 ms" is scored on
+`cancel_requested → cancel_observed`; the quiescent instant is reported beside it with no budget
+attached, for the reasons proposed ADR-018 sets out.

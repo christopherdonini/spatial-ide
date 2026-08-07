@@ -86,7 +86,8 @@ Three things, never conflated. **Only the third carries a verdict.**
 
 | Section | Class | Statement |
 |---|---|---|
-| publish consumer waiting for a partition | **(a) code-controlled** | `PUBLISH_STREAM_POLL_INTERVAL` = 10 ms; derived worst case **25.625 ms** (one interval + the 15.625 ms Windows default timer tick). Bounds the whole pre-first-batch window including the sort. |
+| publish consumer waiting for a partition | **(a) cadence only** | `PUBLISH_STREAM_POLL_INTERVAL` = 10 ms. **The cadence is exact; the latency it produces is not derivable.** One interval plus the 15.625 ms Windows timer tick = 25.625 ms is *how often the loop looks*, not a bound: `recv_timeout` bounds the park from **below**, and waking on time needs the OS scheduler to run the thread — a class-(b) section on a machine saturated by a 5 GB publish. |
+| the rest of the "pre-first-batch" window | **(b) unbounded external** | `pool.acquire`'s connection open and PRAGMA configuration, `create_dir`, and — when the producer wins the race and the stream ends — a style file written and **fsynced**. None of these poll. |
 | bytes between cancellation checks inside a partition write | **(a) code-controlled** | `PUBLISH_WRITE_CHUNK_BYTES` = 256 KiB. Bounds the window **in bytes, exactly**. |
 | one chunk's `write_all`, `File::create`, `sync_all` | **(b) unbounded external** | `std` on Windows offers no interruptible file write. No bound is derivable. The cadence max of **999.924 ms** against a p50 of 8.573 ms in the fifth section is this term, measured. |
 | DuckDB query execution incl. the sort | **(b) unbounded external** | **Attaching the interrupt establishes reachability, not a bound**, and may never be cited as one. |
@@ -97,10 +98,18 @@ Three things, never conflated. **Only the third carries a verdict.**
 
 ### The honest answer, stated in advance
 
-- `cancel_requested → cancel_observed` **before the first batch**: bounded, 25.625 ms derived.
+- `cancel_requested → cancel_observed` **before the first batch**: the *cadence* is bounded at 10 ms
+  and this code controls it. **The latency is measured, never derived** — it carries a scheduling
+  term this workspace cannot bound.
 - `cancel_requested → cancel_observed` **during partition writing**: bounded in bytes, **not in
   time** — it contains a class-(b) syscall.
 - `cancel_observed → cancel_acknowledged`: **not bounded and cannot be made so.**
+
+> **An earlier revision of this table called 25.625 ms "the acknowledgement bound for the whole
+> pre-first-batch window". It is withdrawn**, for the same reason the `262,144 B ÷ 10 MB/s = 25.0 ms`
+> claim on `PUBLISH_WRITE_CHUNK_BYTES` was withdrawn: it netted a code-controlled cadence against
+> unbounded external sections, and "the whole window" was false besides. **No figure in the sixth
+> section may cite it as a bound.**
 
 Per `NEXT-CUT.md`, *"achieved typically (p50/p95), not guaranteeable at maximum across a blocking
 filesystem"* is a **pre-authorized** outcome. If that is what the measurement says, it is written up
