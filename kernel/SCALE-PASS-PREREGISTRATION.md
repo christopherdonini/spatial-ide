@@ -620,3 +620,125 @@ publish A 98,722 ms, publish B 107,320 ms, manifests identical, **6,636 partitio
 byte-identical**, strict reader ok in 28,215 ms, audit 2 intent + 2 outcome. The re-run under the
 amended instrument is expected to reproduce every correctness outcome; if it does not, **that** is
 the finding and it goes in the write-up ahead of everything else.
+
+### A6 — 2026-08-07 — four registered items had no instrument; they are built and measured, additively
+
+**Made after every result of this pass was looked at, including all three cold samples.** The
+header's disclosure applies and is stated rather than implied. What follows is *not* a change to any
+registered value, gate, ceiling, prediction, viewport or sample count, and it re-describes no
+number: it builds instruments for four things §2, §2b, §5b and §5d registered and the harness never
+implemented, and measures them.
+
+**How this differs from A3, A4 and A5.** Those three invalidated work and re-ran it. This one
+invalidates nothing. The streaming run of record (`scale-pass.json`) and the publish run of record
+(`scale-publish.json`) are **untouched and are not re-run** — nothing below re-measures a quantity
+either of them reports. The new phases are **additive**, and because they run in a later session
+from a later build, they carry **their own tree and binary pins and their own session context**, and
+no number they produce is compared with any number from the earlier sessions. That is the
+within-session rule applied, not waived.
+
+#### What was missing, found by validating the artifacts against this file
+
+| # | Registered in | What the harness actually did |
+|---|---|---|
+| 1 | §5b — publish cancellation, three cells (`VerifyingSource`, `Querying`, `WritingPartitions`), n = 7 each | nothing. `kernel/tests/scale_pass.rs` contains no in-process boundary publish at all, so §2's publish-row gate — "completes; **cancellable**; audit correct" — had no measurement of its middle term |
+| 2 | §5b — the inter-partition interval (p50/p95 from `PublishProgress::partition_written`), predicted 5–15 ms | nothing. Both publishes went through the CLI, which reports no per-partition timing to the harness |
+| 3 | §5d — `current_setting('memory_limit')` and `current_setting('temp_directory')` read before the publish phases, and whether spill files appeared | nothing |
+| 4 | §2b — the **in-tree counter** against the declared bound | only process **private commit** was sampled, which §2b registered in advance as *not* the claim ("must never be presented as the claim"). So the memory row's budget verdict rested on no measurement of the bounded quantity |
+
+Items 1 and 4 are the two `docs/08` budget claims in the unattended half. Leaving them unmeasured
+when the fixture is intact, hash-verified and the machine idle would be "unmeasurable" used as a
+synonym for "un-instrumented", and §4's own standard — *"'unmeasurable, with reason' is a legitimate
+verdict"* — does not stretch that far. A reason is a property of the machine, not of the harness.
+
+#### 4 is also a **mislabelled bound**, corrected here
+
+`scale-pass.json` emits `"declared_composed_bound_bytes": 83886080`. That figure is **not** the
+composed bound. Per `kernel/README.md` and the three earlier `RESULTS.md` sections that cite it:
+
+| Component | Bound |
+|---|---|
+| `protocol/data-plane` | `(MAX_INFLIGHT_BATCHES + 1) × MAX_FRAME_BYTES` = (4+1) × 16 MiB = **83,886,080 B** |
+| engine queue | `(MAX_QUEUED_BATCHES + 1) × MAX_BATCH_BYTES` = (2+1) × 4 MiB = **12,582,912 B** |
+| **composed, per stream** | **96,468,992 B (92 MiB)** |
+
+83,886,080 B is the **data-plane** half alone. **This pass streams in process, from the engine,
+with no data plane in the path** — there is no pump, so the data-plane counter cannot be read here
+at all and no run of this pass ever could have read it. What this pass *can* measure, and now does,
+is `StreamStats::peak_resident_bytes` against the **engine-queue** bound of 12,582,912 B.
+
+So the row is reported as: the composed bound **restated in full**, the engine-queue component
+**measured** at both file sizes, and the data-plane component **named as not exercised by an
+in-process stream** — rather than a single number checked against a bound belonging to a component
+that was never in the path. Prior sections' ~1.7 MB figures are data-plane numbers from wire runs;
+they are cited as context and **not compared** with anything below.
+
+#### Declared before measuring (ADR-010 rule 6)
+
+**Cancel trigger points**, fixed now so they cannot be tuned to a result:
+
+| Cell | Cancel fired | Why there |
+|---|---|---|
+| `VerifyingSource` | **1 s** after the phase is observed | inside the chunked 5 GB rehash, past its first chunk |
+| `Querying` | **5 s** after the phase is observed | inside DuckDB's `ORDER BY` sort — the multi-minute window §5b notes nobody has ever sampled |
+| `WritingPartitions` | after **100** `partition_written` callbacks | mid-phase, not at its edge; 100 of ~6,636 is ~1.5 % in |
+
+**Watchdog ceilings** for the new phases, on §3's pattern:
+
+| Phase | Total | Silence |
+|---|---|---|
+| Bounded-memory stream (5 GB, per run) | 900 s | 120 s |
+| Bounded-memory stream (145 MB control, per run) | 300 s | 120 s |
+| Cancellation trial — `VerifyingSource` (each) | 300 s | — |
+| Cancellation trial — `Querying` (each) | 900 s | — |
+| Cancellation trial — `WritingPartitions` (each) | 900 s | — |
+| Cadence publish (one, runs to completion) | 3600 s | `VerifyingSource` 120 s · `Querying` 900 s · others 60 s |
+
+**Sample counts** are §6's, unchanged: n = 7 per cancellation cell. The cadence publish is n = 1 and
+yields ~6,636 inter-partition intervals from one operation.
+
+**The cadence and the cancellation verdict are reported side by side, and neither is quoted without
+the other.** They are not two independent facts: `PUBLISH_PARTITION_TARGET_BYTES` (1 MiB) and
+`PUBLISH_PARTITION_ROWS` (8,192) make *the uninterruptible window one partition's encode and
+write*, in `engine/src/stream.rs`'s own words, so the
+inter-partition interval **is** the mechanism that produces the cancellation latency. A cancellation
+figure quoted alone reads as a property of the boundary; a cadence figure quoted alone reads as
+throughput. Together they say what actually holds and why.
+
+**Budget, unchanged: 100 ms.** §5b's reasoning stands — `docs/08` says "any operation" and
+principle 7 has no size exemption.
+
+**Wrong-phase trials are observations, not samples**, exactly as §5b already registers: each trial
+records the phase actually active when the cancel landed, and a trial that missed its target phase
+is reported and **not** promoted into that cell's latency statistics.
+
+#### Audit assertions this also closes
+
+The new cancellation phase writes to its own log, `audit/cancellation.jsonl` — **never** the
+retained `audit/publish.jsonl`, which is the publish run of record's artifact and is not touched.
+Against it, §5c's assertions **6** (cancelled attempts: cancellation terminal, `error_kind` the
+variant name, `manifest_hash`/`rows`/`partitions` all null) and **8** (append-only: the log's bytes
+are read before and after every attempt and every previously written line is byte-identical
+afterwards) are asserted — both of which the earlier harness left unmade, 6 only vacuously, because
+no attempt was ever cancelled.
+
+§5c's assertions **3** and **5** were hand-checked during validation against the retained artifacts
+and pass: the fixture's independently recomputed SHA-256, the audit intents' `source_content_hash`
+and both manifests' `source.content_hash` are one value; and outcome `rows` 3,300,000 / `partitions`
+6,636 equal the manifest's summed partition rows, the manifest's list length and the strict reader's
+own counts. Recorded here because a hand-check that is not written down is not evidence.
+
+#### What is *not* fixed, and cannot be
+
+Two cold-open items are gone with the boots and are reported as gaps rather than measured:
+
+- **No canary was taken in the cold-open phase**, though §4a step 5 names one and A5's table gates
+  the cold row on it. `cold-open.ps1` has the section heading and no canary.
+- **Process-level `IOReadBytes` was never recorded**, though §4b registers it and calls the gap
+  between it and the machine-wide counter *"the cache-hit measure"*. Only the machine-wide
+  `_Total` PhysicalDisk counter exists, which cannot separate the fixture's read from SysMain's or
+  Defender's.
+
+Re-running them would require three more reboots and would be a **different session** from the one
+that produced the three cold samples, so it could not repair those samples — it could only replace
+them. The samples stand with their gaps named.
