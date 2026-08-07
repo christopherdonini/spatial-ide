@@ -38,7 +38,14 @@ impl CancelToken {
 
     /// Request cancellation. Sets the flag **before** interrupting, so any thread that observes the
     /// interrupt's error can already tell why it happened.
+    ///
+    /// Stamps [`trace::CANCELLATION_REQUESTED`](crate::trace::CANCELLATION_REQUESTED) — the **first
+    /// of the three cancellation instants**, and the only one the canceller itself can stamp. The
+    /// other two belong to whoever owns the operation: `cancel_observed` (the worker stopped
+    /// advancing — what `docs/08` budgets) and `cancel_acknowledged` (the operation quiescent).
+    /// A latency quoted without naming which pair of instants it spans is not a latency.
     pub fn cancel(&self) {
+        crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
         self.inner.cancelled.store(true, Ordering::SeqCst);
         if let Some(h) = self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
             h.interrupt();

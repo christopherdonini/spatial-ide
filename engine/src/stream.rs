@@ -19,8 +19,9 @@
 
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use std::sync::mpsc::{sync_channel, Receiver};
+use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
 use std::sync::Arc;
+use std::time::Duration;
 
 use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, UInt64Array};
 use duckdb::ToSql;
@@ -71,9 +72,14 @@ pub const MAX_QUEUED_BATCHES: usize = 2;
 /// bytes that never passed through `TaggedBatch`'s single constructor, and the ADR-010 rule 1
 /// envelope would then be on the partition by *care* rather than by construction.
 ///
-/// The size ceiling is also what bounds cancellation. Between-partition polling alone says nothing
-/// about how long one partition takes to encode and write; with these ceilings, **the
-/// uninterruptible window is one partition's encode and write**, and that sentence is the bound.
+/// The size ceiling is also what bounds cancellation — **but it is not, on its own, the bound the
+/// consumer feels.** This comment used to end "the uninterruptible window is one partition's encode
+/// and write", and the fifth section of `kernel/RESULTS.md` measured that window at a p95 of
+/// 418.321 ms and an inter-partition cadence max of 999.924 ms against `docs/08`'s 100 ms. Two
+/// things were missing from the sentence: a consumer blocked in [`BatchStream::next_into`] cannot
+/// poll at all while the producer is quiet (see [`PUBLISH_STREAM_POLL_INTERVAL`]), and one
+/// partition's *write* is not one uninterruptible act. The narrowed statement lives on
+/// `PUBLISH_WRITE_CHUNK_BYTES` in `kernel/src/publish`, and it names the term that has no ceiling.
 ///
 /// Progressive sizing is deliberately **not** used here: it exists for `docs/08`'s first-pixels
 /// budget, nobody is waiting for a first pixel during a publish, and a fixed rule makes the
@@ -84,6 +90,26 @@ pub const PUBLISH_PARTITION_ROWS: usize = 8_192;
 /// Partitions one bundle may contain. The zero-padded width of `data/part-NNNNN.arrows` is derived
 /// from this, so raising it is a **format change** and not a tuning knob.
 pub const MAX_PUBLISH_PARTITIONS: usize = 100_000;
+
+/// **How long a publish consumer waits on the producer before polling its own cancellation
+/// (ADR-010 rule 6).**
+///
+/// [`BatchStream::next_into`] blocks on the channel with no timeout, which is correct for a consumer
+/// that has nothing else to do — but publish does: it holds the cancellation token that the operator
+/// just used. While DuckDB sorts, the producer sends nothing, so every `check_cancel` in the publish
+/// loop is unreachable and the operation cannot acknowledge anything. `kernel/RESULTS.md`'s fifth
+/// section measured that as a **3,920 ms** window inside the sort, with the interrupt already armed:
+/// the cancel had reached DuckDB, and the thread that had to *notice* was parked on a channel.
+///
+/// **Derived worst case, not hoped:** one interval, plus the host timer's rounding of a timed park.
+/// The Windows default tick is 15.625 ms and `timeBeginPeriod` is a dependency this workspace does
+/// not take, so that slop is a **declared floor, not a fixable**:
+///
+/// > 10 ms + 15.625 ms = **25.625 ms** to observe a cancel that arrives at the worst moment.
+///
+/// That is the acknowledgement bound for the whole pre-first-batch window, and it no longer depends
+/// on DuckDB honouring the interrupt at all.
+pub const PUBLISH_STREAM_POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 // A partition must fit inside the batch ceiling, or the publish policy would be quietly asking for
 // batches the producer refuses to build.
@@ -368,6 +394,22 @@ pub struct BatchStream {
     connection: ConnectionFacts,
 }
 
+/// What a bounded wait on the producer found.
+///
+/// `WouldBlock` is the state [`BatchStream::next_into`] cannot express and the one publish needs:
+/// **the producer is busy and has sent nothing yet**. It is not an error and not an end — it is the
+/// caller getting its thread back so it can poll the cancellation it holds.
+#[derive(Debug)]
+pub enum BatchPoll {
+    /// A batch was serialized into `out`, or the stream failed terminally.
+    Ready(Result<BatchInfo>),
+    /// The stream is over. Same meaning as `next_into`'s `None`.
+    Ended,
+    /// The wait elapsed with no batch. **Nothing was consumed and nothing was written to `out`** —
+    /// calling again is always safe and never loses a batch.
+    WouldBlock,
+}
+
 impl BatchStream {
     /// Serialize the next batch into `out`, appending to whatever it already holds.
     ///
@@ -378,22 +420,7 @@ impl BatchStream {
             return None;
         }
         match self.rx.recv() {
-            Ok(Ok(item)) => {
-                self.stats.sub_resident(item.est_bytes);
-                let before = out.len();
-                if let Err(e) = item.batch.write_ipc_into(out) {
-                    self.finished = true;
-                    return Some(Err(e));
-                }
-                Some(Ok(BatchInfo {
-                    rows: item.batch.num_rows(),
-                    vertices: item.vertices,
-                    payload_bytes: out.len() - before,
-                    batch_index: item.batch_index,
-                    target_bytes: item.target_bytes,
-                    xy_bounds: item.xy_bounds,
-                }))
-            }
+            Ok(Ok(item)) => Some(self.absorb(item, out)),
             Ok(Err(e)) => {
                 self.finished = true;
                 Some(Err(e))
@@ -403,6 +430,55 @@ impl BatchStream {
                 None
             }
         }
+    }
+
+    /// As [`next_into`](Self::next_into), but gives the thread back after `wait` if the producer has
+    /// sent nothing.
+    ///
+    /// **Why this exists, in one sentence:** a consumer that holds a cancellation token must be able
+    /// to look at it, and `recv()` denies it that for as long as the producer is quiet — which for a
+    /// publish with an `ORDER BY` is the entire sort.
+    ///
+    /// The wait is a *lower* bound on the park, never an upper one; see
+    /// [`PUBLISH_STREAM_POLL_INTERVAL`] for the derived worst case including timer rounding.
+    /// `WouldBlock` consumes nothing, so a caller may poll as often as it likes without losing a
+    /// batch or perturbing the producer — the demand signal is the bounded channel's free slot, and
+    /// a timed-out receive does not take one.
+    pub fn next_into_timeout(&mut self, out: &mut Vec<u8>, wait: Duration) -> BatchPoll {
+        if self.finished {
+            return BatchPoll::Ended;
+        }
+        match self.rx.recv_timeout(wait) {
+            Ok(Ok(item)) => BatchPoll::Ready(self.absorb(item, out)),
+            Ok(Err(e)) => {
+                self.finished = true;
+                BatchPoll::Ready(Err(e))
+            }
+            Err(RecvTimeoutError::Timeout) => BatchPoll::WouldBlock,
+            Err(RecvTimeoutError::Disconnected) => {
+                self.finished = true;
+                BatchPoll::Ended
+            }
+        }
+    }
+
+    /// The one place a received item becomes a `BatchInfo`, shared by both receive paths so a
+    /// bounded wait and an unbounded one cannot drift into accounting resident bytes differently.
+    fn absorb(&mut self, item: Item, out: &mut Vec<u8>) -> Result<BatchInfo> {
+        self.stats.sub_resident(item.est_bytes);
+        let before = out.len();
+        if let Err(e) = item.batch.write_ipc_into(out) {
+            self.finished = true;
+            return Err(e);
+        }
+        Ok(BatchInfo {
+            rows: item.batch.num_rows(),
+            vertices: item.vertices,
+            payload_bytes: out.len() - before,
+            batch_index: item.batch_index,
+            target_bytes: item.target_bytes,
+            xy_bounds: item.xy_bounds,
+        })
     }
 
     pub fn cancel_token(&self) -> CancelToken {
@@ -624,6 +700,13 @@ impl Dataset {
             lease_generation: lease.generation(),
             reused_an_existing_connection: lease.reused_an_existing_connection(),
         };
+        // Stamped on the caller's thread, before the producer starts — the same place the token is
+        // bound to the connection, which is what makes this the boundary a trace wants.
+        crate::trace::mark(
+            crate::trace::LEASE_ACQUIRED,
+            connection.physical_id,
+            connection.lease_generation,
+        );
         let geometry_column = self.geometry_column().to_string();
         let stats = Arc::new(StreamStats::default());
         let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
@@ -651,6 +734,11 @@ impl Dataset {
                     policy,
                     report_bounds,
                 );
+                // With the consumer's wait now bounded, `boundary::execute` can return while this
+                // thread is still here — so "the producer stopped" is a separate fact from "the
+                // call returned", and this is the span that carries it.
+                crate::trace::mark(crate::trace::PRODUCER_FINISHED, 0, 0);
+
                 // **Detach before the lease is decided**, so a `cancel()` arriving after this
                 // stream is over cannot reach a connection that has been handed back — the reason
                 // `CancelToken::detach` exists. Cancellation belongs to the *active lease*, never
@@ -903,6 +991,7 @@ fn produce(
     let mut stmt = conn
         .prepare(sql)
         .map_err(|e| classify(cancel, format!("prepare: {e}")))?;
+    crate::trace::mark(crate::trace::SQL_PREPARED, 0, 0);
 
     let mut params: Vec<&dyn ToSql> = vec![&path];
     let (xmax, xmin, ymax, ymin);
@@ -925,14 +1014,20 @@ fn produce(
     let mut arrow = stmt
         .stream_arrow(params.as_slice())
         .map_err(|e| classify(cancel, format!("execute: {e}")))?;
+    // **These two spans exist to settle a question nothing in this repository answers**: with an
+    // `ORDER BY`, does DuckDB sort inside `stream_arrow` or inside the first `next()`? The fifth
+    // section's 3,920 ms window is on one side of this line and no measurement says which.
+    crate::trace::mark(crate::trace::EXECUTE_RETURNED, 0, 0);
 
     let attribute_fields = envelope.attributes().to_vec();
     let mut pending = Pending::new(attribute_fields.len());
     // Batches handed over so far — the policy's input, and the `batch_index` a consumer sees.
     let mut emitted: u64 = 0;
+    let mut saw_first_chunk = false;
 
     loop {
         if cancel.is_cancelled() {
+            crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
             return Err(EngineError::Cancelled);
         }
 
@@ -955,6 +1050,14 @@ fn produce(
                 return Err(classify(cancel, format!("duckdb fetch panicked: {detail}")));
             }
         };
+
+        // Per *chunk*, and only for the first one — the end of the sort, whatever else it is. A
+        // mark per chunk would still be off the row loop, but the row loop is what this file's
+        // hot-path rule is about and one boundary is what the segment needs.
+        if !saw_first_chunk {
+            saw_first_chunk = true;
+            crate::trace::mark(crate::trace::FIRST_SOURCE_ROW, chunk.num_rows() as u64, 0);
+        }
 
         let ids = column_u64(&chunk, ID_COLUMN)?;
         let geoms = chunk
@@ -1223,6 +1326,13 @@ fn flush(
         return Err(EngineError::Cancelled);
     }
     stats.add_resident(p.est_bytes);
+
+    // Per batch, not per row — the rule this module's tracing keeps. `batch_index` 0 also gets its
+    // own name so a summarizer can find time-to-first-batch without scanning for a minimum.
+    if batch_index == 0 {
+        crate::trace::mark(crate::trace::FIRST_BATCH_FULL, rows as u64, p.est_bytes as u64);
+    }
+    crate::trace::mark(crate::trace::BATCH_FULL, rows as u64, p.est_bytes as u64);
 
     // Blocks when the consumer is behind: this is the backpressure (H3). A disconnected receiver
     // means the consumer is gone, which is a cancellation, not a producer failure.

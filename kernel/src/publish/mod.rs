@@ -101,6 +101,78 @@ pub const OPERATION_CLASS: u8 = 3;
 /// The operation identifier carried in the manifest's operation digest.
 pub const OPERATION: &str = "publish-static-bundle";
 
+/// **Bytes written between cancellation polls inside one partition (ADR-010 rule 6).**
+///
+/// ADR-017 §15 and `spatial_engine`'s partition ceilings together said "the uninterruptible window
+/// is one partition's encode and write". `kernel/RESULTS.md`'s fifth section then measured that
+/// window at a p95 of **418.321 ms** against `docs/08`'s 100 ms, so the sentence was true and the
+/// bound it implied was not tight enough to be useful.
+///
+/// **What class of thing this is — the taxonomy applied, not assumed.** Three things are kept
+/// apart here, because conflating them is how a budget gets met by wishful arithmetic:
+///
+/// 1. **Code-controlled poll cadence.** This constant, and *only* this: **256 KiB of payload passes
+///    between consecutive cancellation checks.** That is a quantity this code fully controls, it is
+///    exact, and it is the whole of what the constant declares.
+/// 2. **Maximum uninterruptible operation.** The `write_all` of one chunk, the `File::create`, and
+///    the `sync_all` are each a single blocking filesystem syscall. **`std` on Windows offers no
+///    interruptible file write, so none of them has a bound this workspace can derive** — they are
+///    unbounded external sections and are named as such.
+/// 3. **Measured end-to-end latency.** The only thing that carries a verdict, and it is not here.
+///
+/// **The honest form of the narrowed window**, with every term's class attached:
+///
+/// > one `write_all` of ≤ 256 KiB (**unbounded**) + one `File::create` (**unbounded**) + one
+/// > `sync_all` (**unbounded**)
+///
+/// **A previous revision of this comment derived "25.0 ms per chunk" from a declared 10 MB/s floor
+/// write rate and called it a worst case. That was wrong and is withdrawn.** A floor rate for a
+/// blocking filesystem is an assumption about an external system, not a derivation; a disk under
+/// writeback pressure — which is exactly the state 5.7 GB of partitions produces — can stall a
+/// single write arbitrarily. The fifth section's own inter-partition cadence **max of 999.924 ms**
+/// against a p50 of 8.573 ms is that stall, measured. An estimate of the typical cost is still
+/// useful and is offered as one below, but it may not be quoted as a ceiling and no verdict may
+/// rest on it:
+///
+/// > *estimate only, not a bound* — at the 68.2 MB/s the fifth section's publish sustained
+/// > in aggregate, 256 KiB is ≈ 3.7 ms.
+///
+/// So chunking narrows the window **in bytes, exactly**, and **in time, only typically**. It does
+/// not on its own discharge the 100 ms budget, and the sixth section is where that is measured
+/// rather than argued. Per `NEXT-CUT.md`'s pre-authorized outcome, "achieved typically (p50/p95),
+/// not guaranteeable at maximum across a blocking filesystem" is an admissible result here.
+pub const PUBLISH_WRITE_CHUNK_BYTES: usize = 256 * 1024;
+
+// A chunk larger than a partition would make the loop a single iteration and the declared cadence a
+// fiction. Checked at compile time, matching the discipline on the engine's own publish ceilings.
+const _: () = assert!(PUBLISH_WRITE_CHUNK_BYTES > 0);
+const _: () = assert!(PUBLISH_WRITE_CHUNK_BYTES <= spatial_engine::PUBLISH_PARTITION_TARGET_BYTES);
+
+/// Span names this operation stamps, when tracing is on.
+///
+/// Constants rather than literals at the call sites: a producer and a summarizer that disagree
+/// about a spelling produce a segment that is silently `None`, which is the shape of defect this
+/// instrumentation exists to remove rather than add. See `spatial_engine::trace` for the
+/// off-by-default contract and the rule against span sites on per-row paths.
+pub mod trace_names {
+    pub const VERIFY_START: &str = "publish_verify_start";
+    pub const VERIFY_END: &str = "publish_verify_end";
+    /// The consumer waited out a poll interval with no batch — publish's own view of the sort.
+    /// Pairs with the engine's `execute_returned` and `first_source_row` to say which side of the
+    /// engine boundary the wait was on.
+    pub const QUERY_RUNNING_OBSERVED: &str = "publish_query_running";
+    pub const PARTITION_CREATE_START: &str = "partition_create_start";
+    pub const PARTITION_WRITE_START: &str = "partition_write_start";
+    /// **The unbounded term.** Everything between this and [`PARTITION_SYNC_END`] is one
+    /// `sync_all`, which no declared cadence bounds.
+    pub const PARTITION_SYNC_START: &str = "partition_sync_start";
+    pub const PARTITION_SYNC_END: &str = "partition_sync_end";
+    /// The instant the operation noticed a cancellation, as opposed to the instant it returned.
+    pub const CANCEL_OBSERVED: &str = "publish_cancel_observed";
+    /// Staging removal finished — part of the *return* window and not of the acknowledgement.
+    pub const STAGING_REMOVED: &str = "publish_staging_removed";
+}
+
 /// Phases a caller can watch. Reported so the operation's silence is detectable (ADR-010 rule 7).
 ///
 /// `Querying` is the one worth naming: with an `ORDER BY`, DuckDB sorts before the first row
@@ -111,6 +183,22 @@ pub const OPERATION: &str = "publish-static-bundle";
 pub enum PublishPhase {
     VerifyingSource,
     Querying,
+    /// **The sort, reported while it is happening rather than after it.**
+    ///
+    /// `Querying` is reported the moment `stream_for_publish` is asked for a stream, and that call
+    /// returns as soon as the statement is *prepared* — so the label was live for microseconds and
+    /// `WritingPartitions` was then reported before a single partition existed. Any UI driven by
+    /// this observer showed "writing partitions" for the whole of a multi-second sort, and
+    /// `kernel/RESULTS.md`'s fifth section had to fire on a wall clock to find that window, hitting
+    /// it 1 time in 7.
+    ///
+    /// This is emitted the first time the consumer waits out a full [`PUBLISH_STREAM_POLL_INTERVAL`]
+    /// with no batch, so it is reachable **only** when a batch has been demanded and none has
+    /// arrived — inside the sort, by construction rather than by timing. ADR-010 rule 7: a
+    /// long-running operation reports progress and its silence is detectable.
+    ///
+    /// [`PUBLISH_STREAM_POLL_INTERVAL`]: spatial_engine::PUBLISH_STREAM_POLL_INTERVAL
+    QueryRunning,
     WritingPartitions,
     WritingStyle,
     WritingViewer,
@@ -123,6 +211,7 @@ impl PublishPhase {
         match self {
             Self::VerifyingSource => "verifying-source",
             Self::Querying => "querying",
+            Self::QueryRunning => "query-running",
             Self::WritingPartitions => "writing-partitions",
             Self::WritingStyle => "writing-style",
             Self::WritingViewer => "writing-viewer",
@@ -133,9 +222,32 @@ impl PublishPhase {
 }
 
 /// Progress, as an observer rather than a log line, so a caller can drive a UI or a test from it.
+///
+/// **The three methods with default bodies are additions, and the defaults are load-bearing**: five
+/// implementations of this trait exist across `kernel/src`, `kernel/tests` and the CLI, and one of
+/// them is a frozen measurement harness that must stay byte-identical to keep a pin's provenance.
 pub trait PublishProgress: Send + Sync {
     fn phase(&self, phase: PublishPhase);
     fn partition_written(&self, index: usize, rows: usize, bytes: u64);
+
+    /// Called as one partition's bytes go to disk, at a declared byte cadence
+    /// ([`PUBLISH_WRITE_CHUNK_BYTES`]), and **always once more with
+    /// `bytes_written == bytes_total`** immediately before the file is synced.
+    ///
+    /// That final call is not a formality: `sync_all` is the one act on this path with no declared
+    /// ceiling, so the callback that precedes it is the only place an observer can be standing when
+    /// the unbounded part begins.
+    fn partition_write_progress(&self, _index: usize, _bytes_written: u64, _bytes_total: u64) {}
+
+    /// The instant the operation **noticed** a cancellation, as distinct from the instant it
+    /// finished unwinding.
+    ///
+    /// `docs/08` budgets the *acknowledgement*; `boundary::execute` returning is completion, and it
+    /// additionally carries staging removal and the audit record's own fsync. The fifth section
+    /// measured only the second and scored it against a budget written for the first. Reporting
+    /// both is what lets the sixth section take an honest verdict on each — **it is not a licence to
+    /// quote the smaller number alone.**
+    fn cancellation_observed(&self, _at: std::time::Instant) {}
 }
 
 /// A no-op observer, so the operation never branches on `Option` internally.
@@ -365,6 +477,7 @@ fn run(
     started: std::time::Instant,
 ) -> Result<PublishOutcome, PublishError> {
     let ds = req.dataset;
+    let watch = CancelWatch::new(cancel, progress);
 
     // Admitted in `preflight`, before the staging directory existed.
     let PublishPreflight { logical_uri, pin, style, projection, license, viewer_license } = pre;
@@ -380,28 +493,61 @@ fn run(
     // whole-file re-read below is what turns that into a checked fact, and it still happens before
     // a single partition is written.
     progress.phase(PublishPhase::VerifyingSource);
-    check_cancel(cancel)?;
+    watch.check()?;
+    spatial_engine::trace::mark(trace_names::VERIFY_START, 0, 0);
     let content_hash_millis = pin.verify_by_rehash(ds.path(), cancel)?;
+    spatial_engine::trace::mark(trace_names::VERIFY_END, 0, 0);
 
     // ---- partitions ---------------------------------------------------------------------------
     progress.phase(PublishPhase::Querying);
     let mut stream = ds.stream_for_publish(&req.query, projection, cancel.clone())?;
 
     staging.create_dir(bundle::DATA_DIR)?;
-    progress.phase(PublishPhase::WritingPartitions);
 
     let mut partitions: Vec<Asset> = Vec::new();
     let mut rows_total: u64 = 0;
     let mut bounds: Option<[f64; 4]> = None;
     let mut payload = Vec::new();
 
+    // **The wait is bounded, and that is the whole of the sort-window fix.**
+    //
+    // `next_into` blocks on the producer with no timeout, so while DuckDB sorted, this thread was
+    // parked and every check below was unreachable — the interrupt had already fired and nobody was
+    // awake to say so. Waiting in `PUBLISH_STREAM_POLL_INTERVAL` slices makes the acknowledgement a
+    // property of this loop rather than of DuckDB's willingness to return.
+    // `WritingPartitions` is reported when the first batch is in hand, not before the stream has
+    // produced anything — it used to be announced here, ahead of the sort, so an observer saw
+    // "writing partitions" for seconds while nothing was being written.
+    let mut reported_query_running = false;
+    let mut reported_writing = false;
     loop {
-        check_cancel(cancel)?;
-        let Some(info) = stream.next_into(&mut payload) else { break };
-        let info = info?;
+        watch.check()?;
+        let info = loop {
+            match stream.next_into_timeout(&mut payload, spatial_engine::PUBLISH_STREAM_POLL_INTERVAL)
+            {
+                spatial_engine::BatchPoll::Ready(info) => break Some(info?),
+                spatial_engine::BatchPoll::Ended => break None,
+                spatial_engine::BatchPoll::WouldBlock => {
+                    // Reachable only with a batch demanded and none delivered: the sort. Reported
+                    // once, because a phase that re-announces itself every 10 ms is a log, not a
+                    // phase.
+                    if !reported_query_running {
+                        reported_query_running = true;
+                        progress.phase(PublishPhase::QueryRunning);
+                        spatial_engine::trace::mark(trace_names::QUERY_RUNNING_OBSERVED, 0, 0);
+                    }
+                    watch.check()?;
+                }
+            }
+        };
+        let Some(info) = info else { break };
+        if !reported_writing {
+            reported_writing = true;
+            progress.phase(PublishPhase::WritingPartitions);
+        }
         // Cancellation is observed on both sides of the encode-and-write, which is what makes the
         // uninterruptible window "one partition" rather than "however long the rest takes".
-        check_cancel(cancel)?;
+        watch.check()?;
 
         let index = partitions.len();
         if index >= spatial_engine::MAX_PUBLISH_PARTITIONS {
@@ -412,7 +558,7 @@ fn run(
             });
         }
         let rel = bundle::partition_path(index);
-        let hash = staging.write(&rel, &payload)?;
+        let hash = staging.write_partition(&rel, &payload, index, &watch, progress)?;
         partitions.push(Asset {
             path: rel,
             bytes: payload.len() as u64,
@@ -423,7 +569,13 @@ fn run(
         bounds = union(bounds, info.xy_bounds);
         progress.partition_written(index, info.rows, payload.len() as u64);
         payload.clear();
-        check_cancel(cancel)?;
+        watch.check()?;
+    }
+    // A source that matches nothing writes no partitions, and the phase would otherwise never be
+    // reported at all. Announced here so the phase sequence a consumer sees is unchanged by the
+    // move above — the only difference is that it is now truthful about when writing began.
+    if !reported_writing {
+        progress.phase(PublishPhase::WritingPartitions);
     }
 
     // ---- style ---------------------------------------------------------------------------------
@@ -438,7 +590,7 @@ fn run(
     staging.create_dir(bundle::VIEWER_DIR)?;
     let mut viewer_assets = Vec::with_capacity(req.viewer.len());
     for asset in req.viewer.iter() {
-        check_cancel(cancel)?;
+        watch.check()?;
         let rel = viewer_bundle_path(&asset.path);
         if let Some(parent) = Path::new(&rel).parent() {
             staging.create_dir(&parent.to_string_lossy().replace('\\', "/"))?;
@@ -501,7 +653,7 @@ fn run(
 
     // ---- finalize ------------------------------------------------------------------------------
     progress.phase(PublishPhase::Finalizing);
-    check_cancel(cancel)?;
+    watch.check()?;
 
     // **The fail-closed re-check.** Cheap, and it is a heuristic rather than a content hash — which
     // is why the manifest records only "hashed at publish start" and does not shelve this beside it
@@ -546,11 +698,41 @@ fn run(
     })
 }
 
-fn check_cancel(cancel: &CancelToken) -> Result<(), PublishError> {
-    if cancel.is_cancelled() {
-        return Err(PublishError::Cancelled);
+/// A cancellation check that also records **when the operation first noticed**.
+///
+/// The instant matters because `docs/08` budgets an *acknowledgement* and this operation's callers
+/// were only ever able to time a *return*. Between the two sit staging removal and the audit
+/// record's fsync, both of which are real work the boundary must do and neither of which the budget
+/// is about. One observer call, once, on the first check that sees a cancelled token.
+///
+/// `Cell` rather than an atomic: every `check` runs on the publishing thread, and a type that says
+/// "single-threaded" is a better record of that than a synchronised one that implies otherwise.
+struct CancelWatch<'a> {
+    cancel: &'a CancelToken,
+    progress: &'a dyn PublishProgress,
+    reported: std::cell::Cell<bool>,
+}
+
+impl<'a> CancelWatch<'a> {
+    fn new(cancel: &'a CancelToken, progress: &'a dyn PublishProgress) -> Self {
+        Self { cancel, progress, reported: std::cell::Cell::new(false) }
     }
-    Ok(())
+
+    fn check(&self) -> Result<(), PublishError> {
+        if self.cancel.is_cancelled() {
+            self.observe();
+            return Err(PublishError::Cancelled);
+        }
+        Ok(())
+    }
+
+    /// Stamp the acknowledgement, at most once per operation.
+    fn observe(&self) {
+        if !self.reported.replace(true) {
+            spatial_engine::trace::mark(trace_names::CANCEL_OBSERVED, 0, 0);
+            self.progress.cancellation_observed(std::time::Instant::now());
+        }
+    }
 }
 
 fn union(a: Option<[f64; 4]>, b: Option<[f64; 4]>) -> Option<[f64; 4]> {
@@ -1002,17 +1184,98 @@ impl Staging {
     /// Write one file and return its `sha256:` hash. The hash is taken over the **bytes written**,
     /// not over a buffer that was intended to be written.
     fn write(&self, rel: &str, bytes: &[u8]) -> Result<String, PublishError> {
+        self.write_inner(rel, bytes, None)
+    }
+
+    /// As [`write`](Self::write), but polls cancellation every [`PUBLISH_WRITE_CHUNK_BYTES`] and
+    /// reports byte-cadence progress.
+    ///
+    /// Only partitions use this. Style, viewer assets and the manifest are single small files
+    /// written once; giving them a chunk loop would add branches to bound a window nothing has
+    /// measured as costly.
+    fn write_partition(
+        &self,
+        rel: &str,
+        bytes: &[u8],
+        index: usize,
+        watch: &CancelWatch<'_>,
+        progress: &dyn PublishProgress,
+    ) -> Result<String, PublishError> {
+        self.write_inner(rel, bytes, Some((index, watch, progress)))
+    }
+
+    /// **Why the write is chunked, and what the chunking does *not* buy.**
+    ///
+    /// The fifth section measured `WritingPartitions` cancellation at a p95 of 418.321 ms against a
+    /// 100 ms budget. Partition boundaries alone were never a bound: a partition is ≤ 1 MiB, but one
+    /// `write_all` of it is a single opaque act, and the operation could not look at its token until
+    /// the whole partition — *and its fsync* — had gone to disk.
+    ///
+    /// Chunking bounds the `write_all` term and **nothing else**. `f.sync_all()` below is one
+    /// syscall (`FlushFileBuffers` on Windows) inside the cancellable region, it is the only call
+    /// here capable of blocking for hundreds of milliseconds with a saturated writeback cache, and
+    /// **no cadence can bound it**. That is stated rather than smoothed over: the narrowed
+    /// uninterruptible window is *one chunk, plus one `File::create`, plus one `sync_all`*, and the
+    /// last term has no declared ceiling. Whether it is in fact where the 418 ms went is a
+    /// measurement this cut takes, not a claim it makes here.
+    ///
+    /// Splitting the write is free of format consequence: the returned hash is taken over `bytes`
+    /// in memory, so no partition hash and no determinism property depends on how many `write` calls
+    /// produced the file.
+    fn write_inner(
+        &self,
+        rel: &str,
+        bytes: &[u8],
+        observed: Option<(usize, &CancelWatch<'_>, &dyn PublishProgress)>,
+    ) -> Result<String, PublishError> {
         viewer_assets::validate_relative_path(rel)?;
         let target = self.path.join(rel);
         let display = target.display().to_string();
+        // **The three spans that decompose the fifth section's 418 ms p95.** It reported one number
+        // for "the partition write" and named three candidate mechanisms without separating them.
+        // `create` / `write_all` / `sync_all` are those mechanisms, and the sixth section says which
+        // one it was instead of suspecting.
+        if observed.is_some() {
+            spatial_engine::trace::mark(trace_names::PARTITION_CREATE_START, 0, bytes.len() as u64);
+        }
         let mut f = std::fs::File::create(&target)
             .map_err(|e| error::classify_io(&display, "creating a bundle file", e))?;
-        f.write_all(bytes)
-            .map_err(|e| error::classify_io(&display, "writing a bundle file", e))?;
+        if observed.is_some() {
+            spatial_engine::trace::mark(trace_names::PARTITION_WRITE_START, 0, bytes.len() as u64);
+        }
+        match observed {
+            None => f
+                .write_all(bytes)
+                .map_err(|e| error::classify_io(&display, "writing a bundle file", e))?,
+            Some((index, watch, progress)) => {
+                let total = bytes.len() as u64;
+                let mut done: u64 = 0;
+                for chunk in bytes.chunks(PUBLISH_WRITE_CHUNK_BYTES) {
+                    watch.check()?;
+                    f.write_all(chunk)
+                        .map_err(|e| error::classify_io(&display, "writing a bundle file", e))?;
+                    done += chunk.len() as u64;
+                    progress.partition_write_progress(index, done, total);
+                }
+                // An empty partition writes no chunk, so the final report is made unconditionally
+                // rather than inside the loop. The contract is that the callback always fires once
+                // with `bytes_written == bytes_total`, immediately before the unbounded sync.
+                if done == 0 {
+                    progress.partition_write_progress(index, 0, total);
+                }
+                watch.check()?;
+            }
+        }
         // Flushed and synced before it is hashed and listed: a manifest that lists a hash for bytes
         // still sitting in a buffer is describing something that may never reach the disk.
         f.flush().map_err(|e| error::classify_io(&display, "flushing a bundle file", e))?;
+        if observed.is_some() {
+            spatial_engine::trace::mark(trace_names::PARTITION_SYNC_START, 0, bytes.len() as u64);
+        }
         f.sync_all().map_err(|e| error::classify_io(&display, "syncing a bundle file", e))?;
+        if observed.is_some() {
+            spatial_engine::trace::mark(trace_names::PARTITION_SYNC_END, 0, bytes.len() as u64);
+        }
         Ok(canonical::sha256_hex(bytes))
     }
 
@@ -1064,6 +1327,12 @@ impl Staging {
         if self.path.exists() {
             std::fs::remove_dir_all(&self.path)?;
         }
+        // Stamped even when there was nothing to remove, so the span is a fixed point in every
+        // cancelled operation's trace rather than one that appears only sometimes. This is the
+        // largest known term between the acknowledgement and the return, and separating the two is
+        // the whole reason the fifth section's numbers could not be scored against a budget written
+        // for acknowledgement.
+        spatial_engine::trace::mark(trace_names::STAGING_REMOVED, 0, 0);
         Ok(())
     }
 }

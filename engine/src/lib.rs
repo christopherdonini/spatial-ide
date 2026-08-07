@@ -86,6 +86,7 @@ pub mod geoparquet;
 pub mod pin;
 pub mod pool;
 pub mod stream;
+pub mod trace;
 pub mod wkb;
 
 pub use attributes::{PublishedProjection, MAX_PUBLISHED_ATTRIBUTES};
@@ -100,8 +101,8 @@ pub use pool::{
     MAX_STREAM_CONNECTIONS,
 };
 pub use stream::{
-    BatchInfo, BatchSizePolicy, BatchStream, Bbox, ConnectionFacts, FilterPlan, RowOrdering,
-    StreamStats, ViewportQuery, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS, MAX_QUEUED_BATCHES,
-    MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS, PUBLISH_PARTITION_TARGET_BYTES,
-    TARGET_BATCH_BYTES,
+    BatchInfo, BatchPoll, BatchSizePolicy, BatchStream, Bbox, ConnectionFacts, FilterPlan,
+    RowOrdering, StreamStats, ViewportQuery, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS,
+    MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS,
+    PUBLISH_PARTITION_TARGET_BYTES, PUBLISH_STREAM_POLL_INTERVAL, TARGET_BATCH_BYTES,
 };
