@@ -19,11 +19,16 @@
  * ## It flags. It does not judge.
  *
  * ADR-009's own Caveat reserves the legal reading for counsel, and this file is a script. So every
- * dependency lands in one of three buckets:
+ * dependency lands in one of four buckets:
  *
  *   - **recognised** — its SPDX expression is on `RECOGNISED_PERMISSIVE` below, a list the *human*
  *     owns. Being on that list is not a compatibility ruling; it is a record that somebody already
  *     looked at that identifier and had no question about it.
+ *   - **decided** — the identifier check failed, and a human then accepted **this exact package, at
+ *     this version, declaring this expression, in this tree**, on a dated note the report cites
+ *     (`PACKAGE_DECISIONS`). Deliberately package-scoped rather than identifier-scoped: widening the
+ *     identifier list to clear a specific package would recognise every future package that declared
+ *     it, which is the rubber stamp this header warns about.
  *   - **REVIEW** — anything else: copyleft, reciprocal, unrecognised, an expression this script
  *     cannot parse, a missing field, a package not on disk.
  *   - **NOT AUDITABLE** — a tree that could not be read at all, named rather than skipped.
@@ -85,6 +90,115 @@ const RECOGNISED_PERMISSIVE = new Set([
   'Zlib',
 ]);
 
+/**
+ * **Package-scoped decisions a human has made — deliberately not identifiers.**
+ *
+ * Every entry here records a decision about *this package, at this version, declaring this exact
+ * expression, in this tree*. Adding the identifier to `RECOGNISED_PERMISSIVE` instead would
+ * recognise **every future package** that declares it, which is the rubber stamp this file's header
+ * warns about — and in one case it would destroy the human's own qualifier: the five MPL-2.0 crates
+ * were accepted as *spike-only, transitive via Tauri*. A global `MPL-2.0` entry would silently pass
+ * an MPL-2.0 crate that appeared tomorrow in the **workspace** — the shipped `AGPL-3.0-or-later`
+ * core — which is a different question nobody has answered.
+ *
+ * **Never add an entry without its dated decision comment and the note it cites.** An entry with no
+ * citation is indistinguishable from someone silencing a line.
+ *
+ * All four key components are load-bearing:
+ *
+ *   - **name alone** would recognise every future version, and a version bump is exactly when a
+ *     license can change;
+ *   - **name + version** would still cover a re-publish that corrected the metadata within a
+ *     version, so the decision would no longer be about the text the human read;
+ *   - **the declared expression** pins that text;
+ *   - **the tree** preserves the spike-only qualifier mechanically rather than in prose.
+ *
+ * A package that moves, is bumped, or changes its declared expression **re-flags**, and that is the
+ * intended behaviour rather than a rough edge: re-reading a one-line diff is cheap, and the event
+ * that would be silently passed is precisely the event that can change a license.
+ */
+const PACKAGE_DECISIONS = [
+  // 2026-08-07 — PRE-PUBLIC-CHECKLIST.md, "Human decisions — 2026-08-07" item 1: accepted under the
+  // **Apache-2.0 branch** of its OR expression. The BSL-1.0 alternative is not relied on, and this
+  // is not a decision about BSL-1.0.
+  {
+    tree: 'Cargo.toml', name: 'ryu', version: '1.0.23', license: 'Apache-2.0 OR BSL-1.0',
+    decided: '2026-08-07',
+    why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+  },
+  // 2026-08-07 — same note, item 1: CDLA-Permissive-2.0 is a permissive **data** license, accepted
+  // for the root certificate set `webpki-roots` distributes.
+  {
+    tree: 'Cargo.toml', name: 'webpki-roots', version: '1.0.9', license: 'CDLA-Permissive-2.0',
+    decided: '2026-08-07',
+    why: 'CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set',
+  },
+  // 2026-08-07 — same note, item 1. The bake-off crate is ADR-012 decision evidence, pinned to the
+  // trees its phases were measured on; the same OR-branch reasoning applies to the same version.
+  {
+    tree: 'protocol/transport-bakeoff/Cargo.toml', name: 'ryu', version: '1.0.23',
+    license: 'Apache-2.0 OR BSL-1.0', decided: '2026-08-07',
+    why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+  },
+  // 2026-08-07 — same note, item 1, and the same OR-branch reasoning again in the third tree.
+  {
+    tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'ryu', version: '1.0.23',
+    license: 'Apache-2.0 OR BSL-1.0', decided: '2026-08-07',
+    why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+  },
+  // ---- 2026-08-07 — same note, item 1: the five MPL-2.0 crates ----------------------------------
+  //
+  // Accepted **as spike-only, transitive via Tauri, compatible regardless**. The tree key is what
+  // makes "spike-only" mechanical: any of these five appearing in the workspace re-flags, because
+  // an MPL-2.0 crate in the shipped AGPL core is a question the human has not been asked.
+  {
+    tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'cssparser',
+    version: '0.36.0', license: 'MPL-2.0', decided: '2026-08-07',
+    why: 'spike-only, transitive via Tauri, compatible regardless',
+  },
+  {
+    tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'cssparser-macros',
+    version: '0.6.1', license: 'MPL-2.0', decided: '2026-08-07',
+    why: 'spike-only, transitive via Tauri, compatible regardless',
+  },
+  {
+    tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'dtoa-short',
+    version: '0.3.5', license: 'MPL-2.0', decided: '2026-08-07',
+    why: 'spike-only, transitive via Tauri, compatible regardless',
+  },
+  {
+    tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'option-ext',
+    version: '0.2.0', license: 'MPL-2.0', decided: '2026-08-07',
+    why: 'spike-only, transitive via Tauri, compatible regardless',
+  },
+  {
+    tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'selectors',
+    version: '0.36.1', license: 'MPL-2.0', decided: '2026-08-07',
+    why: 'spike-only, transitive via Tauri, compatible regardless',
+  },
+];
+
+/** The note every entry above cites, named once so the report can print the citation. */
+const DECISION_SOURCE = 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1';
+
+/** Which decisions were actually matched this run, so a stale one becomes visible (see the report). */
+const usedDecisions = new Set();
+
+/**
+ * The decision covering this exact package in this exact tree, or `null`.
+ *
+ * Keyed on the **manifest path / npm directory** rather than the display label: the labels are prose
+ * a future edit can reword, while `CARGO_TREES` and `NPM_TREES` are already keyed on paths.
+ */
+function decisionFor(tree, name, version, license) {
+  const i = PACKAGE_DECISIONS.findIndex(
+    (d) => d.tree === tree && d.name === name && d.version === version && d.license === license,
+  );
+  if (i === -1) return null;
+  usedDecisions.add(i);
+  return PACKAGE_DECISIONS[i];
+}
+
 /** The cargo manifests to audit: the workspace, and the two crates it deliberately excludes. */
 const CARGO_TREES = [
   ['workspace (kernel, engine, renderer, protocol/data-plane)', 'Cargo.toml'],
@@ -137,6 +251,28 @@ function classify(license, licenseFile) {
   return { verdict: 'REVIEW', why: `not on the recognised list: ${unknown.join(', ')}` };
 }
 
+/**
+ * `classify`, then the package-scoped decision list — **in that order, and only in that order.**
+ *
+ * A decision is consulted *after* identifier recognition fails, never before, so an entry in
+ * `PACKAGE_DECISIONS` can only ever move a line out of REVIEW. It cannot make a recognised package
+ * look decided, and — the direction that matters — it cannot be used to override a future stricter
+ * reading of the identifier list.
+ *
+ * `decided` is a **third verdict**, distinct from `recognised`, because the two say different
+ * things. `recognised`: somebody looked at that *identifier* and had no question about it.
+ * `decided`: somebody looked at *this package* and accepted it, on a date, for a reason, in a note
+ * this report cites. Collapsing them would lose the citation, which is the only thing that makes an
+ * entry auditable.
+ */
+function verdictFor(tree, name, version, license, licenseFile) {
+  const base = classify(license, licenseFile);
+  if (base.verdict !== 'REVIEW') return base;
+  const d = decisionFor(tree, name, version, license ?? '');
+  if (!d) return base;
+  return { verdict: 'decided', why: d.why, decided: d.decided, flaggedFor: base.why };
+}
+
 function cargoTree(label, manifest) {
   const path = join(ROOT, manifest);
   if (!existsSync(path)) {
@@ -169,7 +305,7 @@ function cargoTree(label, manifest) {
       name: p.name,
       version: p.version,
       license: p.license ?? '',
-      ...classify(p.license, p.license_file),
+      ...verdictFor(manifest, p.name, p.version, p.license, p.license_file),
     }))
     .sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
   return { label, rows };
@@ -267,7 +403,7 @@ function npmTree(label, dir) {
       name,
       version: pkg.version ?? '',
       license,
-      ...classify(license, undefined),
+      ...verdictFor(dir, name, pkg.version ?? '', license, undefined),
     });
   }
   rows.sort((a, b) => a.name.localeCompare(b.name));
@@ -281,8 +417,11 @@ const npm = NPM_TREES.map(([l, d]) => npmTree(l, d));
 const all = [...cargo, ...npm];
 
 const flagged = all.flatMap((t) => (t.rows ?? []).filter((r) => r.verdict === 'REVIEW').map((r) => ({ tree: t.label, ...r })));
+const decided = all.flatMap((t) => (t.rows ?? []).filter((r) => r.verdict === 'decided').map((r) => ({ tree: t.label, ...r })));
 const notAuditable = all.filter((t) => t.notAuditable);
 const audited = all.reduce((n, t) => n + (t.rows?.length ?? 0), 0);
+/** Entries in the decision list that matched nothing this run — staleness, made visible. */
+const unusedDecisions = PACKAGE_DECISIONS.filter((_, i) => !usedDecisions.has(i));
 
 const lines = [];
 const w = (s = '') => lines.push(s);
@@ -305,6 +444,13 @@ w();
 w('There is deliberately no "incompatible" verdict: a copyleft library in the `AGPL-3.0-or-later` core');
 w('is usually unremarkable, while the same library in the Apache-2.0 SDK layer would not be, and that');
 w('distinction is a human\'s to draw.');
+w();
+w('A line listed as **`decided`** is a third thing again, and the distinction is the point.');
+w('`recognised` means somebody looked at that *SPDX identifier*. `decided` means somebody looked at');
+w('*that exact package, at that exact version, declaring that exact expression, in that exact tree*');
+w('and accepted it — on a date, for a reason, recorded in a note this report cites. Neither is a');
+w('compatibility ruling, and a decision covers nothing but the four things it names: a version bump,');
+w('a changed expression, or the same package appearing in a different tree all return it to review.');
 w();
 w('## What this audit does not cover, stated so it is not assumed');
 w();
@@ -331,10 +477,47 @@ w();
 w(`| | |`);
 w(`|---|---|`);
 w(`| Packages audited | ${audited} |`);
-w(`| Recognised without question | ${audited - flagged.length} |`);
+w(`| Recognised without question | ${audited - flagged.length - decided.length} |`);
+w(`| Decided by a human, with a dated citation | ${decided.length} |`);
 w(`| **Needs human review** | **${flagged.length}** |`);
 w(`| Trees not auditable | ${notAuditable.length} |`);
 w();
+
+if (decided.length) {
+  w('## Decided packages');
+  w();
+  w('Each of these was flagged by the mechanical check and then **accepted by a human**, on the date');
+  w('and for the reason shown. They are printed rather than merely omitted: a decision that only');
+  w('shows up as the absence of a review line is one nobody can audit.');
+  w();
+  w('| Tree | Package | Version | Declared | Flagged because | Decided | Reason |');
+  w('|---|---|---|---|---|---|---|');
+  for (const d of decided) {
+    w(
+      `| ${d.tree} | \`${d.name}\` | ${d.version} | \`${d.license}\` | ${d.flaggedFor} | ` +
+        `${d.decided} | ${d.why} |`,
+    );
+  }
+  w();
+  w(`Source for every decision above: **${DECISION_SOURCE}**. Counsel confirms per ADR-009's Caveat`);
+  w('before anything commercial; nothing here is a legal conclusion.');
+  w();
+}
+
+if (unusedDecisions.length) {
+  w('## Unused decisions');
+  w();
+  w('Entries in the script\'s decision list that matched no package this run. A decision whose');
+  w('package has moved, been bumped, or left the tree is **stale**, and staleness that nobody can');
+  w('see accumulates into a list that quietly recognises things nobody checked.');
+  w();
+  w('| Tree | Package | Version | Declared | Decided |');
+  w('|---|---|---|---|---|');
+  for (const d of unusedDecisions) {
+    w(`| ${d.tree} | \`${d.name}\` | ${d.version} | \`${d.license}\` | ${d.decided} |`);
+  }
+  w();
+}
 
 if (notAuditable.length) {
   w('## Not auditable');
@@ -348,8 +531,18 @@ if (notAuditable.length) {
 w('## Needs human review');
 w();
 if (flagged.length === 0) {
-  w('None. Every audited package declares an SPDX expression whose every identifier is on the');
-  w('recognised list in the script.');
+  // **The sentence has to name the decisions, or it is false.** With a package-scoped decision list
+  // in play, "every identifier is on the recognised list" stops being true the moment one entry is
+  // used — nine packages here reach zero-review through a *human decision*, not through the
+  // identifier list. A summary that hid that would be the audit claiming something it cannot honor.
+  if (decided.length) {
+    w(`None. Every audited package either declares an SPDX expression whose every identifier is on`);
+    w(`the recognised list in the script, **or is one of the ${decided.length} package-scoped`);
+    w('decisions listed above** — each accepted by a named human, on a date, with its citation.');
+  } else {
+    w('None. Every audited package declares an SPDX expression whose every identifier is on the');
+    w('recognised list in the script.');
+  }
   w();
   w('**This is not a statement that the dependency tree is legally clear**, and it must not be cited');
   w('as one. It says the mechanical check found nothing to ask about, over the coverage stated above.');
@@ -380,15 +573,18 @@ for (const t of all) {
   w('| Package | Version | Declared license | |');
   w('|---|---|---|---|');
   for (const r of t.rows) {
-    w(`| \`${r.name}\` | ${r.version} | ${r.license ? `\`${r.license}\`` : '*(none)*'} | ${r.verdict === 'REVIEW' ? '**REVIEW**' : ''} |`);
+    const mark =
+      r.verdict === 'REVIEW' ? '**REVIEW**' : r.verdict === 'decided' ? `decided ${r.decided}` : '';
+    w(`| \`${r.name}\` | ${r.version} | ${r.license ? `\`${r.license}\`` : '*(none)*'} | ${mark} |`);
   }
   w();
 }
 
 writeFileSync(join(ROOT, 'DEPENDENCY-LICENSES.md'), lines.join('\n'), 'utf8');
 console.log(
-  `DEPENDENCY-LICENSES.md — ${audited} packages audited, ${flagged.length} need human review, ` +
-    `${notAuditable.length} tree(s) not auditable`,
+  `DEPENDENCY-LICENSES.md — ${audited} packages audited, ${decided.length} decided by a human, ` +
+    `${flagged.length} need human review, ${notAuditable.length} tree(s) not auditable` +
+    (unusedDecisions.length ? `, ${unusedDecisions.length} unused decision(s)` : ''),
 );
 // **Exit 0 even with flags.** A flag is a question for a person, and failing the process would push
 // the next reader toward editing the recognised list to make it stop.

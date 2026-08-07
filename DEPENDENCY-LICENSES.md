@@ -17,6 +17,13 @@ There is deliberately no "incompatible" verdict: a copyleft library in the `AGPL
 is usually unremarkable, while the same library in the Apache-2.0 SDK layer would not be, and that
 distinction is a human's to draw.
 
+A line listed as **`decided`** is a third thing again, and the distinction is the point.
+`recognised` means somebody looked at that *SPDX identifier*. `decided` means somebody looked at
+*that exact package, at that exact version, declaring that exact expression, in that exact tree*
+and accepted it — on a date, for a reason, recorded in a note this report cites. Neither is a
+compatibility ruling, and a decision covers nothing but the four things it names: a version bump,
+a changed expression, or the same package appearing in a different tree all return it to review.
+
 ## What this audit does not cover, stated so it is not assumed
 
 - **Only the `x86_64-pc-windows-msvc` graph.** The full multi-platform dependency graph cannot be resolved
@@ -43,8 +50,30 @@ distinction is a human's to draw.
 |---|---|
 | Packages audited | 721 |
 | Recognised without question | 712 |
-| **Needs human review** | **9** |
+| Decided by a human, with a dated citation | 9 |
+| **Needs human review** | **0** |
 | Trees not auditable | 1 |
+
+## Decided packages
+
+Each of these was flagged by the mechanical check and then **accepted by a human**, on the date
+and for the reason shown. They are printed rather than merely omitted: a decision that only
+shows up as the absence of a review line is one nobody can audit.
+
+| Tree | Package | Version | Declared | Flagged because | Decided | Reason |
+|---|---|---|---|---|---|---|
+| workspace (kernel, engine, renderer, protocol/data-plane) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
+| workspace (kernel, engine, renderer, protocol/data-plane) | `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | not on the recognised list: CDLA-Permissive-2.0 | 2026-08-07 | CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set |
+| protocol/transport-bakeoff (ADR-012 decision evidence) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
+| spikes/adr-003-crs-rendering (spike app) | `cssparser` | 0.36.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
+| spikes/adr-003-crs-rendering (spike app) | `cssparser-macros` | 0.6.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
+| spikes/adr-003-crs-rendering (spike app) | `dtoa-short` | 0.3.5 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
+| spikes/adr-003-crs-rendering (spike app) | `option-ext` | 0.2.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
+| spikes/adr-003-crs-rendering (spike app) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
+| spikes/adr-003-crs-rendering (spike app) | `selectors` | 0.36.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
+
+Source for every decision above: **PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1**. Counsel confirms per ADR-009's Caveat
+before anything commercial; nothing here is a legal conclusion.
 
 ## Not auditable
 
@@ -54,17 +83,12 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 
 ## Needs human review
 
-| Tree | Package | Version | Declared | Why it is here |
-|---|---|---|---|---|
-| workspace (kernel, engine, renderer, protocol/data-plane) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 |
-| workspace (kernel, engine, renderer, protocol/data-plane) | `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | not on the recognised list: CDLA-Permissive-2.0 |
-| protocol/transport-bakeoff (ADR-012 decision evidence) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 |
-| spikes/adr-003-crs-rendering (spike app) | `cssparser` | 0.36.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 |
-| spikes/adr-003-crs-rendering (spike app) | `cssparser-macros` | 0.6.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 |
-| spikes/adr-003-crs-rendering (spike app) | `dtoa-short` | 0.3.5 | `MPL-2.0` | not on the recognised list: MPL-2.0 |
-| spikes/adr-003-crs-rendering (spike app) | `option-ext` | 0.2.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 |
-| spikes/adr-003-crs-rendering (spike app) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 |
-| spikes/adr-003-crs-rendering (spike app) | `selectors` | 0.36.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 |
+None. Every audited package either declares an SPDX expression whose every identifier is on
+the recognised list in the script, **or is one of the 9 package-scoped
+decisions listed above** — each accepted by a named human, on a date, with its citation.
+
+**This is not a statement that the dependency tree is legally clear**, and it must not be cited
+as one. It says the mechanical check found nothing to ask about, over the coverage stated above.
 
 ## Full inventory
 
@@ -195,7 +219,7 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `rustls` | 0.23.43 | `Apache-2.0 OR ISC OR MIT` |  |
 | `rustls-pki-types` | 1.15.1 | `MIT OR Apache-2.0` |  |
 | `rustls-webpki` | 0.103.13 | `ISC` |  |
-| `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | **REVIEW** |
+| `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | decided 2026-08-07 |
 | `scopeguard` | 1.2.0 | `MIT OR Apache-2.0` |  |
 | `semver` | 1.0.28 | `MIT OR Apache-2.0` |  |
 | `seq-macro` | 0.3.6 | `MIT OR Apache-2.0` |  |
@@ -244,7 +268,7 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `utf8-zero` | 0.8.1 | `MIT OR Apache-2.0` |  |
 | `vcpkg` | 0.2.15 | `MIT/Apache-2.0` |  |
 | `version_check` | 0.9.5 | `MIT/Apache-2.0` |  |
-| `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | **REVIEW** |
+| `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | decided 2026-08-07 |
 | `winapi` | 0.3.9 | `MIT/Apache-2.0` |  |
 | `windows-link` | 0.2.1 | `MIT OR Apache-2.0` |  |
 | `windows-sys` | 0.61.2 | `MIT OR Apache-2.0` |  |
@@ -354,7 +378,7 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `regex-automata` | 0.4.16 | `MIT OR Apache-2.0` |  |
 | `regex-syntax` | 0.8.11 | `MIT OR Apache-2.0` |  |
 | `rustc_version` | 0.4.1 | `MIT OR Apache-2.0` |  |
-| `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | **REVIEW** |
+| `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | decided 2026-08-07 |
 | `semver` | 1.0.28 | `MIT OR Apache-2.0` |  |
 | `serde` | 1.0.229 | `MIT OR Apache-2.0` |  |
 | `serde_core` | 1.0.229 | `MIT OR Apache-2.0` |  |
@@ -446,8 +470,8 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `crossbeam-utils` | 0.8.22 | `MIT OR Apache-2.0` |  |
 | `crunchy` | 0.2.4 | `MIT` |  |
 | `crypto-common` | 0.1.7 | `MIT OR Apache-2.0` |  |
-| `cssparser` | 0.36.0 | `MPL-2.0` | **REVIEW** |
-| `cssparser-macros` | 0.6.1 | `MPL-2.0` | **REVIEW** |
+| `cssparser` | 0.36.0 | `MPL-2.0` | decided 2026-08-07 |
+| `cssparser-macros` | 0.6.1 | `MPL-2.0` | decided 2026-08-07 |
 | `ctor` | 0.8.0 | `Apache-2.0 OR MIT` |  |
 | `ctor-proc-macro` | 0.0.7 | `Apache-2.0 OR MIT` |  |
 | `darling` | 0.23.0 | `MIT` |  |
@@ -463,7 +487,7 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `dom_query` | 0.27.0 | `MIT` |  |
 | `dpi` | 0.1.2 | `Apache-2.0 AND MIT` |  |
 | `dtoa` | 1.0.11 | `MIT OR Apache-2.0` |  |
-| `dtoa-short` | 0.3.5 | `MPL-2.0` | **REVIEW** |
+| `dtoa-short` | 0.3.5 | `MPL-2.0` | decided 2026-08-07 |
 | `dtor` | 0.3.0 | `Apache-2.0 OR MIT` |  |
 | `dtor-proc-macro` | 0.0.6 | `Apache-2.0 OR MIT` |  |
 | `dunce` | 1.0.5 | `CC0-1.0 OR MIT-0 OR Apache-2.0` |  |
@@ -534,7 +558,7 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `num-traits` | 0.2.19 | `MIT OR Apache-2.0` |  |
 | `once_cell` | 1.21.4 | `MIT OR Apache-2.0` |  |
 | `open` | 5.4.0 | `MIT` |  |
-| `option-ext` | 0.2.0 | `MPL-2.0` | **REVIEW** |
+| `option-ext` | 0.2.0 | `MPL-2.0` | decided 2026-08-07 |
 | `parking_lot` | 0.12.5 | `MIT OR Apache-2.0` |  |
 | `parking_lot_core` | 0.9.12 | `MIT OR Apache-2.0` |  |
 | `percent-encoding` | 2.3.2 | `MIT OR Apache-2.0` |  |
@@ -564,14 +588,14 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | `regex-syntax` | 0.8.11 | `MIT OR Apache-2.0` |  |
 | `rustc_version` | 0.4.1 | `MIT OR Apache-2.0` |  |
 | `rustc-hash` | 2.1.3 | `Apache-2.0 OR MIT` |  |
-| `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | **REVIEW** |
+| `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | decided 2026-08-07 |
 | `same-file` | 1.0.6 | `Unlicense/MIT` |  |
 | `schemars` | 0.8.22 | `MIT` |  |
 | `schemars` | 0.9.0 | `MIT` |  |
 | `schemars` | 1.2.2 | `MIT` |  |
 | `schemars_derive` | 0.8.22 | `MIT` |  |
 | `scopeguard` | 1.2.0 | `MIT OR Apache-2.0` |  |
-| `selectors` | 0.36.1 | `MPL-2.0` | **REVIEW** |
+| `selectors` | 0.36.1 | `MPL-2.0` | decided 2026-08-07 |
 | `semver` | 1.0.28 | `MIT OR Apache-2.0` |  |
 | `serde` | 1.0.229 | `MIT OR Apache-2.0` |  |
 | `serde_core` | 1.0.229 | `MIT OR Apache-2.0` |  |
