@@ -172,8 +172,16 @@ Fixed inputs, or the test measures the wrong thing: same fixture, same `Viewport
   refused rather than silently replacing the first. The consistency demonstration is a single-stream
   run, so the limit costs nothing today.
 - **`TRACE_BUFFER_RECORDS` is reached in normal use, and on the publish path it truncates in a
-  *biased* way.** For the 145 MB consistency cell the earlier statement holds: every segment it needs
-  is a *first* occurrence, and first occurrences are never what gets dropped.
+  *biased* way.** The 145 MB consistency cell is safe **because it does not fill the buffer at all**
+  — its own harness asserts `dropped == 0` before making any exact claim, and the claim rests on that
+  assertion rather than on any property of first occurrences.
+
+  An earlier revision of this bullet said "first occurrences are never what gets dropped". **That is
+  false and it was load-bearing, so it is withdrawn.** Drop-with-count is *positional*, not
+  name-aware: once the buffer is full, every later record goes, first occurrence or not — including
+  `publish_cancel_observed` and `publish_staging_removed`, which is to say the cancellation instant
+  the instrument exists to time. **The rule that replaces it: no segment whose endpoint occurs after
+  the buffer filled may be derived from a trace with `dropped > 0`.**
 
   **On the publish path it does not hold, and this bounds what the sixth section may claim.**
   `write_inner` stamps four marks per partition (`partition_create_start`, `partition_write_start`,

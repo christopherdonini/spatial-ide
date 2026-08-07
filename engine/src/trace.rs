@@ -59,9 +59,24 @@ use std::time::Instant;
 /// **This ceiling is reached in normal use and that is expected.** [`BATCH_FULL`] fires once per
 /// batch, and the hero-slice fixture streams 6,637 batches — so a whole-file trace drops roughly
 /// 2,500 records. The drop count travels with the artifact and must be printed beside any figure
-/// derived from it, because a segment whose endpoint was dropped is missing, not zero. Every segment
-/// the consistency demonstration needs is a *first* occurrence, and first occurrences are never the
-/// records that get dropped.
+/// derived from it, because a segment whose endpoint was dropped is missing, not zero.
+///
+/// **An earlier revision of this comment said "first occurrences are never the records that get
+/// dropped". That is false and it was load-bearing, so it is withdrawn with its replacement stated
+/// exactly.** Drop-with-count is *positional*, not name-aware: once the buffer is full every later
+/// record goes, first occurrence or not. On the hero-slice fixture the buffer fills at about batch
+/// 4,090 of 6,637, and everything the publish side stamps after that — `publish_cancel_observed`,
+/// `publish_staging_removed`, a late partition's `partition_sync_end` — is a first occurrence that
+/// is dropped. The cancellation instant this instrument exists to time is in that list.
+///
+/// > **The rule that replaces it:** no segment whose endpoint occurs after the buffer filled may be
+/// > derived from a trace with `dropped > 0`. In practice that means a trace which dropped anything
+/// > supports only segments that close early — the query and first-batch pair — and supports no
+/// > publish-side or cancellation segment at all.
+///
+/// A trace that must carry late events needs a run short enough not to fill the buffer, which is why
+/// the cancellation cells cancel within the first few hundred partitions and the consistency cell
+/// runs on the 145 MB control.
 pub const TRACE_BUFFER_RECORDS: usize = 4096;
 
 /// The single flag every disabled `mark` reads.
@@ -155,8 +170,21 @@ impl Trace {
         &self.key
     }
 
+    /// Every recorded event, **sorted by its own timestamp**.
+    ///
+    /// **Push order is not timestamp order, and assuming it was is a real defect rather than a
+    /// theoretical one.** `push` reads the clock *before* it takes the buffer lock, and `mark_cold`
+    /// takes the global slot lock before that — so with a consumer and a producer both stamping,
+    /// which is the normal case, two events can land in the buffer in the opposite order to the
+    /// instants they carry. `first()` would then return the later of two, and `segment_ms` could
+    /// hand back a negative duration that `to_jsonl` would happily print as `"millis":-0.3`.
+    ///
+    /// Sorting is stable, so two events sharing a nanosecond keep their push order — the only
+    /// tie-break available, and better than an arbitrary one.
     pub fn events(&self) -> Vec<Event> {
-        self.events.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        let mut v = self.events.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        v.sort_by_key(|e| e.offset_nanos);
+        v
     }
 
     /// The first event with this name, if any. The building block every derived segment uses.
@@ -172,7 +200,14 @@ impl Trace {
     pub fn segment_ms(&self, from: &str, to: &str) -> Option<f64> {
         let a = self.first(from)?;
         let b = self.first(to)?;
-        Some((b.offset_nanos as f64 - a.offset_nanos as f64) / 1_000_000.0)
+        // **A segment that runs backwards is refused, not reported.** With `events()` sorted this
+        // should be unreachable for a well-formed pair, which is exactly why it is worth keeping:
+        // if it ever fires, the pair is wrong or the clock is, and `None` says "this is not
+        // derivable" while a negative number would say "this took less than no time".
+        if b.offset_nanos < a.offset_nanos {
+            return None;
+        }
+        Some((b.offset_nanos - a.offset_nanos) as f64 / 1_000_000.0)
     }
 
     /// Every span in the frozen vocabulary that this trace can actually derive, as

@@ -150,14 +150,20 @@ async fn tracing_changes_no_byte_on_the_wire() {
     .expect("no other trace is running");
     assert!(trace::is_enabled(), "the traced run really is traced");
     let traced = collect_frames(&path).await;
-    let recorded = guard.trace().events().len();
+    let traced_batches =
+        guard.trace().events().iter().filter(|e| e.name == trace::BATCH_FULL).count();
     drop(guard);
 
     // If the traced run recorded nothing, the comparison is vacuous — two untraced runs would of
     // course agree. Checked before the interesting assertion rather than after.
+    //
+    // **Counting `batch_full` specifically, not any event.** A bare `events().len() > 0` was too
+    // weak: `BatchStream::drop` used to stamp a cancellation instant on every drop, so the previous
+    // run's teardown could make an otherwise-empty trace look non-empty and the guard would pass on
+    // a trace that had recorded nothing about this run at all.
     assert!(
-        recorded > 0,
-        "the traced run recorded no spans, so this comparison proves nothing about tracing"
+        traced_batches > 0,
+        "the traced run stamped no batch_full, so this comparison proves nothing about tracing"
     );
 
     assert_eq!(

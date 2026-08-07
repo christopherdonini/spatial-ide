@@ -219,17 +219,20 @@ fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
     let outcome = publish_unguarded(&request(&ds, &v, dest.clone()), &cancel, Some(&obs));
     let elapsed = started.elapsed();
 
-    if !rec.saw(PublishPhase::QueryRunning) {
-        // The sort finished inside one poll interval. Nothing is asserted about the window, and
-        // that is reported rather than passed silently — a green test that checked nothing is the
-        // failure mode this whole cut is about.
-        eprintln!(
-            "note: the sort completed within one poll interval on this machine, so the \
-             sort-window cancel was not exercised. Phases seen: {:?}",
-            rec.phases()
-        );
-        return;
-    }
+    // **This used to return early with an `eprintln!`. It now fails.** `cargo test` captures output
+    // for *passing* tests, so that note was invisible in CI: the test was one `FEATURES` change or
+    // one faster machine away from being permanently and silently skipped — precisely the "green
+    // test that checked nothing" this cut exists to argue against. The design note calls this
+    // trigger deterministic by construction, so a machine where it does not fire is itself a
+    // finding and should redden rather than whisper.
+    assert!(
+        rec.saw(PublishPhase::QueryRunning),
+        "QueryRunning never fired: the sort finished inside one poll interval, so the sort-window \
+         cancel was not exercised and this test asserted nothing. Phases seen: {:?}. If the fixture \
+         has become too small for the sort to outlast one poll interval, raise FEATURES — do not \
+         delete this assertion.",
+        rec.phases()
+    );
 
     assert!(
         matches!(outcome, Err(PublishError::Cancelled)),

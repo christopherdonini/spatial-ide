@@ -223,7 +223,7 @@ impl PublishPhase {
 
 /// Progress, as an observer rather than a log line, so a caller can drive a UI or a test from it.
 ///
-/// **The three methods with default bodies are additions, and the defaults are load-bearing**: five
+/// **The two methods with default bodies are additions, and the defaults are load-bearing**: five
 /// implementations of this trait exist across `kernel/src`, `kernel/tests` and the CLI, and one of
 /// them is a frozen measurement harness that must stay byte-identical to keep a pin's provenance.
 pub trait PublishProgress: Send + Sync {
@@ -468,6 +468,19 @@ pub(crate) fn publish_prepared(
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Runs the operation and guarantees the acknowledgement instant is stamped **whenever the outcome
+/// is a cancellation**, including the paths that never reach a `watch.check()`.
+///
+/// **Two such paths exist and both are real.** `pin.verify_by_rehash` polls the token itself and
+/// returns `EngineError::Cancelled`, which `?` converts straight to `PublishError::Cancelled` — that
+/// is the `VerifyingSource` cell, one of the cells this cut re-scores, and without this wrapper it
+/// would have had no observed instant at all. The producer can also deliver `Err(Cancelled)` through
+/// `BatchPoll::Ready` before the consumer's next check wins the race.
+///
+/// A missing instant would present as a **missing sample rather than an error**, which is the
+/// quietest way a measurement can go wrong. Stamping here is later than a `check()` would have been,
+/// by the cost of unwinding to this frame; that is stated rather than hidden, and `observe` is
+/// idempotent so a path that did check keeps its earlier, tighter instant.
 fn run(
     req: &PublishRequest<'_>,
     cancel: &CancelToken,
@@ -476,8 +489,24 @@ fn run(
     pre: &PublishPreflight,
     started: std::time::Instant,
 ) -> Result<PublishOutcome, PublishError> {
-    let ds = req.dataset;
     let watch = CancelWatch::new(cancel, progress);
+    let outcome = run_inner(req, cancel, progress, staging, pre, started, &watch);
+    if matches!(outcome, Err(PublishError::Cancelled)) {
+        watch.observe();
+    }
+    outcome
+}
+
+fn run_inner(
+    req: &PublishRequest<'_>,
+    cancel: &CancelToken,
+    progress: &dyn PublishProgress,
+    staging: &Staging,
+    pre: &PublishPreflight,
+    started: std::time::Instant,
+    watch: &CancelWatch<'_>,
+) -> Result<PublishOutcome, PublishError> {
+    let ds = req.dataset;
 
     // Admitted in `preflight`, before the staging directory existed.
     let PublishPreflight { logical_uri, pin, style, projection, license, viewer_license } = pre;
@@ -1215,8 +1244,14 @@ impl Staging {
             .map_err(|e| error::classify_io(&target.display().to_string(), "creating a bundle directory", e))
     }
 
-    /// Write one file and return its `sha256:` hash. The hash is taken over the **bytes written**,
-    /// not over a buffer that was intended to be written.
+    /// Write one file and return its `sha256:` hash.
+    ///
+    /// **The hash is over `bytes`, the in-memory buffer** — see [`write_inner`](Self::write_inner),
+    /// which is what makes chunking the write free of format consequence. This doc previously said
+    /// the opposite ("over the bytes written, not over a buffer that was intended to be written"),
+    /// which was already untrue before this cut and became a visible contradiction inside one `impl`
+    /// once `write_inner` stated it correctly. What the sync buys is that the bytes reach the disk
+    /// before the file is listed in a manifest; it is not what the hash is taken from.
     fn write(&self, rel: &str, bytes: &[u8]) -> Result<String, PublishError> {
         self.write_inner(rel, bytes, None)
     }

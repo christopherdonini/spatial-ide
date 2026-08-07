@@ -288,6 +288,54 @@ fn traces_agree_with_the_instruments_that_already_measured_the_same_thing() {
     }
 }
 
+/// **A run nobody cancelled must not claim a cancellation was requested.**
+///
+/// `BatchStream::drop` cancels its token on *every* drop, a completed stream included — that is what
+/// stops an abandoned stream and it is deliberate. An earlier revision stamped
+/// `cancellation_requested` inside `CancelToken::cancel`, so review captured a real artifact from a
+/// run with no cancel in it reading `producer_finished` at 169.68 ms followed by
+/// `cancellation_requested` at 170.32 ms.
+///
+/// That instant is the first of the three the design note freezes. A summarizer deriving
+/// `cancel_requested -> cancel_observed` would find an origin in runs that had none, and in a
+/// genuinely cancelled run would find two.
+#[test]
+fn a_successful_run_stamps_no_cancellation_instant() {
+    let _serial = serial();
+    let d = workspace("no-phantom-cancel");
+    let ds = pinned(&fixture(&d));
+
+    let guard = trace::start(TraceKey { label: "no-phantom-cancel".into(), ..Default::default() })
+        .expect("no other trace is running");
+    let mut stream = ds.stream(&ViewportQuery::all()).expect("stream opens");
+    let mut payload = Vec::new();
+    while let Some(b) = stream.next_into(&mut payload) {
+        b.expect("no terminal error");
+        payload.clear();
+    }
+    // The drop that used to stamp the phantom instant.
+    drop(stream);
+    quiesce(&ds);
+    let t = guard.trace();
+    drop(guard);
+
+    let names: Vec<&str> = t.events().iter().map(|e| e.name).collect();
+    assert!(
+        t.first(trace::CANCELLATION_REQUESTED).is_none(),
+        "a stream that ran to completion must stamp no cancellation instant, got {names:?}"
+    );
+    assert!(
+        t.first(trace::PRODUCER_CANCELLED).is_none(),
+        "nor a producer-side cancellation observation, got {names:?}"
+    );
+    // The run really did happen, so the absence above is meaningful rather than an empty trace.
+    assert!(t.first(trace::FIRST_BATCH_FULL).is_some(), "the run produced batches");
+    assert!(
+        t.first(trace::PRODUCER_FINISHED).is_some(),
+        "and the producer recorded that it finished"
+    );
+}
+
 /// The sort's location — inside `stream_arrow` or inside the first `next()` — is not established
 /// anywhere in this repository. This test does not assert which; it asserts that the spans that
 /// **can** answer it are both present and ordered, so the sixth section can report the answer
@@ -340,6 +388,11 @@ fn a_traced_publish_and_an_untraced_one_produce_the_same_bundle() {
     let untraced = publish_unguarded(&request(&ds, &v, untraced_dest.clone()), &CancelToken::new(), None)
         .expect("publish succeeds");
     assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
+
+    // **Quiesce before the trace opens**, or the untraced publish's producer stamps into the
+    // traced run's buffer — the exact defect this file's `quiesce` doc calls the worst shape.
+    // Nothing here asserts a count, so it would have passed while being wrong.
+    quiesce(&ds);
 
     let traced_dest = d.join("traced");
     let guard = trace::start(TraceKey { label: "same-bundle".into(), ..Default::default() })
