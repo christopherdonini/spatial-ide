@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // CI item "editing and cancellation semantics" (cancellation half). This
 // validates the generic JS cancellation mechanism this spike relies on --
 // AbortController wired to fetch() -- against a plain Node http server, NOT

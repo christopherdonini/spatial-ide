@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Canonical JSON — the one number grammar in this repository.
 //!
 //! Two artifacts must hash reproducibly: the **style document** (whose hash is carried into the

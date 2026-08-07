@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Integration tests for the one operation this slice has: open → SQL filter → stream → cancel.
 //!
 //! Every test runs against a **real GeoParquet file** written by the seeded fixture generator, read

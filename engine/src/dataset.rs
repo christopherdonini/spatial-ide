@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Opening a GeoParquet dataset: read the file's own facts, admit or refuse, hold the CRS as type.
 //!
 //! `docs/05` puts DuckDB in the role of "querying GeoParquet", and that is the only role it has

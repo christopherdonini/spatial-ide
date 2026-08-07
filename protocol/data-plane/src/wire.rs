@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Binary framing for the data channel.
 //!
 //! Transport-level, deliberately kept out of `transport.rs` (which is the transport-neutral

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! `slice-host` — runs the first engine slice end to end.
 //!
 //! Opens a GeoParquet dataset, serves the data plane on loopback, and prints the URL a browser

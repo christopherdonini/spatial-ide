@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Phase-3 analysis coverage (README §19.3, §19.5, §19.9).
  *

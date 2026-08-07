@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Minimal WebGL2 point renderer — the "first rendered pixels" end of the vertical harness.
  *

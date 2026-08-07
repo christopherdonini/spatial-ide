@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Typed, visible failures.
 //!
 //! `docs/05`: "Mixing CRS without a declared transform is an **error**, not a warning." Every

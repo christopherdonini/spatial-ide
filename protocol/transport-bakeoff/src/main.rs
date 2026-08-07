@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Data-plane transport bake-off harness — decision evidence for ADR-012.
 //!
 //! Serves the browser consumer and both candidate data-plane endpoints from one loopback listener

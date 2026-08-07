@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! M1: synthetic P1 point cloud (README "Test data").
 //!
 //! 10M points, uniform random over the EPSG:2056 extent used by this spike:

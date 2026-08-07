@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // CI item "CRS/local-frame calculations" (see .github/workflows/spike-ci.yml).
 // Pure logic, no DOM/WebView2/GPU -- runs identically on any platform Node
 // runs on. Node's native TypeScript type-stripping runs this file directly,

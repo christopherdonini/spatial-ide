@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Phase 2 — the pre-generated, immutable Arrow corpus (README §16.2).
 //!
 //! Phase 1 measured a generator, not a transport: synthesis and Arrow serialization consumed

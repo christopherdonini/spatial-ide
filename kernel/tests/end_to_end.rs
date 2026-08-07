@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! **H1–H7, carried forward from the bake-off as permanent integration tests of the slice.**
 //!
 //! The bake-off's seven hard requirements were pass/fail gates for a measurement. They are kept here

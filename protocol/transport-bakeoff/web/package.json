@@ -1,6 +1,7 @@
 {
   "name": "transport-bakeoff-consumer",
   "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
   "private": true,
   "type": "module",
   "description": "Browser consumer for the data-plane transport bake-off. Vanilla TypeScript deliberately: ADR-001 left React-vs-Svelte open and a bake-off must not decide it.",

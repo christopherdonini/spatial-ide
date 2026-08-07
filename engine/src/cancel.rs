@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Cancellation that reaches the query, not just the loop around it.
 //!
 //! ADR-004 amendment 2 disqualified the Tauri custom protocol as the data plane because "a client

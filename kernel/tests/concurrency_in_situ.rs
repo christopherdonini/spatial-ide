@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! **In-situ instrumentation of the real concurrency pattern: a superseded query cancelled while
 //! another stream keeps running.**
 //!

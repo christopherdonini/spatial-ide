@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! H6 — no transport detail leaks into the neutral interface.
 //!
 //! ADR-004 is "one semantic API, multiple optimized **bindings**"; ADR-012 says the swap between

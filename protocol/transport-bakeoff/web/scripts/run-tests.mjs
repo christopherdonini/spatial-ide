@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // Bundles and runs the TS regression suite under node. esbuild is already a dev dependency, so
 // this needs no new tooling.
 import { build } from 'esbuild';

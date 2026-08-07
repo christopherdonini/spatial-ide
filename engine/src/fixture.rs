@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Seeded GeoParquet fixture writer — **test support, feature-gated, never the shipped path**.
 //!
 //! `docs/02` scopes this module to "DuckDB + Arrow, connectors, CRS engine, data doctor"; a

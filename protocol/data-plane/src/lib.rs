@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! # `protocol/data-plane` — the data-plane binding (docs/02, docs/04, docs/10)
 //!
 //! ADR-004's data plane: **binary, chunked, backpressured, copy-minimized, JSON-free**, carrying

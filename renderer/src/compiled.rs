@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Compiling a style document against a dataset schema, deterministically.
 //!
 //! `docs/06`: "Deterministic: same style + same data → identical style and layout *decisions*."

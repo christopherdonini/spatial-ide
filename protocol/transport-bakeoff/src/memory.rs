@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Producer-side process memory sampling (README §6).
 //!
 //! The metric is Windows `GetProcessMemoryInfo` -> `PROCESS_MEMORY_COUNTERS_EX.PrivateUsage`

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Per-session authentication, origin validation, and credential redaction (`docs/09`).
 //!
 //! `docs/09`'s posture is local-first with no network access without an explicit grant. A listening

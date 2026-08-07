@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // Build one TypeScript module into a temporary ESM file so a Node test can import it.
 //
 // The viewer's own `dist/app.js` is not importable here on purpose: it touches `document` at module

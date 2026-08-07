@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Offset-relative rendering frame (ADR-003's "re-center on the view origin
  * ... before f32 GPU upload").

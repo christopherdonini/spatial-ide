@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The style's meaning is a **cross-implementation** contract, and this is where that is pinned.
 //!
 //! Style v0 is compiled in Rust at publish and read again in TypeScript by the bundle viewer. Two

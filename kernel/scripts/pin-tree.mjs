@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Records a content hash of every source file a measurement depends on — **and, with
  * `--binaries`, of the binaries that were actually built from them.**

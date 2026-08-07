@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Runs the whole slice under measurement: `slice-host` (release) + the browser probe + a memory
  * sampler on the host process.

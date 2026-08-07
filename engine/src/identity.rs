@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Stable feature identity, and the admission policy for a source that carries it under another
 //! name — **ADR-016 (Proposed)**.
 //!

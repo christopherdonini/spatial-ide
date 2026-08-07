@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * H6 — "no transport leakage into the semantic API", as a checked outcome rather than a design
  * claim. The preregistration (README §5, H6) makes this falsifiable, so it is asserted mechanically.

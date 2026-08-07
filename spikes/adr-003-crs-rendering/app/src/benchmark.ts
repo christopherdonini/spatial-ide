@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { Deck, Layer, OrthographicView } from "@deck.gl/core";
 
 // There's no browser-automation tool that can drive the native WebView2

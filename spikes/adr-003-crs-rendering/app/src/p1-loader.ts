@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { tableFromIPC } from "apache-arrow";
 
 // Must match src-tauri/src/p1.rs — the ground-truth EPSG:2056 extent and the

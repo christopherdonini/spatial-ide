@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // A **generic static file server**, for serving a published bundle during the acceptance run.
 //
 // The point of the acceptance criterion is that a bundle works from *any* static host, so this must

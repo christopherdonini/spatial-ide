@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Writes a GeoParquet fixture. **Test support**, behind the `fixture` feature, and an *example*
 //! rather than a binary so it cannot end up in the shipped surface by accident.
 //!

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! CRS as a **type**, and the admission policy for a source that does not carry one.
 //!
 //! `docs/05`: "CRS is part of the dataset's type and flows through every operation." A dataset that

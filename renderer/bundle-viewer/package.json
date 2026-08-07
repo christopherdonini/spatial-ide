@@ -1,6 +1,7 @@
 {
   "name": "spatial-bundle-viewer",
   "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
   "private": true,
   "type": "module",
   "description": "The static bundle viewer: the renderer module's projected publishing canvas. Vanilla TypeScript — this does NOT decide ADR-001's open React-vs-Svelte question.",

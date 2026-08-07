@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! M2: precision probe markers.
 //!
 //! Five probe locations — the four corners of the spike's EPSG:2056 extent

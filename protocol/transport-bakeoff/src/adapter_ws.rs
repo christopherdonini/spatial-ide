@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! **Candidate A — binary WebSocket.**
 //!
 //! Backpressure: explicit application credit. The consumer grants credit as fixed-layout binary

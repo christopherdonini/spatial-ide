@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { tableFromIPC } from "apache-arrow";
 
 // M4: P2 "parcel" polygon dataset. Grid layout, vertex count and extent

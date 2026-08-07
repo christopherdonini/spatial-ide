@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // The viewer's SHA-256 is pinned against an independent implementation.
 //
 // It is the whole basis of `asset-hash-mismatch`. A wrong one would either pass corrupted assets —

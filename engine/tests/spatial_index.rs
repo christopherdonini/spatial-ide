@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The revision-keyed spatial index — `docs/07`'s open gate, tested for the two things that make
 //! it safe rather than merely fast: **identical results to the unindexed scan**, and **a stale
 //! index cannot serve a newer revision**.

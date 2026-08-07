@@ -6,6 +6,10 @@ name = "transport-bakeoff"
 version = "0.0.0"
 edition = "2021"
 publish = false
+# ADR-009 item 1, written out rather than inherited: this crate is deliberately not a workspace
+# member (see the header above), so `license.workspace = true` is unavailable to it. The value is
+# the workspace's.
+license = "AGPL-3.0-or-later"
 
 [dependencies]
 arrow = "59"

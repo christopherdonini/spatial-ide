@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! A revision-keyed, in-memory spatial index over the covering-bbox columns — `docs/07`'s open
 //! gate, closed for this slice's shape only.
 //!

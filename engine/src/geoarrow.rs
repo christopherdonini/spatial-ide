@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! GeoArrow polygon assembly, and the check that the claimed encoding matches the data.
 //!
 //! Layout (GeoArrow, interleaved coordinates):

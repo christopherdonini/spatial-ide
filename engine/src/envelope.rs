@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The batch envelope — ADR-010 rule 1's tag, made unforgeable.
 //!
 //! Rule 1: "A bulk buffer whose envelope does not name its frame is untagged and is in violation."

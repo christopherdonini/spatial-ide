@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Diagnostic: how fast is the consumer's streaming SHA-256, and can it account for the flat
  * ~33 MB/s "transport throughput" Phase 2 measured at every batch size?

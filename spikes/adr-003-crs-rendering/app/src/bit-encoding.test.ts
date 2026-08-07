@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // CI item "serialization and exact-ID behaviour" -- the JS-side half of the
 // bit-pattern encoding M5 item 4 added (src-tauri/src/lib.rs has the Rust
 // counterpart, cargo test bit_encoding_tests). Pure logic, no IPC -- this

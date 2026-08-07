@@ -20,6 +20,15 @@ exclude = [
     "spikes/adr-003-crs-rendering/app/src-tauri",
 ]
 
+# One licensing statement for every member, inherited rather than repeated. ADR-009 item 1 puts the
+# kernel, engine, renderer and protocol implementation in the forever-open core, so there is exactly
+# one value here and a member that wanted a different one would be a decision, not a field.
+#
+# The two `exclude`d crates cannot inherit this — they are not members — and carry the identical
+# value written out. That is the cost of their exclusion, not a second policy.
+[workspace.package]
+license = "AGPL-3.0-or-later"
+
 [workspace.dependencies]
 # One Arrow version across the workspace. Pinned to what `duckdb` 1.10505 itself depends on — a
 # second arrow major in the tree would make `RecordBatch` two incompatible types and force a

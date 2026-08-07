@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! WKB → GeoArrow polygon decoding.
 //!
 //! Real GeoParquet in the wild stores geometry as WKB (the 1.0 encoding, and still the default in

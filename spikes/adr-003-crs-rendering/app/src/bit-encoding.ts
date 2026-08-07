@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // M5 item 4 (README ADR-004 amendment draft): a plain f64 sent as a Tauri
 // invoke() command argument was measured (M4 diagnostic notes, "Precision &
 // write-path correctness" row) to not reliably survive the JS->Rust IPC

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The producer pump: pulls batches from a source and frames them, on its own thread.
 //!
 //! Two properties this file exists to hold:

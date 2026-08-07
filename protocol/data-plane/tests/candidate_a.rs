@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The adapter's own contract, exercised with a real WebSocket client and a synthetic source.
 //!
 //! A Rust client rather than a browser, deliberately: the bake-off's silent-truncation episode was

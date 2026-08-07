@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Parsing of the GeoParquet `geo` file-level metadata.
 //!
 //! Pure functions over the JSON document, kept apart from the DuckDB read so the admission rules

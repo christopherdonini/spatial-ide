@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // CI item "report-schema validation". The milestone report interfaces
 // (M0Report in main.ts, M4Report in m4-editing.ts, M5Report in
 // m5-dataplane.ts, etc.) are TypeScript-only and erased at runtime -- they

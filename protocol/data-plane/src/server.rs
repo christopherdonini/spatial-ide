@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The listening data plane: one operation, one stream per connection, declared ceilings.
 //!
 //! ## Where the control plane went — declared, not left implicit

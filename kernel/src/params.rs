@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! The one operation's parameters, as fixed-layout binary.
 //!
 //! These bytes are opaque to `protocol/data-plane` (it carries a blob) and are decoded here, which

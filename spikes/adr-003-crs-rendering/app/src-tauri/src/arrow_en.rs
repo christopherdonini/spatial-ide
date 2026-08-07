@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Shared Arrow IPC framing for the spike's two-column `(e, n)` EPSG:2056
 //! point payloads — used by both P1 (p1.rs) and the M2 precision markers
 //! (markers.rs) so every dataset crosses the protocol boundary in exactly

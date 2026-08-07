@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! **Every O(N) phase of an index build is cancellable — deterministically, not by luck.**
 //!
 //! `kernel/RESULTS.md`'s second section reports this as a code fact rather than a timing: after

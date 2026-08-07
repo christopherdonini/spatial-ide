@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! **Reused DuckDB connections, and the cancellation that has to survive the reuse.**
 //!
 //! `kernel/RESULTS.md`'s second section decomposed the first-pixels budget and found S2 — query

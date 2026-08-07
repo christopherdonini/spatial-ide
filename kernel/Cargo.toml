@@ -3,6 +3,8 @@ name = "spatial-kernel"
 version = "0.0.0"
 edition = "2021"
 publish = false
+# ADR-009 item 1: forever-open core. Inherited from `[workspace.package]`.
+license.workspace = true
 description = "Composition root for the first engine slice: engine → data-plane binding. Nothing else."
 
 [lib]

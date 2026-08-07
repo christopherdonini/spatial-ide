@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! Identity admission — the **ADR-016** policy, exercised through real GeoParquet files.
 //!
 //! Separate from `slice.rs` because it is a different subject with its own fixtures, in the same

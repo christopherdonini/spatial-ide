@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // The TypeScript half of the cross-implementation style contract.
 //
 // The publisher compiles the style in Rust and this viewer reads the same document again in

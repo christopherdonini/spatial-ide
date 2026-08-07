@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 //! # `engine` — the data-engine module (docs/02, docs/05)
 //!
 //! First cut, scoped to one operation: **open a GeoParquet → filter in SQL → stream GeoArrow

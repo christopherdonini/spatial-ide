@@ -3,6 +3,8 @@ name = "spatial-renderer"
 version = "0.0.0"
 edition = "2021"
 publish = false
+# ADR-009 item 1: forever-open core. Inherited from `[workspace.package]`.
+license.workspace = true
 description = "renderer module (docs/02, docs/06): style compilation. GPU rendering and labels are not in this cut."
 
 [dependencies]
