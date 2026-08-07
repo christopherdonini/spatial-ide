@@ -19,24 +19,3 @@ expressed for the documents themselves.
 
 Source code in this repository is AGPL-3.0-or-later, not CC-BY-4.0.  See
 /LICENSE and /LICENSES/README.md.
-
-
-================================================================================
-INCOMPLETE — THE VERBATIM LICENSE TEXT IS NOT YET IN THIS REPOSITORY
-================================================================================
-
-The grant above is real; the copy of the license that must accompany it is not
-here.  The verbatim CC-BY-4.0 legal code belongs at:
-
-    LICENSES/CC-BY-4.0.txt
-
-It is absent because the session that wrote this file was under a binding
-no-downloads constraint and the text exists nowhere on the machine — checked,
-not assumed.  It was deliberately not reproduced from memory.  LICENSES/README.md
-records what was searched.
-
-To finish this:
-
-    curl -o LICENSES/CC-BY-4.0.txt https://creativecommons.org/licenses/by/4.0/legalcode.txt
-
-Then delete this notice, from the line of `=` above to the end of the file.

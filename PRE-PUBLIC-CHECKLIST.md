@@ -246,3 +246,28 @@ repository has ever been assigned a runner. Every result above is local.
 
 Flipping the repository public is a separate human action after all of the above. Nothing in this
 branch does it, and nothing in this branch should be read as recommending it yet.
+
+---
+
+## Custodian completion note — 2026-08-07
+
+Items closed in this pass, by the custodian (Fable) with the operator's bandwidth constraint
+respected (all fetches ran sandbox-side; ~53 KB synced to disk):
+
+1. **License texts fetched from canonical sources**: `LICENSES/AGPL-3.0-or-later.txt` (34,523 B,
+   canonical header/footer verified) and `LICENSES/CC-BY-4.0.txt` (18,657 B). Trailing
+   marked-incomplete notices removed from `LICENSE` and `docs/LICENSE` per their own instructions.
+2. **`DCO` diffed against developercertificate.org**: the transcription's only delta was the Linux
+   Foundation's old street address (three lines), present in the historical text and absent from
+   the live official one. Removed; the file is now whitespace-normalized-identical to the live
+   source. The from-memory caveat is discharged.
+3. **Name-collision check performed** (web search scope): no product/project/repository named
+   "Spatial IDE" found; the phrase exists only descriptively. Trademark stub written in `docs/14`
+   with the descriptiveness consequence stated; full register search deferred to pre-1.0 with
+   counsel.
+
+Still open, and whose: the **nine flagged dependencies** and the **two judgement calls** (item 1) —
+the human's, with the custodian's engineering reads presented in conversation; **CI green** —
+environmental (`Settings → Billing → Actions`); **`protocol/transport-bakeoff/web` audit** —
+deferred until off the metered connection (requires `npm install`); **counsel review** — per
+ADR-009's own caveat, before first outside contribution and before anything commercial.
