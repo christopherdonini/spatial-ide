@@ -524,3 +524,50 @@ deterministic and **that** is the finding.
 **Nothing else changed.** No ceiling, no sample count, no prediction, no viewport, no measured
 quantity. The instrument that produced attempt 1's numbers and the instrument that produces attempt
 2's differ by a `sleep` and one extra recorded canary reading.
+
+### A4 — 2026-08-07 — the canary invalidator is corrected to the scope §6 registers
+
+**Made after attempts 1 and 2 were looked at.** Both are invalidated; attempt 3 is the run of
+record. This is the second time the header's rule has bitten, and it is working as intended.
+
+**This is a correction *toward* the registered text, not a loosening after failing to meet it.**
+The bound is **unchanged at 10 %**. What changes is the *scope* it is applied over, and §6 has said
+which scope since before any instrument existed:
+
+> the 400 M instrument at the start and end of every phase; a spread above the declared 10 % across
+> **a phase's** canary points invalidates **that phase**.
+
+The harness computed a **global** min/max across every point in the pass and invalidated the whole
+run. That is strictly harsher than what was registered, and on a pass long enough to heat the
+machine it is also the wrong question: a phase can sit well inside the bound while the pass as a
+whole drifts past it, and the global test then throws away phases whose own numbers are clean.
+
+**Attempt 2's per-phase spreads, which is what §6 asks for:**
+
+| Interval | Spread | Verdict |
+|---|---|---|
+| `start` → `after-generate` | **15.1 %** | exceeds |
+| `after-generate` → `after-open` | 7.0 % | ok |
+| `after-open` → `after-streaming` | 3.4 % | ok |
+| `after-streaming` → `after-cancel` | 3.5 % | ok |
+| `after-cancel` → `after-memory` | 5.8 % | ok |
+
+Every phase carrying a `docs/08` row is inside the declared bound. The one excursion is across
+**fixture generation** — which is a 40-second burst of compression and IO on every core, so a
+thermal excursion there is the expected behaviour of the machine rather than a surprise.
+
+**Generation is exempt from the invalidator, and that is a scope statement rather than a favour.**
+It carries no `docs/08` row: §2 lists the measured rows and generation is not among them, and its
+wall time is recorded under "facts with no budget". A canary excursion across it therefore costs a
+number that was never a claim. Every phase that *does* carry a row is held to the unchanged 10 %.
+
+**What is now recorded per run:** each interval's spread and verdict, in the artifact, labelled by
+the phase it brackets. A reader can see every phase's drift rather than one pass/fail for the run.
+
+**Attempts 1 and 2 are both retained** under `target/slice-evidence/scale-pass/`, with their
+invalidators named, and are reported in the write-up beside the run of record.
+
+**The fixture is byte-identical across attempts 1 and 2** —
+`sha256:5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` both times, from
+independent generations. The generator is deterministic under its seed, which §1c assumed and
+nothing had yet established.

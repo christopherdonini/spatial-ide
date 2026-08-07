@@ -94,20 +94,27 @@ impl Canary {
     }
 }
 
-/// The spread across a set of canary points, on the **long** instrument.
+/// Per-phase canary spreads — **the registered invalidator, and the scope matters**.
 ///
-/// Returns `(spread, ok)`. A phase whose canary points spread beyond [`CANARY_MAX_SPREAD`] is
-/// invalidated: the machine moved while its numbers were being taken, and a ratio does not cancel
-/// an asymmetric drift.
-pub fn canary_spread(points: &[Canary]) -> (f64, bool) {
-    if points.len() < 2 {
-        return (0.0, true);
-    }
-    let mins: Vec<f64> = points.iter().map(Canary::long_min).collect();
-    let s = sorted(&mins);
-    let (lo, hi) = (s[0], s[s.len() - 1]);
-    let spread = if lo > 0.0 { (hi - lo) / lo } else { f64::INFINITY };
-    (spread, spread <= CANARY_MAX_SPREAD)
+/// The preregistration declares: *"the 400 M instrument at the start and end of every phase; a
+/// spread above the declared 10 % across **a phase's** canary points invalidates **that phase**."*
+///
+/// An earlier implementation took a global min/max over every point in the pass and invalidated the
+/// whole run. That is **stricter** than what was registered, and it is wrong for a pass long enough
+/// to heat the machine: a phase can sit comfortably inside the bound while the pass as a whole
+/// drifts past it, and the global test then discards phases whose own numbers are clean.
+///
+/// Returns one entry per interval: `(phase, spread, within_bound)`, where `phase` is the label of
+/// the point that **ends** the interval — the phase that ran between the two readings.
+pub fn phase_spreads(points: &[Canary]) -> Vec<(String, f64, bool)> {
+    points
+        .windows(2)
+        .map(|w| {
+            let (a, b) = (w[0].long_min(), w[1].long_min());
+            let spread = if a.min(b) > 0.0 { (a - b).abs() / a.min(b) } else { f64::INFINITY };
+            (w[1].label.clone(), spread, spread <= CANARY_MAX_SPREAD)
+        })
+        .collect()
 }
 
 // ---------------------------------------------------------------------------------------------
