@@ -41,8 +41,9 @@
  *     --out-prefix target/slice-evidence/first-batch/probe --trials 7 [--headed]
  */
 
-import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, existsSync, statSync } from 'node:fs';
+import { spawn, execFileSync } from 'node:child_process';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, statSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 
@@ -114,12 +115,23 @@ if (!viewports.length) {
 
 // ---- instruments copied from `run-slice-probe.mjs` (see the header on the duplication) ----------
 
-function canaryMs(iters = 40_000_000) {
+/**
+ * **Number arithmetic, not `BigInt`, and the iteration count is a tenth of the first attempt's.**
+ *
+ * The invalidated headless attempt used a 40 M-iteration `BigInt` loop, which cost **4.7 s per
+ * sample** and 14 s per canary point. A canary that expensive is a load on the machine it is
+ * measuring. This is the same shape at a cost of roughly half a second, which is enough to detect
+ * drift and cheap enough not to cause it.
+ *
+ * **The constant changed between the invalidated attempt and the re-run, and no number crosses
+ * between them** — the attempt produced no admissible cell, so there is nothing to carry.
+ */
+function canaryMs(iters = 20_000_000) {
   const t = process.hrtime.bigint();
-  let acc = 0n;
-  for (let i = 0n; i < BigInt(iters); i++) acc = (acc + ((i << 7n) ^ 0x9e3779b97f4a7c15n)) & 0xffffffffffffffffn;
+  let acc = 0;
+  for (let i = 0; i < iters; i++) acc = (acc + (((i << 7) | (i >>> 25)) ^ 0x9e3779b9)) | 0;
   const ms = Number(process.hrtime.bigint() - t) / 1e6;
-  if (acc === 123n) console.log('');
+  if (acc === 123) console.log('');
   return ms;
 }
 function canaryPoint(label) {
@@ -167,6 +179,58 @@ function sha256(path) {
   return h.digest('hex');
 }
 
+/**
+ * **Remove the browser profiles each trial leaves behind — a defect this script shipped without and
+ * that was found in use, not in review.**
+ *
+ * `run-probe.mjs` creates `canvas-probe-<pid>` under the temp directory per page load and does not
+ * remove it. At ~31 MB a profile and 84 page loads that is ~2.6 GB, and
+ * `kernel/RESULTS.md`'s second section records the probe **filling the disk during its own
+ * measurement** — an instrument consuming the resource it is measuring on. `run-slice-probe.mjs`
+ * sweeps for exactly this reason; this script did not, and the first headless block leaked 34
+ * profiles before it was noticed. Swept between viewport blocks and again at the end.
+ *
+ * **Removing the directory is not enough, and that is the finding.** The browser holds its profile
+ * open, so `rmSync` fails with EPERM while the process lives — and headless Edge leaves child
+ * processes behind after the parent is killed. The first headless block ended with **459** live
+ * `msedge.exe` processes holding 44 profiles, and its canary drifted **53 %** against a declared
+ * 10 % bound: an instrument that loaded the machine it was measuring, which is the second section's
+ * own recorded failure recurring in a new place. So the browsers are killed **by profile match**
+ * first, then the directories are removed.
+ *
+ * **Killed by command-line match, never by image name.** `taskkill /IM msedge.exe` would close the
+ * operator's own browser, and the operator is sitting at this machine keeping a window visible for
+ * the headed block.
+ */
+function killLeakedBrowsers() {
+  const ps =
+    "Get-CimInstance Win32_Process -Filter \"Name='msedge.exe'\" | " +
+    "Where-Object { $_.CommandLine -like '*canvas-probe-*' } | " +
+    'ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch {} }';
+  try {
+    execFileSync('powershell', ['-NoProfile', '-Command', ps], { stdio: 'ignore', timeout: 30_000 });
+  } catch {
+    /* a kill that finds nothing is the normal case */
+  }
+}
+
+function sweepProfiles() {
+  killLeakedBrowsers();
+  let removed = 0;
+  let failed = 0;
+  for (const e of readdirSync(tmpdir(), { withFileTypes: true })) {
+    if (!e.isDirectory() || !/^canvas-probe-\d+$/.test(e.name)) continue;
+    try {
+      rmSync(join(tmpdir(), e.name), { recursive: true, force: true });
+      removed += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+  if (removed || failed) console.log(`  swept ${removed} browser profile(s)${failed ? `, ${failed} still held` : ''}`);
+  return { removed, failed };
+}
+
 // ---- host lifecycle: one per trial, because layouts interleave ----------------------------------
 
 const hostBin = join(repoRoot, 'target', 'release', 'slice-host.exe');
@@ -174,6 +238,36 @@ const assets = join(repoRoot, 'frontends', 'canvas-probe', 'dist');
 if (!existsSync(hostBin)) {
   console.error(`no slice-host at ${hostBin}; build with: cargo build --release --bin slice-host`);
   process.exit(2);
+}
+
+/**
+ * **Refuse a page bundle older than the source it is built from.**
+ *
+ * `frontends/canvas-probe/dist/` is a **gitignored build artifact**, so nothing in the repository
+ * makes it track `src/`. The first headless attempt ran against a bundle two days stale, and the
+ * page silently ignored **both** `scenario=solo` and `bbox`: every trial streamed the whole 100 000
+ * rows under the supersede scenario while being filed as a quarter-viewport solo trial. It did not
+ * error, it did not warn, and the timings it produced looked entirely plausible.
+ *
+ * A staleness check is one `statSync` and it removes the whole class. The row-count assertion below
+ * is the second line of defence, and it is what would have caught this one had the check existed and
+ * been bypassed.
+ */
+{
+  const bundle = join(assets, 'app.js');
+  const src = join(repoRoot, 'frontends', 'canvas-probe', 'src', 'main.ts');
+  if (!existsSync(bundle)) {
+    console.error(`no probe bundle at ${bundle}; build with: cd frontends/canvas-probe && npm run build`);
+    process.exit(2);
+  }
+  if (existsSync(src) && statSync(bundle).mtimeMs < statSync(src).mtimeMs) {
+    console.error(
+      `refused: ${bundle} is older than ${src}. A stale bundle silently ignores the scenario and ` +
+        `the bbox and produces plausible timings for the wrong query — the failure that invalidated ` +
+        `this phase's first attempt. Rebuild: cd frontends/canvas-probe && npm run build`,
+    );
+    process.exit(2);
+  }
 }
 
 async function withHost(dataPath, fn) {
@@ -268,6 +362,10 @@ for (const viewport of viewports) {
         return await new Promise((res) => probe.on('exit', res));
       });
 
+      // Per trial, not per block: 459 processes accumulated over one block last time, and the
+      // damage is done long before the block ends.
+      sweepProfiles();
+
       const cellKey = key(f.id, viewport.name);
       if (!cells.has(cellKey)) {
         cells.set(cellKey, {
@@ -281,21 +379,31 @@ for (const viewport of viewports) {
         });
       }
       const cell = cells.get(cellKey);
-      let rec = null;
+      // **`results.trial` and `results.segments`, not the top level.** `run-probe.mjs` writes a
+      // wrapper — kind / status / browser / results / log — and the trial record lives under
+      // `results`. An earlier revision of this script read the top level, found `undefined`, and
+      // dropped every trial while the page loads themselves were fine. Mirrored from
+      // `run-slice-probe.mjs`, which is the copy that was already right.
+      let artifact = null;
       if (code === 0 && existsSync(out)) {
         try {
-          rec = JSON.parse(readFileSync(out, 'utf8'));
+          artifact = JSON.parse(readFileSync(out, 'utf8'));
         } catch (e) {
-          rec = null;
+          artifact = null;
         }
       }
-      const seg = rec?.segments ?? {};
-      const reasons = code === 0 ? admit(rec, seg) : [`probe exited ${code}`];
+      const rec = artifact?.results?.trial ?? null;
+      const seg = artifact?.results?.segments ?? null;
+      const reasons = code !== 0
+        ? [`probe exited ${code}`]
+        : seg
+          ? admit(rec, seg)
+          : ['the probe produced no segment record — the page did not run the solo scenario'];
       if (reasons.length) {
         cell.dropped.push({ rep: r, reasons });
         console.log(`  drop ${f.id}/${viewport.name}/${r}: ${reasons.join('; ')}`);
       } else {
-        cell.trials.push({ rep: r, ...seg, rows: rec.rows, batches: rec.batches });
+        cell.trials.push({ rep: r, ...seg, rows: rec.rows, batches: rec.batches, payload_bytes: rec.payloadBytes });
         console.log(
           `  ${f.id}/${viewport.name}/${r}: first pixels ${seg.first_pixels_after_query_start_ms?.toFixed(1)} ms, ` +
             `full payload ${seg.full_payload_after_query_start_ms?.toFixed(1)} ms`,
@@ -303,11 +411,23 @@ for (const viewport of viewports) {
       }
     }
   }
+  sweepProfiles();
   canaries.push(canaryPoint(`${mode}-after-${viewport.name}`));
 }
 canaries.push(canaryPoint(`${mode}-end`));
+const swept = sweepProfiles();
 
 // ---- summary ------------------------------------------------------------------------------------
+
+/**
+ * **The rows a viewport must select, asserted rather than noted.**
+ *
+ * The first attempt at this phase ran with a two-day-stale `dist/` bundle that ignored both
+ * `scenario` and `bbox`: every trial streamed the whole 100 000 rows under the supersede scenario
+ * while being filed as a quarter-viewport solo trial. Nothing in the instrument noticed, because
+ * nothing checked what came back. This does.
+ */
+const EXPECTED_ROWS = { quarter: 25281, '1-64': 1600, whole: 100000 };
 
 const summary = [...cells.values()].map((c) => {
   const fp = c.trials.map((t) => t.first_pixels_after_query_start_ms).filter((v) => v != null);
@@ -324,8 +444,24 @@ const summary = [...cells.values()].map((c) => {
     s4_p50: pct(seg('s4_first_bytes_to_decoded_ms'), 50),
     s5_p50: pct(seg('s5_decoded_to_first_pixels_ms'), 50),
     rows: [...new Set(c.trials.map((t) => t.rows))],
+    rows_expected: EXPECTED_ROWS[c.viewport] ?? null,
+    rows_as_declared:
+      EXPECTED_ROWS[c.viewport] === undefined
+        ? null
+        : c.trials.length > 0 && c.trials.every((t) => t.rows === EXPECTED_ROWS[c.viewport]),
   };
 });
+
+for (const c of summary) {
+  if (c.rows_as_declared === false) {
+    console.error(
+      `INSTRUMENT FAILURE: ${c.layout}/${c.viewport} returned rows ${JSON.stringify(c.rows)} ` +
+        `against the declared ${c.rows_expected}. The page did not run the window this cell names, ` +
+        `so no timing in it means anything. Phase stopped.`,
+    );
+    process.exitCode = 3;
+  }
+}
 
 /**
  * A2.1 item 2, applied mechanically. A difference below the declared floor is **not** reported as an
@@ -386,6 +522,7 @@ const artifact = {
   canary_within_10pct: spread <= 0.1,
   cells: summary,
   comparisons,
+  profiles_swept: swept,
 };
 
 const outFile = `${outPrefix}-${mode}.json`;
