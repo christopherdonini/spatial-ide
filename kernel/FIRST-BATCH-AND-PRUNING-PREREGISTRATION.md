@@ -415,3 +415,69 @@ nothing to the scale pass's directory.
   applies here on the same terms and to nothing else.
 - **Nothing about lever A**, which does not run here.
 - **Nothing about the default planner.** B1 is a layout candidate; there is no planner switch.
+
+### A2 — 2026-08-08 — the browser-probe cells, authorized by the human after results were seen
+
+**Written after the run of record and after its verdicts were read**, like A1 and for the same reason:
+this document requires an amendment to say so first. The probe cells were deferred by
+`NIGHT-CUT.md`'s rule 3 — they need a visible window — and that rule deferred them **without ever
+specifying what they were**. So this is not a re-scoping of something declared; it is the declaration
+that was owed.
+
+**It changes no trigger, no ceiling, no sample count and no verdict rule.** The seventh section's
+double null stands: neither lever enters the default planner, and **no probe cell can change that,
+because no gate is scored here.**
+
+#### The one question these cells exist to answer
+
+The producer-side pass found exactly one measured layout win: at the **1/64** viewport the clustered
+file reads **12,870,243 B against 25,146,407 B** and beats its control 45–47 of 49 on time to first
+batch. Every other lever result is a null.
+
+The third section decomposed first pixels and found the budget spent before the browser runs: S2
+(query start → OPEN) 67.8–103.7 ms, S4 + S5 under 11 ms in four of seven cells. **So a 1.3 ms
+producer-side win has somewhere to disappear**, and whether it survives to a pixel is a different
+measurement from whether it exists. That is the whole question.
+
+#### Cells
+
+`{S, C, H} × {quarter, 1/64} × {headless, headed}`, **n = 7**, one page load per trial. **12 cells,
+84 page loads.**
+
+- The three **145 MB files of the run of record**, unchanged and re-hashed before the phase. B1's
+  comparison remains **`H` against `C`**, never against `S`; `S` against `C` prices the writer on
+  this path as it did on the producer's.
+- **Headless and headed are separate cells and are never pooled** — `PROBE-PREREGISTRATION.md` §1a's
+  rule, because headless changes the compositor and GPU path.
+- **Whole-file is excluded.** It is where the writer effect was largest producer-side (20.1 ms) and
+  where no layout effect exists, so it would spend a third of the human's attention on a cell whose
+  answer is already known. Declared, not dropped.
+- The **display** extent is held fixed at the fixture's full extent in every trial, so only the query
+  changes and the draw transform does not.
+
+Segments, instants and invalidators are **`PROBE-PREREGISTRATION.md` §1a and §2 verbatim**. Nothing
+here redefines a boundary.
+
+#### What these cells may not claim
+
+- **No gate.** B1's gate was decided producer-side and is closed. A probe result cannot open it, and
+  a favourable probe cell is not a second chance at it.
+- **No comparison with the third section's numbers**, in either direction. Different session,
+  different tree, different fixture class.
+- **No comparison with the producer-side first-batch figures in the seventh section.** They are a
+  different quantity on a different clock in a different process. What the probe can say is whether
+  the *sign* of the layout effect is still visible at the pixel; it cannot say the two magnitudes
+  agree.
+- **Nothing about lever A or lever B2**, neither of which the browser path can reach: `slice-host`
+  never calls `build_index`, so every browser trial is `ScanOnly` or `WholeFile` — §1a's
+  "structurally absent, declared absent rather than reported as zero".
+- **Nothing about frame time or the renderer module.** The probe is a 2D canvas consumer.
+- **Nothing about macOS or Linux.**
+
+#### The outcome this phase is pre-authorized to reach
+
+**"The producer-side layout win does not survive to first pixels" is a complete and expected
+result.** A 1.3 ms difference against an S2 that the third section measured at 67.8–103.7 ms may well
+be invisible, and if it is, that is worth knowing precisely: it would say that storage layout is a
+*total-time* and *IO* lever rather than a first-pixels one, which is a sharper claim than the
+producer-side pass alone can support.
