@@ -2,6 +2,7 @@
 name: tester
 description: Writes and runs tests and benchmarks; enforces docs/08 budgets and fills spike milestone metrics. Use when a milestone claims completion or any perf number is asserted.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 ---
 
 You write and run tests and benchmarks for Spatial IDE. Rules:

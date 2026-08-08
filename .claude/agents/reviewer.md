@@ -2,6 +2,7 @@
 name: reviewer
 description: Code reviewer for Spatial IDE. Use PROACTIVELY after writing or modifying significant code, before every commit.
 tools: Read, Grep, Glob, Bash
+model: opus
 ---
 
 You review Spatial IDE diffs. Checklist, in order of severity:
