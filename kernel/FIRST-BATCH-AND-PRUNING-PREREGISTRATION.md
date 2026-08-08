@@ -318,3 +318,100 @@ actual IO" item.
 ## 11. Amendments
 
 *(none)*
+
+### A1 — 2026-08-08 — the 5 GB clustered cell, authorized by the human after results were seen
+
+**This amendment was written after the run of record and after its verdicts were read.** That is
+stated first because this document requires it, and because it is the fact a reader most needs in
+order to weigh what follows. It is written *by* the operator's explicit authorization, not by an
+unattended session deciding its own scope — §0's unattended rule held, the phase waited, and the
+human is present.
+
+**It changes no trigger, no ceiling, no sample count and no verdict rule, and it carries no number
+from the completed pass forward into a new verdict.** The double-null verdict of the seventh section
+stands exactly as written: **neither lever enters the default planner.** Nothing below can change
+that, and nothing below is permitted to be cited as though it could.
+
+#### What it adds, and why it could not have been declared earlier
+
+§8 registered **prediction 4**: that finding 4's height-versus-area crossover **moves with row-group
+count** — raster's full-width strips cost a viewport its *height* at every granularity, while a
+curve's blobs cost its *area plus a boundary term* that shrinks as groups get smaller. At **13** row
+groups the curve lost 0 of 49 at a quarter; at **403** the arithmetic says it should win.
+
+The seventh section established **half** of that: the raster baseline does **not** improve with
+row-group count (50.5 % of the file at 403 groups against 51.8 % at 13). The other half — whether the
+curve's boundary term actually shrinks — is untested, and testing it needs a Hilbert rewrite of a 5 GB
+file that §9 placed out of scope because `NIGHT-CUT.md` scoped 5 GB cells to "ScanOnly vs **the
+winning** pruning candidate" and no candidate won. **The human has now placed it in scope explicitly.**
+
+#### Cells
+
+**Two new 5 GB files, and the second is not optional.** The seventh section's most expensive lesson is
+that a clustered variant comes from DuckDB's writer while the fixture it is made from comes from
+arrow-rs, and that the writer alone moved whole-file first batch by 20.1 ms — larger than the layout
+effect it would have been mistaken for. So the 5 GB comparison gets the same control:
+
+| id | writer | order | source |
+|---|---|---|---|
+| `S5` | arrow-rs | raster by id | the scale pass's own fixture, **reused and never written to** |
+| `C5` | DuckDB `COPY`, `ClusterOrder::SourceIdentity` | raster by id | rewritten from `S5` |
+| `H5` | DuckDB `COPY`, `ClusterOrder::Hilbert16` | Hilbert order 16 | rewritten from `S5` |
+
+`row_group_rows` = **8 192**, the scale pass's own value and a multiple of DuckDB's vector size;
+`write_clustered_variant` refuses any layout it did not produce as asked, and that refusal stops this
+phase rather than being worked around.
+
+**Factor levels:** `{S5, C5, H5} × {whole, near-quarter, far-quarter, 1/64} × ScanOnly × size-only`,
+n = **7**, one process per trial, interleaved by the same committed pure function. **12 cells,
+84 trials.**
+
+**Only the size-only batch policy runs, and the omission is declared rather than silent.** Lever A is
+answered — zero budget cuts in 426 trials across two classes — and re-running it here would add half
+again as much wall-clock to re-establish a null this pass already holds at n = 7 in six cells. **This
+amendment may not be read as evidence about lever A in either direction.**
+
+**1/64 is included** because it is the other side of the crossover: it is where the curve won at 13
+groups, and prediction 4 is a statement about how the two viewport sizes trade as granularity changes.
+
+#### Row counts, predicted by arithmetic **before** the phase runs
+
+The seventh section recorded (S13) that its row-count check was a same-instrument tautology — the
+reference count came from the same engine, the same predicate and the same fixture as the trials, so
+it could catch nondeterminism and not a wrong filter. **That is corrected here**, on the fifth
+section's precedent: from the generator's grid (`cols = ⌈√3 300 000⌉ = 1817`, 40 m cell, the last
+grid row holding 3 300 000 − 1816 × 1817 = **328** features), the exact counts are
+
+| viewport | derivation | rows |
+|---|---|---|
+| whole | — | **3,300,000** |
+| near quarter | 909 columns × 909 rows | **826,281** |
+| far quarter | 909 × 908 full rows + 328 in the partial last row | **825,700** |
+| 1/64 | 228 × 228 | **51,984** |
+
+Two of these are the fifth section's own registered numbers, arrived at independently. **A mismatch
+is an instrument failure that stops the phase**, not a result.
+
+#### Gate, unchanged
+
+B1's gate is **`H5` against `C5`** — never against `S5` — at the **quarter** extent, p50 lower **and**
+≥ 42 of 49 pairwise, with row counts equal to the arithmetic above. `S5` against `C5` prices the
+writer at this class. **A pass yields a proposed ADR on ingest-layout policy, not a code change**, and
+it does not disturb the seventh section's verdict that nothing enters the default planner today.
+
+#### Ceilings and protocol, unchanged
+
+120 s opening settle; 60 s before every canary reading; ≤ 10 % per-phase spread; disk ≥ 20 GiB checked
+at the phase boundary; one 5 GB trial ceiling 900 s; rewrite ceiling 1800 s per file, raised from §7's
+900 s **because a 5 GB sort is not a 145 MB sort** and a ceiling that a legitimate operation exceeds
+is not a ceiling. `S5` is re-hashed before the first trial and after the last, and this phase writes
+nothing to the scale pass's directory.
+
+#### What this phase may not claim
+
+- **No comparison with the seventh section's 145 MB numbers, or with the fifth section's**, in either
+  direction. Its own three files, in its own session, or nothing.
+- **No timing comparison across phases.** The byte-counter carve-out the seventh section declared
+  applies here on the same terms and to nothing else.
+- **Nothing about lever A**, which does not run here.
+- **Nothing about the default planner.** B1 is a layout candidate; there is no planner switch.
