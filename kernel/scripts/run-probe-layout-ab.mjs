@@ -452,14 +452,26 @@ const summary = [...cells.values()].map((c) => {
   };
 });
 
-for (const c of summary) {
-  if (c.rows_as_declared === false) {
+// **Stops before any verdict is computed or written, and that is the point.**
+//
+// An earlier revision set `process.exitCode` here and carried on into `compare()` and
+// `writeFileSync`, so a wrong-window run still produced a complete artifact full of verdicts and the
+// console line "Phase stopped." was simply false. A check that announces a stop and does not stop is
+// worse than no check: it puts the reassurance in the log and the bad data in the artifact.
+{
+  const wrong = summary.filter((c) => c.rows_as_declared === false);
+  if (wrong.length) {
+    for (const c of wrong) {
+      console.error(
+        `INSTRUMENT FAILURE: ${c.layout}/${c.viewport} returned rows ${JSON.stringify(c.rows)} ` +
+          `against the declared ${c.rows_expected}. The page did not run the window this cell names.`,
+      );
+    }
     console.error(
-      `INSTRUMENT FAILURE: ${c.layout}/${c.viewport} returned rows ${JSON.stringify(c.rows)} ` +
-        `against the declared ${c.rows_expected}. The page did not run the window this cell names, ` +
-        `so no timing in it means anything. Phase stopped.`,
+      'No verdict is computed and no artifact is written: a timing taken on the wrong window is not ' +
+        'a slower or faster number, it is not a measurement of this cell at all.',
     );
-    process.exitCode = 3;
+    process.exit(3);
   }
 }
 

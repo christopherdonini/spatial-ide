@@ -70,6 +70,9 @@ const N_TRACED_OTHER: usize = 3;
 
 const CEIL_GENERATE: Duration = Duration::from_secs(600);
 const CEIL_REWRITE: Duration = Duration::from_secs(900);
+/// **Amendment A1.** Raised from `CEIL_REWRITE` because a 5 GB sort is not a 145 MB sort, and a
+/// ceiling that a legitimate operation exceeds is not a ceiling.
+const CEIL_REWRITE_5GB: Duration = Duration::from_secs(1800);
 const CEIL_TRIAL: Duration = Duration::from_secs(120);
 const CEIL_TRIAL_5GB: Duration = Duration::from_secs(900);
 const SILENCE_GENERATE: Duration = Duration::from_secs(120);
@@ -117,6 +120,45 @@ fn edge(cols: f64, divisor: usize) -> f64 {
     ((cols as usize / divisor) as f64) * CELL_M + CELL_M / 2.0
 }
 
+/// **The exact row count a viewport selects, derived from the generator's grid — not observed.**
+///
+/// Amendment A1, repairing the weakness review found in the seventh section (S13): that pass took its
+/// "prediction" from the same engine, predicate and fixture as the trials, so it could catch
+/// nondeterminism and not a wrong filter. This is arithmetic over `fixture::parcel`'s grid and shares
+/// nothing with the query path, which is the fifth section's precedent.
+///
+/// Features tile a `cols`-wide grid in raster order, so the last grid row is partial: with `n`
+/// features there are `n / cols` full rows and `n % cols` features in the row above them.
+fn predicted_rows(file: FileId, v: ViewId) -> u64 {
+    let n = file.features() as u64;
+    let cols = file.grid_cols() as u64;
+    let full_rows = n / cols;
+    let partial = n % cols;
+    let (x_cols, y_lo, y_hi) = match v {
+        ViewId::Whole => return n,
+        // Columns 0..=last and rows 0..=last, where `last` is the last column wholly inside.
+        ViewId::NearQuarter => {
+            let last = cols / 2;
+            (last + 1, 0u64, last)
+        }
+        ViewId::Sixty4th => {
+            let last = cols / 8;
+            (last + 1, 0u64, last)
+        }
+        // Same x band; the y band is the top `last + 1` grid rows of a `cols`-row grid.
+        ViewId::FarQuarter => {
+            let last = cols / 2;
+            (last + 1, cols - 1 - last, cols - 1)
+        }
+    };
+    let mut rows = 0u64;
+    for j in y_lo..=y_hi {
+        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        rows += in_row.min(x_cols);
+    }
+    rows
+}
+
 // ---- the cell space (§3) -------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -136,6 +178,13 @@ enum FileId {
     /// read-volume figure at **403** row groups — which is the baseline the *clustered* 5 GB cell
     /// will need, and that cell is a morning item.
     G5,
+    /// **Amendment A1** — the identity-order control at the 5 GB class, rewritten from `G5` through
+    /// DuckDB's `COPY`. Not optional: without it a clustered 5 GB result would measure writer plus
+    /// order, which is the seventh section's most expensive lesson.
+    C5,
+    /// **Amendment A1** — the Hilbert-ordered variant at the 5 GB class. The file registered
+    /// prediction 4 exists to test.
+    H5,
 }
 
 impl FileId {
@@ -145,6 +194,8 @@ impl FileId {
             Self::C => "C-duckdb-raster",
             Self::H => "H-duckdb-hilbert16",
             Self::G5 => "G5-arrow-raster-5gb",
+            Self::C5 => "C5-duckdb-raster-5gb",
+            Self::H5 => "H5-duckdb-hilbert16-5gb",
         }
     }
     fn path(self) -> PathBuf {
@@ -157,6 +208,9 @@ impl FileId {
                 .parent()
                 .unwrap()
                 .join("target/slice-evidence/scale-pass/parcels-5gb.parquet"),
+            // The rewrites live in **this** cut's evidence directory, never in the scale pass's.
+            Self::C5 => evidence_dir().join("parcels-5gb-duckdb-raster.parquet"),
+            Self::H5 => evidence_dir().join("parcels-5gb-duckdb-hilbert16.parquet"),
         }
     }
     /// Features the file holds — the input to its viewport grid. `fixture::parcel` derives the grid
@@ -167,7 +221,7 @@ impl FileId {
             // `kernel/SCALE-PASS-PREREGISTRATION.md` §1a. Restated rather than imported, because
             // that harness's constant is private to it; the row-count check below is what catches a
             // disagreement.
-            Self::G5 => 3_300_000,
+            Self::G5 | Self::C5 | Self::H5 => 3_300_000,
         }
     }
     fn grid_cols(self) -> f64 {
@@ -282,6 +336,8 @@ impl Cell {
                 "C-duckdb-raster" => FileId::C,
                 "H-duckdb-hilbert16" => FileId::H,
                 "G5-arrow-raster-5gb" => FileId::G5,
+                "C5-duckdb-raster-5gb" => FileId::C5,
+                "H5-duckdb-hilbert16-5gb" => FileId::H5,
                 _ => return None,
             },
             plan: match p[1] {
@@ -868,6 +924,247 @@ fn the_factorial_first_batch_pass() {
     println!("→ {}", out_dir.join("first-batch.json").display());
 }
 
+/// **The predictor, checked against numbers this repository registered before it existed.**
+///
+/// Not `#[ignore]`d: it costs nothing and it is what keeps amendment A1's arithmetic and
+/// `kernel/SCALE-PASS-PREREGISTRATION.md` §1b from drifting apart. Without it, A1's "exact predicted
+/// row count" is prose beside code that computes something else — the defect a reviewer found in that
+/// section's own 1/64 edge.
+#[test]
+fn the_predicted_row_counts_match_the_numbers_registered_before_this_harness() {
+    // The fifth section's own registered constants, independently derived here.
+    assert_eq!(predicted_rows(FileId::G5, ViewId::NearQuarter), 826_281);
+    assert_eq!(predicted_rows(FileId::G5, ViewId::Sixty4th), 51_984);
+    assert_eq!(predicted_rows(FileId::G5, ViewId::Whole), 3_300_000);
+    // The far quarter is this cut's addition; 909 x 908 full rows plus the partial row's 328.
+    assert_eq!(predicted_rows(FileId::G5, ViewId::FarQuarter), 825_700);
+    // The 145 MB class, which the run of record observed independently.
+    assert_eq!(predicted_rows(FileId::S, ViewId::NearQuarter), 25_281);
+    assert_eq!(predicted_rows(FileId::S, ViewId::FarQuarter), 25_108);
+    assert_eq!(predicted_rows(FileId::S, ViewId::Sixty4th), 1_600);
+    // A rewrite is the same features in a new order, so its counts are its source's.
+    for f in [FileId::C5, FileId::H5] {
+        for v in [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th] {
+            assert_eq!(predicted_rows(f, v), predicted_rows(FileId::G5, v));
+        }
+    }
+}
+
+/// **Amendment A1 — the 5 GB clustered cell.** The untested half of registered prediction 4.
+///
+/// `{S5, C5, H5} x {whole, near, far, 1/64} x ScanOnly x size-only`, n = 7. B1's gate is **`H5`
+/// against `C5`**, never against `S5`; `S5` against `C5` prices the writer at this class.
+///
+/// **This phase writes nothing to the scale pass's directory.** It reads that fixture, re-hashes it
+/// before the first trial and after the last, and puts both rewrites in this cut's own evidence
+/// directory.
+#[test]
+#[ignore = "measurement pass; run explicitly with --release, after the 145 MB pass"]
+fn the_5gb_clustered_cell() {
+    refuse_debug("first_batch_factorial::5gb-clustered");
+    require_disk("first-batch-5gb-clustered");
+
+    let out_dir = evidence_dir();
+    let mut log = String::new();
+    macro_rules! say {
+        ($($a:tt)*) => {{ let s = format!($($a)*); println!("{s}"); log.push_str(&s); log.push('\n'); }};
+    }
+    say!("hardware: {}", hardware_profile());
+
+    let src = FileId::G5.path();
+    if !src.exists() {
+        say!("UNMEASURED — the 5 GB fixture is absent at {}", src.display());
+        std::fs::write(out_dir.join("first-batch-5gb-clustered.log"), log).ok();
+        return;
+    }
+    let (src_bytes, src_hash) = file_facts(&src);
+    say!("source G5 — {src_bytes} bytes, sha256 {src_hash}");
+
+    // ---- the two rewrites ---------------------------------------------------------------------
+    let extent = DeclaredExtent {
+        xmin: E_LO,
+        ymin: N_LO,
+        xmax: E_LO + FileId::G5.grid_cols() * CELL_M,
+        ymax: N_LO + FileId::G5.grid_cols() * CELL_M,
+    };
+    for (id, order) in
+        [(FileId::C5, ClusterOrder::SourceIdentity), (FileId::H5, ClusterOrder::Hilbert16)]
+    {
+        let dst = id.path();
+        if dst.exists() {
+            say!("{} already present; not rewritten", id.as_str());
+            continue;
+        }
+        require_disk("first-batch-5gb-rewrite");
+        let cancel = CancelToken::new();
+        let dog = Watchdog::start("rewrite-5gb", CEIL_REWRITE_5GB, None, cancel.clone());
+        let spec = VariantSpec {
+            order,
+            extent,
+            row_group_rows: ROW_GROUP_ROWS,
+            id_column: "id".into(),
+        };
+        match write_clustered_variant(&src, &dst, &spec, &cancel) {
+            Ok(f) => {
+                let fired = dog.finish();
+                say!(
+                    "wrote {}: {} features, {} bytes, {} row groups, {} clamped, {:.0} ms{}",
+                    id.as_str(),
+                    f.features,
+                    f.bytes,
+                    f.row_groups,
+                    f.clamped_features,
+                    f.elapsed_millis,
+                    if fired { " (WATCHDOG FIRED)" } else { "" }
+                );
+            }
+            Err(e) => {
+                dog.finish();
+                // Record and proceed. A layout refusal stops this arm; it is not worked around.
+                say!("UNMEASURED — rewrite {} refused: {e}", id.as_str());
+            }
+        }
+    }
+
+    // ---- fixture facts, and B2 admissibility as an observed fact -------------------------------
+    let mut fixture_json = Vec::new();
+    let mut present = Vec::new();
+    for id in [FileId::G5, FileId::C5, FileId::H5] {
+        let p = id.path();
+        if !p.exists() {
+            say!("UNMEASURED — {} was not produced; its cells do not run", id.as_str());
+            continue;
+        }
+        present.push(id);
+        let (bytes, hash) = file_facts(&p);
+        let (row_groups, admissible) = match Dataset::open(&p) {
+            Ok(ds) => match ds.build_row_group_index(&CancelToken::new()) {
+                Ok(r) => (
+                    r.row_groups,
+                    match r.admissible {
+                        Ok(()) => "admissible".to_string(),
+                        Err(reason) => reason.as_str().to_string(),
+                    },
+                ),
+                Err(e) => (0, format!("build failed: {e}")),
+            },
+            Err(e) => (0, format!("open failed: {e}")),
+        };
+        fixture_json.push(format!(
+            "{{\"id\":\"{}\",\"bytes\":{},\"sha256\":\"{}\",\"row_groups\":{},\
+             \"b2_admissible\":\"{}\"}}",
+            id.as_str(),
+            bytes,
+            hash,
+            row_groups,
+            json_escape(&admissible),
+        ));
+        say!("fixture {} — {bytes} bytes, {row_groups} row groups, B2 {admissible}", id.as_str());
+    }
+
+    // ---- A1: row counts predicted by arithmetic, asserted against the scan ---------------------
+    let views = [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th];
+    let mut predicted = Vec::new();
+    for v in views {
+        let want = predicted_rows(FileId::G5, v);
+        let got = reference_rows(FileId::G5, v);
+        predicted.push(format!(
+            "{{\"viewport\":\"{}\",\"predicted\":{},\"observed\":{}}}",
+            v.as_str(),
+            want,
+            got
+        ));
+        say!("viewport {}: predicted {want}, observed {got}", v.as_str());
+        // A mismatch is an instrument failure that stops the phase, not a result (A1).
+        assert_eq!(
+            want, got,
+            "viewport {} selected {got} rows against the arithmetic prediction of {want}; the \
+             generator's grid and this harness disagree, and no timing taken now would mean anything",
+            v.as_str()
+        );
+    }
+
+    say!("settling {SETTLE_OPENING} s before the first canary");
+    std::thread::sleep(Duration::from_secs(SETTLE_OPENING));
+    let mut canaries = vec![Canary::take("5gb-clustered-setup-end")];
+
+    let cells: Vec<Cell> = present
+        .iter()
+        .flat_map(|&file| {
+            views.iter().map(move |&view| Cell {
+                file,
+                plan: PlanId::ScanOnly,
+                batch: BatchId::SizeOnly,
+                view,
+                traced: false,
+            })
+        })
+        .collect();
+    say!("{} cells at 5 GB, n = {N}", cells.len());
+
+    let exe = std::env::current_exe().expect("current exe");
+    let slot = out_dir.join("trial-slot-5gb-clustered.json");
+    let mut trials: Vec<String> = Vec::new();
+    for r in 0..N {
+        std::thread::sleep(Duration::from_secs(SETTLE_CANARY));
+        canaries.push(Canary::take(&format!("5gb-clustered-rep-{r}-start")));
+        for i in interleaved(cells.len(), r) {
+            let cell = cells[i];
+            match spawn_trial(&exe, &cell, &slot) {
+                Ok(line) => trials.push(format!("{{\"rep\":{r},\"trial\":{line}}}")),
+                Err(e) => {
+                    say!("UNMEASURED — trial {} rep {r}: {e}", cell.label());
+                    trials.push(format!(
+                        "{{\"rep\":{r},\"trial\":{{\"cell\":\"{}\",\"error\":\"{}\"}}}}",
+                        cell.label(),
+                        json_escape(&e)
+                    ));
+                }
+            }
+        }
+    }
+    std::thread::sleep(Duration::from_secs(SETTLE_CANARY));
+    canaries.push(Canary::take("5gb-clustered-pass-end"));
+
+    // The source is re-hashed after the last trial, not only before the first.
+    let (src_bytes_after, src_hash_after) = file_facts(&src);
+    if src_hash_after != src_hash || src_bytes_after != src_bytes {
+        say!("INVALIDATED — the 5 GB source changed during the pass: {src_hash} -> {src_hash_after}");
+    }
+
+    let spreads = phase_spreads(&canaries);
+    for (label, spread, ok) in &spreads {
+        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+    }
+
+    let artifact = format!(
+        "{{\"preregistration\":\"kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md#A1\",\
+         \"scope\":\"amendment A1, human-authorized: the clustered 5 GB cell. ScanOnly, size-only. \
+         Says nothing about lever A and nothing about the default planner.\",\
+         \"hardware\":\"{}\",\"media\":\"{}\",\"source_sha256_after\":\"{}\",\
+         \"fixtures\":[{}],\"predicted_rows\":[{}],\"canaries\":[{}],\"canary_spreads\":[{}],\
+         \"trials\":[{}]}}",
+        json_escape(&hardware_profile()),
+        json_escape(&media_type()),
+        src_hash_after,
+        fixture_json.join(","),
+        predicted.join(","),
+        canaries.iter().map(|c| c.json()).collect::<Vec<_>>().join(","),
+        spreads
+            .iter()
+            .map(|(l, s, ok)| format!(
+                "{{\"phase\":\"{}\",\"spread\":{s:.4},\"within\":{ok}}}",
+                json_escape(l)
+            ))
+            .collect::<Vec<_>>()
+            .join(","),
+        trials.join(","),
+    );
+    std::fs::write(out_dir.join("first-batch-5gb-clustered.json"), artifact).expect("write");
+    std::fs::write(out_dir.join("first-batch-5gb-clustered.log"), log).expect("write log");
+    println!("→ {}", out_dir.join("first-batch-5gb-clustered.json").display());
+}
+
 /// **Cancellation, re-asserted with row-group pruning in the path.**
 ///
 /// `NIGHT-CUT.md` requires it; `kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md` does not declare
@@ -1143,7 +1440,11 @@ fn spawn_trial(exe: &Path, cell: &Cell, slot: &Path) -> std::result::Result<Stri
     let _ = std::fs::remove_file(slot);
     // §7 declares two trial ceilings: 120 s at the 145 MB class and 900 s at 5 GB. One constant for
     // both would either abort a legitimate 5 GB trial or fail to bound a hung 145 MB one.
-    let ceiling = if cell.file == FileId::G5 { CEIL_TRIAL_5GB } else { CEIL_TRIAL };
+    let ceiling = if matches!(cell.file, FileId::G5 | FileId::C5 | FileId::H5) {
+        CEIL_TRIAL_5GB
+    } else {
+        CEIL_TRIAL
+    };
     let started = Instant::now();
     let out = Command::new(exe)
         .args(["night_trial_child", "--exact", "--nocapture", "--test-threads=1"])
