@@ -3486,10 +3486,16 @@ system, and none was noticed until review.
 
 ## Morning items
 
+*(Items 1 and 2 were authorized by the operator and **ran** on 2026-08-08 under amendments A1 and A2;
+their results are in the amendment section at the end of this file. They are left here as written, so
+the night's own record of what it deferred and why stays legible.)*
+
 1. **The 5 GB clustered cell** — the test of registered prediction 4, that finding 4's crossover moves
    with row-group count. At 403 row groups the curve should win at a quarter where at 13 it lost
    0/49. Needs a Hilbert rewrite of the 5 GB fixture and a declaration covering it. **Schedule first.**
-2. **Browser-probe cells**, deferred per `NIGHT-CUT.md` rule 3.
+   → **ran under A1.** Confirmed on read volume; the first-batch gate still fails.
+2. **Browser-probe cells**, deferred per `NIGHT-CUT.md` rule 3. → **ran under A2.** All eight
+   comparisons `not-resolvable-by-this-instrument`.
 3. **A decision on whether ingest-layout policy earns an ADR.** Finding 4 says clustering is a
    *conditional* win, not a win, so the ADR would have to carry the condition — which is the honest
    version and a better decision than an unconditional one would have been.
@@ -3555,3 +3561,414 @@ recorded rather than silently corrected, because the tables above were read off 
 `engine/src/stream.rs` · `engine/src/rowgroup.rs` · `engine/src/layout.rs` — the levers themselves.
 `engine/tests/first_batch_and_pruning.rs` · `engine/tests/row_group_seam.rs` — the deterministic
 tests, which run in the ordinary suite and assert no latency.
+
+---
+
+## Amendments run 2026-08-08 with the operator present — A1 and A2
+
+**What does not change, stated before anything else.** The verdicts above stand exactly as written:
+**neither lever enters the default planner.** A1 re-runs B1's gate at a new class under the same
+rule; A2 scores **no gate at all**. No number below is differenced against any number above, and
+neither amendment was written by an unattended session — both say in their own first lines that they
+were written after the run of record's verdicts were read, and both were authorized by the operator.
+
+**One class of number is compared across phases and one is not, and the line is drawn before it is
+used.** The seventh section declared a narrow carve-out: **byte counters** produced exactly one
+distinct value across every trial of every cell, so they are a deterministic function of the file,
+the query and the reader rather than of how fast the machine was. That licence is restated at the one
+place below that uses it, and **it extends to nothing else** — A1 §"What this phase may not claim"
+says "**No timing comparison across phases**", and this section makes none. An earlier draft of this
+preamble claimed no number below was differenced against any number above; that was simply false of
+the read-volume comparison, and the sentence is replaced rather than quietly narrowed.
+
+### Why these ran at all
+
+`NIGHT-CUT.md` deferred two things. **A1** is registered prediction 4 — that finding 4's
+height-versus-area crossover **moves with row-group count** — which the night could establish only
+half of. **A2** is the browser-probe cells, which rule 3 deferred *without ever specifying what they
+were*, so A2 is the declaration that was owed rather than a re-scoping of one that existed.
+
+---
+
+## A1 — the 5 GB clustered cell
+
+Three files at the 5 GB class. The scale pass's own fixture, reused and re-hashed before the first
+trial and after the last with no change, plus two rewrites into this cut's evidence directory:
+
+**`G5` is the file amendment A1 calls `S5`.** The contract names the arrow-rs 5 GB file `S5`
+throughout; the harness, the artifact and this section call it `G5`, because `S` was already taken by
+the 145 MB source and a single letter reused across two classes is how a table gets misread. The
+rename is recorded here rather than left for a reader to infer, and no other identifier moved.
+
+| id | writer | order | bytes | row groups | B2 admissibility | rewrite |
+|---|---|---|---|---|---|---|
+| `G5` (A1's `S5`) | arrow-rs | raster by id | 5,004,376,705 | 403 | admissible | — (reused, never written) |
+| `C5` | DuckDB `COPY` | raster by id | 4,976,612,784 | 403 | admissible | 18,544 ms |
+| `H5` | DuckDB `COPY` | Hilbert 16 | 5,000,231,051 | 403 | **`id-ranges-overlap`** | 28,600 ms |
+
+Zero clamped centroids in both rewrites. **Finding 5 holds at 5 GB**: clustering costs the file B2
+admissibility at 403 row groups exactly as it did at 13, so the two levers remain mutually exclusive
+on one file at both classes.
+
+**The row-count check, repaired.** Review found (S13) that the night's "prediction" ran the same
+engine, predicate and fixture as the trials and could therefore catch nondeterminism but not a wrong
+filter. A1 derives all four counts from the generator's grid **before the phase runs** —
+`cols = ⌈√3 300 000⌉ = 1817`, 40 m cell, the last grid row holding 3 300 000 − 1816 × 1817 = **328**
+features — and asserts them:
+
+| viewport | derivation | predicted | observed |
+|---|---|---|---|
+| whole | — | 3,300,000 | **3,300,000** |
+| near quarter | 909 × 909 | 826,281 | **826,281** |
+| far quarter | 909 × 908 full rows + 328 | 825,700 | **825,700** |
+| 1/64 | 228 × 228 | 51,984 | **51,984** |
+
+Two are the fifth section's own registered numbers, arrived at independently here; the far quarter is
+this cut's addition and the night had only observed it. A unit test pins the arithmetic against those
+registered constants so it cannot drift from `SCALE-PASS-PREREGISTRATION.md` §1b.
+
+n = 7, one process per trial, ScanOnly and size-only only (A1 declares why: lever A's gate is
+answered — as an **unexercised** null, which the seventh section is careful to say and this one does
+not upgrade — and re-running it would buy a null already held at n = 7 in six cells). Every canary phase inside the
+bound: **1.9, 2.1, 3.3, 0.5, 1.5, 4.3, 4.1, 3.5 %**. Zero unmeasured trials.
+
+### Results
+
+| viewport | file | first batch p50 / p95 | total p50 | read (whole trial) | share |
+|---|---|---|---|---|---|
+| whole | `G5` | 64.8 / 74.7 | 15,915.7 | 4,905,189,027 | 98.0 % |
+| | `C5` | 96.4 / 140.0 | 16,431.3 | 4,893,302,870 | 98.3 % |
+| | `H5` | 105.9 / 119.4 | 16,414.5 | 4,920,006,862 | 98.4 % |
+| near quarter | `G5` | 80.6 / 103.8 | 5,651.5 | 2,525,760,273 | 50.5 % |
+| | `C5` | 119.9 / 323.7 | 5,821.3 | 2,509,291,154 | 50.4 % |
+| | **`H5`** | 107.6 / 132.8 | **4,265.0** | **1,553,060,895** | **31.1 %** |
+| far quarter | `G5` | 81.0 / 105.1 | 5,642.7 | 2,526,948,620 | 50.5 % |
+| | `C5` | 134.0 / 161.2 | 5,703.2 | 2,507,427,105 | 50.4 % |
+| | **`H5`** | 140.1 / 145.6 | **4,263.0** | **1,479,187,457** | **29.6 %** |
+| 1/64 | `G5` | 252.9 / 304.8 | 460.8 | 647,451,443 | 12.9 % |
+| | `C5` | 247.8 / 275.3 | 464.8 | 644,620,847 | 13.0 % |
+| | **`H5`** | **91.6 / 100.6** | **239.9** | **163,217,277** | **3.3 %** |
+
+### Prediction 4: **confirmed on the mechanism, and the gate still fails**
+
+Those are two different sentences and this section keeps them apart.
+
+**Confirmed, on read volume.** At 403 row groups the curve reads **31.1 %** of the file at the near
+quarter against raster's **50.4 %**, and **3.3 %** against **13.0 %** at 1/64. At **13** row groups
+the same curve read *more* than raster at a quarter — 65.9 % against 57.7 %. **The crossover moved
+with row-group count, in the direction registered in §8 before either run.**
+
+> **This is the one cross-phase comparison in this section, and it is made under the seventh
+> section's declared byte-counter carve-out, restated here rather than assumed.** Read counters are
+> deterministic: in this phase each of the twelve cells produced **one** distinct `read_bytes` across
+> all seven trials, as every cell of the night's sixty-four did, so they are a function of the file,
+> the query and the reader and not of how fast the machine was. Both sides are the **whole-trial**
+> counter over file bytes — the 145 MB artifact carries no query-scoped counter, so that is the only
+> scope in which the two are the same quantity, and the column above is labelled accordingly. The
+> licence covers byte counts and **nothing else in this section**; no timing crosses phases anywhere.
+>
+> **Free corroboration, since it is available:** `G5`'s read volumes here are **byte-identical** to
+> the seventh section's 5 GB `ScanOnly` cells — 4,905,189,027 / 2,525,760,273 / 2,526,948,620 —
+> across a different binary and a different phase twenty minutes apart. That is direct evidence for
+> the carve-out rather than an argument for it.
+
+**What is observed and what is inferred.** *Observed:* the process asked the file system for fewer
+bytes. *Inferred:* that the curve's per-row-group envelopes are tighter and its boundary term shrank
+as the blobs got smaller. **Nothing here observed DuckDB's row-group selection**, and the seventh
+section's rule applies unchanged one level down. The counter is **logical** bytes, warm OS cache
+included, on **Windows only**; it is not a statement about disk traffic or any other platform.
+
+**The gate still fails**, and it fails differently from the night, which is the informative part:
+
+| viewport | `H5` vs `C5` p50 | rank | verdict |
+|---|---|---|---|
+| whole | 105.9 vs 96.4 | 22/49 | fails |
+| **near quarter** — the declared gate | **107.6 vs 119.9** | **31/49** | **fails** |
+| far quarter | 140.1 vs 134.0 | 20/49 | fails |
+| 1/64 | 91.6 vs 247.8 | **49/49** | beats on this metric — see the digest caveat below |
+
+At 145 MB the curve lost the quarter on **p50** at 0 of 49 — decisively worse. At 5 GB it **wins on
+p50** and misses only the rank separation, 31 of 49 against the 42 the gate requires. **The sign
+flipped; the significance did not clear the bar.** Dispersion in the baseline arm is where the separation went, and **the p95 is the wrong number to
+cite for it**: `C5`'s 323.7 ms outlier *gives* `H5` seven of its thirty-one wins. The shortfall comes
+from `C5`'s **fast** tail — 93.7 ms and 95.6 ms, both below `H5`'s minimum of 98.1 ms, costing
+fourteen pairs on their own. The raw samples are `C5` [323.7, 95.6, 93.7, 133.0, 113.4, 119.9, 121.8]
+against `H5` [107.4, 116.1, 98.1, 107.6, 103.3, 132.8, 110.7].
+
+> **The digest-set condition is still not evidenced, and it is a gate condition.** §8 requires
+> identical sorted per-feature digest sets, and the harness still records only a 64-bit FNV-1a fold —
+> the shortfall the seventh section disclosed, unchanged here. At this class `H5`'s payload totals
+> differ from `C5`'s by **+4,672 / −640 / +1,216 / +448 bytes** at equal row counts, with different
+> folds, which is the same pattern that section flagged and declined to explain. **No row above is
+> scored on that condition**, the 1/64 row included, so none of them is a gate pass in the full sense
+> even where the metric it does measure is unanimous.
+>
+> Two things that *are* clean and worth stating: each of the twelve cells produced **one** distinct
+> `read_bytes` and **one** distinct wire fold across all seven of its trials, and **`G5` and `C5`
+> produce byte-identical folds and payload totals at every viewport** — direct evidence that the 5 GB
+> writer control really is the same rows in the same order, which was assumed rather than shown at
+> 145 MB.
+
+**Where the win actually lands is total time, and the first-batch gate cannot see it.** Near quarter
+**4,265.0 ms against 5,821.3** (**−26.7 %**), far quarter **4,263.0 against 5,703.2** (**−25.3 %**),
+against read volumes falling 38.1 % and 41.0 %. **The two move together in direction and not in
+magnitude**, and the section does not claim otherwise.
+
+> **What `total_ms` contains at this class, disclosed because the largest claim in this section rests
+> on it.** `RETAIN_PAYLOAD_CEILING` is 256 MiB, so every 5 GB cell folds its wire bytes **inside** the
+> timed loop — a fold over 1.4–5.7 GB per trial is in each of these totals. It is uniform across all
+> three 5 GB files by construction, so those cells remain comparable **with each other**, which is
+> the only comparison made here. It is one more reason no total above is compared with any other
+> phase's. The gate is a first-batch gate by declaration and is not rewritten
+here to admit a quantity it was not scored on; the number is reported because it is the largest
+effect this cut measured, and a reader who only saw the gate row would not know it existed.
+
+### The writer control, larger at 5 GB than at 145 MB
+
+`C5` against `G5` — the same rows in the same order through a different parquet writer:
+
+| viewport | p50 | rank |
+|---|---|---|
+| whole | 96.4 vs 64.8 | **0/49** |
+| near quarter | 119.9 vs 80.6 | 2/49 |
+| far quarter | 134.0 vs 81.0 | **0/49** |
+| 1/64 | 247.8 vs 252.9 | 31/49 |
+
+**At this class the writer moves first batch by 31.6 ms at whole file, 39.3 ms at the near quarter
+and 53.0 ms at the far quarter — and by −5.1 ms at 1/64, where the sign reverses.** Three of the four
+are larger than the whole layout effect at the near quarter (12.3 ms). Had `H5` been differenced
+against `G5` — the comparison the brief's setup implied — the writer would have swallowed the layout
+signal completely and inverted its sign. **The control is again the reason this section can say
+anything about layout.**
+
+> **A "the writer effect grows with file size" claim appeared in an earlier draft and is withdrawn.**
+> It differenced these figures against the seventh section's 20.1 ms, which is a **timing** comparison
+> across phases — the one thing A1 explicitly forbids — and it was not like for like: 20.1 ms is that
+> section's **whole-file** cell, whose 145 MB viewport analogues are 5.1 ms and 0.1 ms, and the
+> draft's "at the viewports" range silently included a whole-file number and dropped the 1/64 cell
+> where the sign reverses. Two points across a changed file size, a changed row-group count, a
+> changed binary and a changed phase would not support the claim even if the comparison were
+> licensed. **What stands is the within-phase statement above.**
+
+---
+
+## A2 — the browser-probe cells
+
+**No gate is scored here.** B1's gate was decided producer-side and is closed. This phase asks one
+question: the producer-side pass found a **1.3 ms** layout win at 1/64 at the 145 MB class — does it
+survive to a pixel?
+
+`{S, C, H} × {quarter, 1/64} × {headless, headed}`, n = 7, one page load per trial, layouts
+interleaved *within* each viewport × compositor block by a committed rotation. The three files are
+the run of record's own, re-hashed; nothing was generated for the probe.
+
+### The criterion, declared before any probe trial ran
+
+A2.1 fixed it while the data did not yet exist: the third section recorded up to **29 ms** of
+between-attempt dispersion on a first-pixels p50, and **any difference below that is reported as
+`not-resolvable-by-this-instrument`** — neither "no effect" nor a win, because at that scale this
+instrument supports neither. A2.1 registered the layout arm as **predicted unresolvable in advance**,
+1.3 ms being more than twenty times below the floor.
+
+### Results
+
+**Headless** — canary spread 5.4 %, every cell n = 7, every cell returning its declared row count:
+
+| layout | viewport | rows | first pixels p50 / p95 | full payload p50 | S2 | S3 | S4 | S5 |
+|---|---|---|---|---|---|---|---|---|
+| `S` | quarter | 25,281 | 162.1 / 173.5 | 1,914.5 | 29.7 | 73.6 | 6.1 | 54.4 |
+| `C` | quarter | 25,281 | 166.1 / 179.3 | 2,077.7 | 27.2 | 75.4 | 7.5 | 52.0 |
+| `H` | quarter | 25,281 | 153.3 / 184.1 | 1,837.5 | 34.7 | 83.9 | 6.4 | 35.7 |
+| `S` | 1/64 | 1,600 | 127.9 / 148.1 | 229.4 | 33.3 | 43.4 | 6.7 | 45.3 |
+| `C` | 1/64 | 1,600 | 129.2 / 131.8 | 226.7 | 34.6 | 38.8 | 6.5 | 45.1 |
+| `H` | 1/64 | 1,600 | 123.5 / 131.9 | 220.5 | 39.1 | 38.0 | 6.8 | 45.9 |
+
+**Headed** — canary spread 6.5 %, same n and same row checks:
+
+| layout | viewport | first pixels p50 / p95 | full payload p50 | S2 | S3 | S4 | S5 |
+|---|---|---|---|---|---|---|---|
+| `S` | quarter | 196.8 / 221.0 | 2,104.7 | 38.2 | 71.2 | 7.4 | 79.1 |
+| `C` | quarter | 194.8 / 221.2 | 2,131.4 | 36.3 | 73.4 | 6.9 | 79.7 |
+| `H` | quarter | 199.4 / 222.0 | 1,949.5 | 34.3 | 86.2 | 6.6 | 73.1 |
+| `S` | 1/64 | 172.7 / 180.2 | 261.6 | 35.9 | 44.6 | 6.3 | 86.9 |
+| `C` | 1/64 | 179.8 / 199.9 | 285.9 | 37.0 | 46.7 | 7.9 | 81.4 |
+| `H` | 1/64 | 165.7 / 271.6 | 262.8 | 35.5 | 44.6 | 6.3 | 84.1 |
+
+**Headless and headed are never pooled** (`PROBE-PREREGISTRATION.md` §1a).
+
+### Verdicts — all eight, and the registered prediction holds
+
+| comparison | headless Δp50 | headed Δp50 | verdict, both paths |
+|---|---|---|---|
+| `H` − `C` @ quarter | −12.8 ms | +4.6 ms | **not resolvable** |
+| `C` − `S` @ quarter | +4.0 ms | −2.0 ms | **not resolvable** |
+| `H` − `C` @ 1/64 | −5.7 ms | −14.1 ms | **not resolvable** |
+| `C` − `S` @ 1/64 | +1.3 ms | +7.1 ms | **not resolvable** |
+
+> **The claim this licenses, and it is sharper than the producer-side pass can make alone: storage
+> layout is an IO and total-time lever, and this instrument cannot see it as a first-pixels lever at
+> this fixture class.**
+>
+> **Stated with its floor, because A2.1's own rule forbids the shorter version.** The instrument
+> cannot distinguish "no effect" from "an effect of up to 29 ms"; what it establishes is that the
+> producer-side difference — **1.3 ms**, the budgeted arm's 1.315 ms as registered — is more than
+> twenty times below what this instrument can resolve, on a consumer path whose S2 alone is
+> 27–39 ms. "Does not survive to a pixel" is a reasonable reading and is **not** what was measured.
+
+**The sign result, which A2 named as the only thing this instrument could speak to.** A2 registered
+that "what the probe can say is whether the *sign* of the layout effect is still visible at the
+pixel". It is at 1/64, where both compositor paths agree with the producer's direction (−5.7 and
+−14.1 ms against the producer's −1.3). **It is not at the quarter**, where the two paths disagree with
+*each other* — −12.8 ms headless against +4.6 ms headed — and headless disagrees in sign with the
+producer's +6.7 ms. All four are far below the floor, so none of this is an effect; it is reported
+because A2 asked the question and a silent answer would be a worse one.
+
+**Full payload is the one place a difference is visible, and no verdict is available for it.** `H`
+against `C` at the quarter is **−240.2 ms headless and −181.9 ms headed**, in the direction the read
+volume predicts and in both compositor paths. **A2.1 declared a floor for first-pixels p50 and for
+nothing else**, and this pass characterized no dispersion for full payload — so these are reported as
+observations and are not scored. Declaring a second floor now, after seeing them, is exactly what the
+first one exists to prevent.
+
+### The first headless block is invalidated, and the two attempts together are the argument for the floor
+
+| attempt | outcome |
+|---|---|
+| 0a | **abandoned during setup** — the page ran the wrong scenario and the wrong window (defect 1). No artifact retained; the run was stopped once a trial record was read |
+| 0b | **abandoned during setup** — the driver could not parse what the page wrote (defect 2). Same run as 0a; both defects were present together |
+| 1 | **INVALIDATED by the canary: 53.0 % spread against a declared 10 %.** Artifacts retained |
+| 2 | **run of record.** Canary 5.4 % |
+
+**Attempt 1's cells were individually admissible and the *phase* was not**, and the distinction
+matters enough to state plainly: all six of its cells reached `admitted: 7`, `dropped: 0` and the
+correct row count. Nothing about any single trial was wrong. What failed was the declared per-phase
+canary bound, which is a statement about the machine the trials ran on rather than about the trials.
+An earlier draft said "no admissible cell"; that was wrong in the direction that flatters the
+instrument, and it is corrected here.
+
+**Three instrument defects, all found in use and none in review.**
+
+1. **A stale page bundle, failing silently.** `frontends/canvas-probe/dist/` is a **gitignored build
+   artifact**, so nothing in the repository makes it track `src/`. `dist/app.js` carried a filesystem
+   mtime of **2026-08-05 13:11** against `src/main.ts` at **2026-08-07 10:30** — both read from the
+   working tree during diagnosis and neither retained in an artifact. The page therefore ignored
+   **both** `scenario=solo` and `bbox`: every trial streamed the whole 100,000 rows under the
+   supersede scenario while being filed as a quarter-viewport solo trial. No error, no warning, and
+   timings that looked entirely reasonable. The script now **refuses a bundle older than its source**
+   and **asserts each cell's row count** — 25,281 at the quarter, 1,600 at 1/64 — and, since review,
+   **exits before any verdict is computed or written** rather than setting an exit code and carrying
+   on, which is what it did when this text first claimed it stopped the phase.
+2. **The record was read at the wrong level.** `run-probe.mjs` writes a wrapper and the trial lives
+   under `results.trial` / `results.segments`; the new script read the top level, found `undefined`,
+   and dropped **every trial of that run** while the page loads themselves were fine. (An earlier
+   draft put a number on it. The run was stopped partway and no artifact of it is retained, so there
+   is no count to cite.) This is precisely the cost that script's own header predicted when it
+   recorded its duplication of `run-slice-probe.mjs` as owed.
+3. **The instrument loaded the machine it was measuring.** Removing a profile directory is not
+   enough — the browser holds it open, so `rmSync` fails with EPERM while the process lives, and
+   headless Edge leaves children behind. The retained artifact records **44 profiles still held** at
+   the end of the block; a `Get-CimInstance` count taken during cleanup, **in the session and not in
+   any artifact**, found **459 live `msedge.exe` processes** whose command lines named a
+   `canvas-probe-*` profile. That second figure is a session observation and is labelled as one. That
+   is the second section's leak finding recurring in a new place. Browsers are now killed **by
+   command-line match** — never by image name, because the operator was at the machine with their own
+   browser open — and swept after every trial.
+
+> **What the invalidated block reported, and why the pre-declared floor is the whole point.** It gave
+> `H` faster by **46.3 ms** at the quarter *and* `C` faster by **156.6 ms** at 1/64 — two
+> "resolvable" verdicts **in opposite directions**, both above the floor. The clean **headless** block
+> gives **−12.8 ms** and **−5.7 ms** — same sign, both far below it. **The clean headed block gives
+> +4.6 ms and −14.1 ms, which are opposite signs in clean data**, so "same sign" is a property of one
+> compositor path and not of the fix; both are below the floor, which is the point that does hold.
+> Contaminated data did not look like noise. It looked like a finding.
+>
+> **What that argues for, precisely.** It was the **canary invalidator** that rejected attempt 1, not
+> the floor — no criterion chosen after the fact could rescue a block whose declared 10 % bound was
+> breached by five times. The floor's contribution is different and narrower: it fixed *the wording*
+> of a verdict before anyone could see which phrasing would flatter the result. The two do different
+> jobs, and an earlier draft of this paragraph gave the floor credit for the canary's.
+
+The invalidated attempt's artifacts are retained under
+`target/slice-evidence/first-batch/invalidated-headless-attempt1/` rather than deleted.
+
+**Its canary constant differed from the re-run's** — a 40 M-iteration `BigInt` loop costing 4.7 s a
+sample and 14 s a point, itself a load on the machine — so the two canary series are two different
+instruments and the "53.0 % → 5.4 %" above is **not** a measurement of an improvement. It is two
+readings, each valid against its own declared 10 % bound, printed together because the second
+instrument is the one the fix was made for.
+
+**And the invalidated block's own timings are quoted above, deliberately.** An earlier draft claimed
+no number crossed between the attempts; three do — the two contradictory deltas and the canary pair.
+They are cited **as the invalidated block's numbers, to characterize what contamination looks like**,
+and never as evidence about layout. That is a different use from a measurement, and the distinction
+is the reason they are labelled at every mention rather than dropped.
+
+---
+
+## What A1 and A2 change, and what they leave standing
+
+- **Gate verdicts: unchanged.** Nothing enters the default planner. B1 fails its declared quarter gate
+  at both classes; A2 scores nothing.
+- **Finding 4 is sharpened rather than overturned.** The height-versus-area trade is real, its
+  crossover **moves with row-group granularity** as registered, and the effect is an **IO and
+  total-time** effect that does not reach first pixels at this fixture class. "Which granularity, for
+  which viewport" remains the framing to carry forward, and now has two points on the curve.
+- **Finding 5 confirmed at 5 GB**: the two levers stay mutually exclusive on one file.
+- **Finding 6 holds again at a new class, and is not extended.** Within this phase the writer moves
+  first batch by 31.6 / 39.3 / 53.0 ms at whole, near and far, and by −5.1 ms at 1/64 — larger, at
+  three of four viewports, than the layout effect it would have been mistaken for. **No claim is made
+  about how the writer effect scales with file size**: that would be a cross-phase timing comparison,
+  which A1 forbids and which two confounded points could not support anyway.
+- **Three obligations remain open**, unchanged by these phases: `docs/07`'s "index that prunes actual
+  IO" still needs finding 3's second clause; **`engine/README.md`'s** now-bounded twin sentence was
+  corrected in this cut but `docs/07` was not; and **ADR-019 is still not filed**, because no lever
+  passed a gate, which is the condition the architect attached to filing it.
+
+## Reproducing A1 and A2, and what each ran on
+
+```bash
+# A1 — the 5 GB clustered cell. Rewrites C5 and H5 from the scale pass's fixture on first run,
+# re-hashes the source before the first trial and after the last, and REFUSES to generate one.
+# Asserts the four arithmetic row counts BEFORE the opening settle; a mismatch panics.
+cargo build --release --tests -p spatial-kernel
+BIN=$(ls -t target/release/deps/first_batch_factorial-*.exe | head -1)
+"$BIN" the_5gb_clustered_cell --exact --ignored --nocapture --test-threads=1
+#   -> target/slice-evidence/first-batch/first-batch-5gb-clustered.json   (1,443.49 s)
+
+# A2 — the probe. Headless first, unattended; the headed block needs a visible, unlocked session.
+cd frontends/canvas-probe && npm run build && cd ../..   # the staleness guard refuses a stale bundle
+cargo build --release --bin slice-host
+node kernel/scripts/run-probe-layout-ab.mjs   --files 'S=…/parcels-145mb.parquet;C=…-duckdb-raster.parquet;H=…-duckdb-hilbert16.parquet'   --viewports 'quarter=2600000,1200000,2606340,1206340;1-64=2600000,1200000,2601580,1201580'   --extent 2600000,1200000,2612680,1212680 --out-prefix …/probe --trials 7 [--headed]
+```
+
+**Pins, and the provenance gaps in them.** A1 ran on test binary `3596ae4e…`, a **third** build
+distinct from both of the night's; A2 ran on `slice-host` `194d7468…` and a probe bundle rebuilt at
+11:25. **No tree pin was taken for either phase, and each binary was hashed once rather than before
+and after** — the same §7 shortfall the seventh section disclosed about itself, recurring here and
+disclosed for the same reason. Nothing is differenced across any binary boundary except read-byte
+counts under the carve-out above.
+
+**A1's instrument was committed *after* its run, and A2's before.** `kernel/scripts/run-probe-layout-ab.mjs`
+was committed before any probe trial existed and says so in its own commit message; `the_5gb_clustered_cell`
+and `predicted_rows` lived only in the working tree while A1 ran and were committed afterwards, so
+**A1 was not reproducible from any tree in history until that commit**. The two are not symmetric and
+an earlier draft presented them as though they were.
+
+## Raw artifacts (`target/slice-evidence/first-batch/`, gitignored)
+
+`first-batch-5gb-clustered.json` · `5gb-clustered-console.log` · `probe-headless.json` ·
+`probe-headed.json` · their `probe-trials-*` directories · `invalidated-headless-attempt1/` ·
+`binary-pin-phase3.txt` · `binary-pin-slice-host.txt` · the two 5 GB rewrites (~10 GB).
+
+## Instrument sources (committed)
+
+`kernel/tests/first_batch_factorial.rs` — A1's driver, `predicted_rows`, and the unit test pinning it
+against `SCALE-PASS-PREREGISTRATION.md` §1b's registered counts.
+`kernel/scripts/run-probe-layout-ab.mjs` — A2's driver: the counterbalanced rotation, the bundle
+staleness guard, the per-cell row assertion, the kill-by-command-line sweep and the resolvability
+criterion applied mechanically.
+
+**Every table in this amendment was transcribed by hand.** `scripts/summarize-first-batch.mjs` reads
+the night's `first-batch.json` only and knows nothing of these three artifacts. The seventh section
+named hand transcription as the source of its one error; this section says which tables are exposed
+to it rather than leaving a reader to find out.
