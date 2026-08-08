@@ -313,10 +313,10 @@ impl RowGroupIndex {
     /// **Read through DuckDB's `parquet_metadata()` on the connection this dataset already holds,
     /// and not through a second parquet reader.** Promoting the `parquet` crate to a non-optional
     /// dependency would put two footer readers in the shipped binary — DuckDB's, which executes the
-    /// query, and the crate's, which decided what to prune — and two readers that can disagree about
-    /// one footer is the wrong-but-plausible-answer hazard class ADR-010 rule 2 exists to prevent.
-    /// It also costs no `Cargo.toml` change at all, which is what "zero new dependencies" was
-    /// supposed to mean.
+    /// query, and the crate's, which decided what to prune. A disagreement between them would surface
+    /// as a **wrong-but-plausible result set** rather than as an error, which is the class `docs/01`
+    /// principle 8 requires to be signalled rather than absorbed. It also costs no `Cargo.toml`
+    /// change at all, which is what "zero new dependencies" was supposed to mean.
     ///
     /// One metadata query, cancellable: the query itself through the connection's interrupt handle,
     /// the reduction below through the token, at [`CANCEL_POLL_INTERVAL`].

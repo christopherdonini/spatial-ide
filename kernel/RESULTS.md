@@ -2883,3 +2883,675 @@ not re-run `scale_pass_a6.rs`.
 `engine/src/trace.rs` · `engine/src/stream.rs` · `kernel/src/publish/mod.rs` — the instrument and the
 code it measures. `kernel/tests/publish_cancellation.rs`, `trace_spans.rs`, `wire_bytes_invariant.rs`
 — the deterministic tests, which run in the ordinary suite and assert no latency.
+
+---
+
+# Seventh section — 2026-08-08 — time-to-first-batch: two levers, measured factorially
+
+**Contract:** `kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md`, committed at `60d3d57` **before**
+the harness existed. Every cell, ceiling, sample count, verdict rule and invalidator below comes from
+that document; this section applies them and decides nothing.
+
+## What this section may not claim, stated before any number
+
+- **No number here is differenced against any earlier section.** Different session, different build,
+  different tree. Both gates are scored within this session or not at all.
+- **A plan is not evidence that IO was excluded.** "The predicate was built" and "fewer bytes were
+  read" are different facts, and the second section's mistake was to time the first while believing
+  the second. Every pruning claim below rests on a read-volume measurement.
+- **B1's numbers are layout-variant results** — a different file with a different content hash — and
+  are never stated as a same-file claim.
+- **Build cost and query benefit are never netted.** No "pays for itself after N queries" appears.
+- The cancellation figures are a **re-assertion of a property**, not a preregistered scored cell, and
+  nothing in the gate verdicts rests on them.
+
+## Scope
+
+Windows 10 Pro 19045 · Intel i9-9980HK, 8 cores / 16 threads · 63.7 GiB RAM · SSD · release build.
+Nothing here says anything about macOS or Linux — the same limit `docs/07` places on ADR-003. The
+read-volume instrument is Windows-only and is declared so.
+
+**Metered-safe held in the strong sense: `Cargo.toml` and `Cargo.lock` are byte-identical to their
+state before this cut.** Parquet metadata is read through DuckDB's own `parquet_metadata()` rather
+than by promoting the `parquet` crate out of the `fixture` feature — which would also have put a
+**second footer reader in the shipped binary beside DuckDB's**. One reader would decide what to prune
+and the other would execute the query, and a disagreement between them would surface as a
+wrong-but-plausible result set rather than as an error: the class `docs/01` principle 8 exists to keep
+signalled rather than absorbed. (An earlier draft cited ADR-010 rule 2 here. Rule 2 is about
+authoritative coordinate lookup and cursor unprojection and does not reach this; the citation is
+withdrawn rather than restated more loosely.)
+
+## Every attempt, and what invalidated it
+
+| # | outcome |
+|---|---|
+| 1 | **INVALIDATED — instrument defect. 384 trials, 384 `unmeasured` rows, zero samples.** |
+| 2 | **Run of record.** 384 trials, **0 unmeasured**, 0 inadmissible cells, every canary phase inside the declared bound. |
+
+**Attempt 1's mechanism, because the way it hid is the transferable part.** The child printed its
+result behind an `@@TRIAL@@` sentinel and the driver used `strip_prefix` to find it. libtest with
+`--nocapture` writes a test's output *on the same line as its own progress banner* —
+`test night_trial_child ... @@TRIAL@@{…}` — so the sentinel was never at position 0 and the prefix
+never matched.
+
+**The mechanism was smoke-tested before the run, and the smoke test passed.** A human reading
+`test night_trial_child ... @@TRIAL@@{"error":…}` on a console sees the sentinel and the JSON and
+concludes it works; a human does not notice that the sentinel is not first on the line, because a
+human does not parse. **The check passed a person and would never have passed the code.**
+
+Two changes, chosen to make the class unreachable rather than the instance fixed: the result now
+travels through a **file** whose path the driver passes in, so no formatting layer remains between
+child and driver; and the driver runs a **mechanism self-check — one full trial, parsed — before the
+opening settle and before any measurement**. The second matters more than the first. Attempt 1 ran
+for minutes and produced a complete-looking artifact in which every row said the same thing; a run
+that cannot measure should cost seconds, not a night.
+
+## The fixtures — three at the 145 MB class, and why the third exists
+
+| id | writer | order | bytes | row groups | B2 admissibility | SHA-256 |
+|---|---|---|---|---|---|---|
+| `S` | arrow-rs `ArrowWriter` | raster by id | 151,629,665 | 13 | admissible | `fe61e704fcc01d40…` |
+| `C` | **DuckDB** `COPY` | raster by id | 150,775,777 | 13 | admissible | `ffc76db3c8e9bed2…` |
+| `H` | **DuckDB** `COPY` | Hilbert order 16 | 151,514,313 | 13 | **`id-ranges-overlap`** | `ced7c1ac070a1bbc…` |
+
+**`C` is the writer control and the pass would be worthless without it.** A clustered variant is
+written by DuckDB's parquet writer while the fixture it is made from is written by arrow-rs;
+compression matches but page size, dictionary thresholds, encodings and statistics emission do not.
+Differencing `H` against `S` would measure *writer plus order* and attribute all of it to order.
+`C` is the identical `COPY` with only the `ORDER BY` changed, so `H` against `C` differs by the row
+order and by nothing else. **§9 of this section prices the confound, and it is not small.**
+
+Row counts: whole **100,000** · near-quarter **25,281** · far-quarter **25,108** · 1/64 **1,600**.
+
+**What that check is, stated at its real strength.** §3 called for an *exact predicted* row count
+asserted by the harness. What the harness does is run the same engine, the same predicate and the same
+fixture once up front and record the answer — so it catches **nondeterminism**, and it cannot catch a
+wrong filter, because the reference and the trials share every input. The fifth section derived
+826,281 and 51,984 **by arithmetic before the fixture existed** and called that the strongest
+instrument check in its cut; this pass did not do that, and the weaker check is labelled rather than
+promoted. The numbers are independently right — 159² = 25,281 for the near quarter, 157 × 159 + 145 =
+25,108 for the far — but **nothing in the run checked that**.
+
+**The far-quarter viewport is new**, and it is the only viewport in which lever B2's mechanism can
+reach time-to-first-batch. Every viewport this repository had registered is south-west anchored, so
+on a raster-ordered file its matching rows are at the **front** of the scan while row-group
+elimination removes work from the **tail**.
+
+## Admissibility
+
+384 trials over 64 cells: 32 untraced cells at n = 7, traced twins at n = 7 for the two gate
+viewports and n = 3 elsewhere (labelled not verdict-bearing). One process per trial. Interleaving by
+a committed pure function, never a runtime shuffle.
+
+**Every cell passed the admissibility criteria that were checked, and the criteria that were not
+checked are named rather than implied.** Each cell reached its declared n with **one** row count, one
+filter plan, one cut policy and one wire fold across all its trials — and the read-volume counter was
+likewise a single distinct value across all seven trials of all sixty-four cells, which is stronger
+than the "p50" the tables below imply.
+
+**Not checked, and therefore not claimed:** §7 also makes admissibility conditional on "source pin and
+binary pin identical **before and after** the phase". **No tree pin was taken at all**, and the binary
+was hashed **once, after** the run (`binary-pin-attempt2.txt`, 03:15:19, against a pass that ended at
+03:13:33). A pin taken after a run brackets nothing — this file's sixth section says exactly that in
+its own first reproduction step. The summarizer applies the five criteria it can see and reports on
+those; it never evaluates a pin, the disk floor or the fixture hashes. **This is the sixth section's
+finding 6 recurring in a new place**, and it is recorded rather than smoothed over.
+
+Canary spread, in phase order: rep-0 **1.5 %**, rep-1 **1.0 %**, rep-2 **2.4 %**, rep-3 **2.8 %**,
+rep-4 **2.4 %**, rep-5 **1.7 %**, rep-6 **1.4 %**, pass-end **1.0 %**, against the declared 10 %.
+
+**Every 145 MB figure below is warm-OS-cache, and no figure in this section is a cold-open number.**
+Three files of ~150 MB against 63.7 GiB of RAM, 384 back-to-back trials. The read-volume instrument
+counts *logical* bytes the process asked the file system for — which is exactly the IO-exclusion
+question, and is **not** a statement about disk traffic.
+
+## The baseline everything else rests on: how much DuckDB already prunes, with no index in the path
+
+`NIGHT-CUT.md`'s premise was that parquet's per-row-group statistics "prune nothing today because the
+fixture's rows are spatially random". **Both halves are false.** `fixture::parcel` places feature
+`id` at grid `(id % cols, id / cols)` — the fixture is **raster-ordered**, so its row groups have
+narrow y envelopes and DuckDB's zone maps can and do use them.
+`kernel/SCALE-PASS-PREREGISTRATION.md` §1d had already declared this as a confound.
+
+Read volume of a plain `ScanOnly` query, as a share of the file. Nothing injected, nothing built:
+
+| file | whole | near quarter | far quarter | 1/64 |
+|---|---|---|---|---|
+| `S` raster | 148,601,340 (**98.0 %**) | 78,579,653 (**51.8 %**) | 77,618,512 (**51.2 %**) | 22,444,625 (**14.8 %**) |
+| `C` raster | 148,227,249 (98.3 %) | 86,966,899 (57.7 %) | 77,017,173 (51.1 %) | 25,146,407 (16.7 %) |
+| `H` Hilbert | 149,072,353 (98.4 %) | 99,860,366 (65.9 %) | 87,339,342 (57.6 %) | **12,870,243 (8.5 %)** |
+
+**A quarter-extent query on a raster-ordered file already reads about half the file and no more.**
+It is the number every claim in this section has to be read against, and no document in this
+repository stated it before.
+
+**What is observed and what is inferred, kept apart.** *Observed:* the process asked the file system
+for 78,579,653 of 151,629,665 bytes, identically in all seven trials. *Inferred:* that this is DuckDB
+skipping six of thirteen row groups on the covering-bbox statistics — from the external index's own
+`kept: 7` and the arithmetic agreement, 7/13 = 53.8 % against 51.8 % measured, the gap being the
+columns a viewport query does not read. **Nothing here observed DuckDB's internal group selection.**
+This section's own rule — a plan is not evidence that IO was excluded — applies one level down, to
+this sentence.
+
+## Lever A — the time budget
+
+**Total `time-budget` cuts across all 384 trials of the pass: 0.** The budget was armed in half of
+every cell pair and **never fired once**.
+
+The registered prediction said it would not, on arithmetic: at `avg_vertices = 100`,
+`estimate_bytes(1, 100) ≈ 2 012 B` per row, so a 64 KiB first batch is about 33 rows — far inside one
+2 048-row DuckDB chunk. The traced twins turn that prediction into a measured mechanism, and the
+number is more extreme than the arithmetic suggested:
+
+| segment | over all **160** traced trials | p50 |
+|---|---|---|
+| `query` — `sql_prepared → first_source_row` | **21.314 – 74.576 ms** | — |
+| `source_to_first_batch` — the window the budget bounds | **0.030 – 0.255 ms** | **0.053 ms** |
+
+`dropped_records` is **0** in every traced trial, so both segments are fully derivable.
+
+> **A correction to an earlier draft of this table, kept because the error is instructive.** The
+> summarizer prints one representative trace per cell — `summarize-first-batch.mjs` takes the first
+> traced trial — and a first draft transcribed those thirty-two single samples as though they were
+> ranges over the cells, reporting `0.0 – 0.1 ms` under an `n` column that said 7. Over all 160 traced
+> trials the true maximum is **0.255 ms** and **30 of 160 trials exceed 0.1 ms**. The figures above are
+> over every trial. The conclusion is unaffected; the number was wrong.
+
+> **Lever A is an 8 ms budget on a window whose worst observed value is 0.255 ms** — thirty times
+> smaller — with a p50 of 0.053 ms. Time to first batch is, at this shape, almost entirely the query
+> window: the time DuckDB spends before handing over its first chunk. **Batch-cutting policy cannot
+> reach it on this shape.**
+
+Every budgeted-versus-size-only pair is therefore a null, and the ranks confirm it rather than merely
+failing to reject: 10/49 to 38/49 across sixteen pairs, against the 42/49 the gate requires. The p50
+differences that look favourable (43.7 vs 47.5 ms at `S`/far-quarter) carry 38/49 and are dispersion,
+not effect.
+
+**What this does and does not establish.** It establishes that the budget does not fire on **this
+shape**, and why. It establishes nothing about whether a time budget would help where a first batch
+genuinely takes milliseconds to accumulate — a sparse filter returning few matching rows per chunk,
+or a feature class far larger than `docs/08`'s Polygons. The mechanism was never exercised, so this is
+an **unexercised null**, which is a weaker statement than a measured refutation. It is stated that way
+deliberately.
+
+The lever's standing after this pass is as a **declared behaviour with a structural guarantee** —
+`stream_for_publish` cannot acquire it, by a typed refusal, so ADR-017 §12's determinism cannot become
+timing-dependent — and **not as a first-pixels lever at this shape**.
+
+## Lever B2 — row-group pruning, and the exact size of what it excluded
+
+The plan was in force and correct in every cell: `RowGroupsPruned` keeping **7 of 13** row groups at
+both quarters and **2 of 13** at 1/64, returning the same rows and the same wire fold as `ScanOnly` in
+all seven trials of every cell.
+
+**It excluded exactly zero bytes of IO.** Not "a negligible amount" — zero, to the byte, in four of
+four viewports:
+
+Both columns are the **whole-trial** counter, which includes `Dataset::open`'s identity scan on both
+sides — so the difference remains exactly attributable:
+
+| viewport | B2 read, less the index build | `ScanOnly` read | difference |
+|---|---|---|---|
+| whole | 148,601,340 | 148,601,340 | **0** |
+| near quarter | 78,579,653 | 78,579,653 | **0** |
+| far quarter | 77,618,512 | 77,618,512 | **0** |
+| 1/64 | 22,444,625 | 22,444,625 | **0** |
+
+**How that figure was recovered, disclosed because it was not read directly.** The run-of-record
+instrument takes its read-volume counter at the **start of the trial**, so a `RowGroups` cell's raw
+figure also contains `Dataset::open` and the index build's SHA-256 content hash — which reads the
+whole file. The raw figures were 300,231,005 / 230,209,318 / 229,248,177 / 174,074,290, and
+subtracting the file's own 151,629,665 bytes recovers the four numbers above **exactly, in all four
+cells**. What is corroborated four times is that the excess is **viewport-independent and exactly one
+file size**; the index build's own read volume is confirmed **once**, not four times. That is enough
+to make the subtraction a measurement rather than an argument, and it is worth stating at its real
+strength rather than at a flattering one.
+
+**Why a subtraction and not a direct reading.** The second binary records a query-scoped counter, and
+the 5 GB phase uses it — but adding a 145 MB cell to read it directly would have meant a cell outside
+the preregistered set, measured on a different binary from every cell it would be compared against.
+The subtraction is exact and stays inside the run of record; a fresh reading would have been cleaner
+and would not have been comparable.
+
+**The mechanism, because a number without one is a tuning excuse.** DuckDB was already skipping
+exactly the row groups this index computes — the same statistics, the same predicate, one level up. So
+the injected id-range predicate re-expressed a decision already made, and the only thing it could add
+was a longer statement. **This is the second section's finding again, one level up**, and it is the
+sharper form of it: there, an index answered the predicate the *scan* already computed; here, an index
+answered the predicate the *storage layer* already computed.
+
+Against the gate: **0 of 8 cells beat their `ScanOnly` twin**, ranks 6/49 to 28/49. The index build
+cost **575.6 ms p50 over a 556.7 – 636.0 ms range** across every `RowGroups` trial — reported
+separately and never netted against any query time.
+
+> **Correction to the record, stated because the old sentence is still true in its own regime.**
+> `build_sql`'s planner comment says the fixed-grid index "adds work while DuckDB still scans the
+> GeoParquet bbox columns". That held for the second section's fixture, which had **a single row
+> group** and therefore nothing to prune. It does not hold for a multi-row-group file, where DuckDB
+> prunes first and an index adds work to what is left. Both regimes are now measured, and the comment
+> is bounded rather than withdrawn.
+
+## Lever B1 — clustered layout, against its writer control
+
+`H` against `C`. Time to first batch, p50 and pairwise rank at n = 7 vs 7:
+
+| batch | viewport | verdict | p50 (H vs C) | rank | read volume H vs C |
+|---|---|---|---|---|---|
+| size-only | whole | does not beat | 72.2 vs 69.9 | 19/49 | 149.1 MB vs 148.2 MB |
+| size-only | near quarter | does not beat | 59.0 vs 52.4 | **0/49** | 99.9 MB vs 87.0 MB |
+| size-only | far quarter | does not beat | 52.2 vs 47.6 | **0/49** | 87.3 MB vs 77.0 MB |
+| size-only | **1/64** | **BEATS** | **23.3 vs 24.6** | **45/49** | **12.9 MB vs 25.1 MB** |
+| budgeted | whole | does not beat | 71.9 vs 68.6 | 17/49 | 149.1 MB vs 148.2 MB |
+| budgeted | near quarter | does not beat | 60.2 vs 51.8 | **0/49** | 99.9 MB vs 87.0 MB |
+| budgeted | far quarter | does not beat | 53.3 vs 48.7 | **0/49** | 87.3 MB vs 77.0 MB |
+| budgeted | **1/64** | **BEATS** | **23.0 vs 24.3** | **47/49** | **12.9 MB vs 25.1 MB** |
+
+**Registered prediction 3, scored.** §8 predicted, from the files' own footers before the run, that
+the curve would **lose at both quarters and win at 1/64**. **The direction is confirmed in all three
+viewports.** The magnitude prediction is **not**: the footer table predicted raster and Hilbert both
+reading 7 of 13 groups at the far quarter, i.e. no difference, and the run measured **51.1 % against
+57.6 %** — the curve reading materially *more*. The prediction's arithmetic counted groups; the
+measurement counts bytes, and a group is not a fixed number of bytes when the rows inside it differ.
+**Direction: confirmed. Magnitude: wrong, and recorded as wrong.**
+
+Clustering does not help or hurt uniformly — it **trades a viewport's height against its area**:
+
+> Raster order's row groups are **full-width strips**, so a viewport costs its **height**. A
+> space-filling curve's row groups are **compact blobs**, so a viewport costs its **area plus a
+> boundary term**. At a quarter viewport — half the extent in each axis — height (≈ 50 %) beats
+> area-plus-boundary, and the curve loses **0 of 49**, decisively. At 1/64 the area term wins, the
+> curve reads **half the bytes** (8.5 % of the file against 16.7 %), and it beats **45–47 of 49**.
+
+The read-volume column is what makes that a mechanism rather than a story: at 1/64 the clustered file
+reads 12,870,243 B where the control reads 25,146,407 B, and at the near quarter it reads
+99,860,366 B where the control reads 86,966,899 B. **The layout changed how much IO the storage layer
+could exclude, in both directions, and first-batch time moved in the same direction every time.**
+
+**Direction only — the magnitudes do not scale together and the section does not pretend they do.**
+Read volume is a whole-query quantity; first-batch time is a ~33-row prefix. Per megabyte of extra
+read the first-batch cost is 0.51 ms at the near quarter, 0.45 at the far quarter and 0.11 at 1/64 — a
+factor of roughly 4.5 across the three. Sign is a finding; slope is not.
+
+### The writer confound, priced — and it is larger than the layout effect
+
+`C` against `S`: the same rows in the same order, from a different parquet writer.
+
+| batch | viewport | p50 (C vs S) | rank |
+|---|---|---|---|
+| size-only | whole | **69.9 vs 49.8** | 0/49 |
+| size-only | near quarter | 52.4 vs 47.3 | 1/49 |
+| size-only | far quarter | 47.6 vs 47.5 | 22/49 |
+| size-only | 1/64 | 24.6 vs 24.4 | 21/49 |
+
+**A whole-file first batch is 20.1 ms slower from the DuckDB-written file than from the arrow-rs one —
+about 40 % — with the same rows in the same order.** In absolute terms that is about fifteen times the
+layout effect at 1/64 (1.3 ms), though the two are at different viewports and in relative terms it is
+40 % against 5.3 %. Had `H` been differenced against `S`, as the brief's setup implied, the writer's
+20 ms would have been reported as a property of Hilbert ordering. **The control is the reason this
+section can say anything about layout at all**, and its cost was one extra file and one extra
+`ORDER BY`.
+
+**And it corroborates itself:** `C` and `S` produce byte-identical wire folds and payload totals at
+every viewport, so the 20 ms separates two encodings of provably the same rows in provably the same
+order.
+
+## Cancellation, re-asserted with pruning in the path
+
+Required by `NIGHT-CUT.md`; **not a preregistered scored cell**, so it is reported as a property
+assertion and nothing in the gate verdicts rests on it. Interval labels are the frozen ones from
+`kernel/CANCELLATION-AND-TRACING.md` §2, and ADR-018's vocabulary is cited **descriptively** while it
+remains Proposed.
+
+Seven trials, near-quarter, plan `RowGroupsPruned { total: 13, kept: 7, ranges: 1 }` in all seven:
+
+| interval | figure | budget |
+|---|---|---|
+| `cancel_requested → cancel_observed` | 0.000 · 0.001 · 0.000 · **0.060** · 0.000 · 0.000 · 0.000 ms | `docs/08` 100 ms — **met**, 7/7 |
+| `cancel_requested → the consumer's terminal return` | 6.365 – 8.089 ms | **none attached** (`cancel_acknowledged` class) |
+
+**A sub-microsecond cross-thread figure is at the instrument's resolution** — the trace stamps a
+`QueryPerformanceCounter`-backed `Instant`, whose tick is on the order of 100 ns — **and is read as
+"observed essentially immediately", never as an exact latency.** This file's first section records that
+wall-clock thresholds on cross-thread handoffs are the wrong instrument; the same caution applies to
+an implausibly good reading as to an implausibly bad one.
+
+One engine change made this measurable: `PRODUCER_CANCELLED` is now stamped on the producer's
+**row-loop** cancellation exit as well as at the chunk boundary. That is the path that actually fires
+— a chunk is thousands of rows — so the interval `docs/08`'s budget is scored on previously had no
+endpoint on the common path, and an always-absent span reads as "did not happen".
+
+## The 5 GB spot cells — the `ScanOnly` arm, which is the whole of what was declared
+
+`NIGHT-CUT.md` scopes 5 GB spot cells to "ScanOnly vs **the winning** pruning candidate" and requires
+a "same-session `ScanOnly` re-baseline first". No candidate won, so this is that re-baseline and
+nothing else. The clustered 5 GB cell is a morning item and the reason is in §"What could not be
+measured".
+
+The scale pass's own fixture, **reused and never written to**: 5,004,376,705 B, **403 row groups**,
+SHA-256 `5ae955c5fb7ee4d3…` — identical to the hash the fifth section recorded, and re-hashed after
+the last trial with no change.
+
+**This also closes a caveat the fifth section left open.** That section recorded its 403 row groups as
+**derived, not verified**. This pass read the count **from the file's own footer** — 403 — so the
+figure is now a measurement of the artifact rather than an arithmetic prediction about it. Row counts came out at **3,300,000 / 826,281 / 825,700**; the first two
+are the fifth section's own preregistered numbers, arrived at independently here.
+
+n = 7, one process per trial, every canary phase inside the bound (0.7 – 3.6 %):
+
+| batch | viewport | rows | first batch p50 / p95 | total p50 | read: whole trial | read: query only | share (whole trial) | `time-budget` cuts |
+|---|---|---|---|---|---|---|---|---|
+| size-only | whole | 3,300,000 | 68.7 / 75.0 ms | 15,247.7 ms | 4,905,189,027 | 4,886,046,331 | **98.0 %** | 0 |
+| size-only | near quarter | 826,281 | 80.2 / 93.7 ms | 5,437.6 ms | 2,525,760,273 | 2,506,617,577 | **50.5 %** | 0 |
+| size-only | far quarter | 825,700 | 82.3 / 94.0 ms | 5,333.1 ms | 2,526,948,620 | 2,507,805,924 | **50.5 %** | 0 |
+| budgeted | whole | 3,300,000 | 65.1 / 73.4 ms | 15,598.3 ms | 4,905,189,027 | 4,886,046,331 | 98.0 % | 0 |
+| budgeted | near quarter | 826,281 | 78.0 / 93.7 ms | 5,451.8 ms | 2,525,760,273 | 2,506,617,577 | 50.5 % | 0 |
+| budgeted | far quarter | 825,700 | **78.7 / 82.4 ms** | 5,509.7 ms | 2,526,948,620 | 2,507,805,924 | 50.5 % | 0 |
+
+**Both scopes are printed because this is the only table that can print both**, and because a first
+draft of this row carried **82.4 / 94.0 ms** — this cell's p95 written into the p50 column and the
+neighbouring row's p95 copied down. It was the one table no script produced. Corrected here, and the
+lesson is in the instrument list below.
+
+**Lever A fired zero times here too**, on a file 33 times larger with 31 times the row groups.
+
+**The finding this arm was worth running for — and the one comparison this section makes across
+phases, with its licence stated first.**
+
+> **Timings are never compared across phases here, and byte counts are — deliberately, and this is the
+> carve-out.** The reason the cross-phase rule exists is machine drift, and this pass measured its
+> own: the 400 M canary read **106.9 ms** during the 145 MB phase and **54.7 ms** during the 5 GB
+> phase twenty minutes later, on the same machine. **A factor of two.** Every phase held its own 10 %
+> bound, which is what makes each phase's timings good; comparing timings across them would be
+> comparing two machines, and **this section does not do it anywhere.**
+>
+> A read-byte counter is not subject to that drift and this run proves it rather than assuming it:
+> the counter produced **exactly one distinct value** across all seven trials of all sixty-four
+> 145 MB cells and all seven of every 5 GB cell. It is a deterministic function of the file, the
+> query and the reader — not of how fast the machine was. **That is the licence, it is narrow, and it
+> extends to nothing else in this section.**
+
+At the **whole-trial** counter — the same scope the 145 MB table uses — a quarter-extent query reads
+**50.5 %** of the 5 GB file at **403** row groups against **51.8 %** of the 145 MB file at **13**.
+Both are near half. **The 1.3-point difference is not tested and no claim is made about it**: each
+figure is a single deterministic value, so there is no dispersion to test against, and the files differ
+in more than their row-group count.
+
+What that supports is the weaker and sufficient statement: **raster order's strips span the full x
+extent at every granularity, so a quarter-extent viewport costs about its height — near half — at both
+13 and 403 row groups, and finer row groups did not reduce it.** Registered prediction 4 therefore
+rests entirely on its other half, that the *curve's* boundary term shrinks as groups get smaller, and
+that half is exactly what the morning cell has to measure. **Half the prediction has support; the
+interesting half is untested.**
+
+> **No figure in this table is differenced against the fifth section's**, in either direction, even
+> though its whole-file total (15,247.7 ms here) is close to what that section recorded. Different
+> session, different build, different binary pin.
+
+## Gate verdicts — stated separately, as the preregistration requires
+
+"Beat" is **p50 lower and ≥ 42 of 49 pairwise** at n = 7 vs 7. A p50 delta alone is not a pass.
+
+### Lever A — **does not enter the default planner.**
+
+Zero budget cuts in 384 trials; no cell beats its twin; best rank 38/49. The window the budget bounds
+is 0.0–0.1 ms. **An unexercised null**, not a refutation — see the qualification above.
+
+### Lever B2 — **does not enter the default planner.** It failed the condition the lever exists for.
+
+| gate condition (§8) | result |
+|---|---|
+| plan is `RowGroupsPruned { kept < total }` in all 7 trials of the gate viewport | **met** — 7 of 13 kept |
+| pruning **evidenced** by read volume strictly lower than `ScanOnly`'s | **FAILED — difference is exactly 0 bytes** |
+| first-batch p50 lower and 42/49 at the far quarter | **failed** — size-only 45.4 vs 47.5, rank **28/49**; budgeted 48.0 vs 43.7, rank **6/49**. §8 does not say which policy scores the gate, so both are printed and neither passes |
+| digest sets identical, row count equals prediction | **row counts met; digest sets NOT evidenced by this run** — see the note below |
+| no whole-file regression, and `FilterPlan::WholeFile` with no viewport | **met** — plan observed `whole-file`, no predicate injected, no regression |
+| …**and zero metadata work** | **NOT met, and the harness is why.** `first_batch_factorial.rs` builds the index for every `RowGroups` cell *before* it looks at the viewport, so the whole-viewport trials paid **575 ms** and read an extra 151,629,665 B for an index the plan then never consulted. Whether the **planner** would do metadata work at whole-file is a different question, and **this run cannot answer it** |
+| metadata build cost reported separately and never netted | met — 575 ms p50 |
+
+The **evidence-of-pruning** condition is the one that matters — the first condition, that the plan was
+built at all, was met — and failing it is why this is a **structural** verdict rather than a close
+call: an index over the same statistics DuckDB itself uses cannot exclude IO DuckDB has
+not already excluded. The fixed-grid index's planner note stands, and now has a companion.
+
+### The comparison §6 declared, and what the run of record actually recorded
+
+**Disclosed because a gate row cites it.** §6 declares three comparisons: a **SHA-256** over each
+cell's concatenated wire bytes, and a **sorted per-feature digest set `{(id, sha256(coords))}`** across
+plans and across files. The harness implements the first as a **64-bit FNV-1a fold**, not SHA-256, and
+**does not compute the per-feature digest set at all**.
+
+What that means for each claim:
+
+- **Within a cell** — the fold is identical across all seven trials of all sixty-four cells. A
+  mismatch would have been conclusive; a match is strong evidence and not a proof, and the substituted
+  hash is weaker than the one declared. Recorded as a substitution, not as compliance.
+- **Across plans, one file** — `ScanOnly` and `RowGroups` produce **byte-identical folds and payload
+  totals** at every viewport, with equal row counts. That is as strong as a digest set for this pair.
+- **Across files** — `C` and `S` produce **byte-identical folds and payload totals at every
+  viewport**, which is direct evidence that the writer control really is the same rows in the same
+  order, and is worth stating as a result rather than an assumption. `H` does **not**: its payload
+  totals differ from `C` by **+128, +64, −256 and 0 bytes** at whole, near, far and 1/64, with equal
+  row counts throughout. That is the size and sign of Arrow IPC padding under different batch
+  boundaries — a reordered file cuts batches at different features — but **this run does not rule out
+  any other cause**, because the comparison that would have (the per-feature digest set) was not
+  computed.
+
+The digest-set property *is* asserted, by `engine/tests/first_batch_and_pruning.rs` in the ordinary
+suite, on a smaller fixture at a different row-group size. **That is a different file, so it supports
+the code and not this run**, and the gate rows above say so rather than borrowing it.
+
+### Lever B1 — **cannot enter the default planner; there is nothing to switch.** Its gate is split.
+
+| viewport | verdict |
+|---|---|
+| quarter extent — **the declared gate viewport** | **FAILS — 0 of 49**, both batch policies. Decisively worse. |
+| 1/64 extent — *not a gate viewport*, reported as a result | **beats — 45/49 and 47/49**, with half the read volume |
+
+**Neither row is scored on the digest-set condition §8 also requires**, for the reason in the note
+above. The 1/64 row is therefore a first-batch and read-volume result, and is not a gate pass in any
+sense — it is not the gate viewport, and one of the gate's conditions was not evidenced.
+
+**B1's declared gate is the quarter extent, so B1 does not pass.** The 1/64 result is real, mechanism
+-backed and reproducible, and it is reported as what it is: a pass at a viewport that is not the gate.
+It changes the roadmap without clearing a bar.
+
+**A pass would have yielded a proposed ADR, not a code change**, and that stands: reordering a user's
+file at import is new product behaviour with its own reproducibility grade (ADR-005) and its own
+recorded-operation obligation (`docs/05`, `docs/01` principle 3). Nothing in this cut touches the
+import path.
+
+## Findings
+
+### 1. At this shape, time to first batch is the query window, and batch policy cannot reach it
+
+`source_to_first_batch` is **0.0–0.1 ms** in all 32 traced cells while `query` is **22.8–70.5 ms**.
+The third section decomposed first pixels from the *consumer's* side and found start-up dominant;
+this is the same conclusion from the producer's side, at a finer grain, and it retires batch-cut
+policy as a first-pixels lever on this shape. **What is left is the query window itself** — statement
+preparation, DuckDB's planning, and the scan up to its first chunk.
+
+### 2. DuckDB already prunes row groups on the covering-bbox statistics, and the number is large
+
+A quarter-extent query reads **51.8 %** of a 13-row-group file and a 1/64 query **14.8 %**, unaided.
+This is stated nowhere else in this repository, and it silently underlies every viewport number in the
+fifth section, whose fixture was the first here to have more than one row group.
+
+### 3. An external index over the same statistics is redundant — measured at exactly zero
+
+Not "small": **0 bytes** of difference in 4 of 4 viewports. The corrected design lesson in `docs/07`
+— an index must replace IO, not re-filter it — needs a second clause: *and it must replace IO the
+storage layer would not have skipped anyway.* A candidate that reads the same statistics DuckDB reads
+can never satisfy it.
+
+### 4. Storage layout trades a viewport's height against its area, and the crossover is measurable
+
+Strips cost height; blobs cost area plus a boundary term. Measured on one file pair, one session: the
+curve loses **0/49** at a quarter and wins **45–47/49** at 1/64, with read volume moving 87.0 → 99.9 MB
+and 25.1 → 12.9 MB respectively. **This is the most useful thing the pass produced**, because it says
+the right question is not "should we cluster?" but "cluster for which viewport size, at which
+row-group granularity?"
+
+### 5. The two levers are mutually exclusive on one file, structurally
+
+B1 reorders rows by a space-filling curve; B2 needs the identity column's per-row-group statistics
+monotone and disjoint in file order — a property **ADR-016 never promised** and that raster order
+happened to provide. Clustering destroys it, so the clustered file is refused by name
+(`id-ranges-overlap`), which the setup table records for `H`. "B2 on the clustered file is out of
+scope" is a fact about the design, not a scoping choice. ADR-016 is not amended; the property is
+checked per file and refused when absent.
+
+### 6. The parquet **writer** moved first-batch time more than the layout did
+
+20 ms at whole-file — about 40 % — for the same rows in the same order. Any future layout, sort-order
+or ingest experiment in this repository must control for the writer or it is measuring one thing and
+reporting another. The control cost one extra file and one extra `ORDER BY`.
+
+### 7. An instrument that a human validated and the code could not
+
+Attempt 1's smoke test passed a person and would never have passed the parser. The durable fix was
+not the parser — it was moving the mechanism check **into the run, before the settle**, so a harness
+that cannot measure fails in seconds instead of producing a complete-looking artifact full of
+identical `unmeasured` rows.
+
+### 8. DuckDB's parquet writer does not honour an arbitrary `ROW_GROUP_SIZE`
+
+*(Findings 5 and 8 rest on deterministic tests and on a pre-run implementation probe, **not** on the
+run of record. They are stated here because they bound what the run means, and they are marked so a
+reader does not take them for measurements of this pass. §0's disclosure rule for pilot numbers
+applies to both.)*
+
+It flushes on a multiple of its vector size: 8,000 rows asked for groups of 1,000 came out as **four**
+groups. Row-group size decides how much extent one group spans, which is exactly what a layout
+experiment varies, so `write_clustered_variant` now verifies the written layout against the request
+and **refuses** on mismatch rather than letting a differently-grouped variant reach a results table.
+
+## What could not be measured, and why — declared rather than discovered
+
+### Declared in the preregistration and **not run** — recorded `unmeasured`, as the unattended rule requires
+
+These four were registered and did not happen. Each is a gap in this pass, not a property of the
+system, and none was noticed until review.
+
+1. **§5's traced trial per 5 GB cell — `unmeasured — not implemented in the harness.`** §5 declares
+   "5 GB spot cells run untraced, **plus one traced first-batch-only trial per cell**". All six 5 GB
+   cells ran untraced and `first-batch-5gb.json` contains no trace at all.
+2. **§5's trace-buffer drop check at 5 GB — `unmeasured — depends on (1).`** §5 predicted that a
+   5 GB whole-file trace would fill the 4 096-record buffer and drop ~2 547 records, and said that
+   would be "checked in the artifact via `dropped_records`, not assumed". It was neither checked nor
+   assumed; the prediction is simply open. The `dropped_records = 0` reported above is the **145 MB**
+   result only.
+3. **§2's post-run re-hash of the 145 MB fixtures — `unmeasured — hashed once, before the trial
+   loop.`** §2 says every fixture's SHA-256 is "recorded … and **re-verified after the last trial**".
+   The 5 GB phase does re-hash and its before/after hashes match; the 145 MB phase does not. That
+   asymmetry makes the omission read as rigour that was applied when it was not, which is why it is
+   listed here rather than left to a reader to notice.
+4. **§6's empirical determinism assertion for lever A — `unmeasured — never run.`** §6 declares
+   "publish identical inputs under a build carrying the budgeted policy and confirm manifest and every
+   partition byte-identical". Only the **structural** half exists — `stream_for_publish` cannot
+   acquire the budgeted policy, enforced by a typed refusal and asserted by a unit test. The
+   structural guarantee is arguably *why* the empirical run is unreachable, but **an argument is not a
+   measurement** and the registered item is not discharged by one.
+
+### Out of scope by declaration
+
+- **The 5 GB clustered cell, which would test the pass's most interesting registered prediction.**
+  Prediction 4 says the crossover in finding 4 should **move with row-group count**: the boundary term
+  shrinks as groups get smaller, so at the 5 GB class's **403** row groups the curve should win at a
+  quarter where at 13 groups it loses 0/49. Running it needs a Hilbert rewrite of a 5 GB file — a
+  DuckDB sort of 5 GB and 5 GB of disk — that nothing declared, and `NIGHT-CUT.md` scopes 5 GB spot
+  cells to "ScanOnly vs **the winning** pruning candidate". **An unattended run may not improvise past
+  a declared scope**, so it is a morning item, and it is the first thing to schedule.
+- **Browser-probe cells: deferred to morning**, per `NIGHT-CUT.md` rule 3 — they need a visible
+  window. No number in this section depends on one.
+- **Physical disk traffic.** The read-volume instrument counts *logical* bytes the process asked the
+  file system for, warm OS cache included. That is precisely the IO-exclusion question and it is not a
+  statement about disk.
+- **Any other platform.** The instrument is Windows-only.
+- **Whether a time budget helps where a first batch takes milliseconds to accumulate.** Finding 1
+  says the window is 0.1 ms *on this shape*; it says nothing about a sparser one.
+
+## Obligations this cut creates and does not discharge
+
+- **`engine/README.md` still carries the unqualified sentence** that finding 3 bounds — "…while
+  DuckDB still scans the GeoParquet bbox columns … Until an index prunes actual IO, `ScanOnly` is the
+  preferred product plan." The planner comment in `engine/src/stream.rs` **was** bounded in this cut;
+  the README was not. Owed.
+- **`docs/07`'s open item "an index that prunes actual IO"** needs finding 3's second clause — *and
+  that the storage layer would not have skipped anyway*. This cut is engine-only and does not edit
+  `docs/`. Owed.
+- **ADR-019 is not filed.** The architect drafted a proposed ADR on metadata-derived IO exclusion to
+  be filed **only if a lever passed its gate**. Neither did, so it is not filed, and this is recorded
+  so a successor does not go looking for it. Its five draft clauses stand as the discipline any future
+  candidate must meet whether or not the ADR is ever written.
+
+## Morning items
+
+1. **The 5 GB clustered cell** — the test of registered prediction 4, that finding 4's crossover moves
+   with row-group count. At 403 row groups the curve should win at a quarter where at 13 it lost
+   0/49. Needs a Hilbert rewrite of the 5 GB fixture and a declaration covering it. **Schedule first.**
+2. **Browser-probe cells**, deferred per `NIGHT-CUT.md` rule 3.
+3. **A decision on whether ingest-layout policy earns an ADR.** Finding 4 says clustering is a
+   *conditional* win, not a win, so the ADR would have to carry the condition — which is the honest
+   version and a better decision than an unconditional one would have been.
+
+## Reproducing this
+
+```bash
+# 0. The contract. Committed BEFORE the harness existed; read it before the numbers.
+#    kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md   (commit 60d3d57)
+
+# 1. Build from clean. A number taken on a debug build is not a smaller number, it is not a
+#    measurement -- the harness refuses one.
+cargo build --release --tests -p spatial-kernel
+
+# 2. The factorial pass. Generates all three 145 MB fixtures on first run, runs a mechanism
+#    self-check BEFORE the opening settle, then 384 trials in 384 processes.
+#    Budget ~13 min: a 120 s opening settle, then EIGHT 60 s settles (seven rep-starts plus
+#    pass-end), plus the trials. The run of record took 771.31 s.
+#    -> target/slice-evidence/first-batch/first-batch.json
+BIN=$(ls -t target/release/deps/first_batch_factorial-*.exe | head -1)
+"$BIN" the_factorial_first_batch_pass --exact --ignored --nocapture --test-threads=1
+
+# 3. The tables in this section, from that artifact. It scores; it does not decide.
+node scripts/summarize-first-batch.mjs
+
+# 4. The cancellation re-assertion. Reuses the fixture from step 2; asserts the property.
+"$BIN" cancellation_holds_with_pruning_in_the_path --exact --ignored --nocapture --test-threads=1
+
+# 5. The 5 GB spot cells. REFUSES to generate a fixture and re-hashes the one it finds, before the
+#    first trial and after the last.
+"$BIN" the_5gb_spot_cells --exact --ignored --nocapture --test-threads=1
+```
+
+**A provenance split this section will not paper over.** The factorial pass ran on a binary pinned at
+`ab9c5aa43dd7113d…`; the cancellation and 5 GB phases ran on `f6790f56c2891a3c…`, which differs by
+two additions — a second read-volume counter in the harness, and the `PRODUCER_CANCELLED` mark on the
+producer's row-loop cancellation exit. The second is product code, on a branch that is not taken in a
+non-cancelled stream. **Nothing is differenced across the two binaries**: the factorial verdicts come
+entirely from the first, and the cancellation and 5 GB figures entirely from the second.
+
+## Raw artifacts (`target/slice-evidence/first-batch/`, gitignored)
+
+`first-batch.json` (run of record) · `summary.md` · `attempt-2-console.log` ·
+`attempt-1-INVALIDATED-console.log` · `first-batch-cancel.json` · `cancel-console.log` ·
+`first-batch-5gb.json` · `5gb-console.log` · `binary-pin-attempt2.txt` · `binary-pin-phase2.txt` ·
+the three 145 MB fixtures.
+
+The 5 GB fixture is the scale pass's own, in `target/slice-evidence/scale-pass/`, reused and never
+written to: SHA-256 `5ae955c5fb7ee4d3…`, identical to the hash the fifth section recorded.
+
+## Instrument sources (committed)
+
+`kernel/tests/first_batch_factorial.rs` — the harness: the factorial driver, the child, the
+cancellation re-assertion and the 5 GB spot cells.
+`scripts/summarize-first-batch.mjs` — the summarizer. **It produced the 145 MB tables and the gate
+tables, and it did not produce the 5 GB table or the cancellation table**, which were transcribed by
+hand from their artifacts — and the hand-transcribed one is exactly where this section's one
+transcription error was found in review. It reads `first-batch.json` only. It also applies §7's
+`n = 7` as a *scoring* criterion rather than an *admissibility* one, and labels a traced quarter cell
+in a way that could be read as verdict-bearing when §5 says untraced carries every verdict. Both are
+recorded rather than silently corrected, because the tables above were read off it.
+`kernel/tests/support/mod.rs` — the canary, watchdog and disk gate, unchanged by this cut.
+`engine/src/stream.rs` · `engine/src/rowgroup.rs` · `engine/src/layout.rs` — the levers themselves.
+`engine/tests/first_batch_and_pruning.rs` · `engine/tests/row_group_seam.rs` — the deterministic
+tests, which run in the ordinary suite and assert no latency.

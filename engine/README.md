@@ -119,6 +119,16 @@ kept alongside the ranges so the result set stays provably identical — so the 
 a single row the bbox test would have kept. They are pure added work per row on top of a scan that
 still runs in full. **Until an index prunes actual IO, `ScanOnly` is the preferred product plan.**
 
+**The regime that paragraph holds in — added by `kernel/RESULTS.md`'s seventh section, not withdrawn.**
+"DuckDB still scans" was true of the fixture the second section measured, which had a **single row
+group** and therefore nothing to prune. It is not true of a multi-row-group file: the seventh section
+measured a quarter-extent query reading **51.8 %** of a 13-row-group file with no index in the path,
+because DuckDB's own zone maps skip groups on the covering-bbox statistics. The conclusion is
+unchanged and its reason is stronger — an index over the same statistics is redundant there, and the
+row-group candidate in `src/rowgroup.rs` measured **exactly zero** bytes of additional IO exclusion in
+four of four viewports. The `docs/07` open item therefore needs a second clause: an index must replace
+IO **that the storage layer would not have skipped anyway**.
+
 **None of this says the index is wrong.** It is not:
 `an_indexed_query_returns_exactly_what_the_scan_returns` holds, and the measured payload totals were
 byte-identical at every point (25 281 rows / 44 018 088 B; 1 600 rows / 2 798 952 B). It says this

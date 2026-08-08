@@ -71,6 +71,7 @@ const N_TRACED_OTHER: usize = 3;
 const CEIL_GENERATE: Duration = Duration::from_secs(600);
 const CEIL_REWRITE: Duration = Duration::from_secs(900);
 const CEIL_TRIAL: Duration = Duration::from_secs(120);
+const CEIL_TRIAL_5GB: Duration = Duration::from_secs(900);
 const SILENCE_GENERATE: Duration = Duration::from_secs(120);
 const SETTLE_OPENING: u64 = 120;
 const SETTLE_CANARY: u64 = 60;
@@ -106,14 +107,14 @@ fn spec_s() -> FixtureSpec {
     }
 }
 
-fn grid_cols() -> f64 {
-    (FEATURES as f64).sqrt().ceil()
-}
-
 /// An edge on a cell **centre** (`scale_pass.rs::viewport_edge`'s recorded correction), so inclusion
 /// is pure arithmetic and cannot depend on per-feature vertex jitter.
-fn edge(divisor: usize) -> f64 {
-    ((grid_cols() as usize / divisor) as f64) * CELL_M + CELL_M / 2.0
+///
+/// **`cols` is the file's own grid**, not a constant: `fixture::parcel` derives the grid from the
+/// feature count, so the 145 MB files and the 5 GB file have different ones (317 and 1817) and a
+/// viewport computed with the wrong one selects a different extent.
+fn edge(cols: f64, divisor: usize) -> f64 {
+    ((cols as usize / divisor) as f64) * CELL_M + CELL_M / 2.0
 }
 
 // ---- the cell space (§3) -------------------------------------------------------------------------
@@ -126,6 +127,15 @@ enum FileId {
     C,
     /// DuckDB writer, Hilbert order — the layout candidate.
     H,
+    /// **The 5 GB spot-cell file — the scale pass's own fixture, reused and never regenerated.**
+    ///
+    /// Its cells are `ScanOnly` only, and that is a scope decision rather than an omission.
+    /// `NIGHT-CUT.md` scopes 5 GB spot cells to "ScanOnly vs **the winning** pruning candidate", and
+    /// the preregistration's unattended rule forbids improvising past a declared scope. What runs
+    /// here is the same-session `ScanOnly` re-baseline the brief itself requires first, plus the
+    /// read-volume figure at **403** row groups — which is the baseline the *clustered* 5 GB cell
+    /// will need, and that cell is a morning item.
+    G5,
 }
 
 impl FileId {
@@ -134,14 +144,34 @@ impl FileId {
             Self::S => "S-arrow-raster",
             Self::C => "C-duckdb-raster",
             Self::H => "H-duckdb-hilbert16",
+            Self::G5 => "G5-arrow-raster-5gb",
         }
     }
     fn path(self) -> PathBuf {
-        evidence_dir().join(match self {
-            Self::S => "parcels-145mb.parquet",
-            Self::C => "parcels-145mb-duckdb-raster.parquet",
-            Self::H => "parcels-145mb-duckdb-hilbert16.parquet",
-        })
+        match self {
+            Self::S => evidence_dir().join("parcels-145mb.parquet"),
+            Self::C => evidence_dir().join("parcels-145mb-duckdb-raster.parquet"),
+            Self::H => evidence_dir().join("parcels-145mb-duckdb-hilbert16.parquet"),
+            // The scale pass's fixture, in its own directory. This harness **never writes here**.
+            Self::G5 => PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap()
+                .join("target/slice-evidence/scale-pass/parcels-5gb.parquet"),
+        }
+    }
+    /// Features the file holds — the input to its viewport grid. `fixture::parcel` derives the grid
+    /// from the feature count, so a viewport computed with the wrong one selects the wrong extent.
+    fn features(self) -> usize {
+        match self {
+            Self::S | Self::C | Self::H => FEATURES,
+            // `kernel/SCALE-PASS-PREREGISTRATION.md` §1a. Restated rather than imported, because
+            // that harness's constant is private to it; the row-count check below is what catches a
+            // disagreement.
+            Self::G5 => 3_300_000,
+        }
+    }
+    fn grid_cols(self) -> f64 {
+        (self.features() as f64).sqrt().ceil()
     }
 }
 
@@ -174,29 +204,29 @@ impl ViewId {
             Self::Sixty4th => "1-64",
         }
     }
-    fn bbox(self) -> Option<Bbox> {
-        let top = N_LO + (grid_cols() - 1.0) * CELL_M + CELL_M / 2.0;
+    fn bbox(self, cols: f64) -> Option<Bbox> {
+        let top = N_LO + (cols - 1.0) * CELL_M + CELL_M / 2.0;
         match self {
             Self::Whole => None,
             Self::NearQuarter => Some(Bbox {
                 xmin: E_LO,
                 ymin: N_LO,
-                xmax: E_LO + edge(2),
-                ymax: N_LO + edge(2),
+                xmax: E_LO + edge(cols, 2),
+                ymax: N_LO + edge(cols, 2),
             }),
             // Same x band, y band at the **top** — the only viewport in which row-group elimination
             // can reach time-to-first-batch on a raster-ordered file (§3).
             Self::FarQuarter => Some(Bbox {
                 xmin: E_LO,
-                ymin: top - edge(2),
-                xmax: E_LO + edge(2),
+                ymin: top - edge(cols, 2),
+                xmax: E_LO + edge(cols, 2),
                 ymax: top,
             }),
             Self::Sixty4th => Some(Bbox {
                 xmin: E_LO,
                 ymin: N_LO,
-                xmax: E_LO + edge(8),
-                ymax: N_LO + edge(8),
+                xmax: E_LO + edge(cols, 8),
+                ymax: N_LO + edge(cols, 8),
             }),
         }
     }
@@ -251,6 +281,7 @@ impl Cell {
                 "S-arrow-raster" => FileId::S,
                 "C-duckdb-raster" => FileId::C,
                 "H-duckdb-hilbert16" => FileId::H,
+                "G5-arrow-raster-5gb" => FileId::G5,
                 _ => return None,
             },
             plan: match p[1] {
@@ -305,19 +336,34 @@ fn interleaved(len: usize, r: usize) -> Vec<usize> {
 // ---- the child: exactly one trial, one JSON line -------------------------------------------------
 
 const CELL_VAR: &str = "SPATIAL_NIGHT_CELL";
+const OUT_VAR: &str = "SPATIAL_NIGHT_OUT";
 
+/// One trial, in a process of its own.
+///
+/// **The result goes to a file, not to stdout, and that is a correction rather than a preference.**
+///
+/// The first attempt had the child `println!` a sentinel line and the driver `strip_prefix` it.
+/// libtest with `--nocapture` writes a test's output *on the same line as its own progress banner* —
+/// `test night_trial_child ... @@TRIAL@@{…}` — so the sentinel was never at position 0 and the
+/// prefix never matched. Every one of 384 trials was recorded `unmeasured — child printed no trial
+/// line`, and the smoke test missed it because a human eye reading the console sees the sentinel and
+/// does not notice that it is not first on the line.
+///
+/// A file has no formatting layer between the child and the driver, so there is nothing left to be
+/// wrong about. The failure is recorded in `kernel/RESULTS.md` rather than quietly fixed.
 #[test]
 fn night_trial_child() {
-    let Ok(spec) = std::env::var(CELL_VAR) else {
+    let (Ok(spec), Ok(out)) = (std::env::var(CELL_VAR), std::env::var(OUT_VAR)) else {
         // The ordinary suite runs this and it does nothing. The driver is `#[ignore]`d.
         return;
     };
     let cell = Cell::parse(&spec).expect("the driver passed an unparseable cell");
     let json = run_one_trial(&cell);
-    // One line, on stdout, with a sentinel the driver greps for — so cargo's own noise cannot be
-    // mistaken for a measurement.
-    println!("@@TRIAL@@{json}");
-    std::io::stdout().flush().ok();
+    let mut f = std::fs::File::create(&out).expect("create the trial's result file");
+    f.write_all(json.as_bytes()).expect("write the trial result");
+    f.sync_all().expect("flush the trial result");
+    // Still echoed, because a console is what an operator reads when something goes wrong.
+    println!("trial {} -> {}", cell.label(), json);
 }
 
 fn run_one_trial(cell: &Cell) -> String {
@@ -350,10 +396,19 @@ fn run_one_trial(cell: &Cell) -> String {
         }
     }
 
-    let q = match cell.view.bbox() {
+    let q = match cell.view.bbox(cell.file.grid_cols()) {
         None => ViewportQuery::all(),
         Some(b) => ViewportQuery::viewport(b, ds.crs().identifier()),
     };
+
+    // **A second read-volume mark, taken here rather than only at the top of the trial.**
+    //
+    // The first counter is whole-trial: it includes `Dataset::open`'s identity scan and, on a
+    // `RowGroups` cell, the index build's SHA-256 content hash — which reads the entire file. In the
+    // 145 MB pass that made a B2 cell's raw figure look like three times ScanOnly's, when the excess
+    // was **exactly one file size** and the query's own read was identical to ScanOnly's to the
+    // byte. Recording both makes that attribution a fact rather than a subtraction.
+    let io_before_query = io_read_bytes();
 
     // **`flatten`, not a nested `Option`.** `trace::start` returns `None` when a trace is already
     // running; one process per trial makes that impossible here, but a nested `Option` would have
@@ -466,7 +521,8 @@ fn run_one_trial(cell: &Cell) -> String {
         "{{\"cell\":\"{}\",\"open_ms\":{:.3},\"index_build_ms\":{:.3},\"index_admissible\":\"{}\",\
          \"row_groups\":{},\"filter_plan\":{},\"cut_policy\":\"{}\",\"first_batch_ms\":{},\
          \"total_ms\":{:.3},\"rows\":{},\"payload_bytes\":{},\"wire_fold\":\"{}\",\
-         \"read_bytes\":{},\"cuts\":{{{}}},\"retained_payload\":{},\"trace\":{},\"error\":{}}}",
+         \"read_bytes\":{},\"read_bytes_query\":{},\"cuts\":{{{}}},\"retained_payload\":{},\
+         \"trace\":{},\"error\":{}}}",
         cell.label(),
         open_ms,
         index_build_ms,
@@ -480,6 +536,7 @@ fn run_one_trial(cell: &Cell) -> String {
         payload,
         wire_fold,
         opt_u64(io_after.zip(io_before).map(|(a, b)| a.saturating_sub(b))),
+        opt_u64(io_after.zip(io_before_query).map(|(a, b)| a.saturating_sub(b))),
         cut_json,
         retain,
         trace_json,
@@ -629,8 +686,8 @@ fn the_factorial_first_batch_pass() {
     let extent = DeclaredExtent {
         xmin: E_LO,
         ymin: N_LO,
-        xmax: E_LO + grid_cols() * CELL_M,
-        ymax: N_LO + grid_cols() * CELL_M,
+        xmax: E_LO + FileId::S.grid_cols() * CELL_M,
+        ymax: N_LO + FileId::S.grid_cols() * CELL_M,
     };
     for (id, order) in [(FileId::C, ClusterOrder::SourceIdentity), (FileId::H, ClusterOrder::Hilbert16)]
     {
@@ -709,9 +766,38 @@ fn the_factorial_first_batch_pass() {
     // ---- the predicted row counts, asserted (§3) --------------------------------------------
     let mut predicted = Vec::new();
     for v in [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th] {
-        let n = reference_rows(&s_path, v);
+        let n = reference_rows(FileId::S, v);
         predicted.push(format!("{{\"viewport\":\"{}\",\"rows\":{}}}", v.as_str(), n));
         say!("viewport {} selects {} rows", v.as_str(), n);
+    }
+
+    // ---- the mechanism self-check, before the settle and before any measurement ---------------
+    //
+    // **Attempt 1 recorded 384 `unmeasured` rows and zero samples because the driver could not parse
+    // what the child printed.** It ran for minutes, produced a complete-looking artifact, and every
+    // row in it said the same thing. The defect was in the harness, not in the system under test,
+    // and nothing in the run could tell the difference.
+    //
+    // So the mechanism is exercised **once, end to end, before anything is settled or timed**, and a
+    // failure here stops the pass immediately instead of consuming it. A run that cannot measure
+    // should cost seconds, not a night.
+    let exe = std::env::current_exe().expect("current exe");
+    let probe_cell = Cell {
+        file: FileId::S,
+        plan: PlanId::ScanOnly,
+        batch: BatchId::SizeOnly,
+        view: ViewId::Sixty4th,
+        traced: false,
+    };
+    match spawn_trial(&exe, &probe_cell, &out_dir.join("trial-slot.json")) {
+        Ok(line) if line.contains("\"first_batch_ms\"") && line.contains("\"rows\"") => {
+            say!("mechanism check OK — a child trial round-trips");
+        }
+        Ok(line) => panic!(
+            "the trial mechanism produced something this driver cannot use, and every cell would \
+             have recorded `unmeasured` without saying why. Got: {line}"
+        ),
+        Err(e) => panic!("the trial mechanism does not work: {e}"),
     }
 
     // ---- §7: the opening settle, then the first canary ---------------------------------------
@@ -722,7 +808,6 @@ fn the_factorial_first_batch_pass() {
     // ---- the trial loop -----------------------------------------------------------------------
     let all = cells();
     say!("{} cells; n = 7 untraced, 7 traced at the gate viewports, 3 elsewhere", all.len());
-    let exe = std::env::current_exe().expect("current exe");
     let mut trials: Vec<String> = Vec::new();
     let max_r = all.iter().map(Cell::n).max().unwrap_or(N);
 
@@ -735,7 +820,7 @@ fn the_factorial_first_batch_pass() {
             if r >= cell.n() {
                 continue;
             }
-            match spawn_trial(&exe, &cell) {
+            match spawn_trial(&exe, &cell, &out_dir.join("trial-slot.json")) {
                 Ok(line) => {
                     trials.push(format!("{{\"rep\":{r},\"trial\":{line}}}"));
                 }
@@ -783,31 +868,306 @@ fn the_factorial_first_batch_pass() {
     println!("→ {}", out_dir.join("first-batch.json").display());
 }
 
-/// One trial, in its own process. Returns the child's JSON line.
-fn spawn_trial(exe: &Path, cell: &Cell) -> std::result::Result<String, String> {
+/// **Cancellation, re-asserted with row-group pruning in the path.**
+///
+/// `NIGHT-CUT.md` requires it; `kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md` does not declare
+/// it as a scored cell, and under the unattended rule this harness may not add one. So it is what
+/// the brief actually asks for — a **re-assertion of a property**, reported with its interval label
+/// and explicitly **not** a preregistered timing cell. It may not be differenced against the fifth
+/// or sixth sections, and nothing in the gate verdicts rests on it.
+///
+/// **The interval is `cancel_requested → cancel_observed`**, which is what `docs/08`'s "cancellation
+/// acknowledged < 100 ms" is scored on per `kernel/CANCELLATION-AND-TRACING.md` §2 — cited
+/// descriptively, as the proposed ADR-018 vocabulary requires while it remains Proposed.
+/// `cancel_requested → the consumer's terminal return` is reported **beside** it as a
+/// `cancel_acknowledged`-class figure with **no budget attached**, because the two are different
+/// intervals and the fifth section's numbers were the second kind.
+///
+/// Run in-process rather than one-process-per-trial, deliberately: the one-process rule exists so a
+/// warm cache cannot bias a *timing comparison between plans*, and this cell compares nothing. It
+/// wants the index warm, which is the whole point of having pruning in the path.
+#[test]
+#[ignore = "measurement pass; run explicitly with --release"]
+fn cancellation_holds_with_pruning_in_the_path() {
+    refuse_debug("first_batch_factorial::cancel");
+    let out_dir = evidence_dir();
+    let path = FileId::S.path();
+    assert!(path.exists(), "run the factorial pass first; this cell reuses its fixture");
+
+    let mut observed = Vec::new();
+    let mut terminal = Vec::new();
+    let mut plans = Vec::new();
+    for trial in 0..N {
+        let ds = Dataset::open(&path).expect("open");
+        ds.build_row_group_index(&CancelToken::new()).expect("build row-group index");
+        let q = ViewportQuery::viewport(
+            ViewId::NearQuarter.bbox(FileId::S.grid_cols()).unwrap(),
+            ds.crs().identifier(),
+        );
+        let guard = spatial_engine::trace::start(spatial_engine::trace::TraceKey {
+            label: format!("cancel-with-pruning-{trial}"),
+            ..Default::default()
+        })
+        .expect("no other trace is running");
+
+        let cancel = CancelToken::new();
+        let mut stream = ds
+            .stream_rowgroup_pruned_experimental(&q, cancel.clone())
+            .expect("pruned stream");
+        plans.push(stream.filter_plan());
+
+        let mut buf = Vec::new();
+        // Two batches, so the producer is inside its row loop rather than still starting up — the
+        // state a cancellation actually arrives in.
+        for _ in 0..2 {
+            match stream.next_into(&mut buf) {
+                Some(Ok(_)) => buf.clear(),
+                _ => break,
+            }
+        }
+        let requested = Instant::now();
+        cancel.cancel();
+        while let Some(r) = stream.next_into(&mut buf) {
+            buf.clear();
+            if r.is_err() {
+                break;
+            }
+        }
+        let terminal_ms = requested.elapsed().as_secs_f64() * 1000.0;
+
+        let t = guard.trace();
+        let seg = t.segment_ms(
+            spatial_engine::trace::CANCELLATION_REQUESTED,
+            spatial_engine::trace::PRODUCER_CANCELLED,
+        );
+        drop(guard);
+        observed.push(seg);
+        terminal.push(terminal_ms);
+        println!(
+            "cancel trial {trial}: plan {:?} · requested→observed {} · requested→terminal {terminal_ms:.3} ms",
+            plans[trial],
+            seg.map(|v| format!("{v:.3} ms")).unwrap_or_else(|| "unmeasured (span absent)".into()),
+        );
+    }
+
+    let got: Vec<f64> = observed.iter().filter_map(|v| *v).collect();
+    let json = format!(
+        "{{\"interval\":\"cancel_requested -> cancel_observed (docs/08's 100 ms budget)\",\
+         \"note\":\"a re-assertion required by NIGHT-CUT.md, NOT a preregistered scored cell; never \
+         differenced against the fifth or sixth sections\",\
+         \"plans\":[{}],\"requested_to_observed_ms\":[{}],\"samples\":{},\"of\":{},\
+         \"requested_to_terminal_ms_no_budget\":{}}}",
+        plans.iter().map(|p| format!("\"{}\"", p.as_str())).collect::<Vec<_>>().join(","),
+        observed
+            .iter()
+            .map(|v| v.map(|x| format!("{x:.3}")).unwrap_or_else(|| "null".into()))
+            .collect::<Vec<_>>()
+            .join(","),
+        got.len(),
+        N,
+        json_f64s(&terminal),
+    );
+    std::fs::write(out_dir.join("first-batch-cancel.json"), &json).expect("write");
+    println!("{json}");
+
+    // The property, asserted. Reported above whatever the verdict, so a miss is a recorded number
+    // rather than a lost run.
+    assert!(!got.is_empty(), "no trial produced a `cancel_requested -> cancel_observed` span");
+    let worst = sorted(&got).last().copied().unwrap();
+    assert!(
+        worst < 100.0,
+        "cancellation with pruning in the path missed docs/08's 100 ms budget: worst \
+         requested->observed {worst:.3} ms over {} samples",
+        got.len()
+    );
+    assert!(
+        plans.iter().all(|p| matches!(
+            p,
+            FilterPlan::RowGroupsPruned { .. } | FilterPlan::RowGroupsKeptAll { .. }
+        )),
+        "the pruning plan was not in the path, so this asserts nothing about pruning: {plans:?}"
+    );
+}
+
+/// The **5 GB spot cells** — the `ScanOnly` arm, and only that arm.
+///
+/// **Scope, stated because the omission is deliberate.** `NIGHT-CUT.md` scopes 5 GB spot cells to
+/// "ScanOnly vs **the winning** pruning candidate", and it requires a "same-session ScanOnly
+/// re-baseline first". This is that re-baseline. The clustered 5 GB cell — which would test the
+/// preregistration's **prediction 4**, that layout's sign flips with row-group count — is *not* run
+/// here: it needs a Hilbert rewrite of a 5 GB file that nothing declared, and the unattended rule
+/// forbids improvising past a declared scope. It is recorded as the first thing to schedule next.
+///
+/// **This phase writes nothing.** The fixture is the scale pass's own, reused, re-hashed, and
+/// refused on mismatch — the discipline `CANCEL-RESCORE-PREREGISTRATION.md` §2 established after a
+/// pass that could silently create its own input.
+#[test]
+#[ignore = "measurement pass; run explicitly with --release, after the 145 MB pass"]
+fn the_5gb_spot_cells() {
+    refuse_debug("first_batch_factorial::5gb");
+    require_disk("first-batch-5gb");
+
+    let out_dir = evidence_dir();
+    let mut log = String::new();
+    macro_rules! say {
+        ($($a:tt)*) => {{ let s = format!($($a)*); println!("{s}"); log.push_str(&s); log.push('\n'); }};
+    }
+    say!("hardware: {}", hardware_profile());
+
+    let path = FileId::G5.path();
+    if !path.exists() {
+        // Record and proceed — this phase refuses to generate a 5 GB fixture, so an absent one is
+        // an `unmeasured` phase rather than a 30-minute improvisation.
+        say!("UNMEASURED — the 5 GB fixture is absent at {}", path.display());
+        std::fs::write(out_dir.join("first-batch-5gb.log"), log).ok();
+        return;
+    }
+    let (bytes, hash) = file_facts(&path);
+    say!("fixture G5 — {bytes} bytes, sha256 {hash}");
+
+    let (row_groups, admissible) = match Dataset::open(&path) {
+        Ok(ds) => match ds.build_row_group_index(&CancelToken::new()) {
+            Ok(r) => (
+                r.row_groups,
+                match r.admissible {
+                    Ok(()) => "admissible".to_string(),
+                    Err(reason) => reason.as_str().to_string(),
+                },
+            ),
+            Err(e) => (0, format!("build failed: {e}")),
+        },
+        Err(e) => (0, format!("open failed: {e}")),
+    };
+    say!("G5 — {row_groups} row groups, B2 {admissible}");
+
+    let exe = std::env::current_exe().expect("current exe");
+    let slot = out_dir.join("trial-slot-5gb.json");
+    let mut predicted = Vec::new();
+    for v in [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter] {
+        let n = reference_rows(FileId::G5, v);
+        predicted.push(format!("{{\"viewport\":\"{}\",\"rows\":{}}}", v.as_str(), n));
+        say!("viewport {} selects {} rows", v.as_str(), n);
+    }
+
+    say!("settling {SETTLE_OPENING} s before the first canary");
+    std::thread::sleep(Duration::from_secs(SETTLE_OPENING));
+    let mut canaries = vec![Canary::take("5gb-setup-end")];
+
+    let cells: Vec<Cell> = [BatchId::SizeOnly, BatchId::Budgeted]
+        .iter()
+        .flat_map(|&batch| {
+            [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter].iter().map(move |&view| Cell {
+                file: FileId::G5,
+                plan: PlanId::ScanOnly,
+                batch,
+                view,
+                traced: false,
+            })
+        })
+        .collect();
+    say!("{} cells at 5 GB, n = {N}", cells.len());
+
+    let mut trials: Vec<String> = Vec::new();
+    for r in 0..N {
+        std::thread::sleep(Duration::from_secs(SETTLE_CANARY));
+        canaries.push(Canary::take(&format!("5gb-rep-{r}-start")));
+        for i in interleaved(cells.len(), r) {
+            let cell = cells[i];
+            match spawn_trial(&exe, &cell, &slot) {
+                Ok(line) => trials.push(format!("{{\"rep\":{r},\"trial\":{line}}}")),
+                Err(e) => {
+                    say!("UNMEASURED — trial {} rep {r}: {e}", cell.label());
+                    trials.push(format!(
+                        "{{\"rep\":{r},\"trial\":{{\"cell\":\"{}\",\"error\":\"{}\"}}}}",
+                        cell.label(),
+                        json_escape(&e)
+                    ));
+                }
+            }
+        }
+    }
+    std::thread::sleep(Duration::from_secs(SETTLE_CANARY));
+    canaries.push(Canary::take("5gb-pass-end"));
+
+    // **Re-hashed after the last trial, not only before the first.** A fixture that changed under a
+    // pass is the failure `SourceChangedUnderPublish` exists for one level up.
+    let (bytes_after, hash_after) = file_facts(&path);
+    if hash_after != hash || bytes_after != bytes {
+        say!("INVALIDATED — the 5 GB fixture changed during the pass: {hash} -> {hash_after}");
+    }
+
+    let spreads = phase_spreads(&canaries);
+    for (label, spread, ok) in &spreads {
+        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+    }
+
+    let artifact = format!(
+        "{{\"preregistration\":\"kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md\",\
+         \"scope\":\"ScanOnly arm only; the clustered 5 GB cell is undeclared and is a morning item\",\
+         \"hardware\":\"{}\",\"media\":\"{}\",\
+         \"fixtures\":[{{\"id\":\"{}\",\"path\":\"{}\",\"bytes\":{},\"sha256\":\"{}\",\
+         \"sha256_after\":\"{}\",\"row_groups\":{},\"b2_admissible\":\"{}\"}}],\
+         \"predicted_rows\":[{}],\"canaries\":[{}],\"canary_spreads\":[{}],\"trials\":[{}]}}",
+        json_escape(&hardware_profile()),
+        json_escape(&media_type()),
+        FileId::G5.as_str(),
+        json_escape(&path.display().to_string()),
+        bytes,
+        hash,
+        hash_after,
+        row_groups,
+        json_escape(&admissible),
+        predicted.join(","),
+        canaries.iter().map(|c| c.json()).collect::<Vec<_>>().join(","),
+        spreads
+            .iter()
+            .map(|(l, s, ok)| format!(
+                "{{\"phase\":\"{}\",\"spread\":{s:.4},\"within\":{ok}}}",
+                json_escape(l)
+            ))
+            .collect::<Vec<_>>()
+            .join(","),
+        trials.join(","),
+    );
+    std::fs::write(out_dir.join("first-batch-5gb.json"), artifact).expect("write artifact");
+    std::fs::write(out_dir.join("first-batch-5gb.log"), log).expect("write log");
+    println!("→ {}", out_dir.join("first-batch-5gb.json").display());
+}
+
+/// One trial, in its own process. Returns the child's JSON.
+///
+/// The result travels through a file rather than through stdout — see `night_trial_child` for the
+/// defect that made that necessary. The file is removed first, so a stale result from a previous
+/// repetition can never be read as this one's.
+fn spawn_trial(exe: &Path, cell: &Cell, slot: &Path) -> std::result::Result<String, String> {
+    let _ = std::fs::remove_file(slot);
+    // §7 declares two trial ceilings: 120 s at the 145 MB class and 900 s at 5 GB. One constant for
+    // both would either abort a legitimate 5 GB trial or fail to bound a hung 145 MB one.
+    let ceiling = if cell.file == FileId::G5 { CEIL_TRIAL_5GB } else { CEIL_TRIAL };
     let started = Instant::now();
     let out = Command::new(exe)
         .args(["night_trial_child", "--exact", "--nocapture", "--test-threads=1"])
         .env(CELL_VAR, cell.label())
+        .env(OUT_VAR, slot)
         .output()
         .map_err(|e| format!("spawn: {e}"))?;
-    if started.elapsed() > CEIL_TRIAL {
-        return Err(format!("exceeded the declared {} s trial ceiling", CEIL_TRIAL.as_secs()));
+    if started.elapsed() > ceiling {
+        return Err(format!("exceeded the declared {} s trial ceiling", ceiling.as_secs()));
     }
     if !out.status.success() {
-        return Err(format!("child exited {:?}", out.status.code()));
+        let tail: String =
+            String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" / ");
+        return Err(format!("child exited {:?}: {tail}", out.status.code()));
     }
-    String::from_utf8_lossy(&out.stdout)
-        .lines()
-        .find_map(|l| l.strip_prefix("@@TRIAL@@").map(str::to_string))
-        .ok_or_else(|| "child printed no trial line".to_string())
+    std::fs::read_to_string(slot).map_err(|e| format!("child wrote no result file: {e}"))
 }
 
 /// Rows a viewport selects, taken from the **unindexed scan** rather than from arithmetic — so a
 /// generator change is caught by a disagreement rather than propagating silently.
-fn reference_rows(path: &Path, v: ViewId) -> u64 {
-    let ds = Dataset::open(path).expect("open for reference count");
-    let q = match v.bbox() {
+fn reference_rows(file: FileId, v: ViewId) -> u64 {
+    let path = file.path();
+    let ds = Dataset::open(&path).expect("open for reference count");
+    let q = match v.bbox(file.grid_cols()) {
         None => ViewportQuery::all(),
         Some(b) => ViewportQuery::viewport(b, ds.crs().identifier()),
     };

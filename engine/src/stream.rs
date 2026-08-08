@@ -1166,6 +1166,16 @@ impl Dataset {
             // still runs in full. **Until an index prunes actual IO, `ScanOnly` is the preferred
             // product plan.**
             //
+            // **The regime that sentence holds in, added by the seventh section rather than
+            // withdrawn.** "DuckDB still scans" was true of the fixture the second section measured,
+            // which had a **single row group** and so had nothing to prune. On a multi-row-group
+            // file it does not hold: the seventh section measured a quarter-extent query reading
+            // **51.8 %** of a 13-row-group file with no index in the path, because DuckDB's own zone
+            // maps skip six groups on the covering-bbox statistics. The conclusion is unchanged and
+            // its reason is stronger — an index over the same statistics is redundant there, and the
+            // row-group candidate in `crate::rowgroup` measured **exactly zero** bytes of additional
+            // IO exclusion in four of four viewports.
+            //
             // Nothing here says the index is wrong. It is not:
             // `an_indexed_query_returns_exactly_what_the_scan_returns` holds, and the measured
             // payload totals were byte-identical at every point. It says this index does not pay
@@ -1514,6 +1524,17 @@ fn produce(
 
         for (row, id) in ids.iter().enumerate().take(chunk.num_rows()) {
             if cancel.is_cancelled() {
+                // **Stamped here too, and this is not a breach of `trace.rs`'s no-mark-in-the-row-
+                // loop rule.** That rule is about cost, and this `mark` is on the branch that
+                // *returns*: it executes at most once per stream and never in the steady state.
+                //
+                // Without it the span is simply missing for the common case. The producer usually
+                // observes a cancellation here rather than at the chunk boundary — a chunk is
+                // thousands of rows — so `cancel_requested → cancel_observed`, which is the interval
+                // `docs/08`'s 100 ms budget is scored on, had no endpoint on the path that actually
+                // fires. An always-absent name reads as "did not happen", which is the defect
+                // `kernel/CANCELLATION-AND-TRACING.md` records about the previous vocabulary.
+                crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
                 return Err(EngineError::Cancelled);
             }
             let wkb = binary_value(&geoms, row)?;
