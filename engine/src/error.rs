@@ -131,6 +131,17 @@ pub enum EngineError {
     /// question for **ADR-014**. This ceiling is provisional and reversible, exactly as that
     /// crate's own N+1 refusal is, and nothing here may be cited as evidence about ADR-014.
     ConnectionsExhausted { class: &'static str, capacity: usize },
+
+    /// A stream asked for a declared row order **and** a time-budgeted first batch.
+    ///
+    /// **Refused by construction, and the refusal is the whole protection.** ADR-017 §12's
+    /// determinism guarantee — two publishes of the same inputs producing byte-identical partitions
+    /// — rests on partition boundaries being a pure function of the row sequence and the declared
+    /// ceilings. A clock in the cut decision makes them a function of how fast the machine was, so
+    /// the same inputs would publish differently on a loaded machine. Making the combination
+    /// unrepresentable is what keeps that a property of the code rather than a convention nobody
+    /// can see at a call site (the reason `BatchCutPolicy` has no `Default`).
+    TimingDependentOrdering { ordering: &'static str, cut: &'static str },
 }
 
 impl fmt::Display for EngineError {
@@ -214,6 +225,13 @@ impl fmt::Display for EngineError {
                 "refused: this dataset's {class} connection capacity ({capacity}) is fully leased. \
                  The engine refuses rather than queueing; queueing would decide an admission \
                  policy that is reserved elsewhere"
+            ),
+            Self::TimingDependentOrdering { ordering, cut } => write!(
+                f,
+                "refused: ordering `{ordering}` cannot be combined with batch-cut policy `{cut}`. \
+                 A declared row order exists so partition boundaries are a pure function of the \
+                 row sequence; a time budget in the cut decision would make them a function of \
+                 machine load, and ADR-017 §12's byte-identical-republish guarantee rests on them"
             ),
         }
     }

@@ -85,6 +85,44 @@ pub const MAX_QUEUED_BATCHES: usize = 2;
 /// budget, nobody is waiting for a first pixel during a publish, and a fixed rule makes the
 /// determinism argument short enough to audit.
 pub const PUBLISH_PARTITION_TARGET_BYTES: usize = 1024 * 1024;
+
+/// **The first batch's time budget — a *cut trigger*, never a delivery deadline.**
+///
+/// The first batch is cut at the first opportunity after this has elapsed **since the first source
+/// row**, or at the size target, whichever comes first.
+///
+/// **What it does not bound, stated first because an earlier draft of this cut's brief said the
+/// opposite.** The window before the first source row contains DuckDB's own fetch — an external
+/// section this module neither times nor controls — so "the first batch is emitted at 8 ms" would be
+/// a delivery deadline the code cannot honour. It is withdrawn for exactly the reason the
+/// `262,144 B ÷ 10 MB/s` claim on `PUBLISH_WRITE_CHUNK_BYTES` and the acknowledgement reading of
+/// [`PUBLISH_STREAM_POLL_INTERVAL`] were withdrawn: a bound that excludes an unbounded external
+/// section is not a bound. **This value may never be quoted as "first batch within 8 ms of query
+/// start."**
+///
+/// **Why 8 ms, derived rather than tuned.** It is about half a 60 Hz vsync interval, so a batch cut
+/// at the budget can still make the next compositor tick. That is a presentation-model derivation;
+/// no measurement is claimed for the value itself, and `docs/08`'s no-numbers-no-claim rule applies
+/// to any assertion that it improved anything.
+pub const FIRST_BATCH_TIME_BUDGET: Duration = Duration::from_millis(8);
+
+/// Rows between clock reads inside the first batch. **Never per row.**
+///
+/// `trace.rs`'s hard rule — no `mark` inside the producer's row loop — is about cost, not about
+/// tracing, so it applies with equal force to an `Instant::elapsed`. The row loop runs once per
+/// feature (3.3 M times on the hero-slice fixture) and already carries a `SeqCst` load per row.
+///
+/// **The size of that cost is arithmetic, not a measurement, and is labelled as such** (`docs/08`:
+/// no numbers, no claim). A Windows `QueryPerformanceCounter` is conventionally quoted in the tens
+/// of nanoseconds; at 3.3 M rows, *any* per-row cost in that range is tens of milliseconds, against
+/// a budget of 8. Nothing here measures QPC on this machine, and no figure derived from this comment
+/// may be quoted as one — the point is only that the stride exists because the per-row alternative
+/// is the wrong order of magnitude, which holds across the whole plausible range.
+///
+/// The clock is read at DuckDB chunk boundaries and at this stride **while the first batch is
+/// accumulating**, and not at all thereafter.
+pub const BUDGET_CHECK_ROW_STRIDE: usize = 256;
+
 /// Rows per published partition, whichever ceiling binds first.
 pub const PUBLISH_PARTITION_ROWS: usize = 8_192;
 /// Partitions one bundle may contain. The zero-padded width of `data/part-NNNNN.arrows` is derived
@@ -189,6 +227,14 @@ pub struct BatchInfo {
     /// consumer or a measurement can attribute a batch's size to the policy without parsing one.
     pub batch_index: u64,
     pub target_bytes: usize,
+    /// **Which trigger ended this batch — reported, never inferred from its size.**
+    ///
+    /// The same doctrine as [`FilterPlan`] and [`ConnectionFacts`]: "the size target was reached"
+    /// and "the time budget fired" produce a batch that looks similar from outside and are different
+    /// facts, and a measurement that cannot tell them apart cannot say whether the budget ever ran.
+    /// Without this the only way to answer "did lever A fire?" is to compare `payload_bytes` against
+    /// `target_bytes` and guess, which is exactly the inference this field exists to remove.
+    pub cut_by: BatchCut,
     /// `[xmin, ymin, xmax, ymax]` over this batch's own vertices, in the dataset's CRS.
     ///
     /// **`None` means "not computed", never "empty".** It is computed only on the publish path,
@@ -200,6 +246,35 @@ pub struct BatchInfo {
     /// Authoritative f64 throughout — no origin, no narrowing. A render origin is renderer-local
     /// state (ADR-010 rule 1) and nothing derived from one appears here.
     pub xy_bounds: Option<[f64; 4]>,
+}
+
+/// What ended one batch.
+///
+/// Four triggers, and they are not interchangeable: a reader of an artifact has to be able to say
+/// which one produced a given batch without reasoning backwards from its size.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BatchCut {
+    /// The size ladder's target for this batch index was reached — including the pre-append cut
+    /// that keeps one oversized feature from carrying an almost-full batch past the ceiling.
+    SizeTarget,
+    /// The policy's row ceiling was reached first.
+    RowCeiling,
+    /// [`FIRST_BATCH_TIME_BUDGET`] had elapsed since the first source row. **Only ever on batch 0**,
+    /// and only under [`BatchCutPolicy::TimeBudgetedFirstBatch`].
+    TimeBudget,
+    /// The source ran out. The final batch of every stream carries this, whatever its size.
+    StreamEnd,
+}
+
+impl BatchCut {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::SizeTarget => "size-target",
+            Self::RowCeiling => "row-ceiling",
+            Self::TimeBudget => "time-budget",
+            Self::StreamEnd => "stream-end",
+        }
+    }
 }
 
 /// The batch-size policy in force for a stream, and the whole of it.
@@ -219,6 +294,38 @@ pub struct BatchSizePolicy {
     /// policy declares a lower one, and a ceiling that lives in two places is a ceiling that can
     /// disagree with itself.
     pub max_rows: usize,
+    /// What may cut a batch: size alone, or size **or** the first batch's time budget.
+    pub cut: BatchCutPolicy,
+}
+
+/// What is allowed to end a batch.
+///
+/// **A named enum and not a `bool`**, on the `IndexUse` / `AttributeMode` precedent: a reader of a
+/// call site sees which policy is in force without knowing which way round a flag goes, and a third
+/// policy later is a compile error at every construction site rather than a silent reinterpretation.
+///
+/// **Deliberately no `impl Default`.** `BatchSizePolicy::default()` names its variant explicitly, so
+/// there is no way to acquire a cut policy by omission — which is what makes the publish path's
+/// `SizeOnly` a decision recorded at the site rather than an inherited accident.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BatchCutPolicy {
+    /// The size ladder alone. Every boundary is a pure function of the row sequence and the
+    /// declared ceilings — which is what ADR-017 §12's determinism guarantee rests on.
+    SizeOnly,
+    /// Batch 0 is additionally cut once [`FIRST_BATCH_TIME_BUDGET`] has elapsed since the first
+    /// source row. Batches 1..n are unaffected and stay on the size ladder.
+    TimeBudgetedFirstBatch,
+}
+
+impl BatchCutPolicy {
+    /// The name a typed refusal and an artifact both use, so a measurement and an error cannot
+    /// disagree about which policy ran.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::SizeOnly => "size-only",
+            Self::TimeBudgetedFirstBatch => "time-budgeted-first-batch",
+        }
+    }
 }
 
 impl Default for BatchSizePolicy {
@@ -229,6 +336,9 @@ impl Default for BatchSizePolicy {
             target_bytes: TARGET_BATCH_BYTES,
             min_bytes: MIN_BATCH_BYTES,
             max_rows: MAX_ROWS_PER_BATCH,
+            // Named, not omitted. The budgeted policy is undecided — its preregistered gate has not
+            // been answered — and shipping it as the default would prejudge that gate.
+            cut: BatchCutPolicy::SizeOnly,
         }
     }
 }
@@ -245,7 +355,22 @@ impl BatchSizePolicy {
             target_bytes: PUBLISH_PARTITION_TARGET_BYTES,
             min_bytes: MIN_BATCH_BYTES,
             max_rows: PUBLISH_PARTITION_ROWS,
+            // **ADR-017 §12.** A clock in the cut decision would make partition boundaries — and
+            // therefore every partition hash and the manifest — a function of machine load. Stated
+            // here *and* enforced in `stream_inner`, which refuses the combination outright: a
+            // convention at one call site is not a guarantee, and the guarantee is what §12 needs.
+            cut: BatchCutPolicy::SizeOnly,
         }
+    }
+
+    /// The viewport policy with the first batch's **time budget** armed.
+    ///
+    /// Measurement-only; reached through `Dataset::stream_budgeted_experimental` and no product
+    /// path. Identical to [`Default`] in every size term — the budget is an *additional* cut
+    /// trigger, never a replacement for the ladder — so a cell that differs between the two differs
+    /// by the budget and by nothing else.
+    pub fn time_budgeted() -> Self {
+        Self { cut: BatchCutPolicy::TimeBudgetedFirstBatch, ..Self::default() }
     }
 }
 
@@ -279,6 +404,62 @@ pub enum FilterPlan {
     /// Distinct from `ScanOnly` because "there was no index" and "the index could not help" are
     /// different facts, and a reader deserves to know which one a timing describes.
     IndexTooFragmented { candidates: usize },
+
+    // ---- lever B2: the row-group index (`crate::rowgroup`) --------------------------------------
+    //
+    // Four variants where a bool would do, because they are four different facts and the whole
+    // point of this enum is that a timing can be *attributed* rather than inferred. In particular
+    // `RowGroupsKeptAll` is the cell most likely to look like a regression — the plan ran, the
+    // statement grew, nothing was excluded — and it has to be nameable for that to be reportable.
+    /// Row-group envelopes excluded at least one group's IO.
+    RowGroupsPruned { total: usize, kept: usize, ranges: usize },
+    /// The index was admissible and every group survived: the predicate is in the statement and
+    /// **no IO was excluded**. Correct, and worth nothing.
+    RowGroupsKeptAll { total: usize },
+    /// The file's own statistics cannot support an id-range injection. The named refusal travels
+    /// with the plan, because "no index" and "this file's layout refuses one" are different facts.
+    RowGroupsNotPrunable { total: usize, reason: crate::rowgroup::RowGroupRefusal },
+    /// Surviving groups produced more ranges than one statement will carry.
+    RowGroupsTooFragmented { total: usize, kept: usize },
+    /// **No** row group's envelope intersects the viewport.
+    ///
+    /// No range predicate is emitted, and the omission is the point: an empty predicate — `WHERE
+    /// 1=0`, or a range list with nothing in it — would make the index *decide* the result rather
+    /// than narrow it, which ADR-006 says a pure transformation's cached output may not do. That
+    /// exact encoding is what made every viewport query return zero rows in `index.rs`'s first
+    /// design. The scan reaches the same empty answer from the file's own statistics.
+    RowGroupsExcludeAll { total: usize },
+}
+
+impl FilterPlan {
+    /// A short stable name for an artifact. Kept beside the variants so a harness and an error
+    /// message cannot disagree about what a cell ran.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::WholeFile => "whole-file",
+            Self::IndexNarrowed { .. } => "index-narrowed",
+            Self::ScanOnly => "scan-only",
+            Self::IndexTooFragmented { .. } => "index-too-fragmented",
+            Self::RowGroupsPruned { .. } => "row-groups-pruned",
+            Self::RowGroupsKeptAll { .. } => "row-groups-kept-all",
+            Self::RowGroupsNotPrunable { .. } => "row-groups-not-prunable",
+            Self::RowGroupsTooFragmented { .. } => "row-groups-too-fragmented",
+            Self::RowGroupsExcludeAll { .. } => "row-groups-exclude-all",
+        }
+    }
+
+    /// Whether this plan **injected a predicate intended to exclude IO**. Never evidence that IO was
+    /// actually excluded — that is a read-volume measurement and this is a statement about what was
+    /// built.
+    ///
+    /// **`RowGroupsExcludeAll` is deliberately excluded from this**, though it is the arm where the
+    /// most IO is unnecessary. It emits no range predicate at all — by design, because an empty
+    /// predicate would make the index decide — so the statement it produced is byte-for-byte the
+    /// scan's. Counting it here would put "the index excluded IO" in an artifact for a query in
+    /// which the index injected nothing.
+    pub fn claims_io_exclusion(self) -> bool {
+        matches!(self, Self::RowGroupsPruned { .. })
+    }
 }
 
 /// Whether a plan may consult the spatial index.
@@ -293,6 +474,11 @@ pub(crate) enum IndexUse {
     Off,
     /// The experimental seam, reached only through `Dataset::stream_indexed_experimental`.
     Experimental,
+    /// The **row-group** seam (lever B2), reached only through
+    /// `Dataset::stream_rowgroup_pruned_experimental`. A third variant rather than a second boolean:
+    /// the two seams consult different structures answering different predicates, and a plan that
+    /// could reach both would have to decide which one wins, which is a design nobody has made.
+    RowGroups,
 }
 
 /// Whether a stream's rows arrive in a declared order.
@@ -392,6 +578,7 @@ struct Item {
     batch_index: u64,
     target_bytes: usize,
     xy_bounds: Option<[f64; 4]>,
+    cut_by: BatchCut,
 }
 
 pub struct BatchStream {
@@ -489,6 +676,7 @@ impl BatchStream {
             batch_index: item.batch_index,
             target_bytes: item.target_bytes,
             xy_bounds: item.xy_bounds,
+            cut_by: item.cut_by,
         })
     }
 
@@ -665,6 +853,86 @@ impl Dataset {
         )
     }
 
+    /// The same query with the **first batch's time budget** armed.
+    ///
+    /// **Experimental and measurement-only. No product path calls this**, on the
+    /// `stream_indexed_experimental` precedent and for the same reason: the budgeted policy's
+    /// preregistered gate has not been answered, and a policy that reached the default planner
+    /// before its gate would make the gate ceremonial.
+    ///
+    /// What it changes is one thing — batch 0 may be cut by [`FIRST_BATCH_TIME_BUDGET`] as well as
+    /// by size. Everything else, the size ladder included, is `Dataset::stream`'s.
+    #[doc(hidden)]
+    pub fn stream_budgeted_experimental(
+        &self,
+        q: &ViewportQuery,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::Off,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::time_budgeted(),
+                envelope: self.envelope().clone(),
+                report_bounds: false,
+            },
+        )
+    }
+
+    /// The same query planned with the **row-group index** in the path (lever B2).
+    ///
+    /// **Experimental and measurement-only. No product path calls this**, and its preregistered
+    /// gate has not been answered — `docs/07`'s "an index that prunes actual IO is a separate,
+    /// architect-first design with its own preregistered gate; no claim is made for it here."
+    ///
+    /// Requires [`Dataset::build_row_group_index`] to have run in this process for this file. When
+    /// no admissible index exists the plan is [`FilterPlan::ScanOnly`] and the query is exactly the
+    /// unindexed one — a missing index narrows nothing and must not fail a query.
+    #[doc(hidden)]
+    pub fn stream_rowgroup_pruned_experimental(
+        &self,
+        q: &ViewportQuery,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::RowGroups,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::default(),
+                envelope: self.envelope().clone(),
+                report_bounds: false,
+            },
+        )
+    }
+
+    /// As [`Self::stream_rowgroup_pruned_experimental`], with the first batch's time budget armed —
+    /// the factorial cell where **both** levers are in force.
+    ///
+    /// It exists because the measurement is factorial and a cell that cannot be constructed cannot
+    /// be measured; it is not a policy anybody has proposed shipping.
+    #[doc(hidden)]
+    pub fn stream_rowgroup_pruned_budgeted_experimental(
+        &self,
+        q: &ViewportQuery,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::RowGroups,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::time_budgeted(),
+                envelope: self.envelope().clone(),
+                report_bounds: false,
+            },
+        )
+    }
+
     fn stream_inner(
         &self,
         q: &ViewportQuery,
@@ -672,6 +940,24 @@ impl Dataset {
         plan: StreamPlan,
     ) -> Result<BatchStream> {
         let StreamPlan { index_use, ordering, policy, envelope, report_bounds } = plan;
+
+        // **The ADR-017 §12 protection, and it is structural rather than conventional.**
+        //
+        // A declared row order exists so that partition boundaries — and therefore every partition
+        // hash and the manifest — are a pure function of the row sequence and the declared
+        // ceilings. A time budget in the cut decision makes them a function of how fast the machine
+        // was, so the same inputs would publish differently under load. Refusing the combination
+        // here means "publish partitioning is independent of stream batching" is a property of the
+        // code, checkable at one place, rather than a convention spread across call sites.
+        //
+        // Checked before anything is prepared, leased or spawned: a refusal that costs a connection
+        // is a refusal that had a side effect.
+        if is_timing_dependent(ordering, policy.cut) {
+            return Err(EngineError::TimingDependentOrdering {
+                ordering: "by-identity-ascending",
+                cut: policy.cut.as_str(),
+            });
+        }
         // **A viewport CRS is a caller assertion about the query, not an equivalence judgement
         // about two definitions.** ADR-015 §7. The engine does not decide that the caller's CRS
         // and the dataset's "agree" — it has no PROJ and cannot — it only refuses a viewport that
@@ -898,8 +1184,99 @@ impl Dataset {
             // `None` from `candidates` means the index cannot narrow *this* query — a degenerate
             // grid, a bbox it will not reason about. Falling through to the scan is the only safe
             // reading: a derived structure that cannot answer must not answer.
+            // ---------------------------------------------------------------------------------
+            // **Lever B2 — the row-group seam.** A separate block, not a third arm of the
+            // feature-index match, because it injects a fundamentally different predicate: the
+            // ranges here are **row-group aligned**, so a range never excludes a row inside a group
+            // it names. That is what makes the injection a statement about IO rather than about
+            // rows, and it is the whole difference from the fixed-grid index the second section
+            // measured.
+            //
+            // **The bbox comparison stays alongside, exactly as it does for the other seam**, and
+            // for the identical reason: it keeps the result set provably identical to the
+            // unindexed one, so a wrong index costs time and never correctness (ADR-006 — a pure
+            // transformation's cached output is not the system of record).
+            // ---------------------------------------------------------------------------------
+            if index_use == IndexUse::RowGroups {
+                match self.admitted_row_groups() {
+                    // No index has been built for this file, or the cached one may no longer
+                    // serve it. Falling through to the scan is the only safe reading.
+                    None => plan = FilterPlan::ScanOnly,
+                    Some(idx) => match idx.ranges_for(view) {
+                        Err(reason) => {
+                            plan = FilterPlan::RowGroupsNotPrunable {
+                                total: idx.total_groups(),
+                                reason,
+                            }
+                        }
+                        Ok(sel) if sel.kept == 0 => {
+                            plan = FilterPlan::RowGroupsExcludeAll { total: sel.total }
+                        }
+                        Ok(sel) if !sel.excludes_io() => {
+                            // Admissible, in force, and excluding nothing. Named rather than
+                            // rendered as a longer statement that does the same work.
+                            plan = FilterPlan::RowGroupsKeptAll { total: sel.total }
+                        }
+                        Ok(sel) if sel.ranges.len() > crate::rowgroup::MAX_ROW_GROUP_RANGES => {
+                            plan = FilterPlan::RowGroupsTooFragmented {
+                                total: sel.total,
+                                kept: sel.kept,
+                            }
+                        }
+                        Ok(sel) => {
+                            // **The source column, never the `id` alias** — the measured DuckDB
+                            // resolution finding this file records twenty lines down.
+                            let col = source_column.clone();
+                            let preds: Vec<String> = sel
+                                .ranges
+                                .iter()
+                                .map(|(lo, hi)| {
+                                    if lo == hi {
+                                        format!("{col} = {lo}")
+                                    } else {
+                                        format!("{col} BETWEEN {lo} AND {hi}")
+                                    }
+                                })
+                                .collect();
+                            plan = FilterPlan::RowGroupsPruned {
+                                total: sel.total,
+                                kept: sel.kept,
+                                ranges: sel.ranges.len(),
+                            };
+                            sql.push_str(&format!(" WHERE ({})", preds.join(" OR ")));
+                            sql.push_str(&format!(
+                                " AND {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
+                                xmin = c.xmin.to_sql(),
+                                xmax = c.xmax.to_sql(),
+                                ymin = c.ymin.to_sql(),
+                                ymax = c.ymax.to_sql(),
+                            ));
+                            sql.push_str(&order_clause);
+                            if let Some(n) = q.limit {
+                                sql.push_str(&format!(" LIMIT {n}"));
+                            }
+                            return Ok((sql, plan));
+                        }
+                    },
+                }
+                // Every arm that reaches here emits the plain covering-bbox scan below, with the
+                // plan recording *why* no range predicate was injected.
+                sql.push_str(&format!(
+                    " WHERE {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
+                    xmin = c.xmin.to_sql(),
+                    xmax = c.xmax.to_sql(),
+                    ymin = c.ymin.to_sql(),
+                    ymax = c.ymax.to_sql(),
+                ));
+                sql.push_str(&order_clause);
+                if let Some(n) = q.limit {
+                    sql.push_str(&format!(" LIMIT {n}"));
+                }
+                return Ok((sql, plan));
+            }
+
             let admitted = match index_use {
-                IndexUse::Off => None,
+                IndexUse::Off | IndexUse::RowGroups => None,
                 IndexUse::Experimental => self.admitted_index(),
             };
             if let Some(candidates) = admitted.and_then(|idx| idx.candidates(view)) {
@@ -1043,6 +1420,23 @@ fn produce(
     // Batches handed over so far — the policy's input, and the `batch_index` a consumer sees.
     let mut emitted: u64 = 0;
     let mut saw_first_chunk = false;
+    // **The first batch's budget clock, started at the first source row and at no other boundary.**
+    //
+    // Not at lease acquisition and not when `stream_arrow` returns: anchored there, the budget's
+    // window would contain DuckDB's own fetch, during which the producer holds no rows and is
+    // parked inside `next()` — a budget that expires where no action is possible is noise, not a
+    // trigger. Anchored here it is exactly co-terminous with `SPAN_SOURCE_TO_FIRST_BATCH` and
+    // provably does not touch `SPAN_QUERY`, which is what lets a measurement *attribute* any
+    // movement to a segment rather than infer it.
+    //
+    // An unconditional `Instant`, deliberately **not** derived from `trace::mark` — `mark` is a
+    // no-op when tracing is off, and the policy has to behave identically in both states or the
+    // traced twin measures a different producer than the cell it is a twin of.
+    let mut first_row_at: Option<std::time::Instant> = None;
+    let budgeted = policy.cut == BatchCutPolicy::TimeBudgetedFirstBatch;
+    // Rows appended since the budget clock was last read. Maintained only while batch 0 is
+    // accumulating under an armed budget; zero cost on every other stream and every later batch.
+    let mut rows_since_budget_check = 0usize;
 
     loop {
         if cancel.is_cancelled() {
@@ -1073,8 +1467,16 @@ fn produce(
         // Per *chunk*, and only for the first one — the end of the sort, whatever else it is. A
         // mark per chunk would still be off the row loop, but the row loop is what this file's
         // hot-path rule is about and one boundary is what the segment needs.
-        if !saw_first_chunk {
+        // **Guarded on the chunk actually carrying rows, and that is not pedantry.** DuckDB may
+        // yield an empty vector, and anchoring the budget there would start the 8 ms before a single
+        // row existed — so the first batch would be cut small for a reason nothing in the artifact
+        // records, which is precisely the attribution this lever exists to establish. The span's
+        // name is `first_source_row`; a chunk with no rows contains no source row.
+        if !saw_first_chunk && chunk.num_rows() > 0 {
             saw_first_chunk = true;
+            // Stamped before the trace mark, so the budget's origin is the arrival of the rows and
+            // not the cost of recording that they arrived.
+            first_row_at = Some(std::time::Instant::now());
             crate::trace::mark(crate::trace::FIRST_SOURCE_ROW, chunk.num_rows() as u64, 0);
         }
 
@@ -1141,8 +1543,19 @@ fn produce(
             if !pending.ids.is_empty() && pending.est_bytes + incoming > target {
                 pending.push_attr_run(&chunk_attrs, run_start, row);
                 run_start = row;
-                flush(&mut pending, envelope, cancel, stats, tx, emitted, target, report_bounds)?;
+                flush(
+                    &mut pending,
+                    envelope,
+                    cancel,
+                    stats,
+                    tx,
+                    emitted,
+                    target,
+                    report_bounds,
+                    BatchCut::SizeTarget,
+                )?;
                 emitted += 1;
+                rows_since_budget_check = 0;
             }
 
             let before = pending.builder.vertices();
@@ -1154,20 +1567,90 @@ fn produce(
                 estimate_bytes(pending.ids.len(), pending.builder.vertices()) + pending.attr_bytes;
             pending.first_id.get_or_insert(*id);
 
-            if pending.est_bytes >= target || pending.ids.len() >= policy.max_rows {
+            // **The budget's in-chunk site: a row stride, never per row.** See
+            // `BUDGET_CHECK_ROW_STRIDE` — the row loop already carries a `SeqCst` load per row, and
+            // a clock read per row would cost more than the trigger can save. Maintained only while
+            // batch 0 is accumulating, so every later batch pays nothing at all: the whole
+            // expression is guarded by `emitted == 0`, which is false for the rest of the stream.
+            let mut budget_reached = false;
+            if budgeted && emitted == 0 {
+                rows_since_budget_check += 1;
+                if rows_since_budget_check >= BUDGET_CHECK_ROW_STRIDE {
+                    rows_since_budget_check = 0;
+                    budget_reached = first_row_at
+                        .is_some_and(|t| t.elapsed() >= FIRST_BATCH_TIME_BUDGET);
+                }
+            }
+            let cut_by =
+                cut_reason(pending.est_bytes, pending.ids.len(), target, policy.max_rows, budget_reached);
+            if let Some(cut_by) = cut_by {
                 pending.push_attr_run(&chunk_attrs, run_start, row + 1);
                 run_start = row + 1;
-                flush(&mut pending, envelope, cancel, stats, tx, emitted, target, report_bounds)?;
+                flush(
+                    &mut pending,
+                    envelope,
+                    cancel,
+                    stats,
+                    tx,
+                    emitted,
+                    target,
+                    report_bounds,
+                    cut_by,
+                )?;
                 emitted += 1;
+                rows_since_budget_check = 0;
             }
         }
         // Whatever of this chunk is still accumulating carries over into the next batch.
         pending.push_attr_run(&chunk_attrs, run_start, chunk.num_rows());
+
+        // **The budget's principal site: a DuckDB chunk boundary.**
+        //
+        // This is where it can actually fire on a selective query. The producer never sees
+        // non-matching rows — the bbox predicate is in SQL — so a sparse viewport spends its time
+        // *inside* `arrow.next()`, and the accumulating first batch crosses chunk after chunk while
+        // the row loop barely runs. A trigger that only looked at a row stride would be checking a
+        // clock exactly where the clock is not moving.
+        //
+        // **An empty-at-budget first batch is a declared behaviour and it is: nothing is emitted.**
+        // `pending.ids.is_empty()` is the whole of it. The producer cannot cut a batch it has no
+        // rows for; the budget re-arms and fires at the first moment at least one row exists. An
+        // empty batch would spend a queue credit and a `batch_index` on zero rows and would put a
+        // zero-row IPC stream on a path no consumer in this tree has ever seen one on.
+        if budgeted && emitted == 0 && !pending.ids.is_empty() {
+            let expired = first_row_at.is_some_and(|t| t.elapsed() >= FIRST_BATCH_TIME_BUDGET);
+            if expired {
+                let target = policy.target_for(emitted);
+                flush(
+                    &mut pending,
+                    envelope,
+                    cancel,
+                    stats,
+                    tx,
+                    emitted,
+                    target,
+                    report_bounds,
+                    BatchCut::TimeBudget,
+                )?;
+                emitted += 1;
+                rows_since_budget_check = 0;
+            }
+        }
     }
 
     if !pending.ids.is_empty() {
         let target = policy.target_for(emitted);
-        flush(&mut pending, envelope, cancel, stats, tx, emitted, target, report_bounds)?;
+        flush(
+            &mut pending,
+            envelope,
+            cancel,
+            stats,
+            tx,
+            emitted,
+            target,
+            report_bounds,
+            BatchCut::StreamEnd,
+        )?;
     }
     Ok(())
 }
@@ -1211,6 +1694,49 @@ impl Pending {
             runs.push(col.slice(start, end - start));
         }
     }
+}
+
+/// Which trigger, if any, ends the batch that has just had a row appended.
+///
+/// **Extracted so the precedence is testable rather than argued.** The producer's row loop cannot be
+/// driven at a chosen clock from a test, so the part of lever A that *can* be pinned deterministically
+/// is this decision — and it is the part that decides what an artifact's `cut_by` counts mean.
+///
+/// Precedence is declared, not incidental: when two triggers are true at once the **reported** one is
+/// the one that would have fired without the other. A budget cut is therefore only ever reported
+/// where the size ladder had not already reached its target, which is exactly what makes a
+/// `time-budget` count mean "this batch exists because of lever A" rather than "lever A was armed".
+///
+/// **What `MIN_BATCH_BYTES` actually is, since the budget is the second thing to go under it.** MIN
+/// is not a per-batch floor and never was: it floors [`BatchSizePolicy::target_for`]'s *target*, and
+/// the final `StreamEnd` batch of every stream is routinely smaller than it. The budget arm adds a
+/// second, deliberate way to emit a batch below MIN — one taken in exchange for pixels sooner, the
+/// same trade `FIRST_TARGET_BATCH_BYTES` makes one step earlier. Declared, not discovered (ADR-010
+/// rule 6).
+fn cut_reason(
+    est_bytes: usize,
+    rows: usize,
+    target: usize,
+    max_rows: usize,
+    budget_reached: bool,
+) -> Option<BatchCut> {
+    if est_bytes >= target {
+        Some(BatchCut::SizeTarget)
+    } else if rows >= max_rows {
+        Some(BatchCut::RowCeiling)
+    } else if budget_reached {
+        Some(BatchCut::TimeBudget)
+    } else {
+        None
+    }
+}
+
+/// Whether a stream's ordering and cut policy may be combined.
+///
+/// One place, so the refusal in `stream_inner` and the truth table its test asserts cannot drift
+/// apart. See [`EngineError::TimingDependentOrdering`] for why the combination is refused.
+pub(crate) fn is_timing_dependent(ordering: RowOrdering, cut: BatchCutPolicy) -> bool {
+    ordering == RowOrdering::ByIdentityAscending && cut == BatchCutPolicy::TimeBudgetedFirstBatch
 }
 
 fn estimate_bytes(rows: usize, vertices: usize) -> usize {
@@ -1285,6 +1811,7 @@ fn flush(
     batch_index: u64,
     target_bytes: usize,
     report_bounds: bool,
+    cut_by: BatchCut,
 ) -> Result<()> {
     let mut p = std::mem::replace(pending, Pending::new(pending.attrs.len()));
 
@@ -1362,6 +1889,7 @@ fn flush(
         batch_index,
         target_bytes,
         xy_bounds,
+        cut_by,
     }))
     .map_err(|_| EngineError::Cancelled)
 }
@@ -1440,5 +1968,67 @@ mod tests {
     #[test]
     fn identifiers_are_quoted_not_interpolated() {
         assert_eq!(quote_ident("geom\"; DROP TABLE t; --"), "\"geom\"\"; DROP TABLE t; --\"");
+    }
+
+    // ---- lever A ------------------------------------------------------------------------------
+
+    #[test]
+    fn the_publish_policy_is_size_only_and_cannot_acquire_a_clock_by_default() {
+        // ADR-017 §12. Stated at the construction site *and* asserted here, because the whole
+        // determinism guarantee rests on a publish partition boundary being a pure function of the
+        // row sequence.
+        assert_eq!(BatchSizePolicy::publish().cut, BatchCutPolicy::SizeOnly);
+        // And the viewport default too: the budgeted policy's gate is unanswered, so nothing may
+        // reach it by omission. `BatchCutPolicy` has no `Default` precisely so this is a decision.
+        assert_eq!(BatchSizePolicy::default().cut, BatchCutPolicy::SizeOnly);
+        // The experimental policy differs from the default in the cut and in nothing else — a cell
+        // that differs between them differs by the budget alone.
+        let (d, b) = (BatchSizePolicy::default(), BatchSizePolicy::time_budgeted());
+        assert_eq!(b.cut, BatchCutPolicy::TimeBudgetedFirstBatch);
+        assert_eq!(
+            (d.first_target_bytes, d.growth_factor, d.target_bytes, d.min_bytes, d.max_rows),
+            (b.first_target_bytes, b.growth_factor, b.target_bytes, b.min_bytes, b.max_rows),
+        );
+    }
+
+    #[test]
+    fn a_declared_row_order_and_a_time_budget_are_never_combinable() {
+        // The **whole** truth table, so a third `BatchCutPolicy` or a third `RowOrdering` cannot be
+        // added without this test being revisited.
+        use BatchCutPolicy::*;
+        use RowOrdering::*;
+        assert!(!is_timing_dependent(Unordered, SizeOnly));
+        assert!(!is_timing_dependent(Unordered, TimeBudgetedFirstBatch));
+        assert!(!is_timing_dependent(ByIdentityAscending, SizeOnly));
+        assert!(is_timing_dependent(ByIdentityAscending, TimeBudgetedFirstBatch));
+    }
+
+    #[test]
+    fn the_cut_precedence_makes_a_time_budget_count_mean_what_it_says() {
+        let (target, max_rows) = (1000usize, 10usize);
+        // Size wins over everything: a batch that reached its target was going to be cut anyway.
+        assert_eq!(cut_reason(1000, 1, target, max_rows, true), Some(BatchCut::SizeTarget));
+        assert_eq!(cut_reason(1001, 20, target, max_rows, true), Some(BatchCut::SizeTarget));
+        // Rows win over the budget, for the same reason.
+        assert_eq!(cut_reason(10, 10, target, max_rows, true), Some(BatchCut::RowCeiling));
+        // The budget is reported only where nothing else would have cut — which is what makes it
+        // countable as "this batch exists because of lever A".
+        assert_eq!(cut_reason(10, 1, target, max_rows, true), Some(BatchCut::TimeBudget));
+        // Disarmed, the same state cuts nothing at all.
+        assert_eq!(cut_reason(10, 1, target, max_rows, false), None);
+    }
+
+    #[test]
+    fn a_budget_cut_is_free_to_land_below_the_minimum_batch_size() {
+        // The declared trade, asserted on the decision rather than on two literals: a batch far
+        // below `MIN_BATCH_BYTES` is still cut when the budget fires, and is not cut when it does
+        // not. An earlier revision "asserted" this as `10 < MIN_BATCH_BYTES`, which is a fact about
+        // two constants and says nothing about the code.
+        let tiny = MIN_BATCH_BYTES / 8;
+        assert_eq!(
+            cut_reason(tiny, 1, TARGET_BATCH_BYTES, MAX_ROWS_PER_BATCH, true),
+            Some(BatchCut::TimeBudget)
+        );
+        assert_eq!(cut_reason(tiny, 1, TARGET_BATCH_BYTES, MAX_ROWS_PER_BATCH, false), None);
     }
 }

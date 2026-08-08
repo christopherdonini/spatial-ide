@@ -19,6 +19,7 @@ use crate::crs::{self, CrsAssertion, DatasetCrs};
 use crate::envelope::{BatchEnvelope, ID_COLUMN};
 use crate::identity::{self, DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
 use crate::index;
+use crate::rowgroup;
 use crate::error::{EngineError, Result};
 use crate::geoparquet::{CoveringBbox, GeoMeta};
 use crate::pool::{ConnectionPool, Lease, LeaseClass, PoolConfig};
@@ -46,6 +47,47 @@ static INDEX_CONSULTATIONS: AtomicU64 = AtomicU64::new(0);
 /// deterministically instead of inferring it from a timing.
 pub fn index_consultations() -> u64 {
     INDEX_CONSULTATIONS.load(Ordering::SeqCst)
+}
+
+/// Process-wide, in-memory **row-group** index cache (lever B2). Not persisted, for the reason
+/// `INDEX_CACHE` is not: the first thing this tree writes to disk owes `docs/11`'s ResourceRef model
+/// and ADR-005's grades, and that is a decision rather than a side effect of a latency fix.
+static ROW_GROUP_CACHE: std::sync::LazyLock<rowgroup::RowGroupCache> =
+    std::sync::LazyLock::new(rowgroup::RowGroupCache::default);
+
+/// How many times the row-group seam has been consulted in this process.
+///
+/// The same instrument, unconditional and not `cfg(test)`-gated, for the same reason
+/// `INDEX_CONSULTATIONS` is: the property under test is that the **shipped** planner never reaches
+/// this seam, and a counter compiled only into a test build would prove that about a build nobody
+/// runs.
+static ROW_GROUP_CONSULTATIONS: AtomicU64 = AtomicU64::new(0);
+
+/// Times any `Dataset` in this process has asked whether a row-group index may serve a query.
+///
+/// Never an SKP field and never on the wire.
+pub fn row_group_consultations() -> u64 {
+    ROW_GROUP_CONSULTATIONS.load(Ordering::SeqCst)
+}
+
+/// What one `build_row_group_index` call cost and produced.
+///
+/// Build cost and query benefit stay separate, and **admissibility is a first-class field rather
+/// than something inferred from a later plan**: "this file's statistics cannot support an injection"
+/// is a fact about the file, decided once, and a caller that learned it only from a query's
+/// `FilterPlan` would be learning it once per query.
+#[derive(Clone, Debug)]
+pub struct RowGroupReport {
+    /// `None` when a cached index was reused; otherwise why it could not be.
+    pub miss: Option<index::IndexMiss>,
+    pub content_hash_millis: f64,
+    pub build_millis: f64,
+    pub row_groups: usize,
+    pub admissible: std::result::Result<(), rowgroup::RowGroupRefusal>,
+    pub declared_memory_bytes: usize,
+    /// Footer rows `parquet_metadata` returned — one per (row group × column), so it is the
+    /// metadata query's own size and not the file's row count.
+    pub scanned_metadata_rows: u64,
 }
 
 /// What one `build_index` call cost and produced. Build cost and query benefit stay separate.
@@ -444,6 +486,115 @@ impl Dataset {
         let hash = INDEX_CACHE.hash_for(self.path())?;
         let key = index::IndexKey::new(hash, self.identity().source().source_column());
         INDEX_CACHE.get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref()).ok()
+    }
+
+    /// Build (or reuse) this dataset's **row-group** index — lever B2 of the first-batch cut.
+    ///
+    /// Same discipline as [`Self::build_index`] and, deliberately, the same shape of report:
+    /// content-hash cost and build cost are **separate numbers and are never netted** into "pays for
+    /// itself after N queries". Two additional facts ride along, because without them a cell cannot
+    /// be attributed: how many row groups the file has, and whether the file's own statistics admit
+    /// an id-range injection at all.
+    ///
+    /// **The metadata query is one `parquet_metadata()` call on a maintenance lease**, for the same
+    /// reason `build_index` takes one: it is a whole-file operation in kind, and four admitted
+    /// streams must not make a build impossible.
+    pub fn build_row_group_index(&self, cancel: &CancelToken) -> Result<RowGroupReport> {
+        self.build_row_group_index_observed(cancel, None)
+    }
+
+    /// As [`Self::build_row_group_index`], reporting each phase to an observer.
+    pub fn build_row_group_index_observed(
+        &self,
+        cancel: &CancelToken,
+        observer: Option<&dyn index::IndexPhaseObserver>,
+    ) -> Result<RowGroupReport> {
+        let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
+            detail: "the file's `geo` metadata declares no covering.bbox, so a row group has no \
+                     envelope to reason about"
+                .into(),
+        })?;
+
+        index::observe(observer, index::IndexPhase::ContentHash);
+        let (content_hash, hash_millis) = index::content_hash(self.path(), cancel)?;
+        let key = rowgroup::RowGroupKey::new(content_hash, self.identity().source().source_column());
+        let validity = index::ValidityHeuristic::of(self.path());
+
+        match ROW_GROUP_CACHE.get(self.path(), &key, validity.as_ref()) {
+            Ok(existing) => {
+                index::observe(observer, index::IndexPhase::Complete);
+                Ok(RowGroupReport {
+                    miss: None,
+                    content_hash_millis: hash_millis,
+                    build_millis: 0.0,
+                    row_groups: existing.total_groups(),
+                    admissible: existing.admissible(),
+                    declared_memory_bytes: existing.declared_memory_bound(),
+                    scanned_metadata_rows: existing.scanned_metadata_rows(),
+                })
+            }
+            Err(miss) => {
+                let path_str = self
+                    .path()
+                    .to_str()
+                    .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?;
+                let lease = self.pool.acquire(LeaseClass::Maintenance)?;
+                let built = rowgroup::RowGroupIndex::build(
+                    lease.connection(),
+                    path_str,
+                    covering,
+                    self.identity().source().source_column(),
+                    key,
+                    validity,
+                    cancel,
+                    observer,
+                );
+                // The lease's fate is decided from the build's own outcome, before the `?` — a
+                // cancelled build interrupted DuckDB on this connection, and the capacity slot must
+                // be freed either way or the single maintenance slot leaks.
+                let built = match built {
+                    Ok(b) => {
+                        lease.release_healthy();
+                        b
+                    }
+                    Err(e) => {
+                        drop(lease);
+                        return Err(e);
+                    }
+                };
+                let report = RowGroupReport {
+                    miss: Some(miss),
+                    content_hash_millis: hash_millis,
+                    build_millis: built.build_millis(),
+                    row_groups: built.total_groups(),
+                    admissible: built.admissible(),
+                    declared_memory_bytes: built.declared_memory_bound(),
+                    scanned_metadata_rows: built.scanned_metadata_rows(),
+                };
+                // Reached only on a completed build: a cancelled one returned above, so no partial
+                // index is ever inserted.
+                ROW_GROUP_CACHE.insert(self.path().to_path_buf(), std::sync::Arc::new(built));
+                index::observe(observer, index::IndexPhase::Complete);
+                Ok(report)
+            }
+        }
+    }
+
+    /// The row-group index that may serve this dataset right now, if any.
+    ///
+    /// Re-checks admission on every call, exactly as [`Self::admitted_index`] does and for the same
+    /// reason: the file can change under a long-lived process.
+    ///
+    /// **The ordinary planner does not call this.** The only caller is the explicitly-named
+    /// experimental stream entry point, and `engine/tests/row_group_seam.rs` is what keeps that true
+    /// — its own file, its own process, because this counter is process-wide.
+    pub(crate) fn admitted_row_groups(&self) -> Option<std::sync::Arc<rowgroup::RowGroupIndex>> {
+        ROW_GROUP_CONSULTATIONS.fetch_add(1, Ordering::SeqCst);
+        let hash = ROW_GROUP_CACHE.hash_for(self.path())?;
+        let key = rowgroup::RowGroupKey::new(hash, self.identity().source().source_column());
+        ROW_GROUP_CACHE
+            .get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref())
+            .ok()
     }
 
     pub fn path(&self) -> &Path {

@@ -110,6 +110,13 @@ pub enum IndexPhase {
     ComputeExtent,
     /// Every feature placed into its cells.
     PopulateGrid,
+    /// The **row-group** index's one metadata query (`crate::rowgroup`). A different structure over
+    /// the same file, sharing this vocabulary rather than inventing a second observer trait — a test
+    /// that has to learn two phase enums to aim a delay ladder at two builds is the gap this enum
+    /// exists to close, not one to reopen.
+    RowGroupMetadata,
+    /// The row-group index's admissibility reduction over the footer rows.
+    RowGroupAdmissibility,
     /// The build finished, or a cached index was reused.
     Complete,
 }
@@ -122,6 +129,8 @@ impl IndexPhase {
             Self::ValidateBboxes => "validate-bboxes",
             Self::ComputeExtent => "compute-extent",
             Self::PopulateGrid => "populate-grid",
+            Self::RowGroupMetadata => "row-group-metadata",
+            Self::RowGroupAdmissibility => "row-group-admissibility",
             Self::Complete => "complete",
         }
     }

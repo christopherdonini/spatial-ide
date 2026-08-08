@@ -83,8 +83,14 @@ pub mod error;
 pub mod fixture;
 pub mod geoarrow;
 pub mod geoparquet;
+/// Spatially-clustered layout variants — lever B1. Test/measurement support, gated with the
+/// generator for the same reason: rewriting a file is not one of the things `docs/02` scopes to
+/// this module.
+#[cfg(feature = "fixture")]
+pub mod layout;
 pub mod pin;
 pub mod pool;
+pub mod rowgroup;
 pub mod stream;
 pub mod trace;
 pub mod wkb;
@@ -100,9 +106,11 @@ pub use pool::{
     ConnectionPool, LeaseClass, PoolConfig, MAX_MAINTENANCE_CONNECTIONS, MAX_PHYSICAL_CONNECTIONS,
     MAX_STREAM_CONNECTIONS,
 };
+pub use rowgroup::{RowGroupIndex, RowGroupRefusal, RowGroupSelection};
 pub use stream::{
-    BatchInfo, BatchPoll, BatchSizePolicy, BatchStream, Bbox, ConnectionFacts, FilterPlan,
-    RowOrdering, StreamStats, ViewportQuery, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS,
+    BatchCut, BatchCutPolicy, BatchInfo, BatchPoll, BatchSizePolicy, BatchStream, Bbox,
+    ConnectionFacts, FilterPlan, RowOrdering, StreamStats, ViewportQuery,
+    BUDGET_CHECK_ROW_STRIDE, FIRST_BATCH_TIME_BUDGET, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS,
     MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS,
     PUBLISH_PARTITION_TARGET_BYTES, PUBLISH_STREAM_POLL_INTERVAL, TARGET_BATCH_BYTES,
 };
