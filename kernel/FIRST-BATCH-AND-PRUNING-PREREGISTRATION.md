@@ -481,3 +481,56 @@ result.** A 1.3 ms difference against an S2 that the third section measured at 6
 be invisible, and if it is, that is worth knowing precisely: it would say that storage layout is a
 *total-time* and *IO* lever rather than a first-pixels one, which is a sharper claim than the
 producer-side pass alone can support.
+
+#### A2.1 — 2026-08-08 — four additions to A2, from the operator, still before any probe trial runs
+
+**Written after the producer-side results were seen and before any probe cell has run.** The
+distinction matters here more than in A1 or A2: item 2 below is a **verdict rule**, and it is being
+fixed while the data it will judge does not yet exist.
+
+**1. Counterbalancing — layouts interleave *within* each viewport × compositor block.** Not
+file-by-file. The order inside a block is a rotation over `{S, C, H}` by repetition index, the same
+committed-pure-function discipline the producer-side pass used, so no layout systematically occupies
+the warm or the cold end of a block.
+
+**This is also why no separate re-baseline phase exists**: the `S` cells **are** the same-session
+control. A re-baseline run before or after the layout arms would be a different block of time on a
+machine this repository has measured drifting by a factor of two between phases twenty minutes apart.
+
+**Headless runs first, unattended. Every headed cell is scheduled contiguously**, so the operator's
+window-sitting is one stretch rather than six.
+
+**2. The resolvability criterion, declared now, before any probe number exists.**
+
+The third section recorded the probe's own between-attempt dispersion: **up to 29 ms on a
+first-pixels p50**, across attempts of the same cell on the same tree. That is the instrument's
+noise floor and it is not reducible by anything this phase can do.
+
+> **Any first-pixels difference smaller than 29 ms on p50 is reported as `not resolvable by this
+> instrument`.** Not "no effect", and not a win. Both of those are claims this instrument cannot
+> support at that scale, and the whole point of declaring it now is that the wording is chosen before
+> anyone can see which way it would flatter the result.
+
+Applied to both comparisons this phase makes:
+
+| comparison | producer-side size | verdict available from the probe |
+|---|---|---|
+| **`H` − `C`**, the layout arm, at 1/64 | **1.3 ms** | **predicted `not resolvable` in advance.** 1.3 ms is more than twenty times below the noise floor. If a probe cell shows a large difference here it is evidence about the *instrument or the session*, not about layout, and it will be read that way |
+| **`C` − `S`**, the writer arm, at the quarter | **5.1 ms** producer-side (whole-file was 20.1 ms and whole-file does not run here) | **may or may not resolve.** Also below the floor; the same rule applies |
+
+**So this phase is registered as most likely to produce two `not resolvable` rows, and that is a
+result.** It would establish that storage layout is an **IO and total-time** lever and not a
+first-pixels one at this fixture class — a sharper claim than the producer-side pass can make alone,
+and one that cannot be made at all without this criterion having been written down first.
+
+**A difference at or above 29 ms would be a finding and would still not open B1's gate**, which was
+decided producer-side and is closed.
+
+**3. Layout arms use the night's existing artifacts only.** `S`, `C` and `H` as written by the run of
+record, re-hashed before the phase. **No new layout variant is generated for a probe.** A file
+produced to be measured by the instrument that will measure it is the confound this whole cut spent
+its most expensive lesson on.
+
+**4. Full-payload is printed beside first-pixels in every cell, always** —
+`PROBE-PREREGISTRATION.md` §1a's rule, never one without the other. **The 5 GB file does not enter
+the browser at all**, in any cell, under any compositor.
