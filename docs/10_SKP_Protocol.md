@@ -46,4 +46,6 @@ emitted frame byte-for-byte with tracing enabled and disabled, rather than by re
 **What is deliberately absent:** any cross-process trace propagation, any persisted trace id, any
 correlation field on SKP. Whether SKP should ever carry trace context is exactly the open question,
 and the rule that it must not — as a normative constraint rather than a description of today — is
-drafted as a proposed appended amendment to ADR-004, since this document changes via ADR.
+**ADR-004 Amendment 4, accepted 2026-08-08**: instrument surface is never an SKP field, proven by
+byte comparison per operation class. A future SKP-carries-trace-context design remains possible, but
+only as its own deliberate ADR argued against that amendment.

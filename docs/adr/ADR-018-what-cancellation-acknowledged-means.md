@@ -1,8 +1,8 @@
 # ADR-018 — What "cancellation acknowledged" means, and what an operation owes after it
 
-**Status:** **Proposed** — 2026-08-07. Not accepted, not binding, and **not citable to block a
-review** until it is. Drafted by the cut that closes `kernel/RESULTS.md`'s fifth-section publish
-cancellation miss; the human rules on acceptance.
+**Status:** **Accepted** — 2026-08-08, with one clarification appended to item 6 at acceptance (the
+human's condition: "achieved typically" can never attach to a failed p95) and item 7 struck in favor
+of ADR-004 Amendment 4, per item 7's own instruction. Architect-blockable from acceptance.
 
 **Related:** `docs/01` principle 7 (never block the canvas) and principle 8 (no numbers, no claim) ·
 `docs/08` (the cancellation budget) · ADR-004 amendment 2 · ADR-006 (class-3 side effects) ·
@@ -99,17 +99,18 @@ stops the budget from being met by redefinition: an operation may honestly repor
 `docs/08` at p50 and p95 and cannot guarantee a maximum, rather than quietly narrowing the window it
 measures until the number fits.
 
-### 7. Instrument surface is never an SKP field
+> **Acceptance clarification (2026-08-08, the human's condition).** "Achieved typically, not
+> guaranteeable at maximum" is admissible **only when p50 and p95 both meet the budget** and solely
+> the maximum exceeds it, with the excursion attributed to a named class-(b) section by instrument
+> output. **A failed p95 is a MISSED verdict, unconditionally — this phrase may never attach to
+> it.** The sentence describes an unboundable tail above a met budget; it is not a softer word for
+> a miss.
 
-Producer-side counters, spans and connection facts never cross the wire. **Proving it is a regression
-test over serialized bytes, not a review conclusion** — with tracing enabled and disabled, the same
-deterministic operation must serialize byte-identical frames.
+### 7. ~~Instrument surface is never an SKP field~~ — struck at acceptance (2026-08-08)
 
-This item is the normative half of what would otherwise be a note in `docs/10`. `docs/10` is marked
-"Changes via ADR", and a constraint foreclosing a future SKP design option belongs in an ADR rather
-than in a pointer. **It is drafted separately as a proposed appended amendment to ADR-004**, whose
-subject the wire is; if that amendment is accepted, this item defers to it and should be struck from
-here rather than duplicated.
+Struck per this item's own instruction: the rule now lives as **ADR-004 Amendment 4**, accepted the
+same day, whose subject the wire is. This ADR's subject is cancellation semantics; on the wire
+question it defers there.
 
 ---
 

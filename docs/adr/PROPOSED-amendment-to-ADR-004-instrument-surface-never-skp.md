@@ -1,8 +1,8 @@
 # PROPOSED appended amendment to ADR-004 — instrument surface is never an SKP field
 
-**Status: PROPOSED, 2026-08-07. NOT APPLIED.** ADR-004 is Accepted and immutable; this file is a
-draft of text to be *appended* to it if the human accepts. **Nothing here is in force**, and it may
-not be cited to block a review or as settled design.
+**Status: APPLIED — 2026-08-08.** The human accepted; the text is appended to ADR-004 as its
+Amendment 4. This file is retained as the decision record — the argument lives here, the rule lives
+there.
 
 Filed as a separate file rather than appended directly, following the precedent of
 `PROPOSED-amendment-to-ADR-003-projected-canvas-publishing.md`.
