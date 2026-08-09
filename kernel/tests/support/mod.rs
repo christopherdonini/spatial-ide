@@ -384,6 +384,22 @@ pub fn require_disk(phase: &str) -> u64 {
     free
 }
 
+/// A fixture's size and content hash, for the "recorded in the artifact, re-verified rather than
+/// assumed" discipline every measurement pass in this family follows.
+///
+/// **Added here rather than left duplicated a third time.** `kernel/tests/first_batch_factorial.rs`
+/// carries its own private copy and stays on it — that harness is a frozen instrument
+/// (`kernel/RESULTS.md` attributes its numbers to the tree it was measured on, and migrating it here
+/// to tidy code is not this cut's business) — but a *new* harness reaching for the identical logic a
+/// third time is exactly the drift this module's own header warns about.
+pub fn file_facts(p: &std::path::Path) -> (u64, String) {
+    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let hash = spatial_engine::index::content_hash(p, &spatial_engine::CancelToken::new())
+        .map(|(h, _)| h)
+        .unwrap_or_else(|_| "unreadable".into());
+    (md.len(), hash)
+}
+
 /// **`total_cmp`, not `partial_cmp().unwrap()`.** A zero-batch run legitimately produces a NaN
 /// first-batch time, and the unwrap turned that into a panic at the END of a phase -- losing the
 /// whole phase instead of reporting the empty run it was trying to describe.
