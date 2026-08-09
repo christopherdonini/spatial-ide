@@ -988,6 +988,11 @@ impl Dataset {
         }
 
         let (sql, filter_plan) = self.build_sql(q, index_use, envelope.attributes(), ordering)?;
+        // Stamped on the caller's thread, before a lease exists — `sql_built` is outside the
+        // `lease_to_first_row` window by construction (`SPAN_LEASE_BIND` reports the gap to
+        // `lease_acquired` rather than folding it into any scored segment; see docs/07's scope
+        // bound in `trace.rs`).
+        crate::trace::mark(crate::trace::SQL_BUILT, 0, 0);
         let path = self
             .path()
             .to_str()
@@ -1387,6 +1392,12 @@ fn produce(
     policy: BatchSizePolicy,
     report_bounds: bool,
 ) -> Result<()> {
+    // First statement in the producer thread's body — separates thread-spawn/handoff cost
+    // (`SPAN_PRODUCER_HANDOFF`, `lease_acquired → producer_started`) from `conn.prepare()` plus the
+    // pre-prepare cancellation check just below (`SPAN_STATEMENT_PREPARE`), which a single event
+    // bracketing both would have conflated.
+    crate::trace::mark(crate::trace::PRODUCER_STARTED, 0, 0);
+
     // Checked before anything is prepared or executed: DuckDB does not latch an interrupt raised on
     // an idle connection (see `cancel.rs`), so a stream cancelled before it started is stopped
     // here or not at all.
@@ -1397,6 +1408,10 @@ fn produce(
     let mut stmt = conn
         .prepare(sql)
         .map_err(|e| classify(cancel, format!("prepare: {e}")))?;
+    // **This is not "planning" in the query-planner sense.** The file path is a bound parameter
+    // (`FROM read_parquet(?)`), so DuckDB cannot open the file, read its footer, or plan the scan
+    // yet — it does not know which file. What this call costs is settled by `SPAN_STATEMENT_PREPARE`
+    // (`producer_started → sql_prepared`), not assumed from its name.
     crate::trace::mark(crate::trace::SQL_PREPARED, 0, 0);
 
     let mut params: Vec<&dyn ToSql> = vec![&path];
@@ -1417,12 +1432,26 @@ fn produce(
         return Err(EngineError::Cancelled);
     }
 
+    // `SPAN_PARAM_ASSEMBLY` (`sql_prepared → execute_called`) closes here: parameter-`Vec`
+    // construction plus the cancellation check above, named so it is not inferred by subtracting
+    // the other segments from `query`.
+    crate::trace::mark(crate::trace::EXECUTE_CALLED, 0, 0);
+
     let mut arrow = stmt
         .stream_arrow(params.as_slice())
         .map_err(|e| classify(cancel, format!("execute: {e}")))?;
-    // **These two spans exist to settle a question nothing in this repository answers**: with an
-    // `ORDER BY`, does DuckDB sort inside `stream_arrow` or inside the first `next()`? The fifth
-    // section's 3,920 ms window is on one side of this line and no measurement says which.
+    // **`SPAN_BIND_AND_EXECUTE` (`execute_called → execute_returned`) brackets exactly this call,
+    // which binds parameters *and* executes in one step.** The vendored `duckdb` crate has no
+    // public API on this path that separates them — `Statement::stream_arrow` is `__bind_in` then
+    // `execute_streaming` with no observable boundary between — so this span may never be quoted as
+    // either half alone.
+    //
+    // A previous revision of this comment framed these events as settling whether DuckDB sorts
+    // inside `stream_arrow` or the first `next()`. That framing is withdrawn: the cell that
+    // produced the only measurement here (`kernel/tests/cancel_rescore.rs`'s consistency
+    // demonstration) runs an unordered whole-file scan with no `ORDER BY`, so it measured this call's
+    // cost on a query with no sort to locate. `kernel/CANCELLATION-AND-TRACING.md` §2's question is
+    // still open; see `kernel/RESULTS.md`'s eighth section.
     crate::trace::mark(crate::trace::EXECUTE_RETURNED, 0, 0);
 
     let attribute_fields = envelope.attributes().to_vec();
@@ -1474,9 +1503,9 @@ fn produce(
             }
         };
 
-        // Per *chunk*, and only for the first one — the end of the sort, whatever else it is. A
-        // mark per chunk would still be off the row loop, but the row loop is what this file's
-        // hot-path rule is about and one boundary is what the segment needs.
+        // Per *chunk*, and only for the first one. A mark per chunk would still be off the row
+        // loop, but the row loop is what this file's hot-path rule is about and one boundary is
+        // what the segment needs.
         // **Guarded on the chunk actually carrying rows, and that is not pedantry.** DuckDB may
         // yield an empty vector, and anchoring the budget there would start the 8 ms before a single
         // row existed — so the first batch would be cut small for a reason nothing in the artifact

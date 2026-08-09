@@ -336,17 +336,21 @@ fn a_successful_run_stamps_no_cancellation_instant() {
     );
 }
 
-/// The sort's location — inside `stream_arrow` or inside the first `next()` — is not established
-/// anywhere in this repository. This test does not assert which; it asserts that the spans that
-/// **can** answer it are both present and ordered, so the sixth section can report the answer
-/// rather than another guess.
+/// **Not a sort-location test.** An earlier revision of this test and its name claimed the two
+/// `stream_arrow`-bracketing spans "locate the sort" — but `ViewportQuery::all()` is
+/// `RowOrdering::Unordered`, so the query it runs has no `ORDER BY` and no sort to locate.
+/// `kernel/CANCELLATION-AND-TRACING.md` §2's question is still open. What this test actually
+/// establishes: the full `lease_to_first_row` window's internal spans (`NEXT-CUT.md` Phase 1) are
+/// all present, correctly ordered, and every adjacent segment is derivable — the property the
+/// eighth section's attribution cells depend on existing before they can trust a single number from
+/// it.
 #[test]
-fn the_two_spans_that_locate_the_sort_are_both_stamped() {
+fn the_query_windows_internal_spans_are_all_present_and_ordered() {
     let _serial = serial();
-    let d = workspace("sort-location");
+    let d = workspace("query-window-spans");
     let ds = pinned(&fixture(&d));
 
-    let guard = trace::start(TraceKey { label: "sort-location".into(), ..Default::default() })
+    let guard = trace::start(TraceKey { label: "query-window-spans".into(), ..Default::default() })
         .expect("no other trace is running");
     let mut stream = ds
         .stream(&ViewportQuery::all())
@@ -360,15 +364,42 @@ fn the_two_spans_that_locate_the_sort_are_both_stamped() {
     quiesce(&ds);
 
     let t = guard.trace();
-    let prepared = t.first(trace::SQL_PREPARED).expect("sql_prepared is stamped");
-    let executed = t.first(trace::EXECUTE_RETURNED).expect("execute_returned is stamped");
-    let first_row = t.first(trace::FIRST_SOURCE_ROW).expect("first_source_row is stamped");
 
-    assert!(prepared.offset_nanos <= executed.offset_nanos);
-    assert!(executed.offset_nanos <= first_row.offset_nanos);
-    // Both halves are derivable, which is the property that makes the question answerable at all.
-    assert!(t.segment_ms(trace::SQL_PREPARED, trace::EXECUTE_RETURNED).is_some());
-    assert!(t.segment_ms(trace::EXECUTE_RETURNED, trace::FIRST_SOURCE_ROW).is_some());
+    // ---- the ordering the model claims, same shape as the LEASE_ACQUIRED..FIRST_BATCH_FULL check
+    // above, for the same diagnosable-failure reason ------------------------------------------------
+    let order = [
+        trace::SQL_BUILT,
+        trace::LEASE_ACQUIRED,
+        trace::PRODUCER_STARTED,
+        trace::SQL_PREPARED,
+        trace::EXECUTE_CALLED,
+        trace::EXECUTE_RETURNED,
+        trace::FIRST_SOURCE_ROW,
+    ];
+    let mut last = 0u64;
+    for name in order {
+        let e = t.first(name).unwrap_or_else(|| panic!("{name} must be stamped"));
+        assert!(
+            e.offset_nanos >= last,
+            "spans must be monotonic; {name} at {} follows {last}",
+            e.offset_nanos
+        );
+        last = e.offset_nanos;
+    }
+
+    // Every adjacent segment is derivable, which is the property that makes an attribution cell
+    // trustworthy at all — including the wider `lease_to_first_row` window Phase 1 scores its
+    // decision rule against, not just the narrower `query` span.
+    assert!(t.segment_ms(trace::SQL_BUILT, trace::LEASE_ACQUIRED).is_some(), "lease_bind");
+    assert!(t.segment_ms(trace::LEASE_ACQUIRED, trace::PRODUCER_STARTED).is_some(), "producer_handoff");
+    assert!(t.segment_ms(trace::PRODUCER_STARTED, trace::SQL_PREPARED).is_some(), "statement_prepare");
+    assert!(t.segment_ms(trace::SQL_PREPARED, trace::EXECUTE_CALLED).is_some(), "param_assembly");
+    assert!(t.segment_ms(trace::EXECUTE_CALLED, trace::EXECUTE_RETURNED).is_some(), "bind_and_execute");
+    assert!(t.segment_ms(trace::EXECUTE_RETURNED, trace::FIRST_SOURCE_ROW).is_some(), "first_fetch");
+    assert!(t.segment_ms(trace::LEASE_ACQUIRED, trace::FIRST_SOURCE_ROW).is_some(), "lease_to_first_row");
+    // `query` (`sql_prepared -> first_source_row`) keeps its original, narrower definition — see
+    // `SPAN_LEASE_TO_FIRST_ROW`'s doc comment for why the two are not the same span.
+    assert!(t.segment_ms(trace::SQL_PREPARED, trace::FIRST_SOURCE_ROW).is_some(), "query");
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -377,14 +377,49 @@ pub const REQUEST_ACCEPTED: &str = "request_accepted";
 /// avoids by listing only derivable pairs.
 pub const CANCELLATION_REQUESTED: &str = "cancellation_requested";
 
+/// `build_sql` returned on the **caller's** thread, before a lease exists and before a producer
+/// thread is spawned. Stamped here rather than inferred: `build_sql` runs strictly before
+/// [`LEASE_ACQUIRED`] (`stream_inner` calls it first — the seam behind every entry point that opens
+/// a stream, including the publish path), so it is outside the attributed `lease_to_first_row`
+/// window by construction — see [`SPAN_LEASE_BIND`], which reports it rather than folding it into
+/// any scored segment.
+///
+/// **The earliest-firing event in the vocabulary, which matters under this module's declared "one
+/// traced stream per traced run" limit** (see `CURRENT`'s doc, above): a traced run that opens a
+/// second stream after the first fails but before it is dropped would let this event pair with the
+/// wrong stream's later events, since [`Trace::first`] is name-global, not stream-scoped. No traced
+/// cell today opens two streams in one trace; a harness that ever does must not rely on this event.
+pub const SQL_BUILT: &str = "sql_built";
 /// The lease was acquired and the cancellation token bound to its connection.
 pub const LEASE_ACQUIRED: &str = "lease_acquired";
-/// The SQL statement was prepared. Whether the sort happens here or at the first fetch is exactly
-/// what this and [`EXECUTE_RETURNED`] exist to settle — nothing in this repository establishes it.
+/// The first statement in `produce()`'s body, on the newly spawned producer thread — before the
+/// pre-prepare cancellation check. Separates thread-spawn/handoff cost ([`SPAN_PRODUCER_HANDOFF`])
+/// from `conn.prepare()`'s own cost ([`SPAN_STATEMENT_PREPARE`]), which a single event bracketing
+/// both would have conflated.
+pub const PRODUCER_STARTED: &str = "producer_started";
+/// The SQL statement was prepared (`conn.prepare()` returned). **This is not "planning" in the
+/// query-planner sense** — the file path is a bound parameter (`FROM read_parquet(?)`), so DuckDB
+/// cannot open the file, read its footer, or plan the scan at this point; it does not yet know
+/// which file. What `conn.prepare()` costs here is settled by [`SPAN_STATEMENT_PREPARE`], not
+/// assumed.
 pub const SQL_PREPARED: &str = "sql_prepared";
-/// `stream_arrow` returned. See [`SQL_PREPARED`].
+/// Immediately before `stmt.stream_arrow(params)` is called — after parameters are assembled and
+/// the cancellation check that follows them. See [`SPAN_PARAM_ASSEMBLY`] and
+/// [`SPAN_BIND_AND_EXECUTE`].
+pub const EXECUTE_CALLED: &str = "execute_called";
+/// `stream_arrow` returned. **This call binds parameters and executes in one step** — the vendored
+/// `duckdb` crate has no public API that separates them *on this path*, so
+/// [`SPAN_BIND_AND_EXECUTE`] (`execute_called` → `execute_returned`) may never be quoted as either
+/// half alone. (`Statement::raw_bind_parameter` does separate binding from execution, but only
+/// pairs with `raw_query`/`raw_execute`, not with `stream_arrow`'s `execute_streaming`, which is
+/// `pub(crate)` — reaching it would mean forking the vendored crate, which the architect's ruling
+/// rules out for the same reason `trace.rs`'s own header refuses `cfg(test)`-gated tracing: a
+/// measurement against a locally patched dependency describes a binary nobody ships.)
 pub const EXECUTE_RETURNED: &str = "execute_returned";
-/// The first chunk arrived from DuckDB — the end of the sort, whatever else it is.
+/// The first chunk arrived from DuckDB.
+///
+/// **A previous revision of this doc called this "the end of the sort".** Withdrawn along with
+/// [`SPAN_QUERY`]'s equivalent claim — see that constant's doc for why.
 pub const FIRST_SOURCE_ROW: &str = "first_source_row";
 /// The producer completed its first batch and offered it to the consumer.
 pub const FIRST_BATCH_FULL: &str = "first_batch_full";
@@ -403,11 +438,59 @@ pub const PRODUCER_FINISHED: &str = "producer_finished";
 
 /// Request admitted → the lease bound to a connection.
 pub const SPAN_LEASE_ACQUIRE: &str = "lease_acquire";
-/// Statement prepared → the first row out of DuckDB. **This is the sort**, and it is the span that
-/// finally names the window `kernel/RESULTS.md`'s fifth section could only measure from outside.
+/// Statement prepared → the first row out of DuckDB.
+///
+/// **A previous revision of this doc called this span "the sort".** That claim was drawn from a
+/// cell (`kernel/tests/cancel_rescore.rs`'s consistency demonstration) that runs
+/// `ViewportQuery::all()` — `RowOrdering::Unordered`, no `ORDER BY` at all. There is no sort in
+/// that query, so nothing established where a sort would happen; the label is withdrawn and the
+/// question `kernel/CANCELLATION-AND-TRACING.md` §2 asked remains open. The measured split itself
+/// (`sql_prepared → execute_returned` dominant over `execute_returned → first_source_row`) stands;
+/// only the causal story attached to it is retracted. See `kernel/RESULTS.md`'s eighth section.
 pub const SPAN_QUERY: &str = "query";
 /// First source row → the producer's first completed batch.
 pub const SPAN_SOURCE_TO_FIRST_BATCH: &str = "source_to_first_batch";
+
+/// `sql_built` → `lease_acquired`. **Reported, never scored** (docs/07 scope bound): the path's
+/// UTF-8 conversion, `lease_for_stream`'s pool acquire / connection open / PRAGMA configuration /
+/// interrupt-token attach, and `ConnectionFacts` construction —
+/// `kernel/CANCELLATION-AND-TRACING.md` §3's unbounded class-(b) section, which nothing had ever
+/// measured before this cut. A lever against it is a separate, undesignated future phase, not this
+/// one's.
+pub const SPAN_LEASE_BIND: &str = "lease_bind";
+/// `lease_acquired` → `producer_started`. Thread spawn and the cross-thread handoff: cloning the
+/// geometry column name, the `Arc<StreamStats>`, the cancel token and the `BatchEnvelope`
+/// (CRS + identity + attribute fields), allocating the batch channel, and naming/spawning the
+/// producer thread. **If this segment is large, do not assume the cost is the spawn itself** — the
+/// envelope clone is the one call here with unbounded-by-schema size.
+pub const SPAN_PRODUCER_HANDOFF: &str = "producer_handoff";
+/// `producer_started` → `sql_prepared`. `conn.prepare()` plus the pre-prepare cancellation check
+/// that precedes it (the same disclosure [`SPAN_PARAM_ASSEMBLY`] makes for its own check) —
+/// **the only segment a prepared-statement-reuse lever can remove.** The Phase-1 decision rule is
+/// scored against this segment's share of [`SPAN_LEASE_TO_FIRST_ROW`].
+pub const SPAN_STATEMENT_PREPARE: &str = "statement_prepare";
+/// `sql_prepared` → `execute_called`. Parameter-`Vec` construction plus one cancellation check —
+/// named so it is not inferred by subtracting the other segments from `query`.
+pub const SPAN_PARAM_ASSEMBLY: &str = "param_assembly";
+/// `execute_called` → `execute_returned`. Brackets exactly `Statement::stream_arrow`, which binds
+/// parameters **and** executes in one call. Never quotable as "bind" or "execute" alone — see
+/// [`EXECUTE_RETURNED`].
+pub const SPAN_BIND_AND_EXECUTE: &str = "bind_and_execute";
+/// `execute_returned` → `first_source_row`. The first chunk carrying rows, once `stream_arrow` has
+/// already returned.
+pub const SPAN_FIRST_FETCH: &str = "first_fetch";
+/// `lease_acquired` → `first_source_row`. **The window Phase 1 attributes.** Wider than
+/// [`SPAN_QUERY`] by exactly [`SPAN_PRODUCER_HANDOFF`] + [`SPAN_STATEMENT_PREPARE`] — the brief's
+/// own description of "the query window" as "lease acquired → first source row" named this span,
+/// not `query`, and the decision rule is scored against it so that `statement_prepare` (outside
+/// `query`) is not structurally excluded from ever being found dominant.
+///
+/// **This span is a composite of `producer_handoff` + `statement_prepare` + `query` (itself
+/// `param_assembly` + `bind_and_execute` + `first_fetch`), not a disjoint sibling of them.** A
+/// summarizer that sums every entry in [`SPANS`] to get "the window" double-counts: `query` and
+/// `lease_to_first_row` each restate segments also reported individually. Report the five
+/// leaf segments and the two composites side by side, never summed together.
+pub const SPAN_LEASE_TO_FIRST_ROW: &str = "lease_to_first_row";
 
 /// The spans this cut derives, and the event pair each one means.
 ///
@@ -424,11 +507,162 @@ pub const SPAN_SOURCE_TO_FIRST_BATCH: &str = "source_to_first_batch";
 pub const SPANS: &[(&str, &str, &str)] = &[
     (SPAN_QUERY, SQL_PREPARED, FIRST_SOURCE_ROW),
     (SPAN_SOURCE_TO_FIRST_BATCH, FIRST_SOURCE_ROW, FIRST_BATCH_FULL),
+    (SPAN_LEASE_BIND, SQL_BUILT, LEASE_ACQUIRED),
+    (SPAN_PRODUCER_HANDOFF, LEASE_ACQUIRED, PRODUCER_STARTED),
+    (SPAN_STATEMENT_PREPARE, PRODUCER_STARTED, SQL_PREPARED),
+    (SPAN_PARAM_ASSEMBLY, SQL_PREPARED, EXECUTE_CALLED),
+    (SPAN_BIND_AND_EXECUTE, EXECUTE_CALLED, EXECUTE_RETURNED),
+    (SPAN_FIRST_FETCH, EXECUTE_RETURNED, FIRST_SOURCE_ROW),
+    (SPAN_LEASE_TO_FIRST_ROW, LEASE_ACQUIRED, FIRST_SOURCE_ROW),
 ];
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// **`SPANS` is the contract every summarizer reads; a silent edit to it must fail a test, not
+    /// just a downstream figure.** Two properties this cut's arithmetic depends on, checked
+    /// structurally rather than by re-deriving them from literals: every span name is unique, and no
+    /// two entries share an `(from, to)` pair (which would make two differently-named spans always
+    /// report the identical duration — a defect the previous version of this table could not have
+    /// had with two entries, but a nine-entry table can).
+    #[test]
+    fn spans_table_has_unique_names_and_unique_event_pairs() {
+        let mut names: Vec<&str> = SPANS.iter().map(|(name, _, _)| *name).collect();
+        names.sort_unstable();
+        names.dedup();
+        assert_eq!(names.len(), SPANS.len(), "a span name is reused");
+
+        let mut pairs: Vec<(&str, &str)> = SPANS.iter().map(|(_, from, to)| (*from, *to)).collect();
+        pairs.sort_unstable();
+        pairs.dedup();
+        assert_eq!(pairs.len(), SPANS.len(), "two spans share the same (from, to) event pair");
+    }
+
+    /// **Additivity of `SPANS` itself, checked structurally — this is the test that catches a
+    /// re-pointed entry, not the nanosecond one below.** A previous revision of this test built every
+    /// leg from hard-coded event constants rather than from `SPANS`, so its own doc claimed table-edit
+    /// protection the test could not provide: review found that re-pointing
+    /// `SPAN_STATEMENT_PREPARE` at `(LEASE_ACQUIRED, SQL_PREPARED)` — silently overlapping
+    /// `producer_handoff` and corrupting the eighth section's arithmetic by exactly one segment —
+    /// passed every test in the workspace, because none of them looked the pair up in the table they
+    /// were meant to be checking.
+    ///
+    /// This one does: each leg's `(from, to)` is resolved by name **from `SPANS`**, so a re-point is
+    /// caught here even though every event pair in isolation is still a duplicate-free, valid entry
+    /// (`spans_table_has_unique_names_and_unique_event_pairs` cannot catch it — uniqueness and
+    /// telescoping are different properties). No trace, no marks, no timing — this is pure structure
+    /// over the table's declared pairs.
+    #[test]
+    fn the_spans_table_telescopes_by_construction() {
+        fn pair(name: &str) -> (&'static str, &'static str) {
+            let (_, from, to) = SPANS.iter().find(|(n, _, _)| *n == name).unwrap_or_else(|| {
+                panic!("{name} must be a span in SPANS for this chain to be checkable")
+            });
+            (from, to)
+        }
+
+        let five_leg = [
+            SPAN_PRODUCER_HANDOFF,
+            SPAN_STATEMENT_PREPARE,
+            SPAN_PARAM_ASSEMBLY,
+            SPAN_BIND_AND_EXECUTE,
+            SPAN_FIRST_FETCH,
+        ];
+        for w in five_leg.windows(2) {
+            assert_eq!(
+                pair(w[0]).1,
+                pair(w[1]).0,
+                "{} must close on the event {} opens on, for lease_to_first_row to telescope",
+                w[0],
+                w[1]
+            );
+        }
+        assert_eq!(
+            pair(five_leg[0]).0,
+            pair(SPAN_LEASE_TO_FIRST_ROW).0,
+            "the five-leg chain must open where lease_to_first_row opens"
+        );
+        assert_eq!(
+            pair(*five_leg.last().unwrap()).1,
+            pair(SPAN_LEASE_TO_FIRST_ROW).1,
+            "the five-leg chain must close where lease_to_first_row closes"
+        );
+
+        let three_leg = [SPAN_PARAM_ASSEMBLY, SPAN_BIND_AND_EXECUTE, SPAN_FIRST_FETCH];
+        for w in three_leg.windows(2) {
+            assert_eq!(pair(w[0]).1, pair(w[1]).0, "{} must close where {} opens, for query", w[0], w[1]);
+        }
+        assert_eq!(pair(three_leg[0]).0, pair(SPAN_QUERY).0, "the three-leg chain must open where query opens");
+        assert_eq!(
+            pair(*three_leg.last().unwrap()).1,
+            pair(SPAN_QUERY).1,
+            "the three-leg chain must close where query closes"
+        );
+    }
+
+    /// **Not a table-edit guard — [`the_spans_table_telescopes_by_construction`] is that test.** This
+    /// one proves a narrower thing: that the millisecond API every summarizer actually calls
+    /// (`Trace::segment_ms`, which divides by 1e6) does not lose additivity that the raw
+    /// `offset_nanos` integers provably have. A tight `mark` loop puts every leg microseconds apart,
+    /// so the f64 rounding error this test can actually exercise is on the order of 1e-16 — far under
+    /// the `1e-6` tolerance below — which is disclosed rather than presented as a stress test of the
+    /// boundary.
+    #[test]
+    fn the_query_windows_events_telescope_exactly() {
+        let _serial = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let guard = start(TraceKey::default()).expect("no other trace is running");
+        // A tight, deliberate sequence — not a real stream — so the only thing under test is the
+        // arithmetic, not scheduling. Real gaps between these marks are exercised by
+        // `kernel/tests/trace_spans.rs`'s `the_query_windows_internal_spans_are_all_present_and_ordered`.
+        for name in [
+            SQL_BUILT,
+            LEASE_ACQUIRED,
+            PRODUCER_STARTED,
+            SQL_PREPARED,
+            EXECUTE_CALLED,
+            EXECUTE_RETURNED,
+            FIRST_SOURCE_ROW,
+        ] {
+            mark(name, 0, 0);
+        }
+        let t = guard.trace();
+
+        let leg = |from: &str, to: &str| -> u64 {
+            let a = t.first(from).unwrap();
+            let b = t.first(to).unwrap();
+            b.offset_nanos - a.offset_nanos
+        };
+
+        // Exact, in the unit the marks are actually stored in.
+        let five_leg_nanos = leg(LEASE_ACQUIRED, PRODUCER_STARTED)
+            + leg(PRODUCER_STARTED, SQL_PREPARED)
+            + leg(SQL_PREPARED, EXECUTE_CALLED)
+            + leg(EXECUTE_CALLED, EXECUTE_RETURNED)
+            + leg(EXECUTE_RETURNED, FIRST_SOURCE_ROW);
+        assert_eq!(five_leg_nanos, leg(LEASE_ACQUIRED, FIRST_SOURCE_ROW), "lease_to_first_row, in nanos");
+
+        let three_leg_nanos = leg(SQL_PREPARED, EXECUTE_CALLED)
+            + leg(EXECUTE_CALLED, EXECUTE_RETURNED)
+            + leg(EXECUTE_RETURNED, FIRST_SOURCE_ROW);
+        assert_eq!(three_leg_nanos, leg(SQL_PREPARED, FIRST_SOURCE_ROW), "query, in nanos");
+
+        // The millisecond API every summarizer actually calls — within a tolerance, because f64
+        // division does not guarantee the sum of parts equals the whole to the last bit.
+        let leg_ms = |from: &str, to: &str| t.segment_ms(from, to).unwrap();
+        let five_leg_ms = leg_ms(LEASE_ACQUIRED, PRODUCER_STARTED)
+            + leg_ms(PRODUCER_STARTED, SQL_PREPARED)
+            + leg_ms(SQL_PREPARED, EXECUTE_CALLED)
+            + leg_ms(EXECUTE_CALLED, EXECUTE_RETURNED)
+            + leg_ms(EXECUTE_RETURNED, FIRST_SOURCE_ROW);
+        let whole_ms = t.segment_ms(LEASE_ACQUIRED, FIRST_SOURCE_ROW).unwrap();
+        assert!(
+            (five_leg_ms - whole_ms).abs() < 1e-6,
+            "lease_to_first_row, in ms: {five_leg_ms} vs {whole_ms}"
+        );
+
+        drop(guard);
+    }
 
     /// **`CURRENT` is process-global by design, and `cargo test` runs tests as threads in one
     /// process** — so two trace-using tests would otherwise race for the single slot and one would

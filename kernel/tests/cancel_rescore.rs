@@ -819,7 +819,7 @@ fn consistency_cell(ds: &Dataset) -> String {
     "traced_ttfb_ms": {}, "wall_ttfb_ms": {}, "traced_is_contained": {},
     "sql_prepared_to_execute_returned_ms": {},
     "execute_returned_to_first_source_row_ms": {},
-    "which_call_holds_the_sort": "the larger of the two segments above. Nothing in this repository established this before; see CANCELLATION-AND-TRACING.md §2."
+    "note": "this cell runs ViewportQuery::all() (RowOrdering::Unordered, no ORDER BY), so the split above locates cost inside stream_arrow vs. the first fetch — it does not and cannot locate a sort, and no claim about sort location should be drawn from it. CANCELLATION-AND-TRACING.md §2's question is unanswered by this cell."
   }}"#,
         stats.batches_generated.load(Ordering::SeqCst),
         stats.rows_generated.load(Ordering::SeqCst),
