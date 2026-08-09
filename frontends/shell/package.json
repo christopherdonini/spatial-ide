@@ -1,0 +1,36 @@
+{
+  "name": "spatial-ide-shell",
+  "private": true,
+  "version": "0.1.0",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "description": "frontends/shell: the walking skeleton (docs/07 Prototype-completion cut 1). React + TypeScript per the 2026-08-09 ADR-001 amendment. Clients only, no logic (docs/02) -- anything worth a unit test that is not UI belongs in protocol/skp or kernel/.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "verify": "npm run typecheck && npm run build && npm run test",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "apache-arrow": "^21.2.0",
+    "@deck.gl/core": "^9.3.7",
+    "@deck.gl/layers": "^9.3.7"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3",
+    "vitest": "^2.1.8",
+    "jsdom": "^25.0.1"
+  }
+}

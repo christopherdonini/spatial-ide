@@ -1,0 +1,29 @@
+[package]
+name = "spatial-ide-shell"
+version = "0.1.0"
+description = "frontends/shell -- the Prototype-completion arc's walking skeleton (docs/07 cut 1). Clients only, no logic (docs/02): every command here decodes a request, calls one spatial_kernel::skp::SkpHost method, and serializes the result."
+edition = "2021"
+# ADR-009 item 1: forever-open core, written out rather than inherited -- this crate is `exclude`d
+# from the workspace (see root Cargo.toml, which also states why), so `license.workspace = true` is
+# unavailable to it.
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "spatial_ide_shell_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync", "rt-multi-thread", "time"] }
+
+spatial-kernel = { path = "../../../kernel" }
+spatial-engine = { path = "../../../engine" }
+spatial-data-plane = { path = "../../../protocol/data-plane" }
+spatial-skp = { path = "../../../protocol/skp" }

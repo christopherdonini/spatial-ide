@@ -1,0 +1,100 @@
+name: Product CI — shell
+
+# frontends/shell's own suite: typecheck, build, vitest, and the Tauri backend's cargo tests.
+#
+# ## Why a third workflow rather than a job on either existing one
+#
+# GitHub applies `on.push.paths` per **workflow**, not per job. Folding this into
+# `product-ci-viewer.yml` would spend that workflow's install on every kernel/engine change that
+# happens to touch `protocol/skp/tests/data/**`; folding it into `product-ci-rust.yml` would spend a
+# vendored-DuckDB Rust build on every pure-frontend edit. The two packages also have different
+# working directories, lockfiles, and cache keys, and this one — uniquely among the three — needs
+# both a Node toolchain and a Rust one in the same job.
+#
+# ## Why `windows-latest`, unlike the viewer's `ubuntu-latest`
+#
+# The viewer workflow's own reasoning ("pure TypeScript with no native surface of its own") does not
+# reach here: this job builds `frontends/shell/src-tauri`, a Tauri crate whose reference profile is
+# Windows/WebView2 (CLAUDE.md), and `tauri` on Linux needs webkit2gtk system packages this repository
+# has never validated. Splitting the Node half onto `ubuntu-latest` would double checkout and install
+# to save nothing, since the Rust half still needs `windows-latest`.
+#
+# ## What a green run here means, stated narrowly (product-ci-rust.yml's own discipline, repeated)
+#
+# It means: `frontends/shell` type-checks, builds, and its vitest suite passes; and
+# `frontends/shell/src-tauri` compiles and its own `cargo test` suite passes. It does **not** mean:
+#
+#   - **`tauri build` was run.** Bundling/installer/signing is not exercised here — green on this
+#     workflow does not mean the installer builds.
+#   - **Any UI, admission, canvas, or streaming behaviour was exercised interactively.** No browser,
+#     no WebView2, no real GeoParquet fixture opened end to end. That is the tester's own pass.
+#   - **Any performance claim, or anything about macOS/Linux** — same standing caveat as the other
+#     two product workflows.
+#
+# ## The shared-fixture path, watched here too
+#
+# `protocol/skp/tests/data/**` is the same reasoning `product-ci-viewer.yml` already states for
+# `renderer/tests/data/manifest-key-sets.json`: a reader (this crate's future TypeScript SKP client)
+# and a writer (`protocol/skp`'s own Rust tests) with separate tables can each stay green while
+# disagreeing about the wire shape. Both this workflow and `product-ci-rust.yml` watch the directory.
+#
+# ## Standing not-a-gate note
+#
+# **Until a run of this workflow has gone green end to end, it is configuration that has never been
+# exercised, and nothing in this repository may cite it as a gate.** When it does, record the run id,
+# commit, trigger and duration here, as the other two product workflows do.
+
+on:
+  push:
+    paths:
+      - "frontends/shell/**"
+      - "protocol/skp/tests/data/**"
+      - ".github/workflows/product-ci-shell.yml"
+  pull_request:
+    paths:
+      - "frontends/shell/**"
+      - "protocol/skp/tests/data/**"
+      - ".github/workflows/product-ci-shell.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: product-ci-shell-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  shell:
+    name: typecheck · build · vitest · cargo test
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontends/shell/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-latest-shell
+          workspaces: "frontends/shell/src-tauri"
+
+      - name: Install (locked)
+        working-directory: frontends/shell
+        run: npm ci
+
+      # `verify` is the package's own script (typecheck -> build -> test), so CI and a developer
+      # cannot drift into two different definitions of "verified" — the viewer workflow's own
+      # convention. Runs before cargo below because the Tauri crate's own build reads the frontend's
+      # `dist/` output as `frontendDist`, even though this step does not invoke `tauri build` itself.
+      - name: Type-check, build, and test the frontend
+        working-directory: frontends/shell
+        run: npm run verify
+
+      # Not `cargo build --workspace`: this crate is deliberately excluded from the root workspace
+      # (root Cargo.toml explains why) and carries its own lockfile.
+      - name: Build and test the Tauri backend
+        run: cargo test --manifest-path frontends/shell/src-tauri/Cargo.toml --locked

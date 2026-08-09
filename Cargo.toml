@@ -19,6 +19,13 @@ members = [
 exclude = [
     "protocol/transport-bakeoff",
     "spikes/adr-003-crs-rendering/app/src-tauri",
+    # `frontends/shell/src-tauri` depends on a Node build output (its `frontendDist`), so making it a
+    # workspace member would make `cargo build --workspace` depend on npm having already run.
+    # Excluding it is also the enforcement mechanism for docs/02's "frontends: clients only, no
+    # logic" — anything in this crate worth a unit test does not belong there; it belongs in
+    # `protocol/skp` or `kernel/`, both of which stay real workspace members. Covered by
+    # `.github/workflows/product-ci-shell.yml`, not `product-ci-rust.yml`.
+    "frontends/shell/src-tauri",
 ]
 
 # One licensing statement for every member, inherited rather than repeated. ADR-009 item 1 puts the
