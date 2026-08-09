@@ -9,6 +9,7 @@ import { DECKGL_PICK_INDEX_CEILING, PickCeilingExceeded, ResidentVertexCeilingEx
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import { PickResult, resolvePick } from "./pick";
 import { ResidentSet } from "./residentSet";
+import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportBbox";
 
 /**
  * The working canvas — deck.gl `OrthographicView` in the dataset's source CRS (ADR-010 rules 1, 2,
@@ -28,15 +29,15 @@ export interface WorkingCanvasHandle {
   pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): void;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
-  /** Fit the view to an authoritative f64 point — used once, when the first batch of a fresh
-   * dataset arrives, to put the camera somewhere the data actually is. */
-  centerOn(x: number, y: number): void;
 }
 
 export interface WorkingCanvasProps {
   geometryColumn: string;
   onHover: (pick: PickResult | null) => void;
   onCanvasRefusal: (streamHandle: string, message: string) => void;
+  /** Fired after every settled view-state change (pan, zoom, or an origin recenter) with the
+   * authoritative-CRS box the view now shows -- the caller drives `viewport_query` from this. */
+  onViewportChanged: (bbox: AuthoritativeBbox) => void;
 }
 
 const INITIAL_ZOOM = 0;
@@ -47,7 +48,7 @@ function pixelsPerMetreAtZoom(zoom: number): number {
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { geometryColumn, onHover, onCanvasRefusal },
+  { geometryColumn, onHover, onCanvasRefusal, onViewportChanged },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -79,6 +80,13 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           end("frame-decode");
         }
 
+        // No dataset extent exists to aim the initial camera at (SKP-V0.md's C1: `describe` never
+        // claims one). The first feature of the first batch ever received is the closest thing to
+        // "where the data is", so the frame recenters on it and the view snaps there -- this is
+        // what lets "open a dataset" actually show something without the operator first guessing
+        // where in an unbounded plane to pan to.
+        const wasEmpty = residentRef.current.getBatches().length === 0;
+
         begin("buffer-build");
         try {
           residentRef.current.addBatch(batch);
@@ -92,21 +100,20 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           throw e;
         }
         end("buffer-build");
+
+        if (wasEmpty) {
+          const anchor = batch.rings.find((r) => r.length > 0 && r[0].length > 0)?.[0]?.[0];
+          if (anchor) {
+            const frame = frameRef.current;
+            frame.maybeRecenter(anchor[0], anchor[1]);
+            deckRef.current?.setProps({ viewState: { target: [0, 0, 0], zoom: INITIAL_ZOOM } });
+          }
+        }
         render();
       },
 
       clearStream(streamHandle) {
         residentRef.current.clearStream(streamHandle);
-        render();
-      },
-
-      centerOn(x, y) {
-        const frame = frameRef.current;
-        frame.maybeRecenter(x, y);
-        const deck = deckRef.current;
-        if (deck) {
-          deck.setProps({ viewState: { target: [0, 0, 0], zoom: INITIAL_ZOOM } });
-        }
         render();
       },
     }),
@@ -135,6 +142,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         if (frame.maybeRecenter(worldX, worldY)) {
           render();
         }
+        onViewportChanged(
+          computeAuthoritativeViewportBbox({
+            targetX: vs.target[0],
+            targetY: vs.target[1],
+            zoom: vs.zoom,
+            widthPx: canvas.clientWidth,
+            heightPx: canvas.clientHeight,
+            originX: frame.originX,
+            originY: frame.originY,
+          })
+        );
       },
       onHover: (info: PickingInfo) => {
         // rule 1: deck.gl's own unprojected pick coordinate is never read, here or anywhere else.
