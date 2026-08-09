@@ -139,3 +139,23 @@ The ADR-003 spike README is an archived deliverable and is not edited. It cites 
 | README:274, M4 architecture note — "folding this direction into its rule 3" | rule 3's per-tile-buffers clause + rule 4's partial-update/consolidation half | **ADR-011** — and the spike's own gate for it ("provisional until re-measured at P2 scale on both GPUs") is carried into ADR-011's acceptance gates, in substance |
 
 The original rule 5 (declared capacity ceilings) is now rule 6; the original rule 4's editing-boundary content is split between **rule 4** (static/dynamic split, atomic commit — measured) and **ADR-011** (partial range updates, async consolidation — unmeasured), with **rule 5** carrying the cache-is-derived-state invariant that belongs to any cache, tiled or not.
+
+## Amendment (2026-08-09) — rule 2's accuracy clause, revised per ADR-013 §5
+
+Rule 2's promotion bullet reads: *"Its declared accuracy travels with it and constrains the
+reproducibility grade the containing workflow may claim (ADR-005, principle 3)."* **Revised, now
+binding:** declared accuracy **bounds the accuracy claim the containing workflow may make, displayed
+alongside its ADR-005 reproducibility grade — it does not alter that grade.**
+
+The two axes are orthogonal: reproducibility asks whether the same result can be recreated; accuracy
+asks how closely that result may represent reality. A cursor-derived point can be exactly
+reproducible while spatially coarse, and conflating the axes would corrupt both grades. Declared
+accuracy composes by its own rule mirroring ADR-005's — the weakest declared accuracy among a
+derived output's spatial inputs, plus the transform pipeline's where one applies — and the two
+attributes are displayed side by side, never combined into one number. (ADR-013 §5, accepted
+2026-08-09; the human's reasoning recorded there.)
+
+**The rule-2 OPEN block** (*Typed coordinate provenance and candidate-to-authoritative promotion*)
+**is resolved by ADR-013's acceptance**; its deadline — before the editing plugin's digitizing
+path — is discharged, with ADR-013's own surviving open item (delta-store column shape) carrying
+its separate deadline.

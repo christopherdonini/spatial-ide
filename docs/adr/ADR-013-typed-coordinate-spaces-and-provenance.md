@@ -1,6 +1,6 @@
 # ADR-013 — Typed Coordinate Spaces and Provenance
 
-**Status:** Proposed — **binds nothing.** Not architect-blockable, and **may not be cited to block a review or as settled design** until accepted. **ADR-010 rule 1 remains the binding text** for coordinate spaces; the table below refines its naming and may not be read as replacing it. Same posture ADR-011 carries, for a different reason: ADR-011 is unmeasured, whereas this ADR asserts no measurement at all.
+**Status:** Accepted — 2026-08-09, with the granularity ruling and three clarifications recorded in the **Acceptance appendix** below, and the ADR-010 rule-2 amendment its §5 requires applied the same day. Architect-blockable from acceptance. **ADR-010 rule 1 remains the binding text** for coordinate spaces; the table below refines its naming and may not be read as replacing it.
 **Resolves:** the `> OPEN:` block in **ADR-010** (*Typed coordinate provenance and candidate-to-authoritative promotion*), which names a new ADR as its expected vehicle.
 **Deadline, inherited from that block:** the question **must be resolved** — by this ADR or a successor — **before the editing plugin's digitizing path is built** (ADR-002, 1.0; `07`).
 **Related:** ADR-010 rules 1–4 (Accepted — refined, never amended), ADR-005 (grades — **left intact**), ADR-007 (delta store), ADR-006 (operation classes), ADR-002 (editing scope), `docs/01` principles 3 and 8, `docs/05`, `docs/10`, `docs/11`.
@@ -105,6 +105,15 @@ This mirrors ADR-005's existing weakest-input rule and fits the ADR-007 delta st
 > geometry column in the delta store and on the wire. **Per-feature is proposed; per-vertex is the
 > named alternative.** This choice should be made explicitly at acceptance, not inherited.
 
+> **RESOLVED at acceptance (2026-08-09): per-feature with the weakest-vertex rule**, as proposed.
+> The human's grounds: it fits Arrow's row model and the delta store; it conservatively prevents
+> mixed geometry from claiming survey accuracy; it avoids a parallel provenance array per
+> coordinate; and it avoids prematurely designing **stable vertex identity** and compaction
+> behavior, which per-vertex provenance would presuppose. Per-vertex remains a **named future
+> refinement**, contingent on that identity design existing first. Additionally ruled: **a degraded
+> feature never automatically regains authoritative status — the only path back is the explicit,
+> logged promotion** (rule 2).
+
 **Snapping inherits, it does not derive.** A vertex snapped to an existing feature takes **the snap
 target's provenance**, because ADR-010 rule 2 already says the committed value *is* the target's
 authoritative f64 — it is a lookup, not a measurement. This is the commonest case in ADR-002 1.0's
@@ -133,6 +142,8 @@ block. It does not enact one — see the contradiction notice immediately below.
 > written.** Accepting ADR-013 therefore requires an **appended ADR-010 amendment** revising that
 > clause, drafted at acceptance and approved as its own decision. §7 refuses to enlarge an accepted
 > rule by side channel; §5 must equally refuse to narrow one.
+>
+> **The amendment was applied at acceptance** — ADR-010, appended amendment of 2026-08-09.
 
 **The two axes are orthogonal, and conflating them would corrupt both.** ADR-005's ladder answers
 *"will replaying this produce the same result?"* A hand-digitized point is **perfectly replayable** —
@@ -202,7 +213,9 @@ anchor-precision measurement.
   edit it describes (ADR-006 workspace mutation), never as a renderer-side write. Its shape (one
   column or three: class / method / declared accuracy), its nullability and default for existing rows,
   its survival through compaction into GeoParquet, and its queryability across the overlay are
-  **decided at acceptance** — see the open item below.
+  **explicitly deferred past acceptance** to the open item below, whose own deadline — before the
+  delta store gains the column — governs. *(Corrected at acceptance: the earlier "decided at
+  acceptance" wording contradicted that deadline.)*
 - A **schema field on SKP data-plane envelopes** (`docs/10`, ADR-004) — a field, not a new message
   type, and not a control-plane concept.
 - A **metadata field** under `docs/11`'s stable-ID policy, including a declared default for datasets
@@ -229,3 +242,22 @@ anchor-precision measurement.
 > **OPEN:** *Delta-store column shape.* One column or three; defaults for existing rows; survival
 > through compaction; queryability across the ADR-007 overlay. Must be settled before the delta store
 > gains the column.
+
+## Acceptance appendix (2026-08-09, the human's rulings)
+
+1. **Granularity:** per-feature with the weakest-vertex rule, per §3's RESOLVED note. Per-vertex is
+   a named future refinement contingent on a stable-vertex-identity design; it is never introduced
+   as a side effect of a provenance column. No automatic regrade — explicit, logged promotion is
+   the only path from `derived` back to `authoritative`.
+2. **The envelope/§3 reconciliation:** the envelope declares the provenance **column's schema and
+   encoding** — a batch-layout fact, which is what envelopes are for — while the provenance
+   **values** are per-row Arrow payload. §3's "never an envelope tag" governs values; the
+   Consequences' "schema field on SKP data-plane envelopes" governs the layout declaration. Both
+   stand once distinguished; neither survives read alone.
+3. **Column shape:** explicitly deferred (Consequences corrected accordingly); the open item's own
+   deadline governs.
+4. **Implementation naming:** the authoritative-class type is **not** implemented under a name that
+   grants trust — not `AuthoritativeProjectCrsCoordinate`. A neutral name (`CrsCoordinate` or
+   equivalent), with **CRS instance and provenance determining trust at runtime, never the type
+   name** — §1's own rule ("class answers *what shape*; instance and provenance answer *what may be
+   trusted*") applied to the code that will implement it.
