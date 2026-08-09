@@ -2358,6 +2358,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File run-cold-open.ps1
 preregistration could not quietly redefine an interval while declaring a measurement of it.
 **Nothing above this line is edited.** The fifth section stands as its tree's record.
 
+> **Correction, filed by the eighth section — this title's second clause, "the sort located", is
+> withdrawn.** The cell that produced "Where the sort actually happens" below
+> (`kernel/tests/cancel_rescore.rs`'s consistency demonstration) runs `ViewportQuery::all()` —
+> `RowOrdering::Unordered`, no `ORDER BY` at all — so there is no sort in that query and nothing in
+> this section located one. The measured split (`sql_prepared → execute_returned` dominant over
+> `execute_returned → first_source_row`, n = 1) stands as a number; only the causal label attached to
+> it is retracted. `kernel/CANCELLATION-AND-TRACING.md` §2's open question — with an `ORDER BY`, does
+> DuckDB sort inside `stream_arrow` or the first `next()` — remains unanswered, and is also amended
+> in `kernel/CANCELLATION-AND-TRACING.md` §8. Full correction below, in this section's own "Where the
+> sort actually happens" subsection; the eighth section's registered prediction leaned on the number
+> this section measured, not on the retracted label.
+
 ## What this section may not claim, stated before any number
 
 **No figure here may be differenced against the fifth section's.** Different tree, different session.
@@ -2667,11 +2679,29 @@ at; it is not evidence that the boundary they were pointed at is the right one. 
 disagreement arose, so this cut carries no unresolved instrumentation discrepancy** — the condition
 rev 2 attached to piece 2's validation claim.
 
-### Where the sort actually happens — previously unestablished anywhere in this repository
+### Where the sort actually happens — a title this section can no longer claim, corrected by the eighth section
 
-`CANCELLATION-AND-TRACING.md` §2 named this an open question: with an `ORDER BY`, does DuckDB sort
+> **Withdrawn.** This subsection's own question is still open. `ViewportQuery::all()` — the query the
+> cell below actually runs — is `RowOrdering::Unordered`: no `ORDER BY`, no sort to locate. The
+> architect's ruling for the eighth section's cut caught this on inspection of `engine/src/stream.rs`
+> before any new measurement ran, and it is recorded here rather than smoothed into a silent rewrite.
+> **The numbers below are unchanged and still hold** — n = 1, "recorded, not established", exactly as
+> this section always said — only the causal story "this is the sort" is retracted. What the
+> `sql_prepared → execute_returned` dominance actually reflects is **positional, not causal**: the
+> cost falls somewhere inside `Statement::stream_arrow` — which binds parameters and executes in one
+> call, a seam the vendored `duckdb` crate does not expose on this path — before `execute_returned`.
+> *What within that call* produces the cost (IO, DuckDB's own query-plan execution, Arrow
+> materialization, or some mix) is **not established, at n = 1 or otherwise**; the eighth section
+> states this limit explicitly rather than filling it with a second unmeasured claim. What n = 7 per
+> viewport *does* independently establish, in the eighth section's own session and own trials, is the
+> same **positional** split — cost before `execute_returned` dominating cost after it — not a deeper
+> account of what that cost is. See the eighth section in full.
+
+`CANCELLATION-AND-TRACING.md` §2 named the sort question open: with an `ORDER BY`, does DuckDB sort
 inside `stream_arrow`, or inside the first `next()`? The fifth section's window sits on one side of
-that line and no measurement said which. Two spans one line apart now do:
+that line and no measurement said which. **Neither does this cell** — it has no `ORDER BY` — but the
+two spans below still answer a different, real question: which side of `stream_arrow`/`next()` the
+bulk of query-window cost falls on, positionally.
 
 Both segments are trace-derived, so the preregistration's §C6 requires the drop count printed beside
 them regardless of whether it is zero: **`dropped_records: 0`.**
@@ -2681,8 +2711,11 @@ them regardless of whether it is zero: **`dropped_records: 0`.**
 | `sql_prepared → execute_returned` | **55.109** | **96.3 %** |
 | `execute_returned → first_source_row` | 2.127 | 3.7 % |
 
-**The sort is inside `stream_arrow`.** The call that returns the iterator does the work; the first
-fetch from it is nearly free.
+**Withdrawn: "The sort is inside `stream_arrow`."** There is no sort in this query. What the split
+actually shows, positionally — confirmed independently at n = 7 per viewport by the eighth section —
+is that whatever `stream_arrow` itself costs dominates the query window, and the first fetch from it
+is nearly free. *What* `stream_arrow` spends that cost on is not decomposed here or in the eighth
+section; see that section's own stated limit.
 
 **Both segments are n = 1 — recorded, not established**, by this file's own standing rule that one
 sample gives an order of magnitude and not a distribution. What makes the *location* claim more than
@@ -2696,7 +2729,8 @@ the invalidated attempts are not quoted here, and the ratio of the run of record
 n = 1 like the segments it comes from.
 
 **Scope, stated because it is easy to over-read:** this is the 145 MB control, not 5 GB. It says
-*where* the work happens, which was the open question. It says nothing about how long the sort takes
+which side of `stream_arrow`/`next()` the cost falls on — the question this subsection can actually
+answer, now that "the sort" is withdrawn as its label. It says nothing about how long that cost runs
 at hero-slice scale, and the 5 GB figure is not derivable from it.
 
 ### The figure this section deliberately does not print, and the caveat that stops it
@@ -2806,10 +2840,11 @@ check and a stale one answers the question wrongly.
 
 - **Intra-partition cancellation *latency*.** Needs an off-thread trigger; the declared ones fire
   inline. Future work, declared rather than retrofitted.
-- **The sort's duration at 5 GB.** C6 runs on the 145 MB control. Where the sort lives is *located* —
-  at n = 1, with the direction robust across every attempt that ran the cell — and how long it takes
-  at scale is neither located nor derivable from it. "Established" is this file's word for n ≥ 7 and
-  is not used of either segment.
+- **Whatever `stream_arrow` costs, at 5 GB.** C6 runs on the 145 MB control and has no `ORDER BY` —
+  "the sort" was withdrawn as this cost's label, above. Which side of `stream_arrow`/`next()` it falls
+  on is positionally consistent at n = 1, across every attempt that ran the cell, and how long it
+  takes at 5 GB scale is neither located nor derivable from it. "Established" is this file's word for
+  n ≥ 7 and is not used of either segment at this scale.
 - **Which term dominates the publish write path at 5 GB.** The spans exist; the trace buffer's
   positional drop makes any such figure describe the first ~819 of ~5,700 partitions — the cold-cache
   population, and the opposite one from where the cancellation cells fire. Declared as a limit before
@@ -3972,3 +4007,289 @@ criterion applied mechanically.
 the night's `first-batch.json` only and knows nothing of these three artifacts. The seventh section
 named hand transcription as the source of its one error; this section says which tables are exposed
 to it rather than leaving a reader to find out.
+
+---
+
+# Eighth section — 2026-08-08 — the query window attributed, and the lever the brief expected does not apply
+
+**Contract:** `kernel/QUERY-WINDOW-ATTRIBUTION-PREREGISTRATION.md`, committed before the harness
+existed. **Vocabulary:** `engine/src/trace.rs`'s doc comments and `SPANS` constant, committed before
+the preregistration. **Brief:** `NEXT-CUT.md` — scope engine/kernel only.
+
+**Every number below is this session's own.** Nothing here is differenced against the night pass's
+21.3–74.6 ms `query` figure or the sixth section's n = 1 consistency-demonstration split
+(55.109 / 2.127 ms) — both are cited as another-session context only, per the standing within-session
+rule this file has kept since the fifth section.
+
+## Scope
+
+Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz · 8 cores / 16 threads · 63.7 GiB RAM · Windows 10 Pro 19045
+· SSD · release build (the harness refuses a debug one). 145 MB class only, `ScanOnly` plan,
+`SizeOnly` batching, unordered viewport path — the ordered publish path's query window is not
+attributed here (see "What this cut leaves for a future one"). Nothing here says anything about
+macOS or Linux, or about the 5 GB hero-slice scale.
+
+**No source-tree pin was taken for this pass, before or after — a disclosed gap, not an oversight
+smoothed over.** Started from commit `d84715b`; every file this pass touches was still a working-tree
+change, uncommitted, when the trials ran. A reader auditing exactly which tree produced these numbers
+has only this document's own git history to go on until the commits this section's numbers are filed
+under land.
+
+## What this section corrects before it claims anything
+
+`NEXT-CUT.md`'s own premise needed three corrections before any code was written, and an architect
+consultation (per this repository's CLAUDE.md workflow) supplied them, in the same spirit the previous
+cut's C1–C3 corrected `NIGHT-CUT.md`:
+
+1. **The brief called the window "lease acquired → first source row" but pointed at the wrong span's
+   numbers.** The `query` span (`sql_prepared → first_source_row`) produced the night pass's
+   21.3–74.6 ms figure; the window actually described by "lease acquired → first source row" is wider
+   and had no name. It is named `lease_to_first_row` below, and it — not `query` — is what this
+   section's decision rule is scored against, so that a segment outside `query` (namely
+   `statement_prepare`) is not structurally barred from ever being found dominant.
+2. **One of the brief's four requested event names cannot exist.** `statement_ready`
+   ("prepared/bound, if the API distinguishes") does not: the vendored `duckdb` crate's
+   `Statement::stream_arrow` binds parameters and executes in one call, with no public seam between
+   the two on this path. Patching the vendored crate to manufacture one was ruled out — a measurement
+   against a locally patched dependency describes a binary nobody ships.
+3. **A finding this cut's own registered prediction leaned on had an unsupported causal claim.** The
+   sixth section's "the sort is inside `stream_arrow`" is withdrawn (see the correction filed against
+   that section's title and its "Where the sort actually happens" subsection, above): the cell that
+   produced it runs `ViewportQuery::all()` — `RowOrdering::Unordered` — so there was no sort to
+   locate. The 55.109/2.127 ms split stands as a number; the label is retracted.
+   `kernel/CANCELLATION-AND-TRACING.md` §2's sort question is still open and is unaffected by this
+   cut, which measures an unordered window throughout.
+
+## What was built
+
+Three new trace events, all per-operation marks (none inside a per-row loop, per `trace.rs`'s hard
+rule): `SQL_BUILT` (caller thread, before a lease exists — outside the scored window by construction),
+`PRODUCER_STARTED` (first statement in `produce()`'s body, on the producer thread — spawn-closure
+work above it lands in `producer_handoff`, below), `EXECUTE_CALLED` (immediately before `stream_arrow`
+is called). Combined with the four events already in place
+(`LEASE_ACQUIRED`, `SQL_PREPARED`, `EXECUTE_RETURNED`, `FIRST_SOURCE_ROW`), seven derived spans were
+added to `trace::SPANS`: `lease_bind`, `producer_handoff`, `statement_prepare`, `param_assembly`,
+`bind_and_execute`, `first_fetch`, and the composite `lease_to_first_row`. `query` and
+`source_to_first_batch` keep their original definitions unchanged.
+
+**Additivity is exact by construction and is asserted, not assumed** — by three new structural unit
+tests in `engine/src/trace.rs`. `spans_table_has_unique_names_and_unique_event_pairs` proves no span
+name and no `(from, to)` event pair repeats in the nine-entry `SPANS` table. Separately —
+uniqueness and telescoping are different properties, and one test proving the first does not cover
+the second — `the_spans_table_telescopes_by_construction` resolves every leg from `SPANS` **by name**
+and proves
+the five-leg and three-leg chains telescope to `lease_to_first_row` and `query` respectively
+**regardless of what durations the marks record** — it would catch a table entry silently re-pointed
+at the wrong event pair, which review confirmed by deliberately corrupting `SPAN_STATEMENT_PREPARE`'s
+entry and watching the test fail, then reverting. A third test
+(`the_query_windows_events_telescope_exactly`) proves the millisecond `segment_ms` API doesn't lose
+that exactness to floating-point rounding. The measurement harness (below) re-derives the identical
+check on every **live** trial, in raw nanoseconds, and refuses to promote a trial that fails it into a
+cell's statistics — an instrument defect, not a data point.
+
+Both the wire-bytes invariant test (`kernel/tests/wire_bytes_invariant.rs`) and the full trace test
+suite pass; nothing here adds a field, a tag or a byte to any wire type (ADR-004 Amendment 4 intact).
+
+## The preregistered cells, and what ran
+
+`kernel/QUERY-WINDOW-ATTRIBUTION-PREREGISTRATION.md`: 145 MB class, the exact fixture already on disk
+at `target/slice-evidence/first-batch/parcels-145mb.parquet` (151,629,665 bytes, sha256
+`fe61e704fcc01d40…`) reused rather than regenerated, in-session `ScanOnly` baseline, `SizeOnly`
+batching, three viewports (`whole`, `near-quarter`, `1-64`), every trial traced, n ≥ 7 per viewport,
+one process per trial. The tester ran it end to end: release build, mechanism self-check on the gate
+viewport (additivity verified live, `dropped_records: 0`), all three viewports' predicted row counts
+asserted before any trial, 120 s opening settle, canary before each of 7 repetitions and at pass-end,
+21 trials total (7 × 3), wall time 614.06 s.
+
+**Every canary phase held inside the declared 10 % spread** (0.2 %–4.7 % across all eight
+checkpoints). **All three viewports are admissible**: n = 7 each, `dropped_records: 0` in all 21
+trials, one filter plan per viewport (`whole-file` for `whole`; `scan-only` for the other two), and
+every trial's row count matched the registered prediction exactly (100,000 / 25,281 / 1,600). Zero
+errored trials.
+
+### The segment decomposition, p50 / p95 (ms)
+
+| viewport | n | producer_handoff | statement_prepare | param_assembly | bind_and_execute | first_fetch | `query` (composite) | `lease_to_first_row` (composite) | `lease_bind` (reported, not scored) |
+|---|---|---|---|---|---|---|---|---|---|
+| whole | 7 | 0.218 / 0.296 | 0.154 / 0.221 | 0.000 / 0.000 | 43.710 / 47.518 | 1.667 / 5.067 | 45.327 / 49.160 | 45.722 / 49.531 | 0.001 / 0.002 |
+| near-quarter | 7 | 0.194 / 0.351 | 0.163 / 0.179 | 0.001 / 0.001 | 41.383 / 45.009 | 1.090 / 1.547 | 42.474 / 46.014 | 42.790 / 46.394 | 0.001 / 0.002 |
+| 1-64 | 7 | 0.220 / 0.227 | 0.172 / 0.179 | 0.001 / 0.001 | 23.602 / 26.279 | 0.319 / 0.621 | 23.853 / 26.639 | 24.255 / 27.037 | 0.001 / 0.002 |
+
+**`query` and `lease_to_first_row` are composites of the leaves beside them, never a sixth and
+seventh independent sample, and never summed with the leaves** — `SPAN_LEASE_TO_FIRST_ROW`'s doc
+comment states the hazard explicitly, because before this cut the table's two entries were disjoint
+and summing every row was harmless; it no longer is.
+
+### Dominance, scored per §5: the p50 of each trial's own segment share — not a ratio of p50s
+
+Rows kept in the order `scripts/summarize-query-window-attribution.mjs` emits them (its `LEAVES`
+order), not reordered by result:
+
+| viewport | segment | p50 of per-trial shares | ratio of p50s | ≥ 40 %? |
+|---|---|---|---|---|
+| whole | producer_handoff | 0.5 % | 0.5 % | no |
+| whole | statement_prepare | 0.4 % | 0.3 % | no |
+| whole | param_assembly | 0.0 % | 0.0 % | no |
+| whole | bind_and_execute | **95.6 %** | 95.6 % | **yes** |
+| whole | first_fetch | 3.6 % | 3.6 % | no |
+| near-quarter | producer_handoff | 0.5 % | 0.5 % | no |
+| near-quarter | statement_prepare | 0.4 % | 0.4 % | no |
+| near-quarter | param_assembly | 0.0 % | 0.0 % | no |
+| near-quarter | bind_and_execute | **96.7 %** | 96.7 % | **yes** |
+| near-quarter | first_fetch | 2.5 % | 2.5 % | no |
+| 1-64 | producer_handoff | 0.8 % | 0.9 % | no |
+| 1-64 | statement_prepare | 0.7 % | 0.7 % | no |
+| 1-64 | param_assembly | 0.0 % | 0.0 % | no |
+| 1-64 | bind_and_execute | **97.2 %** | 97.3 % | **yes** |
+| 1-64 | first_fetch | 1.3 % | 1.3 % | no |
+
+**No gap between the two dominance figures exceeds 0.1 percentage points anywhere in the table**
+(`whole`/`statement_prepare`: 0.4 vs 0.3; `1-64`/`bind_and_execute`: 97.2 vs 97.3;
+`1-64`/`producer_handoff`: 0.8 vs 0.9 — all three are ties at this precision, not one largest gap).
+Close agreement between the two is expected at this margin — `bind_and_execute` does not merely lead,
+it saturates the window — and both are reported rather than one assumed from the other, per §5's
+declared rule that the two must never be conflated.
+
+## The registered prediction, and whether it held
+
+Recorded in the preregistration **before any trial ran**, from the architect's ruling: `statement_prepare`
+under 5 % of `lease_to_first_row` at every viewport, `bind_and_execute` dominant. Mechanism argued in
+advance: `stream.rs` builds `FROM read_parquet(?)` with the file path as a bound parameter, so at
+`conn.prepare()` time DuckDB does not yet know which file it will read and cannot open it, read its
+footer, resolve the projected columns, or plan the scan — all of that necessarily defers to
+`stream_arrow`, the call that does know the file.
+
+**The prediction held at all three viewports, not just the gate.** `statement_prepare`'s share was
+0.4 %, 0.4 %, 0.7 % (whole / near-quarter / 1-64) — comfortably under 5 % everywhere — and
+`bind_and_execute` was dominant everywhere at 95.6–97.2 %.
+
+## The decision rule (§6), applied mechanically at the gate viewport (near-quarter)
+
+**`bind_and_execute` dominates at 96.7 % of `lease_to_first_row` — the ≥ 40 % threshold, cleared by a
+wide margin.** Per `kernel/QUERY-WINDOW-ATTRIBUTION-PREREGISTRATION.md` §6's table, verbatim, for the
+`bind_and_execute` row:
+
+> **Not** the prepared-statement lever — that lever cannot reach this segment (it binds and executes
+> on every call regardless of whether the statement object was freshly prepared). Recorded as a
+> finding; the architect proposes a lever for this segment as its own preregistered phase, not
+> improvised here.
+
+**Phase 2 — the prepared-statement / plan-reuse lever this brief was written to build — does not
+proceed.** This is the outcome `NEXT-CUT.md` itself pre-authorized ("If scan spin-up dominates →
+record the finding, and the architect proposes the appropriate lever *as its own preregistered phase*
+rather than improvising past scope") and is a legitimate result of Phase 1, not a failure to find one.
+
+**Why the lever could never have reached this segment, stated plainly rather than left to infer.**
+`bind_and_execute` brackets exactly `Statement::stream_arrow` — the one call that binds parameters
+*and* executes on this path (correction #2, above). A prepared-statement cache
+(`Connection::prepare_cached`, confirmed present in the vendored crate, D10 in the architect's ruling)
+removes the cost of `conn.prepare()` — measured here inside `statement_prepare`, which also includes
+one pre-prepare cancellation check (`engine/src/trace.rs`'s doc on `SPAN_STATEMENT_PREPARE`) — at
+0.4–0.7 % of the window. Even generously crediting the whole segment to `conn.prepare()` alone, the
+conclusion only strengthens: it does not touch bind or execute, which happen on every call regardless
+of whether the statement object is freshly prepared or reused. A lever built against this brief's
+literal text would have spent Phase 2 shortening a segment measured, at every viewport, under one
+percent of the window it was meant to move.
+
+## `lease_bind`, reported per §8 — never eligible to win the decision rule, and it did not
+
+`lease_bind` (`sql_built → lease_acquired`) is a class-(b) section
+(`kernel/CANCELLATION-AND-TRACING.md` §3) nothing had ever measured before this cut. Measured here at
+0.001 ms p50 / 0.002 ms p95 at every viewport — negligible, and structurally unsurprising: every trial
+in this harness calls `Dataset::open` before streaming, which primes the connection pool, so
+`reused_connection` was `true` in all 21 trials and `lease_bind` never contains a fresh
+connection-open/PRAGMA cost here. **This does not establish that `lease_bind` is always negligible** —
+only that it is negligible on a warm connection, which is what every trial in this pass measured by
+construction. A cold-connection figure is unmeasured and is not claimed.
+
+## First-pixels arithmetic, restated so no one has to ask
+
+This cut moves nothing on the browser-visible first-pixels path, and says so before anyone asks.
+`bind_and_execute` (23.6–43.7 ms p50 across the three viewports) is a **producer-side, in-process**
+segment, plausibly inside the third section's `S3` window (`OPEN → first bytes`) — plausibly, because
+that section's own cell (whole-file, headless, connection reuse on, n = 7: `kernel/RESULTS.md`
+"The one number this cut set out to move: S2", S3 = 102.3 ms p50) and this cut's cells are different
+sessions and different harnesses, so containment is architectural, not measured, and no subtraction
+between them is claimed. **This cut built no lever, so it moves nothing on the browser-visible
+first-pixels path — not because a lever here couldn't matter, but because none was warranted (the
+decision rule, above) and none was built.**
+
+**`S2` (`query start → OPEN`, the third section's browser-side socket/handshake segment, same cell as
+above) sits at 55.6 ms p50 with connection reuse on, and is untouched by this cut** — S2 and the query
+window this cut attributes are different segments of the pipeline, measured in different sessions with
+different instruments, and nothing here bears on socket handshake time. That same cell's first pixels
+after query start stood at 163.9 ms p50 with reuse on, against `docs/08`'s < 100 ms budget — a
+third-section figure, restated here only so a reader does not have to go looking for it. **No
+`< 100 ms` claim is available from this cut's own work**, and none is made.
+
+## What this cut leaves for a future one
+
+- **A `bind_and_execute` lever is undesignated and unscoped.** The architect's own decision table
+  (§6) is explicit that this cut may not improvise one — it would need its own preregistered phase,
+  and the mechanism (parallelism across viewports? a different DuckDB scan strategy? something in the
+  Parquet reader's own tuning?) is not investigated here.
+- **ADR-020 is not filed.** The architect drafted a skeleton — mechanism (`Connection::prepare_cached`),
+  cache identity (physical connection × SQL text, dataset/lease-health scoping inherited structurally
+  from the pool), revision handling (invalidation on content-pin change, never a per-query content
+  hash), a declared ceiling with its reason stated at the call site, and mandatory `discard()` on
+  every error or cancellation — conditionally, to be filed only if Phase 1 named `statement_prepare`
+  as dominant. It did not. The skeleton stands as the discipline a future candidate for this exact
+  lever would have to meet, in case a different query shape ever makes `conn.prepare()` itself the
+  bottleneck.
+- **Whether `bind_and_execute`'s cost is IO, DuckDB's own query-plan execution, Arrow materialization,
+  or some mix is not decomposed here.** The vendored crate exposes no seam inside `stream_arrow` on
+  this path (correction #2), so decomposing it further without forking the dependency is out of
+  reach for a `duckdb`-crate-based engine — a real limit, not an oversight.
+- **Warm-vs-cold connection is not varied.** Every trial in this pass reused a warm connection
+  (`lease_bind`'s near-zero cost, above); whether `bind_and_execute` itself has a cold-connection
+  component (first query on a freshly opened connection) is unmeasured.
+- **The 145 MB class only.** Whether `bind_and_execute` still dominates at the hero-slice's 5 GB
+  scale is unmeasured — the sixth section made the equivalent disclaimer about its own C6 cell, and
+  it applies here unchanged.
+- **The unordered viewport path only, under `ScanOnly`.** The ordered publish path's query window
+  (`RowOrdering::ByIdentityAscending`, per `stream_for_publish`) is unattributed by this cut, and the
+  preregistration's assumption that attribution is plan-independent — that whatever dominates under
+  `ScanOnly` would also dominate under a pruning plan — is untested.
+
+## Reproducing this
+
+```
+# 0. The contract, committed before the harness or any number existed.
+#    kernel/QUERY-WINDOW-ATTRIBUTION-PREREGISTRATION.md
+
+# 1. Build from clean, release only — the harness refuses a debug build.
+cargo build --release -p spatial-kernel --test query_window_attribution
+
+# 2. The pass. Mechanism self-check on the gate viewport BEFORE the settle; 120 s opening settle;
+#    7 canary-bounded repetitions across 3 viewports, interleaved; 21 trials in 21 processes.
+#    Budget ~10 min. The run of record took 614.06 s (cargo's own test-result line; not itself
+#    written into the JSON artifact).
+cargo test --release -p spatial-kernel --test query_window_attribution \
+  -- --ignored the_query_window_attribution_pass --nocapture --test-threads=1
+#   -> target/slice-evidence/query-window-attribution/query-window-attribution.json
+
+# 3. The tables in this section, from that artifact. It scores; it does not decide.
+node scripts/summarize-query-window-attribution.mjs
+```
+
+## Raw artifacts (`target/slice-evidence/query-window-attribution/`, gitignored)
+
+`query-window-attribution.json` (the run of record) · `query-window-attribution.log`.
+
+## Instrument sources (committed)
+
+`kernel/QUERY-WINDOW-ATTRIBUTION-PREREGISTRATION.md` — the contract. `engine/src/trace.rs` — the
+event vocabulary, the derived `SPANS` table, and the three structural unit tests pinning its
+uniqueness and additivity. `kernel/tests/query_window_attribution.rs` — the harness: one process per
+trial, the mechanism self-check, the live additivity gate. `kernel/tests/support/mod.rs` — the shared
+canary, watchdog, disk-floor and now `file_facts` instruments, reused rather than reimplemented a
+third time. `scripts/summarize-query-window-attribution.mjs` — applies §5's dominance rule and §6's
+decision rule mechanically to the artifact.
+
+**The two tables above (segment decomposition, dominance) are the summarizer's own output, checked
+cell by cell against a live re-run of `node scripts/summarize-query-window-attribution.mjs` — not
+transcribed by hand.** Every other figure in this section (ranges, percentages restated in prose, the
+wall-clock time) is derived by hand *from* those tables and should be checked against them, not
+assumed correct on its own — the seventh section named exactly this class of hand-transcription as the
+source of its one error, and this section does not claim to be exempt from the same risk merely
+because its tables are not.

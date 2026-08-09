@@ -206,3 +206,49 @@ Fixed inputs, or the test measures the wrong thing: same fixture, same `Viewport
   is unfalsifiable in exactly the way this instrument exists to prevent.
 - **§5d's `temp_directory` control remains unimplemented and unreachable** (`Lease::connection()` is
   `pub(crate)`). Out of this cut's scope; a ~7 GB sort can still spill somewhere unrecorded.
+
+---
+
+## 8. Amendment — `NEXT-CUT.md`'s query-window attribution
+
+**Not the same brief this document was written against.** §2–4 above cite an earlier `NEXT-CUT.md`
+(its rev 1/rev 2) — a transient, per-cut document already deleted per its own status line, as this
+cut's own `NEXT-CUT.md` will be. This amendment is against a **later** cut's `NEXT-CUT.md`, reusing
+the same filename by this repository's convention, and touches §2 only.
+
+Two statements in §2 above are stale as of this amendment and are corrected here rather than edited
+in place, per this repository's standing discipline of appending corrections instead of rewriting them
+away.
+
+**§2 "Producer boundaries", line 70-72 is withdrawn.** It said `sql_prepared` and `execute_returned`
+"straddle the two opaque FFI calls one line apart" and that the pair "exists to settle" which one the
+sort blocks in. Two corrections:
+
+1. **A third event, `execute_called`, now sits between them** (stamped immediately before
+   `stmt.stream_arrow(params)`, after parameter assembly). The pair no longer straddles one line; it
+   straddles `Statement::stream_arrow` itself, and a new span (`param_assembly`,
+   `sql_prepared → execute_called`) separates parameter-`Vec` construction from that call.
+2. **The premise that this pair could locate a sort was itself false**, independent of the new event.
+   The one cell that ever measured this split (`kernel/tests/cancel_rescore.rs`'s consistency
+   demonstration) runs `ViewportQuery::all()` — `RowOrdering::Unordered`, no `ORDER BY`. There is no
+   sort in that query. The measured split (`sql_prepared → execute_returned` dominant at n = 1) stands
+   as a number; the causal label attached to it in `kernel/RESULTS.md`'s sixth section is retracted
+   there and in `engine/src/trace.rs`'s doc comments. **This document's own question — with an
+   `ORDER BY`, does DuckDB sort inside `stream_arrow` or the first `next()` — is therefore still open**,
+   exactly as it was before piece 2 ran; piece 2 did not answer it, contrary to what §2 claimed.
+
+**§2 "Events vs spans", line 77-79 is superseded.** The derived-span list ("`lease_acquire`, `query`,
+`source_to_first_batch`") is stale twice over: `lease_acquire` was already reserved-not-derived when
+this line was written (a standing inconsistency within this document, now resolved by omission rather
+than repeated), and the table has grown to nine entries. Current, authoritative list: `engine/src/trace.rs`'s
+`SPANS` constant — this document does not duplicate it going forward, to avoid the two disagreeing
+again. As of this amendment: `query`, `source_to_first_batch`, `lease_bind`, `producer_handoff`,
+`statement_prepare`, `param_assembly`, `bind_and_execute`, `first_fetch`, `lease_to_first_row`.
+`lease_acquire` remains reserved.
+
+**The window `NEXT-CUT.md`'s Phase 1 attributes is `lease_to_first_row` (`lease_acquired →
+first_source_row`), not `query`.** `query` is narrower by exactly `producer_handoff +
+statement_prepare` and is reported alongside it for continuity with earlier figures, but the Phase-1
+decision rule is scored against the wider span — see `kernel/RESULTS.md`'s eighth section for why
+scoring on `query` would structurally exclude the one segment a prepared-statement-reuse lever could
+ever remove.
