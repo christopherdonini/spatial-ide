@@ -12,6 +12,7 @@ resolver = "2"
 members = [
     "engine",
     "protocol/data-plane",
+    "protocol/skp",
     "renderer",
     "kernel",
 ]

@@ -1,0 +1,19 @@
+[package]
+name = "spatial-skp"
+version = "0.0.0"
+edition = "2021"
+publish = false
+# ADR-009 item 1: forever-open core. Inherited from `[workspace.package]`.
+license.workspace = true
+description = "protocol module (docs/02, docs/10): SKP v0 types. See SKP-V0.md."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# OS CSPRNG for kernel-minted handles (DatasetHandle, StreamHandle) — same source
+# `protocol/data-plane` uses for its session token, for the same reason (ADR-012's threat model).
+getrandom = "0.3"
+hex = "0.4"
+
+[dev-dependencies]
+serde_json = "1"

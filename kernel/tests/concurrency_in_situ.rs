@@ -224,10 +224,10 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
     )
     .expect("fixture");
 
-    let mut catalog = Catalog::new();
+    let catalog = Catalog::new();
     catalog.open(DATASET, &path, None).expect("open");
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::new(catalog)),
+        factory: Arc::new(EngineSourceFactory::new(Arc::new(catalog))),
         static_dir: None,
     })
     .await
@@ -377,10 +377,10 @@ async fn the_admission_slot_is_released_when_the_stream_ends_not_when_the_peer_l
     let path = dir.join("admission.parquet");
     write_geoparquet(&path, &FixtureSpec { features: 1_000, ..Default::default() }).expect("fixture");
 
-    let mut catalog = Catalog::new();
+    let catalog = Catalog::new();
     catalog.open(DATASET, &path, None).expect("open");
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::new(catalog)),
+        factory: Arc::new(EngineSourceFactory::new(Arc::new(catalog))),
         static_dir: None,
     })
     .await

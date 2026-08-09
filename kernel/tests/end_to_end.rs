@@ -47,10 +47,10 @@ fn fixture(name: &str, features: usize) -> (std::path::PathBuf, FixtureFacts) {
 }
 
 async fn host(path: &std::path::Path) -> RunningDataPlane {
-    let mut catalog = Catalog::new();
+    let catalog = Catalog::new();
     catalog.open(DATASET, path, None).expect("open dataset");
     spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::new(catalog)),
+        factory: Arc::new(EngineSourceFactory::new(Arc::new(catalog))),
         static_dir: None,
     })
     .await

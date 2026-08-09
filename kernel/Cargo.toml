@@ -18,6 +18,7 @@ path = "src/main.rs"
 [dependencies]
 spatial-engine = { path = "../engine" }
 spatial-data-plane = { path = "../protocol/data-plane" }
+spatial-skp = { path = "../protocol/skp" }
 # Style compilation and the canonical-JSON grammar. The manifest and the style document share one
 # number grammar on purpose — two would be two things to specify and two to re-implement.
 spatial-renderer = { path = "../renderer" }

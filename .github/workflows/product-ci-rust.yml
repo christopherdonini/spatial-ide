@@ -124,6 +124,7 @@ on:
       # key-set artifacts — and that stays covered by `renderer/**` above.
       - "!renderer/bundle-viewer/**"
       - "protocol/data-plane/**"
+      - "protocol/skp/**"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".github/workflows/product-ci-rust.yml"
@@ -138,6 +139,7 @@ on:
       # key-set artifacts — and that stays covered by `renderer/**` above.
       - "!renderer/bundle-viewer/**"
       - "protocol/data-plane/**"
+      - "protocol/skp/**"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".github/workflows/product-ci-rust.yml"

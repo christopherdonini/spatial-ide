@@ -95,7 +95,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|_| "unix:unknown".into()),
     });
 
-    let mut catalog = Catalog::with_connections(connections);
+    let catalog = Catalog::with_connections(connections);
     // A refusal here is the point of the refusal: it happens at open, in front of an operator,
     // before anything is served.
     catalog.open(&name, &data, assertion)?;
@@ -145,7 +145,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let running = serve(DataPlaneConfig {
         factory: std::sync::Arc::new(EngineSourceFactory::with_connection_reports(
-            catalog, reports,
+            std::sync::Arc::new(catalog),
+            reports,
         )),
         static_dir: assets,
     })

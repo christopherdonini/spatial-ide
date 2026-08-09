@@ -213,6 +213,24 @@ impl Dataset {
         Self::open_inner(path.as_ref(), assertion, None, &CancelToken::new(), connections)
     }
 
+    /// Open with every admission parameter exposed, and a caller-held cancel token.
+    ///
+    /// **This is the constructor a control-plane host uses.** The four constructors above all pass
+    /// a throwaway `CancelToken::new()` internally — nobody outside `open_inner` could ever reach
+    /// it, so `open_dataset` was uncancellable even though `admit_identity`'s uniqueness scan (a
+    /// multi-second, uninterruptible whole-column read at `docs/07`'s 5 GB) already threads a token
+    /// through every path. This constructor changes nothing about *what* runs; it only lets a
+    /// caller hold the token that was always there (SKP-V0.md §2, correction C3).
+    pub fn open_cancellable(
+        path: impl AsRef<Path>,
+        assertion: Option<CrsAssertion>,
+        declared_identity: Option<IdentityDeclaration>,
+        cancel: &CancelToken,
+        connections: PoolConfig,
+    ) -> Result<Self> {
+        Self::open_inner(path.as_ref(), assertion, declared_identity, cancel, connections)
+    }
+
     fn open_inner(
         path: &Path,
         assertion: Option<CrsAssertion>,

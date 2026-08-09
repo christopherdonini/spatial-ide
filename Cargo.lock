@@ -1596,6 +1596,7 @@ dependencies = [
  "spatial-data-plane",
  "spatial-engine",
  "spatial-renderer",
+ "spatial-skp",
  "tokio",
  "tokio-tungstenite",
 ]
@@ -1607,6 +1608,16 @@ dependencies = [
  "arrow",
  "serde_json",
  "sha2",
+]
+
+[[package]]
+name = "spatial-skp"
+version = "0.0.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "hex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

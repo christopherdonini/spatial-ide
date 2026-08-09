@@ -50,7 +50,7 @@
 
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use spatial_data_plane::transport::{
     BatchMeta, BatchSource, OpenRequest, SourceCancel, SourceFactory,
@@ -61,6 +61,7 @@ pub mod bundle;
 pub mod params;
 pub mod permission;
 pub mod publish;
+pub mod skp;
 
 pub use params::{StreamParams, OPERATION};
 
@@ -82,15 +83,24 @@ pub struct StreamConnectionRecord {
     pub reused_an_existing_connection: bool,
 }
 
-/// Datasets opened at startup, addressable by name.
+/// Datasets opened at startup, addressable by name — and, since `frontends/shell`, also opened and
+/// closed **at runtime** through SKP's `open_dataset`/`close_dataset`.
+///
+/// **Interior mutability, deliberately.** `slice-host` and the test suite open every dataset once
+/// before the data plane starts and never touch the catalog again, so `&mut self` cost them
+/// nothing. The shell cannot do that: `EngineSourceFactory` holds an `Arc<Catalog>` clone that is
+/// already streaming from datasets opened earlier in the same process, while the Tauri command
+/// layer needs to add and remove entries in the *same* map as `open_dataset`/`close_dataset` calls
+/// arrive. An `RwLock` is what lets both hold the identical `Arc<Catalog>` (architect review,
+/// `frontends/shell` cut 1, D2.2).
 pub struct Catalog {
-    datasets: HashMap<String, Arc<Dataset>>,
+    datasets: RwLock<HashMap<String, Arc<Dataset>>>,
     connections: PoolConfig,
 }
 
 impl Default for Catalog {
     fn default() -> Self {
-        Self { datasets: HashMap::new(), connections: PoolConfig::default() }
+        Self { datasets: RwLock::new(HashMap::new()), connections: PoolConfig::default() }
     }
 }
 
@@ -105,56 +115,134 @@ impl Catalog {
     /// It is a capacity on the same code path, not a second implementation — see
     /// `spatial_engine::PoolConfig`.
     pub fn with_connections(connections: PoolConfig) -> Self {
-        Self { datasets: HashMap::new(), connections }
+        Self { datasets: RwLock::new(HashMap::new()), connections }
     }
 
     pub fn connections(&self) -> PoolConfig {
         self.connections
     }
 
+    fn lock_write(&self) -> std::sync::RwLockWriteGuard<'_, HashMap<String, Arc<Dataset>>> {
+        self.datasets.write().unwrap_or_else(|e| e.into_inner())
+    }
+    fn lock_read(&self) -> std::sync::RwLockReadGuard<'_, HashMap<String, Arc<Dataset>>> {
+        self.datasets.read().unwrap_or_else(|e| e.into_inner())
+    }
+
     /// Open a dataset and register it under `name`.
     ///
-    /// Opening here means the CRS admission decision (ADR-015) happens **at startup**, in the open
-    /// where an operator sees it, rather than on a consumer's first request. It is also where the
+    /// Opening here means the CRS admission decision (ADR-015) happens **at open**, in front of
+    /// whoever is watching, rather than on a consumer's first request. It is also where the
     /// dataset's first configured DuckDB connection is prepared, so the first query does not create
     /// one inside **S2** — the `query start → OPEN` segment `kernel/RESULTS.md` measured at p50
     /// 92.6 ms. **How much of S2 that creation accounts for is not known**: S2 also carries socket
     /// acquisition, the handshake, SQL construction and the configuration statement, and no
     /// measurement has yet divided it. Producing that division is what the reused-connection pass
     /// is for; nothing here claims its answer in advance.
+    ///
+    /// **Not cancellable.** Every product path that calls this today (`slice-host`, the test suite)
+    /// opens its dataset before anything else can observe a cancel key. `open_cancellable` is the
+    /// entry point SKP's `open_dataset` uses.
     pub fn open(
-        &mut self,
+        &self,
         name: impl Into<String>,
         path: impl AsRef<Path>,
         assertion: Option<CrsAssertion>,
     ) -> spatial_engine::Result<()> {
         let ds = Dataset::open_with_connections(path, assertion, self.connections)?;
-        self.datasets.insert(name.into(), Arc::new(ds));
+        self.lock_write().insert(name.into(), Arc::new(ds));
+        Ok(())
+    }
+
+    /// As [`Self::open`], with a caller-held [`CancelToken`] bound throughout admission (SKP-V0.md
+    /// §2, correction C3) — ADR-016's whole-column uniqueness scan is a multi-second, otherwise
+    /// uninterruptible operation at `docs/07`'s 5 GB, and `docs/01` principle 7 is unqualified.
+    pub fn open_cancellable(
+        &self,
+        name: impl Into<String>,
+        path: impl AsRef<Path>,
+        assertion: Option<CrsAssertion>,
+        cancel: &CancelToken,
+    ) -> spatial_engine::Result<()> {
+        let ds = Dataset::open_cancellable(path, assertion, None, cancel, self.connections)?;
+        self.lock_write().insert(name.into(), Arc::new(ds));
         Ok(())
     }
 
     pub fn get(&self, name: &str) -> Option<Arc<Dataset>> {
-        self.datasets.get(name).cloned()
+        self.lock_read().get(name).cloned()
     }
 
-    pub fn names(&self) -> Vec<&str> {
-        self.datasets.keys().map(String::as_str).collect()
+    /// Remove a dataset from the catalog. The `Arc<Dataset>` a live stream already holds keeps the
+    /// dataset alive until that stream ends regardless of removal order — nothing here waits for or
+    /// depends on streams being stopped first (`skp::SkpHost::close_dataset` cancels them
+    /// separately, for a different reason: so they stop promptly, not so this is safe).
+    pub fn remove(&self, name: &str) -> Option<Arc<Dataset>> {
+        self.lock_write().remove(name)
     }
+
+    pub fn names(&self) -> Vec<String> {
+        self.lock_read().keys().cloned().collect()
+    }
+}
+
+/// Build an engine stream for one viewport query, with its own fresh [`CancelToken`] — the shared
+/// core both admission paths use.
+///
+/// Kept separate from wrapping into the data-plane's erased `(Box<dyn BatchSource>, Arc<dyn
+/// SourceCancel>)` shape (see [`wrap_for_data_plane`]) because SKP's `viewport_query` needs the
+/// *typed* `EngineError` to map through `skp::error_of` — the raw-params path below stringifies
+/// immediately because `SourceFactory::create` has no other option, but a typed refusal degrading
+/// to a string one call frame earlier than it has to is exactly what `skp::error_of`'s exhaustive
+/// match exists to never let happen at the SKP boundary.
+pub(crate) fn open_engine_stream(
+    ds: &Dataset,
+    query: &ViewportQuery,
+) -> spatial_engine::Result<(BatchStream, CancelToken)> {
+    let cancel = CancelToken::new();
+    let stream = ds.stream_with_cancel(query, cancel.clone())?;
+    Ok((stream, cancel))
+}
+
+/// Erase an engine stream into the data-plane's transport-neutral shape.
+pub(crate) fn wrap_for_data_plane(
+    stream: BatchStream,
+    cancel: CancelToken,
+    dataset: String,
+    dataset_reuses_connections: bool,
+    reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+) -> (Box<dyn BatchSource>, Arc<dyn SourceCancel>) {
+    let source = EngineSource { stream, dataset, dataset_reuses_connections, reports };
+    (Box::new(source), Arc::new(EngineCancel(cancel)))
+}
+
+/// Which of two admission paths `EngineSourceFactory::create` takes.
+///
+/// **One process never runs both.** `Raw` is the path every product binary and test in this
+/// workspace used before `frontends/shell` existed: the data-plane START frame carries the
+/// operation's own parameters, decoded by [`StreamParams`]. `frontends/shell` installs
+/// [`AdmissionMode::TicketOnly`] instead — ADR-019 retires the raw path's own declared "temporary
+/// structural deviation" now that a control plane exists to mint tickets — and asserts by test that
+/// a raw-`StreamParams` START is refused rather than silently accepted (`kernel/tests/skp_admission.rs`).
+enum AdmissionMode {
+    Raw,
+    TicketOnly(Arc<skp::StreamRegistry>),
 }
 
 /// Turns an operation request into an engine stream. This is the whole composition.
 pub struct EngineSourceFactory {
-    catalog: Catalog,
+    catalog: Arc<Catalog>,
     /// Where finished streams report what they ran on, when anyone is listening.
     ///
     /// **Unbounded, deliberately.** A bounded channel would let a stalled reporter block a producer
     /// thread, which is an instrument changing the thing it measures.
     connection_reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+    mode: AdmissionMode,
 }
 
 impl EngineSourceFactory {
-    pub fn new(catalog: Catalog) -> Self {
-        Self { catalog, connection_reports: None }
+    pub fn new(catalog: Arc<Catalog>) -> Self {
+        Self { catalog, connection_reports: None, mode: AdmissionMode::Raw }
     }
 
     /// As `new`, reporting each finished stream's connection facts.
@@ -164,10 +252,17 @@ impl EngineSourceFactory {
     /// `t_query_start → t_open` segment a measurement is trying to read. The same facts are
     /// available at stream end, where they cost the measurement nothing.
     pub fn with_connection_reports(
-        catalog: Catalog,
+        catalog: Arc<Catalog>,
         reports: std::sync::mpsc::Sender<StreamConnectionRecord>,
     ) -> Self {
-        Self { catalog, connection_reports: Some(reports) }
+        Self { catalog, connection_reports: Some(reports), mode: AdmissionMode::Raw }
+    }
+
+    /// `frontends/shell`'s constructor (ADR-019). A START frame's `params` is redeemed as a
+    /// [`spatial_skp::v0::StreamHandle`] ticket already built and validated by
+    /// `SkpHost::viewport_query`, never decoded as [`StreamParams`].
+    pub fn ticket_only(catalog: Arc<Catalog>, tickets: Arc<skp::StreamRegistry>) -> Self {
+        Self { catalog, connection_reports: None, mode: AdmissionMode::TicketOnly(tickets) }
     }
 }
 
@@ -182,6 +277,18 @@ impl SourceFactory for EngineSourceFactory {
                 request.operation
             ));
         }
+        match &self.mode {
+            AdmissionMode::Raw => self.create_from_raw_params(request),
+            AdmissionMode::TicketOnly(tickets) => Self::create_from_ticket(tickets, request),
+        }
+    }
+}
+
+impl EngineSourceFactory {
+    fn create_from_raw_params(
+        &self,
+        request: &OpenRequest,
+    ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
         let p = StreamParams::decode(&request.params)?;
         let ds = self
             .catalog
@@ -200,21 +307,39 @@ impl SourceFactory for EngineSourceFactory {
             None => query,
         };
 
-        let cancel = CancelToken::new();
         // Every refusal the engine can make — an unadmitted CRS, a viewport in the wrong CRS, a
         // missing covering column — arrives here as a typed error and leaves as a terminal frame
         // carrying its own words. Nothing is flattened into "failed".
-        let stream = ds
-            .stream_with_cancel(&query, cancel.clone())
-            .map_err(|e| e.to_string())?;
-
-        let source = EngineSource {
+        let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| e.to_string())?;
+        Ok(wrap_for_data_plane(
             stream,
-            dataset: p.dataset,
-            dataset_reuses_connections: ds.connections().config().reuses_connections(),
-            reports: self.connection_reports.clone(),
-        };
-        Ok((Box::new(source), Arc::new(EngineCancel(cancel))))
+            cancel,
+            p.dataset,
+            ds.connections().config().reuses_connections(),
+            self.connection_reports.clone(),
+        ))
+    }
+
+    /// **ADR-019.** The params blob is a [`spatial_skp::v0::StreamHandle`]'s ASCII bytes, nothing
+    /// else — a query built from a client-supplied bbox/limit never reaches this call. Redeeming a
+    /// ticket costs a mutex lock and a map removal: the engine work already ran, synchronously,
+    /// inside `SkpHost::viewport_query`.
+    ///
+    /// **A raw `StreamParams` payload is refused here, not specially detected.** `StreamParams`'s
+    /// wire form always opens with a one-byte flag field (`0x00`–`0x03`), which can never be the
+    /// `sh_` a valid ticket handle starts with, so `StreamHandle::from_str` fails deterministically
+    /// on it — asserted by `kernel/tests/skp_admission.rs` rather than left to be assumed. One
+    /// process never installs both admission paths (ADR-019's own consequence).
+    fn create_from_ticket(
+        tickets: &Arc<skp::StreamRegistry>,
+        request: &OpenRequest,
+    ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+        let handle_str = std::str::from_utf8(&request.params)
+            .map_err(|_| "ticket handle is not valid UTF-8".to_string())?;
+        let handle: spatial_skp::v0::StreamHandle = handle_str
+            .parse()
+            .map_err(|e: String| format!("not a ticket this producer minted: {e}"))?;
+        tickets.redeem(handle.as_str())
     }
 }
 
