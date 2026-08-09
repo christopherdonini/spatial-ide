@@ -47,3 +47,38 @@ body,
   white-space: pre-wrap;
   margin: 0.5rem 0;
 }
+
+.admission-panel {
+  padding: 1rem;
+  max-width: 40rem;
+}
+
+.admission-refusal {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #a33;
+  border-radius: 4px;
+}
+
+.admission-refusal-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.admission-refusal-fields dt {
+  font-weight: 600;
+}
+
+.admission-cut2-note {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.describe-summary dt {
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+.describe-summary dd {
+  margin-left: 0;
+}
