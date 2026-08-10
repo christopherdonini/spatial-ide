@@ -21,6 +21,14 @@ function sinkFor(callIndex: number): StreamSink {
   return startStreamMock.mock.calls[callIndex][0].sink as StreamSink;
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
   beforeEach(() => {
     viewportQueryMock.mockReset();
@@ -127,6 +135,89 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
     expect(cancelMock).toHaveBeenCalledWith("sh_a");
     expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+    expect(manager.activeStreamHandle).toBeNull();
+  });
+
+  it("a call whose viewportQuery resolves after a newer call has already won abandons its own ticket (re-entrancy)", async () => {
+    // The throttle bounds issue *rate*; it is not a mutex. A real viewport_query crosses Tauri IPC
+    // + spawn_blocking + DuckDB statement prep, routinely slower than the 120 ms window, so two
+    // calls can have their awaits interleaved -- this reproduces exactly that.
+    const first = deferred<{ stream: string; expires_in_ms: number }>();
+    viewportQueryMock.mockReturnValueOnce(first.promise);
+    const onSuperseded = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+
+    const call1 = manager.requestViewport(null, null, 1_000);
+    // Let call1 run past its own `supersedeCurrent()` await and reach `viewportQuery`, where it
+    // then pauses on `first.promise` -- a real macrotask flush rather than a guessed microtask
+    // count, so this does not depend on how many `await`s `supersedeCurrent` happens to have.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(viewportQueryMock).toHaveBeenCalledTimes(1);
+
+    mockStream("sh_b");
+    const call2 = manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    await call2;
+    expect(manager.activeStreamHandle).toBe("sh_b");
+
+    // call1's ticket now arrives, "late".
+    first.resolve({ stream: "sh_a", expires_in_ms: 30_000 });
+    await call1;
+
+    expect(manager.activeStreamHandle).toBe("sh_b");
+    expect(cancelMock).toHaveBeenCalledWith("sh_a");
+    // sh_a was never active, so its cancellation is not a "supersede" in D3.7's sense -- only a
+    // stream that was actually serving batches counts as superseded.
+    expect(onSuperseded).not.toHaveBeenCalledWith("sh_a");
+    expect(startStreamMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("stop() invalidates an in-flight requestViewport call, which abandons its ticket instead of becoming active", async () => {
+    const pending = deferred<{ stream: string; expires_in_ms: number }>();
+    viewportQueryMock.mockReturnValueOnce(pending.promise);
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+
+    const call = manager.requestViewport(null, null, 1_000);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(viewportQueryMock).toHaveBeenCalledTimes(1);
+
+    await manager.stop();
+    pending.resolve({ stream: "sh_a", expires_in_ms: 30_000 });
+    await call;
+
+    expect(manager.activeStreamHandle).toBeNull();
+    expect(cancelMock).toHaveBeenCalledWith("sh_a");
+    expect(startStreamMock).not.toHaveBeenCalled();
+
+    // And the manager stays refused afterward.
+    mockStream("sh_b");
+    await manager.requestViewport(null, null, 2_000);
+    expect(manager.activeStreamHandle).toBeNull();
+    expect(startStreamMock).not.toHaveBeenCalled();
+  });
+
+  it("cancelStream cancels a named stream even when a newer one is now active", async () => {
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+
+    mockStream("sh_b");
+    await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(manager.activeStreamHandle).toBe("sh_b");
+
+    // sh_a is long superseded; a declared-ceiling refusal naming it must still be able to cancel it
+    // without disturbing the stream that is actually active now.
+    await manager.cancelStream("sh_a");
+    expect(cancelMock).toHaveBeenCalledWith("sh_a");
+    expect(manager.activeStreamHandle).toBe("sh_b");
+  });
+
+  it("cancelStream on the active stream clears it", async () => {
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+
+    await manager.cancelStream("sh_a");
+
     expect(manager.activeStreamHandle).toBeNull();
   });
 

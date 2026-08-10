@@ -68,7 +68,10 @@ describe("buildLayers (ADR-010 rules 3 and 6)", () => {
 
   it("propagates the 24-bit pick ceiling refusal rather than constructing an oversized layer", () => {
     const frame = new OffsetFrame(100);
-    const huge: ResidentBatch = { ...batch("sh_a", 0), ids: new BigUint64Array(16_777_216) };
+    // `checkPickCeiling` (and this test) only ever reads `.length` -- a real 16,777,216-element
+    // `BigUint64Array` would be a genuine 128 MiB allocation per test run for a value never read.
+    const oversizedIds = { length: 16_777_216 } as unknown as BigUint64Array;
+    const huge: ResidentBatch = { ...batch("sh_a", 0), ids: oversizedIds };
     expect(() => buildLayers([huge], frame)).toThrow(PickCeilingExceeded);
   });
 });

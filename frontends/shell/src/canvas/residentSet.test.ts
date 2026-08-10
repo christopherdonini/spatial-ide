@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
 import { MAX_RESIDENT_VERTICES, ResidentVertexCeilingExceeded } from "./limits";
-import { ResidentSet } from "./residentSet";
+import { DuplicateBatchError, ResidentSet } from "./residentSet";
 
 function batch(streamHandle: string, batchSeq: number, totalVertices: number): ResidentBatch {
   return {
@@ -55,5 +55,28 @@ describe("ResidentSet", () => {
     set.clear();
     expect(set.getBatches()).toHaveLength(0);
     expect(set.totalResidentVertices).toBe(0);
+  });
+
+  it("refuses a (streamHandle, batchSeq) that is already resident, and adds nothing (S12)", () => {
+    const set = new ResidentSet();
+    set.addBatch(batch("sh_a", 0, 100));
+    expect(() => set.addBatch(batch("sh_a", 0, 100))).toThrow(DuplicateBatchError);
+    expect(set.getBatches()).toHaveLength(1);
+    expect(set.totalResidentVertices).toBe(100);
+  });
+
+  it("clearStream frees its keys, so a later batch reusing the same batchSeq is accepted", () => {
+    const set = new ResidentSet();
+    set.addBatch(batch("sh_a", 0, 100));
+    set.clearStream("sh_a");
+    expect(() => set.addBatch(batch("sh_a", 0, 50))).not.toThrow();
+    expect(set.totalResidentVertices).toBe(50);
+  });
+
+  it("clear() frees its keys too", () => {
+    const set = new ResidentSet();
+    set.addBatch(batch("sh_a", 0, 100));
+    set.clear();
+    expect(() => set.addBatch(batch("sh_a", 0, 50))).not.toThrow();
   });
 });

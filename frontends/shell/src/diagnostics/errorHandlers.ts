@@ -47,7 +47,11 @@ function describeError(candidate: unknown, fallbackMessage: string): { message: 
  * one. An async operation may not terminate silently; this is what makes that true at the top of
  * the call stack rather than only inside code that remembered to add a `.catch()`.
  */
+let installed = false;
+
 export function installGlobalErrorHandlers(): void {
+  if (installed) return; // idempotent: a second call must not add a second listener pair
+  installed = true;
   window.addEventListener("error", (event) => {
     const { message, detail } = describeError(event.error, event.message);
     logSessionEvent("error", detail);

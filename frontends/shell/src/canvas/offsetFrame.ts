@@ -9,6 +9,13 @@
  * inheritance of those numbers (architect review, `frontends/shell` cut 1, D3.2). The only change
  * from the spike is generalizing the naming away from EPSG:2056 specifically — the math is CRS-
  * agnostic and always was.
+ *
+ * **`offsetPositions`/`toF32Positions` are not on this cut's actual render path** (S7, reviewer):
+ * `buildLayers.ts` calls `toLocal` once per vertex instead, because `SolidPolygonLayer` here takes
+ * nested `[x,y][][]` rings, not one flat typed buffer a vectorized offset could fill. They stay —
+ * tested, ported unmodified from the spike — as the batch-offset form a future flat-buffer layer
+ * would call; deleting spike-verified numeric code to satisfy an unused-code sweep would be the
+ * wrong trade against re-deriving and re-verifying the same formula later.
  */
 
 /** An authoritative project-CRS coordinate (ADR-010 rule 1) — f64, the only form that may be

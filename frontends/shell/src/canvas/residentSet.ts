@@ -1,6 +1,28 @@
 import type { ResidentBatch } from "./decodeBatch";
 import { checkPickCeiling, MAX_RESIDENT_VERTICES, ResidentVertexCeilingExceeded } from "./limits";
 
+/** Same key shape as `buildLayers.ts`'s own `layerId` -- not imported from there to avoid a
+ * dependency back into the render-layer module from this purely-bookkeeping one. */
+function batchKey(batch: Pick<ResidentBatch, "streamHandle" | "batchSeq">): string {
+  return `${batch.streamHandle}:${batch.batchSeq}`;
+}
+
+/** A `(streamHandle, batchSeq)` pair arrived twice (S12, reviewer): a retransmit, a caller bug, or
+ * a data-plane ordering violation, never a legitimate resend -- ADR-019 mints a stream ticket once
+ * and a stream's own batch sequence is not restarted mid-stream. Accepting it silently would double-
+ * count `totalVertices` against the declared ceiling and hand `buildLayers` two layers sharing one
+ * `layerId`, which deck.gl does not support. Treated as a genuine failure, not a declared ceiling:
+ * `WorkingCanvas.pushBatch` lets this propagate rather than reporting it via `onCanvasRefusal`. */
+export class DuplicateBatchError extends Error {
+  constructor(
+    public readonly streamHandle: string,
+    public readonly batchSeq: number
+  ) {
+    super(`batch ${streamHandle}:${batchSeq} is already resident -- a batch sequence must not repeat`);
+    this.name = "DuplicateBatchError";
+  }
+}
+
 /**
  * Every batch currently resident on the canvas, across every live stream. `addBatch` enforces both
  * declared ceilings (ADR-010 rule 6) and refuses rather than silently evicting or tiling -- the
@@ -10,6 +32,7 @@ import { checkPickCeiling, MAX_RESIDENT_VERTICES, ResidentVertexCeilingExceeded 
 export class ResidentSet {
   private batches: ResidentBatch[] = [];
   private totalVertices = 0;
+  private keys = new Set<string>();
 
   get totalResidentVertices(): number {
     return this.totalVertices;
@@ -22,9 +45,14 @@ export class ResidentSet {
   /**
    * Adds a batch after checking both ceilings. Throws `PickCeilingExceeded` or
    * `ResidentVertexCeilingExceeded` and adds nothing on refusal -- a rejected batch is not
-   * partially resident.
+   * partially resident. Throws `DuplicateBatchError` for a `(streamHandle, batchSeq)` already
+   * resident, checked before either ceiling since a duplicate is not a capacity question at all.
    */
   addBatch(batch: ResidentBatch): void {
+    const key = batchKey(batch);
+    if (this.keys.has(key)) {
+      throw new DuplicateBatchError(batch.streamHandle, batch.batchSeq);
+    }
     checkPickCeiling(batch.ids.length);
     const attemptedTotal = this.totalVertices + batch.totalVertices;
     if (attemptedTotal > MAX_RESIDENT_VERTICES) {
@@ -32,6 +60,7 @@ export class ResidentSet {
     }
     this.batches.push(batch);
     this.totalVertices = attemptedTotal;
+    this.keys.add(key);
   }
 
   /** Drops every resident batch belonging to `streamHandle` -- called on supersede or close.
@@ -43,6 +72,7 @@ export class ResidentSet {
         return true;
       }
       removedVertices += b.totalVertices;
+      this.keys.delete(batchKey(b));
       return false;
     });
     this.totalVertices -= removedVertices;
@@ -51,5 +81,6 @@ export class ResidentSet {
   clear(): void {
     this.batches = [];
     this.totalVertices = 0;
+    this.keys.clear();
   }
 }

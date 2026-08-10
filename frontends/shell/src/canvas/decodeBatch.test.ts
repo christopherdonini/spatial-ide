@@ -80,4 +80,23 @@ describe("decodeBatch", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]]);
     expect(() => decodeBatch("sh_test", 0, ipc, "the_wrong_column")).toThrow(/no `the_wrong_column`/);
   });
+
+  it("refuses a null id rather than silently coercing it to 0n", () => {
+    // The engine's schema declares `id: UInt64 not null`; a null here is a batch that violates its
+    // own envelope, and `BigInt(null)` would otherwise silently become `0n` -- a value
+    // indistinguishable from a real id.
+    const idVec = vectorFromArray([1n, null], new Uint64());
+    const fsl = new FixedSizeList(2, new Field("xy", new Float64(), false));
+    const ringType = new List(new Field("vertices", fsl, false));
+    const geomType = new List(new Field("rings", ringType, false));
+    const geomVec = vectorFromArray(
+      [[[[0, 0], [1, 0], [0, 1], [0, 0]]], [[[2, 2], [3, 2], [2, 3], [2, 2]]]],
+      geomType
+    );
+    const table = new Table({ id: idVec, geometry: geomVec });
+    table.schema.metadata.set("frame", EXPECTED_FRAME);
+    const ipc = tableToIPC(table, "stream");
+
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry")).toThrow(/null id/);
+  });
 });

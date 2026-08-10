@@ -68,6 +68,12 @@ export function decodeBatch(
 
   for (let i = 0; i < n; i++) {
     const rawId = idVector.get(i);
+    // The engine's schema declares `id: UInt64 not null` -- a null here is a batch that violates
+    // its own envelope, and `BigInt(null)` would silently become `0n`, a value indistinguishable
+    // from a real id ADR-016 §7's uniqueness guarantee is supposed to rule out.
+    if (rawId === null) {
+      throw new Error(`batch row ${i} carries a null id, violating the declared \`id: UInt64 not null\` schema`);
+    }
     ids[i] = typeof rawId === "bigint" ? rawId : BigInt(rawId as number);
 
     const featureRings: Array<Array<[number, number]>> = [];

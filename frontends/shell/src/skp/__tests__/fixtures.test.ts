@@ -33,22 +33,71 @@ function loadFixture<T>(name: string): T {
   return JSON.parse(fs.readFileSync(file, "utf-8")) as T;
 }
 
+/**
+ * `protocol/skp`'s own `fixtures.rs` gets full-shape coverage for free: it deserializes each
+ * fixture into a `#[serde(deny_unknown_fields)]` struct and re-serializes it, so an extra or
+ * missing field fails that test regardless of whether any individual assertion names it.
+ * TypeScript's `interface`s are erased at runtime and give this client no equivalent for free
+ * (S10, reviewer) -- the per-field `expect`s below this point in the file only catch drift in
+ * whichever field they happen to name. This closes that gap the same way
+ * `renderer/tests/data/manifest-key-sets.json` closes it for the bundle manifest: check the
+ * fixture's actual keys against the exact set `types.ts` declares for that shape.
+ */
+function assertExactKeys(value: unknown, expected: readonly string[], label: string): void {
+  expect(Object.keys(value as Record<string, unknown>).sort(), label).toEqual([...expected].sort());
+}
+
 describe("SKP v0 shared fixtures", () => {
   it("open_dataset request/response", () => {
     const req = loadFixture<OpenDatasetRequest>("v0-open_dataset-request");
+    assertExactKeys(req, ["skp", "path", "cancel_key"], "open_dataset request");
     expect(req.skp).toBe(SKP_VERSION);
     expect(typeof req.path).toBe("string");
     expect(typeof req.cancel_key).toBe("string");
 
     const res = loadFixture<OpenDatasetResponse>("v0-open_dataset-response");
+    assertExactKeys(res, ["dataset"], "open_dataset response");
     expect(res.dataset).toMatch(/^ds_[0-9a-f]{32}$/);
   });
 
   it("describe request/response, including the two brief corrections (extent, row_count)", () => {
     const req = loadFixture<DescribeRequest>("v0-describe-request");
+    assertExactKeys(req, ["skp", "dataset"], "describe request");
     expect(req.dataset).toMatch(/^ds_[0-9a-f]{32}$/);
 
     const res = loadFixture<DescribeResponse>("v0-describe-response");
+    assertExactKeys(
+      res,
+      ["source", "crs", "geometry", "identity", "schema", "covering_bbox", "row_count", "extent", "license"],
+      "describe response"
+    );
+    assertExactKeys(res.source, ["path_display", "geoparquet_version"], "describe response .source");
+    assertExactKeys(
+      res.crs,
+      ["identifier", "definition_json", "source", "asserted_by", "asserted_at", "axis_order", "axis_normalization"],
+      "describe response .crs"
+    );
+    assertExactKeys(
+      res.geometry,
+      ["column", "encoding", "coordinate_layout", "frame"],
+      "describe response .geometry"
+    );
+    assertExactKeys(
+      res.identity,
+      ["source", "uniqueness", "verified_rows", "max_value", "js_exact"],
+      "describe response .identity"
+    );
+    for (const [i, field] of res.schema.entries()) {
+      assertExactKeys(field, ["name", "arrow_type", "nullable"], `describe response .schema[${i}]`);
+    }
+    assertExactKeys(res.row_count, ["basis", "value"], "describe response .row_count");
+    assertExactKeys(res.extent, ["basis", "value"], "describe response .extent");
+    assertExactKeys(
+      res.license,
+      ["license", "attribution", "redistribution", "declares_anything"],
+      "describe response .license"
+    );
+
     expect(res.crs.identifier).toBe("EPSG:2056");
     expect(res.crs.source).toBe("file");
     expect(res.geometry.frame).toBe("authoritative-project-crs");
@@ -63,7 +112,9 @@ describe("SKP v0 shared fixtures", () => {
 
   it("viewport_query request/response, with bbox edges as hex, never JSON numbers", () => {
     const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request");
+    assertExactKeys(req, ["skp", "dataset", "bbox", "bbox_crs", "limit"], "viewport_query request");
     expect(req.bbox).not.toBeNull();
+    assertExactKeys(req.bbox, ["xmin", "ymin", "xmax", "ymax"], "viewport_query request .bbox");
     expect(req.bbox!.xmin).toBe("0000000000000000");
     expect(decodeHexF64(req.bbox!.xmin)).toBe(0);
     expect(decodeHexF64(req.bbox!.xmax)).toBe(1);
@@ -72,26 +123,34 @@ describe("SKP v0 shared fixtures", () => {
     expect(req.limit).toBe("5000");
 
     const res = loadFixture<ViewportQueryResponse>("v0-viewport_query-response");
+    assertExactKeys(res, ["stream", "expires_in_ms"], "viewport_query response");
     expect(res.stream).toMatch(/^sh_[0-9a-f]{32}$/);
     expect(res.expires_in_ms).toBe(30_000);
   });
 
   it("cancel request/response", () => {
     const req = loadFixture<CancelRequest>("v0-cancel-request");
+    assertExactKeys(req, ["skp", "handle"], "cancel request");
     expect(req.handle).toMatch(/^sh_[0-9a-f]{32}$/);
     const res = loadFixture<CancelResponse>("v0-cancel-response");
+    assertExactKeys(res, ["state"], "cancel response");
     expect(res.state).toBe("requested");
   });
 
   it("close_dataset request/response", () => {
     const req = loadFixture<CloseDatasetRequest>("v0-close_dataset-request");
+    assertExactKeys(req, ["skp", "dataset"], "close_dataset request");
     expect(req.dataset).toMatch(/^ds_[0-9a-f]{32}$/);
     const res = loadFixture<CloseDatasetResponse>("v0-close_dataset-response");
+    assertExactKeys(res, ["cancelled_streams"], "close_dataset response");
     expect(res.cancelled_streams).toBe(1);
   });
 
   it("a typed engine refusal crosses with its code, verbatim message, and named fields", () => {
     const err = loadFixture<SkpError>("v0-error-example");
+    // `fields` is deliberately excluded from the key-set check above this line -- it is a
+    // `Record<string, string>`, an open map whose keys vary per error code, not a fixed shape.
+    assertExactKeys(err, ["code", "message", "fields"], "error example");
     expect(err.code).toBe("engine.crs_undeclared");
     expect(err.message).toContain("OGC:CRS84");
     expect(err.fields.detail).toBeDefined();
