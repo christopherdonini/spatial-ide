@@ -48,6 +48,19 @@ The deviation's stated justification — "this slice has no Tauri shell" — end
    `StreamHandle` (`"sh_" + 32 lowercase hex`, OS CSPRNG), and stores a `Ticket { query, dataset:
    Arc<Dataset>, minted_at, state }` in the kernel's stream registry. The handle is returned to the
    caller; the query itself never crosses the data plane.
+
+   **Implementation note (S6, reviewer, `frontends/shell` cut 1): `kernel/src/skp.rs`'s
+   `StreamRegistry` stores more than this paragraph's shape.** A `Pending` ticket holds an
+   *already-built* `Box<dyn BatchSource>` and its `Arc<dyn SourceCancel>` (`PendingBuilt`), not
+   `{ query, dataset, minted_at, state }` as written above — `viewport_query` calls
+   `open_engine_stream` (which leases a connection and constructs the engine's `BatchStream`)
+   *before* minting, so that "validated before any socket is touched" above is a synchronous,
+   typed refusal rather than a promise redemption has to keep later. Storing the query and re-
+   deriving the stream at redemption would either duplicate that validation or defer it past the
+   point this decision says it happens. The trade this makes explicit: a `Pending` ticket holds a
+   leased `engine::pool::Class::Stream` connection for as long as it sits unredeemed, which is what
+   makes that pool's `MAX_STREAM_CONNECTIONS` (not this section's own `MAX_PENDING_TICKETS`) the
+   ceiling reached first in practice — see `kernel::skp::MAX_PENDING_TICKETS`'s doc comment.
 2. The client opens the existing WebSocket data-plane connection exactly as today (`spatial-dp.v0` +
    `tok.<hex>` subprotocols, origin-checked, loopback-only — **unchanged**) and sends one `TAG_START`
    frame whose `operation` is `"stream_features"` and whose `params` is the ticket handle's ASCII

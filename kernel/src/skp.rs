@@ -26,14 +26,32 @@ use spatial_skp::v0::{
     SourceInfo, StreamHandle, ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
 };
 
-use crate::{open_engine_stream, wrap_for_data_plane, Catalog, StreamConnectionRecord};
+use crate::{open_engine_stream, wrap_for_data_plane, Catalog};
 
 /// ADR-019: an unredeemed ticket is swept and its slot freed.
 pub const TICKET_TTL: Duration = Duration::from_secs(30);
 /// ADR-019, ADR-010 rule 6 (declared, not discovered): `viewport_query` mints tickets at gesture
 /// rate under supersede-on-pan, and an unbounded pending set per dataset is exactly the failure a
 /// declared ceiling exists to name in advance.
+///
+/// **Not the ceiling reached first in practice.** Every `Pending` ticket already holds a leased
+/// `engine::pool::Class::Stream` connection (`SkpHost::viewport_query` builds the engine stream
+/// *before* minting), and that pool's own `MAX_STREAM_CONNECTIONS` is 4 — so a dataset's fifth
+/// concurrent pending ticket fails at the connection lease with `engine.connections_exhausted`
+/// long before this constant's count is ever checked. This ceiling stays as the declared backstop
+/// for whichever pool sizing ends up binding, per ADR-010 rule 6's "declared, not discovered" —
+/// it is not dead, just usually not the one that fires (reviewer finding B5, this cut).
 pub const MAX_PENDING_TICKETS: usize = 8;
+/// B4 (reviewer, this cut): neither `Redeemed` nor `CancelledBeforeRedeem` has any other event that
+/// ever removes its entry — unlike `Pending`, which the stream itself either redeems or lets expire
+/// against [`TICKET_TTL`]. Left unbounded, `StreamRegistry`'s map would grow for the whole life of
+/// the process. Evicting an entry this old trades away `cancel()`'s ability to reach an
+/// exceptionally long-running *redeemed* stream after this window (it would report `unknown`
+/// instead of forwarding the cancellation, the same as an always-unknown handle) for bounded
+/// memory — accepted because docs/08's target datasets stream in well under five minutes, and an
+/// abandoned client's own transport disconnect is what the data plane's own cleanup is for, not
+/// this registry.
+pub const TERMINAL_ENTRY_MAX_AGE: Duration = Duration::from_secs(300);
 
 /// `state` in a [`CancelResponse`] (SKP-V0.md §1) — no timestamp, counter or duration attaches to
 /// it (ADR-004 Amendment 4).
@@ -65,11 +83,12 @@ enum TicketState {
     Pending { built: PendingBuilt, dataset: String, minted_at: Instant },
     /// Redeemed exactly once. `cancelled` is this registry's own record of whether `cancel` has
     /// been called on it — never inferred from the underlying `SourceCancel`, which exposes no way
-    /// to ask.
-    Redeemed { dataset: String, cancel: Arc<dyn SourceCancel>, cancelled: bool },
+    /// to ask. `redeemed_at` bounds this entry's own lifetime in the map (`TERMINAL_ENTRY_MAX_AGE`)
+    /// — it is not a signal that the underlying stream has finished.
+    Redeemed { dataset: String, cancel: Arc<dyn SourceCancel>, cancelled: bool, redeemed_at: Instant },
     /// Was `Pending`, cancelled before a redemption ever arrived. A later redemption is refused —
     /// this is the whole of what closes the cancel-then-redeem race ADR-019 names.
-    CancelledBeforeRedeem,
+    CancelledBeforeRedeem { cancelled_at: Instant },
 }
 
 /// The kernel's half of ADR-019: mints and redeems single-use, expiring stream tickets.
@@ -91,8 +110,26 @@ impl StreamRegistry {
     fn sweep_locked(tickets: &mut HashMap<String, TicketState>) {
         tickets.retain(|_, state| match state {
             TicketState::Pending { minted_at, .. } => minted_at.elapsed() <= TICKET_TTL,
-            _ => true,
+            TicketState::Redeemed { redeemed_at, .. } => redeemed_at.elapsed() <= TERMINAL_ENTRY_MAX_AGE,
+            TicketState::CancelledBeforeRedeem { cancelled_at } => {
+                cancelled_at.elapsed() <= TERMINAL_ENTRY_MAX_AGE
+            }
         });
+    }
+
+    /// Reclaim stale entries — a `Pending` ticket's leased connection among them — without waiting
+    /// for `mint`/`redeem`/`cancel`/`cancel_all_for_dataset` to do it as an incidental side effect.
+    ///
+    /// **B5 (reviewer, this cut).** Every one of those four methods sweeps only *after* acquiring
+    /// this registry's own lock, which is fine when reaching them costs nothing scarce — but
+    /// `SkpHost::viewport_query` leases an `engine::pool::Class::Stream` connection *before* it
+    /// ever calls `mint`, so once enough expired `Pending` tickets have exhausted that pool, a new
+    /// `viewport_query` fails at the lease and never reaches a method that would have swept them.
+    /// Without an entry point reachable *before* the lease, that lockout would be permanent rather
+    /// than bounded by `TICKET_TTL`. Called at the top of `viewport_query`, before it leases.
+    pub fn sweep_expired(&self) {
+        let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
+        Self::sweep_locked(&mut tickets);
     }
 
     /// Mint a ticket for an already-built, already-validated engine source. Refuses beyond
@@ -139,7 +176,7 @@ impl StreamRegistry {
                      expired after {TICKET_TTL:?}"
                 ))
             }
-            Some(TicketState::CancelledBeforeRedeem) => {
+            Some(TicketState::CancelledBeforeRedeem { .. }) => {
                 return Err(format!("ticket `{handle}` was cancelled before it was redeemed"))
             }
             Some(TicketState::Redeemed { .. }) => {
@@ -152,7 +189,12 @@ impl StreamRegistry {
         };
         tickets.insert(
             handle.to_string(),
-            TicketState::Redeemed { dataset, cancel: built.cancel.clone(), cancelled: false },
+            TicketState::Redeemed {
+                dataset,
+                cancel: built.cancel.clone(),
+                cancelled: false,
+                redeemed_at: Instant::now(),
+            },
         );
         Ok((built.source, built.cancel))
     }
@@ -163,9 +205,9 @@ impl StreamRegistry {
         Self::sweep_locked(&mut tickets);
         match tickets.get_mut(handle) {
             None => CancelOutcome::Unknown,
-            Some(TicketState::CancelledBeforeRedeem) => CancelOutcome::AlreadyTerminal,
+            Some(TicketState::CancelledBeforeRedeem { .. }) => CancelOutcome::AlreadyTerminal,
             Some(state @ TicketState::Pending { .. }) => {
-                *state = TicketState::CancelledBeforeRedeem;
+                *state = TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() };
                 CancelOutcome::Requested
             }
             Some(TicketState::Redeemed { cancel, cancelled, .. }) => {
@@ -190,10 +232,10 @@ impl StreamRegistry {
         for state in tickets.values_mut() {
             match state {
                 TicketState::Pending { dataset: d, .. } if d == dataset => {
-                    *state = TicketState::CancelledBeforeRedeem;
+                    *state = TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() };
                     n += 1;
                 }
-                TicketState::Redeemed { dataset: d, cancel, cancelled } if d == dataset && !*cancelled => {
+                TicketState::Redeemed { dataset: d, cancel, cancelled, .. } if d == dataset && !*cancelled => {
                     cancel.cancel();
                     *cancelled = true;
                     n += 1;
@@ -242,18 +284,31 @@ impl OpenRegistry {
     }
 }
 
+/// RAII counterpart to [`OpenRegistry::end`] — S5 (reviewer, this cut). `begin`/`end` alone rely on
+/// the caller reaching the matching `end` on every path out of the function, panics included; this
+/// makes "every path" true by construction instead of by discipline.
+struct OpenGuard<'a> {
+    opens: &'a OpenRegistry,
+    key: String,
+}
+
+impl Drop for OpenGuard<'_> {
+    fn drop(&mut self) {
+        self.opens.end(&self.key);
+    }
+}
+
 /// The composition SKP v0 needs: a shared catalog, a shared ticket registry, and an open-call
 /// registry local to this host. One `SkpHost` per running shell process.
 pub struct SkpHost {
     catalog: Arc<Catalog>,
     tickets: Arc<StreamRegistry>,
     opens: OpenRegistry,
-    connection_reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
 }
 
 impl SkpHost {
     pub fn new(catalog: Arc<Catalog>, tickets: Arc<StreamRegistry>) -> Self {
-        Self { catalog, tickets, opens: OpenRegistry::default(), connection_reports: None }
+        Self { catalog, tickets, opens: OpenRegistry::default() }
     }
 
     /// The catalog this host mutates. `frontends/shell/src-tauri`'s app setup gives the identical
@@ -275,11 +330,15 @@ impl SkpHost {
             .map_err(|e| SkpError::protocol("malformed_cancel_key", e))?;
         let cancel = CancelToken::new();
         self.opens.begin(cancel_key.as_str(), cancel.clone())?;
+        // S5 (reviewer, this cut): a guard, not a bare `self.opens.end(...)` after the call below —
+        // `open_cancellable` runs arbitrary engine/DuckDB code, and an unwind out of it must still
+        // free this cancel key. Without this, a panic here would leave `cancel_key` permanently
+        // `cancel_key_in_use` for the rest of the process's life, since nothing else ever removes it.
+        let _end_open_on_drop = OpenGuard { opens: &self.opens, key: cancel_key.as_str().to_string() };
         let handle = DatasetHandle::mint();
         // The handle IS the catalog name — never user-controlled text (`kernel/src/lib.rs`'s own
         // "names, never paths" rule, one level up: now also "names, never chosen by the caller").
         let outcome = self.catalog.open_cancellable(handle.as_str(), &req.path, None, &cancel);
-        self.opens.end(cancel_key.as_str());
         outcome.map_err(|e| error_of(&e))?;
         Ok(OpenDatasetResponse { dataset: handle })
     }
@@ -298,6 +357,13 @@ impl SkpHost {
         req: ViewportQueryRequest,
     ) -> Result<ViewportQueryResponse, SkpError> {
         check_version(&req.skp)?;
+        // B5 (reviewer, this cut): reclaim stale pending tickets' leased connections *before*
+        // attempting to lease another. `open_engine_stream` below leases from a pool bounded by
+        // `MAX_STREAM_CONNECTIONS`, and that lease can fail before this call ever reaches
+        // `tickets.mint`'s own sweep — the only other place a `Pending` ticket's expiry is noticed.
+        // See `MAX_PENDING_TICKETS`'s doc comment for why that pool, not this registry's declared
+        // ceiling, is the one that binds in practice.
+        self.tickets.sweep_expired();
         let dataset_name = req.dataset.as_str().to_string();
         let ds = self
             .catalog
@@ -308,12 +374,16 @@ impl SkpHost {
         // `ViewportCrsUnidentifiable` and `NoCoveringBbox` return here, synchronously, with their
         // full typed text — never as a data-plane terminal frame arriving after a round trip.
         let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| error_of(&e))?;
+        // `None`: `frontends/shell` has no consumer for `StreamConnectionRecord` telemetry yet
+        // (unlike `kernel::main`'s own product binary, which does via `with_connection_reports`) —
+        // no half-built reporting path here waiting for a caller that doesn't exist (S7, reviewer,
+        // this cut: this used to be a field that could only ever be constructed as `None`).
         let (source, source_cancel) = wrap_for_data_plane(
             stream,
             cancel,
             dataset_name.clone(),
             ds.connections().config().reuses_connections(),
-            self.connection_reports.clone(),
+            None,
         );
         let handle = self.tickets.mint(&dataset_name, source, source_cancel)?;
         Ok(ViewportQueryResponse { stream: handle, expires_in_ms: TICKET_TTL.as_millis() as u32 })
@@ -586,6 +656,56 @@ mod tests {
         // A different dataset is not affected by another dataset's pending count.
         let (s, c) = synthetic_source();
         assert!(reg.mint("other", s, c).is_ok());
+    }
+
+    /// B5: without `sweep_expired`, an expired `Pending` ticket sits in the map — and holds
+    /// whatever it leased — until some *other* registry method happens to run and sweep it as a
+    /// side effect. `SkpHost::viewport_query` cannot rely on that: it leases a connection before
+    /// calling any of them. This exercises the reclaim directly, without a real 30-second wait —
+    /// `minted_at` is backdated past `TICKET_TTL` under the same lock a real sweep would use.
+    #[test]
+    fn sweep_expired_reclaims_a_stale_pending_ticket_without_any_other_call() {
+        let reg = StreamRegistry::default();
+        let (s, c) = synthetic_source();
+        let handle = reg.mint("d", s, c).unwrap();
+        {
+            let mut tickets = reg.tickets.lock().unwrap();
+            match tickets.get_mut(handle.as_str()) {
+                Some(TicketState::Pending { minted_at, .. }) => {
+                    *minted_at = Instant::now() - TICKET_TTL - Duration::from_secs(1);
+                }
+                other => panic!("expected a fresh Pending ticket, found_entry={}", other.is_some()),
+            }
+        }
+        reg.sweep_expired();
+        assert!(
+            reg.redeem(handle.as_str()).is_err(),
+            "an expired pending ticket must already be gone, not merely redeemable-but-stale"
+        );
+    }
+
+    /// B4: a terminal (`CancelledBeforeRedeem`) entry has no event that ever removes it other than
+    /// aging out — this exercises that path directly the same way the sibling test above exercises
+    /// `Pending` expiry, again without a real five-minute wait.
+    #[test]
+    fn sweep_expired_reclaims_an_old_cancelled_before_redeem_entry() {
+        let reg = StreamRegistry::default();
+        let (s, c) = synthetic_source();
+        let handle = reg.mint("d", s, c).unwrap();
+        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::Requested));
+        {
+            let mut tickets = reg.tickets.lock().unwrap();
+            match tickets.get_mut(handle.as_str()) {
+                Some(TicketState::CancelledBeforeRedeem { cancelled_at }) => {
+                    *cancelled_at = Instant::now() - TERMINAL_ENTRY_MAX_AGE - Duration::from_secs(1);
+                }
+                other => panic!("expected CancelledBeforeRedeem, found_entry={}", other.is_some()),
+            }
+        }
+        reg.sweep_expired();
+        // Gone from the map entirely: a fresh cancel on the same handle now reports `Unknown`, not
+        // `AlreadyTerminal` -- the two are observably different outcomes over SKP's own wire shape.
+        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::Unknown));
     }
 
     #[test]

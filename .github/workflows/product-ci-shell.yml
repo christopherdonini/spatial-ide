@@ -38,6 +38,15 @@ name: Product CI — shell
 # and a writer (`protocol/skp`'s own Rust tests) with separate tables can each stay green while
 # disagreeing about the wire shape. Both this workflow and `product-ci-rust.yml` watch the directory.
 #
+# ## The upstream crate paths, watched here too (S13, reviewer, this cut)
+#
+# `frontends/shell/src-tauri/Cargo.toml` depends on `kernel`, `engine`, `protocol/data-plane` and
+# `protocol/skp` by relative path, outside `frontends/shell/**` — a change to any of their `src/`
+# trees can break this crate's own `cargo test` step below without touching a single path the
+# filters otherwise watch. `protocol/skp/tests/data/**` is already covered above; its `src/**` is
+# listed explicitly rather than assumed to be, since `protocol/skp/**` alone would also catch the
+# fixture directory a second time.
+#
 # ## Standing not-a-gate note
 #
 # **Until a run of this workflow has gone green end to end, it is configuration that has never been
@@ -48,11 +57,19 @@ on:
   push:
     paths:
       - "frontends/shell/**"
+      - "kernel/**"
+      - "engine/**"
+      - "protocol/data-plane/**"
+      - "protocol/skp/src/**"
       - "protocol/skp/tests/data/**"
       - ".github/workflows/product-ci-shell.yml"
   pull_request:
     paths:
       - "frontends/shell/**"
+      - "kernel/**"
+      - "engine/**"
+      - "protocol/data-plane/**"
+      - "protocol/skp/src/**"
       - "protocol/skp/tests/data/**"
       - ".github/workflows/product-ci-shell.yml"
   workflow_dispatch:
