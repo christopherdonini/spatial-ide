@@ -25,8 +25,10 @@ body,
 
 .app-main {
   flex: 1;
-  position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  overflow: auto;
 }
 
 .error-banner {
@@ -85,9 +87,13 @@ body,
 }
 
 .canvas-container {
-  position: absolute;
-  inset: 0;
-  top: 12rem; /* leaves room for the admission panel above it */
+  position: relative;
+  flex: 1;
+  /* Not 0: with `flex: 1`'s implied `flex-basis: 0%`, a `min-height` of 0 would let the admission
+     panel's own natural height push this to nothing (a working canvas of 0px is indistinguishable
+     from a missing one) if the panel ever grows tall enough to fill `.app-main`. This floor keeps
+     the canvas usable; `.app-main`'s own `overflow: auto` is what absorbs the rest. */
+  min-height: 200px;
 }
 
 .working-canvas {

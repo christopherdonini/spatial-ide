@@ -214,8 +214,8 @@ impl StreamRegistry {
                 if *cancelled {
                     CancelOutcome::AlreadyTerminal
                 } else {
-                    // ADR-019 D2.4: reaches the producer's own CancelToken directly, the same one a
-                    // data-plane CANCEL frame would reach — the two mechanisms converge.
+                    // ADR-019's Consequences: reaches the producer's own CancelToken directly, the
+                    // same one a data-plane CANCEL frame would reach — the two mechanisms converge.
                     cancel.cancel();
                     *cancelled = true;
                     CancelOutcome::Requested

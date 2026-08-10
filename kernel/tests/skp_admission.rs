@@ -323,7 +323,7 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
         host.cancel(spatial_skp::v0::CancelRequest { skp: SKP_VERSION.to_string(), handle: stream_handle.as_str().to_string() });
     assert_eq!(outcome.unwrap().state, "requested");
 
-    // Drain to a terminal. `SkpHost::cancel` interrupts the engine directly (ADR-019 D2.4); the
+    // Drain to a terminal. `SkpHost::cancel` interrupts the engine directly (ADR-019's Consequences); the
     // adapter's own `StreamState` never saw a CANCEL control frame, so the terminal code the wire
     // reports is `TERM_PRODUCER_FAILED` carrying the engine's own "cancelled" text — a
     // characteristic of this convergence path, asserted here rather than assumed.

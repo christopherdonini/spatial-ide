@@ -84,7 +84,8 @@ ticket (ADR-019) and the batches flow on the existing WebSocket data plane.
 
 `handle` is either a `StreamHandle` or a `CancelKey`. No timestamp, counter or duration in this
 response (ADR-004 Amendment 4 — instrument surface is never an SKP field). For a redeemed stream
-this reaches the producer's own `CancelToken` (ADR-019 §D2.4); for an unredeemed ticket it marks the
+this reaches the producer's own `CancelToken` (ADR-019's Consequences: the SKP `cancel` call and a
+data-plane `TAG_CANCEL` frame converge on the same token); for an unredeemed ticket it marks the
 ticket cancelled so a later redemption is refused, closing the cancel-then-redeem race.
 
 ### `close_dataset`

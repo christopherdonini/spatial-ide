@@ -1,7 +1,7 @@
 {
   "code": "engine.crs_undeclared",
-  "message": "refused: the file declares no CRS and none was asserted by the caller (no `crs` key in geo metadata). This engine does not apply GeoParquet's OGC:CRS84 default (docs/05, no silent conversion)",
+  "message": "refused: the file declares no CRS and none was asserted by the caller (no `geo` metadata CRS on the primary geometry column). This engine does not apply GeoParquet's OGC:CRS84 default (docs/05, no silent conversion)",
   "fields": {
-    "detail": "no `crs` key in geo metadata"
+    "detail": "no `geo` metadata CRS on the primary geometry column"
   }
 }
