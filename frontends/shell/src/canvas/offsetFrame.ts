@@ -130,12 +130,28 @@ export class OffsetFrame {
     if (drift <= this.threshold) {
       return false;
     }
-    this.events.push({ index: this.recenters, fromX: this.x, fromY: this.y, toX: viewX, toY: viewY, driftM: drift });
+    this.recenterTo(viewX, viewY, drift);
+    return true;
+  }
+
+  /**
+   * Unconditionally moves the origin to `(viewX, viewY)`, bypassing the drift threshold --
+   * `maybeRecenter`'s gate exists to bound *incidental* drift from ordinary panning, and does not
+   * apply to an explicit, user- or caller-triggered re-fit (`WorkingCanvas`'s open-time
+   * fit-to-bounds and its "zoom to layer" affordance), which must always land exactly on the
+   * requested point regardless of how close the current origin already is.
+   */
+  forceRecenter(viewX: AuthoritativeM, viewY: AuthoritativeM): void {
+    const drift = this.initialized ? Math.hypot(viewX - this.x, viewY - this.y) : Infinity;
+    this.recenterTo(viewX, viewY, drift);
+  }
+
+  private recenterTo(viewX: AuthoritativeM, viewY: AuthoritativeM, driftM: number): void {
+    this.events.push({ index: this.recenters, fromX: this.x, fromY: this.y, toX: viewX, toY: viewY, driftM });
     this.x = viewX;
     this.y = viewY;
     this.initialized = true;
     this.recenters++;
-    return true;
   }
 
   /** Absolute f64 → local frame, still full f64 precision (for view state, never for the GPU). */

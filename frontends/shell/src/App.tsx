@@ -6,11 +6,12 @@ import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { PickResult } from "./canvas/pick";
+import { Debounced, debounce } from "./streaming/debounce";
 import ErrorBanner from "./ErrorBanner";
 import { encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import type { Bbox } from "./skp/types";
-import { ViewportStreamManager } from "./streaming/viewportStreamManager";
+import { VIEWPORT_QUERY_MIN_INTERVAL_MS, ViewportStreamManager } from "./streaming/viewportStreamManager";
 
 function toWireBbox(bbox: AuthoritativeBbox): Bbox {
   return {
@@ -34,10 +35,25 @@ export default function App() {
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
+  const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
+
+  function reportViewportOutcome(promise: Promise<void>) {
+    promise.then(
+      () => setViewportRefusal(null),
+      (e: unknown) => {
+        if (e instanceof SkpCallError) {
+          setViewportRefusal(formatRefusal(e.skpError));
+          return;
+        }
+        throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
+      }
+    );
+  }
 
   useEffect(() => {
     if (!admitted) {
       managerRef.current = null;
+      viewportDebounceRef.current = null;
       return;
     }
 
@@ -52,36 +68,34 @@ export default function App() {
     });
     managerRef.current = manager;
 
-    async function issueViewportQuery(bbox: Bbox | null, bboxCrs: string | null) {
-      try {
-        await manager.requestViewport(bbox, bboxCrs);
-        setViewportRefusal(null);
-      } catch (e) {
-        // A typed engine refusal (e.g. `engine.no_covering_bbox` on a file with no covering-bbox
-        // column) is product truth the same way an admission refusal is -- it must render with its
-        // own code and message, not surface as a generic "Unhandled promise rejection" banner.
-        if (e instanceof SkpCallError) {
-          setViewportRefusal(formatRefusal(e.skpError));
-          return;
-        }
-        throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
-      }
-    }
+    // Pan/zoom-driven queries are debounced to settle (`streaming/debounce.ts`'s own doc comment):
+    // deck.gl's `onViewStateChange` fires on every pointer-move frame during a drag, and issuing a
+    // query per frame -- even throttled to the manager's own 120 ms window -- let overlapping
+    // in-flight `viewport_query` calls pile up kernel-side tickets faster than ordinary dragging
+    // should (Custodian walkthrough finding: `skp.too_many_pending_streams` from plain dragging).
+    // Debouncing means continuous motion issues nothing; only a settled view issues a query.
+    const debounced = debounce((bbox: Bbox, bboxCrs: string | null) => {
+      reportViewportOutcome(manager.requestViewport(bbox, bboxCrs));
+    }, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    viewportDebounceRef.current = debounced;
 
     // The first look is unfiltered: `describe` establishes no dataset extent to aim a viewport at
-    // (SKP-V0.md's C1), so the canvas's own auto-recenter-on-first-batch is what puts the camera
-    // somewhere the data actually is.
-    void issueViewportQuery(null, null);
+    // (SKP-V0.md's C1), so the canvas's own fit-to-bounds-on-open is what puts the camera somewhere
+    // the data actually is. Issued immediately, not debounced -- there is nothing yet to coalesce.
+    reportViewportOutcome(manager.requestViewport(null, null));
 
     return () => {
+      debounced.cancel();
+      viewportDebounceRef.current = null;
       void manager.stop();
       // Every admitted dataset stays open (and its DuckDB pool resident) until explicitly closed;
       // opening a second one must not leak the first (S1, architect review of this cut).
       void closeDataset(admitted.dataset).catch(() => {});
       managerRef.current = null;
     };
-    // `issueViewportQuery` is intentionally defined and used only inside this effect -- it closes
-    // over `manager`, which is itself effect-local, so it is not a dependency of anything outside.
+    // `reportViewportOutcome` is stable across renders (it only reaches `setViewportRefusal`,
+    // itself stable) and `manager`/`debounced` are effect-local, so neither is a dependency of
+    // anything outside.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admitted]);
 
@@ -105,20 +119,19 @@ export default function App() {
                 void managerRef.current?.cancelStream(streamHandle);
               }}
               onViewportChanged={(bbox) => {
-                const manager = managerRef.current;
-                if (!manager) return;
-                manager.requestViewport(toWireBbox(bbox), null).then(
-                  () => setViewportRefusal(null),
-                  (e: unknown) => {
-                    if (e instanceof SkpCallError) {
-                      setViewportRefusal(formatRefusal(e.skpError));
-                      return;
-                    }
-                    throw e;
-                  }
-                );
+                // Debounced to settle -- see the effect above's own comment and
+                // `streaming/debounce.ts` for why a pan/zoom-driven query is never issued directly
+                // from this callback.
+                viewportDebounceRef.current?.call(toWireBbox(bbox), null);
               }}
             />
+            <button
+              type="button"
+              className="zoom-to-layer"
+              onClick={() => canvasRef.current?.fitToBounds()}
+            >
+              Zoom to layer
+            </button>
             {hover && (
               <div className="hover-readout">
                 id {hover.id.toString()}

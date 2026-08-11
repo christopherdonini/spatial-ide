@@ -102,6 +102,19 @@ body,
   display: block;
 }
 
+.zoom-to-layer {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
 .hover-readout {
   position: absolute;
   bottom: 0.5rem;

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const viewportQueryMock = vi.hoisted(() => vi.fn());
 const cancelMock = vi.hoisted(() => vi.fn());
@@ -10,6 +10,7 @@ vi.mock("./dataPlaneClient", () => ({ dataPlaneAttach: dataPlaneAttachMock }));
 const startStreamMock = vi.hoisted(() => vi.fn());
 vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 
+import { debounce } from "./debounce";
 import type { StreamSink } from "./transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS, ViewportStreamManager } from "./viewportStreamManager";
 
@@ -233,5 +234,95 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
     expect(manager.activeStreamHandle).toBe("sh_b");
     expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+  });
+
+  describe("supersede storm (Custodian walkthrough finding: ordinary dragging surfaced skp.too_many_pending_streams)", () => {
+    // App.tsx's actual production wiring: onViewportChanged -> debounce -> manager.requestViewport.
+    // Driven here with fake timers so a several-second drag storm runs in test time, not wall time.
+    const ROUND_TRIP_MS = 150; // "routinely longer than the throttle window" -- viewportStreamManager.ts's own doc comment
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function trackedViewportQueryMock() {
+      let inFlight = 0;
+      let maxConcurrent = 0;
+      let totalMints = 0;
+      viewportQueryMock.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            inFlight++;
+            totalMints++;
+            maxConcurrent = Math.max(maxConcurrent, inFlight);
+            const mine = totalMints;
+            setTimeout(() => {
+              inFlight--;
+              resolve({ stream: `sh_${mine}`, expires_in_ms: 30_000 });
+            }, ROUND_TRIP_MS);
+          })
+      );
+      return {
+        totalMints: () => totalMints,
+        maxConcurrent: () => maxConcurrent,
+      };
+    }
+
+    it("a continuous multi-second drag with no pauses (walkthrough A7) issues at most one query, not one per throttle tick", async () => {
+      const counts = trackedViewportQueryMock();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const debounced = debounce((bbox: null, bboxCrs: null) => {
+        void manager.requestViewport(bbox, bboxCrs);
+      }, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      // 3s of continuous pointer-move events, 16ms apart (one per animation frame), no pause ever
+      // longer than the debounce settle window -- deck.gl's onViewStateChange firing throughout one
+      // uninterrupted drag. Without debounce (App.tsx calling requestViewport directly, throttled
+      // only to VIEWPORT_QUERY_MIN_INTERVAL_MS), this exact event stream mints ~24 tickets over the
+      // same 3s with some overlap (proven by this suite's own instrumentation during development --
+      // not asserted here since this test exercises the fixed, debounced path).
+      for (let t = 0; t < 3000; t += 16) {
+        debounced.call(null, null);
+        await vi.advanceTimersByTimeAsync(16);
+      }
+      expect(counts.totalMints()).toBe(0); // nothing ever settled -- the drag never paused
+
+      // The drag ends: let the final debounce window elapse with no further events.
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS + 10);
+
+      expect(counts.totalMints()).toBe(1);
+      expect(counts.maxConcurrent()).toBe(1);
+    });
+
+    it("a drag with brief pauses (settle, resume, settle again) keeps concurrently in-flight queries far under MAX_PENDING_TICKETS", async () => {
+      const counts = trackedViewportQueryMock();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const debounced = debounce((bbox: null, bboxCrs: null) => {
+        void manager.requestViewport(bbox, bboxCrs);
+      }, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      // Ten pause-and-resume cycles: a burst of continuous movement (128ms, no query) followed by a
+      // pause just past the settle window (fires exactly one query). Each round trip (150ms) is
+      // longer than the settle window, so this also exercises overlap between a still-in-flight
+      // query and the next pause's -- the kernel-ticket-pileup shape this fix targets, driven for
+      // longer than any single round trip could ever cover on its own.
+      for (let burst = 0; burst < 10; burst++) {
+        for (let i = 0; i < 8; i++) {
+          debounced.call(null, null);
+          await vi.advanceTimersByTimeAsync(16);
+        }
+        await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS + 10);
+      }
+
+      // At most one query per pause (ten pauses), never one per pointer-move frame (80 of those).
+      expect(counts.totalMints()).toBeLessThanOrEqual(10);
+      // The kernel's own ceiling (MAX_PENDING_TICKETS, kernel/src/skp.rs) is 8; staying in the low
+      // single digits here leaves an order of magnitude of headroom under ordinary interaction.
+      expect(counts.maxConcurrent()).toBeLessThanOrEqual(2);
+    });
   });
 });

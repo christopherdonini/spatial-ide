@@ -5,6 +5,7 @@ import { logSessionEvent } from "../diagnostics/log";
 import { begin, end } from "../diagnostics/watchdog";
 import { batchForLayerId, buildLayers } from "./buildLayers";
 import { decodeBatch } from "./decodeBatch";
+import { extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import { DECKGL_PICK_INDEX_CEILING, PickCeilingExceeded, ResidentVertexCeilingExceeded } from "./limits";
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import { PickResult, resolvePick } from "./pick";
@@ -45,6 +46,9 @@ export interface WorkingCanvasHandle {
   pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): void;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
+  /** Re-fit the camera to the bbox of everything currently resident ("zoom to layer"). A no-op
+   * (returns `false`) when nothing is resident -- there is no bbox to fit to yet. */
+  fitToBounds(): boolean;
 }
 
 export interface WorkingCanvasProps {
@@ -78,6 +82,16 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   const deckRef = useRef<Deck<OrthographicView> | null>(null);
   const residentRef = useRef(new ResidentSet());
   const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerMetreAtZoom(INITIAL_ZOOM))));
+  /** Bbox of every ring vertex across every currently-resident batch, or `null` while nothing
+   * resident carries any geometry. Kept in lockstep with `residentRef` -- grown in `pushBatch`,
+   * recomputed from scratch in `clearStream` (a union has no inverse, so "shrink" means "refold"). */
+  const residentExtentRef = useRef<AuthoritativeBbox | null>(null);
+  /** Has this canvas ever auto-fit the camera to arriving data. Sticky for the canvas's whole
+   * lifetime (unlike the old `wasEmpty` check, which fired on "resident batch count is zero"): a
+   * batch that carries no geometry -- an empty first batch, or one whose every feature is a null
+   * geometry -- must not consume the one-shot auto-fit and leave every later batch, geometry and
+   * all, rendering at whatever the frame origin defaulted to (the empty-canvas bug this replaces). */
+  const hasAutoFitRef = useRef(false);
 
   // The Deck instance is constructed once (empty deps below) and its callbacks close over these
   // props at that moment. Routing every prop through a ref -- read inside the callback, written on
@@ -102,6 +116,35 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     }
   }
 
+  /**
+   * Recenters the frame origin on `bbox`'s midpoint and sets the camera zoom to fit the whole bbox
+   * on screen (`extent.ts`'s `fitViewStateForBbox`) -- shared by the automatic fit-on-open (the
+   * first time arriving data carries any geometry) and the manual "zoom to layer" affordance.
+   *
+   * Uses `OffsetFrame.forceRecenter`, not `maybeRecenter`: an explicit fit must always land exactly
+   * on the requested point, never gated by the incidental-panning drift threshold.
+   */
+  function fitToExtent(bbox: AuthoritativeBbox): void {
+    const canvas = canvasElRef.current;
+    const widthPx = canvas?.clientWidth || 1;
+    const heightPx = canvas?.clientHeight || 1;
+    const fit = fitViewStateForBbox(bbox, widthPx, heightPx);
+    const frame = frameRef.current;
+    frame.forceRecenter(fit.centerX, fit.centerY);
+    frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(fit.zoom), RECENTER_BUDGET_PX));
+    // See this file's own doc comment: `initialViewState`, never `viewState`.
+    deckRef.current?.setProps({ initialViewState: { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom } });
+    render();
+  }
+
+  /** Recomputes `residentExtentRef` from every batch actually resident right now -- called after
+   * `clearStream` since a union has no inverse; the accumulated extent cannot simply be shrunk. */
+  function recomputeResidentExtent(): void {
+    residentExtentRef.current = residentRef.current
+      .getBatches()
+      .reduce<AuthoritativeBbox | null>((acc, b) => unionBbox(acc, extentOfBatch(b)), null);
+  }
+
   useImperativeHandle(
     ref,
     () => ({
@@ -113,13 +156,6 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         } finally {
           end("frame-decode");
         }
-
-        // No dataset extent exists to aim the initial camera at (SKP-V0.md's C1: `describe` never
-        // claims one). The first feature of the first batch ever received is the closest thing to
-        // "where the data is", so the frame recenters on it and the view snaps there -- this is
-        // what lets "open a dataset" actually show something without the operator first guessing
-        // where in an unbounded plane to pan to.
-        const wasEmpty = residentRef.current.getBatches().length === 0;
 
         begin("buffer-build");
         try {
@@ -135,21 +171,31 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         }
         end("buffer-build");
 
-        if (wasEmpty) {
-          const anchor = batch.rings.find((r) => r.length > 0 && r[0].length > 0)?.[0]?.[0];
-          if (anchor) {
-            const frame = frameRef.current;
-            frame.maybeRecenter(anchor[0], anchor[1]);
-            // See this file's own doc comment: `initialViewState`, never `viewState`.
-            deckRef.current?.setProps({ initialViewState: { target: [0, 0, 0], zoom: INITIAL_ZOOM } });
-          }
+        // No dataset extent exists to aim the initial camera at (SKP-V0.md's C1: `describe` never
+        // claims one), so the camera fits to the bbox of arriving data instead -- the first time
+        // any arrives, not merely the first batch received (a batch can carry zero features, or
+        // features whose geometry is entirely null; either must not consume the one-shot auto-fit
+        // and leave every later batch invisible at whatever the frame origin defaulted to).
+        const batchExtent = extentOfBatch(batch);
+        residentExtentRef.current = unionBbox(residentExtentRef.current, batchExtent);
+        if (!hasAutoFitRef.current && residentExtentRef.current) {
+          hasAutoFitRef.current = true;
+          fitToExtent(residentExtentRef.current);
         }
         render();
       },
 
       clearStream(streamHandle) {
         residentRef.current.clearStream(streamHandle);
+        recomputeResidentExtent();
         render();
+      },
+
+      fitToBounds() {
+        const bbox = residentExtentRef.current;
+        if (!bbox) return false;
+        fitToExtent(bbox);
+        return true;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
