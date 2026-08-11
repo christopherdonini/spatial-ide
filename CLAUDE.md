@@ -27,6 +27,12 @@ AI-native spatial computing platform: headless Rust kernel speaking SKP, Tauri s
 
 Windows 10 Pro 22H2 (build 19045) · Rust stable (MSVC) · WebView2 · VS Build Tools **with the "Desktop development with C++" workload** (MSVC v143 + Windows SDK — without it cargo fails with `link.exe not found`) · Node LTS (required for Tauri frontend tooling). Spike frontend is **vanilla TypeScript deliberately** — ADR-001 left React-vs-Svelte open, and a spike must not decide it.
 
+## Custodian
+
+In remote-operation periods the main session holds the Custodian role — see `AI_DEVELOPMENT.md`'s
+"Custodian role" section for the loop, the red lines (decisions that always wait for the human via
+`DECISIONS-PENDING.md`), and the accumulated mechanics. The red lines apply in every mode.
+
 ## Workflow
 
 Before non-trivial work: consult the `architect` agent. After significant code: `reviewer` agent. Perf/milestone claims: `tester` agent fills the spike results table. Commit style: `<type>: <summary>` (feat/fix/chore/spike/docs).
