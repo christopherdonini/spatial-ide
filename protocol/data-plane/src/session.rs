@@ -60,8 +60,18 @@ pub struct Session {
 }
 
 impl Session {
+    /// The origin is the consumer this server serves at `/` itself (`DataPlaneConfig::static_dir`),
+    /// whose origin is necessarily `http://127.0.0.1:<this server's own port>`.
     pub fn new(port: u16) -> std::io::Result<Self> {
-        Ok(Self { token: mint_token()?, origin: format!("http://127.0.0.1:{port}") })
+        Self::with_origin(format!("http://127.0.0.1:{port}"))
+    }
+
+    /// Same as `new`, but for a consumer that is *not* a same-origin page this server serves
+    /// itself -- e.g. a Tauri webview loading its own separate origin (`http://localhost:<vite
+    /// port>` in dev, `http://tauri.localhost` packaged on Windows/WebView2), which has nothing to
+    /// do with this server's own bound port. See ADR-020.
+    pub fn with_origin(origin: String) -> std::io::Result<Self> {
+        Ok(Self { token: mint_token()?, origin })
     }
 
     /// The credential, for the one caller that must hand it to a consumer out of band. In
@@ -158,6 +168,32 @@ mod tests {
         assert!(!s.request_allowed(None, None));
         assert!(!s.request_allowed(None, Some("cross-site")));
         assert!(!s.request_allowed(None, Some("same-site")));
+    }
+
+    #[test]
+    fn with_origin_admits_a_declared_non_same_origin_consumer_and_nothing_else() {
+        // ADR-020: a Tauri webview's origin has nothing to do with the data plane's own bound
+        // port, so `new(port)`'s derivation (`http://127.0.0.1:<port>`) can never match it --
+        // exactly the shell's own real origin, both dev and packaged forms.
+        let s = Session::with_origin("http://localhost:5180".to_string()).unwrap();
+        assert!(s.request_allowed(Some("http://localhost:5180"), None));
+        // The port-derived origin `new` would have produced is *not* separately admitted --
+        // `with_origin` replaces the expected origin, it does not add to it.
+        assert!(!s.request_allowed(Some("http://127.0.0.1:5180"), None));
+        assert!(!s.request_allowed(Some("http://tauri.localhost"), None));
+        assert!(!s.request_allowed(Some("null"), None));
+    }
+
+    #[test]
+    fn new_and_with_origin_produce_the_same_shape_for_the_port_derived_case() {
+        // `new(port)` is documented as `with_origin(format!("http://127.0.0.1:{port}"))` --
+        // asserted directly so the two constructors cannot silently drift apart.
+        let by_port = Session::new(4321).unwrap();
+        let by_origin = Session::with_origin("http://127.0.0.1:4321".to_string()).unwrap();
+        assert_eq!(
+            by_port.request_allowed(Some("http://127.0.0.1:4321"), None),
+            by_origin.request_allowed(Some("http://127.0.0.1:4321"), None)
+        );
     }
 
     #[test]

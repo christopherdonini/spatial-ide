@@ -1,3 +1,4 @@
+import { traceViewportQuery } from "../diagnostics/renderTrace";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox } from "../skp/types";
 import { startStream } from "./adapterWs";
@@ -63,6 +64,7 @@ export class ViewportStreamManager {
       return;
     }
     this.lastIssuedAtMs = nowMs;
+    traceViewportQuery(this.opts.dataset, bbox, bboxCrs);
 
     // Claimed before any `await` below, so a concurrent call that starts later (and therefore
     // claims a higher generation) can be detected by this call after it resumes.

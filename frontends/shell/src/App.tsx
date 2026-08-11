@@ -6,6 +6,7 @@ import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { PickResult } from "./canvas/pick";
+import { logSessionEvent } from "./diagnostics/log";
 import { Debounced, debounce } from "./streaming/debounce";
 import ErrorBanner from "./ErrorBanner";
 import { encodeHexF64 } from "./skp/codec";
@@ -64,6 +65,19 @@ export default function App() {
       },
       onSuperseded: (streamHandle) => {
         canvasRef.current?.clearStream(streamHandle);
+      },
+      // Every data-plane terminal used to be dropped on the floor here (docs/01 principle 8
+      // violation, found alongside the origin-mismatch bug this cut fixes): a `TransportFailed`
+      // from a rejected WebSocket upgrade produced no error banner and no console output, so a
+      // stream that could never deliver a single batch looked identical to an idle canvas.
+      // `Completed`/`Cancelled` are expected outcomes -- every supersede-on-pan produces a
+      // `Cancelled` for the superseded stream -- and must not bang a refusal banner on every pan.
+      onTerminal: (streamHandle, terminal) => {
+        if (terminal.kind === "Completed" || terminal.kind === "Cancelled") {
+          return;
+        }
+        logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
+        setCanvasRefusal(`stream ${terminal.kind}: ${terminal.detail}`);
       },
     });
     managerRef.current = manager;

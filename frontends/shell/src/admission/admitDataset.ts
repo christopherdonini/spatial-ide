@@ -1,4 +1,5 @@
 import { logSessionEvent } from "../diagnostics/log";
+import { traceDescribeBounds } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
 import { describe as describeDataset, openDataset, SkpCallError } from "../skp/client";
 import type { DescribeResponse } from "../skp/types";
@@ -29,6 +30,7 @@ export async function admitDataset(path: string, cancelKey: string): Promise<Adm
     begin("describe");
     const describeResult = await describeDataset(dataset);
     end("describe");
+    traceDescribeBounds(dataset, describeResult.extent);
 
     return { kind: "admitted", admitted: { dataset, describe: describeResult } };
   } catch (e) {

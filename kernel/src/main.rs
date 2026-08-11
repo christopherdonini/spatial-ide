@@ -149,6 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             reports,
         )),
         static_dir: assets,
+        expected_origin: None,
     })
     .await?;
 

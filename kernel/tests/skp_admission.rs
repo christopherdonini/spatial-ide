@@ -86,6 +86,7 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
     let dp = spatial_data_plane::serve(DataPlaneConfig {
         factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
         static_dir: None,
+        expected_origin: None,
     })
     .await
     .expect("serve");
@@ -136,6 +137,7 @@ async fn a_raw_stream_params_start_is_refused_in_ticket_only_mode() {
     let dp = spatial_data_plane::serve(DataPlaneConfig {
         factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
         static_dir: None,
+        expected_origin: None,
     })
     .await
     .expect("serve");
@@ -153,6 +155,53 @@ async fn a_raw_stream_params_start_is_refused_in_ticket_only_mode() {
     let Message::Binary(b) = msg else { panic!("expected a binary frame") };
     assert_eq!(b.first(), Some(&wire::TAG_TERMINAL), "a raw StreamParams START must be refused, not silently accepted");
     assert_eq!(b.get(wire::FRAME_PREFIX_LEN), Some(&wire::TERM_PRODUCER_FAILED));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_longer_authenticates_it() {
+    // ADR-020: `frontends/shell`'s Tauri webview origin (`http://localhost:5180` under `tauri
+    // dev`) has nothing to do with the data plane's own OS-assigned port, so `Session::new`'s
+    // derivation (`http://127.0.0.1:<port>`) could never match it -- every stream this shell ever
+    // opened was silently 403'd at the WebSocket upgrade. This reproduces the shell's actual
+    // `DataPlaneConfig { expected_origin: Some(..) }` wiring end to end over a real socket: the
+    // regression that bug would have failed.
+    let path = fixture("webview-origin", 1_000);
+    let handle = dataset_handle();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    let tickets = StreamRegistry::new();
+
+    let dp = spatial_data_plane::serve(DataPlaneConfig {
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        static_dir: None,
+        expected_origin: Some("http://localhost:5180".to_string()),
+    })
+    .await
+    .expect("serve");
+
+    // The shell's real dev-mode origin: admitted.
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
+    req.headers_mut().insert("origin", "http://localhost:5180".parse().unwrap());
+    req.headers_mut().insert(
+        "sec-websocket-protocol",
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+    );
+    tokio_tungstenite::connect_async(req).await.expect("the shell's declared webview origin must be admitted");
+
+    // The port-derived origin `Session::new` would have used -- no longer authoritative once
+    // `expected_origin` is declared. This is the exact request shape the pre-fix code accepted and
+    // the post-fix code must reject.
+    let mut wrong = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
+    wrong.headers_mut()
+        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    wrong.headers_mut().insert(
+        "sec-websocket-protocol",
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+    );
+    assert!(
+        tokio_tungstenite::connect_async(wrong).await.is_err(),
+        "the port-derived origin must be rejected once expected_origin is declared"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -290,6 +339,7 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     let dp = spatial_data_plane::serve(DataPlaneConfig {
         factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
         static_dir: None,
+        expected_origin: None,
     })
     .await
     .expect("serve");

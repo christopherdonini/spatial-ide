@@ -229,6 +229,7 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
     let dp = spatial_data_plane::serve(DataPlaneConfig {
         factory: Arc::new(EngineSourceFactory::new(Arc::new(catalog))),
         static_dir: None,
+        expected_origin: None,
     })
     .await
     .expect("serve");
@@ -382,6 +383,7 @@ async fn the_admission_slot_is_released_when_the_stream_ends_not_when_the_peer_l
     let dp = spatial_data_plane::serve(DataPlaneConfig {
         factory: Arc::new(EngineSourceFactory::new(Arc::new(catalog))),
         static_dir: None,
+        expected_origin: None,
     })
     .await
     .expect("serve");

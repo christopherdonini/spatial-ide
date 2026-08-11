@@ -2,6 +2,12 @@ import { Deck, OrthographicView, PickingInfo } from "@deck.gl/core";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import { logSessionEvent } from "../diagnostics/log";
+import {
+  traceLayerUpdate,
+  tracePositionsSample,
+  traceStreamBatch,
+  traceViewState,
+} from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
 import { batchForLayerId, buildLayers } from "./buildLayers";
 import { decodeBatch } from "./decodeBatch";
@@ -92,6 +98,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * geometry -- must not consume the one-shot auto-fit and leave every later batch, geometry and
    * all, rendering at whatever the frame origin defaulted to (the empty-canvas bug this replaces). */
   const hasAutoFitRef = useRef(false);
+  /** Per-stream cumulative rows/vertices received -- diagnostic instrumentation only (Custodian
+   * walkthrough finding), reset per stream handle since a superseded stream's batches are dropped
+   * but its handle is never reused. */
+  const streamStatsRef = useRef(new Map<string, { rows: number; vertices: number }>());
 
   // The Deck instance is constructed once (empty deps below) and its callbacks close over these
   // props at that moment. Routing every prop through a ref -- read inside the callback, written on
@@ -109,8 +119,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     if (!deck) return;
     begin("layer-construct");
     try {
-      const layers = buildLayers(residentRef.current.getBatches(), frameRef.current);
+      const batches = residentRef.current.getBatches();
+      const layers = buildLayers(batches, frameRef.current);
       deck.setProps({ layers });
+      // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
+      // own internal layer state -- the same total `buildLayers` fed the GPU from, computed once by
+      // `decodeBatch` and carried on each `ResidentBatch` rather than re-walked here.
+      const totalPositions = batches.reduce((sum, b) => sum + b.totalVertices, 0);
+      traceLayerUpdate(layers.length, totalPositions);
     } finally {
       end("layer-construct");
     }
@@ -132,6 +148,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     const frame = frameRef.current;
     frame.forceRecenter(fit.centerX, fit.centerY);
     frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(fit.zoom), RECENTER_BUDGET_PX));
+    traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
     // See this file's own doc comment: `initialViewState`, never `viewState`.
     deckRef.current?.setProps({ initialViewState: { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom } });
     render();
@@ -171,6 +188,16 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         }
         end("buffer-build");
 
+        const stats = streamStatsRef.current.get(streamHandle) ?? { rows: 0, vertices: 0 };
+        stats.rows += batch.ids.length;
+        stats.vertices += batch.totalVertices;
+        streamStatsRef.current.set(streamHandle, stats);
+        traceStreamBatch(streamHandle, batchSeq, batch.ids.length, batch.totalVertices, stats.rows, stats.vertices);
+        const preOffsetSample = batch.rings.find((r) => r.length > 0 && r[0].length > 0)?.[0]?.slice(0, 3);
+        if (preOffsetSample) {
+          tracePositionsSample("pre-offset", streamHandle, batchSeq, preOffsetSample);
+        }
+
         // No dataset extent exists to aim the initial camera at (SKP-V0.md's C1: `describe` never
         // claims one), so the camera fits to the bbox of arriving data instead -- the first time
         // any arrives, not merely the first batch received (a batch can carry zero features, or
@@ -181,6 +208,18 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         if (!hasAutoFitRef.current && residentExtentRef.current) {
           hasAutoFitRef.current = true;
           fitToExtent(residentExtentRef.current);
+        }
+        // Logged after any fit-triggered recenter above, so this reflects the origin `render()`
+        // (right below) will actually use -- the comparison that matters is decode vs. what the GPU
+        // sees, not decode vs. some origin already stale by the time of the next line.
+        if (preOffsetSample) {
+          const frame = frameRef.current;
+          tracePositionsSample(
+            "post-offset",
+            streamHandle,
+            batchSeq,
+            preOffsetSample.map(([x, y]) => frame.toLocal(x, y))
+          );
         }
         render();
       },
@@ -218,6 +257,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const vs = viewState as { target: [number, number, number]; zoom: number };
         const frame = frameRef.current;
         frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(vs.zoom), RECENTER_BUDGET_PX));
+        traceViewState(vs.target[0], vs.target[1], vs.zoom, frame.originX, frame.originY);
 
         // Captured *before* any recenter below: `vs.target` is a local-frame value produced
         // relative to *this* origin, and combining it with any other origin is exactly the

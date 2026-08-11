@@ -108,6 +108,11 @@ pub struct DataPlaneConfig {
     /// plane (ADR-004 amendment 2 leaves the custom-protocol path acceptable for exactly that);
     /// it is here so a browser consumer has a same-origin page to load.
     pub static_dir: Option<PathBuf>,
+    /// The consumer's own origin, when it is *not* the same-origin page `static_dir` above would
+    /// serve -- e.g. a Tauri webview, whose origin has nothing to do with this server's own bound
+    /// port (ADR-020). `None` preserves the original assumption: the consumer is the page served
+    /// at `/`, so its origin *is* this server's own `http://127.0.0.1:<port>`.
+    pub expected_origin: Option<String>,
 }
 
 /// Every stream this process has served, for instrumentation and tests. Producer-side facts only —
@@ -193,7 +198,10 @@ pub async fn serve(config: DataPlaneConfig) -> std::io::Result<RunningDataPlane>
     let addr = listener.local_addr()?;
     assert!(addr.ip().is_loopback(), "the data plane binds loopback only");
 
-    let session = Session::new(addr.port())?;
+    let session = match config.expected_origin {
+        Some(origin) => Session::with_origin(origin)?,
+        None => Session::new(addr.port())?,
+    };
     let registry = Arc::new(StreamRegistry::default());
     let json_frames_seen = Arc::new(AtomicU64::new(0));
 

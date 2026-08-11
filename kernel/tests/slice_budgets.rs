@@ -366,6 +366,7 @@ async fn host(path: &std::path::Path) -> RunningDataPlane {
     spatial_data_plane::serve(DataPlaneConfig {
         factory: Arc::new(EngineSourceFactory::new(Arc::new(catalog))),
         static_dir: None,
+        expected_origin: None,
     })
     .await
     .expect("serve")

@@ -39,6 +39,20 @@ pub fn run() {
             let tickets = spatial_kernel::skp::StreamRegistry::new();
             let host = Arc::new(SkpHost::new(catalog.clone(), tickets.clone()));
 
+            // The shell's webview is never the same-origin page `static_dir` would serve (there is
+            // none here) -- its actual origin is `http://localhost:5180` under `tauri dev`
+            // (vite.config.ts's fixed dev port, mirrored in tauri.conf.json's devUrl) or
+            // `http://tauri.localhost` in a packaged build (Tauri's default custom-protocol origin
+            // on Windows/WebView2, the only validated platform per ADR-003's Resolution).
+            // `Session`'s default (deriving its expected origin from the data plane's own bound
+            // port) assumed a same-origin browser consumer and silently 403'd every WebSocket
+            // upgrade from this webview -- ADR-020.
+            let webview_origin = if cfg!(debug_assertions) {
+                "http://localhost:5180".to_string()
+            } else {
+                "http://tauri.localhost".to_string()
+            };
+
             // Blocking on the setup thread is the standard Tauri pattern for "this must exist
             // before the app finishes starting" async work — `setup` itself is synchronous, and no
             // command can run before it returns.
@@ -47,6 +61,7 @@ pub fn run() {
                 // No static assets: the shell's own webview loads the frontend directly, unlike
                 // `slice-host`'s browser consumer. This endpoint serves the data plane only.
                 static_dir: None,
+                expected_origin: Some(webview_origin),
             }))
             .expect(
                 "the data plane binds an OS-assigned loopback port and startup failure here is \

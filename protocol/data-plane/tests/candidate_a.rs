@@ -99,7 +99,7 @@ impl SourceFactory for SyntheticFactory {
 }
 
 async fn start(factory: Arc<SyntheticFactory>) -> RunningDataPlane {
-    spatial_data_plane::serve(DataPlaneConfig { factory, static_dir: None })
+    spatial_data_plane::serve(DataPlaneConfig { factory, static_dir: None, expected_origin: None })
         .await
         .expect("serve")
 }
