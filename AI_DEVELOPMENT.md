@@ -84,3 +84,27 @@ profile) + GTX 1650 (second profile; monitor must be plugged into the card for i
 display sleep interacts with measurement runs (see the bake-off's occlusion notes) · Windows
 Update auto-restart must stay disabled during remote periods · sessions killed by reboots resume
 via `claude --resume`, and the repo + state files are the memory, not the session.
+
+## Token discipline (2026-08-09 — binding in remote periods, good sense always)
+
+The plan has rolling limits; an unattended setup cannot afford flailing. Rules, from three weeks of
+observed burn:
+
+1. **Model per moment.** Big model (Fable/Opus, high effort) for custodian verdicts, briefs, and
+   gate-critical review only; Sonnet mainline for implementation sessions. Subagent pins in
+   `.claude/agents/` stay as configured. Never run implementation loops at xhigh.
+2. **Never read a known-large file whole.** `kernel/RESULTS.md` is 2,500+ lines; use grep for the
+   section heading, then read the range. Same for preregistrations and this file.
+3. **One cut, one session.** Stop at phase boundaries, externalize to state files (the NIGHT-STATE
+   pattern), let a fresh session continue. A days-old mega-session pays for its whole history on
+   every turn. `/compact` at phase boundaries, never mid-measurement.
+4. **Reports point, they don't duplicate.** The write-up lives in committed files; the chat report
+   is verdicts + the human's decision list + `git status --porcelain`, ≤ 30 lines.
+5. **Pipe build/test output to files**; read the tail and the summary line, not 400 lines of
+   `Compiling`.
+6. **Gate prompts name their targets** — the diff, the files, the claim under review — never
+   "review everything."
+7. **Two failed attempts at the same step → stop, record, queue for the human.** Grinding is the
+   most expensive failure mode and it never once worked in this repository's history.
+8. **On a limit warning: checkpoint to the state file immediately, then stop cleanly.** Losing an
+   uncommitted afternoon to a hard cutoff costs more than any session it interrupts.
