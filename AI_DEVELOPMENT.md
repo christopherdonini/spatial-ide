@@ -108,3 +108,14 @@ observed burn:
    most expensive failure mode and it never once worked in this repository's history.
 8. **On a limit warning: checkpoint to the state file immediately, then stop cleanly.** Losing an
    uncommitted afternoon to a hard cutoff costs more than any session it interrupts.
+
+## The worker mechanics (2026-08-09)
+
+Implementation runs on the **`worker` subagent** (`.claude/agents/worker.md`, Sonnet, full tools):
+the custodian decomposes a brief into bounded pieces, delegates each, and audits the terse reports
+against the tree — its own context stays small, the grind runs on the cheap model, and
+one-session-per-tree holds by construction. Gates (architect/reviewer/tester) run as always,
+between pieces or after the set. **Fallback for pieces too large for one delegation:** the
+custodian switches itself to Sonnet (`/model sonnet`) for the implementation stretch and back for
+verdicts, noting the switch; after the cut, exit and relaunch a fresh custodian rather than
+carrying the accumulated context forward.
