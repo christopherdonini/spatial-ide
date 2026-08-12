@@ -1,4 +1,5 @@
 import { traceViewportQuery } from "../diagnostics/renderTrace";
+import { logSessionEvent } from "../diagnostics/log";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox } from "../skp/types";
 import { startStream } from "./adapterWs";
@@ -37,6 +38,33 @@ export interface ViewportStreamManagerOptions {
  */
 export class ViewportStreamManager {
   private currentStreamHandle: string | null = null;
+  /**
+   * The stream handle whose batches are believed resident on the canvas right now, or `null`.
+   * Tracked separately from `currentStreamHandle` because that field is nulled the moment a
+   * stream's terminal arrives -- Completed, Cancelled, or ProducerFailed alike (`sink.onTerminal`
+   * below) -- even though a Completed stream's already-pushed batches stay resident on the canvas
+   * until something explicitly clears them. Without this second field, a stream that completes
+   * naturally (all its data delivered) *before* the next `requestViewport` call leaves
+   * `currentStreamHandle` already `null` by the time `supersedeCurrent` runs, so the old "nothing
+   * to cancel, nothing to clear" logic skipped `onSuperseded` entirely for it -- its full residency
+   * then coexisted with the next stream's incoming batches, tripping `MAX_RESIDENT_VERTICES` on a
+   * viewport that would have fit on its own (in-situ evidence: a completed 100k-fixture load
+   * settling at 1,961,249 resident vertices, then an ordinary pan overflowing at ~2.0-2.04M because
+   * the finished stream's full residency was still counted alongside the new stream's first
+   * batches). `clearResidency` is what actually fires `onSuperseded` now, unconditionally on
+   * whichever handle this field names, regardless of whether that stream is still `currentStreamHandle`.
+   */
+  private residentStreamHandle: string | null = null;
+  /** Handles this manager itself cancelled -- via `supersedeCurrent` or `cancelStream` -- and whose
+   * eventual terminal (however the transport chooses to report it) is therefore expected, not a
+   * failure. Populated at the moment the cancel is issued, not when its terminal arrives, so the
+   * decision "did I cancel this" never depends on the terminal's own `kind`. See `sink.onTerminal`
+   * below and CANCELLATION-FACTS.md §1: supersede-on-pan's cancel reaches the producer through the
+   * SKP path, which yields `TERM_PRODUCER_FAILED` (a `ProducerFailed` terminal here), never
+   * `TERM_CANCELLED` -- so `terminal.kind` alone cannot distinguish "I cancelled this, expected"
+   * from "this genuinely failed" the way `App.tsx` used to assume.
+   */
+  private readonly selfCancelledHandles = new Set<string>();
   private nextBatchSeq = 0;
   private lastIssuedAtMs = 0;
   private generation = 0;
@@ -83,6 +111,7 @@ export class ViewportStreamManager {
       return;
     }
     this.currentStreamHandle = stream;
+    this.residentStreamHandle = stream;
     this.nextBatchSeq = 0;
 
     const attach = await dataPlaneAttach();
@@ -90,6 +119,11 @@ export class ViewportStreamManager {
       await skpCancel(stream).catch(() => {});
       if (this.currentStreamHandle === stream) {
         this.currentStreamHandle = null;
+      }
+      if (this.residentStreamHandle === stream) {
+        // Never actually started (never reached `startStream` below), so nothing was ever pushed
+        // to the canvas under this handle -- there is no residency to clear later.
+        this.residentStreamHandle = null;
       }
       return;
     }
@@ -112,6 +146,18 @@ export class ViewportStreamManager {
         if (this.currentStreamHandle === streamHandleAtStart) {
           this.currentStreamHandle = null;
         }
+        // A terminal for a handle this manager itself cancelled (supersede or `cancelStream`) is
+        // an expected outcome, not a failure -- even when its `kind` is `ProducerFailed`
+        // (CANCELLATION-FACTS.md §1: the SKP cancel path yields `TERM_PRODUCER_FAILED`, never
+        // `TERM_CANCELLED`). This manager is the only thing that knows "I cancelled this", so it
+        // is the layer that suppresses the banner, not `App.tsx` guessing from `terminal.kind`.
+        if (this.selfCancelledHandles.delete(streamHandleAtStart)) {
+          logSessionEvent(
+            "debug",
+            `stream-terminal-self-cancelled: ${streamHandleAtStart}: ${terminal.kind} — ${terminal.detail}`
+          );
+          return;
+        }
         this.opts.onTerminal?.(streamHandleAtStart, terminal);
       },
     };
@@ -120,21 +166,42 @@ export class ViewportStreamManager {
   }
 
   /** Cancels the current stream (if any) without starting a replacement -- used by
-   * `requestViewport`'s own supersede step and by `stop()`. */
+   * `requestViewport`'s own supersede step and by `stop()`. Also clears the canvas's residency for
+   * whichever stream last held it (`clearResidency`), regardless of whether that stream was still
+   * `currentStreamHandle` at this point -- see `residentStreamHandle`'s own doc comment for why
+   * that distinction is exactly the fix for the double-residency defect. */
   private async supersedeCurrent(): Promise<void> {
     const previous = this.currentStreamHandle;
-    if (previous === null) {
+    if (previous !== null) {
+      this.currentStreamHandle = null;
+      this.selfCancelledHandles.add(previous);
+      try {
+        await skpCancel(previous);
+      } catch {
+        // A cancel racing an already-finished stream reports "unknown"/"already_terminal" through
+        // the SKP response, not a thrown error; a transport failure calling cancel is not fatal to
+        // superseding it client-side either way -- the new query proceeds regardless.
+      }
+    }
+    this.clearResidency();
+  }
+
+  /**
+   * Drops the canvas's residency for whichever stream last held it (`residentStreamHandle`), if
+   * any -- called synchronously as part of `supersedeCurrent`, i.e. at the moment a new
+   * `requestViewport` call decides to supersede, never deferred to when a terminal happens to
+   * arrive. This runs unconditionally, even when the previously-resident stream had already
+   * reached its own terminal on its own (nothing left in `currentStreamHandle` to cancel): its
+   * already-pushed batches are still on the canvas either way, and are exactly what must be gone
+   * before the new stream's first batch is admitted.
+   */
+  private clearResidency(): void {
+    const resident = this.residentStreamHandle;
+    if (resident === null) {
       return;
     }
-    this.currentStreamHandle = null;
-    try {
-      await skpCancel(previous);
-    } catch {
-      // A cancel racing an already-finished stream reports "unknown"/"already_terminal" through
-      // the SKP response, not a thrown error; a transport failure calling cancel is not fatal to
-      // superseding it client-side either way -- the new query proceeds regardless.
-    }
-    this.opts.onSuperseded(previous);
+    this.residentStreamHandle = null;
+    this.opts.onSuperseded(resident);
   }
 
   /**
@@ -148,6 +215,7 @@ export class ViewportStreamManager {
     if (this.currentStreamHandle === streamHandle) {
       this.currentStreamHandle = null;
     }
+    this.selfCancelledHandles.add(streamHandle);
     try {
       await skpCancel(streamHandle);
     } catch {

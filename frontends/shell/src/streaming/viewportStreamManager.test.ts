@@ -236,6 +236,140 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     expect(onSuperseded).toHaveBeenCalledWith("sh_a");
   });
 
+  describe("terminal suppression for self-cancelled streams (D1: the SKP cancel path yields ProducerFailed, not Cancelled -- CANCELLATION-FACTS.md §1)", () => {
+    it("a terminal for a stream this manager superseded is suppressed -- never reaches onTerminal, whatever its kind", async () => {
+      mockStream("sh_a");
+      const onTerminal = vi.fn();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      await manager.requestViewport(null, null, 1_000);
+      const staleSink = sinkFor(0);
+
+      mockStream("sh_b");
+      await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+
+      // The old connection's own terminal frame arrives late, reporting the SKP cancel path's real
+      // kind -- exactly the ".canvas-refusal: stream ProducerFailed: cancelled" banner this fix
+      // removes for an ordinary pan.
+      staleSink.onTerminal({ kind: "ProducerFailed", detail: "cancelled" });
+
+      expect(onTerminal).not.toHaveBeenCalled();
+    });
+
+    it("a terminal for a stream this manager explicitly cancelled (cancelStream) is suppressed too", async () => {
+      mockStream("sh_a");
+      const onTerminal = vi.fn();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      await manager.requestViewport(null, null, 1_000);
+      const sink = sinkFor(0);
+
+      await manager.cancelStream("sh_a");
+      sink.onTerminal({ kind: "ProducerFailed", detail: "cancelled" });
+
+      expect(onTerminal).not.toHaveBeenCalled();
+    });
+
+    it("a ProducerFailed on a stream this manager did NOT cancel still reaches onTerminal as a failure", async () => {
+      mockStream("sh_a");
+      const onTerminal = vi.fn();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      await manager.requestViewport(null, null, 1_000);
+      const sink = sinkFor(0);
+
+      // A genuine producer-side failure -- nothing here ever called supersedeCurrent/cancelStream
+      // on "sh_a", so this must still be reported and still banner in App.tsx.
+      sink.onTerminal({ kind: "ProducerFailed", detail: "engine.crs_undeclared" });
+
+      expect(onTerminal).toHaveBeenCalledWith("sh_a", { kind: "ProducerFailed", detail: "engine.crs_undeclared" });
+    });
+
+    it("a stream's own natural Completed still reaches onTerminal (App.tsx's own whitelist treats it as benign)", async () => {
+      mockStream("sh_a");
+      const onTerminal = vi.fn();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      await manager.requestViewport(null, null, 1_000);
+      const sink = sinkFor(0);
+
+      sink.onTerminal({ kind: "Completed", detail: "" });
+
+      expect(onTerminal).toHaveBeenCalledWith("sh_a", { kind: "Completed", detail: "" });
+    });
+  });
+
+  describe("residency across supersession (D2: a stream's residency must be cleared synchronously at supersede time, not deferred to a terminal)", () => {
+    // A minimal stand-in for App.tsx's real wiring (onBatch -> WorkingCanvas.pushBatch,
+    // onSuperseded -> WorkingCanvas.clearStream), tracking just enough (bytes per stream handle) to
+    // assert ordering without pulling ResidentSet/WorkingCanvas into this suite.
+    function fakeResidentTracker() {
+      const resident = new Map<string, number>();
+      const onBatch = vi.fn((streamHandle: string, _seq: number, payload: Uint8Array) => {
+        resident.set(streamHandle, (resident.get(streamHandle) ?? 0) + payload.length);
+      });
+      const onSuperseded = vi.fn((streamHandle: string) => {
+        resident.delete(streamHandle);
+      });
+      return { resident, onBatch, onSuperseded };
+    }
+
+    it("a stream that completes naturally before the next requestViewport is still cleared before the new stream's first batch (the actual root cause: a natural terminal nulls currentStreamHandle, not residency)", async () => {
+      mockStream("sh_a");
+      const { resident, onBatch, onSuperseded } = fakeResidentTracker();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+      await manager.requestViewport(null, null, 1_000);
+      const sinkA = sinkFor(0);
+
+      sinkA.onBatch(new Uint8Array(500), true);
+      expect(resident.get("sh_a")).toBe(500);
+
+      // sh_a completes entirely on its own -- nobody cancelled it, no supersede has happened yet.
+      // This is the empirically-observed sequence: the full unfiltered fixture load settles
+      // (Completed) well before the first ordinary pan.
+      sinkA.onTerminal({ kind: "Completed", detail: "" });
+      expect(manager.activeStreamHandle).toBeNull();
+      expect(resident.has("sh_a")).toBe(true); // still resident: completing is not the same as clearing
+
+      mockStream("sh_b");
+      await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+
+      // Cleared synchronously as part of the supersede step -- before sh_b's own first pushBatch,
+      // never deferred to any terminal.
+      expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+      expect(resident.has("sh_a")).toBe(false);
+
+      const sinkB = sinkFor(1);
+      sinkB.onBatch(new Uint8Array(300), true);
+      expect([...resident.entries()]).toEqual([["sh_b", 300]]);
+
+      // A late batch for the long-gone sh_a handle must be dropped, not pushed -- the call count
+      // must not grow past the two legitimate pushes above (sh_a's original batch, sh_b's first).
+      const callsBeforeLateBatch = onBatch.mock.calls.length;
+      sinkA.onBatch(new Uint8Array(999), true);
+      expect(onBatch.mock.calls.length).toBe(callsBeforeLateBatch);
+      expect(resident.has("sh_a")).toBe(false);
+    });
+
+    it("a stream still actively streaming when superseded is also cleared before the new stream's first batch", async () => {
+      mockStream("sh_a");
+      const { resident, onBatch, onSuperseded } = fakeResidentTracker();
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+      await manager.requestViewport(null, null, 1_000);
+      const sinkA = sinkFor(0);
+      sinkA.onBatch(new Uint8Array(500), true);
+      expect(resident.get("sh_a")).toBe(500);
+
+      mockStream("sh_b");
+      await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+
+      expect(resident.has("sh_a")).toBe(false);
+
+      const sinkB = sinkFor(1);
+      sinkB.onBatch(new Uint8Array(300), true);
+      expect([...resident.entries()]).toEqual([["sh_b", 300]]);
+
+      sinkA.onBatch(new Uint8Array(999), true);
+      expect(resident.has("sh_a")).toBe(false);
+    });
+  });
+
   describe("supersede storm (Custodian walkthrough finding: ordinary dragging surfaced skp.too_many_pending_streams)", () => {
     // App.tsx's actual production wiring: onViewportChanged -> debounce -> manager.requestViewport.
     // Driven here with fake timers so a several-second drag storm runs in test time, not wall time.

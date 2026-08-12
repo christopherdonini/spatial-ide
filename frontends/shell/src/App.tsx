@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import AdmissionPanel from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
@@ -24,6 +24,29 @@ function toWireBbox(bbox: AuthoritativeBbox): Bbox {
 }
 
 /**
+ * D4's stale-banner fix, isolated from React rendering: every `App`-level piece of UI state that
+ * names something about the *previous* dataset (a canvas refusal, a viewport refusal, a hover
+ * readout naming a feature id) is cleared before the new `Admitted` value is adopted. Exported and
+ * parameterized over explicit setters (not a closure over `App`'s own hooks) so `App.test.ts` can
+ * assert this exact sequencing directly -- see `handleAdmitted`'s doc comment in `App` for why a
+ * full `<App />` render is not a practical way to test it here.
+ */
+export function admitAndResetStaleUiState(
+  next: Admitted,
+  setters: {
+    setCanvasRefusal: (value: string | null) => void;
+    setViewportRefusal: (value: FormattedRefusal | null) => void;
+    setHover: (value: PickResult | null) => void;
+    setAdmitted: (value: Admitted) => void;
+  }
+): void {
+  setters.setCanvasRefusal(null);
+  setters.setViewportRefusal(null);
+  setters.setHover(null);
+  setters.setAdmitted(next);
+}
+
+/**
  * Cut 1's whole shell: an admission flow, a working canvas, and viewport-driven streaming with
  * supersede-on-pan (`docs/07` Prototype-completion arc). No style panel, no publish affordance --
  * neither exists anywhere in this tree, not even as a disabled control (NEXT-CUT.md's own
@@ -37,6 +60,29 @@ export default function App() {
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
+
+  /**
+   * The single admission callback `AdmissionPanel` calls on every successful `open_dataset` --
+   * first open and every reopen alike. Clears every piece of UI state a *previous* dataset could
+   * have left behind before adopting the new one, so a refusal or hover reading from dataset N
+   * never survives into dataset N+1's UI (D4, custodian forensic run: the stale banner from one
+   * ceiling refusal read as identical across every later step because nothing here ever reset it).
+   * The actual sequencing is `admitAndResetStaleUiState` below, kept as a plain function over
+   * explicit setter parameters (no closure over this component's hooks) specifically so
+   * `App.test.ts` can assert it without rendering `<App />` -- `WorkingCanvas`'s real `Deck`
+   * construction needs a WebGL context jsdom does not provide, so this indirection is what keeps
+   * the reset sequencing itself testable without a DOM/WebGL harness this repo does not carry.
+   *
+   * `useCallback([])`: every `useState` setter closed over here is identity-stable for the
+   * component's whole lifetime (React's own guarantee), so this callback never needs to change --
+   * without it, a plain function literal gets a new identity every `App` render, which flows into
+   * `AdmissionPanel`'s `onAdmitted` prop, its `admitPath` (`useCallback([onAdmitted])`), and the
+   * `useEffect([admitPath])` that (un)registers the `openPath` E2E hook -- unregistering and
+   * re-registering that hook on every render, for no reason.
+   */
+  const handleAdmitted = useCallback((next: Admitted): void => {
+    admitAndResetStaleUiState(next, { setCanvasRefusal, setViewportRefusal, setHover, setAdmitted });
+  }, []);
 
   function reportViewportOutcome(promise: Promise<void>) {
     promise.then(
@@ -70,8 +116,14 @@ export default function App() {
       // violation, found alongside the origin-mismatch bug this cut fixes): a `TransportFailed`
       // from a rejected WebSocket upgrade produced no error banner and no console output, so a
       // stream that could never deliver a single batch looked identical to an idle canvas.
-      // `Completed`/`Cancelled` are expected outcomes -- every supersede-on-pan produces a
-      // `Cancelled` for the superseded stream -- and must not bang a refusal banner on every pan.
+      //
+      // `ViewportStreamManager` never forwards a terminal for a stream it cancelled itself (an
+      // ordinary supersede-on-pan, or an explicit `cancelStream` refusal) -- see its own
+      // `selfCancelledHandles` doc comment. It is the layer that knows "I cancelled this", which
+      // CANCELLATION-FACTS.md §1 established cannot be read back off `terminal.kind` alone: the SKP
+      // cancel path yields `ProducerFailed`, never `Cancelled`. What reaches here is therefore
+      // either a stream's own natural `Completed` (benign, whitelisted below) or a genuine failure
+      // this manager did not cause -- which must still banner.
       onTerminal: (streamHandle, terminal) => {
         if (terminal.kind === "Completed" || terminal.kind === "Cancelled") {
           return;
@@ -118,10 +170,24 @@ export default function App() {
       <ErrorBanner />
       <header className="app-header">Spatial IDE</header>
       <main className="app-main">
-        <AdmissionPanel onAdmitted={setAdmitted} />
+        <AdmissionPanel onAdmitted={handleAdmitted} />
         {admitted && (
           <div className="canvas-container">
+            {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen
+              * (a *new* `open_dataset`, `Admitted` object, even for the same file: SKP-V0.md never
+              * promises the same dataset handle back) unmounts and remounts this component,
+              * discarding `residentRef`/`residentExtentRef`/`hasAutoFitRef`/`frameRef` entirely
+              * rather than reconciling the same instance across two different datasets' CRS/extent/
+              * identity spaces. D4 (custodian forensic run): without a `key`, React reconciles the
+              * *same* WorkingCanvas instance across a reopen (same position in this tree), so the
+              * new dataset's first batch landed on the old dataset's still-fully-resident 1,961,249
+              * vertices -- 1,961,249 + 51,187 (the new stream's own first batch) = 2,012,436, the
+              * exact refusal this run's own evidence names. ADR-010 rule 1 ("a frame is a type
+              * too" -- `frameRef`'s origin, like `residentRef`'s buffers, is tagged to the dataset
+              * that produced it) is the constitutional reason a *new* dataset's canvas state may
+              * never survive as an untagged carryover from the old one, not merely this bug's fix. */}
             <WorkingCanvas
+              key={admitted.dataset}
               ref={canvasRef}
               geometryColumn={admitted.describe.geometry.column}
               onHover={setHover}
