@@ -205,6 +205,56 @@ async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_l
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_declared_origin_with_a_wrong_token_is_refused_as_a_credential_rejection() {
+    // ADR-020 condition C3, named by the 2026-08-12 architect review: origin admission and
+    // credential admission are two separate checks (`server::upgrade` checks `Session::
+    // request_allowed` first, returning 403 "origin", then `Session::token_matches` second,
+    // returning 401 "credential"), and the matrix had no case proving they stay separate once
+    // `expected_origin` is `Some(..)`. A request that presents the *correct* declared origin
+    // together with a *wrong* token must clear the first check and fail on the second -- if this
+    // instead came back as an origin refusal (or was silently admitted), the two checks would have
+    // collapsed into one.
+    //
+    // The positive control this negative test needs -- declared origin + correct token admitted --
+    // already exists a few lines above in
+    // `a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_longer_authenticates_it`,
+    // so it is not repeated here.
+    let path = fixture("wrong-token", 1_000);
+    let handle = dataset_handle();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    let tickets = StreamRegistry::new();
+
+    let dp = spatial_data_plane::serve(DataPlaneConfig {
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        static_dir: None,
+        expected_origin: Some("http://localhost:5180".to_string()),
+    })
+    .await
+    .expect("serve");
+
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
+    req.headers_mut().insert("origin", "http://localhost:5180".parse().unwrap());
+    // A well-formed but wrong token -- same shape `Session::token_matches` expects, differing
+    // credential.
+    req.headers_mut()
+        .insert("sec-websocket-protocol", format!("{SUBPROTOCOL}, tok.{}", "0".repeat(64)).parse().unwrap());
+
+    let err = tokio_tungstenite::connect_async(req)
+        .await
+        .expect_err("the declared origin does not rescue a wrong token");
+    let tokio_tungstenite::tungstenite::Error::Http(resp) = err else {
+        panic!("expected an HTTP-level refusal at the upgrade, got {err:?}");
+    };
+    assert_eq!(
+        resp.status().as_u16(),
+        401,
+        "server.rs answers a bad credential with 401 (\"credential\"); 403 would mean the origin \
+         check fired instead, which is the exact conflation this test exists to rule out"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a_handle() {
     let path = fixture("crs-mismatch", 100);
     let handle = dataset_handle();
