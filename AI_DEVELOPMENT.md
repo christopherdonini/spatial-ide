@@ -108,6 +108,13 @@ observed burn:
    most expensive failure mode and it never once worked in this repository's history.
 8. **On a limit warning: checkpoint to the state file immediately, then stop cleanly.** Losing an
    uncommitted afternoon to a hard cutoff costs more than any session it interrupts.
+9. **Background shells get declared expected durations.** When the custodian starts one, it names
+   how long the command should take; a shell silent past its declaration is **presumed hung** —
+   read its accumulated output, capture to the piece's state file, kill it, diagnose the named
+   cause. Never wait indefinitely: a hang and patience look identical from the outside, and only
+   one of them is ever the right explanation past the declared duration. (Added 2026-08-12 after a
+   harness process hung 16 hours *after* successfully printing its result — the cost was a night of
+   wall clock, and the result was sitting in the log the whole time.)
 
 ## The worker mechanics (2026-08-09)
 
