@@ -5,10 +5,14 @@ of the running desktop app: the happy path (picker → admission → canvas → 
 refusing file's typed refusal (no CRS; missing identity). Every other acceptance-list item is
 verified programmatically — see the tester's report folded into this cut's design-note commit.
 
-**Evidence class: operator-verified against this scripted walkthrough, not automated.** A run of
-this document is recorded as: date, who ran it, pass/fail per numbered step, and any deviation
-verbatim. That is a different, weaker evidence class than an assertion in a test suite, and this
-file exists so the gap between the two is a named, comparable thing rather than an unstated one.
+**Evidence class: operator-verified against this scripted walkthrough** — a human performing these
+exact numbered steps by hand and recording the result, **not automated by this document itself**
+(see the 2026-08-12 update below: most of the same ground is now *separately* automated by
+`e2e/regression.mjs`, a distinct **E2E-verified** evidence class, not a replacement for this one). A
+run of this document is recorded as: date, who ran it, pass/fail per numbered step, and any
+deviation verbatim. That is a different, weaker evidence class than an assertion in a test suite,
+and this file exists so the gap between the two is a named, comparable thing rather than an
+unstated one.
 
 ## Why this is a script, not automation
 
@@ -32,6 +36,53 @@ When that changes, the WebDriver half (canvas, admission, pan/zoom, hover — ev
 DOM) is worth building; the native-picker half stays a structural limitation no Tauri e2e setup
 resolves, and the picker step here would still need either a manual click or an OS-level automation
 tool.
+
+**2026-08-12 update: this deferral is superseded, not retracted.** A human-approved
+`playwright-core`-over-CDP harness now exists (`frontends/shell/e2e/README.md`) — it drives the
+app's own dev-mode WebView2 through the Chrome DevTools Protocol, not `tauri-driver`/WebDriver, and
+was scoped and approved on those terms rather than the WebDriver path this section argued against.
+Every DOM- and canvas-assertable step below is now **also** encoded as `e2e/regression.mjs`, the
+**E2E-verified** class (`e2e/README.md`'s own evidence-class paragraph): driven through real IPC
+and a real render loop, via the same `window.__SPATIAL_E2E__.openPath` in-page hook this document's
+own reasoning above already named as the one structural gap (no driver reaches the native dialog).
+What stays **operator-verified only**, unchanged by this: the native file-picker step (A2 — no CDP
+driver reaches WebView2's own dialog chrome, the same limitation this section describes) and every
+look-and-feel judgment call in Part A (smoothness, no visible jump/tearing/ghosting/jitter in
+A4–A9; A10's exit-without-crash claim). The operator walkthrough below remains the acceptance
+instrument for those; the table after the intro maps exactly which numbered steps below the script
+covers and what it deliberately leaves for a human to still judge.
+
+## What `e2e/regression.mjs` covers
+
+Short-form cross-reference, not a duplicate of either document: each automated step ID is the exact
+one `e2e/regression.mjs`'s own summary table prints. "Does not cover" only lists what that same
+numbered walkthrough step *claims* that the script cannot assert — not everything a script could
+never know.
+
+**Status as of 2026-08-12: this suite is currently RED on `A5'`–`A9'`.** A queued, unresolved shell
+defect (`DECISIONS-PENDING.md` entry 0 — a spurious resident-vertex-ceiling refusal, reproduced
+deterministically across three verified-fresh launches) trips early in every run and its banner
+never clears, so every later banner-absence assertion fails identically. "Covers" below names what
+each step *asserts when it passes*, not that it currently does — read a fresh run's own output for
+current status, not this table.
+
+| Automated step | Walkthrough step(s) | Covers | Does not cover |
+|---|---|---|---|
+| `A1'` | A1 | DOM: window title/header read "Spatial IDE"; "Open GeoParquet…" button present | that a window actually opens (this asserts page content, not window chrome) |
+| `A3'` | A3 | `openPath` admits; `DescribeSummary` DOM contains these five expected substrings (CRS identifier, geometry encoding, identity source, row count, license fallback) — not a full-text verbatim match of the whole summary; no refusal panel present afterward | the transient "Opening…" button label; the picker itself (A2, not attempted — see above); any summary text outside the five asserted substrings |
+| `A4'` | A4 | canvas non-blank (overall + 3×3 grid-cell sampling) after settle; "Zoom to layer" button present | whether the render *looks* like "a field of parcels" — any visual/aesthetic judgment |
+| `A5'`/`A6'` | A5, A6 | after one pan and one zoom-in-then-out: no `.canvas-refusal`, no `ErrorBanner`, a fresh `[render-trace]` view-state/viewport_query entry, pixels still non-blank | smoothness; absence of visible jump, tearing, ghosting, or coordinate jitter (A5/A6's own qualitative claims); A6 itself asks for zooming "several times... including at least one large jump" — the script does exactly one zoom-in-then-out, not a repeated or large-jump gesture |
+| `A7'` | A7 | pan far, click "Zoom to layer", pixels non-blank again after the re-fit settles | that the resulting fit is *the same fit A4 produced* — only non-blank pixels are asserted, not that the two fits match |
+| `A8'` | A8 | a rapid ≥15-gesture burst produces no `.canvas-refusal`/`ErrorBanner` and no `too_many_pending_streams` text anywhere in the run | "never freezes or becomes unresponsive" — a responsiveness/latency claim, not measured here |
+| `A9'` | A9 | a `.hover-readout` matching `id <number>` appears over a feature (located from real pixel data, not a guessed coordinate) and disappears over empty space | the `@ (x.xxx, y.xxx)` coordinate suffix's formatting; that the id changes between two specific, different polygons |
+| `B2'`/`B3'` | B2, B3 | `openPath` refuses with `engine.crs_undeclared`; the panel shows that code, the verbatim message, the cut-2 remediation note, no dismiss control, and `.describe-summary` is absent (the "no summary" half of B2's own claim) | "no canvas change" (B2's other half) — that a canvas already showing a previously-admitted dataset is left pixel-for-pixel untouched by this refusal is not asserted |
+| `C2'`/`C3'` | C2, C3 | same, for `engine.identity_unusable` | same as B2'/B3' above |
+| `REOPEN'` | the "works from any state" claim in this doc's own prose (not a numbered step) | one of the three claimed states specifically: reopening *from a refused state* admits, with no stale refusal banner present beforehand, and the canvas is non-blank after settle | reopening from *idle* (never having admitted anything) or from *already-admitted* (reopening over a still-showing canvas, no refusal in between) — the other two states the prose claims but this step does not exercise |
+| `NET'` | — (informational, not a walkthrough claim) | whether any `>=400` HTTP response was observed during the run | — this row exists only because `regression.mjs`'s own summary table prints a `NET'` row; it names no walkthrough step and asserts nothing that fails the run |
+
+A10 (close the window; no crash, no hang) has no automated counterpart at all — a CDP-attached
+session has no way to assert "the window closed cleanly" about the very connection it is using to
+assert anything else.
 
 ## Prerequisites
 
