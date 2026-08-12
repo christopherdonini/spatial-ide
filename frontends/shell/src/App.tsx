@@ -188,6 +188,7 @@ export default function App() {
               * never survive as an untagged carryover from the old one, not merely this bug's fix. */}
             <WorkingCanvas
               key={admitted.dataset}
+              dataset={admitted.dataset}
               ref={canvasRef}
               geometryColumn={admitted.describe.geometry.column}
               onHover={setHover}

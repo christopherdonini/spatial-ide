@@ -17,9 +17,13 @@
 // anything else touches the page -- see its own doc comment for the fresh-launch race it
 // closes (a WebView2 page target existing is not the same fact as React having mounted).
 
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+
+const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 
 const FIXTURE_100K = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\100k-happy-path.parquet";
 const FIXTURE_NO_CRS = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\no-crs-refused.parquet";
@@ -624,6 +628,21 @@ async function main() {
     console.error(`regression: harness failure: ${e.stack ?? e.message}`);
     process.exitCode = 1;
   } finally {
+    // DECISIONS-PENDING.md entry 0's evidence extraction: this script otherwise never persists
+    // the full console/render-trace ledger it already captured in-memory (only step-level
+    // pass/fail notes reach stdout) -- same write-a-JSON-report pattern as `debug-session.mjs`,
+    // added here so the one authorized instrumented run leaves a durable, complete ledger.
+    try {
+      mkdirSync(OUT_DIR, { recursive: true });
+      const ledgerPath = join(OUT_DIR, `regression-render-trace-${Date.now()}.json`);
+      writeFileSync(
+        ledgerPath,
+        JSON.stringify({ renderTrace: consoleHandle.renderTrace(), allConsoleEntries: consoleHandle.entries }, null, 2)
+      );
+      console.log(`Full render-trace ledger: ${ledgerPath}`);
+    } catch (e) {
+      console.error(`regression: failed to write the render-trace ledger: ${e.message}`);
+    }
     consoleHandle.dispose();
     // Disconnects only -- `session.stop()` is never called here, success or failure: this
     // app is already running and must stay running (task constraint), and a launched

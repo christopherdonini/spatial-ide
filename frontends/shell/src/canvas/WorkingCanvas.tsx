@@ -5,8 +5,10 @@ import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
 import {
+  traceCanvasLifecycle,
   traceLayerUpdate,
   tracePositionsSample,
+  traceResidency,
   traceStreamBatch,
   traceViewState,
 } from "../diagnostics/renderTrace";
@@ -14,7 +16,12 @@ import { begin, end } from "../diagnostics/watchdog";
 import { batchForLayerId, buildLayers } from "./buildLayers";
 import { decodeBatch } from "./decodeBatch";
 import { extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
-import { DECKGL_PICK_INDEX_CEILING, PickCeilingExceeded, ResidentVertexCeilingExceeded } from "./limits";
+import {
+  DECKGL_PICK_INDEX_CEILING,
+  MAX_RESIDENT_VERTICES,
+  PickCeilingExceeded,
+  ResidentVertexCeilingExceeded,
+} from "./limits";
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import { PickResult, resolvePick } from "./pick";
 import { ResidentSet } from "./residentSet";
@@ -60,6 +67,9 @@ export interface WorkingCanvasHandle {
 }
 
 export interface WorkingCanvasProps {
+  /** Diagnostics-only (DECISIONS-PENDING.md entry 0's residency ledger): identifies this instance
+   * in `[render-trace] canvas-lifecycle` lines. Not read for any rendering decision. */
+  dataset: string;
   geometryColumn: string;
   onHover: (pick: PickResult | null) => void;
   /** A declared ceiling (`ResidentVertexCeilingExceeded`, `PickCeilingExceeded`) refused a batch for
@@ -146,7 +156,7 @@ function summarizePixels(buf: Uint8Array, width: number, height: number, regions
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { geometryColumn, onHover, onCanvasRefusal, onViewportChanged },
+  { dataset, geometryColumn, onHover, onCanvasRefusal, onViewportChanged },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -239,6 +249,22 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           end("frame-decode");
         }
 
+        // Ledger line logged before `addBatch`'s own ceiling check runs, so a refused attempt is
+        // recorded too, not only an admitted one (DECISIONS-PENDING.md entry 0). `attemptedTotal`
+        // is what `ResidentSet.addBatch` itself compares against `MAX_RESIDENT_VERTICES` -- the
+        // same number whichever way the check goes, so no exception inspection is needed here.
+        const residentTotalBefore = residentRef.current.totalResidentVertices;
+        const attemptedTotal = residentTotalBefore + batch.totalVertices;
+        traceResidency(
+          "push",
+          streamHandle,
+          batchSeq,
+          batch.totalVertices,
+          residentTotalBefore,
+          attemptedTotal,
+          attemptedTotal > MAX_RESIDENT_VERTICES
+        );
+
         begin("buffer-build");
         try {
           residentRef.current.addBatch(batch);
@@ -290,7 +316,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       },
 
       clearStream(streamHandle) {
+        const before = residentRef.current.totalResidentVertices;
         residentRef.current.clearStream(streamHandle);
+        const after = residentRef.current.totalResidentVertices;
+        traceResidency("clear", streamHandle, null, before - after, before, after, false);
         recomputeResidentExtent();
         render();
       },
@@ -305,6 +334,16 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [geometryColumn]
   );
+
+  // Diagnostics-only (DECISIONS-PENDING.md entry 0): names how many `WorkingCanvas` instances a
+  // session actually mounted and which dataset each owned -- `App.tsx` keys this component on
+  // `admitted.dataset`, so mount/unmount here is exactly a dataset-handle remount, never a plain
+  // re-render.
+  useEffect(() => {
+    traceCanvasLifecycle("mount", dataset);
+    return () => traceCanvasLifecycle("unmount", dataset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const canvas = canvasElRef.current;

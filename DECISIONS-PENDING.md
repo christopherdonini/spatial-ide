@@ -5,12 +5,31 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-0. **[AUTHORIZED 2026-08-13 — instrumented session in progress]** Shell defect, unresolved after
-   two fix attempts (token-discipline rule 7) — resident-vertex ceiling trips at exactly
-   2,012,436 on fresh sessions. The human authorized exactly one verified-fresh instrumented
-   session: pushBatch/clearStream residency ledger only (handle, seq, vertex delta, resulting
-   total); no ceiling change, no eviction/tiling, no speculative fix; report exact event ordering
-   and stop — the evidence-directed fix comes next. Original entry preserved below for context. The E2E suite reproduces it
+0. **[DIAGNOSED 2026-08-13 — fix direction is yours]** The instrumented session (one
+   verified-fresh run, residency ledger, no fix — as authorized) closes the mechanism question:
+   **not a residency bug.** The ledger shows one stream from zero through 40 admitted batches to
+   1,961,249, then its own 41st batch (51,187 vertices) refused at 2,012,436 — **the 100k
+   walkthrough fixture's true total ring-vertex count is 2,012,436, i.e. 12,436 (0.6%) over the
+   declared 2,000,000 `MAX_RESIDENT_VERTICES` ceiling, by construction**. The refusal fires on
+   every first load of this fixture (and fired, unnoticed in the DOM, in every earlier
+   "passing" instrument run — 40 of 41 batches render 97.5% of features, so pixels look right);
+   the reopen shows the identical independent sequence; no cross-stream contamination, no
+   interleaving, zero residency carried between streams or datasets — `ResidentSet`,
+   `clearStream`, and the remount fix all behave exactly as coded. A5′–A8′/REOPEN′ fail only
+   because the banner from that first-load refusal is never dismissed. Ledger:
+   `frontends/shell/e2e/out/regression-render-trace-1786578099481.json`. Options, with
+   recommendation first: **(a) regenerate the fixture under the ceiling** (e.g. ~95k rows via
+   `kernel/tests/manual_walkthrough_fixtures.rs`) so the happy-path walkthrough exercises the
+   happy path, **and add a deliberate over-ceiling fixture + walkthrough/E2E step asserting the
+   declared-ceiling refusal fires visibly** — the refusal is designed behavior (limits.ts:
+   refuse, never silently evict) and deserves its own acceptance step rather than photobombing
+   Part A; (b) raise the ceiling above this fixture's total — a declared-capacity change
+   (ADR-010 rule 6 territory) that re-arrives at the same cliff with the next larger dataset;
+   (c) bound the unfiltered first look so first render never exceeds the ceiling — a real design
+   question (docs/07's 5 GB hero dataset can never fully reside client-side anyway) but bigger
+   than this walkthrough and better decided with the hero slice's own tiling/LOD work (ADR-011).
+   Banner dismissal semantics ride with whichever option you pick. Original pre-diagnosis entry
+   below for context. The E2E suite reproduces it
    deterministically: 2,012,436 = 1,961,249 (the 100k fixture's full residency) + 51,187 (one
    batch) across three verified-fresh launches and three code states, recurring per pan/fit cycle
    (session logs show repeat firings ~39 s apart); the visible symptoms are a spurious red

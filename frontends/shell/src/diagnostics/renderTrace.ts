@@ -40,6 +40,31 @@ export function traceViewState(targetX: number, targetY: number, zoom: number, o
   console.debug(PREFIX, "view-state", { targetX, targetY, zoom, originX, originY });
 }
 
+/** DECISIONS-PENDING.md entry 0's residency ledger: every `ResidentSet` mutation attempt, in
+ * `WorkingCanvas.pushBatch`/`clearStream`. `residentTotalAfter` is the attempted (not necessarily
+ * applied) total on a `"push"` -- the same number whether admitted or refused, since
+ * `ResidentSet.addBatch` computes and compares that one value before deciding either way -- so a
+ * refused attempt still leaves a ledger line naming the total it was refused at. `batchSeq` is
+ * `null` for `"clear"` (a whole-stream event, not one batch). */
+export function traceResidency(
+  event: "push" | "clear",
+  streamHandle: string,
+  batchSeq: number | null,
+  vertexDelta: number,
+  residentTotalBefore: number,
+  residentTotalAfter: number,
+  refused: boolean
+): void {
+  console.debug(PREFIX, "residency", { event, streamHandle, batchSeq, vertexDelta, residentTotalBefore, residentTotalAfter, refused });
+}
+
+/** One line per `WorkingCanvas` mount/unmount, naming the dataset handle it was keyed on (D4's
+ * remount fix, `App.tsx`) -- lets a session's ledger show exactly how many canvas instances
+ * existed and which dataset each owned, without inferring it from `"push"`/`"clear"` lines alone. */
+export function traceCanvasLifecycle(event: "mount" | "unmount", dataset: string): void {
+  console.debug(PREFIX, "canvas-lifecycle", { event, dataset });
+}
+
 /** `positions` is `[x, y]` pairs, at most 3 -- the caller decides which 3 (e.g. the first ring's
  * first three vertices), this only formats and logs what it is given. */
 export function tracePositionsSample(
