@@ -5,8 +5,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-0. **Shell defect, unresolved after two fix attempts (token-discipline rule 7) — resident-vertex
-   ceiling trips at exactly 2,012,436 on fresh sessions.** The E2E suite reproduces it
+0. **[AUTHORIZED 2026-08-13 — instrumented session in progress]** Shell defect, unresolved after
+   two fix attempts (token-discipline rule 7) — resident-vertex ceiling trips at exactly
+   2,012,436 on fresh sessions. The human authorized exactly one verified-fresh instrumented
+   session: pushBatch/clearStream residency ledger only (handle, seq, vertex delta, resulting
+   total); no ceiling change, no eviction/tiling, no speculative fix; report exact event ordering
+   and stop — the evidence-directed fix comes next. Original entry preserved below for context. The E2E suite reproduces it
    deterministically: 2,012,436 = 1,961,249 (the 100k fixture's full residency) + 51,187 (one
    batch) across three verified-fresh launches and three code states, recurring per pan/fit cycle
    (session logs show repeat firings ~39 s apart); the visible symptoms are a spurious red
@@ -23,41 +27,24 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    authorize, not ours to take. Touches: the A5'–A9' regression steps stay red until fixed; the
    operator walkthrough re-run (entry 2) stays held behind it.
 
-1. **ADR-020 (proposed) — data-plane origin admission for the shell's embedded webview.**
-   `Session` derived its one admitted `Origin` from the data plane's own bound port — correct for
-   a same-origin browser consumer, never equal to the shell's webview origin — so every WebSocket
-   upgrade this shell attempted was silently 403'd; the fix replaces the port-derived expectation
-   with a host-declared one, page script never supplying it. Full architect security review
-   (2026-08-12, per your red-line instruction, against docs/09 and ADR-012 H4): **no H4 conflict,
-   no exploitable weakening** — the 32-byte CSPRNG token is untouched and is now the only barrier
-   a local attacker must clear — but the draft text was **blocked** for calling ADR-012
-   "already-accepted" (it is Proposed, twice withheld) and for presenting the packaged path as
-   clean (`http://tauri.localhost` is a constant shared by every Tauri app on the machine;
-   `cfg!(debug_assertions)` also admits the dev origin in a `tauri build --debug` package — fails
-   closed, correctness defect). **All text corrections applied to the draft 2026-08-12** by the
-   custodian (a Proposed ADR is drafting, not an accepted record); the E2E harness now gives
-   twice-reproduced render evidence that the fix works (entry 2). Recommendation: **accept**;
-   rejecting means the shell renders nothing until something replaces it. Touches on acceptance:
-   ADR-020's status line; a short ADR-012 amendment quoting its own **Origin** threat-model bullet
-   (delta: the referent of *foreign* changes) plus the H4-PASS-inherited-by-argument caveat; a
-   `docs/09` "local listening sockets" bullet (architect's draft wording in its 2026-08-12 report);
-   ADR-list entries in `docs/02` and `docs/README`. A supporting negative test (admitted origin +
-   wrong token refused) is being added now regardless of the decision.
-
-2. **PR #8 operator walkthrough — re-run needed, but HOLD until the pan-banner fix lands.** The
-   E2E harness (your approved amendment) now gives **twice-reproduced evidence the ADR-020 fix
-   works**: admission passes, 40 batches / 1.96M positions reach the layer, pixel read-back shows
-   the blue fill over ~20% of the canvas (reports in `frontends/shell/e2e/out/`; instrument class:
-   E2E-verified, separate from operator-verified). Encoding the walkthrough as regression tests
-   then found **a defect the empty canvas had been masking**: `App.tsx`'s `onTerminal` treats only
-   `Completed`/`Cancelled` as benign, but supersede-on-pan's SKP-path cancel yields
-   `ProducerFailed` (`CANCELLATION-FACTS.md` §1), so ordinary panning fires a spurious red refusal
-   banner — A5–A8 of your walkthrough would FAIL today. Fix is going through gates now; a second,
-   fresh-session differential run is separating it from a possible stream-starvation-after-churn
-   symptom. Recommendation: re-run Part A only after the fix merges (the away-mode evidence rule
-   stands: native dialog A2 and the look-and-feel qualities of A4–A10 are yours alone; the rest is
-   E2E-covered as a floor, not a replacement). Touches: PR #8 merge.
+1. **PR #8 operator walkthrough — HELD, per the human's 2026-08-13 instruction:** held until
+   entry 0 is diagnosed, fixed, and A5′–A9′ pass in a fresh session; then the human performs
+   Part A. (The E2E harness gives twice-reproduced render evidence — admission, 40 batches /
+   1.96M positions, ~20% pixel coverage; the away-mode evidence rule stands: native dialog A2 and
+   the look-and-feel qualities of A4–A10 are the human's alone; the rest is E2E-covered as a
+   floor, not a replacement.) Touches: PR #8 merge.
 
 ## Resolved
 
-*(none yet under this protocol)*
+- **2026-08-13 — ADR-020 accepted by the human.** Acceptance is of the host-declared exact-match
+  origin mechanism, not of `cfg!(debug_assertions)` as the final origin-selection method; the
+  `tauri build --debug` origin mismatch stays recorded in the ADR as a fail-closed implementation
+  defect owed before packaged-debug support is claimed. All acceptance edits applied by the
+  custodian the same day: ADR-020 status line; ADR-012 Amendment 1 (quotes the **Origin**
+  threat-model bullet, states the referent delta, carries the H4 PASS-inherited-by-argument
+  caveat); `docs/09` "Local listening sockets" section; `docs/02` and `docs/README` ADR-list
+  entries. The C3 negative test (admitted origin + wrong token → 401 credential) was already
+  committed (`3188f1d`).
+- **2026-08-13 — Entry 0's instrumented session authorized by the human** (exactly one
+  verified-fresh run, residency ledger only, no fix). Moved to in-progress at the top of Pending;
+  the defect itself remains open there until diagnosed and fixed.

@@ -27,6 +27,17 @@ Grants attach to any client — plugin, AI agent, notebook — through the one e
 - **Credential leakage.** Credentials live in the OS keychain; secrets are redacted from logs, lineage, notebooks, fix reports, and AI context.
 - **Irreversible actions.** Publishing, exports, and remote writes declare their reversibility class (ADR-006) before approval.
 
+## Local listening sockets
+
+The data plane binds a loopback-only, OS-assigned ephemeral port and admits connections on a
+per-session OS-CSPRNG token plus exact-match `Origin` validation (ADR-012's threat model;
+ADR-020). The expected origin is declared by the host process: the same-origin page for a browser
+consumer, or the embedded webview's own origin for `frontends/shell` (`http://tauri.localhost`
+packaged — a constant shared by every Tauri app on the machine — `http://localhost:5180` in dev).
+Origin validation is defence-in-depth against browser-origin confusion; it is not a boundary
+against local processes, which set the header freely — for those, the token is the barrier. Peer
+authentication on loopback, token scoping and expiry are open (ADR-012 open risk 8; ADR-020).
+
 ## Telemetry and training
 
 > Local action traces improve in-session assistance. Any external collection — for evaluation or training — is explicit, redacted, and opt-in.

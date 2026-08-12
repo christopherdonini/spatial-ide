@@ -1,7 +1,15 @@
 # ADR-020 — Data-Plane Origin Admission for an Embedded-Webview Consumer
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. `frontends/shell`
-implements it today because, without it, every data-plane WebSocket upgrade this shell attempts is
+**Status:** **Accepted — 2026-08-13, by the human**, on the 2026-08-12 architect security review
+(no docs/09 conflict, no ADR-012 H4 conflict, blocking text corrections applied) and the E2E
+render evidence. Immutable from this acceptance; corrections are dated corrigenda.
+**Scope of acceptance (the human's own framing):** accepted is the **host-declared exact-match
+origin mechanism** (`DataPlaneConfig::expected_origin`, `Session::with_origin`) — **not** a claim
+that `cfg!(debug_assertions)` is the final origin-selection method. The `tauri build --debug`
+origin mismatch recorded under Decision stays explicitly recorded as a **fail-closed
+implementation defect, owed before any packaged-debug support is claimed**.
+**History:** proposed 2026-08-11. `frontends/shell`
+implemented it ahead of acceptance because, without it, every data-plane WebSocket upgrade this shell attempts is
 refused (`403 origin`) and no batch can ever reach the canvas. As with ADR-019, the
 *implementation* is licensed by already-accepted **ADR-004** — the standing under which
 `protocol/data-plane`'s WebSocket adapter itself proceeds while ADR-012 remains provisional
@@ -115,6 +123,9 @@ are independent mechanisms, and `tauri build --debug` is precisely where they di
 - No wire, frame, or SKP-level change. `protocol/skp` and `SKP-V0.md` are untouched.
 
 ## If accepted
+
+*(All items below applied at acceptance, 2026-08-13: this status line; ADR-012 Amendment 1;
+`docs/09`'s "Local listening sockets" section; the `docs/02` and `docs/README` entries.)*
 
 - This file's status line updates to Accepted, dated.
 - ADR-012 gains a short amendment that **quotes the sentence it amends** — its threat-model

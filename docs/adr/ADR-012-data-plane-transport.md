@@ -239,3 +239,30 @@ Both candidates require a listening TCP socket, which is a real change in local 
 9. **The harness's own remaining gaps**, recorded in README §15.8 and to be closed before it is used again: `debugAssertions` is emitted by the server but never recorded in the artifact, so §8's debug-build invalidator has no mechanism behind it *in the report* (the profile was confirmed independently for this run); H4's live negative tests target `/clock` rather than the two data endpoints, leaving the WebSocket subprotocol reject path untested; sampling cadence ran at ~62.6 ms against a declared 50 ms.
 10. **Synthetic, structurally regular payload.** Uniform-random points at a fixed seed; no GeoParquet, no DuckDB, no spatial index, no picking, no editing, no reprojection, no concurrent streams, no WAN path. Real irregular cadastral data is unexercised, exactly as the ADR-003 spike's own scope-limits section states for P1/P2.
 11. **Server-side spatial indexing** — `docs/07`'s *other* open gate — is untouched here and stays `engine/` work per `docs/05`.
+
+---
+
+## Amendment 1 (2026-08-13) — the embedded-webview consumer class (ADR-020)
+
+Applied at ADR-020's acceptance; ADR-012 itself remains Proposed and this amendment does not
+change that. The threat-model bullet this amends is **Origin**, above, which reads:
+
+> **Origin:** a stated `Origin` must match exactly; `null` and any foreign origin are rejected. An
+> absent `Origin` — which browsers omit on same-origin GET — is accepted only with a positive
+> `Sec-Fetch-Site: same-origin` Fetch-Metadata signal that page script cannot forge. A client
+> presenting neither header is rejected.
+
+The delta, whole: the mechanics of all three sentences are preserved; only the referent of
+*foreign* changes — from "not this server's own origin" to "not the origin the **host process
+declared**" (`DataPlaneConfig::expected_origin`; the port-derived same-origin default remains for
+every consumer that declares none). This names a new consumer class: **embedded webview, different
+origin, same process, still loopback-only** — where *same process* describes the intended
+consumer, not a property the origin check enforces (ADR-020's Consequences state precisely what
+the check has and has not become for this class).
+
+Caveat carried with H4: H4's **PASS** in this ADR's eligibility table was obtained on a
+same-origin harness configuration that no longer describes this consumer. Its five elements all
+survive under ADR-020 (loopback bind asserted at startup, ephemeral port, per-session auth,
+exact-match origin validation with `null` rejected, redacted credentials), but for the
+embedded-webview class that PASS is inherited **by argument, not by measurement**. The
+admitted-origin-plus-wrong-token negative is pinned by test (`kernel/tests/skp_admission.rs`).
