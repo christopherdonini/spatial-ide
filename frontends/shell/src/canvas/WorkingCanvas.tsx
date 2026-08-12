@@ -1,6 +1,8 @@
 import { Deck, OrthographicView, PickingInfo } from "@deck.gl/core";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
+import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
+import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   traceLayerUpdate,
@@ -78,6 +80,69 @@ function pixelsPerMetreAtZoom(zoom: number): number {
   // HiDPI backing-store resolution changes what one CSS pixel costs in GPU samples, never what
   // one world unit costs in CSS pixels, so mixing the two in this function would be the error.
   return Math.pow(2, zoom);
+}
+
+function clampInt(v: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, Math.round(v)));
+}
+
+/** E2E TEST SURFACE helper (e2e/README.md): turns a raw RGBA `readPixels` buffer into a summary
+ * small enough to cross CDP as JSON, without the raw buffer itself ever leaving the page. Pure and
+ * DOM-free so it needs no dev-only guard of its own -- the `capturePixels` hook registered below is
+ * the only caller, and that registration is already gated. */
+function summarizePixels(buf: Uint8Array, width: number, height: number, regions: PixelRegion[]): PixelSummary {
+  const totalPixels = width * height;
+  let nonBackgroundCount = 0;
+  let opaqueCount = 0;
+  // Keyed by each channel quantized to 16 levels (value >> 4); one exact sample pixel is kept per
+  // bin so `topColors` can report a real color, not a lossy quantized midpoint.
+  const bins = new Map<string, { count: number; sample: [number, number, number, number] }>();
+
+  for (let i = 0; i < totalPixels; i++) {
+    const o = i * 4;
+    const r = buf[o];
+    const g = buf[o + 1];
+    const b = buf[o + 2];
+    const a = buf[o + 3];
+    if (r !== 0 || g !== 0 || b !== 0 || a !== 0) nonBackgroundCount++;
+    if (a === 255) opaqueCount++;
+    const key = `${r >> 4},${g >> 4},${b >> 4},${a >> 4}`;
+    const bin = bins.get(key);
+    if (bin) {
+      bin.count++;
+    } else {
+      bins.set(key, { count: 1, sample: [r, g, b, a] });
+    }
+  }
+
+  const topColors: PixelColorCount[] = [...bins.values()]
+    .sort((x, y) => y.count - x.count)
+    .slice(0, 8)
+    .map(({ count, sample }) => ({ rgba: sample.join(","), count }));
+
+  const regionSummaries: PixelRegionSummary[] = regions.map((region) => {
+    const x0 = clampInt(region.x * width, 0, width);
+    const y0 = clampInt(region.y * height, 0, height);
+    const x1 = clampInt((region.x + region.w) * width, x0, width);
+    const y1 = clampInt((region.y + region.h) * height, y0, height);
+    let regionNonBackground = 0;
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const o = (y * width + x) * 4;
+        if (buf[o] !== 0 || buf[o + 1] !== 0 || buf[o + 2] !== 0 || buf[o + 3] !== 0) regionNonBackground++;
+      }
+    }
+    return {
+      x: region.x,
+      y: region.y,
+      w: region.w,
+      h: region.h,
+      nonBackgroundCount: regionNonBackground,
+      totalPixels: (x1 - x0) * (y1 - y0),
+    };
+  });
+
+  return { width, height, totalPixels, nonBackgroundCount, opaqueCount, topColors, regions: regionSummaries };
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
@@ -313,6 +378,77 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       deckRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // E2E TEST SURFACE (dev builds only, e2e/README.md): reads the just-rendered frame back with the
+  // ADR-003 spike's technique (spikes/adr-003-crs-rendering/app/src/m4-editing.ts) -- a one-shot
+  // `onAfterRender` that reads the framebuffer, then a forced `redraw` to produce a frame to read.
+  // Reaches `canvasElRef`/`deckRef` only inside the registered closure, at call time, so it does
+  // not need to re-run when either ref's *contents* change -- only once, alongside construction.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    let captureInFlight = false;
+
+    async function capturePixels(regions?: PixelRegion[]): Promise<PixelSummary> {
+      if (captureInFlight) {
+        throw new Error("capturePixels: a capture is already in flight");
+      }
+      const canvas = canvasElRef.current;
+      const deck = deckRef.current;
+      if (!canvas || !deck) {
+        throw new Error("capturePixels: canvas or Deck instance is not mounted");
+      }
+      // luma.gl already created this canvas's WebGL2 context; per the HTML spec a canvas can carry
+      // only one context, so `getContext` here is always a lookup of that same context, never a
+      // competing creation.
+      const gl = canvas.getContext("webgl2");
+      if (!gl) {
+        throw new Error("capturePixels: canvasElRef.current.getContext('webgl2') returned null");
+      }
+
+      captureInFlight = true;
+      try {
+        return await new Promise<PixelSummary>((resolve, reject) => {
+          let settled = false;
+          // Never restores to `undefined`: `_drawLayers` in the installed @deck.gl/core@9.3.7
+          // calls `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
+          // this canvas's very next render -- a fresh noop is the only safe "off" state.
+          const restore = () => deck.setProps({ onAfterRender: () => {} });
+
+          const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            restore();
+            reject(new Error("capturePixels: no frame rendered within 5000ms"));
+          }, 5000);
+
+          deck.setProps({
+            onAfterRender: () => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              restore();
+              const width = gl.drawingBufferWidth;
+              const height = gl.drawingBufferHeight;
+              const buf = new Uint8Array(width * height * 4);
+              gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+              resolve(summarizePixels(buf, width, height, regions ?? []));
+            },
+          });
+          // A non-empty reason bypasses `needsRedraw` and draws synchronously (`@deck.gl/core`'s
+          // `redraw()`), so in the common case `onAfterRender` above has already fired by the time
+          // this call returns. The only path that reaches the timeout above is `layerManager` not
+          // yet existing (`redraw()` silently no-ops then) -- exactly "never rendered a frame".
+          deck.redraw("e2e-capture");
+        });
+      } finally {
+        captureInFlight = false;
+      }
+    }
+
+    registerE2eHook("capturePixels", capturePixels);
+    return () => unregisterE2eHook("capturePixels");
   }, []);
 
   return (
