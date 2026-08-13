@@ -69,10 +69,15 @@ export interface PixelSummary {
 
 export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };
 
-/** Same shape as `OpenPathOutcome`, named separately -- one is `open_dataset`'s admission verdict,
- * the other is `viewport_query`'s filter-admission verdict (NEXT-CUT.md P5), and nothing here
- * promises the two will always stay structurally identical just because they happen to be today. */
-export type FilterQueryOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };
+/** **Not** the same guarantee as `OpenPathOutcome` despite the superficially similar shape (P6
+ * should-fix, reviewer round over P5): `openPath`'s `"admitted"` means `open_dataset` actually
+ * returned a dataset handle. `queryWithFilter`'s `"no-refusal"` below means only that
+ * `ViewportStreamManager.requestViewport` resolved without throwing a typed `skp.filter_*`
+ * refusal -- `requestViewport` returns `void` and resolves the same way on a throttled call, a
+ * superseded/generation-losing call, or a call issued after `stop()` (`viewportStreamManager.ts`'s
+ * own doc comment), none of which means this call's own ticket was minted. Do not read
+ * `"no-refusal"` as "a ticket was minted for this call" -- it is not that claim. */
+export type FilterQueryOutcome = { kind: "no-refusal" } | { kind: "refused"; code: string; message: string };
 
 export interface E2eTestSurface {
   openPath?: (path: string) => Promise<OpenPathOutcome>;
@@ -81,10 +86,15 @@ export interface E2eTestSurface {
    * against the currently-open dataset -- the SAME production call a future filter panel would make,
    * not a parallel test-only path (this file's own top doc comment). Only registered once a dataset
    * is admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
-   * `{kind:"admitted"}` once the filtered stream's ticket is minted and its transport attach has
-   * begun (not once it finishes delivering -- the caller waits for render settlement separately, the
-   * same `waitForSettle` pattern every other e2e/*.mjs step already uses), or to the typed
-   * `skp.filter_*` refusal `viewport_query` returned. */
+   * `{kind:"no-refusal"}` once `requestViewport` itself resolves without throwing -- **this means "no
+   * typed `skp.filter_*` refusal was raised," not "a ticket was minted."** `requestViewport` is a
+   * silent no-op on a throttled call, a call superseded by a newer one before it finished minting, or
+   * a call issued after the manager was stopped (see `FilterQueryOutcome`'s own doc comment) -- every
+   * one of those resolves exactly like a real admitted mint from this hook's point of view. A caller
+   * that needs to know a ticket actually minted must confirm it some other way (e.g. watching for a
+   * render change), the same `waitForSettle` pattern every other e2e/*.mjs step already uses for that
+   * purpose. Resolves to `{kind:"refused", ...}` for the one case this hook *can* tell apart: a typed
+   * `skp.filter_*` refusal `viewport_query` actually returned. */
   queryWithFilter?: (predicate: string) => Promise<FilterQueryOutcome>;
 }
 

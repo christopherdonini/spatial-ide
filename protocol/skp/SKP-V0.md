@@ -158,19 +158,30 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 
 1. **Semantic command model** — the five commands above. Nothing else: no `list_datasets`, no `sql`,
    no `style`, no `publish` (ADR-017's acceptance condition keeps publish unreachable regardless).
+   **v0.1 (§7 below) does not add a sixth command** — `viewport_query` gains an optional row-filter
+   parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
 2. **Transport bindings** — one: Tauri invoke. No control-plane websocket, no stdio, no MCP adapter.
 3. **Version negotiation** — *"beyond a version field" means, minimally:* every request carries
    `skp: "skp/0"`, compared with `==`. No ranges, no min/max, no capability sets, no per-command
    versions, no downgrade path, no handshake. A client and host that disagree fail on the first call.
+   **v0.1 (§7) bumps the compared literal to `skp/0.1`, `==` unchanged** — still no ranges, no
+   min/max, no handshake; a v0-only client and a v0.1 host fail on the first call exactly as any two
+   disagreeing literals always have here.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
    Progress: data-plane batches only. `open_dataset` is cancellable but not progress-reporting.
+   **v0.1 (§7) adds a named shortfall to this item, not a new gap**: for a filtered scan whose
+   predicate matches late, "progress: data-plane batches only" can mean *zero* batches for a long
+   time — see §7's own shortfall paragraph.
 6. **Backpressure** — data-plane credit only (`MAX_INFLIGHT_BATCHES = 4`, unchanged). None on the
    control plane; commands are unqueued, bounded only by the declared ticket/stream ceilings.
 7. **Subscriptions and events** — none. No server-to-client push on the control plane in any form.
 8. **Error taxonomy** — §6. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
-   error invented, none flattened to a string.
+   error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
+   taxonomy — still no new error *invented outside a declared, exhaustive taxonomy*: every one of the
+   eleven is named, matched exhaustively with no wildcard arm, exactly this item's own discipline
+   applied to predicate admission.
 9. **Idempotency** — none. Retrying `open_dataset` opens a second `Dataset` and a second connection
    pool. `cancel`'s idempotence is a property of `CancelToken::cancel` and `StreamState::observe_cancel`
    already keeping the first instant — an accident of two existing implementations, not a mechanism,
@@ -183,7 +194,10 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 12. **Distributed tracing** — forbidden as a field, permanently, by ADR-004 Amendment 4. Instrument
     surface joins off the wire, by identities that already exist.
 13. **Schema evolution** — none. `deny_unknown_fields` both directions; any field change is a new
-    version string, not a tolerant reader.
+    version string, not a tolerant reader. **v0.1 (§7) is exactly one instance of this rule being
+    exercised**, not an exception to it: `viewport_query`'s new `filter` field shipped together with
+    the `skp/0.1` version bump, every fixture on both sides of the wire updated in the same commit
+    (`CUT-STATE.md` P1) — a tolerant reader was never introduced.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
@@ -218,3 +232,147 @@ much as to performance.
 See `docs/adr/ADR-019-control-plane-admission-tickets.md` for how `viewport_query`'s ticket reaches
 the data plane, and `docs/adr/ADR-001-frontend-stack.md`'s 2026-08-09 amendment for the shell's
 frontend framework decision this document assumes but does not itself make.
+
+## 7. v0.1 — a row filter on `viewport_query`
+
+**Appended 2026-08-13. §§1–6 above are the original v0 text, unrewritten** (except the five §4 items
+marked above — items 1, 3, 5, 8, and 13 — each carrying its own short v0.1 note in place rather than being rewritten wholesale) —
+this section is additive. Implemented ahead of ADR-021's own acceptance, the ADR-019/ADR-020
+precedent (both were implemented as Proposed before acceptance, under already-accepted ADR-004's
+license): **this section documents what the code actually does today, not a promised future state,
+and it may not be cited as a conformance claim or as an accepted SKP capability until ADR-021 is
+accepted** (see that ADR's own Status line).
+
+### 7.1 Version
+
+`skp` is now compared against `"skp/0.1"`, still with a plain `==` (§4 item 3, updated above) — no
+richer negotiation was added, `deny_unknown_fields` stays on every derived struct in both directions,
+and every fixture on both the Rust and TypeScript sides of the wire was updated in the same commit
+that bumped the literal (`CUT-STATE.md` P1). `skp/1` stays RESERVED, for docs/07's 1.0 freeze.
+
+### 7.2 The wire shape
+
+```
+{ skp, dataset, bbox: Option<{xmin,ymin,xmax,ymax: HexF64}>, bbox_crs: Option<String>,
+  limit: Option<DecU64>, filter: Option<{ predicate: String, dialect: String }> }
+  →  { stream: StreamHandle, expires_in_ms: u32 }
+```
+
+`filter` is the only change to `viewport_query`'s request; the response is untouched, and `describe`
+is untouched too — it stays the pure, in-memory, no-IO command §1 describes, with nothing to say
+about a filter that only ever attaches to a stream request. **`filter: null` declares "no filter,"
+never an absent key** — exactly `bbox_crs`'s own discipline: the field carries no
+`#[serde(default)]`, so a request that omits the `filter` key entirely is a deserialize failure, not
+a tolerated omission, and a present `Option<Filter>` with `None` still serializes to JSON `null`.
+
+`dialect`'s one admitted value is `"duckdb-expr/0"` (`FILTER_DIALECT_DUCKDB_EXPR_0`,
+`protocol/skp/src/v0/commands.rs`) — any other value is refused by `Filter::new` at construction and
+at deserialization alike, before the predicate text is ever looked at. A second dialect, if one is
+ever added, gets its own version string; none exists in v0.1.
+
+`predicate` is a single boolean **expression** — never a statement, never a `SELECT` (§7.3).
+
+### 7.3 The SQL contract
+
+A boolean expression in the declared dialect, composed by the host, verbatim, into the query it
+already builds. **Never** a whole SQL statement, and **never** a derived-dataset handle: docs/11's
+ResourceRef model and ADR-016's reopen-stability question are both unsatisfied, so a filtered result
+is a shaped version of one `viewport_query` request, not a new addressable resource.
+
+**Composition rule, stated as a string and tested as one** (`engine/src/stream.rs::build_sql`, its
+own `filter_composition` test module):
+
+```
+WHERE (<predicate verbatim>) AND <bbox> [AND <ranges>]
+```
+
+Exactly two transformations, both mechanical: one added paren pair around the predicate text (never
+rewritten, normalized, or case-folded on the way in or out), and the predicate placed **leftmost** —
+every condition the query plan itself contributes (the bbox comparison, and any experimental
+`FilterPlan` range predicate) is `AND`-appended after it, never before. With no bbox and a filter
+present, the predicate is the entire `WHERE` clause.
+
+**Namespace**: `describe.schema` minus the geometry column minus any column whose type is not
+admitted for filtering (`engine::attributes::admit_attribute_type`) — an unqualified name; this
+predicate never names a table.
+
+### 7.4 Admitted constructs and the refused-by-name list
+
+**Admitted**: column references (one unqualified name per reference), literals (dollar-quoted
+strings included — DuckDB's parser lowers `$$...$$` to the identical node a `'...'` literal
+produces, so there is nothing left to refuse by construct name once parsed), `AND`/`OR`
+conjunctions, every `=`/`<`/`>`/`<>`/`<=`/`>=` comparison, `BETWEEN`, `IN` with a **literal** list,
+`NOT`, `IS [NOT] NULL`, the four basic arithmetic operators (`+ - * /`), and `LIKE`/`ILIKE` with a
+**literal** pattern (the second operand must itself be a constant, never a sub-expression).
+
+**Refused, by name**: `CAST`, any subquery (`(SELECT ...)`, `x IN (SELECT ...)`), any bind
+parameter (`?`, a named placeholder), a star expression, and every function call **except** the two
+small, named sets just above — `read_csv`, `random()`, and every other scalar or table function
+alike. **The construct allowlist is a docs/09 security boundary, not taste**: the no-subquery,
+no-function-call rules are what stop a "read dataset A" grant from becoming "read any local file" via
+`read_csv` reached through a filter predicate. The walker is allowlist-shaped throughout — an
+unrecognized construct is always the final, unconditional-refusal arm, never a silent pass
+(`engine/src/predicate.rs`).
+
+### 7.5 Refusal taxonomy — eleven `skp.filter_*` codes
+
+Exhaustive, no wildcard arm, mapped field-for-field from `engine::predicate::FilterError`
+(`kernel/src/skp.rs::filter_error_of`) — exactly §6/§4 item 8's own "no wildcard arm" discipline,
+applied to predicate admission.
+
+| Code | Fields |
+|---|---|
+| `skp.filter_dialect_unsupported` | `declared` |
+| `skp.filter_unparsable` | `detail` |
+| `skp.filter_not_a_single_expression` | `statements` |
+| `skp.filter_construct_not_admitted` | `construct` |
+| `skp.filter_unknown_column` | `column` |
+| `skp.filter_column_not_filterable` | `column`, `reason` |
+| `skp.filter_identity_alias_ambiguous` | `column`, `source_column` |
+| `skp.filter_not_boolean` | `inferred_type` |
+| `skp.filter_too_long` | `limit`, `saw` |
+| `skp.filter_too_deep` | `limit`, `saw` |
+| `skp.filter_rejected_by_binder` | `detail` |
+
+`skp.filter_identity_alias_ambiguous` is currently unreachable from any product entry point — no
+constructor `kernel/` uses today produces a declared identity mapping whose source column differs
+from the wire's own `id` name while the file also carries its own, unrelated `id` column. Written
+now, fires the day a caller supplies one.
+
+### 7.6 Three-stage admission, pre-lease and pre-mint
+
+`AdmittedPredicate::admit` (`engine/src/predicate.rs`) runs three named stages, on `spawn_blocking`,
+before `kernel/src/skp.rs::viewport_query` leases a stream connection or mints a ticket — a refused
+predicate returns synchronously and typed, exactly §1's `viewport_query` entry already states for
+`ViewportCrsMismatch`/`ViewportCrsUnidentifiable`/`NoCoveringBbox`, never as a data-plane terminal
+frame arriving after a round trip:
+
+1. **Structural admission** — DuckDB's own parser (`json_serialize_sql`, the predicate bound as
+   `CAST(? AS VARCHAR)`, never string-concatenated into the query text). **Never a hand-rolled SQL
+   lexer** — a second SQL grammar is not admitted. The returned expression tree is walked against
+   the declared allowlist (§7.4).
+2. **Namespace admission** — every column name the walk collected is checked against the dataset's
+   resident schema (§7.3's namespace rule).
+3. **Bind admission** — the predicate is prepared against a zero-row, typed surrogate relation built
+   from the admitted namespace (`CAST(NULL AS ...)` literals only, no file I/O), and its inferred
+   type is asserted `BOOLEAN`; an implicit int-to-bool (or any other) coercion is refused rather
+   than silently accepted.
+
+### 7.7 Named shortfall
+
+A selective predicate over a large file can emit **no batches for a long time**. Progress on
+`viewport_query` is data-plane-batches-only (§4 item 5) — there is no other progress signal a
+filtered scan can emit — so principle 7's progress clause is **unmet** for a filtered scan whose
+predicate matches late, and docs/08's first-pixels budget is **structurally unreachable** for such a
+predicate: there is nothing to measure "first pixels" against until a matching row is found. Not
+papered over.
+
+### 7.8 Data plane
+
+**Unchanged, empty diff.** The predicate rides the ticket mint (§7.2 above, §1's existing
+`viewport_query` entry); `TAG_START` stays ticket-only (ADR-019); nothing under
+`protocol/data-plane/` changed for this feature.
+
+Full design, consequences, and the security property this carries:
+`docs/adr/ADR-021-row-filter-on-viewport-query.md` (Proposed — binds nothing until accepted; see that
+ADR's own Status line for what "implemented ahead of acceptance" does and does not authorize).

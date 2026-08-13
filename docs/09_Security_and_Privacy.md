@@ -38,6 +38,16 @@ Origin validation is defence-in-depth against browser-origin confusion; it is no
 against local processes, which set the header freely — for those, the token is the barrier. Peer
 authentication on loopback, token scoping and expiry are open (ADR-012 open risk 8; ADR-020).
 
+## Predicate admission (control-plane filter parsing)
+
+`viewport_query`'s row-filter predicate (ADR-021, Proposed) is caller-authored SQL text reaching a
+control-plane command; its admission parser (`json_serialize_sql`) is **statically linked and
+build-time-resident** — admission performs no runtime extension fetch of any kind. DuckDB's own
+extension-autoload mechanism would otherwise make the first admitted predicate a filesystem write to
+the extension directory and, for a non-bundled extension, a network install; static linking
+(`engine/Cargo.toml`'s `json` feature) closes that off entirely, for a component whose whole job is
+bounding what untrusted caller SQL can do.
+
 ## Telemetry and training
 
 > Local action traces improve in-session assistance. Any external collection — for evaluation or training — is explicit, redacted, and opt-in.

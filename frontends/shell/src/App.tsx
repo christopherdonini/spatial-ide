@@ -286,7 +286,12 @@ export default function App() {
             predicate,
             dialect: FILTER_DIALECT_DUCKDB_EXPR_0,
           });
-          return { kind: "admitted" };
+          // "no-refusal", not "admitted": `requestViewport` resolves `void` the same way on a
+          // throttled/superseded/post-stop no-op as it does on a real mint (P6 should-fix,
+          // reviewer round over P5) -- see `FilterQueryOutcome`'s own doc comment
+          // (`e2e-test-surface.ts`) for why this hook cannot honestly claim more than that no
+          // typed `skp.filter_*` refusal was raised.
+          return { kind: "no-refusal" };
         } catch (e) {
           if (e instanceof SkpCallError) {
             return { kind: "refused", code: e.skpError.code, message: e.skpError.message };
