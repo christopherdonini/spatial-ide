@@ -5,6 +5,27 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+A. **Import-layout cut concluded — the preregistered gate FAILED; two decisions.** The cut
+   (branch `cut/import-layout`, stacked on the parked shell branch; full record:
+   `kernel/RESULTS.md` ninth section, preregistration `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`)
+   measured docs/07's "index that prunes actual IO" item to a close: no index prunes IO (the
+   zero-byte finding stands); physical layout is the only lever — Hilbert at 5 GB read **61.7%**
+   of raster's bytes at the near-quarter and won total time 49/49 — but the gate's
+   no-whole-file-regression condition failed at **100.544% vs the declared ≤ 100.5%** (Hilbert
+   files compress ~0.5% worse), and per the preregistration's own words one unmet condition is a
+   complete fail: **layout stays out of the import path; ADR-021 was not filed.** The bracket
+   recorded: an unordered source gets **no pruning at all** (shuffled control ≥ 99.99% read at
+   every viewport, both classes). Registered prediction 3 also failed honestly (the crossover
+   sign reverses with granularity). **Decision 1:** accept the fail as final (recommended — the
+   condition was deliberately authored; the numbers are recorded either way; the over-ceiling
+   question this connects to already belongs to ADR-011 gate 8), or authorize a *fresh*
+   preregistered gate with a re-authored whole-file condition — noting the 0.044-point margin
+   cuts both ways and gate-shopping erodes the discipline. **Decision 2:** the docs/07 line-22
+   replacement text (drafted in this entry's commit-adjacent record — the custodian applies it on
+   your accept): it records the measured close, the bracket, the failed gate, and points any
+   revisit at a fresh preregistration + ADR-011 gate 8. Touches: docs/07 line 22 only; docs/05
+   is untouched by a fail (no product surface was created).
+
 0. **[RESOLVED 2026-08-13 — see Resolved section. Superseded text below preserved for the
    record; note its "12,436 (0.6%) over" magnitude was later corrected — the file's true total
    is 2,508,699 (25.4% over); 2,012,436 was the truncated partial sum at the refusal moment.]**
