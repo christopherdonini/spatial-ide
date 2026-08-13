@@ -5,12 +5,13 @@
 //! property a filtered stream must hold relative to the same unfiltered stream — evidence item E in
 //! the piece's brief.
 //!
-//! **What this file does not do.** It does not validate the predicate's SQL — `AdmittedPredicate::
-//! assume_validated` is exactly what its name says, and structural/namespace/bind admission is a
-//! later piece in this cut (P3, wired in P4). This file only proves that, once a predicate reaches
-//! `build_sql` verbatim, the rows a filtered query keeps are **unmodified**: same ids, same geometry
-//! bytes, same envelope — a filter selects rows, it never re-keys or reprojects them (`NEXT-CUT.md`
-//! design essential 6; ADR-006 class 1: a pure transform, replayable, no undo owed).
+//! **What this file is about.** It proves that, once a predicate reaches `build_sql`, the rows a
+//! filtered query keeps are **unmodified**: same ids, same geometry bytes, same envelope — a filter
+//! selects rows, it never re-keys or reprojects them (`NEXT-CUT.md` design essential 6; ADR-006
+//! class 1: a pure transform, replayable, no undo owed). The predicate below goes through
+//! [`AdmittedPredicate::admit`] — real structural/namespace/bind admission (P3, wired into
+//! `kernel/src/skp.rs` in P4) — rather than the old test-only unvalidated constructor, since
+//! `zone = 'residential'` is exactly the kind of predicate admission is meant to pass.
 
 use std::collections::BTreeMap;
 
@@ -125,7 +126,8 @@ fn a_filtered_stream_is_an_id_keyed_subset_with_byte_identical_rows_and_envelope
     let (unfiltered, unfiltered_schema) =
         drain_digests(ds.stream(&ViewportQuery::all()).expect("unfiltered stream"));
 
-    let predicate = AdmittedPredicate::assume_validated(format!("zone = '{}'", ZONE_VALUES[0]));
+    let predicate = AdmittedPredicate::admit(format!("zone = '{}'", ZONE_VALUES[0]), &ds)
+        .expect("a real, positive-control predicate must be admitted");
     let filtered_query = ViewportQuery::all().with_filter(predicate);
     let (filtered, filtered_schema) =
         drain_digests(ds.stream(&filtered_query).expect("filtered stream"));

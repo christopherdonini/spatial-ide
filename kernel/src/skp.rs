@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
-use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, EngineError, ViewportQuery};
+use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, EngineError, FilterError, ViewportQuery};
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, CrsInfo,
     DatasetHandle, DecU64, DescribeRequest, DescribeResponse, Extent, FieldInfo, GeometryInfo,
@@ -369,7 +369,16 @@ impl SkpHost {
             .catalog
             .get(&dataset_name)
             .ok_or_else(|| SkpError::unknown_dataset(&dataset_name))?;
-        let query = build_viewport_query(&ds, &req);
+        // Filter admission (`NEXT-CUT.md` P4; `AdmittedPredicate::admit`, `engine/src/predicate.rs`
+        // P3) runs *inside* `build_viewport_query`, right here — after `ds` is resolved (admission
+        // needs the dataset's own resident schema, an ADR-016-style structural precondition: no
+        // extra IO beyond DuckDB's own parse/bind against what is already open) but strictly
+        // *before* `open_engine_stream` below ever leases a `Class::Stream` connection and *before*
+        // `self.tickets.mint` ever runs. A refused predicate returns here, synchronously, as one of
+        // the eleven typed `skp.filter_*` codes (`filter_error_of`) — never as a data-plane terminal
+        // frame arriving after a round trip, and never after a ticket a client would have to redeem
+        // just to learn it was refused (SKP-V0 §1, ADR-019 §1).
+        let query = build_viewport_query(&ds, &req).map_err(|e| filter_error_of(&e))?;
         // Validated **before** any handle is minted (SKP-V0.md §1): `ViewportCrsMismatch`,
         // `ViewportCrsUnidentifiable` and `NoCoveringBbox` return here, synchronously, with their
         // full typed text — never as a data-plane terminal frame arriving after a round trip.
@@ -426,7 +435,10 @@ fn check_version(skp: &str) -> Result<(), SkpError> {
     Ok(())
 }
 
-fn build_viewport_query(ds: &Dataset, req: &ViewportQueryRequest) -> ViewportQuery {
+fn build_viewport_query(
+    ds: &Dataset,
+    req: &ViewportQueryRequest,
+) -> Result<ViewportQuery, FilterError> {
     let query = match &req.bbox {
         Some(b) => {
             let bbox =
@@ -443,16 +455,15 @@ fn build_viewport_query(ds: &Dataset, req: &ViewportQueryRequest) -> ViewportQue
         None => query,
     };
     match &req.filter {
-        // **Direct pass-through — deliberately unvalidated.** `Filter::new`
-        // (`protocol/skp`) only checked the wire dialect is `duckdb-expr/0`; nothing between there
-        // and here has parsed the predicate's grammar, resolved a column against this dataset's
-        // schema, or asked whether it binds to `BOOLEAN`. P3 wires that admission (structural,
-        // namespace, bind) in front of `AdmittedPredicate::assume_validated`, and P4 moves *this*
-        // call site behind it — pre-lease, pre-mint, on `spawn_blocking` — so `SkpHost::
-        // viewport_query` refuses before a connection is leased or a ticket minted. Until then this
-        // is exactly the identity function on the wire text.
-        Some(f) => query.with_filter(AdmittedPredicate::assume_validated(f.predicate.clone())),
-        None => query,
+        // **Real admission, not a pass-through.** `Filter::new` (`protocol/skp`) only ever checked
+        // the wire dialect is `duckdb-expr/0`; `AdmittedPredicate::admit` (`engine/src/predicate.rs`,
+        // P3) is what actually parses the predicate's grammar (structural admission), resolves every
+        // column against `ds`'s resident schema (namespace admission), and asks DuckDB's own binder
+        // whether it evaluates to `BOOLEAN` (bind admission) — all three stages, in that order, each
+        // gating the next. `?` here is what makes this function, and so `viewport_query` above,
+        // refuse synchronously and typed the moment any stage refuses.
+        Some(f) => Ok(query.with_filter(AdmittedPredicate::admit(f.predicate.clone(), ds)?)),
+        None => Ok(query),
     }
 }
 
@@ -595,6 +606,70 @@ pub fn error_of(e: &EngineError) -> SkpError {
         code: format!("engine.{name}"),
         message,
         fields: fields.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
+    }
+}
+
+/// Maps every `FilterError` variant (`engine::predicate`, P3's admission) to its declared
+/// `skp.filter_*` wire code and named fields — `NEXT-CUT.md` design essential 5's taxonomy,
+/// field for field. **No wildcard arm**: a twelfth `FilterError` variant fails this build until it
+/// is mapped here, the same discipline [`error_of`] applies to `EngineError` above. `message` is
+/// `FilterError`'s own `Display` output, unedited, exactly [`error_of`]'s own convention.
+pub fn filter_error_of(e: &FilterError) -> SkpError {
+    let message = e.to_string();
+    match e {
+        FilterError::DialectUnsupported { declared } => SkpError::protocol_with_fields(
+            "filter_dialect_unsupported",
+            message,
+            [("declared", declared.clone())],
+        ),
+        FilterError::Unparsable { detail } => {
+            SkpError::protocol_with_fields("filter_unparsable", message, [("detail", detail.clone())])
+        }
+        FilterError::NotASingleExpression { statements } => SkpError::protocol_with_fields(
+            "filter_not_a_single_expression",
+            message,
+            [("statements", statements.to_string())],
+        ),
+        FilterError::ConstructNotAdmitted { construct } => SkpError::protocol_with_fields(
+            "filter_construct_not_admitted",
+            message,
+            [("construct", construct.clone())],
+        ),
+        FilterError::UnknownColumn { column } => SkpError::protocol_with_fields(
+            "filter_unknown_column",
+            message,
+            [("column", column.clone())],
+        ),
+        FilterError::ColumnNotFilterable { column, reason } => SkpError::protocol_with_fields(
+            "filter_column_not_filterable",
+            message,
+            [("column", column.clone()), ("reason", reason.clone())],
+        ),
+        FilterError::IdentityAliasAmbiguous { column, source_column } => SkpError::protocol_with_fields(
+            "filter_identity_alias_ambiguous",
+            message,
+            [("column", column.clone()), ("source_column", source_column.clone())],
+        ),
+        FilterError::NotBoolean { inferred_type } => SkpError::protocol_with_fields(
+            "filter_not_boolean",
+            message,
+            [("inferred_type", inferred_type.clone())],
+        ),
+        FilterError::TooLong { limit, saw } => SkpError::protocol_with_fields(
+            "filter_too_long",
+            message,
+            [("limit", limit.to_string()), ("saw", saw.to_string())],
+        ),
+        FilterError::TooDeep { limit, saw } => SkpError::protocol_with_fields(
+            "filter_too_deep",
+            message,
+            [("limit", limit.to_string()), ("saw", saw.to_string())],
+        ),
+        FilterError::RejectedByBinder { detail } => SkpError::protocol_with_fields(
+            "filter_rejected_by_binder",
+            message,
+            [("detail", detail.clone())],
+        ),
     }
 }
 
@@ -760,5 +835,100 @@ mod tests {
         let e = error_of(&EngineError::CeilingExceeded { ceiling: "c", limit: 1, saw: 2 });
         assert_eq!(e.code, "engine.ceiling_exceeded");
         assert_eq!(e.fields.get("limit").map(String::as_str), Some("1"));
+    }
+
+    // ---- `filter_error_of` — one test per `skp.filter_*` code (`NEXT-CUT.md` design essential 5,
+    // brief evidence item B) ------------------------------------------------------------------
+    //
+    // `filter_error_of`'s match has no wildcard arm (a compile-time exhaustiveness property, same
+    // discipline `error_of` uses above), and unlike `every_engine_error_variant_maps_to_a_distinct_
+    // engine_dot_code`'s three-of-twenty sample, every one of `FilterError`'s eleven variants gets
+    // its own test below — code AND every field key asserted, never a bare `is_err`.
+
+    #[test]
+    fn filter_dialect_unsupported_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::DialectUnsupported { declared: "sql/legacy".into() });
+        assert_eq!(e.code, "skp.filter_dialect_unsupported");
+        assert_eq!(e.fields.get("declared").map(String::as_str), Some("sql/legacy"));
+    }
+
+    #[test]
+    fn filter_unparsable_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::Unparsable { detail: "syntax error".into() });
+        assert_eq!(e.code, "skp.filter_unparsable");
+        assert_eq!(e.fields.get("detail").map(String::as_str), Some("syntax error"));
+    }
+
+    #[test]
+    fn filter_not_a_single_expression_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::NotASingleExpression { statements: 2 });
+        assert_eq!(e.code, "skp.filter_not_a_single_expression");
+        assert_eq!(e.fields.get("statements").map(String::as_str), Some("2"));
+    }
+
+    #[test]
+    fn filter_construct_not_admitted_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::ConstructNotAdmitted { construct: "a subquery".into() });
+        assert_eq!(e.code, "skp.filter_construct_not_admitted");
+        assert_eq!(e.fields.get("construct").map(String::as_str), Some("a subquery"));
+    }
+
+    #[test]
+    fn filter_unknown_column_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::UnknownColumn { column: "zzz".into() });
+        assert_eq!(e.code, "skp.filter_unknown_column");
+        assert_eq!(e.fields.get("column").map(String::as_str), Some("zzz"));
+    }
+
+    #[test]
+    fn filter_column_not_filterable_maps_to_its_code_and_fields() {
+        let e = filter_error_of(&FilterError::ColumnNotFilterable {
+            column: "geometry".into(),
+            reason: "this is the geometry column".into(),
+        });
+        assert_eq!(e.code, "skp.filter_column_not_filterable");
+        assert_eq!(e.fields.get("column").map(String::as_str), Some("geometry"));
+        assert_eq!(e.fields.get("reason").map(String::as_str), Some("this is the geometry column"));
+    }
+
+    #[test]
+    fn filter_identity_alias_ambiguous_maps_to_its_code_and_fields() {
+        let e = filter_error_of(&FilterError::IdentityAliasAmbiguous {
+            column: "id".into(),
+            source_column: "parcel_key".into(),
+        });
+        assert_eq!(e.code, "skp.filter_identity_alias_ambiguous");
+        assert_eq!(e.fields.get("column").map(String::as_str), Some("id"));
+        assert_eq!(e.fields.get("source_column").map(String::as_str), Some("parcel_key"));
+    }
+
+    #[test]
+    fn filter_not_boolean_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::NotBoolean { inferred_type: "BIGINT".into() });
+        assert_eq!(e.code, "skp.filter_not_boolean");
+        assert_eq!(e.fields.get("inferred_type").map(String::as_str), Some("BIGINT"));
+    }
+
+    #[test]
+    fn filter_too_long_maps_to_its_code_and_fields() {
+        let e = filter_error_of(&FilterError::TooLong { limit: 4096, saw: 5000 });
+        assert_eq!(e.code, "skp.filter_too_long");
+        assert_eq!(e.fields.get("limit").map(String::as_str), Some("4096"));
+        assert_eq!(e.fields.get("saw").map(String::as_str), Some("5000"));
+    }
+
+    #[test]
+    fn filter_too_deep_maps_to_its_code_and_fields() {
+        let e = filter_error_of(&FilterError::TooDeep { limit: 32, saw: 40 });
+        assert_eq!(e.code, "skp.filter_too_deep");
+        assert_eq!(e.fields.get("limit").map(String::as_str), Some("32"));
+        assert_eq!(e.fields.get("saw").map(String::as_str), Some("40"));
+    }
+
+    #[test]
+    fn filter_rejected_by_binder_maps_to_its_code_and_field() {
+        let e = filter_error_of(&FilterError::RejectedByBinder { detail: "binder refused".into() });
+        assert_eq!(e.code, "skp.filter_rejected_by_binder");
+        assert_eq!(e.fields.get("detail").map(String::as_str), Some("binder refused"));
     }
 }

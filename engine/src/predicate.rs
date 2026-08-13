@@ -124,17 +124,19 @@ impl AdmittedPredicate {
         Ok(Self { text })
     }
 
-    /// Construct an `AdmittedPredicate` **without validating it.**
+    /// Construct an `AdmittedPredicate` with **nothing checked** — `pub(crate)`, test-only.
     ///
-    /// **Deprecated, and kept only as a shim.** `kernel/src/skp.rs`'s P2 pass-through calls this
-    /// directly (`CUT-STATE.md` P2 §5) and this piece (P3) is scoped to `engine/` only — "do NOT
-    /// touch kernel this piece". P4 switches that call site to [`AdmittedPredicate::admit`] and
-    /// removes this method entirely; until then it is the one remaining way to build a predicate
-    /// with nothing checked, and the name still says exactly that.
-    #[deprecated(
-        note = "unvalidated; P4 switches kernel/src/skp.rs to AdmittedPredicate::admit and removes this"
-    )]
-    pub fn assume_validated(text: String) -> Self {
+    /// **Not the old `assume_validated` shim.** That was a `pub` method `kernel/src/skp.rs`'s P2
+    /// pass-through called directly; `NEXT-CUT.md` P4 switched that call site to
+    /// [`AdmittedPredicate::admit`] and removed it, so nothing outside this crate can build a
+    /// predicate with admission skipped any more. This constructor exists only for
+    /// `stream::tests::filter_composition`'s composition-as-string matrix, which tests `build_sql`'s
+    /// pure SQL-**text** composition in isolation from whether a given predicate would pass real
+    /// admission against any particular dataset (its own odd-casing/whitespace case names a column
+    /// no fixture in this crate ever writes, on purpose — the property under test is "never
+    /// rewritten", not "would admit").
+    #[cfg(test)]
+    pub(crate) fn unchecked_for_composition_test(text: String) -> Self {
         Self { text }
     }
 
@@ -760,10 +762,9 @@ mod tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
     fn the_text_comes_back_exactly_as_given_never_rewritten() {
         let odd = "  zone = 'residential'  -- not touched";
-        let p = AdmittedPredicate::assume_validated(odd.to_string());
+        let p = AdmittedPredicate::unchecked_for_composition_test(odd.to_string());
         assert_eq!(p.sql_text(), odd);
     }
 

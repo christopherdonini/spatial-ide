@@ -24,11 +24,11 @@ use futures_util::{SinkExt, StreamExt};
 use spatial_data_plane::server::DataPlaneConfig;
 use spatial_data_plane::session::SUBPROTOCOL;
 use spatial_data_plane::{wire, RunningDataPlane};
-use spatial_engine::fixture::{write_geoparquet, CrsMode, FixtureSpec};
+use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureFacts, FixtureSpec, ZONE_VALUES};
 use spatial_engine::trace::{self, TraceKey};
 use spatial_kernel::skp::{SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
-use spatial_skp::v0::{DatasetHandle, ViewportQueryRequest, SKP_VERSION};
+use spatial_skp::v0::{DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 
@@ -51,6 +51,42 @@ fn fixture(name: &str, features: usize) -> std::path::PathBuf {
     write_geoparquet(&path, &FixtureSpec { features, avg_vertices: 12, hole_every: 0, ..Default::default() })
         .expect("write fixture");
     path
+}
+
+/// As [`fixture`], with `AttributeMode::CategoricalZone` (P4's SQL-filter tests: a `zone` attribute
+/// column is the one thing any fixture in this crate can filter a predicate on) — returns the
+/// written [`FixtureFacts`] too, so a filtered stream's row count can be checked against the
+/// *specific* number of rows the fixture actually wrote for one zone, not just "some subset".
+fn fixture_zoned(name: &str, features: usize) -> (std::path::PathBuf, FixtureFacts) {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");
+    std::fs::create_dir_all(&dir).expect("fixture dir");
+    let path = dir.join(format!("skp-admission-{name}.parquet"));
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features,
+            avg_vertices: 12,
+            hole_every: 0,
+            attributes: AttributeMode::CategoricalZone,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
+    (path, facts)
+}
+
+fn duckdb_filter(predicate: &str) -> Filter {
+    Filter::new(predicate, FILTER_DIALECT_DUCKDB_EXPR_0)
+        .expect("the one admitted wire dialect must construct")
+}
+
+/// Decode one `TAG_BATCH` frame's payload and return its row count — this file only needs a count
+/// to prove a filtered stream's shape, not the fuller per-row decode `end_to_end.rs`'s `Collected`
+/// performs.
+fn batch_row_count(payload: &[u8]) -> usize {
+    let mut rdr =
+        arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None).expect("ipc");
+    rdr.next().expect("one batch").expect("decode").num_rows()
 }
 
 async fn connect(dp: &RunningDataPlane) -> Client {
@@ -286,6 +322,127 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
     assert_eq!(err.code, "engine.viewport_crs_mismatch");
     assert!(err.message.contains("EPSG:4326"), "{}", err.message);
     assert!(err.message.contains("performs no reprojection"), "{}", err.message);
+}
+
+// ---------------------------------------------------------------------------------------------
+// `cut/sql-filter` P4 — admission wired pre-lease/pre-mint in `SkpHost::viewport_query`.
+// ---------------------------------------------------------------------------------------------
+
+/// Evidence item G's positive half, over a real socket: a `duckdb-expr/0` predicate that admission
+/// (P3) accepts delivers a stream whose row count matches *exactly* the fixture's own recorded
+/// count for that zone — not merely "some nonzero subset", which a vacuous or off-by-everything
+/// filter could also produce.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_subset_stream_over_the_wire()
+{
+    let (path, facts) = fixture_zoned("filter-valid", 4_000);
+    assert!(
+        facts.zone_counts.iter().all(|&n| n > 0),
+        "the fixture must exercise every zone, or this test's subset claim is vacuous: {:?}",
+        facts.zone_counts
+    );
+    let expected_rows = facts.zone_counts[0]; // ZONE_VALUES[0] == "residential"
+
+    let handle = dataset_handle();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(catalog.clone(), tickets.clone());
+
+    let ticket = host
+        .viewport_query(ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: handle,
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(duckdb_filter(&format!("zone = '{}'", ZONE_VALUES[0]))),
+        })
+        .expect("a real, admitted predicate must not be refused");
+
+    let dp = spatial_data_plane::serve(DataPlaneConfig {
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        static_dir: None,
+        expected_origin: None,
+    })
+    .await
+    .expect("serve");
+
+    let mut c = connect(&dp).await;
+    let start_frame =
+        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()));
+    c.send(Message::Binary(start_frame.into())).await.expect("start");
+    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into()))
+        .await
+        .expect("credit");
+
+    let mut rows = 0usize;
+    let mut terminal = None;
+    loop {
+        let msg = match tokio::time::timeout(RECV_DEADLINE, c.next()).await {
+            Ok(Some(Ok(m))) => m,
+            Ok(Some(Err(_))) | Ok(None) => break,
+            Err(_) => panic!("timed out waiting for a frame"),
+        };
+        let Message::Binary(b) = msg else { continue };
+        let Some(len) = wire::payload_len(&b) else { continue };
+        let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
+        match b.first() {
+            Some(&wire::TAG_BATCH) => rows += batch_row_count(payload),
+            Some(&wire::TAG_TERMINAL) => {
+                terminal = Some(payload[0]);
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    assert_eq!(terminal, Some(wire::TERM_COMPLETED));
+    assert_eq!(
+        rows, expected_rows,
+        "a filtered stream must deliver exactly the rows the fixture wrote for this zone, no more \
+         and no fewer"
+    );
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// Evidence item G's negative half: an unadmitted predicate refuses synchronously, with its typed
+/// `skp.filter_*` code, before any handle is minted — no socket needed, exactly the pattern
+/// `viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a_handle` above uses for
+/// a different refusal family. The registry state is asserted directly (`StreamRegistry::
+/// cancel_all_for_dataset`'s public count, the only reachable window into it from outside
+/// `kernel::skp`): zero tickets exist for this dataset, because `AdmittedPredicate::admit` refused
+/// before `SkpHost::viewport_query` ever reached `open_engine_stream`'s lease or `tickets.mint`.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronously_and_mints_no_ticket()
+{
+    let (path, _facts) = fixture_zoned("filter-invalid", 500);
+    let handle = dataset_handle();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(catalog, tickets.clone());
+
+    let err = host
+        .viewport_query(ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: handle.clone(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(duckdb_filter("nonexistent_column_xyz = 1")),
+        })
+        .expect_err("a predicate naming a column this dataset does not carry must be refused");
+
+    assert_eq!(err.code, "skp.filter_unknown_column");
+    assert_eq!(err.fields.get("column").map(String::as_str), Some("nonexistent_column_xyz"));
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "admission refused before `tickets.mint` ever ran; there is no ticket to have minted"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

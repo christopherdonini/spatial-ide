@@ -1480,9 +1480,20 @@ fn produce(
     // the other segments from `query`.
     crate::trace::mark(crate::trace::EXECUTE_CALLED, 0, 0);
 
-    let mut arrow = stmt
-        .stream_arrow(params.as_slice())
-        .map_err(|e| classify(cancel, format!("execute: {e}")))?;
+    let arrow_result = stmt.stream_arrow(params.as_slice());
+    // **A new `PRODUCER_CANCELLED` site, found by `cut/sql-filter` P4's own testing (the sibling site
+    // just below the `catch_unwind` this function's row-fetch loop wraps is the other one this piece
+    // adds).** `stream_arrow` binds *and executes* in one call (the comment below already says the
+    // vendored crate exposes no boundary between the two) — for a selective, late-matching predicate
+    // this one call is where the *entire* non-matching prefix gets scanned, because nothing yields a
+    // chunk this producer could check `cancel.is_cancelled()` between until a match is found. An
+    // interrupt landing here surfaces as this call's own `Err`, not a panic on a later `.next()`, and
+    // was silently unmarked before this fix — the exact scenario a late-matching filter makes the
+    // common case, not a corner case.
+    if arrow_result.is_err() && cancel.is_cancelled() {
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
+    }
+    let mut arrow = arrow_result.map_err(|e| classify(cancel, format!("execute: {e}")))?;
     // **`SPAN_BIND_AND_EXECUTE` (`execute_called → execute_returned`) brackets exactly this call,
     // which binds parameters *and* executes in one step.** The vendored `duckdb` crate has no
     // public API on this path that separates them — `Statement::stream_arrow` is `__bind_in` then
@@ -1542,6 +1553,21 @@ fn produce(
                     .map(|s| (*s).to_string())
                     .or_else(|| payload.downcast_ref::<String>().cloned())
                     .unwrap_or_else(|| "no panic message".to_string());
+                // **The other new `PRODUCER_CANCELLED` site this piece adds (`cut/sql-filter` P4's
+                // own testing; see `stream_arrow`'s call site above for the first).** A selective,
+                // late-matching predicate can leave the *entire* non-matching prefix
+                // scanned inside one `arrow.next()` call (DuckDB does not yield a chunk boundary this
+                // producer can check `cancel.is_cancelled()` between, because nothing survives the
+                // filter until near the end) — DuckDB's own interrupt is what actually stops it, and
+                // the interrupted fetch panics rather than returning an error (the comment above the
+                // `catch_unwind` this arm belongs to already says so). Without this mark, a
+                // cancellation observed *only* on this path — which a late-matching filter makes the
+                // common case, not a corner case — left `cancel_observed` permanently unstamped: the
+                // same "an always-absent name reads as did not happen" defect the row-loop check's own
+                // comment (above) already named for a different gap.
+                if cancel.is_cancelled() {
+                    crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
+                }
                 return Err(classify(cancel, format!("duckdb fetch panicked: {detail}")));
             }
         };
@@ -2155,7 +2181,8 @@ mod tests {
         fn the_where_composition_matrix_matches_the_declared_rule_exactly() {
             let ds = test_dataset("composition_matrix");
             let bbox = Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 };
-            let predicate = || AdmittedPredicate::assume_validated("zone = 'residential'".into());
+            let predicate =
+                || AdmittedPredicate::unchecked_for_composition_test("zone = 'residential'".into());
 
             const BBOX_COND: &str = "\"bbox\".\"xmin\" <= ? AND \"bbox\".\"xmax\" >= ? AND \
                                       \"bbox\".\"ymin\" <= ? AND \"bbox\".\"ymax\" >= ?";
@@ -2208,7 +2235,7 @@ mod tests {
             let ds = test_dataset("verbatim");
             let odd = "  Zone = 'Residential'  ";
             let q = ViewportQuery::all()
-                .with_filter(AdmittedPredicate::assume_validated(odd.to_string()));
+                .with_filter(AdmittedPredicate::unchecked_for_composition_test(odd.to_string()));
             let (sql, _) = ds
                 .build_sql(&q, IndexUse::Off, &[], RowOrdering::Unordered)
                 .expect("build_sql");
