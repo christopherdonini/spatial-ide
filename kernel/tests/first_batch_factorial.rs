@@ -97,6 +97,18 @@ fn evidence_dir() -> PathBuf {
     d
 }
 
+/// `cut/import-layout`'s own evidence directory — distinct from `evidence_dir()` above, which is
+/// `first-batch`'s. Only `cancellation_holds_with_pruning_in_the_path_on_h5` writes here; every other
+/// function in this file reads `H5` (and the other 5 GB files) from `evidence_dir()` as before.
+fn import_layout_evidence_dir() -> PathBuf {
+    let d = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("target/slice-evidence/import-layout");
+    std::fs::create_dir_all(&d).unwrap();
+    d
+}
+
 fn spec_s() -> FixtureSpec {
     FixtureSpec {
         features: FEATURES,
@@ -1283,6 +1295,141 @@ fn cancellation_holds_with_pruning_in_the_path() {
             FilterPlan::RowGroupsPruned { .. } | FilterPlan::RowGroupsKeptAll { .. }
         )),
         "the pruning plan was not in the path, so this asserts nothing about pruning: {plans:?}"
+    );
+}
+
+/// **`cut/import-layout` phase 8 — the same cancellation property, re-asserted with `H5` (the
+/// clustered, Hilbert-ordered 5 GB file) in the path instead of `S`.**
+///
+/// `NEXT-CUT.md` phase 8 requires it; `kernel/IMPORT-LAYOUT-PREREGISTRATION.md` does not declare
+/// cancellation as a scored cell, so — exactly as above — this is a **re-assertion of a property**,
+/// not a preregistered timing cell, reported with its ADR-018 interval label and quotable against
+/// no budget in either direction beyond the one it already carries. It may not be differenced
+/// against any other section's numbers, and nothing in `cut/import-layout`'s gate verdicts rests on
+/// it. Mechanism, intervals and the two-batch-then-cancel shape are otherwise **identical** to
+/// `cancellation_holds_with_pruning_in_the_path` above — this is that same test, pointed at a
+/// different file, per the piece's own instruction not to build new machinery.
+///
+/// **Observed, and worth naming rather than papering over:** on `H5` this lever's own candidate
+/// index (`crate::rowgroup`, the abandoned B2 mechanism from the second/seventh sections, never in
+/// the default planner) reports `RowGroupsNotPrunable { reason: IdRangesOverlap }` on all seven
+/// trials, not `RowGroupsPruned`/`RowGroupsKeptAll` as it did on `S`. That refusal reason is one of
+/// `RowGroupRefusal`'s own documented variants — "two row groups' identity intervals overlap" — and
+/// is exactly what a Hilbert-ordered file produces: `H5`'s `id` column is scattered by
+/// `(hilbert_key, id)` order, not contiguous per row group the way `S`'s raster order happens to
+/// leave it. It is a disclosed mechanism fact about the abandoned B2 candidate, not a defect in this
+/// test or in cancellation: `build_row_group_index` still runs, `stream_rowgroup_pruned_experimental`
+/// still executes and still streams, and cancellation is still exercised on that same code path —
+/// only the resulting `FilterPlan` differs, so the plan assertion below accepts it explicitly rather
+/// than silently loosening to "any plan".
+#[test]
+#[ignore = "measurement pass; run explicitly with --release"]
+fn cancellation_holds_with_pruning_in_the_path_on_h5() {
+    refuse_debug("first_batch_factorial::cancel_h5");
+    let out_dir = import_layout_evidence_dir();
+    let path = FileId::H5.path();
+    assert!(
+        path.exists(),
+        "run cut/import-layout phase 5 first; this cell reuses the H5 fixture"
+    );
+
+    let mut observed = Vec::new();
+    let mut terminal = Vec::new();
+    let mut plans = Vec::new();
+    for trial in 0..N {
+        let ds = Dataset::open(&path).expect("open");
+        ds.build_row_group_index(&CancelToken::new()).expect("build row-group index");
+        let q = ViewportQuery::viewport(
+            ViewId::NearQuarter.bbox(FileId::H5.grid_cols()).unwrap(),
+            ds.crs().identifier(),
+        );
+        let guard = spatial_engine::trace::start(spatial_engine::trace::TraceKey {
+            label: format!("cancel-with-pruning-h5-{trial}"),
+            ..Default::default()
+        })
+        .expect("no other trace is running");
+
+        let cancel = CancelToken::new();
+        let mut stream = ds
+            .stream_rowgroup_pruned_experimental(&q, cancel.clone())
+            .expect("pruned stream");
+        plans.push(stream.filter_plan());
+
+        let mut buf = Vec::new();
+        // Two batches, so the producer is inside its row loop rather than still starting up — the
+        // state a cancellation actually arrives in.
+        for _ in 0..2 {
+            match stream.next_into(&mut buf) {
+                Some(Ok(_)) => buf.clear(),
+                _ => break,
+            }
+        }
+        let requested = Instant::now();
+        cancel.cancel();
+        while let Some(r) = stream.next_into(&mut buf) {
+            buf.clear();
+            if r.is_err() {
+                break;
+            }
+        }
+        let terminal_ms = requested.elapsed().as_secs_f64() * 1000.0;
+
+        let t = guard.trace();
+        let seg = t.segment_ms(
+            spatial_engine::trace::CANCELLATION_REQUESTED,
+            spatial_engine::trace::PRODUCER_CANCELLED,
+        );
+        drop(guard);
+        observed.push(seg);
+        terminal.push(terminal_ms);
+        println!(
+            "cancel-h5 trial {trial}: plan {:?} · requested→observed {} · requested→terminal {terminal_ms:.3} ms",
+            plans[trial],
+            seg.map(|v| format!("{v:.3} ms")).unwrap_or_else(|| "unmeasured (span absent)".into()),
+        );
+    }
+
+    let got: Vec<f64> = observed.iter().filter_map(|v| *v).collect();
+    let json = format!(
+        "{{\"interval\":\"cancel_requested -> cancel_observed (docs/08's 100 ms budget)\",\
+         \"note\":\"cut/import-layout phase 8 — a re-assertion required by NEXT-CUT.md, NOT a \
+         preregistered scored cell in either that cut's or IMPORT-LAYOUT-PREREGISTRATION.md's gate; \
+         never differenced against any other section\",\
+         \"source_file\":\"H5-duckdb-hilbert16-5gb\",\
+         \"plans\":[{}],\"requested_to_observed_ms\":[{}],\"samples\":{},\"of\":{},\
+         \"requested_to_terminal_ms_no_budget\":{}}}",
+        plans.iter().map(|p| format!("\"{}\"", p.as_str())).collect::<Vec<_>>().join(","),
+        observed
+            .iter()
+            .map(|v| v.map(|x| format!("{x:.3}")).unwrap_or_else(|| "null".into()))
+            .collect::<Vec<_>>()
+            .join(","),
+        got.len(),
+        N,
+        json_f64s(&terminal),
+    );
+    std::fs::write(out_dir.join("import-layout-cancel-h5.json"), &json).expect("write");
+    println!("{json}");
+
+    // The property, asserted. Reported above whatever the verdict, so a miss is a recorded number
+    // rather than a lost run.
+    assert!(!got.is_empty(), "no trial produced a `cancel_requested -> cancel_observed` span");
+    let worst = sorted(&got).last().copied().unwrap();
+    assert!(
+        worst < 100.0,
+        "cancellation with pruning in the path (H5) missed docs/08's 100 ms budget: worst \
+         requested->observed {worst:.3} ms over {} samples",
+        got.len()
+    );
+    assert!(
+        plans.iter().all(|p| matches!(
+            p,
+            FilterPlan::RowGroupsPruned { .. }
+                | FilterPlan::RowGroupsKeptAll { .. }
+                | FilterPlan::RowGroupsNotPrunable { .. }
+        )),
+        "the row-group mechanism was not in the path at all, so this asserts nothing about \
+         cancellation with it present: {plans:?}"
     );
 }
 

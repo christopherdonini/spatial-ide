@@ -129,6 +129,24 @@ row-group candidate in `src/rowgroup.rs` measured **exactly zero** bytes of addi
 four of four viewports. The `docs/07` open item therefore needs a second clause: an index must replace
 IO **that the storage layer would not have skipped anyway**.
 
+**Bounded a second time — added by `kernel/RESULTS.md`'s ninth section (2026-08-13), also not
+withdrawn.** That section's own preregistered gate asked the remaining half of the `docs/07` open item
+directly: not whether an index prunes IO (closed above — it does not, redundantly), but whether
+*import-time physical row order itself* — a Hilbert-ordered rewrite, no index anywhere in the path —
+makes DuckDB's own zone-map pruning materially more effective without a whole-file cost. **The gate
+failed**, on a narrow whole-file-regression margin (a Hilbert-ordered file's own SNAPPY compression
+runs about 0.5 % worse than the same rows in source order, 100.5443 % measured against a declared
+100.5 % ceiling) even though its read-volume and total-time conditions both passed comfortably (a
+Hilbert-ordered 5 GB file read 61.67 % of the raster control's bytes at a quarter-extent viewport,
+p50 4.09 s vs 5.39 s, 49/49 pairwise faster). So **pruning is a layout property of the file's own
+physical row order, not an index property** — DuckDB's zone maps already do it, for free, with no
+index and no rewrite, on whatever order the file already has — and this cut's gate found no ordering
+lever it tested that clears its own regression bar cleanly enough to change what ships. `ScanOnly`
+remains the preferred product plan, now with the measured bracket attached: an unordered, ETL-shaped
+source gets essentially no pruning at all (95–100 % of the file read at every non-whole viewport, both
+classes measured), while a well-ordered one reads roughly 0.6× at the shape this cut treated as the
+hero viewport — real and large in both directions, without either result moving the product plan.
+
 **None of this says the index is wrong.** It is not:
 `an_indexed_query_returns_exactly_what_the_scan_returns` holds, and the measured payload totals were
 byte-identical at every point (25 281 rows / 44 018 088 B; 1 600 rows / 2 798 952 B). It says this

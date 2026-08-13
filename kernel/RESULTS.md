@@ -4293,3 +4293,381 @@ wall-clock time) is derived by hand *from* those tables and should be checked ag
 assumed correct on its own — the seventh section named exactly this class of hand-transcription as the
 source of its one error, and this section does not claim to be exempt from the same risk merely
 because its tables are not.
+
+---
+
+# Ninth section — 2026-08-13 — import-time spatial layout: THE GATE FAILS, and the bracket it establishes
+
+**Numbered ninth, not eighth, and that is a deviation worth naming rather than silently renumbering
+someone else's work.** The piece that produced this section was instructed to add "the eighth
+section," written against a state of this file that ended at the seventh section. By the time this
+piece ran, the Eighth section above (query-window attribution, also 2026-08-08, a different
+concurrent cut) already existed. Matching this file's own established convention — sections numbered
+in the sequence they land, never renumbered after the fact — means this one is the ninth, and it is
+filed as such rather than colliding with, or rewriting the title of, a section this piece did not
+produce.
+
+**Contract:** `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`, committed `82cb44e` **before** the harness
+existed. Every cell, ceiling, sample count, verdict rule and invalidator below comes from that
+document; this section applies them and decides nothing. **Brief:** `NEXT-CUT.md` — the architect's
+design note dated 2026-08-13, binding.
+
+## The question, reframed from `docs/07` line 22
+
+`docs/07` line 22 leaves one item open: *"an index that prunes actual IO, which is a separate
+architect-first design with its own preregistered gate; no claim is made for it here."* The
+architect's design note (`NEXT-CUT.md`, "Framings blocked") closes the *index* framing before this
+cut's harness was ever written: "An external index over the same covering-bbox statistics excluded
+exactly 0 bytes (`kernel/RESULTS.md` finding 3, 4/4 viewports). The question is layout." (That is this
+file's own seventh section, finding 3, "0 bytes of difference in 4 of 4 viewports" — quoted above at
+"### 3. An external index over the same statistics is redundant — measured at exactly zero.") What
+this cut measures, in place of an index, is whether **import-time physical row order**
+— Hilbert-ordered rather than source order — makes DuckDB's own zone-map pruning (no index in the
+path at all) materially more effective at a viewport query, without paying for it at whole-file scope.
+
+## The gate — quoted verbatim from `kernel/IMPORT-LAYOUT-PREREGISTRATION.md` §2
+
+> **Gate — import-time spatial layout.**
+>
+> **The claim.** *At a fixed dataset class, writer and row-group granularity, a Hilbert-ordered
+> file's viewport query asks the file system for materially fewer bytes than the same rows in
+> source order, and the reduction is not paid for by a whole-file regression.*
+>
+> **Scored on two quantities and no others:**
+>
+> 1. **Read volume — primary.** Query-scoped `GetProcessIoCounters` read-byte delta. `H` reads
+>    **≤ 70%** of `C`'s bytes at the **near-quarter** viewport, at the 5 GB class, in **all 7
+>    trials**. 70% is declared as the point where the decision changes — below a 30% reduction
+>    the rewrite cost and product surface are not worth a default change — and it is deliberately
+>    weaker than any A1 figure, which is not carried into this verdict.
+>    **Determinism condition, not a statistic:** each cell must produce exactly **one distinct**
+>    `read_bytes` across its 7 trials. More than one distinct value = **`unmeasured — read
+>    counter non-deterministic`**, an instrument fault, never a spread.
+> 2. **Total query time — secondary.** `H` beats `C` at the near quarter: **p50 lower and ≥ 42
+>    of 49 pairwise** at n = 7 vs 7, same session, same phase. Payload-retention setting
+>    identical on both arms of every pair, recorded in the artifact.
+>
+> **And all of:** no whole-file regression — `H` whole-file read ≤ **100.5%** of `C`'s · row
+> count equals the generator-derived count **before the phase runs** · the **sorted per-feature
+> digest set `{(id, sha256(coords))}` is identical across `C`, `H`, `R`** at every viewport,
+> computed by a dedicated correctness phase, **never substituted by a fold** · rewrite cost
+> reported separately, **never netted** against any query time.
+>
+> **Fail condition.** Any one unmet is a **fail**, and a fail is a complete result: layout stays
+> out of the import path, no ADR is filed, and the cut's value is the bracket it establishes.
+>
+> **Explicitly not gated, not quotable:** time to first batch (reported beside every cell so a
+> reader sees it did not move). docs/08 wording untouched.
+>
+> **Scope every number carries:** warm-OS-cache **logical** bytes · **Windows only** · one
+> machine, one session, one writer (DuckDB `COPY`), one data shape · within-session comparisons
+> only · **`H` is a different file with a different content hash**, never a same-file claim.
+
+## Scope
+
+Windows 10 Pro 19045 · Intel i9-9980HK, 8 cores / 16 threads · 63.7 GiB RAM · SSD · release build.
+Nothing here says anything about macOS or Linux — the same limit `docs/07` places on ADR-003. The
+read-volume instrument is Windows-only and is declared so. **Every number below carries the gate's
+own scope clause, restated because it is the clause a reader is most likely to skip past in a
+blockquote:** warm-OS-cache **logical** bytes, not physical disk traffic · one machine, one session,
+one writer (DuckDB `COPY`), one data shape · within-session comparisons only, never differenced
+against any earlier section · **`H` (and `H5`) are different files with different content hashes than
+`C`/`C5`**, never a same-file claim. The 5 GB fixture is **not** a `docs/08` matrix row — it serves the
+"cold open of a 5 GB GeoParquet" budget, stated as such throughout, never as a matrix figure.
+
+## The 145 MB factorial — reported, this class does not gate
+
+9 files (`C`/`H`/`R` × granularity ∈ {8192, 4096, 2048}) × 4 viewports × n = 7 = 252 trials, all 36
+cells deterministic (`distinct_read_bytes_count = 1` everywhere).
+
+**Read fraction** (`read_bytes / that file's own on-disk bytes`):
+
+```
+order            g    whole   near-qtr  far-qtr   1/64
+source-identity  8192 98.0%    57.4%     50.8%    16.4%
+hilbert16        8192 98.1%    65.6%     57.4%     8.2%
+shuffled         8192 97.9%   100.0%    100.0%   100.0%
+source-identity  4096 98.0%    53.3%     50.8%    16.4%
+hilbert16        4096 98.1%    49.2%     45.1%     4.1%
+shuffled         4096 97.9%   100.0%    100.0%   100.0%
+source-identity  2048 98.0%    51.2%     50.8%    14.3%
+hilbert16        2048 98.1%    41.0%     36.9%     2.1%
+shuffled         2048 97.9%   100.0%    100.0%   100.0%
+```
+
+**The 145 MB half of the gate's own read-volume bar (`H ≤ 70% of C`, near quarter — reported only;
+this class does not gate): fails at all three granularities.** g8192: ratio **1.1489** (H reads
+*more*). g4096: ratio **0.9279**. g2048: ratio **0.8040** — closest to the bar, still short. Total-time
+pairwise at the same viewport (reported, not gated): g8192 `H` **0/49** faster (p50 110.86 ms vs
+103.97 ms — slower); g4096 **29/49** (p50 99.14 ms vs 100.15 ms); g2048 **49/49** (p50 92.63 ms vs
+99.04 ms). Whole-file ratio 1.0057–1.0058 at all three granularities — already over the 100.5 %
+ceiling that applies at the 5 GB class, though this class is never gated on it.
+
+**Prediction 1 (145 MB half) — CONFIRMED.** `R` reads ≥ 95 % at every one of the 12 (granularity ×
+viewport) cells: whole 97.89–97.95 %, near-quarter/far-quarter/1-64 **99.99 %** at every
+granularity — a shuffled file's zone maps exclude essentially nothing, at any viewport size.
+
+**Prediction 3 — FAILED, with the sign reversal stated plainly.** The registered reasoning ("the
+boundary term still dominates" through 49 groups, so the near-quarter crossover would not reverse
+between 13 and 49 row groups) **was wrong.** It reverses *inside* the 145 MB granularity sweep itself:
+at g8192 (13 groups) `C` beats `H` on read volume (`C`=86,539,415 B vs `H`=99,428,826 B); at g2048 (49
+groups) `H` beats `C` (`C`=77,290,822 B vs `H`=62,142,766 B). The preregistration is append-only and
+is not edited to fit this — the miss is recorded here, per its own §11 pre-authorization that being
+wrong about a registered prediction is a result, not an embarrassment.
+
+**Mechanism — why `H` costs more at coarse granularity and less at fine, named rather than left as a
+correlation.** The 145 MB size table below shows `H` writes consistently **larger** than `C` at every
+granularity (SNAPPY compresses a Hilbert-scattered column worse than the same column in raster order)
+— a fixed cost `H` always pays. At coarse granularity (13 groups) that fixed cost is not bought back by
+pruning, because each of the 13 groups already spans a large fraction of the bbox grid; at fine
+granularity (49 groups) each group is small enough that Hilbert clustering starts excluding groups the
+raster order's horizontal strips cannot, and the pruning gain overtakes the fixed compression cost.
+
+145 MB file sizes (bytes), from the fixture matrix — the same one `H`'s worse compression is read from
+below at the 5 GB class:
+
+| order | g8192 | g4096 | g2048 |
+|---|---|---|---|
+| `C` | 150,775,777 | 150,769,309 | 150,836,625 |
+| `H` | 151,514,313 (**+0.49 %**) | 151,525,358 (**+0.50 %**) | 151,597,301 (**+0.50 %**) |
+| `R` | 155,714,947 (**+3.28 %**) | 155,699,002 (**+3.27 %**) | 155,788,514 (**+3.28 %**) |
+
+## THE 5 GB GATE — scored here, per the preregistration, at shipped granularity, near-quarter viewport
+
+3 files (`C5`/`H5`/`R5`) × 4 viewports × n = 7 = 84 trials, all 12 cells deterministic
+(`distinct_read_bytes_count = 1` everywhere), row counts matched the generator-derived prediction on
+every cell, checked before the trial loop ran.
+
+| # | condition (verbatim scope) | numbers | verdict |
+|---|---|---|---|
+| 1 | Read volume, primary: `H5` ≤ 70 % of `C5`'s bytes, near quarter, all 7 trials one distinct value | `C5` = 2,495,357,326 B; `H5` = 1,538,983,430 B; ratio **0.6167** | **PASS** |
+| 2 | Total query time, secondary: `H5` p50 lower and ≥ 42/49 pairwise, near quarter | `H5` p50 **4,090.4886 ms** vs `C5` p50 **5,385.4301 ms**; pairwise **49/49** | **PASS** |
+| 3 | No whole-file regression: `H5` whole-file read ≤ 100.5 % of `C5`'s | `C5` whole = 4,879,369,042 B; `H5` whole = 4,905,929,397 B; ratio **1.005443** (100.5443 %) — **0.044 percentage points over the 100.5 % ceiling** | **FAIL** |
+| 4 | Row count equals the generator-derived count, before the phase runs | all 12 cells matched | **PASS** |
+| — | Digest-set identity `{(id, sha256(coords))}` across `C5`/`H5`/`R5`, every viewport, dedicated correctness phase, never a fold | 4/4 viewports identical, n = 1 per file/viewport | **PASS** |
+
+**THE GATE FAILS.** Item 3 is the one unmet condition. Per the preregistration's own fail rule, "any
+one unmet is a fail, and a fail is a complete result" — **no number above is netted against any
+other**: item 1's comfortable pass (a **38 %** read-volume reduction against a 70 %-of-`C5` bar, well
+inside the margin) does not buy back item 3's narrow miss, and the preregistration's own text forbids
+exactly that trade. **Layout stays out of the import path.
+No ADR is filed** (ADR-021 stays drafted, unfiled, per the preregistration §10's "if — and only if —
+the gate passes" clause). This is a **complete result**, not an inconclusive one: the cut's value is
+the bracket established below.
+
+The 12-cell matrix in full (read fraction = `read_bytes / that file's own on-disk bytes`):
+
+```
+order  viewport      file_bytes     read_bytes     fraction   total_ms_p50
+C5     whole         4,976,612,784  4,879,369,042  98.05%     14,614.71
+C5     near-quarter  4,976,612,784  2,495,357,326  50.14%      5,385.43
+C5     far-quarter   4,976,612,784  2,493,493,277  50.10%      5,470.45
+C5     1/64          4,976,612,784    630,687,019  12.67%        437.14
+H5     whole         5,000,231,051  4,905,929,397  98.11%     15,187.76
+H5     near-quarter  5,000,231,051  1,538,983,430  30.78%      4,090.49
+H5     far-quarter   5,000,231,051  1,465,109,992  29.30%      4,026.65
+H5     1/64          5,000,231,051    149,139,812   2.98%        216.43
+R5     whole         5,176,967,826  5,070,773,647  97.95%     13,973.69
+R5     near-quarter  5,176,967,826  5,176,811,099 100.00%      8,269.36
+R5     far-quarter   5,176,967,826  5,176,811,099 100.00%      8,123.52
+R5     1/64          5,176,967,826  5,176,811,099 100.00%      2,003.17
+```
+
+**The mechanism of the failing condition, named honestly rather than left as a bare percentage.**
+`H5`'s whole-file loss is the same fact the 145 MB table already shows: **Hilbert-ordered files
+compress about 0.5 % worse than the same rows in source order** (SNAPPY over a spatially-scattered
+column beats less redundancy out of it than SNAPPY over a raster-ordered one), at both classes — 145
+MB: `H` **+0.49–0.50 %** over `C` at every granularity (table above); 5 GB: `H5` whole read
+4,905,929,397 B vs `C5`'s 4,879,369,042 B, the same **+0.54 %**-class effect, and it is this fixed cost
+— not query-time behaviour — that pushes item 3 to 100.5443 % against a 100.5 % ceiling. The shuffled
+control `R`/`R5` compresses worse still (**+3.3 %** at 145 MB), consistent with a compressor losing
+more locality the less physically ordered a column is; neither number is a query-time effect, and
+rewrite cost is never netted against query time anywhere in this section, per the preregistration's own
+prohibition.
+
+**Prediction 1 (5 GB half) — CONFIRMED.** `R5` read fraction: whole 97.95 %, near-quarter, far-quarter
+and 1/64 all **99.997 %** (5,176,811,099 / 5,176,967,826 B). Combined with the 145 MB half above,
+**prediction 1 is CONFIRMED at both classes**: no zone-map pruning survives a shuffle, at either scale.
+
+**First batch, reported beside every cell, never gated, never quotable against `docs/08` — one line.**
+145 MB near-quarter p50 (ms, g8192/g4096/g2048): `C` 50.4/47.1/45.4, `H` 59.4/47.2/41.6, `R`
+74.6/70.4/73.5. 5 GB near-quarter p50 (ms): `C5` ≈117, `H5` ≈107, `R5` ≈141. It moved far less, in
+either direction, than the read-volume/total-time crossover did across the same cells — consistent with
+the first-batch cut's own finding that first-batch time is dominated by something other than the
+row-order lever measured here.
+
+## The bracket this cut establishes
+
+Independent of the gate's own fail, the factorial as a whole draws a bracket around what physical row
+order is worth, at both classes: an **unordered, ETL-shaped source gets no zone-map pruning at all** —
+`R`/`R5` read **95–100 %** of the file at every non-whole viewport at both classes (145 MB
+99.99 %; 5 GB 99.997 %) — while a **Hilbert-ordered file reads 0.62** of the raster control's
+bytes at the hero viewport (`H5` vs `C5`, near quarter, the gate's own scored ratio, 0.6167). Layout is
+therefore a real, large lever on read volume in both directions — an unordered source is close to a 1×
+read no matter the viewport, and a well-ordered one is closer to 0.6× at the viewport this cut treats
+as the hero case — even though the specific Hilbert-rewrite candidate this gate tested does not clear
+its own whole-file-regression bar.
+
+## Cancellation, re-asserted with the clustered file (`H5`) in the path — phase 8
+
+Required by `NEXT-CUT.md` phase 8; **not a preregistered scored cell** (`kernel/IMPORT-LAYOUT-PREREGISTRATION.md`
+does not declare cancellation), so this is reported as a property assertion and nothing in the gate
+verdicts above rests on it. Interval labels are ADR-018's — **ADR-018 is now Accepted** (2026-08-08,
+after the seventh section cited it as Proposed) — and "acknowledged" is retired from prose per that
+ADR; the figures below use `observed` and the test's own generic "terminal return" label rather than
+`quiescent`, because the second interval is measured on the *consumer's* clock, not the *producer's*,
+and ADR-018's `cancel_quiescent` is specifically the producer-side instant.
+
+The first-batch cut's own re-assertion
+(`kernel/tests/first_batch_factorial.rs::cancellation_holds_with_pruning_in_the_path`) was **pointed at
+`H5`** rather than rebuilt — a sibling test, `cancellation_holds_with_pruning_in_the_path_on_h5`, same
+mechanism, `FileId::H5` substituted for `FileId::S` (both already existed in that file's own `FileId`
+enum). Seven trials, near quarter:
+
+| interval | figure | budget |
+|---|---|---|
+| `cancel_requested → cancel_observed` | 0.103 · 0.105 · 0.035 · 0.000 · 0.000 · 0.001 · 0.083 ms | `docs/08` 100 ms — **met**, 7/7, worst 0.105 ms |
+| `cancel_requested → the consumer's terminal return` | 19.115 – 33.694 ms | **none attached** (not one of ADR-018's three named instants) |
+
+**Disclosed rather than smoothed over:** on `H5` the row-group candidate index (the abandoned "B2"
+mechanism from the second/seventh sections, never in the default planner) reports
+`RowGroupsNotPrunable { total: 403, reason: IdRangesOverlap }` on all 7 trials — not
+`RowGroupsPruned`/`RowGroupsKeptAll` as it does on `S`. `IdRangesOverlap` is one of
+`RowGroupRefusal`'s own documented variants ("two row groups' identity intervals overlap") and is
+exactly what a Hilbert-ordered `id` column produces: `H5`'s ids are scattered by `(hilbert_key, id)`
+order, not contiguous per row group the way `S`'s raster order happens to leave them. This is a fact
+about a candidate this cut's gate does not use (B2 is not the mechanism the gate above measures — that
+mechanism is DuckDB's own zone-map pruning, exercised through the ordinary query path, not through
+`stream_rowgroup_pruned_experimental`), not a defect in cancellation: the row-group index still built,
+the pruned-stream API still ran, and cancellation was still exercised on that code path throughout.
+Artifact: `target/slice-evidence/import-layout/import-layout-cancel-h5.json`.
+
+## Findings
+
+1. **The gate fails on exactly one condition, by a narrow margin, and that is a complete result.**
+   Read volume (0.6167 vs a 0.70 ceiling) and total query time (49/49 pairwise) both clear their bars
+   comfortably; the whole-file-regression ceiling (100.5443 % vs 100.5 %) misses by 0.044 percentage
+   points. None of the three is netted against another.
+2. **The mechanism behind the one failing condition is compression, not query behaviour.** A
+   Hilbert-scattered column compresses about 0.5 % worse under SNAPPY than the same rows in source
+   order, at both the 145 MB and 5 GB classes — a fixed writer-side cost, reproduced independently at
+   two scales, not a per-query effect.
+3. **Prediction 1 is confirmed at both classes: an unordered source gets no zone-map pruning at all.**
+   `R`/`R5` read 95–100 % of the file at every non-whole viewport, at both classes — the strongest,
+   least ambiguous result this cut produced.
+4. **Prediction 3 failed, and the sign reversal is stronger than the registered reasoning
+   anticipated.** It reverses *inside* the 145 MB granularity sweep itself (13 groups: `C` wins; 49
+   groups: `H` wins), not merely between classes as the registered text implied.
+5. **The bracket the cut establishes stands independently of the gate's fail.** No pruning at all
+   (unordered source, ~100 % reads) to a 0.62× read at the hero viewport (Hilbert order) is the
+   measured range physical row order spans at this shape — real and large in both directions, even
+   though this particular rewrite candidate does not clear its own regression bar.
+6. **Cancellation holds with a clustered (Hilbert) 5 GB file in the path, by three orders of
+   magnitude of margin**, and the re-assertion surfaces a disclosed, expected mechanism fact about an
+   already-abandoned candidate (the B2 row-group index reports `IdRangesOverlap` on a Hilbert-ordered
+   id column) that is orthogonal to the gate itself.
+7. **ADR-018's status changed under this cut's own feet, and the vocabulary is used correctly for
+   the version that applies now.** The seventh section cited it as Proposed; it was Accepted the same
+   day the seventh section was written, and "acknowledged" is retired from prose accordingly.
+
+## What could not be measured, and why
+
+Nothing in this cut's declared factorial or gate fell to `unmeasured` — 252 + 84 = 336 scored trials,
+36 + 12 = 48 cells, zero non-deterministic read-counter cells, zero trial errors, zero watchdog fires.
+The only thing this section does **not** attempt is anything the preregistration's non-goals already
+excluded (geometry LOD columns, hive/sidecar partitioning, a second parquet reader, reviving lever A or
+B2 as a *candidate*, any SKP/MCP/CLI exposure, macOS/Linux, physical disk traffic, headed/GUI cells) —
+see `kernel/IMPORT-LAYOUT-PREREGISTRATION.md` §9 for the full list, restated from `NEXT-CUT.md`.
+
+## Instruments — a process finding carried forward from phase 3
+
+**This workspace's release profile cannot support a hardcoded binary-hash pin across pieces of one
+cut**, disclosed in full in `CUT-STATE.md`'s phase-3 addendum §4 and restated here because it bears on
+how every hash in this section should be read. `Cargo.toml`'s release profile keeps `debug = true`
+("kept for profiling the workspace's own crates"), so MSVC's `link.exe` embeds a build-specific PDB
+identifier in every relink; an ordinary `cargo build`/`cargo test` against `-p spatial-kernel` or
+`-p spatial-engine` — even one that recompiles only a new test file, with **zero** production source
+changed — relinks every `[[bin]]` and test artifact in that crate and changes its SHA-256. Observed
+directly across one piece's ordinary edit/compile cycle: `publish-bundle.exe`'s hash moved **three
+times** while `git diff --stat HEAD` stayed empty throughout. **Consequence, applied everywhere in this
+cut from phase 3 onward:** every harness/binary hash quoted in this cut's phases is **logged at the
+moment of use**, never asserted against a value recorded in an earlier piece — a hardcoded
+expected-hash assertion is self-defeating in this environment, because writing the newly observed value
+into source and recompiling to pick it up relinks the binary again and makes the just-written value
+wrong before the test can run once with it.
+
+## Obligations this cut discharges and creates
+
+- **Discharged:** `engine/README.md`'s unqualified "Until an index prunes actual IO, `ScanOnly` is the
+  preferred product plan" sentence is bound below, citing this section — pruning is a layout property
+  of the file's own physical row order (DuckDB's zone maps, no index required), not something an index
+  adds; `ScanOnly` remains the product plan, now with the measured bracket attached.
+- **Not created:** ADR-021 (import-time layout policy) is **not filed** — the gate failed, and the
+  preregistration §10 files it only "if — and only if — the gate passes." Its draft stands, unfiled,
+  with the architect, exactly where the preregistration leaves it.
+- **`docs/07` line 22's open item is answered, not edited here.** This cut is engine/kernel-only per
+  its own non-goals and does not edit `docs/`; the replacement text is queued for the human via
+  `DECISIONS-PENDING.md` at phase 10, by the custodian, not by this piece.
+
+## Reproducing this
+
+```bash
+# 0. The contract, committed before the harness or any number existed.
+#    kernel/IMPORT-LAYOUT-PREREGISTRATION.md   (commit 82cb44e)
+
+# 1. Build from clean, release only.
+cargo build --release -p spatial-engine -p spatial-kernel --tests --features fixture
+
+# 2. The 145 MB fixture matrix (9 files) plus the two prediction-2 rewrites.
+cargo test --release --features fixture -p spatial-engine --test import_layout_fixtures -- \
+  --ignored --exact generate_the_145mb_fixture_matrix --nocapture
+
+# 3. Correctness first: the digest-set condition across C/H/R, all viewports, n = 1.
+cargo test --release -p spatial-engine --features fixture --test import_layout_digest -- \
+  --ignored --exact the_cross_file_digest_correctness_pass --nocapture
+
+# 4. ADR-017 §12 publish determinism across layouts at 145 MB.
+cargo test --release -p spatial-kernel --test import_layout_publish_determinism -- \
+  --ignored --exact adr017_publish_determinism_across_layouts_at_145mb --nocapture
+
+# 5. The 145 MB factorial — reported, not gated.
+#    -> target/slice-evidence/import-layout/first-factorial-145mb.json
+cargo test --release -p spatial-kernel --test import_layout_factorial -- \
+  --ignored --exact the_145mb_factorial_pass --nocapture --test-threads=1
+
+# 6. The 5 GB file table: reuse C5/H5 from the first-batch cut iff hashes verify, write R5.
+cargo test --release --features fixture -p spatial-engine --test import_layout_5gb_fixtures -- \
+  --ignored --exact generate_the_5gb_fixture_set --nocapture
+
+# 7. THE GATE. 12 cells x n = 7 = 84 trials, near-quarter is the scored viewport.
+#    -> target/slice-evidence/import-layout/factorial-5gb.json
+cargo test --release -p spatial-kernel --test import_layout_factorial -- \
+  --ignored --exact the_5gb_scored_cells --nocapture --test-threads=1
+
+# 8. The 5 GB digest correctness pass — the gate's own digest condition.
+cargo test --release --features fixture -p spatial-engine --test import_layout_5gb_digest -- \
+  --ignored --exact the_5gb_cross_file_digest_correctness_pass --nocapture
+
+# 9. Cancellation, re-asserted with H5 (the clustered file) in the path — a property, not a cell.
+#    -> target/slice-evidence/import-layout/import-layout-cancel-h5.json
+cargo test --release -p spatial-kernel --test first_batch_factorial -- \
+  --ignored --exact cancellation_holds_with_pruning_in_the_path_on_h5 --nocapture
+```
+
+## Raw artifacts (`target/slice-evidence/import-layout/`, gitignored)
+
+`first-factorial-145mb.json` (the 145 MB factorial, 252 trial rows) · `factorial-5gb.json` (THE GATE,
+84 trial rows) · `fixtures-5gb.json` · `logs/digest-correctness*.{log,txt}` (145 MB) ·
+`logs/digest-correctness-5gb*.{log,txt}` (5 GB) · `import-layout-cancel-h5.json` (phase 8) · every
+phase's own console/run logs under `logs/` and the top level.
+
+## Instrument sources (committed)
+
+`kernel/IMPORT-LAYOUT-PREREGISTRATION.md` — the contract. `engine/src/layout.rs` — `ClusterOrder`,
+including the `Shuffled` variant this cut added. `kernel/tests/import_layout_factorial.rs` — the 145 MB
+and 5 GB scored harnesses. `engine/tests/import_layout_fixtures.rs`,
+`engine/tests/import_layout_5gb_fixtures.rs` — fixture generation. `engine/tests/import_layout_digest.rs`,
+`engine/tests/import_layout_5gb_digest.rs` — the correctness phases. `kernel/tests/import_layout_publish_determinism.rs`
+— ADR-017 §12. `kernel/tests/first_batch_factorial.rs` — extended with
+`cancellation_holds_with_pruning_in_the_path_on_h5` (phase 8), reusing that file's own `FileId::H5` and
+cancellation mechanism unchanged.
