@@ -2,7 +2,7 @@ import { Deck, OrthographicView, PickingInfo } from "@deck.gl/core";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
-import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSummary } from "../e2e-test-surface";
+import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   traceCanvasLifecycle,
@@ -77,6 +77,13 @@ export interface WorkingCanvasProps {
    * stream must be *cancelled*, and only the caller (which owns the `ViewportStreamManager`) can
    * reach the SKP `cancel` command -- see `App.tsx`'s handler. */
   onCanvasRefusal: (streamHandle: string, message: string) => void;
+  /** Fires only for `ResidentVertexCeilingExceeded` (never `PickCeilingExceeded`), alongside
+   * `onCanvasRefusal` above, not instead of it -- rider 1 (DECISIONS-PENDING.md entry 0, option
+   * (a)): the human's persistent "N of M features rendered — declared ceiling reached" status
+   * indicator, which needs a count `onCanvasRefusal`'s bare message string does not carry.
+   * `residentFeatureCount` is `ResidentSet.totalResidentFeatures` read at the moment of refusal --
+   * i.e. *before* the refused batch's own features, since a refused batch adds nothing. */
+  onResidentCeilingExceeded: (streamHandle: string, residentFeatureCount: number) => void;
   /** Fired after every settled view-state change (pan, zoom, or an origin recenter) with the
    * authoritative-CRS box the view now shows -- the caller drives `viewport_query` from this. */
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
@@ -99,14 +106,22 @@ function clampInt(v: number, lo: number, hi: number): number {
 /** E2E TEST SURFACE helper (e2e/README.md): turns a raw RGBA `readPixels` buffer into a summary
  * small enough to cross CDP as JSON, without the raw buffer itself ever leaving the page. Pure and
  * DOM-free so it needs no dev-only guard of its own -- the `capturePixels` hook registered below is
- * the only caller, and that registration is already gated. */
-function summarizePixels(buf: Uint8Array, width: number, height: number, regions: PixelRegion[]): PixelSummary {
+ * the only caller within this module, and that registration is already gated; exported (S6,
+ * reviewer round 2026-08-13) so `WorkingCanvas.test.ts` can assert the `samplePoint` logic directly
+ * against a small synthetic buffer, without a DOM/WebGL harness this package does not carry. */
+export function summarizePixels(buf: Uint8Array, width: number, height: number, regions: PixelRegion[]): PixelSummary {
   const totalPixels = width * height;
   let nonBackgroundCount = 0;
   let opaqueCount = 0;
-  // Keyed by each channel quantized to 16 levels (value >> 4); one exact sample pixel is kept per
-  // bin so `topColors` can report a real color, not a lossy quantized midpoint.
-  const bins = new Map<string, { count: number; sample: [number, number, number, number] }>();
+  // Keyed by each channel quantized to 16 levels (value >> 4); one exact sample pixel AND the
+  // drawing-buffer (x, y) it came from is kept per bin -- `topColors` reports the real color (not a
+  // lossy quantized midpoint), and the frame-wide `samplePoint` below reuses the same per-bin
+  // location for a real, read-back-confirmed hover target (2026-08-13) -- still one pass over `buf`,
+  // no second walk of the pixel buffer added for either purpose.
+  const bins = new Map<
+    string,
+    { count: number; sample: [number, number, number, number]; samplePoint: PixelSamplePoint }
+  >();
 
   for (let i = 0; i < totalPixels; i++) {
     const o = i * 4;
@@ -121,14 +136,20 @@ function summarizePixels(buf: Uint8Array, width: number, height: number, regions
     if (bin) {
       bin.count++;
     } else {
-      bins.set(key, { count: 1, sample: [r, g, b, a] });
+      // `i`'s row-major decomposition is in the same buffer-native, row-0-is-bottom convention
+      // `PixelRegion`'s own doc comment already declares -- this point is handed back exactly as
+      // read, in buffer pixels; converting to CSS page coordinates is the caller's job, not this
+      // module's (the E2E harness does that conversion itself, deliberately, per its own notes).
+      bins.set(key, { count: 1, sample: [r, g, b, a], samplePoint: { x: i % width, y: Math.floor(i / width) } });
     }
   }
 
-  const topColors: PixelColorCount[] = [...bins.values()]
-    .sort((x, y) => y.count - x.count)
-    .slice(0, 8)
-    .map(({ count, sample }) => ({ rgba: sample.join(","), count }));
+  const sortedBins = [...bins.values()].sort((x, y) => y.count - x.count);
+  const topColors: PixelColorCount[] = sortedBins.slice(0, 8).map(({ count, sample }) => ({ rgba: sample.join(","), count }));
+  const isBackgroundSample = (sample: [number, number, number, number]) =>
+    sample[0] === 0 && sample[1] === 0 && sample[2] === 0 && sample[3] === 0;
+  const densestNonBackgroundBin = sortedBins.find((bin) => !isBackgroundSample(bin.sample));
+  const overallSamplePoint: PixelSamplePoint | null = densestNonBackgroundBin ? densestNonBackgroundBin.samplePoint : null;
 
   const regionSummaries: PixelRegionSummary[] = regions.map((region) => {
     const x0 = clampInt(region.x * width, 0, width);
@@ -136,10 +157,18 @@ function summarizePixels(buf: Uint8Array, width: number, height: number, regions
     const x1 = clampInt((region.x + region.w) * width, x0, width);
     const y1 = clampInt((region.y + region.h) * height, y0, height);
     let regionNonBackground = 0;
+    let regionSamplePoint: PixelSamplePoint | null = null;
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
         const o = (y * width + x) * 4;
-        if (buf[o] !== 0 || buf[o + 1] !== 0 || buf[o + 2] !== 0 || buf[o + 3] !== 0) regionNonBackground++;
+        if (buf[o] !== 0 || buf[o + 1] !== 0 || buf[o + 2] !== 0 || buf[o + 3] !== 0) {
+          regionNonBackground++;
+          // First encountered wins -- no separate pass over this region's pixels beyond the one
+          // already computing `regionNonBackground`, and "any" non-background pixel is exactly
+          // what a hover target needs (unlike the frame-wide case above, a region small enough to
+          // be worth sampling has no dominant-background risk to guard against with a histogram).
+          if (regionSamplePoint === null) regionSamplePoint = { x, y };
+        }
       }
     }
     return {
@@ -149,14 +178,24 @@ function summarizePixels(buf: Uint8Array, width: number, height: number, regions
       h: region.h,
       nonBackgroundCount: regionNonBackground,
       totalPixels: (x1 - x0) * (y1 - y0),
+      samplePoint: regionSamplePoint,
     };
   });
 
-  return { width, height, totalPixels, nonBackgroundCount, opaqueCount, topColors, regions: regionSummaries };
+  return {
+    width,
+    height,
+    totalPixels,
+    nonBackgroundCount,
+    opaqueCount,
+    topColors,
+    regions: regionSummaries,
+    samplePoint: overallSamplePoint,
+  };
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, onHover, onCanvasRefusal, onViewportChanged },
+  { dataset, geometryColumn, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -186,6 +225,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onHoverRef.current = onHover;
   const onCanvasRefusalRef = useRef(onCanvasRefusal);
   onCanvasRefusalRef.current = onCanvasRefusal;
+  const onResidentCeilingExceededRef = useRef(onResidentCeilingExceeded);
+  onResidentCeilingExceededRef.current = onResidentCeilingExceeded;
   const onViewportChangedRef = useRef(onViewportChanged);
   onViewportChangedRef.current = onViewportChanged;
 
@@ -273,6 +314,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           if (e instanceof ResidentVertexCeilingExceeded || e instanceof PickCeilingExceeded) {
             logSessionEvent("canvas-refusal", e.message);
             onCanvasRefusalRef.current(streamHandle, e.message);
+            if (e instanceof ResidentVertexCeilingExceeded) {
+              // Read now, not after: `addBatch` above added nothing on refusal, so this is exactly
+              // "resident features at the moment of refusal" -- rider 1's own definition.
+              onResidentCeilingExceededRef.current(streamHandle, residentRef.current.totalResidentFeatures);
+            }
             return;
           }
           throw e;

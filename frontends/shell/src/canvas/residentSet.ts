@@ -32,10 +32,24 @@ export class DuplicateBatchError extends Error {
 export class ResidentSet {
   private batches: ResidentBatch[] = [];
   private totalVertices = 0;
+  /** Sum of `batch.ids.length` across every resident batch -- rows/features, not vertices. Kept in
+   * lockstep with `totalVertices` the same way: grown in `addBatch`, shrunk in `clearStream`, zeroed
+   * in `clear`. Added for rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent
+   * ceiling-refusal status indicator names "N of M features rendered", and a vertex count is not a
+   * feature count -- one refused batch can carry any number of vertices per feature. */
+  private totalFeatures = 0;
   private keys = new Set<string>();
 
   get totalResidentVertices(): number {
     return this.totalVertices;
+  }
+
+  /** Rows/features currently resident across every live stream -- what rider 1's status indicator
+   * reports as `residentFeatureCount` at the moment a batch is refused (this getter is read
+   * *before* the refused batch's own features are added, since `addBatch` adds nothing on
+   * refusal). */
+  get totalResidentFeatures(): number {
+    return this.totalFeatures;
   }
 
   getBatches(): readonly ResidentBatch[] {
@@ -60,6 +74,7 @@ export class ResidentSet {
     }
     this.batches.push(batch);
     this.totalVertices = attemptedTotal;
+    this.totalFeatures += batch.ids.length;
     this.keys.add(key);
   }
 
@@ -67,20 +82,24 @@ export class ResidentSet {
    * Batches from other streams are untouched. */
   clearStream(streamHandle: string): void {
     let removedVertices = 0;
+    let removedFeatures = 0;
     this.batches = this.batches.filter((b) => {
       if (b.streamHandle !== streamHandle) {
         return true;
       }
       removedVertices += b.totalVertices;
+      removedFeatures += b.ids.length;
       this.keys.delete(batchKey(b));
       return false;
     });
     this.totalVertices -= removedVertices;
+    this.totalFeatures -= removedFeatures;
   }
 
   clear(): void {
     this.batches = [];
     this.totalVertices = 0;
+    this.totalFeatures = 0;
     this.keys.clear();
   }
 }

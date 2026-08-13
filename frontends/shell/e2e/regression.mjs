@@ -29,6 +29,8 @@ const FIXTURE_100K = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough
 const FIXTURE_NO_CRS = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\no-crs-refused.parquet";
 const FIXTURE_MISSING_IDENTITY =
   "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\missing-identity-refused.parquet";
+const FIXTURE_OVER_CEILING =
+  "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\over-ceiling-refused.parquet";
 const REGEN_COMMAND = "cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture";
 
 // Verbatim from `engine/src/error.rs`'s `Display` impl (traced through `kernel/src/skp.rs`'s
@@ -223,6 +225,43 @@ function hasFreshRenderTraceMotion(entries, sinceCount) {
   return entries.length > sinceCount && entries.slice(sinceCount).some((e) => /view-state|viewport_query/.test(e.text));
 }
 
+/**
+ * 2026-08-13 fix (coordinator-authorized instrument round): converts one of `capturePixels`'s new
+ * `samplePoint` drawing-buffer coordinates to a CSS page point, deriving the scale from the actual
+ * buffer/box dimensions rather than assuming DPR -- `bufferWidth`/`bufferHeight` are
+ * `capturePixels`'s own `width`/`height` fields, which are literally `gl.drawingBufferWidth`/
+ * `gl.drawingBufferHeight` (`WorkingCanvas.tsx`'s `capturePixels` closure), not re-derived here.
+ * `flipY` toggles between the two plausible row-0 conventions -- WebGL's own `readPixels` spec says
+ * row 0 is the *bottom* of the buffer (the `flipY: true` case), but `stepA9` verifies this
+ * empirically per point rather than assuming it, per the coordinator's own note.
+ *
+ * Half-pixel centering (nit, reviewer round): `point.x`/`point.y` are integer buffer pixel
+ * *indices*, not fractional positions -- mapping index 0 straight through (`0 * scaleX`) lands
+ * exactly on the box's outer edge (for `flipY`, one full row *outside* the box, since the bottom
+ * edge is `canvasRect.top + canvasRect.height`, not a point inside it), not the centre of that
+ * pixel's own footprint, which is where a real mouse-move needs to land for deck.gl's own
+ * hit-testing to see the same pixel `capturePixels` read back. `+ 0.5` fixes that. Clamped into the
+ * box afterward as a floor/ceiling, not a correctness dependency of the centering itself -- every
+ * `point.x`/`point.y` this function is actually called with is a valid buffer index
+ * (`0..width-1`/`0..height-1`), so the clamp should never actually trigger.
+ */
+function bufferPointToCss(point, canvasRect, bufferWidth, bufferHeight, flipY) {
+  const scaleX = canvasRect.width / bufferWidth;
+  const scaleY = canvasRect.height / bufferHeight;
+  const cssX = canvasRect.left + (point.x + 0.5) * scaleX;
+  const cssY = flipY
+    ? canvasRect.top + canvasRect.height - (point.y + 0.5) * scaleY
+    : canvasRect.top + (point.y + 0.5) * scaleY;
+  return {
+    x: Math.min(canvasRect.left + canvasRect.width, Math.max(canvasRect.left, cssX)),
+    y: Math.min(canvasRect.top + canvasRect.height, Math.max(canvasRect.top, cssY)),
+  };
+}
+
+function samePoint(a, b) {
+  return !!a && !!b && a.x === b.x && a.y === b.y;
+}
+
 // ---------------------------------------------------------------------------------------
 // Steps. Each returns a short PASS note (string) or throws with a message naming its own
 // step ID (per-step `withTimeout` bounds every one of these, so a hang inside becomes a
@@ -373,7 +412,7 @@ async function stepA8(page, consoleHandle) {
   return `16 alternating pan/zoom gestures, no settle waits between; settled after=${settle.settled}; no refusal/banner; no too_many_pending_streams`;
 }
 
-async function stepA9(page) {
+async function stepA9(page, consoleHandle) {
   // Fresh grid, taken now (after A7''s re-fit *and* A8''s burst) -- never A4''s, which is
   // stale the moment A5'-A8' start moving the camera (the piece's own ordering note).
   const grid = await page.evaluate((regions) => window.__SPATIAL_E2E__.capturePixels(regions), gridRegions());
@@ -387,21 +426,84 @@ async function stepA9(page) {
     if (fractions[i] > fractions[denseIdx]) denseIdx = i;
     if (fractions[i] < fractions[emptyIdx]) emptyIdx = i;
   }
+  let secondDenseIdx = -1;
+  for (let i = 0; i < fractions.length; i++) {
+    if (i === denseIdx) continue;
+    if (secondDenseIdx === -1 || fractions[i] > fractions[secondDenseIdx]) secondDenseIdx = i;
+  }
   if (fractions[denseIdx] <= 0) {
     throw new Error(
       `A9': no non-background grid cell to hover (fractions: ${fractions.map((f) => (f * 100).toFixed(1) + "%").join(", ")})`
     );
   }
 
-  const densePoint = bufferRegionToCss(grid.regions[denseIdx], rect, 0.5, 0.5);
-  await page.mouse.move(densePoint.x, densePoint.y);
-  const appeared = await waitForCondition(
-    () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
-    (text) => text !== null && /^id \d+/.test(text),
-    15_000
-  );
-  if (!appeared.ok) {
-    throw new Error(`A9': .hover-readout did not appear with text matching /^id \\d+/ within 15000ms (last seen: ${JSON.stringify(appeared.last)})`);
+  // 2026-08-13 fix: deterministic, read-back-verified targets from `capturePixels`'s new
+  // `samplePoint` field, not a heuristic cell-center guess (the failure mode traced to a prior
+  // A9' run's own ledger: full delivery, no errors, a guessed center landing in a gap between
+  // parcels). Up to 3 distinct candidates, each tried under both plausible row-0 conventions.
+  const candidates = [];
+  const pushCandidate = (point) => {
+    if (point && !candidates.some((c) => samePoint(c, point))) candidates.push(point);
+  };
+  pushCandidate(grid.regions[denseIdx].samplePoint);
+  pushCandidate(grid.samplePoint);
+  if (secondDenseIdx >= 0 && fractions[secondDenseIdx] > 0) {
+    pushCandidate(grid.regions[secondDenseIdx].samplePoint);
+  }
+  if (candidates.length === 0) {
+    throw new Error(
+      "A9': every candidate region reported a non-background fraction > 0 but no samplePoint -- capturePixels contract violated"
+    );
+  }
+
+  let found = null;
+  const attempts = [];
+  // `candidates` is already capped at 3 entries by `pushCandidate`'s own three call sites above
+  // (dense region, frame-wide, second-densest region) -- no `.slice(0, 3)` needed here; a prior
+  // version had one, dead (it could never actually truncate anything).
+  outer: for (const point of candidates) {
+    for (const flipY of [true, false]) {
+      const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
+      const attemptStart = Date.now();
+      await page.mouse.move(css.x, css.y);
+      const result = await waitForCondition(
+        () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
+        (text) => text !== null && /^id \d+/.test(text),
+        5_000
+      );
+      attempts.push({ point, flipY, css, ok: result.ok, last: result.last, attemptStart });
+      if (result.ok) {
+        found = { point, flipY, css, text: result.last };
+        break outer;
+      }
+    }
+  }
+
+  if (!found) {
+    // Per the coordinator's own escalation: exhausting every read-back-verified non-background
+    // pixel is no longer an instrument miss, it is evidence of a genuine pick/hover defect (deck
+    // picking layer vs fill rendering divergence) -- gather everything the report needs. The
+    // `topColors` cross-reference is best-effort, named as such: the densest-non-background bin a
+    // `samplePoint` was drawn from is *usually*, not provably, still in a fresh recapture's top 8.
+    const recapture = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()).catch(() => null);
+    const nonBackgroundColor =
+      recapture?.topColors?.find((c) => c.rgba !== "0,0,0,0")?.rgba ?? "(none found in a fresh top-8 recapture)";
+    const windowStart = attempts[0]?.attemptStart ?? Date.now();
+    const traceWindow = consoleHandle.entries.filter((e) => e.at >= windowStart).map((e) => `[${e.kind}/${e.type}] ${e.text}`);
+    const attemptLines = attempts
+      .map(
+        (a, i) =>
+          `  #${i + 1} buffer(${a.point.x},${a.point.y}) flipY=${a.flipY} -> css(${a.css.x.toFixed(1)},${a.css.y.toFixed(1)}): ${
+            a.ok ? "HIT" : `miss (last seen: ${JSON.stringify(a.last)})`
+          }`
+      )
+      .join("\n");
+    throw new Error(
+      `A9': .hover-readout never appeared over any of ${attempts.length} read-back-verified non-background pixel attempts:\n` +
+        `${attemptLines}\n` +
+        `best-effort non-background color from a fresh recapture: ${nonBackgroundColor}\n` +
+        `console/trace entries from the wait window (${traceWindow.length}):\n${traceWindow.join("\n")}`
+    );
   }
 
   const emptyPoint = bufferRegionToCss(grid.regions[emptyIdx], rect, 0.08, 0.08);
@@ -415,7 +517,11 @@ async function stepA9(page) {
     throw new Error(`A9': .hover-readout did not disappear over the emptiest cell within 15000ms (last seen: ${JSON.stringify(gone.last)})`);
   }
 
-  return `hovered densest cell (#${denseIdx}, ${(fractions[denseIdx] * 100).toFixed(1)}%) -> "${appeared.last}"; moved to emptiest cell (#${emptyIdx}, ${(fractions[emptyIdx] * 100).toFixed(1)}%) -> hover-readout gone`;
+  return (
+    `hovered a verified non-background pixel (buffer ${found.point.x},${found.point.y}, flipY=${found.flipY}, ` +
+    `css ${found.css.x.toFixed(1)},${found.css.y.toFixed(1)}) after ${attempts.length} attempt(s) -> "${found.text}"; ` +
+    `moved to emptiest cell (#${emptyIdx}, ${(fractions[emptyIdx] * 100).toFixed(1)}%) -> hover-readout gone`
+  );
 }
 
 async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMessage) {
@@ -455,23 +561,139 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
   return `refused ${expectedCode}; message verbatim; cut-2 note present; no dismiss button on the panel; no describe-summary`;
 }
 
+/**
+ * Rider 1 of the human's 2026-08-13 entry-0 decision (`DECISIONS-PENDING.md`, option (a)): the
+ * declared `MAX_RESIDENT_VERTICES` ceiling is a designed refusal, not a bug (`limits.ts`: refuse,
+ * never silently evict), and it deserves its own deliberate acceptance step rather than the happy
+ * path accidentally tripping it. `over-ceiling-refused.parquet` is a VALID GeoParquet file -- the
+ * refusal is render-side (mid-stream, once resident vertices would cross the ceiling), never
+ * admission-side, so `openPath` must return `{kind:"admitted"}` here, not `{kind:"refused"}`.
+ *
+ * The core assertion is rider 1's own words, quoted in `App.tsx`'s `nextResidencyStatus` doc
+ * comment: "dismiss hides the banner, never the status indicator" -- `.canvas-refusal`'s Dismiss
+ * button only ever calls `setCanvasRefusal(null)`; `.residency-status` clears only on a later full
+ * delivery or a dataset change (asserted separately, by `REOPEN'` immediately after this step).
+ */
+async function stepOverCeiling(page, consoleHandle) {
+  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_OVER_CEILING);
+  if (outcome.kind !== "admitted") {
+    throw new Error(
+      `OVERCEIL': openPath(over-ceiling fixture) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"} -- ` +
+        `this fixture is a VALID file; the refusal is render-side, not admission-side`
+    );
+  }
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+
+  const before = await page.evaluate(() => ({
+    canvasRefusalText: document.querySelector(".canvas-refusal")?.textContent ?? null,
+    residencyStatusText: document.querySelector(".residency-status")?.textContent ?? null,
+  }));
+  if (before.canvasRefusalText === null) {
+    throw new Error(`OVERCEIL': .canvas-refusal not present after admitting the over-ceiling fixture (settled=${settle.settled})`);
+  }
+  if (before.residencyStatusText === null) {
+    throw new Error(`OVERCEIL': .residency-status not present after admitting the over-ceiling fixture (settled=${settle.settled})`);
+  }
+  // Plain digits, no thousands separators -- `App.tsx`'s own `ResidencyStatus` doc comment:
+  // `datasetRowCount` is a wire `DecU64` string, never narrowed to `Number`. `100000` here is a
+  // literal, not a variable, because this fixture shares the happy path's exact `features:
+  // 100_000` spec (`manual_walkthrough_fixtures.rs`'s own doc comment on the generator).
+  const statusPattern = /^(\d+) of 100000 features rendered — declared ceiling reached \(MAX_RESIDENT_VERTICES\)$/;
+  const match = statusPattern.exec(before.residencyStatusText);
+  if (!match) {
+    throw new Error(
+      `OVERCEIL': .residency-status text did not match the expected pattern. Actual: ${JSON.stringify(before.residencyStatusText)}`
+    );
+  }
+  const renderedCount = Number(match[1]);
+
+  const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
+  const frac = fractionOf(pixels);
+  if (frac <= 0.02) {
+    throw new Error(
+      `OVERCEIL': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% -- expected most features to have rendered before the ceiling refusal (rendered count per the status line: ${renderedCount})`
+    );
+  }
+
+  const clicked = await page.evaluate(() => {
+    const btn = document.querySelector(".canvas-refusal button");
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  if (!clicked) throw new Error("OVERCEIL': no Dismiss button found inside .canvas-refusal to click");
+
+  const after = await page.evaluate(() => ({
+    canvasRefusalPresent: document.querySelector(".canvas-refusal") !== null,
+    residencyStatusText: document.querySelector(".residency-status")?.textContent ?? null,
+  }));
+  if (after.canvasRefusalPresent) {
+    throw new Error("OVERCEIL': .canvas-refusal still present after clicking its Dismiss button");
+  }
+  if (after.residencyStatusText === null) {
+    throw new Error(
+      'OVERCEIL\': .residency-status disappeared after dismissing the banner -- rider 1\'s core claim ' +
+        '("dismiss hides the banner, never the status indicator") violated'
+    );
+  }
+  if (after.residencyStatusText !== before.residencyStatusText) {
+    throw new Error(
+      `OVERCEIL': .residency-status text changed across the Dismiss click. Before: ${JSON.stringify(before.residencyStatusText)}, after: ${JSON.stringify(after.residencyStatusText)}`
+    );
+  }
+
+  return (
+    `admitted (render-side refusal, not admission-side); .canvas-refusal and .residency-status both present after settle; ` +
+    `${renderedCount} of 100000 features rendered (${(frac * 100).toFixed(1)}% pixels non-bg); ` +
+    `Dismiss removed the banner but .residency-status remained: "${after.residencyStatusText}"`
+  );
+}
+
 async function stepReopen(page, consoleHandle) {
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_100K);
   if (outcome.kind !== "admitted") {
-    throw new Error(`REOPEN': expected {kind:"admitted"} reopening the 100k fixture from a refused state, got ${JSON.stringify(outcome)}`);
+    throw new Error(`REOPEN': expected {kind:"admitted"} reopening the 100k fixture, got ${JSON.stringify(outcome)}`);
+  }
+  // Rider 1 (DECISIONS-PENDING.md entry 0): `admitAndResetStaleUiState`'s "dataset-changed"
+  // transition unconditionally nulls `residencyStatus` on every admission -- this reopen runs
+  // immediately after `OVERCEIL'` left `.residency-status` present (deliberately, post-Dismiss),
+  // so it is that transition's own assertion: a dataset change, not a banner dismiss, is what
+  // must clear it. Checked before `waitForSettle` below, with no separate wait -- but not because
+  // the reset itself is synchronous end-to-end: `setResidencyStatus(null)` is a synchronous JS
+  // *call*, but React's own commit (re-rendering and actually updating the DOM) is not synchronous
+  // with it -- React 18 flushes a batch of updates at the next microtask checkpoint, even outside
+  // an event handler. What makes checking immediately safe is the `await page.evaluate(...)` this
+  // line already crossed: a CDP round trip (browser IPC, not an in-page call) cannot resolve
+  // before at least one full microtask checkpoint on the page has passed, so by the time this
+  // step's own next `page.evaluate` below runs, React's commit is certainly already done -- the
+  // ordering guarantee comes from the round trip already paid for above, not from the setter call
+  // being synchronous. A still-present status at this point would be the state surviving the wrong
+  // event, not a timing gap this script failed to wait out.
+  const residencyStatusAfterReopen = await page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null);
+  if (residencyStatusAfterReopen !== null) {
+    throw new Error(
+      `REOPEN': .residency-status still present after reopening the happy-path fixture (a dataset change must clear it, not just a banner dismiss). Text: ${JSON.stringify(residencyStatusAfterReopen)}`
+    );
   }
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
-  // `WorkingCanvas` is keyed on `admitted.dataset` (`App.tsx`'s D4 fix -- ADR-010 rule 1 and the
-  // 2,012,436 = 1,961,249 + 51,187 evidence it fixes): `open_dataset` mints a fresh dataset handle
-  // on every call, this fixture included on a reopen, so React fully unmounts the previous
-  // `WorkingCanvas` instance and mounts a new one -- a fresh `ResidentSet`, a fresh
-  // `hasAutoFitRef` (starting `false` again), a fresh `OffsetFrame`. The one-shot
-  // auto-fit-on-open therefore fires again on *this* reopen, the same as it did for A4', so
-  // clicking "Zoom to layer" below is no longer load-bearing for correctness -- kept anyway
-  // because it is cheap and exercises the same affordance A7' already covers. The assertion
-  // right below this comment, not the click that follows it, is what actually checks the D4 fix:
-  // a still-broken reopen (the old, unkeyed canvas reconciling stale residency into the new
-  // dataset) would banner a ceiling refusal here, before any click.
+  // `WorkingCanvas` is keyed on `admitted.dataset` (`App.tsx`'s D4 fix, ADR-010 rule 1: a new
+  // dataset is a new frame/identity space, so every canvas ref built against the old one must
+  // reset, not survive as an untagged carryover -- see `App.tsx`'s own key comment for the
+  // 2026-08-13 correction to what this fix's original evidence sentence claimed, since refuted:
+  // "2,012,436 = the old dataset's still-resident 1,961,249 + the new dataset's first batch" was
+  // never actually true -- both numbers were the *same* stream's own partial sum at its own
+  // refusal moment (a stream then cancelled), not two different datasets' residency. The remount
+  // itself was never resting on that arithmetic and stays correct regardless.
+  //
+  // `open_dataset` mints a fresh dataset handle on every call, this fixture included on a reopen,
+  // so React fully unmounts the previous `WorkingCanvas` instance and mounts a new one -- a fresh
+  // `ResidentSet`, a fresh `hasAutoFitRef` (starting `false` again), a fresh `OffsetFrame`. The
+  // one-shot auto-fit-on-open therefore fires again on *this* reopen, the same as it did for A4',
+  // so clicking "Zoom to layer" below is no longer load-bearing for correctness -- kept anyway
+  // because it is cheap and exercises the same affordance A7' already covers. The assertion right
+  // below this comment, not the click that follows it, is what actually checks the remount fix: a
+  // still-broken reopen (the old, unkeyed canvas reconciling stale residency into the new dataset)
+  // would banner a ceiling refusal here, before any click.
   await assertNoRefusalOrBanner(page, "REOPEN' (before Zoom to layer)");
   await page.evaluate(() => {
     const btn = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Zoom to layer"));
@@ -481,9 +703,9 @@ async function stepReopen(page, consoleHandle) {
   const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   const frac = fractionOf(pixels);
   if (frac <= 0.02) {
-    throw new Error(`REOPEN': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% after reopening from refused state (settled=${settle.settled})`);
+    throw new Error(`REOPEN': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% after reopening (settled=${settle.settled})`);
   }
-  return `reopened 100k fixture from refused state -> admitted; canvas ${(frac * 100).toFixed(1)}% non-bg after settle`;
+  return `reopened 100k fixture -> admitted; .residency-status cleared immediately (dataset change, not Dismiss); canvas ${(frac * 100).toFixed(1)}% non-bg after settle`;
 }
 
 async function stepNet(page, badResponses) {
@@ -514,6 +736,7 @@ async function main() {
     ["100k happy path", FIXTURE_100K],
     ["no CRS", FIXTURE_NO_CRS],
     ["missing identity", FIXTURE_MISSING_IDENTITY],
+    ["over-ceiling (deliberate)", FIXTURE_OVER_CEILING],
   ]) {
     if (!existsSync(path)) {
       console.error(`regression: ${label} fixture not found: ${path}`);
@@ -583,11 +806,15 @@ async function main() {
     await runStep("A5'/A6'", 60_000, () => stepA5A6(page, consoleHandle));
     await runStep("A7'", 60_000, () => stepA7(page, consoleHandle));
     await runStep("A8'", 45_000, () => stepA8(page, consoleHandle));
-    await runStep("A9'", 40_000, () => stepA9(page));
+    // Up to 3 candidate points x 2 orientations x 5s bounded wait each = 30s worst case, plus the
+    // grid capture and the empty-space half -- 60s gives comfortable headroom without masking a
+    // genuine hang (the per-candidate 5s bound is what actually limits any single wait).
+    await runStep("A9'", 60_000, () => stepA9(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () => stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE));
     await runStep("C2'/C3'", 30_000, () =>
       stepRefusal(page, "C2'/C3'", FIXTURE_MISSING_IDENTITY, "engine.identity_unusable", IDENTITY_UNUSABLE_MESSAGE)
     );
+    await runStep("OVERCEIL'", 60_000, () => stepOverCeiling(page, consoleHandle));
     await runStep("REOPEN'", 60_000, () => stepReopen(page, consoleHandle));
 
     // Final sweep, not just A8''s own point-in-time check: "anywhere in the run" includes

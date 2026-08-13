@@ -4,11 +4,15 @@ import type { ResidentBatch } from "./decodeBatch";
 import { MAX_RESIDENT_VERTICES, ResidentVertexCeilingExceeded } from "./limits";
 import { DuplicateBatchError, ResidentSet } from "./residentSet";
 
-function batch(streamHandle: string, batchSeq: number, totalVertices: number): ResidentBatch {
+function batch(streamHandle: string, batchSeq: number, totalVertices: number, featureCount = 1): ResidentBatch {
+  const ids = new BigUint64Array(featureCount);
+  for (let i = 0; i < featureCount; i++) {
+    ids[i] = BigInt(batchSeq) * 1000n + BigInt(i);
+  }
   return {
     streamHandle,
     batchSeq,
-    ids: BigUint64Array.from([BigInt(batchSeq)]),
+    ids,
     rings: [[[[0, 0]]]],
     totalVertices,
   };
@@ -78,5 +82,41 @@ describe("ResidentSet", () => {
     set.addBatch(batch("sh_a", 0, 100));
     set.clear();
     expect(() => set.addBatch(batch("sh_a", 0, 50))).not.toThrow();
+  });
+
+  // Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent ceiling-refusal status
+  // indicator names "N of M features rendered", which needs a row/feature count -- distinct from
+  // `totalResidentVertices`, since one refused batch's vertex delta says nothing about how many
+  // features it carried.
+  describe("totalResidentFeatures", () => {
+    it("accumulates row/feature counts across batches and streams", () => {
+      const set = new ResidentSet();
+      set.addBatch(batch("sh_a", 0, 100, 3));
+      set.addBatch(batch("sh_b", 0, 200, 5));
+      expect(set.totalResidentFeatures).toBe(8);
+    });
+
+    it("a batch refused for exceeding MAX_RESIDENT_VERTICES contributes nothing -- the count read at refusal time is exactly what was resident before it", () => {
+      const set = new ResidentSet();
+      set.addBatch(batch("sh_a", 0, MAX_RESIDENT_VERTICES - 10, 97_500));
+      expect(() => set.addBatch(batch("sh_a", 1, 11, 2_500))).toThrow(ResidentVertexCeilingExceeded);
+      expect(set.totalResidentFeatures).toBe(97_500);
+    });
+
+    it("clearStream drops only the named stream's feature share", () => {
+      const set = new ResidentSet();
+      set.addBatch(batch("sh_a", 0, 100, 3));
+      set.addBatch(batch("sh_a", 1, 50, 2));
+      set.addBatch(batch("sh_b", 0, 200, 7));
+      set.clearStream("sh_a");
+      expect(set.totalResidentFeatures).toBe(7);
+    });
+
+    it("clear() resets it to 0", () => {
+      const set = new ResidentSet();
+      set.addBatch(batch("sh_a", 0, 100, 4));
+      set.clear();
+      expect(set.totalResidentFeatures).toBe(0);
+    });
   });
 });

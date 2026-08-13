@@ -32,9 +32,22 @@ export interface PixelColorCount {
   count: number;
 }
 
+/** A drawing-buffer pixel coordinate (WebGL's own `readPixels` origin, bottom-left -- same
+ * convention `PixelRegion` uses), confirmed non-background at capture time by the same pass that
+ * produced the summary carrying it -- 2026-08-13, so an E2E hover assertion can target a real,
+ * read-back-verified point instead of a heuristic cell-center guess that can land in a gap between
+ * rendered features (the failure mode a prior A9' run traced to). */
+export interface PixelSamplePoint {
+  x: number;
+  y: number;
+}
+
 export interface PixelRegionSummary extends PixelRegion {
   nonBackgroundCount: number;
   totalPixels: number;
+  /** The first non-background pixel encountered scanning this region, or `null` if
+   * `nonBackgroundCount` is 0 -- always non-null whenever `nonBackgroundCount > 0`. */
+  samplePoint: PixelSamplePoint | null;
 }
 
 export interface PixelSummary {
@@ -48,6 +61,10 @@ export interface PixelSummary {
   /** Up to 8 entries, most-populous bin first, from a 16-level-per-channel coarse histogram. */
   topColors: PixelColorCount[];
   regions: PixelRegionSummary[];
+  /** The sample pixel belonging to the densest histogram bin that is not the exact background
+   * color (`0,0,0,0`), or `null` if every pixel in the frame is background. Distinct from any
+   * single region's own `samplePoint`: this is frame-wide, not scoped to a `PixelRegion`. */
+  samplePoint: PixelSamplePoint | null;
 }
 
 export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };

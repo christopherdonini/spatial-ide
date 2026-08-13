@@ -128,13 +128,43 @@ body,
   pointer-events: none;
 }
 
-.canvas-refusal {
+/* S1 fix (reviewer round, 2026-08-13): `.canvas-refusal` and `.residency-status` used to be two
+   independently absolute-positioned elements at fixed offsets -- `.residency-status`'s old fixed
+   `top: 3.25rem` assumed `.canvas-refusal` never grew past ~2.75rem tall, which a wrapped (2+
+   line) refusal message violated, occluding the status underneath it (`.residency-status` has no
+   `z-index` of its own and is the *earlier* sibling in paint order either way). Both are now
+   children of this single flex column (`App.tsx`'s `.canvas-status-stack`), top-anchored where
+   `.canvas-refusal` alone used to be, stacking in normal document flow -- each child's actual
+   rendered height, whatever it is, is what the next one below it respects, never a number guessed
+   in advance. Stays clear of `.hover-readout` (bottom-left) and `.zoom-to-layer` (top-right)
+   exactly as before. */
+.canvas-status-stack {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
   right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.canvas-refusal {
   padding: 0.5rem 0.75rem;
   background: #4a0f0f;
   color: #fff;
   border-radius: 4px;
+}
+
+/* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent, non-dismissible
+   ceiling-refusal status -- distinct from `.canvas-refusal` above (the loud, dismissible event) so
+   dismissing the banner can never hide this. A `.canvas-status-stack` child now (see its own
+   comment above), not independently positioned. */
+.residency-status {
+  padding: 0.35rem 0.6rem;
+  background: rgba(74, 15, 15, 0.85);
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  pointer-events: none;
 }

@@ -59,12 +59,26 @@ one `e2e/regression.mjs`'s own summary table prints. "Does not cover" only lists
 numbered walkthrough step *claims* that the script cannot assert — not everything a script could
 never know.
 
-**Status as of 2026-08-12: this suite is currently RED on `A5'`–`A9'`.** A queued, unresolved shell
-defect (`DECISIONS-PENDING.md` entry 0 — a spurious resident-vertex-ceiling refusal, reproduced
-deterministically across three verified-fresh launches) trips early in every run and its banner
-never clears, so every later banner-absence assertion fails identically. "Covers" below names what
-each step *asserts when it passes*, not that it currently does — read a fresh run's own output for
-current status, not this table.
+**Status as of 2026-08-13: GREEN** — confirmed by a real run of the exact committed tree
+(`e2e/out/regression-render-trace-1786583532688.json`, 2026-08-13: all 12 steps PASS). The
+2026-08-12 RED status this replaces was diagnosed, not merely observed: `DECISIONS-PENDING.md`
+entry 0 found the *fixture itself* — not the shell — carrying a true ring-vertex total over the
+declared `MAX_RESIDENT_VERTICES` ceiling by construction: the `avg_vertices: 24` spec the happy-path
+fixture originally carried has a true total of **2,508,699 vertices, 25.4% over the 2,000,000
+ceiling** (client-decoded and writer-side counts agree bit-identically — there is no separate metric
+to reconcile), so the happy path tripped a designed ceiling refusal on every first load instead of
+demonstrating a clean one. (A different, smaller number — 2,012,436 — was misread at the time as
+this fixture's true total; the run ledger cited above resolved it as a truncated partial sum a
+since-cancelled stream carried at the shell's own refusal moment, 1,961,249 already resident +
+51,187 attempted, never a file total.) Resolved 2026-08-13 by the human's option (a), entry 0: the
+happy-path fixture is regenerated under the ceiling (`avg_vertices: 18`, true total 1,885,130 —
+114,870 vertices / 5.7% of headroom below the ceiling, not the ~25% a casual reading of the old
+`avg_vertices: 24` spec's shortfall might suggest — still the same `features: 100_000` figure
+docs/07 and this suite both name, no change to any `A3'` assertion), and the ceiling refusal itself
+gets its own deliberate acceptance step (`OVERCEIL'`, Part D below) against a new, purpose-built
+over-ceiling fixture (true total 2,508,699, the same spec the happy path used to carry; its own
+refusal lands at 78,191 of 100,000 features, 78.19%), instead of the happy path accidentally
+exercising it. "Covers" below names what each step *asserts when it passes*.
 
 | Automated step | Walkthrough step(s) | Covers | Does not cover |
 |---|---|---|---|
@@ -77,7 +91,8 @@ current status, not this table.
 | `A9'` | A9 | a `.hover-readout` matching `id <number>` appears over a feature (located from real pixel data, not a guessed coordinate) and disappears over empty space | the `@ (x.xxx, y.xxx)` coordinate suffix's formatting; that the id changes between two specific, different polygons |
 | `B2'`/`B3'` | B2, B3 | `openPath` refuses with `engine.crs_undeclared`; the panel shows that code, the verbatim message, the cut-2 remediation note, no dismiss control, and `.describe-summary` is absent (the "no summary" half of B2's own claim) | "no canvas change" (B2's other half) — that a canvas already showing a previously-admitted dataset is left pixel-for-pixel untouched by this refusal is not asserted |
 | `C2'`/`C3'` | C2, C3 | same, for `engine.identity_unusable` | same as B2'/B3' above |
-| `REOPEN'` | the "works from any state" claim in this doc's own prose (not a numbered step) | one of the three claimed states specifically: reopening *from a refused state* admits, with no stale refusal banner present beforehand, and the canvas is non-blank after settle | reopening from *idle* (never having admitted anything) or from *already-admitted* (reopening over a still-showing canvas, no refusal in between) — the other two states the prose claims but this step does not exercise |
+| `OVERCEIL'` | D1, D2, D3 | `openPath` admits the over-ceiling fixture (`{kind:"admitted"}`, not a refusal — D1); after settle, both `.canvas-refusal` and `.residency-status` are present, the latter matching the exact `<N> of 100000 features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)` pattern, and pixels are non-blank (D2); clicking the banner's Dismiss removes `.canvas-refusal` but leaves `.residency-status` present with unchanged text (D3, rider 1's core claim) | that "most parcels render" is actually ~97.5% or any other specific proportion — only "pixels non-blank, >2%" and the status line's own reported count are checked, not a match against a human-observed percentage; look-and-feel (does the red banner *look* alarming, does the status line read as legible/persistent to a human) |
+| `REOPEN'` | the "works from any state" claim in this doc's own prose (not a numbered step); also D4's re-render/status-clear half | reopening the happy-path fixture (run immediately after `OVERCEIL'`, so from an *already-admitted*, ceiling-degraded state, not a refused one) admits, `.residency-status` is absent immediately (a dataset change clears it — D4, entry 0 rider 1, asserted before `.canvas-refusal` is even checked), no stale refusal banner is present, and the canvas is non-blank after settle | reopening from *idle* (never having admitted anything) or immediately after a *refused* state (B2'/C2' leave AdmissionPanel refused, but `OVERCEIL'` now runs — and re-admits — in between) — the other two states the prose claims but this step's current position in the run does not exercise directly |
 | `NET'` | — (informational, not a walkthrough claim) | whether any `>=400` HTTP response was observed during the run | — this row exists only because `regression.mjs`'s own summary table prints a `NET'` row; it names no walkthrough step and asserts nothing that fails the run |
 
 A10 (close the window; no crash, no hang) has no automated counterpart at all — a CDP-attached
@@ -91,18 +106,19 @@ assert anything else.
   `localhost:5180`, not Tauri's default 1420 — 1420 falls inside this machine's Windows
   excluded-port range (1335-1434), the same finding the ADR-003 spike recorded. Nothing to do
   here; named in case a bind failure ever needs explaining.
-- The three fixture files below, generated by `kernel/tests/manual_walkthrough_fixtures.rs`
+- The four fixture files below, generated by `kernel/tests/manual_walkthrough_fixtures.rs`
   (`cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture`
   regenerates them from the committed generator if they are missing — nothing about the fixture
   *files* is committed, only the code that writes them, matching every other fixture in this repo).
 
 | Fixture | Path | Purpose |
 |---|---|---|
-| 100k happy path | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\100k-happy-path.parquet` | Part A — the ordinary admitted case, no refusal anywhere |
+| 100k happy path | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\100k-happy-path.parquet` | Part A — the ordinary admitted case, no refusal anywhere; regenerated 2026-08-13 (`avg_vertices: 18`, entry 0 option (a)) to stay under `MAX_RESIDENT_VERTICES` — same `features: 100_000` |
 | No CRS | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\no-crs-refused.parquet` | Part B — `engine.crs_undeclared` |
 | Missing identity | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\missing-identity-refused.parquet` | Part C — `engine.identity_unusable` |
+| Over-ceiling (deliberate) | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\over-ceiling-refused.parquet` | Part D — a valid, admitting file whose true vertex total is deliberately kept over `MAX_RESIDENT_VERTICES` (entry 0 option (a), rider 1): the same `features: 100_000, avg_vertices: 24` spec the happy path used to carry, regenerated by `generate_the_over_ceiling_refusing_fixture` (same regeneration command as the row above) |
 
-All three open the same running app instance in sequence — no relaunch needed between parts;
+All four open the same running app instance in sequence — no relaunch needed between parts;
 clicking **Open GeoParquet…** again works from any state (idle, refused, or already admitted).
 
 ---
@@ -142,6 +158,22 @@ hover never populates, the app hangs or crashes): stop, record the exact step an
 | C2 | Select `missing-identity-refused.parquet` and confirm. | A red-bordered refusal panel appears showing the code `engine.identity_unusable` and the message **"refused: `id` cannot serve as stable feature identity — the file has no such column, and no identity mapping was declared. Stable per-feature identity is required (docs/11); declare a mapping to a column that carries it. Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"** (verbatim). |
 | C3 | Read the panel fully. | The same cut-2 remediation note as Part B appears (declaring an identity-mapping column is cut-2 work). |
 
+## Part D — deliberate ceiling refusal (over-ceiling fixture)
+
+Entry 0's rider 1 (`DECISIONS-PENDING.md`, the human's 2026-08-13 option-(a) decision): the declared
+`MAX_RESIDENT_VERTICES` ceiling is designed behavior (`limits.ts`: refuse, never silently evict or
+tile), and deserves its own deliberate acceptance step — this fixture's true vertex total is kept
+over the ceiling on purpose, unlike the happy-path fixture above.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| D1 | Click **Open GeoParquet…** and select `over-ceiling-refused.parquet`. | The button briefly reads "Opening…", then a summary appears exactly as A3 does — this file is valid and admits normally, including row count `100000 (...)`. No refusal panel appears at this stage: the refusal below is render-side, not admission-side. |
+| D2 | Observe the canvas area. | Most parcels render (delivery streams in and renders for a while before the ceiling trips partway through). A red-bordered refusal banner appears, naming the stream that carried the ceiling-breaching batch, cancelled — **and** a persistent status line also appears reading `<N> of 100000 features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`, where `<N>` is however many features were actually resident at the moment of refusal. |
+| D3 | Click **Dismiss** on the red banner. | The banner disappears. **The status line remains, unchanged.** This is the acceptance point rider 1 exists for: an incomplete-render state must stay visible for as long as it actually holds, independent of whether the operator has acknowledged the one-time banner event — dismissing the banner is not the same act as the render becoming complete. |
+| D4 | Click **Open GeoParquet…** again and select `100k-happy-path.parquet`. | The canvas re-renders fully (this fixture is under the ceiling by construction, entry 0 option (a)) and the status line disappears — a dataset change clears it unconditionally (`nextResidencyStatus`'s `"dataset-changed"` transition), the same as any other reopen. |
+
+**If anything deviates:** stop, record the exact step, and report it, same as Parts A–C.
+
 ---
 
 ## Result log
@@ -154,3 +186,4 @@ Fill in after running the script above.
 - **Part A (A1–A10):** pass / fail — deviations: _______________
 - **Part B (B1–B3):** pass / fail — deviations: _______________
 - **Part C (C1–C3):** pass / fail — deviations: _______________
+- **Part D (D1–D4):** pass / fail — deviations: _______________
