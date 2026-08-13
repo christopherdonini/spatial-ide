@@ -1,11 +1,21 @@
 # ADR-021 — A Row Filter on `viewport_query` (SKP v0.1)
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. Implemented ahead
-of acceptance under already-accepted ADR-004's license and within `docs/07`'s Prototype hero-slice
-scope, the ADR-019/ADR-020 precedent (both were implemented as Proposed code before their own
+**Status:** **Accepted — 2026-08-13, by the human**, carrying the acceptance condition below.
+Immutable from this acceptance; corrections are dated corrigenda. It was implemented ahead of
+acceptance under already-accepted ADR-004's license and within `docs/07`'s Prototype hero-slice
+scope, the ADR-019/ADR-020 precedent (all three were implemented as Proposed code before their own
 acceptance — the same standing on which `protocol/data-plane`'s WebSocket adapter itself proceeds
-under ADR-012's still-provisional status). **Prohibited before acceptance:** describing this as an SKP
-capability externally, and any conformance claim.
+under ADR-012's still-provisional status). With acceptance, the pre-acceptance prohibitions lift:
+the surface may now be described as SKP v0.1 and is subject to whatever conformance SKP-V0 defines.
+
+**Acceptance condition (human, 2026-08-13 — binding):** the named batches-may-be-empty shortfall
+below **carries forward as a binding obligation on the filter-panel cut**. Before any user-facing
+filter UI ships, the panel must present **liveness and a working cancel affordance during
+zero-batch filtered scans** — indeterminate progress plus a cancel that actually cancels is the
+acceptable interim. True scan-progress reporting remains the named debt against **SKP-V0 §4.5**,
+to be resolved there or explicitly re-deferred with a stated reason; it is never silently dropped.
+A user typing a selective filter and staring at a silent canvas is `docs/01` principle 7 bleeding
+through a UI we chose to ship, and this condition exists to prevent exactly that.
 **Drafted by:** the architect design consult for the `cut/sql-filter` branch (2026-08-13), per
 CLAUDE.md's architect-first workflow rule, filed from that consult's skeleton by this cut's own P6
 docs piece.
@@ -176,8 +186,11 @@ String}>`. No new command. No derived-dataset handle.**
 
 ## Open
 
-- **Acceptance itself** — this ADR's Status line. Until accepted, this surface may not be described
-  as an SKP capability externally, and no conformance claim may be made about it (per this ADR's own
-  Status line and `NEXT-CUT.md` design essential 8).
+- **The filter-panel liveness/cancel obligation** — the acceptance condition above. Binding on the
+  filter-panel cut before any user-facing filter UI ships; the SKP-V0 §4.5 scan-progress debt it
+  points at is resolved there or explicitly re-deferred with a reason, never dropped.
 - **macOS/Linux hardware validation** for the surface this predicate composes against — inherited
   from `docs/07`'s own still-open item, not reopened or narrowed by this ADR.
+
+*(Resolved at acceptance: the pre-acceptance "may not be described as an SKP capability / no
+conformance claim" restriction — lifted 2026-08-13 by acceptance.)*

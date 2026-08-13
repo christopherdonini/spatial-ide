@@ -237,11 +237,11 @@ frontend framework decision this document assumes but does not itself make.
 
 **Appended 2026-08-13. §§1–6 above are the original v0 text, unrewritten** (except the five §4 items
 marked above — items 1, 3, 5, 8, and 13 — each carrying its own short v0.1 note in place rather than being rewritten wholesale) —
-this section is additive. Implemented ahead of ADR-021's own acceptance, the ADR-019/ADR-020
-precedent (both were implemented as Proposed before acceptance, under already-accepted ADR-004's
-license): **this section documents what the code actually does today, not a promised future state,
-and it may not be cited as a conformance claim or as an accepted SKP capability until ADR-021 is
-accepted** (see that ADR's own Status line).
+this section is additive. **ADR-021 was accepted 2026-08-13** (carrying a human acceptance
+condition — the filter-panel liveness/cancel obligation; see that ADR's Status line), so this
+section documents an accepted SKP v0.1 surface. It was written and merged ahead of that acceptance
+under already-accepted ADR-004's license, the ADR-019/ADR-020 precedent; that "ahead of acceptance"
+standing is now historical.
 
 ### 7.1 Version
 
@@ -374,5 +374,5 @@ papered over.
 `protocol/data-plane/` changed for this feature.
 
 Full design, consequences, and the security property this carries:
-`docs/adr/ADR-021-row-filter-on-viewport-query.md` (Proposed — binds nothing until accepted; see that
-ADR's own Status line for what "implemented ahead of acceptance" does and does not authorize).
+`docs/adr/ADR-021-row-filter-on-viewport-query.md` (**Accepted 2026-08-13**, carrying the human's
+filter-panel liveness/cancel acceptance condition — see that ADR's Status line).
