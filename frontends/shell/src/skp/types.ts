@@ -9,7 +9,12 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0";
+export const SKP_VERSION = "skp/0.1";
+
+/** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
+ * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
+ * string, not a silent addition to this one. */
+export const FILTER_DIALECT_DUCKDB_EXPR_0 = "duckdb-expr/0";
 
 export interface SkpError {
   code: string;
@@ -103,12 +108,22 @@ export interface Bbox {
   ymax: HexF64;
 }
 
+/** A row filter carried on `viewport_query` -- a boolean expression in the declared `dialect`,
+ * never a whole SQL statement, never a derived-dataset handle (`protocol/skp/src/v0/commands.rs`'s
+ * `Filter`, design note item 1). This client does not parse or admit `predicate`; only the kernel
+ * does, and it may refuse it. */
+export interface Filter {
+  predicate: string;
+  dialect: string; // the one admitted value is `FILTER_DIALECT_DUCKDB_EXPR_0`
+}
+
 export interface ViewportQueryRequest {
   skp: string;
   dataset: string;
   bbox: Bbox | null;
   bbox_crs: string | null;
   limit: DecU64 | null;
+  filter: Filter | null; // always present, `null` means no filter (matches `bbox_crs`'s discipline)
 }
 export interface ViewportQueryResponse {
   stream: string;

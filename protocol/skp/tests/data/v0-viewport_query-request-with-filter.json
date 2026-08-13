@@ -1,0 +1,11 @@
+{
+  "skp": "skp/0.1",
+  "dataset": "ds_00112233445566778899aabbccddeeff",
+  "bbox": null,
+  "bbox_crs": null,
+  "limit": null,
+  "filter": {
+    "predicate": "zone = 3 AND area > 100",
+    "dialect": "duckdb-expr/0"
+  }
+}

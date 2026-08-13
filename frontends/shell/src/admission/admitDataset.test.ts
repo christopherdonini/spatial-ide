@@ -60,10 +60,10 @@ describe("admitDataset", () => {
 
     // The real product-truth check: the same request shape open_dataset's own fixture declares.
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
-      request: { skp: "skp/0", path: "C:/data/parcels.parquet", cancel_key: "open-1" },
+      request: { skp: "skp/0.1", path: "C:/data/parcels.parquet", cancel_key: "open-1" },
     });
     expect(invokeMock).toHaveBeenNthCalledWith(2, "describe", {
-      request: { skp: "skp/0", dataset: "ds_00000000000000000000000000000000" },
+      request: { skp: "skp/0.1", dataset: "ds_00000000000000000000000000000000" },
     });
   });
 

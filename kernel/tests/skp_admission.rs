@@ -80,6 +80,7 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
             bbox: None,
             bbox_crs: None,
             limit: None,
+            filter: None,
         })
         .expect("viewport_query");
 
@@ -276,6 +277,7 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
             bbox: Some(bbox),
             bbox_crs: Some("EPSG:4326".to_string()),
             limit: None,
+            filter: None,
         })
         .expect_err("a viewport in the wrong CRS must be refused");
 
@@ -382,6 +384,7 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
             bbox: None,
             bbox_crs: None,
             limit: None,
+            filter: None,
         })
         .expect("viewport_query");
     let stream_handle = ticket.stream.clone();

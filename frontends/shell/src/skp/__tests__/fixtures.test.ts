@@ -17,7 +17,7 @@ import type {
   ViewportQueryRequest,
   ViewportQueryResponse,
 } from "../types";
-import { SKP_VERSION } from "../types";
+import { FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -112,7 +112,11 @@ describe("SKP v0 shared fixtures", () => {
 
   it("viewport_query request/response, with bbox edges as hex, never JSON numbers", () => {
     const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request");
-    assertExactKeys(req, ["skp", "dataset", "bbox", "bbox_crs", "limit"], "viewport_query request");
+    assertExactKeys(
+      req,
+      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter"],
+      "viewport_query request"
+    );
     expect(req.bbox).not.toBeNull();
     assertExactKeys(req.bbox, ["xmin", "ymin", "xmax", "ymax"], "viewport_query request .bbox");
     expect(req.bbox!.xmin).toBe("0000000000000000");
@@ -121,11 +125,27 @@ describe("SKP v0 shared fixtures", () => {
     expect(decodeHexF64(req.bbox!.ymax)).toBe(2);
     expect(req.bbox_crs).toBeNull(); // declares "the dataset's own CRS" (SKP-V0.md §1)
     expect(req.limit).toBe("5000");
+    expect(req.filter).toBeNull(); // skp/0.1: absent filter is `null`, never omitted
 
     const res = loadFixture<ViewportQueryResponse>("v0-viewport_query-response");
     assertExactKeys(res, ["stream", "expires_in_ms"], "viewport_query response");
     expect(res.stream).toMatch(/^sh_[0-9a-f]{32}$/);
     expect(res.expires_in_ms).toBe(30_000);
+  });
+
+  it("viewport_query request with a filter present (skp/0.1)", () => {
+    const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request-with-filter");
+    assertExactKeys(
+      req,
+      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter"],
+      "viewport_query request (with filter)"
+    );
+    expect(req.skp).toBe(SKP_VERSION);
+    expect(req.bbox).toBeNull();
+    expect(req.filter).not.toBeNull();
+    assertExactKeys(req.filter, ["predicate", "dialect"], "viewport_query request .filter");
+    expect(req.filter!.predicate).toBe("zone = 3 AND area > 100");
+    expect(req.filter!.dialect).toBe(FILTER_DIALECT_DUCKDB_EXPR_0);
   });
 
   it("cancel request/response", () => {
@@ -161,6 +181,7 @@ describe("SKP v0 shared fixtures", () => {
       "v0-open_dataset-request",
       "v0-describe-request",
       "v0-viewport_query-request",
+      "v0-viewport_query-request-with-filter",
       "v0-cancel-request",
       "v0-close_dataset-request",
     ]) {

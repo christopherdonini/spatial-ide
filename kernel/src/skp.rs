@@ -728,7 +728,7 @@ mod tests {
 
     #[test]
     fn version_mismatch_is_refused_before_anything_else() {
-        assert!(check_version("skp/0").is_ok());
+        assert!(check_version("skp/0.1").is_ok());
         let e = check_version("skp/9").unwrap_err();
         assert_eq!(e.code, "skp.version_unsupported");
     }

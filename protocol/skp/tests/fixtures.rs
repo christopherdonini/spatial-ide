@@ -49,6 +49,19 @@ fn viewport_query_fixtures_round_trip() {
     round_trip::<ViewportQueryResponse>("v0-viewport_query-response");
 }
 
+/// `skp/0.1`: `filter` is present (never omitted) on every `viewport_query` request, including the
+/// unfiltered one above (`"filter": null`) and this variant, which carries one.
+#[test]
+fn viewport_query_request_with_a_filter_round_trips() {
+    let v = fixture("v0-viewport_query-request-with-filter");
+    let parsed: ViewportQueryRequest = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as ViewportQueryRequest: {e}"));
+    let filter = parsed.filter.as_ref().expect("this fixture's whole point is a present filter");
+    assert_eq!(filter.predicate, "zone = 3 AND area > 100");
+    assert_eq!(filter.dialect, "duckdb-expr/0");
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
 #[test]
 fn cancel_fixtures_round_trip() {
     round_trip::<CancelRequest>("v0-cancel-request");
@@ -73,6 +86,7 @@ fn every_request_fixture_carries_the_current_skp_version() {
         "v0-open_dataset-request",
         "v0-describe-request",
         "v0-viewport_query-request",
+        "v0-viewport_query-request-with-filter",
         "v0-cancel-request",
         "v0-close_dataset-request",
     ] {
