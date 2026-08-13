@@ -5,8 +5,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-A. **[DIRECTION APPROVED 2026-08-13 — exact text below awaits your sight-approval, then the
-   custodian applies it to docs/07 line 22.]** You accepted the gate fail as final with reopen
+A. **[RESOLVED 2026-08-13 — text sight-approved by the human ("apply") and applied to docs/07
+   line 22 the same day. The gate fail is final; the three reopen conditions are recorded in
+   docs/07 itself, ADR-012-pattern. One addition at application time: a trailing pointer noting
+   the earlier bullet's in-memory-index record is preserved in RESULTS.md's second section and
+   git history — added so the replacement deletes no evidence trail.]** Drafted text below
+   retained for the record. You accepted the gate fail as final with reopen
    conditions per the ADR-012 pattern. **The drafted replacement text, verbatim:**
 
    > - **Spatial indexing — measured to a close (2026-08-13; `kernel/RESULTS.md` ninth
