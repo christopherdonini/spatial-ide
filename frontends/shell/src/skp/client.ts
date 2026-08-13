@@ -6,6 +6,7 @@ import {
   CancelResponse,
   CloseDatasetResponse,
   DescribeResponse,
+  Filter,
   OpenDatasetResponse,
   SkpError,
   SKP_VERSION,
@@ -53,11 +54,23 @@ export function describe(dataset: string): Promise<DescribeResponse> {
   return call("describe", { skp: SKP_VERSION, dataset });
 }
 
+/**
+ * `filter` is `Filter | null`, defaulting to `null` -- every existing call site (viewport-driven
+ * streaming with no predicate) is unaffected, and it is the ONE function both a future filter panel
+ * and the dev-only E2E hook (`e2e-test-surface.ts`'s `queryWithFilter`, wired through
+ * `ViewportStreamManager.requestViewport`) call to actually send one (NEXT-CUT.md P5: "client only,
+ * no logic" -- this function does not parse, admit, or otherwise inspect `filter.predicate`; only
+ * the kernel does, and it may refuse it). `filter: null` is sent explicitly, never omitted, matching
+ * the `bbox_crs` discipline (SKP-V0.md "v0.1" section): `ViewportQueryRequest.filter` is
+ * `Option<Filter>` with no `#[serde(default)]` on the Rust side, so an absent key is a deserialize
+ * failure, not a tolerated omission.
+ */
 export function viewportQuery(
   dataset: string,
   bbox: Bbox | null,
   bboxCrs: string | null,
-  limit: DecU64 | null
+  limit: DecU64 | null,
+  filter: Filter | null = null
 ): Promise<ViewportQueryResponse> {
   return call("viewport_query", {
     skp: SKP_VERSION,
@@ -65,12 +78,7 @@ export function viewportQuery(
     bbox,
     bbox_crs: bboxCrs,
     limit,
-    // `filter: null` explicitly, matching the `bbox_crs` discipline (SKP-V0.md "v0.1" section):
-    // `ViewportQueryRequest.filter` is `Option<Filter>` with no `#[serde(default)]` on the Rust
-    // side, so an absent key is a deserialize failure, not a tolerated omission. The real
-    // filter-sending client API is P5's; this keeps a live `viewport_query` invoke round-tripping
-    // against the v0.1 struct in the meantime.
-    filter: null,
+    filter,
   });
 }
 

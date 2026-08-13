@@ -47,10 +47,20 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     await manager.requestViewport(null, null, 1_000);
 
     expect(cancelMock).not.toHaveBeenCalled();
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, null);
     expect(startStreamMock).toHaveBeenCalledTimes(1);
     expect(startStreamMock.mock.calls[0][0].ticketHandle).toBe("sh_a");
     expect(manager.activeStreamHandle).toBe("sh_a");
+  });
+
+  it("a filter passed to requestViewport rides through to viewportQuery verbatim (P5)", async () => {
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+
+    await manager.requestViewport(null, null, 1_000, filter);
+
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, filter);
   });
 
   it("a batch for the active stream is admitted with an ascending sequence number", async () => {

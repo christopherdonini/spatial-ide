@@ -13,7 +13,8 @@
     "verify": "npm run typecheck && npm run build && npm run test",
     "tauri": "tauri",
     "e2e:debug": "node e2e/debug-session.mjs",
-    "e2e:regression": "node e2e/regression.mjs"
+    "e2e:regression": "node e2e/regression.mjs",
+    "e2e:filter": "node e2e/filter.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.7",

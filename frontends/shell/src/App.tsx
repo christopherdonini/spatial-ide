@@ -7,11 +7,13 @@ import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { PickResult } from "./canvas/pick";
 import { logSessionEvent } from "./diagnostics/log";
+import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
 import ErrorBanner from "./ErrorBanner";
 import { encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
 import type { Bbox } from "./skp/types";
 import {
   VIEWPORT_QUERY_MIN_INTERVAL_MS,
@@ -270,6 +272,30 @@ export default function App() {
     });
     managerRef.current = manager;
 
+    // E2E TEST SURFACE (dev builds only, e2e/README.md): drives `manager.requestViewport` with a
+    // caller-supplied predicate over the whole dataset (bbox `null`, the same unrestricted shape the
+    // initial unfiltered load below already uses) -- the exact same production call a future filter
+    // panel would make, through the exact same `viewportStreamManager.ts` seam (NEXT-CUT.md P5: "not
+    // a second, test-only code path", this file's own top comment). Only registered here, inside this
+    // effect, because `manager` (and therefore anything to query) only exists once a dataset is
+    // admitted -- mirrors `capturePixels` only existing once `WorkingCanvas` mounts.
+    if (import.meta.env.DEV) {
+      registerE2eHook("queryWithFilter", async (predicate: string) => {
+        try {
+          await manager.requestViewport(null, null, undefined, {
+            predicate,
+            dialect: FILTER_DIALECT_DUCKDB_EXPR_0,
+          });
+          return { kind: "admitted" };
+        } catch (e) {
+          if (e instanceof SkpCallError) {
+            return { kind: "refused", code: e.skpError.code, message: e.skpError.message };
+          }
+          throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
+        }
+      });
+    }
+
     // Pan/zoom-driven queries are debounced to settle (`streaming/debounce.ts`'s own doc comment):
     // deck.gl's `onViewStateChange` fires on every pointer-move frame during a drag, and issuing a
     // query per frame -- even throttled to the manager's own 120 ms window -- let overlapping
@@ -290,6 +316,7 @@ export default function App() {
       debounced.cancel();
       viewportDebounceRef.current = null;
       void manager.stop();
+      if (import.meta.env.DEV) unregisterE2eHook("queryWithFilter");
       // Every admitted dataset stays open (and its DuckDB pool resident) until explicitly closed;
       // opening a second one must not leak the first (S1, architect review of this cut).
       void closeDataset(admitted.dataset).catch(() => {});

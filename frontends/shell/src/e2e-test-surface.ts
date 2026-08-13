@@ -69,9 +69,23 @@ export interface PixelSummary {
 
 export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };
 
+/** Same shape as `OpenPathOutcome`, named separately -- one is `open_dataset`'s admission verdict,
+ * the other is `viewport_query`'s filter-admission verdict (NEXT-CUT.md P5), and nothing here
+ * promises the two will always stay structurally identical just because they happen to be today. */
+export type FilterQueryOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };
+
 export interface E2eTestSurface {
   openPath?: (path: string) => Promise<OpenPathOutcome>;
   capturePixels?: (regions?: PixelRegion[]) => Promise<PixelSummary>;
+  /** Drives `ViewportStreamManager.requestViewport` (`App.tsx`) with a caller-supplied predicate
+   * against the currently-open dataset -- the SAME production call a future filter panel would make,
+   * not a parallel test-only path (this file's own top doc comment). Only registered once a dataset
+   * is admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
+   * `{kind:"admitted"}` once the filtered stream's ticket is minted and its transport attach has
+   * begun (not once it finishes delivering -- the caller waits for render settlement separately, the
+   * same `waitForSettle` pattern every other e2e/*.mjs step already uses), or to the typed
+   * `skp.filter_*` refusal `viewport_query` returned. */
+  queryWithFilter?: (predicate: string) => Promise<FilterQueryOutcome>;
 }
 
 declare global {

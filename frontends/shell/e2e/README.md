@@ -53,3 +53,21 @@ running afterward, same as `e2e:debug`.
 
 **Currently RED on `A5'`-`A9'`**: a queued shell defect trips a spurious ceiling refusal early in
 every run (`DECISIONS-PENDING.md` entry 0) -- read a fresh run's own output, not this file.
+
+## Filter spec (sql-filter cut, P5)
+
+```
+npm run e2e:filter
+```
+
+`e2e/filter.mjs` -- a sibling to `regression.mjs`, not folded into it, so a real filter defect is
+never entangled with the unrelated `A5'`-`A9'` flakiness noted above. Opens
+`target/fixtures/manual-walkthrough/filter-zoned.parquet` (regenerate: `cargo test -p spatial-kernel
+--test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture`), then
+drives `window.__SPATIAL_E2E__.queryWithFilter` (registered only once a dataset is admitted, mirrors
+`capturePixels`) -- the same `ViewportStreamManager.requestViewport` seam a future filter panel would
+call, per NEXT-CUT.md P5. `FILTER'` asserts a valid predicate (`zone = 'residential'`) renders
+measurably fewer non-background pixels than the unfiltered load, over the same fixed camera viewport,
+without going blank. `REFUSED'` asserts an invalid predicate (an unknown column) surfaces a typed
+`skp.filter_*` code/message with no crash or hang. Same **E2E-verified** evidence class as
+`regression.mjs`; same watchdog/deadline discipline; leaves the app running afterward.

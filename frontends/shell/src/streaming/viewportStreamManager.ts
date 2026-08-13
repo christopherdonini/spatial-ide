@@ -1,7 +1,7 @@
 import { traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
-import type { Bbox } from "../skp/types";
+import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
 import { dataPlaneAttach } from "./dataPlaneClient";
 import type { StreamSink, Terminal } from "./transport";
@@ -83,8 +83,19 @@ export class ViewportStreamManager {
    * `VIEWPORT_QUERY_MIN_INTERVAL_MS`; a call inside the throttle window is a silent no-op, exactly
    * as a declared ceiling should behave -- it is not an error for a pan gesture to fire faster than
    * this shell chooses to issue queries. A no-op after `stop()` for the same reason.
+   *
+   * `filter` (NEXT-CUT.md P5) rides straight through to `skp/client.ts`'s `viewportQuery` -- this
+   * method does no filter logic of its own, it is only the seam a future filter panel and the
+   * dev-only E2E hook (`App.tsx`'s `queryWithFilter` registration) both call to actually issue a
+   * filtered query through the same production streaming path (supersede, ticket mint, transport
+   * attach) every other query already uses, rather than a parallel one.
    */
-  async requestViewport(bbox: Bbox | null, bboxCrs: string | null, nowMs: number = Date.now()): Promise<void> {
+  async requestViewport(
+    bbox: Bbox | null,
+    bboxCrs: string | null,
+    nowMs: number = Date.now(),
+    filter: Filter | null = null
+  ): Promise<void> {
     if (this.stopped) {
       return;
     }
@@ -103,7 +114,7 @@ export class ViewportStreamManager {
       return; // superseded (or stopped, which also bumps the generation) while cancelling the previous stream
     }
 
-    const { stream } = await viewportQuery(this.opts.dataset, bbox, bboxCrs, null);
+    const { stream } = await viewportQuery(this.opts.dataset, bbox, bboxCrs, null, filter);
     if (myGeneration !== this.generation) {
       // A newer call (or stop()) won the race while this ticket was minting. This call is the only
       // thing that knows this handle exists, so it is the only thing that will ever cancel it.

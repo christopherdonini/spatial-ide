@@ -17,7 +17,7 @@
 
 use std::path::PathBuf;
 
-use spatial_engine::fixture::{write_geoparquet, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
 
 fn dir() -> PathBuf {
     let d = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/manual-walkthrough");
@@ -162,4 +162,57 @@ fn generate_the_missing_identity_refusing_fixture() {
     )
     .expect("write the missing-identity refusing fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The filter fixture (`NEXT-CUT.md` sql-filter P5): a dataset where a predicate meaningfully
+/// partitions rows, opened through the same real admission path
+/// (`window.__SPATIAL_E2E__.openPath`) `frontends/shell/e2e/filter.mjs`'s FILTER'/REFUSED' steps
+/// use to exercise the shell's filter client wrapper end to end -- P0-P4 already cover admission and
+/// composition themselves with unit/integration tests; this file exists only to give the E2E spec a
+/// real GeoParquet file to open.
+///
+/// `AttributeMode::CategoricalZone` writes a nullable `zone` text column, four declared values
+/// (`engine::fixture::ZONE_VALUES`, `zone = 'residential'` is the E2E spec's predicate) plus NULL --
+/// derived from `zone_for(seed, id)`, a pure hash of the feature id, so the admitted subset is
+/// scattered across the whole grid (`parcel()`'s own placement is one feature per grid cell, `id %
+/// cols` / `id / cols`) rather than clustered in one screen region -- a working filter should show
+/// roughly a fifth of the unfiltered pixel coverage, not just "fewer pixels somewhere".
+#[test]
+#[ignore = "generates a real file for the E2E filter spec; not part of the default suite"]
+fn generate_the_filter_fixture() {
+    let path = dir().join("filter-zoned.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 2_000,
+            avg_vertices: 12,
+            hole_every: 0,
+            attributes: AttributeMode::CategoricalZone,
+            ..Default::default()
+        },
+    )
+    .expect("write the filter fixture");
+    println!(
+        "wrote {} ({} features, {} vertices, zone_counts={:?}, zone_nulls={})",
+        path.display(),
+        facts.features,
+        facts.vertices,
+        facts.zone_counts,
+        facts.zone_nulls
+    );
+    // Counted while writing, never predicted (`FixtureFacts::zone_counts`'s own doc comment) --
+    // guards against a vacuous partition: every declared value present, at least one NULL, and the
+    // spec's own predicate (`zone = 'residential'`, `ZONE_VALUES[0]`) excluding real rows.
+    assert!(
+        facts.zone_counts.iter().all(|&c| c > 0),
+        "every ZONE_VALUES entry must appear at least once (got {:?})",
+        facts.zone_counts
+    );
+    assert!(facts.zone_nulls > 0, "at least one NULL zone must appear (got 0)");
+    assert!(
+        facts.zone_counts[0] > 0 && facts.zone_counts[0] < facts.features,
+        "the 'residential' predicate must admit some rows but exclude others (admits {} of {})",
+        facts.zone_counts[0],
+        facts.features
+    );
 }
