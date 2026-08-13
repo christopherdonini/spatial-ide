@@ -103,7 +103,7 @@ pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
-pub use predicate::AdmittedPredicate;
+pub use predicate::{AdmittedPredicate, FilterError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH};
 pub use pool::{
     ConnectionPool, LeaseClass, PoolConfig, MAX_MAINTENANCE_CONNECTIONS, MAX_PHYSICAL_CONNECTIONS,
     MAX_STREAM_CONNECTIONS,
