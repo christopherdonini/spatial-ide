@@ -15,8 +15,14 @@ fixture = ["dep:parquet"]
 [dependencies]
 arrow = { workspace = true }
 # `bundled` builds DuckDB from vendored sources (no cmake on the reference profile); `parquet`
-# builds in the parquet reader, without which `read_parquet` does not exist.
-duckdb = { version = "1.10505.0", features = ["bundled", "parquet"] }
+# builds in the parquet reader, without which `read_parquet` does not exist; `json` statically
+# links the json extension so `json_serialize_sql` (the predicate-admission parser, ADR-021) is a
+# built-in function. Without it DuckDB tries to *auto-install* the json extension at first use,
+# which succeeds on a machine with a writable extension dir but fails on a fresh CI runner with
+# `Extension Autoloading Error: ... Could not move file: Access is denied` — a dev/CI capability
+# gap the P0 feasibility probe could not see because it ran where json was already cached. The
+# feature is `json = ["bundled"]`: no new crate in the tree, only more of DuckDB's own sources.
+duckdb = { version = "1.10505.0", features = ["bundled", "parquet", "json"] }
 serde_json = "1"
 # Content-addressed identity for derived artifacts (docs/02, docs/05): a spatial index is keyed by
 # the content hash of what it was built from, never by a filename.
