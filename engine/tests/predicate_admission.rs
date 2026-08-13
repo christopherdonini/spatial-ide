@@ -204,6 +204,47 @@ fn the_adversarial_corpus_each_row_refused_with_its_specific_code() {
             FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
             "ConstructNotAdmitted naming the AND-sentinel mismatch"
         ),
+        // FINAL B1 attempt (rule 7): the single-sentinel fix above was itself re-review-demonstrated
+        // escapable — `1=1) AND 1=1 --` and `1=1) AND 1=1 ;--` FORGE the sentinel by writing their
+        // own trailing `1=1`, then use a same-line comment to eat the wrapper's real, appended
+        // `) AND 1=1` — identically in admission and in composition. `is_sentinel_comparison` could
+        // not tell the forged `1=1` from the real one, so "last child is a 1=1 comparison" passed on
+        // the forgery. Fixed by the differential two-sentinel probe (`differential_operands`):
+        // parsed once with a `1=1` sentinel and once with `2=2`, requiring both to end in their own
+        // distinct, correct sentinel and otherwise agree exactly — no single predicate text can end
+        // in `1=1` for one parse and `2=2` for the other at the same textual position. These five
+        // rows are that fix's own standing regression, empirically confirmed (`target/slice-
+        // evidence/sql-filter/logs/p3-probe-differential.log`) before any test was written.
+        refusal!(
+            "ESCAPE (forged sentinel + line comment): the surviving escape from the reviewer's final gate",
+            "1=1) AND 1=1 --",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
+        refusal!(
+            "ESCAPE (forged sentinel + semicolon/comment): same class, semicolon variant",
+            "1=1) AND 1=1 ;--",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
+        refusal!(
+            "ESCAPE (forged sentinel + unterminated block comment): fails to parse outright",
+            "1=1) AND 1=1 /*",
+            FilterError::Unparsable { .. },
+            "Unparsable (unterminated /* comment)"
+        ),
+        refusal!(
+            "ESCAPE (forged sentinel + line comment, real column): same class over a real predicate",
+            "zone='x') AND 1=1 --",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
+        refusal!(
+            "block-comment variant of the forged sentinel (terminated, leaves an unmatched paren)",
+            "1=1) AND 1=1 /* x */",
+            FilterError::Unparsable { .. },
+            "Unparsable (the terminated comment leaves a dangling close-paren, refused at parse)"
+        ),
     ];
 
     for row in &rows {
@@ -309,6 +350,12 @@ fn the_positive_controls_from_the_design_note_all_admit() {
         // Adapted from the brief's `NOT (x > 3 OR y < 2)` — `id` is a real, filterable, numeric
         // column (the native identity column); `x`/`y` are not columns this fixture has.
         "NOT (id > 3 OR id < 2)",
+        // The differential probe's own converse case (final B1 fix): a predicate whose *own* text
+        // legitimately ends in `1=1` must still admit, not be caught by the forged-sentinel refusal
+        // above. Probe A flattens to `[id>3, caller's 1=1, sentinel 1=1]`, probe B to `[id>3,
+        // caller's 1=1, sentinel 2=2]` — both end in the correct sentinel for their own probe, and
+        // the preceding operands agree, so this is the check working as designed, not a coincidence.
+        "id > 3 AND 1=1",
     ];
     for p in positive {
         AdmittedPredicate::admit(p, &ds).unwrap_or_else(|e| panic!("`{p}` should admit: {e}"));

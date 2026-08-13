@@ -298,32 +298,28 @@ impl std::error::Error for FilterError {}
 // Stage 1 — structural admission
 // ---------------------------------------------------------------------------------------------
 
-/// The literal comparison this module appends after every predicate it admits, standing in for
-/// the real `<bbox>` condition `stream.rs::build_sql` appends in the identical position
-/// (`(<predicate>) AND <bbox>`). See [`wrap`] and [`expect_predicate_operands`] for why.
-const SENTINEL: &str = "1=1";
+/// The two literal comparisons this module appends, on two **separate** parses of the same
+/// predicate, standing in for the real `<bbox>` condition `stream.rs::build_sql` appends in the
+/// identical position (`(<predicate>) AND <bbox>`). See [`wrap_with`] and
+/// [`differential_operands`] for the full rationale — a single fixed sentinel (this module's first
+/// fix attempt) is **forgeable**: a predicate can write its own trailing `1=1` and use a same-line
+/// comment to eat the wrapper's real, appended `) AND 1=1` in both admission and composition
+/// identically, so "last child is *a* `1=1` comparison" cannot tell the forgery from the real
+/// sentinel. Two sentinels that **differ from each other** cannot both be forged by one text at
+/// the same textual position, which is the property this module now actually relies on.
+const SENTINEL_A: &str = "1=1";
+const SENTINEL_A_VALUE: i64 = 1;
+const SENTINEL_B: &str = "2=2";
+const SENTINEL_B_VALUE: i64 = 2;
 
 /// Wrap `predicate` in the fixed template this module standardizes on (`CUT-STATE.md` P0),
-/// **mirroring real composition's own shape, not just its paren count.**
-///
-/// `stream.rs::build_sql` composes `(<predicate text, verbatim>) AND <bbox condition>` — one added
-/// paren pair around the predicate, then an `AND`-conjoined right neighbour. Admission's own
-/// wrapper used to be `SELECT 1 WHERE ( <predicate> )` — the same *paren count* as real
-/// composition, but not the same *shape*: nothing after the predicate's own closing paren mirrored
-/// the real `AND <bbox>` that always follows it once the predicate reaches `build_sql`. A predicate
-/// whose own text contains an unbalanced `)` can close admission's wrapper paren early and still
-/// parse — reassociating everything after it — with nothing downstream of `where_clause` to catch
-/// it, because there *was* nothing downstream to reassociate against.
-///
-/// This wrapper appends [`SENTINEL`] in exactly that position — `SELECT 1 WHERE ( <predicate> ) AND
-/// 1=1` — so a predicate that parses cleanly here has been proven to compose safely against a real
-/// `AND <bbox>` too: if the predicate's own parens are balanced, DuckDB's parser must bind it as one
-/// operand of a top-level `AND` whose other operand is the sentinel — see
-/// [`expect_predicate_operands`], which asserts exactly that shape and refuses anything else.
-/// **The invariant enforced is "the emitted WHERE really is `(<predicate>) AND <bbox>`", not merely
-/// "the format string looks like it".**
-fn wrap(predicate: &str) -> String {
-    format!("SELECT 1 WHERE ({predicate}) AND {SENTINEL}")
+/// appending `sentinel` as the `AND`-conjoined right neighbour real composition
+/// (`stream.rs::build_sql`, `(<predicate>) AND <bbox>`) always supplies in that position.
+/// [`differential_operands`] calls this twice, once per sentinel in [`SENTINEL_A`]/[`SENTINEL_B`],
+/// and requires both parses to agree — see that function's doc for why one sentinel alone is not
+/// enough.
+fn wrap_with(predicate: &str, sentinel: &str) -> String {
+    format!("SELECT 1 WHERE ({predicate}) AND {sentinel}")
 }
 
 /// Ask DuckDB's own parser (`json_serialize_sql`) what `wrapped` parses to.
@@ -342,10 +338,10 @@ fn serialize_sql(wrapped: &str, conn: &Connection) -> Result<Value, FilterError>
     })
 }
 
-/// Structural admission (stage 1). Parses `predicate` via DuckDB's own parser, walks the returned
-/// tree against the declared allowlist, and returns every column name the walk collected (for
-/// stage 2). Enforces [`MAX_PREDICATE_BYTES`] before parsing at all, and [`MAX_PREDICATE_DEPTH`]
-/// during the walk.
+/// Structural admission (stage 1). Parses `predicate` **twice**, differentially (see
+/// [`differential_operands`]), walks the returned operands against the declared allowlist, and
+/// returns every column name the walk collected (for stage 2). Enforces [`MAX_PREDICATE_BYTES`]
+/// before parsing at all, and [`MAX_PREDICATE_DEPTH`] during the walk.
 fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, FilterError> {
     if predicate.len() > MAX_PREDICATE_BYTES {
         return Err(FilterError::TooLong {
@@ -354,7 +350,37 @@ fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, F
         });
     }
 
-    let payload = serialize_sql(&wrap(predicate), conn)?;
+    let operands = differential_operands(predicate, conn)?;
+    if operands.is_empty() {
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "an empty predicate (nothing but this module's own AND-sentinel)".to_string(),
+        });
+    }
+
+    let mut columns = Vec::new();
+    // Each operand is walked at depth 1, as if it were the top of the caller's own predicate —
+    // deliberately *not* depth 2 under an implied top-level AND, because that AND is this module's
+    // own sentinel wrapping, not something the caller wrote. See `differential_operands`'s doc for
+    // the one place this reads slightly more generously than before for a predicate whose own top
+    // level is itself a bare `AND` chain (DuckDB flattens it together with the sentinel's own
+    // `AND`, so what used to be one `CONJUNCTION` node at depth 1 is now several operands each
+    // starting fresh at depth 1) — not a security gap, since [`MAX_PREDICATE_DEPTH`]'s ceiling has
+    // headroom to spare and every operand is still walked and admitted independently.
+    for operand in &operands {
+        walk_expr(operand, 1, &mut columns)?;
+    }
+    Ok(columns)
+}
+
+/// Parse `predicate` wrapped with `sentinel` appended (`wrap_with`) and, if the wrapper's own fixed
+/// shape is intact (every field `expect_wrapper_shape` checks, plus a top-level
+/// `CONJUNCTION`/`CONJUNCTION_AND` `where_clause`), return **every** child of that top-level `AND`
+/// — sentinel included, owned, for the caller ([`differential_operands`]) to compare across two
+/// independent parses. Everything that used to be one function (`expect_bare_select_wrapper`, this
+/// module's original name) is now shared, single-parse plumbing that [`differential_operands`]
+/// calls twice.
+fn parse_and_children(predicate: &str, sentinel: &str, conn: &Connection) -> Result<Vec<Value>, FilterError> {
+    let payload = serialize_sql(&wrap_with(predicate, sentinel), conn)?;
 
     // `CUT-STATE.md` P0: a malformed inner SQL string never surfaces as a Rust `Err` from the call
     // above — it succeeds at the SQL-execution layer and reports its own failure *inside* the JSON
@@ -392,26 +418,96 @@ fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, F
     let node = stmt.get("node").ok_or_else(|| FilterError::ConstructNotAdmitted {
         construct: "a statement with no `node`".to_string(),
     })?;
-    let operands = expect_predicate_operands(node)?;
-    if operands.is_empty() {
-        return Err(FilterError::ConstructNotAdmitted {
-            construct: "an empty predicate (nothing but this module's own AND-sentinel)".to_string(),
-        });
+    let children = expect_wrapper_shape(node)?;
+    Ok(children.clone())
+}
+
+/// **The differential two-sentinel probe — B1's final fix, superseding the single-sentinel check.**
+///
+/// A re-review demonstrated the single-sentinel wrapper (`SELECT 1 WHERE (<predicate>) AND 1=1`,
+/// this module's first B1 fix attempt) was still escapable: `1=1) AND 1=1 --` **forges** the
+/// sentinel by writing its own trailing `1=1`, then uses a same-line `--` comment to eat the
+/// wrapper's real, appended `) AND 1=1` — in admission *and* in composition identically, since both
+/// append the same suffix on the same line. The single check ("last child is *a* `1=1`
+/// comparison") cannot distinguish the caller's forged `1=1` from this module's real one, because
+/// nothing about a `1=1` node says who wrote it.
+///
+/// **The fix: parse the same predicate twice, with two *different* sentinels, and require both
+/// parses to agree on everything except the sentinel itself.** [`SENTINEL_A`] (`1=1`) and
+/// [`SENTINEL_B`] (`2=2`) are appended on two separate calls to [`parse_and_children`]. For
+/// admission to pass:
+///
+/// 1. Both parses must independently pass every wrapper-shape check (`expect_wrapper_shape`) and
+///    resolve to a top-level `CONJUNCTION_AND`.
+/// 2. Probe A's **last** child must be exactly `1=1`; probe B's **last** child must be exactly
+///    `2=2`. (**Not** "exactly two children" — DuckDB flattens n-ary `AND`, so `(a AND b) AND 1=1`
+///    is one 3-ary `AND [a, b, sentinel]`; the check is "last child is the sentinel value this
+///    probe expects", which holds regardless of how many operands precede it.)
+/// 3. Every child **except the last** must be identical, JSON-value-for-JSON-value, in the same
+///    order, between the two parses.
+///
+/// **Why this is sound against the whole escape class, not just the two shapes already found.** A
+/// rightward escape — a comment, a semicolon, or an unbalanced paren — truncates or reassociates
+/// the wrapped text at some point. Whatever that point is, it is *identical* between probe A and
+/// probe B, because `wrap_with`'s two outputs differ **only** in their final three characters (the
+/// sentinel's own digits) — everything before that, including the caller's entire predicate text
+/// and this module's own added `) AND `, is byte-for-byte the same string in both probes. So an
+/// escape that truncates before reaching the sentinel truncates *both* probes at the same point,
+/// producing the same tree for both (rule 3 fails only if it produced different last-children by
+/// coincidence, but rule 2 already fails first: a truncated tree cannot independently end in both a
+/// real `1=1` *and* a real `2=2`, because whatever is truncated to is the same text read twice, and
+/// no single text is simultaneously `1=1`-shaped and `2=2`-shaped). An escape that reassociates
+/// (`... ) OR (1=1`) produces a top-level `CONJUNCTION_OR` in both probes identically, refused by
+/// rule 1. **No single predicate text can end in `1=1` for probe A and `2=2` for probe B at the
+/// same textual position** — that is the property this check actually relies on, not an enumerated
+/// list of shapes. Combined with the existing refuse-by-default allowlist walk (`walk_expr`) over
+/// whatever operands survive, this closes the paren, comment, and semicolon escape classes
+/// uniformly: this module is no longer enumerating escape shapes, it is checking that its own
+/// appended conjunct provably survived to the last position, under a name the caller could not have
+/// forged.
+///
+/// **Empirically confirmed** (probe built, run, and deleted before commit — evidence retained at
+/// `target/slice-evidence/sql-filter/logs/p3-probe-differential.log`) to refuse every one of
+/// `1=1) AND 1=1 --`, `1=1) AND 1=1 ;--`, `1=1) AND 1=1 /*`, `1=1) OR (1=1`, `1=1) --`,
+/// `zone='x') AND 1=1 --`, `1=1) AND 1=1 /* x */`, and to admit every one of `zone='residential'`,
+/// `id BETWEEN 5 AND 10`, `a=1 AND b=2 AND c=3`, `NOT (x>3 OR y<2)`, and — the case that would prove
+/// this check too strict if it failed — `id > 3 AND 1=1`, a benign predicate whose *own* text
+/// legitimately ends in `1=1`: probe A's operands flatten to `[id>3, caller's 1=1, sentinel 1=1]`
+/// and probe B's to `[id>3, caller's 1=1, sentinel 2=2]` — both end in the *correct* sentinel for
+/// their own probe, and the two preceding-operand lists (`[id>3, caller's 1=1]`) are identical, so
+/// this admits, and the caller's own harmless `1=1` rides through to the allowlist walk like any
+/// other admitted comparison.
+fn differential_operands(predicate: &str, conn: &Connection) -> Result<Vec<Value>, FilterError> {
+    let children_a = parse_and_children(predicate, SENTINEL_A, conn)?;
+    let children_b = parse_and_children(predicate, SENTINEL_B, conn)?;
+
+    let mismatch = |detail: &str| FilterError::ConstructNotAdmitted {
+        construct: format!(
+            "the predicate does not provably compose with this module's own AND-sentinel the way \
+             real composition, `(<predicate>) AND <bbox>`, would ({detail}) — the caller's text \
+             re-associated, truncated, or forged a sentinel across the paren this module added"
+        ),
+    };
+
+    let last_a = children_a.last().ok_or_else(|| mismatch("probe A's top-level AND has no operands"))?;
+    let last_b = children_b.last().ok_or_else(|| mismatch("probe B's top-level AND has no operands"))?;
+
+    if !is_integer_equality_sentinel(last_a, SENTINEL_A_VALUE) {
+        return Err(mismatch("probe A's last operand is not this module's own 1=1 sentinel"));
+    }
+    if !is_integer_equality_sentinel(last_b, SENTINEL_B_VALUE) {
+        return Err(mismatch("probe B's last operand is not this module's own 2=2 sentinel"));
     }
 
-    let mut columns = Vec::new();
-    // Each operand is walked at depth 1, as if it were the top of the caller's own predicate —
-    // deliberately *not* depth 2 under an implied top-level AND, because that AND is this module's
-    // own sentinel wrapping, not something the caller wrote. See `expect_predicate_operands`'s doc
-    // for the one place this reads slightly more generously than before for a predicate whose own
-    // top level is itself a bare `AND` chain (DuckDB flattens it together with the sentinel's own
-    // `AND`, so what used to be one `CONJUNCTION` node at depth 1 is now several operands each
-    // starting fresh at depth 1) — not a security gap, since [`MAX_PREDICATE_DEPTH`]'s ceiling has
-    // headroom to spare and every operand is still walked and admitted independently.
-    for operand in operands {
-        walk_expr(operand, 1, &mut columns)?;
+    let preceding_a = &children_a[..children_a.len() - 1];
+    let preceding_b = &children_b[..children_b.len() - 1];
+    if preceding_a != preceding_b {
+        return Err(mismatch(
+            "the two differentially-sentineled parses disagree on everything before the sentinel",
+        ));
     }
-    Ok(columns)
+
+    Ok(preceding_a.to_vec())
 }
 
 /// Every key `json_serialize_sql` puts on a wrapped statement's top-level `node`
@@ -466,56 +562,47 @@ fn refuse_unknown_keys(value: &Value, known: &[&str], what: &str) -> Result<(), 
     }
 }
 
-/// Is `node` exactly this module's own [`SENTINEL`] (`1=1`, an `INTEGER` `1` compared for equality
-/// with itself) — never anything a caller's own text could produce *by coincidence* and still be
-/// treated as something other than what it structurally is: whatever sits in this position, by
-/// construction.
-fn is_sentinel_comparison(node: &Value) -> bool {
+/// Is `node` an equality comparison of the literal integer `value` against itself (`1=1`, `2=2`,
+/// ...) — used once per probe in [`differential_operands`], against that probe's own expected
+/// sentinel value, never against a fixed constant a caller's own text could coincidentally produce
+/// and have accepted as this module's.
+fn is_integer_equality_sentinel(node: &Value, value: i64) -> bool {
     node.get("class").and_then(Value::as_str) == Some("COMPARISON")
         && node.get("type").and_then(Value::as_str) == Some("COMPARE_EQUAL")
-        && is_integer_constant_one(node.get("left"))
-        && is_integer_constant_one(node.get("right"))
+        && is_integer_constant(node.get("left"), value)
+        && is_integer_constant(node.get("right"), value)
 }
 
-fn is_integer_constant_one(node: Option<&Value>) -> bool {
+fn is_integer_constant(node: Option<&Value>, value: i64) -> bool {
     match node {
         Some(n) => {
             n.get("class").and_then(Value::as_str) == Some("CONSTANT")
-                && n.get("value").and_then(|v| v.get("value")).and_then(Value::as_i64) == Some(1)
+                && n.get("value").and_then(|v| v.get("value")).and_then(Value::as_i64) == Some(value)
         }
         None => false,
     }
 }
 
 /// Assert that `node` (the top-level parsed `SELECT_NODE`) is **exactly** this module's own
-/// `SELECT 1 WHERE ( <predicate> ) AND 1=1` wrapper, with nothing else attached anywhere else in
-/// the statement, and return the caller's own predicate as a list of top-level operands — every
-/// child of the top `AND` **except** the trailing [`SENTINEL`] — for [`structural_admit`] to walk.
+/// `SELECT 1 WHERE ( <predicate> ) AND <sentinel>` wrapper, with nothing else attached anywhere
+/// else in the statement, and return **every** child of the top-level `AND` — sentinel included —
+/// for [`differential_operands`] to compare across its two independent parses.
 ///
-/// **Two independent things are checked here, and conflating them is exactly the gap this module
-/// had.** First: the wrapper's *other* fields (everything but `where_clause`) are exactly the
-/// fixed template's own — this is what refuses a `GROUP BY`/`HAVING`/`UNION` breakout
-/// (`1=1) GROUP BY 1 HAVING count(*) > 0 --` parses to **one** valid `SELECT_NODE` whose
+/// **This function checks the wrapper's fixed shape only; it does not, and cannot on its own,
+/// decide which child is the sentinel** — that requires knowing *which* sentinel this particular
+/// parse used, which only [`differential_operands`] (the caller, holding both parses) can compare.
+/// What this function alone closes: the wrapper's *other* fields (everything but `where_clause`)
+/// must be exactly the fixed template's own — this is what refuses a `GROUP BY`/`HAVING`/`UNION`
+/// breakout (`1=1) GROUP BY 1 HAVING count(*) > 0 --` parses to **one** valid `SELECT_NODE` whose
 /// `where_clause` is an innocuous `1=1`, while `group_expressions`/`having` carry the smuggled
-/// `count(*)` — real JSON observed while building this module, recorded in `CUT-STATE.md`).
-/// Second, and this is the part a where-clause-only check on the *old* wrapper (`SELECT 1 WHERE (
-/// <predicate> )`, no sentinel) could never catch: `where_clause` itself must be a top-level
-/// `CONJUNCTION`/`CONJUNCTION_AND` whose **last** child is exactly [`SENTINEL`]. Real composition
-/// (`stream.rs::build_sql`) emits `(<predicate>) AND <bbox>` — an `AND`-conjoined right neighbour
-/// in the identical position `AND 1=1` occupies here. If the predicate's own parentheses are
-/// balanced, DuckDB's parser is forced to bind it as one operand of that top-level `AND`
-/// (**empirically confirmed** the sentinel lands last across every predicate shape this corpus
-/// exercises — chained `AND`, top-level `OR`, top-level `NOT`, `BETWEEN`, `IN`, and even a
-/// predicate whose *own* text ends in `1=1` — evidence in
-/// `target/slice-evidence/sql-filter/logs/p3-probe-sentinel.log`). If the predicate's own text
-/// instead contains an unbalanced `)` that closes this wrapper's paren early, the text after it
-/// reassociates — `... ) OR (1=1` puts the sentinel *inside* an `AND` that is itself just one
-/// operand of a top-level `OR`, so the top level here is `CONJUNCTION_OR`, not `CONJUNCTION_AND`,
-/// and is refused; `1=1) --` comments out the sentinel (and everything else on the line) entirely,
-/// so `where_clause` is a bare `COMPARISON`, not even a `CONJUNCTION`, and is refused the same way.
-/// **The invariant enforced is "the emitted WHERE really is `(<predicate>) AND <bbox>`", not
-/// merely "the format string looks like it".**
-fn expect_predicate_operands(node: &Value) -> Result<Vec<&Value>, FilterError> {
+/// `count(*)` — real JSON observed while building this module, recorded in `CUT-STATE.md`) — and
+/// `where_clause` itself must be a top-level `CONJUNCTION`/`CONJUNCTION_AND` (refusing a
+/// reassociation like `... ) OR (1=1`, whose top level is `CONJUNCTION_OR`, or a comment-eaten
+/// `1=1) --`, whose `where_clause` is a bare `COMPARISON`, not even a `CONJUNCTION`). **Neither of
+/// those alone is enough** — see [`differential_operands`]'s doc for the escape (a forged trailing
+/// `1=1` plus a same-line comment) that a single-sentinel version of this same shape check missed,
+/// and the fix.
+fn expect_wrapper_shape(node: &Value) -> Result<&Vec<Value>, FilterError> {
     let node_type = node.get("type").and_then(Value::as_str).unwrap_or("<missing type>");
     if node_type != "SELECT_NODE" {
         return Err(FilterError::ConstructNotAdmitted {
@@ -580,7 +667,8 @@ fn expect_predicate_operands(node: &Value) -> Result<Vec<&Value>, FilterError> {
         }
     };
 
-    // The sentinel-shape check — see this function's own doc for the full rationale.
+    // Top-level shape check only — *which* child is the sentinel is [`differential_operands`]'s
+    // question, not this function's; it holds both parses and this one holds only one of them.
     if where_clause.get("class").and_then(Value::as_str) != Some("CONJUNCTION")
         || where_clause.get("type").and_then(Value::as_str) != Some("CONJUNCTION_AND")
     {
@@ -591,17 +679,7 @@ fn expect_predicate_operands(node: &Value) -> Result<Vec<&Value>, FilterError> {
                 .to_string(),
         });
     }
-    let children = expect_children(where_clause)?;
-    match children.last() {
-        Some(last) if is_sentinel_comparison(last) => Ok(children[..children.len() - 1].iter().collect()),
-        _ => Err(FilterError::ConstructNotAdmitted {
-            construct: "the predicate's own text consumed this module's AND-sentinel instead of \
-                        leaving it as the top-level AND's last operand — real composition appends \
-                        `AND <bbox>` in exactly that position, so a predicate that cannot be found \
-                        there would re-associate against the real bbox too"
-                .to_string(),
-        }),
-    }
+    expect_children(where_clause)
 }
 
 /// Read `node`'s `children` array, refusing (by construct) any node whose shape does not carry one.
@@ -1105,9 +1183,10 @@ mod tests {
 
     /// Positive control for the sentinel design itself: a predicate whose own top level is already
     /// an `AND` chain still admits, and both of its own columns are still collected — DuckDB
-    /// flattens `(a AND b) AND 1=1` into one 3-ary `CONJUNCTION_AND` (measured;
-    /// `target/slice-evidence/sql-filter/logs/p3-probe-sentinel.log`), and `expect_predicate_
-    /// operands` walks every child except the last (the sentinel), not "exactly two children".
+    /// flattens `(a AND b) AND <sentinel>` into one 3-ary `CONJUNCTION_AND` (measured;
+    /// `target/slice-evidence/sql-filter/logs/p3-probe-sentinel.log`), and `expect_wrapper_shape`
+    /// (via `differential_operands`) walks every child except the last (the sentinel), not
+    /// "exactly two children".
     #[test]
     fn a_predicate_that_is_itself_a_top_level_and_chain_still_admits_with_every_column_collected() {
         match structural_admit("a = 1 AND b = 2 AND c = 3", &conn()) {
@@ -1118,6 +1197,54 @@ mod tests {
                 assert!(!columns.contains(&"1".to_string()), "the sentinel must not be collected");
             }
             other => panic!("expected the AND-chain to admit, got {other:?}"),
+        }
+    }
+
+    /// **The escape that survived the single-sentinel fix** (reviewer's final gate on B1, FINAL
+    /// attempt per rule 7): `1=1) AND 1=1 --` forges its own trailing `1=1` and then uses a
+    /// same-line comment to eat this module's real, appended `) AND 1=1` — identically to how a
+    /// real composed `) AND <bbox> ... LIMIT n` would be eaten. A single fixed sentinel cannot
+    /// tell the forged `1=1` from the real one. The differential two-sentinel probe can: probe A
+    /// (real sentinel `1=1`) sees a forged `1=1` in last position and would pass on its own, but
+    /// probe B (real sentinel `2=2`) has its own real `) AND 2=2` eaten the same way, leaving its
+    /// last operand the caller's forged `1=1` too — which is not `2=2` — so probe B's own
+    /// sentinel check fails and the whole predicate is refused.
+    #[test]
+    fn a_forged_trailing_sentinel_eaten_by_a_comment_is_refused_by_the_differential_probe() {
+        // The first two force the differential mismatch this test is named for. The third,
+        // `1=1) AND 1=1 /*`, is an *unterminated* block comment — DuckDB's parser refuses it
+        // outright (`Unparsable`, "unterminated /* comment") before this module's own shape checks
+        // ever run at all. Still a refusal, and still evidence the escape does not survive, just
+        // via a different named code — asserted separately below rather than folded into the same
+        // `ConstructNotAdmitted`/"AND-sentinel" assertion, so this test says exactly which code
+        // each row actually produces rather than a bare "it refused".
+        for predicate in ["1=1) AND 1=1 --", "1=1) AND 1=1 ;--"] {
+            match structural_admit(predicate, &conn()) {
+                Err(FilterError::ConstructNotAdmitted { construct }) => {
+                    assert!(construct.contains("AND-sentinel"), "`{predicate}`: {construct}");
+                }
+                other => panic!(
+                    "`{predicate}` was expected to be refused as a forged/eaten sentinel, got {other:?}"
+                ),
+            }
+        }
+        match structural_admit("1=1) AND 1=1 /*", &conn()) {
+            Err(FilterError::Unparsable { .. }) => {}
+            other => panic!("`1=1) AND 1=1 /*` was expected Unparsable (unterminated comment), got {other:?}"),
+        }
+    }
+
+    /// The differential probe's own converse case, proving it is not *too* strict: a predicate
+    /// whose **own** text legitimately ends in `1=1` must still admit. Probe A flattens to
+    /// `[id > 3, caller's 1=1, sentinel 1=1]`; probe B flattens to `[id > 3, caller's 1=1,
+    /// sentinel 2=2]` — both end in the correct sentinel for their own probe, the preceding
+    /// operands agree, and the caller's own harmless `1=1` rides through to the allowlist walk
+    /// like any other admitted comparison.
+    #[test]
+    fn a_predicate_that_legitimately_ends_in_its_own_one_equals_one_still_admits() {
+        match structural_admit("id > 3 AND 1=1", &conn()) {
+            Ok(columns) => assert!(columns.iter().any(|c| c == "id"), "missing id in {columns:?}"),
+            other => panic!("expected this benign predicate to admit, got {other:?}"),
         }
     }
 
@@ -1144,7 +1271,7 @@ mod tests {
             "qualify": null,
         });
         node.as_object_mut().unwrap().insert("a_future_clause_this_module_has_never_seen".into(), Value::Bool(true));
-        match expect_predicate_operands(&node) {
+        match expect_wrapper_shape(&node) {
             Err(FilterError::ConstructNotAdmitted { construct }) => {
                 assert!(construct.contains("a_future_clause_this_module_has_never_seen"), "{construct}");
             }
