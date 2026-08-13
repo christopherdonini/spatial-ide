@@ -5,6 +5,32 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+B. **ADR-021 (proposed) — a row filter on `viewport_query` (SKP v0.1).** The hero slice's second
+   verb ("filter in SQL"), built headless this cut on `cut/sql-filter` (stacked on #9). Filtering
+   is a `filter: {predicate, dialect}` parameter on the existing `viewport_query` — no new command,
+   no derived-dataset handle (docs/11 ResourceRef and ADR-016 reopen-stability are unsatisfied, so
+   a handle would over-claim resource-hood); the version string moves to `skp/0.1` (`skp/1` stays
+   reserved for the 1.0 freeze). The predicate is a boolean expression, never a statement or a
+   SELECT: three-stage admission (structural allowlist over DuckDB's own parse tree, namespace,
+   zero-IO bind) with eleven typed `skp.filter_*` refusals and a declared composition rule. **This
+   is where caller-authored SQL first enters the system, so it went through three adversarial
+   security reviews** — the first two each broke a design (paren re-association, then
+   comment-forgery of a sentinel); the accepted design is a *differential two-sentinel probe* that
+   is sound by structure, not by an enumerated escape list (16 escape attempts refused, 10
+   admitting predicates streamed with zero bbox/limit bypass). Two security properties are recorded
+   in the ADR and docs/09: the allowlist is the boundary that stops a dataset-scoped grant becoming
+   arbitrary local-file read, and the parser (`json_serialize_sql`) is **statically linked so
+   admission performs no runtime extension fetch** (per your 2026-08-13 direction). Named shortfall,
+   stated not papered: a selective predicate over 5 GB can emit no batches for a long time, so
+   principle 7's progress clause is structurally unmet for filtered scans. Implemented ahead of
+   acceptance under ADR-004 + docs/07 scope (the ADR-019/ADR-020 precedent); ADR-021 is Proposed,
+   binds nothing, architect-reviewed (two narrow text fixes applied). CI green on the branch; no
+   data-plane change (empty diff). Recommendation: **accept** — it is the hero slice's next verb and
+   the surface/security design is settled. Touches on acceptance: ADR-021's status line; nothing
+   else needs editing (SKP-V0.md §7, docs/09, docs/02/README index already reflect it as Proposed).
+   The shell filter *panel* and its look-and-feel are a later operator-present cut, not this one.
+
+
 A. **[RESOLVED 2026-08-13 — text sight-approved by the human ("apply") and applied to docs/07
    line 22 the same day. The gate fail is final; the three reopen conditions are recorded in
    docs/07 itself, ADR-012-pattern. One addition at application time: a trailing pointer noting
