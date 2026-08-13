@@ -166,6 +166,44 @@ fn the_adversarial_corpus_each_row_refused_with_its_specific_code() {
             FilterError::ConstructNotAdmitted { .. },
             "ConstructNotAdmitted"
         ),
+        // Reviewer gate over P1–P4: a BLOCKING, demonstrated escape — admission's old wrapper
+        // (`SELECT 1 WHERE (<text>)`) added exactly one paren pair, and real composition
+        // (`stream.rs::build_sql`) also adds exactly one paren pair (`(<text>) AND <bbox>`), but
+        // the two shapes were not the *same* shape: nothing after admission's own closing paren
+        // mirrored the `AND <bbox>` that always follows once a predicate reaches composition. A
+        // predicate whose own text closes that paren early admitted fine here and then
+        // re-associated after composition — demonstrated live: `zone = 'residential') OR (1=1`
+        // composed to `WHERE (zone='residential') OR (1=1) AND <bbox>`, and since `AND` binds
+        // tighter than `OR`, the bbox condition was bypassed entirely (a 1-row viewport returned
+        // 77 rows); `1=1) --` composed with the comment eating the real `AND <bbox> ... LIMIT n`
+        // suffix, dropping the caller's own ceiling (400 rows instead of 3). Fixed by making the
+        // wrapper mirror composition's *shape*, not just its paren count (`wrap`'s own doc); these
+        // four rows are the standing regression, both escape classes (re-association via a
+        // top-level `OR`, and comment-eats-tail) plus the reviewer's own `1=1) OR (1=1` variant.
+        refusal!(
+            "ESCAPE (re-association): predicate closes admission's paren early, reassociates as OR",
+            "zone = 'residential') OR (1=1",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
+        refusal!(
+            "ESCAPE (comment-eats-tail): trailing comment consumes the AND-sentinel entirely",
+            "1=1) --",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
+        refusal!(
+            "ESCAPE (statement-separator + comment): same class as above, semicolon variant",
+            "1=1) ;--",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
+        refusal!(
+            "ESCAPE (re-association, reviewer's own variant): bare 1=1 OR 1=1 breakout",
+            "1=1) OR (1=1",
+            FilterError::ConstructNotAdmitted { construct } if construct.contains("AND-sentinel"),
+            "ConstructNotAdmitted naming the AND-sentinel mismatch"
+        ),
     ];
 
     for row in &rows {
@@ -193,6 +231,68 @@ fn dollar_quoting_and_a_positive_control_both_admit() {
     // Structurally indistinguishable from a normal string literal (`CUT-STATE.md`'s documented
     // decision) — admitted, not refused, since `zone` is a real filterable column.
     AdmittedPredicate::admit("zone = $$residential$$", &ds).expect("dollar-quoted literal admits");
+}
+
+/// Should-fix 2 (reviewer gate): a stage-1/2 refusal releases its lease **healthy** — the
+/// connection is reused, not discarded-and-recreated — because stage 1/2 only ever run
+/// `json_serialize_sql` with the caller's text as bound data, never executed. A stage-3 refusal
+/// keeps the original, more conservative discard, because stage 3 actually prepares and executes
+/// a statement built from the predicate text.
+#[test]
+fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_refusal_still_discards()
+{
+    let ds = dataset();
+    let created_after_open = ds.connections().physical_connections_created();
+    assert_eq!(created_after_open, 1, "Dataset::open leaves exactly one connection behind it");
+
+    // A stage-1 refusal (a subquery — never reaches namespace or bind admission at all).
+    match AdmittedPredicate::admit("(SELECT 1)", &ds) {
+        Err(FilterError::ConstructNotAdmitted { .. }) => {}
+        other => panic!("expected a stage-1 refusal, got {other:?}"),
+    }
+    assert_eq!(
+        ds.connections().physical_connections_created(),
+        created_after_open,
+        "a stage-1 refusal must not have discarded (and so recreated) the connection"
+    );
+    assert_eq!(ds.connections().idle_connections(), 1, "the connection must be back in the pool");
+
+    // A stage-2 refusal (an unknown column — structurally fine, only namespace admission refuses).
+    match AdmittedPredicate::admit("nonexistent_column_xyz = 1", &ds) {
+        Err(FilterError::UnknownColumn { .. }) => {}
+        other => panic!("expected a stage-2 refusal, got {other:?}"),
+    }
+    assert_eq!(
+        ds.connections().physical_connections_created(),
+        created_after_open,
+        "a stage-2 refusal must not have discarded the connection either"
+    );
+
+    // A stage-3 refusal (non-boolean arithmetic — structurally fine, namespace admits trivially
+    // since no column is referenced, only the bind check against the surrogate refuses).
+    match AdmittedPredicate::admit("1 + 1", &ds) {
+        Err(FilterError::NotBoolean { .. }) => {}
+        other => panic!("expected a stage-3 refusal, got {other:?}"),
+    }
+    // `physical_connections_created` is cumulative and only grows when `acquire` finds the pool
+    // empty and has to open a fresh connection — discarding on `Drop` does not itself bump it, it
+    // only empties the idle pool. So the discard shows up as `idle_connections() == 0` right away,
+    // and as the counter incrementing on the *next* lease, which the final admitted call below is.
+    assert_eq!(
+        ds.connections().idle_connections(),
+        0,
+        "a stage-3 refusal must discard its connection rather than return it to the pool"
+    );
+
+    // One fully-admitted predicate: the pool is empty, so this must create a *new* physical
+    // connection — proving the stage-3 refusal above really did discard the old one rather than
+    // merely failing to release it.
+    AdmittedPredicate::admit("zone = 'residential'", &ds).expect("a real predicate still admits");
+    assert_eq!(
+        ds.connections().physical_connections_created(),
+        created_after_open + 1,
+        "the stage-3 discard must have forced this next lease to create a fresh connection"
+    );
 }
 
 #[test]

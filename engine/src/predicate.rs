@@ -104,6 +104,17 @@ impl AdmittedPredicate {
     pub fn admit(text: impl Into<String>, dataset: &Dataset) -> Result<Self, FilterError> {
         let text = text.into();
 
+        // Cheap, pool-free refusal, checked **before** anything touches the connection pool — an
+        // over-length predicate should never cost a lease acquisition. `structural_admit` repeats
+        // this same check (it is also called directly, without a pool at all, by this module's own
+        // unit tests), so this is a second enforcement of one ceiling, not a second ceiling.
+        if text.len() > MAX_PREDICATE_BYTES {
+            return Err(FilterError::TooLong {
+                limit: MAX_PREDICATE_BYTES as u64,
+                saw: text.len() as u64,
+            });
+        }
+
         let lease = dataset.connections().acquire(LeaseClass::Maintenance).map_err(|e| {
             FilterError::RejectedByBinder {
                 detail: format!("no connection was available to validate this predicate: {e}"),
@@ -111,14 +122,38 @@ impl AdmittedPredicate {
         })?;
         let conn = lease.connection();
 
-        let columns = structural_admit(&text, conn)?;
-        let namespace = namespace_admit(&columns, dataset)?;
+        // Stages 1 and 2 never run anything but `SELECT json_serialize_sql(CAST(? AS VARCHAR))`
+        // with the caller's text passed as **bound data**, never executed as SQL — exactly as safe
+        // as the pool's own trivial `SELECT 1` verification (`pool.rs::Lease::verify_and_take`'s
+        // doc). A refusal at either stage says nothing adverse about the connection itself, so it
+        // is released healthy rather than discarded — P5's filter panel calls admission on every
+        // keystroke, and destroying and recreating a DuckDB connection per refused keystroke would
+        // be a real, avoidable cost.
+        let columns = match structural_admit(&text, conn) {
+            Ok(columns) => columns,
+            Err(e) => {
+                lease.release_healthy();
+                return Err(e);
+            }
+        };
+        let namespace = match namespace_admit(&columns, dataset) {
+            Ok(namespace) => namespace,
+            Err(e) => {
+                // `namespace_admit` never touches `conn` at all — the connection is exactly as
+                // clean here as it was right after `structural_admit` succeeded.
+                lease.release_healthy();
+                return Err(e);
+            }
+        };
+
+        // Stage 3 is different: it actually `prepare()`s and executes a statement built from the
+        // (already structurally-admitted) predicate text. Keep the original, more conservative
+        // discard-on-failure behavior here — `pool.rs`'s own discipline is "what cannot be
+        // confirmed is discarded", and a connection that ran a real prepared statement, even an
+        // admitted one, is not the same trivial, data-only call stages 1/2 make.
         bind_admit(&text, &namespace, conn)?;
 
-        // Reached only once every stage above returned `Ok` — every earlier `?` drops (and so
-        // discards, never returns to the pool) a lease that ran arbitrary caller text through
-        // DuckDB and was never confirmed to be in a state worth reusing. Only a *fully* admitted
-        // predicate's connection is known-clean enough to hand back.
+        // Reached only once every stage above returned `Ok`.
         lease.release_healthy();
 
         Ok(Self { text })
@@ -263,11 +298,32 @@ impl std::error::Error for FilterError {}
 // Stage 1 — structural admission
 // ---------------------------------------------------------------------------------------------
 
-/// Wrap `predicate` in the fixed template this module standardizes on (`CUT-STATE.md` P0):
-/// `SELECT 1 WHERE ( <predicate> )`. The added parens are the **only** thing ever prepended or
-/// appended to the caller's text before it reaches DuckDB's parser.
+/// The literal comparison this module appends after every predicate it admits, standing in for
+/// the real `<bbox>` condition `stream.rs::build_sql` appends in the identical position
+/// (`(<predicate>) AND <bbox>`). See [`wrap`] and [`expect_predicate_operands`] for why.
+const SENTINEL: &str = "1=1";
+
+/// Wrap `predicate` in the fixed template this module standardizes on (`CUT-STATE.md` P0),
+/// **mirroring real composition's own shape, not just its paren count.**
+///
+/// `stream.rs::build_sql` composes `(<predicate text, verbatim>) AND <bbox condition>` — one added
+/// paren pair around the predicate, then an `AND`-conjoined right neighbour. Admission's own
+/// wrapper used to be `SELECT 1 WHERE ( <predicate> )` — the same *paren count* as real
+/// composition, but not the same *shape*: nothing after the predicate's own closing paren mirrored
+/// the real `AND <bbox>` that always follows it once the predicate reaches `build_sql`. A predicate
+/// whose own text contains an unbalanced `)` can close admission's wrapper paren early and still
+/// parse — reassociating everything after it — with nothing downstream of `where_clause` to catch
+/// it, because there *was* nothing downstream to reassociate against.
+///
+/// This wrapper appends [`SENTINEL`] in exactly that position — `SELECT 1 WHERE ( <predicate> ) AND
+/// 1=1` — so a predicate that parses cleanly here has been proven to compose safely against a real
+/// `AND <bbox>` too: if the predicate's own parens are balanced, DuckDB's parser must bind it as one
+/// operand of a top-level `AND` whose other operand is the sentinel — see
+/// [`expect_predicate_operands`], which asserts exactly that shape and refuses anything else.
+/// **The invariant enforced is "the emitted WHERE really is `(<predicate>) AND <bbox>`", not merely
+/// "the format string looks like it".**
 fn wrap(predicate: &str) -> String {
-    format!("SELECT 1 WHERE ({predicate})")
+    format!("SELECT 1 WHERE ({predicate}) AND {SENTINEL}")
 }
 
 /// Ask DuckDB's own parser (`json_serialize_sql`) what `wrapped` parses to.
@@ -323,6 +379,7 @@ fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, F
         return Err(FilterError::NotASingleExpression { statements: statements.len() });
     }
     let stmt = &statements[0];
+    refuse_unknown_keys(stmt, KNOWN_STATEMENT_KEYS, "statement")?;
 
     // Defense in depth: a `?`/`$1` placeholder reaching *anywhere* in the wrapped statement shows
     // up here too, not only as a `PARAMETER` node the walk below would refuse on its own.
@@ -335,33 +392,137 @@ fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, F
     let node = stmt.get("node").ok_or_else(|| FilterError::ConstructNotAdmitted {
         construct: "a statement with no `node`".to_string(),
     })?;
-    let where_clause = expect_bare_select_wrapper(node)?;
+    let operands = expect_predicate_operands(node)?;
+    if operands.is_empty() {
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "an empty predicate (nothing but this module's own AND-sentinel)".to_string(),
+        });
+    }
 
     let mut columns = Vec::new();
-    walk_expr(where_clause, 1, &mut columns)?;
+    // Each operand is walked at depth 1, as if it were the top of the caller's own predicate —
+    // deliberately *not* depth 2 under an implied top-level AND, because that AND is this module's
+    // own sentinel wrapping, not something the caller wrote. See `expect_predicate_operands`'s doc
+    // for the one place this reads slightly more generously than before for a predicate whose own
+    // top level is itself a bare `AND` chain (DuckDB flattens it together with the sentinel's own
+    // `AND`, so what used to be one `CONJUNCTION` node at depth 1 is now several operands each
+    // starting fresh at depth 1) — not a security gap, since [`MAX_PREDICATE_DEPTH`]'s ceiling has
+    // headroom to spare and every operand is still walked and admitted independently.
+    for operand in operands {
+        walk_expr(operand, 1, &mut columns)?;
+    }
     Ok(columns)
 }
 
-/// Assert that `node` (the top-level parsed `SELECT_NODE`) is **exactly** this module's own
-/// `SELECT 1 WHERE ( ... )` wrapper, with nothing else attached anywhere else in the statement,
-/// and return its `where_clause` on success.
+/// Every key `json_serialize_sql` puts on a wrapped statement's top-level `node`
+/// (`SELECT_NODE`), confirmed against real output while building this module — twelve, exactly.
+/// See [`refuse_unknown_keys`].
+const KNOWN_SELECT_NODE_KEYS: &[&str] = &[
+    "type",
+    "modifiers",
+    "cte_map",
+    "select_list",
+    "from_table",
+    "where_clause",
+    "group_expressions",
+    "group_sets",
+    "aggregate_handling",
+    "having",
+    "sample",
+    "qualify",
+];
+
+/// Every key `json_serialize_sql` puts on one entry of the top-level `statements` array — two.
+/// See [`refuse_unknown_keys`].
+const KNOWN_STATEMENT_KEYS: &[&str] = &["node", "named_param_map"];
+
+/// Refuse `value` if it carries any object key **outside** `known`.
 ///
-/// **Why every field here, not only `where_clause`.** The wrapper closes its own parenthesis
-/// immediately after the caller's text; if that text itself contains an unbalanced `)`, everything
-/// after it lands in the *same* top-level `SELECT`, not inside `where_clause` at all — a `GROUP
-/// BY`/`HAVING` breakout (`1=1) GROUP BY 1 HAVING count(*) > 0 --`) parses to **one** valid
-/// `SELECT_NODE` whose `where_clause` is an innocuous `1=1`, while `group_expressions` and
-/// `having` carry the smuggled function call — real JSON observed while building this module,
-/// recorded in `CUT-STATE.md`. A walker that only inspected `where_clause` would admit that whole
-/// predicate. Checking every other field the wrapper's own fixed template controls is what closes
-/// that gap.
-fn expect_bare_select_wrapper(node: &Value) -> Result<&Value, FilterError> {
+/// **Hardening against version drift, not a present hole** — every key `json_serialize_sql`
+/// produces today, at both the statement level and the `SELECT_NODE` level, is already checked
+/// explicitly by name elsewhere in this module. This exists so a *future* DuckDB version that adds
+/// a new clause (a new key this module has never seen and so has no explicit check for) is refused
+/// by default rather than silently passed through unexamined — the same allowlist-shaped,
+/// refuse-what-you-cannot-name discipline [`walk_expr`] applies to expression nodes, applied here
+/// to the wrapper's own shape.
+fn refuse_unknown_keys(value: &Value, known: &[&str], what: &str) -> Result<(), FilterError> {
+    match value.as_object() {
+        Some(obj) => {
+            for key in obj.keys() {
+                if !known.contains(&key.as_str()) {
+                    return Err(FilterError::ConstructNotAdmitted {
+                        construct: format!(
+                            "an unrecognized {what} key `{key}` — a shape this module does not \
+                             know how to check, refused rather than silently passed"
+                        ),
+                    });
+                }
+            }
+            Ok(())
+        }
+        None => Err(FilterError::ConstructNotAdmitted {
+            construct: format!("a malformed {what} (not a JSON object)"),
+        }),
+    }
+}
+
+/// Is `node` exactly this module's own [`SENTINEL`] (`1=1`, an `INTEGER` `1` compared for equality
+/// with itself) — never anything a caller's own text could produce *by coincidence* and still be
+/// treated as something other than what it structurally is: whatever sits in this position, by
+/// construction.
+fn is_sentinel_comparison(node: &Value) -> bool {
+    node.get("class").and_then(Value::as_str) == Some("COMPARISON")
+        && node.get("type").and_then(Value::as_str) == Some("COMPARE_EQUAL")
+        && is_integer_constant_one(node.get("left"))
+        && is_integer_constant_one(node.get("right"))
+}
+
+fn is_integer_constant_one(node: Option<&Value>) -> bool {
+    match node {
+        Some(n) => {
+            n.get("class").and_then(Value::as_str) == Some("CONSTANT")
+                && n.get("value").and_then(|v| v.get("value")).and_then(Value::as_i64) == Some(1)
+        }
+        None => false,
+    }
+}
+
+/// Assert that `node` (the top-level parsed `SELECT_NODE`) is **exactly** this module's own
+/// `SELECT 1 WHERE ( <predicate> ) AND 1=1` wrapper, with nothing else attached anywhere else in
+/// the statement, and return the caller's own predicate as a list of top-level operands — every
+/// child of the top `AND` **except** the trailing [`SENTINEL`] — for [`structural_admit`] to walk.
+///
+/// **Two independent things are checked here, and conflating them is exactly the gap this module
+/// had.** First: the wrapper's *other* fields (everything but `where_clause`) are exactly the
+/// fixed template's own — this is what refuses a `GROUP BY`/`HAVING`/`UNION` breakout
+/// (`1=1) GROUP BY 1 HAVING count(*) > 0 --` parses to **one** valid `SELECT_NODE` whose
+/// `where_clause` is an innocuous `1=1`, while `group_expressions`/`having` carry the smuggled
+/// `count(*)` — real JSON observed while building this module, recorded in `CUT-STATE.md`).
+/// Second, and this is the part a where-clause-only check on the *old* wrapper (`SELECT 1 WHERE (
+/// <predicate> )`, no sentinel) could never catch: `where_clause` itself must be a top-level
+/// `CONJUNCTION`/`CONJUNCTION_AND` whose **last** child is exactly [`SENTINEL`]. Real composition
+/// (`stream.rs::build_sql`) emits `(<predicate>) AND <bbox>` — an `AND`-conjoined right neighbour
+/// in the identical position `AND 1=1` occupies here. If the predicate's own parentheses are
+/// balanced, DuckDB's parser is forced to bind it as one operand of that top-level `AND`
+/// (**empirically confirmed** the sentinel lands last across every predicate shape this corpus
+/// exercises — chained `AND`, top-level `OR`, top-level `NOT`, `BETWEEN`, `IN`, and even a
+/// predicate whose *own* text ends in `1=1` — evidence in
+/// `target/slice-evidence/sql-filter/logs/p3-probe-sentinel.log`). If the predicate's own text
+/// instead contains an unbalanced `)` that closes this wrapper's paren early, the text after it
+/// reassociates — `... ) OR (1=1` puts the sentinel *inside* an `AND` that is itself just one
+/// operand of a top-level `OR`, so the top level here is `CONJUNCTION_OR`, not `CONJUNCTION_AND`,
+/// and is refused; `1=1) --` comments out the sentinel (and everything else on the line) entirely,
+/// so `where_clause` is a bare `COMPARISON`, not even a `CONJUNCTION`, and is refused the same way.
+/// **The invariant enforced is "the emitted WHERE really is `(<predicate>) AND <bbox>`", not
+/// merely "the format string looks like it".**
+fn expect_predicate_operands(node: &Value) -> Result<Vec<&Value>, FilterError> {
     let node_type = node.get("type").and_then(Value::as_str).unwrap_or("<missing type>");
     if node_type != "SELECT_NODE" {
         return Err(FilterError::ConstructNotAdmitted {
             construct: format!("a top-level statement of type `{node_type}`, not a bare SELECT"),
         });
     }
+    refuse_unknown_keys(node, KNOWN_SELECT_NODE_KEYS, "SELECT_NODE")?;
 
     let empty_array = |key: &str| matches!(node.get(key).and_then(Value::as_array), Some(a) if a.is_empty());
     let is_null = |key: &str| node.get(key).map(Value::is_null).unwrap_or(false);
@@ -410,10 +571,35 @@ fn expect_bare_select_wrapper(node: &Value) -> Result<&Value, FilterError> {
         return Err(FilterError::ConstructNotAdmitted { construct: "a QUALIFY clause".to_string() });
     }
 
-    match node.get("where_clause") {
-        Some(w) if !w.is_null() => Ok(w),
+    let where_clause = match node.get("where_clause") {
+        Some(w) if !w.is_null() => w,
+        _ => {
+            return Err(FilterError::ConstructNotAdmitted {
+                construct: "an empty predicate (no WHERE expression at all)".to_string(),
+            })
+        }
+    };
+
+    // The sentinel-shape check — see this function's own doc for the full rationale.
+    if where_clause.get("class").and_then(Value::as_str) != Some("CONJUNCTION")
+        || where_clause.get("type").and_then(Value::as_str) != Some("CONJUNCTION_AND")
+    {
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "the predicate does not compose with this module's own AND-sentinel the \
+                        way real composition, `(<predicate>) AND <bbox>`, would — the caller's \
+                        text re-associated across the paren this module added"
+                .to_string(),
+        });
+    }
+    let children = expect_children(where_clause)?;
+    match children.last() {
+        Some(last) if is_sentinel_comparison(last) => Ok(children[..children.len() - 1].iter().collect()),
         _ => Err(FilterError::ConstructNotAdmitted {
-            construct: "an empty predicate (no WHERE expression at all)".to_string(),
+            construct: "the predicate's own text consumed this module's AND-sentinel instead of \
+                        leaving it as the top-level AND's last operand — real composition appends \
+                        `AND <bbox>` in exactly that position, so a predicate that cannot be found \
+                        there would re-associate against the real bbox too"
+                .to_string(),
         }),
     }
 }
@@ -749,7 +935,18 @@ fn bind_admit(
         .query_arrow([])
         .map_err(|e| FilterError::RejectedByBinder { detail: e.to_string() })?;
     let schema = arrow.get_schema();
-    let inferred = schema.field(0).data_type();
+    // `.fields().first()`, never the indexing `schema.field(0)` — this runs on a caller-driven
+    // path, and an index access would be a panic waiting on whatever input makes the surrogate
+    // query's result carry zero columns (not observed, but not worth an `unwrap`-shaped risk on
+    // this seam either).
+    let inferred = match schema.fields().first() {
+        Some(field) => field.data_type(),
+        None => {
+            return Err(FilterError::RejectedByBinder {
+                detail: "the surrogate query's result carries no columns at all".to_string(),
+            })
+        }
+    };
 
     if inferred != &DataType::Boolean {
         return Err(FilterError::NotBoolean { inferred_type: inferred.to_string() });
@@ -875,6 +1072,83 @@ mod tests {
         match structural_admit("1=1 --", &conn()) {
             Err(FilterError::Unparsable { .. }) => {}
             other => panic!("expected Unparsable, got {other:?}"),
+        }
+    }
+
+    /// B1 (reviewer gate, demonstrated live): the old wrapper (`SELECT 1 WHERE (<text>)`) admitted
+    /// this, and composition (`(<text>) AND <bbox>`) then re-associated it — `AND` binds tighter
+    /// than `OR`, so the bbox condition was bypassed entirely. The fixed wrapper
+    /// (`SELECT 1 WHERE (<text>) AND 1=1`) refuses it: the top-level `where_clause` here is a
+    /// `CONJUNCTION_OR`, not the required `CONJUNCTION_AND` with the sentinel last.
+    #[test]
+    fn a_predicate_that_closes_the_wrapper_paren_early_and_reassociates_as_or_is_refused() {
+        match structural_admit("zone = 'residential') OR (1=1", &conn()) {
+            Err(FilterError::ConstructNotAdmitted { construct }) => {
+                assert!(construct.contains("AND-sentinel"), "{construct}");
+            }
+            other => panic!("expected ConstructNotAdmitted naming the AND-sentinel, got {other:?}"),
+        }
+    }
+
+    /// B1's other demonstrated escape: a trailing comment that eats real composition's `AND
+    /// <bbox> ... LIMIT n` suffix eats this module's own `AND 1=1` sentinel identically — refused
+    /// because `where_clause` is a bare `COMPARISON`, not a `CONJUNCTION_AND` at all.
+    #[test]
+    fn a_trailing_comment_that_would_eat_compositions_and_bbox_also_eats_the_sentinel_and_is_refused() {
+        match structural_admit("1=1) --", &conn()) {
+            Err(FilterError::ConstructNotAdmitted { construct }) => {
+                assert!(construct.contains("AND-sentinel"), "{construct}");
+            }
+            other => panic!("expected ConstructNotAdmitted naming the AND-sentinel, got {other:?}"),
+        }
+    }
+
+    /// Positive control for the sentinel design itself: a predicate whose own top level is already
+    /// an `AND` chain still admits, and both of its own columns are still collected — DuckDB
+    /// flattens `(a AND b) AND 1=1` into one 3-ary `CONJUNCTION_AND` (measured;
+    /// `target/slice-evidence/sql-filter/logs/p3-probe-sentinel.log`), and `expect_predicate_
+    /// operands` walks every child except the last (the sentinel), not "exactly two children".
+    #[test]
+    fn a_predicate_that_is_itself_a_top_level_and_chain_still_admits_with_every_column_collected() {
+        match structural_admit("a = 1 AND b = 2 AND c = 3", &conn()) {
+            Ok(columns) => {
+                for name in ["a", "b", "c"] {
+                    assert!(columns.iter().any(|c| c == name), "missing {name} in {columns:?}");
+                }
+                assert!(!columns.contains(&"1".to_string()), "the sentinel must not be collected");
+            }
+            other => panic!("expected the AND-chain to admit, got {other:?}"),
+        }
+    }
+
+    /// Should-fix 4 (reviewer gate): an unrecognized key anywhere on the wrapped `SELECT_NODE`
+    /// refuses by default rather than passing silently — hardening against a future DuckDB version
+    /// adding a clause this module has no explicit check for. Exercised directly against the
+    /// checker rather than by finding real DuckDB output that adds a thirteenth key (there isn't
+    /// one today), which is exactly the point: the check must fire on a shape this module has
+    /// never seen, not only on shapes it can currently provoke.
+    #[test]
+    fn an_unrecognized_select_node_key_is_refused_rather_than_silently_passed() {
+        let mut node = serde_json::json!({
+            "type": "SELECT_NODE",
+            "modifiers": [],
+            "cte_map": {"map": []},
+            "select_list": [{"class": "CONSTANT"}],
+            "from_table": {"type": "EMPTY"},
+            "where_clause": {"class": "CONJUNCTION", "type": "CONJUNCTION_AND", "children": []},
+            "group_expressions": [],
+            "group_sets": [],
+            "aggregate_handling": "STANDARD_HANDLING",
+            "having": null,
+            "sample": null,
+            "qualify": null,
+        });
+        node.as_object_mut().unwrap().insert("a_future_clause_this_module_has_never_seen".into(), Value::Bool(true));
+        match expect_predicate_operands(&node) {
+            Err(FilterError::ConstructNotAdmitted { construct }) => {
+                assert!(construct.contains("a_future_clause_this_module_has_never_seen"), "{construct}");
+            }
+            other => panic!("expected ConstructNotAdmitted naming the unrecognized key, got {other:?}"),
         }
     }
 }
