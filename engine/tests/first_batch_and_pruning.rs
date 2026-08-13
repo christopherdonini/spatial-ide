@@ -12,7 +12,10 @@
 //! - **Lever B2** — the row-group index returns exactly the rows the scan returns, its metadata
 //!   column paths are the ones this DuckDB actually reports, and every refusal is a named variant.
 //! - **Lever B1** — a clustered variant carries **the same features, byte for byte**, and its
-//!   `geo` metadata survives the rewrite.
+//!   `geo` metadata survives the rewrite. The same is asserted of `ClusterOrder::Shuffled`, the
+//!   import-layout cut's shuffled control `R` (`kernel/IMPORT-LAYOUT-PREREGISTRATION.md` §4/§5),
+//!   which additionally has its own determinism condition to prove: `ORDER BY hash(id), id`, never
+//!   `random()`.
 //!
 //! ## The comparison used throughout, and why it is not a concatenation hash
 //!
@@ -565,6 +568,162 @@ fn a_clustered_variant_carries_the_same_features_and_the_same_geo_metadata() {
     let (qa, _) = digest_set(a.stream(&q).expect("q source"));
     let (qb, _) = digest_set(b.stream(&q).expect("q variant"));
     assert_eq!(qa, qb);
+}
+
+// ---- lever B1's shuffled control, `R` (`kernel/IMPORT-LAYOUT-PREREGISTRATION.md` §4/§5) --------
+
+#[test]
+fn a_shuffled_variant_carries_the_same_features_and_the_same_geo_metadata() {
+    // The same B1 correctness proof as the Hilbert test above, run against `ClusterOrder::Shuffled`
+    // instead. `rewrite`'s F3 written-layout verification and the confound guard do not branch on
+    // `order` at all, so this is what shows they apply to the shuffled control identically, rather
+    // than resting on that as an unexercised claim about shared code.
+    let spec = multi_row_group();
+    let (src, facts) = write("lever-r-src", &spec);
+    let dst = src.with_file_name("lever-r-shuffled.parquet");
+    let _ = std::fs::remove_file(&dst);
+
+    let (cols, cell) = grid(&spec);
+    let variant = VariantSpec {
+        order: ClusterOrder::Shuffled,
+        extent: DeclaredExtent {
+            xmin: 2_600_000.0,
+            ymin: 1_200_000.0,
+            xmax: 2_600_000.0 + cols * cell,
+            ymax: 1_200_000.0 + cols * cell,
+        },
+        row_group_rows: spec.row_group_rows,
+        id_column: "id".into(),
+    };
+    let out = write_clustered_variant(&src, &dst, &variant, &CancelToken::new()).expect("variant");
+
+    assert_eq!(out.features, facts.features as u64);
+    assert!(out.carried_metadata_keys.contains(&"geo".to_string()));
+    assert_eq!(out.row_groups, facts.features.div_ceil(spec.row_group_rows) as u64);
+
+    let a = Dataset::open(&src).expect("open source");
+    let b = Dataset::open(&dst).expect("open variant");
+    assert_eq!(a.crs().identifier(), b.crs().identifier(), "the variant lost its CRS");
+    let (sa, _) = digest_set(a.stream(&ViewportQuery::all()).expect("stream source"));
+    let (sb, _) = digest_set(b.stream(&ViewportQuery::all()).expect("stream variant"));
+    assert_eq!(sa, sb, "the shuffled variant is not the same features as its source");
+
+    // Structural evidence the shuffle actually reordered rows, on the same B2-admissibility check
+    // the Hilbert test uses: `hash(id)` has no relationship to the source's raster order, so a
+    // shuffled file's per-row-group id ranges must not still be disjoint and ascending.
+    assert!(
+        !id_ranges_are_disjoint_and_ordered(&dst),
+        "a shuffled file's identity should not still be row-group-ordered"
+    );
+}
+
+#[test]
+fn the_shuffled_order_is_deterministic_across_two_independent_rewrites() {
+    // The preregistration's determinism condition for `R`, made a fact rather than an intention:
+    // `ORDER BY hash(id), id`, never `random()`. Two rewrites of the identical source, through the
+    // identical `COPY`, from two separate calls — so nothing is cached or shared between them —
+    // must land on byte-identical files.
+    let spec = multi_row_group();
+    let (src, _) = write("lever-r-determinism-src", &spec);
+    let (cols, cell) = grid(&spec);
+    let extent = DeclaredExtent {
+        xmin: 2_600_000.0,
+        ymin: 1_200_000.0,
+        xmax: 2_600_000.0 + cols * cell,
+        ymax: 1_200_000.0 + cols * cell,
+    };
+
+    let mut hashes = Vec::new();
+    for i in 0..2 {
+        let dst = src.with_file_name(format!("lever-r-determinism-{i}.parquet"));
+        let _ = std::fs::remove_file(&dst);
+        write_clustered_variant(
+            &src,
+            &dst,
+            &VariantSpec {
+                order: ClusterOrder::Shuffled,
+                extent,
+                row_group_rows: spec.row_group_rows,
+                id_column: "id".into(),
+            },
+            &CancelToken::new(),
+        )
+        .expect("variant");
+        let (hash, _) = spatial_engine::index::content_hash(&dst, &CancelToken::new())
+            .expect("hash the written variant");
+        hashes.push(hash);
+    }
+    assert_eq!(
+        hashes[0], hashes[1],
+        "`ORDER BY hash(id), id` must be deterministic across independent rewrites, unlike `random()`"
+    );
+}
+
+#[test]
+fn the_shuffled_order_is_exactly_hash_id_then_id_in_file_order() {
+    // Not only "not raster order" (the structural test above) but the **exact** order the
+    // preregistration names, checked against a query this module's own rewrite never issues:
+    // reading the variant's ids in physical file order must match an independently-issued
+    // `ORDER BY hash(id), id` over the untouched source.
+    let spec = multi_row_group();
+    let (src, _) = write("lever-r-order-src", &spec);
+    let dst = src.with_file_name("lever-r-order.parquet");
+    let _ = std::fs::remove_file(&dst);
+    let (cols, cell) = grid(&spec);
+    write_clustered_variant(
+        &src,
+        &dst,
+        &VariantSpec {
+            order: ClusterOrder::Shuffled,
+            extent: DeclaredExtent {
+                xmin: 2_600_000.0,
+                ymin: 1_200_000.0,
+                xmax: 2_600_000.0 + cols * cell,
+                ymax: 1_200_000.0 + cols * cell,
+            },
+            row_group_rows: spec.row_group_rows,
+            id_column: "id".into(),
+        },
+        &CancelToken::new(),
+    )
+    .expect("variant");
+
+    let written = ids_in_file_order(&dst);
+    let expected = ids_in_hash_id_order(&src);
+    assert_eq!(written.len(), spec.features);
+    assert_eq!(
+        written, expected,
+        "the shuffled variant's physical row order does not match an independent `ORDER BY \
+         hash(id), id` over the source"
+    );
+}
+
+/// `id`, in the physical order `read_parquet` returns with no `ORDER BY` at all — DuckDB's
+/// `preserve_insertion_order` (on by default) is what makes this equal file order rather than
+/// whatever a parallel scan's scheduling happened to produce.
+fn ids_in_file_order(path: &std::path::Path) -> Vec<u64> {
+    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let mut stmt = conn.prepare("SELECT id FROM read_parquet(?)").expect("prepare");
+    let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
+    let mut out = Vec::new();
+    while let Some(r) = rows.next().expect("row") {
+        out.push(r.get::<_, u64>(0).expect("id"));
+    }
+    out
+}
+
+/// `id`, sorted by `hash(id), id` — the preregistration's exact wording, issued independently of
+/// [`spatial_engine::layout::write_clustered_variant`]'s own SQL.
+fn ids_in_hash_id_order(path: &std::path::Path) -> Vec<u64> {
+    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let mut stmt =
+        conn.prepare("SELECT id FROM read_parquet(?) ORDER BY hash(id), id").expect("prepare");
+    let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
+    let mut out = Vec::new();
+    while let Some(r) = rows.next().expect("row") {
+        out.push(r.get::<_, u64>(0).expect("id"));
+    }
+    out
 }
 
 #[test]

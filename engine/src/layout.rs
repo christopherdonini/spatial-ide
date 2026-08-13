@@ -106,6 +106,24 @@ pub enum ClusterOrder {
     /// as order. Sharing the code path is what makes "identical except the ORDER BY" a fact rather
     /// than an intention.
     SourceIdentity,
+    /// **The shuffled control, `R` — `kernel/IMPORT-LAYOUT-PREREGISTRATION.md` §4/§5.** What an
+    /// unordered ETL-shaped source reads: every prior baseline in this repository sat on a
+    /// raster-ordered fixture, so `SourceIdentity`'s zone-map pruning is the floor for an
+    /// *already-sorted* file, not for the shape a real import produces. Existing as a third
+    /// [`ClusterOrder`] rather than a separate function for the identical reason `SourceIdentity`
+    /// does: sharing `rewrite`'s one `COPY` statement, differing only in the `ORDER BY`, is what
+    /// makes the comparison a control instead of a claim.
+    ///
+    /// **`ORDER BY hash(id), id` — exact wording, deterministic, and never `random()`.** DuckDB's
+    /// `hash()` is a pure function of its input: the same id always hashes to the same value, in the
+    /// same process or a fresh one, so two independent rewrites of the same source produce
+    /// byte-identical files. `random()` would not — every run would draw a fresh order, so nothing
+    /// about "R" could be re-verified after the fact, and the preregistration is explicit that this
+    /// is the property that rules it out. `id` is the tie-break for the (astronomically unlikely,
+    /// but not impossible) case of a hash collision — the same discipline `Hilbert16`'s
+    /// `(curve_key, id)` order applies for the same reason: an order without a tie-break is not a
+    /// total order.
+    Shuffled,
 }
 
 impl ClusterOrder {
@@ -115,6 +133,7 @@ impl ClusterOrder {
         match self {
             Self::Hilbert16 => "hilbert16",
             Self::SourceIdentity => "source-identity",
+            Self::Shuffled => "shuffled",
         }
     }
 }
@@ -307,6 +326,11 @@ fn rewrite(
     let order_by = match spec.order {
         ClusterOrder::Hilbert16 => format!("o.curve_key ASC, s.{id} ASC"),
         ClusterOrder::SourceIdentity => format!("s.{id} ASC"),
+        // The preregistration's exact wording (`ORDER BY hash(id), id`), qualified by the `s.`
+        // alias the shared `SELECT ... FROM read_parquet(...) s` already uses. `hash()`, never
+        // `random()` — see the variant's own doc comment for why that is load-bearing rather than
+        // stylistic.
+        ClusterOrder::Shuffled => format!("hash(s.{id}), s.{id} ASC"),
     };
     let copy = format!(
         "COPY (SELECT s.* FROM read_parquet('{s}') s JOIN __clustered_order o ON s.{id} = o.id \
