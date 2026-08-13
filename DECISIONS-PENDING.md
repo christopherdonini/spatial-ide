@@ -5,7 +5,34 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-A. **Import-layout cut concluded — the preregistered gate FAILED; two decisions.** The cut
+A. **[DIRECTION APPROVED 2026-08-13 — exact text below awaits your sight-approval, then the
+   custodian applies it to docs/07 line 22.]** You accepted the gate fail as final with reopen
+   conditions per the ADR-012 pattern. **The drafted replacement text, verbatim:**
+
+   > - **Spatial indexing — measured to a close (2026-08-13; `kernel/RESULTS.md` ninth
+   >   section).** No index prunes IO: an external index over the covering-bbox statistics
+   >   excluded exactly zero bytes (seventh section, finding 3), and DuckDB's zone maps already
+   >   prune roughly half of a raster-ordered file at a quarter viewport. Physical layout is the
+   >   only lever that moved read volume — a Hilbert-ordered 5 GB file read **61.7%** of the
+   >   raster control's bytes at the near-quarter viewport and won total time 49/49 — but the
+   >   **preregistered import-layout gate FAILED** on its no-whole-file-regression condition
+   >   (100.544% vs the declared ≤ 100.5%; Hilbert-ordered files compress ~0.5% worse), and a
+   >   fail is a complete result: **layout stays out of the import path; no ADR was filed.** The
+   >   standing bracket: an **unordered** source gets no pruning at all (shuffled control
+   >   ≥ 99.99% read at every viewport, both classes) — spatial pruning is a property of layout,
+   >   not of any index. **Reopen conditions** (each requires a fresh preregistered gate, never
+   >   an amendment): **(1)** evidence that the real workload is small-viewport-dominant with
+   >   whole-file opens rare — the measured trade re-weights (Hilbert wins 3.3% vs 13.0% at
+   >   1/64, loses only on whole-file cost); **(2)** ADR-011's tiled-batch direction accepted in
+   >   a form that removes whole-extent reads from the hot path (its gate 8 owns the residency
+   >   question this connects to); **(3)** a demonstrated instrument/writer confound — e.g.
+   >   explicitly pinned parquet encodings showing the ~0.5% whole-file overhead was the
+   >   writer's, not the layout's, while the near-quarter win survives. Every figure is
+   >   warm-cache logical bytes on Windows, one machine, one writer.
+
+   Original entry follows for the record.
+
+A′. *(superseded original)* **Import-layout cut concluded — the preregistered gate FAILED; two decisions.** The cut
    (branch `cut/import-layout`, stacked on the parked shell branch; full record:
    `kernel/RESULTS.md` ninth section, preregistration `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`)
    measured docs/07's "index that prunes actual IO" item to a close: no index prunes IO (the
@@ -70,16 +97,16 @@ A. **Import-layout cut concluded — the preregistered gate FAILED; two decision
    authorize, not ours to take. Touches: the A5'–A9' regression steps stay red until fixed; the
    operator walkthrough re-run (entry 2) stays held behind it.
 
-1. **PR #8 operator walkthrough — hold condition MET 2026-08-13; ready for your Part A (and
-   new Part D).** Your condition was "entry 0 diagnosed, fixed, and A5′–A9′ pass in a fresh
-   session": all twelve regression steps now PASS on a verified-fresh launch
-   (`frontends/shell/e2e/out/regression-render-trace-1786582131720.json` — A9′ hovers a
-   read-back-verified feature pixel; OVERCEIL′ shows "78191 of 100000 features rendered —
-   declared ceiling reached", banner dismiss leaves the status standing; REOPEN′ clears it on
-   dataset change). The away-mode evidence rule stands: native dialog A2 and the look-and-feel
-   qualities of A4–A10 and D2 are yours alone; the E2E floor covers the rest. Touches: PR #8
-   merge (also gated on nothing else — ADR-020 is accepted and applied). Walkthrough now has
-   four fixtures and Parts A–D.
+1. **POST-MERGE OBLIGATION — operator walkthrough Parts A–D, due 2026-08-23.** Per your
+   2026-08-13 instruction, PR #8 merged with two GUI items recorded as
+   **operator verification deferred — queued for the human's return** (away-mode evidence rule),
+   named: **(1)** the native file-dialog flow (walkthrough A2 — structurally unreachable by any
+   E2E automation); **(2)** the look-and-feel qualities (A4–A10: smoothness, no tearing/jitter/
+   ghosting; D2's visual acceptance point — the persistent residency status being *seen*).
+   Dated: ten days from merge, **2026-08-23**. Interim evidence cited: all twelve E2E-verified
+   regression steps PASS on the exact merged tree
+   (`frontends/shell/e2e/out/regression-render-trace-1786583532688.json`, 2026-08-13). The
+   walkthrough is a post-merge obligation, not a merge gate; it stays queued here until run.
 
 ## Resolved
 
