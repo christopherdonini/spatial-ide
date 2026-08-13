@@ -130,7 +130,7 @@ fn publish_a_bundle(d: &Path) -> PathBuf {
     let req = PublishRequest {
         dataset: &ds,
         dataset_name: "parcels",
-        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None },
+        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None },
         attributes: vec!["zone".into()],
         style_source: STYLE,
         viewer: &viewer,

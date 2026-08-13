@@ -132,7 +132,7 @@ fn request<'a>(
     PublishRequest {
         dataset: ds,
         dataset_name: "parcels",
-        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None },
+        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None },
         attributes: vec!["zone".to_string()],
         style_source: STYLE,
         viewer: v,

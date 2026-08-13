@@ -400,7 +400,9 @@ fn a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_no
     ));
     // …and the same viewport with no CRS named is admitted: that declares it to be in the
     // dataset's own CRS, which is the escape hatch §7.3 leaves open.
-    assert!(ds.stream(&ViewportQuery { bbox: Some(view), bbox_crs: None, limit: None }).is_ok());
+    assert!(ds
+        .stream(&ViewportQuery { bbox: Some(view), bbox_crs: None, limit: None, filter: None })
+        .is_ok());
 }
 
 #[test]

@@ -90,6 +90,7 @@ pub mod geoparquet;
 pub mod layout;
 pub mod pin;
 pub mod pool;
+pub mod predicate;
 pub mod rowgroup;
 pub mod stream;
 pub mod trace;
@@ -102,6 +103,7 @@ pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
+pub use predicate::AdmittedPredicate;
 pub use pool::{
     ConnectionPool, LeaseClass, PoolConfig, MAX_MAINTENANCE_CONNECTIONS, MAX_PHYSICAL_CONNECTIONS,
     MAX_STREAM_CONNECTIONS,

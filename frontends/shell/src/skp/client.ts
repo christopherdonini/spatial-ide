@@ -65,6 +65,12 @@ export function viewportQuery(
     bbox,
     bbox_crs: bboxCrs,
     limit,
+    // `filter: null` explicitly, matching the `bbox_crs` discipline (SKP-V0.md "v0.1" section):
+    // `ViewportQueryRequest.filter` is `Option<Filter>` with no `#[serde(default)]` on the Rust
+    // side, so an absent key is a deserialize failure, not a tolerated omission. The real
+    // filter-sending client API is P5's; this keeps a live `viewport_query` invoke round-tripping
+    // against the v0.1 struct in the meantime.
+    filter: null,
   });
 }
 

@@ -448,8 +448,8 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         // admissible value is the one string that matches, so the flag's whole reachable effect
         // would be letting an operator opt into a refusal. When a caller genuinely needs to assert
         // a viewport CRS, the assertion arrives through SKP.
-        Some(b) => ViewportQuery { bbox: Some(b), bbox_crs: None, limit },
-        None => ViewportQuery { bbox: None, bbox_crs: None, limit },
+        Some(b) => ViewportQuery { bbox: Some(b), bbox_crs: None, limit, filter: None },
+        None => ViewportQuery { bbox: None, bbox_crs: None, limit, filter: None },
     };
 
     // **A dropped flag is said out loud rather than dropped quietly.** An operator declaration is

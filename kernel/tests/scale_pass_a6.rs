@@ -195,7 +195,7 @@ fn request<'a>(ds: &'a Dataset, v: &'a ViewerAssets, destination: PathBuf) -> Pu
     PublishRequest {
         dataset: ds,
         dataset_name: "parcels",
-        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None },
+        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None },
         // The fixture is `AttributeMode::None` (§1a), so there is nothing to project.
         attributes: Vec::new(),
         style_source: STYLE,
@@ -609,7 +609,7 @@ fn peak_resident(
 ) -> (usize, u64, usize, bool) {
     let cancel = CancelToken::new();
     let dog = Watchdog::start(label, ceiling, Some(SILENCE_STREAM), cancel.clone());
-    let q = ViewportQuery { bbox: None, bbox_crs: None, limit: None };
+    let q = ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None };
     let mut stream = ds.stream_with_cancel(&q, cancel).expect("the stream opens");
     let mut payload = Vec::new();
     let mut rows = 0u64;

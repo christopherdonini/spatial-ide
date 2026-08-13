@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
-use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
+use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, EngineError, ViewportQuery};
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, CrsInfo,
     DatasetHandle, DecU64, DescribeRequest, DescribeResponse, Extent, FieldInfo, GeometryInfo,
@@ -438,8 +438,20 @@ fn build_viewport_query(ds: &Dataset, req: &ViewportQueryRequest) -> ViewportQue
         }
         None => ViewportQuery::all(),
     };
-    match &req.limit {
+    let query = match &req.limit {
         Some(n) => query.with_limit(n.0),
+        None => query,
+    };
+    match &req.filter {
+        // **Direct pass-through — deliberately unvalidated.** `Filter::new`
+        // (`protocol/skp`) only checked the wire dialect is `duckdb-expr/0`; nothing between there
+        // and here has parsed the predicate's grammar, resolved a column against this dataset's
+        // schema, or asked whether it binds to `BOOLEAN`. P3 wires that admission (structural,
+        // namespace, bind) in front of `AdmittedPredicate::assume_validated`, and P4 moves *this*
+        // call site behind it — pre-lease, pre-mint, on `spawn_blocking` — so `SkpHost::
+        // viewport_query` refuses before a connection is leased or a ticket minted. Until then this
+        // is exactly the identity function on the wire text.
+        Some(f) => query.with_filter(AdmittedPredicate::assume_validated(f.predicate.clone())),
         None => query,
     }
 }

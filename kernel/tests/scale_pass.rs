@@ -369,7 +369,7 @@ fn measure_the_five_gigabyte_scale_pass() {
     require_disk("stream");
     let ds = Dataset::open(fixture_path()).expect("open the 5 GB fixture");
 
-    let whole = ViewportQuery { bbox: None, bbox_crs: None, limit: None };
+    let whole = ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None };
     let (whole_first, whole_total, whole_rows, whole_batches, whole_mem, whole_plan) =
         stream_phase(&ds, &whole, WHOLE_FILE_RUNS, CEIL_WHOLE_FILE, "whole-file");
     assert_eq!(whole_rows, FEATURES as u64, "the whole-file stream did not return every row");
@@ -390,6 +390,7 @@ fn measure_the_five_gigabyte_scale_pass() {
         }),
         bbox_crs: Some(crs.clone()),
         limit: None,
+        filter: None,
     };
 
     let quarter = viewport(2);

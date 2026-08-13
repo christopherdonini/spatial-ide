@@ -31,6 +31,7 @@ use crate::dataset::{lease_for_stream, Dataset};
 use crate::envelope::{BatchEnvelope, TaggedBatch, ID_COLUMN};
 use crate::error::{EngineError, Result};
 use crate::geoarrow::build_polygon_array;
+use crate::predicate::AdmittedPredicate;
 use crate::wkb::PolygonBuilder;
 
 /// Declared ceilings — ADR-010 rule 6: "A layer design states its ceiling … before approaching it."
@@ -201,19 +202,32 @@ pub struct ViewportQuery {
     /// The CRS the bbox is expressed in, as an identifier. Checked against the dataset's own.
     pub bbox_crs: Option<String>,
     pub limit: Option<u64>,
+    /// A caller predicate, already an [`AdmittedPredicate`] by the time it reaches this struct.
+    ///
+    /// **`None` is "no predicate"** — the whole-file-or-viewport answer this type already had before
+    /// this cut, unchanged in shape. Admitting the *text* (structural/namespace/bind checks) is not
+    /// this crate's job today (see `predicate.rs`); this field only says where a validated predicate
+    /// composes into `build_sql`'s `WHERE` clause once one exists.
+    pub filter: Option<AdmittedPredicate>,
 }
 
 impl ViewportQuery {
     pub fn all() -> Self {
-        Self { bbox: None, bbox_crs: None, limit: None }
+        Self { bbox: None, bbox_crs: None, limit: None, filter: None }
     }
 
     pub fn viewport(bbox: Bbox, crs_identifier: impl Into<String>) -> Self {
-        Self { bbox: Some(bbox), bbox_crs: Some(crs_identifier.into()), limit: None }
+        Self { bbox: Some(bbox), bbox_crs: Some(crs_identifier.into()), limit: None, filter: None }
     }
 
     pub fn with_limit(mut self, n: u64) -> Self {
         self.limit = Some(n);
+        self
+    }
+
+    /// Attach an admitted predicate. Builder-style, on the [`Self::with_limit`] precedent.
+    pub fn with_filter(mut self, filter: AdmittedPredicate) -> Self {
+        self.filter = Some(filter);
         self
     }
 }
@@ -1123,6 +1137,26 @@ impl Dataset {
         }
         let mut sql = format!("SELECT {projection} FROM read_parquet(?)");
 
+        // **The caller's predicate, verbatim, wrapped in exactly the one added paren pair the
+        // design note (`NEXT-CUT.md`) describes.** Never rewritten, normalized, or case-folded —
+        // whatever `AdmittedPredicate` carries is what reaches DuckDB. `AdmittedPredicate` itself
+        // establishes nothing about admission (see `predicate.rs`); this line only composes it.
+        let filter_clause: Option<String> =
+            q.filter.as_ref().map(|f| format!("({})", f.sql_text()));
+
+        // Opens this statement's `WHERE` clause. **The caller's predicate is always leftmost when
+        // one exists** — `NEXT-CUT.md`'s composition rule — and every condition this plan itself
+        // contributes (bbox, and any `FilterPlan` range predicate) is `AND`-appended after it, never
+        // the reverse. Without a filter this opens exactly the clause the plan already built before
+        // this cut. Callers append their own condition text immediately after calling this.
+        let open_where = |sql: &mut String| {
+            sql.push_str(" WHERE ");
+            if let Some(f) = &filter_clause {
+                sql.push_str(f);
+                sql.push_str(" AND ");
+            }
+        };
+
         // **`ORDER BY` names the *source* column, never the `id` alias — and the reason is not the
         // one the range predicates below give.**
         //
@@ -1258,7 +1292,8 @@ impl Dataset {
                                 kept: sel.kept,
                                 ranges: sel.ranges.len(),
                             };
-                            sql.push_str(&format!(" WHERE ({})", preds.join(" OR ")));
+                            open_where(&mut sql);
+                            sql.push_str(&format!("({})", preds.join(" OR ")));
                             sql.push_str(&format!(
                                 " AND {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
                                 xmin = c.xmin.to_sql(),
@@ -1276,8 +1311,9 @@ impl Dataset {
                 }
                 // Every arm that reaches here emits the plain covering-bbox scan below, with the
                 // plan recording *why* no range predicate was injected.
+                open_where(&mut sql);
                 sql.push_str(&format!(
-                    " WHERE {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
+                    "{xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
                     xmin = c.xmin.to_sql(),
                     xmax = c.xmax.to_sql(),
                     ymin = c.ymin.to_sql(),
@@ -1329,7 +1365,8 @@ impl Dataset {
                             ranges: ranges.len(),
                             candidates: candidates.len(),
                         };
-                        sql.push_str(&format!(" WHERE ({})", preds.join(" OR ")));
+                        open_where(&mut sql);
+                        sql.push_str(&format!("({})", preds.join(" OR ")));
                         sql.push_str(&format!(
                             " AND {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
                             xmin = c.xmin.to_sql(),
@@ -1353,13 +1390,19 @@ impl Dataset {
                 plan = FilterPlan::ScanOnly;
             }
             // Intersection, not containment: a feature whose bbox overlaps the viewport is in.
+            open_where(&mut sql);
             sql.push_str(&format!(
-                " WHERE {xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
+                "{xmin} <= ? AND {xmax} >= ? AND {ymin} <= ? AND {ymax} >= ?",
                 xmin = c.xmin.to_sql(),
                 xmax = c.xmax.to_sql(),
                 ymin = c.ymin.to_sql(),
                 ymax = c.ymax.to_sql(),
             ));
+        } else if let Some(f) = &filter_clause {
+            // No bbox: the predicate is the whole `WHERE` clause. `open_where` is not used here —
+            // it always leaves a trailing `AND` for a condition this branch has none of.
+            sql.push_str(" WHERE ");
+            sql.push_str(f);
         }
         // **`RowOrdering::Unordered` emits nothing here, and that is the viewport path's whole
         // point:** ordering would materialize the entire result before the first batch and turn a
@@ -2080,5 +2123,99 @@ mod tests {
             Some(BatchCut::TimeBudget)
         );
         assert_eq!(cut_reason(tiny, 1, TARGET_BATCH_BYTES, MAX_ROWS_PER_BATCH, false), None);
+    }
+
+    // ---- filter composition (`cut/sql-filter` P2) --------------------------------------------
+    //
+    // `build_sql` is a private method, so the only place that can assert its emitted SQL **text**
+    // is a unit test in this module. Exercising it needs a real, opened `Dataset`, and the only way
+    // to get one without a hand-authored parquet file is the fixture writer — hence the explicit
+    // `fixture` feature gate, rather than relying on this crate's own `[dev-dependencies]` self-
+    // reference (`Cargo.toml`) to have turned it on implicitly.
+    #[cfg(feature = "fixture")]
+    mod filter_composition {
+        use super::*;
+        use crate::fixture::{write_geoparquet, FixtureSpec};
+
+        fn test_dataset(name: &str) -> Dataset {
+            let dir = std::env::temp_dir().join("spatial-engine-build-sql-tests").join(name);
+            std::fs::create_dir_all(&dir).unwrap();
+            let path = dir.join("fixture.parquet");
+            write_geoparquet(&path, &FixtureSpec { features: 8, ..Default::default() })
+                .expect("fixture");
+            Dataset::open(&path).expect("open")
+        }
+
+        /// The composition-as-string matrix (`NEXT-CUT.md` P2): `{predicate present/absent} ×
+        /// {bbox present/absent} × {limit present/absent}`, all eight cells, each checked against
+        /// the emitted SQL **text** — so the composition rule (`WHERE ( <predicate verbatim> ) AND
+        /// <bbox>`, exactly one added paren pair, predicate leftmost) is verified against code, not
+        /// prose.
+        #[test]
+        fn the_where_composition_matrix_matches_the_declared_rule_exactly() {
+            let ds = test_dataset("composition_matrix");
+            let bbox = Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 };
+            let predicate = || AdmittedPredicate::assume_validated("zone = 'residential'".into());
+
+            const BBOX_COND: &str = "\"bbox\".\"xmin\" <= ? AND \"bbox\".\"xmax\" >= ? AND \
+                                      \"bbox\".\"ymin\" <= ? AND \"bbox\".\"ymax\" >= ?";
+            const PREFIX: &str = "SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?)";
+
+            let cases: [(Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String); 8] = [
+                (None, None, None, PREFIX.to_string()),
+                (None, None, Some(7), format!("{PREFIX} LIMIT 7")),
+                (None, Some(bbox), None, format!("{PREFIX} WHERE {BBOX_COND}")),
+                (None, Some(bbox), Some(7), format!("{PREFIX} WHERE {BBOX_COND} LIMIT 7")),
+                (Some(predicate()), None, None, format!("{PREFIX} WHERE (zone = 'residential')")),
+                (
+                    Some(predicate()),
+                    None,
+                    Some(7),
+                    format!("{PREFIX} WHERE (zone = 'residential') LIMIT 7"),
+                ),
+                (
+                    Some(predicate()),
+                    Some(bbox),
+                    None,
+                    format!("{PREFIX} WHERE (zone = 'residential') AND {BBOX_COND}"),
+                ),
+                (
+                    Some(predicate()),
+                    Some(bbox),
+                    Some(7),
+                    format!("{PREFIX} WHERE (zone = 'residential') AND {BBOX_COND} LIMIT 7"),
+                ),
+            ];
+
+            for (filter, bbox, limit, expected) in cases {
+                let had_filter = filter.is_some();
+                let q = ViewportQuery { bbox, bbox_crs: None, limit, filter };
+                let (sql, _plan) = ds
+                    .build_sql(&q, IndexUse::Off, &[], RowOrdering::Unordered)
+                    .expect("build_sql");
+                assert_eq!(
+                    sql, expected,
+                    "cell: filter={had_filter} bbox={} limit={limit:?}",
+                    bbox.is_some()
+                );
+            }
+        }
+
+        /// The predicate's text is never rewritten on the way into the clause — only wrapped in the
+        /// one declared paren pair. Odd internal whitespace and casing ride through unexamined.
+        #[test]
+        fn the_predicate_text_rides_verbatim_never_rewritten_or_case_folded() {
+            let ds = test_dataset("verbatim");
+            let odd = "  Zone = 'Residential'  ";
+            let q = ViewportQuery::all()
+                .with_filter(AdmittedPredicate::assume_validated(odd.to_string()));
+            let (sql, _) = ds
+                .build_sql(&q, IndexUse::Off, &[], RowOrdering::Unordered)
+                .expect("build_sql");
+            assert_eq!(
+                sql,
+                format!("SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE ({odd})")
+            );
+        }
     }
 }
