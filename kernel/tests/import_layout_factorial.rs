@@ -989,3 +989,774 @@ fn the_145mb_factorial_pass() {
 
     assert!(!any_fixture_changed, "a fixture changed during the pass — see the log above");
 }
+
+// =====================================================================================================
+// Phase 6 of the import-layout cut — `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`'s **scored 5 GB
+// cells**: `{C5 raster, H5 hilbert16, R5 shuffled} x {whole, near-quarter, far-quarter, 1/64}`, n = 7
+// -> 84 trials. **THE GATE IS SCORED HERE** (preregistration §2/§4: "the gate viewport is the near
+// quarter, at the 5 GB class, at shipped granularity").
+//
+// Extends this file rather than duplicating it — one process per trial, a file channel (never
+// stdout), the same committed `interleaved` function, the same `GetProcessIoCounters` instrument, the
+// same mechanism self-check, the same per-cell determinism condition, the same canary discipline, the
+// same "fixture hashes before AND re-hash after" rule. What differs from the 145 MB pass above: no
+// granularity axis (§4: "At 5 GB: three orders at shipped granularity only" — the files were written
+// at 8192 rows/group and this phase does not re-derive that, it reads it back and asserts on it), a
+// wider per-trial ceiling (900 s vs 120 s, §7), and a different feature count (3 300 000, the
+// `scale-pass` cut's own shape — `SCALE-PASS-PREREGISTRATION.md` §1a) driving a different viewport
+// grid. `ViewId` and `interleaved` are reused unchanged from the section above; nothing about them is
+// specific to the 145 MB class.
+// =====================================================================================================
+
+const FEATURES_5GB: usize = 3_300_000;
+const CEIL_TRIAL_5GB: Duration = Duration::from_secs(900); // preregistration §7: one 5 GB trial.
+
+fn grid_cols_5gb() -> f64 {
+    (FEATURES_5GB as f64).sqrt().ceil()
+}
+
+/// Restated rather than parameterising the 145 MB `predicted_rows` above: this file's own house
+/// style (`first_batch_factorial.rs::FileId::features`) keeps each dataset class's arithmetic next to
+/// its own constants rather than threading a `features` argument through code already scored at the
+/// other class. Verified by hand against `kernel/RESULTS.md`'s A1 section before this file was
+/// written: whole 3 300 000, near-quarter 826 281, far-quarter 825 700, 1/64 51 984 — all four match.
+fn predicted_rows_5gb(v: ViewId) -> u64 {
+    let n = FEATURES_5GB as u64;
+    let cols = grid_cols_5gb() as u64;
+    let full_rows = n / cols;
+    let partial = n % cols;
+    let (x_cols, y_lo, y_hi) = match v {
+        ViewId::Whole => return n,
+        ViewId::NearQuarter => {
+            let last = cols / 2;
+            (last + 1, 0u64, last)
+        }
+        ViewId::Sixty4th => {
+            let last = cols / 8;
+            (last + 1, 0u64, last)
+        }
+        ViewId::FarQuarter => {
+            let last = cols / 2;
+            (last + 1, cols - 1 - last, cols - 1)
+        }
+    };
+    let mut rows = 0u64;
+    for j in y_lo..=y_hi {
+        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        rows += in_row.min(x_cols);
+    }
+    rows
+}
+
+/// The three 5 GB files. `C5`/`H5` are the `first-batch` cut's amendment A1 files, reused read-only;
+/// `R5` is phase 5's own new file (`engine/tests/import_layout_5gb_fixtures.rs`). `G5` — the
+/// arrow-rs-written source — is **never a comparison arm** (preregistration §4) and does not appear
+/// here at all.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum FileId5gb {
+    C5,
+    H5,
+    R5,
+}
+
+impl FileId5gb {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::C5 => "C5-duckdb-raster-5gb",
+            Self::H5 => "H5-duckdb-hilbert16-5gb",
+            Self::R5 => "R5-duckdb-shuffled-5gb",
+        }
+    }
+    fn parse(s: &str) -> Option<Self> {
+        match s {
+            "C5-duckdb-raster-5gb" => Some(Self::C5),
+            "H5-duckdb-hilbert16-5gb" => Some(Self::H5),
+            "R5-duckdb-shuffled-5gb" => Some(Self::R5),
+            _ => None,
+        }
+    }
+    /// `C5`/`H5` live under the `first-batch` cut's own evidence directory (never written here);
+    /// `R5` lives under this cut's own (`evidence_dir()`, defined above).
+    fn path(self) -> PathBuf {
+        let first_batch = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("target/slice-evidence/first-batch");
+        match self {
+            Self::C5 => first_batch.join("parcels-5gb-duckdb-raster.parquet"),
+            Self::H5 => first_batch.join("parcels-5gb-duckdb-hilbert16.parquet"),
+            Self::R5 => evidence_dir().join("parcels-5gb-duckdb-shuffled.parquet"),
+        }
+    }
+}
+
+/// The phase-5 pin (`CUT-STATE.md`'s phase-5 addendum table / `target/slice-evidence/import-layout/
+/// fixtures-5gb.json`), independently re-verified against the files on disk before any trial reads
+/// them. `C5`/`H5`'s values are the `first-batch` cut's amendment A1 artifact's own recorded hashes,
+/// re-verified byte-for-byte by this cut's own phase 5 before being trusted here.
+const KNOWN_SHA256_5GB: &[(FileId5gb, &str, u64)] = &[
+    (
+        FileId5gb::C5,
+        "9b07b1ebf31f7011bf52c4904e7f991bb24aac59ff9c38d64aaff202cd8a659b",
+        4_976_612_784,
+    ),
+    (
+        FileId5gb::H5,
+        "eb963539b21a802130796886a00a2c7667be1c16659f748685f4ce7b3f4fabf1",
+        5_000_231_051,
+    ),
+    (
+        FileId5gb::R5,
+        "43d50bd6a646ff4945f70f2bfcfc1706bfcdaa8fd6c8b7783e9796d5c282d982",
+        5_176_967_826,
+    ),
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct Cell5gb {
+    order: FileId5gb,
+    view: ViewId,
+}
+
+impl Cell5gb {
+    fn label(&self) -> String {
+        format!("{}|{}", self.order.as_str(), self.view.as_str())
+    }
+    fn parse(s: &str) -> Option<Self> {
+        let p: Vec<&str> = s.split('|').collect();
+        if p.len() != 2 {
+            return None;
+        }
+        let order = FileId5gb::parse(p[0])?;
+        let view = match p[1] {
+            "whole" => ViewId::Whole,
+            "near-quarter" => ViewId::NearQuarter,
+            "far-quarter" => ViewId::FarQuarter,
+            "1-64" => ViewId::Sixty4th,
+            _ => return None,
+        };
+        Some(Self { order, view })
+    }
+}
+
+/// The cell list — **12 cells**: three orders x four viewports (3 files x 4 viewports, this piece's
+/// own count; n = 7 makes 84 trials).
+fn cells_5gb() -> Vec<Cell5gb> {
+    let mut out = Vec::new();
+    for &order in &[FileId5gb::C5, FileId5gb::H5, FileId5gb::R5] {
+        for &view in &ViewId::ALL {
+            out.push(Cell5gb { order, view });
+        }
+    }
+    out
+}
+
+const CELL_VAR_5GB: &str = "SPATIAL_IMPORT_LAYOUT_5GB_CELL";
+const OUT_VAR_5GB: &str = "SPATIAL_IMPORT_LAYOUT_5GB_OUT";
+
+/// One 5 GB trial, in a process of its own — the identical convention `import_layout_trial_child`
+/// (above) and `first_batch_factorial.rs::night_trial_child` both use. Not `#[ignore]`d: the ordinary
+/// suite runs this and it does nothing (both env vars absent).
+#[test]
+fn import_layout_5gb_trial_child() {
+    let (Ok(spec), Ok(out)) = (std::env::var(CELL_VAR_5GB), std::env::var(OUT_VAR_5GB)) else {
+        return;
+    };
+    let cell = Cell5gb::parse(&spec).expect("the driver passed an unparseable 5 GB cell");
+    let v = run_one_trial_5gb(&cell);
+    let s = serde_json::to_string(&v).expect("serialize the trial result");
+    let mut f = std::fs::File::create(&out).expect("create the trial's result file");
+    f.write_all(s.as_bytes()).expect("write the trial result");
+    f.sync_all().expect("flush the trial result");
+    println!("trial {} -> {s}", cell.label());
+}
+
+fn run_one_trial_5gb(cell: &Cell5gb) -> serde_json::Value {
+    let path = cell.order.path();
+    let io_before = io_read_bytes();
+    let open_started = Instant::now();
+    let ds = match Dataset::open(&path) {
+        Ok(d) => d,
+        Err(e) => return trial_error_5gb(cell, "open", &e.to_string()),
+    };
+    let open_ms = open_started.elapsed().as_secs_f64() * 1000.0;
+
+    let q = match cell.view.bbox(grid_cols_5gb()) {
+        None => ViewportQuery::all(),
+        Some(b) => ViewportQuery::viewport(b, ds.crs().identifier()),
+    };
+
+    let io_before_query = io_read_bytes();
+    let cancel = CancelToken::new();
+
+    let call_started = Instant::now();
+    let mut stream = match ds.stream_with_cancel(&q, cancel) {
+        Ok(s) => s,
+        Err(e) => return trial_error_5gb(cell, "stream", &e.to_string()),
+    };
+
+    let mut first_batch_ms: Option<f64> = None;
+    let mut rows: u64 = 0;
+    let mut payload: usize = 0;
+    let mut buf: Vec<u8> = Vec::new();
+    let mut err: Option<String> = None;
+    // Payload never retained — uniform across every cell, identical to the 145 MB pass above.
+    while let Some(info) = stream.next_into(&mut buf) {
+        match info {
+            Ok(i) => {
+                if first_batch_ms.is_none() {
+                    first_batch_ms = Some(call_started.elapsed().as_secs_f64() * 1000.0);
+                }
+                rows += i.rows as u64;
+                payload += i.payload_bytes;
+                buf.clear();
+            }
+            Err(e) => {
+                err = Some(e.to_string());
+                break;
+            }
+        }
+    }
+    let total_ms = call_started.elapsed().as_secs_f64() * 1000.0;
+    let io_after = io_read_bytes();
+
+    serde_json::json!({
+        "cell": cell.label(),
+        "order": cell.order.as_str(),
+        "viewport": cell.view.as_str(),
+        "open_ms": open_ms,
+        "first_batch_ms": first_batch_ms,
+        "total_ms": total_ms,
+        "rows": rows,
+        "predicted_rows": predicted_rows_5gb(cell.view),
+        "payload_bytes": payload,
+        "read_bytes_whole_trial": io_after.zip(io_before).map(|(a, b)| a.saturating_sub(b)),
+        "read_bytes_query": io_after.zip(io_before_query).map(|(a, b)| a.saturating_sub(b)),
+        "error": err,
+    })
+}
+
+fn trial_error_5gb(cell: &Cell5gb, phase: &str, detail: &str) -> serde_json::Value {
+    serde_json::json!({
+        "cell": cell.label(),
+        "order": cell.order.as_str(),
+        "viewport": cell.view.as_str(),
+        "open_ms": null,
+        "first_batch_ms": null,
+        "total_ms": null,
+        "rows": null,
+        "predicted_rows": predicted_rows_5gb(cell.view),
+        "payload_bytes": null,
+        "read_bytes_whole_trial": null,
+        "read_bytes_query": null,
+        "error": format!("{phase}: {detail}"),
+    })
+}
+
+fn spawn_trial_5gb(
+    exe: &std::path::Path,
+    cell: &Cell5gb,
+    slot: &std::path::Path,
+) -> Result<String, String> {
+    let _ = std::fs::remove_file(slot);
+    let started = Instant::now();
+    let out = Command::new(exe)
+        .args(["import_layout_5gb_trial_child", "--exact", "--nocapture", "--test-threads=1"])
+        .env(CELL_VAR_5GB, cell.label())
+        .env(OUT_VAR_5GB, slot)
+        .output()
+        .map_err(|e| format!("spawn: {e}"))?;
+    if started.elapsed() > CEIL_TRIAL_5GB {
+        return Err(format!("exceeded the declared {} s trial ceiling", CEIL_TRIAL_5GB.as_secs()));
+    }
+    if !out.status.success() {
+        let tail: String =
+            String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" / ");
+        return Err(format!("child exited {:?}: {tail}", out.status.code()));
+    }
+    std::fs::read_to_string(slot).map_err(|e| format!("child wrote no result file: {e}"))
+}
+
+struct CellSummary5gb {
+    order: FileId5gb,
+    view: ViewId,
+    file_bytes: u64,
+    read_bytes_status: String,
+    read_bytes: Option<u64>,
+    distinct_read_bytes_count: usize,
+    read_fraction: Option<f64>,
+    total_ms_p50: Option<f64>,
+    total_ms_samples: Vec<f64>,
+    first_batch_ms_samples: Vec<Option<f64>>,
+    rows_match_predicted: bool,
+    errors: Vec<String>,
+}
+
+#[test]
+#[ignore = "measurement pass; THE GATE; run explicitly with --release; \
+            kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 6"]
+fn the_5gb_scored_cells() {
+    refuse_debug("import_layout_factorial::5gb-scored");
+    let free_before = require_disk("import-layout-factorial-5gb");
+
+    let mut log = String::new();
+    macro_rules! say {
+        ($($a:tt)*) => {{ let s = format!($($a)*); println!("{s}"); log.push_str(&s); log.push('\n'); }};
+    }
+
+    say!("kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 6 — the scored 5 GB cells (THE GATE)");
+    say!("hardware: {}", hardware_profile());
+    say!("media: {}", media_type());
+    say!(
+        "free disk before: {:.2} GiB ({free_before} B)",
+        free_before as f64 / (1u64 << 30) as f64
+    );
+
+    let exe = std::env::current_exe().expect("current exe");
+    let (exe_bytes, exe_hash) = file_facts(&exe);
+    say!(
+        "harness binary at time of use: {exe_bytes} B, sha256 {exe_hash} — logged, never asserted \
+         against an earlier pin (this workspace's release profile relinks [[bin]] artifacts on every \
+         `cargo build -p spatial-kernel`, per CUT-STATE.md phase 3's finding)"
+    );
+
+    // ---- fixture hashes, verified before the loop -----------------------------------------------
+    let mut fixture_facts: Vec<(FileId5gb, u64, String)> = Vec::new();
+    for &(order, want_hash, want_bytes) in KNOWN_SHA256_5GB {
+        let path = order.path();
+        let (bytes, hash) = file_facts(&path);
+        assert_eq!(
+            hash, want_hash,
+            "{}: fixture hash does not match the phase-5 pin ({want_hash}) — refusing to measure a \
+             fixture that moved underneath this phase",
+            order.as_str()
+        );
+        assert_eq!(
+            bytes, want_bytes,
+            "{}: fixture size does not match the phase-5 pin ({want_bytes} B)",
+            order.as_str()
+        );
+        say!("verified {}: {bytes} B, sha256 {hash}", order.as_str());
+        fixture_facts.push((order, bytes, hash));
+    }
+    assert_eq!(fixture_facts.len(), 3, "expected exactly C5, H5, R5");
+
+    let file_bytes_of = |order: FileId5gb| -> u64 {
+        fixture_facts.iter().find(|(o, _, _)| *o == order).map(|(_, b, _)| *b).unwrap_or(0)
+    };
+
+    let predicted: Vec<serde_json::Value> = ViewId::ALL
+        .iter()
+        .map(|&v| serde_json::json!({"viewport": v.as_str(), "rows": predicted_rows_5gb(v)}))
+        .collect();
+    for &v in &ViewId::ALL {
+        say!(
+            "viewport {} selects {} rows (arithmetic, generator-derived, asserted before the phase runs)",
+            v.as_str(),
+            predicted_rows_5gb(v)
+        );
+    }
+
+    // ---- mechanism self-check, before anything is settled or timed ------------------------------
+    // The fastest cell (1/64 of C5) so the self-check itself stays well inside the 900 s ceiling.
+    let probe = Cell5gb { order: FileId5gb::C5, view: ViewId::Sixty4th };
+    let slot = evidence_dir().join("trial-slot-5gb.json");
+    match spawn_trial_5gb(&exe, &probe, &slot) {
+        Ok(line) => {
+            let v: serde_json::Value = serde_json::from_str(&line).unwrap_or_else(|e| {
+                panic!(
+                    "the 5 GB trial mechanism produced something this driver's JSON parser cannot \
+                     read ({e}); every one of the 84 trials would have recorded `unmeasured` \
+                     without saying why. Got: {line}"
+                )
+            });
+            assert!(
+                v.get("error").map(|e| e.is_null()).unwrap_or(false),
+                "mechanism self-check trial errored: {line}"
+            );
+            let rb = v.get("read_bytes_query").and_then(|x| x.as_u64());
+            assert!(
+                rb.is_some_and(|x| x > 0),
+                "mechanism self-check produced a zero or missing read_bytes_query — the read-volume \
+                 instrument cannot measure on this run. Got: {line}"
+            );
+            let tm = v.get("total_ms").and_then(|x| x.as_f64());
+            assert!(
+                tm.is_some_and(|x| x.is_finite() && x >= 0.0),
+                "mechanism self-check produced no usable total_ms: {line}"
+            );
+            say!(
+                "mechanism self-check OK — a 5 GB child trial round-trips through the file channel, \
+                 parses as JSON, and read_bytes_query = {} > 0",
+                rb.unwrap()
+            );
+        }
+        Err(e) => panic!("the 5 GB trial mechanism does not work at all: {e}"),
+    }
+
+    // ---- the opening settle, then the first canary -----------------------------------------------
+    say!("settling {SETTLE_OPENING} s before the first canary");
+    std::thread::sleep(Duration::from_secs(SETTLE_OPENING));
+    let mut canaries = vec![Canary::take("5gb-setup-end")];
+
+    // ---- the trial loop ----------------------------------------------------------------------------
+    let all = cells_5gb();
+    assert_eq!(all.len(), 12, "expected the full 3-order x 4-viewport 5 GB matrix");
+    say!("{} cells x n={N} = {} trials; interleaving: interleaved(len, r) = (i + 5r) mod len", all.len(), all.len() * N);
+
+    let mut trials: Vec<(usize, Cell5gb, serde_json::Value)> = Vec::new();
+    for r in 0..N {
+        std::thread::sleep(Duration::from_secs(SETTLE_CANARY));
+        canaries.push(Canary::take(&format!("5gb-rep-{r}-start")));
+        for i in interleaved(all.len(), r) {
+            let cell = all[i];
+            match spawn_trial_5gb(&exe, &cell, &slot) {
+                Ok(line) => {
+                    let v: serde_json::Value = serde_json::from_str(&line).unwrap_or_else(|e| {
+                        serde_json::json!({
+                            "cell": cell.label(),
+                            "error": format!("driver could not parse child JSON: {e}: {line}"),
+                        })
+                    });
+                    trials.push((r, cell, v));
+                }
+                Err(e) => {
+                    say!("UNMEASURED — trial {} rep {r}: {e}", cell.label());
+                    trials.push((r, cell, serde_json::json!({"cell": cell.label(), "error": e})));
+                }
+            }
+        }
+    }
+    std::thread::sleep(Duration::from_secs(SETTLE_CANARY));
+    canaries.push(Canary::take("5gb-pass-end"));
+
+    let spreads = phase_spreads(&canaries);
+    for (label, spread, ok) in &spreads {
+        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+    }
+
+    // ---- re-hash the fixtures after the last trial -----------------------------------------------
+    let mut any_fixture_changed = false;
+    let mut fixture_json: Vec<serde_json::Value> = Vec::new();
+    for (order, bytes_before, hash_before) in &fixture_facts {
+        let path = order.path();
+        let (bytes_after, hash_after) = file_facts(&path);
+        if hash_after != *hash_before {
+            any_fixture_changed = true;
+            say!("INVALIDATED — {} changed during the pass: {hash_before} -> {hash_after}", order.as_str());
+        }
+        fixture_json.push(serde_json::json!({
+            "order": order.as_str(), "path": path.display().to_string(),
+            "bytes_before": bytes_before, "sha256_before": hash_before,
+            "bytes_after": bytes_after, "sha256_after": hash_after,
+        }));
+    }
+
+    let free_after = free_bytes_on_c().unwrap_or(0);
+    say!("free disk after: {:.2} GiB ({free_after} B)", free_after as f64 / (1u64 << 30) as f64);
+
+    // ---- per-cell summaries ------------------------------------------------------------------------
+    let field_u64 = |order: FileId5gb, view: ViewId, field: &str| -> Vec<Option<u64>> {
+        let mut byrep: Vec<Option<u64>> = vec![None; N];
+        for (r, c, v) in &trials {
+            if c.order == order && c.view == view {
+                byrep[*r] = v.get(field).and_then(|x| x.as_u64());
+            }
+        }
+        byrep
+    };
+    let field_f64 = |order: FileId5gb, view: ViewId, field: &str| -> Vec<Option<f64>> {
+        let mut byrep: Vec<Option<f64>> = vec![None; N];
+        for (r, c, v) in &trials {
+            if c.order == order && c.view == view {
+                byrep[*r] = v.get(field).and_then(|x| x.as_f64());
+            }
+        }
+        byrep
+    };
+    let cell_errors = |order: FileId5gb, view: ViewId| -> Vec<String> {
+        trials
+            .iter()
+            .filter(|(_, c, _)| c.order == order && c.view == view)
+            .filter_map(|(_, _, v)| v.get("error").and_then(|e| e.as_str()).map(|s| s.to_string()))
+            .collect()
+    };
+
+    let mut cell_summaries: Vec<CellSummary5gb> = Vec::new();
+    for &order in &[FileId5gb::C5, FileId5gb::H5, FileId5gb::R5] {
+        for &view in &ViewId::ALL {
+            let rb = field_u64(order, view, "read_bytes_query");
+            let errs = cell_errors(order, view);
+            let (status, value, distinct_count) =
+                if !errs.is_empty() || rb.iter().any(|v| v.is_none()) {
+                    (
+                        "unmeasured — one or more of the 7 trials errored or returned no read-byte \
+                         count"
+                            .to_string(),
+                        None,
+                        0usize,
+                    )
+                } else {
+                    let vals: Vec<u64> = rb.iter().map(|v| v.unwrap()).collect();
+                    let distinct: BTreeSet<u64> = vals.iter().copied().collect();
+                    if distinct.len() != 1 {
+                        (
+                            format!(
+                                "unmeasured — read counter non-deterministic ({} distinct values: \
+                                 {distinct:?})",
+                                distinct.len()
+                            ),
+                            None,
+                            distinct.len(),
+                        )
+                    } else {
+                        ("measured".to_string(), Some(vals[0]), 1usize)
+                    }
+                };
+            let file_bytes = file_bytes_of(order);
+            let read_fraction = value.map(|v| v as f64 / file_bytes as f64);
+
+            let tm = field_f64(order, view, "total_ms");
+            let tm_ok: Vec<f64> = tm.iter().flatten().copied().collect();
+            let total_ms_p50 = if tm_ok.len() == N { Some(pct(&sorted(&tm_ok), 0.5)) } else { None };
+
+            let fb = field_f64(order, view, "first_batch_ms");
+
+            let rows = field_u64(order, view, "rows");
+            let predicted = predicted_rows_5gb(view);
+            let rows_match_predicted =
+                !rows.is_empty() && rows.iter().all(|r| r.map(|x| x == predicted).unwrap_or(false));
+
+            cell_summaries.push(CellSummary5gb {
+                order,
+                view,
+                file_bytes,
+                read_bytes_status: status,
+                read_bytes: value,
+                distinct_read_bytes_count: distinct_count,
+                read_fraction,
+                total_ms_p50,
+                total_ms_samples: tm_ok,
+                first_batch_ms_samples: fb,
+                rows_match_predicted,
+                errors: errs,
+            });
+        }
+    }
+    assert_eq!(cell_summaries.len(), 12, "expected one summary per 5 GB cell");
+
+    let find_cell = |order: FileId5gb, view: ViewId| -> &CellSummary5gb {
+        cell_summaries
+            .iter()
+            .find(|c| c.order == order && c.view == view)
+            .expect("every (order, viewport) cell was summarised above")
+    };
+
+    // ---- THE GATE, item 1: does H5 read <= 70% of C5 at the near quarter, all 7 trials ------------
+    let c_nq = find_cell(FileId5gb::C5, ViewId::NearQuarter);
+    let h_nq = find_cell(FileId5gb::H5, ViewId::NearQuarter);
+    let c_nq_rep = field_u64(FileId5gb::C5, ViewId::NearQuarter, "read_bytes_query");
+    let h_nq_rep = field_u64(FileId5gb::H5, ViewId::NearQuarter, "read_bytes_query");
+    let per_rep_ratio: Vec<Option<f64>> = c_nq_rep
+        .iter()
+        .zip(h_nq_rep.iter())
+        .map(|(cv, hv)| match (cv, hv) {
+            (Some(cv), Some(hv)) if *cv > 0 => Some(*hv as f64 / *cv as f64),
+            _ => None,
+        })
+        .collect();
+    let gate1_verdict = if per_rep_ratio.iter().any(|r| r.is_none()) {
+        "UNMEASURED"
+    } else if per_rep_ratio.iter().all(|r| r.unwrap() <= 0.70) {
+        "PASS"
+    } else {
+        "FAIL"
+    };
+    say!(
+        "GATE item 1 (H5 <= 70% of C5 at near quarter, all 7 trials): C5={:?} H5={:?} per-rep \
+         ratios={:?} -> {gate1_verdict}",
+        c_nq.read_bytes, h_nq.read_bytes, per_rep_ratio
+    );
+
+    // ---- THE GATE's determinism condition, restated per cell for visibility -----------------------
+    for c in &cell_summaries {
+        say!(
+            "determinism {} / {}: {} distinct value(s), status={}",
+            c.order.as_str(),
+            c.view.as_str(),
+            c.distinct_read_bytes_count,
+            c.read_bytes_status
+        );
+    }
+
+    // ---- THE GATE, item 2: total query time — H5 beats C5 at the near quarter -----------------------
+    let (gate2_wins, gate2_of) = if c_nq.total_ms_samples.len() == N && h_nq.total_ms_samples.len() == N
+    {
+        let mut w = 0usize;
+        let mut o = 0usize;
+        for &hv in &h_nq.total_ms_samples {
+            for &cv in &c_nq.total_ms_samples {
+                o += 1;
+                if hv < cv {
+                    w += 1;
+                }
+            }
+        }
+        (Some(w), Some(o))
+    } else {
+        (None, None)
+    };
+    let gate2_p50_lower = match (h_nq.total_ms_p50, c_nq.total_ms_p50) {
+        (Some(hp), Some(cp)) => Some(hp < cp),
+        _ => None,
+    };
+    let gate2_verdict = match (gate2_p50_lower, gate2_wins) {
+        (Some(true), Some(w)) if w >= 42 => "PASS",
+        (Some(_), Some(_)) => "FAIL",
+        _ => "UNMEASURED",
+    };
+    say!(
+        "GATE item 2 (total time, H5 vs C5 near quarter): H5 p50={:?} C5 p50={:?} p50_lower={:?} \
+         pairwise={:?}/{:?} (need >=42/49) -> {gate2_verdict}",
+        h_nq.total_ms_p50, c_nq.total_ms_p50, gate2_p50_lower, gate2_wins, gate2_of
+    );
+
+    // ---- THE GATE, "and all of": no whole-file regression -------------------------------------------
+    let c_whole = find_cell(FileId5gb::C5, ViewId::Whole);
+    let h_whole = find_cell(FileId5gb::H5, ViewId::Whole);
+    let whole_ratio = match (c_whole.read_bytes, h_whole.read_bytes) {
+        (Some(cv), Some(hv)) if cv > 0 => Some(hv as f64 / cv as f64),
+        _ => None,
+    };
+    let gate3_verdict = match whole_ratio {
+        Some(r) if r <= 1.005 => "PASS",
+        Some(_) => "FAIL",
+        None => "UNMEASURED",
+    };
+    say!(
+        "GATE item 3 (no whole-file regression, H5 <= 100.5% of C5): C5 whole={:?} H5 whole={:?} \
+         ratio={:?} -> {gate3_verdict}",
+        c_whole.read_bytes, h_whole.read_bytes, whole_ratio
+    );
+
+    // ---- THE GATE, "and all of": row counts match the generator-derived prediction ------------------
+    let rows_all_match = cell_summaries.iter().all(|c| c.rows_match_predicted);
+    say!(
+        "GATE item 4 (row counts match generator-derived prediction, every cell): {}",
+        if rows_all_match { "PASS" } else { "FAIL" }
+    );
+
+    // ---- prediction 1's 5 GB half: R5 >= 95% at every viewport ---------------------------------------
+    let mut pred1 = Vec::new();
+    let mut pred1_all_meet = true;
+    let mut pred1_any_unmeasured = false;
+    for &view in &ViewId::ALL {
+        let r = find_cell(FileId5gb::R5, view);
+        let verdict = match r.read_fraction {
+            Some(f) if f >= 0.95 => "MEETS",
+            Some(_) => {
+                pred1_all_meet = false;
+                "BELOW"
+            }
+            None => {
+                pred1_any_unmeasured = true;
+                "UNMEASURED"
+            }
+        };
+        pred1.push(serde_json::json!({
+            "viewport": view.as_str(), "r5_read_bytes": r.read_bytes,
+            "file_bytes": r.file_bytes, "fraction": r.read_fraction, "verdict": verdict,
+        }));
+    }
+    let pred1_verdict = if pred1_any_unmeasured {
+        "UNMEASURED"
+    } else if pred1_all_meet {
+        "CONFIRMED"
+    } else {
+        "FAILED"
+    };
+    say!("prediction 1, 5 GB half (R5 >= 95% at every viewport): {pred1_verdict}");
+
+    // ---- THE GATE's overall verdict -------------------------------------------------------------------
+    let gate_overall = if [gate1_verdict, gate2_verdict, gate3_verdict].iter().any(|v| *v == "UNMEASURED")
+    {
+        "UNMEASURED"
+    } else if gate1_verdict == "PASS" && gate2_verdict == "PASS" && gate3_verdict == "PASS" && rows_all_match
+    {
+        "GATE PASSES"
+    } else {
+        "GATE FAILS"
+    };
+    say!(
+        "\n=== THE GATE VERDICT: {gate_overall} === (item1={gate1_verdict} item2={gate2_verdict} \
+         item3={gate3_verdict} item4_rows={})",
+        if rows_all_match { "PASS" } else { "FAIL" }
+    );
+
+    // ---- the artifact -----------------------------------------------------------------------------
+    let artifact = serde_json::json!({
+        "preregistration": "kernel/IMPORT-LAYOUT-PREREGISTRATION.md",
+        "phase": 6,
+        "scope": "the 5 GB scored cells — THE GATE (preregistration §2/§4)",
+        "hardware": hardware_profile(),
+        "media": media_type(),
+        "harness_binary_sha256_at_time_of_use": exe_hash,
+        "harness_binary_bytes_at_time_of_use": exe_bytes,
+        "interleaving_function": "interleaved(len, r) = (i + 5r) mod len for i in 0..len",
+        "payload_retention": "never retained on any cell — buf.clear() after every batch",
+        "settle_opening_s": SETTLE_OPENING,
+        "settle_canary_s": SETTLE_CANARY,
+        "trial_ceiling_s": CEIL_TRIAL_5GB.as_secs(),
+        "n_per_cell": N,
+        "free_disk_before_bytes": free_before,
+        "free_disk_after_bytes": free_after,
+        "fixtures": fixture_json,
+        "any_fixture_changed_during_pass": any_fixture_changed,
+        "predicted_rows": predicted,
+        "canaries": canaries.iter().map(|c| serde_json::from_str::<serde_json::Value>(&c.json())
+            .expect("Canary::json() is always valid JSON")).collect::<Vec<_>>(),
+        "canary_spreads": spreads.iter().map(|(l, s, ok)| serde_json::json!({
+            "phase": l, "spread": s, "within": ok,
+        })).collect::<Vec<_>>(),
+        "trials": trials.iter().map(|(r, c, v)| serde_json::json!({
+            "rep": r, "cell": c.label(), "trial": v,
+        })).collect::<Vec<_>>(),
+        "cells": cell_summaries.iter().map(|c| serde_json::json!({
+            "order": c.order.as_str(), "viewport": c.view.as_str(),
+            "file_bytes": c.file_bytes, "read_bytes_status": c.read_bytes_status,
+            "read_bytes": c.read_bytes, "distinct_read_bytes_count": c.distinct_read_bytes_count,
+            "read_fraction_vs_whole_file": c.read_fraction,
+            "total_ms_p50": c.total_ms_p50, "total_ms_samples": c.total_ms_samples,
+            "first_batch_ms_samples": c.first_batch_ms_samples,
+            "rows_match_predicted": c.rows_match_predicted, "errors": c.errors,
+        })).collect::<Vec<_>>(),
+        "gate": {
+            "item1_h_le_70pct_of_c_at_near_quarter": {
+                "c_read_bytes": c_nq.read_bytes, "h_read_bytes": h_nq.read_bytes,
+                "per_rep_ratio": per_rep_ratio, "verdict": gate1_verdict,
+            },
+            "item2_total_time_h_beats_c_near_quarter": {
+                "h_p50_ms": h_nq.total_ms_p50, "c_p50_ms": c_nq.total_ms_p50,
+                "p50_lower": gate2_p50_lower, "pairwise_h_faster_of_49": gate2_wins,
+                "pairwise_of": gate2_of, "verdict": gate2_verdict,
+            },
+            "item3_no_whole_file_regression": {
+                "c_whole_read_bytes": c_whole.read_bytes, "h_whole_read_bytes": h_whole.read_bytes,
+                "ratio": whole_ratio, "verdict": gate3_verdict,
+            },
+            "item4_row_counts_match_predicted_every_cell": rows_all_match,
+            "overall_verdict": gate_overall,
+        },
+        "prediction_1_5gb_half_r5_ge_95pct_every_viewport": {"cells": pred1, "verdict": pred1_verdict},
+    });
+
+    std::fs::write(
+        evidence_dir().join("factorial-5gb.json"),
+        serde_json::to_string_pretty(&artifact).expect("serialize the artifact"),
+    )
+    .expect("write artifact");
+    std::fs::write(logs_dir().join("factorial-5gb.log"), &log).expect("write log");
+    println!("→ {}", evidence_dir().join("factorial-5gb.json").display());
+
+    assert!(!any_fixture_changed, "a fixture changed during the pass — see the log above");
+}
