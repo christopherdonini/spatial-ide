@@ -5,7 +5,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-0. **[DIAGNOSED 2026-08-13 — fix direction is yours]** The instrumented session (one
+0. **[RESOLVED 2026-08-13 — see Resolved section. Superseded text below preserved for the
+   record; note its "12,436 (0.6%) over" magnitude was later corrected — the file's true total
+   is 2,508,699 (25.4% over); 2,012,436 was the truncated partial sum at the refusal moment.]**
+   *(original entry follows)* The instrumented session (one
    verified-fresh run, residency ledger, no fix — as authorized) closes the mechanism question:
    **not a residency bug.** The ledger shows one stream from zero through 40 admitted batches to
    1,961,249, then its own 41st batch (51,187 vertices) refused at 2,012,436 — **the 100k
@@ -46,15 +49,36 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    authorize, not ours to take. Touches: the A5'–A9' regression steps stay red until fixed; the
    operator walkthrough re-run (entry 2) stays held behind it.
 
-1. **PR #8 operator walkthrough — HELD, per the human's 2026-08-13 instruction:** held until
-   entry 0 is diagnosed, fixed, and A5′–A9′ pass in a fresh session; then the human performs
-   Part A. (The E2E harness gives twice-reproduced render evidence — admission, 40 batches /
-   1.96M positions, ~20% pixel coverage; the away-mode evidence rule stands: native dialog A2 and
-   the look-and-feel qualities of A4–A10 are the human's alone; the rest is E2E-covered as a
-   floor, not a replacement.) Touches: PR #8 merge.
+1. **PR #8 operator walkthrough — hold condition MET 2026-08-13; ready for your Part A (and
+   new Part D).** Your condition was "entry 0 diagnosed, fixed, and A5′–A9′ pass in a fresh
+   session": all twelve regression steps now PASS on a verified-fresh launch
+   (`frontends/shell/e2e/out/regression-render-trace-1786582131720.json` — A9′ hovers a
+   read-back-verified feature pixel; OVERCEIL′ shows "78191 of 100000 features rendered —
+   declared ceiling reached", banner dismiss leaves the status standing; REOPEN′ clears it on
+   dataset change). The away-mode evidence rule stands: native dialog A2 and the look-and-feel
+   qualities of A4–A10 and D2 are yours alone; the E2E floor covers the rest. Touches: PR #8
+   merge (also gated on nothing else — ADR-020 is accepted and applied). Walkthrough now has
+   four fixtures and Parts A–D.
 
 ## Resolved
 
+- **2026-08-13 — Entry 0 resolved: the human chose option (a) with three riders, executed the
+  same day.** The riders, as given: **(1)** the over-ceiling acceptance step must assert the
+  refusal is *unmissable*, not merely present — incomplete-render state signalled at
+  canvas/status level with rendered/total counts, persistent while the condition holds; a
+  dismissible banner alone fails; dismiss hides the banner, never the status indicator.
+  **(2)** Option (c) — bounding the first look — is the standing question ADR-011's tiling/LOD
+  slice must eventually answer; the ceiling refusal is the honest interim for arbitrary user
+  files, not the forever behavior (now ADR-011 acceptance gate 8). **(3)** The
+  wrong-instance-callback remount footgun gets its small fix now with a regression test
+  (`makeManagerCallbacks`, App.test.ts). Executed: happy-path fixture regenerated under the
+  ceiling (1,885,130 vertices, hard-asserted ≤ 1,950,000 — headroom over the 2,000,000 ceiling
+  is 114,870, 5.7%, so the assert is the guard, not the margin's size); deliberate over-ceiling
+  fixture kept at the old spec (true total **2,508,699**, 25.4% over — the earlier "2,012,436 /
+  0.6% over" figure was the truncated partial sum at the refusal moment, a custodian synthesis
+  error caught in review; refusal lands at 78,191 of 100,000 features); persistent
+  `.residency-status` indicator per rider 1; walkthrough Part D + E2E OVERCEIL′ step. **All
+  twelve regression steps green on a verified-fresh run** (ledger cited in Pending entry 1).
 - **2026-08-13 — ADR-020 accepted by the human.** Acceptance is of the host-declared exact-match
   origin mechanism, not of `cfg!(debug_assertions)` as the final origin-selection method; the
   `tauri build --debug` origin mismatch stays recorded in the ADR as a fail-closed implementation
