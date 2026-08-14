@@ -180,10 +180,29 @@ over the ceiling on purpose, unlike the happy-path fixture above.
 
 Fill in after running the script above.
 
-- **Date run:** _______________
-- **Run by:** _______________
-- **Build/commit:** _______________
-- **Part A (A1–A10):** pass / fail — deviations: _______________
-- **Part B (B1–B3):** pass / fail — deviations: _______________
-- **Part C (C1–C3):** pass / fail — deviations: _______________
-- **Part D (D1–D4):** pass / fail — deviations: _______________
+- **Date run:** 2026-08-14
+- **Run by:** the human (Christopher), operating remotely over RustDesk. Motion-quality judgments
+  (A5/A6/A8 smoothness, tearing) therefore carry a **degraded-channel caveat**: correctness was
+  judged firmly; smoothness only as far as the remote channel allows. Corroborated by the app's own
+  session log (`session-1786658855.log`): both refusal messages logged verbatim, the Part-D ceiling
+  refusal at the predicted 2,012,436 partial sum, clean exit.
+- **Build/commit:** `3f50456` (branch `cut/sql-filter` tip — supersets the merged PR #8 tree plus
+  PRs #9/#10 candidate work).
+- **Part A (A1–A10):** **pass with one functional deviation.** A1–A6, A8, A9, A10 pass. **A7
+  deviates:** "Zoom to layer" worked once at the start (fitting from ~20% visible to the whole
+  layer), and re-centers when the layer is visible — but **when the layer was panned fully out of
+  view, clicking it did nothing**, which is A7's own scenario. Diagnosed same day: `fitToBounds`
+  fits `residentExtentRef` (current residency only), and supersede-on-pan clearing empties
+  residency when the viewport leaves the data, so the button has no target exactly when the user is
+  lost. A consequence of the 2026-08-13 residency-clearing fix; the E2E A7′ step missed it because
+  its fixed drags never fully left the data extent. Recorded as a defect; fix through gates.
+  Also observed (recorded, no action): the post-pan/zoom refill pause "seems a bit slow" — the
+  designed debounce, inflated by RustDesk latency; a tuning question for panel-era polish, not a
+  defect.
+- **Part B (B1–B3):** **pass** — refusal code and message verbatim, cut-2 note present, no dismiss
+  control.
+- **Part C (C1–C3):** **pass** — same, `engine.identity_unusable` verbatim.
+- **Part D (D1–D4):** **pass** (rider 1's visual acceptance point confirmed by the operator: banner
+  and persistent status simultaneously readable; Dismiss removed the banner and the status
+  remained; status cleared on the D4 reopen). One cosmetic deviation: the banner's **Dismiss button
+  abuts the message's last word ("tiling") with no spacing** — recorded; trivial CSS fix.

@@ -5,18 +5,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-1. **POST-MERGE OBLIGATION — operator walkthrough Parts A–D, due 2026-08-23.** PR #8 merged
-   (2026-08-13, your instruction) with two GUI items recorded as **operator verification
-   deferred — queued for the human's return** (away-mode evidence rule): **(1)** the native
-   file-dialog flow (walkthrough A2 — structurally unreachable by any E2E automation); **(2)** the
-   look-and-feel qualities (A4–A10 smoothness / no tearing / jitter / ghosting; D2's visual
-   acceptance point — the persistent residency status being *seen*). Interim evidence: all twelve
-   E2E-verified regression steps PASS on the exact merged tree
-   (`frontends/shell/e2e/out/regression-render-trace-1786583532688.json`). A post-merge
-   obligation, not a merge gate; run `frontends/shell/MANUAL-WALKTHROUGH.md` Parts A–D when back
-   at the machine.
+*(none — the A7 fix below is in-flight custodian work, not a decision)*
 
 ## Resolved
+
+- **2026-08-14 — operator walkthrough Parts A–D RUN by the human (over RustDesk), nine days ahead
+  of its 2026-08-23 due date.** Parts B, C, D and A1–A6/A8–A10 **pass** — including both
+  operator-only items: the native dialog (A2) and rider 1's visual acceptance point (D2/D3, banner
+  and persistent status simultaneously readable, Dismiss leaves the status standing). Motion
+  judgments carry the RustDesk degraded-channel caveat, corroborated by the app's session log.
+  **One functional deviation: A7** — "Zoom to layer" is inert when the layer has been panned fully
+  out of view (residency-clearing emptied its fit target; diagnosed same day; fix through gates,
+  with the E2E A7′ step strengthened to pan fully off-data so this class stays caught). Two minor
+  records: the post-pan refill pause reads slightly slow over RustDesk (designed debounce; panel-era
+  tuning question), and the ceiling banner's Dismiss button abuts the message text (cosmetic CSS,
+  fixed with the A7 work). Full log: `frontends/shell/MANUAL-WALKTHROUGH.md` Result log.
 
 - **2026-08-13 — ADR-021 accepted, with a binding acceptance condition.** The row filter on
   `viewport_query` (SKP v0.1) accepted as designed. **Condition (applied to the ADR's acceptance
