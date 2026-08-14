@@ -1,3 +1,4 @@
+import { computeAuthoritativeViewportBbox } from "./viewportBbox";
 import type { AuthoritativeBbox } from "./viewportBbox";
 import type { ResidentBatch } from "./decodeBatch";
 
@@ -47,6 +48,23 @@ export function unionBbox(
     xmax: Math.max(a.xmax, b.xmax),
     ymax: Math.max(a.ymax, b.ymax),
   };
+}
+
+/**
+ * "Zoom to layer" target selection (2026-08-14 walkthrough A7 defect, `WorkingCanvas.tsx`'s own
+ * `fitAnchorRef` comment has the full account): prefers CURRENT residency (`resident`), the same
+ * bbox the auto-fit-on-open and the ordinary "re-fit while data is still visible" case have always
+ * used, but falls back to the dataset-lifetime union (`anchor`) when residency has been emptied --
+ * e.g. by supersede-on-pan clearing everything out of view. Only `null` (both sides never having
+ * seen any geometry) means truly nothing to fit to. A free function, not inlined into
+ * `fitToBounds`, because `fitToBounds` itself needs a live `Deck`/canvas to be reachable at all,
+ * and this is the one piece of its decision that is pure enough to unit-test without one.
+ */
+export function chooseFitTarget(
+  resident: AuthoritativeBbox | null,
+  anchor: AuthoritativeBbox | null
+): AuthoritativeBbox | null {
+  return resident ?? anchor;
 }
 
 export interface FitViewState {
@@ -104,4 +122,37 @@ export function fitViewStateForBbox(
   }
 
   return { target: [0, 0], zoom, centerX, centerY };
+}
+
+/**
+ * The authoritative-CRS viewport bbox a `fit` will actually show once applied to a frame whose
+ * origin has already been recentred to `fit`'s own `centerX`/`centerY` (`OffsetFrame.forceRecenter`
+ * -- the caller's job, not this function's). Second half of the 2026-08-14 walkthrough A7 fix
+ * (coordinator-authorized completion): `WorkingCanvas.fitToBounds` needs this to drive a fresh
+ * `viewport_query` for wherever the camera just jumped to, exactly the same computation
+ * `onViewStateChange` already uses for every interactive pan/zoom
+ * (`viewportBbox.ts`'s`computeAuthoritativeViewportBbox`) -- reused here directly, not
+ * reimplemented, so the two paths can never silently diverge.
+ *
+ * `fit.target` is always `[0, 0]` by `fitViewStateForBbox`'s own contract (its own doc comment),
+ * so together with the post-recenter frame origin this reconstructs exactly the box the camera now
+ * shows -- margin included, the same margin `fitViewStateForBbox` applied, not the raw dataset bbox
+ * that was fit to (which is usually strictly smaller).
+ */
+export function bboxForFit(
+  fit: FitViewState,
+  frameOriginX: number,
+  frameOriginY: number,
+  widthPx: number,
+  heightPx: number
+): AuthoritativeBbox {
+  return computeAuthoritativeViewportBbox({
+    targetX: fit.target[0],
+    targetY: fit.target[1],
+    zoom: fit.zoom,
+    widthPx,
+    heightPx,
+    originX: frameOriginX,
+    originY: frameOriginY,
+  });
 }

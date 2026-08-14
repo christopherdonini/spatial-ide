@@ -354,16 +354,55 @@ async function stepA5A6(page, consoleHandle) {
   return `pan settled=${panSettle.settled}, zoom settled=${zoomSettle.settled}; no refusal/banner either time; pixels ${(frac * 100).toFixed(1)}% non-bg after`;
 }
 
+/**
+ * 2026-08-14 walkthrough fix: the original A7' panned a *fixed* 4x300px, which never actually left
+ * the data extent -- masking the operator-found defect (`fitToBounds` fit only current residency,
+ * and the supersede-on-pan clearing (2026-08-13 D2 fix) empties residency once the viewport leaves
+ * the data, leaving "Zoom to layer" with no target exactly when the user is lost). This drags
+ * repeatedly in one consistent direction, each time re-checking `capturePixels` for the whole
+ * canvas, until the viewport is *provably* off the data (non-background fraction at or below
+ * `OFF_DATA_THRESHOLD`) -- not a fixed drag count. Bounded at `maxDrags` and fails loudly, naming
+ * the last observed fraction, rather than silently accepting "still on data" as good enough to
+ * proceed (a pass here would no longer mean what A7's own scenario -- "panned fully out of view" --
+ * requires).
+ */
+const OFF_DATA_THRESHOLD = 0.005; // 0.5% non-background counts as "provably empty" for this purpose
+const OFF_DATA_MAX_DRAGS = 10;
+
+async function panUntilOffData(page, consoleHandle, rect, center) {
+  // Deliberately larger than the old fixed 300px stride (and than `rect.width`, so even a single
+  // drag covers more than one full canvas width of world-space at the current zoom) -- the old
+  // stride's own failure to leave the extent is exactly what this fix responds to.
+  const dragPx = Math.max(600, Math.round(rect.width * 1.5));
+  let fraction = 1;
+  let drags = 0;
+  for (; drags < OFF_DATA_MAX_DRAGS; drags++) {
+    await doPan(page, center, -dragPx, 0);
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 800, timeoutMs: 10_000 });
+    const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
+    fraction = fractionOf(pixels);
+    if (fraction <= OFF_DATA_THRESHOLD) {
+      drags += 1;
+      break;
+    }
+  }
+  if (fraction > OFF_DATA_THRESHOLD) {
+    throw new Error(
+      `A7': failed to pan off the data extent after ${OFF_DATA_MAX_DRAGS} drags of ${dragPx}px each ` +
+        `(still ${(fraction * 100).toFixed(2)}% non-bg, threshold ${(OFF_DATA_THRESHOLD * 100).toFixed(1)}%) -- ` +
+        `cannot exercise A7's own "panned fully out of view" scenario`
+    );
+  }
+  return { drags, dragPx, fraction };
+}
+
 async function stepA7(page, consoleHandle) {
   const rect = await canvasRect(page);
   if (!rect) throw new Error("A7': .working-canvas not found");
   const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  const stride = Math.max(80, Math.min(300, rect.width / 3));
-  for (let i = 0; i < 4; i++) {
-    await doPan(page, center, -stride, 0);
-  }
-  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1000, timeoutMs: 15_000 });
-  await assertNoRefusalOrBanner(page, "A7' (pan far)");
+
+  const offData = await panUntilOffData(page, consoleHandle, rect, center);
+  await assertNoRefusalOrBanner(page, "A7' (pan off-data)");
 
   const clicked = await page.evaluate(() => {
     const btn = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Zoom to layer"));
@@ -377,9 +416,17 @@ async function stepA7(page, consoleHandle) {
   const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   const frac = fractionOf(pixels);
   if (frac <= 0.02) {
-    throw new Error(`A7': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% after "Zoom to layer" (settled=${settle.settled})`);
+    throw new Error(
+      `A7': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% after "Zoom to layer" ` +
+        `(settled=${settle.settled}; was provably off-data first: ${(offData.fraction * 100).toFixed(2)}% non-bg ` +
+        `after ${offData.drags} drag(s) of ${offData.dragPx}px)`
+    );
   }
-  return `panned far (4x ${Math.round(stride)}px), clicked "Zoom to layer", pixels ${(frac * 100).toFixed(1)}% non-bg after (settled=${settle.settled})`;
+  return (
+    `panned off-data (${offData.drags} drag(s) of ${offData.dragPx}px, ${(offData.fraction * 100).toFixed(2)}% non-bg ` +
+    `<= ${(OFF_DATA_THRESHOLD * 100).toFixed(1)}% threshold), clicked "Zoom to layer", pixels ${(frac * 100).toFixed(1)}% ` +
+    `non-bg after (settled=${settle.settled})`
+  );
 }
 
 async function stepA8(page, consoleHandle) {
@@ -804,7 +851,10 @@ async function main() {
     await runStep("A3'", 40_000, () => stepA3(page));
     await runStep("A4'", 60_000, () => stepA4(page, consoleHandle));
     await runStep("A5'/A6'", 60_000, () => stepA5A6(page, consoleHandle));
-    await runStep("A7'", 60_000, () => stepA7(page, consoleHandle));
+    // Up to `OFF_DATA_MAX_DRAGS` (10) drag+settle+capture rounds to provably leave the data
+    // extent, then the "Zoom to layer" click and its own settle -- generously bounded above what
+    // 10 rounds of a ~10s settle bound could ever actually need in practice.
+    await runStep("A7'", 150_000, () => stepA7(page, consoleHandle));
     await runStep("A8'", 45_000, () => stepA8(page, consoleHandle));
     // Up to 3 candidate points x 2 orientations x 5s bounded wait each = 30s worst case, plus the
     // grid capture and the empty-space half -- 60s gives comfortable headroom without masking a

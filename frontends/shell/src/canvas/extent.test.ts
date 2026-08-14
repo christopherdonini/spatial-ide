@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
+import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 
 describe("extentOfBatch", () => {
   it("returns null for a batch with zero features", () => {
@@ -90,5 +90,67 @@ describe("fitViewStateForBbox", () => {
   it("zoom is clamped so a vast extent does not zoom out unboundedly", () => {
     const fit = fitViewStateForBbox({ xmin: 0, ymin: 0, xmax: 1e12, ymax: 1e12 }, 1000, 1000, 0);
     expect(fit.zoom).toBeGreaterThanOrEqual(-20);
+  });
+});
+
+// 2026-08-14 walkthrough A7 defect: `WorkingCanvas.fitToBounds` used to fit only current residency
+// (`residentExtentRef`), which the supersede-on-pan clearing empties whenever the viewport leaves
+// the data -- exactly when "Zoom to layer" is needed most. `chooseFitTarget` is the pure decision
+// extracted out of that fix, exercised directly here since `fitToBounds` itself needs a live
+// `Deck`/WebGL canvas this package's jsdom test environment does not provide.
+describe("chooseFitTarget (2026-08-14 walkthrough A7 fix)", () => {
+  const resident = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
+  const anchor = { xmin: -50, ymin: -50, xmax: 100, ymax: 100 };
+
+  it("prefers current residency when it is non-null, even if the anchor covers more", () => {
+    expect(chooseFitTarget(resident, anchor)).toEqual(resident);
+  });
+
+  it("falls back to the dataset-lifetime anchor when residency has been emptied (panned fully off-data)", () => {
+    expect(chooseFitTarget(null, anchor)).toEqual(anchor);
+  });
+
+  it("returns null only when neither residency nor the anchor has ever seen any geometry", () => {
+    expect(chooseFitTarget(null, null)).toBeNull();
+  });
+});
+
+// 2026-08-14 walkthrough A7 fix, second half (coordinator-authorized completion): giving
+// `fitToBounds` a fit target (`chooseFitTarget` above) moves the camera there, but nothing was
+// re-fetched for that location -- `bboxForFit` is the pure "compute the bbox to emit" half of the
+// fix, exercised directly here for the same reason `chooseFitTarget` is: `WorkingCanvas.fitToExtent`
+// itself needs a live `Deck`/WebGL canvas this package's jsdom test environment does not provide.
+describe("bboxForFit (2026-08-14 walkthrough A7 fix, second half)", () => {
+  it("reconstructs the authoritative viewport bbox from a fit's zoom and the post-recenter frame origin", () => {
+    // zoom=2 -> pixelsPerMetre=4; widthPx=800/heightPx=400 -> half-extents 100m/50m either side of
+    // the origin (`fit.target` is always [0,0], so world coords collapse to the origin itself).
+    const fit = { target: [0, 0] as [number, number], zoom: 2, centerX: 999, centerY: 999 };
+    const bbox = bboxForFit(fit, 100, 50, 800, 400);
+    expect(bbox).toEqual({ xmin: 0, ymin: 0, xmax: 200, ymax: 100 });
+  });
+
+  it("is centered on the post-recenter origin, not on the fit's own centerX/centerY field", () => {
+    // A caller who forgot to recenter the frame before calling this (passing some other origin)
+    // gets a bbox centered on whatever origin it actually passed, not silently re-derived from
+    // `fit.centerX`/`fit.centerY` -- this function trusts its own `frameOriginX`/`frameOriginY`
+    // parameters, matching `fitToExtent`'s own doc comment ("read now, i.e. AFTER forceRecenter").
+    const fit = { target: [0, 0] as [number, number], zoom: 0, centerX: 12345, centerY: 12345 };
+    const bbox = bboxForFit(fit, 10, 20, 1000, 1000);
+    expect(bbox.xmin + bbox.xmax).toBeCloseTo(20, 9); // centered on x=10, not x=12345
+    expect(bbox.ymin + bbox.ymax).toBeCloseTo(40, 9); // centered on y=20, not y=12345
+  });
+
+  it("covers the original extent a fit was computed for, once the frame recenters to that fit's own center (margin only ever grows the box)", () => {
+    const original = { xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_100, ymax: 1_200_050 };
+    const widthPx = 1000;
+    const heightPx = 800;
+    const fit = fitViewStateForBbox(original, widthPx, heightPx);
+    // Simulates `fitToExtent`'s own sequence: `OffsetFrame.forceRecenter(fit.centerX, fit.centerY)`
+    // moves the origin there, then this function is called with that same, now-current origin.
+    const bbox = bboxForFit(fit, fit.centerX, fit.centerY, widthPx, heightPx);
+    expect(bbox.xmin).toBeLessThanOrEqual(original.xmin);
+    expect(bbox.ymin).toBeLessThanOrEqual(original.ymin);
+    expect(bbox.xmax).toBeGreaterThanOrEqual(original.xmax);
+    expect(bbox.ymax).toBeGreaterThanOrEqual(original.ymax);
   });
 });

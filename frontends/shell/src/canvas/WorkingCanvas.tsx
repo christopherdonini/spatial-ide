@@ -15,7 +15,7 @@ import {
 import { begin, end } from "../diagnostics/watchdog";
 import { batchForLayerId, buildLayers } from "./buildLayers";
 import { decodeBatch } from "./decodeBatch";
-import { extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
+import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import {
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
@@ -61,8 +61,12 @@ export interface WorkingCanvasHandle {
   pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): void;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
-  /** Re-fit the camera to the bbox of everything currently resident ("zoom to layer"). A no-op
-   * (returns `false`) when nothing is resident -- there is no bbox to fit to yet. */
+  /** Re-fit the camera ("zoom to layer") to the bbox of everything currently resident, or -- when
+   * residency has been emptied entirely (e.g. by supersede-on-pan clearing) -- to the
+   * dataset-lifetime union of every batch extent this instance has ever admitted (2026-08-14
+   * walkthrough A7 fix: the button must have a target exactly when the user has panned away, not
+   * only while data is still visible). A no-op (returns `false`) only when neither has ever seen
+   * any geometry -- nothing was ever rendered by this instance. */
   fitToBounds(): boolean;
 }
 
@@ -206,6 +210,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * resident carries any geometry. Kept in lockstep with `residentRef` -- grown in `pushBatch`,
    * recomputed from scratch in `clearStream` (a union has no inverse, so "shrink" means "refold"). */
   const residentExtentRef = useRef<AuthoritativeBbox | null>(null);
+  /** Fix for the 2026-08-14 walkthrough A7 defect: the RUNNING UNION of every batch extent ever
+   * admitted by this canvas instance, across its whole dataset-lifetime -- grown in `pushBatch`
+   * exactly alongside `residentExtentRef`, but **never shrunk or recomputed in `clearStream`**.
+   * `fitToBounds` below falls back to this when `residentExtentRef` has gone `null` -- which
+   * happens exactly when the user has panned the viewport fully out of the data, the
+   * supersede-on-pan residency clearing (2026-08-13 D2 fix) having emptied every resident batch.
+   * That is precisely the moment "Zoom to layer" exists to rescue the user from (the operator's
+   * own framing, 2026-08-14 walkthrough A7: the button must have a target when the user is lost --
+   * that is its whole purpose), so a `null` `residentExtentRef` must not leave the button inert.
+   *
+   * No reset code exists for this ref, deliberately: `App.tsx` keys `WorkingCanvas` on
+   * `admitted.dataset`, so a dataset change unmounts this whole component instance and mounts a
+   * fresh one with a fresh (empty) `fitAnchorRef` -- the anchor dies with the instance, never
+   * leaking one dataset's extent into another's fit. */
+  const fitAnchorRef = useRef<AuthoritativeBbox | null>(null);
   /** Has this canvas ever auto-fit the camera to arriving data. Sticky for the canvas's whole
    * lifetime (unlike the old `wasEmpty` check, which fired on "resident batch count is zero"): a
    * batch that carries no geometry -- an empty first batch, or one whose every feature is a null
@@ -255,8 +274,18 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    *
    * Uses `OffsetFrame.forceRecenter`, not `maybeRecenter`: an explicit fit must always land exactly
    * on the requested point, never gated by the incidental-panning drift threshold.
+   *
+   * `notifyViewport` (2026-08-14 walkthrough A7 fix, second half -- coordinator-authorized
+   * completion): when `true`, this also emits the fitted view's own authoritative bbox through
+   * `onViewportChangedRef`, exactly as an interactive pan/zoom does (`extent.ts`'s `bboxForFit`,
+   * reusing `computeAuthoritativeViewportBbox` -- the same computation, never reimplemented) --
+   * driving `App.tsx`'s existing `onViewportChanged` -> debounced `requestViewport` -> supersede +
+   * fresh ticketed stream pipeline, entirely unchanged downstream. This is what actually fetches
+   * data for wherever the camera just jumped to; recentring the camera alone (this function's
+   * pre-existing behavior) only re-renders whatever happens to already be resident there. Each call
+   * site decides `notifyViewport` for itself -- see their own comments for why.
    */
-  function fitToExtent(bbox: AuthoritativeBbox): void {
+  function fitToExtent(bbox: AuthoritativeBbox, notifyViewport: boolean): void {
     const canvas = canvasElRef.current;
     const widthPx = canvas?.clientWidth || 1;
     const heightPx = canvas?.clientHeight || 1;
@@ -268,6 +297,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // See this file's own doc comment: `initialViewState`, never `viewState`.
     deckRef.current?.setProps({ initialViewState: { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom } });
     render();
+    if (notifyViewport) {
+      // `frame.originX`/`frame.originY` read now, i.e. AFTER `forceRecenter` above moved them --
+      // the post-recenter origin is what `bboxForFit`'s own doc comment requires to reconstruct the
+      // fitted view's real bbox.
+      onViewportChangedRef.current(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
+    }
   }
 
   /** Recomputes `residentExtentRef` from every batch actually resident right now -- called after
@@ -342,9 +377,19 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // and leave every later batch invisible at whatever the frame origin defaulted to).
         const batchExtent = extentOfBatch(batch);
         residentExtentRef.current = unionBbox(residentExtentRef.current, batchExtent);
+        // Grown in lockstep with `residentExtentRef` above, but never shrunk -- see `fitAnchorRef`'s
+        // own doc comment for why this one ref intentionally never clears.
+        fitAnchorRef.current = unionBbox(fitAnchorRef.current, batchExtent);
         if (!hasAutoFitRef.current && residentExtentRef.current) {
           hasAutoFitRef.current = true;
-          fitToExtent(residentExtentRef.current);
+          // `notifyViewport: false` -- this data is already streaming in from the initial
+          // unfiltered, unbounded `viewport_query` (`App.tsx`: issued immediately on open, before
+          // any pan/zoom). Emitting a viewport-changed bbox here would feed straight into
+          // `ViewportStreamManager.requestViewport`, which supersedes-on-pan (D2) the stream
+          // currently delivering this very batch -- cancelling and re-issuing a fresh, narrower
+          // query mid-flight, re-fetching everything already in transit. A real cost under D2-era
+          // supersede semantics, not a hypothetical one.
+          fitToExtent(residentExtentRef.current, false);
         }
         // Logged after any fit-triggered recenter above, so this reflects the origin `render()`
         // (right below) will actually use -- the comparison that matters is decode vs. what the GPU
@@ -371,9 +416,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       },
 
       fitToBounds() {
-        const bbox = residentExtentRef.current;
+        // `chooseFitTarget` (extent.ts): current residency when there is any, else the
+        // dataset-lifetime anchor -- returns `false` only when neither ever saw any geometry.
+        const bbox = chooseFitTarget(residentExtentRef.current, fitAnchorRef.current);
         if (!bbox) return false;
-        fitToExtent(bbox);
+        // `notifyViewport: true` -- a user explicitly asked to go here (the second half of the
+        // 2026-08-14 walkthrough A7 fix): the app must actually fetch what is at the fit target,
+        // not merely move the camera to it. This is the case `residentExtentRef` having gone
+        // `null` (supersede-on-pan cleared everything, the fallback to `fitAnchorRef` fired) most
+        // needs -- with nothing resident, there is nothing already on screen for `render()` alone
+        // to redraw at the new camera position.
+        fitToExtent(bbox, true);
         return true;
       },
     }),
