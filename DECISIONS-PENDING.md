@@ -5,7 +5,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-*(none — the A7 fix below is in-flight custodian work, not a decision)*
+1. **Rider-1 refinement — clear the ceiling status when a new query is issued?** Your rider 1
+   (2026-08-13) made the `.residency-status` ceiling indicator persistent "while the condition
+   holds," cleared by a later full delivery or dataset change. The filter-panel cut adds a third
+   way the condition stops holding: applying a filter supersedes and clears the canvas, after
+   which a stale "78,191 of 100,000 features rendered" would be claiming something no longer true.
+   The architect recommends adding a `"query-issued"` clear transition — within your rider's
+   stated intent, but the rider was your decision, so it's named here rather than absorbed.
+   Recommendation: **approve**. Touches: `nextResidencyStatus` + one unit test (P4 of the
+   filter-panel cut proceeds on the recommendation unless you say otherwise; flagged in the PR).
+   *(A second, smaller operator call — whether the scan-liveness indicator shows on every
+   in-flight stream or only filtered ones — is deliberately left to your Part E judgment, with
+   every-stream as the recommended default.)*
 
 ## Resolved
 

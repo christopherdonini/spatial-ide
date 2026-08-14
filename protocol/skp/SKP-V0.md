@@ -174,6 +174,26 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    **v0.1 (§7) adds a named shortfall to this item, not a new gap**: for a filtered scan whose
    predicate matches late, "progress: data-plane batches only" can mean *zero* batches for a long
    time — see §7's own shortfall paragraph.
+   **v0.1 scan-progress debt — re-deferred 2026-08-14, with reason, per ADR-021's acceptance
+   condition (discharged here, not dropped).** True scan progress for a filtered `viewport_query` —
+   any signal that a scan is advancing while no batch has been emitted — is **not** resolved by the
+   filter-panel cut. Three reasons. **(1) It is a protocol change, not a client one.** No
+   batch-independent carrier exists: `TAG_PROGRESS` is emitted only after a batch is sent
+   (`protocol/data-plane/src/adapter_ws.rs`), and item 7 below declares no control-plane
+   server→client push at all — so resolving it means new producer-side wire semantics on a data
+   plane ADR-021 decision 10 recorded as unchanged, plus a new engine-side instrument. **(2) What
+   the quantity *is* has not been decided.** Rows scanned, bytes read, row groups completed, and
+   elapsed-since-first-source-row are four different claims with four different costs and honesty
+   properties; choosing one is an ADR-class decision (`docs/01` principle 8 — a progress number
+   that does not name what it counts is not progress), not an implementation detail. **(3) The
+   acceptance condition's own interim ships instead**: indeterminate liveness plus a working
+   cancel, both derived client-side from signals that already exist (`TAG_OPEN`, batch arrival,
+   `cancel`), with no wire change. **What carries it:** the next SKP version that opens the wire
+   for any reason — a `skp/0.2`, or `docs/07`'s 1.0 freeze, whichever comes first; until then this
+   item stays on this list, unmet and named. **What may not be claimed meanwhile:** that
+   `viewport_query` is progress-reporting (principle 7's progress clause stays unmet for a
+   late-matching predicate, exactly as §7.7 states), and no `docs/08` first-pixels figure for a
+   filtered scan.
 6. **Backpressure** — data-plane credit only (`MAX_INFLIGHT_BATCHES = 4`, unchanged). None on the
    control plane; commands are unqueued, bounded only by the declared ticket/stream ceilings.
 7. **Subscriptions and events** — none. No server-to-client push on the control plane in any form.
@@ -365,7 +385,9 @@ A selective predicate over a large file can emit **no batches for a long time**.
 filtered scan can emit — so principle 7's progress clause is **unmet** for a filtered scan whose
 predicate matches late, and docs/08's first-pixels budget is **structurally unreachable** for such a
 predicate: there is nothing to measure "first pixels" against until a matching row is found. Not
-papered over.
+papered over. *(Re-deferred 2026-08-14 with reasons per ADR-021's acceptance condition — see §4
+item 5's dated entry; the filter panel ships the condition's own interim: indeterminate liveness +
+a working cancel, no wire change.)*
 
 ### 7.8 Data plane
 
