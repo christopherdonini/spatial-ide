@@ -61,12 +61,17 @@ export interface WorkingCanvasHandle {
   pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): void;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
-  /** Re-fit the camera ("zoom to layer") to the bbox of everything currently resident, or -- when
-   * residency has been emptied entirely (e.g. by supersede-on-pan clearing) -- to the
-   * dataset-lifetime union of every batch extent this instance has ever admitted (2026-08-14
-   * walkthrough A7 fix: the button must have a target exactly when the user has panned away, not
-   * only while data is still visible). A no-op (returns `false`) only when neither has ever seen
-   * any geometry -- nothing was ever rendered by this instance. */
+  /** Re-fit the camera ("zoom to layer") to the layer's best-known extent -- the dataset-lifetime
+   * union of every batch extent this instance has ever admitted (`fitAnchorRef`), deliberately
+   * **not** current residency. Two reasons, both 2026-08-14 walkthrough findings: (1) residency
+   * alone goes `null` exactly when the viewport has been panned fully off-data, leaving the button
+   * with no target exactly when the user has panned away; (2) even with a residency-preferring
+   * fallback, the fit outcome then depended on scroll history and in-flight refill timing -- a
+   * second click could see different residency than the first and jump somewhere visibly
+   * different, which read as "random" to an operator expecting the same place every time. Fitting
+   * the anchor unconditionally makes every click land on the same, deterministic fit once the
+   * layer has ever loaded anything (`extent.ts`'s `chooseFitTarget` has the full account). A no-op
+   * (returns `false`) only when nothing was ever rendered by this instance. */
   fitToBounds(): boolean;
 }
 
@@ -213,12 +218,20 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   /** Fix for the 2026-08-14 walkthrough A7 defect: the RUNNING UNION of every batch extent ever
    * admitted by this canvas instance, across its whole dataset-lifetime -- grown in `pushBatch`
    * exactly alongside `residentExtentRef`, but **never shrunk or recomputed in `clearStream`**.
-   * `fitToBounds` below falls back to this when `residentExtentRef` has gone `null` -- which
-   * happens exactly when the user has panned the viewport fully out of the data, the
-   * supersede-on-pan residency clearing (2026-08-13 D2 fix) having emptied every resident batch.
    * That is precisely the moment "Zoom to layer" exists to rescue the user from (the operator's
    * own framing, 2026-08-14 walkthrough A7: the button must have a target when the user is lost --
    * that is its whole purpose), so a `null` `residentExtentRef` must not leave the button inert.
+   *
+   * **`fitToBounds` below fits ONLY this anchor now, unconditionally -- never `residentExtentRef`
+   * (2026-08-14 same-day follow-up, operator live re-check).** The original fix used `resident ??
+   * anchor` (prefer residency, fall back to the anchor); that made the button's fit outcome depend
+   * on scroll history and in-flight refill timing (a second click during a refill window could see
+   * different residency than the first, and jump somewhere visibly different) -- an operator
+   * clicking a button meant to mean "take me to the layer" saw a different place each time, which
+   * read as random. The anchor is provably a superset of whatever residency ever was (both grow
+   * from the same `unionBbox(..., batchExtent)` call below), so fitting it unconditionally is both
+   * safe and, once anything has ever loaded, deterministic across every click -- see `extent.ts`'s
+   * `chooseFitTarget` for the full account.
    *
    * No reset code exists for this ref, deliberately: `App.tsx` keys `WorkingCanvas` on
    * `admitted.dataset`, so a dataset change unmounts this whole component instance and mounts a
@@ -416,16 +429,19 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       },
 
       fitToBounds() {
-        // `chooseFitTarget` (extent.ts): current residency when there is any, else the
-        // dataset-lifetime anchor -- returns `false` only when neither ever saw any geometry.
-        const bbox = chooseFitTarget(residentExtentRef.current, fitAnchorRef.current);
+        // `chooseFitTarget` (extent.ts): ALWAYS the dataset-lifetime anchor, never current
+        // residency -- see this method's own doc comment above and `chooseFitTarget`'s own doc
+        // comment for why (2026-08-14 same-day follow-up: a residency-preferring fallback made the
+        // fit outcome depend on scroll history and refill timing, which read as random to an
+        // operator clicking a button meant to mean "take me to the layer," the same place every
+        // time). Returns `false` only when nothing has ever been admitted.
+        const bbox = chooseFitTarget(fitAnchorRef.current);
         if (!bbox) return false;
         // `notifyViewport: true` -- a user explicitly asked to go here (the second half of the
         // 2026-08-14 walkthrough A7 fix): the app must actually fetch what is at the fit target,
-        // not merely move the camera to it. This is the case `residentExtentRef` having gone
-        // `null` (supersede-on-pan cleared everything, the fallback to `fitAnchorRef` fired) most
-        // needs -- with nothing resident, there is nothing already on screen for `render()` alone
-        // to redraw at the new camera position.
+        // not merely move the camera to it. Most needed exactly when nothing is currently resident
+        // (supersede-on-pan cleared everything) -- with nothing resident, there is nothing already
+        // on screen for `render()` alone to redraw at the new camera position.
         fitToExtent(bbox, true);
         return true;
       },

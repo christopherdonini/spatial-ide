@@ -93,25 +93,45 @@ describe("fitViewStateForBbox", () => {
   });
 });
 
-// 2026-08-14 walkthrough A7 defect: `WorkingCanvas.fitToBounds` used to fit only current residency
-// (`residentExtentRef`), which the supersede-on-pan clearing empties whenever the viewport leaves
-// the data -- exactly when "Zoom to layer" is needed most. `chooseFitTarget` is the pure decision
-// extracted out of that fix, exercised directly here since `fitToBounds` itself needs a live
-// `Deck`/WebGL canvas this package's jsdom test environment does not provide.
-describe("chooseFitTarget (2026-08-14 walkthrough A7 fix)", () => {
-  const resident = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
+// 2026-08-14 walkthrough A7 defect + same-day follow-up: `WorkingCanvas.fitToBounds` originally fit
+// only current residency (`residentExtentRef`), which the supersede-on-pan clearing empties whenever
+// the viewport leaves the data -- exactly when "Zoom to layer" is needed most. A first fix added a
+// `resident ?? anchor` fallback, but the operator's live re-check found the button's own fit outcome
+// then varied per click (residency depends on scroll history and in-flight refill timing) -- read as
+// "random." `chooseFitTarget` now fits ONLY the dataset-lifetime anchor, unconditionally, for
+// per-click determinism; exercised directly here since `fitToBounds` itself needs a live `Deck`/WebGL
+// canvas this package's jsdom test environment does not provide.
+describe("chooseFitTarget (2026-08-14 walkthrough A7 fix + same-day determinism follow-up)", () => {
   const anchor = { xmin: -50, ymin: -50, xmax: 100, ymax: 100 };
 
-  it("prefers current residency when it is non-null, even if the anchor covers more", () => {
-    expect(chooseFitTarget(resident, anchor)).toEqual(resident);
+  it("fits the dataset-lifetime anchor when it is non-null", () => {
+    expect(chooseFitTarget(anchor)).toEqual(anchor);
   });
 
-  it("falls back to the dataset-lifetime anchor when residency has been emptied (panned fully off-data)", () => {
-    expect(chooseFitTarget(null, anchor)).toEqual(anchor);
+  it("returns null only when nothing has ever been admitted", () => {
+    expect(chooseFitTarget(null)).toBeNull();
   });
 
-  it("returns null only when neither residency nor the anchor has ever seen any geometry", () => {
-    expect(chooseFitTarget(null, null)).toBeNull();
+  it("determinism: a simulated residency clear (the supersede-on-pan case) does not change the fit target, because the anchor -- grown by the same unionBbox calls production code uses -- is untouched by it", () => {
+    // Mirrors `WorkingCanvas.tsx`'s own pattern exactly: `pushBatch` grows both
+    // `residentExtentRef` and `fitAnchorRef` from the same `batchExtent` via `unionBbox`;
+    // `clearStream`'s `recomputeResidentExtent` only ever resets residency, never the anchor.
+    const batch1 = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
+    const batch2 = { xmin: 20, ymin: 20, xmax: 30, ymax: 30 };
+    let residentExtent: { xmin: number; ymin: number; xmax: number; ymax: number } | null = null;
+    let simulatedAnchor: { xmin: number; ymin: number; xmax: number; ymax: number } | null = null;
+    for (const batchExtent of [batch1, batch2]) {
+      residentExtent = unionBbox(residentExtent, batchExtent);
+      simulatedAnchor = unionBbox(simulatedAnchor, batchExtent);
+    }
+    const fitBeforeClear = chooseFitTarget(simulatedAnchor);
+
+    residentExtent = null; // the supersede-on-pan clear this whole fix is about -- anchor untouched
+
+    const fitAfterClear = chooseFitTarget(simulatedAnchor);
+    expect(fitAfterClear).toEqual(fitBeforeClear);
+    expect(fitAfterClear).toEqual({ xmin: 0, ymin: 0, xmax: 30, ymax: 30 });
+    expect(residentExtent).toBeNull(); // sanity: the simulated clear really happened
   });
 });
 

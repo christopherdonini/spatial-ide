@@ -51,20 +51,38 @@ export function unionBbox(
 }
 
 /**
- * "Zoom to layer" target selection (2026-08-14 walkthrough A7 defect, `WorkingCanvas.tsx`'s own
- * `fitAnchorRef` comment has the full account): prefers CURRENT residency (`resident`), the same
- * bbox the auto-fit-on-open and the ordinary "re-fit while data is still visible" case have always
- * used, but falls back to the dataset-lifetime union (`anchor`) when residency has been emptied --
- * e.g. by supersede-on-pan clearing everything out of view. Only `null` (both sides never having
- * seen any geometry) means truly nothing to fit to. A free function, not inlined into
- * `fitToBounds`, because `fitToBounds` itself needs a live `Deck`/canvas to be reachable at all,
- * and this is the one piece of its decision that is pure enough to unit-test without one.
+ * "Zoom to layer" target selection (`WorkingCanvas.tsx`'s own `fitAnchorRef` comment has the full
+ * account). **Fits ONLY the dataset-lifetime anchor -- current residency plays no part.** Two
+ * related findings, same day, drove this to its final shape:
+ *
+ * - 2026-08-14 walkthrough A7: residency alone goes `null` exactly when the viewport has been
+ *   panned fully off-data, leaving the button with no target at the moment it is needed most --
+ *   the original motivation for introducing the anchor at all, as a fallback.
+ * - 2026-08-14 follow-up (operator, live re-check): a `resident ?? anchor` fallback -- preferring
+ *   residency whenever it happened to be non-null -- made the button's own fit outcome depend on
+ *   scroll history and in-flight refill timing. A second click during the refill window `fitToBounds`'s
+ *   own emitted `viewport_query` triggers (`WorkingCanvas.tsx`'s `fitToExtent`,
+ *   `notifyViewport: true`) could see a different -- possibly empty, possibly partial -- residency
+ *   than the first click did, producing a visibly different fit each time. That read as "random" to
+ *   an operator clicking a button whose whole point is "take me to the layer," the same place, every
+ *   time. **Per-click determinism is the actual requirement**, not "prefer whatever happens to be on
+ *   screen right now."
+ *
+ * Fitting the anchor unconditionally is safe because it is provably a superset of whatever residency
+ * ever was: every batch's extent is unioned into both `residentExtentRef` and this anchor at push
+ * time, and the anchor is never shrunk (`WorkingCanvas.tsx`'s `pushBatch`/`fitAnchorRef` comments).
+ * Once the initial load has delivered anything, the anchor IS the layer's known extent -- fitting it
+ * every time reproduces the same A4-style fit deterministically, independent of whatever is resident
+ * (or mid-refill) at click time. Residency was dropped from this function's signature entirely
+ * (rather than kept as a now-always-shadowed fallback parameter) -- nothing else in this module calls
+ * it with a residency argument, and a parameter that can never actually change the return value is
+ * worse than no parameter. `null` only when nothing has ever been admitted -- nothing to fit to yet.
+ * A free function, not inlined into `fitToBounds`, because `fitToBounds` itself needs a live
+ * `Deck`/canvas to be reachable at all, and this is the one piece of its decision pure enough to
+ * unit-test without one.
  */
-export function chooseFitTarget(
-  resident: AuthoritativeBbox | null,
-  anchor: AuthoritativeBbox | null
-): AuthoritativeBbox | null {
-  return resident ?? anchor;
+export function chooseFitTarget(anchor: AuthoritativeBbox | null): AuthoritativeBbox | null {
+  return anchor;
 }
 
 export interface FitViewState {
