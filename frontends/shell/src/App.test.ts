@@ -8,6 +8,7 @@ import {
   admitAndResetStaleUiState,
   ApplyFilterDeps,
   applyFilter,
+  handleCanvasCeilingRefusal,
   isScanInFlight,
   makeDebouncedViewportQuery,
   makeManagerCallbacks,
@@ -15,6 +16,7 @@ import {
   nextScanState,
   requestViewportWithSingleRetry,
   ResidencyStatus,
+  ScanEvent,
   ScanState,
   scanLivenessText,
   scanLivenessTextShouldShow,
@@ -418,6 +420,49 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
   });
 });
 
+// NEXT-CUT.md P6 reviewer gate, B1 (blocking, "corrupts the very indicator Part E judges"): a
+// declared-ceiling refusal (ResidentVertexCeilingExceeded OR PickCeilingExceeded, both routed through
+// WorkingCanvas's own onCanvasRefusal) calls cancelStream, whose terminal ViewportStreamManager then
+// suppresses -- without a scan event dispatched AT that call site, the scan machine would stay
+// in-flight forever, showing a live indicator + enabled Cancel for a scan the app itself killed.
+describe("handleCanvasCeilingRefusal (P6 review, B1: a ceiling refusal must leave the in-flight family)", () => {
+  it("dispatches {kind:'failed'} (at the call site) alongside setCanvasRefusal and cancelStream", () => {
+    const setCanvasRefusal = vi.fn();
+    const applyScanEvent = vi.fn();
+    const cancelStream = vi.fn();
+
+    handleCanvasCeilingRefusal("sh_a", "accepting this batch would carry 2100000 resident vertices...", {
+      setCanvasRefusal,
+      applyScanEvent,
+      cancelStream,
+    });
+
+    expect(setCanvasRefusal).toHaveBeenCalledWith("accepting this batch would carry 2100000 resident vertices...");
+    expect(applyScanEvent).toHaveBeenCalledWith({ kind: "failed" });
+    expect(cancelStream).toHaveBeenCalledWith("sh_a");
+  });
+
+  it("end to end through the real nextScanState: a ceiling refusal while delivering leaves the in-flight family -- indicator and Cancel disappear", () => {
+    // Models App.tsx's own wiring: `applyScanEvent` reduces through the real `nextScanState`, exactly
+    // as `commitScanState`/`applyScanEvent` do in the component.
+    let scanState: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 250 };
+    const applyScanEvent = (event: ScanEvent) => {
+      scanState = nextScanState(scanState, event);
+    };
+
+    handleCanvasCeilingRefusal("sh_a", "ceiling message", {
+      setCanvasRefusal: () => {},
+      applyScanEvent,
+      cancelStream: () => {},
+    });
+
+    // The indicator (isScanInFlight) and Cancel (also isScanInFlight) both key off the same
+    // predicate -- "leaves the in-flight family" is exactly isScanInFlight flipping to false.
+    expect(isScanInFlight(scanState)).toBe(false);
+    expect(scanState).toEqual<ScanState>({ kind: "failed", streamHandle: "sh_a" });
+  });
+});
+
 // ADR-021's binding acceptance condition / NEXT-CUT.md P4 item 1: "idle -> issuing -> open-no-rows
 // -> delivering(rows) -> {complete | cancelled(rows) | failed}". Every transition, including
 // cancel-without-terminal (P4 binding note 6) and failure.
@@ -498,31 +543,41 @@ describe("nextScanState (P4: the scan-liveness/cancel state machine)", () => {
   // P4 binding note 6, the load-bearing property: "a cancelled stream's terminal never reaches App"
   // -- the machine must reach `cancelled` from the cancel call site ALONE, never waiting on (or
   // needing) a `completed`/`failed` event that, for a self-cancelled stream, will never arrive.
-  it("cancel-without-terminal: issuing -- cancelledByUser --> cancelled(rows: 0), no batch ever arrived", () => {
+  it("cancel-without-terminal: issuing -- cancelledByUser(same handle) --> cancelled(rows: 0), no batch ever arrived", () => {
     const issuing: ScanState = { kind: "issuing", streamHandle: "sh_a" };
-    expect(nextScanState(issuing, { kind: "cancelledByUser" })).toEqual<ScanState>({
+    expect(nextScanState(issuing, { kind: "cancelledByUser", streamHandle: "sh_a" })).toEqual<ScanState>({
       kind: "cancelled",
       streamHandle: "sh_a",
       rows: 0,
     });
   });
 
-  it("cancel-without-terminal: open-no-rows -- cancelledByUser --> cancelled(rows: 0)", () => {
+  it("cancel-without-terminal: open-no-rows -- cancelledByUser(same handle) --> cancelled(rows: 0)", () => {
     const openNoRows: ScanState = { kind: "open-no-rows", streamHandle: "sh_a" };
-    expect(nextScanState(openNoRows, { kind: "cancelledByUser" })).toEqual<ScanState>({
+    expect(nextScanState(openNoRows, { kind: "cancelledByUser", streamHandle: "sh_a" })).toEqual<ScanState>({
       kind: "cancelled",
       streamHandle: "sh_a",
       rows: 0,
     });
   });
 
-  it("cancel-without-terminal: delivering(rows) -- cancelledByUser --> cancelled(rows), carrying the count forward", () => {
+  it("cancel-without-terminal: delivering(rows) -- cancelledByUser(same handle) --> cancelled(rows), carrying the count forward", () => {
     const delivering: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 12_345 };
-    expect(nextScanState(delivering, { kind: "cancelledByUser" })).toEqual<ScanState>({
+    expect(nextScanState(delivering, { kind: "cancelledByUser", streamHandle: "sh_a" })).toEqual<ScanState>({
       kind: "cancelled",
       streamHandle: "sh_a",
       rows: 12_345,
     });
+  });
+
+  // P6 review, should-fix 1: `cancelledByUser` now carries a `streamHandle` and no-ops on mismatch,
+  // mirroring `streamOpened`'s own guard -- a stale cancel meant for an already-superseded handle
+  // must never mark a FRESHLY-issued stream cancelled.
+  it("a cancelledByUser for a DIFFERENT (stale) handle than the one currently tracked is a no-op", () => {
+    const delivering: ScanState = { kind: "delivering", streamHandle: "sh_current", rows: 42 };
+    expect(nextScanState(delivering, { kind: "cancelledByUser", streamHandle: "sh_stale" })).toEqual<ScanState>(
+      delivering
+    );
   });
 
   it("once cancelled, a LATE completed/failed/batch/streamOpened for the same handle changes nothing", () => {
@@ -534,9 +589,9 @@ describe("nextScanState (P4: the scan-liveness/cancel state machine)", () => {
   });
 
   it("a cancelledByUser while idle/complete/cancelled/failed is a no-op", () => {
-    expect(nextScanState(idle, { kind: "cancelledByUser" })).toEqual<ScanState>(idle);
+    expect(nextScanState(idle, { kind: "cancelledByUser", streamHandle: "sh_a" })).toEqual<ScanState>(idle);
     const complete: ScanState = { kind: "complete", streamHandle: "sh_a" };
-    expect(nextScanState(complete, { kind: "cancelledByUser" })).toEqual<ScanState>(complete);
+    expect(nextScanState(complete, { kind: "cancelledByUser", streamHandle: "sh_a" })).toEqual<ScanState>(complete);
   });
 
   it("a fresh issued event ALWAYS supersedes -- even a cancelled/complete/failed scan starts a new one", () => {
@@ -749,6 +804,39 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
     // Recovery: previous filter, same bbox -- already-admitted, cannot itself be refused on filter
     // grounds (design section's own claim).
     expect(requestViewport).toHaveBeenNthCalledWith(2, bbox, previousFilter);
+  });
+
+  // NEXT-CUT.md P6 reviewer gate, B2 (blocking): the recovery attempt failing (too_many_pending_streams,
+  // a transport failure, the dataset having since closed -- anything, not just a second filter refusal)
+  // must never blank the refusal the user's OWN typed predicate actually earned, nor propagate and
+  // surface as an unrelated global banner for a query the user never made.
+  it("the recovery re-issue itself failing does not blank or swallow the user's own refusal -- outcome is still {kind:'refused'} with it", async () => {
+    const previousFilter = filterFixture("zone = 'residential'");
+    const bbox = bboxFixture();
+    const skpError = skpErrorFixture();
+    const recoveryError = new Error("skp.too_many_pending_streams");
+    const requestViewport = vi
+      .fn()
+      // The Apply attempt itself, over the NEW (typo'd) filter -- refused.
+      .mockRejectedValueOnce(new SkpCallError(skpError))
+      // The recovery re-issue ALSO fails -- a non-filter rejection (transport/ceiling/dataset-closed),
+      // not another SkpCallError necessarily, but any rejection at all is the case B2 covers.
+      .mockRejectedValueOnce(recoveryError);
+    const { deps } = baseDeps({
+      requestViewport,
+      getActiveFilter: () => previousFilter,
+      getLastViewportBbox: () => bbox,
+    });
+    const typoFilter = filterFixture("bogus_column_xyz = 1");
+
+    const outcome = await applyFilter(typoFilter, deps);
+
+    // The user's own refusal, unchanged and un-swallowed -- not a thrown error, not {kind:"not-applied"}.
+    expect(outcome).toEqual({
+      kind: "refused",
+      refusal: { code: skpError.code, message: skpError.message, fields: [], remediationIsCut2: false },
+    });
+    expect(requestViewport).toHaveBeenCalledTimes(2);
   });
 
   it("an unexpected (non-SkpCallError) failure propagates, never swallowed (ADR-010 rule 7)", async () => {

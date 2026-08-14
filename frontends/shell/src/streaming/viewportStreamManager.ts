@@ -1,4 +1,4 @@
-import { traceViewportQuery } from "../diagnostics/renderTrace";
+import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
@@ -208,6 +208,9 @@ export class ViewportStreamManager {
     };
 
     startStream({ url: attach.url, subprotocols: attach.subprotocols, ticketHandle: stream, sink });
+    // P6 review, should-fix 3: logged at the moment of the real mint, not before -- `traceViewportQuery`
+    // above fires on every attempt (throttled or not), this fires only once a ticket actually issued.
+    traceStreamIssued(this.opts.dataset, stream);
     return { kind: "issued", streamHandle: stream };
   }
 

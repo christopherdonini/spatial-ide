@@ -21,6 +21,16 @@ export function traceViewportQuery(dataset: string, bbox: unknown, bboxCrs: stri
   console.debug(PREFIX, "viewport_query", { dataset, bbox, bboxCrs });
 }
 
+/** NEXT-CUT.md P6 reviewer gate, should-fix 3: a sibling to `traceViewportQuery` above, logged at the
+ * moment a ticket actually mints (`ViewportStreamManager.requestViewport`, right before it returns
+ * `{kind:"issued", streamHandle}`) -- `traceViewportQuery` itself fires before the mint, so it never
+ * carries a handle. Gives `e2e/filter-panel.mjs`'s `SLOW'/CANCEL'` step a real pre-batch reference
+ * for the handle it asserts zero `[render-trace] batch` lines against, retiring the "true by
+ * construction" weakness of trusting only the handle `queryWithFilter`'s own return value carried. */
+export function traceStreamIssued(dataset: string, streamHandle: string): void {
+  console.debug(PREFIX, "stream-issued", { dataset, streamHandle });
+}
+
 export function traceStreamBatch(
   streamHandle: string,
   batchSeq: number,

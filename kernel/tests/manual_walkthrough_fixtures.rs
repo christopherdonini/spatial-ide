@@ -255,8 +255,9 @@ fn generate_the_filter_fixture() {
 /// gate (`frontends/shell/src/App.tsx`) with real margin left over for the real pipeline's own added
 /// latency and the E2E harness's own polling round trips, rather than the ~360 ms the 1,500,000-
 /// feature construction left (too tight a margin to commit to, disclosed rather than risked). Write
-/// time for `FEATURES = 4_000_000` at `avg_vertices: 12` measured 67.0 s (`time` around the
-/// equivalent `make-fixture` invocation) -- a one-time, explicit `--ignored` generation, not part of
+/// time for `FEATURES = 4_000_000` at `avg_vertices: 12` measured 65.84 s (`generate_the_slow_filter_fixture`'s
+/// own `--ignored --nocapture` run, `target/slice-evidence/filter-panel/logs/p5-generate-slow-fixture.log`:
+/// "finished in 65.84s") -- a one-time, explicit `--ignored` generation, not part of
 /// any default suite or CI path, in the same "minutes for the big ones" tolerance this crate's own
 /// `fixture.rs` module doc already states for the docs/07 5 GB fixture; declined to go larger (a
 /// 6,000,000-feature single-row-group construction was estimated, not measured, at roughly 1.4 s
@@ -269,7 +270,7 @@ fn generate_the_filter_fixture() {
 /// the scan to whichever one ~1M-row group straddles the threshold regardless of the file's total
 /// size, which is the near-instant-tail-read failure mode this fixture exists to avoid) -- going
 /// further into the docs/07 "5 GB, minutes" write-time class for a bigger safety margin than the
-/// already-comfortable 937.7 ms provides was judged not worth the added one-time generation cost.
+/// already-comfortable 962.5 ms provides was judged not worth the added one-time generation cost.
 #[test]
 #[ignore = "generates a real file for the E2E filter-panel liveness/cancel spec; not part of the default suite"]
 fn generate_the_slow_filter_fixture() {

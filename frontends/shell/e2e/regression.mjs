@@ -295,8 +295,13 @@ async function stepA3(page) {
   const expected = ["EPSG:2056", "geometry (geoarrow.polygon)", "file:id", "100000", "not declared"];
   const missing = expected.filter((s) => !summaryText.includes(s));
   if (missing.length) throw new Error(`A3': DescribeSummary missing expected text: ${missing.join(", ")}. Full text: ${summaryText}`);
-  const refusalPanel = await page.evaluate(() => document.querySelector(".admission-refusal") !== null);
-  if (refusalPanel) throw new Error("A3': .admission-refusal panel present after a successful admission");
+  // P6 review, nit: scoped to `.admission-panel .admission-refusal` -- `FilterPanel`'s own refusal
+  // display (`.filter-refusal`) wraps the SAME shared `RefusalBlock` component (`.admission-refusal`
+  // class names preserved byte-exactly, CUT-STATE.md P3), so a bare `.admission-refusal` selector can
+  // now match either render site, making this assertion fragile to DOM order rather than actually
+  // checking the admission panel specifically.
+  const refusalPanel = await page.evaluate(() => document.querySelector(".admission-panel .admission-refusal") !== null);
+  if (refusalPanel) throw new Error("A3': .admission-panel .admission-refusal panel present after a successful admission");
   // "these five expected substrings" -- checking `summaryText.includes(...)` five times is not the
   // same claim as "verbatim" (a full-text match of the whole summary block); see
   // `MANUAL-WALKTHROUGH.md`'s own coverage table for the corrected wording.
@@ -579,8 +584,11 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
   if (outcome.message !== expectedMessage) {
     throw new Error(`${stepId}: refusal message mismatch.\nExpected: ${expectedMessage}\nActual:   ${outcome.message}`);
   }
+  // P6 review, nit: scoped to `.admission-panel .admission-refusal` -- see this file's own A3' comment
+  // for why a bare `.admission-refusal` selector is fragile now that `FilterPanel` can render the same
+  // shared component too.
   const panel = await page.evaluate(() => {
-    const el = document.querySelector(".admission-refusal");
+    const el = document.querySelector(".admission-panel .admission-refusal");
     return {
       exists: !!el,
       codeText: el?.querySelector(".admission-refusal-code")?.textContent ?? null,
@@ -589,7 +597,7 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
       hasButton: !!el?.querySelector("button"),
     };
   });
-  if (!panel.exists) throw new Error(`${stepId}: .admission-refusal panel not found in the DOM`);
+  if (!panel.exists) throw new Error(`${stepId}: .admission-panel .admission-refusal panel not found in the DOM`);
   if (panel.codeText !== expectedCode) throw new Error(`${stepId}: panel code text was "${panel.codeText}", expected "${expectedCode}"`);
   if (panel.messageText !== expectedMessage) {
     throw new Error(`${stepId}: panel message text mismatch.\nExpected: ${expectedMessage}\nActual:   ${panel.messageText}`);

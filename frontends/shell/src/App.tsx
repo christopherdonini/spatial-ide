@@ -8,13 +8,13 @@ import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { PickResult } from "./canvas/pick";
 import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
+import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
 import ErrorBanner from "./ErrorBanner";
 import { encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
-import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
 import type { Bbox, Filter } from "./skp/types";
 import {
   RequestOutcome,
@@ -158,8 +158,27 @@ export async function applyFilter(newFilter: Filter | null, deps: ApplyFilterDep
     outcome = await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, newFilter), deps.wait);
   } catch (e) {
     if (e instanceof SkpCallError) {
-      await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, deps.getActiveFilter()), deps.wait);
-      return { kind: "refused", refusal: formatRefusal(e.skpError) };
+      // NEXT-CUT.md P6 review, B2 (blocking): format the user's OWN refusal FIRST, before the
+      // recovery attempt runs at all -- the recovery is a best-effort canvas restore, never part of
+      // this function's contract with its caller. Recovery wrapped in its own try/catch: a non-filter
+      // rejection there (too_many_pending_streams, a transport failure, the dataset having since
+      // closed) must never blank the refusal the user's own typed predicate actually earned, nor
+      // surface as an unrelated global banner for a query they never made. Logged, not silently
+      // dropped (ADR-010 rule 8), and not re-thrown -- a caller awaiting `applyFilter` has no way to
+      // distinguish "your predicate was refused" from "the internal recovery attempt also failed" if
+      // this propagated, and only the former is this function's own claim to make.
+      const refusal = formatRefusal(e.skpError);
+      try {
+        await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, deps.getActiveFilter()), deps.wait);
+      } catch (recoveryError) {
+        logSessionEvent(
+          "filter-recovery-failed",
+          `re-issuing the last successfully-issued query after a refused Apply also failed: ${
+            recoveryError instanceof Error ? recoveryError.message : String(recoveryError)
+          }`
+        );
+      }
+      return { kind: "refused", refusal };
     }
     throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
   }
@@ -279,6 +298,11 @@ export type ScanState =
  * `scanRowsAccumulator`, below) -- this machine only ever records the running total it is handed, it
  * never sums deltas itself. `reset` is this file's own addition (not one of the six named inputs):
  * dataset change clears this the same way it clears `activeFilter`/`residencyStatus`.
+ *
+ * `cancelledByUser` carries a `streamHandle` (P6 review, should-fix 1) -- mirrors `streamOpened`'s
+ * own shape/guard: the Cancel call site must not be able to mark a FRESHLY-issued stream cancelled
+ * while actually killing an old, already-superseded handle (a render-scope staleness risk the fix
+ * closes both here, structurally, and at the call site, via `scanStateRef`).
  */
 export type ScanEvent =
   | { kind: "issued"; streamHandle: string }
@@ -286,7 +310,7 @@ export type ScanEvent =
   | { kind: "batch"; rows: number }
   | { kind: "completed" }
   | { kind: "failed" }
-  | { kind: "cancelledByUser" }
+  | { kind: "cancelledByUser"; streamHandle: string }
   | { kind: "reset" };
 
 export function nextScanState(state: ScanState, event: ScanEvent): ScanState {
@@ -316,8 +340,11 @@ export function nextScanState(state: ScanState, event: ScanEvent): ScanState {
       // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- this function does not itself
       // know when it is called, only that IF it is called while a scan is tracked, it moves straight
       // to `cancelled` without waiting for any terminal (which, for a self-cancelled stream, never
-      // arrives -- `ViewportStreamManager`'s own `selfCancelledHandles`).
-      if (!isScanInFlight(state)) {
+      // arrives -- `ViewportStreamManager`'s own `selfCancelledHandles`). Guarded on `streamHandle`
+      // (P6 review, should-fix 1) exactly like `streamOpened` above: a cancel meant for a handle this
+      // machine is no longer tracking (superseded by a fresher `issued` already) is a no-op, never a
+      // wrong-stream cancellation.
+      if (!isScanInFlight(state) || state.streamHandle !== event.streamHandle) {
         return state;
       }
       const rows = state.kind === "delivering" ? state.rows : 0;
@@ -441,6 +468,43 @@ export function makeManagerCallbacks(
 }
 
 /**
+ * `WorkingCanvas`'s `onCanvasRefusal` handler (NEXT-CUT.md P6 reviewer gate, **B1 -- blocking,
+ * "corrupts the very indicator Part E judges"**). A declared-ceiling refusal
+ * (`ResidentVertexCeilingExceeded` OR `PickCeilingExceeded` -- both route through this one
+ * `WorkingCanvasProps` callback, see `WorkingCanvas.tsx`'s own `pushBatch`) calls `cancelStream`,
+ * whose terminal `ViewportStreamManager` then suppresses (`selfCancelledHandles`) -- exactly binding
+ * note 6's "a cancelled stream's terminal never reaches App." Without a scan event dispatched HERE,
+ * at the cancel call site, the scan machine would stay wherever it was
+ * (`issuing`/`open-no-rows`/`delivering`) FOREVER after every over-ceiling stream, showing a live
+ * "still scanning" indicator and an enabled Cancel for a scan the app itself already killed -- and
+ * the slow fixture's own unfiltered first look (`SLOW'/CANCEL'`,
+ * `kernel/tests/manual_walkthrough_fixtures.rs`'s `generate_the_slow_filter_fixture`) IS exactly such
+ * a stream, so Part E's operator would be judging a lying indicator.
+ *
+ * `{kind:"failed"}` chosen over a new dedicated event, as the reviewer's own note allowed: `.residency
+ * -status` (rider 1) already names the ceiling right next to this exact moment, so the scan-liveness
+ * indicator needs no extra copy of its own -- simply leaving the in-flight family (Cancel and the
+ * liveness text both disappear, `isScanInFlight`/`scanLivenessText` already return accordingly for
+ * `"failed"`) is the whole fix `nextScanState`'s existing transition already provides.
+ *
+ * Extracted as a pure function (not inline JSX) so this exact sequencing is unit-testable without a
+ * DOM, at the same kind of seam `makeManagerCallbacks` above already establishes for handler logic.
+ */
+export function handleCanvasCeilingRefusal(
+  streamHandle: string,
+  message: string,
+  deps: {
+    setCanvasRefusal: (value: string | null) => void;
+    applyScanEvent: (event: ScanEvent) => void;
+    cancelStream: (streamHandle: string) => void;
+  }
+): void {
+  deps.setCanvasRefusal(message);
+  deps.applyScanEvent({ kind: "failed" });
+  deps.cancelStream(streamHandle);
+}
+
+/**
  * Cut 1's whole shell: an admission flow, a working canvas, and viewport-driven streaming with
  * supersede-on-pan (`docs/07` Prototype-completion arc). No style panel, no publish affordance --
  * neither exists anywhere in this tree, not even as a disabled control (NEXT-CUT.md's own
@@ -473,12 +537,30 @@ export default function App() {
   // NEXT-CUT.md P4: App-owned (not FilterPanel-owned) precisely because indicator scope is "EVERY
   // in-flight viewport stream" (item 6), not filter-only -- an ordinary pan/zoom drives this too.
   const [scanState, setScanState] = useState<ScanState>({ kind: "idle" });
-  /** The one function every `scanState` write in this component goes through -- mirrors
-   * `commitActiveFilter`'s own role for `activeFilter`. `useCallback([])`-stable for the same reason:
-   * it only ever reaches `setScanState`, itself React's own identity-stable setter. */
-  const applyScanEvent = useCallback((event: ScanEvent) => {
-    setScanState((prev) => nextScanState(prev, event));
+  /** P6 review, should-fix 1: a ref mirror of `scanState`, written SYNCHRONOUSLY by `commitScanState`
+   * below -- the same `activeFilter`/`activeFilterRef` split this file already uses, for the same
+   * reason. The Cancel JSX handler reads THIS, never the render-scope `scanState` closure, so which
+   * stream gets cancelled is decided from the freshest possible state rather than whatever `scanState`
+   * happened to be captured as when that particular render's closure was created. */
+  const scanStateRef = useRef<ScanState>({ kind: "idle" });
+  /** Writes BOTH `scanStateRef.current` (synchronously) and the `scanState` render state -- the one
+   * function every `scanState` write in this component goes through (mirrors `commitActiveFilter`'s
+   * own role for `activeFilter`). `useCallback([])`-stable for the same reason `commitActiveFilter`
+   * is. */
+  const commitScanState = useCallback((value: ScanState) => {
+    scanStateRef.current = value;
+    setScanState(value);
   }, []);
+  /** Computes the next state from `scanStateRef.current` (always fresh -- see its own doc comment,
+   * not from React's own `scanState` render value) and commits it via `commitScanState`.
+   * `useCallback([commitScanState])`: `commitScanState` is itself `useCallback([])`-stable, so this
+   * never actually changes identity across renders either. */
+  const applyScanEvent = useCallback(
+    (event: ScanEvent) => {
+      commitScanState(nextScanState(scanStateRef.current, event));
+    },
+    [commitScanState]
+  );
   /** Set inside the `[admitted]` effect below, to that effect's own `issueViewportQuery` closure --
    * `null` before a dataset is admitted (or after this effect's own cleanup runs). Exists so
    * `handleApplyFilter` (component-body level, below) can reach the SAME reporting wrapper the
@@ -544,15 +626,14 @@ export default function App() {
    * construction needs a WebGL context jsdom does not provide, so this indirection is what keeps
    * the reset sequencing itself testable without a DOM/WebGL harness this repo does not carry.
    *
-   * `useCallback([commitActiveFilter])`: every other setter closed over here is React's own
-   * identity-stable `useState` setter, and `commitActiveFilter` is itself `useCallback([])`-stable
-   * (its own doc comment above) -- so in practice this callback still never actually changes across
-   * renders, for the same reason it never needed to before this piece added the one real
-   * dependency: without stability here, a plain function literal gets a new identity every `App`
-   * render, which flows into `AdmissionPanel`'s `onAdmitted` prop, its `admitPath`
-   * (`useCallback([onAdmitted])`), and the `useEffect([admitPath])` that (un)registers the
-   * `openPath` E2E hook -- unregistering and re-registering that hook on every render, for no
-   * reason.
+   * `useCallback([commitActiveFilter, commitScanState])`: every other setter closed over here is
+   * React's own identity-stable `useState` setter, and both `commitActiveFilter` and `commitScanState`
+   * are themselves `useCallback([])`-stable (their own doc comments above) -- so in practice this
+   * callback still never actually changes across renders, for the same reason it never needed to
+   * before this piece added its own dependency: without stability here, a plain function literal gets
+   * a new identity every `App` render, which flows into `AdmissionPanel`'s `onAdmitted` prop, its
+   * `admitPath` (`useCallback([onAdmitted])`), and the `useEffect([admitPath])` that (un)registers the
+   * `openPath` E2E hook -- unregistering and re-registering that hook on every render, for no reason.
    */
   const handleAdmitted = useCallback(
     (next: Admitted): void => {
@@ -565,15 +646,15 @@ export default function App() {
         setLastViewportBbox: (value) => {
           lastViewportBboxRef.current = value;
         },
-        setScanState,
+        setScanState: commitScanState,
         setAdmitted,
       });
     },
-    // `commitActiveFilter` is itself `useCallback([])`-stable (see its own doc comment above), so
-    // this dependency never actually changes across renders -- `handleAdmitted` stays as
-    // identity-stable as it was before this piece, for the same reason its own doc comment already
-    // states (`AdmissionPanel`'s `admitPath`/E2E-hook `useEffect` chain).
-    [commitActiveFilter]
+    // `commitActiveFilter`/`commitScanState` are each `useCallback([])`-stable (see their own doc
+    // comments above), so this dependency never actually changes across renders -- `handleAdmitted`
+    // stays as identity-stable as it was before this piece, for the same reason its own doc comment
+    // already states (`AdmissionPanel`'s `admitPath`/E2E-hook `useEffect` chain).
+    [commitActiveFilter, commitScanState]
   );
 
   function reportViewportOutcome(promise: Promise<RequestOutcome>) {
@@ -688,7 +769,10 @@ export default function App() {
     if (import.meta.env.DEV) {
       registerE2eHook("queryWithFilter", (predicate: string) =>
         applyFilter(
-          { predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 },
+          // P6 review, nit: routed through the SAME `predicateTextToFilter` mapping the real panel's
+          // input uses (empty string -> `filter: null`, the one admitted mapping) -- this hook drives
+          // the identical seam a real Apply click does end to end, not just at the `applyFilter` call.
+          predicateTextToFilter(predicate),
           {
             requestViewport: (bbox, f) => issueViewportQuery(bbox, null, f),
             cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
@@ -771,13 +855,18 @@ export default function App() {
             onApply={handleApplyFilter}
             scanState={scanState}
             onCancel={() => {
-              if (!isScanInFlight(scanState)) return;
-              const handle = scanState.streamHandle;
+              // P6 review, should-fix 1: reads `scanStateRef.current`, NEVER the render-scope
+              // `scanState` this closure could otherwise capture stale -- see the ref's own doc
+              // comment. Both the dispatch and the handle handed to `cancelStream` come from the
+              // exact same, freshest-possible read.
+              const current = scanStateRef.current;
+              if (!isScanInFlight(current)) return;
+              const handle = current.streamHandle;
               // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- dispatched synchronously
               // here, in the SAME handler that calls `cancelStream`, never awaiting anything: a
               // self-cancelled stream's terminal is suppressed by the manager and will never arrive
               // to drive this transition otherwise.
-              setScanState((prev) => nextScanState(prev, { kind: "cancelledByUser" }));
+              applyScanEvent({ kind: "cancelledByUser", streamHandle: handle });
               void managerRef.current?.cancelStream(handle);
             }}
           />
@@ -809,11 +898,17 @@ export default function App() {
               geometryColumn={admitted.describe.geometry.column}
               onHover={setHover}
               onCanvasRefusal={(streamHandle, message) => {
-                setCanvasRefusal(message);
-                // limits.ts's own declared remedy is "cancel the offending stream", not just "show
-                // a message" -- a batch that already crossed a ceiling must not keep the stream
-                // running to consume more credit and more connection capacity for nothing.
-                void managerRef.current?.cancelStream(streamHandle);
+                // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
+                // comment above has the full account -- a declared-ceiling refusal must dispatch a
+                // scan event AT the cancel call site, or the liveness indicator lies forever after.
+                handleCanvasCeilingRefusal(streamHandle, message, {
+                  setCanvasRefusal,
+                  applyScanEvent,
+                  // limits.ts's own declared remedy is "cancel the offending stream", not just "show
+                  // a message" -- a batch that already crossed a ceiling must not keep the stream
+                  // running to consume more credit and more connection capacity for nothing.
+                  cancelStream: (h) => void managerRef.current?.cancelStream(h),
+                });
               }}
               onResidentCeilingExceeded={(_streamHandle, residentFeatureCount) => {
                 setResidencyStatus(

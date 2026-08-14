@@ -353,6 +353,31 @@ async function stepSlowCancel(page, consoleHandle) {
   }
   const handle = applyOutcome.streamHandle;
 
+  // P6 review, should-fix 3: a real pre-batch reference for `handle` before the zero-batch-lines
+  // check below even runs -- retires that check's prior "true by construction" weakness (trusting
+  // only the handle `queryWithFilter`'s own return value carried, with nothing in the trace itself
+  // confirming a stream was ever actually issued for it). `traceStreamIssued`
+  // (`diagnostics/renderTrace.ts`) fires synchronously, inside `ViewportStreamManager.requestViewport`,
+  // right before that same promise resolves with the handle -- so this line should already be in the
+  // console buffer by the time `applyOutcome` above resolved; polled anyway (bounded, not timed) as
+  // the same robustness margin every other DOM/console check in this suite already uses.
+  const issuedLine = await waitForCondition(
+    () =>
+      Promise.resolve(
+        consoleHandle.entries
+          .slice(consoleIndexBeforeApply)
+          .some((e) => e.text.includes("[render-trace] stream-issued") && e.text.includes(handle))
+      ),
+    (found) => found === true,
+    10_000
+  );
+  if (!issuedLine.ok) {
+    throw new Error(
+      `SLOW'/CANCEL': no [render-trace] stream-issued line found for ${handle} within 10s of queryWithFilter ` +
+        `resolving -- the zero-batch-lines check below would be true by construction without this`
+    );
+  }
+
   // Poll (bounded, not timed) for BOTH the Cancel affordance and the liveness indicator.
   const shown = await waitForCondition(
     () =>
@@ -443,9 +468,9 @@ async function stepSlowCancel(page, consoleHandle) {
 
   return (
     `OVERCEIL' pattern observed openly (${match[1]} of ${SLOW_FIXTURE_FEATURES}); applied "${SLOW_FIXTURE_PREDICATE}" ` +
-    `(handle ${handle}); Cancel enabled + liveness "${expectedLivenessText}" shown WHILE zero batch lines existed for ` +
-    `that handle; Cancel clicked; .scan-incomplete "${incomplete.last}"; zero batch lines for that handle ever, ` +
-    `including a 3s settle window after Cancel`
+    `(handle ${handle}, [render-trace] stream-issued line confirmed); Cancel enabled + liveness "${expectedLivenessText}" ` +
+    `shown WHILE zero batch lines existed for that handle; Cancel clicked; .scan-incomplete "${incomplete.last}"; ` +
+    `zero batch lines for that handle ever, including a 3s settle window after Cancel`
   );
 }
 

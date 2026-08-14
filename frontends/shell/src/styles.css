@@ -208,8 +208,17 @@ body,
   opacity: 0.8;
 }
 
+/* P6 review, should-fix 4: the same panel-growth-vs-canvas-floor regression class P3's own column-list
+   drop responded to (CUT-STATE.md) is runtime-reachable here too -- `.filter-refusal` (a fields `dl`
+   can carry several rows) rendering in a short window can still push `.canvas-container` toward its
+   `min-height` floor. Capped rather than left to grow unbounded; `overflow-y: auto` keeps every field
+   reachable instead of silently clipping content. (Part E's own E3 -- refusal readability -- must
+   check this in a short/cramped window; editing MANUAL-WALKTHROUGH.md itself is P7's job, not this
+   piece's.) */
 .filter-refusal {
   margin-top: 0.75rem;
+  max-height: 12rem;
+  overflow-y: auto;
 }
 
 /* P4 item 2: the indeterminate liveness indicator -- no percentage, no ETA, no "N of M" (the text
