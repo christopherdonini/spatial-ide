@@ -14,7 +14,7 @@ import ErrorBanner from "./ErrorBanner";
 import { encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
-import type { Bbox } from "./skp/types";
+import type { Bbox, Filter } from "./skp/types";
 import {
   RequestOutcome,
   VIEWPORT_QUERY_MIN_INTERVAL_MS,
@@ -46,6 +46,18 @@ export function admitAndResetStaleUiState(
     setViewportRefusal: (value: FormattedRefusal | null) => void;
     setHover: (value: PickResult | null) => void;
     setResidencyStatus: (value: ResidencyStatus | null) => void;
+    /** NEXT-CUT.md (filter-panel cut) design section: "Dataset change clears the filter via
+     * `admitAndResetStaleUiState`." A predicate scoped to one dataset's columns must never ride
+     * into the next dataset's first query -- the same D4 class of staleness this function already
+     * closes for a refusal/hover/status. Expected to write BOTH `activeFilter` render state and
+     * `activeFilterRef.current` (see `App`'s own `commitActiveFilter`), since the ref is what every
+     * issue site actually reads. */
+    setActiveFilter: (value: Filter | null) => void;
+    /** `lastViewportBboxRef.current` -- a bbox scoped to the previous dataset's own CRS/extent
+     * space is exactly the kind of untagged carryover ADR-010 rule 1 forbids (the same reasoning
+     * `App`'s own `<WorkingCanvas key={admitted.dataset}>` remount comment states for canvas-side
+     * refs); a fresh dataset starts with no "current viewport" of its own yet. */
+    setLastViewportBbox: (value: Bbox | null) => void;
     setAdmitted: (value: Admitted) => void;
   }
 ): void {
@@ -56,7 +68,120 @@ export function admitAndResetStaleUiState(
   // class of bug rider 1 (DECISIONS-PENDING.md entry 0, option (a)) explicitly calls out ("It
   // clears when ... (b) the dataset changes").
   setters.setResidencyStatus(nextResidencyStatus({ kind: "dataset-changed" }));
+  setters.setActiveFilter(null);
+  setters.setLastViewportBbox(null);
   setters.setAdmitted(next);
+}
+
+/**
+ * `requestViewport`'s single-retry-on-throttled wrapper (NEXT-CUT.md filter-panel-cut design
+ * section: "On `throttled` from a user click: ONE retry after `VIEWPORT_QUERY_MIN_INTERVAL_MS`,
+ * then a neutral 'not applied — try again'"). Pure over an injected `attempt` (the caller has
+ * already bound whatever bbox/filter this particular call needs) and an injected `wait` (real
+ * `setTimeout` in production; a zero-delay or fake-timer-driven stub in tests) so the retry timing
+ * itself is directly assertable without a DOM. Resolves `attempt()`'s own `RequestOutcome`
+ * unchanged on anything but a first-attempt `"throttled"` -- exactly ONE retry, never a loop: a
+ * second `"throttled"` is returned as-is, for the caller to treat as "not applied".
+ */
+export async function requestViewportWithSingleRetry(
+  attempt: () => Promise<RequestOutcome>,
+  wait: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+): Promise<RequestOutcome> {
+  const first = await attempt();
+  if (first.kind !== "throttled") {
+    return first;
+  }
+  await wait(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+  return attempt();
+}
+
+/**
+ * `applyFilter`'s own outcome -- deliberately NOT `RequestOutcome` itself: `"applied"` is a
+ * narrower claim (an issued mint whose filter this call itself supplied, now committed as
+ * `activeFilter`), and a refusal is reported here as structured `FormattedRefusal` (the same shape
+ * `viewportRefusal`/`AdmissionPanel`'s refusal block already render), not a raw `SkpCallError` a
+ * caller would have to catch.
+ */
+export type ApplyFilterOutcome =
+  | { kind: "applied"; streamHandle: string }
+  /** Neither a refusal nor a mint -- throttled twice, superseded, or issued after `stop()`. The
+   * neutral "not applied — try again" the design section names; `activeFilter` is untouched. */
+  | { kind: "not-applied" }
+  | { kind: "refused"; refusal: FormattedRefusal };
+
+export interface ApplyFilterDeps {
+  /** Bound to the live manager's `requestViewport`, over a bbox/filter pair THIS function supplies
+   * -- never a closure this function builds itself, so a test can substitute a bare mock with no
+   * manager/dataset/transport at all. */
+  requestViewport: (bbox: Bbox | null, filter: Filter | null) => Promise<RequestOutcome>;
+  /** `Debounced.cancel` for the pan/zoom debounce -- called FIRST, before anything else (design
+   * section (a): "else a scheduled pan fires 120ms later and silently reverts the filter"). */
+  cancelPendingDebounce: () => void;
+  /** `lastViewportBboxRef.current` AT ISSUE TIME -- `null` until the first settled view, in which
+   * case this applies over the whole dataset (`bbox: null`), the same shape the initial unfiltered
+   * load already uses. */
+  getLastViewportBbox: () => Bbox | null;
+  /** `activeFilterRef.current` AT ISSUE TIME -- also doubles as "the last successfully-issued
+   * filter" for the refusal-recovery re-issue below, since this ref is only ever written by
+   * `commitActiveFilter`, which nothing in this function calls before a mint actually succeeds. */
+  getActiveFilter: () => Filter | null;
+  /** Writes BOTH `activeFilterRef.current` (synchronously, so the very next issue site reads the
+   * new value) and the `activeFilter` render state -- called ONLY when `newFilter` itself mints. */
+  commitActiveFilter: (filter: Filter | null) => void;
+  wait?: (ms: number) => Promise<void>;
+}
+
+/**
+ * Apply = supersede immediately (NEXT-CUT.md design section). `activeFilter` is assigned ONLY on an
+ * ISSUED outcome for `newFilter` itself -- a refusal or a throttled-after-retry never becomes state
+ * (design item 3). On a refusal, the "typo-blanks-canvas fix": the refusing attempt already
+ * superseded and cleared residency (`ViewportStreamManager`'s own supersede-before-mint order), so
+ * this re-issues the LAST successfully-issued query -- `getActiveFilter()` (unchanged by this failed
+ * attempt) over the same bbox -- through the identical retry helper, recovering the canvas. That
+ * recovery predicate is already-admitted (it minted once before), so it cannot itself be refused on
+ * filter grounds (design item 3's own claim) -- its outcome is not otherwise reported here, since
+ * this function's own `ApplyFilterOutcome` is about `newFilter`'s fate, not the recovery's.
+ */
+export async function applyFilter(newFilter: Filter | null, deps: ApplyFilterDeps): Promise<ApplyFilterOutcome> {
+  deps.cancelPendingDebounce();
+  const bbox = deps.getLastViewportBbox();
+
+  let outcome: RequestOutcome;
+  try {
+    outcome = await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, newFilter), deps.wait);
+  } catch (e) {
+    if (e instanceof SkpCallError) {
+      await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, deps.getActiveFilter()), deps.wait);
+      return { kind: "refused", refusal: formatRefusal(e.skpError) };
+    }
+    throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
+  }
+
+  if (outcome.kind === "issued") {
+    deps.commitActiveFilter(newFilter);
+    return { kind: "applied", streamHandle: outcome.streamHandle };
+  }
+  return { kind: "not-applied" };
+}
+
+/**
+ * The pan/zoom-driven debounced query body (`App`'s own `[admitted]` effect wires this into
+ * `debounce(...)`). Reads `activeFilterRef.current` INSIDE this closure -- i.e. at FIRE time, never
+ * captured as an argument when `Debounced.call()` is invoked -- so a filter Apply landing between a
+ * pan's `debounced.call()` and its settle-fire is what this closure actually issues, never silently
+ * overridden by whatever filter was active when the pan started (design item 1: "the debounced
+ * pan/zoom closure reads it INSIDE the debounced body ... kills the stale-arg class"). Exported and
+ * parameterized purely so `App.test.ts` can drive it through the real `debounce()` module and assert
+ * that ordering property directly, without a DOM.
+ */
+export function makeDebouncedViewportQuery(
+  requestViewport: (bbox: Bbox, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>,
+  activeFilterRef: { current: Filter | null },
+  reportOutcome: (promise: Promise<RequestOutcome>) => void
+): (bbox: Bbox, bboxCrs: string | null) => void {
+  return (bbox, bboxCrs) => {
+    reportOutcome(requestViewport(bbox, bboxCrs, activeFilterRef.current));
+  };
 }
 
 /**
@@ -183,9 +308,38 @@ export default function App() {
   // independently of `canvasRefusal` -- see `nextResidencyStatus`'s own doc comment for why
   // dismissing the banner must never touch this.
   const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus | null>(null);
+  // NEXT-CUT.md (filter-panel cut) design section: "App owns `activeFilter` (state for render + ref
+  // for issue sites)." `activeFilter` is the render-facing value (consumed by P3's panel, not by
+  // anything in this piece); `activeFilterRef` is what every issue site actually reads, kept in sync
+  // by `commitActiveFilter` below -- the same split `canvasRef`/nothing-else already has no analogue
+  // for, but `onHoverRef` et al. in `WorkingCanvas.tsx` establish the identical "ref mirrors state,
+  // read inside a callback body" pattern this file borrows.
+  const [activeFilter, setActiveFilter] = useState<Filter | null>(null);
+  const activeFilterRef = useRef<Filter | null>(null);
+  // "a new `lastViewportBboxRef` written by onViewportChanged (null until first settled view)" --
+  // Apply's own re-issue target (design section (b)): the current viewport, not just the last one a
+  // debounced query happened to fire for.
+  const lastViewportBboxRef = useRef<Bbox | null>(null);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
+
+  /** Writes BOTH `activeFilterRef.current` (synchronously) and the `activeFilter` render state --
+   * the one function every `activeFilter` write in this component goes through, whether that write
+   * is a successful Apply's commit or a dataset-change reset (`admitAndResetStaleUiState` below).
+   * `useCallback([])`: `setActiveFilter` is React's own identity-stable setter, so this never needs
+   * to change either -- see `handleAdmitted`'s own doc comment for why that stability matters. */
+  const commitActiveFilter = useCallback((filter: Filter | null) => {
+    activeFilterRef.current = filter;
+    setActiveFilter(filter);
+  }, []);
+  // `activeFilter` (the render value, as opposed to `activeFilterRef`) has no reader yet in this
+  // piece -- P3 (NEXT-CUT.md, next phase) is where the FilterPanel component actually renders it
+  // (the input's controlled value, a "filter applied" indication, etc.). Declared now because P2's
+  // own scope is "App owns `activeFilter` (state for render + ref for issue sites)"; `noUnusedLocals`
+  // would otherwise refuse to compile a value this piece deliberately does not consume yet. Remove
+  // this line the moment P3 actually reads `activeFilter` in the JSX below.
+  void activeFilter;
 
   /**
    * The single admission callback `AdmissionPanel` calls on every successful `open_dataset` --
@@ -199,22 +353,36 @@ export default function App() {
    * construction needs a WebGL context jsdom does not provide, so this indirection is what keeps
    * the reset sequencing itself testable without a DOM/WebGL harness this repo does not carry.
    *
-   * `useCallback([])`: every `useState` setter closed over here is identity-stable for the
-   * component's whole lifetime (React's own guarantee), so this callback never needs to change --
-   * without it, a plain function literal gets a new identity every `App` render, which flows into
-   * `AdmissionPanel`'s `onAdmitted` prop, its `admitPath` (`useCallback([onAdmitted])`), and the
-   * `useEffect([admitPath])` that (un)registers the `openPath` E2E hook -- unregistering and
-   * re-registering that hook on every render, for no reason.
+   * `useCallback([commitActiveFilter])`: every other setter closed over here is React's own
+   * identity-stable `useState` setter, and `commitActiveFilter` is itself `useCallback([])`-stable
+   * (its own doc comment above) -- so in practice this callback still never actually changes across
+   * renders, for the same reason it never needed to before this piece added the one real
+   * dependency: without stability here, a plain function literal gets a new identity every `App`
+   * render, which flows into `AdmissionPanel`'s `onAdmitted` prop, its `admitPath`
+   * (`useCallback([onAdmitted])`), and the `useEffect([admitPath])` that (un)registers the
+   * `openPath` E2E hook -- unregistering and re-registering that hook on every render, for no
+   * reason.
    */
-  const handleAdmitted = useCallback((next: Admitted): void => {
-    admitAndResetStaleUiState(next, {
-      setCanvasRefusal,
-      setViewportRefusal,
-      setHover,
-      setResidencyStatus,
-      setAdmitted,
-    });
-  }, []);
+  const handleAdmitted = useCallback(
+    (next: Admitted): void => {
+      admitAndResetStaleUiState(next, {
+        setCanvasRefusal,
+        setViewportRefusal,
+        setHover,
+        setResidencyStatus,
+        setActiveFilter: commitActiveFilter,
+        setLastViewportBbox: (value) => {
+          lastViewportBboxRef.current = value;
+        },
+        setAdmitted,
+      });
+    },
+    // `commitActiveFilter` is itself `useCallback([])`-stable (see its own doc comment above), so
+    // this dependency never actually changes across renders -- `handleAdmitted` stays as
+    // identity-stable as it was before this piece, for the same reason its own doc comment already
+    // states (`AdmissionPanel`'s `admitPath`/E2E-hook `useEffect` chain).
+    [commitActiveFilter]
+  );
 
   function reportViewportOutcome(promise: Promise<RequestOutcome>) {
     promise.then(
@@ -306,15 +474,29 @@ export default function App() {
     // in-flight `viewport_query` calls pile up kernel-side tickets faster than ordinary dragging
     // should (Custodian walkthrough finding: `skp.too_many_pending_streams` from plain dragging).
     // Debouncing means continuous motion issues nothing; only a settled view issues a query.
-    const debounced = debounce((bbox: Bbox, bboxCrs: string | null) => {
-      reportViewportOutcome(manager.requestViewport(bbox, bboxCrs));
-    }, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    //
+    // `makeDebouncedViewportQuery` (this file, above) is what reads `activeFilterRef.current` INSIDE
+    // the debounced body -- one of the design section's three ref-reading issue sites, and the one
+    // an ordinary pan/zoom drives.
+    const debounced = debounce(
+      makeDebouncedViewportQuery(
+        (bbox, bboxCrs, filter) => manager.requestViewport(bbox, bboxCrs, undefined, filter),
+        activeFilterRef,
+        reportViewportOutcome
+      ),
+      VIEWPORT_QUERY_MIN_INTERVAL_MS
+    );
     viewportDebounceRef.current = debounced;
 
     // The first look is unfiltered: `describe` establishes no dataset extent to aim a viewport at
     // (SKP-V0.md's C1), so the canvas's own fit-to-bounds-on-open is what puts the camera somewhere
     // the data actually is. Issued immediately, not debounced -- there is nothing yet to coalesce.
-    reportViewportOutcome(manager.requestViewport(null, null));
+    // Reads `activeFilterRef.current` too (design section: "all three issue sites read the REF at
+    // issue time") -- always `null` here in practice, since a fresh admission's own
+    // `admitAndResetStaleUiState` call already cleared it before this effect re-runs, but reading the
+    // ref rather than hardcoding `null` keeps this call uniform with the other two issue sites
+    // instead of a special case that would silently stop being true if that ordering ever changed.
+    reportViewportOutcome(manager.requestViewport(null, null, undefined, activeFilterRef.current));
 
     return () => {
       debounced.cancel();
@@ -381,6 +563,11 @@ export default function App() {
                 );
               }}
               onViewportChanged={(bbox) => {
+                // `lastViewportBboxRef` (design section (b)): written on EVERY viewport change, not
+                // only a debounced/settled one -- Apply's own re-issue needs "the current viewport"
+                // at click time, which may be mid-drag, not only the last one a debounced query
+                // happened to fire for.
+                lastViewportBboxRef.current = toWireBbox(bbox);
                 // Debounced to settle -- see the effect above's own comment and
                 // `streaming/debounce.ts` for why a pan/zoom-driven query is never issued directly
                 // from this callback.

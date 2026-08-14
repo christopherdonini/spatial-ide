@@ -4,8 +4,23 @@ import type { Admitted } from "./admission/admitDataset";
 import type { FormattedRefusal } from "./admission/formatRefusal";
 import type { PickResult } from "./canvas/pick";
 import type { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
-import { admitAndResetStaleUiState, makeManagerCallbacks, nextResidencyStatus, ResidencyStatus } from "./App";
-import type { DescribeResponse } from "./skp/types";
+import {
+  admitAndResetStaleUiState,
+  ApplyFilterDeps,
+  applyFilter,
+  makeDebouncedViewportQuery,
+  makeManagerCallbacks,
+  nextResidencyStatus,
+  requestViewportWithSingleRetry,
+  ResidencyStatus,
+} from "./App";
+import { SkpCallError } from "./skp/client";
+import { encodeHexF64 } from "./skp/codec";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
+import type { Bbox, DescribeResponse, Filter, SkpError } from "./skp/types";
+import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "./streaming/viewportStreamManager";
+import type { RequestOutcome } from "./streaming/viewportStreamManager";
+import { debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
 
 // D4 (custodian forensic run, evidence: 2,012,436 = 1,961,249 + 51,187): a refusal from one
@@ -71,12 +86,27 @@ function refusalFixture(): FormattedRefusal {
   return { code: "engine.crs_undeclared", message: "refused: no CRS", fields: [], remediationIsCut2: true };
 }
 
+function bboxFixture(): Bbox {
+  return {
+    xmin: encodeHexF64(0),
+    ymin: encodeHexF64(0),
+    xmax: encodeHexF64(10),
+    ymax: encodeHexF64(10),
+  };
+}
+
+function filterFixture(predicate = "zone = 'residential'"): Filter {
+  return { predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+}
+
 describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive a new admission)", () => {
   it("clears canvasRefusal, viewportRefusal, hover, and residencyStatus, then adopts the new Admitted value", () => {
     const setCanvasRefusal = vi.fn();
     const setViewportRefusal = vi.fn();
     const setHover = vi.fn();
     const setResidencyStatus = vi.fn();
+    const setActiveFilter = vi.fn();
+    const setLastViewportBbox = vi.fn();
     const setAdmitted = vi.fn();
     const next = admittedFixture("ds_b");
 
@@ -85,6 +115,8 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setViewportRefusal,
       setHover,
       setResidencyStatus,
+      setActiveFilter,
+      setLastViewportBbox,
       setAdmitted,
     });
 
@@ -98,29 +130,41 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     // changes" -- a status naming one dataset's row counts must not survive into the next.
     expect(setResidencyStatus).toHaveBeenCalledTimes(1);
     expect(setResidencyStatus).toHaveBeenCalledWith(null);
+    // NEXT-CUT.md (filter-panel cut) design section: "Dataset change clears the filter via
+    // `admitAndResetStaleUiState`" -- (+ref, +lastViewportBbox).
+    expect(setActiveFilter).toHaveBeenCalledTimes(1);
+    expect(setActiveFilter).toHaveBeenCalledWith(null);
+    expect(setLastViewportBbox).toHaveBeenCalledTimes(1);
+    expect(setLastViewportBbox).toHaveBeenCalledWith(null);
     expect(setAdmitted).toHaveBeenCalledTimes(1);
     expect(setAdmitted).toHaveBeenCalledWith(next);
   });
 
-  it("resets even when the previous dataset actually had a live refusal, hover, and residency status set", () => {
+  it("resets even when the previous dataset actually had a live refusal, hover, residency status, filter, and viewport bbox set", () => {
     // Simulates dataset N's UI state right before dataset N+1 is admitted -- the exact live
-    // sequence this fix targets: a ceiling refusal banner, a persistent residency status, and a
-    // hover readout, all up from N.
+    // sequence this fix targets: a ceiling refusal banner, a persistent residency status, a hover
+    // readout, an applied filter, and a settled viewport bbox, all up from N.
     const state: {
       canvasRefusal: string | null;
       viewportRefusal: FormattedRefusal | null;
       hover: PickResult | null;
       residencyStatus: ResidencyStatus | null;
+      activeFilter: Filter | null;
+      lastViewportBbox: Bbox | null;
     } = {
       canvasRefusal: "accepting this batch would carry 2012436 resident vertices...",
       viewportRefusal: refusalFixture(),
       hover: pickResultFixture(),
       residencyStatus: { residentFeatureCount: 97_500, datasetRowCount: "100000" },
+      activeFilter: filterFixture(),
+      lastViewportBbox: bboxFixture(),
     };
     const setCanvasRefusal = vi.fn((v: string | null) => (state.canvasRefusal = v));
     const setViewportRefusal = vi.fn((v: FormattedRefusal | null) => (state.viewportRefusal = v));
     const setHover = vi.fn((v: PickResult | null) => (state.hover = v));
     const setResidencyStatus = vi.fn((v: ResidencyStatus | null) => (state.residencyStatus = v));
+    const setActiveFilter = vi.fn((v: Filter | null) => (state.activeFilter = v));
+    const setLastViewportBbox = vi.fn((v: Bbox | null) => (state.lastViewportBbox = v));
     const setAdmitted = vi.fn();
 
     admitAndResetStaleUiState(admittedFixture("ds_b"), {
@@ -128,6 +172,8 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setViewportRefusal,
       setHover,
       setResidencyStatus,
+      setActiveFilter,
+      setLastViewportBbox,
       setAdmitted,
     });
 
@@ -135,6 +181,8 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     expect(state.viewportRefusal).toBeNull();
     expect(state.hover).toBeNull();
     expect(state.residencyStatus).toBeNull();
+    expect(state.activeFilter).toBeNull();
+    expect(state.lastViewportBbox).toBeNull();
   });
 
   it("resets happen before setAdmitted is called, so a re-render never sees the new dataset alongside stale UI state", () => {
@@ -143,6 +191,8 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setViewportRefusal = vi.fn(() => order.push("viewportRefusal"));
     const setHover = vi.fn(() => order.push("hover"));
     const setResidencyStatus = vi.fn(() => order.push("residencyStatus"));
+    const setActiveFilter = vi.fn(() => order.push("activeFilter"));
+    const setLastViewportBbox = vi.fn(() => order.push("lastViewportBbox"));
     const setAdmitted = vi.fn(() => order.push("admitted"));
 
     admitAndResetStaleUiState(admittedFixture("ds_c"), {
@@ -150,6 +200,8 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setViewportRefusal,
       setHover,
       setResidencyStatus,
+      setActiveFilter,
+      setLastViewportBbox,
       setAdmitted,
     });
 
@@ -306,5 +358,214 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
 
     expect(onFailureTerminal).not.toHaveBeenCalled();
     expect(onDeliveryCompleted).not.toHaveBeenCalled();
+  });
+});
+
+function issuedOutcome(streamHandle: string): RequestOutcome {
+  return { kind: "issued", streamHandle };
+}
+
+function skpErrorFixture(code = "skp.filter_unknown_column"): SkpError {
+  return { code, message: "refused: `bogus_column_xyz` is not a column this dataset carries", fields: {} };
+}
+
+describe("requestViewportWithSingleRetry (NEXT-CUT.md filter-panel-cut P2 item 2: exactly one retry on throttled)", () => {
+  it("returns the first attempt's outcome unchanged when it is not 'throttled', never waiting", async () => {
+    const wait = vi.fn().mockResolvedValue(undefined);
+    const attempt = vi.fn().mockResolvedValueOnce(issuedOutcome("sh_a"));
+
+    const outcome = await requestViewportWithSingleRetry(attempt, wait);
+
+    expect(outcome).toEqual(issuedOutcome("sh_a"));
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(wait).not.toHaveBeenCalled();
+  });
+
+  it("on a first 'throttled', waits VIEWPORT_QUERY_MIN_INTERVAL_MS then retries exactly once, returning the second attempt's outcome", async () => {
+    const wait = vi.fn().mockResolvedValue(undefined);
+    const attempt = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "throttled" })
+      .mockResolvedValueOnce(issuedOutcome("sh_a"));
+
+    const outcome = await requestViewportWithSingleRetry(attempt, wait);
+
+    expect(outcome).toEqual(issuedOutcome("sh_a"));
+    expect(attempt).toHaveBeenCalledTimes(2);
+    expect(wait).toHaveBeenCalledTimes(1);
+    expect(wait).toHaveBeenCalledWith(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+  });
+
+  it("a second 'throttled' is returned as-is -- exactly ONE retry, never a loop", async () => {
+    const wait = vi.fn().mockResolvedValue(undefined);
+    const attempt = vi.fn().mockResolvedValue({ kind: "throttled" });
+
+    const outcome = await requestViewportWithSingleRetry(attempt, wait);
+
+    expect(outcome).toEqual({ kind: "throttled" });
+    expect(attempt).toHaveBeenCalledTimes(2);
+    expect(wait).toHaveBeenCalledTimes(1);
+  });
+
+  it("a thrown refusal propagates directly, never swallowed or retried", async () => {
+    const wait = vi.fn().mockResolvedValue(undefined);
+    const err = new SkpCallError(skpErrorFixture());
+    const attempt = vi.fn().mockRejectedValueOnce(err);
+
+    await expect(requestViewportWithSingleRetry(attempt, wait)).rejects.toBe(err);
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(wait).not.toHaveBeenCalled();
+  });
+});
+
+// NEXT-CUT.md (filter-panel cut) design section, P2 items 2-3: Apply = supersede immediately, with
+// the debounce-cancel-first ordering, the bbox/filter read at issue time, activeFilter assigned ONLY
+// on an issued outcome, and the typo-blanks-canvas refusal-recovery re-issue. `wait` is a
+// zero-latency stub throughout (no fake timers needed -- `requestViewportWithSingleRetry`'s own
+// timing is covered above).
+describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, commit-only-on-issued, refusal recovery)", () => {
+  function baseDeps(overrides: Partial<ApplyFilterDeps> = {}): {
+    deps: ApplyFilterDeps;
+    calls: string[];
+    requestViewport: ReturnType<typeof vi.fn>;
+    cancelPendingDebounce: ReturnType<typeof vi.fn>;
+    commitActiveFilter: ReturnType<typeof vi.fn>;
+  } {
+    const calls: string[] = [];
+    const cancelPendingDebounce = vi.fn(() => calls.push("cancel-debounce"));
+    const requestViewport = vi.fn(async () => {
+      calls.push("request-viewport");
+      return issuedOutcome("sh_new");
+    });
+    const commitActiveFilter = vi.fn();
+    const deps: ApplyFilterDeps = {
+      requestViewport,
+      cancelPendingDebounce,
+      getLastViewportBbox: () => bboxFixture(),
+      getActiveFilter: () => null,
+      commitActiveFilter,
+      wait: async () => {},
+      ...overrides,
+    };
+    return { deps, calls, requestViewport, cancelPendingDebounce, commitActiveFilter };
+  }
+
+  it("cancels the pending debounce FIRST, before requestViewport is ever called", async () => {
+    const { deps, calls } = baseDeps();
+
+    await applyFilter(filterFixture(), deps);
+
+    expect(calls[0]).toBe("cancel-debounce");
+    expect(calls[1]).toBe("request-viewport");
+  });
+
+  it("issues over getLastViewportBbox() and the NEW filter, and on an issued outcome commits it + returns {kind:'applied'}", async () => {
+    const newFilter = filterFixture("zone = 'commercial'");
+    const bbox = bboxFixture();
+    const { deps, requestViewport, commitActiveFilter } = baseDeps({ getLastViewportBbox: () => bbox });
+
+    const outcome = await applyFilter(newFilter, deps);
+
+    expect(requestViewport).toHaveBeenCalledWith(bbox, newFilter);
+    expect(commitActiveFilter).toHaveBeenCalledWith(newFilter);
+    expect(outcome).toEqual({ kind: "applied", streamHandle: "sh_new" });
+  });
+
+  it("throttled-after-retry never becomes state: returns {kind:'not-applied'}, commitActiveFilter never called", async () => {
+    const requestViewport = vi.fn().mockResolvedValue({ kind: "throttled" });
+    const commitActiveFilter = vi.fn();
+    const { deps } = baseDeps({ requestViewport, commitActiveFilter });
+
+    const outcome = await applyFilter(filterFixture(), deps);
+
+    expect(outcome).toEqual({ kind: "not-applied" });
+    expect(commitActiveFilter).not.toHaveBeenCalled();
+  });
+
+  it("a refusal never becomes state, reports {kind:'refused', refusal}, and re-issues the LAST successfully-issued query (previous filter + lastViewportBbox) -- the typo-blanks-canvas fix", async () => {
+    const previousFilter = filterFixture("zone = 'residential'"); // the last successfully-issued filter
+    const bbox = bboxFixture();
+    const skpError = skpErrorFixture();
+    const requestViewport = vi
+      .fn()
+      // The Apply attempt itself, over the NEW (typo'd) filter -- refused.
+      .mockRejectedValueOnce(new SkpCallError(skpError))
+      // The recovery re-issue, over the PREVIOUS filter -- succeeds.
+      .mockResolvedValueOnce(issuedOutcome("sh_recovery"));
+    const commitActiveFilter = vi.fn();
+    const { deps } = baseDeps({
+      requestViewport,
+      getActiveFilter: () => previousFilter,
+      getLastViewportBbox: () => bbox,
+      commitActiveFilter,
+    });
+    const typoFilter = filterFixture("bogus_column_xyz = 1");
+
+    const outcome = await applyFilter(typoFilter, deps);
+
+    expect(outcome).toEqual({
+      kind: "refused",
+      refusal: { code: skpError.code, message: skpError.message, fields: [], remediationIsCut2: false },
+    });
+    expect(commitActiveFilter).not.toHaveBeenCalled(); // the refused typo never becomes state
+    expect(requestViewport).toHaveBeenCalledTimes(2);
+    expect(requestViewport).toHaveBeenNthCalledWith(1, bbox, typoFilter);
+    // Recovery: previous filter, same bbox -- already-admitted, cannot itself be refused on filter
+    // grounds (design section's own claim).
+    expect(requestViewport).toHaveBeenNthCalledWith(2, bbox, previousFilter);
+  });
+
+  it("an unexpected (non-SkpCallError) failure propagates, never swallowed (ADR-010 rule 7)", async () => {
+    const boom = new Error("transport exploded");
+    const requestViewport = vi.fn().mockRejectedValueOnce(boom);
+    const { deps } = baseDeps({ requestViewport });
+
+    await expect(applyFilter(filterFixture(), deps)).rejects.toBe(boom);
+  });
+});
+
+// NEXT-CUT.md design section, P2 item 1: "the debounced pan/zoom closure reads it [activeFilterRef]
+// INSIDE the debounced body ... kills the stale-arg class". Driven through the REAL `debounce()`
+// module (not a reimplementation) so this is an assertion about the actual ordering property, not a
+// restatement of `makeDebouncedViewportQuery`'s own body.
+describe("makeDebouncedViewportQuery (P2 item 1: activeFilterRef read at FIRE time, not schedule time)", () => {
+  it("apply-between-schedule-and-fire: a filter applied AFTER debounced.call() but BEFORE it fires is the one issued", async () => {
+    vi.useFakeTimers();
+    try {
+      const activeFilterRef: { current: Filter | null } = { current: null };
+      const requestViewport = vi.fn().mockResolvedValue(issuedOutcome("sh_a"));
+      const body = makeDebouncedViewportQuery(requestViewport, activeFilterRef, () => {});
+      const debounced = debounce(body, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      const bbox = bboxFixture();
+
+      debounced.call(bbox, null); // schedule while unfiltered (a pan starting)
+      const appliedMidFlight = filterFixture("zone = 'residential'");
+      activeFilterRef.current = appliedMidFlight; // "Apply" landing between schedule and fire
+
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS + 10);
+
+      expect(requestViewport).toHaveBeenCalledTimes(1);
+      expect(requestViewport).toHaveBeenCalledWith(bbox, null, appliedMidFlight);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("with no filter ever applied, issues with a null filter (the ordinary unfiltered pan, unchanged)", async () => {
+    vi.useFakeTimers();
+    try {
+      const activeFilterRef: { current: Filter | null } = { current: null };
+      const requestViewport = vi.fn().mockResolvedValue(issuedOutcome("sh_a"));
+      const body = makeDebouncedViewportQuery(requestViewport, activeFilterRef, () => {});
+      const debounced = debounce(body, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      const bbox = bboxFixture();
+
+      debounced.call(bbox, null);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS + 10);
+
+      expect(requestViewport).toHaveBeenCalledWith(bbox, null, null);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
