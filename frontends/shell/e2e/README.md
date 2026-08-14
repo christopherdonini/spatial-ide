@@ -71,3 +71,37 @@ measurably fewer non-background pixels than the unfiltered load, over the same f
 without going blank. `REFUSED'` asserts an invalid predicate (an unknown column) surfaces a typed
 `skp.filter_*` code/message with no crash or hang. Same **E2E-verified** evidence class as
 `regression.mjs`; same watchdog/deadline discipline; leaves the app running afterward.
+
+## Filter panel spec (filter-panel cut, P5)
+
+```
+npm run e2e:filter-panel
+```
+
+`e2e/filter-panel.mjs` -- a further sibling, this one driving the actual rendered `.filter-panel` DOM
+(`input.filter-predicate`, `button.filter-apply`, `button.filter-clear`, `button.filter-cancel`,
+`.filter-refusal`, `.scan-liveness`, `.scan-incomplete`) rather than the `queryWithFilter` hook
+`filter.mjs` uses -- P3/P4 of the filter-panel cut built the panel `filter.mjs` predates. `PANEL'`
+types `zone = 'residential'` into the input and clicks Apply, reusing `filter.mjs`'s own 60%-margin
+pixel-fraction check. `PANELREFUSE'` types an unknown column, asserts `.filter-refusal` shows
+`skp.filter_unknown_column` verbatim, and that the canvas still shows the PREVIOUS filtered view (the
+typo-blanks-canvas recovery re-issue). `CLEAR'` asserts the unfiltered fraction is restored.
+`SLOW'`/`CANCEL'` is ADR-021's own acceptance condition, asserted literally: opens a new
+~4,000,000-feature fixture (regenerate: `cargo test -p spatial-kernel --test
+manual_walkthrough_fixtures generate_the_slow_filter_fixture -- --ignored --nocapture` -- see that
+generator's own doc comment for why it is sized the way it is, and why a single Parquet row group is
+what makes the late-matching scan genuinely slow rather than collapsing to a near-instant, prunable
+tail read), asserts the OVERCEIL' pattern openly first (this fixture's declared precondition: it
+overflows `MAX_RESIDENT_VERTICES` on its own unfiltered first look), then applies a late-matching
+predicate (`id > <features - 100>`) and asserts `button.filter-cancel` + `.scan-liveness` are BOTH
+present while GENUINELY ZERO `[render-trace] batch` lines exist yet for the issued stream handle,
+then clicks Cancel and asserts `.scan-incomplete` appears with no further batch lines for that handle
+over a settle window. That one step applies its predicate via `window.__SPATIAL_E2E__.queryWithFilter`
+rather than the DOM input/Apply pair -- disclosed in the script's own top comment -- because obtaining
+the issued stream handle needs a return value a DOM click cannot give, and NEXT-CUT.md's own evidence
+plan names the hook as a sanctioned handle source; `queryWithFilter` reaches the identical `applyFilter`
+seam the real Apply button calls (the filter-panel cut's own "deviation-3 retrofit"), so the resulting
+DOM state is exactly what a real Apply click would produce. No timing assertion anywhere in this
+step (ADR-018) -- every wait is a bounded robustness poll, never a claim about how fast anything
+happened. Same **E2E-verified** evidence class; same watchdog/deadline discipline (longer default,
+600s, for the larger fixture's own admission/settle time); leaves the app running afterward.

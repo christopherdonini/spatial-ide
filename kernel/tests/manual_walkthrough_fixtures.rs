@@ -216,3 +216,95 @@ fn generate_the_filter_fixture() {
         facts.features
     );
 }
+
+/// The slow-filter fixture (`NEXT-CUT.md` filter-panel cut P5 -- the ADR-021 acceptance condition's
+/// own evidence): a dataset large enough that a **late-matching** filtered scan
+/// (`e2e/filter-panel.mjs`'s `SLOW'`/`CANCEL'` step issues `id > <FEATURES - 100>` -- the same
+/// "ids ascend in physical row order" trick `skp_filter_cancellation.rs`'s
+/// `cancel_reaches_the_producer_during_a_late_matching_filtered_scan` already relies on; this
+/// generator's default `IdentityMode::NativeUnique` writes `id = written + i`, ascending with
+/// physical row order, unchanged here) takes long enough, wall-clock, for the shell's scan-liveness
+/// indicator and Cancel affordance to be observed with **genuinely zero batches delivered yet** --
+/// the literal acceptance condition this cut exists to prove, never a hand-simulated delay.
+///
+/// **Declared precondition, asserted openly by the E2E step, not hidden:** at `FEATURES` features,
+/// `avg_vertices: 12`, this fixture's true vertex total is far over the shell's declared
+/// `MAX_RESIDENT_VERTICES = 2_000_000` ceiling (`frontends/shell/src/canvas/limits.ts`) -- hard
+/// -asserted below -- so the *unfiltered* first look (every dataset's own first, unfiltered query,
+/// `App.tsx`'s own effect comment: "The first look is unfiltered") refuses part-way through with the
+/// same OVERCEIL' pattern `over-ceiling-refused.parquet` already exercises
+/// (`.canvas-refusal`/`.residency-status`, `regression.mjs`'s `stepOverCeiling`). `SLOW'` asserts this
+/// pattern FIRST, openly, before ever applying a filter -- it is expected and asserted, not a defect
+/// this fixture happens to also carry.
+///
+/// **Sizing, measured, not guessed.** `row_group_rows` is set to `FEATURES` -- one single Parquet row
+/// group spanning every id -- so DuckDB's own row-group-level statistics pruning (which this
+/// fixture's ascending, sorted `id` column would otherwise make maximally effective, collapsing a
+/// late-matching scan to a near-instant tail-only read, since a plain multi-row-group file only ever
+/// needs to open the ONE row group whose own `[min, max]` id range straddles the threshold) has
+/// nothing to prune: the file's one row group has `min_id = 0`, `max_id = FEATURES - 1`, so
+/// `id > FEATURES - 100` cannot skip it, and DuckDB must genuinely scan through it. Measured with a
+/// throwaway probe (`engine/examples/pilot_p5_slow_scan_timing.rs` -- P0's own disposal convention,
+/// `pilot_json_serialize_sql.rs`/P3's `pilot_p3_*.rs`: built, timed, deleted before this piece's
+/// commit; console kept at `target/slice-evidence/filter-panel/logs/p5-probe-scan-timing.log`),
+/// isolating just the engine's own `ds.stream(&query)` call to first-batch, with no SKP ticket, no
+/// WebSocket, no JS decode on top (all of which can only ADD latency, never remove it, so this is a
+/// conservative lower bound on what the running shell will show): at 1,500,000 features (single row
+/// group) the same construction measured 345.6 ms; **at `FEATURES = 4_000_000` (this fixture) it
+/// measured 962.5 ms** -- comfortably over the shell's `SCAN_LIVENESS_DELAY_MS = 200` anti-flicker
+/// gate (`frontends/shell/src/App.tsx`) with real margin left over for the real pipeline's own added
+/// latency and the E2E harness's own polling round trips, rather than the ~360 ms the 1,500,000-
+/// feature construction left (too tight a margin to commit to, disclosed rather than risked). Write
+/// time for `FEATURES = 4_000_000` at `avg_vertices: 12` measured 67.0 s (`time` around the
+/// equivalent `make-fixture` invocation) -- a one-time, explicit `--ignored` generation, not part of
+/// any default suite or CI path, in the same "minutes for the big ones" tolerance this crate's own
+/// `fixture.rs` module doc already states for the docs/07 5 GB fixture; declined to go larger (a
+/// 6,000,000-feature single-row-group construction was estimated, not measured, at roughly 1.4 s
+/// scan / ~100 s write by linear extrapolation from the two measured points above) because the
+/// measured 4,000,000-feature margin already clears the liveness gate by a comfortable factor with a
+/// bounded, declared write cost, and NEXT-CUT.md's own sizing guidance names "something like 1-2M
+/// rows" as the target range -- `4_000_000` is already a disclosed step beyond that range, taken
+/// because the row-group-forcing construction described above is what actually defeats DuckDB's own
+/// pruning (a plain 1-2M-row file at the writer's *default* row-group size would let pruning collapse
+/// the scan to whichever one ~1M-row group straddles the threshold regardless of the file's total
+/// size, which is the near-instant-tail-read failure mode this fixture exists to avoid) -- going
+/// further into the docs/07 "5 GB, minutes" write-time class for a bigger safety margin than the
+/// already-comfortable 937.7 ms provides was judged not worth the added one-time generation cost.
+#[test]
+#[ignore = "generates a real file for the E2E filter-panel liveness/cancel spec; not part of the default suite"]
+fn generate_the_slow_filter_fixture() {
+    const FEATURES: usize = 4_000_000;
+    let path = dir().join("slow-filter-scan.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: FEATURES,
+            avg_vertices: 12,
+            hole_every: 0,
+            // See this function's own doc comment: a single row group spanning every id is what
+            // makes `id > FEATURES - 100` genuinely unprunable, rather than collapsing to a
+            // near-instant tail-only read the way the writer's *default* ~1,048,576-row grouping
+            // would let DuckDB's own row-group statistics pruning produce.
+            row_group_rows: FEATURES,
+            ..Default::default()
+        },
+    )
+    .expect("write the slow-filter fixture");
+    println!(
+        "wrote {} ({} features, {} vertices, {} bytes)",
+        path.display(),
+        facts.features,
+        facts.vertices,
+        facts.bytes
+    );
+    // Hard-asserted, not merely commented: this fixture only does its declared-precondition job --
+    // the unfiltered first look overflowing the shell's ceiling, so `SLOW'` can assert the OVERCEIL'
+    // pattern openly before ever applying a filter -- if its true vertex total actually exceeds the
+    // shell's 2_000_000 MAX_RESIDENT_VERTICES ceiling.
+    assert!(
+        facts.vertices > 2_000_000,
+        "slow-filter fixture must exceed the shell's 2_000_000 MAX_RESIDENT_VERTICES ceiling on its \
+         unfiltered first look, per this fixture's own declared precondition (got {} vertices)",
+        facts.vertices
+    );
+}
