@@ -99,6 +99,27 @@ A10 (close the window; no crash, no hang) has no automated counterpart at all �
 session has no way to assert "the window closed cleanly" about the very connection it is using to
 assert anything else.
 
+## What `e2e/filter-panel.mjs` covers
+
+A separate suite (`npm run e2e:filter-panel`, `frontends/shell/e2e/filter-panel.mjs`, filter-panel
+cut P5) drives Part E's own filter-panel DOM directly — a sibling to `regression.mjs` above, not
+folded into it. Same cross-reference convention: "Does not cover" lists only what the numbered Part
+E step *claims* that the script cannot assert.
+
+**Status as of the P6 reviewer-gate fresh run: GREEN** — `5/5 PASS (OPEN, PANEL', PANELREFUSE',
+CLEAR', SLOW'/CANCEL')`, ledger
+`frontends/shell/e2e/out/filter-panel-render-trace-1786738495024.json`. `SLOW'`/`CANCEL'` is one
+combined automated step (`runStep("SLOW'/CANCEL'", ...)` in the script itself) covering both the
+liveness/Cancel-appears half and the Cancel-actually-stops half in a single pass over the same
+issued stream handle — not two independently run steps.
+
+| Automated step | Walkthrough step(s) | Covers | Does not cover |
+|---|---|---|---|
+| `PANEL'` | E2 | typing `zone = 'residential'` into the real `input.filter-predicate` and clicking the real `button.filter-apply`; the filtered non-background pixel fraction is measurably lower than the unfiltered fraction (a pixel-fraction margin, not a visual read); `.filter-active` shows the applied predicate verbatim | whether the resulting scatter of polygons *looks* like a plausible "about a fifth of the shapes, not a patch removed" to a human — a look-and-feel judgment E2 itself asks for |
+| `PANELREFUSE'` | E3 | typing the unknown-column predicate and clicking Apply surfaces `.filter-refusal` with the exact code `skp.filter_unknown_column` and the exact verbatim message; the canvas fraction after the refusal stays within 2 percentage points of `PANEL'`'s own filtered fraction (confirms the typo-blanks-canvas recovery re-issue actually happened, not just that *some* fraction rendered) | refusal readability in the height-capped, scrolling `.filter-refusal` region (`max-height: 12rem; overflow-y: auto`, should-fix 4) — a look-and-feel judgment only the operator makes, in a short/cramped window |
+| `CLEAR'` | E4 | clicking the real `button.filter-clear` restores the unfiltered pixel fraction to within margin of the original and removes `.filter-refusal`/`.filter-active` from the DOM | nothing beyond the pixel-fraction/DOM-presence checks — no look-and-feel gap named for this step |
+| `SLOW'`/`CANCEL'` | E5, E6, E7 | the OVERCEIL' pattern's `.residency-status` text on the slow fixture's own unfiltered first look, matched by regex (not a fixed `<N>`); that `button.filter-cancel` and the literal `.scan-liveness` text `"Filtering — scanning, no matching rows yet"` both appear while GENUINELY ZERO `[render-trace] batch` lines exist yet for the issued stream handle — the acceptance condition itself, asserted literally; that clicking Cancel produces `.scan-incomplete` reading `"Filtered view incomplete — scan cancelled at 0 rows"` with zero further batch lines for that handle across a bounded settle window | whether the liveness indicator *reads as* "working, not hung" to a human (E5's own qualitative claim); whether Cancel *feels* responsive/immediate (E6 — ADR-018 forbids the script from making any timing claim here, so there is nothing in that direction for it to assert); the legibility of the persistent `.scan-incomplete` text to a human eye over continued observation (E7's own look-and-feel half, beyond the exact-string match the script already performs) |
+
 ## Prerequisites
 
 - Build/run from `frontends/shell`: `npm run tauri dev` (runs the Vite dev server via
@@ -176,6 +197,36 @@ over the ceiling on purpose, unlike the happy-path fixture above.
 
 ---
 
+## Part E — the filter panel (filter-panel cut)
+
+ADR-021's binding acceptance condition: before any user-facing filter UI ships, the panel must
+present liveness and a working cancel affordance during zero-batch filtered scans. This part is
+that acceptance instrument's operator half — `e2e/filter-panel.mjs` above covers the DOM-assertable
+half of the same ground; the coverage table names exactly where the two halves overlap and where
+this operator pass is the only evidence.
+
+Two new fixtures, opened in the same running app instance as Parts A–D — no relaunch needed:
+
+| Fixture | Path | Purpose |
+|---|---|---|
+| Filter-zoned | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\filter-zoned.parquet` | E1–E4, E8 — 2,000 features, a nullable `zone` text column with four declared values plus NULL, scattered by a per-feature hash (not clustered in one region); `zone = 'residential'` admits some rows and excludes others, by construction. Regenerate: `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture` |
+| Slow filter scan | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\slow-filter-scan.parquet` | E5–E7 — 4,000,000 features, one single Parquet row group (`id` ascending with physical row order, unprunable by DuckDB's own row-group statistics), true vertex total deliberately kept over `MAX_RESIDENT_VERTICES` on its own unfiltered first look (same OVERCEIL' pattern as Part D's fixture), so that a late-matching predicate (`id > 3999900`) genuinely takes long enough, wall-clock, for zero-batch liveness/cancel to be observed rather than simulated. Regenerate: `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_slow_filter_fixture -- --ignored --nocapture` |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| E1 | Click **Open GeoParquet…** (canvas from Part D may still be visible; that's fine) and select `filter-zoned.parquet`. | The button briefly reads "Opening…", then a summary appears exactly as A3 does (2000 features this time). No refusal panel. Below the summary, a new **filter panel** appears in the app's normal flow: an empty text input (placeholder `e.g. zone = 'residential'`), an **Apply** button, and a **Clear** button — no Cancel button, no liveness line, no refusal region yet. The canvas fits and renders `filter-zoned.parquet`'s own field of polygons (2,000 features — visibly sparser than the 100k happy-path fixture). |
+| E2 | Type `zone = 'residential'` into the filter input and click **Apply** (or press Enter). | A line reading `Applied: zone = 'residential'` appears below the controls. The canvas visibly redraws to noticeably fewer polygons than E1 — the matching subset is scattered across the same extent (each feature's zone is assigned by a per-feature hash, not clustered in one region), so this should read as *the same field with roughly a fifth of the shapes*, not a patch removed from one corner. No refusal region, no liveness/Cancel (this fixture is small enough to resolve well within the anti-flicker delay). |
+| E3 | Clear the input, type the typo `bogus_column_xyz = 1`, and click **Apply**. | A red-outlined refusal region appears below the controls, showing the code `skp.filter_unknown_column` and the message **"refused: `bogus_column_xyz` is not a column this dataset carries"** (verbatim). **Read it in a short window right after it appears** — this region is height-capped (`max-height: 12rem`, scrolls internally) rather than growing the panel, so judge whether the code, the message, and any field list stay reachable/readable in that capped space, not whether the panel can grow arbitrarily tall. The canvas is UNCHANGED from E2 — it still shows the `zone = 'residential'` filtered view, not blank and not reverted to unfiltered (the typo-blanks-canvas recovery re-issue). |
+| E4 | Click **Clear**. | The input empties, the refusal region and the `Applied: …` line both disappear, and the canvas returns to the full unfiltered view — the same density as E1. |
+| E5 | Click **Open GeoParquet…** and select `slow-filter-scan.parquet`. Wait for the first (unfiltered) look to settle, then type `id > 3999900` into the filter input and click **Apply**. | Two things, in order, both expected and stated openly — neither is a defect to report: **(1)** the unfiltered first look overflows the declared ceiling **by construction** (this fixture's true vertex total is kept far over `MAX_RESIDENT_VERTICES` on purpose, the same as Part D's fixture) — expect the same red-bordered ceiling banner plus a persistent status line reading `<N> of 4000000 features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)` (the automated suite's own runs against this exact fixture consistently read `163440 of 4000000 features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`; your own `<N>` may land elsewhere, but the surrounding text must match exactly). **(2)** After Apply: a **Cancel** button appears immediately next to Apply/Clear, and shortly after, a liveness line reads the literal text **"Filtering — scanning, no matching rows yet"** — no percentage, no ETA, no "N of M" figure. The canvas itself does not change (the predicate matches only the last 100 of 4,000,000 physically-ascending ids, so nothing has matched yet). **Judge:** does this read as *working*, not *hung*? |
+| E6 | Click **Cancel**. | The canvas stops changing — no further polygons appear after the click. Judge only *that* it stopped, from your own observation; **do not** describe how fast or immediate the stop felt, and do not attach any duration or figure to it (ADR-018 — the shell itself cannot even measure the producer's own clock, so no such claim is available to make). If operating remotely (e.g. RustDesk), record the same degraded-channel caveat the 2026-08-14 Part A entry used for its own motion-quality judgments. |
+| E7 | Read the status line that remains after clicking Cancel. | A persistent status line reads the literal text **"Filtered view incomplete — scan cancelled at 0 rows"** (0 rows — the late predicate never matched anything before the cancel). It has no dismiss control and does not disappear on its own; judge whether it stays legible over a few seconds of continued observation. The Cancel button and the liveness line are both gone — the scan is no longer in flight. |
+| E8 | Click **Open GeoParquet…** again and select `filter-zoned.parquet`. | The filter panel remounts for the new dataset: the predicate input is empty again, and the refusal region, the `Applied: …` line, and the `Filtered view incomplete…` status are all gone — none of it carries over from the slow fixture. The canvas shows `filter-zoned.parquet`'s own unfiltered view, the same as E1. |
+
+**If anything deviates:** stop, record the exact step, and report it, same as Parts A–D.
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -213,3 +264,13 @@ Fill in after running the script above.
   and persistent status simultaneously readable; Dismiss removed the banner and the status
   remained; status cleared on the D4 reopen). One cosmetic deviation: the banner's **Dismiss button
   abuts the message's last word ("tiling") with no spacing** — recorded; trivial CSS fix.
+
+### Part E run (separate pass — filter panel)
+
+Part E did not exist during the 2026-08-14 run recorded above (that run covered Parts A–D only).
+Fill in the fields below when Part E is actually run by an operator.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Part E (E1–E8):**
