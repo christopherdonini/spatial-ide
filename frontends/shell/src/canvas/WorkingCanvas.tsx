@@ -57,8 +57,12 @@ export interface WorkingCanvasHandle {
    * data-plane batches arrive. Reports (via `onCanvasRefusal`, after logging) rather than throwing
    * when a declared ceiling refuses the batch; a genuine decode failure (a malformed buffer, a
    * mistagged frame) still throws, since that is a defect the caller's own `startStream` decode
-   * boundary is built to turn into a terminal frame, not something this method can recover from. */
-  pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): void;
+   * boundary is built to turn into a terminal frame, not something this method can recover from.
+   * Returns the number of rows/features this call actually admitted -- `batch.ids.length` on
+   * success, `0` on a declared-ceiling refusal (nothing was added) -- so the caller (`App.tsx`'s
+   * `makeManagerCallbacks`, NEXT-CUT.md P4) can accumulate a cumulative row count for the
+   * scan-liveness indicator without decoding the batch a second time itself. */
+  pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): number;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
   /** Re-fit the camera ("zoom to layer") to the layer's best-known extent -- the dataset-lifetime
@@ -367,7 +371,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
               // "resident features at the moment of refusal" -- rider 1's own definition.
               onResidentCeilingExceededRef.current(streamHandle, residentRef.current.totalResidentFeatures);
             }
-            return;
+            return 0; // nothing admitted -- see this method's own doc comment on the interface
           }
           throw e;
         }
@@ -417,6 +421,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           );
         }
         render();
+        return batch.ids.length;
       },
 
       clearStream(streamHandle) {

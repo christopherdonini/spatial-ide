@@ -8,11 +8,17 @@ import {
   admitAndResetStaleUiState,
   ApplyFilterDeps,
   applyFilter,
+  isScanInFlight,
   makeDebouncedViewportQuery,
   makeManagerCallbacks,
   nextResidencyStatus,
+  nextScanState,
   requestViewportWithSingleRetry,
   ResidencyStatus,
+  ScanState,
+  scanLivenessText,
+  scanLivenessTextShouldShow,
+  SCAN_LIVENESS_DELAY_MS,
 } from "./App";
 import { SkpCallError } from "./skp/client";
 import { encodeHexF64 } from "./skp/codec";
@@ -107,6 +113,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setResidencyStatus = vi.fn();
     const setActiveFilter = vi.fn();
     const setLastViewportBbox = vi.fn();
+    const setScanState = vi.fn();
     const setAdmitted = vi.fn();
     const next = admittedFixture("ds_b");
 
@@ -117,6 +124,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setResidencyStatus,
       setActiveFilter,
       setLastViewportBbox,
+      setScanState,
       setAdmitted,
     });
 
@@ -136,6 +144,10 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     expect(setActiveFilter).toHaveBeenCalledWith(null);
     expect(setLastViewportBbox).toHaveBeenCalledTimes(1);
     expect(setLastViewportBbox).toHaveBeenCalledWith(null);
+    // NEXT-CUT.md P4: the scan-liveness machine is App-owned (`.scan-incomplete`, `FilterPanel`'s
+    // Cancel affordance) and gets the identical D4-class reset every other per-dataset state does.
+    expect(setScanState).toHaveBeenCalledTimes(1);
+    expect(setScanState).toHaveBeenCalledWith({ kind: "idle" });
     expect(setAdmitted).toHaveBeenCalledTimes(1);
     expect(setAdmitted).toHaveBeenCalledWith(next);
   });
@@ -151,6 +163,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       residencyStatus: ResidencyStatus | null;
       activeFilter: Filter | null;
       lastViewportBbox: Bbox | null;
+      scanState: ScanState;
     } = {
       canvasRefusal: "accepting this batch would carry 2012436 resident vertices...",
       viewportRefusal: refusalFixture(),
@@ -158,6 +171,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       residencyStatus: { residentFeatureCount: 97_500, datasetRowCount: "100000" },
       activeFilter: filterFixture(),
       lastViewportBbox: bboxFixture(),
+      scanState: { kind: "delivering", streamHandle: "sh_a", rows: 42 },
     };
     const setCanvasRefusal = vi.fn((v: string | null) => (state.canvasRefusal = v));
     const setViewportRefusal = vi.fn((v: FormattedRefusal | null) => (state.viewportRefusal = v));
@@ -165,6 +179,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setResidencyStatus = vi.fn((v: ResidencyStatus | null) => (state.residencyStatus = v));
     const setActiveFilter = vi.fn((v: Filter | null) => (state.activeFilter = v));
     const setLastViewportBbox = vi.fn((v: Bbox | null) => (state.lastViewportBbox = v));
+    const setScanState = vi.fn((v: ScanState) => (state.scanState = v));
     const setAdmitted = vi.fn();
 
     admitAndResetStaleUiState(admittedFixture("ds_b"), {
@@ -174,6 +189,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setResidencyStatus,
       setActiveFilter,
       setLastViewportBbox,
+      setScanState,
       setAdmitted,
     });
 
@@ -183,6 +199,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     expect(state.residencyStatus).toBeNull();
     expect(state.activeFilter).toBeNull();
     expect(state.lastViewportBbox).toBeNull();
+    expect(state.scanState).toEqual<ScanState>({ kind: "idle" });
   });
 
   it("resets happen before setAdmitted is called, so a re-render never sees the new dataset alongside stale UI state", () => {
@@ -193,6 +210,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setResidencyStatus = vi.fn(() => order.push("residencyStatus"));
     const setActiveFilter = vi.fn(() => order.push("activeFilter"));
     const setLastViewportBbox = vi.fn(() => order.push("lastViewportBbox"));
+    const setScanState = vi.fn(() => order.push("scanState"));
     const setAdmitted = vi.fn(() => order.push("admitted"));
 
     admitAndResetStaleUiState(admittedFixture("ds_c"), {
@@ -202,6 +220,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setResidencyStatus,
       setActiveFilter,
       setLastViewportBbox,
+      setScanState,
       setAdmitted,
     });
 
@@ -238,6 +257,15 @@ describe("nextResidencyStatus (rider 1's persistent ceiling-refusal status indic
 
   it("a dataset-changed event clears the status -- rider 1's condition (b)", () => {
     expect(nextResidencyStatus({ kind: "dataset-changed" })).toBeNull();
+  });
+
+  // Rider-1 refinement (DECISIONS-PENDING.md entry 1, architect recommendation, approved to
+  // proceed): applying a filter (or any new query) supersedes and clears the canvas exactly as a
+  // dataset change or full delivery does -- a stale ceiling status must not survive it.
+  it("a query-issued event clears the status -- rider-1 refinement (DECISIONS-PENDING.md entry 1)", () => {
+    const withStatus = nextResidencyStatus({ kind: "ceiling-refusal", residentFeatureCount: 1, datasetRowCount: "2" });
+    expect(withStatus).not.toBeNull();
+    expect(nextResidencyStatus({ kind: "query-issued" })).toBeNull();
   });
 
   // Rider 1, point 3: ".canvas-refusal keeps its Dismiss button; Dismiss hides the banner ONLY,
@@ -358,6 +386,214 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
 
     expect(onFailureTerminal).not.toHaveBeenCalled();
     expect(onDeliveryCompleted).not.toHaveBeenCalled();
+  });
+
+  // NEXT-CUT.md P4 item 1: `onBatchRows` -- the `batch(rows cumulative)` scan-liveness input needs a
+  // per-batch row count, which only `WorkingCanvasHandle.pushBatch`'s own return value carries.
+  it("onBatch calls onBatchRows with pushBatch's own return value (the admitted row count)", () => {
+    const pushBatch = vi.fn().mockReturnValue(37);
+    const canvas: WorkingCanvasHandle = { pushBatch, clearStream: vi.fn(), fitToBounds: vi.fn(() => false) };
+    const onBatchRows = vi.fn();
+    const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });
+
+    callbacks.onBatch("sh_a", 0, new Uint8Array([1]));
+
+    expect(onBatchRows).toHaveBeenCalledWith("sh_a", 37);
+  });
+
+  it("onBatchRows is optional -- a caller that omits it (every pre-existing call site) still works", () => {
+    const canvas = fakeCanvasHandle();
+    const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn() });
+
+    expect(() => callbacks.onBatch("sh_a", 0, new Uint8Array())).not.toThrow();
+  });
+
+  it("a null canvas reports 0 rows to onBatchRows rather than throwing (nothing was actually pushed)", () => {
+    const onBatchRows = vi.fn();
+    const callbacks = makeManagerCallbacks(null, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });
+
+    callbacks.onBatch("sh_a", 0, new Uint8Array());
+
+    expect(onBatchRows).toHaveBeenCalledWith("sh_a", 0);
+  });
+});
+
+// ADR-021's binding acceptance condition / NEXT-CUT.md P4 item 1: "idle -> issuing -> open-no-rows
+// -> delivering(rows) -> {complete | cancelled(rows) | failed}". Every transition, including
+// cancel-without-terminal (P4 binding note 6) and failure.
+describe("nextScanState (P4: the scan-liveness/cancel state machine)", () => {
+  const idle: ScanState = { kind: "idle" };
+
+  it("idle -- issued(handle) --> issuing(handle)", () => {
+    expect(nextScanState(idle, { kind: "issued", streamHandle: "sh_a" })).toEqual<ScanState>({
+      kind: "issuing",
+      streamHandle: "sh_a",
+    });
+  });
+
+  it("issuing -- streamOpened(same handle) --> open-no-rows", () => {
+    const issuing: ScanState = { kind: "issuing", streamHandle: "sh_a" };
+    expect(nextScanState(issuing, { kind: "streamOpened", streamHandle: "sh_a" })).toEqual<ScanState>({
+      kind: "open-no-rows",
+      streamHandle: "sh_a",
+    });
+  });
+
+  it("a streamOpened for a DIFFERENT (stale) handle is a no-op -- the late-TAG_OPEN guard", () => {
+    const issuing: ScanState = { kind: "issuing", streamHandle: "sh_current" };
+    expect(nextScanState(issuing, { kind: "streamOpened", streamHandle: "sh_stale" })).toEqual<ScanState>(issuing);
+  });
+
+  it("a streamOpened while not issuing (e.g. idle) is a no-op", () => {
+    expect(nextScanState(idle, { kind: "streamOpened", streamHandle: "sh_a" })).toEqual<ScanState>(idle);
+  });
+
+  it("open-no-rows -- batch(rows) --> delivering(rows)", () => {
+    const openNoRows: ScanState = { kind: "open-no-rows", streamHandle: "sh_a" };
+    expect(nextScanState(openNoRows, { kind: "batch", rows: 12 })).toEqual<ScanState>({
+      kind: "delivering",
+      streamHandle: "sh_a",
+      rows: 12,
+    });
+  });
+
+  it("delivering -- batch(rows) --> delivering(rows), replacing (not accumulating) the count", () => {
+    const delivering: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 12 };
+    expect(nextScanState(delivering, { kind: "batch", rows: 30 })).toEqual<ScanState>({
+      kind: "delivering",
+      streamHandle: "sh_a",
+      rows: 30,
+    });
+  });
+
+  it("a batch while idle (no scan tracked) is a no-op", () => {
+    expect(nextScanState(idle, { kind: "batch", rows: 5 })).toEqual<ScanState>(idle);
+  });
+
+  it("open-no-rows -- completed --> complete", () => {
+    const openNoRows: ScanState = { kind: "open-no-rows", streamHandle: "sh_a" };
+    expect(nextScanState(openNoRows, { kind: "completed" })).toEqual<ScanState>({ kind: "complete", streamHandle: "sh_a" });
+  });
+
+  it("delivering -- completed --> complete", () => {
+    const delivering: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 500 };
+    expect(nextScanState(delivering, { kind: "completed" })).toEqual<ScanState>({ kind: "complete", streamHandle: "sh_a" });
+  });
+
+  it("issuing -- failed --> failed", () => {
+    const issuing: ScanState = { kind: "issuing", streamHandle: "sh_a" };
+    expect(nextScanState(issuing, { kind: "failed" })).toEqual<ScanState>({ kind: "failed", streamHandle: "sh_a" });
+  });
+
+  it("delivering -- failed --> failed", () => {
+    const delivering: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 3 };
+    expect(nextScanState(delivering, { kind: "failed" })).toEqual<ScanState>({ kind: "failed", streamHandle: "sh_a" });
+  });
+
+  it("completed/failed while idle are no-ops (defensive, never crashes)", () => {
+    expect(nextScanState(idle, { kind: "completed" })).toEqual<ScanState>(idle);
+    expect(nextScanState(idle, { kind: "failed" })).toEqual<ScanState>(idle);
+  });
+
+  // P4 binding note 6, the load-bearing property: "a cancelled stream's terminal never reaches App"
+  // -- the machine must reach `cancelled` from the cancel call site ALONE, never waiting on (or
+  // needing) a `completed`/`failed` event that, for a self-cancelled stream, will never arrive.
+  it("cancel-without-terminal: issuing -- cancelledByUser --> cancelled(rows: 0), no batch ever arrived", () => {
+    const issuing: ScanState = { kind: "issuing", streamHandle: "sh_a" };
+    expect(nextScanState(issuing, { kind: "cancelledByUser" })).toEqual<ScanState>({
+      kind: "cancelled",
+      streamHandle: "sh_a",
+      rows: 0,
+    });
+  });
+
+  it("cancel-without-terminal: open-no-rows -- cancelledByUser --> cancelled(rows: 0)", () => {
+    const openNoRows: ScanState = { kind: "open-no-rows", streamHandle: "sh_a" };
+    expect(nextScanState(openNoRows, { kind: "cancelledByUser" })).toEqual<ScanState>({
+      kind: "cancelled",
+      streamHandle: "sh_a",
+      rows: 0,
+    });
+  });
+
+  it("cancel-without-terminal: delivering(rows) -- cancelledByUser --> cancelled(rows), carrying the count forward", () => {
+    const delivering: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 12_345 };
+    expect(nextScanState(delivering, { kind: "cancelledByUser" })).toEqual<ScanState>({
+      kind: "cancelled",
+      streamHandle: "sh_a",
+      rows: 12_345,
+    });
+  });
+
+  it("once cancelled, a LATE completed/failed/batch/streamOpened for the same handle changes nothing", () => {
+    const cancelled: ScanState = { kind: "cancelled", streamHandle: "sh_a", rows: 7 };
+    expect(nextScanState(cancelled, { kind: "completed" })).toEqual<ScanState>(cancelled);
+    expect(nextScanState(cancelled, { kind: "failed" })).toEqual<ScanState>(cancelled);
+    expect(nextScanState(cancelled, { kind: "batch", rows: 99 })).toEqual<ScanState>(cancelled);
+    expect(nextScanState(cancelled, { kind: "streamOpened", streamHandle: "sh_a" })).toEqual<ScanState>(cancelled);
+  });
+
+  it("a cancelledByUser while idle/complete/cancelled/failed is a no-op", () => {
+    expect(nextScanState(idle, { kind: "cancelledByUser" })).toEqual<ScanState>(idle);
+    const complete: ScanState = { kind: "complete", streamHandle: "sh_a" };
+    expect(nextScanState(complete, { kind: "cancelledByUser" })).toEqual<ScanState>(complete);
+  });
+
+  it("a fresh issued event ALWAYS supersedes -- even a cancelled/complete/failed scan starts a new one", () => {
+    const cancelled: ScanState = { kind: "cancelled", streamHandle: "sh_old", rows: 7 };
+    expect(nextScanState(cancelled, { kind: "issued", streamHandle: "sh_new" })).toEqual<ScanState>({
+      kind: "issuing",
+      streamHandle: "sh_new",
+    });
+  });
+
+  it("reset unconditionally returns idle -- the dataset-change clear", () => {
+    const delivering: ScanState = { kind: "delivering", streamHandle: "sh_a", rows: 999 };
+    expect(nextScanState(delivering, { kind: "reset" })).toEqual<ScanState>({ kind: "idle" });
+  });
+});
+
+describe("isScanInFlight / scanLivenessText / scanLivenessTextShouldShow (P4 items 2, 6, 7)", () => {
+  it("isScanInFlight is true for issuing/open-no-rows/delivering, false otherwise", () => {
+    expect(isScanInFlight({ kind: "idle" })).toBe(false);
+    expect(isScanInFlight({ kind: "issuing", streamHandle: "sh_a" })).toBe(true);
+    expect(isScanInFlight({ kind: "open-no-rows", streamHandle: "sh_a" })).toBe(true);
+    expect(isScanInFlight({ kind: "delivering", streamHandle: "sh_a", rows: 1 })).toBe(true);
+    expect(isScanInFlight({ kind: "complete", streamHandle: "sh_a" })).toBe(false);
+    expect(isScanInFlight({ kind: "cancelled", streamHandle: "sh_a", rows: 1 })).toBe(false);
+    expect(isScanInFlight({ kind: "failed", streamHandle: "sh_a" })).toBe(false);
+  });
+
+  it("scanLivenessText: the two literal strings NEXT-CUT.md's design section names, no percentage/ETA/N-of-M", () => {
+    expect(scanLivenessText({ kind: "open-no-rows", streamHandle: "sh_a" })).toBe(
+      "Filtering — scanning, no matching rows yet"
+    );
+    expect(scanLivenessText({ kind: "delivering", streamHandle: "sh_a", rows: 250 })).toBe("Filtering — 250 rows so far");
+  });
+
+  it("scanLivenessText is null for idle/issuing and every terminal state", () => {
+    expect(scanLivenessText({ kind: "idle" })).toBeNull();
+    expect(scanLivenessText({ kind: "issuing", streamHandle: "sh_a" })).toBeNull();
+    expect(scanLivenessText({ kind: "complete", streamHandle: "sh_a" })).toBeNull();
+    expect(scanLivenessText({ kind: "cancelled", streamHandle: "sh_a", rows: 1 })).toBeNull();
+    expect(scanLivenessText({ kind: "failed", streamHandle: "sh_a" })).toBeNull();
+  });
+
+  // The gating logic itself, pure: below the declared delay -> hidden; at/above it -> shown; never
+  // shown at all when nothing is in flight, however much time has "elapsed".
+  it("scanLivenessTextShouldShow is false below SCAN_LIVENESS_DELAY_MS, true at and above it", () => {
+    const openNoRows: ScanState = { kind: "open-no-rows", streamHandle: "sh_a" };
+    expect(scanLivenessTextShouldShow(openNoRows, 0)).toBe(false);
+    expect(scanLivenessTextShouldShow(openNoRows, SCAN_LIVENESS_DELAY_MS - 1)).toBe(false);
+    expect(scanLivenessTextShouldShow(openNoRows, SCAN_LIVENESS_DELAY_MS)).toBe(true);
+    expect(scanLivenessTextShouldShow(openNoRows, SCAN_LIVENESS_DELAY_MS + 500)).toBe(true);
+  });
+
+  it("scanLivenessTextShouldShow is false when not in flight, regardless of elapsed time", () => {
+    expect(scanLivenessTextShouldShow({ kind: "idle" }, SCAN_LIVENESS_DELAY_MS + 1000)).toBe(false);
+    expect(scanLivenessTextShouldShow({ kind: "complete", streamHandle: "sh_a" }, SCAN_LIVENESS_DELAY_MS + 1000)).toBe(
+      false
+    );
   });
 });
 

@@ -211,3 +211,41 @@ body,
 .filter-refusal {
   margin-top: 0.75rem;
 }
+
+/* P4 item 2: the indeterminate liveness indicator -- no percentage, no ETA, no "N of M" (the text
+   itself, `App.tsx`'s `scanLivenessText`, already enforces that; this is purely the spinner). */
+.scan-liveness {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.scan-liveness-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid rgba(128, 128, 128, 0.35);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: scan-liveness-spin 0.8s linear infinite;
+}
+
+@keyframes scan-liveness-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* P4 item 3, rider-1 pattern: persistent, not dismissible -- same visual family as
+   `.residency-status`, a `.canvas-status-stack` child now like every other status there. */
+.scan-incomplete {
+  padding: 0.35rem 0.6rem;
+  background: rgba(74, 15, 15, 0.85);
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  pointer-events: none;
+}
+

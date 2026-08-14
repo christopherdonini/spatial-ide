@@ -59,6 +59,11 @@ export function admitAndResetStaleUiState(
      * `App`'s own `<WorkingCanvas key={admitted.dataset}>` remount comment states for canvas-side
      * refs); a fresh dataset starts with no "current viewport" of its own yet. */
     setLastViewportBbox: (value: Bbox | null) => void;
+    /** NEXT-CUT.md P4: the scan-liveness machine is App-owned (rendered in both `FilterPanel` and
+     * the canvas status stack's `.scan-incomplete`), so it needs the identical D4-class reset every
+     * other piece of per-dataset UI state already gets here -- a `.scan-incomplete` naming one
+     * dataset's cancelled scan must not survive into the next dataset's UI. */
+    setScanState: (value: ScanState) => void;
     setAdmitted: (value: Admitted) => void;
   }
 ): void {
@@ -71,6 +76,7 @@ export function admitAndResetStaleUiState(
   setters.setResidencyStatus(nextResidencyStatus({ kind: "dataset-changed" }));
   setters.setActiveFilter(null);
   setters.setLastViewportBbox(null);
+  setters.setScanState({ kind: "idle" });
   setters.setAdmitted(next);
 }
 
@@ -221,12 +227,145 @@ export function nextResidencyStatus(
     | { kind: "ceiling-refusal"; residentFeatureCount: number; datasetRowCount: string }
     | { kind: "delivery-complete" }
     | { kind: "dataset-changed" }
+    /** Rider-1 refinement (DECISIONS-PENDING.md entry 1, architect recommendation, approved to
+     * proceed): applying a filter supersedes and clears the canvas exactly as a dataset change or a
+     * full delivery does -- a stale "N of M features rendered" claim must not survive a query the
+     * operator themselves just superseded. Named in DECISIONS-PENDING.md and the PR per the human's
+     * own rider being amended here, not silently absorbed. */
+    | { kind: "query-issued" }
 ): ResidencyStatus | null {
   switch (event.kind) {
     case "ceiling-refusal":
       return { residentFeatureCount: event.residentFeatureCount, datasetRowCount: event.datasetRowCount };
     case "delivery-complete":
     case "dataset-changed":
+    case "query-issued":
+      return null;
+  }
+}
+
+/**
+ * NEXT-CUT.md (filter-panel cut) P4, ADR-021's binding acceptance condition: "before any user-facing
+ * filter UI ships, the panel must present liveness and a working cancel affordance during zero-batch
+ * filtered scans." This is the pure state machine behind that affordance, kept outside React state
+ * updates for the same testability reason `nextResidencyStatus` above is (`App.test.ts` asserts every
+ * transition directly, no DOM).
+ *
+ * `idle -> issuing -> open-no-rows -> delivering(rows) -> {complete | cancelled(rows) | failed}`.
+ * Every non-`idle` state carries the `streamHandle` it belongs to. A fresh `issued` event ALWAYS
+ * supersedes whatever this machine was previously tracking (mirrors `ViewportStreamManager
+ * .requestViewport`'s own supersede-on-issue semantics) -- exactly one scan is tracked at a time,
+ * matching P4 item 6's indicator scope ("EVERY in-flight viewport stream", not filter-only). Every
+ * OTHER event checks the state it would apply to still carries a matching (or any, for `batch`/
+ * `completed`/`failed`/`cancelledByUser`) `streamHandle` before acting, so a late event for a stream
+ * this machine is no longer tracking is a no-op -- the concrete form of P4 binding note 6, "a
+ * cancelled stream's terminal never reaches App": once `cancelledByUser` has already moved this
+ * machine to `cancelled`, nothing (a late `streamOpened`, a late `batch`, an eventual `completed` that
+ * `ViewportStreamManager` suppresses anyway) can move it off that state except a fresh `issued`.
+ */
+export type ScanState =
+  | { kind: "idle" }
+  | { kind: "issuing"; streamHandle: string }
+  | { kind: "open-no-rows"; streamHandle: string }
+  | { kind: "delivering"; streamHandle: string; rows: number }
+  | { kind: "complete"; streamHandle: string }
+  | { kind: "cancelled"; streamHandle: string; rows: number }
+  | { kind: "failed"; streamHandle: string };
+
+/**
+ * Inputs named by NEXT-CUT.md P4 item 1, verbatim: "issued(handle), streamOpened(handle),
+ * batch(rows cumulative), completed, failed, cancelledByUser". `batch`'s `rows` is the CUMULATIVE
+ * count for the currently-tracked stream, computed by the caller (`App.tsx`'s own effect-local
+ * `scanRowsAccumulator`, below) -- this machine only ever records the running total it is handed, it
+ * never sums deltas itself. `reset` is this file's own addition (not one of the six named inputs):
+ * dataset change clears this the same way it clears `activeFilter`/`residencyStatus`.
+ */
+export type ScanEvent =
+  | { kind: "issued"; streamHandle: string }
+  | { kind: "streamOpened"; streamHandle: string }
+  | { kind: "batch"; rows: number }
+  | { kind: "completed" }
+  | { kind: "failed" }
+  | { kind: "cancelledByUser" }
+  | { kind: "reset" };
+
+export function nextScanState(state: ScanState, event: ScanEvent): ScanState {
+  switch (event.kind) {
+    case "issued":
+      return { kind: "issuing", streamHandle: event.streamHandle };
+    case "streamOpened":
+      // Mirrors `ViewportStreamManager`'s own late-TAG_OPEN guard: a `streamOpened` for a handle
+      // this machine is not currently `issuing` for (superseded, or already moved on) is dropped.
+      if (state.kind !== "issuing" || state.streamHandle !== event.streamHandle) {
+        return state;
+      }
+      return { kind: "open-no-rows", streamHandle: state.streamHandle };
+    case "batch":
+      if (state.kind !== "open-no-rows" && state.kind !== "delivering") {
+        return state;
+      }
+      return { kind: "delivering", streamHandle: state.streamHandle, rows: event.rows };
+    case "completed":
+      // `!isScanInFlight(state)` (declared below -- hoisted, so callable here) covers exactly
+      // {idle, complete, cancelled, failed}, i.e. everything that is NOT {issuing, open-no-rows,
+      // delivering}; the complement is also what lets TypeScript narrow `state.streamHandle` below.
+      return !isScanInFlight(state) ? state : { kind: "complete", streamHandle: state.streamHandle };
+    case "failed":
+      return !isScanInFlight(state) ? state : { kind: "failed", streamHandle: state.streamHandle };
+    case "cancelledByUser": {
+      // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- this function does not itself
+      // know when it is called, only that IF it is called while a scan is tracked, it moves straight
+      // to `cancelled` without waiting for any terminal (which, for a self-cancelled stream, never
+      // arrives -- `ViewportStreamManager`'s own `selfCancelledHandles`).
+      if (!isScanInFlight(state)) {
+        return state;
+      }
+      const rows = state.kind === "delivering" ? state.rows : 0;
+      return { kind: "cancelled", streamHandle: state.streamHandle, rows };
+    }
+    case "reset":
+      return { kind: "idle" };
+  }
+}
+
+/** The three in-flight sub-states, as a type -- lets `isScanInFlight` below actually narrow
+ * `scanState` at its call sites (`App.tsx`'s Cancel handler reads `.streamHandle` right after the
+ * guard; a plain `boolean` return would not let TypeScript prove that field exists there). */
+type InFlightScanState = Extract<ScanState, { kind: "issuing" | "open-no-rows" | "delivering" }>;
+
+/** Cancel's own visibility -- ZERO delay, never gated by `SCAN_LIVENESS_DELAY_MS` below (P4 items
+ * 2 and 7: "Cancel appears with ZERO delay"). */
+export function isScanInFlight(state: ScanState): state is InFlightScanState {
+  return state.kind === "issuing" || state.kind === "open-no-rows" || state.kind === "delivering";
+}
+
+/** Declared, not measured (ADR-010 rule 6 style, matching `VIEWPORT_QUERY_MIN_INTERVAL_MS`'s own
+ * framing in `viewportStreamManager.ts`): an anti-flicker guard so a viewport query that resolves
+ * well within human perception time never flashes liveness text nobody has time to read. Cancel is
+ * NEVER gated by this constant -- see `isScanInFlight`. */
+export const SCAN_LIVENESS_DELAY_MS = 200;
+
+/** Pure gating decision over an externally-tracked elapsed time. `FilterPanel` owns the actual timer
+ * (a one-shot `setTimeout(SCAN_LIVENESS_DELAY_MS)` reset whenever a NEW stream becomes in-flight,
+ * which is the direct realization of this function evaluated at the threshold instant); this
+ * function is factored out so the threshold behavior itself -- not in-flight, below the delay, at or
+ * above it -- is unit-testable without a DOM/timer harness. */
+export function scanLivenessTextShouldShow(state: ScanState, msSinceIssued: number): boolean {
+  return isScanInFlight(state) && msSinceIssued >= SCAN_LIVENESS_DELAY_MS;
+}
+
+/** The two literal liveness strings NEXT-CUT.md's design section names verbatim -- NO percentage,
+ * ETA, or "N of M" (P4 item 2/binding note 4: no figure implying a duration). `null` for `idle` and
+ * `issuing` (a ticket was minted but TAG_OPEN has not yet been observed -- Cancel is already visible
+ * via `isScanInFlight`, but there is no defined text for this sub-state) and for every terminal state
+ * (the persistent `.scan-incomplete` status, or the canvas itself, already speaks for those). */
+export function scanLivenessText(state: ScanState): string | null {
+  switch (state.kind) {
+    case "open-no-rows":
+      return "Filtering — scanning, no matching rows yet";
+    case "delivering":
+      return `Filtering — ${state.rows} rows so far`;
+    default:
       return null;
   }
 }
@@ -260,11 +399,18 @@ export function makeManagerCallbacks(
     onFailureTerminal: (streamHandle: string, terminal: Terminal) => void;
     /** A stream's own natural `Completed` terminal -- rider 1's `"delivery-complete"` event. */
     onDeliveryCompleted: () => void;
+    /** NEXT-CUT.md P4 item 1: the `batch(rows cumulative)` scan-liveness input needs a per-batch row
+     * count, which only `WorkingCanvasHandle.pushBatch`'s own return value carries (the count of rows
+     * this call actually admitted -- `0` on a declared-ceiling refusal, since nothing was added).
+     * Optional so every pre-existing call site of this function (rider 3's own tests) keeps
+     * compiling unchanged. Not called at all when `canvas` is `null` (nothing was pushed either). */
+    onBatchRows?: (streamHandle: string, rowsInBatch: number) => void;
   }
 ): Pick<ViewportStreamManagerOptions, "onBatch" | "onSuperseded" | "onTerminal"> {
   return {
     onBatch: (streamHandle, batchSeq, payload) => {
-      canvas?.pushBatch(streamHandle, batchSeq, payload);
+      const rowsInBatch = canvas?.pushBatch(streamHandle, batchSeq, payload) ?? 0;
+      handlers.onBatchRows?.(streamHandle, rowsInBatch);
     },
     onSuperseded: (streamHandle) => {
       canvas?.clearStream(streamHandle);
@@ -324,11 +470,21 @@ export default function App() {
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
-  /** Set inside the `[admitted]` effect below, to a thin wrapper over `manager.requestViewport` --
+  // NEXT-CUT.md P4: App-owned (not FilterPanel-owned) precisely because indicator scope is "EVERY
+  // in-flight viewport stream" (item 6), not filter-only -- an ordinary pan/zoom drives this too.
+  const [scanState, setScanState] = useState<ScanState>({ kind: "idle" });
+  /** The one function every `scanState` write in this component goes through -- mirrors
+   * `commitActiveFilter`'s own role for `activeFilter`. `useCallback([])`-stable for the same reason:
+   * it only ever reaches `setScanState`, itself React's own identity-stable setter. */
+  const applyScanEvent = useCallback((event: ScanEvent) => {
+    setScanState((prev) => nextScanState(prev, event));
+  }, []);
+  /** Set inside the `[admitted]` effect below, to that effect's own `issueViewportQuery` closure --
    * `null` before a dataset is admitted (or after this effect's own cleanup runs). Exists so
-   * `handleApplyFilter` (component-body level, below) can reach the manager without itself needing
-   * to be defined inside the effect (which reruns per `admitted`, while `handleApplyFilter` -- passed
-   * to `FilterPanel` as a prop -- has no reason to change identity that often). */
+   * `handleApplyFilter` (component-body level, below) can reach the SAME reporting wrapper the
+   * effect's initial load and debounced pan/zoom already issue every query through, without itself
+   * needing to be defined inside the effect (which reruns per `admitted`, while `handleApplyFilter`
+   * -- passed to `FilterPanel` as a prop -- has no reason to change identity that often). */
   const issueQueryRef = useRef<
     ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>) | null
   >(null);
@@ -343,15 +499,19 @@ export default function App() {
     setActiveFilter(filter);
   }, []);
   // `activeFilter` (the render value) is read below, in the JSX, passed to `FilterPanel` -- P3
-  // (this piece) is what finally consumes the value P2 only ever wrote.
+  // (this piece) is what finally consumes the value P2 only ever wrote (see that piece's own
+  // now-removed placeholder comment in git history).
 
   /**
    * `FilterPanel`'s own `onApply` prop -- the SAME function the dev-only `queryWithFilter` E2E hook
    * calls (NEXT-CUT.md filter-panel cut, deviation-3 retrofit: "hook and panel drive the identical
    * seam"). `requestViewport` here reaches into `issueQueryRef.current` -- set by the `[admitted]`
-   * effect below -- rather than closing over `managerRef.current` directly, so the seam both callers
-   * share lives in exactly one place. `useCallback([commitActiveFilter])`: stable for the same reason
-   * `handleAdmitted` below is.
+   * effect below -- rather than closing over `managerRef.current` directly, so that every query this
+   * function issues (including the refusal-recovery re-issue `applyFilter` performs internally) also
+   * feeds the scan-liveness machine and the rider-1 `"query-issued"` clear exactly like the initial
+   * load and the debounced pan/zoom already do -- one reporting wrapper, one seam, never a second
+   * parallel path that would silently miss those two side effects for Apply-issued queries alone.
+   * `useCallback([commitActiveFilter])`: stable for the same reason `handleAdmitted` above is.
    */
   const handleApplyFilter = useCallback(
     (filter: Filter | null): Promise<ApplyFilterOutcome> => {
@@ -405,6 +565,7 @@ export default function App() {
         setLastViewportBbox: (value) => {
           lastViewportBboxRef.current = value;
         },
+        setScanState,
         setAdmitted,
       });
     },
@@ -458,36 +619,78 @@ export default function App() {
         `admitted.dataset=${admitted.dataset}: canvasRef.current was null when this effect captured it -- every batch/supersede for this dataset will silently no-op for this manager's whole lifetime`
       );
     }
+    // NEXT-CUT.md P4 item 1: `batch(rows cumulative)` -- the running total for whichever stream this
+    // scan machine is currently tracking. Effect-local (not a ref/useState): reset implicitly on
+    // every effect rerun (a fresh dataset), and explicitly whenever `issueViewportQuery` below
+    // observes a NEW `issued` outcome, exactly the same "one scan tracked at a time" discipline
+    // `nextScanState`'s own doc comment states.
+    let scanRowsAccumulator: { streamHandle: string | null; rows: number } = { streamHandle: null, rows: 0 };
+
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
+      onStreamOpened: (streamHandle) => {
+        applyScanEvent({ kind: "streamOpened", streamHandle });
+      },
       ...makeManagerCallbacks(canvas, {
         onFailureTerminal: (streamHandle, terminal) => {
           logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
           setCanvasRefusal(`stream ${terminal.kind}: ${terminal.detail}`);
+          applyScanEvent({ kind: "failed" });
         },
         onDeliveryCompleted: () => {
           // Rider 1: "a later stream completes fully without a ceiling refusal" clears the status.
           setResidencyStatus(nextResidencyStatus({ kind: "delivery-complete" }));
+          applyScanEvent({ kind: "completed" });
+        },
+        onBatchRows: (streamHandle, rowsInBatch) => {
+          if (scanRowsAccumulator.streamHandle !== streamHandle) {
+            scanRowsAccumulator = { streamHandle, rows: 0 };
+          }
+          scanRowsAccumulator.rows += rowsInBatch;
+          applyScanEvent({ kind: "batch", rows: scanRowsAccumulator.rows });
         },
       }),
     });
     managerRef.current = manager;
-    // The one choke point both `handleApplyFilter` (component-body level, via `issueQueryRef`) and
-    // the debounced/initial-load call sites below reach `manager.requestViewport` through.
-    issueQueryRef.current = (bbox, bboxCrs, filter) => manager.requestViewport(bbox, bboxCrs, undefined, filter);
 
-    // E2E TEST SURFACE (dev builds only, e2e/README.md): drives `applyFilter` -- the SAME seam
-    // `FilterPanel`'s own Apply button calls (NEXT-CUT.md filter-panel cut, deviation-3 retrofit:
-    // "the e2e queryWithFilter hook must be routed through applyFilter ... hook and panel drive the
-    // identical seam", not a second, parallel path). Only registered here, inside this effect,
-    // because `issueQueryRef.current` (and therefore anything to query) only exists once a dataset is
-    // admitted -- mirrors `capturePixels` only existing once `WorkingCanvas` mounts.
+    /**
+     * The ONE choke point every `manager.requestViewport` call in this effect (and, via
+     * `issueQueryRef`, `handleApplyFilter`'s Apply/refusal-recovery calls too) goes through --
+     * NEXT-CUT.md P4 item 6's "EVERY in-flight viewport stream" indicator scope, and the rider-1
+     * `"query-issued"` clear (DECISIONS-PENDING.md entry 1), both live here exactly once rather than
+     * at each of the four call sites separately. Dispatches happen inside the promise's own `.then()`
+     * so they never delay the `RequestOutcome` any caller of this function still needs to inspect.
+     */
+    function issueViewportQuery(
+      bbox: Bbox | null,
+      bboxCrs: string | null,
+      filter: Filter | null
+    ): Promise<RequestOutcome> {
+      const promise = manager.requestViewport(bbox, bboxCrs, undefined, filter);
+      promise.then((outcome) => {
+        if (outcome.kind === "issued") {
+          scanRowsAccumulator = { streamHandle: outcome.streamHandle, rows: 0 };
+          applyScanEvent({ kind: "issued", streamHandle: outcome.streamHandle });
+          setResidencyStatus(nextResidencyStatus({ kind: "query-issued" }));
+        }
+      }, /* rejection handled by each call site's own reportViewportOutcome/applyFilter */ () => {});
+      return promise;
+    }
+    issueQueryRef.current = issueViewportQuery;
+
+    // E2E TEST SURFACE (dev builds only, e2e/README.md): drives `applyFilter` -- the SAME helper
+    // `handleApplyFilter` above binds for the real FilterPanel's Apply button (NEXT-CUT.md
+    // filter-panel cut, deviation-3 retrofit: "the e2e queryWithFilter hook must be routed through
+    // applyFilter ... hook and panel drive the identical seam", not a second, parallel path). Only
+    // registered here, inside this effect, because `issueViewportQuery` (and therefore anything to
+    // query) only exists once a dataset is admitted -- mirrors `capturePixels` only existing once
+    // `WorkingCanvas` mounts.
     if (import.meta.env.DEV) {
       registerE2eHook("queryWithFilter", (predicate: string) =>
         applyFilter(
           { predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 },
           {
-            requestViewport: (bbox, f) => manager.requestViewport(bbox, null, undefined, f),
+            requestViewport: (bbox, f) => issueViewportQuery(bbox, null, f),
             cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
             getLastViewportBbox: () => lastViewportBboxRef.current,
             getActiveFilter: () => activeFilterRef.current,
@@ -506,12 +709,17 @@ export default function App() {
     //
     // `makeDebouncedViewportQuery` (this file, above) is what reads `activeFilterRef.current` INSIDE
     // the debounced body -- one of the design section's three ref-reading issue sites, and the one
-    // an ordinary pan/zoom drives.
+    // an ordinary pan/zoom drives. Routed through `issueViewportQuery` (not `manager.requestViewport`
+    // directly) so an ordinary pan/zoom feeds the scan-liveness machine exactly like Apply does.
     const debounced = debounce(
       makeDebouncedViewportQuery(
-        (bbox, bboxCrs, filter) => manager.requestViewport(bbox, bboxCrs, undefined, filter),
+        (bbox, bboxCrs, filter) => {
+          const p = issueViewportQuery(bbox, bboxCrs, filter);
+          reportViewportOutcome(p);
+          return p;
+        },
         activeFilterRef,
-        reportViewportOutcome
+        () => {} // reporting is already handled by the wrapper above; nothing further to do here
       ),
       VIEWPORT_QUERY_MIN_INTERVAL_MS
     );
@@ -525,7 +733,7 @@ export default function App() {
     // `admitAndResetStaleUiState` call already cleared it before this effect re-runs, but reading the
     // ref rather than hardcoding `null` keeps this call uniform with the other two issue sites
     // instead of a special case that would silently stop being true if that ordering ever changed.
-    reportViewportOutcome(manager.requestViewport(null, null, undefined, activeFilterRef.current));
+    reportViewportOutcome(issueViewportQuery(null, null, activeFilterRef.current));
 
     return () => {
       debounced.cancel();
@@ -538,9 +746,9 @@ export default function App() {
       void closeDataset(admitted.dataset).catch(() => {});
       managerRef.current = null;
     };
-    // `reportViewportOutcome`/`commitActiveFilter` are stable across renders (each only reaches a
-    // `useCallback([])` or React `useState` setter) and `manager`/`debounced` are effect-local, so
-    // neither is a dependency of anything outside.
+    // `reportViewportOutcome`/`applyScanEvent`/`commitActiveFilter` are stable across renders (each
+    // only reaches a `useCallback([])` or React `useState` setter) and `manager`/`debounced` are
+    // effect-local, so none is a dependency of anything outside.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admitted]);
 
@@ -554,10 +762,25 @@ export default function App() {
           * below the admission panel, in normal document flow -- never an absolute overlay. Keyed on
           * `admitted.dataset` for the same reason `WorkingCanvas` below is: a dataset change must
           * discard this panel's own local input text/busy/refusal state rather than reconcile it
-          * across two different datasets' filter spaces (`activeFilter` itself is reset independently
-          * via `admitAndResetStaleUiState`). */}
+          * across two different datasets' filter/column spaces (App-owned state -- `activeFilter`,
+          * `scanState` -- is reset independently via `admitAndResetStaleUiState`). */}
         {admitted && (
-          <FilterPanel key={admitted.dataset} appliedFilter={activeFilter} onApply={handleApplyFilter} />
+          <FilterPanel
+            key={admitted.dataset}
+            appliedFilter={activeFilter}
+            onApply={handleApplyFilter}
+            scanState={scanState}
+            onCancel={() => {
+              if (!isScanInFlight(scanState)) return;
+              const handle = scanState.streamHandle;
+              // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- dispatched synchronously
+              // here, in the SAME handler that calls `cancelStream`, never awaiting anything: a
+              // self-cancelled stream's terminal is suppressed by the manager and will never arrive
+              // to drive this transition otherwise.
+              setScanState((prev) => nextScanState(prev, { kind: "cancelledByUser" }));
+              void managerRef.current?.cancelStream(handle);
+            }}
+          />
         )}
         {admitted && (
           <div className="canvas-container">
@@ -636,7 +859,7 @@ export default function App() {
               * advance -- both stay simultaneously visible regardless of message length, and both
               * stay clear of `.hover-readout` (bottom-left) and `.zoom-to-layer` (top-right) exactly
               * as before. */}
-            {(canvasRefusal || viewportRefusal || residencyStatus) && (
+            {(canvasRefusal || viewportRefusal || residencyStatus || scanState.kind === "cancelled") && (
               <div className="canvas-status-stack">
                 {canvasRefusal && (
                   <div className="canvas-refusal" role="alert">
@@ -664,6 +887,18 @@ export default function App() {
                 {residencyStatus && (
                   <div className="residency-status" role="status">
                     {`${residencyStatus.residentFeatureCount} of ${residencyStatus.datasetRowCount} features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`}
+                  </div>
+                )}
+                {/* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close
+                  * control (rider-1 pattern). Cleared only by the next issued query (any of the three
+                  * issue sites, via `issueViewportQuery`'s own unconditional `"issued"` supersede) or
+                  * a dataset change (`admitAndResetStaleUiState`'s `setScanState({kind:"idle"})`) --
+                  * derived directly from `scanState.kind === "cancelled"`, no separate boolean to
+                  * drift out of sync with the machine that actually governs it. No duration word or
+                  * figure beyond the row count itself (binding note 4). */}
+                {scanState.kind === "cancelled" && (
+                  <div className="scan-incomplete" role="status">
+                    {`Filtered view incomplete — scan cancelled at ${scanState.rows} rows`}
                   </div>
                 )}
               </div>
