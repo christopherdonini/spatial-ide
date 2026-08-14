@@ -177,3 +177,37 @@ body,
   border-radius: 4px;
   pointer-events: none;
 }
+
+/* NEXT-CUT.md (filter-panel cut) P3 binding note 9: in `.app-main`'s flex column, normal document
+   flow -- never an absolute overlay (the S1 lesson already applied to `.canvas-status-stack`). */
+.filter-panel {
+  padding: 1rem;
+  max-width: 40rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-predicate {
+  flex: 1;
+  min-width: 16rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.filter-active {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.filter-refusal {
+  margin-top: 0.75rem;
+}

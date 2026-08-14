@@ -131,13 +131,15 @@ async function stepFilter(page, consoleHandle) {
     (predicate) => window.__SPATIAL_E2E__.queryWithFilter(predicate),
     "zone = 'residential'"
   );
-  // "issued", not "admitted" (filter-panel cut P1: queryWithFilter now reports requestViewport's
-  // own real RequestOutcome instead of a claim-nothing "no-refusal" -- e2e-test-surface.ts's own doc
-  // comment): a ticket was actually minted for this call. The subsequent pixel-fraction comparison
-  // below is still what proves the filtered query rendered, which "issued" alone cannot.
-  if (outcome.kind !== "issued") {
+  // "applied", not "issued"/"admitted" (filter-panel cut P3, deviation-3 retrofit: queryWithFilter
+  // now routes through App.tsx's own `applyFilter` -- the same seam the real FilterPanel's Apply
+  // button calls -- and reports ITS outcome shape, `ApplyFilterOutcome`, not the lower-level
+  // `RequestOutcome` P1 reported): a ticket was actually minted for this call and committed as the
+  // active filter. The subsequent pixel-fraction comparison below is still what proves the filtered
+  // query rendered, which "applied" alone cannot.
+  if (outcome.kind !== "applied") {
     throw new Error(
-      `FILTER': queryWithFilter("zone = 'residential'") returned ${JSON.stringify(outcome)}, expected {kind:"issued"}`
+      `FILTER': queryWithFilter("zone = 'residential'") returned ${JSON.stringify(outcome)}, expected {kind:"applied"}`
     );
   }
 
@@ -178,11 +180,16 @@ async function stepRefused(page) {
   if (outcome.kind !== "refused") {
     throw new Error(`REFUSED': queryWithFilter("bogus_column_xyz = 1") returned ${JSON.stringify(outcome)}, expected {kind:"refused"}`);
   }
-  if (outcome.code !== "skp.filter_unknown_column") {
-    throw new Error(`REFUSED': expected code "skp.filter_unknown_column", got "${outcome.code}" (message: ${outcome.message})`);
+  // filter-panel cut P3 (deviation-3 retrofit): the refusal is now `applyFilter`'s own structured
+  // `FormattedRefusal` (`outcome.refusal.{code,message,fields,remediationIsCut2}`), not the bare
+  // `{code, message}` pair P1's direct-`requestViewport` hook used to construct by hand.
+  if (outcome.refusal.code !== "skp.filter_unknown_column") {
+    throw new Error(
+      `REFUSED': expected code "skp.filter_unknown_column", got "${outcome.refusal.code}" (message: ${outcome.refusal.message})`
+    );
   }
-  if (outcome.message !== UNKNOWN_COLUMN_MESSAGE) {
-    throw new Error(`REFUSED': message mismatch.\nExpected: ${UNKNOWN_COLUMN_MESSAGE}\nActual:   ${outcome.message}`);
+  if (outcome.refusal.message !== UNKNOWN_COLUMN_MESSAGE) {
+    throw new Error(`REFUSED': message mismatch.\nExpected: ${UNKNOWN_COLUMN_MESSAGE}\nActual:   ${outcome.refusal.message}`);
   }
   return `refused skp.filter_unknown_column; message verbatim; call resolved (no crash/hang)`;
 }

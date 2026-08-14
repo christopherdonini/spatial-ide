@@ -18,7 +18,7 @@
  * in-page summary below crosses back over CDP.
  */
 
-import type { RequestOutcome } from "./streaming/viewportStreamManager";
+import type { ApplyFilterOutcome } from "./App";
 
 export interface PixelRegion {
   /** Fraction of the drawing buffer, 0..1, in WebGL's own `readPixels` origin (bottom-left). */
@@ -73,28 +73,28 @@ export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: st
 
 /**
  * `openPath`'s `"admitted"` means `open_dataset` actually returned a dataset handle.
- * `queryWithFilter`'s outcome below is `ViewportStreamManager.requestViewport`'s own `RequestOutcome`
- * (`viewportStreamManager.ts`), reported honestly rather than collapsed into one claim-nothing
- * `"no-refusal"` value (NEXT-CUT.md filter-panel cut P1, closing the honesty gap this comment used to
- * name): `"issued"` carries the real stream handle a caller minted a ticket for; `"throttled"` /
- * `"superseded"` / `"stopped"` name exactly why no ticket was minted, distinguishably now, instead of
- * all resolving identically to a real mint from this hook's point of view. `"refused"` is the one case
- * this hook could already tell apart before this fix: a typed `skp.filter_*` refusal `viewport_query`
- * actually returned (thrown as `SkpCallError` by `requestViewport`, not part of its `RequestOutcome`
- * union -- see `App.tsx`'s hook registration). */
-export type FilterQueryOutcome = RequestOutcome | { kind: "refused"; code: string; message: string };
+ *
+ * `queryWithFilter`'s outcome below is `App.tsx`'s own `ApplyFilterOutcome` -- NEXT-CUT.md
+ * (filter-panel cut) P1 first honestly reported `ViewportStreamManager.requestViewport`'s raw
+ * `RequestOutcome` here (closing an older "no-refusal" collapse); P3's deviation-3 retrofit went one
+ * step further and routed this hook through `applyFilter` itself, the exact same function
+ * `FilterPanel`'s own Apply button calls -- "hook and panel drive the identical seam," not a second,
+ * parallel path with its own reporting shape. `"applied"` carries the real stream handle a caller
+ * minted a ticket for; `"not-applied"` names a throttled-after-retry/superseded/stopped call (no
+ * ticket minted, no refusal either); `"refused"` carries the same structured `FormattedRefusal`
+ * (`code`, verbatim `message`, `fields`, `remediationIsCut2`) the panel's own `.filter-refusal` block
+ * renders, rather than the bare `{code, message}` pair this hook used to construct by hand.
+ */
+export type FilterQueryOutcome = ApplyFilterOutcome;
 
 export interface E2eTestSurface {
   openPath?: (path: string) => Promise<OpenPathOutcome>;
   capturePixels?: (regions?: PixelRegion[]) => Promise<PixelSummary>;
-  /** Drives `ViewportStreamManager.requestViewport` (`App.tsx`) with a caller-supplied predicate
-   * against the currently-open dataset -- the SAME production call a future filter panel would make,
-   * not a parallel test-only path (this file's own top doc comment). Only registered once a dataset
-   * is admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
-   * `requestViewport`'s own `RequestOutcome` (`{kind:"issued", streamHandle}` on a real mint;
-   * `{kind:"throttled"|"superseded"|"stopped"}` naming exactly why one was not) or, for a typed
-   * `skp.filter_*` refusal `viewport_query` itself returned, `{kind:"refused", code, message}` --
-   * see `FilterQueryOutcome`'s own doc comment. */
+  /** Drives `App.tsx`'s `applyFilter` with a caller-supplied predicate against the currently-open
+   * dataset -- the SAME seam `FilterPanel`'s own Apply button calls (deviation-3 retrofit), not a
+   * parallel test-only path (this file's own top doc comment). Only registered once a dataset is
+   * admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
+   * `applyFilter`'s own `ApplyFilterOutcome` -- see `FilterQueryOutcome`'s own doc comment. */
   queryWithFilter?: (predicate: string) => Promise<FilterQueryOutcome>;
 }
 

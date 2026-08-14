@@ -7,6 +7,7 @@ import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { PickResult } from "./canvas/pick";
 import { logSessionEvent } from "./diagnostics/log";
+import FilterPanel from "./filter/FilterPanel";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
@@ -323,6 +324,14 @@ export default function App() {
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
+  /** Set inside the `[admitted]` effect below, to a thin wrapper over `manager.requestViewport` --
+   * `null` before a dataset is admitted (or after this effect's own cleanup runs). Exists so
+   * `handleApplyFilter` (component-body level, below) can reach the manager without itself needing
+   * to be defined inside the effect (which reruns per `admitted`, while `handleApplyFilter` -- passed
+   * to `FilterPanel` as a prop -- has no reason to change identity that often). */
+  const issueQueryRef = useRef<
+    ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>) | null
+  >(null);
 
   /** Writes BOTH `activeFilterRef.current` (synchronously) and the `activeFilter` render state --
    * the one function every `activeFilter` write in this component goes through, whether that write
@@ -333,13 +342,35 @@ export default function App() {
     activeFilterRef.current = filter;
     setActiveFilter(filter);
   }, []);
-  // `activeFilter` (the render value, as opposed to `activeFilterRef`) has no reader yet in this
-  // piece -- P3 (NEXT-CUT.md, next phase) is where the FilterPanel component actually renders it
-  // (the input's controlled value, a "filter applied" indication, etc.). Declared now because P2's
-  // own scope is "App owns `activeFilter` (state for render + ref for issue sites)"; `noUnusedLocals`
-  // would otherwise refuse to compile a value this piece deliberately does not consume yet. Remove
-  // this line the moment P3 actually reads `activeFilter` in the JSX below.
-  void activeFilter;
+  // `activeFilter` (the render value) is read below, in the JSX, passed to `FilterPanel` -- P3
+  // (this piece) is what finally consumes the value P2 only ever wrote.
+
+  /**
+   * `FilterPanel`'s own `onApply` prop -- the SAME function the dev-only `queryWithFilter` E2E hook
+   * calls (NEXT-CUT.md filter-panel cut, deviation-3 retrofit: "hook and panel drive the identical
+   * seam"). `requestViewport` here reaches into `issueQueryRef.current` -- set by the `[admitted]`
+   * effect below -- rather than closing over `managerRef.current` directly, so the seam both callers
+   * share lives in exactly one place. `useCallback([commitActiveFilter])`: stable for the same reason
+   * `handleAdmitted` below is.
+   */
+  const handleApplyFilter = useCallback(
+    (filter: Filter | null): Promise<ApplyFilterOutcome> => {
+      return applyFilter(filter, {
+        requestViewport: (bbox, f) => {
+          const issue = issueQueryRef.current;
+          if (!issue) {
+            return Promise.resolve({ kind: "stopped" });
+          }
+          return issue(bbox, null, f);
+        },
+        cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
+        getLastViewportBbox: () => lastViewportBboxRef.current,
+        getActiveFilter: () => activeFilterRef.current,
+        commitActiveFilter,
+      });
+    },
+    [commitActiveFilter]
+  );
 
   /**
    * The single admission callback `AdmissionPanel` calls on every successful `open_dataset` --
@@ -401,6 +432,7 @@ export default function App() {
     if (!admitted) {
       managerRef.current = null;
       viewportDebounceRef.current = null;
+      issueQueryRef.current = null;
       return;
     }
 
@@ -440,32 +472,29 @@ export default function App() {
       }),
     });
     managerRef.current = manager;
+    // The one choke point both `handleApplyFilter` (component-body level, via `issueQueryRef`) and
+    // the debounced/initial-load call sites below reach `manager.requestViewport` through.
+    issueQueryRef.current = (bbox, bboxCrs, filter) => manager.requestViewport(bbox, bboxCrs, undefined, filter);
 
-    // E2E TEST SURFACE (dev builds only, e2e/README.md): drives `manager.requestViewport` with a
-    // caller-supplied predicate over the whole dataset (bbox `null`, the same unrestricted shape the
-    // initial unfiltered load below already uses) -- the exact same production call a future filter
-    // panel would make, through the exact same `viewportStreamManager.ts` seam (NEXT-CUT.md P5: "not
-    // a second, test-only code path", this file's own top comment). Only registered here, inside this
-    // effect, because `manager` (and therefore anything to query) only exists once a dataset is
+    // E2E TEST SURFACE (dev builds only, e2e/README.md): drives `applyFilter` -- the SAME seam
+    // `FilterPanel`'s own Apply button calls (NEXT-CUT.md filter-panel cut, deviation-3 retrofit:
+    // "the e2e queryWithFilter hook must be routed through applyFilter ... hook and panel drive the
+    // identical seam", not a second, parallel path). Only registered here, inside this effect,
+    // because `issueQueryRef.current` (and therefore anything to query) only exists once a dataset is
     // admitted -- mirrors `capturePixels` only existing once `WorkingCanvas` mounts.
     if (import.meta.env.DEV) {
-      registerE2eHook("queryWithFilter", async (predicate: string) => {
-        try {
-          // Honest now (P1 fix over the prior "no-refusal" gap, `e2e-test-surface.ts`'s own doc
-          // comment): `requestViewport`'s own `RequestOutcome` -- {kind:"issued", streamHandle} on
-          // a real mint, or the specific reason it was not -- is `FilterQueryOutcome`'s own
-          // non-refused half verbatim, so it is returned directly rather than collapsed.
-          return await manager.requestViewport(null, null, undefined, {
-            predicate,
-            dialect: FILTER_DIALECT_DUCKDB_EXPR_0,
-          });
-        } catch (e) {
-          if (e instanceof SkpCallError) {
-            return { kind: "refused", code: e.skpError.code, message: e.skpError.message };
+      registerE2eHook("queryWithFilter", (predicate: string) =>
+        applyFilter(
+          { predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 },
+          {
+            requestViewport: (bbox, f) => manager.requestViewport(bbox, null, undefined, f),
+            cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
+            getLastViewportBbox: () => lastViewportBboxRef.current,
+            getActiveFilter: () => activeFilterRef.current,
+            commitActiveFilter,
           }
-          throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
-        }
-      });
+        )
+      );
     }
 
     // Pan/zoom-driven queries are debounced to settle (`streaming/debounce.ts`'s own doc comment):
@@ -501,6 +530,7 @@ export default function App() {
     return () => {
       debounced.cancel();
       viewportDebounceRef.current = null;
+      issueQueryRef.current = null;
       void manager.stop();
       if (import.meta.env.DEV) unregisterE2eHook("queryWithFilter");
       // Every admitted dataset stays open (and its DuckDB pool resident) until explicitly closed;
@@ -508,9 +538,9 @@ export default function App() {
       void closeDataset(admitted.dataset).catch(() => {});
       managerRef.current = null;
     };
-    // `reportViewportOutcome` is stable across renders (it only reaches `setViewportRefusal`,
-    // itself stable) and `manager`/`debounced` are effect-local, so neither is a dependency of
-    // anything outside.
+    // `reportViewportOutcome`/`commitActiveFilter` are stable across renders (each only reaches a
+    // `useCallback([])` or React `useState` setter) and `manager`/`debounced` are effect-local, so
+    // neither is a dependency of anything outside.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admitted]);
 
@@ -520,6 +550,15 @@ export default function App() {
       <header className="app-header">Spatial IDE</header>
       <main className="app-main">
         <AdmissionPanel onAdmitted={handleAdmitted} />
+        {/* NEXT-CUT.md (filter-panel cut) P3 item 5 / binding note 9: in `.app-main`'s flex column,
+          * below the admission panel, in normal document flow -- never an absolute overlay. Keyed on
+          * `admitted.dataset` for the same reason `WorkingCanvas` below is: a dataset change must
+          * discard this panel's own local input text/busy/refusal state rather than reconcile it
+          * across two different datasets' filter spaces (`activeFilter` itself is reset independently
+          * via `admitAndResetStaleUiState`). */}
+        {admitted && (
+          <FilterPanel key={admitted.dataset} appliedFilter={activeFilter} onApply={handleApplyFilter} />
+        )}
         {admitted && (
           <div className="canvas-container">
             {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen

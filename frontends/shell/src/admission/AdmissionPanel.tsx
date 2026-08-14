@@ -5,6 +5,7 @@ import { pickFile } from "../skp/dialog";
 import { admitDataset, Admitted, AdmissionOutcome } from "./admitDataset";
 import DescribeSummary from "./DescribeSummary";
 import { FormattedRefusal } from "./formatRefusal";
+import RefusalBlock from "./RefusalBlock";
 
 type State =
   | { kind: "idle" }
@@ -71,28 +72,7 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
         {state.kind === "opening" ? "Opening…" : "Open GeoParquet…"}
       </button>
 
-      {state.kind === "refused" && (
-        <div className="admission-refusal" role="alert">
-          <div className="admission-refusal-code">{state.refusal.code}</div>
-          <p className="admission-refusal-message">{state.refusal.message}</p>
-          {state.refusal.fields.length > 0 && (
-            <dl className="admission-refusal-fields">
-              {state.refusal.fields.map(([key, value]) => (
-                <div key={key}>
-                  <dt>{key}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          {state.refusal.remediationIsCut2 && (
-            <p className="admission-cut2-note">
-              Remediation (asserting a CRS, or declaring an identity-mapping column) is cut-2
-              work — not available in this build.
-            </p>
-          )}
-        </div>
-      )}
+      {state.kind === "refused" && <RefusalBlock refusal={state.refusal} />}
 
       {state.kind === "admitted" && <DescribeSummary describe={state.admitted.describe} />}
     </div>
