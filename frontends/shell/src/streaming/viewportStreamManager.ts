@@ -22,7 +22,32 @@ export interface ViewportStreamManagerOptions {
   /** A stream was superseded or closed; its resident batches should be dropped. */
   onSuperseded: (streamHandle: string) => void;
   onTerminal?: (streamHandle: string, terminal: Terminal) => void;
+  /** TAG_OPEN reached the transport -- the producer accepted the ticket and is scanning (NEXT-CUT.md
+   * P1: "the ONLY batch-independent liveness signal", no protocol change). Only ever called for the
+   * *currently active* stream, mirroring `onBatch`'s own guard -- a TAG_OPEN arriving late for a
+   * stream this manager has already superseded must not report liveness for a query nobody is
+   * waiting on anymore. */
+  onStreamOpened?: (streamHandle: string) => void;
 }
+
+/**
+ * `requestViewport`'s own outcome, reported honestly instead of a uniform `Promise<void>` (NEXT-CUT.md
+ * P1: "Panel must not show 'applied' for a call that never issued; cancel needs the issued handle").
+ * Reporting only -- every existing throttle/generation/supersede code path in `requestViewport` below
+ * is unchanged by this type; it only names, at each existing early return, what already happened:
+ *
+ * - `"stopped"`: the `stopped`-guard at the very top (`stop()` was already called).
+ * - `"throttled"`: the `VIEWPORT_QUERY_MIN_INTERVAL_MS` throttle-guard (a silent no-op, unchanged).
+ * - `"superseded"`: any of the three generation-loss checks below (a newer call, or a concurrent
+ *   `stop()` -- both bump `this.generation` the same way, and this call cannot tell which one beat
+ *   it any more than the pre-existing code could; see those checks' own comments).
+ * - `"issued"`: `startStream` actually ran, carrying the real stream handle.
+ */
+export type RequestOutcome =
+  | { kind: "issued"; streamHandle: string }
+  | { kind: "throttled" }
+  | { kind: "superseded" }
+  | { kind: "stopped" };
 
 /**
  * Viewport-driven streaming with supersede-on-pan (NEXT-CUT.md item 3; architect review D3.7).
@@ -95,12 +120,12 @@ export class ViewportStreamManager {
     bboxCrs: string | null,
     nowMs: number = Date.now(),
     filter: Filter | null = null
-  ): Promise<void> {
+  ): Promise<RequestOutcome> {
     if (this.stopped) {
-      return;
+      return { kind: "stopped" };
     }
     if (nowMs - this.lastIssuedAtMs < VIEWPORT_QUERY_MIN_INTERVAL_MS) {
-      return;
+      return { kind: "throttled" };
     }
     this.lastIssuedAtMs = nowMs;
     traceViewportQuery(this.opts.dataset, bbox, bboxCrs);
@@ -111,7 +136,7 @@ export class ViewportStreamManager {
 
     await this.supersedeCurrent();
     if (myGeneration !== this.generation) {
-      return; // superseded (or stopped, which also bumps the generation) while cancelling the previous stream
+      return { kind: "superseded" }; // superseded (or stopped, which also bumps the generation) while cancelling the previous stream
     }
 
     const { stream } = await viewportQuery(this.opts.dataset, bbox, bboxCrs, null, filter);
@@ -119,7 +144,7 @@ export class ViewportStreamManager {
       // A newer call (or stop()) won the race while this ticket was minting. This call is the only
       // thing that knows this handle exists, so it is the only thing that will ever cancel it.
       await skpCancel(stream).catch(() => {});
-      return;
+      return { kind: "superseded" };
     }
     this.currentStreamHandle = stream;
     this.residentStreamHandle = stream;
@@ -136,12 +161,21 @@ export class ViewportStreamManager {
         // to the canvas under this handle -- there is no residency to clear later.
         this.residentStreamHandle = null;
       }
-      return;
+      return { kind: "superseded" };
     }
 
     const streamHandleAtStart = stream;
     const sink: StreamSink = {
-      onOpen: () => {},
+      onOpen: () => {
+        // Mirrors `onBatch`'s own guard immediately below: a TAG_OPEN for a stream this manager has
+        // already superseded (the old socket delivering it late, exactly the race `onBatch`'s own
+        // comment documents for a stray batch) must never report liveness for a query nobody is
+        // waiting on anymore.
+        if (this.currentStreamHandle !== streamHandleAtStart) {
+          return;
+        }
+        this.opts.onStreamOpened?.(streamHandleAtStart);
+      },
       onBatch: (payload) => {
         // Admitted only if this is still the active stream. A batch that arrives after its stream
         // was superseded is dropped here, never handed to the canvas -- this is the check D3.7's
@@ -174,6 +208,7 @@ export class ViewportStreamManager {
     };
 
     startStream({ url: attach.url, subprotocols: attach.subprotocols, ticketHandle: stream, sink });
+    return { kind: "issued", streamHandle: stream };
   }
 
   /** Cancels the current stream (if any) without starting a replacement -- used by

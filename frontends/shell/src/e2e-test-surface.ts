@@ -18,6 +18,8 @@
  * in-page summary below crosses back over CDP.
  */
 
+import type { RequestOutcome } from "./streaming/viewportStreamManager";
+
 export interface PixelRegion {
   /** Fraction of the drawing buffer, 0..1, in WebGL's own `readPixels` origin (bottom-left). */
   x: number;
@@ -69,15 +71,18 @@ export interface PixelSummary {
 
 export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };
 
-/** **Not** the same guarantee as `OpenPathOutcome` despite the superficially similar shape (P6
- * should-fix, reviewer round over P5): `openPath`'s `"admitted"` means `open_dataset` actually
- * returned a dataset handle. `queryWithFilter`'s `"no-refusal"` below means only that
- * `ViewportStreamManager.requestViewport` resolved without throwing a typed `skp.filter_*`
- * refusal -- `requestViewport` returns `void` and resolves the same way on a throttled call, a
- * superseded/generation-losing call, or a call issued after `stop()` (`viewportStreamManager.ts`'s
- * own doc comment), none of which means this call's own ticket was minted. Do not read
- * `"no-refusal"` as "a ticket was minted for this call" -- it is not that claim. */
-export type FilterQueryOutcome = { kind: "no-refusal" } | { kind: "refused"; code: string; message: string };
+/**
+ * `openPath`'s `"admitted"` means `open_dataset` actually returned a dataset handle.
+ * `queryWithFilter`'s outcome below is `ViewportStreamManager.requestViewport`'s own `RequestOutcome`
+ * (`viewportStreamManager.ts`), reported honestly rather than collapsed into one claim-nothing
+ * `"no-refusal"` value (NEXT-CUT.md filter-panel cut P1, closing the honesty gap this comment used to
+ * name): `"issued"` carries the real stream handle a caller minted a ticket for; `"throttled"` /
+ * `"superseded"` / `"stopped"` name exactly why no ticket was minted, distinguishably now, instead of
+ * all resolving identically to a real mint from this hook's point of view. `"refused"` is the one case
+ * this hook could already tell apart before this fix: a typed `skp.filter_*` refusal `viewport_query`
+ * actually returned (thrown as `SkpCallError` by `requestViewport`, not part of its `RequestOutcome`
+ * union -- see `App.tsx`'s hook registration). */
+export type FilterQueryOutcome = RequestOutcome | { kind: "refused"; code: string; message: string };
 
 export interface E2eTestSurface {
   openPath?: (path: string) => Promise<OpenPathOutcome>;
@@ -86,15 +91,10 @@ export interface E2eTestSurface {
    * against the currently-open dataset -- the SAME production call a future filter panel would make,
    * not a parallel test-only path (this file's own top doc comment). Only registered once a dataset
    * is admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
-   * `{kind:"no-refusal"}` once `requestViewport` itself resolves without throwing -- **this means "no
-   * typed `skp.filter_*` refusal was raised," not "a ticket was minted."** `requestViewport` is a
-   * silent no-op on a throttled call, a call superseded by a newer one before it finished minting, or
-   * a call issued after the manager was stopped (see `FilterQueryOutcome`'s own doc comment) -- every
-   * one of those resolves exactly like a real admitted mint from this hook's point of view. A caller
-   * that needs to know a ticket actually minted must confirm it some other way (e.g. watching for a
-   * render change), the same `waitForSettle` pattern every other e2e/*.mjs step already uses for that
-   * purpose. Resolves to `{kind:"refused", ...}` for the one case this hook *can* tell apart: a typed
-   * `skp.filter_*` refusal `viewport_query` actually returned. */
+   * `requestViewport`'s own `RequestOutcome` (`{kind:"issued", streamHandle}` on a real mint;
+   * `{kind:"throttled"|"superseded"|"stopped"}` naming exactly why one was not) or, for a typed
+   * `skp.filter_*` refusal `viewport_query` itself returned, `{kind:"refused", code, message}` --
+   * see `FilterQueryOutcome`'s own doc comment. */
   queryWithFilter?: (predicate: string) => Promise<FilterQueryOutcome>;
 }
 

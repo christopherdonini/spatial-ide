@@ -131,13 +131,13 @@ async function stepFilter(page, consoleHandle) {
     (predicate) => window.__SPATIAL_E2E__.queryWithFilter(predicate),
     "zone = 'residential'"
   );
-  // "no-refusal", not "admitted" (P6 should-fix, e2e-test-surface.ts's own doc comment): this only
-  // asserts `viewport_query` raised no typed `skp.filter_*` refusal for this predicate -- the
-  // subsequent pixel-fraction comparison below is what actually proves the filtered query minted
-  // and rendered, which this outcome alone cannot.
-  if (outcome.kind !== "no-refusal") {
+  // "issued", not "admitted" (filter-panel cut P1: queryWithFilter now reports requestViewport's
+  // own real RequestOutcome instead of a claim-nothing "no-refusal" -- e2e-test-surface.ts's own doc
+  // comment): a ticket was actually minted for this call. The subsequent pixel-fraction comparison
+  // below is still what proves the filtered query rendered, which "issued" alone cannot.
+  if (outcome.kind !== "issued") {
     throw new Error(
-      `FILTER': queryWithFilter("zone = 'residential'") returned ${JSON.stringify(outcome)}, expected {kind:"no-refusal"}`
+      `FILTER': queryWithFilter("zone = 'residential'") returned ${JSON.stringify(outcome)}, expected {kind:"issued"}`
     );
   }
 

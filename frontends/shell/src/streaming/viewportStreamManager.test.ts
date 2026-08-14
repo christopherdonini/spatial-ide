@@ -469,4 +469,131 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
       expect(counts.maxConcurrent()).toBeLessThanOrEqual(2);
     });
   });
+
+  // NEXT-CUT.md (filter-panel cut) P1: `requestViewport` reports what actually happened instead of a
+  // uniform `Promise<void>` -- reporting only, no behavior change to any existing path above (every
+  // test in this describe block up to here still passes unmodified but for its own return-type use,
+  // which is exactly the claim this section proves one outcome kind at a time).
+  describe("requestViewport's returned RequestOutcome (P1: reporting seam, no behavior change)", () => {
+    it("a successful mint resolves {kind:'issued', streamHandle} with the real handle", async () => {
+      mockStream("sh_a");
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+
+      const outcome = await manager.requestViewport(null, null, 1_000);
+
+      expect(outcome).toEqual({ kind: "issued", streamHandle: "sh_a" });
+    });
+
+    it("a call inside the throttle window resolves {kind:'throttled'} -- the existing silent no-op, now reported", async () => {
+      mockStream("sh_a");
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      await manager.requestViewport(null, null, 1_000);
+
+      const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS - 1);
+
+      expect(outcome).toEqual({ kind: "throttled" });
+      expect(viewportQueryMock).toHaveBeenCalledTimes(1); // still a no-op -- unchanged
+    });
+
+    it("a call after stop() resolves {kind:'stopped'} -- the existing refused-forever behavior, now reported", async () => {
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      await manager.stop();
+
+      const outcome = await manager.requestViewport(null, null, 1_000);
+
+      expect(outcome).toEqual({ kind: "stopped" });
+      expect(startStreamMock).not.toHaveBeenCalled();
+    });
+
+    it("a call that loses the generation race (re-entrancy, mirrors the suite's own re-entrancy test above) resolves {kind:'superseded'}", async () => {
+      const first = deferred<{ stream: string; expires_in_ms: number }>();
+      viewportQueryMock.mockReturnValueOnce(first.promise);
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+
+      const call1 = manager.requestViewport(null, null, 1_000);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(viewportQueryMock).toHaveBeenCalledTimes(1);
+
+      mockStream("sh_b");
+      const call2 = manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+      const outcome2 = await call2;
+      expect(outcome2).toEqual({ kind: "issued", streamHandle: "sh_b" });
+
+      // call1's ticket now arrives, "late" -- past the point call2 already won the generation race.
+      first.resolve({ stream: "sh_a", expires_in_ms: 30_000 });
+      const outcome1 = await call1;
+
+      expect(outcome1).toEqual({ kind: "superseded" });
+      expect(cancelMock).toHaveBeenCalledWith("sh_a"); // the abandoned ticket is still cancelled, unchanged
+    });
+  });
+
+  // NEXT-CUT.md P1 item 2: TAG_OPEN wired to `onStreamOpened`, the only batch-independent liveness
+  // signal (no protocol change) -- and P1 item 3's own instruction to check whether the guard
+  // `onBatch` already has for a superseded stream's late frame applies here too. It does: the same
+  // race (the old socket keeps delivering after supersession, since neither `supersedeCurrent` nor
+  // `cancelStream` ever closes the socket directly -- only an SKP cancel that the producer must still
+  // act on) can deliver a late TAG_OPEN exactly as it can deliver a late batch.
+  describe("onStreamOpened (P1 item 2: wired from sink.onOpen)", () => {
+    it("fires with the stream handle when TAG_OPEN arrives for the currently active stream", async () => {
+      mockStream("sh_a");
+      const onStreamOpened = vi.fn();
+      const manager = new ViewportStreamManager({
+        dataset: "ds_x",
+        onBatch: vi.fn(),
+        onSuperseded: vi.fn(),
+        onStreamOpened,
+      });
+      await manager.requestViewport(null, null, 1_000);
+      const sink = sinkFor(0);
+
+      sink.onOpen({ operationId: "op_1", streamId: "st_1" });
+
+      expect(onStreamOpened).toHaveBeenCalledTimes(1);
+      expect(onStreamOpened).toHaveBeenCalledWith("sh_a");
+    });
+
+    it("does NOT fire for a superseded stream's late TAG_OPEN (mirrors onBatch's own guard, made explicit)", async () => {
+      mockStream("sh_a");
+      const onStreamOpened = vi.fn();
+      const manager = new ViewportStreamManager({
+        dataset: "ds_x",
+        onBatch: vi.fn(),
+        onSuperseded: vi.fn(),
+        onStreamOpened,
+      });
+      await manager.requestViewport(null, null, 1_000);
+      const staleSink = sinkFor(0);
+
+      mockStream("sh_b");
+      await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+
+      // The old connection's socket delivers its own TAG_OPEN after supersession -- the same class
+      // of race the suite's own "a batch arriving late from a superseded stream is dropped" test
+      // exercises for onBatch, above.
+      staleSink.onOpen({ operationId: "op_1", streamId: "st_1" });
+
+      expect(onStreamOpened).not.toHaveBeenCalled();
+    });
+
+    it("the newly active stream's own TAG_OPEN still fires normally after a supersede", async () => {
+      mockStream("sh_a");
+      const onStreamOpened = vi.fn();
+      const manager = new ViewportStreamManager({
+        dataset: "ds_x",
+        onBatch: vi.fn(),
+        onSuperseded: vi.fn(),
+        onStreamOpened,
+      });
+      await manager.requestViewport(null, null, 1_000);
+
+      mockStream("sh_b");
+      await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+      const sinkB = sinkFor(1);
+
+      sinkB.onOpen({ operationId: "op_2", streamId: "st_2" });
+
+      expect(onStreamOpened).toHaveBeenCalledWith("sh_b");
+    });
+  });
 });

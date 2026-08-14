@@ -16,6 +16,7 @@ import { closeDataset, SkpCallError } from "./skp/client";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
 import type { Bbox } from "./skp/types";
 import {
+  RequestOutcome,
   VIEWPORT_QUERY_MIN_INTERVAL_MS,
   ViewportStreamManager,
   ViewportStreamManagerOptions,
@@ -215,7 +216,7 @@ export default function App() {
     });
   }, []);
 
-  function reportViewportOutcome(promise: Promise<void>) {
+  function reportViewportOutcome(promise: Promise<RequestOutcome>) {
     promise.then(
       () => setViewportRefusal(null),
       (e: unknown) => {
@@ -282,16 +283,14 @@ export default function App() {
     if (import.meta.env.DEV) {
       registerE2eHook("queryWithFilter", async (predicate: string) => {
         try {
-          await manager.requestViewport(null, null, undefined, {
+          // Honest now (P1 fix over the prior "no-refusal" gap, `e2e-test-surface.ts`'s own doc
+          // comment): `requestViewport`'s own `RequestOutcome` -- {kind:"issued", streamHandle} on
+          // a real mint, or the specific reason it was not -- is `FilterQueryOutcome`'s own
+          // non-refused half verbatim, so it is returned directly rather than collapsed.
+          return await manager.requestViewport(null, null, undefined, {
             predicate,
             dialect: FILTER_DIALECT_DUCKDB_EXPR_0,
           });
-          // "no-refusal", not "admitted": `requestViewport` resolves `void` the same way on a
-          // throttled/superseded/post-stop no-op as it does on a real mint (P6 should-fix,
-          // reviewer round over P5) -- see `FilterQueryOutcome`'s own doc comment
-          // (`e2e-test-surface.ts`) for why this hook cannot honestly claim more than that no
-          // typed `skp.filter_*` refusal was raised.
-          return { kind: "no-refusal" };
         } catch (e) {
           if (e instanceof SkpCallError) {
             return { kind: "refused", code: e.skpError.code, message: e.skpError.message };
