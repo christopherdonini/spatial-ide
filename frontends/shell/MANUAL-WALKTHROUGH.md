@@ -195,7 +195,14 @@ Fill in after running the script above.
   fits `residentExtentRef` (current residency only), and supersede-on-pan clearing empties
   residency when the viewport leaves the data, so the button has no target exactly when the user is
   lost. A consequence of the 2026-08-13 residency-clearing fix; the E2E A7′ step missed it because
-  its fixed drags never fully left the data extent. Recorded as a defect; fix through gates.
+  its fixed drags never fully left the data extent. **Fixed same day (`3748666`), two halves:** a
+  dataset-lifetime fit anchor (a residency-clearing-immune union of every extent ever rendered)
+  gives the button a target, and a user-initiated fit now emits the fitted view's authoritative
+  bbox into the ordinary debounced query pipeline so the target repopulates (programmatic
+  `setProps` camera moves never fire deck's view-state callback — verified in deck.gl source — so
+  without this no query was ever issued for the fitted location). The E2E A7′ step is strengthened
+  to pan provably off-data first (the operator's exact sequence); all twelve steps green on the
+  fixed tree (`regression-render-trace-1786727379404.json`).
   Also observed (recorded, no action): the post-pan/zoom refill pause "seems a bit slow" — the
   designed debounce, inflated by RustDesk latency; a tuning question for panel-era polish, not a
   defect.
