@@ -258,3 +258,86 @@ body,
   pointer-events: none;
 }
 
+/* NEXT-CUT.md (style-panel cut) P4, binding note 6: in `.app-main`'s flex column, below
+   `.filter-panel`, in normal document flow -- never an absolute overlay (the S1 lesson, same as
+   `.filter-panel` itself). Collapsed by default: only `.style-disclosure`'s own row height is paid
+   until expanded.
+
+   Measured, fresh E2E run (killed every remnant process first; 1280x800 window; 100k-happy-path
+   fixture admitted ONCE via `openPath`; `.admission-panel` + `.filter-panel` + `.style-panel` all
+   present, no refusal/liveness banner showing): `.admission-panel` 450px, `.filter-panel` 90.2px --
+   leaving only ~21.8px of headroom above `.canvas-container`'s 200px floor before ANYTHING is added
+   below the filter panel. This is much tighter than the ~112px this file's own binding note quotes
+   from `FilterPanel.tsx`'s own header comment; that figure was measured against a different
+   `.filter-panel` content shape (its own now-dropped column-list extra), and today's real headroom
+   with both panels at their present, shipped size is the ~21.8px above, not ~112px.
+
+   A first attempt at `.style-panel` reused `.filter-panel`'s own `padding: 1rem` and default
+   line-height, measuring **56px collapsed** -- 34px over the real ~21.8px budget, and it reproduced
+   `FilterPanel.tsx`'s own dropped-extra defect exactly: `.canvas-container` forced to its 200px
+   floor with its own bottom edge landing 34px below the 800px viewport (physically off-screen,
+   unreachable by a hover event). The CSS below is the fix: `.style-disclosure` alone, at 0.75rem/
+   line-height 1, inside a 0.15rem-padded `.style-panel`, measures **17.8px collapsed** -- fits with
+   ~4px to spare. `.canvas-container` measured 204.0px collapsed (its bottom lands exactly at the
+   800px viewport edge; A9' hover verified green against this exact build, see this piece's own
+   CUT-STATE.md section).
+
+   Expanded, `.style-panel` measures 285.8px (`.style-controls`'s own 16rem `max-height` caps it at
+   256px of that): `.canvas-container` is then forced to its 200px floor with its bottom landing at
+   1064px, well below the 800px viewport -- `.app-main`'s own `overflow: auto` makes the canvas
+   reachable by scrolling, not by an unscrolled hover. Accepted: expanding is a deliberate user
+   action, and neither `regression.mjs` nor `filter-panel.mjs` (this piece's own required verify
+   step) ever clicks `.style-disclosure`, so this does not touch the "hover suite must stay green"
+   gate -- a future piece adding an expanded-state E2E assertion would need to scroll first. */
+.style-panel {
+  /* Deliberately much tighter than `.filter-panel`'s own `padding: 1rem` -- the ~21.8px headroom
+     above leaves no room for that. `.style-controls` below (only paid when expanded) gets its own,
+     more generous spacing; nothing here is spent on anything but the collapsed row itself. */
+  padding: 0.15rem 1rem;
+  max-width: 40rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.style-disclosure {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+
+.style-controls {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* Same cap-then-scroll discipline `.filter-refusal`'s own comment established (P6 review,
+     should-fix 4 on the filter-panel cut): an expanded style panel -- controls plus the read-only
+     document text -- must not itself push `.canvas-container` toward its 200px floor. */
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.style-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.style-document {
+  margin: 0.25rem 0 0;
+  padding: 0.5rem;
+  background: rgba(128, 128, 128, 0.08);
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+

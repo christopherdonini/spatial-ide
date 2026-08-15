@@ -12,6 +12,7 @@ import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
+import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
 import ErrorBanner from "./ErrorBanner";
@@ -534,10 +535,12 @@ export function handleCanvasCeilingRefusal(
 }
 
 /**
- * Cut 1's whole shell: an admission flow, a working canvas, and viewport-driven streaming with
- * supersede-on-pan (`docs/07` Prototype-completion arc). No style panel, no publish affordance --
- * neither exists anywhere in this tree, not even as a disabled control (NEXT-CUT.md's own
- * constraint).
+ * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
+ * supersede-on-pan, a filter panel, and a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
+ * style-panel cut) (`docs/07` Prototype-completion arc). **No publish affordance** -- it does not
+ * exist anywhere in this tree, not even as a disabled control (NEXT-CUT.md binding note 8; the hero
+ * round-trip is style-in-shell -> copy the visible document -> `publish-bundle --style` ->
+ * bundle viewer, entirely outside this codebase).
  */
 export default function App() {
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
@@ -547,13 +550,10 @@ export default function App() {
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
   // persistence, no undo; binding note 4), starting at exactly today's fixed rendering
   // (`DEFAULT_STYLE_STATE`'s own doc comment has the hex/opacity math against `buildLayers.ts`'s
-  // pre-P2 constant). `setStyle` has no caller yet -- the panel itself is P4; this piece lands the
-  // state and the `WorkingCanvas` wiring (`style` prop) it will drive. `void setStyle;` below is the
-  // same `noUnusedLocals` satisfier this file's own `activeFilter` precedent used for the identical
-  // situation (filter-panel cut P2, CUT-STATE.md: confirmed by direct experiment that `tsc
-  // --noUnusedLocals` DOES flag an unused element of a function-body `useState` destructure).
+  // pre-P2 constant). P4 gives `setStyle` its caller: `StylePanel`'s `onChange` prop, below --
+  // every control write goes straight through this one setter, exactly the `activeFilter`/
+  // `setActiveFilter` shape this file already uses for the filter panel's own state.
   const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE_STATE);
-  void setStyle;
   // Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent status indicator, tracked
   // independently of `canvasRefusal` -- see `nextResidencyStatus`'s own doc comment for why
   // dismissing the banner must never touch this.
@@ -916,6 +916,15 @@ export default function App() {
             }}
           />
         )}
+        {/* NEXT-CUT.md (style-panel cut) P4 / binding note 6: in `.app-main`'s flex column, below
+          * `FilterPanel`, in normal document flow -- never an absolute overlay (the S1 lesson, same
+          * as `.filter-panel` itself). Keyed on `admitted.dataset` for the same reason `FilterPanel`
+          * is: a dataset change discards this panel's own local `expanded` disclosure state, back to
+          * collapsed, rather than carrying it across two different datasets. `style` itself is
+          * App-owned and NOT reset on a dataset change (unlike `activeFilter`) -- NEXT-CUT.md names
+          * no such reset, and a style is a rendering choice independent of which dataset it is
+          * currently painting. */}
+        {admitted && <StylePanel key={admitted.dataset} style={style} onChange={setStyle} />}
         {admitted && (
           <div className="canvas-container">
             {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen

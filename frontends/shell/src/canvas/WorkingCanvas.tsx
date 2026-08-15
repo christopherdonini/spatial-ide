@@ -33,10 +33,10 @@ import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportB
 /**
  * The working canvas — deck.gl `OrthographicView` in the dataset's source CRS (ADR-010 rules 1, 2,
  * 3, 6, 7; architect review, `frontends/shell` cut 1, D3.1–D3.6). Style v0 (ADR-017 §5a; ADR-022)
- * lives as a `style` PROP here -- `App.tsx` owns the editable state -- but no PANEL exists anywhere
- * in this tree yet (NEXT-CUT.md P4). See `applyStyleChange` below for the re-render seam a style
- * change takes: it recomputes resolved draw parameters and calls `render()`, and reaches nothing
- * else -- no viewport query, no ticket, no debounce interaction (binding note 7).
+ * lives as a `style` PROP here -- `App.tsx` owns the editable state, `style/StylePanel.tsx` (P4) is
+ * the one place it is edited. See `applyStyleChange` below for the re-render seam a style change
+ * takes: it recomputes resolved draw parameters and calls `render()`, and reaches nothing else --
+ * no viewport query, no ticket, no debounce interaction (binding note 7).
  *
  * **deck.gl's own unprojected pick coordinate is never read anywhere in this module.** Rule 1: it
  * is a renderer-local value with no CRS tag, and the only authoritative coordinate a pick may
