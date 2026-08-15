@@ -16,6 +16,13 @@ name: Product CI — bundle viewer
 # it can break either side and the whole reason it exists is that a reader and a writer with
 # separate tables can each stay green while disagreeing with each other.
 #
+# `renderer/style-ts/**` is listed below too (reviewer gate, style-panel cut P7 fixes, B1 —
+# blocking). ADR-022's extraction moved the shared TS style semantics (`Style.parse`/`resolve`) out
+# of `renderer/bundle-viewer/src/` into this sibling package; `bundle-viewer/src/main.ts` imports it
+# by relative path (`../../style-ts/src/style.js`). Before this fix, a change under
+# `renderer/style-ts/**` alone matched none of this workflow's path filters and left the viewer's own
+# consumption of that shared code entirely unchecked by CI.
+#
 # ## What a green run here means
 #
 # The viewer type-checks, builds, and its 40-plus unit tests pass — including the manifest mutation
@@ -44,11 +51,13 @@ on:
   push:
     paths:
       - "renderer/bundle-viewer/**"
+      - "renderer/style-ts/**"
       - "renderer/tests/data/**"
       - ".github/workflows/product-ci-viewer.yml"
   pull_request:
     paths:
       - "renderer/bundle-viewer/**"
+      - "renderer/style-ts/**"
       - "renderer/tests/data/**"
       - ".github/workflows/product-ci-viewer.yml"
   workflow_dispatch:

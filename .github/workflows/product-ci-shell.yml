@@ -47,6 +47,14 @@ name: Product CI — shell
 # listed explicitly rather than assumed to be, since `protocol/skp/**` alone would also catch the
 # fixture directory a second time.
 #
+# ## The style-ts path, watched here too (reviewer gate, style-panel cut P7 fixes, B1 — blocking)
+#
+# `frontends/shell/src/style/document.ts` imports `renderer/style-ts/src/style.ts` by relative path
+# (ADR-022's extraction: the shared TS style semantics live there, outside `frontends/shell/**`
+# entirely). Before this fix, a change under `renderer/style-ts/**` alone matched none of this
+# workflow's path filters — the shell's own second consumption of that shared code went unchecked by
+# CI, the same class of gap `product-ci-viewer.yml` closes for the bundle viewer's own import of it.
+#
 # ## Standing not-a-gate note
 #
 # **Until a run of this workflow has gone green end to end, it is configuration that has never been
@@ -62,6 +70,7 @@ on:
       - "protocol/data-plane/**"
       - "protocol/skp/src/**"
       - "protocol/skp/tests/data/**"
+      - "renderer/style-ts/**"
       - ".github/workflows/product-ci-shell.yml"
   pull_request:
     paths:
@@ -71,6 +80,7 @@ on:
       - "protocol/data-plane/**"
       - "protocol/skp/src/**"
       - "protocol/skp/tests/data/**"
+      - "renderer/style-ts/**"
       - ".github/workflows/product-ci-shell.yml"
   workflow_dispatch:
 

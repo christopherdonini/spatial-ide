@@ -123,6 +123,11 @@ on:
       # split exists to avoid. The Rust side reads `renderer/tests/data/**` — the shared style and
       # key-set artifacts — and that stays covered by `renderer/**` above.
       - "!renderer/bundle-viewer/**"
+      # …nor the shared TS style semantics ADR-022 extracted alongside it (reviewer gate,
+      # style-panel cut P7 fixes, B1 — blocking): `renderer/style-ts/**` is pure TypeScript too, read
+      # by `frontends/shell` and `renderer/bundle-viewer` (both covered by their own workflows'
+      # filters), never by a Rust target. Same waste this exclusion already avoids for the viewer.
+      - "!renderer/style-ts/**"
       - "protocol/data-plane/**"
       - "protocol/skp/**"
       - "Cargo.toml"
@@ -138,6 +143,11 @@ on:
       # split exists to avoid. The Rust side reads `renderer/tests/data/**` — the shared style and
       # key-set artifacts — and that stays covered by `renderer/**` above.
       - "!renderer/bundle-viewer/**"
+      # …nor the shared TS style semantics ADR-022 extracted alongside it (reviewer gate,
+      # style-panel cut P7 fixes, B1 — blocking): `renderer/style-ts/**` is pure TypeScript too, read
+      # by `frontends/shell` and `renderer/bundle-viewer` (both covered by their own workflows'
+      # filters), never by a Rust target. Same waste this exclusion already avoids for the viewer.
+      - "!renderer/style-ts/**"
       - "protocol/data-plane/**"
       - "protocol/skp/**"
       - "Cargo.toml"
