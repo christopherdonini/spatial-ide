@@ -5,6 +5,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+2. **D1 (style cut, small) — "Save style…" file write, or visible/copyable text only?** The style
+   panel shows the current style document as text (the accepted ADR-017 §5a format — the model
+   already exists; the shell adopts it rather than inventing one). A Save-to-file button would be
+   an ADR-006 **class-3 external side effect** (export): explicit approval + an audit record owed —
+   machinery the publish cut is building anyway. Recommendation: **text only this cut**; the
+   clipboard covers the hero-slice round-trip (style in shell → copy → `publish-bundle --style` →
+   bundle viewer). The cut proceeds on the recommendation unless you override. Touches: the style
+   panel's control set only.
+
 1. **Rider-1 refinement — clear the ceiling status when a new query is issued?** Your rider 1
    (2026-08-13) made the `.residency-status` ceiling indicator persistent "while the condition
    holds," cleared by a later full delivery or dataset change. The filter-panel cut adds a third

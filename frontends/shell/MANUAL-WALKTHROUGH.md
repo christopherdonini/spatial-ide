@@ -274,7 +274,20 @@ Fill in after running the script above.
 Part E did not exist during the 2026-08-14 run recorded above (that run covered Parts A–D only).
 Fill in the fields below when Part E is actually run by an operator.
 
-- **Date run:**
-- **Run by:**
-- **Build/commit:**
-- **Part E (E1–E8):**
+- **Date run:** 2026-08-14/15 (spanning midnight, one continuous session)
+- **Run by:** the human (Christopher), over RustDesk — same degraded-channel caveat as the Part A–D
+  run for motion/feel judgments; correctness judged firmly.
+- **Build/commit:** `046b41d`.
+- **Part E (E1–E8):** **pass with one functional deviation, fixed same session.** E1–E4 perfect
+  (panel, real filter visibly subsetting, refusal readable with the canvas preserved by the
+  recovery query, Clear restoring). E5's liveness and the **ADR-021 acceptance-condition behaviors
+  — E6 cancel and E7 persistent incomplete status — perfect**; E8 clean-slate perfect. **E5
+  deviation:** after a *completed* filtered scan on the slow fixture, the matching tail features
+  were unfindable (the filtered query carried the current viewport bbox, and Zoom to layer fit the
+  all-time anchor — the operator's "too far up / zoom to layer does nothing" report, exactly).
+  Human-approved design revision applied same session (`55dec4d`): **Apply behaves like opening a
+  dataset** — unrestricted first look (`bbox: null`), fit anchor + one-shot auto-fit reset per
+  filter generation, so filter → scan → the camera lands on the matches, and Zoom to layer fits
+  the filtered layer deterministically. Encoded as E2E step `FIND'` (the operator's scenario
+  through the real panel DOM; camera lands on the 99 matches). All suites green on the fixed tree
+  (12/12, 3/3, 6/6).
