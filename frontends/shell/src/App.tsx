@@ -124,9 +124,11 @@ export interface ApplyFilterDeps {
   /** `Debounced.cancel` for the pan/zoom debounce -- called FIRST, before anything else (design
    * section (a): "else a scheduled pan fires 120ms later and silently reverts the filter"). */
   cancelPendingDebounce: () => void;
-  /** `lastViewportBboxRef.current` AT ISSUE TIME -- `null` until the first settled view, in which
-   * case this applies over the whole dataset (`bbox: null`), the same shape the initial unfiltered
-   * load already uses. */
+  /** `lastViewportBboxRef.current` AT ISSUE TIME -- read ONLY by the refusal-recovery re-issue below
+   * (human-approved design revision, 2026-08-15 walkthrough Part E E5: the PRIMARY attempt no longer
+   * reads this at all, see `applyFilter`'s own doc comment). `null` until the first settled view, in
+   * which case the recovery applies over the whole dataset (`bbox: null`), the same shape the
+   * initial unfiltered load already uses. */
   getLastViewportBbox: () => Bbox | null;
   /** `activeFilterRef.current` AT ISSUE TIME -- also doubles as "the last successfully-issued
    * filter" for the refusal-recovery re-issue below, since this ref is only ever written by
@@ -135,27 +137,48 @@ export interface ApplyFilterDeps {
   /** Writes BOTH `activeFilterRef.current` (synchronously, so the very next issue site reads the
    * new value) and the `activeFilter` render state -- called ONLY when `newFilter` itself mints. */
   commitActiveFilter: (filter: Filter | null) => void;
+  /** Human-approved design revision, 2026-08-15 walkthrough Part E, E5 finding: "Apply behaves
+   * exactly like opening a dataset." A new filter GENERATION (any Apply or Clear that actually
+   * issues) must reset `WorkingCanvas`'s fit anchor and one-shot auto-fit
+   * (`WorkingCanvasHandle.resetFitForNewGeneration`) so the camera lands on the filtered matches the
+   * same way it already lands on a freshly-opened dataset's own first batch -- called ONLY alongside
+   * `commitActiveFilter` above, i.e. only on a real issued outcome, never on a refusal/not-applied. */
+  resetFitForNewGeneration: () => void;
   wait?: (ms: number) => Promise<void>;
 }
 
 /**
  * Apply = supersede immediately (NEXT-CUT.md design section). `activeFilter` is assigned ONLY on an
  * ISSUED outcome for `newFilter` itself -- a refusal or a throttled-after-retry never becomes state
- * (design item 3). On a refusal, the "typo-blanks-canvas fix": the refusing attempt already
- * superseded and cleared residency (`ViewportStreamManager`'s own supersede-before-mint order), so
- * this re-issues the LAST successfully-issued query -- `getActiveFilter()` (unchanged by this failed
- * attempt) over the same bbox -- through the identical retry helper, recovering the canvas. That
- * recovery predicate is already-admitted (it minted once before), so it cannot itself be refused on
- * filter grounds (design item 3's own claim) -- its outcome is not otherwise reported here, since
- * this function's own `ApplyFilterOutcome` is about `newFilter`'s fate, not the recovery's.
+ * (design item 3).
+ *
+ * **The primary attempt issues `bbox: null` -- an unrestricted first look, never
+ * `getLastViewportBbox()`** (human-approved design revision, 2026-08-15 walkthrough Part E, E5
+ * finding: the operator applied a late-matching predicate on the slow fixture and the matches were
+ * unfindable -- they lived at the grid's far top, off the viewport the UNFILTERED first look
+ * happened to leave the camera at, because the filtered query had been carrying that same stale
+ * viewport bbox forward. "A filter asks WHERE the matches are" -- Apply (and Clear, which is simply
+ * Apply with `newFilter: null`, the SAME code path) now behaves exactly like opening a dataset: an
+ * unrestricted look, camera re-fit on the first batch (see `resetFitForNewGeneration` below). Pan/
+ * zoom-driven queries are UNCHANGED -- they still carry the current viewport bbox + whatever filter
+ * is active, via `makeDebouncedViewportQuery`'s own existing body, not this function.
+ *
+ * On a refusal, the "typo-blanks-canvas fix": the refusing attempt already superseded and cleared
+ * residency (`ViewportStreamManager`'s own supersede-before-mint order), so this re-issues the LAST
+ * successfully-issued query -- `getActiveFilter()` over `getLastViewportBbox()` -- through the
+ * identical retry helper, recovering the canvas to what was actually showing before. **The recovery
+ * keeps its EXISTING semantics, unchanged by this revision**: it restores the last real view, not a
+ * fresh unrestricted look, so it deliberately still reads `getLastViewportBbox()`. That recovery
+ * predicate is already-admitted (it minted once before), so it cannot itself be refused on filter
+ * grounds (design item 3's own claim) -- its outcome is not otherwise reported here, since this
+ * function's own `ApplyFilterOutcome` is about `newFilter`'s fate, not the recovery's.
  */
 export async function applyFilter(newFilter: Filter | null, deps: ApplyFilterDeps): Promise<ApplyFilterOutcome> {
   deps.cancelPendingDebounce();
-  const bbox = deps.getLastViewportBbox();
 
   let outcome: RequestOutcome;
   try {
-    outcome = await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, newFilter), deps.wait);
+    outcome = await requestViewportWithSingleRetry(() => deps.requestViewport(null, newFilter), deps.wait);
   } catch (e) {
     if (e instanceof SkpCallError) {
       // NEXT-CUT.md P6 review, B2 (blocking): format the user's OWN refusal FIRST, before the
@@ -169,7 +192,10 @@ export async function applyFilter(newFilter: Filter | null, deps: ApplyFilterDep
       // this propagated, and only the former is this function's own claim to make.
       const refusal = formatRefusal(e.skpError);
       try {
-        await requestViewportWithSingleRetry(() => deps.requestViewport(bbox, deps.getActiveFilter()), deps.wait);
+        await requestViewportWithSingleRetry(
+          () => deps.requestViewport(deps.getLastViewportBbox(), deps.getActiveFilter()),
+          deps.wait
+        );
       } catch (recoveryError) {
         logSessionEvent(
           "filter-recovery-failed",
@@ -185,6 +211,7 @@ export async function applyFilter(newFilter: Filter | null, deps: ApplyFilterDep
 
   if (outcome.kind === "issued") {
     deps.commitActiveFilter(newFilter);
+    deps.resetFitForNewGeneration();
     return { kind: "applied", streamHandle: outcome.streamHandle };
   }
   return { kind: "not-applied" };
@@ -609,6 +636,9 @@ export default function App() {
         getLastViewportBbox: () => lastViewportBboxRef.current,
         getActiveFilter: () => activeFilterRef.current,
         commitActiveFilter,
+        // Human-approved design revision, 2026-08-15 walkthrough Part E E5 -- see `applyFilter`'s own
+        // doc comment and `WorkingCanvasHandle.resetFitForNewGeneration`'s own doc comment.
+        resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
       });
     },
     [commitActiveFilter]
@@ -779,6 +809,9 @@ export default function App() {
             getLastViewportBbox: () => lastViewportBboxRef.current,
             getActiveFilter: () => activeFilterRef.current,
             commitActiveFilter,
+            // Same-seam doctrine (deviation-3 retrofit): this hook drives the IDENTICAL applyFilter
+            // seam a real Apply click does, including the new-generation fit reset.
+            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
           }
         )
       );

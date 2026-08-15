@@ -314,6 +314,7 @@ function fakeCanvasHandle(): WorkingCanvasHandle {
     pushBatch: vi.fn(),
     clearStream: vi.fn(),
     fitToBounds: vi.fn(() => false),
+    resetFitForNewGeneration: vi.fn(),
   };
 }
 
@@ -394,7 +395,12 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
   // per-batch row count, which only `WorkingCanvasHandle.pushBatch`'s own return value carries.
   it("onBatch calls onBatchRows with pushBatch's own return value (the admitted row count)", () => {
     const pushBatch = vi.fn().mockReturnValue(37);
-    const canvas: WorkingCanvasHandle = { pushBatch, clearStream: vi.fn(), fitToBounds: vi.fn(() => false) };
+    const canvas: WorkingCanvasHandle = {
+      pushBatch,
+      clearStream: vi.fn(),
+      fitToBounds: vi.fn(() => false),
+      resetFitForNewGeneration: vi.fn(),
+    };
     const onBatchRows = vi.fn();
     const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });
 
@@ -721,6 +727,7 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
     requestViewport: ReturnType<typeof vi.fn>;
     cancelPendingDebounce: ReturnType<typeof vi.fn>;
     commitActiveFilter: ReturnType<typeof vi.fn>;
+    resetFitForNewGeneration: ReturnType<typeof vi.fn>;
   } {
     const calls: string[] = [];
     const cancelPendingDebounce = vi.fn(() => calls.push("cancel-debounce"));
@@ -729,16 +736,18 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
       return issuedOutcome("sh_new");
     });
     const commitActiveFilter = vi.fn();
+    const resetFitForNewGeneration = vi.fn();
     const deps: ApplyFilterDeps = {
       requestViewport,
       cancelPendingDebounce,
       getLastViewportBbox: () => bboxFixture(),
       getActiveFilter: () => null,
       commitActiveFilter,
+      resetFitForNewGeneration,
       wait: async () => {},
       ...overrides,
     };
-    return { deps, calls, requestViewport, cancelPendingDebounce, commitActiveFilter };
+    return { deps, calls, requestViewport, cancelPendingDebounce, commitActiveFilter, resetFitForNewGeneration };
   }
 
   it("cancels the pending debounce FIRST, before requestViewport is ever called", async () => {
@@ -750,41 +759,52 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
     expect(calls[1]).toBe("request-viewport");
   });
 
-  it("issues over getLastViewportBbox() and the NEW filter, and on an issued outcome commits it + returns {kind:'applied'}", async () => {
+  // Human-approved design revision, 2026-08-15 walkthrough Part E E5: Apply (and Clear, the SAME
+  // code path with `newFilter: null`) now issues an UNRESTRICTED first look -- `bbox: null`, never
+  // `getLastViewportBbox()` -- exactly like opening a dataset. Also resets the canvas's fit anchor
+  // for the new filter generation, so the first-batch auto-fit lands on the matches.
+  it("issues bbox: null (NOT getLastViewportBbox()) over the NEW filter, and on an issued outcome commits it + resets the fit anchor + returns {kind:'applied'}", async () => {
     const newFilter = filterFixture("zone = 'commercial'");
-    const bbox = bboxFixture();
-    const { deps, requestViewport, commitActiveFilter } = baseDeps({ getLastViewportBbox: () => bbox });
+    const { deps, requestViewport, commitActiveFilter, resetFitForNewGeneration } = baseDeps({
+      // Deliberately non-null, to prove the primary attempt ignores it entirely.
+      getLastViewportBbox: () => bboxFixture(),
+    });
 
     const outcome = await applyFilter(newFilter, deps);
 
-    expect(requestViewport).toHaveBeenCalledWith(bbox, newFilter);
+    expect(requestViewport).toHaveBeenCalledWith(null, newFilter);
     expect(commitActiveFilter).toHaveBeenCalledWith(newFilter);
+    expect(resetFitForNewGeneration).toHaveBeenCalledTimes(1);
     expect(outcome).toEqual({ kind: "applied", streamHandle: "sh_new" });
   });
 
-  it("throttled-after-retry never becomes state: returns {kind:'not-applied'}, commitActiveFilter never called", async () => {
+  it("throttled-after-retry never becomes state: returns {kind:'not-applied'}, commitActiveFilter/resetFitForNewGeneration never called", async () => {
     const requestViewport = vi.fn().mockResolvedValue({ kind: "throttled" });
     const commitActiveFilter = vi.fn();
-    const { deps } = baseDeps({ requestViewport, commitActiveFilter });
+    const { deps, resetFitForNewGeneration } = baseDeps({ requestViewport, commitActiveFilter });
 
     const outcome = await applyFilter(filterFixture(), deps);
 
     expect(outcome).toEqual({ kind: "not-applied" });
     expect(commitActiveFilter).not.toHaveBeenCalled();
+    expect(resetFitForNewGeneration).not.toHaveBeenCalled();
   });
 
-  it("a refusal never becomes state, reports {kind:'refused', refusal}, and re-issues the LAST successfully-issued query (previous filter + lastViewportBbox) -- the typo-blanks-canvas fix", async () => {
+  it("a refusal never becomes state, reports {kind:'refused', refusal}, and re-issues the LAST successfully-issued query (previous filter + lastViewportBbox, UNCHANGED recovery semantics) -- the typo-blanks-canvas fix", async () => {
     const previousFilter = filterFixture("zone = 'residential'"); // the last successfully-issued filter
     const bbox = bboxFixture();
     const skpError = skpErrorFixture();
     const requestViewport = vi
       .fn()
-      // The Apply attempt itself, over the NEW (typo'd) filter -- refused.
+      // The Apply attempt itself, over the NEW (typo'd) filter -- refused. bbox: null (the design
+      // revision), not getLastViewportBbox().
       .mockRejectedValueOnce(new SkpCallError(skpError))
-      // The recovery re-issue, over the PREVIOUS filter -- succeeds.
+      // The recovery re-issue, over the PREVIOUS filter -- succeeds. Recovery keeps its EXISTING
+      // semantics: getLastViewportBbox(), not null -- it restores the last real view, not a fresh
+      // unrestricted look.
       .mockResolvedValueOnce(issuedOutcome("sh_recovery"));
     const commitActiveFilter = vi.fn();
-    const { deps } = baseDeps({
+    const { deps, resetFitForNewGeneration } = baseDeps({
       requestViewport,
       getActiveFilter: () => previousFilter,
       getLastViewportBbox: () => bbox,
@@ -799,10 +819,12 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
       refusal: { code: skpError.code, message: skpError.message, fields: [], remediationIsCut2: false },
     });
     expect(commitActiveFilter).not.toHaveBeenCalled(); // the refused typo never becomes state
+    expect(resetFitForNewGeneration).not.toHaveBeenCalled(); // no new generation on a refusal
     expect(requestViewport).toHaveBeenCalledTimes(2);
-    expect(requestViewport).toHaveBeenNthCalledWith(1, bbox, typoFilter);
-    // Recovery: previous filter, same bbox -- already-admitted, cannot itself be refused on filter
-    // grounds (design section's own claim).
+    // The primary (refused) attempt: bbox: null, per the design revision.
+    expect(requestViewport).toHaveBeenNthCalledWith(1, null, typoFilter);
+    // Recovery: previous filter, over getLastViewportBbox() -- already-admitted, cannot itself be
+    // refused on filter grounds (design section's own claim), and deliberately NOT bbox: null.
     expect(requestViewport).toHaveBeenNthCalledWith(2, bbox, previousFilter);
   });
 

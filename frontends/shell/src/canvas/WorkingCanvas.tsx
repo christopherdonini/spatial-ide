@@ -77,6 +77,33 @@ export interface WorkingCanvasHandle {
    * layer has ever loaded anything (`extent.ts`'s `chooseFitTarget` has the full account). A no-op
    * (returns `false`) only when nothing was ever rendered by this instance. */
   fitToBounds(): boolean;
+  /**
+   * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
+   * called whenever a new FILTER GENERATION begins (`App.tsx`'s `applyFilter`, on any Apply or Clear
+   * that actually issues).
+   *
+   * **Human-approved design revision, 2026-08-15 walkthrough Part E, E5 finding.** The operator
+   * applied a late-matching predicate on the slow fixture; the liveness/cancel affordance itself
+   * worked perfectly, but once the scan completed the matching features were unfindable -- they live
+   * at the grid's far top, and the filtered query had been carrying the CURRENT viewport bbox
+   * forward (unchanged since the unfiltered first look), so the matches either never arrived at all
+   * or arrived far off-screen. "Zoom to layer" was then also inert: `fitToBounds` fits the
+   * dataset-lifetime `fitAnchorRef`, which by then already equalled the just-fitted (matchless) view
+   * -- reproducing exactly what was already on screen, not a rescue.
+   *
+   * Resolution: `App.tsx`'s `applyFilter` now issues Apply/Clear as an unrestricted `bbox: null` look
+   * (a filter asks WHERE the matches are, not "within whatever the camera already happened to be
+   * pointed at") and calls THIS method on every successful issue, before that stream's first batch
+   * can arrive. Clearing both refs here is what lets the EXISTING first-batch one-shot auto-fit
+   * (`pushBatch`'s own `if (!hasAutoFitRef.current && residentExtentRef.current)` block,
+   * `notifyViewport: false` -- no new query storm, unchanged) fire again for the filtered delivery,
+   * symmetric with a fresh dataset-open, with no new fit logic of its own: filter -> scan -> the
+   * camera lands on the matches. `fitToBounds` (`chooseFitTarget(fitAnchorRef.current)`) is then
+   * deterministic again within the NEW generation, exactly as it already was within a dataset's whole
+   * lifetime -- "the layer" the button fits is the layer the user is actually looking at right now:
+   * (dataset, filter generation), not (dataset) alone.
+   */
+  resetFitForNewGeneration(): void;
 }
 
 export interface WorkingCanvasProps {
@@ -449,6 +476,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // on screen for `render()` alone to redraw at the new camera position.
         fitToExtent(bbox, true);
         return true;
+      },
+
+      resetFitForNewGeneration() {
+        fitAnchorRef.current = null;
+        hasAutoFitRef.current = false;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps

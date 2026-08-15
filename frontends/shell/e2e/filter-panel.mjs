@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// E2E TEST SURFACE (e2e/README.md) -- PANEL'/PANELREFUSE'/CLEAR'/SLOW'/CANCEL' steps for
-// NEXT-CUT.md's filter-panel cut, phase P5. Sibling to `filter.mjs` (which drives
+// E2E TEST SURFACE (e2e/README.md) -- PANEL'/PANELREFUSE'/CLEAR'/SLOW'/CANCEL'/FIND' steps for
+// NEXT-CUT.md's filter-panel cut, phase P5 (+ FIND', added post-P7a per the operator's own Part E
+// E5 finding and the human-approved "Apply behaves exactly like opening a dataset" design revision
+// -- see `stepFind`'s own doc comment). Sibling to `filter.mjs` (which drives
 // `window.__SPATIAL_E2E__.queryWithFilter` directly, bypassing the actual `FilterPanel` DOM --
 // "not through the (nonexistent) shell filter panel", its own header's words, written before P3
 // built one) and to `regression.mjs` -- this suite is what actually drives the real rendered
@@ -474,10 +476,109 @@ async function stepSlowCancel(page, consoleHandle) {
   );
 }
 
+/**
+ * `FIND'` -- the operator's exact 2026-08-15 walkthrough Part E, E5 scenario, permanently encoded.
+ * A fresh open of the slow fixture (not chained off `SLOW'/CANCEL''s` own leftover state: that step
+ * ends with a CANCELLED, zero-row scan and a camera that never moved for this filter generation --
+ * FIND' needs the scan to actually run to completion, which is a materially different scenario worth
+ * its own clean start). Applies the SAME late-matching predicate via the real panel DOM (input +
+ * Apply click -- no stream handle needed here, `SLOW'/CANCEL'` already owns that assertion), waits
+ * for the scan to finish on its own (liveness/Cancel both gone, `isScanInFlight` false), and asserts
+ * the human-approved design revision's whole point: the camera actually shows the matching features,
+ * not a blank canvas -- non-background pixels clearly above a small floor.
+ */
+async function stepFind(page, consoleHandle) {
+  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_SLOW);
+  if (outcome.kind !== "admitted") {
+    throw new Error(`FIND': openPath(slow fixture) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+  }
+
+  // The unfiltered first look overflows the ceiling (the same OVERCEIL' pattern `SLOW'/CANCEL'`
+  // already asserts in full) -- not re-asserted here, just settled out before Apply.
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 120_000 });
+
+  // The operator's exact scenario, through the real panel DOM.
+  await page.fill("input.filter-predicate", SLOW_FIXTURE_PREDICATE);
+  await page.click("button.filter-apply");
+
+  // TWO-PHASE wait, not a bare "not in-flight" check -- diagnosed empirically while calibrating this
+  // step: a bare `!cancelPresent && livenessGone` poll can pass on its VERY FIRST read, before
+  // `page.click`'s own async `applyFilter` chain has progressed far enough to dispatch a fresh
+  // `issued` event -- because the UNFILTERED first look's own ceiling refusal already left `scanState`
+  // as `{kind:"failed"}` moments earlier (P6 review B1's own fix), and "failed" ALSO satisfies
+  // "not in-flight". A poll that never actually observed the NEW scan start would report "done"
+  // immediately, true only by accident. Phase 1 requires observing `button.filter-cancel` actually
+  // appear (the new scan genuinely started) before phase 2 waits for it to disappear again (the new
+  // scan genuinely finished) -- `isScanInFlight` covers both liveness/Cancel identically, so Cancel
+  // alone is a sufficient, simpler signal for phase 1.
+  const started = await waitForCondition(
+    () => page.evaluate(() => document.querySelector("button.filter-cancel") !== null),
+    (present) => present === true,
+    30_000
+  );
+  if (!started.ok) {
+    throw new Error("FIND': button.filter-cancel never appeared after Apply -- the new scan never appears to have started");
+  }
+
+  // The scan must actually finish here (unlike `SLOW'/CANCEL'`, which cancels it pre-batch).
+  // Generous timeout: this is the full, unprunable single-row-group scan across all 4,000,000
+  // features (`generate_the_slow_filter_fixture`'s own doc comment), not the first-batch-only
+  // measurement the fixture's sizing was calibrated against.
+  const scanDone = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        livenessGone: document.querySelector(".scan-liveness") === null,
+        cancelGone: document.querySelector("button.filter-cancel") === null,
+        incompleteText: document.querySelector(".scan-incomplete")?.textContent ?? null,
+      })),
+    (state) => state.livenessGone && state.cancelGone,
+    180_000
+  );
+  if (!scanDone.ok) {
+    throw new Error(
+      `FIND': the filtered scan never left the in-flight family (liveness/Cancel both gone) within 180s ` +
+        `of having started (last observed: ${JSON.stringify(scanDone.last)})`
+    );
+  }
+  if (scanDone.last.incompleteText !== null) {
+    throw new Error(
+      `FIND': .scan-incomplete unexpectedly present after the scan finished on its own (nobody clicked Cancel) -- ` +
+        `${JSON.stringify(scanDone.last.incompleteText)}`
+    );
+  }
+
+  // THE operator's finding, permanently encoded: the camera actually landed on the matching
+  // features -- non-background pixels clearly above a small floor. `SLOW_FIXTURE_TAIL` (100)
+  // features fitted onto the whole canvas should render clearly, not a blank/near-blank sliver.
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+  const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
+  const fraction = fractionOf(pixels);
+  // Calibrated against a real run (99 matching rows -- id > 3999900 admits ids 3999901..3999999 on a
+  // 0-indexed id column -- fitted onto the whole canvas measured 1.41% non-background,
+  // 4036/285440 px): FLOOR set at 0.5%, comfortably below the observed value (~2.8x headroom for
+  // run-to-run WebGL/AA variance) while still failing hard on an effectively blank canvas (the exact
+  // defect this step exists to catch).
+  const FLOOR = 0.005;
+  if (fraction <= FLOOR) {
+    throw new Error(
+      `FIND': filtered-and-completed canvas is effectively blank (${(fraction * 100).toFixed(3)}% non-bg, floor ` +
+        `${(FLOOR * 100).toFixed(1)}%, settled=${settle.settled}) -- the human-approved design revision (Apply issues ` +
+        `bbox: null, WorkingCanvas.resetFitForNewGeneration) should have landed the camera on the ${SLOW_FIXTURE_TAIL} ` +
+        `matching features, exactly the 2026-08-15 walkthrough Part E E5 finding this step encodes`
+    );
+  }
+
+  return (
+    `fresh open; applied "${SLOW_FIXTURE_PREDICATE}" via the real DOM; scan completed on its own ` +
+    `(liveness/Cancel both gone, no .scan-incomplete); camera landed on the matches ` +
+    `(${(fraction * 100).toFixed(2)}% non-bg, > ${(FLOOR * 100).toFixed(1)}% floor, settled=${settle.settled})`
+  );
+}
+
 async function main() {
-  const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 600_000);
+  const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 900_000);
   const watchdog = setTimeout(() => {
-    console.error(`filter-panel: SPATIAL_E2E_DEADLINE_MS (default 600000) exceeded -- presumed hung, failing loudly`);
+    console.error(`filter-panel: SPATIAL_E2E_DEADLINE_MS (default 900000) exceeded -- presumed hung, failing loudly`);
     process.exit(2);
   }, DEADLINE_MS);
   watchdog.unref();
@@ -533,6 +634,7 @@ async function main() {
     await runStep("PANELREFUSE'", 60_000, () => stepPanelRefuse(page, consoleHandle, ctx));
     await runStep("CLEAR'", 60_000, () => stepClear(page, consoleHandle, ctx));
     await runStep("SLOW'/CANCEL'", 240_000, () => stepSlowCancel(page, consoleHandle));
+    await runStep("FIND'", 300_000, () => stepFind(page, consoleHandle));
 
     console.log("");
     console.log("== Summary ==");
