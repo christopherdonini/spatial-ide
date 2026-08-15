@@ -40,7 +40,10 @@
  * snaps to the nearest feature; a design that did would need its own decision.
  */
 
-import type { DrawParameters, Style } from './style.js';
+// Style v0's TS implementation lives in the renderer-owned `style-ts` package, not under this
+// package's own `src/` -- ADR-022 point 2; see `../../style-ts/src/style.ts`'s own doc comment for
+// why this import crosses a package boundary rather than a same-package relative path.
+import type { DrawParameters, Style } from '../../style-ts/src/style.js';
 import type { Partition } from './partition.js';
 
 /** Declared ceilings (ADR-010 rule 6). Behaviour at each is declared with it, not discovered. */

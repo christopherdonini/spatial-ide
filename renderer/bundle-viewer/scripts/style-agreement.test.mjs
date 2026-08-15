@@ -10,6 +10,12 @@
 //
 // So both read **the same vector**, `renderer/tests/data/style-agreement.json`, and neither
 // generates it from its own output. Its Rust counterpart is `renderer/tests/style_agreement.rs`.
+//
+// The TypeScript implementation under test lives in `../../style-ts/src/style.ts` (ADR-022 point 2
+// moved it out of this package, once a second TS consumer -- `frontends/shell` -- existed; see that
+// file's own doc comment). This test still runs from THIS package (`renderer/bundle-viewer`) because
+// the bundle viewer is still one of style-ts's two consumers and this is its own verify step; the
+// shell joins the same vector as a third reader, in its own test, under `frontends/shell/src/style/`.
 
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -18,7 +24,7 @@ import assert from 'node:assert/strict';
 
 import { importModule } from './bundle-for-test.mjs';
 
-const { Style } = await importModule('src/style.ts');
+const { Style } = await importModule('../style-ts/src/style.ts');
 
 const vector = JSON.parse(readFileSync('../tests/data/style-agreement.json', 'utf8'));
 

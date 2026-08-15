@@ -6,12 +6,24 @@
  *
  * ## This is the second implementation of one rule, and that is the risk it manages
  *
- * The publisher compiles the style in Rust; this reads the same document again in TypeScript. Two
- * implementations of one resolution rule is the shape in which a style silently means two things —
- * the publisher's legend saying one thing and the drawn map another, with nothing raised. So the
- * two are pinned against a **shared vector**, `renderer/tests/data/style-agreement.json`, which
- * `scripts/style-agreement.test.mjs` and `renderer/tests/style_agreement.rs` both read and neither
+ * The publisher compiles the style in Rust (`renderer/src/style.rs`); this reads the same document
+ * again in TypeScript. Two implementations of one resolution rule is the shape in which a style
+ * silently means two things -- the publisher's legend saying one thing and the drawn map another,
+ * with nothing raised. So the two are pinned against a **shared vector**,
+ * `renderer/tests/data/style-agreement.json`, which `renderer/bundle-viewer/scripts/
+ * style-agreement.test.mjs` and `renderer/tests/style_agreement.rs` both read and neither
  * generates.
+ *
+ * ## Relocated here, out of `renderer/bundle-viewer/`, by ADR-022
+ *
+ * ADR-022 widens style v0's role from "the document a bundle carries" to "the project's one style
+ * model wherever a style exists," and its point 2 is explicit: "Document semantics stay in
+ * `renderer/`, in exactly two implementations -- one Rust, one TypeScript -- pinned by the
+ * agreement vector. Every consumer reads one of the two; no consumer re-implements parse/resolve/
+ * legend semantics." With a second TypeScript consumer (`frontends/shell`'s working canvas) joining
+ * the bundle viewer, this module's home moved from being one particular viewer's implementation
+ * detail to a renderer-owned module both import -- unchanged in every line but its error type (see
+ * `./style-error.ts`'s own doc comment for why that one thing did change).
  *
  * ## The hash is over the stored bytes, never over a re-canonicalization
  *
@@ -20,7 +32,7 @@
  * serializer rather than of the bytes in the bundle, which is the opposite of what it is for.
  */
 
-import { BundleFailure } from './failure.js';
+import { StyleParseError } from './style-error.js';
 
 export const SUPPORTED_STYLE_VERSION = 1;
 
@@ -95,7 +107,7 @@ export class Style {
     this.legend = [];
     if (this.matchColumn !== null) {
       // Declared cases in declaration order, then NULL, then unmatched. **A function of the style,
-      // not of the data** — every declared case appears whether or not this bundle contains one.
+      // not of the data** -- every declared case appears whether or not this bundle contains one.
       for (const value of caseValues()) {
         this.legend.push({ kind: { kind: 'case', value }, draw: this.draw({ kind: 'value', value }) });
       }
@@ -112,14 +124,14 @@ export class Style {
     try {
       root = JSON.parse(text);
     } catch (e) {
-      throw new BundleFailure('style-unparseable', assetPath, String(e));
+      throw new StyleParseError('style-unparseable', assetPath, String(e));
     }
     const doc = root as StyleDocument;
     if (typeof doc?.style_version !== 'number') {
-      throw new BundleFailure('style-unparseable', assetPath, '`style_version` is missing');
+      throw new StyleParseError('style-unparseable', assetPath, '`style_version` is missing');
     }
     if (doc.style_version !== SUPPORTED_STYLE_VERSION) {
-      throw new BundleFailure(
+      throw new StyleParseError(
         'style-unsupported-version',
         assetPath,
         `style_version ${doc.style_version}; this viewer implements ${SUPPORTED_STYLE_VERSION}`,
@@ -127,12 +139,12 @@ export class Style {
     }
     const l = doc.layer;
     if (!l || l.geometry !== 'polygon') {
-      throw new BundleFailure('style-unparseable', assetPath, 'layer.geometry must be "polygon"');
+      throw new StyleParseError('style-unparseable', assetPath, 'layer.geometry must be "polygon"');
     }
     for (const key of ['fill_color', 'fill_opacity', 'outline_color', 'outline_width'] as const) {
       const v = l[key] as unknown;
       if (typeof v !== 'object' || v === null || (!('literal' in v) && !('match' in v))) {
-        throw new BundleFailure('style-unparseable', assetPath, `layer.${key} is not a style value`);
+        throw new StyleParseError('style-unparseable', assetPath, `layer.${key} is not a style value`);
       }
     }
     return new Style(doc);
@@ -151,7 +163,7 @@ export class Style {
   /**
    * Resolve one feature's draw parameters from its match-key value.
    *
-   * `null` is a NULL key — a value the source carries, not an absence the caller invented — and
+   * `null` is a NULL key -- a value the source carries, not an absence the caller invented -- and
    * takes the declared `on_null` branch.
    */
   resolve(key: string | null): DrawParameters {

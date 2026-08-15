@@ -1,0 +1,14 @@
+{
+  "name": "spatial-style-ts",
+  "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "type": "module",
+  "description": "Style v0's ONE TypeScript reader/resolver (ADR-017 §5a; ADR-022 point 2: 'document semantics stay in renderer/, in exactly two implementations -- one Rust, one TypeScript'). renderer/bundle-viewer and frontends/shell both import these sources directly -- no build step of its own; each consumer's own bundler (esbuild for bundle-viewer, Vite for the shell) compiles this in. Pinned against renderer/tests/data/style-agreement.json, which this package does not generate.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

@@ -62,7 +62,11 @@ import {
   type View,
 } from './render.js';
 import { sha256Prefixed } from './sha256.js';
-import { Style } from './style.js';
+// Style v0's TS implementation lives in the renderer-owned `style-ts` package, not under this
+// package's own `src/` -- ADR-022 point 2; see `../../style-ts/src/style.ts`'s own doc comment for
+// why this import crosses a package boundary rather than a same-package relative path.
+import { Style } from '../../style-ts/src/style.js';
+import { StyleParseError } from '../../style-ts/src/style-error.js';
 
 // ---------------------------------------------------------------------------------------------
 // Rule 7: unconditional, and first.
@@ -409,7 +413,19 @@ async function load(): Promise<void> {
     bytes: null,
     contentHash: manifest.style.contentHash,
   });
-  const style = Style.parse(new TextDecoder().decode(styleBytes), manifest.style.path);
+  // `Style.parse` throws the shared package's own `StyleParseError` (deliberately narrower than
+  // this viewer's `BundleFailure` -- see `style-ts/src/style-error.ts`'s own doc comment), so this
+  // is the one boundary in this file that translates it into this viewer's own failure vocabulary,
+  // naming the same `state`/`asset`/`detail` unchanged.
+  let style: Style;
+  try {
+    style = Style.parse(new TextDecoder().decode(styleBytes), manifest.style.path);
+  } catch (e) {
+    if (e instanceof StyleParseError) {
+      throw new BundleFailure(e.state, e.asset, e.detail);
+    }
+    throw e;
+  }
   state.style = style;
   renderLegend(style);
 
