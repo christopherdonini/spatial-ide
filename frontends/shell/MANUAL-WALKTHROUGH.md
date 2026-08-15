@@ -231,6 +231,59 @@ Two new fixtures, opened in the same running app instance as Parts A–D — no 
 
 ---
 
+## Part F — the style panel, and the hero round-trip (style-panel cut)
+
+NEXT-CUT.md's own binding note 8: "the hero round-trip is: style in shell → copy the visible
+document → `publish-bundle --style` → bundle viewer." Every earlier part shows the shell rendering
+what it already knows; this part is the whole point of the cut — a style edited live in the shell,
+carried by hand through the publish CLI, and checked against a completely separate consumer
+(`renderer/bundle-viewer`, the same TS resolver `renderer/style-ts/src/style.ts` powers on both
+sides) that never talked to the shell at all.
+
+Reuses `filter-zoned.parquet` (already listed in Part E's own fixtures table above — style v0 has
+no filter/attribute dependency of its own, so no new fixture is needed).
+
+| # | Step | Expected outcome |
+|---|---|---|
+| F1 | Click **Open GeoParquet…** (canvas from Part E may still be visible; that's fine) and select `filter-zoned.parquet`. Below the filter panel, click the collapsed **▸ Style** disclosure. | The summary/canvas admit exactly as Part E's E1 describes. The style disclosure expands (**▾ Style**) to reveal, BELOW the canvas (not above it — the panel was moved below `.canvas-container` after the reviewer gate's S4 fix): a **Fill colour** colour swatch, a **Fill opacity** slider, an **Outline colour** swatch, an **Outline width** slider, a **"Reset to default"** button, and a read-only, monospace text block showing the current style document. |
+| F2 | Pick a distinctive **Fill colour** (something visually unlike the current blue-ish fill) and drag **Fill opacity** all the way to its maximum (1.0). | The canvas updates live — no admission dialog, no query, nothing round-trips through the kernel (a style edit is a re-render of already-resident data only). Judge: does the colour change land promptly with no flicker worth reporting? (Renders are rAF-coalesced — at most one GPU frame per animation tick — so an isolated repaint, not a visible flash or double-draw, is the expected result.) |
+| F3 | Drag the **Fill opacity** slider continuously from one end to the other, watching the canvas the whole time. | The fill's transparency tracks the drag smoothly — judge only whether it *looks* smooth to you, in the moment; do not attach a duration, frame rate, or any other figure to what you saw (ADR-018 — the shell cannot measure its own paint timing here, so no such claim is available). If operating remotely (e.g. RustDesk), record the same degraded-channel caveat earlier motion-quality judgments in this document used. |
+| F4 | Pick a distinctive **Outline colour**, then drag **Outline width** up from 0; once outlines are visibly present, drag it back down to exactly 0. | Once width is above 0, outlines appear around every polygon in that colour. Once width is back down at exactly 0, outlines disappear entirely — not merely thin, genuinely absent (`buildLayers.ts` never draws the outline layer at `outlineWidth === 0`). |
+| F5 | Read the text block at the bottom of the expanded panel. | It is valid JSON: `{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#rrggbb"},"fill_opacity":{"literal":<0..1>},"outline_color":{"literal":"#rrggbb"},"outline_width":{"literal":<0..64>}}}`. Judge: does `fill_color.literal` match the swatch you picked in F2 (as a lowercase `#rrggbb`), does `fill_opacity.literal` read `1` (from F2), and do `outline_color.literal`/`outline_width.literal` match F4's own last-set values (width `0`, since F4 ends by dragging it back down)? This text IS the model — nothing about the panel's controls exists that this block does not already say. |
+| F6 | Click **"Reset to default"**. | The controls and the canvas return to exactly today's original rendering (`fill_color` `#4285f4`, `fill_opacity` `0.7058823529411765` i.e. `180/255`, `outline_color` `#000000`, `outline_width` `0` — visible in the text block). This is a **fresh edit**, not an undo: there is no history to step back through, no "redo" available afterward, and nothing about the earlier F2–F4 edits is retained anywhere — clicking Reset a second time in a row simply re-applies the identical default state. |
+| F7 | **The hero round-trip.** Repeat F2/F4 to set a style you like (any distinctive fill colour, opacity, outline colour/width). Select all the text in the document block (click inside it, Ctrl+A, Ctrl+C) and save it verbatim to a file — e.g. open Notepad (Start → Notepad; RustDesk reaches the desktop fine for this), paste, and **Save As** `C:\dev\spatial-ide\target\my-style.json`. Then open a terminal (PowerShell or `cmd`) and run, exactly: <br><br>`C:\dev\spatial-ide\target\debug\publish-bundle.exe --data "C:\dev\spatial-ide\target\fixtures\manual-walkthrough\filter-zoned.parquet" --style "C:\dev\spatial-ide\target\my-style.json" --viewer "C:\dev\spatial-ide\renderer\bundle-viewer\dist" --out "C:\dev\spatial-ide\target\filter-zoned-styled" --name filter-zoned --attributes zone --viewer-program "Spatial IDE bundle viewer" --viewer-copyright "Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors" --viewer-license AGPL-3.0-or-later --viewer-notice NOTICE.txt --corresponding-source-url "https://example.invalid/spatial-ide" --approve filter-zoned-styled`<br><br>This is a class-3 external side effect (ADR-006) — it will print the gate banner and, because `--approve filter-zoned-styled` already names the destination's own final path component, it publishes without an interactive prompt. It should end by printing `bundle`, `rows`, `partitions`, and the rest of the summary lines, with no error. Then, from `C:\dev\spatial-ide\renderer\bundle-viewer`, run: <br><br>`node scripts/serve-bundle.mjs "C:\dev\spatial-ide\target\filter-zoned-styled" 8731`<br><br>It prints `serving ... at http://127.0.0.1:8731/viewer/index.html` — open that exact URL in a browser (Edge is already on this machine). | The bundle viewer loads the published bundle (status line reads something like "1/1 partitions verified · 2000 features drawn, ..."), and — **the judgment call this whole round-trip exists for** — the polygons' fill colour, fill opacity, and outline (colour and width) in this separately-loaded static page visibly match the style you set on the shell's own canvas in F7's first half. This is a look-and-feel comparison only you can make; no automation touches `publish-bundle` or the viewer's rendered pixels. |
+| F8 | Close the browser tab/terminal from F7; return to the shell. | Nothing about the shell changed — the style panel still shows whatever F7's edit left it at (or F6's default, if you reset after). The shell itself has no publish button anywhere in this tree; the round-trip you just performed by hand is the only path from a shell style edit to a published bundle. |
+
+**If anything deviates:** stop, record the exact step, and report it, same as Parts A–E. In
+particular, if `publish-bundle.exe` is not yet built, run `cargo build -p spatial-kernel --bin
+publish-bundle` first (from `C:\dev\spatial-ide`); if `renderer/bundle-viewer/dist` does not exist,
+run `npm run build` from `renderer/bundle-viewer` first.
+
+## What `e2e/style.mjs` covers
+
+A separate suite (`npm run e2e:style`, `frontends/shell/e2e/style.mjs`, style-panel cut P6) drives
+Part F's own style-panel DOM directly — a sibling to `regression.mjs`/`filter-panel.mjs` above, not
+folded into either. Same cross-reference convention as Parts A–E's own tables: "Does not cover"
+lists only what the numbered Part F step *claims* that the script cannot assert.
+
+**Status as of the reviewer-gate P7-fixes tree (`f0c3b7a`): GREEN** — `6/6 PASS (OPEN, STYLE',
+OPACITY', OUTLINE', DOC', RESET')`, ledger
+`frontends/shell/e2e/out/style-render-trace-1786819236324.json` (CUT-STATE.md, style-panel cut
+reviewer-gate-fixes section).
+
+| Automated step | Walkthrough step(s) | Covers | Does not cover |
+|---|---|---|---|
+| `OPEN` | F1 | `filter-zoned.parquet` admits; `.style-disclosure`'s `aria-expanded` is `"false"` (collapsed by default) on a freshly admitted dataset | that the panel visually renders below the canvas rather than above it (a DOM-order fact, not asserted by this step directly — though `App.tsx`'s own JSX structure is what S4 fixed) |
+| `STYLE'` | F2 | setting fill colour + opacity 1.0 through the real `input.style-fill-color`/`input.style-fill-opacity` controls changes the canvas's dominant non-background pixel bin to an EXACT match for the set colour (opacity 1.0 blends over nothing, so this is the one case asserted bit-for-bit) | whether the change "lands promptly with no flicker worth reporting" — a look-and-feel judgment only F2 itself asks for |
+| `OPACITY'` | F3 (indirectly) | lowering `fill_opacity` changes the dominant pixel bin (asserted as a CHANGE, never a literal — the buffer blends over transparent black) | smoothness of a continuous drag — F3's own qualitative claim; this step sets one discrete value, it does not drag |
+| `OUTLINE'` | F4 | setting outline colour + width > 0 makes that exact colour family appear in the canvas's pixel data; setting width back to 0 makes it disappear entirely | nothing beyond the pixel-presence/absence checks — no look-and-feel gap named for this step |
+| `DOC'` | F5 | `pre.style-document`'s parsed JSON matches the current controls field-by-field (`fill_color.literal`, `fill_opacity.literal`, `outline_color.literal`, `outline_width.literal`) | nothing — this step's own claim is exactly F5's claim, machine-checked |
+| `RESET'` | F6 | clicking `button.style-reset` returns the document to `DEFAULT_STYLE_STATE` exactly, and the dominant pixel bin returns to the baseline colour family (a 3-per-channel tolerance, not bit-for-bit) | that no undo/redo affordance exists anywhere in the DOM — not asserted directly, only that Reset itself produces the same default state whether it is the first or a later click |
+| — | F7 | — | **the entire round-trip.** No automated suite touches `publish-bundle`, the bundle viewer's serve step, or a pixel-level comparison between the shell's canvas and the viewer's rendered page — this is Part F's own reason to exist as an operator-verified step. (`renderer/tests/style_shell_agreement.rs`, a Rust test, separately proves a shell-emitted document is *accepted* by the publish-side grammar and *resolves* to the same draw parameters — but it asserts none of what F7 asks a human to look at.) |
+| — | F8 | — | nothing beyond `OPEN`'s own admission — F8 makes no new claim of its own |
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -291,3 +344,13 @@ Fill in the fields below when Part E is actually run by an operator.
   the filtered layer deterministically. Encoded as E2E step `FIND'` (the operator's scenario
   through the real panel DOM; camera lands on the 99 matches). All suites green on the fixed tree
   (12/12, 3/3, 6/6).
+
+### Part F run (separate pass — style panel)
+
+Part F did not exist during either run recorded above. Fill in the fields below when Part F is
+actually run by an operator.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Part F (F1–F8):**
