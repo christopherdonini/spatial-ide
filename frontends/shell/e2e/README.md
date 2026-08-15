@@ -105,3 +105,30 @@ DOM state is exactly what a real Apply click would produce. No timing assertion 
 step (ADR-018) -- every wait is a bounded robustness poll, never a claim about how fast anything
 happened. Same **E2E-verified** evidence class; same watchdog/deadline discipline (longer default,
 600s, for the larger fixture's own admission/settle time); leaves the app running afterward.
+
+## Style spec (style-panel cut, P6)
+
+```
+npm run e2e:style
+```
+
+`e2e/style.mjs` -- a further sibling, driving the real rendered `.style-panel` DOM (`input.style-
+fill-color`, `input.style-fill-opacity`, `input.style-outline-color`, `input.style-outline-width`,
+`button.style-reset`, `pre.style-document`) rather than any hook. `STYLE'` sets fill colour + opacity
+1.0 through the real inputs (plain `page.fill()` -- verified empirically to fire React's `onChange`
+correctly for both `type="color"` and `type="range"` on this app's installed playwright-core@1.62.1 +
+React 18.3.1, per this script's own top comment; a native-setter-bypass fallback was tested and
+confirmed to also work but is not needed) and asserts `capturePixels`' dominant non-background
+`topColors` bin is an EXACT match for the set colour -- opacity 1.0 means no blending, the one case
+this suite claims bit-for-bit. `OPACITY'` lowers opacity to 0.4 and asserts only that the dominant bin
+CHANGED (never a literal -- the buffer blends over transparent black). `OUTLINE'` sets a distinctive
+outline colour/width and asserts that exact colour family appears in `topColors`, then sets width back
+to 0 and asserts it disappears. `DOC'` parses `pre.style-document`'s own `textContent` and asserts it
+matches the current controls field for field. `RESET'` clicks `button.style-reset` and asserts the
+document returns to `DEFAULT_STYLE_STATE` exactly and pixels return to `STYLE''s` own baseline colour
+family (a small per-channel tolerance, not bit-for-bit -- only the opacity-1.0 case is claimed exact).
+Every `capturePixels` call in this suite happens with the panel COLLAPSED (expand only to reach an
+`<input>`, collapse again before capturing) -- CUT-STATE.md's own P4 layout note that EXPANDING forces
+`.canvas-container` to a different floor means an expanded capture and a collapsed one are not
+comparable frames. Same **E2E-verified** evidence class; same watchdog/deadline discipline; leaves the
+app running afterward.
