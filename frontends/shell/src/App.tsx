@@ -10,6 +10,8 @@ import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
+import { DEFAULT_STYLE_STATE } from "./style/document";
+import type { StyleState } from "./style/document";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
 import ErrorBanner from "./ErrorBanner";
@@ -542,6 +544,16 @@ export default function App() {
   const [hover, setHover] = useState<PickResult | null>(null);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
+  // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
+  // persistence, no undo; binding note 4), starting at exactly today's fixed rendering
+  // (`DEFAULT_STYLE_STATE`'s own doc comment has the hex/opacity math against `buildLayers.ts`'s
+  // pre-P2 constant). `setStyle` has no caller yet -- the panel itself is P4; this piece lands the
+  // state and the `WorkingCanvas` wiring (`style` prop) it will drive. `void setStyle;` below is the
+  // same `noUnusedLocals` satisfier this file's own `activeFilter` precedent used for the identical
+  // situation (filter-panel cut P2, CUT-STATE.md: confirmed by direct experiment that `tsc
+  // --noUnusedLocals` DOES flag an unused element of a function-body `useState` destructure).
+  const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE_STATE);
+  void setStyle;
   // Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent status indicator, tracked
   // independently of `canvasRefusal` -- see `nextResidencyStatus`'s own doc comment for why
   // dismissing the banner must never touch this.
@@ -929,6 +941,7 @@ export default function App() {
               dataset={admitted.dataset}
               ref={canvasRef}
               geometryColumn={admitted.describe.geometry.column}
+              style={style}
               onHover={setHover}
               onCanvasRefusal={(streamHandle, message) => {
                 // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc

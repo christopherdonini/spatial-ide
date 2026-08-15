@@ -13,7 +13,10 @@ import {
   traceViewState,
 } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
-import { batchForLayerId, buildLayers } from "./buildLayers";
+import type { StyleState } from "../style/document";
+import { resolveDrawParameters } from "../style/document";
+import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
+import type { ResolvedDrawParams } from "./buildLayers";
 import { decodeBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import {
@@ -29,8 +32,11 @@ import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportB
 
 /**
  * The working canvas — deck.gl `OrthographicView` in the dataset's source CRS (ADR-010 rules 1, 2,
- * 3, 6, 7; architect review, `frontends/shell` cut 1, D3.1–D3.6). One fixed default style; no style
- * panel exists anywhere in this tree (NEXT-CUT.md).
+ * 3, 6, 7; architect review, `frontends/shell` cut 1, D3.1–D3.6). Style v0 (ADR-017 §5a; ADR-022)
+ * lives as a `style` PROP here -- `App.tsx` owns the editable state -- but no PANEL exists anywhere
+ * in this tree yet (NEXT-CUT.md P4). See `applyStyleChange` below for the re-render seam a style
+ * change takes: it recomputes resolved draw parameters and calls `render()`, and reaches nothing
+ * else -- no viewport query, no ticket, no debounce interaction (binding note 7).
  *
  * **deck.gl's own unprojected pick coordinate is never read anywhere in this module.** Rule 1: it
  * is a renderer-local value with no CRS tag, and the only authoritative coordinate a pick may
@@ -127,6 +133,13 @@ export interface WorkingCanvasProps {
   /** Fired after every settled view-state change (pan, zoom, or an origin recenter) with the
    * authoritative-CRS box the view now shows -- the caller drives `viewport_query` from this. */
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
+  /** `App.tsx`-owned style v0 state (ADR-017 §5a; ADR-022; NEXT-CUT.md P3) -- ephemeral, in-memory
+   * only (no persistence anywhere; binding note 4). Mirrored via a ref (the same `onHoverRef`
+   * pattern every other callback prop in this file already uses) and re-resolved on its own
+   * `useEffect([style])`, below `applyStyleChange`'s own doc comment -- **never** on the same path a
+   * batch or a viewport change renders through, so a style edit cannot accidentally piggyback a
+   * query or a residency mutation it has no business touching. */
+  style: StyleState;
 }
 
 const INITIAL_ZOOM = 0;
@@ -234,14 +247,43 @@ export function summarizePixels(buf: Uint8Array, width: number, height: number, 
   };
 }
 
+/**
+ * The style-change re-render seam (NEXT-CUT.md binding note 7): given a new style, recomputes the
+ * resolved draw parameters and calls `render` exactly once -- and reaches nothing else. Its own
+ * signature is the structural half of "no viewport query, no ticket, no debounce interaction": there
+ * is no viewport/manager/network parameter here to call even by mistake.
+ *
+ * Exported as a pure function, parameterized over its two effects (`setDrawParams`, `render`), for
+ * the same DOM-free testability reason `summarizePixels` above already is (this file's own S6
+ * comment) and `App.tsx`'s `admitAndResetStaleUiState`/`applyFilter`/etc. are: `WorkingCanvas`'s real
+ * `Deck` construction needs a WebGL context jsdom does not provide (`WorkingCanvas.test.ts`'s own
+ * established note), so this is the pure seam a unit test can actually drive without one.
+ */
+export function applyStyleChange(
+  style: StyleState,
+  deps: { setDrawParams: (params: ResolvedDrawParams) => void; render: () => void }
+): void {
+  deps.setDrawParams(toResolvedDrawParams(resolveDrawParameters(style)));
+  deps.render();
+}
+
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged },
+  { dataset, geometryColumn, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck<OrthographicView> | null>(null);
   const residentRef = useRef(new ResidentSet());
   const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerMetreAtZoom(INITIAL_ZOOM))));
+  /** The style prop, already resolved to what `buildLayers` needs (deck.gl's 0-255 RGBA accessor
+   * convention -- `buildLayers.ts`'s own `ResolvedDrawParams`). Initialized synchronously from the
+   * INITIAL `style` prop (never left undefined for a window before the first effect commits, the
+   * same eager-`useRef(new ...())` discipline `frameRef`/`residentRef` above already follow), then
+   * refreshed ONLY by the `useEffect([style])` below, via `applyStyleChange` -- so every `render()`
+   * call between two style changes (a batch arriving, a recenter) reuses the exact same
+   * `ResolvedDrawParams` object, and therefore the exact same `fillColor` array reference, that
+   * `buildLayers.ts`'s own doc comment relies on. */
+  const drawParamsRef = useRef<ResolvedDrawParams>(toResolvedDrawParams(resolveDrawParameters(style)));
   /** Bbox of every ring vertex across every currently-resident batch, or `null` while nothing
    * resident carries any geometry. Kept in lockstep with `residentRef` -- grown in `pushBatch`,
    * recomputed from scratch in `clearStream` (a union has no inverse, so "shrink" means "refold"). */
@@ -299,7 +341,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     begin("layer-construct");
     try {
       const batches = residentRef.current.getBatches();
-      const layers = buildLayers(batches, frameRef.current);
+      const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
       deck.setProps({ layers });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
       // own internal layer state -- the same total `buildLayers` fed the GPU from, computed once by
@@ -486,6 +528,26 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [geometryColumn]
   );
+
+  // NEXT-CUT.md P3 / binding note 7: the ONLY effect this file runs on a style change. Fires on
+  // mount too (React's own `useEffect` semantics) -- harmless, since `drawParamsRef` was already
+  // initialized from this same `style` value above and `render()` is idempotent when nothing else
+  // changed; `deckRef.current` may still be `null` at that first pass (the deck-init effect below is
+  // declared after this one), in which case `render()`'s own `if (!deck) return;` no-ops and the
+  // deck-init effect's own initial `layers: []` -- immediately superseded by this component's first
+  // real `render()` once data/style are both in -- covers the frame that would otherwise be skipped.
+  // Deliberately reaches NOTHING viewport-shaped: no `onViewportChangedRef`, no `frameRef` origin
+  // move, no manager/ticket/debounce of any kind -- `applyStyleChange`'s own signature has no
+  // parameter that could reach one.
+  useEffect(() => {
+    applyStyleChange(style, {
+      setDrawParams: (params) => {
+        drawParamsRef.current = params;
+      },
+      render,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [style]);
 
   // Diagnostics-only (DECISIONS-PENDING.md entry 0): names how many `WorkingCanvas` instances a
   // session actually mounted and which dataset each owned -- `App.tsx` keys this component on

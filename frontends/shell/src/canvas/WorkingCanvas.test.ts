@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { PixelRegion } from "../e2e-test-surface";
-import { summarizePixels } from "./WorkingCanvas";
+import { DEFAULT_STYLE_STATE } from "../style/document";
+import type { StyleState } from "../style/document";
+import { applyStyleChange, summarizePixels } from "./WorkingCanvas";
 
 // S6 (reviewer round, 2026-08-13): `summarizePixels`'s `samplePoint` logic (both the frame-wide
 // densest-non-background-bin sample and each region's own first-non-background-hit sample) had no
@@ -66,5 +68,44 @@ describe("summarizePixels samplePoint logic (S6)", () => {
 
     expect(summary.regions[1].samplePoint).toBeNull();
     expect(summary.regions[1].nonBackgroundCount).toBe(0);
+  });
+});
+
+// NEXT-CUT.md P3 / binding note 7: "a style change issues NO viewport query ... and triggers exactly
+// one re-render path." `applyStyleChange` is the pure seam this drives (see its own doc comment for
+// why a real `<WorkingCanvas>` mount is not how this package tests this component at all -- no
+// WebGL context, no @testing-library/react-equivalent harness).
+describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
+  it("recomputes draw params and calls render exactly once", () => {
+    const render = vi.fn();
+    const setDrawParams = vi.fn();
+
+    applyStyleChange(DEFAULT_STYLE_STATE, { setDrawParams, render });
+
+    expect(render).toHaveBeenCalledTimes(1);
+    expect(setDrawParams).toHaveBeenCalledTimes(1);
+    expect(setDrawParams).toHaveBeenCalledWith({ fillColor: [66, 133, 244, 180] });
+  });
+
+  it("issues no viewport query -- a manager-shaped mock never sees a call, and the function's own signature has nowhere to route one", () => {
+    // Stands in for `ViewportStreamManager.requestViewport` (`App.tsx`'s own real one). Never passed
+    // to `applyStyleChange` at all -- recorded here to pin binding note 7 ("no viewport_query, no
+    // ticket, no debounce interaction") against a future refactor that widens this function's own
+    // `deps` to include one.
+    const manager = { requestViewport: vi.fn(), cancelStream: vi.fn() };
+
+    applyStyleChange(DEFAULT_STYLE_STATE, { setDrawParams: vi.fn(), render: vi.fn() });
+
+    expect(manager.requestViewport).not.toHaveBeenCalled();
+    expect(manager.cancelStream).not.toHaveBeenCalled();
+  });
+
+  it("re-resolves through the SAME imported resolver a real style change would -- not the default's cached value", () => {
+    const custom: StyleState = { fillColor: "#00ff00", fillOpacity: 0.5, outlineColor: "#111111", outlineWidth: 3 };
+    const setDrawParams = vi.fn();
+
+    applyStyleChange(custom, { setDrawParams, render: vi.fn() });
+
+    expect(setDrawParams).toHaveBeenCalledWith({ fillColor: [0, 255, 0, 128] });
   });
 });
