@@ -4,6 +4,31 @@ import type { PixelRegion } from "../e2e-test-surface";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { applyStyleChange, summarizePixels } from "./WorkingCanvas";
+import type { ApplyStyleChangeDeps } from "./WorkingCanvas";
+
+// Reviewer gate, style-panel cut P7 fixes, S2: the previous "issues no viewport query" test built a
+// `manager`-shaped mock (`requestViewport`/`cancelStream`) and asserted neither was called -- but
+// never passed `manager` to `applyStyleChange` at all, so the assertion could not fail regardless of
+// what the function actually did (a vacuous test, a false sense of security). Replaced with a
+// COMPILE-TIME assertion instead of a second runtime one built from a different object literal a
+// human could just as easily forget to wire up: `ApplyStyleChangeDeps` (`WorkingCanvas.tsx`, now
+// named and exported for exactly this) is asserted to have EXACTLY the key set `"setDrawParams" |
+// "render"` -- if a future change ever widened it to add e.g. `manager`/`requestViewport`, the
+// assignment below fails to typecheck (`npm run typecheck`, part of `verify`, catches it on every
+// run: `Type 'true' is not assignable to type 'false'`), which a test asserting one particular
+// call's own `Object.keys` could not guarantee against a different call site built differently.
+//
+// `[T] extends [U] ? ([U] extends [T] ? true : false) : false` is standard-library-free mutual
+// assignability -- `true` iff `T` and `U` are the exact same union, which for two `keyof` results
+// means the exact same key set, neither a subset nor a superset of the other (the `[T]`/`[U]` tuple
+// wrapping is the standard trick to stop a union `T` from distributing over the conditional itself,
+// which would otherwise check membership per-key rather than set equality).
+type AssertExactKeys<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
+const _applyStyleChangeDepsHasExactlySetDrawParamsAndRender: AssertExactKeys<
+  keyof ApplyStyleChangeDeps,
+  "setDrawParams" | "render"
+> = true;
+void _applyStyleChangeDepsHasExactlySetDrawParamsAndRender; // exists only for its own type to be checked
 
 // S6 (reviewer round, 2026-08-13): `summarizePixels`'s `samplePoint` logic (both the frame-wide
 // densest-non-background-bin sample and each region's own first-non-background-hit sample) had no
@@ -94,18 +119,10 @@ describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
     });
   });
 
-  it("issues no viewport query -- a manager-shaped mock never sees a call, and the function's own signature has nowhere to route one", () => {
-    // Stands in for `ViewportStreamManager.requestViewport` (`App.tsx`'s own real one). Never passed
-    // to `applyStyleChange` at all -- recorded here to pin binding note 7 ("no viewport_query, no
-    // ticket, no debounce interaction") against a future refactor that widens this function's own
-    // `deps` to include one.
-    const manager = { requestViewport: vi.fn(), cancelStream: vi.fn() };
-
-    applyStyleChange(DEFAULT_STYLE_STATE, { setDrawParams: vi.fn(), render: vi.fn() });
-
-    expect(manager.requestViewport).not.toHaveBeenCalled();
-    expect(manager.cancelStream).not.toHaveBeenCalled();
-  });
+  // "Issues no viewport query" (binding note 7) is no longer asserted here as a runtime test -- the
+  // module-scope `_applyStyleChangeDepsHasExactlySetDrawParamsAndRender` compile-time assertion
+  // above (reviewer gate S2) is what actually pins it now: `ApplyStyleChangeDeps`'s own key set is
+  // the guarantee, not one call's own mock.
 
   it("re-resolves through the SAME imported resolver a real style change would -- not the default's cached value", () => {
     const custom: StyleState = { fillColor: "#00ff00", fillOpacity: 0.5, outlineColor: "#111111", outlineWidth: 3 };

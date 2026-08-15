@@ -26,17 +26,39 @@
 // predicate` precedent) is what this suite actually uses; the native-setter-bypass path was
 // confirmed as a working FALLBACK, not needed here, and is not carried into this file.
 //
-// **Layout: every `capturePixels` call in this suite happens with the panel COLLAPSED, not merely
-// "collapsed or scrolled"** -- CUT-STATE.md's own P4 note that EXPANDING forces `.canvas-container`
-// to its 200px floor (a materially different viewport than collapsed) means an expanded-state
-// capture and a collapsed-state capture are not comparable frames at all (different visible extent,
-// not just a different scroll position) -- so every step here expands only to reach an `<input>`,
-// then collapses again (`setExpanded`/`collapseAndSettle` below) before ever calling `capturePixels`,
-// keeping every capture in this suite over the identical collapsed viewport.
+// **Layout: every `capturePixels` call in this suite happens with the panel EXPANDED, kept expanded
+// for the whole run (reviewer gate, style-panel cut P7 fixes, S4 -- simplified from this file's
+// original collapse-before-every-capture design).** S4 moved `StylePanel` BELOW `.canvas-container`
+// in `App.tsx`; `styles.css`'s own re-measurement after that move (CUT-STATE.md) found
+// `.canvas-container`'s own top/height are now IDENTICAL collapsed or expanded (flexbox distributes
+// space by the sum of ALL siblings' sizes regardless of visual order, and the canvas comes first in
+// visual order either way) -- the collapse-before-capture dance this file originally needed (when
+// the panel sat ABOVE the canvas and expanding pushed it toward, then past, the 200px floor) is no
+// longer necessary. One real, measured difference remains and is handled, not ignored: expanding
+// makes the page's total content height exceed the 800px viewport, so `.app-main`'s own vertical
+// scrollbar appears and narrows `.canvas-container`'s `clientWidth` by ~15px (1280 -> 1265 at
+// 1280x800) -- comparing a collapsed-width baseline against expanded-width later captures within one
+// test would itself be a (small) inconsistency, so this suite expands ONCE, before its very first
+// capture (`stepStyle`'s own baseline), and never collapses again: every capture in this file,
+// baseline included, is over the SAME (expanded) canvas width.
 //
 // `waitForMountReady`/`withTimeout`/`waitForCondition`/`sleep` duplicated from `filter-panel.mjs`
 // rather than imported -- this workspace's own established convention for sibling E2E files
 // (`filter-panel.mjs`'s own header names the identical precedent for its own Rust integration tests).
+//
+// **A real race found and fixed while verifying the reviewer gate's S5 fix (rAF-coalesced style
+// rendering), disclosed here rather than silently worked around.** `pre.style-document`'s own text
+// updates as soon as React commits the NEW `style` state (`StylePanel` is a pure function of that
+// prop) -- but `WorkingCanvas`'s OWN re-render of the CANVAS ITSELF happens in a SEPARATE, passive
+// `useEffect([style])`, scheduled to run AFTER that commit, not synchronously with it. Before S5,
+// that effect called the real GPU `render()` directly; after S5, it schedules a coalesced frame
+// instead (`coalesceOncePerFrame`). Waiting only for `pre.style-document`'s text (this file's
+// existing `waitForCondition` checks) proves the STYLE STATE updated; it does NOT prove
+// `WorkingCanvas`'s own effect has even RUN yet, let alone that its (possibly still-pending)
+// coalesced render has painted -- two different React subtrees, two different schedules. Every
+// `render()` call, coalesced or not, already logs `[render-trace] layers` (`traceLayerUpdate`) --
+// `waitForFreshLayerUpdate` below polls for a NEW one of those after each input change, before ever
+// capturing pixels, closing this gap structurally rather than by timing luck.
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -116,6 +138,23 @@ async function waitForCondition(getValue, predicate, timeoutMs, pollMs = 150) {
   return { ok: false, last };
 }
 
+/** This file's own top comment has the full account of the race this closes: `pre.style-document`'s
+ * text updating proves the STYLE STATE changed, never that `WorkingCanvas`'s own (now rAF-coalesced)
+ * re-render of the CANVAS has actually happened yet. `render()` logs `[render-trace] layers` on
+ * EVERY call, coalesced or not (`traceLayerUpdate`) -- this polls for a NEW one beyond `sinceCount`,
+ * a real, direct signal that a GPU render has actually occurred since this step's own input change,
+ * never a timing claim (ADR-018): bounded, and it says "a render happened," not "how fast." */
+async function waitForFreshLayerUpdate(consoleHandle, sinceCount, timeoutMs = 5_000) {
+  const layerLines = () => consoleHandle.renderTrace().filter((e) => e.text.includes("layers"));
+  const result = await waitForCondition(() => layerLines().length, (n) => n > sinceCount, timeoutMs, 50);
+  if (!result.ok) {
+    throw new Error(
+      `waitForFreshLayerUpdate: no fresh [render-trace] layers line within ${timeoutMs}ms (had ${sinceCount}, still ${result.last})`
+    );
+  }
+  return layerLines().length;
+}
+
 const MOUNT_READY_TIMEOUT_MS = 90_000;
 
 /** Same gate `regression.mjs`/`filter-panel.mjs` use, before the first step. */
@@ -193,9 +232,12 @@ async function setExpanded(page, want) {
 }
 
 /** Bounded poll for `.canvas-container`'s own client box to stop changing across two 150ms-apart
- * reads -- a readiness gate for the CSS reflow a disclosure toggle triggers (`.canvas-container` is
- * forced to a different floor expanded vs. collapsed, per CUT-STATE.md's own P4 layout note), never
- * a timing claim (ADR-018): this only says "layout is no longer visibly moving," not "how fast." */
+ * reads -- a readiness gate for the ONE-TIME CSS reflow the very first expand triggers (post-S4,
+ * `.app-main`'s own vertical scrollbar appearing narrows `.canvas-container` by ~15px, this file's
+ * own top comment), never a timing claim (ADR-018): this only says "layout is no longer visibly
+ * moving," not "how fast." Called exactly once now (`stepStyle`, right after the suite's one and
+ * only `setExpanded(page, true)`) -- collapsed/expanded no longer alternate within this suite (S4),
+ * so there is no further reflow later steps would need to wait out. */
 async function waitForCanvasLayoutStable(page, timeoutMs = 8_000) {
   const start = Date.now();
   let last = null;
@@ -209,11 +251,6 @@ async function waitForCanvasLayoutStable(page, timeoutMs = 8_000) {
     await sleep(150);
   }
   return last;
-}
-
-async function collapseAndSettle(page) {
-  await setExpanded(page, false);
-  await waitForCanvasLayoutStable(page);
 }
 
 async function readStyleDocument(page) {
@@ -253,6 +290,13 @@ async function stepStyle(page, consoleHandle, ctx) {
   // is unfiltered" comment) -- settle out that stream before reading a "baseline" that would
   // otherwise race an empty canvas, same discipline `filter-panel.mjs`'s own `stepPanel` uses.
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+
+  // S4 (this file's own top comment): expand ONCE, here, before the very first capture -- every
+  // capture in this suite, baseline included, is over the SAME (expanded) canvas width. Waits for
+  // the one-time CSS reflow (the scrollbar appearing) to settle before reading anything.
+  await setExpanded(page, true);
+  await waitForCanvasLayoutStable(page);
+
   const baseline = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   const baselineDominant = dominantNonBackground(baseline);
   if (!baselineDominant) {
@@ -262,7 +306,7 @@ async function stepStyle(page, consoleHandle, ctx) {
   }
   ctx.baselineDominant = baselineDominant;
 
-  await setExpanded(page, true);
+  const layersBefore = consoleHandle.renderTrace().filter((e) => e.text.includes("layers")).length;
   await page.fill("input.style-fill-color", SET_FILL_COLOR);
   await page.fill("input.style-fill-opacity", SET_FILL_OPACITY_FULL);
   const committed = await waitForCondition(
@@ -276,8 +320,12 @@ async function stepStyle(page, consoleHandle, ctx) {
         `Last seen: ${JSON.stringify(committed.last)}`
     );
   }
+  // This file's own top comment: the document text updating is NOT proof `WorkingCanvas`'s own
+  // (rAF-coalesced) render of the CANVAS has happened yet -- wait for real evidence it has.
+  await waitForFreshLayerUpdate(consoleHandle, layersBefore);
 
-  await collapseAndSettle(page);
+  // No collapse -- capture directly (S4's own layout fix removed the need; this file's own top
+  // comment has the full account).
   const styled = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   const dominant = dominantNonBackground(styled);
   if (!dominant || dominant.rgba !== SET_FILL_COLOR_RGBA_OPAQUE) {
@@ -300,8 +348,11 @@ async function stepStyle(page, consoleHandle, ctx) {
  * `OPACITY'`: lower opacity to ~0.4 -- asserts CHANGE only, never a literal (NEXT-CUT.md P6: "the
  * buffer blends over transparent black").
  */
-async function stepOpacity(page, ctx) {
+async function stepOpacity(page, consoleHandle, ctx) {
+  // Already expanded by `stepStyle` and never collapsed since (S4, this file's own top comment) --
+  // `setExpanded`'s own no-op-if-already-`want` guard makes this call cheap and harmless either way.
   await setExpanded(page, true);
+  const layersBefore = consoleHandle.renderTrace().filter((e) => e.text.includes("layers")).length;
   await page.fill("input.style-fill-opacity", SET_FILL_OPACITY_PARTIAL);
   const committed = await waitForCondition(
     () => readStyleDocument(page),
@@ -311,8 +362,8 @@ async function stepOpacity(page, ctx) {
   if (!committed.ok) {
     throw new Error(`OPACITY': pre.style-document never reflected fill_opacity=0.4 within 10s. Last seen: ${JSON.stringify(committed.last)}`);
   }
+  await waitForFreshLayerUpdate(consoleHandle, layersBefore);
 
-  await collapseAndSettle(page);
   const summary = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   const dominant = dominantNonBackground(summary);
   if (!dominant) {
@@ -334,7 +385,7 @@ async function stepOpacity(page, ctx) {
  * `topColors`; width back to 0 -> it disappears. Change-assertion both directions, matching
  * NEXT-CUT.md P6's own wording.
  */
-async function stepOutline(page, ctx) {
+async function stepOutline(page, consoleHandle, ctx) {
   const beforeFamilies = new Set(ctx.opacitySummary.topColors.map((c) => c.rgba));
   if (beforeFamilies.has(SET_OUTLINE_COLOR_RGBA)) {
     throw new Error(
@@ -344,6 +395,7 @@ async function stepOutline(page, ctx) {
   }
 
   await setExpanded(page, true);
+  let layersBefore = consoleHandle.renderTrace().filter((e) => e.text.includes("layers")).length;
   await page.fill("input.style-outline-color", SET_OUTLINE_COLOR);
   await page.fill("input.style-outline-width", SET_OUTLINE_WIDTH);
   const committedOn = await waitForCondition(
@@ -359,8 +411,8 @@ async function stepOutline(page, ctx) {
         `within 10s. Last seen: ${JSON.stringify(committedOn.last)}`
     );
   }
+  await waitForFreshLayerUpdate(consoleHandle, layersBefore);
 
-  await collapseAndSettle(page);
   const withOutline = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   if (!hasColorFamily(withOutline, SET_OUTLINE_COLOR_RGBA)) {
     throw new Error(
@@ -370,6 +422,7 @@ async function stepOutline(page, ctx) {
   }
 
   await setExpanded(page, true);
+  layersBefore = consoleHandle.renderTrace().filter((e) => e.text.includes("layers")).length;
   await page.fill("input.style-outline-width", "0");
   const committedOff = await waitForCondition(
     () => readStyleDocument(page),
@@ -379,8 +432,8 @@ async function stepOutline(page, ctx) {
   if (!committedOff.ok) {
     throw new Error(`OUTLINE': pre.style-document never reflected outline_width=0 within 10s. Last seen: ${JSON.stringify(committedOff.last)}`);
   }
+  await waitForFreshLayerUpdate(consoleHandle, layersBefore);
 
-  await collapseAndSettle(page);
   const withoutOutline = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   if (hasColorFamily(withoutOutline, SET_OUTLINE_COLOR_RGBA)) {
     throw new Error(
@@ -439,8 +492,9 @@ async function stepDoc(page) {
  * baseline COLOUR FAMILY captured in `STYLE'` (a small per-channel tolerance, not bit-for-bit, since
  * this suite only claims exactness for the alpha=1 no-blend case asserted in `STYLE'` itself).
  */
-async function stepReset(page, ctx) {
+async function stepReset(page, consoleHandle, ctx) {
   await setExpanded(page, true);
+  const layersBefore = consoleHandle.renderTrace().filter((e) => e.text.includes("layers")).length;
   await page.click("button.style-reset");
 
   const committed = await waitForCondition(
@@ -451,6 +505,7 @@ async function stepReset(page, ctx) {
   if (!committed.ok) {
     throw new Error(`RESET': pre.style-document never returned to fill_color=${DEFAULT_FILL_COLOR} within 10s. Last seen: ${JSON.stringify(committed.last)}`);
   }
+  await waitForFreshLayerUpdate(consoleHandle, layersBefore);
   const doc = committed.last;
   const expected = {
     "style_version": 1,
@@ -476,7 +531,6 @@ async function stepReset(page, ctx) {
     );
   }
 
-  await collapseAndSettle(page);
   const summary = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
   const dominant = dominantNonBackground(summary);
   if (!dominant) {
@@ -547,10 +601,10 @@ async function main() {
 
     await runStep("OPEN", 40_000, () => stepOpen(page));
     await runStep("STYLE'", 60_000, () => stepStyle(page, consoleHandle, ctx));
-    await runStep("OPACITY'", 40_000, () => stepOpacity(page, ctx));
-    await runStep("OUTLINE'", 40_000, () => stepOutline(page, ctx));
+    await runStep("OPACITY'", 40_000, () => stepOpacity(page, consoleHandle, ctx));
+    await runStep("OUTLINE'", 40_000, () => stepOutline(page, consoleHandle, ctx));
     await runStep("DOC'", 20_000, () => stepDoc(page));
-    await runStep("RESET'", 40_000, () => stepReset(page, ctx));
+    await runStep("RESET'", 40_000, () => stepReset(page, consoleHandle, ctx));
 
     console.log("");
     console.log("== Summary ==");

@@ -106,6 +106,12 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
           </label>
           <label>
             Fill opacity
+            {/* NIT (reviewer gate, style-panel cut P7 fixes): `DEFAULT_STYLE_STATE.fillOpacity` is
+              * 180/255 = 0.70588235... -- not a multiple of this `step`, so the FIRST drag on a
+              * freshly opened panel visibly snaps the thumb to the nearest 0.01 (0.70 or 0.71), a
+              * one-time cosmetic jump on an otherwise smooth control. Left as-is: `step={0.01}` is
+              * NEXT-CUT.md's own literal instruction, the snap is imperceptible in the rendered
+              * fill, and `toStyleDocument` clamps/accepts either value identically either way. */}
             <input
               type="range"
               className="style-fill-opacity"

@@ -127,8 +127,13 @@ to 0 and asserts it disappears. `DOC'` parses `pre.style-document`'s own `textCo
 matches the current controls field for field. `RESET'` clicks `button.style-reset` and asserts the
 document returns to `DEFAULT_STYLE_STATE` exactly and pixels return to `STYLE''s` own baseline colour
 family (a small per-channel tolerance, not bit-for-bit -- only the opacity-1.0 case is claimed exact).
-Every `capturePixels` call in this suite happens with the panel COLLAPSED (expand only to reach an
-`<input>`, collapse again before capturing) -- CUT-STATE.md's own P4 layout note that EXPANDING forces
-`.canvas-container` to a different floor means an expanded capture and a collapsed one are not
-comparable frames. Same **E2E-verified** evidence class; same watchdog/deadline discipline; leaves the
-app running afterward.
+Every `capturePixels` call in this suite happens with the panel EXPANDED, once, and never collapsed
+again (reviewer gate, style-panel cut P7 fixes, S4) -- `StylePanel` now renders BELOW
+`.canvas-container` (`App.tsx`), so `.canvas-container`'s own top/height no longer depend on whether
+the panel is collapsed or expanded (CUT-STATE.md's own re-measurement); the collapse-before-capture
+dance this suite originally needed, from when the panel sat above the canvas and expanding pushed it
+toward and past the 200px floor, is gone. Expanding still narrows `.canvas-container` by ~15px
+(`.app-main`'s own vertical scrollbar appearing once the expanded panel's content exceeds the 800px
+viewport), so this suite expands exactly once, before its first capture, and stays expanded for every
+later one -- comparable widths throughout, never a collapsed-vs-expanded mismatch within one run. Same
+**E2E-verified** evidence class; same watchdog/deadline discipline; leaves the app running afterward.

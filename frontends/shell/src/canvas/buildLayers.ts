@@ -95,7 +95,8 @@ export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
  * batch's `getFillColor` here.
  *
  * **On whether that stability is actually load-bearing for deck.gl's own prop diff -- read, not
- * assumed (installed `@deck.gl/core@9.3.7`).** `getFillColor`'s prop type is `accessor`
+ * assumed (installed `@deck.gl/core@9.3.9` -- `frontends/shell/package-lock.json`, checked directly,
+ * not carried over from an earlier reading).** `getFillColor`'s prop type is `accessor`
  * (`@deck.gl/layers/solid-polygon-layer/solid-polygon-layer.js`: `getFillColor: { type: 'accessor',
  * value: DEFAULT_COLOR }`), and the `accessor` type's `equal` (`@deck.gl/core/dist/lifecycle/
  * prop-types.js`) is `typeof value2 === 'function' ? true : deepEqual(value1, value2, 1)` for a
@@ -109,15 +110,31 @@ export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
  * `render()`, style change or not, which per that file's own comment ("if data has changed, all
  * attributes will need regeneration, so skip [update-trigger] step") means the fine-grained
  * update-trigger path is bypassed on every render regardless of what this function does with colour.
- * What "regenerating" a *constant* colour attribute costs, even then, is `Attribute.setConstantValue`
- * (`@deck.gl/core/dist/lib/attribute/attribute.js`) -- an O(1) value comparison
- * (`_hasConstantBufferValue`) that skips the redundant upload when the constant already matches, not
- * a per-vertex walk. So the measured floor here is: passing a value-equal fresh array would already
- * cost nothing extra per feature; keeping ONE stable reference per style additionally skips even
- * that O(1) constant re-check on every one of the (already data-changed) renders between style
- * changes, and costs nothing to provide. Both are true; this function takes the second, strictly
- * cheaper property because `WorkingCanvas.tsx` can provide it for free, not because the first
- * property would have been insufficient.
+ *
+ * **Correction (reviewer gate, style-panel cut P7 fixes, S1): the earlier version of this comment's
+ * second half was wrong.** It named `Attribute.setConstantValue` /
+ * `_hasConstantBufferValue` as an "O(1)" redundant-upload skip on the render path this canvas
+ * actually takes. Read again, directly (`@deck.gl/core/dist/lib/attribute/attribute.js`,
+ * `attribute-manager.js`, `data-column.js`): `_hasConstantBufferValue` is reached ONLY from
+ * `setConstantBufferValue`, which `setConstantValue` calls ONLY when `this.device.type === 'webgpu'`
+ * -- and even there it is NOT O(1), it walks `numInstances * size` elements of the fully-expanded
+ * emulated buffer. This canvas is WebGL2 (`WorkingCanvas.tsx`'s own `canvas.getContext("webgl2")`),
+ * which never reaches either function: `setConstantValue` on that path calls `DataColumn.setData
+ * ({constant: true, value})` directly, whose own internal check (`_areValuesEqual`, `data-column.js`
+ * -- a *different* function, element-wise over `this.size`, i.e. 4 iterations for RGBA, genuinely
+ * independent of feature/vertex count) is what actually skips a redundant upload. `_areValuesEqual`
+ * is also a **value** comparison, exactly like `compareProps`'s own `deepEqual` above it -- so a
+ * freshly allocated, value-equal array is judged unchanged there too, identically to a stable
+ * reference. Reference stability is therefore not load-bearing at ANY layer this render path
+ * actually reaches, not merely "the smaller one": every check between here and the GPU compares
+ * VALUES. `attribute-manager.js`'s own `update()` loop (line ~118-120) calls `attribute
+ * .setConstantValue(context, props[accessorName])` unconditionally for every string-accessor
+ * attribute on every call, too -- there is no upstream reference check gating whether it runs at all,
+ * only what the value comparison inside it finds once it does. This function still passes
+ * `draw.fillColor`/`draw.outlineColor` through unchanged rather than cloning them, because doing so
+ * costs nothing and a caller need not reason about which of these several value-comparisons would
+ * otherwise have made a fresh array's cost identical -- not because reference stability itself buys
+ * anything measurable on this path.
  */
 export function buildLayers(
   batches: readonly ResidentBatch[],
@@ -132,7 +149,7 @@ export function buildLayers(
     // "complex polygon" (multiple rings, i.e. holes) from a "simple flat" one by checking whether
     // `polygon[0][0]` is itself a finite number -- a flat ring would satisfy that check and get
     // silently misread as one ring's flat vertex list, dropping every hole. Verified against the
-    // installed deck.gl 9.3.7 source rather than assumed.
+    // installed deck.gl 9.3.9 source rather than assumed.
     const polygons: Position[][][] = batch.rings.map((rings) =>
       rings.map((ring) => ring.map(([x, y]) => frame.toLocal(x, y) as Position))
     );

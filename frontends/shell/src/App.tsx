@@ -895,7 +895,17 @@ export default function App() {
           * `scanState` -- is reset independently via `admitAndResetStaleUiState`). */}
         {admitted && (
           <FilterPanel
-            key={admitted.dataset}
+            // Reviewer gate, style-panel cut P7 fixes: prefixed, not the bare `admitted.dataset`
+            // string -- `StylePanel` below is ALSO keyed per-dataset and is a DIRECT SIBLING of this
+            // element in `.app-main`'s children (the `.canvas-container` div between them has no key
+            // of its own, so it does not separate these two in React's own sibling-key namespace).
+            // Two siblings sharing one literal key string is a genuine duplicate-key situation
+            // (`"Warning: Encountered two children with the same key"`, observed live, not
+            // hypothesized -- caught investigating an unrelated E2E flake this exact collision
+            // turned out to be a real contributor to). Both keys still change together on every
+            // dataset change (the remount semantic this file's own comments rely on is unaffected),
+            // they are simply no longer IDENTICAL strings.
+            key={`filter-${admitted.dataset}`}
             appliedFilter={activeFilter}
             onApply={handleApplyFilter}
             scanState={scanState}
@@ -916,15 +926,6 @@ export default function App() {
             }}
           />
         )}
-        {/* NEXT-CUT.md (style-panel cut) P4 / binding note 6: in `.app-main`'s flex column, below
-          * `FilterPanel`, in normal document flow -- never an absolute overlay (the S1 lesson, same
-          * as `.filter-panel` itself). Keyed on `admitted.dataset` for the same reason `FilterPanel`
-          * is: a dataset change discards this panel's own local `expanded` disclosure state, back to
-          * collapsed, rather than carrying it across two different datasets. `style` itself is
-          * App-owned and NOT reset on a dataset change (unlike `activeFilter`) -- NEXT-CUT.md names
-          * no such reset, and a style is a rendering choice independent of which dataset it is
-          * currently painting. */}
-        {admitted && <StylePanel key={admitted.dataset} style={style} onChange={setStyle} />}
         {admitted && (
           <div className="canvas-container">
             {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen
@@ -1055,6 +1056,29 @@ export default function App() {
             )}
           </div>
         )}
+        {/* NEXT-CUT.md (style-panel cut) P4 / binding note 6, MOVED below `.canvas-container`
+          * (reviewer gate, style-panel cut P7 fixes, S4 -- the reviewer's own cheap option). Still in
+          * `.app-main`'s flex column, still normal document flow, never an absolute overlay (the S1
+          * lesson, same as `.filter-panel` itself); still keyed on `admitted.dataset` for the same
+          * reason `FilterPanel` is (a dataset change discards this panel's own local `expanded`
+          * disclosure state, back to collapsed); `style` itself is still App-owned and NOT reset on a
+          * dataset change (unlike `activeFilter`) -- a style is a rendering choice independent of
+          * which dataset it is currently painting.
+          *
+          * **Why below, not above (S4's own rationale).** Part F's subject is "style it and SEE it" --
+          * with the panel ABOVE the canvas, `styles.css`'s own measured numbers put the EXPANDED panel
+          * at 450 (`.admission-panel`) + 90.2 (`.filter-panel`) + 285.8 (`.style-panel` expanded) =
+          * 826.0px, already past the 800px viewport before the canvas gets a single pixel -- the
+          * canvas was entirely below the fold the whole time an operator had the panel open to look at
+          * what they just changed. Below the canvas, `.canvas-container` claims its own space FIRST
+          * (flex order), so it stays visible while the (still collapsed-by-default, still capped)
+          * style panel expands underneath it -- every binding-note-6 property (in flow, collapsed
+          * default, keyed, re-measured below) continues to hold; only the ORDER changed.
+          *
+          * **Key prefixed, not the bare `admitted.dataset` string (reviewer gate, style-panel cut
+          * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
+          * its own comment for the duplicate-sibling-key finding this fixes on both ends. */}
+        {admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={setStyle} />}
       </main>
     </div>
   );

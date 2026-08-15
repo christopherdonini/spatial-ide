@@ -17,6 +17,7 @@ import type { StyleState } from "../style/document";
 import { resolveDrawParameters } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
+import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import { decodeBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import {
@@ -248,6 +249,18 @@ export function summarizePixels(buf: Uint8Array, width: number, height: number, 
 }
 
 /**
+ * `applyStyleChange`'s own effect parameters -- named and exported (reviewer gate, style-panel cut
+ * P7 fixes, S2) so `WorkingCanvas.test.ts` can pin its exact key set at compile time, not just
+ * exercise one object literal a human happened to write. Exactly two keys, deliberately: there is no
+ * viewport/manager/network member here to call even by mistake -- that absence IS binding note 7's
+ * "no viewport query, no ticket, no debounce interaction" claim, structurally, not merely by
+ * convention of what a test happens to assert. */
+export interface ApplyStyleChangeDeps {
+  setDrawParams: (params: ResolvedDrawParams) => void;
+  render: () => void;
+}
+
+/**
  * The style-change re-render seam (NEXT-CUT.md binding note 7): given a new style, recomputes the
  * resolved draw parameters and calls `render` exactly once -- and reaches nothing else. Its own
  * signature is the structural half of "no viewport query, no ticket, no debounce interaction": there
@@ -259,10 +272,7 @@ export function summarizePixels(buf: Uint8Array, width: number, height: number, 
  * `Deck` construction needs a WebGL context jsdom does not provide (`WorkingCanvas.test.ts`'s own
  * established note), so this is the pure seam a unit test can actually drive without one.
  */
-export function applyStyleChange(
-  style: StyleState,
-  deps: { setDrawParams: (params: ResolvedDrawParams) => void; render: () => void }
-): void {
+export function applyStyleChange(style: StyleState, deps: ApplyStyleChangeDeps): void {
   deps.setDrawParams(toResolvedDrawParams(resolveDrawParameters(style)));
   deps.render();
 }
@@ -352,6 +362,19 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       end("layer-construct");
     }
   }
+
+  /** Reviewer gate, style-panel cut P7 fixes, S5: coalesces the style effect's own `render()` calls
+   * to at most one per animation frame -- a continuous slider drag in the style panel (P4) fires an
+   * `onChange`, and therefore this component's `[style]` effect below, once per input event, far
+   * more often than once per frame; without this, each one re-tessellated the whole resident set
+   * synchronously on the spot. `render` (just above) only ever reads refs, never component-scoped
+   * state/props directly, so capturing it once here (the same eager-`useRef(new ...())` discipline
+   * `residentRef`/`frameRef` above already use) behaves identically to capturing it fresh on every
+   * render -- there is nothing for a stale closure to go stale ON. **No query/ticket/debounce
+   * interaction of any kind** (binding note 7, unchanged by this fix): this coalesces WHEN the
+   * existing `render()` call happens, never adds a new one, and reaches nothing viewport-shaped --
+   * `render()` itself still does not, and this wrapper adds no new call site that could. */
+  const coalescedRenderRef = useRef(coalesceOncePerFrame(render));
 
   /**
    * Recenters the frame origin on `bbox`'s midpoint and sets the camera zoom to fit the whole bbox
@@ -539,15 +562,31 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   // Deliberately reaches NOTHING viewport-shaped: no `onViewportChangedRef`, no `frameRef` origin
   // move, no manager/ticket/debounce of any kind -- `applyStyleChange`'s own signature has no
   // parameter that could reach one.
+  //
+  // `setDrawParams` still runs SYNCHRONOUSLY, every call, ungated -- only the `render()` half is
+  // coalesced (S5, above): `drawParamsRef.current` is always current by the time any coalesced frame
+  // actually fires, whether that frame was scheduled by this call or an earlier one it coalesced
+  // into. No new query/ticket/debounce interaction (binding note 7 still holds): coalescing changes
+  // WHEN the already-existing `render()` call happens, never adds a call site that could reach one.
   useEffect(() => {
     applyStyleChange(style, {
       setDrawParams: (params) => {
         drawParamsRef.current = params;
       },
-      render,
+      render: () => coalescedRenderRef.current.schedule(),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [style]);
+
+  // S5's own "cancel on cleanup": unmount-only (`[]` deps, not `[style]` -- cancelling on every
+  // style change would defeat the coalescer's own no-op-while-pending logic for no benefit, since a
+  // still-pending frame already reads fresh state whenever it fires). Prevents a scheduled frame
+  // from calling `render()` after this component instance is gone (`render()`'s own `if (!deck)
+  // return;` already guards the finalized-deck case, so this is belt-and-suspenders hygiene, not a
+  // crash fix -- the same spirit as this file's other `return () => ...` cleanups).
+  useEffect(() => {
+    return () => coalescedRenderRef.current.cancel();
+  }, []);
 
   // Diagnostics-only (DECISIONS-PENDING.md entry 0): names how many `WorkingCanvas` instances a
   // session actually mounted and which dataset each owned -- `App.tsx` keys this component on
@@ -689,6 +728,38 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
               resolve(summarizePixels(buf, width, height, regions ?? []));
             },
           });
+          // Reviewer gate, style-panel cut P7 fixes, S5 correction: a style change's own render is
+          // now coalesced to at most once per animation frame (`coalesceOncePerFrame`), which can
+          // leave `deck.props.layers` one frame stale relative to the LATEST style at the exact
+          // moment this OUT-OF-BAND capture runs (a real user never notices -- the browser's own
+          // next paint always carries a pending frame regardless -- but this hook forces a redraw
+          // right now, outside that normal timing). `flush()` applies any pending coalesced render
+          // synchronously, first, so `deck.props.layers` always reflects the current style by the
+          // time the redraw below runs -- see `coalesceOncePerFrame.ts`'s own doc comment.
+          coalescedRenderRef.current.flush();
+          // **A second, deeper gap `flush()` alone does not close, found and fixed investigating a
+          // real S5-introduced test failure (verified against the installed
+          // `@deck.gl/core@9.3.9` source, `lib/deck.js`/`lib/layer-manager.js`, not assumed).**
+          // `deck.props.layers` being current is not the same fact as the GPU's own attribute
+          // buffers being current: `LayerManager.updateLayers()` (which recomputes a layer's GPU
+          // buffers from its own current props -- e.g. `getFillColor` -- via each layer's
+          // `updateState`) is called ONLY from `Deck._onRenderFrame()`, deck's own internal
+          // `requestAnimationFrame`-driven loop; `Deck.redraw()` -> `_drawLayers()` draws whatever
+          // is CURRENTLY in the GPU buffers and does NOT call `updateLayers()` first. Before this
+          // file coalesced style renders, `render()`'s own `setProps({layers})` call (synchronous,
+          // inside `useEffect([style])`) was always separated from this hook's own forced `redraw()`
+          // by real wall-clock time (a CDP round trip, a poll interval) comfortably longer than one
+          // animation frame -- long enough that deck's own natural loop had ALREADY run
+          // `updateLayers()` by the time this hook's `redraw()` fired, so the gap was never visible.
+          // `flush()` collapses that gap deliberately (that is its whole job for the render itself),
+          // which also collapses the accidental timing margin that used to hide this one -- a forced
+          // `redraw()` immediately after `flush()` could draw brand-new layer PROPS through STALE
+          // GPU BUFFERS, reading back the previous colour. `layerManager` is `protected` in the
+          // installed type declarations (an internal API, not exposed for general use) but is a
+          // real, safely-idempotent method at runtime (`updateLayers()`'s own source: a no-op unless
+          // `needsUpdate()` finds a real reason) -- reached here, narrowly, only in this dev-only E2E
+          // instrument, not anywhere in product code.
+          (deck as unknown as { layerManager: { updateLayers: () => void } }).layerManager.updateLayers();
           // A non-empty reason bypasses `needsRedraw` and draws synchronously (`@deck.gl/core`'s
           // `redraw()`), so in the common case `onAfterRender` above has already fired by the time
           // this call returns. The only path that reaches the timeout above is `layerManager` not

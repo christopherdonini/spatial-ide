@@ -22,6 +22,18 @@
 //! check and that E2E-verified render are evidence about the identical bytes, not two disconnected
 //! sets of numbers.
 //!
+//! **Genuinely verbatim bytes, not a re-serialization (reviewer gate, style-panel cut P7 fixes,
+//! S3).** The fixture's two documents are JSON STRINGS holding the exact COMPACT
+//! `JSON.stringify(doc)` text `document.ts::resolveDrawParameters` itself feeds to `Style.parse` on
+//! the real live-render path -- read directly with `.as_str()` below and handed to `parse` UNCHANGED.
+//! An earlier version of this fixture embedded the documents as nested JSON objects, which forced
+//! this test to `serde_json::to_string` them back into text before calling `parse` -- a
+//! re-serialization whose key order (`serde_json::Value`'s own `Map`, sorted unless the
+//! `preserve_order` feature is on) was not provably the shell's own insertion order, so the old
+//! comment's "verbatim bytes" claim was not actually being tested. This shape closes that gap
+//! structurally: there is no serialization step between the fixture and `parse` for this test to
+//! introduce a difference in.
+//!
 //! Both documents are literal-only (style v0's own live-editing ceiling, ADR-023: `viewport_query`
 //! carries no attributes, so a shell-produced document can never declare a `match`) -- `compile`
 //! below is therefore called against a **minimal stub schema**: an empty column list and an empty
@@ -52,13 +64,20 @@ fn shell_emitted_documents_are_accepted_by_the_publish_side_grammar() {
     let v: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture is JSON");
 
     for (label, key) in [("default_document", "default_document"), ("changed_document", "changed_document")] {
-        let doc = &v[key];
-        assert!(!doc.is_null(), "fixture is missing `{key}`");
-        let src = serde_json::to_string(doc).unwrap();
+        // Read directly as a string and handed to `parse` UNCHANGED (S3) -- no
+        // `serde_json::to_string` round trip in between, so this really is the shell's own bytes,
+        // not a re-serialized approximation of them. `doc` (below, for the field-by-field
+        // expected-value assertions in step 3) is a SEPARATE parse of that same string, purely for
+        // this test's own convenience reading fields back out -- it is never what gets handed to
+        // `parse`/`compile`.
+        let src = v[key].as_str().unwrap_or_else(|| panic!("fixture's `{key}` is missing or not a string"));
+        let doc: serde_json::Value = serde_json::from_str(src).expect("fixture string is valid JSON");
 
         // 1. `spatial_renderer::style::parse` -- the same grammar `publish-bundle --style` compiles
-        // against -- accepts the document the shell actually emitted, verbatim bytes.
-        let parsed = parse(&src);
+        // against -- accepts the document the shell actually emitted, verbatim bytes (see this
+        // file's own top doc comment, S3, for why this is now actually true rather than merely
+        // claimed).
+        let parsed = parse(src);
         assert!(
             parsed.is_ok(),
             "spatial_renderer::style::parse refused the shell-emitted `{label}`: {:?}\nsrc: {src}",
@@ -67,7 +86,7 @@ fn shell_emitted_documents_are_accepted_by_the_publish_side_grammar() {
 
         // 2. `compile` succeeds against the minimal stub schema (this file's own top doc comment)
         // -- the full path `publish-bundle --style` actually runs, not parse alone.
-        let compiled = compile(&src, EMPTY_SCHEMA, EMPTY_PUBLISHED);
+        let compiled = compile(src, EMPTY_SCHEMA, EMPTY_PUBLISHED);
         assert!(
             compiled.is_ok(),
             "spatial_renderer::compile refused the shell-emitted `{label}` against an empty schema: {:?}\nsrc: {src}",
