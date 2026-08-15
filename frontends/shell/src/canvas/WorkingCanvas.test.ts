@@ -84,7 +84,14 @@ describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
 
     expect(render).toHaveBeenCalledTimes(1);
     expect(setDrawParams).toHaveBeenCalledTimes(1);
-    expect(setDrawParams).toHaveBeenCalledWith({ fillColor: [66, 133, 244, 180] });
+    // `DEFAULT_STYLE_STATE.outlineWidth` is `0` (`document.ts`'s own doc comment: "no outline is
+    // drawn today") -- `outlineColor` still resolves and converts (NEXT-CUT.md P5's
+    // `toResolvedDrawParams`), it is simply never drawn while the width stays 0.
+    expect(setDrawParams).toHaveBeenCalledWith({
+      fillColor: [66, 133, 244, 180],
+      outlineColor: [0, 0, 0, 255],
+      outlineWidth: 0,
+    });
   });
 
   it("issues no viewport query -- a manager-shaped mock never sees a call, and the function's own signature has nowhere to route one", () => {
@@ -106,6 +113,10 @@ describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
 
     applyStyleChange(custom, { setDrawParams, render: vi.fn() });
 
-    expect(setDrawParams).toHaveBeenCalledWith({ fillColor: [0, 255, 0, 128] });
+    expect(setDrawParams).toHaveBeenCalledWith({
+      fillColor: [0, 255, 0, 128],
+      outlineColor: [17, 17, 17, 255],
+      outlineWidth: 3,
+    });
   });
 });

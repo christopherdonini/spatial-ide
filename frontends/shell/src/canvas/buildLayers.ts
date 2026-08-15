@@ -1,5 +1,5 @@
 import { COORDINATE_SYSTEM, Position } from "@deck.gl/core";
-import { SolidPolygonLayer } from "@deck.gl/layers";
+import { PathLayer, SolidPolygonLayer } from "@deck.gl/layers";
 
 import type { DrawParameters } from "../../../../renderer/style-ts/src/style";
 import type { ResidentBatch } from "./decodeBatch";
@@ -31,6 +31,13 @@ export function batchForLayerId(
  * type carries and what `buildLayers` below passes straight through unchanged. */
 export interface ResolvedDrawParams {
   fillColor: [number, number, number, number];
+  /** RGBA, alpha always 255 -- style v0 (ADR-017 §5a) has no separate outline-opacity field, only
+   * `fill_opacity`; an outline is drawn fully opaque or not at all (`outlineWidth === 0`). */
+  outlineColor: [number, number, number, number];
+  /** CSS pixels (`renderer/src/style.rs`'s own `MAX_OUTLINE_WIDTH` doc comment: "Outline width
+   * ceiling, in CSS pixels"). `0` means "no outline" -- `buildLayers` below only constructs the
+   * outline `PathLayer` (NEXT-CUT.md P5) when this is `> 0`. */
+  outlineWidth: number;
 }
 
 const HEX_TRIPLET_RE = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/;
@@ -49,10 +56,15 @@ const HEX_TRIPLET_RE = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/;
  * conversion nobody asked to validate."
  */
 export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
-  const m = HEX_TRIPLET_RE.exec(draw.fillColor.toLowerCase());
   const channel = (hex: string | undefined): number => (hex ? parseInt(hex, 16) : 0);
+  const fillMatch = HEX_TRIPLET_RE.exec(draw.fillColor.toLowerCase());
   const alpha = Math.round(Math.min(1, Math.max(0, draw.fillOpacity)) * 255);
-  return { fillColor: [channel(m?.[1]), channel(m?.[2]), channel(m?.[3]), alpha] };
+  const outlineMatch = HEX_TRIPLET_RE.exec(draw.outlineColor.toLowerCase());
+  return {
+    fillColor: [channel(fillMatch?.[1]), channel(fillMatch?.[2]), channel(fillMatch?.[3]), alpha],
+    outlineColor: [channel(outlineMatch?.[1]), channel(outlineMatch?.[2]), channel(outlineMatch?.[3]), 255],
+    outlineWidth: draw.outlineWidth,
+  };
 }
 
 /**
@@ -71,8 +83,10 @@ export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
  * draws its outline via an internal `PathLayer` sub-layer, and a pick against that sub-layer
  * reports `info.layer.id` as the *sub*-layer's id (composite-id-suffixed), not this batch's own
  * `layerId(batch)` -- `batchForLayerId`'s exact-match lookup would silently fail to resolve it.
- * Fill-only avoids that indirection entirely; the style panel's outline controls are P5 (droppable,
- * NEXT-CUT.md), a separate non-pickable `PathLayer` for exactly this reason -- not this layer.
+ * Fill-only avoids that indirection entirely: the outline below (NEXT-CUT.md P5) is a SEPARATE,
+ * standalone, non-pickable `PathLayer` this function constructs itself, never a sub-layer of the
+ * `SolidPolygonLayer` -- so the hazard this paragraph describes cannot recur (see the outline's own
+ * comment below for why it is structurally, not just incidentally, incapable of it).
  *
  * **`draw.fillColor` is used as-is, never re-derived per batch or per call** (NEXT-CUT.md binding
  * note 7: "give the colour arrays stable identity per style"). The caller (`WorkingCanvas.tsx`)
@@ -109,8 +123,9 @@ export function buildLayers(
   batches: readonly ResidentBatch[],
   frame: OffsetFrame,
   draw: ResolvedDrawParams
-): SolidPolygonLayer[] {
-  return batches.map((batch) => {
+): (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] {
+  const layers: (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] = [];
+  for (const batch of batches) {
     checkPickCeiling(batch.ids.length);
     // Nested `[x,y]` pairs per ring, deliberately not a flat `[x,y,x,y,...]` array: deck.gl's own
     // polygon normalizer (`@deck.gl/layers/solid-polygon-layer/polygon.js`) distinguishes a
@@ -121,14 +136,57 @@ export function buildLayers(
     const polygons: Position[][][] = batch.rings.map((rings) =>
       rings.map((ring) => ring.map(([x, y]) => frame.toLocal(x, y) as Position))
     );
-    return new SolidPolygonLayer<Position[][]>({
-      id: layerId(batch),
-      data: polygons,
-      getPolygon: (d) => d,
-      coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-      pickable: true,
-      filled: true,
-      getFillColor: draw.fillColor,
-    });
-  });
+    layers.push(
+      new SolidPolygonLayer<Position[][]>({
+        id: layerId(batch),
+        data: polygons,
+        getPolygon: (d) => d,
+        coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+        pickable: true,
+        filled: true,
+        getFillColor: draw.fillColor,
+      })
+    );
+
+    // NEXT-CUT.md P5: a separate, standalone layer for the outline -- never a sub-layer of the
+    // `SolidPolygonLayer` above (see that layer's own doc comment for the `PolygonLayer` composite-id
+    // pick hazard this avoids). Built only when there is an outline to actually draw
+    // (`outlineWidth > 0`) -- never an invisible zero-width layer sitting in deck.gl's own layer list
+    // for nothing. Reuses `polygons` (already frame-offset, already computed above for the fill
+    // layer) flattened one level: every ring of every feature in this batch, exterior and holes
+    // alike, becomes its own path -- a ring's own vertex list is already a closed loop (GeoArrow/
+    // WKB-derived rings repeat their first vertex as their last), so `PathLayer` draws it closed with
+    // no `_pathType`/`closeLoop` prop needed.
+    //
+    // **Structurally incapable of producing a pick, not merely unlikely to.** `pickable: false`
+    // removes this layer from deck.gl's pick-index space entirely -- there is no code path from a GPU
+    // pick ordinal back to this layer at all, which is the actual structural guarantee (the fact that
+    // its id also never collides with `batchForLayerId`'s exact-match lookup, `${layerId(batch)}
+    // -outline` vs. `layerId(batch)`, is redundant insurance on top of that, not what does the work --
+    // see `buildLayers.test.ts`).
+    //
+    // **Declared cost, never a VRAM figure (ADR-010 rule 6 style).** The layer count for this batch
+    // doubles when outlined (one fill layer, one outline layer), and every ring vertex crosses to the
+    // GPU a SECOND time (once triangulated for the fill polygon's interior, once again as line
+    // geometry for the outline path) -- pure per-batch construction cost, nothing shared between the
+    // two layers. `checkPickCeiling` above and `MAX_RESIDENT_VERTICES` (decode-time resident-vertex
+    // admission, `ResidentSet.addBatch` -- this function runs strictly after that decision) are BOTH
+    // unaffected: the pick ceiling never sees this layer at all (`pickable: false`), and residency
+    // admission has already happened by the time `buildLayers` runs on whatever is resident.
+    if (draw.outlineWidth > 0) {
+      layers.push(
+        new PathLayer<Position[]>({
+          id: `${layerId(batch)}-outline`,
+          data: polygons.flatMap((rings) => rings),
+          getPath: (d) => d,
+          coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+          pickable: false,
+          widthUnits: "pixels", // outline_width is declared in CSS pixels (renderer/src/style.rs)
+          getColor: draw.outlineColor,
+          getWidth: draw.outlineWidth,
+        })
+      );
+    }
+  }
+  return layers;
 }

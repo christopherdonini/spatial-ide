@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import type { Position } from "@deck.gl/core";
+import { PathLayer, SolidPolygonLayer } from "@deck.gl/layers";
+
 import { batchForLayerId, buildLayers, layerId, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
 import type { ResidentBatch } from "./decodeBatch";
@@ -8,8 +11,15 @@ import { OffsetFrame } from "./offsetFrame";
 
 // The pre-P2 fixed default (`buildLayers.ts`'s own git history: `getFillColor: [66, 133, 244,
 // 180]`), reused here as the fixture every existing test's `buildLayers` call passes as the new
-// third parameter -- so every pre-existing assertion below is otherwise unchanged.
-const FIXED_DRAW: ResolvedDrawParams = { fillColor: [66, 133, 244, 180] };
+// third parameter -- so every pre-existing assertion below is otherwise unchanged. `outlineWidth: 0`
+// -- every test in this file except the "outline PathLayer" describe block below never asks for an
+// outline, so `buildLayers` never pushes a second (`-outline`) layer for any of them (NEXT-CUT.md
+// P5: "only when outline_width > 0").
+const FIXED_DRAW: ResolvedDrawParams = {
+  fillColor: [66, 133, 244, 180],
+  outlineColor: [0, 0, 0, 255],
+  outlineWidth: 0,
+};
 
 function batch(streamHandle: string, batchSeq: number): ResidentBatch {
   return {
@@ -25,6 +35,19 @@ function batch(streamHandle: string, batchSeq: number): ResidentBatch {
     ],
     totalVertices: 4 + 6,
   };
+}
+
+/** Every test in this file except the "outline PathLayer" describe block below uses
+ * `outlineWidth: 0`, so `buildLayers` never returns anything but `SolidPolygonLayer`s for them --
+ * this narrows the union return type once, at the point a test needs a fill-layer-only prop
+ * (`getFillColor`, which `PathLayer` does not have), rather than casting at each call site. Throws
+ * (never silently narrows wrong) if a test that thinks it built only fill layers actually got a
+ * `PathLayer` back -- that would itself be a real bug in the test's own `draw` fixture. */
+function asFillLayer(layer: SolidPolygonLayer<Position[][]> | PathLayer<Position[]>): SolidPolygonLayer<Position[][]> {
+  if (!(layer instanceof SolidPolygonLayer)) {
+    throw new Error("asFillLayer: expected a SolidPolygonLayer, got a PathLayer");
+  }
+  return layer;
 }
 
 describe("buildLayers (ADR-010 rules 3 and 6)", () => {
@@ -95,25 +118,82 @@ describe("buildLayers -- resolved draw parameters (NEXT-CUT.md P2)", () => {
   it("every batch's getFillColor is exactly the passed-in draw parameters", () => {
     const frame = new OffsetFrame(100);
     frame.maybeRecenter(2_600_000, 1_200_000);
-    const draw: ResolvedDrawParams = { fillColor: [10, 20, 30, 200] };
+    const draw: ResolvedDrawParams = { fillColor: [10, 20, 30, 200], outlineColor: [0, 0, 0, 255], outlineWidth: 0 };
     const layers = buildLayers([batch("sh_a", 0), batch("sh_b", 3)], frame, draw);
-    expect(layers[0].props.getFillColor).toEqual([10, 20, 30, 200]);
-    expect(layers[1].props.getFillColor).toEqual([10, 20, 30, 200]);
+    expect(asFillLayer(layers[0]).props.getFillColor).toEqual([10, 20, 30, 200]);
+    expect(asFillLayer(layers[1]).props.getFillColor).toEqual([10, 20, 30, 200]);
   });
 
   it("passes the SAME array reference through untouched -- no per-batch or per-call reallocation (binding note 7)", () => {
     const frame = new OffsetFrame(100);
     frame.maybeRecenter(2_600_000, 1_200_000);
-    const draw: ResolvedDrawParams = { fillColor: [1, 2, 3, 4] };
+    const draw: ResolvedDrawParams = { fillColor: [1, 2, 3, 4], outlineColor: [0, 0, 0, 255], outlineWidth: 0 };
     const layers = buildLayers([batch("sh_a", 0), batch("sh_b", 3)], frame, draw);
     // Reference equality, not merely value equality: this function must not clone `draw.fillColor`
     // per batch, or a caller memoizing it once per style change (`WorkingCanvas.tsx`) would still see
     // a fresh array reach deck.gl on every render.
-    expect(layers[0].props.getFillColor).toBe(draw.fillColor);
-    expect(layers[1].props.getFillColor).toBe(draw.fillColor);
+    expect(asFillLayer(layers[0]).props.getFillColor).toBe(draw.fillColor);
+    expect(asFillLayer(layers[1]).props.getFillColor).toBe(draw.fillColor);
 
     const againSameDraw = buildLayers([batch("sh_a", 0)], frame, draw);
-    expect(againSameDraw[0].props.getFillColor).toBe(draw.fillColor);
+    expect(asFillLayer(againSameDraw[0]).props.getFillColor).toBe(draw.fillColor);
+  });
+});
+
+describe("buildLayers -- outline PathLayer (NEXT-CUT.md P5)", () => {
+  const OUTLINE_DRAW: ResolvedDrawParams = {
+    fillColor: [66, 133, 244, 180],
+    outlineColor: [17, 17, 17, 255],
+    outlineWidth: 3,
+  };
+
+  it("adds a second, distinctly-id'd layer per batch when outlineWidth > 0", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const layers = buildLayers([batch("sh_a", 0), batch("sh_b", 3)], frame, OUTLINE_DRAW);
+    expect(layers).toHaveLength(4); // 2 fill + 2 outline
+    expect(layers.map((l) => l.id)).toEqual(["sh_a:0", "sh_a:0-outline", "sh_b:3", "sh_b:3-outline"]);
+  });
+
+  it("builds no outline layer at all when outlineWidth is exactly 0 -- never an invisible zero-width layer", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const layers = buildLayers([batch("sh_a", 0)], frame, FIXED_DRAW);
+    expect(layers).toHaveLength(1);
+    expect(layers[0].id).toBe("sh_a:0");
+  });
+
+  it("the outline layer is a PathLayer, is never pickable, and carries the outline colour/width", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const layers = buildLayers([batch("sh_a", 0)], frame, OUTLINE_DRAW);
+    const outline = layers[1];
+    expect(outline).toBeInstanceOf(PathLayer);
+    expect(outline.props.pickable).toBe(false);
+    expect((outline as PathLayer<Position[]>).props.getColor).toEqual([17, 17, 17, 255]);
+    expect((outline as PathLayer<Position[]>).props.getWidth).toBe(3);
+    expect((outline as PathLayer<Position[]>).props.widthUnits).toBe("pixels");
+  });
+
+  it("the fill layer stays pickable, unaffected by the outline layer's presence", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const layers = buildLayers([batch("sh_a", 0)], frame, OUTLINE_DRAW);
+    expect(asFillLayer(layers[0]).props.pickable).toBe(true);
+  });
+
+  it("the outline layer's id never collides with batchForLayerId's exact-match lookup -- fills only", () => {
+    const b = batch("sh_a", 0);
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const layers = buildLayers([b], frame, OUTLINE_DRAW);
+    const outlineId = layers[1].id;
+    expect(outlineId).toBe("sh_a:0-outline");
+    // The structural guarantee is `pickable: false` (never reachable from a real pick at all); this
+    // is the redundant-insurance half this file's own `buildLayers.ts` comment names: even if an id
+    // were ever handed to `batchForLayerId` by mistake, it still would not resolve to anything.
+    expect(batchForLayerId([b], outlineId)).toBeUndefined();
+    expect(batchForLayerId([b], layerId(b))).toBe(b);
   });
 });
 
@@ -121,8 +201,12 @@ describe("toResolvedDrawParams (DrawParameters -> deck.gl's 0-255 RGBA accessor 
   it("reconstructs today's exact fixed default byte-for-byte", () => {
     // #4285f4 / 180 is buildLayers.ts's own pre-P2 fixed `getFillColor: [66, 133, 244, 180]`
     // (frontends/shell/src/style/document.ts's DEFAULT_STYLE_STATE doc comment has the hex math).
-    expect(toResolvedDrawParams({ fillColor: "#4285f4", fillOpacity: 180 / 255, outlineColor: "#000000", outlineWidth: 0 })).toEqual({
+    expect(
+      toResolvedDrawParams({ fillColor: "#4285f4", fillOpacity: 180 / 255, outlineColor: "#000000", outlineWidth: 0 })
+    ).toEqual({
       fillColor: [66, 133, 244, 180],
+      outlineColor: [0, 0, 0, 255],
+      outlineWidth: 0,
     });
   });
 
@@ -142,5 +226,11 @@ describe("toResolvedDrawParams (DrawParameters -> deck.gl's 0-255 RGBA accessor 
       toResolvedDrawParams({ fillColor: "#AA3333", fillOpacity: 1, outlineColor: "#000000", outlineWidth: 0 })
         .fillColor
     ).toEqual([170, 51, 51, 255]);
+  });
+
+  it("outline colour converts the same way as fill colour, always at alpha 255 (no separate outline-opacity field)", () => {
+    const result = toResolvedDrawParams({ fillColor: "#000000", fillOpacity: 0, outlineColor: "#112233", outlineWidth: 5 });
+    expect(result.outlineColor).toEqual([17, 34, 51, 255]);
+    expect(result.outlineWidth).toBe(5);
   });
 });
