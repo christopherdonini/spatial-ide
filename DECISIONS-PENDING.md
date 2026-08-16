@@ -5,6 +5,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+3. **ADR-022 acceptance — style v0 as the project's single style model.** Filed Proposed and
+   implemented this cut under the ADR-019/020/021 precedent: the shell became §5a's second
+   consumer via the renderer-owned extracted resolver (`renderer/style-ts`), the agreement vector
+   gained a third reader, CI gates now watch the extracted module, and the operator's F7
+   round-trip visually confirmed shell-and-viewer agreement. The ephemeral-view-state
+   consequences (no undo; persistence triggers class-2 + docs/11 in the same commit) are stated
+   in the ADR. Recommendation: **accept**. Touches on acceptance: ADR-022's status line +
+   docs/02/README index entries.
+
+4. **ADR-023 — attribute projection on `viewport_query` (decision deliberately open).** Filed as
+   the named home for the categorical/live-attributes deferral (the ADR-011-gate-8 pattern) — no
+   acceptance is being asked for; it exists so the gap has an address. **No action needed unless
+   you want its question prioritized** (it gates data-driven styling and attribute hover in the
+   shell). Recommendation: leave open until after the publish cut.
+
 2. **D1 (style cut, small) — "Save style…" file write, or visible/copyable text only?** The style
    panel shows the current style document as text (the accepted ADR-017 §5a format — the model
    already exists; the shell adopts it rather than inventing one). A Save-to-file button would be

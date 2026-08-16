@@ -350,7 +350,17 @@ Fill in the fields below when Part E is actually run by an operator.
 Part F did not exist during either run recorded above. Fill in the fields below when Part F is
 actually run by an operator.
 
-- **Date run:**
-- **Run by:**
-- **Build/commit:**
-- **Part F (F1–F8):**
+- **Date run:** 2026-08-16
+- **Run by:** the human (Christopher), over RustDesk — the standing degraded-channel caveat
+  applies to F3's continuous-drag smoothness judgment; every other judgment is
+  channel-insensitive. F7's terminal steps were run by the operator at the machine (via RustDesk),
+  with the custodian verifying the saved style file's validity beforehand (valid §5a JSON, no BOM).
+- **Build/commit:** `29eebd1` (branch `cut/style-panel` tip — supersets the merged tree plus PRs
+  #9/#10/#11 candidate work).
+- **Part F (F1–F8):** **pass, operator's verdict verbatim: "Everything's perfect!"** — including
+  F7, **the hero round-trip this cut exists for**: a style authored live in the shell
+  (fill `#f0e800` at opacity 1.0, outline `#00e1ff` at width 5 — the custodian-verified saved
+  document), published by hand through `publish-bundle --style`'s class-3 gate
+  (`--approve` naming the destination), served, and visually confirmed by the operator to render
+  **identically** in the bundle viewer — a separately-loaded static page sharing only the
+  renderer-owned resolver with the shell. No deviations reported at any step.
