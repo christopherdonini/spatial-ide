@@ -19,7 +19,7 @@
  */
 
 import type { ApplyFilterOutcome } from "./App";
-import type { ExecuteOutcome } from "./publish/types";
+import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
 
 export interface PixelRegion {
   /** Fraction of the drawing buffer, 0..1, in WebGL's own `readPixels` origin (bottom-left). */
@@ -97,6 +97,14 @@ export interface E2eTestSurface {
    * admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
    * `applyFilter`'s own `ApplyFilterOutcome` -- see `FilterQueryOutcome`'s own doc comment. */
   queryWithFilter?: (predicate: string) => Promise<FilterQueryOutcome>;
+  /** Drives `PublishPanel.tsx`'s own `runPrepare` -- the SAME function the real "Publish…" button
+   * calls (`NEXT-CUT.md` P3 item 1: "export it via the established registerE2eHook pattern NOW as
+   * publishPrepare/publishExecute hooks, dev-only"). `scope` overrides the panel's own currently
+   * selected radio choice when given; omitted uses whatever is selected. Registered only once a
+   * dataset is admitted and `PublishPanel` is mounted, mirroring `queryWithFilter`. P4 (this cut's
+   * evidence phase) is expected to be the first real driver of this hook -- P2/P3's own job is only
+   * to expose the seam, per the piece text. */
+  publishPrepare?: (scope?: "whole" | "current") => Promise<PrepareOutcome>;
   /** Drives `PublishDialog.tsx`'s own `execute` prop -- the SAME function the dialog's Submit
    * button calls. Only registered while a `PublishDialog` is actually mounted (mirrors
    * `queryWithFilter`'s "only once there is something to drive" precedent) -- there is no attempt

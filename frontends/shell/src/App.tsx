@@ -10,6 +10,7 @@ import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
+import PublishPanel from "./publish/PublishPanel";
 import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
@@ -536,11 +537,13 @@ export function handleCanvasCeilingRefusal(
 
 /**
  * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
- * supersede-on-pan, a filter panel, and a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
- * style-panel cut) (`docs/07` Prototype-completion arc). **No publish affordance** -- it does not
- * exist anywhere in this tree, not even as a disabled control (NEXT-CUT.md binding note 8; the hero
- * round-trip is style-in-shell -> copy the visible document -> `publish-bundle --style` ->
- * bundle viewer, entirely outside this codebase).
+ * supersede-on-pan, a filter panel, a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
+ * style-panel cut), and a publish panel (NEXT-CUT.md's publish cut, ADR-017's class-3 exposure
+ * surface, gated by `spatial_kernel::permission` -- see `publish/PublishPanel.tsx`'s own doc
+ * comment) (`docs/07` Prototype-completion arc). The style-panel cut's own prior framing here ("No
+ * publish affordance ... the hero round-trip is style-in-shell -> copy the visible document ->
+ * `publish-bundle --style`") is now superseded by that cut, kept only as history in git blame, not
+ * restated as current.
  */
 export default function App() {
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
@@ -570,6 +573,15 @@ export default function App() {
   // Apply's own re-issue target (design section (b)): the current viewport, not just the last one a
   // debounced query happened to fire for.
   const lastViewportBboxRef = useRef<Bbox | null>(null);
+  // NEXT-CUT.md (publish cut) P3 item 3: "Current view" must be disabled with a visible reason
+  // while `lastViewportBboxRef` is still null -- a ref alone cannot drive that render-time decision
+  // (writing it never triggers a re-render), so this is the same ref/state split this file already
+  // uses for `activeFilter`/`scanState`: the ref stays the freshest-possible value any issue site
+  // reads, this boolean is only the render-time "has one ever arrived" signal `PublishPanel` needs.
+  // Set true on the FIRST `onViewportChanged` call below (guarded so an ordinary drag's many calls
+  // per frame do not re-render on every one) and reset to `false` only where the ref itself resets
+  // (`admitAndResetStaleUiState`'s own `setLastViewportBbox` closure below), never elsewhere.
+  const [hasSettledView, setHasSettledView] = useState(false);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
@@ -687,6 +699,10 @@ export default function App() {
         setActiveFilter: commitActiveFilter,
         setLastViewportBbox: (value) => {
           lastViewportBboxRef.current = value;
+          // A fresh dataset starts with no "current viewport" of its own yet -- `value` is always
+          // `null` at this call site (a dataset-change reset), restated as `value !== null` rather
+          // than a hardcoded `false` so this closure stays correct even if that ever changed.
+          setHasSettledView(value !== null);
         },
         setScanState: commitScanState,
         setAdmitted,
@@ -981,6 +997,10 @@ export default function App() {
                 // at click time, which may be mid-drag, not only the last one a debounced query
                 // happened to fire for.
                 lastViewportBboxRef.current = toWireBbox(bbox);
+                // NEXT-CUT.md (publish cut) P3 item 3: flips exactly once per dataset (guarded, so
+                // an in-progress drag's many calls per frame do not re-render on every one) -- the
+                // FIRST arrival here is what lets `PublishPanel` enable "Current view".
+                if (!hasSettledView) setHasSettledView(true);
                 // Debounced to settle -- see the effect above's own comment and
                 // `streaming/debounce.ts` for why a pan/zoom-driven query is never issued directly
                 // from this callback.
@@ -1079,6 +1099,27 @@ export default function App() {
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
           * its own comment for the duplicate-sibling-key finding this fixes on both ends. */}
         {admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={setStyle} />}
+        {/* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
+          * reasoning as `StylePanel`'s own placement below `.canvas-container` (S4): this panel
+          * comes AFTER the canvas in both visual and flex order, so its own collapsed/expanded state
+          * cannot push `.canvas-container` toward its 200px floor (`styles.css`'s own
+          * `.publish-panel` comment has the measured numbers). Keyed on `admitted.dataset` for the
+          * same reason `FilterPanel`/`StylePanel` are -- a dataset change discards this panel's own
+          * local `expanded`/scope-choice/dialog state rather than reconciling it across two
+          * datasets. `style` is passed through unchanged (App-owned, not reset on a dataset change,
+          * same as `StylePanel`'s own prop) -- the publish seam derives the wire-shape document from
+          * it at Publish-click time (`PublishPanel.tsx`'s own `toStyleDocument` call), never a second
+          * copy held here. */}
+        {admitted && (
+          <PublishPanel
+            key={`publish-${admitted.dataset}`}
+            datasetHandle={admitted.dataset}
+            style={style}
+            filterActive={activeFilter !== null}
+            hasSettledView={hasSettledView}
+            getLastViewportBbox={() => lastViewportBboxRef.current}
+          />
+        )}
       </main>
     </div>
   );

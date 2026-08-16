@@ -345,6 +345,109 @@ body,
   overflow-wrap: anywhere;
 }
 
+/* NEXT-CUT.md (publish cut) P3: in `.app-main`'s flex column, BELOW `.canvas-container`
+   (`App.tsx`'s own placement, same S4 reasoning `.style-panel`'s own comment states) -- collapsed
+   by default, same `.style-disclosure` sizing discipline reused verbatim (`.publish-disclosure`
+   below is byte-identical to `.style-disclosure`, kept as a separate rule only so this panel's own
+   history is independently readable, not because the numbers differ).
+
+   Measured, fresh E2E run (100k-happy-path fixture admitted via `openPath`; 1280x800 window;
+   `.admission-panel` 450px + `.filter-panel` 90.2px present in every case below):
+
+   - **Both `.style-panel`/`.publish-panel` collapsed** (17.8px each): `.canvas-container` top
+     578.2px, height 200px (the floor) -- UNCHANGED from `.style-panel`'s own pre-existing baseline,
+     confirming this panel's own placement AFTER `.canvas-container` in flex/visual order does not
+     move the canvas. **One real, measured, disclosed difference from that baseline**: total page
+     content height in THIS state is now 813.75px (header 38 + admission 450 + filter 90.2 + canvas
+     200 + style 17.8 + publish 17.8), 13.75px OVER the 800px viewport purely from adding this
+     panel's own third collapsed row -- so `.app-main`'s own vertical scrollbar now appears even
+     with EVERY panel collapsed (it previously appeared only once something expanded), narrowing
+     `.canvas-container`'s `clientWidth` by the same ~15px (1280px -> 1265px) `.style-panel`'s own
+     comment already documents for the expanded case. **Not fixed by shrinking this panel further**:
+     the remaining budget before 800px is ~4px, well under what any legible/clickable collapsed
+     disclosure row can occupy -- the same "razor-thin budget" class `.style-panel`'s own history
+     section describes, now unavoidable with a third row below the canvas rather than removable by
+     reordering (S4's own fix was moving panels AFTER the canvas so the CANVAS never shrinks below
+     its 200px floor, which still holds exactly here -- it was never a promise that total content
+     would fit the viewport without a scrollbar). Harmless: the canvas's own height and the
+     pixel-fraction thresholds both `e2e:regression`'s and `e2e:style`'s suites assert are unaffected
+     by a ~15px width narrowing, and both suites pass at this width (this piece's own report/
+     CUT-STATE has the run tables).
+   - **Either panel expanded, or both**: `.canvas-container` stays at its 200px floor and 578.2px
+     top in every combination measured (collapsed/expanded × collapsed/expanded) -- only
+     `.publish-panel`'s/`.style-panel`'s own heights and the resulting scroll position change.
+     `.publish-panel` expanded (scope choice, "Current view" disabled with its reason while no
+     settled view exists, no filter-scope sentence) measures 146.97px; with an active filter added
+     (the sentence block, "Current view" still disabled) 206.97px -- the +60px is the filter-scope
+     sentence paragraph's own padded, wrapped block (`.publish-filter-scope-sentence`), the ONLY
+     thing that changed between the two measurements. */
+.publish-panel {
+  padding: 0.15rem 1rem;
+  max-width: 40rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.publish-disclosure {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+
+.publish-controls {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* Same cap-then-scroll discipline `.filter-refusal`/`.style-controls` already establish: an
+     expanded publish panel (scope choice + dialog + refusal/summary) must not itself push
+     `.canvas-container` toward its 200px floor. */
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.publish-scope {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.publish-scope legend {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0;
+}
+
+.publish-scope-disabled-reason {
+  margin: 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.publish-filter-scope-sentence {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(74, 15, 15, 0.15);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.publish-open {
+  align-self: flex-start;
+  padding: 0.35rem 0.75rem;
+}
+
 /* The approval surface (NEXT-CUT.md P2) -- in normal document flow inside `.publish-controls`,
    never an absolute/fixed overlay (the S1 lesson applied consistently across every panel in this
    tree). Visually set off from the panel's own controls with a border, since it is a genuinely
@@ -417,4 +520,25 @@ body,
   font-size: 0.85rem;
   font-style: italic;
   opacity: 0.85;
+}
+
+.publish-summary {
+  padding: 0.5rem 0.75rem;
+  background: rgba(128, 128, 128, 0.08);
+  border-radius: 4px;
+}
+
+.publish-summary-headline {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
+
+.publish-summary-fields dt {
+  font-weight: 600;
+}
+.publish-summary-fields dd {
+  margin-left: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
