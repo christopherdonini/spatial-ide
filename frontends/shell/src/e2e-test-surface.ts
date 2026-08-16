@@ -19,6 +19,7 @@
  */
 
 import type { ApplyFilterOutcome } from "./App";
+import type { ExecuteOutcome } from "./publish/types";
 
 export interface PixelRegion {
   /** Fraction of the drawing buffer, 0..1, in WebGL's own `readPixels` origin (bottom-left). */
@@ -96,6 +97,11 @@ export interface E2eTestSurface {
    * admitted (mirrors `capturePixels`, which only exists once `WorkingCanvas` mounts). Resolves to
    * `applyFilter`'s own `ApplyFilterOutcome` -- see `FilterQueryOutcome`'s own doc comment. */
   queryWithFilter?: (predicate: string) => Promise<FilterQueryOutcome>;
+  /** Drives `PublishDialog.tsx`'s own `execute` prop -- the SAME function the dialog's Submit
+   * button calls. Only registered while a `PublishDialog` is actually mounted (mirrors
+   * `queryWithFilter`'s "only once there is something to drive" precedent) -- there is no attempt
+   * to execute before `publishPrepare` has produced one. */
+  publishExecute?: (typedPhrase: string) => Promise<ExecuteOutcome>;
 }
 
 declare global {

@@ -445,11 +445,36 @@ fn prepare_with_query(
 /// Take the pending attempt (single-use), open a **fresh** audit log for it alone (F-9), and run it
 /// through `permission::boundary::execute` with a [`ShellApproval`] carrying `typed_phrase`.
 /// `publish::publish_unguarded` is never referenced (`tests/sole_caller_scan.rs` asserts it crate-wide).
+///
+/// A thin wrapper over [`execute_with_progress`] with a throwaway token nothing outside this call
+/// can reach and no observer — P1's own original body, kept byte-for-byte so every P1 test keeps
+/// calling this exact signature unchanged. `commands.rs::binding_publish_execute` calls
+/// [`execute_with_progress`] directly instead, supplying the real cancel token and progress sink
+/// (P2, `NEXT-CUT.md` item 3) — so this function's only remaining caller is this module's own P1
+/// test suite (`#[allow(dead_code)]` below is that, disclosed, not a silenced real defect).
+#[allow(dead_code)]
 pub fn execute(
     grants: &Mutex<GrantSet>,
     store: &PendingAttempts,
     attempt_id: &str,
     typed_phrase: &str,
+) -> ExecuteOutcome {
+    execute_with_progress(grants, store, attempt_id, typed_phrase, &CancelToken::new(), None)
+}
+
+/// [`execute`]'s own body, generalized over the cancel token and progress observer the Tauri
+/// command wrapper supplies — P2's minimal host-side wiring for progress events and a working
+/// Cancel-publish control (`NEXT-CUT.md` P2 item 3: "listen to the Tauri publish progress events
+/// P1 wired ... if P1 did not wire events, add the minimal host-side emission now"; P1 did not —
+/// see this module's own top doc comment, "Two things this module deliberately does NOT do").
+#[allow(clippy::too_many_arguments)]
+pub fn execute_with_progress(
+    grants: &Mutex<GrantSet>,
+    store: &PendingAttempts,
+    attempt_id: &str,
+    typed_phrase: &str,
+    cancel: &CancelToken,
+    progress: Option<&dyn publish::PublishProgress>,
 ) -> ExecuteOutcome {
     let Some(pending) = store.take(attempt_id) else {
         return ExecuteOutcome::UnknownAttempt;
@@ -495,9 +520,10 @@ pub fn execute(
     };
 
     // `publish_unguarded` is never called: this is the one path through the boundary's steps 3-8
-    // (`kernel/src/permission/boundary.rs`'s own header), on a cancel token nothing outside this
-    // call can reach — progress and cancel are P2's (`NEXT-CUT.md`'s phase table).
-    match boundary::execute(&attempt, &CancelToken::new(), None) {
+    // (`kernel/src/permission/boundary.rs`'s own header). `cancel`/`progress` are now the caller's
+    // own — [`execute`] above supplies a throwaway token and `None`; `binding_publish_execute`
+    // supplies the real [`RunningPublishes`]-registered token and an [`EventProgress`] sink.
+    match boundary::execute(&attempt, cancel, progress) {
         Ok(outcome) => ExecuteOutcome::Success {
             bundle_path: outcome.bundle_path.display().to_string(),
             rows: outcome.rows,
@@ -515,6 +541,93 @@ pub fn execute(
             }
         }
         Err(e) => ExecuteOutcome::Refused { message: e.to_string() },
+    }
+}
+
+// -------------------------------------------------------------------------------------------
+// Progress + cancel (P2, `NEXT-CUT.md` item 3) — a Tauri event during `execute_with_progress`,
+// and a registry the JS Cancel-publish control can reach mid-run.
+// -------------------------------------------------------------------------------------------
+
+/// The Tauri event `execute_with_progress` emits, once per phase transition
+/// (`spatial_kernel::publish::PublishPhase::as_str()` verbatim — never a percentage or ETA,
+/// `NEXT-CUT.md` P2 item 3: "phases only, no percentages beyond what PublishProgress carries").
+/// JS listens via `@tauri-apps/api/event`'s `listen(PUBLISH_PROGRESS_EVENT, ...)`
+/// (`src/publish/client.ts`).
+pub const PUBLISH_PROGRESS_EVENT: &str = "publish://progress";
+
+#[derive(serde::Serialize, Clone, Debug)]
+pub struct PublishProgressEvent {
+    pub attempt_id: String,
+    pub phase: &'static str,
+}
+
+/// A [`publish::PublishProgress`] that emits [`PUBLISH_PROGRESS_EVENT`] through a caller-supplied
+/// sink — generic over a plain closure, not `tauri::AppHandle` directly, so this stays testable
+/// without a live Tauri app (this module's own "testable without a webview" discipline, top doc
+/// comment). Every default method (`partition_written` aside, which has none) is left at its
+/// no-op default: phases only, nothing else crosses.
+pub struct EventProgress<F: Fn(PublishProgressEvent) + Send + Sync> {
+    attempt_id: String,
+    emit: F,
+}
+
+impl<F: Fn(PublishProgressEvent) + Send + Sync> EventProgress<F> {
+    pub fn new(attempt_id: String, emit: F) -> Self {
+        Self { attempt_id, emit }
+    }
+}
+
+impl<F: Fn(PublishProgressEvent) + Send + Sync> publish::PublishProgress for EventProgress<F> {
+    fn phase(&self, phase: publish::PublishPhase) {
+        (self.emit)(PublishProgressEvent { attempt_id: self.attempt_id.clone(), phase: phase.as_str() });
+    }
+    fn partition_written(&self, _index: usize, _rows: usize, _bytes: u64) {}
+}
+
+/// The registry `binding_publish_cancel` reaches into — a running publish's own [`CancelToken`],
+/// keyed by `attempt_id`, live only for the duration of one `execute_with_progress` call.
+/// **Not** [`PendingAttempts`]: that store holds an attempt BEFORE it starts running (single-use,
+/// consumed by `take`); this one holds a token WHILE it runs, inserted by the Tauri command
+/// wrapper immediately before the blocking call and removed immediately after, regardless of
+/// outcome — so a stale entry never outlives the call it belongs to.
+#[derive(Default)]
+pub struct RunningPublishes {
+    inner: Mutex<HashMap<String, CancelToken>>,
+}
+
+impl RunningPublishes {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&self, attempt_id: String, token: CancelToken) {
+        let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        g.insert(attempt_id, token);
+    }
+
+    pub fn remove(&self, attempt_id: &str) {
+        let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        g.remove(attempt_id);
+    }
+
+    /// `true` iff a running publish was found and cancelled. A miss (already finished, or an
+    /// `attempt_id` this registry never held) is not an error — the same "nothing to act on"
+    /// posture [`PendingAttempts::take`] takes on an unknown id.
+    pub fn cancel(&self, attempt_id: &str) -> bool {
+        let g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        match g.get(attempt_id) {
+            Some(token) => {
+                token.cancel();
+                true
+            }
+            None => false,
+        }
+    }
+
+    #[cfg(test)]
+    fn len(&self) -> usize {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner()).len()
     }
 }
 
@@ -866,5 +979,58 @@ mod tests {
             "{name}"
         );
         assert!(!name.contains(' '), "{name}");
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // P2: progress + cancel
+    // ---------------------------------------------------------------------------------------
+
+    #[test]
+    fn execute_with_progress_emits_every_phase_reached_stamped_with_the_right_attempt_id() {
+        let _guard = env_lock();
+        let d = workspace("progress-events");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+
+        let (grants, store, attempt_id, phrase) = prepared(&d, "progress");
+        let phases: StdMutex<Vec<(String, &'static str)>> = StdMutex::new(Vec::new());
+        let progress = EventProgress::new(attempt_id.clone(), |event: PublishProgressEvent| {
+            phases.lock().unwrap_or_else(|e| e.into_inner()).push((event.attempt_id, event.phase));
+        });
+
+        let outcome =
+            execute_with_progress(&grants, &store, &attempt_id, &phrase, &CancelToken::new(), Some(&progress));
+        assert!(matches!(outcome, ExecuteOutcome::Success { .. }), "got {outcome:?}");
+
+        let recorded = phases.into_inner().unwrap_or_else(|e| e.into_inner());
+        assert!(!recorded.is_empty(), "expected at least one phase event on a real successful publish");
+        assert!(
+            recorded.iter().all(|(id, _)| id == &attempt_id),
+            "every event must be stamped with THIS attempt's own id, never another's: {recorded:?}"
+        );
+        // Not the full fixed phase sequence (a future kernel-side phase addition/reordering is not
+        // this shell test's contract to pin) — only that a real, late phase this run must reach on
+        // a success actually crossed, proving the observer is wired into the real call, not a stub
+        // that would pass on zero events too.
+        let phase_names: Vec<&str> = recorded.iter().map(|(_, p)| *p).collect();
+        assert!(phase_names.contains(&"writing-manifest"), "{phase_names:?}");
+    }
+
+    #[test]
+    fn running_publishes_cancel_is_a_lookup_not_an_error_on_a_miss() {
+        let running = RunningPublishes::new();
+        assert!(!running.cancel("nope"), "cancelling an id never inserted must not be an error, just false");
+
+        let token = CancelToken::new();
+        running.insert("a".into(), token.clone());
+        assert_eq!(running.len(), 1);
+        assert!(!token.is_cancelled());
+
+        assert!(running.cancel("a"), "a known id must be found and cancelled");
+        assert!(token.is_cancelled(), "cancel() on the registry's own clone must flip the SAME token's flag");
+
+        running.remove("a");
+        assert_eq!(running.len(), 0);
+        assert!(!running.cancel("a"), "after remove, the same id is a miss again");
     }
 }

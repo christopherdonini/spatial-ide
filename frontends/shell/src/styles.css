@@ -345,3 +345,76 @@ body,
   overflow-wrap: anywhere;
 }
 
+/* The approval surface (NEXT-CUT.md P2) -- in normal document flow inside `.publish-controls`,
+   never an absolute/fixed overlay (the S1 lesson applied consistently across every panel in this
+   tree). Visually set off from the panel's own controls with a border, since it is a genuinely
+   distinct, higher-stakes surface, not another form field. */
+.publish-dialog {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.publish-dialog-header {
+  font-weight: 600;
+}
+
+.publish-dialog-fields dt {
+  font-weight: 600;
+  margin-top: 0.35rem;
+}
+.publish-dialog-fields dd {
+  margin-left: 0;
+  overflow-wrap: anywhere;
+}
+
+.publish-dialog-destination {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+/* The filter-scope warning block (NEXT-CUT.md P2 item 1: "in a visually distinct warning block
+   when present") -- same colour family `.canvas-refusal`/`.publish-filter-scope-sentence` already
+   use for an attention-worthy, non-error notice. */
+.publish-dialog-filter-scope {
+  padding: 0.5rem 0.75rem;
+  background: #4a0f0f;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.publish-dialog-instruction {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.publish-dialog-phrase {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.publish-dialog-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.publish-dialog-executing {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.publish-dialog-phase {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  opacity: 0.85;
+}

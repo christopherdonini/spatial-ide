@@ -18,6 +18,7 @@
 
 use std::sync::{Arc, Mutex};
 
+use spatial_engine::CancelToken;
 use spatial_kernel::permission::GrantSet;
 use spatial_kernel::skp::SkpHost;
 use spatial_skp::v0::{
@@ -25,10 +26,13 @@ use spatial_skp::v0::{
     DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, SkpError, ViewportQueryRequest,
     ViewportQueryResponse,
 };
-use tauri::State;
+use tauri::{Emitter, State};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::publish::{self, ExecuteOutcome, PendingAttempts, PrepareOutcome, PublishScope};
+use crate::publish::{
+    self, EventProgress, ExecuteOutcome, PendingAttempts, PrepareOutcome, PublishScope,
+    RunningPublishes,
+};
 use crate::state::{DataPlaneHandle, SessionLog};
 
 /// **Runs on `spawn_blocking`.** Opens a DuckDB connection and runs ADR-016's whole-column
@@ -203,16 +207,56 @@ pub async fn binding_publish_prepare(
 /// through the permission boundary with a `ShellApproval` carrying `typed_phrase`. Runs on
 /// `spawn_blocking`: real IO, exactly the class of work `docs/01` principle 7 requires stay off the
 /// async runtime's own worker thread.
+///
+/// **P2's progress + cancel wiring** (`NEXT-CUT.md` item 3 — P1 left this at `None` progress on a
+/// token nothing outside the call could reach, `publish.rs`'s own module docs). A fresh
+/// [`CancelToken`] is minted here and registered in [`RunningPublishes`] BEFORE the blocking call
+/// starts (so `binding_publish_cancel` can reach it for the whole run) and removed unconditionally
+/// after, whatever the outcome — never leaked across attempts. Progress crosses as
+/// [`publish::PUBLISH_PROGRESS_EVENT`] via [`EventProgress`], phases only (no percentage/ETA).
 #[tauri::command]
 pub async fn binding_publish_execute(
+    app: tauri::AppHandle,
     grants: State<'_, Arc<Mutex<GrantSet>>>,
     attempts: State<'_, Arc<PendingAttempts>>,
+    running: State<'_, Arc<RunningPublishes>>,
     attempt_id: String,
     typed_phrase: String,
 ) -> Result<ExecuteOutcome, String> {
     let grants = grants.inner().clone();
     let attempts = attempts.inner().clone();
-    tokio::task::spawn_blocking(move || publish::execute(&grants, &attempts, &attempt_id, &typed_phrase))
-        .await
-        .map_err(|e| format!("binding_publish_execute panicked: {e}"))
+    let running = running.inner().clone();
+
+    let cancel = CancelToken::new();
+    running.insert(attempt_id.clone(), cancel.clone());
+
+    let progress_app = app.clone();
+    let progress = EventProgress::new(attempt_id.clone(), move |event| {
+        // Best-effort: this is an instrument stream (module docs, "phases only"), never a side
+        // effect the publish's own success/refusal depends on — a webview with no listener attached
+        // yet must not fail or stall the operation itself.
+        let _ = progress_app.emit(publish::PUBLISH_PROGRESS_EVENT, event);
+    });
+
+    let exec_attempt_id = attempt_id.clone();
+    let result = tokio::task::spawn_blocking(move || {
+        publish::execute_with_progress(&grants, &attempts, &exec_attempt_id, &typed_phrase, &cancel, Some(&progress))
+    })
+    .await;
+
+    // Unconditional: whether the call above succeeded, refused, or the blocking task itself
+    // panicked, this attempt is no longer running and must not linger in the registry.
+    running.remove(&attempt_id);
+
+    result.map_err(|e| format!("binding_publish_execute panicked: {e}"))
+}
+
+/// The Cancel-publish control's own seam (`NEXT-CUT.md` P2 item 3: "wires to the CancelToken seam
+/// if present; if absent host-side, add the minimal token" — P1 left none; this piece adds it,
+/// [`RunningPublishes`]). `true` iff a running publish for this `attempt_id` was found and
+/// cancelled; `false` is not an error (already finished, or an id this registry never held —
+/// `RunningPublishes::cancel`'s own doc comment).
+#[tauri::command]
+pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt_id: String) -> bool {
+    running.cancel(&attempt_id)
 }

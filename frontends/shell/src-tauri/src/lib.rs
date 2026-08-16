@@ -93,6 +93,11 @@ pub fn run() {
             // rule) -- nothing here is written to disk, and nothing is read back.
             app.manage(Arc::new(Mutex::new(GrantSet::new())));
             app.manage(Arc::new(publish::PendingAttempts::new()));
+            // P2's Cancel-publish seam (`NEXT-CUT.md` item 3): a running publish's own `CancelToken`,
+            // keyed by `attempt_id`, live only for the duration of one `binding_publish_execute`
+            // call (`publish::RunningPublishes`'s own doc comment). Dies with the process, same as
+            // every other publish-seam state above.
+            app.manage(Arc::new(publish::RunningPublishes::new()));
             // `running` is intentionally leaked into a `Box` rather than dropped: dropping it would
             // shut the data plane down while the app is still starting. It lives for the process's
             // whole lifetime, exactly as `slice-host`'s own `running` does until its Ctrl-C.
@@ -111,6 +116,7 @@ pub fn run() {
             commands::binding_pick_file,
             commands::binding_publish_prepare,
             commands::binding_publish_execute,
+            commands::binding_publish_cancel,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
