@@ -134,13 +134,28 @@ disabling it at runtime, the same guarantee `npm run build` gives the JS-side `o
 **`e2e/publish.mjs` therefore does not exercise the native picker itself — only the operator's
 manual walkthrough (MANUAL-WALKTHROUGH.md Part G) does.**
 
-**Approval: DOM, one comparison, in Rust.** `PublishDialog.tsx` renders a host-composed prompt
-verbatim (every `PublishPromptData` field, in a fixed order) and carries the typed phrase back
-unexamined — there is structurally nowhere in this component's own code to compare it against
-`confirmation_phrase`, because the phrase never crosses into JS at all (`submitPublishAttempt`'s
-own signature has no such parameter; proven, not merely observed, by
-`PublishDialog.test.ts`). The one comparison (`permission::approval::check`) stays in Rust,
-reached only after the DOM submits. Never defaulted: the confirmation field starts empty and stays
+**Approval: DOM, one comparison, in Rust.** `PublishDialog.tsx` renders `PublishPromptData`'s own
+informational fields verbatim, in a fixed order: `operation`/`class`/`reversibility` (the header
+line), `source_name`, `source_content_hash`, `style_hash`, `destination_display` (the full string,
+never truncated), `grantor` (with the host's own `grant_remaining_s`, shown once, never
+re-derived), `row_scope`, and — when present — `filter_scope`, in its own alert block. **No
+`confirmation_phrase` field exists on `PublishPromptData` at all, and this is corrected wording,
+not a restatement**: an earlier version of this seam carried one, serialized to JS but never
+rendered by anything, which made an earlier draft of this very sentence — "the phrase never
+crosses into JS" — literally false as written (`publish.rs`'s struct definition and `types.ts`'s
+mirror both declared it; only the dialog's own render list omitted it). Dropping the field
+(reviewer gate, publish cut B1) is what makes the claim true rather than aspirational: the host now
+has nothing to hand the page even if it wanted to. The dialog's own instruction tells the operator
+to type "the destination's final path component"; the typed value carries back to the host
+completely unexamined by this component — **the phrase never enters `submitPublishAttempt` at
+all, structurally**: that function's own signature has no parameter for an expected value to
+compare against, proven rather than merely observed by `PublishDialog.test.ts`. **A script —
+including `e2e/publish.mjs` itself — can still derive the expected phrase from
+`destination_display`'s own basename**, the same value a careful operator would read off the
+rendered `Destination` field; consistent with the limitation stated below, this is
+defence-in-depth against operator error, never a secret the host is withholding from anything
+capable of deriving it on its own. The one comparison (`permission::approval::check`) stays in
+Rust, reached only after the DOM submits. Never defaulted: the confirmation field starts empty and stays
 empty on every code path; no don't-ask-again; no remembered or standing approval (a fresh
 `attempt_id` and a fresh `PublishDialog` instance for every attempt); Enter-on-empty is inert; no
 default or last-used destination (the native picker is asked fresh every time); no pre-selected
@@ -179,6 +194,21 @@ item** (`NEXT-CUT.md`'s Design/Audit paragraph), not settled by this filing.
 test with two attempts pointed at two different `SPATIAL_IDE_AUDIT_LOG` paths, each log holding
 exactly its own intent+outcome pair and nothing of the other's.
 
+**A second bound this same design change exposed, found and fixed at this cut's own reviewer
+gate, and recorded here because it corrects a claim `kernel/PERMISSION-BOUNDARY.md`'s own "Append"
+row makes** ("`OpenOptions::append`, one in-process mutex held across open → write → `sync_all`"):
+that row is true of a caller that only ever holds ONE live `AuditLog` at a time (`publish-bundle`'s
+own shape) — it says nothing about two *different* `AuditLog` instances, each with its own gate,
+writing the same file concurrently, which per-attempt `AuditLog::open_for` makes an ordinary case
+the moment two publish attempts are approved close together. **This ADR supersedes that row**: the
+gate (`kernel/src/permission/audit/log.rs::AUDIT_LOG_GATE`) is now a single **process-global**
+`Mutex`, not one per instance, held across open/rotate → write → sync for every `AuditLog` in the
+process — so no two instances, and no concurrent rotation near the size ceiling, can interleave
+with each other. Proven by test
+(`log::tests::concurrent_audit_log_instances_never_interleave_a_line`: twelve threads, twelve
+concurrently-live `AuditLog` instances, one shared log file, every resulting line still parses and
+none is lost).
+
 **Row scope: exactly ADR-017 §8's two shapes, plus the preflight refusal, and nothing else.**
 `PublishScope` is `WholeFile | ViewportBbox { bbox }` — a query parameter composed into
 `ViewportQuery` inside `to_query()`, `filter: None` always, never a member of `SourceScope` or
@@ -212,6 +242,17 @@ the manifest's own claim and by an independent reader's decode).
   release build, and even through it the grant is minted host-side from the supplied destination —
   but an E2E run through it never exercises the real native picker, which is why the operator's
   manual walkthrough (P5) remains a required, distinct piece of evidence, not a redundant one.
+- **`ensure_pinned`'s own pin phase is uncancellable and unreported** (`publish.rs`'s own doc
+  comment on that function, verbatim in substance): it runs on `spawn_blocking`, so it does not
+  block the whole app, but during `binding_publish_prepare`'s "Preparing…" state it has **no
+  cancel affordance and no progress report of its own** — `docs/01` principle 7's progress/cancel
+  clause is unmet for the pin phase specifically. Invisible on this cut's own evidence fixtures
+  (2 000–100 000 features, pins in well under a second); a real gap for a `docs/07`
+  hero-slice-scale (5 GB) publish attempt through the shell UI, where the same whole-file SHA-256
+  hash that is instant on a small fixture becomes a multi-second-to-multi-minute wait with no way
+  to see progress or back out. Not built or closed by this ADR — a cancellable, progress-reported
+  pin step is design work beyond this cut's own evidence-and-ADR scope, named here rather than
+  silently absorbed.
 - **The exposure review this ADR's own Status line names is discharged ONLY by the human.** Filing
   this ADR, the reviewer gate over this cut (P5), and even a green `e2e/publish.mjs` run are all
   evidence *for* that review — none of them **is** it. Nothing in this document may be read as

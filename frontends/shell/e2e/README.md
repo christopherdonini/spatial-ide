@@ -158,10 +158,13 @@ Submit button's own function) is driven unchanged.
 
 Opens `target/fixtures/manual-walkthrough/filter-zoned.parquet` (regenerate:
 `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture --
---ignored --nocapture`). `APPROVED'` prepares a fresh `target/e2e-publish-out/...` destination,
-asserts every `PublishPromptData` field (source/style hash present, `confirmation_phrase` equal to
-the destination's own basename, `row_scope` reading whole-file, `filter_scope` null), executes with
-the correct phrase, verifies the resulting bundle with the conforming reader
+--ignored --nocapture`). `APPROVED'` prepares a fresh `target/e2e-publish-out/...` destination and
+asserts the prompt data reaching JS: `source_content_hash`/`style_hash` present, `destination_display`
+naming the chosen destination, `row_scope` reading whole-file, `filter_scope` null. **No
+`confirmation_phrase` field exists on `PublishPromptData` at all** (reviewer gate, publish cut B1 --
+the host never hands the expected typed phrase to JS); this suite derives the phrase it types from
+`destination_display`'s own basename, the same defence-in-depth derivation a page script could
+perform, and executes with it, verifies the resulting bundle with the conforming reader
 (`kernel/examples/verify-bundle.rs`, ADR-017 §14), and reads back the two `spatial-audit/1` lines
 for that attempt (`approval_route` `"shell-dialog"`, a normalized destination, no
 credential-looking content). `REFUSED'` executes with a wrong phrase and asserts no bundle
