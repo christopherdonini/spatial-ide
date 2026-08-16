@@ -22,8 +22,20 @@
 //!
 //! - **Guaranteed:** `OpenOptions::append` positions every write at end-of-file *at write time* on
 //!   both Windows and POSIX, so two appenders do not overwrite each other's bytes.
-//! - **Guaranteed:** within this process, one `Mutex` is held across open → write → sync, so the
-//!   process never interleaves with itself. That is the only atomicity claimed.
+//! - **Guaranteed:** ONE **process-global** `Mutex` ([`AUDIT_LOG_GATE`]) — not one per `AuditLog`
+//!   instance — is held across open/rotate → write → sync, so the process never interleaves with
+//!   itself, however many `AuditLog` instances are live. That is the only atomicity claimed.
+//!
+//!   **This was a per-instance `Mutex` before this cut, and that was a real gap, not a hypothetical
+//!   one**: `permission::boundary::execute`'s own callers were single-instance by construction
+//!   (`publish-bundle` opens one `AuditLog` and runs to completion before another could exist) until
+//!   `frontends/shell`'s per-attempt `AuditLog::open_for` (F-9) made two concurrently-live instances
+//!   a reachable case — two publish attempts approved close together, each on its own
+//!   `spawn_blocking` task, each with its OWN gate under the old design, both able to interleave
+//!   their writes to the SAME file, and both able to race a rotation at the size ceiling. Closed by
+//!   making the gate `static`, found and fixed at this cut's own reviewer gate
+//!   (`docs/adr/ADR-024-class-3-permission-boundary-and-first-exposure.md`'s F-9 paragraph records
+//!   the corrected bound).
 //! - **Not guaranteed:** a single `write` is not atomic in general. A record is a few hundred bytes,
 //!   far below any plausible partial-write threshold on either platform, but that is a practical
 //!   expectation and not a standard. This is the second reason for JSON Lines: an interleaved line
@@ -80,12 +92,16 @@ pub const MAX_AUDIT_LOG_GENERATIONS: u32 = 4;
 /// log states its own leakage instead of hiding it — while `credential` is fatal, unconditionally.
 const RESIDUAL_CLASSES: &[&str] = &["local-filesystem-path", "username", "machine-identifier"];
 
+/// The process-global append gate — **not** one per [`AuditLog`] instance. See the module docs'
+/// "What the append guarantees" section for why a per-instance `Mutex` (this static's predecessor)
+/// stopped being sufficient the moment more than one `AuditLog` could be live in this process at
+/// once, and held across open/rotate → write → sync for exactly that reason: rotation and a write
+/// must never interleave with each other any more than two writes may.
+static AUDIT_LOG_GATE: Mutex<()> = Mutex::new(());
+
 /// An open, bounded, append-only audit log.
 pub struct AuditLog {
     path: PathBuf,
-    /// Held across open → write → sync. See the module docs for exactly what this does and does not
-    /// buy.
-    gate: Mutex<()>,
 }
 
 impl AuditLog {
@@ -98,6 +114,10 @@ impl AuditLog {
     ///
     /// An empty `write_all(b"")` is deliberately **not** used as a probe: it proves nothing on
     /// either platform.
+    ///
+    /// **Rotation and the open probe both run inside [`AUDIT_LOG_GATE`]** — the same gate `append`
+    /// uses — so a rotation this call performs cannot race a concurrent write from an already-open
+    /// `AuditLog`, and two `open_for` calls near the size ceiling cannot both rotate at once.
     pub fn open_for(destination_resolved: &Path) -> Result<Self, AuditError> {
         let path = resolve_log_path()?;
 
@@ -116,19 +136,22 @@ impl AuditLog {
             })?;
         }
 
-        rotate_if_needed(&path)?;
+        {
+            let _guard = AUDIT_LOG_GATE.lock().unwrap_or_else(|e| e.into_inner());
+            rotate_if_needed(&path)?;
 
-        // The probe.
-        std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)
-            .map_err(|e| AuditError::Unwritable {
-                path: normalize_destination(&path),
-                detail: e.to_string(),
-            })?;
+            // The probe.
+            std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&path)
+                .map_err(|e| AuditError::Unwritable {
+                    path: normalize_destination(&path),
+                    detail: e.to_string(),
+                })?;
+        }
 
-        Ok(Self { path, gate: Mutex::new(()) })
+        Ok(Self { path })
     }
 
     /// The resolved log path. Normalized, because this is shown to operators.
@@ -188,7 +211,7 @@ impl AuditLog {
         // The backstop, over the bytes that will actually reach the disk.
         let _ = self.classify(&line, identity_fields)?;
 
-        let _guard = self.gate.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = AUDIT_LOG_GATE.lock().unwrap_or_else(|e| e.into_inner());
         let mut f = std::fs::OpenOptions::new()
             .create(true)
             .append(true)
@@ -446,5 +469,100 @@ mod tests {
             declared_occurrence(line, "grantor_name", "bob").unwrap(),
             r#""grantor_name":"bob""#
         );
+    }
+
+    /// Serializes the `SPATIAL_IDE_AUDIT_LOG` set-var/run/read window — the same discipline
+    /// `kernel/tests/permission_boundary.rs` and `frontends/shell/src-tauri/src/publish.rs`
+    /// document for the identical hazard (this is the first test in THIS file to touch the env
+    /// var, but a future one might not be, and the lock costs nothing when uncontended).
+    fn env_lock() -> std::sync::MutexGuard<'static, ()> {
+        static LOCK: std::sync::OnceLock<Mutex<()>> = std::sync::OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// **The regression this cut's own reviewer gate exists to prove**: before [`AUDIT_LOG_GATE`]
+    /// was made `static`, each [`AuditLog`] instance held its OWN `Mutex`, which said nothing about
+    /// two *different* instances (exactly what
+    /// `frontends/shell/src-tauri/src/publish.rs::execute_with_progress`'s per-attempt
+    /// `AuditLog::open_for` makes routine) writing the same file concurrently. Twelve threads, each
+    /// opening its OWN `AuditLog` for the SAME resolved log path and writing its own intent+outcome
+    /// pair, is that exact shape. **What this proves**: every line present parses as valid JSON —
+    /// an interleaved write would corrupt a line rather than silently changing one's meaning (the
+    /// module docs' own stated JSONL property) — and the line count is exactly `2 × THREADS`,
+    /// proving no write was lost either.
+    #[test]
+    fn concurrent_audit_log_instances_never_interleave_a_line() {
+        use std::thread;
+
+        let _guard = env_lock();
+        let dir = std::env::temp_dir().join("spatial-kernel-audit-log-concurrency-test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let log_path = dir.join("publish.jsonl");
+        std::env::set_var(AUDIT_LOG_ENV, &log_path);
+        // Never opened; only needs to be a real path distinct from `log_path` for `open_for`'s own
+        // "not inside the destination" check.
+        let destination = dir.join("bundle");
+
+        const THREADS: usize = 12;
+        let handles: Vec<_> = (0..THREADS)
+            .map(|i| {
+                let destination = destination.clone();
+                thread::spawn(move || {
+                    let log = AuditLog::open_for(&destination).expect("opens");
+                    let intent = IntentRecord {
+                        attempt: format!("attempt-{i}"),
+                        at: "2026-08-16T10:00:00Z".into(),
+                        operation: "publish-static-bundle",
+                        class: 3,
+                        reversibility: "irreversible",
+                        principal_kind: "os-user",
+                        principal_name: "tester".into(),
+                        source_name: "parcels".into(),
+                        source_content_hash: "sha256:aa".into(),
+                        destination: "<dest>/bundle".into(),
+                        style_hash: "sha256:bb".into(),
+                    };
+                    log.append_intent(&intent).expect("intent writes");
+                    let outcome = OutcomeRecord {
+                        attempt: format!("attempt-{i}"),
+                        at: "2026-08-16T10:00:01Z".into(),
+                        outcome: crate::permission::audit::Outcome::Success,
+                        error_kind: None,
+                        grantor_kind: Some("os-user"),
+                        grantor_name: Some("tester".into()),
+                        grant_lifetime_s: Some(120),
+                        grant_remaining_s: Some(119),
+                        approval_route: Some(crate::permission::audit::ApprovalRoute::ShellDialog),
+                        operation_digest: Some(format!("sha256:{i:064x}")),
+                        manifest_hash: Some(format!("sha256:{i:064x}")),
+                        rows: Some(10),
+                        partitions: Some(1),
+                    };
+                    log.append_outcome(&outcome).expect("outcome writes");
+                })
+            })
+            .collect();
+        for h in handles {
+            h.join().expect("writer thread panicked");
+        }
+
+        let text = std::fs::read_to_string(&log_path).unwrap();
+        let lines: Vec<&str> = text.lines().filter(|l| !l.is_empty()).collect();
+        assert_eq!(
+            lines.len(),
+            THREADS * 2,
+            "expected exactly {} lines (one intent + one outcome per thread), got {}: nothing lost, \
+             nothing merged",
+            THREADS * 2,
+            lines.len()
+        );
+        for line in &lines {
+            let _: serde_json::Value = serde_json::from_str(line).unwrap_or_else(|e| {
+                panic!("a line failed to parse as JSON -- interleaving corrupted it: {e}\nline: {line}")
+            });
+        }
+
+        std::env::remove_var(AUDIT_LOG_ENV);
     }
 }

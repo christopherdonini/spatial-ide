@@ -292,13 +292,22 @@ async function stepApproved(page) {
     throw new Error(`APPROVED': style_hash missing: ${JSON.stringify(prompt.style_hash)}`);
   }
   const expectedPhrase = basename(destination);
-  if (prompt.confirmation_phrase !== expectedPhrase) {
-    throw new Error(
-      `APPROVED': confirmation_phrase "${prompt.confirmation_phrase}" !== destination basename "${expectedPhrase}"`
-    );
-  }
   if (!prompt.destination_display || !prompt.destination_display.includes(expectedPhrase)) {
     throw new Error(`APPROVED': destination_display "${prompt.destination_display}" does not name the destination`);
+  }
+  // No `confirmation_phrase` field exists on `PublishPromptData` at all -- the host never hands
+  // the expected typed phrase to JS (reviewer gate, publish cut B1: an earlier version carried
+  // one, unrendered, which made ADR-024's "never crosses into JS" claim false). The dialog's own
+  // instruction is "type the destination's final path component"; this suite, standing in for the
+  // operator, derives that same value from `destination_display`'s own basename -- the identical
+  // defence-in-depth derivation a page script could perform, proving the property is about WHO
+  // computes the phrase (never the host, on the host's own initiative) rather than about the value
+  // being secret.
+  const derivedPhrase = basename(prompt.destination_display);
+  if (derivedPhrase !== expectedPhrase) {
+    throw new Error(
+      `APPROVED': phrase derived from destination_display "${derivedPhrase}" !== destination basename "${expectedPhrase}"`
+    );
   }
   if (!/whole file/i.test(prompt.row_scope)) {
     throw new Error(`APPROVED': row_scope does not read as whole-file scope: ${JSON.stringify(prompt.row_scope)}`);
@@ -312,7 +321,7 @@ async function stepApproved(page) {
   await waitForHook(page, "publishExecute");
   const executeOutcome = await page.evaluate(
     (phrase) => window.__SPATIAL_E2E__.publishExecute(phrase),
-    prompt.confirmation_phrase
+    derivedPhrase
   );
   if (executeOutcome.status !== "success") {
     throw new Error(`APPROVED': execute with the correct phrase returned ${JSON.stringify(executeOutcome)}, expected {status:"success"}`);
@@ -444,10 +453,13 @@ async function stepFiltered(page) {
     );
   }
 
+  // Derived from `destination_display`'s own basename -- see `stepApproved`'s own comment on why
+  // (no `confirmation_phrase` field exists on `PublishPromptData` at all).
+  const derivedPhrase = basename(prompt.destination_display);
   await waitForHook(page, "publishExecute");
   const executeOutcome = await page.evaluate(
     (phrase) => window.__SPATIAL_E2E__.publishExecute(phrase),
-    prompt.confirmation_phrase
+    derivedPhrase
   );
   if (executeOutcome.status !== "success") {
     throw new Error(`FILTERED': execute returned ${JSON.stringify(executeOutcome)}, expected {status:"success"}`);

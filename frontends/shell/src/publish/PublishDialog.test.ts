@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { nextPublishDialogState, submitPublishAttempt } from "./PublishDialog";
+import { nextPublishDialogState, settleExecuteOutcome, submitPublishAttempt } from "./PublishDialog";
 import type { PublishDialogState } from "./PublishDialog";
 import type { ExecuteOutcome } from "./types";
 
@@ -79,10 +79,10 @@ describe("submitPublishAttempt -- the no-JS-comparison proof (NEXT-CUT.md, bindi
   it("sends the typed phrase to the host VERBATIM, with no gate -- proven structurally: this " +
     "function's own signature never receives a confirmation phrase to compare against", async () => {
     const execute = vi.fn().mockResolvedValue(SUCCESS);
-    // A phrase that does NOT match whatever a real `prompt.confirmation_phrase` might have been --
-    // there is nothing in this call for such a mismatch to be checked against, and the outcome
-    // proves it: `execute` (standing in for the host) is reached with that exact string, not
-    // short-circuited by any JS-side equality check.
+    // An arbitrary, almost-certainly-wrong phrase -- there is no expected value anywhere on this
+    // call, or anywhere on `PublishPromptData` (`types.ts`), for a mismatch to be checked against,
+    // and the outcome proves it: `execute` (standing in for the host) is reached with that exact
+    // string, not short-circuited by any JS-side equality check.
     const outcome = await submitPublishAttempt("att_1", "totally-wrong-phrase", { execute });
 
     expect(execute).toHaveBeenCalledTimes(1);
@@ -95,5 +95,28 @@ describe("submitPublishAttempt -- the no-JS-comparison proof (NEXT-CUT.md, bindi
     const execute = vi.fn().mockResolvedValue({ status: "refused", message: "empty phrase" });
     await submitPublishAttempt("att_2", "", { execute });
     expect(execute).toHaveBeenCalledWith("att_2", "");
+  });
+});
+
+describe("settleExecuteOutcome -- S2, this cut's own reviewer gate: the .then-with-no-.catch fix", () => {
+  it("a resolved promise passes its ExecuteOutcome through unchanged", async () => {
+    await expect(settleExecuteOutcome(Promise.resolve(SUCCESS))).resolves.toEqual(SUCCESS);
+  });
+
+  it("a REJECTED promise (an IPC failure, not a typed refusal) resolves to a refused ExecuteOutcome instead of rejecting -- this is what stops the dialog wedging in \"executing\" forever", async () => {
+    const rejected = Promise.reject(new Error("invoke() failed: the webview lost its IPC channel"));
+    const outcome = await settleExecuteOutcome(rejected);
+    expect(outcome).toEqual({
+      status: "refused",
+      message: "invoke() failed: the webview lost its IPC channel",
+    });
+  });
+
+  it("a rejection that is not an Error instance still resolves (never throws) -- String(e) covers it", async () => {
+    // eslint-disable-next-line prefer-promise-reject-errors -- deliberately a non-Error rejection,
+    // proving the `e instanceof Error` branch's own fallback.
+    const rejected = Promise.reject("a bare string rejection");
+    const outcome = await settleExecuteOutcome(rejected);
+    expect(outcome).toEqual({ status: "refused", message: "a bare string rejection" });
   });
 });

@@ -380,6 +380,43 @@ impl GrantSet {
         Ok(())
     }
 
+    /// Removes every grant whose lifetime has elapsed against `now`. **Not called automatically by
+    /// [`Self::add`]** — a caller decides when the linear scan is worth it; this exists because a
+    /// one-shot process like `publish-bundle` mints one grant and exits, so `MAX_GRANTS` was never
+    /// reachable there, but a long-lived `GrantSet` (`frontends/shell`'s own managed state, alive
+    /// for the whole app session) has no such natural bound — without pruning, every `prepare` call
+    /// only ever grows the set, and the 65th in a session refuses `GrantCeilingExceeded` forever
+    /// (S1, found at this cut's own reviewer gate). `frontends/shell/src-tauri/src/publish.rs`
+    /// calls this once per `binding_publish_prepare`, mirroring `PendingAttempts::insert`'s own
+    /// prune-on-insert precedent in the same file. Every grant this crate mints declares a bounded
+    /// `lifetime` (`PublishGrant::new`), so an expired grant is dead weight, never a live
+    /// authorization anything could still need: removing it changes nothing [`Self::find`] could
+    /// have located (an expired grant already refuses there with `GrantExpired`), only how long the
+    /// dead weight sits around first.
+    pub fn prune_expired(&mut self, now: Instant) {
+        // `!g.expired(now)`, the exact predicate `find` already applies (`in_scope.iter().find(|g|
+        // !g.expired(now))` above) -- pruning can never disagree with what a lookup would have done.
+        self.grants.retain(|g| !g.expired(now));
+    }
+
+    /// Removes every grant matching these exact facts — **the "consumed" half of pruning**,
+    /// `prune_expired`'s complement: a grant `boundary::execute` just located and used (S1's own
+    /// gap) serves no further purpose the instant its single-use attempt is spent, whether or not
+    /// it would also have expired naturally on its own 120 s-class lifetime. Matches on the SAME
+    /// predicate `find` uses (`operation` and `scope_mismatch`), **ignoring expiry** — consumed is
+    /// consumed either way — so a caller that just successfully (or unsuccessfully) executed an
+    /// attempt can evict its grant immediately rather than waiting on a future `prune_expired` to
+    /// notice it has gone stale. `frontends/shell/src-tauri/src/publish.rs` calls this once
+    /// `execute_with_progress` reaches a terminal outcome. Returns whether anything was removed —
+    /// `false` is not an error, only "nothing here matched" (e.g. the attempt's own grant issuance
+    /// itself had already refused, so nothing was ever added).
+    pub fn remove_matching(&mut self, facts: &OperationFacts) -> bool {
+        let before = self.grants.len();
+        self.grants
+            .retain(|g| g.operation != facts.operation || g.scope_mismatch(facts).is_some());
+        self.grants.len() != before
+    }
+
     /// The grant authorizing these facts, or the reason there is none.
     ///
     /// **The refusal order is what makes three different failures produce three different errors**,
@@ -595,6 +632,108 @@ mod tests {
             )),
             Err(PermissionError::GrantCeilingExceeded { .. })
         ));
+    }
+
+    /// **S1, this cut's own reviewer gate**: a long-lived `GrantSet` (`frontends/shell`'s own
+    /// managed state) that never prunes hits `MAX_GRANTS` forever after 64 `prepare` calls in one
+    /// session, since nothing ever removed an old, already-expired grant. `prune_expired` is the
+    /// fix, called before `add` on every prepare (`publish.rs`) -- this proves the UNDERLYING
+    /// property directly: many more than `MAX_GRANTS` short-lived grants, pruned between each add,
+    /// never hit the ceiling.
+    #[test]
+    fn prune_expired_keeps_a_long_lived_set_under_the_ceiling_across_many_more_grants_than_it_holds() {
+        let dir = tmp("prune-many");
+        let mut set = GrantSet::new();
+        let short = Duration::from_millis(1);
+
+        for _ in 0..(MAX_GRANTS + 6) {
+            std::thread::sleep(Duration::from_millis(2));
+            set.prune_expired(Instant::now());
+            set.add(grant(&dir, DestinationScope::exact(&dir.join("out")).unwrap(), short))
+                .expect("pruning keeps the set well under MAX_GRANTS, so add must not refuse");
+        }
+        assert!(
+            set.len() < MAX_GRANTS,
+            "every earlier grant used a 1ms lifetime and 2ms elapsed before each prune; the set \
+             should hold at most the handful still unexpired, got {}",
+            set.len()
+        );
+    }
+
+    /// The narrower unit property, independent of the ceiling: an expired grant is gone after
+    /// pruning, and a still-live one is not touched.
+    #[test]
+    fn prune_expired_removes_only_grants_whose_lifetime_has_elapsed() {
+        let dir = tmp("prune-selective");
+        let mut set = GrantSet::new();
+        set.add(grant(&dir, DestinationScope::exact(&dir.join("short")).unwrap(), Duration::from_millis(1)))
+            .unwrap();
+        set.add(grant(&dir, DestinationScope::exact(&dir.join("long")).unwrap(), Duration::from_secs(300)))
+            .unwrap();
+        assert_eq!(set.len(), 2);
+
+        std::thread::sleep(Duration::from_millis(5));
+        set.prune_expired(Instant::now());
+
+        assert_eq!(set.len(), 1, "exactly the expired grant must be removed");
+        // The survivor is still findable -- proving `prune_expired` did not disturb a live grant's
+        // own usability, only remove the dead one.
+        assert!(set.find(&facts(&dir, "parcels", "sha256:aa", "long"), Instant::now()).is_ok());
+    }
+
+    /// `remove_matching` -- the "consumed" half of pruning -- removes exactly the grant matching
+    /// an attempt's own facts and leaves an unrelated one untouched, regardless of expiry.
+    #[test]
+    fn remove_matching_evicts_exactly_the_consumed_grant_ignoring_expiry() {
+        let dir = tmp("remove-matching");
+        let mut set = GrantSet::new();
+        // A long-lived grant for `out` -- NOT expired, but about to be "consumed".
+        set.add(grant(&dir, DestinationScope::exact(&dir.join("out")).unwrap(), Duration::from_secs(300)))
+            .unwrap();
+        // An unrelated grant for a different destination -- must survive.
+        set.add(grant(&dir, DestinationScope::exact(&dir.join("other")).unwrap(), Duration::from_secs(300)))
+            .unwrap();
+        assert_eq!(set.len(), 2);
+
+        let consumed = OperationFacts {
+            operation: OperationKind::Publish,
+            dataset_name: "parcels".into(),
+            content_hash: "sha256:aa".into(),
+            destination: dir.join("out"),
+        };
+        assert!(set.remove_matching(&consumed), "the matching grant must be reported as removed");
+        assert_eq!(set.len(), 1, "exactly the consumed grant is gone");
+        assert!(
+            set.find(&facts(&dir, "parcels", "sha256:aa", "other"), Instant::now()).is_ok(),
+            "the unrelated grant must be untouched"
+        );
+
+        // A second call against the same (now-gone) facts finds nothing to remove -- not an error.
+        assert!(!set.remove_matching(&consumed));
+    }
+
+    /// **S1's own end-to-end shape**: many more publish attempts than `MAX_GRANTS`, each one
+    /// minted then immediately consumed (mirroring `execute_with_progress`'s own
+    /// `remove_matching` call after a terminal outcome) -- the set never grows past what is
+    /// momentarily live, so the 65th (or 700th) never refuses.
+    #[test]
+    fn a_grant_removed_the_instant_its_attempt_is_consumed_never_grows_the_set_across_many_more_than_the_ceiling() {
+        let dir = tmp("consume-many");
+        let mut set = GrantSet::new();
+
+        for i in 0..(MAX_GRANTS * 10) {
+            let dest = dir.join(format!("out-{i}"));
+            set.add(grant(&dir, DestinationScope::exact(&dest).unwrap(), Duration::from_secs(300)))
+                .unwrap_or_else(|e| panic!("prepare #{i} refused despite immediate consumption: {e}"));
+            let facts = OperationFacts {
+                operation: OperationKind::Publish,
+                dataset_name: "parcels".into(),
+                content_hash: "sha256:aa".into(),
+                destination: dest,
+            };
+            assert!(set.remove_matching(&facts), "consumption #{i} found nothing to remove");
+            assert_eq!(set.len(), 0, "the set must be empty again after each consumption, iteration {i}");
+        }
     }
 
     /// A `{:?}` on a grant must not print a raw filesystem path (`docs/09`).

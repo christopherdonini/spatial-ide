@@ -16,8 +16,14 @@ export interface PublishPromptData {
   source_name: string;
   source_content_hash: string;
   style_hash: string;
+  /** The FULL resolved destination string, never truncated. No `confirmation_phrase` field exists
+   * on this type -- the host never hands the expected typed phrase to JS at all (reviewer gate,
+   * publish cut: an earlier version carried one, unrendered, which made ADR-024's "never crosses
+   * into JS" claim false as written). The dialog's own instruction tells the operator to type
+   * "the destination's final path component"; a script -- or `e2e/publish.mjs` -- can still
+   * *derive* the expected phrase from this field's own basename, which is why the property is
+   * defence-in-depth against operator error, never a secret the host withholds. */
   destination_display: string;
-  confirmation_phrase: string;
   grantor: string;
   grant_remaining_s: number;
   /** Whole-file or viewport-bbox, in words -- NEW relative to `ApprovalPrompt::render`'s own field

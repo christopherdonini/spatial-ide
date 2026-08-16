@@ -12,6 +12,7 @@ import {
   nextStateFromDialogSettled,
   nextStateFromPrepareOutcome,
   resolvePublishScope,
+  settlePrepareOutcome,
 } from "./PublishPanel";
 import { FILTER_SCOPE_SENTENCE } from "./types";
 import type { ExecuteOutcome, PrepareOutcome, PublishPromptData } from "./types";
@@ -30,7 +31,6 @@ const PROMPT: PublishPromptData = {
   source_content_hash: "sha256:abc",
   style_hash: "sha256:def",
   destination_display: "C:\\out\\bundle",
-  confirmation_phrase: "bundle",
   grantor: "os-user chris",
   grant_remaining_s: 120,
   row_scope: "row scope: the whole file",
@@ -129,6 +129,30 @@ describe("nextStateFromDialogSettled", () => {
     if (next.kind === "refused") {
       expect(next.refusal.message).toMatch(/no longer known to the host/);
     }
+  });
+});
+
+describe("settlePrepareOutcome -- S2, this cut's own reviewer gate: the un-caught-await fix", () => {
+  it("a resolved promise passes its PrepareOutcome through unchanged", async () => {
+    const outcome: PrepareOutcome = { status: "prompt", attempt_id: "att_1", prompt: PROMPT };
+    await expect(settlePrepareOutcome(Promise.resolve(outcome))).resolves.toEqual(outcome);
+  });
+
+  it("a REJECTED promise (an IPC failure, not a typed refusal) resolves to a refused PrepareOutcome instead of rejecting", async () => {
+    const rejected = Promise.reject(new Error("invoke() failed: the webview lost its IPC channel"));
+    const outcome = await settlePrepareOutcome(rejected);
+    expect(outcome).toEqual({
+      status: "refused",
+      message: "invoke() failed: the webview lost its IPC channel",
+    });
+  });
+
+  it("a rejection that is not an Error instance still resolves (never throws) -- String(e) covers it", async () => {
+    // eslint-disable-next-line prefer-promise-reject-errors -- deliberately a non-Error rejection,
+    // proving the `e instanceof Error` branch's own fallback.
+    const rejected = Promise.reject("a bare string rejection");
+    const outcome = await settlePrepareOutcome(rejected);
+    expect(outcome).toEqual({ status: "refused", message: "a bare string rejection" });
   });
 });
 

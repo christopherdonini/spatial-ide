@@ -85,6 +85,31 @@ export function nextStateFromPrepareOutcome(outcome: PrepareOutcome): PublishPan
   }
 }
 
+/**
+ * Awaits a `binding_publish_prepare*` call and ALWAYS resolves to a `PrepareOutcome` -- success,
+ * typed refusal, or an unexpected REJECTION alike, turned into the same refused shape.
+ *
+ * **S2, this cut's own reviewer gate.** An earlier version had `runPrepare`/
+ * `runPrepareWithDestination` `await` their own `invoke()` call directly, with no surrounding
+ * try/catch -- a rejected promise (an IPC failure; `invoke()`'s own failure mode when a Tauri
+ * command's `Result::Err` is a bare string, not this seam's typed `{status:"refused"}` shape)
+ * unwound out of the caller before `setState` ever ran, wedging the panel in `"preparing"` forever
+ * with no refusal shown and no way to recover (`docs/01` principle 7). Extracted as a pure,
+ * top-level, exported function -- not a component-internal closure -- specifically so
+ * `PublishPanel.test.ts` can prove the reject path without a DOM, mirroring `nextStateFromPrepareOutcome`'s
+ * own "pure so it is testable" precedent above. Mirrors `admitDataset.ts`'s own try/catch
+ * discipline: unlike that function's `SkpCallError` (a real typed shape worth preserving), a
+ * publish-seam rejection has no typed shape at all, so it becomes a plain refusal through the SAME
+ * `RefusalBlock` surface every other publish refusal already renders through.
+ */
+export async function settlePrepareOutcome(promise: Promise<PrepareOutcome>): Promise<PrepareOutcome> {
+  try {
+    return await promise;
+  } catch (e) {
+    return { status: "refused", message: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 /** `PublishDialog`'s own settle result, turned into this panel's next state -- pure, covering
  * every `ExecuteOutcome` variant plus the pre-submit abandon path. */
 export function nextStateFromDialogSettled(result: DialogSettleResult): PublishPanelState {
@@ -166,7 +191,10 @@ export default function PublishPanel({
     }
     setState({ kind: "preparing" });
     const styleDoc = JSON.stringify(toStyleDocument(style));
-    const outcome = await publishPrepare(datasetHandle, styleDoc, scopeInput, filterActive);
+    // `settlePrepareOutcome` (module scope, above) is what turns an unexpected rejection into a
+    // refusal instead of leaving this `await` throw straight out of `runPrepare`, unresolved and
+    // with `setState` never called -- see its own doc comment (S2).
+    const outcome = await settlePrepareOutcome(publishPrepare(datasetHandle, styleDoc, scopeInput, filterActive));
     setState(nextStateFromPrepareOutcome(outcome));
     return outcome;
   }
@@ -198,12 +226,8 @@ export default function PublishPanel({
     }
     setState({ kind: "preparing" });
     const styleDoc = JSON.stringify(toStyleDocument(style));
-    const outcome = await publishPrepareWithDestination(
-      datasetHandle,
-      styleDoc,
-      scopeInput,
-      filterActive,
-      destination
+    const outcome = await settlePrepareOutcome(
+      publishPrepareWithDestination(datasetHandle, styleDoc, scopeInput, filterActive, destination)
     );
     setState(nextStateFromPrepareOutcome(outcome));
     return outcome;

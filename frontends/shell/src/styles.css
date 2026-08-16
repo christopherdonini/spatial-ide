@@ -491,6 +491,18 @@ body,
   font-size: 0.85rem;
 }
 
+/* Reviewer gate, publish cut ("take that nit"): the CLI's own `ApprovalPrompt::render`
+   (`kernel/src/permission/approval.rs`) already judges this sentence necessary for an irreversible
+   class-3 side effect (ADR-006). Always visible while the dialog is open, not only while
+   confirming -- a standing fact about the operation, not a conditional warning like the
+   filter-scope block above, so a lighter weight than that block's own dark-red is deliberate. */
+.publish-dialog-irreversible-warning {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b34700;
+}
+
 .publish-dialog-instruction {
   margin: 0;
   font-size: 0.85rem;

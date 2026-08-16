@@ -243,8 +243,18 @@ pub struct PublishPromptData {
     pub source_name: String,
     pub source_content_hash: String,
     pub style_hash: String,
+    /// The FULL resolved destination string. The dialog's own instruction tells the operator to
+    /// type "the destination's final path component" (`PublishDialog.tsx`) -- **never this
+    /// struct's own field**, because there is no such field: the confirmation phrase is computed
+    /// host-side, both here at `prepare` time (for the boundary's own record) and again,
+    /// independently, inside `boundary::execute` at approval-check time — it is never serialized
+    /// to JS at all (reviewer gate, publish cut: an earlier version carried a `confirmation_phrase`
+    /// field nothing rendered, which made the ADR-024 claim "the phrase never crosses into JS"
+    /// literally false; dropping the field is what makes that claim true rather than aspirational).
+    /// A page script -- or an E2E suite -- can still *derive* the expected phrase from this field's
+    /// own basename (`e2e/publish.mjs` does exactly that), which is why this is defence-in-depth
+    /// against operator error, never a secret the host is withholding.
     pub destination_display: String,
-    pub confirmation_phrase: String,
     pub grantor: String,
     pub grant_remaining_s: u64,
     /// NEW relative to `ApprovalPrompt::render`'s field set: whole-file or viewport-bbox, in words.
@@ -392,6 +402,12 @@ fn prepare_with_query(
 
     {
         let mut held = grants.lock().unwrap_or_else(|e| e.into_inner());
+        // **S1, this cut's own reviewer gate**: unlike `publish-bundle` (one grant, one process,
+        // exits), this `GrantSet` lives for the whole app session in Tauri managed state — without
+        // pruning, every `prepare` call only grows it, and the 65th in a session refused
+        // `GrantCeilingExceeded` forever, since nothing ever removed an old, already-expired grant.
+        // Mirrors `PendingAttempts::insert`'s own prune-on-insert precedent (this file, above).
+        held.prune_expired(Instant::now());
         if let Err(e) = held.add(grant) {
             return PrepareOutcome::Refused { message: e.to_string() };
         }
@@ -405,7 +421,6 @@ fn prepare_with_query(
         source_content_hash: pre.source_content_hash(),
         style_hash: pre.style_hash().to_string(),
         destination_display: resolved_destination.display().to_string(),
-        confirmation_phrase: boundary::confirmation_phrase(&resolved_destination),
         grantor: format!("{} {}", principal.kind.as_str(), principal.id),
         grant_remaining_s,
         row_scope,
@@ -501,9 +516,34 @@ pub fn execute_with_progress(
         Ok(d) => d,
         Err(e) => return ExecuteOutcome::Refused { message: e.to_string() },
     };
+
+    // **S1's "consumed" half, captured before anything below can early-return.** The SAME facts
+    // the grant was minted against (`prepare_with_query`'s own `SourceScope`/`DestinationScope`) —
+    // `dataset.content_pin()` is `Some` by this point (`ensure_pinned` ran during `prepare`) and is
+    // never recomputed, only read, so this matches `preflight`'s own `source_content_hash()`
+    // exactly. Used at every return path below to evict this attempt's own grant the instant its
+    // single use is spent (`GrantSet::remove_matching`'s own doc comment) — whether the attempt
+    // goes on to succeed, refuse, or fail before `boundary::execute` is even reached.
+    let facts = permission::grant::OperationFacts {
+        operation: OperationKind::Publish,
+        dataset_name: pending.dataset_name.clone(),
+        content_hash: pending
+            .dataset
+            .content_pin()
+            .map(|p| format!("sha256:{}", p.hash()))
+            .unwrap_or_default(),
+        destination: resolved_destination.clone(),
+    };
+    let consume_grant = || {
+        grants.lock().unwrap_or_else(|e| e.into_inner()).remove_matching(&facts);
+    };
+
     let audit = match AuditLog::open_for(&resolved_destination) {
         Ok(a) => a,
-        Err(e) => return ExecuteOutcome::Refused { message: e.to_string() },
+        Err(e) => {
+            consume_grant();
+            return ExecuteOutcome::Refused { message: e.to_string() };
+        }
     };
 
     let approval = ShellApproval::new(typed_phrase);
@@ -523,7 +563,13 @@ pub fn execute_with_progress(
     // (`kernel/src/permission/boundary.rs`'s own header). `cancel`/`progress` are now the caller's
     // own — [`execute`] above supplies a throwaway token and `None`; `binding_publish_execute`
     // supplies the real [`RunningPublishes`]-registered token and an [`EventProgress`] sink.
-    match boundary::execute(&attempt, cancel, progress) {
+    let boundary_outcome = boundary::execute(&attempt, cancel, progress);
+    // Release the read borrow before re-locking (mutably) to remove -- `held`/`grantset` are not
+    // used again below.
+    drop(held);
+    consume_grant();
+
+    match boundary_outcome {
         Ok(outcome) => ExecuteOutcome::Success {
             bundle_path: outcome.bundle_path.display().to_string(),
             rows: outcome.rows,
@@ -845,7 +891,17 @@ mod tests {
         let PrepareOutcome::Prompt { attempt_id, prompt } = outcome else {
             panic!("expected a prompt, got {outcome:?}")
         };
-        (grants, store, attempt_id, prompt.confirmation_phrase)
+        // `confirmation_phrase` no longer exists on `PublishPromptData` (reviewer gate: it crossed
+        // to JS unrendered, which made ADR-024's "never crosses into JS" claim false) -- derived
+        // here from `destination_display`'s own basename, the SAME defence-in-depth derivation
+        // `e2e/publish.mjs` now performs, so this test fixture exercises the identical path a real
+        // caller (or a script) would.
+        let phrase = Path::new(&prompt.destination_display)
+            .file_name()
+            .expect("destination_display names a real final component")
+            .to_string_lossy()
+            .to_string();
+        (grants, store, attempt_id, phrase)
     }
 
     #[test]
@@ -1131,6 +1187,58 @@ mod tests {
                 assert!(message.contains("pin"), "{message}");
             }
             other => panic!("expected SourceNotPinned refusal on an unpinned dataset, got {other:?}"),
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Reviewer gate (S1): the 64-grant ceiling never applies to a real session
+    // ---------------------------------------------------------------------------------------
+
+    /// **S1, this cut's own reviewer gate**: before `execute_with_progress` evicted a consumed
+    /// grant (`GrantSet::remove_matching`), the SAME shared `GrantSet` this shell keeps for its
+    /// whole session (unlike `publish-bundle`'s one-grant-one-process shape) only ever grew, and
+    /// the 65th `prepare` in a session refused `GrantCeilingExceeded` forever. Seventy real
+    /// prepare-then-execute cycles, all against ONE shared `grants`/`store` pair (mirroring the
+    /// shell's own managed state, which is exactly one `Mutex<GrantSet>` for the whole app), all
+    /// succeeding, is the regression test: `MAX_GRANTS` is 64, so a 65th-or-later success here is
+    /// only possible because consumed grants stopped accumulating.
+    #[test]
+    fn seventy_sequential_prepare_execute_cycles_never_hit_the_grant_ceiling() {
+        let _guard = env_lock();
+        let d = workspace("seventy-cycles");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let ds = fixture(&d, 10);
+
+        const CYCLES: usize = 70; // > MAX_GRANTS (64, spatial_kernel::permission::MAX_GRANTS)
+        for i in 0..CYCLES {
+            let dest = d.join(format!("out-{i}"));
+            let outcome = prepare(
+                &grants,
+                &store,
+                ds.clone(),
+                "parcels".into(),
+                STYLE.into(),
+                PublishScope::WholeFile,
+                false,
+                viewer(),
+                viewer_license(),
+                dest,
+                "2026-08-16T10:00:00Z".into(),
+            );
+            let PrepareOutcome::Prompt { attempt_id, prompt } = outcome else {
+                panic!("prepare #{i} refused (a GrantSet-ceiling regression?): {outcome:?}")
+            };
+            let phrase = Path::new(&prompt.destination_display)
+                .file_name()
+                .expect("destination_display names a real final component")
+                .to_string_lossy()
+                .to_string();
+            let exec = execute(&grants, &store, &attempt_id, &phrase);
+            assert!(matches!(exec, ExecuteOutcome::Success { .. }), "execute #{i} did not succeed: {exec:?}");
         }
     }
 }

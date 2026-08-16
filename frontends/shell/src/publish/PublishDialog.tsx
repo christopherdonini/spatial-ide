@@ -36,8 +36,11 @@ export type PublishDialogEvent =
  * `admitAndResetStaleUiState` precedent).
  *
  * - **Empty-field / Enter-on-empty-inert**: `submit` on `phrase === ""` is a no-op (stays
- *   `"confirming"` with the same phrase) -- NOT a JS comparison against `confirmation_phrase`,
- *   only a non-emptiness check (`NEXT-CUT.md`: "enable/disable only on non-empty — NOT on match").
+ *   `"confirming"` with the same phrase) -- NOT a comparison against an expected phrase (no such
+ *   value exists anywhere on `PublishPromptData` -- reviewer gate, publish cut: an earlier version
+ *   carried one, unrendered, and this file's own comments claimed a JS comparison was merely
+ *   *avoided* rather than *impossible*; dropping the field is what makes "impossible" true), only
+ *   a non-emptiness check (`NEXT-CUT.md`: "enable/disable only on non-empty — NOT on match").
  * - **Second submit impossible**: `submit` while already `"executing"` is a no-op.
  * - **Cancel abandons**: `cancel` only acts from `"confirming"`; a no-op from `"executing"` (that
  *   state has its own `cancelExecution` event instead).
@@ -68,12 +71,12 @@ export interface PublishDialogSubmitDeps {
 }
 
 /**
- * The dialog's Submit/Enter handler, extracted as a **pure async function with no access to
- * `prompt.confirmation_phrase` at all** -- `PublishDialog.test.ts`'s no-JS-comparison proof is
+ * The dialog's Submit/Enter handler, extracted as a **pure async function with no access to an
+ * expected confirmation phrase at all** -- `PublishDialog.test.ts`'s no-JS-comparison proof is
  * structural, not merely observed: this signature has nowhere to put a comparison even if someone
- * tried, since the confirmation phrase is not a parameter here. `typedPhrase` crosses to
- * `deps.execute` UNCONDITIONALLY, whatever it is (`NEXT-CUT.md`: "the button submits whatever was
- * typed").
+ * tried, since no such value is a parameter here, or exists anywhere on `PublishPromptData`
+ * (`types.ts`). `typedPhrase` crosses to `deps.execute` UNCONDITIONALLY, whatever it is
+ * (`NEXT-CUT.md`: "the button submits whatever was typed").
  */
 export function submitPublishAttempt(
   attemptId: string,
@@ -81,6 +84,27 @@ export function submitPublishAttempt(
   deps: PublishDialogSubmitDeps
 ): Promise<ExecuteOutcome> {
   return deps.execute(attemptId, typedPhrase);
+}
+
+/**
+ * Turns any settlement of `submitPublishAttempt`'s own promise -- success, typed refusal, or an
+ * unexpected REJECTION -- into an `ExecuteOutcome`, never a thrown/rejected value.
+ *
+ * **S2, this cut's own reviewer gate.** An earlier version of `handleSubmit` (below) called
+ * `.then(...)` on this promise with no `.catch`: a rejected promise (an IPC failure; `invoke()`'s
+ * own failure mode when `binding_publish_execute`'s `Result::Err` is a bare string, not this
+ * seam's typed `{status:"refused"}` shape) meant `dispatch`/`onSettled` were never called at all,
+ * wedging the dialog in `"executing"` forever with no way to close it (`docs/01` principle 7).
+ * Extracted as a pure, top-level, exported function -- not inlined in `handleSubmit`'s own
+ * `.then`/`.catch` -- mirroring `submitPublishAttempt`'s own "extracted for testability" precedent
+ * immediately above, so `PublishDialog.test.ts` can prove the reject path without a DOM.
+ */
+export async function settleExecuteOutcome(promise: Promise<ExecuteOutcome>): Promise<ExecuteOutcome> {
+  try {
+    return await promise;
+  } catch (e) {
+    return { status: "refused", message: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 /** What `PublishDialog` reports to its parent exactly once, when it reaches `"closed"` --
@@ -134,7 +158,8 @@ function usePublishPhase(
  * the full enumeration.
  *
  * **Never pre-filled** (the phrase input starts at `""`, `nextPublishDialogState`'s own initial
- * state below -- never `prompt.confirmation_phrase`). **No don't-ask-again, no remembered
+ * state below -- there is no `prompt`-sourced value it even COULD be pre-filled from: no
+ * confirmation-phrase field exists on `PublishPromptData` at all). **No don't-ask-again, no remembered
  * approval** -- there is no checkbox, no localStorage read/write, nothing that could skip this
  * component on a future attempt; every `PublishPanel` "Publish…" click mints a brand-new
  * `attempt_id` and a brand-new `PublishDialog` instance (the parent keys on `attemptId`).
@@ -164,7 +189,10 @@ export default function PublishDialog({
     if (state.kind !== "confirming" || state.phrase === "") return;
     const typedPhrase = state.phrase;
     dispatch({ kind: "submit" });
-    void submitPublishAttempt(attemptId, typedPhrase, { execute }).then((outcome) => {
+    // `settleExecuteOutcome` (module scope, above) is what turns an unexpected rejection into a
+    // refused `ExecuteOutcome` instead of leaving this promise reject with `dispatch`/`onSettled`
+    // never called (S2).
+    void settleExecuteOutcome(submitPublishAttempt(attemptId, typedPhrase, { execute })).then((outcome) => {
       dispatch({ kind: "settled" });
       onSettled({ kind: "executed", outcome });
     });
@@ -221,6 +249,14 @@ export default function PublishDialog({
         </div>
       )}
 
+      {/* Reviewer gate, publish cut: taken as a real finding (not named debt) -- the CLI's own
+        * `ApprovalPrompt::render` (`kernel/src/permission/approval.rs`) already judged this
+        * sentence necessary for an irreversible class-3 side effect (ADR-006), verbatim, and this
+        * dialog had dropped it. */}
+      <p className="publish-dialog-irreversible-warning" role="alert">
+        This cannot be undone. Nothing here can remove a published bundle.
+      </p>
+
       {state.kind === "confirming" && (
         <div className="publish-dialog-confirm">
           <p className="publish-dialog-instruction">
@@ -238,8 +274,9 @@ export default function PublishDialog({
             <button type="button" className="publish-dialog-cancel" onClick={handleAbandon}>
               Cancel
             </button>
-            {/* Enabled on NON-EMPTY only -- NEVER on a match against `prompt.confirmation_phrase`
-              * (NEXT-CUT.md's binding "no JS comparison" rule; `PublishDialog.test.ts` proves this
+            {/* Enabled on NON-EMPTY only -- NEVER on a match against an expected phrase (no such
+              * value exists anywhere on `PublishPromptData` for this to match against --
+              * NEXT-CUT.md's binding "no JS comparison" rule; `PublishDialog.test.ts` proves this
               * structurally via `submitPublishAttempt`'s own signature). */}
             <button
               type="button"
