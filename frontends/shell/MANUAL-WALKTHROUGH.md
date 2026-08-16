@@ -284,6 +284,98 @@ reviewer-gate-fixes section).
 
 ---
 
+## Part G — publish (publish cut)
+
+`NEXT-CUT.md`'s own framing, verbatim and binding: *"This cut builds and evidences the first
+exposure surface for a class-3 publish, against machinery that ALREADY EXISTS... **It does not
+discharge ADR-017's acceptance condition.** The condition's discharge is the human's decision at
+the end, on the evidence and the surface itself."* Every step below through G9 is that evidence —
+including the one click no CDP driver can reach (the native destination picker, G2) and two
+judgment calls only an operator can make (G3, G6). **G10, at the end, is the decision itself** — not
+a table row, a question addressed to the human alone.
+
+Reuses `filter-zoned.parquet` (already listed in Part E's own fixtures table above — publish v0
+needs no fixture of its own; any admitted, styleable dataset works, and reusing this one keeps the
+row-count/zone-filter facts Parts E/F already established available for G8's own filter-active
+step).
+
+| # | Step | Expected outcome |
+|---|---|---|
+| G1 | Click **Open GeoParquet…** and select `filter-zoned.parquet` (canvas from Part F may still be visible; that's fine). Below the filter panel, expand **▸ Style** and set a distinctive style (Part F's F2/F4 — an unusual fill colour and a visible, distinct outline) so the published bundle is visually identifiable later. Then expand the collapsed **▸ Publish** disclosure, below **Style**. | The summary/canvas admit and the style panel behave exactly as Parts E/F describe. The Publish disclosure expands (**▾ Publish**) to reveal a **Row scope** fieldset with two radio options — **Whole dataset** and **Current view** (checked by default) — and, below them, one **Publish…** button. If the canvas has had no pan/zoom gesture yet this session, **Current view** is disabled and a reason paragraph reads *"No settled view yet — pan or zoom the canvas once before publishing the current view."*; pan or zoom once and it enables. No filter-scope sentence appears yet (none is active — that is G8), and no refusal/summary block is present. |
+| G2 | Click **Publish…**. | **The one step no automation in this document's own suites can reach**: a native OS **Save** dialog appears — the same structural limitation this document's intro names for the Open dialog's own picker (no CDP driver reaches WebView2's dialog chrome), except here there is not even a JS-only bypass to script around it: publish's picker is fused *inside* one Tauri command (`e2e/publish.mjs`'s own top comment). Choose a destination **under `C:\dev\spatial-ide\target\`**, giving it a memorable final name of your own choosing (e.g. `C:\dev\spatial-ide\target\manual-walkthrough-publish\my-parcels`), and confirm. The **Publish…** button briefly reads "Preparing…". |
+| G3 | Read the approval dialog that appears, in full, before typing anything. | A modal appears, rendering `PublishPromptData`'s own fields in this exact order (`PublishDialog.tsx`, transcribed directly from source): a header line reading **`publish-static-bundle — class 3 — irreversible`**; a field list — **Source** (the dataset's own logical name), **Source content hash** (`sha256:…`), **Style hash** (`sha256:…` — the style you set in G1), **Destination** (the FULL path you chose in G2, never truncated or ellipsized), **Grantor** (`os-user <your Windows account name> — grant remaining: <N>s`, a static number the host sent once, never ticking down), **Row scope** (a sentence naming whichever radio you left selected in G1 — *"row scope: the whole file — every row the dataset contains"* for Whole dataset, or the current-viewport wording for Current view); no filter-scope block (none is active yet — G8 is where that appears); then a standing, bold, red-orange warning reading **"This cannot be undone. Nothing here can remove a published bundle."** (verbatim — the same sentence `kernel/src/permission/approval.rs`'s CLI prompt already carries); then the instruction **"Type the destination's final path component to confirm."**, an empty text input, and **Cancel**/**Publish** buttons (**Publish** greyed out while the input is empty — typing anything at all enables it; nothing about what you type is checked client-side, only that it is non-empty). **JUDGE:** is the scope complete and readable — do you know exactly what will be written where, from what source, with what style, before you type anything? |
+| G4 | Type a phrase you know is WRONG (e.g. `nope`) into the field and click **Publish**. | The dialog closes immediately — no re-prompt, no retry loop. In the Publish panel below, a typed refusal renders: code `publish-refused`, message **"refused: the confirmation did not name the destination. Expected exactly `<the destination's own final path component you chose in G2>`. Approval names *this* execution — a bare `y` would confirm that a key was pressed, not that the operator read where an irreversible publish was going (ADR-006 class 3; docs/09)"** (verbatim, with the bracketed part replaced by your own G2 destination's own final component — `kernel/src/permission/approval.rs`'s `ApprovalRefused::NotMatched` Display, crossing to the panel unmodified). No bundle exists at the destination you chose (the folder is empty or absent — check in Explorer if you like). **This is the one-prompt-no-retry property, felt live**: there is no "try again" control anywhere on the refusal itself — a new attempt means clicking **Publish…** again, from the top, native picker included. |
+| G5 | Click **Publish…** again — either the same destination (now known to be untouched) or a fresh one — and this time type the CORRECT phrase (the destination's own final path component, read exactly off the dialog's own **Destination** field) and click **Publish**. | The confirming view is replaced by an executing view: a phase line (`role="status"`) that updates through the publish's real phases (`verifying-source`, `querying`, `query-running`, `writing-partitions`, `writing-style`, `writing-viewer`, `writing-manifest`, `finalizing` — `kernel/src/publish/mod.rs::PublishPhase::as_str`; not every phase is guaranteed to be observed on a fast, small-fixture run, `query-running` in particular per its own doc comment; no duration or percentage anywhere, ADR-018) and a **Cancel publish** button. On a fixture this small these may flash by too fast to read individually — judge only that phase text is present and changing, never its speed. The dialog then closes and a quiet summary renders in the panel: **"Published."**, then a definition list — **Destination** (the bundle path), **Rows**, **Partitions**. No duration/`build_millis` figure anywhere (the evidence guard rail: the UI publish path is UNMEASURED this cut, and stays that way). Nothing auto-opens — no browser tab, no file-explorer window. |
+| G6 | Open a text viewer (Notepad is fine) on `%LOCALAPPDATA%\spatial-ide\audit\publish.jsonl`. | One JSON object per line — this file accumulates across every publish attempt ever made on this machine (every earlier automated `publish.mjs` run included), so scroll to the **last few lines**: your G4 attempt's own pair (an `intent` line, then an `outcome` line reading `"outcome":"refused"`, `"error_kind":"ApprovalRefused"`), then your G5 attempt's own pair (`intent` + `"outcome":"success"`). Both outcome lines read `"approval_route":"shell-dialog"`. Both intent lines' `"destination"` field is forward-slash-normalized and does not contain `C:\Users\<you>` or `C:/Users/<you>` — a `target\` destination like this walkthrough's own is outside the audit machinery's recognized user-profile roots, so it is reported plainly, as itself, with `"residual_classes":["local-filesystem-path"]` on the intent line **naming** that fact rather than hiding it (`kernel/PERMISSION-BOUNDARY.md`'s own declared behavior for this class — only a `credential`-class residual is fatal). **JUDGE:** is this the audit record you asked for — would it satisfy you, reading it in six months? |
+| G7 | From `C:\dev\spatial-ide\renderer\bundle-viewer`, run `node scripts/serve-bundle.mjs "<G5's own destination>" 8732` (Part F's own F7 command, pointed at G5's own bundle path, on a fresh port so it does not collide with a still-running Part F session). Open the printed URL (`http://127.0.0.1:8732/viewer/index.html`). | The bundle viewer loads (a status line reads something like "1/1 partitions verified · 2000 features drawn, ..."), and the polygons' fill colour, fill opacity, and outline in this separately-loaded static page visibly match the style you set in G1 — the same look-and-feel comparison Part F's F7 asks for, now reached by clicking **Publish…** in the shell instead of running `publish-bundle.exe` by hand. The bundle is real: nothing about G5's success summary was a simulation. |
+| G8 | Apply a filter if not already active (Part E's panel — e.g. `zone = 'residential'`), then click **Publish…** again (either scope option). | The approval dialog carries, in its own alert block below **Row scope**, this sentence verbatim: **"this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing publishes the viewport extent, not your filter"** (`publish.rs::FILTER_SCOPE_SENTENCE`). **Cancel without publishing** — either dismiss the native picker instead of confirming it (G2's own step), or, once the dialog appears, click its own **Cancel** button. No bundle is written either way. (Optionally, if curious: reopen the audit log — no new pair appears for either cancellation. This was checked, not merely asserted: reading `publish.rs` shows `AuditLog::open_for` and the intent record are written only *inside* `execute_with_progress`/`boundary::execute` — never during `prepare`, and `PublishDialog.tsx`'s own Cancel button (`handleAbandon`) never calls `execute` at all, so an abandoned-after-picker attempt reaches neither. Confirmed live as well, not only read: preparing an attempt through the dev-only test seam and deliberately never executing it left the audit log's line count and content completely unchanged — zero lines mentioned that attempt's own destination.) |
+| G9 | Close the app window. | No crash dialog, no hang on exit — the same claim A10 makes. |
+
+**If anything deviates:** stop, record the exact step, and report it, same as Parts A–F. (Except
+G4 and G8's refusals/cancellations themselves — those ARE the expected outcome, not a deviation.)
+
+### G10 — the decision
+
+Addressed to the human, not to whoever is running this script. Nothing below is a checkbox.
+
+**ADR-017's Status block, verbatim:** *"Acceptance condition attached by the human: before publish
+is exposed through SKP, any shipped CLI/UI, MCP, plugin, notebook or AI surface — and **no later
+than Prototype exit** — the kernel must enforce a **scoped publish grant, explicit approval, and a
+redacted audit record** (the §15/§18 obligations). Until then `publish-bundle` remains
+developer/test tooling only."*
+
+**The 2026-08-07 clarification to that condition, verbatim:** *"...exposure through SKP, any
+shipped CLI/UI, MCP, plugin, notebook or AI surface additionally requires that **the exposure
+surface itself pass review**, and that review must verify one rule in particular: **the requester
+must never mint the grant** (F-5). Until such a surface exists and passes, `publish-bundle` remains
+developer/test tooling."*
+
+**What this cut built and evidenced, briefly:** a binding-local, two-command host seam
+(`binding_publish_prepare`/`binding_publish_execute`, never SKP); a grant minted host-side from the
+native picker's own answer and the dataset's own `ContentPin`, never from anything JS asserts (F-5,
+exercised by every automated and manual attempt above); a DOM approval surface whose one comparison
+stays in Rust (no JS ever sees or checks an expected phrase); per-attempt audit logging (F-9); a
+reviewer gate over the whole cut (B1/B2 fixed as blocking, S1/S2/S5 fixed, S3/S4 named as debt, not
+silently dropped); an automated suite (`e2e/publish.mjs`: `OPEN`/`APPROVED'`/`REFUSED'`/`FILTERED'`
+green, `EXPIRED'` unit-tested instead of run); and this walkthrough, G1–G9, as the operator's own
+click-through of exactly what none of that automation can reach.
+
+**The question only you answer:** does this surface satisfy the clarified condition — has the
+exposure surface itself passed review, with F-5 verified live (the requester never mints the
+grant)? Is publish now permitted to be a product feature **on this surface** — the shell's UI, this
+exact two-command seam, this exact DOM dialog — and on this surface *alone*? (SKP, MCP, any
+plugin/notebook/AI surface stay fenced regardless of this ruling; ADR-017's condition is per-surface,
+and none of those have been built or reviewed by this cut.)
+
+Your ruling goes in this Part's own result log below, in your own words. **Nothing else in this
+tree — no ADR, no `CUT-STATE.md` section, no docs page — may claim the condition discharged until
+it is written there.**
+
+## What `e2e/publish.mjs` covers
+
+A separate suite (`npm run e2e:publish`, `frontends/shell/e2e/publish.mjs`, publish cut P4) drives
+the SAME `binding_publish_prepare`/`execute` seam Part G's own Publish button drives — through a
+dev-only destination-supplying seam (`publishPrepareWithDestination`) rather than the real Open
+dialog, since the native picker itself has no CDP-reachable path at all (this file's own top
+comment). Same cross-reference convention as every earlier coverage table: "Does not cover" lists
+only what the numbered Part G step *claims* that the script cannot assert.
+
+**Status as of the publish-cut reviewer-gate tree (`21bb90b`): GREEN** — `OPEN`/`APPROVED'`/
+`REFUSED'`/`FILTERED'` all PASS, `EXPIRED'` SKIPPED with a stated reason (`CUT-STATE.md`'s
+`P5-fixes` section: exit code 0, checked directly).
+
+| Automated step | Walkthrough step(s) | Covers | Does not cover |
+|---|---|---|---|
+| `OPEN` | G1 | `filter-zoned.parquet` admits; `publishPrepareWithDestination` registers (dataset-scoped) | the Style panel edit, or the Publish disclosure's own DOM (radio buttons, disabled reason text) — `OPEN` only calls `openPath`, it never touches either panel |
+| `APPROVED'` | G2–G7 (everything past the native picker) | every field `PublishPromptData` carries (`source_content_hash`/`style_hash` present and well-formed, `destination_display` names the chosen path, `row_scope` reads whole-file, `filter_scope` is `null`); executing with the phrase derived from `destination_display`'s own basename succeeds; the real bundle is verified by `kernel/examples/verify-bundle.rs` (ADR-017 §14's conforming reader); the audit pair (`approval_route:"shell-dialog"`, a normalized destination, no credential-looking substring) | **the native Save dialog itself** (G2 — no CDP path reaches it at all); the operator's own reading/judgment of the rendered dialog (G3's own JUDGE call); serving and visually comparing the bundle in a browser (G7's own JUDGE call, which this script never attempts — it decodes bytes, not pixels); reading the audit file by eye (G6's own JUDGE call) |
+| `REFUSED'` | G4 | executing with a wrong phrase returns a typed refusal; no bundle directory is created; no `.staging-*` debris under the destination's own parent; the audit pair reads `outcome:"refused"`, `error_kind:"ApprovalRefused"` | that the refusal actually **renders** in the DOM as `RefusalBlock` (`.admission-refusal`/`.admission-refusal-code`/`.admission-refusal-message`) — this script only inspects the hook's own returned outcome object, never the page's rendered markup, for this suite |
+| `FILTERED'` | G8 (the sentence-and-manifest half only) | the filter-scope sentence is present, verbatim, when a filter is active; the published manifest's own `operation.filter` reads `whole-file` and the bundle's row count equals the FULL dataset, both by the manifest's own claim and by the conforming reader's independent decode — the active filter never leaks into the published rows | **G8's own cancel-at-picker/cancel-at-dialog scenario** — `FILTERED'` always executes to a real success, it never cancels; the no-audit-record-on-cancel claim in G8's own parenthetical was checked separately, by direct source reading plus one throwaway, non-suite CDP script (prepare via the dev-only seam, deliberately never execute, re-read the real audit log — zero new lines), not by anything committed to this suite |
+| `EXPIRED'` | — (no Part G step) | — | this step is SKIPPED in every run (no TTL-shortening test knob exists; `PENDING_ATTEMPT_TTL` is a hardcoded 120s constant) — its own property is covered only by `publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown`, a Rust unit test with no sleep; nothing in Part G exercises a 120-second wait either |
+| — | G9 | — | nothing beyond `OPEN`'s own admission — no automated step closes the app window, the same gap A10/F8 already name |
+| — | G10 | — | **entirely.** No automated suite, and nothing in this repository, can make the human's own ruling — that is G10's whole reason to be a distinct block rather than a table row |
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -364,3 +456,15 @@ actually run by an operator.
   (`--approve` naming the destination), served, and visually confirmed by the operator to render
   **identically** in the bundle viewer — a separately-loaded static page sharing only the
   renderer-owned resolver with the shell. No deviations reported at any step.
+
+### Part G run (separate pass — publish)
+
+Part G did not exist during any run recorded above. Fill in the fields below when Part G is
+actually run by an operator. **G10 is not a pass/fail step** — record the human's own ruling on the
+acceptance condition there, in their own words, not a checkbox.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Part G (G1–G9):**
+- **G10 — the human's decision on ADR-017's (clarified) acceptance condition, for this surface:**
