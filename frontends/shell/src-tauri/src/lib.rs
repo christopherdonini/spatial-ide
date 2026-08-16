@@ -16,11 +16,13 @@
 //! the structural enforcement of that rule.
 
 mod commands;
+mod publish;
 mod state;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use spatial_data_plane::{serve, DataPlaneConfig};
+use spatial_kernel::permission::GrantSet;
 use spatial_kernel::skp::SkpHost;
 use spatial_kernel::{Catalog, EngineSourceFactory};
 use tauri::Manager;
@@ -84,6 +86,13 @@ pub fn run() {
             app.manage(host);
             app.manage(data_plane_handle);
             app.manage(session_log);
+            // The publish seam's own state (NEXT-CUT.md P1): a shared, in-process grant set and a
+            // single-use pending-attempt store. Both are `Arc`-wrapped so a `spawn_blocking` closure
+            // in `commands.rs` can hold an owned clone across the `'static` boundary that requires;
+            // both die with the process (`kernel/src/permission/grant.rs`'s own non-persistence
+            // rule) -- nothing here is written to disk, and nothing is read back.
+            app.manage(Arc::new(Mutex::new(GrantSet::new())));
+            app.manage(Arc::new(publish::PendingAttempts::new()));
             // `running` is intentionally leaked into a `Box` rather than dropped: dropping it would
             // shut the data plane down while the app is still starting. It lives for the process's
             // whole lifetime, exactly as `slice-host`'s own `running` does until its Ctrl-C.
@@ -100,6 +109,8 @@ pub fn run() {
             commands::binding_data_plane_attach,
             commands::binding_log_session_event,
             commands::binding_pick_file,
+            commands::binding_publish_prepare,
+            commands::binding_publish_execute,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

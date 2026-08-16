@@ -22,8 +22,23 @@ tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["sync", "rt-multi-thread", "time"] }
+# OS CSPRNG for the publish seam's opaque attempt ids (NEXT-CUT.md P1) -- the same crates and the
+# same reasoning `protocol/data-plane/src/session.rs` gives for its session token: an id must not be
+# guessable or enumerable by a script running in the same webview.
+getrandom = "0.3"
+hex = "0.4"
 
 spatial-kernel = { path = "../../../kernel" }
 spatial-engine = { path = "../../../engine" }
 spatial-data-plane = { path = "../../../protocol/data-plane" }
 spatial-skp = { path = "../../../protocol/skp" }
+# `style::parse` + `StyleDocument::match_column` -- deriving the attributes a publish must carry
+# from the style already in hand (`publish.rs::style_attributes`), never a second style engine.
+spatial-renderer = { path = "../../../renderer" }
+
+[dev-dependencies]
+# `fixture` is test-only generated GeoParquet (`kernel/Cargo.toml`'s own precedent for enabling it):
+# `publish.rs`'s unit tests build real, small datasets rather than mocking `Dataset`. Cargo unifies
+# this with the plain `spatial-engine` dependency above for test builds; the shipped binary does not
+# gain the fixture-generation code.
+spatial-engine = { path = "../../../engine", features = ["fixture"] }

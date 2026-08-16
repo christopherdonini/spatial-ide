@@ -16,8 +16,9 @@
 //! lists every command below in its `tauri::generate_handler!` call; adding one here without adding
 //! it there is a command JS can never reach, which is the reason there is exactly one list.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
+use spatial_kernel::permission::GrantSet;
 use spatial_kernel::skp::SkpHost;
 use spatial_skp::v0::{
     CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, DescribeRequest,
@@ -27,6 +28,7 @@ use spatial_skp::v0::{
 use tauri::State;
 use tauri_plugin_dialog::DialogExt;
 
+use crate::publish::{self, ExecuteOutcome, PendingAttempts, PrepareOutcome, PublishScope};
 use crate::state::{DataPlaneHandle, SessionLog};
 
 /// **Runs on `spawn_blocking`.** Opens a DuckDB connection and runs ADR-016's whole-column
@@ -131,4 +133,86 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
         });
     let picked = rx.await.map_err(|e| format!("file picker channel closed: {e}"))?;
     Ok(picked.map(|p| p.to_string()))
+}
+
+// -------------------------------------------------------------------------------------------
+// The publish seam (`NEXT-CUT.md` P1) — binding-local, never SKP; see `crate::publish`'s module
+// docs for the design this pair implements.
+// -------------------------------------------------------------------------------------------
+
+/// Opens the **native** destination picker (the destination never crosses from JS), runs
+/// `publish::preflight` (pure — P0's row-filter refusal fires here), mints a grant from host-held
+/// facts, and stashes a single-use pending attempt. Returns plain prompt data plus its `attempt_id`.
+///
+/// `filter_active` is a **disclosed deviation** from `NEXT-CUT.md`'s three-parameter shorthand
+/// (`dataset_handle, style_doc, scope`): composing the filter-scope sentence needs to know whether
+/// the shell's *own* active SQL filter (tracked in JS, `App.tsx`'s `activeFilter` — a piece this
+/// binding-local seam has no other way to see) would have applied, and that is not expressible
+/// inside `scope`'s two ADR-017 §8 shapes without a third shape existing. P3 ("Publish affordance and
+/// scope") is what actually threads the live UI state through this parameter; P1 wires the mechanism
+/// and defaults nothing silently — a caller must pass the fact.
+#[tauri::command]
+pub async fn binding_publish_prepare(
+    app: tauri::AppHandle,
+    host: State<'_, Arc<SkpHost>>,
+    grants: State<'_, Arc<Mutex<GrantSet>>>,
+    attempts: State<'_, Arc<PendingAttempts>>,
+    dataset_handle: String,
+    style_doc: String,
+    scope: PublishScope,
+    filter_active: bool,
+) -> Result<PrepareOutcome, String> {
+    let dataset = host
+        .catalog()
+        .get(&dataset_handle)
+        .ok_or_else(|| format!("unknown dataset `{dataset_handle}`"))?;
+    let dataset_name = publish::dataset_name_for(&dataset);
+
+    let default_name = dataset_name.clone();
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog().file().set_file_name(&default_name).save_file(move |picked| {
+        let _ = tx.send(picked);
+    });
+    let picked = rx.await.map_err(|e| format!("destination picker channel closed: {e}"))?;
+    let Some(destination) = picked.and_then(|p| p.into_path().ok()) else {
+        return Ok(PrepareOutcome::PickerCancelled);
+    };
+
+    let (viewer, viewer_license) = match publish::bundled_viewer() {
+        Ok(v) => v,
+        Err(message) => return Ok(PrepareOutcome::Refused { message }),
+    };
+
+    let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
+    Ok(publish::prepare(
+        grants.inner(),
+        attempts.inner(),
+        dataset,
+        dataset_name,
+        style_doc,
+        scope,
+        filter_active,
+        viewer,
+        viewer_license,
+        destination,
+        started_at,
+    ))
+}
+
+/// Takes the pending attempt (single-use), opens a fresh audit log for it alone (F-9), and runs it
+/// through the permission boundary with a `ShellApproval` carrying `typed_phrase`. Runs on
+/// `spawn_blocking`: real IO, exactly the class of work `docs/01` principle 7 requires stay off the
+/// async runtime's own worker thread.
+#[tauri::command]
+pub async fn binding_publish_execute(
+    grants: State<'_, Arc<Mutex<GrantSet>>>,
+    attempts: State<'_, Arc<PendingAttempts>>,
+    attempt_id: String,
+    typed_phrase: String,
+) -> Result<ExecuteOutcome, String> {
+    let grants = grants.inner().clone();
+    let attempts = attempts.inner().clone();
+    tokio::task::spawn_blocking(move || publish::execute(&grants, &attempts, &attempt_id, &typed_phrase))
+        .await
+        .map_err(|e| format!("binding_publish_execute panicked: {e}"))
 }

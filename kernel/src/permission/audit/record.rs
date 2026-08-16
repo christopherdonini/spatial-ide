@@ -86,6 +86,16 @@ pub enum ApprovalRoute {
     Interactive,
     /// Supplied as `--approve <destination>`.
     Flag,
+    /// Typed into a host-composed DOM prompt in `frontends/shell`, compared in Rust
+    /// (`NEXT-CUT.md`'s publish cut). **Value-domain widening within `spatial-audit/1`** — the
+    /// schema tag does not change; a reader already tolerant of an unrecognized `approval_route`
+    /// string (this crate's own reader is not, but no external reader of this file is known to
+    /// exist — `kernel/PERMISSION-BOUNDARY.md`'s "8 MiB × 4 remains one module's ceiling, not
+    /// project policy" is the same posture on a different field) sees a third channel rather than a
+    /// schema break. **Dated, no-external-readers justification, 2026-08-16, QUEUED for the human**:
+    /// this is a decision the custodian records rather than settles — see `NEXT-CUT.md`'s Design
+    /// section, "Audit" paragraph.
+    ShellDialog,
 }
 
 impl ApprovalRoute {
@@ -93,6 +103,7 @@ impl ApprovalRoute {
         match self {
             Self::Interactive => "interactive",
             Self::Flag => "flag",
+            Self::ShellDialog => "shell-dialog",
         }
     }
 }
@@ -348,5 +359,43 @@ mod tests {
         assert!(s.contains(r#""grantor_name":null"#), "{s}");
         assert!(s.contains(r#""manifest_hash":null"#), "{s}");
         assert!(s.contains(r#""error_kind":"NoGrant""#), "{s}");
+    }
+
+    /// **`ApprovalRoute::ShellDialog`, the third channel (`NEXT-CUT.md`'s publish cut).** A new
+    /// value in `approval_route`'s domain, never a new key — the outcome record's key set is
+    /// asserted unchanged from the two-variant pinning above, and the value renders as the wire
+    /// spelling `"shell-dialog"`.
+    #[test]
+    fn shell_dialog_serializes_as_shell_dialog_and_the_key_set_is_unchanged() {
+        assert_eq!(ApprovalRoute::ShellDialog.as_str(), "shell-dialog");
+
+        let outcome = OutcomeRecord {
+            attempt: "0123456789abcdef".into(),
+            at: "2026-08-16T10:00:00Z".into(),
+            outcome: Outcome::Success,
+            error_kind: None,
+            grantor_kind: Some("os-user"),
+            grantor_name: Some("someone".into()),
+            grant_lifetime_s: Some(120),
+            grant_remaining_s: Some(90),
+            approval_route: Some(ApprovalRoute::ShellDialog),
+            operation_digest: Some("sha256:cc".into()),
+            manifest_hash: Some("sha256:dd".into()),
+            rows: Some(10),
+            partitions: Some(1),
+        };
+        let Json::Obj(members) = outcome.to_json(&[]).unwrap() else { panic!() };
+        let keys: Vec<&str> = members.iter().map(|(k, _)| k.as_str()).collect();
+        assert_eq!(
+            keys,
+            [
+                "schema", "attempt", "phase", "at", "outcome", "error_kind", "grantor_kind",
+                "grantor_name", "grant_lifetime_s", "grant_remaining_s", "approval_route",
+                "operation_digest", "manifest_hash", "rows", "partitions", "residual_classes"
+            ],
+            "a third ApprovalRoute variant must not change the outcome record's key set"
+        );
+        let s = to_canonical_string(&outcome.to_json(&[]).unwrap()).unwrap();
+        assert!(s.contains(r#""approval_route":"shell-dialog""#), "{s}");
     }
 }
