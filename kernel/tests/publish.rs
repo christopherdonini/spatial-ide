@@ -27,7 +27,7 @@ use std::path::{Path, PathBuf};
 use spatial_engine::fixture::{
     write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, LicenseMode,
 };
-use spatial_engine::{CancelToken, Dataset, ViewportQuery};
+use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::{self, redaction};
 use spatial_kernel::publish::{
     publish_unguarded, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishError,
@@ -435,6 +435,63 @@ fn an_existing_destination_is_refused_rather_than_replaced() {
     let e = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
     assert!(matches!(e, PublishError::DestinationExists { .. }), "got {e}");
     assert_eq!(read(&dest, bundle::MANIFEST_PATH), before, "the existing bundle was touched");
+}
+
+/// **P0, the honesty fix (NEXT-CUT.md's conditional block).** `build_operation` never reads
+/// `req.query.filter`, so a predicate-carrying publish would today emit a manifest claiming
+/// `whole-file` over whatever `stream_for_publish` actually filtered — a false record (docs/01
+/// principle 3), and one `bundle_version` 1 cannot fix by recording the predicate instead (ADR-017
+/// §8's `filter` is exactly `whole-file` or `covering-bbox-intersects`; Corrigendum 3 spent the v1
+/// schema exception). `preflight` refuses it before a staging directory can exist.
+#[test]
+fn a_row_predicate_is_refused_before_any_staging_directory_exists() {
+    let d = workspace("row-filter");
+    let ds = pinned(&fixture(&d, 300));
+    let v = viewer();
+    let dest = d.join("bundle");
+
+    let predicate = AdmittedPredicate::admit("zone = 'residential'", &ds)
+        .expect("a real predicate over a real fixture column admits");
+    let mut req = request(&ds, &v, dest.clone());
+    req.query = ViewportQuery::all().with_filter(predicate);
+
+    let e = publish_unguarded(&req, &CancelToken::new(), None).unwrap_err();
+    assert!(matches!(e, PublishError::RowFilterNotRecordable), "got {e}");
+    let msg = e.to_string();
+    assert!(msg.contains("ADR-017"), "the refusal must name the ADR: {msg}");
+    assert!(msg.contains("bundle_version"), "the refusal must name bundle_version: {msg}");
+
+    // **The property this test is for**: no destination, and no staging directory beside it —
+    // `preflight` runs and refuses before `publish_prepared` ever creates one.
+    assert!(!dest.exists(), "a destination was created despite the refusal");
+    let leftovers: Vec<String> = std::fs::read_dir(&d)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .filter(|n| n.contains(".staging-"))
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "a staging directory survived despite the refusal: {leftovers:?}"
+    );
+}
+
+/// The refusal fires from `preflight` itself, before license admission or any other check —
+/// `publish::preflight` is called directly here (no `Dataset` even needs to be pinned), which is the
+/// property that lets the boundary refuse a filtered publish with no side effect of any kind.
+#[test]
+fn the_refusal_is_in_preflight_itself_not_only_reachable_through_publish_unguarded() {
+    let d = workspace("row-filter-preflight");
+    let ds = pinned(&fixture(&d, 50));
+    let v = viewer();
+
+    let predicate = AdmittedPredicate::admit("zone = 'residential'", &ds).unwrap();
+    let mut req = request(&ds, &v, d.join("bundle"));
+    req.query = ViewportQuery::all().with_filter(predicate);
+
+    match spatial_kernel::publish::preflight(&req) {
+        Err(e) => assert!(matches!(e, PublishError::RowFilterNotRecordable), "got {e}"),
+        Ok(_) => panic!("a row-predicate query was admitted by preflight"),
+    }
 }
 
 #[test]

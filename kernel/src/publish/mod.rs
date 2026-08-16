@@ -386,6 +386,17 @@ impl PublishPreflight {
 /// because `DestinationExists` is checked after this runs. The module's own stated order already
 /// puts admission before expense; this makes it true of the destination check too.
 pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishError> {
+    // ---- the honesty gate, before anything else is even looked at (NEXT-CUT.md's conditional
+    // block, item 1) --------------------------------------------------------------------------
+    //
+    // Cheapest check in this function — a field read, no IO, no license admission — and it must
+    // run first: every other refusal below at least describes a request that *could* be published
+    // honestly once fixed. This one describes a request whose success would itself be dishonest, so
+    // there is nothing to gain by admitting license or projection first.
+    if req.query.filter.is_some() {
+        return Err(PublishError::RowFilterNotRecordable);
+    }
+
     let ds = req.dataset;
     let logical_uri = dataset_logical_uri(req.dataset_name)?;
 

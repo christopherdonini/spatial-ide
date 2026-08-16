@@ -217,6 +217,7 @@ fn error_kind(e: &BoundaryError) -> &'static str {
             PublishError::ViewerLicenseNoticeMissing { .. } => "ViewerLicenseNoticeMissing",
             PublishError::CorrespondingSourceNotDurable { .. } => "CorrespondingSourceNotDurable",
             PublishError::DatasetNameRejected { .. } => "DatasetNameRejected",
+            PublishError::RowFilterNotRecordable => "RowFilterNotRecordable",
             PublishError::CeilingExceeded { .. } => "CeilingExceeded",
             PublishError::Cancelled => "Cancelled",
             PublishError::StagingNotRemoved { .. } => "StagingNotRemoved",
@@ -270,6 +271,7 @@ fn publish_outcome(e: &PublishError) -> Outcome {
         | PublishError::ViewerLicenseNoticeMissing { .. }
         | PublishError::CorrespondingSourceNotDurable { .. }
         | PublishError::DatasetNameRejected { .. }
+        | PublishError::RowFilterNotRecordable
         | PublishError::CeilingExceeded { .. } => Outcome::Refused,
         PublishError::DestinationNotWritable { .. }
         | PublishError::InsufficientSpace { .. }

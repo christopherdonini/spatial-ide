@@ -96,6 +96,20 @@ pub enum PublishError {
     /// manifest through the URI (`docs/09`), which is why this is checked rather than escaped.
     DatasetNameRejected { name: String, detail: String },
 
+    /// The query carries a row predicate (`query.filter`), and a `bundle_version` 1 manifest cannot
+    /// record one.
+    ///
+    /// ADR-017 §8 types the operation digest's `filter` member as exactly two shapes —
+    /// `whole-file` or `covering-bbox-intersects` — and Corrigendum 3 spent the v1 schema exception,
+    /// so a third shape is not something this version can add. `build_operation` (~line 1046) never
+    /// reads `req.query.filter`; without this refusal a predicate-carrying publish would stream a
+    /// filtered subset while `stream_for_publish` composes it into the query, and the manifest would
+    /// still claim `whole-file` (or `covering-bbox-intersects`, if a bbox happened to be set too) —
+    /// a false manifest over a filtered subset (docs/01 principle 3; ADR-017 §8's digest would not
+    /// match what actually streamed). Refused in `preflight`, before any staging directory exists,
+    /// rather than emitted and left for a reader to discover.
+    RowFilterNotRecordable,
+
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
 
@@ -198,6 +212,17 @@ impl std::fmt::Display for PublishError {
                 f,
                 "refused: dataset name `{name}` {detail}, so it cannot become a logical URI \
                  without putting a filesystem path in the manifest (docs/09)"
+            ),
+            Self::RowFilterNotRecordable => write!(
+                f,
+                "refused: this query carries a row predicate (`query.filter`), and a \
+                 `bundle_version` 1 manifest cannot record one (ADR-017 §8: the operation digest's \
+                 `filter` member is exactly `whole-file` or `covering-bbox-intersects`, and \
+                 Corrigendum 3 spent the v1 schema exception). Publishing it would produce a \
+                 manifest claiming a whole-file (or bbox) extent over a filtered subset — a false \
+                 record (docs/01 principle 3). Clear the filter and publish the whole file, or \
+                 publish the viewport bbox instead — a filtered-subset bundle format is \
+                 bundle_version 2 and does not exist yet"
             ),
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,
