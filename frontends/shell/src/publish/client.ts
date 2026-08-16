@@ -41,6 +41,38 @@ export function publishCancel(attemptId: string): Promise<boolean> {
   return invoke<boolean>("binding_publish_cancel", { attemptId });
 }
 
+/**
+ * **DEV-ONLY E2E TEST SEAM.** `binding_publish_prepare_e2e_destination` (`commands.rs`,
+ * `#[cfg(debug_assertions)]` -- compiled out of a release build entirely, not merely
+ * runtime-gated; see that command's own doc comment for the full design note). Mirrors
+ * `publishPrepare` exactly except it supplies `destination` directly instead of opening the
+ * native OS save dialog, which no CDP-driven E2E suite can reach (`e2e/README.md`'s "Evidence
+ * class" paragraph) -- unlike the admission flow's `openPath` (whose picker and downstream call
+ * were already two separate commands `AdmissionPanel.tsx` could split apart in JS alone),
+ * publish's native picker is fused inside `binding_publish_prepare` itself, so bypassing it needs
+ * a host-side seam rather than a JS-only one.
+ *
+ * The grant `publish::prepare` mints is still minted **host-side** from this supplied
+ * destination, never from a JS-asserted grant (F-5 holds through this seam exactly as it does for
+ * the real command). **`e2e/publish.mjs` therefore does not exercise the native picker itself --
+ * only the operator's manual walkthrough does.**
+ */
+export function publishPrepareWithDestination(
+  datasetHandle: string,
+  styleDoc: string,
+  scope: PublishScopeInput,
+  filterActive: boolean,
+  destination: string
+): Promise<PrepareOutcome> {
+  return invoke<PrepareOutcome>("binding_publish_prepare_e2e_destination", {
+    datasetHandle,
+    styleDoc,
+    scope,
+    filterActive,
+    destination,
+  });
+}
+
 /** `publish.rs::PUBLISH_PROGRESS_EVENT` verbatim -- the one Tauri event name this seam emits. */
 export const PUBLISH_PROGRESS_EVENT = "publish://progress";
 

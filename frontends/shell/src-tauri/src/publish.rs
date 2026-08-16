@@ -655,6 +655,37 @@ fn style_attributes(style_source: &str) -> Vec<String> {
     }
 }
 
+/// **A real gap this piece found by writing `frontends/shell/e2e/publish.mjs`, not by inspection —
+/// every publish attempt through this shell's own UI refused `SourceNotPinned` before this fix,
+/// because nothing on this crate's own admission or publish path ever called
+/// [`Dataset::pin_content`].** `publish::preflight`'s `SourceNotPinned` refusal exists *because*
+/// pinning is a caller responsibility by design (`kernel/src/bin/publish-bundle.rs::main` pins
+/// explicitly, itself, before building its own `PublishRequest` — the CLI's own established
+/// pattern, not something `preflight`/`prepare` does on a caller's behalf) — P1/P2/P3's own unit
+/// tests never caught this because their shared `fixture()` helper pins the dataset itself before
+/// ever calling `prepare`/`execute`, which the real `binding_publish_prepare` never did.
+///
+/// Pins **once, idempotently**: a dataset [`Dataset::content_pin`] already holds is left alone —
+/// hashing is real, uncached-per-call IO/CPU work (`ContentPin::take` reads the whole file), so a
+/// caller across several publish attempts on the same admitted dataset pays this cost once, not
+/// once per attempt.
+///
+/// **Disclosed limitation, not fixed here**: this runs on `spawn_blocking` (never the async
+/// runtime's own worker thread — `commands.rs`'s own `open_dataset`/`viewport_query` precedent),
+/// so it does not block the whole app, but it has **no cancel affordance and no progress report**
+/// of its own during `binding_publish_prepare`'s "Preparing…" state — `docs/01` principle 7's
+/// progress/cancel clause is unmet for the pin phase specifically. Fine for this cut's own
+/// evidence fixtures (2 000–100 000 features, pins in well under a second); a real gap for a
+/// `docs/07` hero-slice-scale (5 GB) publish attempt through the shell UI, which this piece does
+/// not build the cancellable/progress-reported pin step to close — that is design work beyond
+/// evidence-and-ADR scope, named here rather than silently absorbed.
+pub fn ensure_pinned(dataset: &Dataset, cancel: &CancelToken) -> Result<(), String> {
+    if dataset.content_pin().is_some() {
+        return Ok(());
+    }
+    dataset.pin_content(cancel).map(|_| ()).map_err(|e| e.to_string())
+}
+
 /// Derive a manifest-safe dataset name from the dataset's own source file. The shell's
 /// `DatasetHandle` is an opaque `ds_<hex>` token (`protocol/skp/src/v0/handles.rs`), not a name a
 /// human would recognize in a published manifest.
@@ -1032,5 +1063,74 @@ mod tests {
         running.remove("a");
         assert_eq!(running.len(), 0);
         assert!(!running.cancel("a"), "after remove, the same id is a miss again");
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // P4: the real gap `e2e/publish.mjs` found -- nothing pinned before this fix
+    // ---------------------------------------------------------------------------------------
+
+    /// **Deliberately does NOT use the shared `fixture()` helper above**, because that helper
+    /// pins the dataset itself (`fixture()`'s own body) -- which is exactly what hid this bug from
+    /// every P1/P2/P3 unit test. This dataset starts genuinely unpinned, the way `open_dataset`
+    /// actually leaves one.
+    fn unpinned_fixture(dir: &Path) -> Dataset {
+        let path = dir.join("parcels.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 10,
+                attributes: AttributeMode::CategoricalZone,
+                crs_mode: CrsMode::DeclaredLv95,
+                identity: IdentityMode::NativeUnique,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        Dataset::open(&path).unwrap()
+    }
+
+    #[test]
+    fn ensure_pinned_pins_an_unpinned_dataset_and_is_idempotent_on_an_already_pinned_one() {
+        let d = workspace("ensure-pinned");
+        let ds = unpinned_fixture(&d);
+        assert!(ds.content_pin().is_none(), "a freshly opened dataset starts unpinned");
+
+        ensure_pinned(&ds, &CancelToken::new()).expect("pins successfully");
+        let first_hash = ds.content_pin().expect("a pin now exists").hash().to_string();
+        assert!(!first_hash.is_empty());
+
+        // A second call on an already-pinned dataset must not replace the pin (real IO/CPU cost;
+        // `ensure_pinned`'s own doc comment: "once, idempotently").
+        ensure_pinned(&ds, &CancelToken::new()).expect("a second call is a no-op, not an error");
+        assert_eq!(
+            ds.content_pin().unwrap().hash().to_string(),
+            first_hash,
+            "the existing pin must be left alone, never recomputed"
+        );
+    }
+
+    /// The regression itself, proven the way `a_row_predicate_refuses_through_prepare_with_the_p0_message`
+    /// proves P0's refusal: through `prepare`'s own real code path, on a dataset `ensure_pinned` was
+    /// never called for -- this is what `SourceNotPinned` looked like to every real operator before
+    /// this fix, and what `binding_publish_prepare`/`binding_publish_prepare_e2e_destination` must
+    /// never do again (both now call `ensure_pinned` before `prepare`, on `spawn_blocking` --
+    /// `commands.rs`).
+    #[test]
+    fn prepare_on_an_unpinned_dataset_refuses_source_not_pinned_which_is_exactly_why_the_commands_must_pin_first() {
+        let d = workspace("unpinned-refuses");
+        let ds = Arc::new(unpinned_fixture(&d));
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+
+        let outcome = prepare(
+            &grants, &store, ds, "parcels".into(), STYLE.into(), PublishScope::WholeFile, false,
+            viewer(), viewer_license(), d.join("out"), "2026-08-16T10:00:00Z".into(),
+        );
+        match outcome {
+            PrepareOutcome::Refused { message } => {
+                assert!(message.contains("pin"), "{message}");
+            }
+            other => panic!("expected SourceNotPinned refusal on an unpinned dataset, got {other:?}"),
+        }
     }
 }

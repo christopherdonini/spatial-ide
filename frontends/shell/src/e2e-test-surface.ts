@@ -105,11 +105,35 @@ export interface E2eTestSurface {
    * evidence phase) is expected to be the first real driver of this hook -- P2/P3's own job is only
    * to expose the seam, per the piece text. */
   publishPrepare?: (scope?: "whole" | "current") => Promise<PrepareOutcome>;
-  /** Drives `PublishDialog.tsx`'s own `execute` prop -- the SAME function the dialog's Submit
-   * button calls. Only registered while a `PublishDialog` is actually mounted (mirrors
-   * `queryWithFilter`'s "only once there is something to drive" precedent) -- there is no attempt
-   * to execute before `publishPrepare` has produced one. */
+  /** Drives the SAME `client.ts::publishExecute` function `PublishDialog`'s own Submit button
+   * calls (`execute={publishExecute}`, `PublishPanel.tsx`), against the current attempt
+   * (`attemptIdRef.current`, kept in sync with `PublishPanelState`). **Registered dataset-scoped
+   * in `PublishPanel.tsx`, alongside `publishPrepare`/`publishPrepareWithDestination` -- NOT
+   * inside `PublishDialog.tsx`, and this is a real fix, not a stylistic choice**:
+   * `PublishDialog` only mounts when this panel's own `expanded` disclosure is ALSO open, which
+   * `e2e/publish.mjs`'s headless flow (drives every publish hook without ever clicking the
+   * disclosure toggle) never triggers -- an earlier version registered this hook inside
+   * `PublishDialog` and the hook could never be reached by that suite, a real finding from running
+   * it. `{status:"unknown-attempt"}` when called with no attempt currently pending, mirroring what
+   * the host itself returns for an unknown `attempt_id`. */
   publishExecute?: (typedPhrase: string) => Promise<ExecuteOutcome>;
+  /** **DEV-ONLY E2E TEST SEAM** (`NEXT-CUT.md` P4). Drives `PublishPanel.tsx`'s own
+   * `runPrepareWithDestination` -- the SAME `publish::prepare` code path `publishPrepare` above
+   * drives, except it supplies `destination` directly instead of letting the native OS save
+   * dialog answer it. WebView2's save-dialog chrome has no CDP-reachable automation path at all
+   * (unlike `openPath`'s picker, which is a *separate* Tauri command JS can simply not call), so
+   * this hook exists precisely because `publishPrepare` alone leaves no way for `e2e/publish.mjs`
+   * to reach anything past the picker. Backed by `binding_publish_prepare_e2e_destination`
+   * (`commands.rs`, `#[cfg(debug_assertions)]`) -- compiled out of a release build entirely, and
+   * the grant it produces is still minted host-side from the supplied destination, never from a
+   * JS-asserted grant. **An E2E run through this hook therefore does not exercise the native
+   * picker -- only the operator's manual walkthrough does.** `scope` defaults to whatever
+   * `PublishPanel`'s own radio choice currently is, mirroring `publishPrepare`'s own override
+   * parameter. */
+  publishPrepareWithDestination?: (
+    destination: string,
+    scope?: "whole" | "current"
+  ) => Promise<PrepareOutcome>;
 }
 
 declare global {

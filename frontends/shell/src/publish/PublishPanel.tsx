@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import RefusalBlock from "../admission/RefusalBlock";
 import type { FormattedRefusal } from "../admission/formatRefusal";
@@ -10,7 +10,13 @@ import { toStyleDocument } from "../style/document";
 import { formatPublishRefusal } from "./formatPublishRefusal";
 import PublishDialog from "./PublishDialog";
 import type { DialogSettleResult } from "./PublishDialog";
-import { publishCancel, publishExecute, publishPrepare, subscribePublishProgress } from "./client";
+import {
+  publishCancel,
+  publishExecute,
+  publishPrepare,
+  publishPrepareWithDestination,
+  subscribePublishProgress,
+} from "./client";
 import { FILTER_SCOPE_SENTENCE } from "./types";
 import type { ExecuteOutcome, PrepareOutcome, PublishPromptData, PublishScopeInput } from "./types";
 
@@ -165,6 +171,44 @@ export default function PublishPanel({
     return outcome;
   }
 
+  /**
+   * **E2E TEST SEAM ONLY** (`NEXT-CUT.md` P4) -- no button in this component's own JSX calls this.
+   * Identical to `runPrepare` above except the destination is supplied directly rather than asked
+   * of the native OS save dialog (`publishPrepareWithDestination` -> `commands.rs`'s
+   * `binding_publish_prepare_e2e_destination`, `#[cfg(debug_assertions)]`, compiled out of a
+   * release build). WebView2's save dialog has no CDP-reachable automation path at all, so
+   * `e2e/publish.mjs` has no way past it without this seam -- see that hook's own doc comment
+   * (`e2e-test-surface.ts`) for the full design note and its one documented limitation: an E2E run
+   * through this path does not exercise the native picker, only the operator's manual walkthrough
+   * does.
+   */
+  async function runPrepareWithDestination(
+    scopeChoice: PublishScopeChoice,
+    destination: string
+  ): Promise<PrepareOutcome> {
+    const scopeInput = resolvePublishScope(scopeChoice, getLastViewportBbox());
+    if (scopeInput === null) {
+      // Same defensive fallback as `runPrepare` -- see its own comment.
+      const outcome: PrepareOutcome = {
+        status: "refused",
+        message: "no settled view yet -- pan or zoom the canvas once first",
+      };
+      setState(nextStateFromPrepareOutcome(outcome));
+      return outcome;
+    }
+    setState({ kind: "preparing" });
+    const styleDoc = JSON.stringify(toStyleDocument(style));
+    const outcome = await publishPrepareWithDestination(
+      datasetHandle,
+      styleDoc,
+      scopeInput,
+      filterActive,
+      destination
+    );
+    setState(nextStateFromPrepareOutcome(outcome));
+    return outcome;
+  }
+
   function handlePublishClick(): void {
     void runPrepare(scope);
   }
@@ -173,15 +217,65 @@ export default function PublishPanel({
     setState(nextStateFromDialogSettled(result));
   }
 
-  // E2E TEST SURFACE (dev builds only): drives the SAME `runPrepare` function the real "Publish…"
-  // button calls above -- not a second, parallel path (`e2e-test-surface.ts`'s own top comment
-  // doctrine). `PublishDialog.tsx` registers the matching `publishExecute` hook once a dialog is
-  // actually open, mirroring `capturePixels`/`queryWithFilter`'s own "only exists once there is
-  // something to drive" precedent.
+  /**
+   * **The current attempt's id, readable outside a render** (`state.kind === "dialog" ?
+   * state.attemptId : null`) -- kept in sync by the effect just below. Exists so the
+   * `publishExecute` E2E hook (registered ONCE, dataset-scoped, alongside `publishPrepare`/
+   * `publishPrepareWithDestination` -- see that effect's own comment) always reads the FRESHEST
+   * attempt rather than a stale one closed over at registration time, without having to
+   * re-register the hook on every state transition.
+   */
+  const attemptIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    attemptIdRef.current = state.kind === "dialog" ? state.attemptId : null;
+  }, [state]);
+
+  /**
+   * **The SAME `execute` function `PublishDialog`'s own Submit button drives** (`client.ts`'s
+   * `publishExecute`, the identical reference `<PublishDialog execute={publishExecute} .../>`
+   * passes below), and the SAME terminal-state transition a real dialog's `onSettled` produces
+   * (`handleDialogSettled`) -- not a second, parallel path, only a second caller of the one seam.
+   * `"unknown-attempt"` when there is no current attempt (`attemptIdRef.current === null`) mirrors
+   * what the host itself returns for an `attempt_id` it does not hold, rather than throwing.
+   */
+  async function runExecute(typedPhrase: string): Promise<ExecuteOutcome> {
+    const attemptId = attemptIdRef.current;
+    if (attemptId === null) {
+      return { status: "unknown-attempt" };
+    }
+    const outcome = await publishExecute(attemptId, typedPhrase);
+    handleDialogSettled({ kind: "executed", outcome });
+    return outcome;
+  }
+
+  // E2E TEST SURFACE (dev builds only): drives the SAME `runPrepare`/`runPrepareWithDestination`/
+  // `runExecute` functions the real "Publish…" button and `PublishDialog`'s own Submit button call
+  // -- not a second, parallel path (`e2e-test-surface.ts`'s own top comment doctrine).
+  //
+  // **`publishExecute` is registered HERE, dataset-scoped, like `publishPrepare` -- NOT inside
+  // `PublishDialog.tsx`.** An earlier version registered it there, mirroring
+  // `capturePixels`/`queryWithFilter`'s "only exists once there is something to drive" precedent
+  // -- but `PublishDialog` only mounts when BOTH `state.kind === "dialog"` AND this panel's own
+  // `expanded` disclosure is open (JSX below), and `e2e/publish.mjs` drives this seam headlessly,
+  // never clicking the disclosure toggle -- so that hook could never appear, a real finding from
+  // running the suite, not a hypothetical. Registering it here, keyed off `attemptIdRef` rather
+  // than a mounted `PublishDialog`, is what "dataset-scoped like prepare" means concretely: the
+  // hook exists for as long as this panel does, independent of the disclosure's own expand/collapse
+  // state, exactly like `publishPrepare`/`publishPrepareWithDestination` already are.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     registerE2eHook("publishPrepare", (scopeOverride?: PublishScopeChoice) => runPrepare(scopeOverride ?? scope));
-    return () => unregisterE2eHook("publishPrepare");
+    registerE2eHook(
+      "publishPrepareWithDestination",
+      (destination: string, scopeOverride?: PublishScopeChoice) =>
+        runPrepareWithDestination(scopeOverride ?? scope, destination)
+    );
+    registerE2eHook("publishExecute", (typedPhrase: string) => runExecute(typedPhrase));
+    return () => {
+      unregisterE2eHook("publishPrepare");
+      unregisterE2eHook("publishPrepareWithDestination");
+      unregisterE2eHook("publishExecute");
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetHandle, style, filterActive, scope]);
 

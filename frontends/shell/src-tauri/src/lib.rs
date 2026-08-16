@@ -117,6 +117,12 @@ pub fn run() {
             commands::binding_publish_prepare,
             commands::binding_publish_execute,
             commands::binding_publish_cancel,
+            // E2E TEST SEAM (`NEXT-CUT.md` P4) — `#[cfg(debug_assertions)]` on both this entry and
+            // the command's own definition (`commands.rs`) removes the match arm from a release
+            // build entirely (`tauri-macros`' `Handler` codegen applies each item's attributes to
+            // its generated arm), not merely a runtime-disabled command that still ships.
+            #[cfg(debug_assertions)]
+            commands::binding_publish_prepare_e2e_destination,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -137,3 +137,47 @@ toward and past the 200px floor, is gone. Expanding still narrows `.canvas-conta
 viewport), so this suite expands exactly once, before its first capture, and stays expanded for every
 later one -- comparable widths throughout, never a collapsed-vs-expanded mismatch within one run. Same
 **E2E-verified** evidence class; same watchdog/deadline discipline; leaves the app running afterward.
+
+## Publish spec (publish cut, P4)
+
+```
+npm run e2e:publish
+```
+
+`e2e/publish.mjs` -- a further sibling, driving `window.__SPATIAL_E2E__.publishPrepareWithDestination`
+(a **dev-only test seam**, `commands.rs::binding_publish_prepare_e2e_destination`,
+`#[cfg(debug_assertions)]`, compiled out of a release build) rather than `publishPrepare`.
+`binding_publish_prepare`'s own native OS save dialog has no CDP-reachable automation path at all --
+unlike admission's picker (a separate command `openPath` can simply skip calling), publish's picker
+is fused inside that one Tauri command, so reaching anything past it needs this host-side seam. The
+seam supplies a destination directly and otherwise runs the identical `publish::prepare` the real
+command runs, minting the grant host-side from that supplied path exactly as the real command does
+(F-5 holds through it) -- **this suite therefore does not exercise the native picker itself, only
+the operator's manual walkthrough (MANUAL-WALKTHROUGH.md Part G) does.** `publishExecute` (the real
+Submit button's own function) is driven unchanged.
+
+Opens `target/fixtures/manual-walkthrough/filter-zoned.parquet` (regenerate:
+`cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture --
+--ignored --nocapture`). `APPROVED'` prepares a fresh `target/e2e-publish-out/...` destination,
+asserts every `PublishPromptData` field (source/style hash present, `confirmation_phrase` equal to
+the destination's own basename, `row_scope` reading whole-file, `filter_scope` null), executes with
+the correct phrase, verifies the resulting bundle with the conforming reader
+(`kernel/examples/verify-bundle.rs`, ADR-017 §14), and reads back the two `spatial-audit/1` lines
+for that attempt (`approval_route` `"shell-dialog"`, a normalized destination, no
+credential-looking content). `REFUSED'` executes with a wrong phrase and asserts no bundle
+directory, no `.staging-*` debris, and an audit pair `refused`/`ApprovalRefused`. `EXPIRED'` is
+SKIPPED with a stated reason (`publish.mjs`'s own comment): `PENDING_ATTEMPT_TTL` has no
+env/test-shortenable knob, and the property is already unit-tested
+(`publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown`) without a 120s sleep.
+`FILTERED'` applies `zone = 'residential'` through `queryWithFilter` (the same seam a real
+`FilterPanel` Apply click uses), asserts the prompt's `filter_scope` is the conditional block's own
+sentence verbatim, then publishes whole-file and asserts the manifest's `operation.filter` says
+`{"kind":"whole-file"}` and the bundle's row count is the FULL fixture's 2 000 rows -- both by the
+manifest's own claim and by the reader's independent decode -- proving the active filter never
+leaked into the published stream (P0's own guarantee, exercised end to end through the real
+boundary). **Audit-log determinism**: reads `SPATIAL_IDE_AUDIT_LOG` if the invoking environment set
+one, else the real per-user default; `main()` refuses to proceed if `attachOrLaunch` attached to an
+already-running instance rather than launching fresh, since only a fresh launch is guaranteed to
+have inherited this process's own environment. Same **E2E-verified** evidence class; longer default
+deadline (900s, matching `filter-panel.mjs`'s own heavier-suite precedent -- this suite also builds
+and runs a Rust example as a subprocess); leaves the app running afterward.

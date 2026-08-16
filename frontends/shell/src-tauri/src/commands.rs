@@ -144,7 +144,9 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
 // docs for the design this pair implements.
 // -------------------------------------------------------------------------------------------
 
-/// Opens the **native** destination picker (the destination never crosses from JS), runs
+/// Opens the **native** destination picker (the destination never crosses from JS), pins the
+/// dataset's content if it is not already pinned (`publish::ensure_pinned` — a real gap this
+/// piece's own P4 evidence found; see that function's own doc comment), runs
 /// `publish::preflight` (pure — P0's row-filter refusal fires here), mints a grant from host-held
 /// facts, and stashes a single-use pending attempt. Returns plain prompt data plus its `attempt_id`.
 ///
@@ -188,19 +190,32 @@ pub async fn binding_publish_prepare(
     };
 
     let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
-    Ok(publish::prepare(
-        grants.inner(),
-        attempts.inner(),
-        dataset,
-        dataset_name,
-        style_doc,
-        scope,
-        filter_active,
-        viewer,
-        viewer_license,
-        destination,
-        started_at,
-    ))
+    let grants = grants.inner().clone();
+    let attempts = attempts.inner().clone();
+    // `ensure_pinned` is real IO/CPU (a whole-file hash) — `spawn_blocking`, never the async
+    // runtime's own worker thread, the same discipline `open_dataset`/`viewport_query` already
+    // apply above. `publish::ensure_pinned`'s own doc comment names what this does NOT yet give
+    // that pin phase: a cancel affordance or a progress report of its own.
+    tokio::task::spawn_blocking(move || {
+        if let Err(message) = publish::ensure_pinned(&dataset, &CancelToken::new()) {
+            return PrepareOutcome::Refused { message };
+        }
+        publish::prepare(
+            &grants,
+            &attempts,
+            dataset,
+            dataset_name,
+            style_doc,
+            scope,
+            filter_active,
+            viewer,
+            viewer_license,
+            destination,
+            started_at,
+        )
+    })
+    .await
+    .map_err(|e| format!("binding_publish_prepare panicked: {e}"))
 }
 
 /// Takes the pending attempt (single-use), opens a fresh audit log for it alone (F-9), and runs it
@@ -259,4 +274,94 @@ pub async fn binding_publish_execute(
 #[tauri::command]
 pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt_id: String) -> bool {
     running.cancel(&attempt_id)
+}
+
+// -------------------------------------------------------------------------------------------
+// E2E TEST SEAM (`NEXT-CUT.md` P4, `frontends/shell/e2e/publish.mjs`) — dev builds only,
+// compiled out of a release build entirely, not merely runtime-gated.
+// -------------------------------------------------------------------------------------------
+
+/// **Bypasses EXACTLY the native destination picker [`binding_publish_prepare`] opens above,
+/// nothing else** — the same "bypass exactly the native dialog" discipline `openPath`
+/// (`e2e-test-surface.ts`) already establishes for `binding_pick_file`/`admitPath`. WebView2's own
+/// save-dialog chrome has no CDP-reachable automation path at all (`e2e/README.md`'s "Evidence
+/// class" paragraph), so unlike admission — where the picker and the downstream call were already
+/// two separate commands an E2E hook could split apart in JS alone — publish's picker is fused
+/// inside [`binding_publish_prepare`] itself, and there is no way to reach [`publish::prepare`]
+/// from JS without a new host-side seam.
+///
+/// This command supplies `destination` directly and otherwise calls the **identical**
+/// [`publish::prepare`] the real command calls — same `preflight`, same grant minted **host-side**
+/// from this supplied path (never from a JS-asserted grant; F-5's "the requester never mints the
+/// grant" holds exactly as it does for the real command — see `docs/adr/ADR-024-…md`'s own
+/// Decision section for why the test seam does not weaken that property, only which *fact source*
+/// supplied the destination), same single-use pending-attempt stash. **An E2E run through this
+/// seam therefore does not exercise the native picker itself — only the operator's manual
+/// walkthrough does** (`frontends/shell/e2e/publish.mjs`'s own top comment says so again, for a
+/// reader who only ever sees the test file).
+///
+/// **Compiled out of a release build, not merely runtime-gated**: `#[cfg(debug_assertions)]` here
+/// AND on this command's own entry in `lib.rs`'s `generate_handler!` list means `tauri build`'s
+/// default (release) profile never emits this match arm at all — `tauri-macros`' own `Handler`
+/// codegen applies each list item's attributes to its generated match arm
+/// (`#(#attrs)* #command_name_macros => …wrapper!(…)`), so a `cfg` attribute here genuinely removes
+/// the arm rather than merely disabling it at runtime — the same guarantee `npm run build` gives
+/// the JS-side `openPath` hook (verified against `tauri-macros-2.6.3/src/command/handler.rs`
+/// directly while writing this, not assumed).
+///
+/// **Known limitation, the same one ADR-020 already named for this exact idiom in this crate**
+/// (`lib.rs`'s `webview_origin` selector): `cfg!(debug_assertions)`/`#[cfg(debug_assertions)]` is
+/// true for `tauri build --debug` as well as `cargo tauri dev` — a *packaged* debug build would
+/// still carry this seam, letting any page script on that build supply an arbitrary destination
+/// with no native picker in the way. Not exercised or closed by this piece; named so it cannot be
+/// missed.
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub async fn binding_publish_prepare_e2e_destination(
+    host: State<'_, Arc<SkpHost>>,
+    grants: State<'_, Arc<Mutex<GrantSet>>>,
+    attempts: State<'_, Arc<PendingAttempts>>,
+    dataset_handle: String,
+    style_doc: String,
+    scope: PublishScope,
+    filter_active: bool,
+    destination: String,
+) -> Result<PrepareOutcome, String> {
+    let dataset = host
+        .catalog()
+        .get(&dataset_handle)
+        .ok_or_else(|| format!("unknown dataset `{dataset_handle}`"))?;
+    let dataset_name = publish::dataset_name_for(&dataset);
+
+    let (viewer, viewer_license) = match publish::bundled_viewer() {
+        Ok(v) => v,
+        Err(message) => return Ok(PrepareOutcome::Refused { message }),
+    };
+
+    let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
+    let grants = grants.inner().clone();
+    let attempts = attempts.inner().clone();
+    // Same pin step, same `spawn_blocking` discipline as the real `binding_publish_prepare` above
+    // — this seam calls the identical `publish::prepare`, so it must not diverge on the one
+    // precondition that command now satisfies.
+    tokio::task::spawn_blocking(move || {
+        if let Err(message) = publish::ensure_pinned(&dataset, &CancelToken::new()) {
+            return PrepareOutcome::Refused { message };
+        }
+        publish::prepare(
+            &grants,
+            &attempts,
+            dataset,
+            dataset_name,
+            style_doc,
+            scope,
+            filter_active,
+            viewer,
+            viewer_license,
+            std::path::PathBuf::from(destination),
+            started_at,
+        )
+    })
+    .await
+    .map_err(|e| format!("binding_publish_prepare_e2e_destination panicked: {e}"))
 }

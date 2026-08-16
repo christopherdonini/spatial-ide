@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { ExecuteOutcome, PublishPromptData } from "./types";
 
 /**
@@ -151,13 +150,11 @@ export default function PublishDialog({
   const [state, dispatch] = useReducer(nextPublishDialogState, { kind: "confirming", phrase: "" });
   const phase = usePublishPhase(attemptId, state.kind === "executing", subscribeProgress);
 
-  // E2E TEST SURFACE (dev builds only): drives the SAME `execute` prop the Submit button below
-  // calls -- not a second, parallel path (`e2e-test-surface.ts`'s own top comment doctrine).
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    registerE2eHook("publishExecute", (typedPhrase: string) => execute(attemptId, typedPhrase));
-    return () => unregisterE2eHook("publishExecute");
-  }, [attemptId, execute]);
+  // The `publishExecute` E2E hook is registered by `PublishPanel.tsx`, dataset-scoped, NOT here --
+  // see that file's own comment for why: this component only mounts while its parent's `expanded`
+  // disclosure is also open, which `e2e/publish.mjs`'s headless flow never triggers, so a hook
+  // registered only on THIS component's own mount could never be reached by that suite. This
+  // component still drives the identical `execute` prop for the real Submit button below.
 
   function handleSubmit(): void {
     // Guarded directly against the current `state`, not merely by the disabled button -- this
