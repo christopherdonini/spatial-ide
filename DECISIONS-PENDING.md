@@ -5,6 +5,25 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+5. **Publish cut: filtered-subset bundles are OUT at bundle_version 1 (architect ruling) — do
+   you want them scheduled?** A bundle recording the shell's SQL-filtered subset needs
+   `bundle_version 2` + a new ADR (candidate ADR-025): your Corrigendum 3 declared the v1
+   schema-change exception **spent**, and a v1 manifest cannot record a predicate — publishing
+   one today would produce a FALSE manifest (claims whole-file over a subset) and a digest
+   collision, so the cut's P0 makes `preflight` refuse it, typed. The shell publishes whole-file
+   or current-viewport-bbox (the two honest §8 shapes), and an active filter is named in words on
+   the approval surface, never silently dropped. The hero sentence still reads: the filter is how
+   you *find* what to publish; the artifact records the viewport. Recommendation: leave
+   bundle_version 2 unscheduled until real need. No action = the recommendation.
+
+6. **Audit format: `ApprovalRoute` gains `"shell-dialog"` within `spatial-audit/1`.** The audit
+   record's approval_route currently knows "interactive" (stdin) and "flag" (--approve); a shell
+   dialog approval recorded as either would be false. Adding the value is a value-domain widening
+   inside an unchanged key set — permissible without a spatial-audit/2 bump ONLY on the dated
+   no-external-readers fact (the C1/C3 discipline), with an expiry clause when a reader exists.
+   The architect flags it as your decision, not a detail. Recommendation: **approve**; the cut
+   proceeds on it unless you override. Touches: `kernel/src/permission/audit/`, ADR-024's text.
+
 3. **ADR-022 acceptance — style v0 as the project's single style model.** Filed Proposed and
    implemented this cut under the ADR-019/020/021 precedent: the shell became §5a's second
    consumer via the renderer-owned extracted resolver (`renderer/style-ts`), the agreement vector
