@@ -1,5 +1,11 @@
 # The class-3 permission boundary
 
+> **Superseded as home of record by `docs/adr/ADR-024-class-3-permission-boundary-and-first-exposure.md`
+> (Proposed, filed 2026-08-16).** This file is not rewritten — its findings F-1–F-10 and the
+> 2026-08-07 human rulings on F-5/F-10 below stand as the record of the machinery's own design and
+> of the decisions already made about it. ADR-024 is where the model *as filed*, and the first
+> exposure surface built against it (`cut/publish-ui`), now live; cite that ADR going forward.
+
 **What exists as of 2026-08-07**, and — more important — **what exposure still requires**.
 
 ADR-006 gives external side effects three obligations: *audit log · explicit approval · declared
