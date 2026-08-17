@@ -136,9 +136,12 @@ manual walkthrough (MANUAL-WALKTHROUGH.md Part G) does.**
 
 **Approval: DOM, one comparison, in Rust.** `PublishDialog.tsx` renders `PublishPromptData`'s own
 informational fields verbatim, in a fixed order: `operation`/`class`/`reversibility` (the header
-line), `source_name`, `source_content_hash`, `style_hash`, `destination_display` (the full string,
-never truncated), `grantor` (with the host's own `grant_remaining_s`, shown once, never
-re-derived), `row_scope`, and — when present — `filter_scope`, in its own alert block. **No
+line), **`outcome_summary`** (ADR-017's Exposure review, 2026-08-17, condition 1 — one
+host-composed plain sentence stating the concrete outcome, rendered immediately after the header
+and before every field below; see that section for the full account), `source_name`,
+`source_content_hash`, `style_hash`, `destination_display` (the full string, never truncated),
+`grantor` (with the host's own `grant_remaining_s`, shown once, never re-derived), `row_scope`, and
+— when present — `filter_scope`, in its own alert block. **No
 `confirmation_phrase` field exists on `PublishPromptData` at all, and this is corrected wording,
 not a restatement**: an earlier version of this seam carried one, serialized to JS but never
 rendered by anything, which made an earlier draft of this very sentence — "the phrase never

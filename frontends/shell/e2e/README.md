@@ -160,7 +160,10 @@ Opens `target/fixtures/manual-walkthrough/filter-zoned.parquet` (regenerate:
 `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture --
 --ignored --nocapture`). `APPROVED'` prepares a fresh `target/e2e-publish-out/...` destination and
 asserts the prompt data reaching JS: `source_content_hash`/`style_hash` present, `destination_display`
-naming the chosen destination, `row_scope` reading whole-file, `filter_scope` null. **No
+naming the chosen destination, `row_scope` reading whole-file, `filter_scope` null, and
+`outcome_summary` (ADR-017's Exposure review, 2026-08-17, condition 1 -- G3) naming the destination's
+own basename and pattern-matching its stable skeleton (folder/data partition/viewer/manifest,
+never a digit -- no row or partition count is known yet at `prepare` time). **No
 `confirmation_phrase` field exists on `PublishPromptData` at all** (reviewer gate, publish cut B1 --
 the host never hands the expected typed phrase to JS); this suite derives the phrase it types from
 `destination_display`'s own basename, the same defence-in-depth derivation a page script could
