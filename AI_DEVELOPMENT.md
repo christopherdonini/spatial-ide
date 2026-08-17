@@ -126,3 +126,10 @@ between pieces or after the set. **Fallback for pieces too large for one delegat
 custodian switches itself to Sonnet (`/model sonnet`) for the implementation stretch and back for
 verdicts, noting the switch; after the cut, exit and relaunch a fresh custodian rather than
 carrying the accumulated context forward.
+10. **Cut state archives at cut close.** Transient per-cut files (`NEXT-CUT.md`, `CUT-STATE*.md`,
+    ad-hoc `*-STATE.md`) live at the repo root only while their cut is live. The brief is deleted
+    by the cut's final docs commit (its own status line says so); the state file moves to
+    `.cut-archive/` (untracked, gitignored) in the same close-out. The durable record is never
+    the state file — it is RESULTS.md sections, walkthrough result logs, ADRs, and commits. A
+    root that accumulates dead state files is a root where a successor reads the wrong cut's
+    truth. (Added 2026-08-17 at the human's direction, after four cuts' files had piled up.)

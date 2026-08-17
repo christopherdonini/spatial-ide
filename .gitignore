@@ -24,3 +24,4 @@ Thumbs.db
 
 # Stray scaffold remnants (root app/ was an accident; delete freely)
 /app/
+.cut-archive/
