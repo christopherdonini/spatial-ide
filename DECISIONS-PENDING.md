@@ -5,6 +5,25 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+7. **Part H: the principle-7 publish-prepare gap — pre-fix or declare-and-observe?** The shell's
+   publish-prepare runs an **uncancellable, progress-less whole-file SHA-256** ("Preparing…" for
+   tens of seconds at 5 GB; the only figure on record is a withdrawn 20s) before the approval
+   dialog appears — a named docs/01 principle-7 gap, pre-existing and disclosed in the code's own
+   comment, but Part H is the first time a human meets it. Options: pre-fix now (thread the
+   CancelToken + a phase label into prepare — small, host-side) or declare it in H6's step text
+   and let your observation decide whether it becomes a third binding condition on the exposure
+   ruling. Architect and custodian both recommend **declare-and-observe**. Proceeding on that
+   unless you override before the run.
+
+8. **Part H8b — complete a whole-file 5 GB publish to demonstrate the dead-artifact gap?** There
+   is NO publish-side refusal above the reader's ceilings: a whole-file publish succeeds (~100s,
+   5.7 GB written, irreversible) and only the viewer then refuses with ceiling-exceeded — meaning
+   the product's hero path can produce an unviewable artifact with no warning (RESULTS finding 2,
+   now reachable from your UI; ADR-025 is drafted as the decision's home). H8a (default) shows
+   cancellability instead: publish whole-file, cancel mid-flight, nothing written. H8b would give
+   ADR-025 its UI-level evidence at the cost of the write. **Decide live during the run** — the
+   step text offers both; H8b happens only on your explicit go-ahead in the moment.
+
 5. **Publish cut: filtered-subset bundles are OUT at bundle_version 1 (architect ruling) — do
    you want them scheduled?** A bundle recording the shell's SQL-filtered subset needs
    `bundle_version 2` + a new ADR (candidate ADR-025): your Corrigendum 3 declared the v1
