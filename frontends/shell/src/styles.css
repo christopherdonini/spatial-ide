@@ -466,6 +466,17 @@ body,
   font-weight: 600;
 }
 
+/* ADR-017's Exposure review, 2026-08-17, condition 1: the plain-outcome sentence, rendered first
+   (before the provenance <dl> below) and set apart visually so "prominent" is true of the
+   rendering, not only of the JSX order. */
+.publish-dialog-outcome-summary {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(128, 128, 128, 0.15);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
 .publish-dialog-fields dt {
   font-weight: 600;
   margin-top: 0.35rem;

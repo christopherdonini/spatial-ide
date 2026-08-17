@@ -309,6 +309,35 @@ async function stepApproved(page) {
       `APPROVED': phrase derived from destination_display "${derivedPhrase}" !== destination basename "${expectedPhrase}"`
     );
   }
+  // ADR-017's Exposure review, 2026-08-17, condition 1 (G3) -- the plain-outcome sentence.
+  // Pattern-matched against its own STABLE SKELETON (the destination's basename, and the nouns the
+  // binding condition's own template names), never against exact numbers -- `outcome_summary` is
+  // composed at `prepare` time, before any row or partition count is known (`publish.rs`'s own
+  // `compose_outcome_summary` doc comment), so it names none.
+  if (!prompt.outcome_summary || typeof prompt.outcome_summary !== "string") {
+    throw new Error(`APPROVED': outcome_summary missing: ${JSON.stringify(prompt.outcome_summary)}`);
+  }
+  if (!prompt.outcome_summary.includes(expectedPhrase)) {
+    throw new Error(
+      `APPROVED': outcome_summary "${prompt.outcome_summary}" does not name the destination's own basename "${expectedPhrase}"`
+    );
+  }
+  for (const word of ["folder", "data partition", "viewer", "manifest"]) {
+    if (!prompt.outcome_summary.toLowerCase().includes(word)) {
+      throw new Error(
+        `APPROVED': outcome_summary does not read as a plain-outcome sentence (missing "${word}"): ${JSON.stringify(prompt.outcome_summary)}`
+      );
+    }
+  }
+  // **Never an invented row/partition COUNT** -- not "no digit anywhere" (the destination path
+  // itself legitimately carries digits, e.g. this suite's own timestamp-tagged directory names;
+  // asserting that was tried and is wrong). The precise claim: no "<N> rows"/"<N> partition(s)"
+  // figure, because none is known yet at `prepare` time.
+  if (/\d+\s*rows?\b/i.test(prompt.outcome_summary) || /\d+\s*partitions?\b/i.test(prompt.outcome_summary)) {
+    throw new Error(
+      `APPROVED': outcome_summary must carry no row/partition COUNT at prepare time (none is known yet): ${JSON.stringify(prompt.outcome_summary)}`
+    );
+  }
   if (!/whole file/i.test(prompt.row_scope)) {
     throw new Error(`APPROVED': row_scope does not read as whole-file scope: ${JSON.stringify(prompt.row_scope)}`);
   }

@@ -35,6 +35,9 @@ const PROMPT: PublishPromptData = {
   grant_remaining_s: 120,
   row_scope: "row scope: the whole file",
   filter_scope: null,
+  outcome_summary:
+    'This will create a folder named "bundle" at C:\\out, containing the selected rows as one or ' +
+    "more data partitions, the interactive viewer page, and a manifest.",
 };
 
 describe("currentViewOptionDisabled (NEXT-CUT.md P3 item 3)", () => {

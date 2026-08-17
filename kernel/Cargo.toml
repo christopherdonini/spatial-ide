@@ -24,10 +24,14 @@ spatial-skp = { path = "../protocol/skp" }
 spatial-renderer = { path = "../renderer" }
 arrow = { workspace = true }
 tokio = { workspace = true }
+# `permission::audit::reader` (ADR-017's Exposure review, 2026-08-17, condition 2 --
+# `publish-bundle --audit-show`) parses the audit log's own JSONL lines with this, in real
+# (non-test) code -- previously a dev-dependency only, which sufficed while every `serde_json` use
+# in this crate lived inside `#[cfg(test)]`.
+serde_json = "1"
 
 [dev-dependencies]
 arrow = { workspace = true }
-serde_json = "1"
 spatial-engine = { path = "../engine", features = ["fixture"] }
 tokio-tungstenite = "0.29"
 futures-util = "0.3"

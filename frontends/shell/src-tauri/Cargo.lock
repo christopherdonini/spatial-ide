@@ -3969,6 +3969,7 @@ name = "spatial-kernel"
 version = "0.0.0"
 dependencies = [
  "arrow",
+ "serde_json",
  "spatial-data-plane",
  "spatial-engine",
  "spatial-renderer",

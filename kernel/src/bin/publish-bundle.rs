@@ -17,7 +17,20 @@
 //!                [--bbox xmin,ymin,xmax,ymax] [--limit N]
 //!                [--license SPDX --license-at <RFC-3339> [--license-by who]
 //!                 [--redistribution permitted|forbidden|unknown] [--attribution "..."]]
+//!
+//! publish-bundle --audit-show [<path to a spatial-audit/1 JSONL>]
 //! ```
+//!
+//! **`--audit-show`, ADR-017's Exposure review (2026-08-17, condition 2): a human-legible reader
+//! over the audit log, read-only.** Prints one plain-language sentence per intent/outcome pair
+//! (`kernel/src/permission/audit/reader.rs`, `render_audit_log`). With no path argument it reads
+//! `SPATIAL_IDE_AUDIT_LOG` if set, else the platform default
+//! (`%LOCALAPPDATA%\spatial-ide\audit\publish.jsonl` on Windows) — the exact resolution
+//! [`AuditLog::open_for`] itself uses, so a reader and a writer never disagree about which file
+//! "the audit log" names. A line that fails to parse, or that does not carry a recognizable
+//! `spatial-audit/1` shape, is printed as its own `CORRUPT` line rather than skipped. This mode
+//! ignores every other flag and never opens, writes to, or gates anything — it is a diagnostic, not
+//! part of the class-3 boundary itself.
 //!
 //! `--bbox` carries **no CRS**, which declares its coordinates to be in the dataset's own
 //! (ADR-015 §7.3). `--license-at` is **required with `--license`** and is *when the operator made
@@ -140,8 +153,60 @@ impl PublishProgress for Console {
 /// there. The error's own message says a bundle was produced; this note is here so the exit code
 /// alone is not read as "nothing happened".
 fn main() -> std::process::ExitCode {
+    // `--audit-show` is a distinct, read-only mode (module docs) -- intercepted before `run()`'s
+    // own argument loop even starts, so it is never confused with an unknown flag there and never
+    // requires any of the ordinary publish flags (`--data`, `--out`, ...) to be present. Peeking at
+    // `std::env::args()` here does not consume anything `run()` needs: the OS argv is re-read fresh
+    // on every call to `std::env::args()`, not drained by this one.
+    if std::env::args().nth(1).as_deref() == Some("--audit-show") {
+        let path_arg = std::env::args().nth(2).map(PathBuf::from);
+        return audit_show(path_arg);
+    }
     match run() {
         Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("[publish] {e}");
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+/// The pure part of `--audit-show`: resolve the log path, read it, render it -- with no output of
+/// its own, so a test can assert on exactly what it decided rather than scraping stdout.
+/// [`audit_show`] is the one caller that prints this.
+fn audit_show_lines(path_arg: Option<PathBuf>) -> Result<Vec<String>, String> {
+    let path = match path_arg {
+        Some(p) => p,
+        None => spatial_kernel::permission::audit::resolve_log_path().map_err(|e| e.to_string())?,
+    };
+    match std::fs::read_to_string(&path) {
+        Ok(text) => {
+            let mut lines = vec![format!("[audit log: {}]", path.display())];
+            lines.extend(spatial_kernel::permission::audit::render_audit_log(&text));
+            if lines.len() == 1 {
+                lines.push("(empty -- nothing has been published on this machine yet)".to_string());
+            }
+            Ok(lines)
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(vec![format!(
+            "no audit log at {} -- nothing has been published on this machine yet, or the log's \
+             own location has never been written to",
+            path.display()
+        )]),
+        Err(e) => {
+            Err(format!("could not read the audit log at {} ({e})", path.display()))
+        }
+    }
+}
+
+fn audit_show(path_arg: Option<PathBuf>) -> std::process::ExitCode {
+    match audit_show_lines(path_arg) {
+        Ok(lines) => {
+            for line in lines {
+                println!("{line}");
+            }
+            std::process::ExitCode::SUCCESS
+        }
         Err(e) => {
             eprintln!("[publish] {e}");
             std::process::ExitCode::FAILURE
@@ -591,4 +656,88 @@ fn ctrlc_handler(on_signal: impl FnOnce() + Send + 'static) {
             }
         });
     });
+}
+
+#[cfg(test)]
+mod audit_show_tests {
+    use super::*;
+
+    fn workspace(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join("spatial-kernel-publish-bundle-audit-show-tests").join(name);
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    /// **The CLI-plumbing half** -- `resolve_log_path`/file-reading/not-found handling -- proven
+    /// through `audit_show_lines` directly, no captured stdout. The reader's own rendering rules
+    /// (success/refused/orphan/corrupt) are `kernel/src/permission/audit/reader.rs`'s own suite;
+    /// this only proves the binary reaches that function with the right bytes.
+    #[test]
+    fn an_explicit_path_argument_is_read_and_rendered() {
+        let d = workspace("explicit-path");
+        let log = d.join("publish.jsonl");
+        std::fs::write(
+            &log,
+            [
+                r#"{"schema":"spatial-audit/1","attempt":"a1","phase":"intent","at":"2026-08-17T08:44:08Z","destination":"C:/dev/out/x"}"#,
+                r#"{"schema":"spatial-audit/1","attempt":"a1","phase":"outcome","at":"2026-08-17T08:44:09Z","outcome":"success","approval_route":"shell-dialog","rows":10,"partitions":1}"#,
+            ]
+            .join("\n"),
+        )
+        .unwrap();
+
+        let lines = audit_show_lines(Some(log.clone())).expect("reads");
+        assert!(lines[0].contains(&log.display().to_string()), "{lines:?}");
+        assert!(
+            lines.iter().any(|l| l.contains("SUCCEEDED") && l.contains("C:/dev/out/x")),
+            "{lines:?}"
+        );
+    }
+
+    /// A path argument that names nothing on disk is reported as an explicit, honest "no audit
+    /// log" line -- not an error, and not silently empty output -- the same posture the module docs
+    /// state for a machine that has never published anything.
+    #[test]
+    fn a_missing_log_is_reported_not_errored() {
+        let d = workspace("missing");
+        let log = d.join("does-not-exist.jsonl");
+        let lines = audit_show_lines(Some(log)).expect("a missing file is not an error here");
+        assert_eq!(lines.len(), 1, "{lines:?}");
+        assert!(lines[0].contains("no audit log at"), "{lines:?}");
+    }
+
+    /// An existing but EMPTY log is distinguished from a missing one -- both are honest, neither is
+    /// silence with no explanation.
+    #[test]
+    fn an_empty_log_says_so() {
+        let d = workspace("empty");
+        let log = d.join("publish.jsonl");
+        std::fs::write(&log, "").unwrap();
+        let lines = audit_show_lines(Some(log)).expect("reads");
+        assert!(lines.iter().any(|l| l.contains("empty")), "{lines:?}");
+    }
+
+    /// No path argument falls back to `SPATIAL_IDE_AUDIT_LOG` -- the same resolution
+    /// `AuditLog::open_for` itself uses (`resolve_log_path`'s own doc comment: "the one spelling").
+    #[test]
+    fn no_path_argument_falls_back_to_the_env_override() {
+        // Serializes the same env-var hazard `publish.rs`'s and `log.rs`'s own test suites document.
+        static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
+        let _guard = LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner());
+
+        let d = workspace("env-fallback");
+        let log = d.join("publish.jsonl");
+        std::fs::write(
+            &log,
+            r#"{"schema":"spatial-audit/1","attempt":"a1","phase":"intent","at":"2026-08-17T08:44:08Z","destination":"C:/dev/out/env-case"}"#,
+        )
+        .unwrap();
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+
+        let lines = audit_show_lines(None).expect("reads via the env override");
+        assert!(lines.iter().any(|l| l.contains("interrupted?") && l.contains("env-case")), "{lines:?}");
+
+        std::env::remove_var(spatial_kernel::permission::AUDIT_LOG_ENV);
+    }
 }

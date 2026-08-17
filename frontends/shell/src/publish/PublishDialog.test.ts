@@ -1,8 +1,14 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { nextPublishDialogState, settleExecuteOutcome, submitPublishAttempt } from "./PublishDialog";
+import PublishDialog, {
+  nextPublishDialogState,
+  settleExecuteOutcome,
+  submitPublishAttempt,
+} from "./PublishDialog";
 import type { PublishDialogState } from "./PublishDialog";
-import type { ExecuteOutcome } from "./types";
+import type { ExecuteOutcome, PublishPromptData } from "./types";
 
 const CONFIRMING = (phrase: string): PublishDialogState => ({ kind: "confirming", phrase });
 const EXECUTING = (cancelRequested = false): PublishDialogState => ({ kind: "executing", cancelRequested });
@@ -18,6 +24,23 @@ const SUCCESS: ExecuteOutcome = {
   style_hash: "h",
   operation_digest: "d",
   build_millis: 1,
+};
+
+const PROMPT: PublishPromptData = {
+  operation: "publish-static-bundle",
+  class: 3,
+  reversibility: "irreversible",
+  source_name: "parcels",
+  source_content_hash: "sha256:abc",
+  style_hash: "sha256:def",
+  destination_display: "C:\\out\\my-bundle",
+  grantor: "os-user chris",
+  grant_remaining_s: 120,
+  row_scope: "row scope: the whole file — every row the dataset contains",
+  filter_scope: null,
+  outcome_summary:
+    'This will create a folder named "my-bundle" at C:\\out, containing the selected rows as one ' +
+    "or more data partitions, the interactive viewer page, and a manifest.",
 };
 
 describe("nextPublishDialogState -- the approval surface's own lifecycle (NEXT-CUT.md P2)", () => {
@@ -120,3 +143,58 @@ describe("settleExecuteOutcome -- S2, this cut's own reviewer gate: the .then-wi
     expect(outcome).toEqual({ status: "refused", message: "a bare string rejection" });
   });
 });
+
+describe(
+  "the rendered dialog -- ADR-017's Exposure review, 2026-08-17, condition 1 (G3: \"there's a lot " +
+    'of things written but not necessarily that clear"). `renderToStaticMarkup`, not a DOM harness ' +
+    "this package deliberately does not carry (App.test.ts's own top comment) -- a one-shot static " +
+    "render is enough to prove text presence and order, needs no jsdom event loop, and adds no " +
+    "dependency.",
+  () => {
+    // `renderToStaticMarkup` HTML-escapes text content (`"` -> `&quot;`, ...) -- decoded back before
+    // comparison so this test asserts on the same characters an operator actually reads, not on
+    // React's own escaping of them.
+    function renderedHtml(): string {
+      const raw = renderToStaticMarkup(
+        createElement(PublishDialog, {
+          attemptId: "att_1",
+          prompt: PROMPT,
+          execute: vi.fn(),
+          cancelExecution: vi.fn(),
+          onSettled: vi.fn(),
+        })
+      );
+      return raw.replaceAll("&quot;", '"').replaceAll("&#x27;", "'").replaceAll("&amp;", "&");
+    }
+
+    it("renders the host-composed outcome_summary sentence, verbatim", () => {
+      expect(renderedHtml()).toContain(PROMPT.outcome_summary);
+    });
+
+    it("renders it BEFORE the provenance field list -- prominent, not buried (the binding rule: " +
+      '"top of the dialog body, before the provenance fields")', () => {
+      const html = renderedHtml();
+      const summaryAt = html.indexOf(PROMPT.outcome_summary);
+      // `Source` is the FIRST provenance field `PublishDialog.tsx` renders (`<dt>Source</dt>`) --
+      // the correct anchor for "before every provenance field", not merely "before some field".
+      const sourceFieldAt = html.indexOf("Source</dt>");
+      expect(summaryAt).toBeGreaterThan(-1);
+      expect(sourceFieldAt).toBeGreaterThan(-1);
+      expect(summaryAt).toBeLessThan(sourceFieldAt);
+    });
+
+    it("ADDS clarity, replaces nothing -- every existing field is still rendered in full", () => {
+      const html = renderedHtml();
+      for (const value of [
+        PROMPT.source_name,
+        PROMPT.source_content_hash,
+        PROMPT.style_hash,
+        PROMPT.destination_display,
+        PROMPT.row_scope,
+      ]) {
+        expect(html).toContain(value);
+      }
+      expect(html).toContain("This cannot be undone");
+    });
+  }
+);

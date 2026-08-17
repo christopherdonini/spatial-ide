@@ -327,8 +327,13 @@ fn declared_occurrence(line: &str, key: &str, name: &str) -> Option<String> {
     Some(line[start..=i].to_string())
 }
 
-/// Where the log lives.
-fn resolve_log_path() -> Result<PathBuf, AuditError> {
+/// Where the log lives — **the one spelling**, reused by [`AuditLog::open_for`] above and by
+/// `publish-bundle --audit-show` (`kernel/src/bin/publish-bundle.rs`; ADR-017's Exposure review,
+/// 2026-08-17, condition 2) so a reader and a writer can never resolve two different files for
+/// what is supposed to be one log. `pub` for exactly that second caller — a read-only consumer
+/// outside this module that must land on the identical path `open_for` would have used, including
+/// the same `SPATIAL_IDE_AUDIT_LOG` override and the same platform default.
+pub fn resolve_log_path() -> Result<PathBuf, AuditError> {
     if let Ok(v) = std::env::var(AUDIT_LOG_ENV) {
         let p = PathBuf::from(&v);
         if !p.is_absolute() {

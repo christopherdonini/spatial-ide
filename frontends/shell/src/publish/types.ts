@@ -33,6 +33,14 @@ export interface PublishPromptData {
    * NEXT-CUT.md conditional block's own verbatim sentence, never silently dropped. `null`, not
    * omitted (`publish.rs`'s `Option<String>` crosses as `null` when `None`, never an absent key). */
   filter_scope: string | null;
+  /** **ADR-017's Exposure review, 2026-08-17, condition 1** -- one host-composed plain-language
+   * sentence stating the concrete outcome of this publish (what folder, where, roughly what it
+   * contains), rendered by `PublishDialog.tsx` first, before every other field. Composed in
+   * `publish.rs::compose_outcome_summary` from facts already in hand at `prepare` time -- never a
+   * row or partition COUNT, since `preflight` has not read any data yet and inventing one would be
+   * an unmeasured claim (ADR-018/docs/08). This ADDS clarity to the surface; it replaces no other
+   * field. */
+  outcome_summary: string;
 }
 
 /** `PrepareOutcome` (`publish.rs`, `#[serde(tag = "status", rename_all = "kebab-case")]` --

@@ -262,6 +262,39 @@ pub struct PublishPromptData {
     /// NEW: present only when the shell's active filter would have applied to this publish — the
     /// [`FILTER_SCOPE_SENTENCE`], never silently dropped.
     pub filter_scope: Option<String>,
+    /// **ADR-017's Exposure review, 2026-08-17, condition 1** — the human's own words, verbatim:
+    /// *"the approval dialog must state the plain outcome — what will be written, where, and
+    /// roughly what it contains ... in one human sentence alongside the provenance fields"* (G3).
+    /// Composed host-side, from facts already in hand at `prepare` time (see
+    /// [`compose_outcome_summary`]) — the same "host composes, JS only renders" discipline every
+    /// other field on this struct already follows. `PublishDialog.tsx` renders it first, before the
+    /// provenance `<dl>` — this field ADDS clarity; nothing else on this struct changes meaning or
+    /// is removed.
+    pub outcome_summary: String,
+}
+
+/// The plain-outcome sentence [`PublishPromptData::outcome_summary`] carries — composed from facts
+/// `prepare_with_query` already holds at this point in its own body: the resolved destination's own
+/// basename and parent. **Never a row or partition count**: `publish::preflight` is "pure with
+/// respect to the filesystem's contents" (`kernel/src/publish/mod.rs`'s own doc comment on
+/// `PublishPreflight`) — it reads no data, so neither figure is known yet, and inventing one here
+/// would be exactly the kind of unmeasured claim `docs/08`/ADR-018 forbid. Said honestly instead:
+/// "the selected rows" (row scope itself is named precisely, one field below this one, by
+/// `PublishScope::row_scope_sentence`) and "one or more data partitions" (the true, if imprecise,
+/// range — this bundle format always writes at least one).
+fn compose_outcome_summary(resolved_destination: &std::path::Path) -> String {
+    let basename = resolved_destination
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| resolved_destination.display().to_string());
+    let parent_display = match resolved_destination.parent() {
+        Some(p) if !p.as_os_str().is_empty() => p.display().to_string(),
+        _ => "the current directory".to_string(),
+    };
+    format!(
+        "This will create a folder named \"{basename}\" at {parent_display}, containing the \
+         selected rows as one or more data partitions, the interactive viewer page, and a manifest."
+    )
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -425,6 +458,7 @@ fn prepare_with_query(
         grant_remaining_s,
         row_scope,
         filter_scope: filter_active.then(|| FILTER_SCOPE_SENTENCE.to_string()),
+        outcome_summary: compose_outcome_summary(&resolved_destination),
     };
 
     let attempt_id = match mint_attempt_id() {
@@ -1042,6 +1076,70 @@ mod tests {
         );
         let PrepareOutcome::Prompt { prompt, .. } = with else { panic!("expected a prompt") };
         assert_eq!(prompt.filter_scope.as_deref(), Some(FILTER_SCOPE_SENTENCE));
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // ADR-017's Exposure review, 2026-08-17, condition 1 -- the plain-outcome sentence
+    // ---------------------------------------------------------------------------------------
+
+    /// **G3's own binding condition**, proven through `prepare`'s own real code path: the sentence
+    /// names the destination's own basename and parent, and every noun the piece's own template
+    /// names (folder, data partitions, the viewer page, a manifest) -- while never carrying a row
+    /// or partition NUMBER, because `preflight` has not read any data yet at this point and
+    /// inventing one would be exactly the unmeasured claim ADR-018/docs/08 forbid.
+    #[test]
+    fn the_outcome_summary_names_the_real_destination_and_never_invents_a_row_or_partition_count() {
+        let d = workspace("outcome-summary");
+        let ds = fixture(&d, 20);
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let dest = d.join("my-parcels");
+
+        let outcome = prepare(
+            &grants, &store, ds, "parcels".into(), STYLE.into(), PublishScope::WholeFile, false,
+            viewer(), viewer_license(), dest.clone(), "2026-08-16T10:00:00Z".into(),
+        );
+        let PrepareOutcome::Prompt { prompt, .. } = outcome else { panic!("expected a prompt") };
+
+        assert!(
+            prompt.outcome_summary.contains("my-parcels"),
+            "must name the destination's own basename: {}",
+            prompt.outcome_summary
+        );
+        let parent_display = dest.parent().unwrap().display().to_string();
+        assert!(
+            prompt.outcome_summary.contains(&parent_display),
+            "must name the destination's own parent: {}",
+            prompt.outcome_summary
+        );
+        for word in ["folder", "data partition", "viewer", "manifest"] {
+            assert!(
+                prompt.outcome_summary.to_lowercase().contains(word),
+                "outcome_summary missing {word:?}: {}",
+                prompt.outcome_summary
+            );
+        }
+        // **Never an invented row/partition COUNT** -- not "no digit anywhere" (a real destination
+        // path may legitimately carry digits, e.g. `e2e/publish.mjs`'s own timestamp-tagged
+        // directories; asserting that in this suite's own earlier draft was wrong, caught by the
+        // E2E run against a real path). The precise claim: no "<N> rows"/"<N> partition(s)" figure,
+        // because none is known yet at `prepare` time.
+        let lower = prompt.outcome_summary.to_lowercase();
+        assert!(
+            !has_counted_word(&lower, "row") && !has_counted_word(&lower, "partition"),
+            "outcome_summary must carry no row/partition COUNT at prepare time: {}",
+            prompt.outcome_summary
+        );
+    }
+
+    /// Whether `text` contains a digit immediately (whitespace aside) preceding `word` (or its
+    /// plural, since `word` -- "row"/"partition" -- is itself a prefix of the plural spelling) --
+    /// i.e. a claimed COUNT, not merely the word itself (`the_outcome_summary_...`'s own test,
+    /// above, wants "the selected rows" to pass and "10 rows" to fail).
+    fn has_counted_word(text: &str, word: &str) -> bool {
+        text.match_indices(word).any(|(i, _)| {
+            text[..i].trim_end().chars().next_back().is_some_and(|c| c.is_ascii_digit())
+        })
     }
 
     #[test]

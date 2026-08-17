@@ -27,11 +27,13 @@
 pub mod clock;
 pub mod log;
 pub mod normalize;
+pub mod reader;
 pub mod record;
 
 pub use clock::{rfc3339_utc, rfc3339_utc_now};
 pub use log::{
-    AuditLog, AUDIT_LOG_ENV, MAX_AUDIT_LOG_BYTES, MAX_AUDIT_LOG_GENERATIONS,
+    resolve_log_path, AuditLog, AUDIT_LOG_ENV, MAX_AUDIT_LOG_BYTES, MAX_AUDIT_LOG_GENERATIONS,
 };
 pub use normalize::normalize_destination;
+pub use reader::render_audit_log;
 pub use record::{ApprovalRoute, IntentRecord, Outcome, OutcomeRecord, AUDIT_SCHEMA};

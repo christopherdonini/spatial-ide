@@ -223,6 +223,11 @@ export default function PublishDialog({
       <div className="publish-dialog-header">
         {prompt.operation} — class {prompt.class} — {prompt.reversibility}
       </div>
+      {/* ADR-017's Exposure review, 2026-08-17, condition 1 (G3: "there's a lot of things written
+        * but not necessarily that clear") -- ONE host-composed plain-outcome sentence, rendered
+        * FIRST, before every provenance field below. This ADDS clarity; every field the dialog
+        * already carried is unchanged and still rendered in full immediately after it. */}
+      <p className="publish-dialog-outcome-summary">{prompt.outcome_summary}</p>
       <dl className="publish-dialog-fields">
         <dt>Source</dt>
         <dd className="publish-dialog-source-name">{prompt.source_name}</dd>
