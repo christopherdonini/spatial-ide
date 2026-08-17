@@ -1130,3 +1130,13 @@ is **discharged for this UI surface only** — SKP, CLI-as-product, MCP, plugin,
 exposure each still require their own review per the 2026-08-07 clarification, whose
 requester-never-mints rule this surface was verified against. Recorded by the custodian from the
 human's ruling, verbatim where quoted; the walkthrough's Part G result log carries the full run.
+
+## Exposure review completion — 2026-08-17 — both binding conditions landed; discharge effective for the UI surface
+
+Condition 1 (the plain-outcome statement) and condition 2 (`publish-bundle --audit-show`, one
+sentence per intent/outcome pair) landed the same day (`cd3cf1c`, `29005d4`): unit- and
+E2E-evidenced, and demonstrated against the operator's own real audit log. Per the 2026-08-17
+exposure review above, **the acceptance condition is discharged for the shell's UI surface**.
+`publish-bundle` remains developer/test tooling as a CLI, and SKP, MCP, plugin, notebook, and AI
+exposure each still require their own review. Recorded by the custodian executing the human's
+standing instruction ("once the conditions land, merge the PRs...").
