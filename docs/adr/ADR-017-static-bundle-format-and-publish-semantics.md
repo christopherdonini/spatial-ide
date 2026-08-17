@@ -1106,3 +1106,27 @@ A latency claim may not rest on §15's sentence. **Cite a measurement, or cite t
 table and say which term you mean.** `docs/08`'s "cancellation acknowledged < 100 ms" is scored on
 `cancel_requested → cancel_observed`; the quiescent instant is reported beside it with no budget
 attached, for the reasons proposed ADR-018 sets out.
+
+## Exposure review — 2026-08-17, human decision — the UI surface passes, with two binding conditions
+
+The human ran the operator walkthrough's Part G (the `cut/publish-ui` surface: native-picker-only
+destinations, host-minted single-use attempts, DOM approval with the one comparison in
+`approval::check`, per-attempt `spatial-audit/1` records — ADR-024 is the surface's record) end to
+end over RustDesk, including a deliberate wrong-phrase refusal and a by-eye read of the audit
+log, and ruled: **the publish product feature can be included on this UI surface — subject to two
+binding conditions, both operator-found legibility gaps:**
+
+1. **The approval dialog must state the plain outcome** — what will be written, where, and roughly
+   what it contains (a folder of data partitions + the viewer page + a manifest), in one human
+   sentence alongside the provenance fields. The dialog was found strong on provenance and weak on
+   outcome ("there's a lot of things written but not necessarily that clear" — G3, verbatim).
+2. **The audit record must be human-legible without a decoder in the loop** — a reader (e.g.
+   `publish-bundle --audit-show` printing one sentence per intent/outcome pair) or equivalent;
+   the raw JSONL was honest but unreadable by its own audience (G6).
+
+Until both land, the acceptance condition stands undischarged and `publish-bundle` plus the shell
+surface remain developer/test tooling. When both land (through the ordinary gates), the condition
+is **discharged for this UI surface only** — SKP, CLI-as-product, MCP, plugin, notebook, and AI
+exposure each still require their own review per the 2026-08-07 clarification, whose
+requester-never-mints rule this surface was verified against. Recorded by the custodian from the
+human's ruling, verbatim where quoted; the walkthrough's Part G result log carries the full run.

@@ -463,8 +463,25 @@ Part G did not exist during any run recorded above. Fill in the fields below whe
 actually run by an operator. **G10 is not a pass/fail step** — record the human's own ruling on the
 acceptance condition there, in their own words, not a checkbox.
 
-- **Date run:**
-- **Run by:**
-- **Build/commit:**
-- **Part G (G1–G9):**
+- **Date run:** 2026-08-16/17 (one continuous session over midnight)
+- **Run by:** the human (Christopher), over RustDesk. The custodian assisted mechanically at two
+  points, both recorded: supplied the G4 wrong-phrase instruction on request, and decoded the
+  audit log's pairs + supplied the G7 serve command with the operator's real destination — the
+  latter assistance is itself part of the G6 finding.
+- **Build/commit:** `066a3cd` (branch `cut/publish-ui` tip).
+- **Part G (G1–G9):** **pass, with two operator-found legibility deviations** (both real findings,
+  neither a mechanics failure — every gate property held: the wrong phrase refused with no bundle
+  and a clean refused audit pair; the correct phrase published; the bundle served and rendered the
+  operator's own style; the filter-scope warning appeared; a cancelled attempt wrote nothing).
+  **G3 deviation:** asked "do you know exactly what will be written where," the operator's answer
+  was **no** — "there's a lot of things written but not necessarily that clear" (verbatim): strong
+  provenance, missing a plain-outcome sentence. **G6 deviation:** the operator found the audit
+  JSONL but "honestly can't tell what's going on" (verbatim) — machine-honest, not human-legible;
+  the custodian had to decode the pairs.
+- **G10 — the ruling (the human's own words):** *"for me this product feature can be included"* —
+  **with G3 and G6 as binding conditions** (the human's explicit choice when offered
+  conditions-vs-follow-ups): the approval dialog gains a plain-language outcome statement, and the
+  audit record gains a human-legible reader. Recorded in ADR-017's appended "Exposure review —
+  2026-08-17" section; the condition discharges for this UI surface only when both conditions
+  land through the ordinary gates.
 - **G10 — the human's decision on ADR-017's (clarified) acceptance condition, for this surface:**
