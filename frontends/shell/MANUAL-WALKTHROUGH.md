@@ -376,6 +376,87 @@ only what the numbered Part G step *claims* that the script cannot assert.
 
 ---
 
+## Part H — the hero slice at 5 GB (at-scale cut)
+
+`NEXT-CUT.md`'s own framing, binding — architect design consult 2026-08-17, the human's own "pass
+to the next cut" approval, including its three premise corrections (sub-second open; NO
+publish-side whole-file refusal, the reader refuses only after an irreversible write; the fixture
+has NO attribute column and 403 prunable row groups). This Part runs the `docs/07` hero slice — open
+a 5 GB GeoParquet → filter in SQL → style it → publish a static interactive bundle — at the scale
+`docs/07` actually names, for the first time. **Steps H1–H9 below are cited throughout to
+`kernel/RESULTS.md`'s own recorded figures; none of those figures is this operator run's own
+number. H10, at the end, is the human's own exit judgment, not a table row** — the same shape G10
+already established.
+
+### The observation-vs-claim rule (binding, inline here — `NEXT-CUT.md`'s own text, compressed but complete)
+
+Every duration this Part's own steps record carries this verbatim prefix:
+
+> Observation (operator wall-clock, over RustDesk; no preregistration, no canary, no binary pin —
+> not a measurement, and not comparable to any figure in `kernel/RESULTS.md`):
+
+And, seven rules, none of them optional:
+
+1. **Buckets only** — under-a-second / a-few-seconds / tens-of-seconds / minutes. Never a raw
+   figure of this run's own.
+2. **Never beside a budget verb** — no duration recorded in this Part sits next to "meets,"
+   "budget," or a `docs/08` line.
+3. **Never met/missed** — no verdict is scored against anything recorded here.
+4. **Never compared** — not against another step in this run, not against an earlier Part, not
+   against `kernel/RESULTS.md`.
+5. **Never divided** — no throughput, ever (the standing rule every section of
+   `kernel/RESULTS.md` already keeps).
+6. **Cancellation gets NO duration** — ADR-018's own instant-pair discipline in full; a
+   cancellation step in this Part records only that it happened and what it left behind, never how
+   long.
+7. **Citing a `kernel/RESULTS.md` figure ≠ attributing it to this run** — every kernel-side number
+   quoted below is that file's own, from its own tree, its own session, its own build; none of it
+   describes anything this operator run measures.
+
+One new fixture, opened in the same running app instance as every earlier Part — no relaunch
+needed:
+
+| Fixture | Path | Purpose |
+|---|---|---|
+| 5 GB scale-pass parcels | `C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet` | Part H — the declared `docs/07` hero-slice scale. `kernel/tests/scale_pass.rs`'s `spec_5gb()` (seed `0x5EED_2056_0000_0005`, `AttributeMode::None` — no attribute column, `id` ascending, ~403 row groups; **do not edit the pinned harness**); 3,300,000 features, 5,004,376,705 B, `sha256:5ae955c5…c1788` (`kernel/RESULTS.md` fifth section's own fixture table, exact). **Do not regenerate** — hash-gated restoration only (ADR-006: regeneration is a restoration only if the hash matches; every fifth- and sixth-section `kernel/RESULTS.md` figure keyed to this file depends on it). Gitignored, ~5 GB — not committed, same as every other fixture in this document |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| H1 | Click **Open GeoParquet…** and select `parcels-5gb.parquet` (any earlier Part's canvas may still be visible; that's fine). | Per `docs/01` principle 7's declare-and-observe framing: the button reads **"Opening…"**, BRIEFLY — `kernel/RESULTS.md` fifth section's own cold-open row measured **146.681 / 146.679 / 181.267 ms**, kernel-side, cold, across three independent full-boot samples (cite, never attribute: a `Dataset::open` figure from a dedicated cold-open protocol, not a UI paint-to-paint measurement, and not this run's own number). A summary appears with **row count `3300000`** (RESULTS fifth section's fixture table, exact). By the same fixture's own vertex density — **~104.7 vertices/feature** (RESULTS fifth section: 345,507,850 vertices ÷ 3,300,000 features) — the shell's `MAX_RESIDENT_VERTICES = 2,000,000` ceiling (`frontends/shell/src/canvas/limits.ts`) is expected to trip almost immediately: **N ≈ 2,000,000 ÷ 104.7 ≈ 19,000 features (~0.6% of 3,300,000)**. Expect the Part D/OVERCEIL' ceiling shape — a red-bordered banner plus the persistent `.residency-status` line reading `<N> of 3300000 features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`, `<N>` near but not exactly 19,000 (that arithmetic is a derived estimate; the exact trip point is this run's own observation). **Auto-fit fits ONLY what arrived** — a thin band or a sparse scatter across the fixture's own grid, not the whole layer, is the expected, designed shape here, never a defect to report. |
+| H2 | Pan and zoom around the canvas, the same motion Part A's A5/A6/A8 exercised. | Every viewport re-fills toward the same `MAX_RESIDENT_VERTICES` ceiling H1 tripped — expect the ceiling banner/status to reappear on most stops, by H1's own arithmetic. **A tighter (more zoomed-in) viewport is expected to feel SLOWER to its first pixels than a wide one** — the inverse of ordinary intuition, cited, never attributed: `kernel/RESULTS.md` fifth section, finding 4 ("Without an index, a tighter viewport costs *more* to first batch") — whole file 72.175 ms → quarter 94.943 ms → 1/64 256.684 ms, first-batch p50, with no index in this engine's default planner (ADR-011 is unmeasured direction, not settled design — never cited as a fix here). Click **Zoom to layer** at some point: the fit anchor is the dataset-lifetime union of every extent a viewport has actually **visited** this session (the A7 fix, Part A's run record) — **not** the full dataset extent, which was never fully resident at once at this scale to establish. |
+| H3 | Type a late, engineered-non-prunable predicate into the filter panel — `id * 2 > 6599800` — and click **Apply**. | **Read this callout before judging the step** (P1 pre-check, `CUT-STATE.md`, this cut). Admission succeeds — ADR-021's three stages (structural/namespace/bind, `engine/src/predicate.rs`) admit this predicate exactly as they would any arithmetic comparison on `id`, the fixture's ONE filterable column (`AttributeMode::None` — no attribute column exists to filter on instead). **The P1 probe found this predicate is NOT genuinely slow on this fixture**: it, its declared fallback (`id / 2 > 1649950`), and a quadratic candidate tried live (`id * id > 10889340010000`) all returned their ~99-row tail match with an under-a-second first batch and total time against the real 5 GB file (bucket language; a pre-check, not a measurement — n=1 per cell, no canary, no pin). The likely reason, stated as an observation with a plausible mechanism, not a proven decomposition: with no attribute column, a `WHERE` clause on `id` alone only ever has to decode a ~26 MB column across 3,300,000 rows to be evaluated — the ~4.95 GB geometry column is fetched only for matching rows — so an admitted, arithmetically-obscured predicate is cheap here regardless of whether DuckDB's own row-group statistics can prune on it. **So: expect Apply to succeed and resolve quickly, camera landing on the ~99-row tail match** (Part E's E5 finding — Apply behaves like opening a dataset). **If** a **Cancel** button and the `"Filtering — scanning, no matching rows yet"` liveness line (`SCAN_LIVENESS_DELAY_MS = 200`, `App.tsx`) DO appear with a real window to click during your own live run, exercise them: the click carries **no duration** in this record (ADR-018 — "acknowledged" is retired from prose; no instant pair is named for it here), and the status afterward should read the persistent `"Filtered view incomplete — scan cancelled at <N> rows"` shape, judged only as present and legible, never timed. **If no such window appears** (the P1 finding's predicted case), record that plainly: the acceptance condition's ADMISSION half is demonstrated live at 5 GB; its LIVENESS/CANCEL half is not exercisable on this fixture's own shape — `slow-filter-scan.parquet` (Part E, 4,000,000 features, ONE row group, `id > 3999900`) remains the one fixture in this tree that has actually produced that behavior, and substituting it here would be exactly the "faked on a small fixture" the P1 pre-check was told never to do. **Either outcome is a PASS for this step** — the honest report is the acceptance condition, not a particular UI affordance appearing. |
+| H4 | Clear the filter, type `id < 15000`, click **Apply**. | A direct column comparison on `id` — DuckDB's own row-group statistics prune this cleanly (unlike H3's engineered case) and it selects an early, contiguous slice: 15,000 rows × ~104.7 vertices/feature ≈ 1,570,500 vertices, comfortably under the 2,000,000 ceiling — **expect NO ceiling banner this time**, the clean-filter demonstration this step exists for. Apply behaves like opening a dataset (Part E's E5 finding, cited above): the camera lands on the matching subset, not wherever H1–H3 left the viewport. |
+| H5 | Expand **▾ Style** and edit fill/outline as Part F's F2/F4 describe. | A pure re-render of whatever is currently resident — no admission, no query, nothing round-trips through the kernel (Part F's own claim, unchanged by scale: a style edit never re-fetches data). |
+| H6 | **Mandatory sizing pre-step, before clicking Publish**: pan/zoom to roughly **1/8 × 1/8 of the layer's own extent** (an eighth of the width, an eighth of the height — not an eighth of the area). Arithmetic, shown rather than asserted: 1/8 × 1/8 = **1/64 of the layer's area**; `kernel/RESULTS.md` fifth section's own fixture table gives the 1/64 viewport's row count over this exact grid, EXACTLY: **51,984 rows** (≈52k). Bytes: the fifth section's Results table gives the full-file publish's own totals — **5,737,397,728 B ÷ 3,300,000 rows ≈ 1,738 B/row** — so 51,984 rows × ~1,738 B/row ≈ **90,348,192 B ≈ 90 MB**. Partitions: `PUBLISH_PARTITION_TARGET_BYTES` is 1 MiB (`engine/src/stream.rs`) and binds before `PUBLISH_PARTITION_ROWS` (8,192) at this per-row byte size — 90 MB ÷ 1,048,576 B ≈ **86 partitions** (the fifth section's own full-file run landed 6,636 partitions over 3,300,000 rows, ≈497 ≈ **~500 rows/partition** average — consistent with the byte cap binding first, not the row cap). **Stay under ~300k rows, or H7 quietly becomes H8** (H8 is the whole-dataset case; H7 assumes a viewport-sized publish). Click **Publish…**, choose **Current view**, pick a destination under `target\`. | Four things, in this declared order. **(1)** the **Publish…** button reads **"Preparing…"** — per `docs/01` principle 7 and `DECISIONS-PENDING.md` item 7 (the architect's and custodian's declare-and-observe recommendation, standing unless overridden before the run): this is `ensure_pinned`'s own whole-file SHA-256 (`frontends/shell/src-tauri/src/publish.rs`'s own disclosed-limitation comment: "no cancel affordance and no progress report of its own"), **long, uncancellable, and progress-less** at this file's size, **paid once per admitted dataset** (idempotent — a later publish attempt on the same still-open dataset does not pay it again). **The only figure ever on record for this phase is WITHDRAWN**: a draft of `kernel/RESULTS.md`'s sixth section printed 20,046.3 ms for a whole-file rehash, sourced from an INVALIDATED attempt, and withdrew it explicitly ("withdrawn here rather than laundered into the run of record" — sixth section, its own two provenance gaps). **Record this phase's own length in buckets only**, per this Part's rule box — no figure from this repository may stand in for it. **(2)** the approval dialog (Part G's G3 describes every field) — **no row count anywhere on it, by design**: nothing before `querying` executes knows how many rows a viewport predicate will actually select. **(3)** executing, in phase order (`PublishPhase::as_str`, Part G's G5): `verifying-source` re-hashes the 5 GB file a SECOND time — this phase IS cancellable and labelled, unlike phase (1) (`kernel/RESULTS.md` fifth section's own A6 cancellation cell for this exact phase: `VerifyingSource` p50 13.700 ms, **met** the 100 ms budget, n=7 of 7 — cite, never attribute; ADR-018's own instant-pair naming: that figure is `cancel_requested → cancel_observed` on the KERNEL's own producer clock, not this UI run's) — then `querying`, then `writing-partitions`. Once `writing-partitions` has started, click **Cancel publish** and confirm the same "leaves nothing" property Part G's G8 parenthetical already checked (no destination, no staging debris) — **cancellation itself carries no duration in this write-up, full stop** (ADR-018; this Part's own rule box). **(4)** if left to complete instead: a quiet success summary, **no `build_millis`, no duration anywhere** — the standing evidence guard rail Part G's G5 already names. |
+| H7 | From `renderer/bundle-viewer`, run `node scripts/serve-bundle.mjs "<H6's own destination>" 8733` (Part F/G's own command, a fresh port). Open the printed URL. Optionally, from `C:\dev\spatial-ide`, also run `cargo run --release -p spatial-kernel --example verify-bundle -- --bundle "<H6's own destination>"` (the strict ADR-017 §14 reader — `kernel/RESULTS.md` fifth section's own full-file run of this reader took **29,384.239 ms** by its own clock at 3,300,000 rows / 6,636 partitions, cite, never attribute; H6's own viewport-sized bundle is expected far below that, bucketed only if timed at all). | The bundle viewer loads this viewport-sized bundle (well under both ADR-017 §16 reader ceilings at H6's declared sizing) and renders your H5 style. `verify-bundle`, if run, reports every partition byte-count/hash/decode/row-count check passing — the same conforming-reader contract Part G's own coverage table already cites. |
+| H8 | **The honesty step. Say plainly, before clicking anything: there is NO publish-side refusal above the reader's ceilings anywhere in this tree.** `kernel/RESULTS.md` fifth section, finding 2 ("`docs/07`'s hero slice does not complete end-to-end at 5 GB under bundle format v1"): a whole-file 5 GB publish SUCCEEDS — 6,636 partitions = **6.6% of `MAX_PUBLISH_PARTITIONS`** (100,000, `engine/src/stream.rs`) — cite, same fifth-section fixture table — and only the reference viewer then refuses, typed, at load. Two shapes, gated by which the human chooses live. **H8a (default — proceed on this unless overridden before the run)**: click **Publish…**, choose **Whole dataset**, watch the phase line move through `verifying-source` → `querying` → `writing-partitions`, then click **Cancel publish** mid-flight. Judge only: nothing appears at the destination, no staging debris, and a cancellation audit pair (`--audit-show`, H9) records it — a property, never a timing; **no duration attached to any part of this step.** **H8b (ONLY on the human's own explicit go-ahead, IN THE MOMENT — `DECISIONS-PENDING.md` item 8, not this document's to authorize)**: let the SAME whole-dataset publish run to completion instead of cancelling (`kernel/RESULTS.md` fifth section's own full-file publish run of record: A **98,983 ms**, B **106,492 ms** — cite, never attribute, and note the fifth section's own rule that these two runs' wall times may be reported as individual facts and MAY NOT be differenced), serve it (H7's own command), and read the bundle viewer's own typed ceiling-exceeded refusal — RESULTS finding 2, now reached at the UI rather than only argued from the manifest arithmetic; this is the evidence ADR-025 (named as this decision's home in `DECISIONS-PENDING.md` item 8; not yet filed — P4 files it as proposed only if H8 confirms) would cite. | **H8a:** destination absent afterward, audit pair present, no duration reported anywhere. **H8b (only if authorized live):** success summary (no duration, same as H6/G5), then the viewer's own typed refusal on load — read its exact code/message and record it verbatim in the result log, the same discipline Parts B/C's refusal panels used. |
+| H9 | From `C:\dev\spatial-ide`, run exactly: `target\debug\publish-bundle.exe --audit-show` (the built binary directly — `target/debug/publish-bundle.exe` already exists per this cut's own pre-check; no `cargo run` needed). | One plain sentence per intent/outcome pair, Part G's G6 format, now over a log carrying H6's and H8's own attempts too — **judge legibility at THIS volume**: G6's own remediation (`--audit-show`, filed against the human's 2026-08-17 exposure-review condition 2) was built and reviewed at a handful of lines; this is that same reader meeting a log a real 5 GB session has actually grown. Does it stay a plain sentence per line, or does scale make it harder to read than G6's own small-log demonstration suggested? |
+
+**If anything deviates:** stop, record the exact step, and report it, same as Parts A–G. (Except
+H3's own no-window outcome, and H8a's cancellation / H8b's refusal — those ARE the expected
+outcome, not a deviation.)
+
+### H10 — the exit judgment
+
+Addressed to the human alone, not to whoever is running this script. Nothing below is a checkbox.
+
+**The question `NEXT-CUT.md` poses, verbatim:** is the hero slice demonstrated at 5 GB, **"and
+which verb, if any, is not"** — predicted, before any run, in that same document: **"publish holds
+for a viewport subset; whole-file is publishable but not viewable."** H6/H7 above are the
+viewport-subset case; H8b, if run, is the direct test of the whole-file half of that prediction.
+
+**What this piece built and evidenced, briefly:** the P1 predicate probe (`CUT-STATE.md`),
+corroborating H3's own callout rather than the architect's original untested assumption about this
+fixture's shape; H1–H9 above, cited throughout to `kernel/RESULTS.md`'s actual recorded figures,
+never this run's own numbers.
+
+Your ruling goes in this Part's own result log below, in your own words — verbatim, exactly as
+G10's own instruction reads. **Nothing else in this tree — no ADR, no `CUT-STATE.md` section, no
+docs page — may claim at-scale demonstrated until it is written there** (`NEXT-CUT.md` P4's own
+instruction).
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -485,3 +566,15 @@ acceptance condition there, in their own words, not a checkbox.
   2026-08-17" section; the condition discharges for this UI surface only when both conditions
   land through the ordinary gates.
 - **G10 — the human's decision on ADR-017's (clarified) acceptance condition, for this surface:**
+
+### Part H run (separate pass — at-scale)
+
+Part H did not exist during any run recorded above. Fill in the fields below when Part H is
+actually run by an operator. **H10 is not a pass/fail step** — record the human's own ruling on the
+exit judgment there, in their own words, not a checkbox.
+
+- **Date run:** —
+- **Run by:** —
+- **Build/commit:** —
+- **Part H (H1–H9):** —
+- **H10 — the ruling (the human's own words):** —
