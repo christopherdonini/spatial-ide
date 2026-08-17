@@ -565,7 +565,6 @@ acceptance condition there, in their own words, not a checkbox.
   audit record gains a human-legible reader. Recorded in ADR-017's appended "Exposure review —
   2026-08-17" section; the condition discharges for this UI surface only when both conditions
   land through the ordinary gates.
-- **G10 — the human's decision on ADR-017's (clarified) acceptance condition, for this surface:**
 
 ### Part H run (separate pass — at-scale)
 
