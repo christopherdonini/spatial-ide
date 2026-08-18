@@ -28,7 +28,14 @@ Both are engine/kernel/protocol-module work, not renderer work, and belong to th
 ## Alpha
 
 - Data doctor + legacy imports (05)
-- Action console (03)
+- Action console (03) — *(Appended 2026-08-18.)* **Split.** The Prototype ships the console's
+  **principle-4 visibility obligation only**: every shell GUI action displays either the exact
+  control-plane request it sent, or a named statement that no API equivalent exists and which
+  decision owns that gap. This is not the Alpha item — docs/03's console additionally promises
+  session→notebook recording (13's Workflow IR) and the AI flywheel (04, as narrowed by 09), and
+  **both stay Alpha**. Pulling the visibility half forward is not phase-jumping: docs/01
+  principle 4's "and shows it" clause is unphased and has been unmet across every shell surface
+  since cut 1.
 - Problems panel / spatial linting (03)
 - Notebooks: record and replay (03)
 - MCP server with the permission model (04)

@@ -5,45 +5,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-17. **Next cut (action console) — the docs/07 Alpha split append; exact text for your sight.**
-    The architect confirmed the action console as the next cut but split it: the Prototype ships
-    ONLY principle 4's visibility obligation ("and shows it" is unphased docs/01 text, unmet
-    across every shell surface since cut 1); docs/03's other two payoffs — session→notebook
-    recording (docs/13's Workflow IR) and the AI flywheel (docs/04, as narrowed by docs/09) —
-    stay Alpha. That split needs one appended note in docs/07 under Alpha, beside "Action
-    console (03)". Drafted text (the entry-A sight-approval pattern):
-    *"(Appended 2026-08-18.) **Split.** The Prototype ships the console's **principle-4
-    visibility obligation only**: every shell GUI action displays either the exact control-plane
-    request it sent, or a named statement that no API equivalent exists and which decision owns
-    that gap. This is not the Alpha item — docs/03's console additionally promises
-    session→notebook recording (13's Workflow IR) and the AI flywheel (04, as narrowed by 09),
-    and **both stay Alpha**. Pulling the visibility half forward is not phase-jumping: docs/01
-    principle 4's 'and shows it' clause is unphased and has been unmet across every shell
-    surface since cut 1."*
-    **This gates the cut's code** (with entry 18). Recommendation: approve as drafted.
-
-18. **Principle 4's status for style and publish — accepted-with-a-deadline, or a defect?**
-    The console will make undeniable what is true today: two shipped surfaces have NO API
-    equivalent at all — style (ADR-022 makes it ephemeral view state; SKP-V0 §4 item 1 names
-    `style` absent; ADR-023 holds the attribute question) and publish (binding-local by ADR-024,
-    fenced by your ADR-017 acceptance condition). The console renders both as explicit
-    "no API equivalent exists / not part of the API" entries pointing at those decisions — a
-    debt register, not a cover. That reading of docs/01 principle 4 is strictly yours.
-    Architect + custodian recommendation: **accepted-with-a-deadline, recorded in ADR-027** —
-    publish's deadline inherited from ADR-017's acceptance condition (SKP/CLI/MCP exposure is
-    already fenced to your review), style's from ADR-022/ADR-023's own resolution. **Gates the
-    cut's code** (with entry 17).
-
-19. **Action-console display details — proceeds on recommendations once 17/18 clear, unless
-    you override.** (a) Class-B entries (the seven binding_* commands) render the command NAME
-    and plain-language effect but never the argument object and never a copy affordance —
-    principle 8 earns the name; ADR-024's fence earns the omission (a copyable
-    binding_publish_prepare block would put an attacker-useful template in the page and imply
-    callability the ADR denies). (b) Data-plane batch arrivals stay OUT of the console (a named
-    scoping choice: entries are commands, not telemetry). (c) Ring-buffer ceilings (entry count,
-    per-entry bytes) picked by the architect and shown plainly in the PR — note a CRS assertion's
-    definition_json can legitimately be 65,536 bytes.
-
 16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
     admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
     OPEN item 1** ("what the envelope records for a mapped identity — must be settled at
@@ -214,6 +175,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-08-18 — action-console cut gates cleared by the human ("let's roll with the next
+  cut").** Entry 17: the docs/07 Alpha split append applied as drafted (the Prototype ships the
+  console's principle-4 visibility obligation only; notebook recording + AI flywheel stay
+  Alpha). Entry 18: principle 4's status for style and publish = **accepted-with-a-deadline,
+  recorded in ADR-027 at filing** — publish's deadline inherited from ADR-017's acceptance
+  condition, style's from ADR-022/ADR-023's own resolution; the console renders both gaps as
+  explicit debt-register entries. Entry 19 rides its recommendations (class-B name-only/no
+  copy; data-plane out; architect-picked ceilings shown in the PR). The applied docs/07 text
+  was restated verbatim to the human at go-time; a veto reverts it before the cut's PR.
 
 - **2026-08-14 — operator walkthrough Parts A–D RUN by the human (over RustDesk), nine days ahead
   of its 2026-08-23 due date.** Parts B, C, D and A1–A6/A8–A10 **pass** — including both
