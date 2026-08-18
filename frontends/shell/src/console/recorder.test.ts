@@ -3,7 +3,22 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { ConsoleRecorder, MAX_CONSOLE_ENTRIES, MAX_ENTRY_RENDER_BYTES } from "./recorder";
+import {
+  ConsoleRecorder,
+  consoleRecorder,
+  MAX_CONSOLE_ENTRIES,
+  MAX_ENTRY_RENDER_BYTES,
+  recordNamed,
+  type SkpRequestEntry,
+} from "./recorder";
+
+/** Every entry this file's own "ConsoleRecorder" describe block builds via `.record()` is a
+ * `SkpRequestEntry` by construction -- narrowed with this helper rather than a bare `as` cast at
+ * each call site. */
+function asSkpRequestEntry(entry: { kind: string }): SkpRequestEntry {
+  if (entry.kind !== "skp-request") throw new Error(`expected skp-request entry, got ${entry.kind}`);
+  return entry as SkpRequestEntry;
+}
 
 describe("ConsoleRecorder", () => {
   it("records the exact request reference, not a copy (I2)", () => {
@@ -12,7 +27,7 @@ describe("ConsoleRecorder", () => {
 
     recorder.record(request);
 
-    expect(recorder.entries()[0]!.request).toBe(request);
+    expect(asSkpRequestEntry(recorder.entries()[0]!).request).toBe(request);
   });
 
   it("starts an entry pending, in insertion order, with an increasing seq", () => {
@@ -20,7 +35,7 @@ describe("ConsoleRecorder", () => {
     recorder.record({ a: 1 });
     recorder.record({ a: 2 });
 
-    const entries = recorder.entries();
+    const entries = recorder.entries().map(asSkpRequestEntry);
     expect(entries.map((e) => e.outcome)).toEqual(["pending", "pending"]);
     expect(entries.map((e) => e.seq)).toEqual([0, 1]);
     expect(entries.map((e) => (e.request as { a: number }).a)).toEqual([1, 2]);
@@ -32,7 +47,7 @@ describe("ConsoleRecorder", () => {
 
     handle.resolveOk();
 
-    expect(recorder.entries()[0]!.outcome).toBe("ok");
+    expect(asSkpRequestEntry(recorder.entries()[0]!).outcome).toBe("ok");
   });
 
   it("resolveRefused transitions to refused and carries the typed refusal", () => {
@@ -42,7 +57,7 @@ describe("ConsoleRecorder", () => {
 
     handle.resolveRefused(refusal);
 
-    const entry = recorder.entries()[0]!;
+    const entry = asSkpRequestEntry(recorder.entries()[0]!);
     expect(entry.outcome).toBe("refused");
     expect(entry.refusal).toEqual(refusal);
     expect(entry.error).toBeUndefined();
@@ -54,7 +69,7 @@ describe("ConsoleRecorder", () => {
 
     handle.resolveThrew("network unreachable");
 
-    const entry = recorder.entries()[0]!;
+    const entry = asSkpRequestEntry(recorder.entries()[0]!);
     expect(entry.outcome).toBe("threw");
     expect(entry.error).toBe("network unreachable");
     expect(entry.refusal).toBeUndefined();
@@ -67,7 +82,7 @@ describe("ConsoleRecorder", () => {
       recorder.record({ i });
     }
 
-    const entries = recorder.entries();
+    const entries = recorder.entries().map(asSkpRequestEntry);
     expect(entries).toHaveLength(MAX_CONSOLE_ENTRIES);
     expect(recorder.droppedCount()).toBe(10);
     // Oldest 10 (i = 0..9) are gone; the surviving window starts at i = 10 and stays in order.
@@ -117,5 +132,111 @@ describe("ConsoleRecorder", () => {
 
   it("MAX_ENTRY_RENDER_BYTES is above engine's MAX_CRS_DEFINITION_BYTES (65_536) so a legitimate max-size CRS assertion is never pre-truncated", () => {
     expect(MAX_ENTRY_RENDER_BYTES).toBeGreaterThan(65_536);
+  });
+
+  it("record() carries the optional command name on the entry (P3: command-name header)", () => {
+    const recorder = new ConsoleRecorder();
+    recorder.record({ skp: "skp/0.2", dataset: "ds_x" }, "describe");
+
+    expect(recorder.entries()[0]!.kind).toBe("skp-request");
+    expect(asSkpRequestEntry(recorder.entries()[0]!).command).toBe("describe");
+  });
+
+  describe("recordBindingCommand (class B, NEXT-CUT.md P3 item A)", () => {
+    it("records a binding-command entry, name only, starting pending", () => {
+      const recorder = new ConsoleRecorder();
+      recorder.recordBindingCommand("binding_pick_file");
+
+      const entry = recorder.entries()[0]!;
+      expect(entry).toEqual({ seq: 0, kind: "binding-command", command: "binding_pick_file", outcome: "pending" });
+    });
+
+    it("resolveOk transitions to ok", () => {
+      const recorder = new ConsoleRecorder();
+      const handle = recorder.recordBindingCommand("binding_pick_file");
+      handle.resolveOk();
+      const entry = recorder.entries()[0]!;
+      if (entry.kind !== "binding-command") throw new Error("expected binding-command entry");
+      expect(entry.outcome).toBe("ok");
+    });
+
+    it("resolveThrew transitions to threw and carries the message", () => {
+      const recorder = new ConsoleRecorder();
+      const handle = recorder.recordBindingCommand("binding_pick_file");
+      handle.resolveThrew("network unreachable");
+      const entry = recorder.entries()[0]!;
+      if (entry.kind !== "binding-command") throw new Error("expected binding-command entry");
+      expect(entry.outcome).toBe("threw");
+      expect(entry.error).toBe("network unreachable");
+    });
+
+    it("notifies subscribers on record and resolve, same as record()", () => {
+      const recorder = new ConsoleRecorder();
+      const listener = vi.fn();
+      recorder.subscribe(listener);
+      const handle = recorder.recordBindingCommand("binding_pick_file");
+      expect(listener).toHaveBeenCalledTimes(1);
+      handle.resolveOk();
+      expect(listener).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("recordGuiAction (class C, NEXT-CUT.md P3 item A)", () => {
+    it("records a gui-action entry with no outcome field at all -- the action IS its own completion", () => {
+      const recorder = new ConsoleRecorder();
+      recorder.recordGuiAction("style.setFillColor");
+
+      const entry = recorder.entries()[0]!;
+      expect(entry).toEqual({ seq: 0, kind: "gui-action", action: "style.setFillColor" });
+    });
+
+    it("notifies subscribers once, synchronously", () => {
+      const recorder = new ConsoleRecorder();
+      const listener = vi.fn();
+      recorder.subscribe(listener);
+      recorder.recordGuiAction("style.togglePanelExpanded");
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+});
+
+/**
+ * `recordNamed` (NEXT-CUT.md P3 item A): the name-only capture API's own fence, proven at the type
+ * level, not merely by convention. Delegates to the module-level `consoleRecorder` singleton (the
+ * same instance `skp/client.ts` uses), so these tests read only the entry each `it` itself
+ * appended -- the same `entries().length` "before" marker `skp/client.test.ts` already uses for
+ * the same shared-singleton reason.
+ */
+describe("recordNamed", () => {
+  it("CRITICAL: accepts only a string name -- no third parameter exists for an argument object to occupy", () => {
+    // @ts-expect-error -- recordNamed's own signature has no parameter after `name: string`; a
+    // caller cannot pass an argument object even by explicit position, let alone by accident. This
+    // is the fence itself: it fails `tsc`, not merely a lint at review time.
+    recordNamed("binding-command", "binding_pick_file", { path: "/should/not/compile" });
+  });
+
+  it("binding-command records name-only and returns a handle with resolveOk/resolveThrew (no resolveRefused)", () => {
+    const before = consoleRecorder.entries().length;
+
+    const handle = recordNamed("binding-command", "binding_crs_catalog");
+    handle.resolveOk();
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (entry.kind !== "binding-command") throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_crs_catalog");
+    expect(entry.outcome).toBe("ok");
+    // @ts-expect-error -- BindingCommandHandle has no resolveRefused; a binding command never
+    // produces a typed SkpError-shaped refusal at this boundary (recorder.ts's own doc comment).
+    void handle.resolveRefused;
+  });
+
+  it("gui-action records name-only and returns void", () => {
+    const before = consoleRecorder.entries().length;
+
+    const result = recordNamed("gui-action", "canvas.dismissCanvasRefusal");
+
+    expect(result).toBeUndefined();
+    const entry = consoleRecorder.entries()[before]!;
+    expect(entry).toEqual({ seq: entry.seq, kind: "gui-action", action: "canvas.dismissCanvasRefusal" });
   });
 });

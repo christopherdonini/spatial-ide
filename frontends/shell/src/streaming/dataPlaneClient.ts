@@ -3,6 +3,8 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
+import { recordNamed } from "../console/recorder";
+
 export interface DataPlaneAttach {
   url: string;
   subprotocols: [string, string];
@@ -19,7 +21,19 @@ let cached: Promise<DataPlaneAttach> | null = null;
 
 export function dataPlaneAttach(): Promise<DataPlaneAttach> {
   if (!cached) {
-    cached = invoke<DataPlaneAttach>("binding_data_plane_attach");
+    // NEXT-CUT.md P3 item B: name-only, pre-invoke; resolved post-invoke, rethrown unchanged --
+    // this wire must be observationally invisible to `dataPlaneAttach`'s own callers/memoization.
+    const entry = recordNamed("binding-command", "binding_data_plane_attach");
+    cached = invoke<DataPlaneAttach>("binding_data_plane_attach").then(
+      (result) => {
+        entry.resolveOk();
+        return result;
+      },
+      (e: unknown) => {
+        entry.resolveThrew(e instanceof Error ? e.message : String(e));
+        throw e;
+      }
+    );
   }
   return cached;
 }

@@ -4,7 +4,20 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
+import { recordNamed } from "../console/recorder";
 import type { ExecuteOutcome, PrepareOutcome, PublishProgressEvent, PublishScopeInput } from "./types";
+
+/**
+ * NEXT-CUT.md P3 item B: recorded name-only, pre-invoke; resolved post-invoke, rethrown unchanged
+ * -- inlined at each call site below rather than behind a shared helper that takes `command` as a
+ * variable, deliberately: `console/surfaceCompleteness.test.ts`'s completeness scan classifies
+ * every `invoke(`/`invoke<` call site by requiring a STRING LITERAL command name (its own file
+ * header: "the ONE place invoke is ever called with a non-literal command name" is
+ * `skp/client.ts::call()`); a shared `invokeRecorded(command, ...)` helper here would make
+ * `command` a variable at its own `invoke(command, ...)` call site, which that scan would then
+ * (rightly) flag as a second, unaccounted-for non-literal choke point outside `skp/client.ts`.
+ */
+
 
 /** `binding_publish_prepare`'s own JS-visible key spelling: Tauri's `#[tauri::command]` macro
  * converts snake_case Rust parameter names to camelCase by default (`ArgumentCase::Camel`, the
@@ -15,18 +28,26 @@ import type { ExecuteOutcome, PrepareOutcome, PublishProgressEvent, PublishScope
  * from JS") -- `filter_active` is a disclosed P1 deviation (`CUT-STATE.md`), not this shell's own
  * choice to omit or default.
  */
-export function publishPrepare(
+export async function publishPrepare(
   datasetHandle: string,
   styleDoc: string,
   scope: PublishScopeInput,
   filterActive: boolean
 ): Promise<PrepareOutcome> {
-  return invoke<PrepareOutcome>("binding_publish_prepare", {
-    datasetHandle,
-    styleDoc,
-    scope,
-    filterActive,
-  });
+  const entry = recordNamed("binding-command", "binding_publish_prepare");
+  try {
+    const result = await invoke<PrepareOutcome>("binding_publish_prepare", {
+      datasetHandle,
+      styleDoc,
+      scope,
+      filterActive,
+    });
+    entry.resolveOk();
+    return result;
+  } catch (e) {
+    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    throw e;
+  }
 }
 
 /** `binding_publish_execute` -- carries the operator's ALREADY-TYPED phrase. **No comparison
@@ -34,14 +55,30 @@ export function publishPrepare(
  * it is; the one comparison lives in Rust (`permission::approval::check`, `NEXT-CUT.md`'s binding
  * "Approval: DOM, one comparison, in Rust" rule) and a mismatch comes back as `{status:"refused"}`,
  * never a JS-side short-circuit. */
-export function publishExecute(attemptId: string, typedPhrase: string): Promise<ExecuteOutcome> {
-  return invoke<ExecuteOutcome>("binding_publish_execute", { attemptId, typedPhrase });
+export async function publishExecute(attemptId: string, typedPhrase: string): Promise<ExecuteOutcome> {
+  const entry = recordNamed("binding-command", "binding_publish_execute");
+  try {
+    const result = await invoke<ExecuteOutcome>("binding_publish_execute", { attemptId, typedPhrase });
+    entry.resolveOk();
+    return result;
+  } catch (e) {
+    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    throw e;
+  }
 }
 
 /** `binding_publish_cancel` (P2's own addition -- `commands.rs`'s doc comment). `true` iff a
  * running publish for this attempt was found and cancelled; `false` is not an error. */
-export function publishCancel(attemptId: string): Promise<boolean> {
-  return invoke<boolean>("binding_publish_cancel", { attemptId });
+export async function publishCancel(attemptId: string): Promise<boolean> {
+  const entry = recordNamed("binding-command", "binding_publish_cancel");
+  try {
+    const result = await invoke<boolean>("binding_publish_cancel", { attemptId });
+    entry.resolveOk();
+    return result;
+  } catch (e) {
+    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    throw e;
+  }
 }
 
 /**
@@ -59,21 +96,34 @@ export function publishCancel(attemptId: string): Promise<boolean> {
  * destination, never from a JS-asserted grant (F-5 holds through this seam exactly as it does for
  * the real command). **`e2e/publish.mjs` therefore does not exercise the native picker itself --
  * only the operator's manual walkthrough does.**
+ *
+ * NEXT-CUT.md P3 item B: recorded exactly like every other binding command here, including in dev
+ * sessions where this seam actually runs -- it exists in those sessions (compiled in whenever
+ * `debug_assertions` holds), and hiding it from the console would be a display lie, the same
+ * standard the rest of this cut holds every other action to.
  */
-export function publishPrepareWithDestination(
+export async function publishPrepareWithDestination(
   datasetHandle: string,
   styleDoc: string,
   scope: PublishScopeInput,
   filterActive: boolean,
   destination: string
 ): Promise<PrepareOutcome> {
-  return invoke<PrepareOutcome>("binding_publish_prepare_e2e_destination", {
-    datasetHandle,
-    styleDoc,
-    scope,
-    filterActive,
-    destination,
-  });
+  const entry = recordNamed("binding-command", "binding_publish_prepare_e2e_destination");
+  try {
+    const result = await invoke<PrepareOutcome>("binding_publish_prepare_e2e_destination", {
+      datasetHandle,
+      styleDoc,
+      scope,
+      filterActive,
+      destination,
+    });
+    entry.resolveOk();
+    return result;
+  } catch (e) {
+    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    throw e;
+  }
 }
 
 /** `publish.rs::PUBLISH_PROGRESS_EVENT` verbatim -- the one Tauri event name this seam emits. */

@@ -4,6 +4,7 @@
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 
+import { recordNamed } from "../console/recorder";
 import {
   DEFAULT_STYLE_STATE,
   MAX_OPACITY,
@@ -66,23 +67,30 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
     // (never trust a boundary even when the spec already guarantees it); `toStyleDocument`
     // normalizes a second time regardless when the document is built, so this is
     // belt-and-suspenders, not the only guard against a malformed literal (binding note 5).
+    // NEXT-CUT.md P3 item B (class C): recorded at the point this edit actually applies, i.e. the
+    // `onChange` call itself -- never on render.
+    recordNamed("gui-action", "style.setFillColor");
     onChange({ ...style, fillColor: e.target.value.toLowerCase() });
   }
 
   function handleFillOpacity(e: ChangeEvent<HTMLInputElement>): void {
+    recordNamed("gui-action", "style.setFillOpacity");
     onChange({ ...style, fillOpacity: Number(e.target.value) });
   }
 
   function handleOutlineColor(e: ChangeEvent<HTMLInputElement>): void {
+    recordNamed("gui-action", "style.setOutlineColor");
     onChange({ ...style, outlineColor: e.target.value.toLowerCase() });
   }
 
   function handleOutlineWidth(e: ChangeEvent<HTMLInputElement>): void {
+    recordNamed("gui-action", "style.setOutlineWidth");
     onChange({ ...style, outlineWidth: Number(e.target.value) });
   }
 
   function handleReset(): void {
     // "Reset to default" is a FRESH EDIT, never undo-flavoured (NEXT-CUT.md binding note 4).
+    recordNamed("gui-action", "style.resetToDefault");
     onChange(DEFAULT_STYLE_STATE);
   }
 
@@ -91,7 +99,10 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
       <button
         type="button"
         className="style-disclosure"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => {
+          recordNamed("gui-action", "style.togglePanelExpanded");
+          setExpanded((v) => !v);
+        }}
         aria-expanded={expanded}
       >
         {expanded ? "▾" : "▸"} Style

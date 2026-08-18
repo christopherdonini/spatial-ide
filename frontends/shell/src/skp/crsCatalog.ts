@@ -3,6 +3,8 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
+import { recordNamed } from "../console/recorder";
+
 /**
  * One entry of the pinned, in-tree CRS definition catalog (ADR-026 decision 1(a)). Mirrors
  * `frontends/shell/src-tauri/src/commands.rs::CrsCatalogEntry` field-for-field.
@@ -23,8 +25,17 @@ export interface CrsCatalogEntry {
  * `binding_crs_catalog` -- **not SKP** (host UI furniture, ADR-026's catalog; see the Rust
  * command's own doc comment). Static, compiled-in data: no caching here, by design -- unlike
  * `dataPlaneClient.ts`'s `dataPlaneAttach`, this has nothing that would make re-fetching costly
- * or stale, so there is no memoization to get wrong.
+ * or stale, so there is no memoization to get wrong. NEXT-CUT.md P3 item B: name-only, pre-invoke;
+ * resolved post-invoke, rethrown unchanged.
  */
-export function crsCatalog(): Promise<CrsCatalogEntry[]> {
-  return invoke<CrsCatalogEntry[]>("binding_crs_catalog");
+export async function crsCatalog(): Promise<CrsCatalogEntry[]> {
+  const entry = recordNamed("binding-command", "binding_crs_catalog");
+  try {
+    const result = await invoke<CrsCatalogEntry[]>("binding_crs_catalog");
+    entry.resolveOk();
+    return result;
+  } catch (e) {
+    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    throw e;
+  }
 }

@@ -47,7 +47,10 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
   // cloned (I2) -- pre-await, then resolved post-await on every path including a throw, so the
   // recorder is observationally invisible to this function's own contract with its callers: it
   // never changes what is returned or thrown, only observes it.
-  const entry = consoleRecorder.record(request);
+  // `command` is captured on the entry too (NEXT-CUT.md P3): `DescribeRequest` and
+  // `CloseDatasetRequest` are both exactly `{skp, dataset}` on the wire, so the request object
+  // alone cannot tell the console's panel which of the five commands this was.
+  const entry = consoleRecorder.record(request, command);
   try {
     const result = await invoke<Res>(command, { request });
     entry.resolveOk();

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const invokeMock = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
-import { consoleRecorder } from "../console/recorder";
+import { consoleRecorder, isSkpRequestEntry } from "../console/recorder";
 import { SkpCallError, viewportQuery } from "./client";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, type SkpError } from "./types";
 
@@ -68,8 +68,20 @@ describe("call() records every SKP request at the console's one capture site", (
 
     const entry = consoleRecorder.entries()[before]!;
     expect(entry.kind).toBe("skp-request");
+    if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
     const sentRequest = invokeMock.mock.calls[invokeMock.mock.calls.length - 1]![1].request;
     expect(entry.request).toBe(sentRequest);
+  });
+
+  it("records the command name on the entry (P3: the class-A command-name header's own source)", async () => {
+    invokeMock.mockResolvedValueOnce({ stream: "sh_0", expires_in_ms: 30_000 });
+    const before = consoleRecorder.entries().length;
+
+    await viewportQuery("ds_x", null, null, null);
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
+    expect(entry.command).toBe("viewport_query");
   });
 
   it("records outcome ok after a resolved invoke, and rethrows nothing (the happy path)", async () => {
@@ -78,7 +90,9 @@ describe("call() records every SKP request at the console's one capture site", (
 
     await viewportQuery("ds_x", null, null, null);
 
-    expect(consoleRecorder.entries()[before]!.outcome).toBe("ok");
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
+    expect(entry.outcome).toBe("ok");
   });
 
   it("records outcome refused with the typed SkpError, and rethrows an SkpCallError unchanged", async () => {
@@ -89,6 +103,7 @@ describe("call() records every SKP request at the console's one capture site", (
     await expect(viewportQuery("ds_x", null, null, null)).rejects.toBeInstanceOf(SkpCallError);
 
     const entry = consoleRecorder.entries()[before]!;
+    if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
     expect(entry.outcome).toBe("refused");
     expect(entry.refusal).toEqual(skpError);
     expect(entry.error).toBeUndefined();
@@ -102,6 +117,7 @@ describe("call() records every SKP request at the console's one capture site", (
     await expect(viewportQuery("ds_x", null, null, null)).rejects.toBe(transportError);
 
     const entry = consoleRecorder.entries()[before]!;
+    if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
     expect(entry.outcome).toBe("threw");
     expect(entry.error).toBe("network unreachable");
     expect(entry.refusal).toBeUndefined();

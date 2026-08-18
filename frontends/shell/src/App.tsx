@@ -9,6 +9,8 @@ import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { PickResult } from "./canvas/pick";
+import ConsolePanel from "./console/ConsolePanel";
+import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
 import { predicateTextToFilter } from "./filter/predicateInput";
@@ -1038,7 +1040,16 @@ export default function App() {
                 {canvasRefusal && (
                   <div className="canvas-refusal" role="alert">
                     {canvasRefusal}
-                    <button type="button" onClick={() => setCanvasRefusal(null)}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
+                        // "canvas.dismissCanvasRefusal" row): recorded at the point the action
+                        // actually applies -- this click clears local state only, never the kernel.
+                        recordNamed("gui-action", "canvas.dismissCanvasRefusal");
+                        setCanvasRefusal(null);
+                      }}
+                    >
                       Dismiss
                     </button>
                   </div>
@@ -1047,7 +1058,13 @@ export default function App() {
                   <div className="canvas-refusal" role="alert">
                     <div className="admission-refusal-code">{viewportRefusal.code}</div>
                     {viewportRefusal.message}
-                    <button type="button" onClick={() => setViewportRefusal(null)}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        recordNamed("gui-action", "canvas.dismissViewportRefusal");
+                        setViewportRefusal(null);
+                      }}
+                    >
                       Dismiss
                     </button>
                   </div>
@@ -1123,6 +1140,14 @@ export default function App() {
             getLastViewportBbox={() => lastViewportBboxRef.current}
           />
         )}
+        {/* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel
+          * above) -- `open_dataset` itself, and several class-B commands
+          * (`binding_pick_file`/`binding_crs_catalog`), can fire before any dataset is ever
+          * admitted, and the console must account for those too. Same "in `.app-main`'s flex
+          * column, below `.canvas-container`, never an absolute overlay" discipline every other
+          * panel here already follows (S1/S4) -- `styles.css`'s own `.console-panel` comment has
+          * the measured layout-budget note this piece appended. */}
+        <ConsolePanel />
       </main>
     </div>
   );

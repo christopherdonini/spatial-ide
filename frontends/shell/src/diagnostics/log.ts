@@ -3,6 +3,8 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
+import { recordNamed } from "../console/recorder";
+
 /**
  * ADR-010 rule 7: a global handler's output must be persisted to a log that outlives the session.
  * `binding_log_session_event` is a **binding-local command, never an SKP field** (ADR-004
@@ -10,10 +12,18 @@ import { invoke } from "@tauri-apps/api/core";
  * wire through it.
  *
  * Never throws: a log sink that can itself throw into the handler it is meant to record a failure
- * from would defeat the one thing rule 7 asks for.
+ * from would defeat the one thing rule 7 asks for. NEXT-CUT.md P3 item B: recorded name-only,
+ * pre-invoke, resolved post-invoke -- this is the ONE binding command whose own doc comment (right
+ * above) already promises never to surface a failure to its caller, so resolution here is
+ * observational only, same as every other call site's wire.
  */
 export function logSessionEvent(level: string, message: string): void {
-  invoke("binding_log_session_event", { level, message }).catch(() => {
-    // Nothing else can be done here -- see the doc comment above.
-  });
+  const entry = recordNamed("binding-command", "binding_log_session_event");
+  invoke("binding_log_session_event", { level, message }).then(
+    () => entry.resolveOk(),
+    (e: unknown) => {
+      // Nothing else can be done here -- see the doc comment above.
+      entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    }
+  );
 }

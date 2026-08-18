@@ -601,3 +601,139 @@ body,
   font-size: 0.85rem;
   overflow-wrap: anywhere;
 }
+
+/* NEXT-CUT.md P3 (action-console cut): the bottom drawer, collapsed by default -- in `.app-main`'s
+   flex column, in normal document flow, never an absolute/fixed overlay (the S1 lesson every panel
+   in this tree already follows). `.console-disclosure` below is byte-identical to
+   `.style-disclosure`/`.publish-disclosure` -- reused verbatim, not reinvented, for the same
+   reason `.publish-disclosure`'s own comment states.
+
+   **Why a drawer, not a rail panel** (`App.tsx`'s "Current focus" pointer, `docs/07`): the left
+   rail (`.admission-panel` + `.filter-panel` + `.style-panel` collapsed) already measures within
+   ~4px of the 800px viewport floor before this panel exists at all (`.publish-panel`'s own comment
+   above: "the remaining budget before 800px is ~4px" with every panel collapsed) -- there is no
+   rail headroom left for a fourth collapsed row's worth of NEW content, only for one more thin
+   bottom-drawer bar below everything, which is what this is.
+
+   **Mounted UNCONDITIONALLY, unlike every panel above** (`App.tsx`'s own comment at its mount
+   point): before any dataset is admitted, this is the ONLY one of these bottom panels present, so
+   its own collapsed row sits directly below `.admission-panel`, not below a canvas at its floor.
+
+   **Layout-budget note, computed, not a fresh E2E capture** (P5's `e2e/console.mjs` does not exist
+   yet -- this is a disclosed extrapolation, not a measurement, and should be replaced with a real
+   E2E capture once that harness lands): `.console-disclosure` reuses `.style-disclosure`'s own
+   already-twice-measured collapsed row height (17.8px, both `.style-panel`'s and `.publish-panel`'s
+   own comments) byte-for-byte -- same padding, font-size, line-height -- so a THIRD identical
+   collapsed row is expected to add the same 17.8px again. Post-admission, with every one of
+   `.style-panel`/`.publish-panel`/`.console-panel` collapsed: `.canvas-container` is unaffected
+   (unchanged top/height -- it is earlier than all three in flex/visual order, and was already at
+   its 200px floor with only two such rows present); total page content height becomes
+   813.75px + 17.8px = 831.55px, 31.55px over the 800px viewport, so `.app-main`'s own vertical
+   scrollbar (already appearing with two collapsed rows present, per `.publish-panel`'s own comment)
+   continues to appear, at the same ~15px `clientWidth` narrowing already disclosed there -- this
+   third row does not newly introduce that effect, only adds to page height under it. Expanding
+   `.console-entries` is capped (`max-height: 16rem`) by the same cap-then-scroll discipline
+   `.style-controls`/`.publish-controls` already establish, so an expanded console cannot itself
+   push `.canvas-container` toward its floor either. */
+.console-panel {
+  padding: 0.15rem 1rem;
+  max-width: 40rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.console-disclosure {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+
+.console-entries {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* Same cap-then-scroll discipline `.style-controls`/`.publish-controls` already establish. */
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.console-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.console-entry {
+  padding: 0.5rem;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.console-entry-header {
+  font-weight: 600;
+}
+
+.console-entry-label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+
+.console-request-text {
+  margin: 0.25rem 0;
+  padding: 0.5rem;
+  background: rgba(128, 128, 128, 0.08);
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.console-copy-button {
+  padding: 0.2rem 0.5rem;
+}
+
+.console-outcome {
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.console-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+}
+
+.console-entry-prose {
+  margin: 0;
+}
+
+.console-entry-citation,
+.console-entry-owner {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.console-group-header {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.console-entry-unclassified {
+  border-color: rgba(139, 0, 0, 0.6);
+  background: rgba(139, 0, 0, 0.12);
+  font-weight: 600;
+}

@@ -9,7 +9,14 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 const listenMock = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 
-import { publishCancel, publishExecute, publishPrepare, subscribePublishProgress } from "./client";
+import { consoleRecorder, isBindingCommandEntry } from "../console/recorder";
+import {
+  publishCancel,
+  publishExecute,
+  publishPrepare,
+  publishPrepareWithDestination,
+  subscribePublishProgress,
+} from "./client";
 
 /**
  * `publishPrepare`/`publishExecute`/`publishCancel`'s own request shape -- the Rust side already
@@ -74,6 +81,77 @@ describe("publishExecute / publishCancel request shape", () => {
     const result = await publishCancel("att_1");
     expect(invokeMock).toHaveBeenCalledWith("binding_publish_cancel", { attemptId: "att_1" });
     expect(result).toBe(true);
+  });
+});
+
+/**
+ * NEXT-CUT.md P3 item B: every binding command in this file -- including the dev-only E2E seam --
+ * records name-only, pre-invoke, resolved post-invoke, rethrown unchanged. `consoleRecorder` is a
+ * module-level singleton (`skp/client.test.ts`'s own established "before" marker pattern, reused).
+ */
+describe("publish/client.ts records every binding command name-only (NEXT-CUT.md P3)", () => {
+  beforeEach(() => {
+    invokeMock.mockReset();
+  });
+
+  it("publishPrepare records binding_publish_prepare, outcome ok", async () => {
+    invokeMock.mockResolvedValueOnce({ status: "picker-cancelled" });
+    const before = consoleRecorder.entries().length;
+
+    await publishPrepare("ds_x", "{}", { kind: "whole-file" }, false);
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_publish_prepare");
+    expect(entry.outcome).toBe("ok");
+  });
+
+  it("publishExecute records binding_publish_execute, outcome ok", async () => {
+    invokeMock.mockResolvedValueOnce({ status: "unknown-attempt" });
+    const before = consoleRecorder.entries().length;
+
+    await publishExecute("att_1", "phrase");
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_publish_execute");
+    expect(entry.outcome).toBe("ok");
+  });
+
+  it("publishCancel records binding_publish_cancel, outcome ok", async () => {
+    invokeMock.mockResolvedValueOnce(true);
+    const before = consoleRecorder.entries().length;
+
+    await publishCancel("att_1");
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_publish_cancel");
+    expect(entry.outcome).toBe("ok");
+  });
+
+  it("publishPrepareWithDestination (the dev-only E2E seam) records too -- it is never hidden from the console", async () => {
+    invokeMock.mockResolvedValueOnce({ status: "picker-cancelled" });
+    const before = consoleRecorder.entries().length;
+
+    await publishPrepareWithDestination("ds_x", "{}", { kind: "whole-file" }, false, "/tmp/out");
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_publish_prepare_e2e_destination");
+    expect(entry.outcome).toBe("ok");
+  });
+
+  it("a rejected invoke records outcome threw and rethrows unchanged, for every command in this file", async () => {
+    const transportError = new Error("ipc failure");
+    invokeMock.mockRejectedValueOnce(transportError);
+    const before = consoleRecorder.entries().length;
+
+    await expect(publishPrepare("ds_x", "{}", { kind: "whole-file" }, false)).rejects.toBe(transportError);
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.outcome).toBe("threw");
   });
 });
 
