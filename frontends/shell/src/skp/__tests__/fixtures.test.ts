@@ -21,6 +21,7 @@ import type {
   ViewportQueryResponse,
 } from "../types";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
+import { assertExactKeys } from "../../testUtils/assertExactKeys";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -42,13 +43,11 @@ function loadFixture<T>(name: string): T {
  * missing field fails that test regardless of whether any individual assertion names it.
  * TypeScript's `interface`s are erased at runtime and give this client no equivalent for free
  * (S10, reviewer) -- the per-field `expect`s below this point in the file only catch drift in
- * whichever field they happen to name. This closes that gap the same way
- * `renderer/tests/data/manifest-key-sets.json` closes it for the bundle manifest: check the
- * fixture's actual keys against the exact set `types.ts` declares for that shape.
+ * whichever field they happen to name. `assertExactKeys` (`../../testUtils/assertExactKeys`)
+ * closes that gap the same way `renderer/tests/data/manifest-key-sets.json` closes it for the
+ * bundle manifest: check the fixture's actual keys against the exact set `types.ts` declares for
+ * that shape. Shared with `console/renderTruth.test.ts` (NEXT-CUT.md P1) rather than redefined.
  */
-function assertExactKeys(value: unknown, expected: readonly string[], label: string): void {
-  expect(Object.keys(value as Record<string, unknown>).sort(), label).toEqual([...expected].sort());
-}
 
 describe("SKP v0 shared fixtures", () => {
   it("open_dataset request/response", () => {
