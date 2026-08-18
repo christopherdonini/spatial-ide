@@ -5,6 +5,27 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+20. **A9' (regression-suite hover-pick) is RED — rule 7 reached; authorize the third, bounded
+    attempt?** The action-console cut's evidence run exposed it; two fix attempts ran and
+    stopped. What is KNOWN: the drawer's layout overflow was real and is fixed (canvas back to
+    full 1280px, no scrollbar — mechanically verified); the hover-pick step STILL fails there,
+    because at its camera state the frame contains **zero interior-verified pixels** — every
+    non-background candidate is an edge patch (densest alpha 45 vs the fill's real 180). The
+    console bar legitimately costs ~18px of canvas height; features render slightly smaller;
+    at this fixture/zoom they appear to draw as edges with no solid fill interior. Your own
+    hover worked in Parts A–D, and nothing touched the pick or render paths — the failing
+    ASSUMPTION is the test's ("an interior pixel exists at default zoom"), not obviously the
+    product's. Options: **(a) authorize a bounded third attempt, test-side only** — A9' zooms
+    in modestly before hovering (its assertion — hover shows the feature id — is
+    zoom-independent), keeping the interior-verification hardening so it can never go
+    accidentally-green again; if zoomed-in fill is ALSO absent, that instant becomes evidence
+    of a real render defect and stops there; (b) an instrumented render-diagnosis session now
+    (the entry-0 pattern) if you suspect the fill itself regressed; (c) accept the step as
+    EXPECTED-FAIL with the evidence note and let the cut's PR carry the disclosure.
+    Recommendation: **(a)**, proceeding on it unless you override — it resolves the question
+    either way (green = test assumption fixed; red-when-zoomed = a real defect, escalated with
+    evidence). The cut's own console suite is 10/10 green; only this inherited step is red.
+
 16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
     admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
     OPEN item 1** ("what the envelope records for a mapped identity — must be settled at
