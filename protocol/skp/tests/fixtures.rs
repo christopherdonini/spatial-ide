@@ -84,6 +84,27 @@ fn describe_fixtures_round_trip() {
     round_trip::<DescribeResponse>("v0-describe-response");
 }
 
+/// SF10 (reviewer gate, admission-remediation cut): P0's own precedent
+/// (`v0-error-identity_unusable-with-candidates`, a populated fixture beside a null one) applied
+/// to `describe`'s `CrsInfo` — until this fixture, every describe fixture on both the Rust and
+/// TypeScript sides carried `definition_provenance: null` and no test ever exercised a *populated*
+/// caller-asserted shape (`source`, `asserted_by`, `asserted_at`, `definition_provenance` all
+/// non-null together).
+#[test]
+fn describe_response_with_a_caller_asserted_crs_round_trips() {
+    let v = fixture("v0-describe-response-caller-asserted");
+    let parsed: DescribeResponse = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as DescribeResponse: {e}"));
+    assert_eq!(parsed.crs.source, "caller_asserted");
+    assert_eq!(parsed.crs.asserted_by.as_deref(), Some("os-user chris"));
+    assert_eq!(parsed.crs.asserted_at.as_deref(), Some("2026-08-18T00:00:00Z"));
+    assert_eq!(
+        parsed.crs.definition_provenance.as_deref(),
+        Some("catalog:epsg-2056@sha256:254016888ff4")
+    );
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
 #[test]
 fn viewport_query_fixtures_round_trip() {
     round_trip::<ViewportQueryRequest>("v0-viewport_query-request");

@@ -453,6 +453,38 @@ between released implementations; it IS engaged in spirit, which is why this add
 version's record must list its full field set. Both-side fixtures updated in the same commit
 (P2). Flagged for the cut's architect re-review alongside the §7.2 prose finding above.
 
+**P3c addendum (2026-08-18, appended):** `skp/0.2` also picks up three refusal-shaping corrections
+from the P0–P3 reviewer gate's SHOULD-FIX findings, host side:
+
+- **Two new typed refusal codes on `open_dataset`**, both checked on the caller's CRS assertion
+  before anything about it is parsed: `engine.crs_assertion_identifier_blank` (SF3 — an
+  empty-or-whitespace-only `identifier` no longer admits as a nameless caller-asserted CRS that
+  would otherwise flow, unnamed, into `describe` and a published bundle's `crs_identifier`) and
+  `engine.crs_assertion_definition_too_large` (SF4 — `fields.limit`/`fields.saw`, both decimal
+  byte counts). Both map 1:1 from `EngineError::CrsAssertionIdentifierBlank` /
+  `EngineError::CrsAssertionDefinitionTooLarge` via `kernel/src/skp.rs::error_of`'s existing
+  no-wildcard discipline.
+- **`definition_json` on a caller's assertion is now bounded** at `MAX_CRS_DEFINITION_BYTES`
+  (`engine/src/crs.rs`, 65 536 bytes) — checked host-side before the text is ever parsed as JSON,
+  and mirrored client-side (`frontends/shell/src/admission/crsAssertionState.ts`, same constant
+  value, comment naming the Rust source of truth) so an over-bound paste is never even sent: the
+  multi-MB `invoke` serialization the check exists to avoid runs on the webview UI thread
+  regardless of which side ultimately refuses it.
+- **`candidate_columns` (the comma-joined field on `engine.identity_unusable`, `skp/0.2`'s own P0
+  bullet above) now omits any column whose name itself contains a comma** (SF6 —
+  `engine::identity::candidate_identity_columns`). A comma-joined wire field cannot carry such a
+  name without becoming indistinguishable, once the shell splits on `,`, from two candidates that
+  do not exist. The omission is scoped to this *offered* list only: such a column stays fully
+  declarable — typed, uniqueness-checked, and usable as `identity.column` — by a caller who names
+  it directly, unaffected by its absence from the candidate list.
+
+No new command, no wire field removed, no existing field's shape changed. Both-side fixtures
+(`protocol/skp/tests/data/*.json` / `protocol/skp/tests/fixtures.rs` and
+`frontends/shell/src/skp/__tests__/fixtures.test.ts`) gain one new populated `describe` response
+fixture (SF10 — `v0-describe-response-caller-asserted`, `source: caller_asserted` with
+`asserted_by`/`asserted_at`/`definition_provenance` all populated together, the shape no existing
+fixture exercised). Flagged for the cut's architect re-review alongside the P2 addendum above.
+
 **DRAFT — re-deferral of §4 item 5's scan-progress debt, PENDING HUMAN CONFIRMATION
 (DECISIONS-PENDING entry 9).** §4 item 5's dated 2026-08-14 entry parked the true-scan-progress
 debt on "the next SKP version that opens the wire for any reason — a `skp/0.2`, or `docs/07`'s 1.0

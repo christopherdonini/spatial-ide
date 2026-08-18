@@ -604,6 +604,11 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "crs_assertion_conflict",
             vec![("declared", declared.clone()), ("asserted", asserted.clone())],
         ),
+        EngineError::CrsAssertionIdentifierBlank => ("crs_assertion_identifier_blank", vec![]),
+        EngineError::CrsAssertionDefinitionTooLarge { limit, saw } => (
+            "crs_assertion_definition_too_large",
+            vec![("limit", limit.to_string()), ("saw", saw.to_string())],
+        ),
         EngineError::ViewportCrsMismatch { dataset, viewport } => (
             "viewport_crs_mismatch",
             vec![("dataset", dataset.clone()), ("viewport", viewport.clone())],
@@ -903,6 +908,20 @@ mod tests {
         let e = error_of(&EngineError::CeilingExceeded { ceiling: "c", limit: 1, saw: 2 });
         assert_eq!(e.code, "engine.ceiling_exceeded");
         assert_eq!(e.fields.get("limit").map(String::as_str), Some("1"));
+    }
+
+    /// SF3/SF4 (reviewer gate, admission-remediation cut): the two new typed refusals get their
+    /// own distinct `engine.*` codes, same discipline as the test above.
+    #[test]
+    fn crs_assertion_shape_refusals_map_to_distinct_engine_dot_codes() {
+        let e = error_of(&EngineError::CrsAssertionIdentifierBlank);
+        assert_eq!(e.code, "engine.crs_assertion_identifier_blank");
+        assert!(e.fields.is_empty());
+
+        let e = error_of(&EngineError::CrsAssertionDefinitionTooLarge { limit: 65_536, saw: 70_000 });
+        assert_eq!(e.code, "engine.crs_assertion_definition_too_large");
+        assert_eq!(e.fields.get("limit").map(String::as_str), Some("65536"));
+        assert_eq!(e.fields.get("saw").map(String::as_str), Some("70000"));
     }
 
     // ---- `filter_error_of` — one test per `skp.filter_*` code (`NEXT-CUT.md` design essential 5,

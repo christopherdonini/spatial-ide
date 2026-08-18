@@ -151,6 +151,29 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.identity.js_exact).toBe(true);
   });
 
+  it("describe response with a caller-asserted CRS carries a populated definition_provenance " +
+    "(SF10, reviewer gate, admission-remediation cut)", () => {
+    const res = loadFixture<DescribeResponse>("v0-describe-response-caller-asserted");
+    assertExactKeys(
+      res.crs,
+      [
+        "identifier",
+        "definition_json",
+        "source",
+        "asserted_by",
+        "asserted_at",
+        "definition_provenance",
+        "axis_order",
+        "axis_normalization",
+      ],
+      "describe response (caller-asserted) .crs"
+    );
+    expect(res.crs.source).toBe("caller_asserted");
+    expect(res.crs.asserted_by).toBe("os-user chris");
+    expect(res.crs.asserted_at).toBe("2026-08-18T00:00:00Z");
+    expect(res.crs.definition_provenance).toBe("catalog:epsg-2056@sha256:254016888ff4");
+  });
+
   it("viewport_query request/response, with bbox edges as hex, never JSON numbers", () => {
     const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request");
     assertExactKeys(

@@ -100,7 +100,7 @@ pub mod wkb;
 pub use attributes::{PublishedProjection, MAX_PUBLISHED_ATTRIBUTES};
 pub use cancel::CancelToken;
 pub use pin::ContentPin;
-pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
+pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs, MAX_CRS_DEFINITION_BYTES};
 pub use crs_catalog::{definition_provenance, CatalogEntry};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};

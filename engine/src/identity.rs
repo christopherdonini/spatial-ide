@@ -165,6 +165,16 @@ impl DatasetIdentity {
 /// itself. It names candidates a remediation UI may offer a caller to choose among; it is never a
 /// recommendation, a score, or a "looks like an id" guess (that inference is Alpha data-doctor
 /// territory, `docs/05`).
+///
+/// **A column whose name contains a comma is omitted from this list** (SF6, reviewer gate,
+/// admission-remediation cut). `kernel/src/skp.rs::error_of` carries this list on the wire as one
+/// comma-joined `SkpError.fields.candidate_columns` string (`SkpError.fields` has no list shape),
+/// and the shell splits that string back on `,` — a legal Parquet column literally named `a,b`
+/// would render as two phantom candidates, `a` and `b`, neither of which exists. The omission is
+/// scoped to *this offered list only*: such a column remains fully declarable, typed and checked
+/// for uniqueness exactly like any other, by a caller who names it directly (free text, not picked
+/// from this list) — see `admit_column_type` and `dataset::admit_identity`, neither of which
+/// consults this function to decide whether a *declared* column is usable.
 pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -> Vec<String> {
     use arrow::datatypes::DataType as D;
     schema
@@ -172,6 +182,7 @@ pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -
         .iter()
         .filter(|f| matches!(f.data_type(), D::Int64 | D::UInt64))
         .map(|f| f.name().clone())
+        .filter(|name| !name.contains(','))
         .collect()
 }
 
@@ -245,6 +256,31 @@ mod tests {
             candidate_identity_columns(&schema),
             vec!["big_signed".to_string(), "big_unsigned".to_string()],
             "schema order, Int64 and UInt64 only — no Int32, no ranking"
+        );
+    }
+
+    #[test]
+    fn a_comma_bearing_column_is_omitted_from_candidates_but_still_declarable_by_free_text() {
+        use arrow::datatypes::Field;
+        let schema = std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
+            Field::new("clean_id", D::Int64, false),
+            // SF6 (reviewer gate, admission-remediation cut): a legal Parquet column name that
+            // happens to contain a comma. `candidate_columns` is comma-joined on the wire
+            // (`kernel/src/skp.rs::error_of`) and comma-split by the shell, so this name must not
+            // appear in the *offered* candidate list -- it would render as two phantom candidates.
+            Field::new("a,b", D::Int64, false),
+        ]));
+        assert_eq!(
+            candidate_identity_columns(&schema),
+            vec!["clean_id".to_string()],
+            "the comma-bearing column must not appear in the comma-joined candidate list"
+        );
+        // Still declarable: a caller who already knows the exact column name (typed directly, not
+        // picked off the candidate list above) reaches ordinary type admission unaffected by the
+        // candidate-list omission -- the omission narrows what is *offered*, not what is usable.
+        assert!(
+            admit_column_type("a,b", &D::Int64, &schema).is_ok(),
+            "a comma-bearing column must still be declarable and type-admitted by its exact name"
         );
     }
 

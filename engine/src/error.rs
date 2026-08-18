@@ -29,6 +29,24 @@ pub enum EngineError {
     /// operation (`docs/05` detect → propose → preview → apply), which is Alpha work (`docs/07`).
     CrsAssertionConflict { declared: String, asserted: String },
 
+    /// A caller's assertion carries an empty-or-whitespace-only identifier.
+    ///
+    /// SF3 (reviewer gate, admission-remediation cut): unrefused, `identifier=""` admits as a
+    /// nameless caller-asserted CRS and flows unaltered into `describe` and a published bundle's
+    /// manifest (`kernel/src/publish/mod.rs`'s `crs_identifier` field). Checked in
+    /// `crs::validate_assertion_shape`, **before** `dataset::open_inner` ever parses the
+    /// assertion's `definition_json` for axis order — a blank name is refused on its own terms,
+    /// never inferred to be "no identifier" the way a missing `crs` key is (`CrsUndeclared`).
+    CrsAssertionIdentifierBlank,
+
+    /// A caller's asserted CRS definition exceeds [`crate::crs::MAX_CRS_DEFINITION_BYTES`].
+    ///
+    /// SF4 (reviewer gate, admission-remediation cut): checked in `crs::validate_assertion_shape`
+    /// before the text is ever parsed as JSON (the `MAX_PREDICATE_BYTES` precedent,
+    /// `engine/src/predicate.rs`, applied to this control-plane text too) — otherwise an
+    /// unbounded paste is retained whole in `DatasetCrs` and echoed in full on every `describe`.
+    CrsAssertionDefinitionTooLarge { limit: u64, saw: u64 },
+
     /// A query's viewport names a CRS other than the dataset's.
     ///
     /// **Deliberately a separate variant from `CrsAssertionConflict`.** The two refusals are
@@ -163,6 +181,18 @@ impl fmt::Display for EngineError {
                 f,
                 "refused: the file declares CRS {declared} and the caller asserted {asserted}. \
                  A caller assertion is admissible only for a file that declares nothing"
+            ),
+            Self::CrsAssertionIdentifierBlank => write!(
+                f,
+                "refused: the caller-asserted CRS identifier is empty or whitespace-only. A \
+                 nameless assertion would still admit and flow into describe and a published \
+                 bundle's manifest with nothing to identify it by"
+            ),
+            Self::CrsAssertionDefinitionTooLarge { limit, saw } => write!(
+                f,
+                "refused: the caller-asserted CRS definition is {saw} bytes, over the declared \
+                 ceiling of {limit}. PROJJSON definitions are single-digit KB; paste the pinned \
+                 catalog entry or a definition of comparable size"
             ),
             Self::ViewportCrsMismatch { dataset, viewport } => write!(
                 f,

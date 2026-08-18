@@ -170,6 +170,23 @@ mod tests {
         }
     }
 
+    /// The reviewer's named test (NOTE, reviewer gate, admission-remediation cut): binds
+    /// `crs-catalog.json`'s pinned definition to its claimed source by *equality*, not by matching
+    /// hashes alone (`epsg_2056_entry_hash_is_pinned` above already pins the hash; a hash match
+    /// does not itself prove the two source texts are byte-identical, only that they hash the
+    /// same). ADR-026's implementation note says the catalog "reuses … verbatim" the fixture
+    /// generators' proven EPSG:2056 definition (`engine/src/fixture.rs::LV95_PROJJSON`, itself
+    /// `engine/tests/data/epsg2056.projjson`) — this is what holds that claim true by test rather
+    /// than by manual copy-paste discipline. Gated on the `fixture` feature because `LV95_PROJJSON`
+    /// lives behind it (`crate::fixture`, `engine/src/lib.rs`); run via
+    /// `cargo test -p spatial-engine --features fixture`.
+    #[cfg(feature = "fixture")]
+    #[test]
+    fn epsg_2056_catalog_entry_is_byte_identical_to_the_fixture_generators_own_definition() {
+        let e = entries().iter().find(|e| e.id == "epsg-2056").expect("epsg-2056 entry present");
+        assert_eq!(e.definition, crate::fixture::LV95_PROJJSON);
+    }
+
     #[test]
     fn epsg_2056_entry_hash_is_pinned() {
         let e = entries().iter().find(|e| e.id == "epsg-2056").expect("epsg-2056 entry present");

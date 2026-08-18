@@ -1,0 +1,39 @@
+{
+  "source": { "path_display": "C:/data/parcels.parquet", "geoparquet_version": "1.1.0" },
+  "crs": {
+    "identifier": "EPSG:2056",
+    "definition_json": "{\"type\":\"ProjectedCRS\",\"id\":{\"authority\":\"EPSG\",\"code\":2056}}",
+    "source": "caller_asserted",
+    "asserted_by": "os-user chris",
+    "asserted_at": "2026-08-18T00:00:00Z",
+    "definition_provenance": "catalog:epsg-2056@sha256:254016888ff4",
+    "axis_order": "easting,northing",
+    "axis_normalization": "none-performed"
+  },
+  "geometry": {
+    "column": "geometry",
+    "encoding": "geoarrow.polygon",
+    "coordinate_layout": "interleaved-xy",
+    "frame": "authoritative-project-crs"
+  },
+  "identity": {
+    "source": "file:id",
+    "uniqueness": "verified-at-open-full-file",
+    "verified_rows": "100000",
+    "max_value": "99999",
+    "js_exact": true
+  },
+  "schema": [
+    { "name": "id", "arrow_type": "UInt64", "nullable": false },
+    { "name": "geometry", "arrow_type": "Binary", "nullable": false }
+  ],
+  "covering_bbox": true,
+  "row_count": { "basis": "identity-uniqueness-scan-full-file", "value": "100000" },
+  "extent": { "basis": "not-established-at-open", "value": null },
+  "license": {
+    "license": null,
+    "attribution": null,
+    "redistribution": null,
+    "declares_anything": false
+  }
+}

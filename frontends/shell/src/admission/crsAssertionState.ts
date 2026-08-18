@@ -20,6 +20,21 @@ export interface CrsAssertionFormState {
   pastedDefinition: string;
 }
 
+/**
+ * SF4 (reviewer gate, admission-remediation cut): mirrors `engine::crs::MAX_CRS_DEFINITION_BYTES`
+ * (`engine/src/crs.rs`) client-side, in bytes. Refusing only host-side still pays the cost the
+ * reviewer named: a multi-MB paste's `invoke` serialization runs on the webview UI thread before
+ * the host ever sees it, so this bound is checked here too, before any request is sent -- see
+ * `buildCrsAssertion`/`definitionValidationMessage` below.
+ */
+export const MAX_CRS_DEFINITION_BYTES = 65_536;
+
+/** UTF-8 byte length -- `.length` on a JS string counts UTF-16 code units, not bytes, and the
+ * Rust-side bound is a byte count (`String::len()`), so this is the only correct comparison. */
+function utf8ByteLength(text: string): number {
+  return new TextEncoder().encode(text).length;
+}
+
 /** Nothing chosen, nothing typed -- ADR-026 decision 1 / this cut's own I2 principle applied to
  * the CRS form as well as the identity one: no catalog entry starts selected, and no route is
  * assumed. */
@@ -56,7 +71,33 @@ export function buildCrsAssertion(
   const identifier = state.identifier.trim();
   const definitionJson = definitionFor(state, catalog);
   if (identifier.length === 0 || definitionJson === null) return null;
+  // SF4: refused here, client-side, before `onSubmit` (and so `invoke`) is ever reached -- the
+  // same bound `engine::crs::MAX_CRS_DEFINITION_BYTES` enforces host-side, checked a second time
+  // and earlier, so the multi-MB serialization the reviewer named never runs at all.
+  if (utf8ByteLength(definitionJson) > MAX_CRS_DEFINITION_BYTES) return null;
   return { identifier, definition_json: definitionJson };
+}
+
+/**
+ * The inline validation message for the current form state, or `null` when there is nothing to
+ * say (SF4). Kept separate from `buildCrsAssertion`'s `null` (which only ever means "not yet
+ * submittable" -- a form that has not been filled in is not an error) so a consumer can
+ * distinguish "nothing typed yet" from "what you typed is refused, and here is why", without
+ * re-deriving the byte-length check itself.
+ */
+export function definitionValidationMessage(
+  state: CrsAssertionFormState,
+  catalog: readonly CrsCatalogEntry[]
+): string | null {
+  const definitionJson = definitionFor(state, catalog);
+  if (definitionJson === null) return null;
+  const bytes = utf8ByteLength(definitionJson);
+  if (bytes <= MAX_CRS_DEFINITION_BYTES) return null;
+  return (
+    `This definition is ${bytes} bytes, over the ${MAX_CRS_DEFINITION_BYTES}-byte limit. ` +
+    "PROJJSON definitions are single-digit KB; paste the pinned catalog entry or a definition " +
+    "of comparable size."
+  );
 }
 
 /** The identifier text a catalog-entry pick suggests (`"EPSG:2056"`) -- the operator still

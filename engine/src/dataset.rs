@@ -281,6 +281,13 @@ impl Dataset {
             )));
         }
 
+        // SF3/SF4 (reviewer gate, admission-remediation cut): the assertion's own shape — a
+        // non-blank identifier, a definition within `MAX_CRS_DEFINITION_BYTES` — is checked before
+        // anything about it is parsed, including the `serde_json::from_str` immediately below.
+        if let Some(a) = assertion.as_ref() {
+            crs::validate_assertion_shape(a)?;
+        }
+
         // The asserted axis order comes from the caller's own definition when it supplied one.
         // This engine never supplies an axis order it did not read somewhere.
         let asserted_axis = match assertion.as_ref().and_then(|a| a.definition_json.as_deref()) {

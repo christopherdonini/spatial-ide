@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 import type { CrsCatalogEntry } from "../skp/crsCatalog";
 import {
   buildCrsAssertion,
+  definitionValidationMessage,
   initialCrsAssertionFormState,
+  MAX_CRS_DEFINITION_BYTES,
   suggestedIdentifierFor,
 } from "./crsAssertionState";
 
@@ -95,5 +97,50 @@ describe("buildCrsAssertion", () => {
 describe("suggestedIdentifierFor", () => {
   it("authority:code, matching ADR-015's own example shape", () => {
     expect(suggestedIdentifierFor(entry({ authority: "EPSG", code: 2056 }))).toBe("EPSG:2056");
+  });
+});
+
+describe("MAX_CRS_DEFINITION_BYTES bound (SF4, reviewer gate, admission-remediation cut)", () => {
+  it("a pasted definition at exactly the ceiling is still submittable", () => {
+    const state = {
+      route: "paste" as const,
+      selectedEntryId: null,
+      identifier: "EPSG:4326",
+      pastedDefinition: "x".repeat(MAX_CRS_DEFINITION_BYTES),
+    };
+    expect(buildCrsAssertion(state, [])).not.toBeNull();
+    expect(definitionValidationMessage(state, [])).toBeNull();
+  });
+
+  it("a pasted definition one byte over the ceiling is refused -- null, no request built", () => {
+    const state = {
+      route: "paste" as const,
+      selectedEntryId: null,
+      identifier: "EPSG:4326",
+      pastedDefinition: "x".repeat(MAX_CRS_DEFINITION_BYTES + 1),
+    };
+    expect(buildCrsAssertion(state, [])).toBeNull();
+    expect(definitionValidationMessage(state, [])).toMatch(/over the/);
+  });
+
+  it("byte length, not UTF-16 length -- a multi-byte character pushes bytes over the ceiling well " +
+    "before .length would", () => {
+    // Each "€" is 1 UTF-16 code unit but 3 UTF-8 bytes -- this text is under the ceiling by
+    // `.length` but over it by UTF-8 byte count, which is what the Rust-side bound actually is
+    // (`String::len()`).
+    const text = "€".repeat(Math.floor(MAX_CRS_DEFINITION_BYTES / 2));
+    const state = {
+      route: "paste" as const,
+      selectedEntryId: null,
+      identifier: "EPSG:4326",
+      pastedDefinition: text,
+    };
+    expect(text.length).toBeLessThan(MAX_CRS_DEFINITION_BYTES);
+    expect(buildCrsAssertion(state, [])).toBeNull();
+    expect(definitionValidationMessage(state, [])).not.toBeNull();
+  });
+
+  it("no message while the form is simply not filled in yet -- distinct from an over-bound refusal", () => {
+    expect(definitionValidationMessage(initialCrsAssertionFormState(), [])).toBeNull();
   });
 });

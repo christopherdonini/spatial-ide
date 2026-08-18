@@ -242,6 +242,59 @@ fn an_assertion_over_a_file_that_declares_a_crs_is_refused() {
 }
 
 #[test]
+fn an_assertion_with_a_blank_identifier_is_refused_end_to_end() {
+    // SF3 (reviewer gate, admission-remediation cut): the reviewer's own demonstration was
+    // `identifier=""` admitting silently and flowing into `describe` and a published bundle's
+    // manifest. This is that path, through a real file, refused before it ever admits.
+    let _wd = Watchdog::new("an_assertion_with_a_blank_identifier_is_refused_end_to_end");
+    let (path, _) = write(
+        "blank-identifier",
+        &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..small() },
+    );
+    let assertion = CrsAssertion {
+        identifier: "   ".into(),
+        definition_json: Some(spatial_engine::fixture::LV95_PROJJSON.to_string()),
+        by: "integration-test".into(),
+        at: "2026-08-04T00:00:00Z".into(),
+        definition_provenance: spatial_engine::definition_provenance(Some(
+            spatial_engine::fixture::LV95_PROJJSON,
+        )),
+    };
+    assert!(matches!(
+        Dataset::open_with_asserted_crs(&path, assertion),
+        Err(EngineError::CrsAssertionIdentifierBlank)
+    ));
+}
+
+#[test]
+fn an_assertion_with_an_oversized_definition_is_refused_before_it_is_parsed() {
+    // SF4 (reviewer gate, admission-remediation cut): a multi-byte-over-ceiling paste is refused
+    // through the real open path, before `open_inner`'s own JSON parse of `definition_json`
+    // (established axis order) ever runs -- an unparseable-as-JSON oversized string still refuses
+    // with this typed variant, not a `GeoMetadata` parse failure, which is what proves the order.
+    let _wd = Watchdog::new("an_assertion_with_an_oversized_definition_is_refused_before_it_is_parsed");
+    let (path, _) = write(
+        "oversized-definition",
+        &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..small() },
+    );
+    let oversized = "x".repeat(spatial_engine::MAX_CRS_DEFINITION_BYTES + 1);
+    let assertion = CrsAssertion {
+        identifier: "EPSG:2056".into(),
+        definition_json: Some(oversized),
+        by: "integration-test".into(),
+        at: "2026-08-04T00:00:00Z".into(),
+        definition_provenance: spatial_engine::definition_provenance(None),
+    };
+    match Dataset::open_with_asserted_crs(&path, assertion) {
+        Err(EngineError::CrsAssertionDefinitionTooLarge { limit, saw }) => {
+            assert_eq!(limit, spatial_engine::MAX_CRS_DEFINITION_BYTES as u64);
+            assert_eq!(saw, (spatial_engine::MAX_CRS_DEFINITION_BYTES + 1) as u64);
+        }
+        other => panic!("expected CrsAssertionDefinitionTooLarge, got {:?}", other.err()),
+    }
+}
+
+#[test]
 fn a_definition_that_establishes_no_axis_order_is_refused() {
     let _wd = Watchdog::new("a_definition_that_establishes_no_axis_order_is_refused");
     let (path, _) = write(

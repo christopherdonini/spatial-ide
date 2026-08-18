@@ -23,6 +23,41 @@ use crate::error::{EngineError, Result};
 /// a literal so the places that must *refuse* to compare it are greppable.
 pub const DEFINITION_ONLY: &str = "(definition-only)";
 
+/// The maximum size, in bytes, a caller-asserted CRS definition may carry.
+///
+/// **Declared, not discovered** (ADR-010 rule 6) — the `MAX_PREDICATE_BYTES` precedent
+/// (`engine/src/predicate.rs`): bound caller-supplied text on the control plane, checked before it
+/// is ever parsed, rather than trusting whatever a caller sends. PROJJSON definitions are
+/// single-digit KB even for a full national grid CRS with an area-of-use polygon and several
+/// conversion steps — the pinned catalog's own EPSG:2056 entry is well under 2 KB. 64 KiB is
+/// generous headroom over that while still small enough that a multi-MB paste is refused before
+/// the text is retained whole in [`DatasetCrs`] and echoed in full on every `describe` (SF4,
+/// reviewer gate, admission-remediation cut).
+pub const MAX_CRS_DEFINITION_BYTES: usize = 65_536;
+
+/// Structural checks on a caller's assertion that must hold **before anything about it is
+/// parsed** — SF3/SF4 (reviewer gate, admission-remediation cut).
+///
+/// Called from `dataset::open_inner` ahead of that function's own `serde_json::from_str` of
+/// `definition_json` (establishing axis order): an empty-or-whitespace-only identifier, or a
+/// definition over [`MAX_CRS_DEFINITION_BYTES`], is refused on its own terms rather than being
+/// handed to a parser first. Neither check requires DuckDB, a file, or any other admission state —
+/// they are checks on the assertion's own shape.
+pub(crate) fn validate_assertion_shape(a: &CrsAssertion) -> Result<()> {
+    if a.identifier.trim().is_empty() {
+        return Err(EngineError::CrsAssertionIdentifierBlank);
+    }
+    if let Some(def) = a.definition_json.as_deref() {
+        if def.len() > MAX_CRS_DEFINITION_BYTES {
+            return Err(EngineError::CrsAssertionDefinitionTooLarge {
+                limit: MAX_CRS_DEFINITION_BYTES as u64,
+                saw: def.len() as u64,
+            });
+        }
+    }
+    Ok(())
+}
+
 /// Where the dataset's CRS came from. A file fact and a caller's assertion are different things and
 /// stay distinguishable all the way onto the wire.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -279,5 +314,67 @@ mod tests {
         let a = assertion();
         let e = admit(None, Some(&a), None).unwrap_err();
         assert!(matches!(e, EngineError::AxisOrderUnestablished { .. }));
+    }
+
+    // ---- SF3/SF4 (reviewer gate, admission-remediation cut): `validate_assertion_shape` ------
+
+    #[test]
+    fn a_blank_identifier_is_refused() {
+        let mut a = assertion();
+        a.identifier = "".to_string();
+        assert!(matches!(
+            validate_assertion_shape(&a),
+            Err(EngineError::CrsAssertionIdentifierBlank)
+        ));
+    }
+
+    #[test]
+    fn a_whitespace_only_identifier_is_refused() {
+        let mut a = assertion();
+        a.identifier = "   \t  ".to_string();
+        assert!(matches!(
+            validate_assertion_shape(&a),
+            Err(EngineError::CrsAssertionIdentifierBlank)
+        ));
+    }
+
+    #[test]
+    fn a_non_blank_identifier_with_no_definition_passes_shape_validation() {
+        let mut a = assertion();
+        a.definition_json = None;
+        assert!(validate_assertion_shape(&a).is_ok());
+    }
+
+    #[test]
+    fn a_definition_at_exactly_the_ceiling_is_admitted() {
+        let mut a = assertion();
+        a.definition_json = Some("x".repeat(MAX_CRS_DEFINITION_BYTES));
+        assert!(validate_assertion_shape(&a).is_ok());
+    }
+
+    #[test]
+    fn a_definition_one_byte_over_the_ceiling_is_refused() {
+        let mut a = assertion();
+        a.definition_json = Some("x".repeat(MAX_CRS_DEFINITION_BYTES + 1));
+        match validate_assertion_shape(&a) {
+            Err(EngineError::CrsAssertionDefinitionTooLarge { limit, saw }) => {
+                assert_eq!(limit, MAX_CRS_DEFINITION_BYTES as u64);
+                assert_eq!(saw, (MAX_CRS_DEFINITION_BYTES + 1) as u64);
+            }
+            other => panic!("expected CrsAssertionDefinitionTooLarge, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_blank_identifier_is_refused_even_alongside_an_oversized_definition() {
+        // The identifier check runs first (source order in `validate_assertion_shape`) — both are
+        // wrong here, and the caller gets one typed refusal to fix at a time, not a compound one.
+        let mut a = assertion();
+        a.identifier = "".to_string();
+        a.definition_json = Some("x".repeat(MAX_CRS_DEFINITION_BYTES + 1));
+        assert!(matches!(
+            validate_assertion_shape(&a),
+            Err(EngineError::CrsAssertionIdentifierBlank)
+        ));
     }
 }
