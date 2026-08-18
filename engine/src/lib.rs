@@ -102,6 +102,7 @@ pub use pin::ContentPin;
 pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
+pub use identity::{DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
 pub use error::{EngineError, Result};
 pub use predicate::{AdmittedPredicate, FilterError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH};
 pub use pool::{

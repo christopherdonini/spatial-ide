@@ -336,9 +336,16 @@ impl SkpHost {
         // `cancel_key_in_use` for the rest of the process's life, since nothing else ever removes it.
         let _end_open_on_drop = OpenGuard { opens: &self.opens, key: cancel_key.as_str().to_string() };
         let handle = DatasetHandle::mint();
+        // `NEXT-CUT.md` P1: the wire carries the caller's *claim* (identifier/definition_json,
+        // column) and nothing else — `by`/`at` are never read from the request (I4, ADR-004
+        // Amendment 4, ADR-024 F-5). `host_minted_crs_assertion`/`host_minted_identity_declaration`
+        // are the one place either attribution is supplied, and both mint it identically.
+        let assertion = req.crs_assertion.map(host_minted_crs_assertion);
+        let identity = req.identity.map(host_minted_identity_declaration);
         // The handle IS the catalog name — never user-controlled text (`kernel/src/lib.rs`'s own
         // "names, never paths" rule, one level up: now also "names, never chosen by the caller").
-        let outcome = self.catalog.open_cancellable(handle.as_str(), &req.path, None, &cancel);
+        let outcome =
+            self.catalog.open_cancellable(handle.as_str(), &req.path, assertion, identity, &cancel);
         outcome.map_err(|e| error_of(&e))?;
         Ok(OpenDatasetResponse { dataset: handle })
     }
@@ -433,6 +440,46 @@ fn check_version(skp: &str) -> Result<(), SkpError> {
         return Err(SkpError::version_unsupported(skp));
     }
     Ok(())
+}
+
+/// The `by` this host mints for a caller's claim (a CRS assertion or an identity declaration) —
+/// `Principal::OsUser`, in the identical `"<kind> <id>"` form
+/// [`crate::permission::boundary::execute`]'s approval prompt already uses for a grant's own
+/// grantor (`NEXT-CUT.md` P1: "the existing os-user form"). Best-effort and unverified, exactly as
+/// `Principal::from_environment`'s own doc comment states — recorded because a claim with no
+/// claimant is not attributable (`docs/09`), never because it is authenticated.
+fn host_attribution() -> String {
+    let p = crate::permission::grant::Principal::from_environment();
+    format!("{} {}", p.kind.as_str(), p.id)
+}
+
+/// Host-mints `by`/`at` onto a wire [`spatial_skp::v0::CrsAssertion`] — the wire carries neither
+/// (SKP-V0.md, `protocol/skp/src/v0/commands.rs`'s own doc comment on the type), so this is the
+/// only place either is supplied (I4; ADR-004 Amendment 4; ADR-024 F-5). `definition_json` is
+/// always present on the wire (a plain `String`, not `Option`), so it is always carried through as
+/// `Some` — the engine's own `crs::admit` is what may still refuse it (`AxisOrderUnestablished` if
+/// it establishes no axis order, `CrsAssertionConflict` if the file already declares a CRS).
+fn host_minted_crs_assertion(wire: spatial_skp::v0::CrsAssertion) -> spatial_engine::CrsAssertion {
+    spatial_engine::CrsAssertion {
+        identifier: wire.identifier,
+        definition_json: Some(wire.definition_json),
+        by: host_attribution(),
+        at: crate::permission::audit::clock::rfc3339_utc_now(),
+    }
+}
+
+/// Host-mints `by`/`at` onto a wire [`spatial_skp::v0::IdentityDeclaration`] — same discipline as
+/// [`host_minted_crs_assertion`]. `IdentityDeclaration::new` always sets
+/// `skip_uniqueness_check = false`: the wire has no field for it, so a mapped column's uniqueness
+/// is always verified (ADR-016 §5) and never silently skipped.
+fn host_minted_identity_declaration(
+    wire: spatial_skp::v0::IdentityDeclaration,
+) -> spatial_engine::IdentityDeclaration {
+    spatial_engine::IdentityDeclaration::new(
+        wire.column,
+        host_attribution(),
+        crate::permission::audit::clock::rfc3339_utc_now(),
+    )
 }
 
 fn build_viewport_query(

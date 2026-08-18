@@ -55,7 +55,9 @@ use std::sync::{Arc, RwLock};
 use spatial_data_plane::transport::{
     BatchMeta, BatchSource, OpenRequest, SourceCancel, SourceFactory,
 };
-use spatial_engine::{BatchStream, CancelToken, CrsAssertion, Dataset, PoolConfig, ViewportQuery};
+use spatial_engine::{
+    BatchStream, CancelToken, CrsAssertion, Dataset, IdentityDeclaration, PoolConfig, ViewportQuery,
+};
 
 pub mod bundle;
 pub mod params;
@@ -157,14 +159,21 @@ impl Catalog {
     /// As [`Self::open`], with a caller-held [`CancelToken`] bound throughout admission (SKP-V0.md
     /// §2, correction C3) — ADR-016's whole-column uniqueness scan is a multi-second, otherwise
     /// uninterruptible operation at `docs/07`'s 5 GB, and `docs/01` principle 7 is unqualified.
+    ///
+    /// `declared_identity` is P1's own admission-remediation parameter (`NEXT-CUT.md`): a caller
+    /// declaration of which column carries feature identity, admitted through the identical
+    /// `Dataset::open_cancellable` path `assertion` already used — CRS admission still runs first,
+    /// identity second, exactly as `Dataset::open_inner` orders them (I11).
     pub fn open_cancellable(
         &self,
         name: impl Into<String>,
         path: impl AsRef<Path>,
         assertion: Option<CrsAssertion>,
+        declared_identity: Option<IdentityDeclaration>,
         cancel: &CancelToken,
     ) -> spatial_engine::Result<()> {
-        let ds = Dataset::open_cancellable(path, assertion, None, cancel, self.connections)?;
+        let ds =
+            Dataset::open_cancellable(path, assertion, declared_identity, cancel, self.connections)?;
         self.lock_write().insert(name.into(), Arc::new(ds));
         Ok(())
     }
