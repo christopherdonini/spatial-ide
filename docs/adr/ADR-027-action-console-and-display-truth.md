@@ -36,7 +36,12 @@ idempotency.
    lint over rendered copy.
 4. **The console is a debt register as well as a feature.** A class-B or class-C entry is a
    standing, visible statement that principle 4 is unmet for that surface, pointing at the decision
-   that owes the answer. A new Tauri command that is not classified fails the build.
+   that owes the answer. A new Tauri command that is not classified fails the build: it is
+   registered in the host's own handler list (`tauri::generate_handler!` in `src-tauri/src/lib.rs`
+   — a command cannot exist without appearing there), and `surfaceCompleteness.test.ts` reads that
+   list as its authoritative source, failing when a handler-listed command has no registry row (a
+   secondary JS-side call-site scan over the frontend tree backs it up, with its own stated
+   line-scan caveat).
 5. **The console performs no operation**: no execution, no persistence, no export, no telemetry, no
    replay affordance.
 6. **The human's 2026-08-18 ruling (DECISIONS-PENDING entry 18, Resolved):** principle 4's unmet

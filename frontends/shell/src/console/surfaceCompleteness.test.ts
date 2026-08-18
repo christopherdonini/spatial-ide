@@ -27,6 +27,10 @@ import { classARows, classBRows, classCRows } from "./surfaceRegistry";
  */
 const SRC_DIR = path.resolve(__dirname, "../../src");
 const CLIENT_TS_REL = "skp/client.ts";
+/** `src-tauri/src/lib.rs`, relative to `SRC_DIR` -- the host-side, second source of truth this
+ * file cross-checks the registry against (see `deriveHandlerListFromLibRs` below). READ-ONLY:
+ * this test only reads the file; it never writes Rust. */
+const LIB_RS_REL = "../src-tauri/src/lib.rs";
 /** This file's own path, relative to `SRC_DIR`. Excluded from the walk below: this file's own
  * source text necessarily *spells* the `invoke(`/`invoke<` pattern (in `INVOKE_CALL`'s own regex
  * literal, and in prose describing it), which is not a call site to classify -- it is the scanner
@@ -120,6 +124,48 @@ function deriveSkpCommandSetFromClient(): string[] {
   return names.sort();
 }
 
+/**
+ * The SECOND, and more authoritative, source of truth: `src-tauri/src/lib.rs`'s own
+ * `tauri::generate_handler![...]` list. A Tauri command cannot exist without appearing in this
+ * list -- `.invoke_handler(tauri::generate_handler![...])` is what wires a `#[tauri::command]` fn
+ * to the IPC dispatch table at all, so an entry missing from it is not merely undocumented, it is
+ * uncallable. That makes this scan's build-failure claim honest at the Rust source rather than
+ * only at the JS call-site scan above (which the file header already notes can be defeated by an
+ * unusual call form): a handler-listed command with no registry row, or a class-B registry row
+ * naming a command the handler list does not register, fails this test and the build with it.
+ *
+ * Regex-based, at test time, same fs-read shape as `deriveSkpCommandSetFromClient` above -- NOT a
+ * Rust parser, and it does not claim to be one. It assumes exactly one `generate_handler![...]`
+ * block, and that every handler entry is spelled `commands::<name>` (true of every entry in this
+ * tree today, including the one `#[cfg(debug_assertions)]`-gated dev-seam entry -- the attribute
+ * line itself does not match `commands::`, so a cfg-gated entry is still picked up the same as any
+ * other; this scan does not evaluate cfg conditions, so it cannot see a release-only difference in
+ * the set actually registered). An entry registered any other way (a bare fn reference without the
+ * `commands::` module qualifier, a second `generate_handler!` block, a handler list assembled
+ * dynamically) would be missed by this scan -- the same "a pattern-oriented scan can be defeated by
+ * an unusual form" caveat this file's own header comment already states for the JS-side scan.
+ */
+function deriveHandlerListFromLibRs(): string[] {
+  const libRsAbsPath = path.resolve(SRC_DIR, LIB_RS_REL);
+  const text = fs.readFileSync(libRsAbsPath, "utf-8");
+  // The closing `]` must be immediately followed by `)` -- the real close is
+  // `.invoke_handler(tauri::generate_handler![...])`, so the macro's own `]` and the enclosing
+  // call's `)` sit back to back. A naive `\]` alone would stop early: this block's own doc
+  // comments quote `` `#[cfg(debug_assertions)]` `` in prose, which contains a `]` of its own,
+  // long before the real close.
+  const blockMatch = /generate_handler!\[([\s\S]*?)\]\s*\)/.exec(text);
+  if (!blockMatch) {
+    throw new Error(`surfaceCompleteness.test.ts: no generate_handler![...] block found in ${LIB_RS_REL}`);
+  }
+  const names: string[] = [];
+  const pattern = /\bcommands::([a-zA-Z0-9_]+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = pattern.exec(blockMatch[1]!)) !== null) {
+    names.push(m[1]!);
+  }
+  return names;
+}
+
 describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
   const sites = allInvokeSites();
 
@@ -187,6 +233,30 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
     it("has no duplicate command names", () => {
       const names = classBRows().map((r) => r.command);
       expect(new Set(names).size).toBe(names.length);
+    });
+  });
+
+  describe("class B: the host's own generate_handler! list (the authoritative source)", () => {
+    const handlerCommands = deriveHandlerListFromLibRs();
+    const handlerBindingCommands = handlerCommands.filter((name) => name.startsWith("binding_"));
+    const registryCommandNames = new Set(classBRows().map((r) => r.command));
+    const handlerSet = new Set(handlerCommands);
+
+    it("found at least one commands::binding_* entry in lib.rs's generate_handler! list -- " +
+      "otherwise this check proves nothing", () => {
+      expect(handlerBindingCommands.length).toBeGreaterThan(0);
+    });
+
+    it("every binding_* command registered in the host's own generate_handler! list has a " +
+      "class-B registry row", () => {
+      const missing = handlerBindingCommands.filter((name) => !registryCommandNames.has(name)).sort();
+      expect(missing).toEqual([]);
+    });
+
+    it("every class-B registry row's command is registered in the host's own " +
+      "generate_handler! list", () => {
+      const notRegistered = [...registryCommandNames].filter((name) => !handlerSet.has(name)).sort();
+      expect(notRegistered).toEqual([]);
     });
   });
 
