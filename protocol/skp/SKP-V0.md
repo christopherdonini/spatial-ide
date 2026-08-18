@@ -443,6 +443,16 @@ this section is the dated history of how it got there.
   and TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire was
   updated in this same commit, per §4 item 13's own discipline, applied again.
 
+**P2 addendum (2026-08-18, appended — the P0 bullets above are unchanged):** `skp/0.2` also adds
+`definition_provenance: Option<String>` to `CrsInfo` on the `describe` **response** (`Some` only
+for a caller-asserted CRS: `catalog:<id>@sha256:<12-hex>` or `pasted`, host-derived by exact
+content hash of the supplied definition — never wire-carried, ADR-026 implementation note). This
+field is part of the same `skp/0.2` this cut is still assembling on one branch — no `skp/0.2`
+reader was ever released without it, so §4 item 13's no-tolerant-reader rule is not engaged
+between released implementations; it IS engaged in spirit, which is why this addendum exists: the
+version's record must list its full field set. Both-side fixtures updated in the same commit
+(P2). Flagged for the cut's architect re-review alongside the §7.2 prose finding above.
+
 **DRAFT — re-deferral of §4 item 5's scan-progress debt, PENDING HUMAN CONFIRMATION
 (DECISIONS-PENDING entry 9).** §4 item 5's dated 2026-08-14 entry parked the true-scan-progress
 debt on "the next SKP version that opens the wire for any reason — a `skp/0.2`, or `docs/07`'s 1.0
