@@ -251,3 +251,26 @@ scroll-driven miss), and hiding the drawer removes it from `.app-main`'s flex fl
 hover still lands nowhere. The cause is elsewhere (deck.gl pick-layer vs fill-rendering divergence,
 per `regression.mjs`'s own `stepA9` comment on this failure shape) -- not re-diagnosed further here;
 see the action-console P5b piece's own state file/report for the full evidence.
+
+**P5c (2026-08-18), two bounded fixes attempted, STOPPED per custodian rule 7 -- still
+EXPECTED-FAIL, unchanged.** Fix 1 (`.app-rail-top`/`.app-rail-bottom`, `styles.css`/`App.tsx`):
+`.app-main` no longer grows its own scrollbar at all -- mechanically verified against a live
+session at the 1280x800 reference, `.app-main` `scrollHeight === clientHeight` (762 === 762) and
+`.working-canvas` `getBoundingClientRect().width === 1280` (never 1265). Fix 2 (`regression.mjs`'s
+own `verifyInteriorCandidate`): `stepA9` now requires a candidate's 5x5 pixel neighbourhood to be
+entirely non-background AND the frame's own densest non-background `topColors` bin to clear a
+150/255 alpha floor (picked from `DEFAULT_STYLE_STATE.fillOpacity` = 180/255, the actual interior
+alpha this suite renders at) before preferring it, falling back to the old heuristic with a loud
+`console.error` when no candidate qualifies. **With BOTH fixes live, `A9'` still fails
+deterministically, byte-identical across two fresh runs** -- same `12,23,43,45` recapture colour,
+and NONE of the 3 candidates now interior-verify at all (10/25, 13/25, 16/25 of each candidate's own
+5x5 neighbourhood touch background) even with the canvas confirmed full-width. This independently
+reproduces P5b's own isolation-experiment conclusion from a different angle: the miss is not a
+layout/width artifact and does not correlate with proximity to a rendered edge either -- something
+about deck.gl's own pick buffer at this camera state does not agree with the fill buffer at ANY of
+the candidate points tried. Per this piece's own scope, no further attempt was made (WorkingCanvas.tsx
+and the deck.gl layer/pick configuration are out of scope for an e2e-only piece); the defect now
+escalates per custodian rule 7. Both fixes are otherwise real, independently-verified corrections
+(the layout one in particular is unconditionally worth keeping) -- left uncommitted in the working
+tree for the custodian's own disposition; see that piece's own final report for the full run
+transcripts.

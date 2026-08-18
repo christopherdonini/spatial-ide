@@ -265,6 +265,104 @@ function samePoint(a, b) {
   return !!a && !!b && a.x === b.x && a.y === b.y;
 }
 
+/**
+ * A9' interior-pixel hardening (action-console cut, P5c fix 2). Diagnosed by P5b
+ * (`e2e/README.md`'s own EXPECTED-FAIL note, and this piece's own state file): `stepA9`'s old
+ * "first non-background pixel" test (`nonBackgroundCount > 0`, i.e. *any* channel nonzero) is
+ * satisfied by a low-alpha anti-aliased boundary pixel (the diagnosed miss: `12,23,43,45`) just as
+ * readily as by a fully-covered interior one -- deck.gl's own pick layer can miss the former while
+ * the fill layer still draws it, so `capturePixels`' "first pixel scanned" or "densest histogram
+ * bin" heuristics can hand `stepA9` an edge pixel that LOOKS non-background but was never a safe
+ * hover target. This never changes what `stepA9` asserts (hover -> pick -> `.hover-readout` shows
+ * the feature id) -- only how candidate points are ORDERED/filtered before the existing mouse-move
+ * loop tries them, and entirely from e2e code: it reuses the ALREADY-exposed
+ * `capturePixels(regions)` hook (`e2e-test-surface.ts`), never touching `WorkingCanvas.tsx`'s own
+ * `summarizePixels`/`capturePixels` implementation, which has no per-pixel alpha exposed to a
+ * `PixelRegion` scan (`nonBackgroundCount` is a count of "any channel nonzero" pixels, not an
+ * alpha-thresholded one) -- so this can only combine two signals BOTH already reachable through
+ * that hook, not invent a third.
+ *
+ * **Signal 1, INTERIOR (per-candidate, exact):** every pixel in a 5x5 patch centred on the
+ * candidate (clamped at the buffer edge) is independently confirmed non-background via a batch of
+ * 1x1-pixel `PixelRegion`s in one `capturePixels` call -- `nonBackgroundCount === totalPixels` for
+ * every one of them. A genuinely anti-aliased/AA-blended boundary pixel fails this by construction
+ * (a boundary pixel, by definition, has at least one neighbour still on the background side); a
+ * pixel several pixels deep inside a filled polygon passes it.
+ *
+ * **Signal 2, ALPHA (frame-wide, best-effort):** `topColors` already carries the EXACT
+ * (non-quantized) rgba sample the frame-wide `samplePoint` was drawn from
+ * (`WorkingCanvas.tsx::summarizePixels`: `overallSamplePoint` IS `densestNonBackgroundBin
+ * .samplePoint`, and `topColors` is that same `sortedBins` list in the same order) -- so this reads
+ * a REAL alpha value off real data, never a guess, for whichever non-background colour is densest
+ * in the captured frame. `ALPHA_INTERIOR_THRESHOLD` below is picked from that same real data, not
+ * the task's own illustrative "e.g. >= 200": `style/document.ts`'s `DEFAULT_STYLE_STATE.fillOpacity`
+ * is `180 / 255` (a fully-covered fill pixel over a cleared/transparent buffer therefore renders at
+ * EXACTLY alpha 180, confirmed against `buildLayers.test.ts`'s own `toResolvedDrawParams` fixture --
+ * this suite never touches the style panel, so this is the alpha every A9' run actually renders at),
+ * and the diagnosed edge-pixel miss was alpha 45 -- a threshold of 200 would wrongly reject this
+ * app's own genuine, fully-opaque interior pixels. 150 sits comfortably between (105 above the
+ * diagnosed edge case, 30 below full fill), so it is used here instead, with this paragraph as its
+ * own "picked from the data, commented" justification.
+ *
+ * Because a `PixelRegion` scan cannot attribute an exact alpha to an arbitrary REGION-LOCAL
+ * candidate (only the frame-wide densest bin gets that exact cross-reference), signal 2 is applied
+ * as a frame-wide sanity check (does the current frame have a genuinely high-alpha non-background
+ * colour anywhere at all, not "was this exact candidate drawn from it") alongside signal 1's own
+ * exact per-candidate interior guarantee, rather than overclaimed as an exact per-pixel alpha read
+ * for every candidate -- disclosed here rather than silently narrowed.
+ */
+const INTERIOR_PATCH_RADIUS = 2; // 5x5 patch (task's own "or a 5x5 patch" option) -- one pixel
+// wider than a bare 3x3/8-neighbourhood, for margin against a 2px-wide AA transition band.
+const ALPHA_INTERIOR_THRESHOLD = 150; // of 255 -- see this section's own doc comment for the data.
+
+/** Builds up to (2*radius+1)^2 single-pixel `PixelRegion`s (fractional, `capturePixels`' own
+ * convention) covering the patch centred on `point`, clamped to the buffer bounds -- a candidate
+ * near the buffer edge simply gets fewer regions, which only makes the interior check MORE strict
+ * (every requested region must still be fully non-background), never silently lenient. */
+function neighborhoodRegions(point, bufferWidth, bufferHeight, radius) {
+  const regions = [];
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const x = point.x + dx;
+      const y = point.y + dy;
+      if (x < 0 || y < 0 || x >= bufferWidth || y >= bufferHeight) continue;
+      regions.push({ x: x / bufferWidth, y: y / bufferHeight, w: 1 / bufferWidth, h: 1 / bufferHeight });
+    }
+  }
+  return regions;
+}
+
+function parseAlpha(rgba) {
+  const parts = rgba.split(",").map(Number);
+  return parts.length === 4 ? parts[3] : NaN;
+}
+
+/** Runs both signals above for one candidate point, in a single fresh `capturePixels` call (the
+ * hook forces its own synchronized re-render/readback per call -- see its own doc comment -- so
+ * this is one atomic read of the current frame, not a race against a later one). Returns a reason
+ * string either way, for the loud fallback log line this function's own caller writes when no
+ * candidate verifies. */
+async function verifyInteriorCandidate(page, point, bufferWidth, bufferHeight) {
+  const regions = neighborhoodRegions(point, bufferWidth, bufferHeight, INTERIOR_PATCH_RADIUS);
+  if (regions.length === 0) {
+    return { ok: false, reason: "no in-bounds neighbourhood pixels (candidate at the buffer's own corner)" };
+  }
+  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
+  const allInterior = summary.regions.every((r) => r.totalPixels > 0 && r.nonBackgroundCount === r.totalPixels);
+  if (!allInterior) {
+    const missCount = summary.regions.filter((r) => r.nonBackgroundCount !== r.totalPixels).length;
+    return { ok: false, reason: `${missCount}/${summary.regions.length} neighbourhood pixels touch background (edge-adjacent)` };
+  }
+  const highAlphaBin = (summary.topColors ?? []).find((c) => c.rgba !== "0,0,0,0" && parseAlpha(c.rgba) >= ALPHA_INTERIOR_THRESHOLD);
+  if (!highAlphaBin) {
+    return {
+      ok: false,
+      reason: `neighbourhood fully non-background but no captured colour has alpha >= ${ALPHA_INTERIOR_THRESHOLD} (topColors: ${(summary.topColors ?? []).map((c) => c.rgba).join(" | ")})`,
+    };
+  }
+  return { ok: true, reason: `${regions.length}-pixel neighbourhood entirely non-background; alpha ${parseAlpha(highAlphaBin.rgba)} >= ${ALPHA_INTERIOR_THRESHOLD} (${highAlphaBin.rgba})` };
+}
+
 // ---------------------------------------------------------------------------------------
 // Steps. Each returns a short PASS note (string) or throws with a message naming its own
 // step ID (per-step `withTimeout` bounds every one of these, so a hang inside becomes a
@@ -511,12 +609,40 @@ async function stepA9(page, consoleHandle) {
     );
   }
 
+  // P5c fix 2 (this file's own `verifyInteriorCandidate` doc comment has the full account): verify
+  // each candidate against the interior + alpha signals, then try INTERIOR-VERIFIED candidates
+  // first (their own relative order preserved), falling back to the rest -- old behavior -- only if
+  // none verify. Never removes a candidate, never changes what the mouse-move loop below asserts;
+  // only reorders which one it tries first.
+  const verifications = [];
+  for (const point of candidates) {
+    const verdict = await verifyInteriorCandidate(page, point, grid.width, grid.height);
+    verifications.push({ point, ...verdict });
+  }
+  const interiorVerified = verifications.filter((v) => v.ok).map((v) => v.point);
+  const orderedCandidates =
+    interiorVerified.length > 0
+      ? [...interiorVerified, ...candidates.filter((c) => !interiorVerified.some((v) => samePoint(v, c)))]
+      : candidates;
+  if (interiorVerified.length === 0) {
+    // Loud, per the piece's own instruction: this is not a silent fallback -- tiny/thin features
+    // can legitimately have no interior pixel wide enough to survive a 5x5 patch, and that is a
+    // real fact about this run worth a human's attention even when A9' still goes on to PASS via
+    // the old first-non-background heuristic below.
+    console.error(
+      `A9': no interior-verified sample point among ${candidates.length} candidate(s) -- falling back to the ` +
+        `old first-non-background heuristic (tiny feature, or a genuinely low-alpha frame). Per-candidate reasons:\n` +
+        verifications.map((v, i) => `  #${i + 1} buffer(${v.point.x},${v.point.y}): ${v.reason}`).join("\n")
+    );
+  }
+
   let found = null;
   const attempts = [];
   // `candidates` is already capped at 3 entries by `pushCandidate`'s own three call sites above
   // (dense region, frame-wide, second-densest region) -- no `.slice(0, 3)` needed here; a prior
-  // version had one, dead (it could never actually truncate anything).
-  outer: for (const point of candidates) {
+  // version had one, dead (it could never actually truncate anything). `orderedCandidates` is the
+  // same set, just reordered (interior-verified first) by the block above.
+  outer: for (const point of orderedCandidates) {
     for (const flipY of [true, false]) {
       const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
       const attemptStart = Date.now();
