@@ -8,6 +8,7 @@ import type { CrsAssertion } from "../skp/types";
 import {
   buildCrsAssertion,
   CrsAssertionFormState,
+  definitionValidationMessage,
   initialCrsAssertionFormState,
   suggestedIdentifierFor,
 } from "./crsAssertionState";
@@ -42,6 +43,13 @@ export default function CrsAssertionForm({ disabled, onSubmit }: Props) {
   }, []);
 
   const assertion = buildCrsAssertion(state, catalog);
+  // P4 item D (P3c's dangling item): `buildCrsAssertion` already refuses silently -- `assertion`
+  // is `null` -- when the pasted definition is over `MAX_CRS_DEFINITION_BYTES`; this is the SAME
+  // `null` a not-yet-filled-in form produces, so `definitionValidationMessage` is what tells the
+  // two apart and says why, rather than the Submit button simply staying disabled with no
+  // explanation. Submit was already blocked in this state (`assertion === null` below); this only
+  // makes the UI say why instead of staying silent.
+  const definitionMessage = definitionValidationMessage(state, catalog);
 
   return (
     <form
@@ -102,6 +110,11 @@ export default function CrsAssertionForm({ disabled, onSubmit }: Props) {
           value={state.pastedDefinition}
           onChange={(e) => setState((s) => ({ ...s, route: "paste", pastedDefinition: e.target.value }))}
         />
+        {definitionMessage !== null && (
+          <p className="crs-assertion-definition-validation" role="alert">
+            {definitionMessage}
+          </p>
+        )}
       </fieldset>
 
       <label className="crs-assertion-identifier">

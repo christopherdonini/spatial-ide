@@ -5,7 +5,20 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { DescribeResponse } from "../skp/types";
 import { AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
-import { AdmitPathDeps, formFamilyForCode, nextFormFamily, runAdmitPath, State } from "./AdmissionPanel";
+import {
+  AdmitPathDeps,
+  CANCELLED_REFUSAL_CODE,
+  formFamilyForCode,
+  isOpenInFlight,
+  nextFormFamily,
+  openCancelKey,
+  openLivenessText,
+  openLivenessTextShouldShow,
+  OPEN_LIVENESS_DELAY_MS,
+  requestOpenCancel,
+  runAdmitPath,
+  State,
+} from "./AdmissionPanel";
 import { FormattedRefusal } from "./formatRefusal";
 
 // `AdmissionPanel.tsx` renders `<WorkingCanvas>`-adjacent JSX no harness in this package can
@@ -127,7 +140,7 @@ function admittedFixture(): Admitted {
 /** A tiny, non-React stand-in for `useState`: `state` always holds the value the most recent
  * `setState` updater produced, exactly the way the real hook would after a synchronous re-render. */
 function fakeState(): { state: State; setState: AdmitPathDeps["setState"] } {
-  const box: { state: State } = { state: { kind: "idle" } };
+  const box: { state: State } = { state: { kind: "idle", note: null } };
   return {
     get state() {
       return box.state;
@@ -269,5 +282,220 @@ describe("runAdmitPath (SF11: the actual refused -> submit -> re-refusal transit
     resolveSecond({ kind: "admitted", admitted: admittedFixture() });
     await pending;
     expect(harness.state.kind).toBe("admitted");
+  });
+});
+
+// NEXT-CUT.md P4 (principle 7): liveness + a working Cancel on `open` -- the ADR-021 filter-panel
+// acceptance-condition pattern (`App.tsx`'s `SCAN_LIVENESS_DELAY_MS`/`scanLivenessText`/
+// `isScanInFlight`) applied to the whole-column uniqueness scan a declared identity mapping
+// triggers at open.
+
+describe("openLivenessText / openLivenessTextShouldShow (P4 item A)", () => {
+  const openingPlain: State = { kind: "opening", cancelKey: "k1", options: {} };
+  const openingIdentity: State = {
+    kind: "opening",
+    cancelKey: "k1",
+    options: { identity: { column: "parcel_id" } },
+  };
+  const refusedInFlightIdentity: State = {
+    kind: "refused",
+    path: "C:/f.parquet",
+    refusal: refusal("engine.crs_undeclared"),
+    formFamily: "crs",
+    options: {},
+    inFlight: true,
+    cancelKey: "k2",
+    pendingOptions: { identity: { column: "parcel_id" } },
+  };
+  const idle: State = { kind: "idle", note: null };
+
+  it("a plain open in flight: 'Opening…', no identity mentioned", () => {
+    expect(openLivenessText(openingPlain)).toBe("Opening…");
+  });
+
+  it("an in-flight identity declaration (first submit OR a resubmit): the whole-file uniqueness " +
+    "line verbatim (I11: what is being paid, named plainly)", () => {
+    expect(openLivenessText(openingIdentity)).toBe("Opening — checking the declared column across the whole file…");
+    expect(openLivenessText(refusedInFlightIdentity)).toBe(
+      "Opening — checking the declared column across the whole file…"
+    );
+  });
+
+  it("null (no line at all) when nothing is in flight", () => {
+    expect(openLivenessText(idle)).toBeNull();
+  });
+
+  it("openLivenessTextShouldShow is false below OPEN_LIVENESS_DELAY_MS, true at and above it", () => {
+    expect(openLivenessTextShouldShow(openingPlain, 0)).toBe(false);
+    expect(openLivenessTextShouldShow(openingPlain, OPEN_LIVENESS_DELAY_MS - 1)).toBe(false);
+    expect(openLivenessTextShouldShow(openingPlain, OPEN_LIVENESS_DELAY_MS)).toBe(true);
+    expect(openLivenessTextShouldShow(openingPlain, OPEN_LIVENESS_DELAY_MS + 500)).toBe(true);
+  });
+
+  it("openLivenessTextShouldShow is false when not in flight, regardless of elapsed time", () => {
+    expect(openLivenessTextShouldShow(idle, OPEN_LIVENESS_DELAY_MS + 1000)).toBe(false);
+  });
+});
+
+describe("openCancelKey / requestOpenCancel (P4 item B)", () => {
+  it("openCancelKey reads a plain open's own retained cancel_key", () => {
+    expect(openCancelKey({ kind: "opening", cancelKey: "k9", options: {} })).toBe("k9");
+  });
+
+  it("openCancelKey reads an in-flight remediation resubmit's own retained cancel_key", () => {
+    expect(
+      openCancelKey({
+        kind: "refused",
+        path: "C:/f.parquet",
+        refusal: refusal("engine.identity_unusable"),
+        formFamily: "identity",
+        options: {},
+        inFlight: true,
+        cancelKey: "k10",
+        pendingOptions: { identity: { column: "parcel_id" } },
+      })
+    ).toBe("k10");
+  });
+
+  it("openCancelKey is null for idle, admitted, and a refused state that is NOT in flight", () => {
+    expect(openCancelKey({ kind: "idle", note: null })).toBeNull();
+    expect(openCancelKey({ kind: "admitted", admitted: admittedFixture() })).toBeNull();
+    expect(
+      openCancelKey({
+        kind: "refused",
+        path: "C:/f.parquet",
+        refusal: refusal("engine.identity_unusable"),
+        formFamily: "identity",
+        options: {},
+        inFlight: false,
+        cancelKey: null,
+        pendingOptions: null,
+      })
+    ).toBeNull();
+  });
+
+  it("requestOpenCancel calls the client with the EXACT retained cancel_key, once, nothing else", () => {
+    const cancelClient = vi.fn().mockResolvedValue({ state: "requested" });
+    requestOpenCancel({ kind: "opening", cancelKey: "k11", options: {} }, cancelClient);
+    expect(cancelClient).toHaveBeenCalledTimes(1);
+    expect(cancelClient).toHaveBeenCalledWith("k11");
+  });
+
+  it("requestOpenCancel is a no-op when nothing is in flight", () => {
+    const cancelClient = vi.fn();
+    requestOpenCancel({ kind: "idle", note: null }, cancelClient);
+    expect(cancelClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("isOpenInFlight (P4 item C: the top-level Open button's own disabled condition)", () => {
+  it("true while a plain open is running", () => {
+    expect(isOpenInFlight({ kind: "opening", cancelKey: "k1", options: {} })).toBe(true);
+  });
+
+  it("true while a remediation resubmit is running, even though `kind` stays 'refused' (MF1) -- " +
+    "this is the exact gap P3b's own off-scope note named: the button used to check only " +
+    "`state.kind === 'opening'`, which a resubmit never is", () => {
+    expect(
+      isOpenInFlight({
+        kind: "refused",
+        path: "C:/f.parquet",
+        refusal: refusal("engine.crs_undeclared"),
+        formFamily: "crs",
+        options: {},
+        inFlight: true,
+        cancelKey: "k1",
+        pendingOptions: {},
+      })
+    ).toBe(true);
+  });
+
+  it("false for idle, admitted, and a refused state that is not in flight", () => {
+    expect(isOpenInFlight({ kind: "idle", note: null })).toBe(false);
+    expect(isOpenInFlight({ kind: "admitted", admitted: admittedFixture() })).toBe(false);
+    expect(
+      isOpenInFlight({
+        kind: "refused",
+        path: "C:/f.parquet",
+        refusal: refusal("engine.crs_undeclared"),
+        formFamily: "crs",
+        options: {},
+        inFlight: false,
+        cancelKey: null,
+        pendingOptions: null,
+      })
+    ).toBe(false);
+  });
+});
+
+describe("runAdmitPath cancellation (P4, I8): a refusal carrying CANCELLED_REFUSAL_CODE " +
+  "('engine.cancelled', kernel/src/skp.rs::error_of) is never product refusal UX", () => {
+  it("a cancelled PLAIN open returns to idle with the plain 'Open cancelled' note -- no duration, " +
+    "no 'acknowledged' (ADR-018 §1)", async () => {
+    const admit = vi.fn().mockResolvedValue({ kind: "refused", refusal: refusal(CANCELLED_REFUSAL_CODE) });
+    const { harness, deps } = depsFor(admit);
+
+    await runAdmitPath("C:/f.parquet", {}, deps);
+
+    expect(harness.state).toEqual({ kind: "idle", note: "Open cancelled" });
+  });
+
+  it("a cancelled remediation RESUBMIT returns to the SAME refused state it started from -- refusal, " +
+    "formFamily, and options (the carried-options line's own source) untouched, only " +
+    "inFlight/cancelKey/pendingOptions clear -- so the form and whatever the operator had typed " +
+    "survive exactly like a re-refusal does (P3b's carry-forward)", async () => {
+    const admit = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "refused", refusal: refusal("engine.crs_undeclared") })
+      .mockResolvedValueOnce({ kind: "refused", refusal: refusal(CANCELLED_REFUSAL_CODE) });
+    const { harness, deps } = depsFor(admit);
+
+    await runAdmitPath("C:/f.parquet", {}, deps);
+    expect(harness.state.kind === "refused" && harness.state.formFamily).toBe("crs");
+    const priorOptions = harness.state.kind === "refused" ? harness.state.options : {};
+
+    const crsAssertion = { identifier: "EPSG:2056", definition_json: "{}" };
+    await runAdmitPath("C:/f.parquet", { ...priorOptions, crsAssertion }, deps);
+
+    expect(harness.state.kind).toBe("refused");
+    if (harness.state.kind === "refused") {
+      expect(harness.state.refusal.code).toBe("engine.crs_undeclared"); // the ORIGINAL refusal, not the cancellation
+      expect(harness.state.formFamily).toBe("crs");
+      expect(harness.state.options).toEqual({}); // carried-options line stays accurate: unchanged by the cancel
+      expect(harness.state.inFlight).toBe(false);
+      expect(harness.state.cancelKey).toBeNull();
+      expect(harness.state.pendingOptions).toBeNull();
+    }
+  });
+
+  it("Cancel reaches the EXACT cancel_key runAdmitPath minted and retained for the in-flight " +
+    "resubmit -- not a fresh key, not the plain-open key from the FIRST attempt", async () => {
+    let resolveSecond: (outcome: AdmissionOutcome) => void = () => {};
+    const admit = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "refused", refusal: refusal("engine.identity_unusable") })
+      .mockImplementationOnce(
+        () =>
+          new Promise<AdmissionOutcome>((resolve) => {
+            resolveSecond = resolve;
+          })
+      );
+    const { harness, deps } = depsFor(admit);
+
+    await runAdmitPath("C:/f.parquet", {}, deps);
+    const pending = runAdmitPath("C:/f.parquet", { identity: { column: "parcel_id" } }, deps);
+
+    const cancelClient = vi.fn().mockResolvedValue({ state: "requested" });
+    requestOpenCancel(harness.state, cancelClient);
+    expect(cancelClient).toHaveBeenCalledTimes(1);
+    expect(cancelClient).toHaveBeenCalledWith(admit.mock.calls[1][1]); // the SECOND call's own cancel_key
+
+    resolveSecond({ kind: "refused", refusal: refusal(CANCELLED_REFUSAL_CODE) });
+    await pending;
+    expect(harness.state.kind).toBe("refused");
+    if (harness.state.kind === "refused") {
+      expect(harness.state.inFlight).toBe(false);
+      expect(harness.state.formFamily).toBe("identity"); // untouched by the cancellation
+    }
   });
 });
