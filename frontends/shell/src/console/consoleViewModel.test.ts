@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildRowViewModel,
+  CONSOLE_STANDING_HEADER,
   groupConsecutiveEntries,
+  standingHeaderModel,
   type ClassBRowViewModel,
   type ClassCRowViewModel,
 } from "./consoleViewModel";
@@ -62,6 +64,16 @@ describe("groupConsecutiveEntries (I8: coalescing never synthesizes)", () => {
 
   it("empty input yields no groups", () => {
     expect(groupConsecutiveEntries([])).toEqual([]);
+  });
+});
+
+describe("standingHeaderModel (NEXT-CUT.md P4: the layer-2 honesty statement)", () => {
+  it("expanded model's first (only) element is the standing header", () => {
+    expect(standingHeaderModel(true)).toEqual([CONSOLE_STANDING_HEADER]);
+  });
+
+  it("collapsed model has none", () => {
+    expect(standingHeaderModel(false)).toEqual([]);
   });
 });
 

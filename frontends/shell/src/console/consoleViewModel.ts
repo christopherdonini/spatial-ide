@@ -19,6 +19,33 @@ import type { BindingCommandEntry, ConsoleEntry, ConsoleRefusal, GuiActionEntry,
 import { renderSkpRequest, type RenderedEntry } from "./render";
 import { classARows, classBRows, classCRows } from "./surfaceRegistry";
 
+/**
+ * NEXT-CUT.md P4: the layer-2 honesty statement -- one standing sentence set, said once at the
+ * top of the expanded drawer, no matter how truthful class A's own copy text already is. Kept as
+ * data here (never composed inside `ConsolePanel.tsx`) so `console/consoleLanguage.test.ts` can
+ * assert the load-bearing phrases against the constant itself, not by rendering the panel. The
+ * three claims are fixed by NEXT-CUT.md's own text and must never drift: this app's own Tauri IPC
+ * control plane is the actual transport; SKP has exactly one transport binding and no
+ * out-of-process client today (SKP-V0 §4 item 2); handles are session-scoped with no idempotency
+ * (§3, §4 item 9); therefore copied text is a faithful record, never a script anything can run.
+ */
+export const CONSOLE_STANDING_HEADER =
+  "These are the requests this app sent over its own Tauri IPC control plane. SKP has one " +
+  "transport binding today and no out-of-process client (SKP-V0 §4 item 2); handles are " +
+  "session-scoped and there is no idempotency (§3, §4 item 9). This is a faithful record, not " +
+  "a script you can run.";
+
+/**
+ * The header's own tiny "model": present, and first, when the drawer is expanded; entirely
+ * absent when it is collapsed (I9 -- the closed console does zero per-entry work, and the header
+ * is not an entry, so it does not mount there either). A one-element-or-empty array rather than a
+ * boolean so `ConsolePanel.tsx` can spread it directly ahead of the entry groups it already
+ * renders, and so a test can assert "first element" literally rather than by convention.
+ */
+export function standingHeaderModel(expanded: boolean): readonly [typeof CONSOLE_STANDING_HEADER] | readonly [] {
+  return expanded ? [CONSOLE_STANDING_HEADER] : [];
+}
+
 export interface ClassARowViewModel {
   kind: "class-a";
   entry: SkpRequestEntry;

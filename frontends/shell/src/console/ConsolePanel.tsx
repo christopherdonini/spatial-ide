@@ -9,6 +9,7 @@ import { attachCollapsedCountSync, type ConsoleCountSnapshot } from "./collapsed
 import {
   buildRowViewModel,
   groupConsecutiveEntries,
+  standingHeaderModel,
   type ConsoleEntryGroup,
   type ConsoleRowViewModel,
 } from "./consoleViewModel";
@@ -47,6 +48,7 @@ export default function ConsolePanel() {
   }, [expanded]);
 
   const groups = expanded ? groupConsecutiveEntries(entries) : [];
+  const header = standingHeaderModel(expanded);
   const actionsWord = snapshot.count === 1 ? "action" : "actions";
   const label =
     snapshot.dropped > 0
@@ -65,6 +67,11 @@ export default function ConsolePanel() {
       </button>
       {expanded && (
         <div className="console-entries">
+          {header.map((text) => (
+            <p key="standing-header" className="console-standing-header">
+              {text}
+            </p>
+          ))}
           {groups.length === 0 ? (
             <p className="console-empty">No actions recorded yet.</p>
           ) : (
