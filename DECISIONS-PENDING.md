@@ -22,9 +22,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     of a real render defect and stops there; (b) an instrumented render-diagnosis session now
     (the entry-0 pattern) if you suspect the fill itself regressed; (c) accept the step as
     EXPECTED-FAIL with the evidence note and let the cut's PR carry the disclosure.
-    Recommendation: **(a)**, proceeding on it unless you override — it resolves the question
-    either way (green = test assumption fixed; red-when-zoomed = a real defect, escalated with
-    evidence). The cut's own console suite is 10/10 green; only this inherited step is red.
+    Recommendation: **(a)** — it resolves the question either way (green = test assumption
+    fixed; red-when-zoomed = a real defect, escalated with evidence). **Held for your word per
+    rule 7's precedent** (the entry-0 pattern: two failed attempts stop, the human authorizes
+    the third). The cut's own console suite is 10/10 green; only this inherited step is red;
+    P6 (docs) proceeds meanwhile, the PR waits on this entry.
 
 16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
     admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
