@@ -93,7 +93,6 @@ describe("admitDataset", () => {
     if (outcome.kind === "refused") {
       expect(outcome.refusal.code).toBe("engine.crs_undeclared");
       expect(outcome.refusal.message).toBe(skpError.message);
-      expect(outcome.refusal.remediationIsCut2).toBe(true);
     }
     // Exactly one open_dataset call, no describe call. `describe` throwing above would fail the
     // test via the mock's own guard clause; this asserts it positively as well.

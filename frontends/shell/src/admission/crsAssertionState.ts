@@ -33,8 +33,12 @@ function definitionFor(state: CrsAssertionFormState, catalog: readonly CrsCatalo
     return entry ? entry.definition : null;
   }
   if (state.route === "paste") {
-    const text = state.pastedDefinition.trim();
-    return text.length > 0 ? text : null;
+    // SF5 (reviewer gate, admission-remediation cut): `.trim()` is used ONLY to test for
+    // emptiness -- the raw text is what becomes `definition_json`. Trimming it before sending
+    // meant pasting the catalog's own bytes (which end in a trailing newline) hashed differently
+    // host-side than the catalog entry itself, so a verbatim catalog paste read back as `pasted`
+    // provenance instead of `catalog:…`.
+    return state.pastedDefinition.trim().length > 0 ? state.pastedDefinition : null;
   }
   return null;
 }

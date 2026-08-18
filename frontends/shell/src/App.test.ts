@@ -95,7 +95,7 @@ function pickResultFixture(): PickResult {
 }
 
 function refusalFixture(): FormattedRefusal {
-  return { code: "engine.crs_undeclared", message: "refused: no CRS", fields: [], remediationIsCut2: true };
+  return { code: "engine.crs_undeclared", message: "refused: no CRS", fields: [] };
 }
 
 function bboxFixture(): Bbox {
@@ -820,7 +820,7 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
 
     expect(outcome).toEqual({
       kind: "refused",
-      refusal: { code: skpError.code, message: skpError.message, fields: [], remediationIsCut2: false },
+      refusal: { code: skpError.code, message: skpError.message, fields: [] },
     });
     expect(commitActiveFilter).not.toHaveBeenCalled(); // the refused typo never becomes state
     expect(resetFitForNewGeneration).not.toHaveBeenCalled(); // no new generation on a refusal
@@ -860,7 +860,7 @@ describe("applyFilter (P2 items 2-3: cancel-debounce-first, retry-on-throttled, 
     // The user's own refusal, unchanged and un-swallowed -- not a thrown error, not {kind:"not-applied"}.
     expect(outcome).toEqual({
       kind: "refused",
-      refusal: { code: skpError.code, message: skpError.message, fields: [], remediationIsCut2: false },
+      refusal: { code: skpError.code, message: skpError.message, fields: [] },
     });
     expect(requestViewport).toHaveBeenCalledTimes(2);
   });

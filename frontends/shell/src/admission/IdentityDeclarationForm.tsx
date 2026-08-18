@@ -52,8 +52,12 @@ export default function IdentityDeclarationForm({ candidateColumns, disabled, on
       </p>
 
       {candidateColumns.length > 0 && (
-        <fieldset>
-          <legend>Candidate columns (schema order, unranked)</legend>
+        <fieldset className="identity-declaration-candidate-list">
+          {/* Legend fix (reviewer NOTE, admission-remediation cut): this names the actual
+              criterion the engine's candidate projection applies (64-bit integer columns only) --
+              it used to read as an exhaustive list of what is admissible, which the free-text
+              route below (narrower integer widths, admissible by name) contradicts. */}
+          <legend>64-bit integer columns, schema order, unranked</legend>
           {candidateColumns.map((column) => (
             <label className="identity-declaration-candidate" key={column}>
               <input
@@ -70,6 +74,10 @@ export default function IdentityDeclarationForm({ candidateColumns, disabled, on
 
       <fieldset>
         <legend>Or type a column name</legend>
+        <p className="identity-declaration-free-text-hint">
+          Other integer-width columns, not listed above, may also be admissible by name -- the
+          candidate list above names only 64-bit integer columns.
+        </p>
         <label>
           <input
             type="radio"

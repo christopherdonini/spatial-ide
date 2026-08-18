@@ -31,16 +31,6 @@ function crsUndeclared(): SkpError {
   };
 }
 
-function axisOrderUnsupported(): SkpError {
-  return {
-    code: "engine.axis_order_unsupported",
-    message:
-      "refused: established axis order is northing,easting; this slice performs no axis " +
-      "normalization and emits (easting, northing) only",
-    fields: { established: "northing,easting" },
-  };
-}
-
 function identityUnusable(): SkpError {
   return {
     code: "engine.identity_unusable",
@@ -73,18 +63,15 @@ describe("formatRefusal", () => {
     ]);
   });
 
-  it("flags a remediation form for CRS-undeclared and identity-unusable refusals only", () => {
-    expect(formatRefusal(crsUndeclared()).remediationIsCut2).toBe(true);
-    expect(formatRefusal(identityUnusable()).remediationIsCut2).toBe(true);
-    expect(formatRefusal(axisOrderUnsupported()).remediationIsCut2).toBe(false);
-    expect(formatRefusal(ceilingExceeded()).remediationIsCut2).toBe(false);
-  });
-
-  // I1 (must-fix defect): `engine.crs_assertion_conflict` is NOT in the remediation-form set --
-  // AdmissionPanel's own `nextFormFamily` (AdmissionPanel.test.ts) is what actually gates the
-  // control not rendering; this asserts the formatting-layer half of that guarantee.
-  it("does not flag a remediation form for engine.crs_assertion_conflict (I1)", () => {
-    expect(formatRefusal(crsAssertionConflict()).remediationIsCut2).toBe(false);
+  // I1 (must-fix defect): `engine.crs_assertion_conflict` never gets a remediation control --
+  // AdmissionPanel's own `nextFormFamily` (AdmissionPanel.test.ts) is what actually gates that;
+  // `formatRefusal` no longer carries a parallel `remediationIsCut2` flag of its own to drift from
+  // it (NOTE cleanup, reviewer gate, admission-remediation cut -- see `formatRefusal.ts`'s own
+  // comment on why deletion, not a derived field, was the fix).
+  it("crsAssertionConflict still formats to a plain FormattedRefusal with no remediation flag on it", () => {
+    const f = formatRefusal(crsAssertionConflict());
+    expect(f.code).toBe("engine.crs_assertion_conflict");
+    expect(f).not.toHaveProperty("remediationIsCut2");
   });
 
   it("an error with no fields formats to an empty (not undefined) field list", () => {

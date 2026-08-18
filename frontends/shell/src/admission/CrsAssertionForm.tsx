@@ -57,7 +57,7 @@ export default function CrsAssertionForm({ disabled, onSubmit }: Props) {
         to assert again.
       </p>
 
-      <fieldset>
+      <fieldset className="crs-assertion-catalog">
         <legend>Pick a pinned definition</legend>
         {catalog.length === 0 && <p>Loading the pinned catalog&#8230;</p>}
         {catalog.map((entry) => (
@@ -112,6 +112,12 @@ export default function CrsAssertionForm({ disabled, onSubmit }: Props) {
           onChange={(e) => setState((s) => ({ ...s, identifier: e.target.value }))}
         />
       </label>
+      {/* SF9: the identifier is the one field a catalog pick populates from something other than
+          the operator's own keystrokes -- said plainly so the operator knows they own a string
+          they did not type, and that it is still theirs to edit. */}
+      {state.route === "catalog" && (
+        <p className="crs-assertion-identifier-hint">Filled from your catalog pick — edit if it should differ.</p>
+      )}
 
       <button type="submit" disabled={disabled || assertion === null}>
         Assert this CRS

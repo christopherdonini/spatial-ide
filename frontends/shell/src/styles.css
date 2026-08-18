@@ -76,9 +76,42 @@ body,
   font-weight: 600;
 }
 
-.admission-cut2-note {
+/* MF2 honesty requirement (reviewer gate, admission-remediation cut): the plain line naming a
+   carried remediation option from an earlier submit in the same re-refusal loop -- the operator's
+   own claim, visible rather than silently folded into the next request. Same visual family as
+   `.filter-active`/`.publish-scope-disabled-reason` (an italic, low-opacity informational line,
+   not a warning). */
+.admission-carried-option {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
   font-style: italic;
   opacity: 0.8;
+}
+
+/* SF8 (reviewer gate, admission-remediation cut): the pinned-catalog `<pre>` (`CrsAssertionForm`)
+   can run to ~45 lines of PROJJSON per entry, and both the catalog pick list and the identity
+   candidate-columns list can, in principle, grow past a handful of entries -- the same
+   cap-then-scroll discipline `.filter-refusal`/`.style-controls`/`.publish-controls` already
+   establish above (measured-budget comment at :274-291: `.admission-panel` measured 450px with
+   these forms not yet in the tree), applied to these three new elements so none of them can push
+   `.admission-panel` past that budget. ADR-026 still requires the FULL definition text, never
+   summarized or truncated -- a scroll cap satisfies that: it only bounds what is visible without
+   scrolling, never what is present. This is the third instance of exactly this defect class in
+   this codebase (`.filter-refusal`, `.style-controls`/`.publish-controls` are the first two) --
+   the new form components are simply added to the existing list here rather than re-litigated. */
+.crs-assertion-catalog {
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.crs-assertion-definition {
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.identity-declaration-candidate-list {
+  max-height: 12rem;
+  overflow-y: auto;
 }
 
 .describe-summary dt {

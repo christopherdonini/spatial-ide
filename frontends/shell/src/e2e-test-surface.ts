@@ -97,8 +97,8 @@ export interface OpenPathOptions {
  * parallel path with its own reporting shape. `"applied"` carries the real stream handle a caller
  * minted a ticket for; `"not-applied"` names a throttled-after-retry/superseded/stopped call (no
  * ticket minted, no refusal either); `"refused"` carries the same structured `FormattedRefusal`
- * (`code`, verbatim `message`, `fields`, `remediationIsCut2`) the panel's own `.filter-refusal` block
- * renders, rather than the bare `{code, message}` pair this hook used to construct by hand.
+ * (`code`, verbatim `message`, `fields`) the panel's own `.filter-refusal` block renders, rather
+ * than the bare `{code, message}` pair this hook used to construct by hand.
  */
 export type FilterQueryOutcome = ApplyFilterOutcome;
 

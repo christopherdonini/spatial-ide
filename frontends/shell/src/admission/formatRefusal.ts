@@ -7,38 +7,28 @@ export interface FormattedRefusal {
   code: string;
   message: string;
   fields: Array<[string, string]>;
-  /** True when `AdmissionPanel` renders an operator remediation form for this code (a
-   * caller-asserted CRS, or an identity-mapping declaration -- NEXT-CUT.md P3, `CrsAssertionForm`/
-   * `IdentityDeclarationForm`). Field name is a holdover from cut-1, when this named a flow that
-   * did not exist yet ("cut-2 work" in the UI copy) -- kept rather than renamed to limit this
-   * piece's blast radius into `publish/formatPublishRefusal.ts`, which reuses this same type. */
-  remediationIsCut2: boolean;
 }
-
-/** Engine refusal codes with an operator remediation form in this build (`AdmissionPanel`'s own
- * `formFamilyForCode`, which actually gates the form). Kept as an explicit, closed list rather
- * than a prefix check: a future `engine.*` code should not silently inherit this label.
- *
- * **`engine.crs_assertion_conflict` is deliberately absent** (NEXT-CUT.md P3 must-fix, I1):
- * ADR-015 §4 refuses an assertion over an already-declaring file *without comparing* the two
- * definitions, and offers no remediation control for it at all -- see `refusalGuidance` below for
- * this code's copy. */
-const CUT2_REMEDIATION_CODES: ReadonlySet<string> = new Set([
-  "engine.crs_undeclared",
-  "engine.identity_unusable",
-]);
 
 /**
  * The refusal UX **is** `message` -- `EngineError`'s own `Display` text, carried verbatim from
  * `kernel/src/skp.rs::error_of` with no summarizing, truncating, or rewording. This function adds
  * structure for rendering; it does not touch the words.
+ *
+ * NOTE (reviewer gate, admission-remediation cut): a `remediationIsCut2` boolean field used to
+ * live here (cut-1 holdover naming a flow that did not exist yet). It was already unread by every
+ * renderer -- `RefusalBlock.tsx`'s own top comment records that the remediation forms are gated by
+ * `AdmissionPanel`'s `formFamilyForCode`/`nextFormFamily` instead, not by this field, and
+ * `refusalGuidance` below is what replaced the blanket note the field used to gate. Deleted rather
+ * than kept "derived" from `formFamilyForCode`: a single boolean cannot express WHICH form family
+ * a code opens (`"crs"` vs `"identity"`), so making it track `formFamilyForCode` would have meant
+ * keeping a second, narrower copy of the same closed code list next to it -- the exact drift risk
+ * this cleanup exists to remove, not relocate.
  */
 export function formatRefusal(error: SkpError): FormattedRefusal {
   return {
     code: error.code,
     message: error.message,
     fields: Object.entries(error.fields).sort(([a], [b]) => a.localeCompare(b)),
-    remediationIsCut2: CUT2_REMEDIATION_CODES.has(error.code),
   };
 }
 

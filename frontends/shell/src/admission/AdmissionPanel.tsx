@@ -47,11 +47,88 @@ export function nextFormFamily(priorFamily: FormFamily, code: string): FormFamil
   return formFamilyForCode(code) ?? priorFamily;
 }
 
-type State =
+export type State =
   | { kind: "idle" }
   | { kind: "opening" }
-  | { kind: "refused"; path: string; refusal: FormattedRefusal; formFamily: FormFamily }
+  | {
+      kind: "refused";
+      path: string;
+      refusal: FormattedRefusal;
+      formFamily: FormFamily;
+      /** The exact `AdmitOptions` that produced THIS refusal (MF2, reviewer gate, admission-
+       * remediation cut): a form submit merges its own key over these -- new value replaces the
+       * same key, the other key carries -- so a file refused for BOTH a CRS assertion and an
+       * identity declaration does not loop forever resubmitting only the option the operator just
+       * touched (CRS admission precedes identity in the engine, so a single-option resubmit always
+       * re-refuses at whichever gate the dropped option had already passed, paying a whole-file
+       * scan per lap). */
+      options: AdmitOptions;
+      /** True while a remediation submit against THIS SAME refused state is in flight -- the real
+       * double-submit guard behind the forms' `disabled` prop (SF7), and also what keeps `kind` at
+       * `"refused"` (never `"opening"`) across the await. That second part is MF1's actual fix:
+       * `kind` flipping to `"opening"` and back is what unmounted `CrsAssertionForm`/
+       * `IdentityDeclarationForm` on every re-refusal (losing pasted text/picks, SF7) AND made
+       * `nextFormFamily`'s `priorFamily` argument always `null` (the updater always saw
+       * `prev.kind === "opening"`), so an axis-order re-refusal after a bad paste rendered no form
+       * at all and the operator had to re-pick the file from the OS dialog. */
+      inFlight: boolean;
+    }
   | { kind: "admitted"; admitted: Admitted };
+
+export interface AdmitPathDeps {
+  admit: (path: string, cancelKey: string, options?: AdmitOptions) => Promise<AdmissionOutcome>;
+  setState: (updater: (prev: State) => State) => void;
+  onAdmitted: (admitted: Admitted) => void;
+  makeCancelKey: () => string;
+}
+
+/**
+ * The admission flow's state-transition logic, isolated from the `useState`/`useCallback` plumbing
+ * around it so it is directly testable without a render harness (SF11, reviewer gate, admission-
+ * remediation cut) -- this package's own convention for exactly this reason
+ * (`crsAssertionState.ts`'s top comment), applied one level up to the panel's own transition
+ * rather than a single form's. `AdmissionPanel`'s `admitPath` below is a thin wrapper supplying the
+ * real `admitDataset`, the real `setState`, and a real cancel key; a test supplies its own `deps`
+ * and inspects the `State` values `setState` was called with directly.
+ */
+export async function runAdmitPath(
+  path: string,
+  options: AdmitOptions,
+  deps: AdmitPathDeps
+): Promise<AdmissionOutcome> {
+  // MF1: a remediation submit against the SAME refused path keeps `kind: "refused"` (only marking
+  // `inFlight`), never resets to the bare `{kind: "opening"}` a plain first-open (or a fresh path)
+  // uses -- see the `State["refused"]["inFlight"]` doc comment above for what that reset used to
+  // break.
+  deps.setState((prev) =>
+    prev.kind === "refused" && prev.path === path ? { ...prev, inFlight: true } : { kind: "opening" }
+  );
+
+  const cancelKey = deps.makeCancelKey();
+  const outcome = await deps.admit(path, cancelKey, options);
+
+  if (outcome.kind === "refused") {
+    deps.setState((prev) => {
+      // A family -- and now its accumulated `options` -- only carries forward from a refusal
+      // against this SAME path: a fresh path (a new file picked, or a fresh E2E `openPath` call)
+      // never inherits a stale family or option set from whatever was previously open.
+      const priorFamily = prev.kind === "refused" && prev.path === path ? prev.formFamily : null;
+      return {
+        kind: "refused",
+        path,
+        refusal: outcome.refusal,
+        formFamily: nextFormFamily(priorFamily, outcome.refusal.code),
+        options,
+        inFlight: false,
+      };
+    });
+    return outcome;
+  }
+
+  deps.setState(() => ({ kind: "admitted", admitted: outcome.admitted }));
+  deps.onAdmitted(outcome.admitted);
+  return outcome;
+}
 
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
@@ -70,31 +147,17 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
 
   // The one piece of the manual flow a path string can't replay itself -- everything from here
   // down is the product's own admission behavior, unchanged by the E2E hook registered below.
+  // `runAdmitPath` above holds the actual transition logic; this wrapper only supplies the real
+  // dependencies (see `runAdmitPath`'s own doc comment for why the split exists).
   const admitPath = useCallback(
-    async (path: string, options?: AdmitOptions): Promise<AdmissionOutcome> => {
-      setState({ kind: "opening" });
-      const cancelKey =
-        typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`;
-      const outcome = await admitDataset(path, cancelKey, options);
-      if (outcome.kind === "refused") {
-        setState((prev) => {
-          // A family only carries forward from a refusal against this SAME path -- a fresh path
-          // (a new file picked, or a fresh E2E `openPath` call) never inherits a stale family from
-          // whatever was previously open.
-          const priorFamily = prev.kind === "refused" && prev.path === path ? prev.formFamily : null;
-          return {
-            kind: "refused",
-            path,
-            refusal: outcome.refusal,
-            formFamily: nextFormFamily(priorFamily, outcome.refusal.code),
-          };
-        });
-        return outcome;
-      }
-      setState({ kind: "admitted", admitted: outcome.admitted });
-      onAdmitted(outcome.admitted);
-      return outcome;
-    },
+    (path: string, options: AdmitOptions = {}): Promise<AdmissionOutcome> =>
+      runAdmitPath(path, options, {
+        admit: admitDataset,
+        setState,
+        onAdmitted,
+        makeCancelKey: () =>
+          typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`,
+      }),
     [onAdmitted]
   );
 
@@ -145,17 +208,35 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
         <>
           <RefusalBlock refusal={state.refusal} />
           {state.formFamily === "crs" && (
-            <CrsAssertionForm
-              disabled={false}
-              onSubmit={(crsAssertion) => void admitPath(state.path, { crsAssertion })}
-            />
+            <>
+              {/* MF2 honesty requirement: a carried identity option is the operator's own earlier
+                  claim, not a silent addition (no I2 concern), but it must be visible, not silent. */}
+              {state.options.identity && (
+                <p className="admission-carried-option">
+                  This attempt will also include your identity declaration (column:{" "}
+                  {state.options.identity.column}).
+                </p>
+              )}
+              <CrsAssertionForm
+                disabled={state.inFlight}
+                onSubmit={(crsAssertion) => void admitPath(state.path, { ...state.options, crsAssertion })}
+              />
+            </>
           )}
           {state.formFamily === "identity" && (
-            <IdentityDeclarationForm
-              candidateColumns={splitCandidateColumns(fieldValue(state.refusal, "candidate_columns"))}
-              disabled={false}
-              onSubmit={(identity) => void admitPath(state.path, { identity })}
-            />
+            <>
+              {state.options.crsAssertion && (
+                <p className="admission-carried-option">
+                  This attempt will also include your CRS assertion ({state.options.crsAssertion.identifier},
+                  asserted this session).
+                </p>
+              )}
+              <IdentityDeclarationForm
+                candidateColumns={splitCandidateColumns(fieldValue(state.refusal, "candidate_columns"))}
+                disabled={state.inFlight}
+                onSubmit={(identity) => void admitPath(state.path, { ...state.options, identity })}
+              />
+            </>
           )}
         </>
       )}

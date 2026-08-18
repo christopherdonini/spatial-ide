@@ -68,17 +68,27 @@ describe("buildCrsAssertion", () => {
     expect(buildCrsAssertion(state, [])).toBeNull();
   });
 
-  it("the pasted text, trimmed, on the paste route -- an equal route to the catalog", () => {
+  it("the pasted text, VERBATIM (not trimmed), on the paste route -- an equal route to the catalog " +
+    "(SF5, reviewer gate, admission-remediation cut): trimming here would hash a verbatim catalog " +
+    "paste differently than the catalog entry itself (host-side, off pasted bytes), reading back as " +
+    "`pasted` provenance instead of `catalog:…` for a byte-identical paste that included the " +
+    "catalog text's own trailing newline", () => {
     const state = {
       route: "paste" as const,
       selectedEntryId: null,
       identifier: "EPSG:4326",
-      pastedDefinition: '  {"pasted":"definition"}  ',
+      pastedDefinition: '  {"pasted":"definition"}  \n',
     };
     expect(buildCrsAssertion(state, [])).toEqual({
       identifier: "EPSG:4326",
-      definition_json: '{"pasted":"definition"}',
+      definition_json: '  {"pasted":"definition"}  \n',
     });
+  });
+
+  it("still null on the paste route when the text is ONLY whitespace, trim used solely for the " +
+    "emptiness test -- never sent as a non-empty payload", () => {
+    const state = { route: "paste" as const, selectedEntryId: null, identifier: "EPSG:4326", pastedDefinition: "   \n\t  " };
+    expect(buildCrsAssertion(state, [])).toBeNull();
   });
 });
 

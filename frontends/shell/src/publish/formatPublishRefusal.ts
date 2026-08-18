@@ -14,15 +14,13 @@ import type { FormattedRefusal } from "../admission/formatRefusal";
  * The publish seam's refusal is `Display` text only (`publish.rs`'s own doc comment on
  * `PrepareOutcome::Refused`: "Structure (RefusalBlock) is P2's" -- this IS that structure, added
  * here) -- there is no `code`/`fields` on the wire the way an `SkpError` carries them, so `code` is
- * a fixed label (never confused with a real `skp.*`/`engine.*` typed code) and `fields`/
- * `remediationIsCut2` are always empty/false: publish refusals have no cut-2 remediation flow named
- * anywhere in `NEXT-CUT.md`.
+ * a fixed label (never confused with a real `skp.*`/`engine.*` typed code) and `fields` is always
+ * empty: publish refusals have no remediation form named anywhere in `NEXT-CUT.md`.
  */
 export function formatPublishRefusal(message: string): FormattedRefusal {
   return {
     code: "publish-refused",
     message,
     fields: [],
-    remediationIsCut2: false,
   };
 }
