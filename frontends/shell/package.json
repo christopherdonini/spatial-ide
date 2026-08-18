@@ -14,6 +14,7 @@
     "tauri": "tauri",
     "e2e:debug": "node e2e/debug-session.mjs",
     "e2e:regression": "node e2e/regression.mjs",
+    "e2e:admission": "node e2e/admission-remediation.mjs",
     "e2e:filter": "node e2e/filter.mjs",
     "e2e:filter-panel": "node e2e/filter-panel.mjs",
     "e2e:style": "node e2e/style.mjs",

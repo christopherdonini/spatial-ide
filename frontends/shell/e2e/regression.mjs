@@ -579,7 +579,18 @@ async function stepA9(page, consoleHandle) {
   );
 }
 
-async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMessage) {
+/**
+ * P5 repair (admission-remediation cut): known-broken since P3 removed the blanket cut-2 note
+ * (`RefusalBlock.tsx`'s own top comment -- "the blanket cut-2 note this block used to render ... is
+ * gone entirely, NEXT-CUT.md P3 item G") -- `.admission-cut2-note` no longer exists anywhere in the
+ * DOM, so the assertion this function used to make here could never pass again. Repaired to assert
+ * what actually replaced it: the refusal code/message as before, PLUS the correct remediation form
+ * now rendering for that code (`formSelector` -- `.crs-assertion-form` for B2', `.identity-
+ * declaration-form` for C2') instead of the note text. `expectedCandidates`, when given, additionally
+ * asserts each named column appears among `.identity-declaration-candidate` (C2' only -- B2' passes
+ * nothing, since the CRS form has no candidate list). No other step's assertions are touched.
+ */
+async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMessage, formSelector, expectedCandidates) {
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), fixturePath);
   if (outcome.kind !== "refused" || outcome.code !== expectedCode) {
     throw new Error(`${stepId}: expected {kind:"refused", code:"${expectedCode}"}, got ${JSON.stringify(outcome)}`);
@@ -596,7 +607,6 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
       exists: !!el,
       codeText: el?.querySelector(".admission-refusal-code")?.textContent ?? null,
       messageText: el?.querySelector(".admission-refusal-message")?.textContent ?? null,
-      cut2Text: el?.querySelector(".admission-cut2-note")?.textContent ?? null,
       hasButton: !!el?.querySelector("button"),
     };
   });
@@ -605,10 +615,22 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
   if (panel.messageText !== expectedMessage) {
     throw new Error(`${stepId}: panel message text mismatch.\nExpected: ${expectedMessage}\nActual:   ${panel.messageText}`);
   }
-  if (panel.cut2Text === null || !/cut-2/.test(panel.cut2Text)) {
-    throw new Error(`${stepId}: cut-2 remediation note missing or unexpected: ${JSON.stringify(panel.cut2Text)}`);
-  }
   if (panel.hasButton) throw new Error(`${stepId}: a <button> exists inside .admission-refusal (expected no dismiss control)`);
+  // The repair itself: the correct remediation form (NOT the removed cut-2 note) is what now
+  // reaches the operator for this code (AdmissionPanel.tsx's formFamilyForCode/nextFormFamily).
+  const form = await page.evaluate((sel) => {
+    const present = document.querySelector(sel) !== null;
+    const candidates = Array.from(document.querySelectorAll(".identity-declaration-candidate")).map(
+      (el) => el.textContent?.trim()
+    );
+    return { present, candidates };
+  }, formSelector);
+  if (!form.present) throw new Error(`${stepId}: ${formSelector} not present after the refusal (the correct remediation form must render)`);
+  for (const candidate of expectedCandidates ?? []) {
+    if (!form.candidates.includes(candidate)) {
+      throw new Error(`${stepId}: candidate list missing "${candidate}". Actual: ${JSON.stringify(form.candidates)}`);
+    }
+  }
   // The "No summary" half of the walkthrough's own claim (B2/C2): `AdmissionPanel`'s local `state`
   // is replaced wholesale on a refusal (`state.kind === "admitted"` is what gates rendering
   // `DescribeSummary`), so `.describe-summary` must be gone the instant a refusal lands -- assertable
@@ -616,7 +638,9 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
   // asserted here; see `MANUAL-WALKTHROUGH.md`'s own coverage table for that named gap.
   const summaryPresent = await page.evaluate(() => document.querySelector(".describe-summary") !== null);
   if (summaryPresent) throw new Error(`${stepId}: .describe-summary still present after a refusal`);
-  return `refused ${expectedCode}; message verbatim; cut-2 note present; no dismiss button on the panel; no describe-summary`;
+  return `refused ${expectedCode}; message verbatim; ${formSelector} present${
+    expectedCandidates?.length ? ` (candidates include ${expectedCandidates.join(", ")})` : ""
+  }; no dismiss button on the panel; no describe-summary`;
 }
 
 /**
@@ -871,9 +895,19 @@ async function main() {
     // grid capture and the empty-space half -- 60s gives comfortable headroom without masking a
     // genuine hang (the per-candidate 5s bound is what actually limits any single wait).
     await runStep("A9'", 60_000, () => stepA9(page, consoleHandle));
-    await runStep("B2'/B3'", 30_000, () => stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE));
+    await runStep("B2'/B3'", 30_000, () =>
+      stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
+    );
     await runStep("C2'/C3'", 30_000, () =>
-      stepRefusal(page, "C2'/C3'", FIXTURE_MISSING_IDENTITY, "engine.identity_unusable", IDENTITY_UNUSABLE_MESSAGE)
+      stepRefusal(
+        page,
+        "C2'/C3'",
+        FIXTURE_MISSING_IDENTITY,
+        "engine.identity_unusable",
+        IDENTITY_UNUSABLE_MESSAGE,
+        ".identity-declaration-form",
+        ["parcel_key"]
+      )
     );
     await runStep("OVERCEIL'", 60_000, () => stepOverCeiling(page, consoleHandle));
     await runStep("REOPEN'", 60_000, () => stepReopen(page, consoleHandle));

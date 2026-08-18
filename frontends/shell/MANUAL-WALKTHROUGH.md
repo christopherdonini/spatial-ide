@@ -457,6 +457,138 @@ instruction).
 
 ---
 
+## Part I — admission remediation (admission-remediation cut)
+
+`NEXT-CUT.md`'s own one-sentence framing: a refused dataset can be admitted by an explicit operator
+act — asserting a CRS for a file that declares none, or declaring which column carries feature
+identity — with the claim recorded as a claim, nothing persisted, and no proposal, ranking, or
+confidence anywhere. `e2e/admission-remediation.mjs` above covers the DOM/wire-assertable half of
+the same ground (its own coverage table, below, names exactly which numbered step each automated
+step covers); this Part is the judgment-call half only a human makes: does a rendered claim read as
+a claim you made, not a fact the file stated; does an unranked candidate list read as neutral
+information, not a recommendation; does a protective refusal read as protective, not as the tool
+having failed you. **Evidence-class wording, as every earlier Part in this document uses it**: the
+steps below are **operator-verified** (a human running them by hand and recording the result); the
+suite named above is separately **E2E-verified** (driven through real IPC and a real render loop via
+the same `openPath`/`crsCatalog` in-page hooks) — a distinct, weaker-than-neither, not-a-replacement
+pairing, `e2e/README.md`'s own evidence-class paragraph. **No duration appears anywhere in this
+Part** (ADR-018) — I6's own honest note is about a window being *reachable*, never about how fast
+anything was.
+
+Three fixtures, opened in the same running app instance as every earlier Part — no relaunch needed:
+
+| Fixture | Path | Purpose |
+|---|---|---|
+| No CRS | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\no-crs-refused.parquet` | I1–I3 — reused from Part B; declares no `crs` key at all |
+| Missing identity | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\missing-identity-refused.parquet` | I4, I6, I8 — reused from Part C; declares a CRS, but the stable key lives in `parcel_key`, not `id` |
+| Both remediations needed | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\bothneeded-refused.parquet` | I5 — **new this cut**: no `crs` key AND no `id` column, together. Regenerate: `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_bothneeded_refusing_fixture -- --ignored --nocapture` |
+
+`dupkey-refused.parquet` (also new this cut, regenerate: `cargo test -p spatial-kernel --test
+manual_walkthrough_fixtures generate_the_dupkey_refusing_fixture -- --ignored --nocapture`) is
+**E2E-only** — `e2e/admission-remediation.mjs`'s own `DUPKEY'` step covers it; no Part I step opens
+it, since I4/I8 already exercise the identity-declaration surface with a fixture that admits, and a
+second small fixture that never admits adds no new operator judgment to make.
+
+**I3's own copy block** (referenced from its row below, not inline in the table — a table cell
+cannot hold a readable multi-line fence): the pinned EPSG:2056 definition with its two TOP-LEVEL
+`coordinate_system.axis` entries' `direction` values swapped — everything else, including the
+nested `base_crs.coordinate_system` block, byte-for-byte unchanged; constructed the same way
+`e2e/admission-remediation.mjs`'s own `stepAxistrap`/`buildAxisTrapDefinition` builds its copy
+(pretty-printed here for legibility; the script's own `JSON.stringify` output is compact, not
+byte-identical to this formatting — functionally identical JSON either way):
+
+```json
+{
+  "$schema": "https://proj.org/schemas/v0.5/projjson.schema.json",
+  "type": "ProjectedCRS",
+  "name": "CH1903+ / LV95",
+  "base_crs": {
+    "name": "CH1903+",
+    "datum": {
+      "type": "GeodeticReferenceFrame",
+      "name": "CH1903+",
+      "ellipsoid": {
+        "name": "Bessel 1841",
+        "semi_major_axis": 6377397.155,
+        "inverse_flattening": 299.1528128
+      }
+    },
+    "coordinate_system": {
+      "subtype": "ellipsoidal",
+      "axis": [
+        { "name": "Geodetic latitude", "abbreviation": "Lat", "direction": "north", "unit": "degree" },
+        { "name": "Geodetic longitude", "abbreviation": "Lon", "direction": "east", "unit": "degree" }
+      ]
+    },
+    "id": { "authority": "EPSG", "code": 4150 }
+  },
+  "conversion": {
+    "name": "Swiss Oblique Mercator 1995",
+    "method": { "name": "Hotine Oblique Mercator (variant B)", "id": { "authority": "EPSG", "code": 9815 } },
+    "parameters": [
+      { "name": "Latitude of projection centre", "value": 46.9524055555556, "unit": "degree", "id": { "authority": "EPSG", "code": 8811 } },
+      { "name": "Longitude of projection centre", "value": 7.43958333333333, "unit": "degree", "id": { "authority": "EPSG", "code": 8812 } },
+      { "name": "Azimuth of initial line", "value": 90, "unit": "degree", "id": { "authority": "EPSG", "code": 8813 } },
+      { "name": "Angle from Rectified to Skew Grid", "value": 90, "unit": "degree", "id": { "authority": "EPSG", "code": 8814 } },
+      { "name": "Scale factor on initial line", "value": 1, "unit": "unity", "id": { "authority": "EPSG", "code": 8815 } },
+      { "name": "Easting at projection centre", "value": 2600000, "unit": "metre", "id": { "authority": "EPSG", "code": 8816 } },
+      { "name": "Northing at projection centre", "value": 1200000, "unit": "metre", "id": { "authority": "EPSG", "code": 8817 } }
+    ]
+  },
+  "coordinate_system": {
+    "subtype": "Cartesian",
+    "axis": [
+      { "name": "Easting", "abbreviation": "E", "direction": "north", "unit": "metre" },
+      { "name": "Northing", "abbreviation": "N", "direction": "east", "unit": "metre" }
+    ]
+  },
+  "id": { "authority": "EPSG", "code": 2056 }
+}
+```
+
+(Before the swap, the top-level `coordinate_system.axis` block above read `direction: "east"` for
+`Easting` and `direction: "north"` for `Northing` — the ordinary, admissible case I1/I2 already
+exercised. Only those two `direction` values are swapped; the pinned catalog's own bytes are
+otherwise reproduced exactly.)
+
+| # | Step | Expected outcome |
+|---|---|---|
+| I1 | Click **Open GeoParquet…** (canvas from Part H may still be visible; that's fine) and select `no-crs-refused.parquet`. | No summary, no canvas change. A red-bordered refusal panel shows code `engine.crs_undeclared` and the same verbatim message Part B's B2 quotes. Below it, a **CRS assertion form** renders: a "Pick a pinned definition" list (one entry — `CH1903+ / LV95 (EPSG:2056)`, a "Full definition" disclosure, collapsed), an "Or paste a definition" route with an empty textarea, neither route pre-selected; an **Identifier** field; a notice reading *"This records a CLAIM you are making about this file's coordinate reference system -- recorded with who asserted it and when. Nothing is saved: reopening this file will ask you to assert again."*; and an **"Assert this CRS"** button, disabled. (ADR-015 §4: assertion is admissible only over a file that declares nothing — this is that admissible case.) |
+| I2 | Expand the pinned entry's **Full definition** disclosure and read it in full — ADR-026 decision 1(a): "displayed in full before assertion, never selected silently" — before selecting it. Select it (the Identifier field fills with `EPSG:2056` — edit it if you like, it is yours to change), then click **Assert this CRS**. | Admitted. The canvas renders (the same shape Part A's A4 describes, over this fixture's own small feature count). The summary's **CRS** line reads: `EPSG:2056 — caller-asserted by <your OS account> at <an RFC-3339 timestamp>, catalog:epsg-2056@sha256:<12 hex chars>, axis order easting,northing` (ADR-015 §3/§6: `crs_source`, `by`, `at` all recorded; ADR-026 decision 2: provenance names the pinned catalog entry and its content hash, not a bare "trusted"). **Judge:** reading that line, does it read as a CLAIM you just made — attributed to you, timestamped, its own provenance named — rather than a fact the file itself stated? |
+| I3 | Click **Open GeoParquet…** again and reselect `no-crs-refused.parquet` (I7 below confirms formally that nothing persisted; here it only resets to a fresh refusal). In the **Or paste a definition** box, paste the copy block above VERBATIM. Give it any identifier (e.g. `TEST:AXISTRAP`) and click **Assert this CRS**. | Refused again — code `engine.axis_order_unsupported`, message **"refused: established axis order is northing,easting; this slice performs no axis normalization and emits (easting, northing) only"** (verbatim), plus guidance copy reading *"The definition does not establish an x-first axis order. The file was refused, not reinterpreted (ADR-015 §5) -- this is protective behavior, not an error in your file."* The CRS assertion form is STILL present — not dead-ended (P3b MF1's own fix). **Honest note:** this refusal is protective. The engine DID read an axis order from what you pasted (north-first is a real, establishable order) — it refused to silently normalize it rather than failing to understand it, the exact EPSG:4326 trap `docs/05` names. |
+| I4 | Click **Open GeoParquet…** and select `missing-identity-refused.parquet`. | A red-bordered refusal panel shows code `engine.identity_unusable` and the same verbatim message Part C's C2 quotes. Below it, an **identity declaration form** renders: a candidate list titled "64-bit integer columns, schema order, unranked" with exactly one entry, `parcel_key`, its radio UNCHECKED; below that, an equal "Or type a column name" free-text route (ADR-016 §3–§7: a name the engine happened to suggest is not privileged over one you type yourself); a cost notice (I8 reads this in full); and a **"Declare this column"** button, disabled until a route is chosen. **Judge:** does this list read as neutral information — "here is what qualifies" — or does it read as a recommendation — "pick this one"? Select `parcel_key` (or type it into the free-text box instead — an equally valid route) and click **Declare this column**. | Admitted. The summary's **Identity** line reads `mapped:parcel_key — verified-at-open-full-file` (ADR-016 §6: what was actually checked, recorded verbatim — never the bare word "unique" on its own). |
+| I5 | Click **Open GeoParquet…** and select `bothneeded-refused.parquet` (new this cut — no `crs` key AND no `id` column). Assert `EPSG:2056` the same way I2 did. | This time the SAME assert does NOT admit — refused again, now as `engine.identity_unusable` (the file's OTHER remediation need only surfaces once the first is satisfied — `NEXT-CUT.md`'s own I11: CRS admission precedes identity, footer read vs. full scan). Below the identity form, one line reads: *"This attempt will also include your CRS assertion (EPSG:2056, asserted this session)."* — **the carried-claim line**. **Judge:** is it clear that declaring now will ALSO resend the CRS claim you already made, not silently drop it? Declare `parcel_key`. | Admitted. The summary shows BOTH the caller-asserted CRS line (I2's own shape) AND `mapped:parcel_key — verified-at-open-full-file` together — this file genuinely needed both remediations, and both are visible in the one summary. |
+| I6 | Click **Open GeoParquet…** and reselect `missing-identity-refused.parquet` (refuses exactly as I4 did — nothing from I4 persisted). This time, select `parcel_key` again, and the INSTANT you click **Declare this column**, watch immediately for a **Cancel** button and a liveness line beside it, and click **Cancel** if you catch it. | If you catch it: a **Cancel** button appears with no delay next to the (now disabled) "Declare this column" button, and shortly after, a liveness line reads *"Opening — checking the declared column across the whole file…"* (I11: named as the cost it actually is, not a plain "Opening…" — this IS the whole-dataset uniqueness scan, paid because you declared a column, not because the file is large). Clicking Cancel restores the SAME refused panel you were already looking at (code, message, candidate list, your own typed/selected input all intact) — no new refusal panel, no crash, a note reading **"Open cancelled"** where the button was. **Honest note:** at this fixture's size (100 features), the scan this pays for is genuinely fast — over a remote-desktop session in particular, the window to see Cancel/liveness before the declare already resolves on its own (admitted or refused) may be too short to hit reliably. If you never manage to catch it, record that observation plainly — **it is not a failure of this step**, only a property of how fast a 100-row scan resolves. NO duration is recorded either way (ADR-018). |
+| I7 | Click **Open GeoParquet…** and reselect `no-crs-refused.parquet` (the same file you asserted a CRS for in I2/I3). | Refused again, exactly as I1 first showed it — same code, same verbatim message. I2's assertion notice already promised this ("Nothing is saved: reopening this file will ask you to assert again") — this step is that promise, checked live: you must pick or paste the definition again from nothing, the CRS form starting exactly as blank as it did in I1 (no route pre-selected, no prior text remembered). |
+| I8 | On any identity declaration form still open from I4/I5/I6 (or reopen `missing-identity-refused.parquet` fresh), read the paragraph ABOVE the candidate list, before submitting anything. | It reads, verbatim: *"Declaring a column here triggers a whole-dataset uniqueness check when this file is opened. A wrong declaration is refused only after that full scan of the dataset runs -- retrying a failed declaration is not free. Nothing is saved: reopening this file will ask you to declare again."* (I11: refusal-cost honesty — CRS admission precedes identity in `dataset.rs`, so a wrong first guess costs a full scan before you find out it was wrong.) **Judge:** having now actually watched I4/I5/I6 pay that scan (however briefly, even at this fixture's small size), does this sentence read as an accurate, legible warning of what you are about to pay for a wrong guess — not boilerplate you'd skim past? |
+
+**If anything deviates:** stop, record the exact step, and report it, same as every earlier Part.
+(Except I3's own refusal and I6's own "Cancel never reachable" observation — those ARE the expected
+outcome, not a deviation.)
+
+## What `e2e/admission-remediation.mjs` covers
+
+A separate suite (`npm run e2e:admission`, `frontends/shell/e2e/admission-remediation.mjs`,
+admission-remediation cut P5) drives this Part's own admission-panel DOM directly, plus the
+`openPath`/`crsCatalog` in-page hooks for the remediation submits themselves (no CDP driver reaches
+a real form's Submit click any differently than calling the identical `admitPath` function it calls
+— this file's own top comment). Same cross-reference convention as every earlier coverage table:
+"Does not cover" lists only what the numbered Part I step *claims* that the script cannot assert.
+
+| Automated step | Walkthrough step(s) | Covers | Does not cover |
+|---|---|---|---|
+| `ASSERT'` | I1, I2 | `engine.crs_undeclared` refusal verbatim + CRS form present; the pinned catalog is reachable via `crsCatalog()` (one entry, `epsg-2056`, non-empty definition); asserting it admits, canvas renders, and the summary's CRS line shows `caller-asserted by`/non-empty by-at/`catalog:epsg-2056@sha256:` (prefix only) | I2's own claim-vs-fact legibility judgment; the "Full definition" disclosure's own click-to-expand interaction |
+| `PASTED'` | — (no Part I step; a no-normalization property this doc's own I2/I3 do not need repeated) | pasting the SAME definition with one whitespace byte changed admits with provenance `pasted`, never `catalog:...` | — |
+| `AXISTRAP'` | I3 | the axis-swapped definition establishes a real, non-x-first order → `engine.axis_order_unsupported` verbatim, refused not reinterpreted, CRS form still present (P3b MF1) | I3's own "reads as protective" judgment |
+| `NODEF'` | — (no Part I step; I3 already exercises the axis-order family) | a definition with no `coordinate_system` at all → `engine.axis_order_unestablished`, form still present | — |
+| `MAP'` | I4 | `engine.identity_unusable` refusal verbatim + `parcel_key` in the candidate list; declaring it admits with `mapped:parcel_key — verified-at-open-full-file` in the summary | I4's own "candidate list implies no recommendation" judgment |
+| `DUPKEY'` | — (no Part I step, `dupkey-refused.parquet` is E2E-only — see this Part's own fixtures note) | a plain open of a native-duplicate-id file already refuses (genuine uniqueness detail, not missing-column); declaring the same column re-refuses identically, form still present | — |
+| `BOTHNEEDED'` | I5 | crs refusal → assert (carried) → identity refusal with the carried-option line verbatim → declare (combined request) → admitted with BOTH `caller-asserted` and `mapped:` in the summary (MF2 regression guard) | I5's own "is the carried claim clear" judgment |
+| `CONFLICT'` | — (no Part I step; I1–I8 never assert over an already-declaring file — G1's own admitted-CRS fixture already stands in for "a file that declares a CRS" elsewhere in this document) | asserting over an already-declaring file → `engine.crs_assertion_conflict`, NO remediation form/control renders at all (I1) | — |
+| `CANCELOPEN'` | I6 | a declared-identity open against the LARGEST fixture on disk (4,000,000 features) shows Cancel + the declared-column liveness line while genuinely in flight, or records SKIPPED-FAST honestly if the scan resolves first; clicking Cancel restores the idle "Open cancelled" note, form inputs intact. NO duration asserted (ADR-018) | I6's own "was the window even reachable, over RustDesk" judgment — the script's own fixture is 40,000× larger than I6's, deliberately, so its own catch window is comfortably wider than a human's; the two are not the same claim |
+| `NOPERSIST'` | I7 | reopening the ASSERT'-admitted path plain refuses again, verbatim — nothing persisted | — |
+| `OVERBOUND'` | — (no Part I step; pasting 65,000+ bytes by hand is not a productive operator action to script into a walkthrough) | pasting an oversized definition through the real form shows `.crs-assertion-definition-validation` naming the byte counts, Submit stays disabled, no request is issued | — |
+
 ## Result log
 
 Fill in after running the script above.
@@ -577,3 +709,13 @@ exit judgment there, in their own words, not a checkbox.
 - **Build/commit:** —
 - **Part H (H1–H9):** —
 - **H10 — the ruling (the human's own words):** —
+
+### Part I run (separate pass — admission remediation)
+
+Part I did not exist during any run recorded above. Fill in the fields below when Part I is
+actually run by an operator, queued for the next batch session per this cut's own P5 brief.
+
+- **Date run:** —
+- **Run by:** —
+- **Build/commit:** —
+- **Part I (I1–I8):** —

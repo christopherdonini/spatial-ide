@@ -164,6 +164,63 @@ fn generate_the_missing_identity_refusing_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
+/// The "duplicate id" refusing file (`NEXT-CUT.md` admission-remediation cut, P5's `DUPKEY'` E2E
+/// step and Part I's I6): a native `id` column that repeats a constant value
+/// (`IdentityMode::DuplicateIds` — an existing engine fixture mode, reused rather than added;
+/// `kernel/tests/skp_admission_remediation.rs`'s own P1 test already proved this combination
+/// refuses). A **plain** open already refuses here — `engine::dataset::admit_identity` runs the
+/// uniqueness scan for the native `id` column too (`engine/src/identity.rs`'s own module doc: "the
+/// uniqueness scan ... runs for a native column too"), so this file needs no identity declaration to
+/// trip the refusal it exists for; declaring the SAME `id` column again (the E2E step's own "declare
+/// the duplicate-id column") re-runs the identical uniqueness scan and re-refuses identically — a
+/// genuine, typed uniqueness refusal, not a missing-column one, with the remediation form still
+/// reachable afterward.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_dupkey_refusing_fixture() {
+    let path = dir().join("dupkey-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            identity: IdentityMode::DuplicateIds,
+            ..Default::default()
+        },
+    )
+    .expect("write the duplicate-id refusing fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The "both remediations needed" file (`NEXT-CUT.md` admission-remediation cut, P5's `BOTHNEEDED'`
+/// E2E step and Part I's I5 — the reviewer's MUST-FIX-2 loop case, permanently encoded): **neither**
+/// a CRS nor a stable identity is admissible without an explicit operator act — no `crs` key at all
+/// (`CrsMode::AbsentKey`, the same mode `no-crs-refused.parquet` uses) **and** no `id` column, only
+/// `parcel_key` (`IdentityMode::ForeignKeyColumn`, the same mode `missing-identity-refused.parquet`
+/// uses) — combined in one file for the first time; both fields are independent `FixtureSpec`
+/// members, so no engine-side change was needed to write this combination.
+/// `engine::dataset::open_inner` admits CRS before identity (`NEXT-CUT.md`'s own I11: "footer read
+/// vs full scan"), so a plain open of this file refuses CRS first; asserting a CRS alone then
+/// refuses identity; only a request carrying BOTH admits — the combined-request path the P3b
+/// reviewer fix (options accumulation, MF2) exists to make reachable in the real UI.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_bothneeded_refusing_fixture() {
+    let path = dir().join("bothneeded-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            crs_mode: CrsMode::AbsentKey,
+            identity: IdentityMode::ForeignKeyColumn,
+            ..Default::default()
+        },
+    )
+    .expect("write the both-remediations-needed refusing fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
 /// The filter fixture (`NEXT-CUT.md` sql-filter P5): a dataset where a predicate meaningfully
 /// partitions rows, opened through the same real admission path
 /// (`window.__SPATIAL_E2E__.openPath`) `frontends/shell/e2e/filter.mjs`'s FILTER'/REFUSED' steps
