@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- APPROVED'/REFUSED'/FILTERED' steps for NEXT-CUT.md's
 // publish cut, phase P4. Sibling to regression.mjs/filter.mjs/filter-panel.mjs/style.mjs, not
 // folded into any of them: same attach-or-launch path (`lib.mjs`), same watchdog/deadline

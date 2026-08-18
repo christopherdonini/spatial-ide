@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- FILTER'/REFUSED' steps for NEXT-CUT.md sql-filter cut,
 // phase P5 (the shell's filter client wrapper + dev-only E2E hook). Sibling to regression.mjs, not
 // folded into it: P5's scope is strictly the client + hook, and regression.mjs's own README note

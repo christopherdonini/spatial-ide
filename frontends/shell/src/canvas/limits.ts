@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Declared capacity ceilings (ADR-010 rule 6: "declared, not discovered"). A ceiling with no number
  * is not declared, so the values live here and are asserted at the point they could be exceeded --

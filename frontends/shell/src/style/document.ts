@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Style v0 (ADR-017 §5a), consumed rather than reinvented (ADR-022; NEXT-CUT.md P1). This is the
  * shell's ONLY style-shaped code: a document **producer** (`StyleState` -> the §5a document) and a

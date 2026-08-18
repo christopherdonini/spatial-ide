@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Offset-relative rendering frame — ADR-010 rule 3: `f32(coord − origin)`, never
  * `f32(coord) − f32(origin)` and never `f32(coord)` at all for absolute projected magnitudes.

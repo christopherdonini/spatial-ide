@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { cancelFrame, creditFrame, FrameDecoder, startFrame } from "./wire";
 import type { RunningStream, StreamSink } from "./transport";
 

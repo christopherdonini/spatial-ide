@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * E2E TEST SURFACE -- dev builds only. Never present in a production bundle: every export here is
  * a no-op unless `import.meta.env.DEV`, which Vite replaces with a literal `false` for `npm run

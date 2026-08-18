@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Bit-critical scalar codecs for the control plane (ADR-004 amendment 1, `protocol/skp/SKP-V0.md`
  * §3). JSON floats crossing the webview IPC boundary were measured 1-ULP-unstable in 3/9 runs

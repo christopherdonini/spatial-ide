@@ -1,22 +1,36 @@
-# Licenses — which text applies where, and which texts are still missing
+# Licenses — which text applies where
 
 ADR-009 (Accepted 2026-08-07) sets four licensing layers. This directory holds the verbatim texts;
-this file records **which layer each part of the tree is in**, and **which texts are not here yet**.
+this file records **which layer each part of the tree is in**.
+
+> **Update, 2026-08-18 (ADR-009 pre-public checklist pass):** both texts named "missing" below were
+> fetched the same day this file was written (`PRE-PUBLIC-CHECKLIST.md`'s "Custodian completion
+> note — 2026-08-07"), but this file's own prose was never updated to say so — a documentation
+> staleness, not a state fact. Verified present now: `LICENSES/AGPL-3.0-or-later.txt` (34,523 B,
+> sha256 `0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0`, canonical
+> `GNU AFFERO GENERAL PUBLIC LICENSE` header) and `LICENSES/CC-BY-4.0.txt` (18,657 B, sha256
+> `9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411`, canonical `Attribution 4.0
+> International` header). `LICENSE` and `docs/LICENSE` no longer carry a trailing missing-text
+> notice (confirmed by reading both). The "what was searched" record below is retained as-is — it
+> is a historical record of the no-downloads session, not a current-state claim; the table above it
+> and the surrounding prose are corrected in place.
 
 ## The layers, and where they live today
 
 | Layer (ADR-009) | License | Where it lives in this tree | Text |
 |---|---|---|---|
-| Core | `AGPL-3.0-or-later` | `kernel/` `engine/` `renderer/` `protocol/` `frontends/` `spikes/` and every other source file | **MISSING** — see below |
-| Spec and documentation | `CC-BY-4.0` | `docs/` (including `docs/10`, the SKP protocol specification) | **MISSING** — see below |
+| Core | `AGPL-3.0-or-later` | `kernel/` `engine/` `renderer/` `protocol/` `frontends/` `spikes/` and every other source file | `AGPL-3.0-or-later.txt` ✅ |
+| Spec and documentation | `CC-BY-4.0` | `docs/` (including `docs/10`, the SKP protocol specification) | `CC-BY-4.0.txt` ✅ |
 | Client SDKs, generated bindings, example integrations | `Apache-2.0` | **no member yet** — see "The Apache-2.0 layer is empty" below | `Apache-2.0.txt` ✅ |
 | Commercial products | separate works, separately licensed | not in this repository | n/a |
 
 The root `LICENSE` carries the core grant. `docs/LICENSE` carries the documentation grant.
 
-## Two texts are missing, and this is deliberate rather than an oversight
+## Two texts were missing at first, and that was deliberate rather than an oversight
 
-`AGPL-3.0-or-later.txt` and `CC-BY-4.0.txt` **are not in this directory.**
+`AGPL-3.0-or-later.txt` and `CC-BY-4.0.txt` were **not in this directory** when this file was first
+written. Both are present now (see the 2026-08-18 update note above); the record of why they were
+absent and how they were later verified is kept below for provenance.
 
 The session that set up this directory was working under a binding **no-downloads** constraint (the
 operator was on a metered connection: no installs, no fetches, no toolchain or browser downloads).
@@ -44,17 +58,20 @@ Searched on 2026-08-07, on the reference machine:
 - This repository's `node_modules` trees — permissive licenses only (MIT, Apache-2.0, BSD, 0BSD,
   ISC); no AGPL, no CC-BY.
 
-### Retrieving them — one command each, when the connection allows
+### Retrieving them — done, 2026-08-07
+
+The commands below are kept for reference/reproducibility, not as an outstanding step:
 
 ```sh
 curl -o LICENSES/AGPL-3.0-or-later.txt https://www.gnu.org/licenses/agpl-3.0.txt
 curl -o LICENSES/CC-BY-4.0.txt          https://creativecommons.org/licenses/by/4.0/legalcode.txt
 ```
 
-Then delete the trailing notice in `LICENSE` and in `docs/LICENSE`.
+The trailing notices in `LICENSE` and `docs/LICENSE` were deleted the same day.
 
-**Until both files exist, ADR-009 pre-public checklist item 1 is not discharged and the repository
-must not be made public.** `PRE-PUBLIC-CHECKLIST.md` tracks this.
+**Both files exist; ADR-009 pre-public checklist item 1's license-text sub-item is discharged.**
+`PRE-PUBLIC-CHECKLIST.md` and `CUT-STATE-ADR-009-checklist.md` track the checklist's remaining
+items.
 
 ## `Apache-2.0.txt` — provenance, so it is verifiable rather than trusted
 

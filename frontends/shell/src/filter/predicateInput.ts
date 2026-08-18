@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import type { Filter } from "../skp/types";
 

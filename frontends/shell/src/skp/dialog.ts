@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { invoke } from "@tauri-apps/api/core";
 
 /** The OS file picker. **Not SKP** -- `open_dataset` takes a path already chosen; how the caller

@@ -4,8 +4,24 @@ ADR-009 was accepted on 2026-08-07 and its own Status says: **"The repository do
 until the pre-public checklist below lands — accepting this ADR ends the deliberation, not the
 gate."** This file is that checklist's status.
 
+> **Current status, 2026-08-18 (ADR-009 checklist pass, see `CUT-STATE-adr009-checklist.md` for the
+> full classification and citations):** the table below is the **2026-08-07 snapshot**, kept
+> verbatim as the day's record — it was already stale before this pass (item 1's "PARTIAL" reflected
+> the two license texts as missing, but the same day's later "Custodian completion note" below fetched
+> them; the table was never updated to match). Corrected reading as of 2026-08-18:
+>
+> | # | Item | Status |
+> |---|---|---|
+> | 1 | License texts, per-package declarations, SPDX headers | **DONE** — both texts present and hash-verified (`LICENSES/README.md`); SPDX headers now also cover `frontends/shell/**` (83 files that postdate 2026-08-07 had none — added this pass) and `frontends/shell/src-tauri/build.rs`; the two flagged judgement calls (Apache-2.0 layer membership, copyright line) were resolved by the human 2026-08-07, see below |
+> | 2 | DCO 1.1, `CONTRIBUTING.md`, sign-off CI | **DONE** — all three product CI workflows (`product-ci-rust.yml`, `product-ci-shell.yml`, `product-ci-viewer.yml`) green on both `push` and `pull_request` as of 2026-08-17; `dco.yml` has checked multiple PRs since; DCO text re-verified byte-identical against the live `developercertificate.org` source this pass |
+> | 3 | ADR-017 corrigendum: bundle license notice + corresponding source | **DONE**, unchanged — `viewer_license` still present in the manifest schema and publisher |
+> | 4 | Dependency-license audit | **DONE**, re-run this pass — output byte-identical to the recorded report (721 audited, 9 decided, 0 needing review, 1 tree not auditable); no drift since 2026-08-07 |
+> | 5 | Project-name collision check; trademark policy stub | **Informal check + stub done** (docs/14, 2026-08-07) — no collision found by web search; **full trademark-register search is explicitly deferred to pre-1.0/counsel** by that same note, not held as a pre-public blocker. Whether that deferral is the right read of ADR-009 item 5 is queued for the human (not re-decided by this pass) |
+> | 6 | History review | **DONE for 92 commits/632 blobs (2026-08-07); targeted delta re-swept this pass for the 147 commits since** (pickaxe search for credential patterns, machine name, username-bearing paths, and new dataset/fixture files — none found). Not a full blob-by-blob re-read; see `CUT-STATE-adr009-checklist.md` for method and a new, non-blocking finding (pre-2026-08-10 commits generally lack `Signed-off-by` — historical, not a leak) |
+
 **As of 2026-08-07 the repository must NOT be made public.** Two of the six items are open, and both
-need a human. What is open is stated per item below.
+need a human. What is open is stated per item below. *(2026-08-07 snapshot, superseded by the table
+above — kept verbatim.)*
 
 > **The session that produced this worked under a binding no-downloads constraint** (the operator
 > was on a metered connection: no installs, no fetches, no toolchain or browser downloads). Where a
@@ -20,6 +36,10 @@ need a human. What is open is stated per item below.
 | 4 | Dependency-license audit | **DONE** — 9 entries flagged, awaiting a human |
 | 5 | Project-name collision check; trademark policy stub | **OPEN — the human's own task.** Not performed |
 | 6 | History review | **DONE** — no blocking finding; three items to note |
+
+*(Item 5's row above reads "OPEN... Not performed" — true when this table was written, superseded
+the same day by the "Custodian completion note" further down, which the table was never updated to
+match. See the 2026-08-18 status block above for the corrected reading.)*
 
 ---
 

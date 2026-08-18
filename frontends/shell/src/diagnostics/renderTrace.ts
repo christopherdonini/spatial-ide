@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Console-only diagnostic instrumentation (Custodian walkthrough finding, `frontends/shell` cut
  * 1): the render path had no visibility into where geometry that should be on screen was actually

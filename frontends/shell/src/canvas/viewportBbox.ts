@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /** Authoritative f64 bounding box in the dataset's own CRS. */
 export interface AuthoritativeBbox {
   xmin: number;
