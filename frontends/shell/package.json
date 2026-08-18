@@ -18,7 +18,8 @@
     "e2e:filter": "node e2e/filter.mjs",
     "e2e:filter-panel": "node e2e/filter-panel.mjs",
     "e2e:style": "node e2e/style.mjs",
-    "e2e:publish": "node e2e/publish.mjs"
+    "e2e:publish": "node e2e/publish.mjs",
+    "e2e:console": "node e2e/console.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.7",

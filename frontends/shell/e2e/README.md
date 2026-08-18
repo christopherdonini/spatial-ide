@@ -187,3 +187,67 @@ already-running instance rather than launching fresh, since only a fresh launch 
 have inherited this process's own environment. Same **E2E-verified** evidence class; longer default
 deadline (900s, matching `filter-panel.mjs`'s own heavier-suite precedent -- this suite also builds
 and runs a Rust example as a subprocess); leaves the app running afterward.
+
+## Action console spec (action-console cut, P5)
+
+```
+npm run e2e:console
+```
+
+`e2e/console.mjs` -- a further sibling, proving NEXT-CUT.md's display-truth claim ("the console
+composes no command text") **at the UI seam**: every assertion reads the real rendered
+`.console-panel` DOM (`.console-entry-class-a/-b/-c`, `.console-request-text`, `.console-refusal`,
+`.console-group-header`, …), never the `consoleRecorder` module directly -- this file imports
+nothing from `src/console/`. Opens `filter-zoned.parquet` exactly once (NEXT-CUT.md's
+"one-click-two-commands" truth is about ONE `openPath` call). `HEADER'` expands the drawer and
+asserts `.console-standing-header` carries all three required phrases, then collapses and asserts
+the header (and `.console-entries`) is absent from the DOM entirely (I9). `ECHO'` asserts the
+`open_dataset` entry's request parses to exactly `{skp, path, cancel_key, crs_assertion, identity}`
+with the last two explicit `null`, and that the entry's OWN label version equals the entry's OWN
+parsed `skp` field (self-consistent, no hard-coded version anywhere in this suite). `TWOCMD'`
+re-reads that SAME open to assert `describe` also appears, parsing to exactly `{skp, dataset}`.
+`HEXLIM'` drives a real pan and asserts the resulting `viewport_query` entry's bbox members are
+16-lowercase-hex strings surviving quoted verbatim in the raw text (I5), and `limit` is
+digits-or-null. `REFUSAL'` drives an invalid predicate through `queryWithFilter` and asserts
+`.console-outcome` reads "refused" with `.console-refusal` showing the SAME typed code/message the
+call's own returned outcome carries. `CLASSB'` drives `publishPrepareWithDestination` (the dev-only
+seam) and asserts the resulting class-B entry names `binding_publish_prepare_e2e_destination` with
+no copy button, no `{` anywhere in its row, a citation containing "not callable", and the
+destination path string absent from the WHOLE `.console-panel` DOM (ADR-024's fence, proven at the
+UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input and asserts the
+resulting class-C entry names "no API equivalent" with an owner containing "ADR-022". `GROUP'`
+issues 3 identical `queryWithFilter` calls and asserts exactly one NEW `.console-group-header`
+reading "×3" whose expansion shows 3 individually-parseable `.console-request-text` blocks, never a
+merged/synthetic one (I8) -- and reports what actually varies between them (nothing:
+`viewport_query` carries no per-call nonce, unlike `open_dataset`'s `cancel_key`). `COPYTRUNC'`
+drives a NEAR-CAP (exactly `MAX_CRS_DEFINITION_BYTES` = 65 536 bytes) `crsAssertion.definitionJson`
+-- built from the REAL pinned catalog definition padded with low-quote-density filler, so the
+double-JSON-encoding a naive arithmetic check would miss (the field is a STRING holding already-
+serialized JSON text, so its own `"` characters double to `\"` under the OUTER request's
+`JSON.stringify`) cannot silently invalidate the result -- and confirms EMPIRICALLY, not just by
+arithmetic, that the largest `definition_json` any real, UI-reachable request could ever carry (the
+real `CrsAssertionForm` disables Submit past this same 65 536-byte bound, per
+`admission-remediation.mjs`'s OVERBOUND' step) renders UNTRUNCATED, well under
+`MAX_ENTRY_RENDER_BYTES` = 80 000; recorded `NOT-REACHABLE` with the measured byte margin, not
+skipped. `UNCLASS'` asserts `.console-entry-unclassified` count is 0 across the whole run, every
+group expanded first. `REGRESS'` spawns `npm run e2e:regression` and `npm run e2e:admission` from
+THIS process -- both attach to the already-launched app rather than relaunching, so this is
+genuinely the same fresh session, not three separate app instances -- and requires both exit 0.
+Same **E2E-verified** evidence class; longer default deadline (2400s, since `REGRESS'` alone can
+spend up to ~25 minutes across its two sub-suites' own worst-case deadlines); leaves the app running
+afterward.
+
+**EXPECTED-FAIL, `REGRESS'` (action-console cut, P5b diagnosis, 2026-08-18):** `e2e:regression`'s own
+`A9'` (canvas hover-pick) currently fails deterministically -- same buffer candidates, same CSS
+coordinates, same non-background sample colour (`12,23,43,45`) across repeated fresh runs -- so
+`REGRESS'` fails too via its own `e2e:regression` sub-invocation, expected until that separate defect
+is fixed. **Diagnosed NOT to be this drawer's own layout**: the isolation experiment (the identical
+A1'-A8' sequence, then `.console-panel { display: none }` injected via CDP immediately before A9's
+own hover sequence, re-run against the SAME session/camera/dataset state) still misses with the same
+signature -- `.working-canvas`'s `getBoundingClientRect()` and the GL drawing buffer's own
+`width`/`height` agree with each other in BOTH the shown (1265x200) and hidden (1280x212.25) states,
+the canvas stays fully inside the 800px viewport with `.app-main`'s `scrollTop` at 0 in both (no
+scroll-driven miss), and hiding the drawer removes it from `.app-main`'s flex flow entirely yet the
+hover still lands nowhere. The cause is elsewhere (deck.gl pick-layer vs fill-rendering divergence,
+per `regression.mjs`'s own `stepA9` comment on this failure shape) -- not re-diagnosed further here;
+see the action-console P5b piece's own state file/report for the full evidence.
