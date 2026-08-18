@@ -5,6 +5,100 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
+    admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
+    OPEN item 1** ("what the envelope records for a mapped identity — must be settled at
+    acceptance"). The acceptance text should record the shipped envelope as the answer, in
+    `describe.identity`'s own field names:
+    - **Native vs mapped, and which column** — `source` is `"file:id"` or `"mapped:<col>"`, so a
+      consumer tells a declared identity space from a file's own without asking the engine.
+    - **Uniqueness as what-was-checked, never as a fact** — `uniqueness` is
+      `"verified-at-open-full-file"` or `"declared-not-verified"`, with `verified_rows` populated
+      only under the former; the bare word "unique" appears nowhere. `max_value`/`js_exact` carry
+      §7's width contract, and `js_exact` is `null` when unverified rather than defaulted true.
+      The verification runs over the **mapped** values and runs for a **native** `id` column too,
+      closing the gap the ADR's Context names.
+    - **The declaration is host-attributed.** The wire carries no `by`/`at` and must not
+      (`skp/0.2`, ADR-004 Amendment 4); the host mints both — `Principal::OsUser` +
+      `rfc3339_utc_now` — at one boundary, the ADR-024 F-5 form. There is no wire field for
+      skipping the uniqueness check, so a declared mapping is **always** verified.
+    - **The candidate list is part of the refusal, not the record** — 64-bit integer columns in
+      schema order, unranked, unpreselected, no confidence; §3's "declared, never inferred"
+      extended to the list itself.
+    **OPEN item 2 (stability across reopen, and what pins it) stays open, and nothing persists** —
+    reopen means re-declare, no `ResourceRef`, no content-hash pinning, no ADR-005 grade claimed.
+    OPEN item 3 (composite and non-integer keys) stays open. **No performance number is claimed
+    or implied:** the whole-column scan's cost lands on the same docs/08 cold-open budget
+    `kernel/RESULTS.md` still records as unmeasured; this cut ships liveness + a working Cancel
+    instead of a figure (ADR-018).
+    **One thing acceptance must not leave silent:** ADR-016 is currently "Not
+    architect-blockable." Architect recommendation — **make it architect-blockable on acceptance,
+    as ADR-015 was**: it governs an admission policy of the same weight, and ADR-010 rule 2
+    (Accepted, architect-blockable) resolves picking *through* the identity this ADR admits.
+    Recommendation: **accept**, with the envelope record above. Touches on acceptance: ADR-016's
+    Status line + OPEN item 1 marked settled (appended, never rewritten), `docs/02` and
+    `docs/README` index entries.
+
+12. **ADR-009 pre-public checklist: mechanically COMPLETE — ready for your go/no-go, three
+    residual judgments (13–15).** The 2026-08-18 verification pass confirmed the 2026-08-07 work
+    and closed its drift: SPDX headers extended to `frontends/shell` (84 files — the module
+    postdated the original sweep), dependency audit re-run byte-identical (721 audited / 9
+    decided / 0 needing review), DCO re-verified against the live source, all three product CI
+    workflows green on push AND pull_request, history delta (147 new commits) re-swept clean for
+    credentials/personal-data/third-party material, three stale docs corrected with dated notes
+    (`main` @ 8a69260, pushed). What remains is entirely judgment — entries 13–15 plus **making
+    the repository public itself, which stays yours regardless**. Full record:
+    `PRE-PUBLIC-CHECKLIST.md` (durable) + `.cut-archive/CUT-STATE-adr009-checklist.md`.
+
+13. **ADR-009 item 5's pre-public bar — does the 2026-08-07 informal collision check + docs/14
+    trademark stub suffice, with the full register search deferred to pre-1.0?** That deferral is
+    already written into docs/14 as a prior custodian's judgment call, made before the red-line
+    rule reserved ADR-009-adjacent calls for you; this pass did not re-decide it.
+    Recommendation: **accept the deferral as written** ("no collision found, descriptive name,
+    weak mark" for a pre-launch repo; register search stays a pre-1.0/counsel item per ADR-009's
+    own Caveat). Touches nothing if accepted; a docs/14 edit if you read the bar differently.
+
+14. **Two personal git identities are permanently in history**
+    (`donini.christopher@gmail.com` 172+, `chrys92d@gmail.com` 12+) — named non-blocking by the
+    2026-08-07 history review, never explicitly resolved. Normal for an open project; a history
+    rewrite is a named red line and not on the table. Recommendation: **acknowledge, no action**;
+    optionally standardize one identity for future commits, your call.
+
+15. **102 of 239 commits (all on/before 2026-08-10) carry no `Signed-off-by`** — the pattern
+    cleanly tracks DCO adoption settling in after ADR-009's acceptance; every unsigned commit is
+    from your own one-or-two identities, so no external-contribution provenance question exists,
+    and backfilling would be a history rewrite (red line). Recommendation: **accept as historical
+    fact, no rewrite** — the CI check already gates every future external commit, which is what
+    DCO 1.1 is for. Optional: a one-line note in `PRE-PUBLIC-CHECKLIST.md` §6.
+
+9. **The `skp/0.2` scan-progress carrier clause — your ADR-021 condition's lineage fires.** Your
+   filter-panel condition let the true-scan-progress debt be "resolved there or explicitly
+   re-deferred with reason"; the dated re-deferral (SKP-V0 §4 item 5, 2026-08-14) parked it with
+   "the next SKP version that opens the wire for any reason" — and the admission-remediation cut's
+   `skp/0.2` IS that version. All three of item 5's reasons still hold (no batch-independent
+   data-plane carrier; the quantity is undecided and ADR-class; the interim liveness+cancel
+   shipped), and this cut touches no data plane. Recommendation: **explicit second re-deferral
+   with reason, plus a stronger carrier** — the quantity question filed as its own
+   Proposed-with-open-decision ADR (the ADR-023 pattern), due before Prototype exit, so "next
+   version" can never roll over silently again. Because the clause discharges your acceptance
+   condition, the re-deferral is yours to confirm: the drafted §8 text ships flagged in the cut's
+   PR and is not merged as discharged until you say so.
+
+10. **ADR-026 (CRS definition supply) — which supply route?** An operator cannot assert a CRS by
+    typing "EPSG:2056": ADR-015 §5 requires axis order established *from the definition*, and the
+    engine has no PROJ. Options: a pinned, versioned, content-hashed, in-tree plain-text
+    definition set (displayed in full before assertion, never fetched at runtime — the ADR-021
+    static-link security property applied here); paste-PROJJSON-verbatim; or both.
+    Recommendation: **both**; filed Proposed as ADR-026; the cut's P2 builds to it unless you
+    override. Choosing a catalog entry is recorded as provenance (entry id + content hash, or
+    `pasted`), never as an equivalence judgment — docs/05's grid rule applied to definitions.
+
+11. **Scope confirmation — remediation is *declare*, never *detect*.** The cut lists candidate
+    identity columns by type-eligibility only (64-bit integers, schema order, unranked, no
+    preselection, no confidence) per ADR-016 §3; anything smarter ("this looks like an id") is
+    the Alpha data doctor's detect→propose→preview→apply territory (docs/05) and stays out.
+    Recommendation: **confirm**; the cut proceeds on it. (ADR-016 acceptance is entry 16.)
+
 7. **Part H: the principle-7 publish-prepare gap — pre-fix or declare-and-observe?** The shell's
    publish-prepare runs an **uncancellable, progress-less whole-file SHA-256** ("Preparing…" for
    tens of seconds at 5 GB; the only figure on record is a withdrawn 20s) before the approval

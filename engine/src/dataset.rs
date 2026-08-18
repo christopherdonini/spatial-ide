@@ -721,6 +721,12 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
 /// The uniqueness scan is what turns "a column exists" into "an id identifies one feature", and it
 /// runs for a **native** column too: ADR-016's Context records that the native column was
 /// previously trusted without it, which is the gap this closes.
+///
+/// A declared column name is the one caller-supplied string that legitimately reaches SQL text
+/// (as a doubled-quote-escaped identifier). What bounds it is **schema membership, not escaping
+/// alone**: the name must first match a field in the file's own Arrow schema, refused typed
+/// otherwise, before any SQL is composed — SKP-V0 §7.4's "never string-concatenated" discipline,
+/// made explicit for the one site that interpolates an identifier at all (docs/09).
 fn admit_identity(
     conn: &Connection,
     path: &str,

@@ -181,7 +181,9 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    versions, no downgrade path, no handshake. A client and host that disagree fail on the first call.
    **v0.1 (§7) bumps the compared literal to `skp/0.1`, `==` unchanged** — still no ranges, no
    min/max, no handshake; a v0-only client and a v0.1 host fail on the first call exactly as any two
-   disagreeing literals always have here.
+   disagreeing literals always have here. **`skp/0.2` (§8) bumps the compared literal again, `==`
+   unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
+   `skp/0.2` host fail on the first call.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
@@ -216,7 +218,11 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
    taxonomy — still no new error *invented outside a declared, exhaustive taxonomy*: every one of the
    eleven is named, matched exhaustively with no wildcard arm, exactly this item's own discipline
-   applied to predicate admission.
+   applied to predicate admission. **`skp/0.2` (§8) adds two `engine.*` codes** —
+   `engine.crs_assertion_identifier_blank` and `engine.crs_assertion_definition_too_large`
+   (`limit`/`saw`) — and one structured field, `candidate_columns` on `engine.identity_unusable`.
+   Both codes map 1:1 from their `EngineError` variants through `error_of`'s existing no-wildcard
+   `match`; no message text changed.
 9. **Idempotency** — none. Retrying `open_dataset` opens a second `Dataset` and a second connection
    pool. `cancel`'s idempotence is a property of `CancelToken::cancel` and `StreamState::observe_cancel`
    already keeping the first instant — an accident of two existing implementations, not a mechanism,
@@ -233,6 +239,17 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     exercised**, not an exception to it: `viewport_query`'s new `filter` field shipped together with
     the `skp/0.1` version bump, every fixture on both sides of the wire updated in the same commit
     (`CUT-STATE.md` P1) — a tolerant reader was never introduced.
+
+    **`skp/0.2` (§8) is the second instance of this rule, and the first assembled across several
+    commits.** Its field set grew after the literal was bumped (P2's `CrsInfo.definition_provenance`,
+    P3c's two codes and `candidate_columns` refinement). That is **assembly of one unreleased
+    version, not evolution of a released one**, and it is permitted only under all four of: (i) the
+    literal has never been merged to `main` and appears in no persisted artifact — no bundle
+    manifest, audit record or project file carries an `skp` version string; (ii) every addition is
+    recorded in that version's own §8 entry **before** merge; (iii) both-side fixtures in the same
+    commit as each addition; (iv) **the version freezes at merge** — any later change is a new
+    literal. Condition (iv) is what makes (ii) load-bearing: the §8 entry is the version's full
+    field set, and after merge it is a historical record, not a growing one.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
@@ -299,6 +316,21 @@ about a filter that only ever attaches to a stream request. **`filter: null` dec
 never an absent key** — exactly `bbox_crs`'s own discipline: the field carries no
 `#[serde(default)]`, so a request that omits the `filter` key entirely is a deserialize failure, not
 a tolerated omission, and a present `Option<Filter>` with `None` still serializes to JSON `null`.
+*(See the correction below.)*
+
+> **Correction, 2026-08-18 (admission-remediation cut, architect re-review).** The sentence above is
+> wrong about the **reading** side and has been since v0.1: a plain `Option<T>` struct field is
+> deserialized as `None` when its key is absent, with or without `#[serde(default)]`, so an omitted
+> `bbox_crs`, `filter`, `crs_assertion` or `identity` key is **tolerated as "none declared", not
+> refused**. Documented by
+> `protocol/skp/tests/fixtures.rs::omitting_crs_assertion_or_identity_key_is_currently_tolerated_not_refused`.
+> What *is* true and is tested on both sides: **nothing this codebase writes ever omits the key** —
+> `None` serializes to explicit `null`. Omitted and `null` mean the identical thing for all four
+> fields, and the `==` version literal, not field presence, is what refuses a mismatched client.
+> **Named absent, per §4's own discipline:** a wire-required-key mechanism, applied uniformly to
+> every optional field on the wire. Not built here; §6's "no claim without the thing" applies to
+> this spec's own sentences, which is why this correction is appended rather than the finding being
+> left to a test comment.
 
 `dialect`'s one admitted value is `"duckdb-expr/0"` (`FILTER_DIALECT_DUCKDB_EXPR_0`,
 `protocol/skp/src/v0/commands.rs`) — any other value is refused by `Filter::new` at construction and
@@ -501,3 +533,15 @@ Proposed-with-open-decision ADR (the ADR-023 pattern), due before `docs/07`'s Pr
 "the next version" can no longer roll over silently. **Because this clause descends from ADR-021's
 human acceptance condition, the human confirms it — this text is drafted and flagged, not merged as
 discharged.** See `DECISIONS-PENDING.md` entry 9 for the standing recommendation this text mirrors.
+
+**P6 architect re-review (2026-08-18, appended):** the cut's scheduled merge-gating architect
+re-review returned **pass with notes** and ruled on this entry's three flagged questions: (1) §7.2's
+omitted-key prose is corrected (see §7.2's appended correction), not hardened — ADR-021's accepted
+text is not contradicted, only this spec's own sentence was; a wire-required-key mechanism is now a
+§4 named-absent item. (2) Host-derived `definition_provenance` is blessed as built — the F-5 form
+applied to a provenance record, exact-byte bookkeeping that nothing branches on; the `pasted`
+naming question goes to ADR-026's acceptance (DECISIONS-PENDING entry 10), not this review.
+(3) The within-version assembly is blessed under §4 item 13's appended four-condition rule —
+**`skp/0.2` freezes at merge**; its §8 entries above are its full field set. The DRAFT re-deferral
+above remains **PENDING HUMAN CONFIRMATION** — unchanged by this review, which has no standing over
+a clause descending from the human's ADR-021 acceptance condition.

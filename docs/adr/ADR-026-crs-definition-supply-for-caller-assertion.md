@@ -84,3 +84,22 @@ note now describes; it does not change the Decision above.
   entry count, ids, and the EPSG:2056 hash as literals, so adding or editing a catalog entry fails
   those tests until they are consciously updated — the mechanism Decision's Consequences section
   calls "a maintained artifact… growing it is a reviewed change, not a data update."
+
+## Architect note for acceptance (2026-08-18, admission-remediation cut P6)
+
+**Decision 2's deriver, blessed as built.** The record's provenance is **host-derived**: the host
+hashes the wire's `definition_json` exactly as received and compares it against the pinned
+catalog, at the same boundary and in the same function that mints `by`/`at`
+(`kernel/src/skp.rs::host_minted_crs_assertion`). The wire has no such field and must not gain one
+— ADR-024 F-5's "the requester never mints the grant", applied to a provenance record; ADR-004
+Amendment 4 for the wire's silence. Nothing branches on the value: it is recorded and displayed,
+never consulted by admission, so decision 2 creates no path to an equivalence judgement (ADR-015
+§4).
+
+**One item to settle at acceptance: the string `pasted`.** It names a route the operator took,
+while the check establishes only *"not byte-identical to any pinned catalog entry"* — and
+`definition_provenance(None)` returns it where nothing was pasted (`kernel/src/main.rs`'s
+`--assert-crs`, which carries no definition). ADR-015 §5's `none-performed` and ADR-016 §6's
+"the record says what was checked" both argue for a value naming the check (`not-in-catalog`).
+The string is wire-visible in `skp/0.2`, so changing it is free before merge-freeze and a version
+bump afterwards. Raised, not decided here — decision 2's wording is the human's.
