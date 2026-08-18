@@ -133,3 +133,9 @@ carrying the accumulated context forward.
     the state file — it is RESULTS.md sections, walkthrough result logs, ADRs, and commits. A
     root that accumulates dead state files is a root where a successor reads the wrong cut's
     truth. (Added 2026-08-17 at the human's direction, after four cuts' files had piled up.)
+11. **Operator verification batches every 3–4 days** (human direction, 2026-08-18). Cuts never
+    demand same-day operator time: each closes on its E2E-verified + gated evidence with its
+    walkthrough part committed and queued (blank result log), and the human runs the accumulated
+    batch in one sitting. The away-mode evidence rule's "deferred, queued for the human's return"
+    is the default rhythm, not the fallback. Also standing: the macOS track is paused until the
+    Windows app is complete — cross-OS walkthroughs happen in one go.
