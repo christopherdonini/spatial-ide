@@ -91,6 +91,13 @@ pub struct CrsInfo {
     pub source: String,
     pub asserted_by: Option<String>,
     pub asserted_at: Option<String>,
+    /// **ADR-026 decision 2** (this cut's P2), `Some` only when `source == "caller_asserted"`:
+    /// `catalog:<id>@sha256:<first-12-hex>` if the assertion's `definition_json` matched a pinned
+    /// in-tree catalog entry's own content hash exactly, `pasted` otherwise. Host-derived at open
+    /// (`kernel/src/skp.rs::host_minted_crs_assertion`) — never present on any request; a file's
+    /// own declared CRS never went through either ADR-026 supply route, so this is `None` for
+    /// `source == "file"`.
+    pub definition_provenance: Option<String>,
     pub axis_order: String,
     /// Always `"none-performed"` in this slice — no axis normalization is performed anywhere.
     pub axis_normalization: String,

@@ -350,6 +350,7 @@ mod tests {
             definition_json: None,
             by: "operator".into(),
             at: "2026-08-04T12:00:00Z".into(),
+            definition_provenance: crate::crs_catalog::definition_provenance(None),
         };
         let env = BatchEnvelope::new(
             DatasetCrs::from_assertion(&a, AxisOrder::EastingNorthing),

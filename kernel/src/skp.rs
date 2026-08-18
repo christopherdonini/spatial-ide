@@ -459,12 +459,21 @@ fn host_attribution() -> String {
 /// always present on the wire (a plain `String`, not `Option`), so it is always carried through as
 /// `Some` — the engine's own `crs::admit` is what may still refuse it (`AxisOrderUnestablished` if
 /// it establishes no axis order, `CrsAssertionConflict` if the file already declares a CRS).
+///
+/// `definition_provenance` (ADR-026 decision 2, this cut's P2) is minted here too, identically to
+/// `by`/`at`: sha256 of exactly the wire's `definition_json` text, compared against the pinned
+/// in-tree catalog (`spatial_engine::crs_catalog`). **Never taken from the wire** — there is no
+/// such field on `spatial_skp::v0::CrsAssertion`, and there must not be one (the wire gains
+/// nothing for this piece).
 fn host_minted_crs_assertion(wire: spatial_skp::v0::CrsAssertion) -> spatial_engine::CrsAssertion {
+    let definition_provenance =
+        spatial_engine::crs_catalog::definition_provenance(Some(&wire.definition_json));
     spatial_engine::CrsAssertion {
         identifier: wire.identifier,
         definition_json: Some(wire.definition_json),
         by: host_attribution(),
         at: crate::permission::audit::clock::rfc3339_utc_now(),
+        definition_provenance,
     }
 }
 
@@ -539,6 +548,10 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             source: crs.source().as_str().to_string(),
             asserted_by: crs.asserted_by().map(str::to_string),
             asserted_at: crs.asserted_at().map(str::to_string),
+            // `Some` only for a caller-asserted CRS (`DatasetCrs::definition_provenance`'s own doc
+            // comment) — `None` for a file-declared one, which never went through either ADR-026
+            // supply route.
+            definition_provenance: crs.definition_provenance().map(str::to_string),
             axis_order: crs.axis_order().as_str().to_string(),
             axis_normalization: "none-performed".to_string(),
         },

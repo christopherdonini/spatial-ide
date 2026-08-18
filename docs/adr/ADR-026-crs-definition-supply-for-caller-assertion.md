@@ -60,3 +60,27 @@ decision's home.
 
 *(Numbering note: ADR-025 is reserved for the publish dead-artifact / reader-ceiling decision
 pending Part H8; if H8 does not confirm it, renumber that skeleton rather than reusing 025.)*
+
+## Implementation note (P2, 2026-08-18)
+
+`NEXT-CUT.md` P2 built decision 1's recommended set — **both** routes — against the state this
+note now describes; it does not change the Decision above.
+
+- **The catalog lives in `engine/`** (`engine/src/crs-catalog.json`, parsed by
+  `engine/src/crs_catalog.rs`), not `kernel/`: `engine` is the one crate both the kernel host
+  (`kernel/src/skp.rs`) and the shell's Tauri binding (`frontends/shell/src-tauri`) already depend
+  on directly, so a single compiled-in catalog serves both without a second copy or a kernel→shell
+  layering exception. The one entry (`epsg-2056`) reuses `engine/tests/data/epsg2056.projjson`
+  verbatim — the same bytes `engine/src/fixture.rs::LV95_PROJJSON` already ships for the fixture
+  generators — sha256 `254016888ff494a4099d72869206eaf4a8c1ef5a52fb94104540557c2f46d024`, pinned in
+  `crs_catalog::tests::epsg_2056_entry_hash_is_pinned`.
+- **Provenance is host-derived, never wire-carried.** `kernel/src/skp.rs::host_minted_crs_assertion`
+  hashes the wire's `definition_json` text exactly as received and mints
+  `engine::CrsAssertion::definition_provenance` alongside `by`/`at` — the same "the host, not the
+  caller, supplies this fact" discipline ADR-024 F-5 already applies to attribution, extended to
+  the definition's own audit trail so a wrong or dishonest provenance claim can never arrive on the
+  wire in the first place.
+- **Growth is gated by test, not by process alone**: `crs_catalog.rs`'s own unit tests pin the
+  entry count, ids, and the EPSG:2056 hash as literals, so adding or editing a catalog entry fails
+  those tests until they are consciously updated — the mechanism Decision's Consequences section
+  calls "a maintained artifact… growing it is a reviewed change, not a data update."

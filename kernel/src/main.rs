@@ -93,6 +93,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| format!("unix:{}", d.as_secs()))
             .unwrap_or_else(|_| "unix:unknown".into()),
+        // This CLI harness's `--assert-crs` takes an identifier only, never a definition (no
+        // `--assert-definition` flag exists), so there is no definition text to hash. Host-derived
+        // like `at` above, via the identical catalog helper `kernel/src/skp.rs` uses.
+        definition_provenance: spatial_engine::crs_catalog::definition_provenance(None),
     });
 
     let catalog = Catalog::with_connections(connections);

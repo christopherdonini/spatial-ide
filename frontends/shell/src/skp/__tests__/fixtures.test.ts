@@ -105,9 +105,19 @@ describe("SKP v0 shared fixtures", () => {
     assertExactKeys(res.source, ["path_display", "geoparquet_version"], "describe response .source");
     assertExactKeys(
       res.crs,
-      ["identifier", "definition_json", "source", "asserted_by", "asserted_at", "axis_order", "axis_normalization"],
+      [
+        "identifier",
+        "definition_json",
+        "source",
+        "asserted_by",
+        "asserted_at",
+        "definition_provenance",
+        "axis_order",
+        "axis_normalization",
+      ],
       "describe response .crs"
     );
+    expect(res.crs.definition_provenance).toBeNull(); // this fixture's source is "file"
     assertExactKeys(
       res.geometry,
       ["column", "encoding", "coordinate_layout", "frame"],

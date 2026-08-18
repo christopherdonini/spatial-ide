@@ -123,6 +123,46 @@ pub fn binding_log_session_event(state: State<'_, SessionLog>, level: String, me
     state.append(&level, &message);
 }
 
+/// One entry of the pinned, in-tree CRS definition catalog (ADR-026 decision 1(a)), as handed to
+/// the shell for display. Mirrors `spatial_engine::crs_catalog::CatalogEntry` field-for-field.
+#[derive(serde::Serialize)]
+pub struct CrsCatalogEntry {
+    pub id: String,
+    pub authority: String,
+    pub code: u32,
+    pub name: String,
+    /// The full PROJJSON definition text, exactly as stored — displayed in full, never
+    /// summarized, before an operator may choose it (ADR-026 decision 1(a): "displayed in full
+    /// before assertion, never selected silently").
+    pub definition: String,
+    /// The definition's own sha256, lowercase hex — what a returned `catalog:<id>@sha256:…`
+    /// provenance string's suffix is drawn from (`spatial_engine::crs_catalog`).
+    pub hash: String,
+}
+
+/// The pinned CRS definition catalog, read-only, for the shell's remediation UI (`NEXT-CUT.md` P3)
+/// to display in full before an operator asserts a CRS. **Not SKP** — ADR-026's catalog is host UI
+/// furniture (a fixed, compiled-in list an operator picks from), not semantic API surface; giving
+/// it its own SKP command would need its own version discussion the same way any other
+/// request/response shape change on that protocol would (SKP-V0.md §4 item 1). No caching here:
+/// the catalog is static, compiled-in data (`spatial_engine::crs_catalog`'s own `OnceLock`, parsed
+/// once per process already) — a second cache on top of that would be cleverness this data does
+/// not need.
+#[tauri::command]
+pub fn binding_crs_catalog() -> Vec<CrsCatalogEntry> {
+    spatial_engine::crs_catalog::entries()
+        .iter()
+        .map(|e| CrsCatalogEntry {
+            id: e.id.clone(),
+            authority: e.authority.clone(),
+            code: e.code,
+            name: e.name.clone(),
+            definition: e.definition.clone(),
+            hash: e.hash.clone(),
+        })
+        .collect()
+}
+
 /// The OS file picker (docs/03; this cut's admission flow starts here). **Not SKP**: SKP's
 /// `open_dataset` takes a path already chosen — it has no opinion about how the caller got one, and
 /// a picker is squarely UI, which docs/02 keeps out of the protocol.

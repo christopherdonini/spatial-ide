@@ -114,6 +114,7 @@ pub fn run() {
             commands::binding_data_plane_attach,
             commands::binding_log_session_event,
             commands::binding_pick_file,
+            commands::binding_crs_catalog,
             commands::binding_publish_prepare,
             commands::binding_publish_execute,
             commands::binding_publish_cancel,

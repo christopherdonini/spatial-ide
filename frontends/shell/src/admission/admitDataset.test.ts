@@ -18,6 +18,7 @@ function describeFixture(): DescribeResponse {
       source: "file",
       asserted_by: null,
       asserted_at: null,
+      definition_provenance: null,
       axis_order: "easting,northing",
       axis_normalization: "none-performed",
     },

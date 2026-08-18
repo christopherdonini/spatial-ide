@@ -54,6 +54,13 @@ pub struct CrsAssertion {
     pub by: String,
     /// When, as an RFC-3339-shaped string supplied by the caller.
     pub at: String,
+    /// **Host-derived, never taken from the wire** (ADR-026 decision 2): `sha256(definition_json)`
+    /// compared against the pinned in-tree catalog (`crate::crs_catalog`). `catalog:<id>@sha256:
+    /// <first-12-hex>` on an exact match, `pasted` otherwise — see
+    /// `crs_catalog::definition_provenance`'s own doc comment for the exact-equality discipline.
+    /// The host that mints `by`/`at` (e.g. `kernel/src/skp.rs::host_minted_crs_assertion`) also
+    /// mints this, identically.
+    pub definition_provenance: String,
 }
 
 /// Axis order as **established from the file**, never assumed.
@@ -94,6 +101,10 @@ pub struct DatasetCrs {
     source: CrsSource,
     asserted_by: Option<String>,
     asserted_at: Option<String>,
+    /// `Some` only when `source == CallerAsserted` (mirrors `asserted_by`/`asserted_at`) — a
+    /// file's own declared CRS never went through either ADR-026 supply route, so "provenance" in
+    /// that ADR's sense does not apply to it.
+    definition_provenance: Option<String>,
     axis_order: AxisOrder,
 }
 
@@ -111,6 +122,7 @@ impl DatasetCrs {
             source: CrsSource::File,
             asserted_by: None,
             asserted_at: None,
+            definition_provenance: None,
             axis_order,
         }
     }
@@ -124,6 +136,7 @@ impl DatasetCrs {
             source: CrsSource::CallerAsserted,
             asserted_by: Some(a.by.clone()),
             asserted_at: Some(a.at.clone()),
+            definition_provenance: Some(a.definition_provenance.clone()),
             axis_order,
         }
     }
@@ -142,6 +155,10 @@ impl DatasetCrs {
     }
     pub fn asserted_at(&self) -> Option<&str> {
         self.asserted_at.as_deref()
+    }
+    /// `Some` only for a caller-asserted CRS (ADR-026 decision 2) — `None` for a file-declared one.
+    pub fn definition_provenance(&self) -> Option<&str> {
+        self.definition_provenance.as_deref()
     }
     pub fn axis_order(&self) -> AxisOrder {
         self.axis_order
@@ -197,6 +214,7 @@ mod tests {
             definition_json: None,
             by: "test".into(),
             at: "2026-08-04T00:00:00Z".into(),
+            definition_provenance: crate::crs_catalog::definition_provenance(None),
         }
     }
 
@@ -239,6 +257,21 @@ mod tests {
         assert_eq!(crs.source(), CrsSource::CallerAsserted);
         assert_eq!(crs.asserted_by(), Some("test"));
         assert_eq!(crs.asserted_at(), Some("2026-08-04T00:00:00Z"));
+    }
+
+    #[test]
+    fn definition_provenance_is_carried_through_for_an_assertion_and_absent_for_a_file_crs() {
+        let a = assertion();
+        let asserted = admit(None, Some(&a), Some(AxisOrder::EastingNorthing)).unwrap();
+        assert_eq!(asserted.definition_provenance(), Some(a.definition_provenance.as_str()));
+
+        let file = admit(
+            Some(("EPSG:2056".into(), None, AxisOrder::EastingNorthing)),
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(file.definition_provenance(), None);
     }
 
     #[test]

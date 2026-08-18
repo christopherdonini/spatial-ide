@@ -70,6 +70,10 @@ export interface CrsInfo {
   source: string; // "file" | "caller_asserted"
   asserted_by: string | null;
   asserted_at: string | null;
+  /** ADR-026 decision 2 (P2): `Some` only when `source === "caller_asserted"` --
+   * `catalog:<id>@sha256:<first-12-hex>` on an exact content-hash match against the pinned in-tree
+   * catalog, `pasted` otherwise. Host-derived at open; `null` for `source === "file"`. */
+  definition_provenance: string | null;
   axis_order: string;
   axis_normalization: string;
 }

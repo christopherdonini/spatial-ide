@@ -208,6 +208,9 @@ fn a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked()
         definition_json: Some(spatial_engine::fixture::LV95_PROJJSON.to_string()),
         by: "integration-test".into(),
         at: "2026-08-04T00:00:00Z".into(),
+        definition_provenance: spatial_engine::definition_provenance(Some(
+            spatial_engine::fixture::LV95_PROJJSON,
+        )),
     };
     let ds = Dataset::open_with_asserted_crs(&path, assertion).expect("open with assertion");
     assert_eq!(ds.crs().source(), CrsSource::CallerAsserted);
@@ -226,6 +229,9 @@ fn an_assertion_over_a_file_that_declares_a_crs_is_refused() {
         definition_json: Some(spatial_engine::fixture::LV95_PROJJSON.to_string()),
         by: "integration-test".into(),
         at: "2026-08-04T00:00:00Z".into(),
+        definition_provenance: spatial_engine::definition_provenance(Some(
+            spatial_engine::fixture::LV95_PROJJSON,
+        )),
     };
     // Identical to what the file declares, and still refused: agreeing is a definitional-
     // equivalence judgement this slice does not make (docs/05).
