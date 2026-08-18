@@ -6,8 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const invokeMock = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
-import { viewportQuery } from "./client";
-import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./types";
+import { consoleRecorder } from "../console/recorder";
+import { SkpCallError, viewportQuery } from "./client";
+import { FILTER_DIALECT_DUCKDB_EXPR_0, type SkpError } from "./types";
 
 /**
  * `viewportQuery`'s request shape (NEXT-CUT.md P5, deliverable 1). The Rust side already validates
@@ -44,5 +45,65 @@ describe("viewportQuery request shape", () => {
         filter: { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" },
       },
     });
+  });
+});
+
+/**
+ * NEXT-CUT.md P0/I1/I2: `call()` is the console's one capture site. `consoleRecorder` is a
+ * module-level singleton (`console/recorder.ts`), so these tests read only the entry each `it`
+ * itself appended -- `consoleRecorder.entries().length` before the call marks where to look,
+ * since other test files sharing this module registry may also have recorded entries by the time
+ * any one test runs.
+ */
+describe("call() records every SKP request at the console's one capture site", () => {
+  beforeEach(() => {
+    invokeMock.mockReset();
+  });
+
+  it("records the exact request object reference handed to invoke (I2, toBe not toEqual)", async () => {
+    invokeMock.mockResolvedValueOnce({ stream: "sh_0", expires_in_ms: 30_000 });
+    const before = consoleRecorder.entries().length;
+
+    await viewportQuery("ds_x", null, null, null);
+
+    const entry = consoleRecorder.entries()[before]!;
+    expect(entry.kind).toBe("skp-request");
+    const sentRequest = invokeMock.mock.calls[invokeMock.mock.calls.length - 1]![1].request;
+    expect(entry.request).toBe(sentRequest);
+  });
+
+  it("records outcome ok after a resolved invoke, and rethrows nothing (the happy path)", async () => {
+    invokeMock.mockResolvedValueOnce({ stream: "sh_0", expires_in_ms: 30_000 });
+    const before = consoleRecorder.entries().length;
+
+    await viewportQuery("ds_x", null, null, null);
+
+    expect(consoleRecorder.entries()[before]!.outcome).toBe("ok");
+  });
+
+  it("records outcome refused with the typed SkpError, and rethrows an SkpCallError unchanged", async () => {
+    const skpError: SkpError = { code: "skp.filter_unknown_column", message: "refused: bad column", fields: {} };
+    invokeMock.mockRejectedValueOnce(skpError);
+    const before = consoleRecorder.entries().length;
+
+    await expect(viewportQuery("ds_x", null, null, null)).rejects.toBeInstanceOf(SkpCallError);
+
+    const entry = consoleRecorder.entries()[before]!;
+    expect(entry.outcome).toBe("refused");
+    expect(entry.refusal).toEqual(skpError);
+    expect(entry.error).toBeUndefined();
+  });
+
+  it("records outcome threw for an untyped transport failure, and rethrows the original error unchanged", async () => {
+    const transportError = new Error("network unreachable");
+    invokeMock.mockRejectedValueOnce(transportError);
+    const before = consoleRecorder.entries().length;
+
+    await expect(viewportQuery("ds_x", null, null, null)).rejects.toBe(transportError);
+
+    const entry = consoleRecorder.entries()[before]!;
+    expect(entry.outcome).toBe("threw");
+    expect(entry.error).toBe("network unreachable");
+    expect(entry.refusal).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
+import { consoleRecorder } from "../console/recorder";
 import type { DecU64 } from "./codec";
 import {
   Bbox,
@@ -41,12 +42,22 @@ function isSkpError(value: unknown): value is SkpError {
 }
 
 async function call<Res>(command: string, request: Record<string, unknown>): Promise<Res> {
+  // The console's ONE capture site (NEXT-CUT.md I1; `console/soleCaptureSite.test.ts` enforces
+  // it). `request` is recorded by reference -- the exact object handed to `invoke` below, never
+  // cloned (I2) -- pre-await, then resolved post-await on every path including a throw, so the
+  // recorder is observationally invisible to this function's own contract with its callers: it
+  // never changes what is returned or thrown, only observes it.
+  const entry = consoleRecorder.record(request);
   try {
-    return await invoke<Res>(command, { request });
+    const result = await invoke<Res>(command, { request });
+    entry.resolveOk();
+    return result;
   } catch (e) {
     if (isSkpError(e)) {
+      entry.resolveRefused(e);
       throw new SkpCallError(e);
     }
+    entry.resolveThrew(e instanceof Error ? e.message : String(e));
     throw e;
   }
 }
