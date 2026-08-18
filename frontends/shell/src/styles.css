@@ -26,12 +26,50 @@ body,
   border-bottom: 1px solid rgba(128, 128, 128, 0.3);
 }
 
+/* action-console cut P5c fix 1 (`.app-rail-top`/`.app-rail-bottom` below have the full account):
+   `overflow: auto` used to live here, directly -- with `.canvas-container`/`.console-panel` as
+   ordinary siblings of every other panel in the SAME overflow box, whenever the panels' combined
+   content exceeded this element's own flex-computed height (100vh minus `.app-header`'s row, which
+   this element's own `flex: 1` on a `height: 100%` ancestor chain already accounts for), THIS
+   element grew a vertical scrollbar -- and a scrollbar narrows its OWN content box's width, which
+   `.working-canvas` (100% of `.canvas-container`, 100% of this element) inherited: measured
+   1280px -> 1265px CSS pixels at the 1280x800 reference the moment any panel combination pushed
+   total content past 800px (`.console-panel`'s own comment below has the worst-case arithmetic).
+   `e2e/regression.mjs`'s `A9'` traced its own hover-pick miss to exactly that narrowed width
+   landing its sample point on a low-alpha edge pixel a full-width capture would not have hit.
+
+   Fixed here by NEVER letting overflow reach this element at all: `overflow: hidden` is a
+   defensive floor (nothing below should ever actually need it, per the two rails' own doc
+   comment), not the mechanism itself -- the mechanism is that `.app-rail-top`/`.app-rail-bottom`
+   now own the overflow instead, each independently, each narrowing only ITS OWN box if its own
+   content ever needs to scroll, never a sibling's. `.canvas-container` and `.console-panel`'s own
+   bar are direct children of THIS element, never of either rail -- their width is therefore never
+   subject to a scrollbar that lives on some other element's box. */
 .app-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+}
+
+/* action-console cut P5c fix 1: `.app-main`'s own comment above has the full mechanism -- an
+   `overflow-y: auto` rail element gets an *automatic* `min-height: 0` per the flex/overflow spec
+   ("the automatic minimum size ... is 0 if the item's overflow computes to something other than
+   visible"), which is exactly what lets it actually SHRINK below its own content's natural height
+   when `.app-main`'s flex-shrink pass needs the space back for `.canvas-container`'s floor -- the
+   `min-height: 0` below is written explicitly anyway, not left to inherit only from that spec rule,
+   so this stays correct even if the rule's own `overflow-y` value ever changes. When a rail's
+   content genuinely does not fit the space left for it, THIS element's own scrollbar absorbs that
+   overflow (cap-then-scroll, the same discipline `.style-controls`/`.publish-controls`/
+   `.console-entries` already use one level down) -- narrowing only this rail's own width, never
+   `.canvas-container`'s or `.console-panel`'s, which live outside both rails. */
+.app-rail-top,
+.app-rail-bottom {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .error-banner {
@@ -125,10 +163,13 @@ body,
 .canvas-container {
   position: relative;
   flex: 1;
-  /* Not 0: with `flex: 1`'s implied `flex-basis: 0%`, a `min-height` of 0 would let the admission
-     panel's own natural height push this to nothing (a working canvas of 0px is indistinguishable
-     from a missing one) if the panel ever grows tall enough to fill `.app-main`. This floor keeps
-     the canvas usable; `.app-main`'s own `overflow: auto` is what absorbs the rest. */
+  /* Not 0: with `flex: 1`'s implied `flex-basis: 0%`, a `min-height` of 0 would let
+     `.app-rail-top`'s own natural height (the admission panel, principally) push this to nothing
+     (a working canvas of 0px is indistinguishable from a missing one) if that rail ever grew tall
+     enough to fill `.app-main`. This floor keeps the canvas usable; `.app-rail-top`/
+     `.app-rail-bottom`'s own `overflow-y: auto` (action-console cut P5c fix 1, `.app-main`'s own
+     comment above) is what absorbs the rest now -- each independently, scoped to its own box,
+     never this element's or `.app-main`'s own. */
   min-height: 200px;
 }
 

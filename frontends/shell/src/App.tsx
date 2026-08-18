@@ -907,7 +907,14 @@ export default function App() {
       <ErrorBanner />
       <header className="app-header">Spatial IDE</header>
       <main className="app-main">
-        <AdmissionPanel onAdmitted={handleAdmitted} />
+        {/* action-console cut P5c fix 1 (styles.css's own `.app-rail-top`/`.app-rail-bottom`
+          * comment has the full account): admission + filter live in their OWN scrollable rail,
+          * separate from `.canvas-container`/`.console-panel` below -- so THIS rail's content can
+          * overflow and scroll WITHIN ITSELF, without `.app-main` ever growing a scrollbar of its
+          * own (the vertical-scrollbar-eats-canvas-width bug A9' traced to). Nothing about which
+          * panels are gated on `admitted`, keyed, or ordered changed -- only the wrapping div. */}
+        <div className="app-rail-top">
+          <AdmissionPanel onAdmitted={handleAdmitted} />
         {/* NEXT-CUT.md (filter-panel cut) P3 item 5 / binding note 9: in `.app-main`'s flex column,
           * below the admission panel, in normal document flow -- never an absolute overlay. Keyed on
           * `admitted.dataset` for the same reason `WorkingCanvas` below is: a dataset change must
@@ -947,6 +954,7 @@ export default function App() {
             }}
           />
         )}
+        </div>
         {admitted && (
           <div className="canvas-container">
             {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen
@@ -1096,6 +1104,13 @@ export default function App() {
             )}
           </div>
         )}
+        {/* action-console cut P5c fix 1: style + publish + console live in their OWN scrollable
+          * rail too, mirroring `.app-rail-top` above and for the identical reason -- this rail
+          * comes AFTER `.canvas-container` in flex/visual order (S4's own reasoning, unchanged by
+          * this wrap), so the canvas still claims its space first; the wrap only stops THIS rail's
+          * own overflow from ever reaching `.app-main` and narrowing the canvas. See
+          * `styles.css`'s own `.app-rail-top`/`.app-rail-bottom` comment for the full account. */}
+        <div className="app-rail-bottom">
         {/* NEXT-CUT.md (style-panel cut) P4 / binding note 6, MOVED below `.canvas-container`
           * (reviewer gate, style-panel cut P7 fixes, S4 -- the reviewer's own cheap option). Still in
           * `.app-main`'s flex column, still normal document flow, never an absolute overlay (the S1
@@ -1148,6 +1163,7 @@ export default function App() {
           * panel here already follows (S1/S4) -- `styles.css`'s own `.console-panel` comment has
           * the measured layout-budget note this piece appended. */}
         <ConsolePanel />
+        </div>
       </main>
     </div>
   );
