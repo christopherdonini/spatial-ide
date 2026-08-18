@@ -3,6 +3,7 @@
 
 import { useSyncExternalStore } from "react";
 
+import { recordNamed } from "./console/recorder";
 import { Banner, dismissBanner, subscribeBanner } from "./diagnostics/errorHandlers";
 
 let snapshot: Banner | null = null;
@@ -30,7 +31,15 @@ export default function ErrorBanner() {
     <div role="alert" className="error-banner">
       <strong>{banner.message}</strong>
       <pre>{banner.detail}</pre>
-      <button type="button" onClick={dismissBanner}>
+      <button
+        type="button"
+        onClick={() => {
+          // S5 (reviewer gate, action-console P7 fixes): pure view state, same class-C treatment
+          // as the canvas refusal banners' own Dismiss buttons.
+          recordNamed("gui-action", "canvas.dismissErrorBanner");
+          dismissBanner();
+        }}
+      >
         Dismiss
       </button>
     </div>

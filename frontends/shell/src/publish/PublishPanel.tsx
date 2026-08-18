@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import RefusalBlock from "../admission/RefusalBlock";
 import type { FormattedRefusal } from "../admission/formatRefusal";
+import { recordNamed } from "../console/recorder";
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import { decodeHexF64 } from "../skp/codec";
 import type { Bbox } from "../skp/types";
@@ -314,7 +315,12 @@ export default function PublishPanel({
       <button
         type="button"
         className="publish-disclosure"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => {
+          // S5 (reviewer gate, action-console P7 fixes): pure view state, same class-C treatment
+          // as StylePanel's own togglePanelExpanded row.
+          recordNamed("gui-action", "publish.togglePanelExpanded");
+          setExpanded((v) => !v);
+        }}
         aria-expanded={expanded}
       >
         {expanded ? "▾" : "▸"} Publish

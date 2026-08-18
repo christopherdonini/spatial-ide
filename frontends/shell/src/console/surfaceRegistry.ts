@@ -85,8 +85,13 @@ const CLASS_A_ROWS: readonly ClassARow[] = [
 ];
 
 /** The seven binding-local commands plus the dev-only E2E destination seam (NEXT-CUT.md's
- * "7 + dev seam"). */
-const CLASS_B_ROWS: readonly ClassBRow[] = [
+ * "7 + dev seam"). `as const satisfies readonly ClassBRow[]` (reviewer gate S3, action-console P7
+ * fixes) rather than a plain `: readonly ClassBRow[]` annotation: the annotation form would widen
+ * every `command` field to `string` at the type level, discarding the literal names this file's
+ * own `RECORDABLE_NAMES` union (below) is derived FROM -- `satisfies` checks this array is still
+ * shape-compatible with `ClassBRow[]` without widening the inferred literal-union type the way an
+ * annotation would. */
+const CLASS_B_ROWS = [
   {
     class: "B",
     command: "binding_data_plane_attach",
@@ -155,13 +160,18 @@ const CLASS_B_ROWS: readonly ClassBRow[] = [
       "CDP-driven E2E suite can reach; the grant is still minted host-side from that destination.",
     citation: BINDING_LOCAL_CITATION,
   },
-];
+] as const satisfies readonly ClassBRow[];
 
-/** Named GUI actions with no command at all -- style edits, the one panel disclosure toggle, and
- * the two dismissible canvas banners. Not mechanically completeness-checked (no call site exists
- * to scan for); see `surfaceCompleteness.test.ts`'s own comment on why that makes this table a
- * review-maintained one, which is why NEXT-CUT.md Part J's J3 walkthrough item exists. */
-const CLASS_C_ROWS: readonly ClassCRow[] = [
+/** Named GUI actions with no command at all -- style edits, the two panel disclosure toggles (S5:
+ * `style.togglePanelExpanded`, `publish.togglePanelExpanded`, `console.togglePanelExpanded`), the
+ * console's own group-expand toggle (`console.toggleGroupExpanded` -- reflexivity is the point:
+ * the console records its own interactions too), and the two dismissible banners (`canvas.
+ * dismissCanvasRefusal`/`canvas.dismissViewportRefusal`/`canvas.dismissErrorBanner`). Not
+ * mechanically completeness-checked (no call site exists to scan for); see
+ * `surfaceCompleteness.test.ts`'s own comment on why that makes this table a review-maintained
+ * one, which is why NEXT-CUT.md Part J's J3 walkthrough item exists. `as const satisfies` for the
+ * same literal-preserving reason `CLASS_B_ROWS` above uses it. */
+const CLASS_C_ROWS = [
   {
     class: "C",
     action: "style.setFillColor",
@@ -219,7 +229,52 @@ const CLASS_C_ROWS: readonly ClassCRow[] = [
       "App state (setViewportRefusal(null)); it never reaches the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
-];
+  {
+    class: "C",
+    action: "canvas.dismissErrorBanner",
+    statement:
+      "no API equivalent exists -- the Dismiss button on the global error banner only clears local " +
+      "React state (ErrorBanner.tsx's own subscribed snapshot via dismissBanner()); it never reaches " +
+      "the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "publish.togglePanelExpanded",
+    statement:
+      "no API equivalent exists -- PublishPanel's collapsed/expanded disclosure is pure view state, " +
+      "discarded on every dataset change.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "console.togglePanelExpanded",
+    statement:
+      "no API equivalent exists -- ConsolePanel's own collapsed/expanded disclosure is pure view " +
+      "state (reflexive by design: the console records its own toggles the same as every other " +
+      "panel's).",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "console.toggleGroupExpanded",
+    statement:
+      "no API equivalent exists -- a coalesced ×N group's own expand/collapse disclosure is pure " +
+      "view state, local to that group's row.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+] as const satisfies readonly ClassCRow[];
+
+/** The literal union of every recordable name in the registry -- class-B command names union
+ * class-C action names (reviewer gate S3, action-console P7 fixes). Derived FROM `CLASS_B_ROWS`/
+ * `CLASS_C_ROWS` above via `(typeof ...)[number]["..."]`, never hand-duplicated, so a new row added
+ * to either array widens this union automatically and a stale name left behind after a row is
+ * removed narrows it automatically -- there is no second list to fall out of sync. `recorder.ts`'s
+ * `recordNamed` types its own `name` parameter against this union, so a computed or template-string
+ * name is a `tsc` error, not merely a convention (`recorder.test.ts`'s own `@ts-expect-error` case
+ * proves it). Class-A command names are deliberately excluded: `recordNamed` is only ever the
+ * class-B/C capture surface (I1's own split), never class A's. */
+export type RecordableName = (typeof CLASS_B_ROWS)[number]["command"] | (typeof CLASS_C_ROWS)[number]["action"];
 
 /** The full registry: every classified GUI action, in no particular order. */
 export const SURFACE_REGISTRY: readonly SurfaceRow[] = [...CLASS_A_ROWS, ...CLASS_B_ROWS, ...CLASS_C_ROWS];

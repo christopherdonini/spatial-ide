@@ -43,10 +43,12 @@ describe("dataPlaneAttach records binding_data_plane_attach (NEXT-CUT.md P3)", (
     const entry = consoleRecorder.entries()[before]!;
     if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
     expect(entry.outcome).toBe("threw");
-    expect(entry.error).toBe("connection refused");
+    // S4 (reviewer gate, action-console P7 fixes): BindingCommandEntry structurally carries no
+    // error text -- the original `Error` above is still rethrown to `dataPlaneAttach`'s own caller
+    // unchanged, only never stored on this entry.
     // No field on a binding-command entry could ever hold an argument object (recorder.ts's own
     // BindingCommandEntry shape) -- this call takes none anyway, but the assertion documents the
     // invariant the type itself already guarantees.
-    expect(Object.keys(entry).sort()).toEqual(["command", "error", "kind", "outcome", "seq"].sort());
+    expect(Object.keys(entry).sort()).toEqual(["command", "kind", "outcome", "seq"].sort());
   });
 });

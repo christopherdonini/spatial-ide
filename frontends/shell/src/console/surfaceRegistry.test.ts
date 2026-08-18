@@ -15,6 +15,11 @@ import { classBRows, classCRows } from "./surfaceRegistry";
  */
 
 describe("SurfaceRow types structurally reject an argument-object field (I6, compile-time)", () => {
+  // Asserted at TYPECHECK time (`npm run typecheck`/`tsc`), not at `vitest` runtime: the
+  // `@ts-expect-error` comment below is the actual assertion -- if the annotated line ever stops
+  // erroring, tsc itself fails the build; `vitest` running this `it` to completion proves only
+  // that the surrounding runtime code (the `void withArgs` statement) does not throw, not that
+  // the type-level fence held.
   it("a class-B row with an extra args field fails tsc's excess-property check", () => {
     const withArgs: ClassBRow = {
       class: "B",
@@ -29,6 +34,7 @@ describe("SurfaceRow types structurally reject an argument-object field (I6, com
     void withArgs;
   });
 
+  // Same typecheck-time caveat as the `it` above: the `@ts-expect-error` line is the assertion.
   it("a class-B row's citation field is typed string -- an object value fails tsc", () => {
     const objectCitation: ClassBRow = {
       class: "B",

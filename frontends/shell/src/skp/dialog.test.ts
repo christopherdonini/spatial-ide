@@ -51,6 +51,9 @@ describe("pickFile records binding_pick_file (NEXT-CUT.md P3)", () => {
     const entry = consoleRecorder.entries()[before]!;
     if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
     expect(entry.outcome).toBe("threw");
-    expect(entry.error).toBe("ipc failure");
+    // S4 (reviewer gate, action-console P7 fixes): BindingCommandEntry structurally carries no
+    // error text -- the original `Error` above is still rethrown to `pickFile`'s own caller
+    // unchanged, only never stored on this entry.
+    expect("error" in entry).toBe(false);
   });
 });

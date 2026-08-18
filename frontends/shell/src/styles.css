@@ -42,9 +42,10 @@ body,
    defensive floor (nothing below should ever actually need it, per the two rails' own doc
    comment), not the mechanism itself -- the mechanism is that `.app-rail-top`/`.app-rail-bottom`
    now own the overflow instead, each independently, each narrowing only ITS OWN box if its own
-   content ever needs to scroll, never a sibling's. `.canvas-container` and `.console-panel`'s own
-   bar are direct children of THIS element, never of either rail -- their width is therefore never
-   subject to a scrollbar that lives on some other element's box. */
+   content ever needs to scroll, never a sibling's. `.canvas-container`'s own bar is a direct child
+   of THIS element, never of either rail (`.console-panel` lives INSIDE `.app-rail-bottom`, below
+   `.canvas-container` in App.tsx's own JSX -- see that rail's own comment) -- its width is
+   therefore never subject to a scrollbar that lives on some other element's box. */
 .app-main {
   flex: 1;
   display: flex;
@@ -660,22 +661,24 @@ body,
    point): before any dataset is admitted, this is the ONLY one of these bottom panels present, so
    its own collapsed row sits directly below `.admission-panel`, not below a canvas at its floor.
 
-   **Layout-budget note, computed, not a fresh E2E capture** (P5's `e2e/console.mjs` does not exist
-   yet -- this is a disclosed extrapolation, not a measurement, and should be replaced with a real
-   E2E capture once that harness lands): `.console-disclosure` reuses `.style-disclosure`'s own
-   already-twice-measured collapsed row height (17.8px, both `.style-panel`'s and `.publish-panel`'s
-   own comments) byte-for-byte -- same padding, font-size, line-height -- so a THIRD identical
-   collapsed row is expected to add the same 17.8px again. Post-admission, with every one of
-   `.style-panel`/`.publish-panel`/`.console-panel` collapsed: `.canvas-container` is unaffected
-   (unchanged top/height -- it is earlier than all three in flex/visual order, and was already at
-   its 200px floor with only two such rows present); total page content height becomes
-   813.75px + 17.8px = 831.55px, 31.55px over the 800px viewport, so `.app-main`'s own vertical
-   scrollbar (already appearing with two collapsed rows present, per `.publish-panel`'s own comment)
-   continues to appear, at the same ~15px `clientWidth` narrowing already disclosed there -- this
-   third row does not newly introduce that effect, only adds to page height under it. Expanding
-   `.console-entries` is capped (`max-height: 16rem`) by the same cap-then-scroll discipline
-   `.style-controls`/`.publish-controls` already establish, so an expanded console cannot itself
-   push `.canvas-container` toward its floor either. */
+   **Layout-budget note, computed at the time this panel was built** (P5's `e2e/console.mjs` has
+   since landed -- the harness this note originally deferred to; it exercises the console's DOM
+   directly but was never built to assert this panel's own box dimensions, so the arithmetic below
+   remains a disclosed computation, not a fresh capture): `.console-disclosure` reuses
+   `.style-disclosure`'s own already-twice-measured collapsed row height (17.8px, both
+   `.style-panel`'s and `.publish-panel`'s own comments) byte-for-byte -- same padding, font-size,
+   line-height -- so a THIRD identical collapsed row is expected to add the same 17.8px again.
+   Post-admission, with every one of `.style-panel`/`.publish-panel`/`.console-panel` collapsed:
+   `.canvas-container` is unaffected (unchanged top/height -- it is earlier than all three in
+   flex/visual order, and was already at its 200px floor with only two such rows present); total
+   page content height becomes 813.75px + 17.8px = 831.55px, 31.55px over the 800px viewport --
+   **shipped truth, action-console cut P5c fix 1:** `.app-main` no longer grows a scrollbar for
+   this at all (`overflow: hidden`, that fix's own comment above has the full mechanism); the
+   overflow is absorbed by `.app-rail-bottom` instead, the rail this panel itself lives in, which
+   narrows only ITS OWN width via its own `overflow-y: auto`, never `.app-main`'s or
+   `.canvas-container`'s. Expanding `.console-entries` is capped (`max-height: 16rem`) by the same
+   cap-then-scroll discipline `.style-controls`/`.publish-controls` already establish, so an
+   expanded console cannot itself push `.canvas-container` toward its floor either. */
 .console-panel {
   padding: 0.15rem 1rem;
   max-width: 40rem;

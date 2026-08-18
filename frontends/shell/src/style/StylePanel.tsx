@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import { recordNamed } from "../console/recorder";
@@ -57,6 +57,39 @@ interface StylePanelProps {
  */
 export default function StylePanel({ style, onChange }: StylePanelProps) {
   const [expanded, setExpanded] = useState(false);
+  const fillOpacityRef = useRef<HTMLInputElement>(null);
+  const outlineWidthRef = useRef<HTMLInputElement>(null);
+
+  // S2 (reviewer gate, action-console P7 fixes): React's own `onChange` prop is bound to the
+  // native `input` event for `<input type="range">` (React treats "range" as a text-like control
+  // needing per-tick normalization -- see react-dom's own `supportedInputTypes` table), so it
+  // fires once PER DRAG TICK, not once per drag -- roughly 100 times for one slow drag. Recording
+  // one console entry per tick was evicting the console's 256-entry ring after about three drags.
+  // The native DOM `change` event, by contrast, fires exactly once per COMMIT (pointer release for
+  // a mouse drag; once per discrete step for a keyboard adjustment) -- but React's synthetic event
+  // system dedupes a later native `change` against the value the preceding native `input` already
+  // reported, so a plain `onChange` prop never sees it as a second call. Binding `change` directly
+  // via `addEventListener` here bypasses that normalization and gets the commit-only signal for
+  // real. `onChange` on the elements below stays wired to the LIVE style update (fires every tick,
+  // so the canvas keeps repainting as the operator drags); these two effects own ONLY the console
+  // record, once per commit, never per tick.
+  useEffect(() => {
+    if (!expanded) return;
+    const el = fillOpacityRef.current;
+    if (!el) return;
+    const onCommit = () => recordNamed("gui-action", "style.setFillOpacity");
+    el.addEventListener("change", onCommit);
+    return () => el.removeEventListener("change", onCommit);
+  }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const el = outlineWidthRef.current;
+    if (!el) return;
+    const onCommit = () => recordNamed("gui-action", "style.setOutlineWidth");
+    el.addEventListener("change", onCommit);
+    return () => el.removeEventListener("change", onCommit);
+  }, [expanded]);
 
   function handleFillColor(e: ChangeEvent<HTMLInputElement>): void {
     // WHATWG HTML's `<input type="color">` value sanitization algorithm normalizes to a valid
@@ -74,7 +107,9 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
   }
 
   function handleFillOpacity(e: ChangeEvent<HTMLInputElement>): void {
-    recordNamed("gui-action", "style.setFillOpacity");
+    // S2 (reviewer gate, action-console P7 fixes): the console record moved to COMMIT -- see the
+    // `change`-event effect above. This handler stays responsible ONLY for the live style update,
+    // called on every drag tick same as before.
     onChange({ ...style, fillOpacity: Number(e.target.value) });
   }
 
@@ -84,7 +119,8 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
   }
 
   function handleOutlineWidth(e: ChangeEvent<HTMLInputElement>): void {
-    recordNamed("gui-action", "style.setOutlineWidth");
+    // S2: see handleFillOpacity's own comment above -- the record moved to the `change`-event
+    // effect; this handler is the live style update only.
     onChange({ ...style, outlineWidth: Number(e.target.value) });
   }
 
@@ -127,6 +163,7 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
               * NEXT-CUT.md's own literal instruction, the snap is imperceptible in the rendered
               * fill, and `toStyleDocument` clamps/accepts either value identically either way. */}
             <input
+              ref={fillOpacityRef}
               type="range"
               className="style-fill-opacity"
               min={MIN_OPACITY}
@@ -148,6 +185,7 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
           <label>
             Outline width
             <input
+              ref={outlineWidthRef}
               type="range"
               className="style-outline-width"
               min={MIN_OUTLINE_WIDTH}

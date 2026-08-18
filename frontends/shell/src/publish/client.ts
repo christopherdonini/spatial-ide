@@ -45,7 +45,10 @@ export async function publishPrepare(
     entry.resolveOk();
     return result;
   } catch (e) {
-    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    // S4 (reviewer gate, action-console P7 fixes): resolveThrew takes no message -- `e` is still
+    // rethrown below unchanged, so the real text is not lost, only kept out of the console
+    // (BindingCommandHandle's own doc comment has where it still goes).
+    entry.resolveThrew();
     throw e;
   }
 }
@@ -62,7 +65,10 @@ export async function publishExecute(attemptId: string, typedPhrase: string): Pr
     entry.resolveOk();
     return result;
   } catch (e) {
-    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    // S4 (reviewer gate, action-console P7 fixes): resolveThrew takes no message -- `e` is still
+    // rethrown below unchanged, so the real text is not lost, only kept out of the console
+    // (BindingCommandHandle's own doc comment has where it still goes).
+    entry.resolveThrew();
     throw e;
   }
 }
@@ -76,7 +82,10 @@ export async function publishCancel(attemptId: string): Promise<boolean> {
     entry.resolveOk();
     return result;
   } catch (e) {
-    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    // S4 (reviewer gate, action-console P7 fixes): resolveThrew takes no message -- `e` is still
+    // rethrown below unchanged, so the real text is not lost, only kept out of the console
+    // (BindingCommandHandle's own doc comment has where it still goes).
+    entry.resolveThrew();
     throw e;
   }
 }
@@ -121,7 +130,10 @@ export async function publishPrepareWithDestination(
     entry.resolveOk();
     return result;
   } catch (e) {
-    entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    // S4 (reviewer gate, action-console P7 fixes): resolveThrew takes no message -- `e` is still
+    // rethrown below unchanged, so the real text is not lost, only kept out of the console
+    // (BindingCommandHandle's own doc comment has where it still goes).
+    entry.resolveThrew();
     throw e;
   }
 }

@@ -9,15 +9,23 @@
  * never a `ConsoleEntry`, so there is structurally no way for a caller wired through this module to
  * read, format, or render an individual entry while collapsed; a test can prove the ONLY thing a
  * burst of recorder notifications ever produces here is (at most) one `onCount` call per frame.
+ *
+ * `CountableRecorder` below deliberately has no `entries()` member (reviewer gate S6,
+ * action-console P7 fixes): the real `ConsoleRecorder.entries()` is an O(n) copy
+ * (`recorder.ts`'s own doc comment on why), and this module only ever needed a count -- reading
+ * `entries().length` once per frame while collapsed was paying that copy for a number it then
+ * discarded. `count()` is the structural fix: there is no `entries` method on this interface for a
+ * future edit to reach for by habit, the same "no field/method to misuse" discipline this cut
+ * applies everywhere else (`surfaceRegistry.ts`'s own header has the same shape, for a different
+ * fence).
  */
 
 import { coalesceOncePerFrame } from "../canvas/coalesceOncePerFrame";
-import type { ConsoleEntry } from "./recorder";
 
 /** The subset of `ConsoleRecorder`'s API this module needs -- kept narrow and structural so a test
  * can hand it a small fake instead of a real `ConsoleRecorder` instance. */
 export interface CountableRecorder {
-  entries(): readonly ConsoleEntry[];
+  count(): number;
   droppedCount(): number;
   subscribe(listener: () => void): () => void;
 }
@@ -46,7 +54,7 @@ export function attachCollapsedCountSync(
   cancelFrame?: (handle: number) => void
 ): () => void {
   const snapshot = (): ConsoleCountSnapshot => ({
-    count: recorder.entries().length,
+    count: recorder.count(),
     dropped: recorder.droppedCount(),
   });
   const coalesced = coalesceOncePerFrame(() => onCount(snapshot()), requestFrame, cancelFrame);

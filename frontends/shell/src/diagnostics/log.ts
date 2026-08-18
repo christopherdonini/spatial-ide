@@ -21,9 +21,11 @@ export function logSessionEvent(level: string, message: string): void {
   const entry = recordNamed("binding-command", "binding_log_session_event");
   invoke("binding_log_session_event", { level, message }).then(
     () => entry.resolveOk(),
-    (e: unknown) => {
-      // Nothing else can be done here -- see the doc comment above.
-      entry.resolveThrew(e instanceof Error ? e.message : String(e));
+    () => {
+      // Nothing else can be done here -- see the doc comment above. S4 (reviewer gate,
+      // action-console P7 fixes): resolveThrew takes no message by construction, so there is
+      // nothing left to read off the rejection either.
+      entry.resolveThrew();
     }
   );
 }

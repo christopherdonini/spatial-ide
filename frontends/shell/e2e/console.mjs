@@ -160,10 +160,36 @@ async function ensureConsoleCollapsed(page) {
  * The `await page.evaluate(...)` itself is what guarantees React's own commit has landed by the
  * time this resolves -- same reasoning regression.mjs's `REOPEN'` step documents (a CDP round trip
  * cannot resolve before at least one full microtask checkpoint on the page has passed). */
+/**
+ * Waits for two consecutive `requestAnimationFrame` ticks in-page -- the standard technique for
+ * "any single already-pending coalesced callback has definitely fired by now" (reviewer gate S1,
+ * action-console P7 fixes made the expanded console's own sync `coalesceOncePerFrame`-driven, at
+ * most once per frame rather than synchronous-on-notify; a read immediately after an action that
+ * triggers a NEW recorder entry can otherwise race a still-pending coalesced frame). One rAF alone
+ * is not quite enough to guarantee THIS callback (scheduled via `requestAnimationFrame` from
+ * inside a React event handler) has already run by the time ours fires, since ordering between two
+ * independently-scheduled rAF callbacks within the same frame is not guaranteed either way; two
+ * ticks removes that ambiguity entirely.
+ */
+async function waitForNextConsoleFrame(page) {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined))))
+  );
+}
+
+/**
+ * Expands every currently-collapsed `.console-group-header`. Reviewer gate S5 (action-console P7
+ * fixes) made this click itself a recorded class-C action (`console.toggleGroupExpanded` --
+ * reflexivity is the point), so this helper now waits for that recording's own coalesced DOM
+ * effect to settle (`waitForNextConsoleFrame` above) before returning -- every existing caller
+ * already treats this function as "the DOM now reflects every group expanded", which was true
+ * unconditionally before S1/S5 and needs this wait to stay true now.
+ */
 async function expandAllGroups(page) {
   await page.evaluate(() => {
     document.querySelectorAll('.console-group-header[aria-expanded="false"]').forEach((el) => el.click());
   });
+  await waitForNextConsoleFrame(page);
 }
 
 /** Every rendered class-A row, oldest first, after expanding every group -- the recorder's own
@@ -408,9 +434,17 @@ function freshDestination(label) {
  * its rendered row text (I6: no JSON block, ADR-024's fence); its citation contains "not callable".
  * The destination path string itself appears NOWHERE in the console DOM (`.console-panel`'s own
  * `textContent`) -- the fence, proven at the UI, not merely asserted about the registry table.
+ *
+ * Checked in BOTH the raw form and its JSON-escaped form (`JSON.stringify(destination).slice(1,
+ * -1)` -- reviewer gate S6, action-console P7 fixes): on Windows the destination contains `\`
+ * separators, which read as literal characters in the raw path but as `\\` once JSON-escaped
+ * (e.g. inside a `JSON.stringify`'d argument object some other display path might render); a raw
+ * path is NOT a substring of its own escaped form (each `\` no longer matches the doubled `\\`),
+ * so checking only the raw form could miss a leak that only ever appeared escaped.
  */
 async function stepClassB(page) {
   const destination = freshDestination("console-classb");
+  const destinationEscaped = JSON.stringify(destination).slice(1, -1);
   const outcome = await page.evaluate(
     ({ d }) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"),
     { d: destination }
@@ -421,7 +455,7 @@ async function stepClassB(page) {
 
   await expandAllGroups(page);
   const result = await page.evaluate(
-    ({ command, destinationPath }) => {
+    ({ command, destinationPath, destinationPathEscaped }) => {
       const entries = Array.from(document.querySelectorAll(".console-entry-class-b"));
       const matches = entries.filter((el) => (el.querySelector(".console-entry-prose")?.textContent ?? "").includes(command));
       const last = matches[matches.length - 1] ?? null;
@@ -432,10 +466,11 @@ async function stepClassB(page) {
         citation: last?.querySelector(".console-entry-citation")?.textContent ?? null,
         hasCopyButton: last ? last.querySelector(".console-copy-button") !== null : false,
         entryHasBrace: last ? last.textContent.includes("{") : null,
-        destinationLeaked: panelText.includes(destinationPath),
+        destinationLeakedRaw: panelText.includes(destinationPath),
+        destinationLeakedEscaped: panelText.includes(destinationPathEscaped),
       };
     },
-    { command: "binding_publish_prepare_e2e_destination", destinationPath: destination }
+    { command: "binding_publish_prepare_e2e_destination", destinationPath: destination, destinationPathEscaped: destinationEscaped }
   );
   if (!result.found) throw new Error("CLASSB': no .console-entry-class-b entry naming binding_publish_prepare_e2e_destination found");
   if (result.hasCopyButton) throw new Error("CLASSB': a .console-copy-button was present inside the class-B entry");
@@ -443,10 +478,13 @@ async function stepClassB(page) {
   if (result.citation === null || !result.citation.includes("not callable")) {
     throw new Error(`CLASSB': citation missing "not callable". Actual: ${JSON.stringify(result.citation)}`);
   }
-  if (result.destinationLeaked) {
-    throw new Error(`CLASSB': the destination path "${destination}" appeared somewhere in .console-panel's own DOM text`);
+  if (result.destinationLeakedRaw || result.destinationLeakedEscaped) {
+    throw new Error(
+      `CLASSB': the destination path "${destination}" appeared somewhere in .console-panel's own DOM text ` +
+      `(raw: ${result.destinationLeakedRaw}, JSON-escaped: ${result.destinationLeakedEscaped})`
+    );
   }
-  return `publishPrepareWithDestination -> class-B entry names binding_publish_prepare_e2e_destination ("${result.prose}"); no copy button; no "{" anywhere in the row; citation contains "not callable"; destination path absent from the whole .console-panel DOM`;
+  return `publishPrepareWithDestination -> class-B entry names binding_publish_prepare_e2e_destination ("${result.prose}"); no copy button; no "{" anywhere in the row; citation contains "not callable"; destination path absent from the whole .console-panel DOM (checked raw and JSON-escaped)`;
 }
 
 /**
@@ -454,6 +492,13 @@ async function stepClassB(page) {
  * `page.fill` technique for `type="color"`) -> a class-C entry appears with "no API equivalent"
  * language and an owner string containing "ADR-022"; no copy button (I6, and structurally
  * impossible anyway -- `ClassCRowViewModel` carries no field a copy button could read).
+ *
+ * Filtered to owner-contains-"ADR-022" BEFORE taking the last match (reviewer gate S5, S6,
+ * action-console P7 fixes) -- not simply "the last class-C entry": `expandAllGroups` below clicks
+ * every collapsed `.console-group-header`, and since S5 made `console.toggleGroupExpanded` itself
+ * a recorded class-C action (reflexivity is the point), that click can add a LATER class-C entry
+ * of its own (owner "docs/03..."), which a bare "last entry" selection would wrongly grab instead
+ * of the style edit's own entry.
  */
 async function stepClassC(page) {
   await page.evaluate(() => {
@@ -472,8 +517,9 @@ async function stepClassC(page) {
       hasCopyButton: el.querySelector(".console-copy-button") !== null,
     }))
   );
-  const last = entries[entries.length - 1];
-  if (!last) throw new Error("CLASSC': no .console-entry-class-c entry found after the style edit");
+  const styleEntries = entries.filter((e) => (e.owner ?? "").includes("ADR-022"));
+  const last = styleEntries[styleEntries.length - 1];
+  if (!last) throw new Error("CLASSC': no .console-entry-class-c entry with an ADR-022 owner found after the style edit");
   if (last.statement === null || !last.statement.includes("no API equivalent")) {
     throw new Error(`CLASSC': statement missing "no API equivalent". Actual: ${JSON.stringify(last.statement)}`);
   }
@@ -506,6 +552,10 @@ async function stepGroup(page) {
     }
   }
 
+  // S1 (reviewer gate, action-console P7 fixes) made the expanded console's own sync coalesced to
+  // at most once per animation frame -- the 3rd query's own entry can otherwise still be one
+  // pending coalesced frame away from the DOM at the instant this reads it.
+  await waitForNextConsoleFrame(page);
   const headerTextsAfter = await page.evaluate(() =>
     Array.from(document.querySelectorAll(".console-group-header")).map((el) => el.textContent)
   );
@@ -633,9 +683,12 @@ async function stepCopytrunc(page) {
     `NOT-REACHABLE (empirically confirmed, not just arithmetic): a near-cap crsAssertion.definitionJson ` +
     `(base catalog definition ${baseBytes} bytes, padded to exactly MAX_CRS_DEFINITION_BYTES=${MAX_CRS_DEFINITION_BYTES}) ` +
     `driven through openPath rendered UNTRUNCATED at ${renderedBytes} bytes < MAX_ENTRY_RENDER_BYTES=${MAX_ENTRY_RENDER_BYTES} ` +
-    `(margin ${MAX_ENTRY_RENDER_BYTES - renderedBytes} bytes, i.e. JSON-escaping the inner PROJJSON text inside the outer ` +
-    `request's own JSON.stringify cost only ${renderedBytes - paddedBytes} bytes beyond field/structure overhead -- small, ` +
-    `since the quote-free padding diluted the base definition's own quote density across the full 65_536 bytes). No REAL, ` +
+    `(margin ${MAX_ENTRY_RENDER_BYTES - renderedBytes} bytes; the whole rendered request is only ` +
+    `${renderedBytes - paddedBytes} bytes larger than the ${paddedBytes}-byte definition string alone -- NOT purely the ` +
+    `cost of JSON-escaping that string's own inner quotes: this difference also includes the request's other fields ` +
+    `(skp version, dataset path, cancel_key, crs_assertion.identifier) and JSON.stringify's own 2-space pretty-print ` +
+    `indentation, neither decomposed out here. Small regardless, since the quote-free padding diluted the base ` +
+    `definition's own quote density across the full 65_536 bytes). No REAL, ` +
     `UI-reachable request can carry a larger definition_json at all: the real CrsAssertionForm disables Submit before ` +
     `${MAX_CRS_DEFINITION_BYTES} bytes (admission-remediation.mjs's OVERBOUND'), so this near-cap value is already the ` +
     `largest ANY operator action could ever send. By construction, no other class-A field is bounded anywhere near the ` +

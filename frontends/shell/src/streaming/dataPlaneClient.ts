@@ -30,7 +30,9 @@ export function dataPlaneAttach(): Promise<DataPlaneAttach> {
         return result;
       },
       (e: unknown) => {
-        entry.resolveThrew(e instanceof Error ? e.message : String(e));
+        // S4 (reviewer gate, action-console P7 fixes): resolveThrew takes no message -- `e` is
+        // still rethrown unchanged, so the real text is not lost, only kept out of the console.
+        entry.resolveThrew();
         throw e;
       }
     );

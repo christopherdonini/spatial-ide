@@ -95,6 +95,23 @@ describe("ConsoleRecorder", () => {
     }
   });
 
+  it("count() equals entries().length without copying the buffer (S6, reviewer gate, action-console P7 fixes)", () => {
+    const recorder = new ConsoleRecorder();
+    expect(recorder.count()).toBe(0);
+
+    recorder.record({ a: 1 });
+    recorder.record({ a: 2 });
+    expect(recorder.count()).toBe(2);
+    expect(recorder.count()).toBe(recorder.entries().length);
+
+    const total = MAX_CONSOLE_ENTRIES + 10;
+    for (let i = 0; i < total; i++) recorder.record({ i });
+    // Past the eviction ceiling: count() still agrees with entries().length, and both cap at
+    // MAX_CONSOLE_ENTRIES (droppedCount() tracks the rest, not count()).
+    expect(recorder.count()).toBe(MAX_CONSOLE_ENTRIES);
+    expect(recorder.count()).toBe(recorder.entries().length);
+  });
+
   it("subscribe fires on record and on resolve; unsubscribe stops further notifications", () => {
     const recorder = new ConsoleRecorder();
     const listener = vi.fn();
@@ -160,14 +177,22 @@ describe("ConsoleRecorder", () => {
       expect(entry.outcome).toBe("ok");
     });
 
-    it("resolveThrew transitions to threw and carries the message", () => {
+    it("resolveThrew transitions to threw and carries no message -- structurally (S4, reviewer gate, action-console P7 fixes)", () => {
       const recorder = new ConsoleRecorder();
       const handle = recorder.recordBindingCommand("binding_pick_file");
-      handle.resolveThrew("network unreachable");
+      handle.resolveThrew();
       const entry = recorder.entries()[0]!;
       if (entry.kind !== "binding-command") throw new Error("expected binding-command entry");
       expect(entry.outcome).toBe("threw");
-      expect(entry.error).toBe("network unreachable");
+      expect("error" in entry).toBe(false);
+    });
+
+    it("CRITICAL: resolveThrew accepts no message parameter at all -- a caller cannot smuggle host-arbitrary error text through it even by accident", () => {
+      const recorder = new ConsoleRecorder();
+      const handle = recorder.recordBindingCommand("binding_pick_file");
+      // @ts-expect-error -- BindingCommandHandle.resolveThrew has no parameters (S4); passing one
+      // must fail tsc, not merely be ignored at runtime.
+      handle.resolveThrew("this must not compile");
     });
 
     it("notifies subscribers on record and resolve, same as record()", () => {
@@ -208,11 +233,23 @@ describe("ConsoleRecorder", () => {
  * the same shared-singleton reason.
  */
 describe("recordNamed", () => {
-  it("CRITICAL: accepts only a string name -- no third parameter exists for an argument object to occupy", () => {
-    // @ts-expect-error -- recordNamed's own signature has no parameter after `name: string`; a
-    // caller cannot pass an argument object even by explicit position, let alone by accident. This
+  // Asserted at TYPECHECK time (`npm run typecheck`), not at `vitest` runtime -- same caveat as
+  // `surfaceRegistry.test.ts`'s own compile-time `describe` block: the `@ts-expect-error` comment
+  // below is the actual assertion; `vitest` running the call to completion (it never throws) does
+  // not itself prove the type-level fence held.
+  it("CRITICAL: accepts only a RecordableName -- no third parameter exists for an argument object to occupy", () => {
+    // @ts-expect-error -- recordNamed's own signature has no parameter after `name: RecordableName`;
+    // a caller cannot pass an argument object even by explicit position, let alone by accident. This
     // is the fence itself: it fails `tsc`, not merely a lint at review time.
     recordNamed("binding-command", "binding_pick_file", { path: "/should/not/compile" });
+  });
+
+  it("CRITICAL: a computed/template-string name fails tsc -- RecordableName is a literal union, not string (reviewer gate S3)", () => {
+    const computed = "binding_" + "pick_file";
+    // @ts-expect-error -- `computed`'s inferred type is `string`, not the `RecordableName` literal
+    // union; only a name that is ITSELF one of the registry's own literal command/action strings
+    // (or a `const`-narrowed alias of one) type-checks here.
+    recordNamed("binding-command", computed);
   });
 
   it("binding-command records name-only and returns a handle with resolveOk/resolveThrew (no resolveRefused)", () => {

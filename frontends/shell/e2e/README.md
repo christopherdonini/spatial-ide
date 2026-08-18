@@ -271,6 +271,5 @@ about deck.gl's own pick buffer at this camera state does not agree with the fil
 the candidate points tried. Per this piece's own scope, no further attempt was made (WorkingCanvas.tsx
 and the deck.gl layer/pick configuration are out of scope for an e2e-only piece); the defect now
 escalates per custodian rule 7. Both fixes are otherwise real, independently-verified corrections
-(the layout one in particular is unconditionally worth keeping) -- left uncommitted in the working
-tree for the custodian's own disposition; see that piece's own final report for the full run
-transcripts.
+(the layout one in particular is unconditionally worth keeping) -- both committed (`720b6a1`,
+`2e345d4`); see that piece's own final report for the full run transcripts.

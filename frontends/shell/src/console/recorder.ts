@@ -19,12 +19,20 @@
  *
  * Zero DOM, zero React: this module imports nothing from either, matching `docs/02`'s
  * clients-only rule for anything that isn't UI.
+ *
+ * Imports `RecordableName` (a type only) from `./surfaceRegistry` -- reviewer gate S3
+ * (action-console P7 fixes): `recordNamed`'s `name` parameter is typed against that literal
+ * union rather than `string`, so a computed/template-string name fails `tsc`, not merely a
+ * review. Type-only, so this is not a runtime dependency and does not create an import cycle
+ * with `surfaceRegistry.ts` (which imports nothing from this module, or anywhere else).
  */
 
 /** A caller-declared refusal -- the shape already carried by `SkpError` (`skp/client.ts`,
  * `skp/types.ts`): a stable code, a human message, and named fields. Kept as its own type here
  * rather than importing `SkpError` so this module has zero dependency on the SKP wire types --
  * P1/P2 (class B/C entries) will not need to know what an `SkpError` is to add a new `kind`. */
+import type { RecordableName } from "./surfaceRegistry";
+
 export interface ConsoleRefusal {
   code: string;
   message: string;
@@ -75,7 +83,16 @@ export interface SkpRequestEntry {
  * produces a typed `SkpError`-shaped refusal at this boundary (a `{status: "refused"}` VALUE some
  * of these commands resolve with, e.g. `binding_publish_execute`, is a resolved outcome, not a
  * rejected promise -- it is `"ok"` at this layer; the registry row's own prose is what a reader
- * consults for what the command does, not this entry). */
+ * consults for what the command does, not this entry).
+ *
+ * **No `error` field (reviewer gate S4, action-console P7 fixes).** A binding command's thrown
+ * error message is HOST-ARBITRARY text -- unlike class A's typed `SkpError`, there is no wire
+ * schema constraining it, and it is the one path a destination path or similar argument-adjacent
+ * data could ride into the console despite ADR-024's fence never giving it a field of its own. The
+ * fence is therefore structural, not a rendering choice: this type has nowhere to put that text,
+ * so `ConsolePanel.tsx`'s class-B row renders a FIXED sentence for `outcome === "threw"` instead of
+ * ever reading one. The real message is not lost -- `BindingCommandHandle.resolveThrew`'s own doc
+ * comment has where it still goes. */
 export interface BindingCommandEntry {
   seq: number;
   kind: "binding-command";
@@ -83,8 +100,6 @@ export interface BindingCommandEntry {
    * `surfaceRegistry.ts`'s `ClassBRow.command` for display. */
   command: string;
   outcome: "pending" | "ok" | "threw";
-  /** Present only when `outcome === "threw"`. */
-  error?: string;
 }
 
 /** Class C (NEXT-CUT.md's "no command at all"): a named GUI action with no wire call behind it at
@@ -115,10 +130,11 @@ export function isGuiActionEntry(entry: ConsoleEntry): entry is GuiActionEntry {
 
 /**
  * A session's working set, not a log: the recorder is a bounded ring, not an unbounded history.
- * 256 requests covers many minutes of interactive use (`docs/07`'s hero slice is a single
- * open-filter-style-publish session) while keeping the console's own memory footprint negligible
- * next to the datasets it is describing. Oldest entry dropped on overflow, never blocked, never
- * silently truncated without a count -- see `droppedCount()`.
+ * 256 entries is a fixed count, not a duration -- ADR-018's discipline applied to this comment,
+ * not only to a cancellation figure: how long 256 entries lasts depends entirely on how often the
+ * operator acts, so no minute estimate is claimed here, true or otherwise. What IS true by
+ * construction: the ring never blocks, never grows past 256, and never silently truncates -- the
+ * oldest entry is dropped on overflow and every drop is counted, see `droppedCount()`.
  */
 export const MAX_CONSOLE_ENTRIES = 256;
 
@@ -148,10 +164,22 @@ export interface EntryHandle {
 /** Returned by `recordNamed("binding-command", ...)` only -- a `GuiActionEntry` has no in-flight
  * gap to resolve (`recordNamed("gui-action", ...)` returns `void`; see its own doc comment). Two
  * outcomes, not three: no `resolveRefused` -- see `BindingCommandEntry`'s own doc comment for why
- * a binding command never produces a typed refusal at this boundary. */
+ * a binding command never produces a typed refusal at this boundary.
+ *
+ * **`resolveThrew` takes no message (reviewer gate S4, action-console P7 fixes).** Unlike
+ * `EntryHandle.resolveThrew` above (class A, a typed `SkpError` boundary), a binding command's
+ * caught error is untyped, host-arbitrary text -- see `BindingCommandEntry`'s own doc comment for
+ * why that text must never reach this recorder at all. Every call site still has the real `Error`
+ * in scope at its own `catch` block (this method's whole point is to mark the entry `"threw"`, not
+ * to be the only place the error is looked at) and every one of them still rethrows it unchanged --
+ * so the message is not discarded, only kept OUT of the console: it reaches the caller's own error
+ * path exactly as it did before, which (via `diagnostics/errorHandlers.ts`'s global
+ * unhandledrejection/error listeners, when nothing catches it further upstream) is `docs/09`'s
+ * session log, `binding_log_session_event` -- the "session log" `ConsolePanel.tsx`'s fixed
+ * `"threw"` sentence names. */
 export interface BindingCommandHandle {
   resolveOk(): void;
-  resolveThrew(message: string): void;
+  resolveThrew(): void;
 }
 
 export type ConsoleListener = () => void;
@@ -219,9 +247,10 @@ export class ConsoleRecorder {
         entry.outcome = "ok";
         this.notify();
       },
-      resolveThrew: (message: string) => {
+      resolveThrew: () => {
+        // No message parameter, by construction (S4) -- see BindingCommandHandle's own doc
+        // comment for where the real error text still goes.
         entry.outcome = "threw";
-        entry.error = message;
         this.notify();
       },
     };
@@ -263,9 +292,19 @@ export class ConsoleRecorder {
   }
 
   /** Every live entry, oldest first (insertion order survives eviction -- only the oldest ever
-   * leaves). A fresh array each call so a caller cannot mutate the recorder's own buffer. */
+   * leaves). A fresh array each call so a caller cannot mutate the recorder's own buffer -- an
+   * O(n) copy, deliberately, for that safety; a caller that only needs the COUNT should call
+   * `count()` below instead of `entries().length` (reviewer gate S6, action-console P7 fixes). */
   entries(): readonly ConsoleEntry[] {
     return [...this.buffer];
+  }
+
+  /** `entries().length` without the O(n) copy `entries()` deliberately pays for -- O(1), no
+   * allocation. Exists so a collapsed-console caller (`collapsedCountSync.ts`'s own
+   * `CountableRecorder`, I9's "zero per-entry DOM work") never has a reason to reach for the full
+   * array just to read its length once per frame. */
+  count(): number {
+    return this.buffer.length;
   }
 
   /** Notified on every record and every resolution. Returns an unsubscribe function. A plain
@@ -300,22 +339,26 @@ export const consoleRecorder = new ConsoleRecorder();
 /**
  * The name-only capture API (NEXT-CUT.md P3 item A) -- the designed resolution of the I1 tension
  * for classes B and C. Deliberately narrow: this function's own signature accepts a `kind` and a
- * `name: string`, nothing else -- there is no third parameter for a caller to smuggle an argument
- * object through, so a class-B entry can never carry one BY CONSTRUCTION, not by convention or a
- * reviewer's eye (`recorder.test.ts`'s own `@ts-expect-error` case proves a caller cannot pass one
- * even if they tried).
+ * `name: RecordableName`, nothing else -- there is no third parameter for a caller to smuggle an
+ * argument object through, so a class-B entry can never carry one BY CONSTRUCTION, not by
+ * convention or a reviewer's eye (`recorder.test.ts`'s own `@ts-expect-error` case proves a caller
+ * cannot pass one even if they tried). `name` being `RecordableName` rather than `string`
+ * (reviewer gate S3, action-console P7 fixes) is a second, independent fence: a computed or
+ * template-string name -- which a hand-typed string literal permits, but a value derived from
+ * `surfaceRegistry.ts`'s own const arrays does not -- fails `tsc` at the call site, not merely a
+ * lint or a runtime registry lookup.
  *
  * A second, narrower choke point than `consoleRecorder.record()`: every binding-command call site
  * (`streaming/dataPlaneClient.ts`, `diagnostics/log.ts`, `skp/dialog.ts`, `skp/crsCatalog.ts`,
- * `publish/client.ts`) and every class-C handler module (`App.tsx`, `style/StylePanel.tsx`) import
- * THIS function, never `consoleRecorder` itself -- `soleCaptureSite.test.ts` enforces both
- * allowlists as two separate scans, one per exported name, so a module that has no business
- * reaching the full `record(request)` API cannot reach it merely by importing this module for
- * `recordNamed`.
+ * `publish/client.ts`) and every class-C handler module (`App.tsx`, `style/StylePanel.tsx`,
+ * `ErrorBanner.tsx`, `publish/PublishPanel.tsx`, `console/ConsolePanel.tsx`) import THIS function,
+ * never `consoleRecorder` itself -- `soleCaptureSite.test.ts` enforces both allowlists as two
+ * separate scans, one per exported name, so a module that has no business reaching the full
+ * `record(request)` API cannot reach it merely by importing this module for `recordNamed`.
  */
-export function recordNamed(kind: "binding-command", name: string): BindingCommandHandle;
-export function recordNamed(kind: "gui-action", name: string): void;
-export function recordNamed(kind: "binding-command" | "gui-action", name: string): BindingCommandHandle | void {
+export function recordNamed(kind: "binding-command", name: RecordableName): BindingCommandHandle;
+export function recordNamed(kind: "gui-action", name: RecordableName): void;
+export function recordNamed(kind: "binding-command" | "gui-action", name: RecordableName): BindingCommandHandle | void {
   if (kind === "binding-command") {
     return consoleRecorder.recordBindingCommand(name);
   }

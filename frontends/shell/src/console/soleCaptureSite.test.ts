@@ -11,8 +11,9 @@ import { describe, expect, it } from "vitest";
  * merely THAT `console/recorder` is imported (P3 item A's designed resolution): `consoleRecorder`
  * (the full `record(request)` API, request-carrying) stays reachable ONLY from `skp/client.ts`
  * outside this module; `recordNamed` (name-only, no payload parameter exists in its own signature)
- * is reachable from exactly the five binding-command modules plus the two class-C handler modules
- * named in NEXT-CUT.md P3. A module that imports `recordNamed` alone must never ALSO be able to
+ * is reachable from exactly the five binding-command modules plus the class-C handler modules
+ * named below (`RECORD_NAMED_ALLOWLIST`'s own comment has the current, grown list -- S5, reviewer
+ * gate, action-console P7 fixes). A module that imports `recordNamed` alone must never ALSO be able to
  * reach `consoleRecorder`'s `record()` by the same import line -- these are two independent scans
  * over two independent name allowlists, not one blanket "imports this module" check, precisely so
  * a future binding-command module cannot casually widen its own import to `consoleRecorder` and
@@ -35,9 +36,14 @@ const SRC_DIR = path.resolve(__dirname, "../../src");
 const CONSOLE_RECORDER_ALLOWLIST = new Set(["skp/client.ts"]);
 
 /** Files allowed to import `recordNamed` (name-only, classes B and C) from OUTSIDE `console/` --
- * NEXT-CUT.md P3 item A's exact list: the five binding-command modules, plus the two modules that
- * own class-C's handlers (`App.tsx` for the two canvas banner dismissals, `style/StylePanel.tsx`
- * for every style edit and the panel disclosure toggle). */
+ * NEXT-CUT.md P3 item A's original five binding-command modules, plus the class-C handler modules
+ * (`App.tsx` for the two canvas refusal-banner dismissals, `style/StylePanel.tsx` for every style
+ * edit and its own panel disclosure toggle, `ErrorBanner.tsx` for the global error banner's own
+ * dismiss, `publish/PublishPanel.tsx` for its own panel disclosure toggle -- S5, reviewer gate,
+ * action-console P7 fixes). `console/ConsolePanel.tsx`'s own two toggles
+ * (`console.togglePanelExpanded`/`console.toggleGroupExpanded`, same S5 fix) need no entry here --
+ * `isInsideConsoleModuleOrTest` below already treats every file under `console/` as an allowed
+ * self-reference, the same as `consoleRecorder`'s own choke point does. */
 const RECORD_NAMED_ALLOWLIST = new Set([
   "streaming/dataPlaneClient.ts",
   "diagnostics/log.ts",
@@ -46,6 +52,8 @@ const RECORD_NAMED_ALLOWLIST = new Set([
   "publish/client.ts",
   "App.tsx",
   "style/StylePanel.tsx",
+  "ErrorBanner.tsx",
+  "publish/PublishPanel.tsx",
 ]);
 
 function walk(dir: string): string[] {
@@ -137,7 +145,7 @@ describe("console/recorder's two capture surfaces are each reachable from only t
   });
 
   describe("recordNamed (name-only, classes B and C)", () => {
-    it("every import of recordNamed outside console/ is one of the seven named binding-command/class-C handler modules, or a test file", () => {
+    it("every import of recordNamed outside console/ is one of the named binding-command/class-C handler modules, or a test file", () => {
       const offenders: string[] = [];
       for (const imp of importLines) {
         if (isInsideConsoleModuleOrTest(imp.rel)) continue;
@@ -150,7 +158,7 @@ describe("console/recorder's two capture surfaces are each reachable from only t
       expect(offenders).toEqual([]);
     });
 
-    it("at least one of the seven allowed modules really does import recordNamed -- otherwise this scan proves nothing", () => {
+    it("at least one of the allowed modules really does import recordNamed -- otherwise this scan proves nothing", () => {
       const foundIn = new Set(
         importLines.filter((imp) => imp.names !== null && imp.names.includes("recordNamed")).map((imp) => imp.rel)
       );

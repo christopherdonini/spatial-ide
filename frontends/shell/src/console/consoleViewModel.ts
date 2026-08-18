@@ -46,6 +46,17 @@ export function standingHeaderModel(expanded: boolean): readonly [typeof CONSOLE
   return expanded ? [CONSOLE_STANDING_HEADER] : [];
 }
 
+/**
+ * Reviewer gate S4 (action-console P7 fixes): the FIXED sentence a class-B row renders for
+ * `outcome === "threw"` -- `BindingCommandEntry` structurally has no `error` field to read one
+ * from (that type's own doc comment has the reason), so this is a constant, never composed from
+ * the entry. Kept as data here, same convention as `CONSOLE_STANDING_HEADER` above, so
+ * `consoleLanguage.test.ts` can assert the load-bearing phrase against the constant itself.
+ */
+export const CLASS_B_THREW_SENTENCE =
+  "The host reported an error. Details are in the session log — not recorded here (host error " +
+  "text may contain paths).";
+
 export interface ClassARowViewModel {
   kind: "class-a";
   entry: SkpRequestEntry;
