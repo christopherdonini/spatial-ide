@@ -589,6 +589,71 @@ a real form's Submit click any differently than calling the identical `admitPath
 | `NOPERSIST'` | I7 | reopening the ASSERT'-admitted path plain refuses again, verbatim — nothing persisted | — |
 | `OVERBOUND'` | — (no Part I step; pasting 65,000+ bytes by hand is not a productive operator action to script into a walkthrough) | pasting an oversized definition through the real form shows `.crs-assertion-definition-validation` naming the byte counts, Submit stays disabled, no request is issued | — |
 
+---
+
+## Part J — the action console (action-console cut)
+
+`NEXT-CUT.md`'s own one sentence, binding: every shell GUI action accounts for itself — the exact
+control-plane request it actually sent (SKP, copyable), or the named host-local command (name only,
+no arguments, no copy, explicitly not-API), or a plain statement that no API equivalent exists and
+which filed decision owns that gap. ADR-027 (Proposed, filed by this cut's own P6 — see
+`docs/adr/ADR-027-action-console-and-display-truth.md`) is the decision record this Part evidences;
+principle 4 (docs/01) and principle 8 (no numbers, no claim) are its constitutional source.
+`e2e/console.mjs` above covers the DOM-assertable half of the same ground (its own coverage table,
+below, names exactly which numbered step each automated step covers); this Part is the judgment-call
+half only a human makes — does display truth *read* as honest, not merely check out mechanically.
+**Evidence-class wording, as every earlier Part in this document uses it**: the steps below are
+**operator-verified** (a human running them by hand and recording the result); the suite named above
+is separately **E2E-verified** (driven through real IPC and a real render loop via the same
+`openPath`/`queryWithFilter`/`publishPrepareWithDestination` in-page hooks) — a distinct,
+weaker-than-neither, not-a-replacement pairing, `e2e/README.md`'s own evidence-class paragraph.
+
+**Honest note, read before running this Part:** `DECISIONS-PENDING.md` entry 20 records that the
+REGRESSION suite's `A9'` (hover-pick) step is RED, with a fix decision queued to the human. **Part J
+does not depend on hover** — none of J1–J6 below reads or asserts a hover readout — so this Part's
+own pass/fail is independent of entry 20's outcome; do not treat A9' being red as a reason to skip
+or discount this Part.
+
+Reuses `filter-zoned.parquet` (already listed in Part E's own fixtures table above — the console
+records requests already flowing through every earlier Part's own admission/filter/style/publish
+actions; no new fixture is needed, and `e2e/console.mjs` itself reuses this exact file).
+
+| # | Step | Expected outcome |
+|---|---|---|
+| J1 | Click the collapsed **▸ Console** disclosure at the bottom of the window to expand it (**J1's own preamble**: before opening anything, read the standing header sentence at the top of the now-expanded drawer aloud, in full). Then click **Open GeoParquet…** (canvas from Part I may still be visible; that's fine) and select `filter-zoned.parquet`. | **Preamble, judged first:** the expanded drawer (**▾ Console**) shows a standing header sentence (`consoleViewModel.ts`'s `CONSOLE_STANDING_HEADER`, verbatim): *"These are the requests this app sent over its own Tauri IPC control plane. SKP has one transport binding today and no out-of-process client (SKP-V0 §4 item 2); handles are session-scoped and there is no idempotency (§3, §4 item 9). This is a faithful record, not a script you can run."* **Judge:** having read it aloud, is "a faithful record, not a script you can run" clear on a first read — does it land as an honest limit, not as hedging? **Main step:** the admission behaves exactly as Part E's E1 describes, and this ONE click on **Open GeoParquet…** produces exactly **two** new class-A entries, in order: an `open_dataset` entry, then a `describe` entry, each labeled `SKP <version> · control plane` with its own copyable request text and a **Copy** button — never one merged entry, never more than two (`skp/client.ts::call()`'s own two sequential invocations, I2: each captured by reference at the one choke point). **Judge:** does seeing two distinct, individually-readable requests for one click read as *legible* — "I clicked once, and here is exactly what that click actually sent, in order" — or does it read as surprising/noisy? |
+| J2 | Pan or zoom the canvas once (any drag or scroll works) to produce a fresh `viewport_query` class-A entry. Click that entry's **Copy** button, then paste the clipboard contents somewhere visible outside the app — e.g. open Notepad (Start → Notepad; RustDesk reaches the desktop fine for this) and paste (Ctrl+V). | The pasted text is valid JSON with exactly the keys `{skp, dataset, bbox, bbox_crs, filter, limit}`. If `bbox` is non-null, its four members (`xmin`/`ymin`/`xmax`/`ymax`) are each a bare 16-lowercase-hex-digit string (`HexF64`, `skp/codec.ts`) — e.g. `"3ff0000000000000"`, not a decimal number — and `limit` is either `null` or a quoted digits-only string (`DecU64`), never a bare number. Compare the pasted text side-by-side against the console entry's own on-screen `.console-request-text` block: they must match byte-for-byte (I2: the copy button hands the clipboard the exact same string the entry displays, sourced from one captured object by reference, never re-derived). **Judge — this is the cut's real open question for an operator:** is this honesty *tolerable*? A hex-string coordinate in a record you might file away or hand to someone is unusual and, on its own, illegible as a place on a map — but the alternative (a decimal `x`/`y` inside the copy region) would show a request the wire itself never accepts and never sent (ADR-004 amendment 1's bit-critical scalars; I5, "no scalar prettified inside copy text"). Which is the more honest artifact to hand someone: a faithfully unreadable hex pair, or a readable but fabricated decimal one? Record your own answer, not a checkbox. |
+| J3 | Expand **▸ Style** (Part F's F1) and change any one style value (e.g. drag **Fill opacity**). | A new class-C entry appears in the console. Its statement text contains, verbatim, **"no API equivalent exists"**, naming the specific control you moved (e.g. fill opacity) as local `StylePanel` state, never sent to the kernel. Its owner line names **ADR-022** (and ADR-023). No copy button appears anywhere on this entry — there is no field on it a copy button could even read (`ClassCRowViewModel` carries no `request`/`copyText`). **Judge:** having just watched a real style edit repaint the canvas with nothing sent anywhere, does this entry read as *honest bookkeeping* — "here is a real gap, and here is who owns closing it" — rather than as a broken or missing feature? |
+| J4 | Expand **▸ Publish** (Part G's G1) and click **Publish…**; when the native destination dialog appears, choose any destination under `target\` and confirm; when the approval dialog appears (Part G's G3), click **Cancel** rather than approving. | A new class-B entry appears in the console, naming the binding command **`binding_publish_prepare`** by name in its prose, alongside a plain-language effect sentence (never the request/response shape). Its citation reads, verbatim, that this command is **"host-local, not part of the API"** and **"not callable"** by a script, plugin, notebook, CLI, or AI client (`surfaceRegistry.ts`'s `BINDING_LOCAL_CITATION`, cited by ADR-024 and SKP-V0 §4 items 1/3/11/13). **No arguments appear anywhere on this entry** — in particular, the destination path you just chose in the native dialog must appear NOWHERE in the console (search the whole expanded drawer's text with your own eyes, or Ctrl+F if the app's dev tools are open). There is no copy button on this entry (structurally absent, same as J3's class-C row). |
+| J5 | Trigger a refusal: type the unknown-column predicate `bogus_column_xyz = 1` into the filter panel (Part E's E3) and click **Apply**. | A `viewport_query` class-A entry's outcome reads **`refused`**. Below the request text, a refusal block shows the typed code **`skp.filter_unknown_column`** and the exact verbatim message Part E's E3 already quotes — read straight from the same `SkpError` the filter panel's own refusal region rendered, never re-composed by the console (I10: refusals route through `formatRefusal.ts` only, reused, not reimplemented). **Judge:** does the code + verbatim message pairing on this entry match what the filter panel itself showed at the moment of refusal — the same words, not a summary of them? |
+| J6 | With the console still expanded from the steps above, pan the canvas hard for several seconds — repeated drags, including at least one large jump, the same motion Part A's A5/A6/A8 exercise. | Fresh `viewport_query` entries accumulate in the console as you go (coalescing consecutive identical-shape queries into a `×N` group, I8 — click it to expand and see the real individual entries, never a synthesized one). **Judge only whether the canvas itself feels unchanged** with the drawer open and actively recording, compared to your own memory of the same gesture in Parts A/H with the drawer collapsed — **do not attach any number, frame rate, or duration to this observation** (the standing rule: ADR-018 — a feel judgment carries no figure, and I9 is the structural claim this step is checking by hand: a closed console does zero per-entry DOM work, but this step's own drawer is deliberately open, so what you are judging is the recorder's own live-open cost, not its closed cost). If operating remotely (e.g. RustDesk), record the same degraded-channel caveat earlier Parts' motion-quality judgments used. |
+
+**If anything deviates** (a class-A entry missing or merged, a class-B/C entry showing an argument,
+a copy button where none should be, a refusal not matching verbatim, a destination path visible
+anywhere in the console): stop, record the exact step and what you saw, and report it — do not
+continue assuming it was unrelated.
+
+## What `e2e/console.mjs` covers
+
+A separate suite (`npm run e2e:console`, `frontends/shell/e2e/console.mjs`, action-console cut P5)
+drives this Part's own console DOM directly, reading only the rendered `.console-entry-*` markup
+produced by real user-reachable actions (a real `openPath` admission, a real mouse pan, a real
+style-panel input, the dev-only publish destination seam) — never the `consoleRecorder` singleton
+read directly. Same cross-reference convention as every earlier coverage table: "Does not cover"
+lists only what the numbered Part J step *claims* that the script cannot assert.
+
+| Automated step | Walkthrough step(s) | Covers | Does not cover |
+|---|---|---|---|
+| `HEADER'` | J1 (the preamble half) | the standing header is absent from the DOM entirely while collapsed (I9) and present with all 3 required phrases ("one transport binding", "session-scoped", "not a script you can run") while expanded | J1's own "does this land as an honest limit, not hedging" judgment |
+| `ECHO'`/`TWOCMD'` | J1 (the two-entries half) | one `openPath` call produces both an `open_dataset` and a `describe` class-A entry; the `describe` entry's request parses with exactly `{skp, dataset}`; the entry's own label version token equals the parsed request's own `skp` field (no hard-coded version) | J1's own "legible rather than surprising" judgment |
+| `HEXLIM'` | J2 (the fidelity half) | after a real mouse pan, the newest `viewport_query` entry's request parses with exactly `{skp, dataset, bbox, bbox_crs, filter, limit}`; any non-null bbox member is a bare 16-lowercase-hex string, verified to appear quoted verbatim in the raw pretty-printed text (I5: no scalar prettified inside copy text); `limit` is `null` or a digits-only string | J2's own "is this honesty tolerable" judgment — the script proves the hex text is faithful, it does not and cannot judge whether a human finds that faithfulness acceptable; it also does not exercise the actual clipboard/paste-into-Notepad path J2 asks for, only the DOM text the Copy button would send |
+| `CLASSC'` | J3 | a real style-panel fill-colour edit produces a class-C entry whose statement contains "no API equivalent" and whose owner contains "ADR-022"; no copy button present | J3's own "honest bookkeeping vs. broken feature" judgment |
+| `CLASSB'` | J4 | `publishPrepareWithDestination` (the dev seam standing in for the native picker no CDP driver reaches) produces a class-B entry naming `binding_publish_prepare_e2e_destination`; no copy button; no `{` anywhere in the row's rendered text; citation contains "not callable"; the destination path string is absent from the ENTIRE `.console-panel` DOM text, not merely the one entry | that the *real* `binding_publish_prepare` (native picker, not the dev seam) behaves identically — structurally guaranteed by both commands sharing one `ClassBRow`/`ClassBRowViewModel` shape, but not independently re-asserted by this step; also does not click through to Cancel at the approval dialog the way J4 does |
+| `REFUSAL'` | J5 | an unknown-column predicate refuses; the console's own rendered code/message are compared against the SAME live `SkpError` the calling code's own returned outcome carries (self-consistency), never a hard-coded literal | J5's own "matches what the filter panel itself showed" cross-check — the script never opens the filter panel's own refusal region in the same run to compare the two renderings side by side |
+| `GROUP'`/`UNCLASS'`/`COPYTRUNC'` | — (no Part J step names these directly) | 3 consecutive identical filter queries coalesce into one `×N` group that expands to the real individual entries, never a synthesized merge (I8); an unclassified command renders a visible `UNCLASSIFIED — this is a defect, report it` row rather than being silently dropped; an over-`MAX_ENTRY_RENDER_BYTES` request shows a truncated, non-copyable preview with its own reason text (I7) | — |
+| `REGRESS'` | J6 (partially) | the full `regression.mjs`/`admission-remediation.mjs` suites pass end-to-end while attached to the SAME session this console suite already drove — i.e. the console recording live in the background does not break any of the pan/zoom/admission behavior those suites assert | J6's own subjective "does the canvas feel unchanged" judgment — this step is pass/fail on correctness only; ADR-018 bars it from asserting anything about feel, and it asserts nothing about feel |
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -719,3 +784,15 @@ actually run by an operator, queued for the next batch session per this cut's ow
 - **Run by:** —
 - **Build/commit:** —
 - **Part I (I1–I8):** —
+
+### Part J run (separate pass — the action console)
+
+Part J did not exist during any run recorded above. Fill in the fields below when Part J is
+actually run by an operator, queued for the next batch session per this cut's own P6 brief. Note
+before running: `DECISIONS-PENDING.md` entry 20 (REGRESSION suite `A9'` hover-pick, RED) is a queued
+decision Part J does not depend on — see this Part's own honest note above.
+
+- **Date run:** —
+- **Run by:** —
+- **Build/commit:** —
+- **Part J (J1–J6):** —
