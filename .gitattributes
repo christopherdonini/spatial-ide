@@ -1,0 +1,10 @@
+# Byte-sensitive test fixtures: checked out verbatim on every platform.
+#
+# engine/src/crs_catalog.rs asserts the catalog's embedded EPSG:2056 definition is
+# byte-identical to engine/tests/data/epsg2056.projjson (ADR-026 implementation note:
+# "reuses ... verbatim", held true by test). The catalog stores newlines as \n escapes
+# inside a JSON string (platform-stable); the .projjson has real newlines, so without
+# this pin a CRLF-autocrlf checkout (e.g. windows-latest CI) materializes different
+# bytes than the LF blob git stores, and the assert fails on \r alone. Pin LF at
+# checkout so "byte-identical" means the same bytes everywhere.
+*.projjson text eol=lf
