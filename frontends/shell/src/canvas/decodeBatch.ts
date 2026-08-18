@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 import { tableFromIPC } from "apache-arrow";
 
 /** ADR-010 rule 1's envelope tag, as `engine::envelope::BatchEnvelope` writes it. A batch whose

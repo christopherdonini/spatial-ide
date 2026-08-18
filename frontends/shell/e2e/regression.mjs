@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- encodes the automatable steps of
 // `MANUAL-WALKTHROUGH.md` as a regression script. Same attach-or-launch path as
 // `debug-session.mjs` (`lib.mjs`'s `attachOrLaunch`), same in-page hooks

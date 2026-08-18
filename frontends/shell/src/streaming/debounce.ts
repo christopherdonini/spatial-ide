@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Trailing-edge debounce: coalesces a burst of calls into the single latest one, fired only after
  * `settleMs` has passed with no further call.

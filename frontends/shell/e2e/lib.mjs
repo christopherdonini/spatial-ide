@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- Node-side half. Plain ESM, node builtins + playwright-core
 // only (no browser download: this drives the app's own WebView2 over CDP, never a Playwright-
 // managed browser).

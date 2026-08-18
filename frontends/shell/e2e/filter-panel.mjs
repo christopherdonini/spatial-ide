@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- PANEL'/PANELREFUSE'/CLEAR'/SLOW'/CANCEL'/FIND' steps for
 // NEXT-CUT.md's filter-panel cut, phase P5 (+ FIND', added post-P7a per the operator's own Part E
 // E5 finding and the human-approved "Apply behaves exactly like opening a dataset" design revision

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * Coalesces repeated calls into at most one pending `requestAnimationFrame` callback -- the reviewer
  * gate's S5 fix (style-panel cut P7 fixes): a continuous slider drag in the style panel fires an

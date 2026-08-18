@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- STYLE'/OPACITY'/OUTLINE'/DOC'/RESET' steps for NEXT-CUT.md's
 // style-panel cut, phase P6. Sibling to `regression.mjs`/`filter-panel.mjs`, not folded into either
 // (same "an unrelated defect never entangles with this piece's own" reasoning `filter.mjs`'s and

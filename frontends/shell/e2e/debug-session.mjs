@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 // E2E TEST SURFACE (e2e/README.md) -- CLI entry point: admits a fixture through the real admission
 // path, lets the canvas settle, and reads pixels back. An instrument, not a test -- exit 0 means it
 // ran to completion, never a claim that anything rendered (see the "E2E-verified" note in the

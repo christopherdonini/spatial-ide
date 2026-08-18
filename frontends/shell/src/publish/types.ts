@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
 /**
  * The publish seam's wire types (NEXT-CUT.md publish-cut, P1/P2). Field names mirror
  * `frontends/shell/src-tauri/src/publish.rs` exactly -- snake_case included, matching this

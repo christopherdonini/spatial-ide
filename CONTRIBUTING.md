@@ -113,11 +113,14 @@ is retained in `product-ci-rust.yml` rather than deleted, so a recurrence can be
 | `product-ci-viewer.yml` | `31156155406` | `push` (`de6ad08`) | the viewer typechecks, builds and tests |
 | `dco.yml` | `31199038936` | `pull_request` (#3) | **checked 11 non-merge commits, 0 failed** — the check examines a real range, not an empty one |
 
-Two limits on what that green means. `product-ci-viewer.yml` **has never run on a `pull_request`** —
-it is path-filtered to `renderer/**` and no pull request has yet touched those paths, so its
-pull-request behaviour is still unexercised. And a green Rust run makes **no performance claim**: the
-two `docs/08` budget harnesses are `#[ignore]`d and are not run there, deliberately — see that file's
-own "What a green run here means".
+One limit on what that green means: a green Rust run makes **no performance claim**: the two
+`docs/08` budget harnesses are `#[ignore]`d and are not run there, deliberately — see that file's own
+"What a green run here means".
+
+> **Update, 2026-08-18:** the line above previously said `product-ci-viewer.yml` had never run on a
+> `pull_request`. It has since: e.g. run `32016756529` (`cut/publish-ui`, 2026-08-17, success) and
+> `31948569278` (`cut/style-panel`, 2026-08-16, success) — `gh run list --workflow=product-ci-viewer.yml`
+> shows both. That gap is closed; corrected here rather than left to mislead a later reader.
 
 The local commands above remain the check that establishes the most, because they run the full suite
 on the reference profile without a shared runner's drift.
