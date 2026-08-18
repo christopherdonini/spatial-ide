@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { DescribeResponse } from "../skp/types";
+import { crsSummaryLine, identitySummaryLine } from "./describeSummaryText";
 
 /** Success shows schema, identity, row count and license as `describe` actually established them
  * -- never a dataset extent or an unqualified feature count (NEXT-CUT.md's brief said "bounds,
@@ -17,9 +18,7 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
     <div className="describe-summary">
       <dl>
         <dt>CRS</dt>
-        <dd>
-          {describe.crs.identifier} — {describe.crs.source}, axis order {describe.crs.axis_order}
-        </dd>
+        <dd>{crsSummaryLine(describe.crs)}</dd>
 
         <dt>Geometry</dt>
         <dd>
@@ -27,9 +26,7 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
         </dd>
 
         <dt>Identity</dt>
-        <dd>
-          {describe.identity.source} — {describe.identity.uniqueness}
-        </dd>
+        <dd>{identitySummaryLine(describe.identity)}</dd>
 
         <dt>Row count</dt>
         <dd>{rowCount}</dd>
@@ -37,7 +34,7 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
         <dt>Extent</dt>
         <dd>
           not established at open — the canvas fits to features as they stream in (a
-          dataset-extent operation is cut-2 work)
+          dataset-extent operation is not part of this build)
         </dd>
 
         <dt>Schema</dt>

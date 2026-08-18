@@ -23,6 +23,7 @@
 
 import type { ApplyFilterOutcome } from "./App";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
+import type { CrsCatalogEntry } from "./skp/crsCatalog";
 
 export interface PixelRegion {
   /** Fraction of the drawing buffer, 0..1, in WebGL's own `readPixels` origin (bottom-left). */
@@ -75,6 +76,16 @@ export interface PixelSummary {
 
 export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: string; message: string };
 
+/** NEXT-CUT.md P3 item F: the same two `skp/0.2` remediation options a real form submit passes to
+ * `admitDataset` (`AdmitOptions`), camelCased for JS-side ergonomics -- `openPath` converts these
+ * to the wire's snake_case shape itself, so a driver never has to know that detail. Omitted
+ * entirely (not just both fields `undefined`) is how a driver replays a plain, non-remediated
+ * open -- the same as calling `openPath(path)` before this cut. */
+export interface OpenPathOptions {
+  crsAssertion?: { identifier: string; definitionJson: string };
+  identity?: { column: string };
+}
+
 /**
  * `openPath`'s `"admitted"` means `open_dataset` actually returned a dataset handle.
  *
@@ -92,7 +103,12 @@ export type OpenPathOutcome = { kind: "admitted" } | { kind: "refused"; code: st
 export type FilterQueryOutcome = ApplyFilterOutcome;
 
 export interface E2eTestSurface {
-  openPath?: (path: string) => Promise<OpenPathOutcome>;
+  openPath?: (path: string, opts?: OpenPathOptions) => Promise<OpenPathOutcome>;
+  /** Read-only pass-through to `skp/crsCatalog.ts`'s own `crsCatalog()` -- NEXT-CUT.md P3 item F,
+   * so P5's suite can assert against the pinned catalog `CrsAssertionForm` itself renders, without
+   * needing a DOM query to reach it. Registered alongside `openPath` (`AdmissionPanel.tsx`), not
+   * conditioned on any admitted dataset -- the catalog is available before any file is opened. */
+  crsCatalog?: () => Promise<CrsCatalogEntry[]>;
   capturePixels?: (regions?: PixelRegion[]) => Promise<PixelSummary>;
   /** Drives `App.tsx`'s `applyFilter` with a caller-supplied predicate against the currently-open
    * dataset -- the SAME seam `FilterPanel`'s own Apply button calls (deviation-3 retrofit), not a

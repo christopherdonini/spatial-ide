@@ -108,4 +108,52 @@ describe("admitDataset", () => {
     });
     await expect(admitDataset("C:/data/parcels.parquet", "open-3")).rejects.toThrow(TypeError);
   });
+
+  // NEXT-CUT.md P3 item H: "form submit -> admitDataset called with exactly the right params" --
+  // both remediation forms funnel into `admitDataset`'s own `options` parameter, so proving THIS
+  // function forwards it correctly onto the wire is what proves a form submit reaches the SAME
+  // admission path a plain retry uses, not a parallel one.
+  it("a crsAssertion option is forwarded to open_dataset as crs_assertion, identity stays null", async () => {
+    invokeMock.mockImplementation(async (cmd: string) => {
+      if (cmd === "open_dataset") return { dataset: "ds_1" };
+      if (cmd === "describe") return describeFixture();
+      throw new Error(`unexpected command ${cmd}`);
+    });
+
+    await admitDataset("C:/data/no-crs.parquet", "open-crs", {
+      crsAssertion: { identifier: "EPSG:2056", definition_json: "{\"type\":\"ProjectedCRS\"}" },
+    });
+
+    expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
+      request: {
+        skp: "skp/0.2",
+        path: "C:/data/no-crs.parquet",
+        cancel_key: "open-crs",
+        crs_assertion: { identifier: "EPSG:2056", definition_json: "{\"type\":\"ProjectedCRS\"}" },
+        identity: null,
+      },
+    });
+  });
+
+  it("an identity option is forwarded to open_dataset as identity, crs_assertion stays null", async () => {
+    invokeMock.mockImplementation(async (cmd: string) => {
+      if (cmd === "open_dataset") return { dataset: "ds_1" };
+      if (cmd === "describe") return describeFixture();
+      throw new Error(`unexpected command ${cmd}`);
+    });
+
+    await admitDataset("C:/data/missing-identity.parquet", "open-identity", {
+      identity: { column: "parcel_key" },
+    });
+
+    expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
+      request: {
+        skp: "skp/0.2",
+        path: "C:/data/missing-identity.parquet",
+        cancel_key: "open-identity",
+        crs_assertion: null,
+        identity: { column: "parcel_key" },
+      },
+    });
+  });
 });

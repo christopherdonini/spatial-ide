@@ -4,12 +4,22 @@
 import { describe, expect, it } from "vitest";
 
 import type { SkpError } from "../skp/types";
-import { formatRefusal } from "./formatRefusal";
+import { fieldValue, formatRefusal, refusalGuidance } from "./formatRefusal";
 
 // Mirrors kernel/src/skp.rs::error_of's exact shape for each family, so this test would fail if
 // the Rust and TypeScript sides of the refusal contract ever drifted apart in what they assume
 // about it -- not a substitute for the shared-fixture test, which covers the wire shape; this one
-// covers the *presentation* rule (verbatim message, sorted fields, the cut-2 remediation note).
+// covers the *presentation* rule (verbatim message, sorted fields, per-code guidance).
+
+function crsAssertionConflict(): SkpError {
+  return {
+    code: "engine.crs_assertion_conflict",
+    message:
+      "refused: this file already declares a CRS; the asserted CRS was not applied and no " +
+      "comparison was made (ADR-015 §4)",
+    fields: { declared: "EPSG:2056", asserted: "EPSG:4326" },
+  };
+}
 
 function crsUndeclared(): SkpError {
   return {
@@ -63,15 +73,60 @@ describe("formatRefusal", () => {
     ]);
   });
 
-  it("flags the cut-2 remediation note for CRS and identity refusals only", () => {
+  it("flags a remediation form for CRS-undeclared and identity-unusable refusals only", () => {
     expect(formatRefusal(crsUndeclared()).remediationIsCut2).toBe(true);
     expect(formatRefusal(identityUnusable()).remediationIsCut2).toBe(true);
     expect(formatRefusal(axisOrderUnsupported()).remediationIsCut2).toBe(false);
     expect(formatRefusal(ceilingExceeded()).remediationIsCut2).toBe(false);
   });
 
+  // I1 (must-fix defect): `engine.crs_assertion_conflict` is NOT in the remediation-form set --
+  // AdmissionPanel's own `nextFormFamily` (AdmissionPanel.test.ts) is what actually gates the
+  // control not rendering; this asserts the formatting-layer half of that guarantee.
+  it("does not flag a remediation form for engine.crs_assertion_conflict (I1)", () => {
+    expect(formatRefusal(crsAssertionConflict()).remediationIsCut2).toBe(false);
+  });
+
   it("an error with no fields formats to an empty (not undefined) field list", () => {
     const f = formatRefusal({ code: "engine.cancelled", message: "cancelled", fields: {} });
     expect(f.fields).toEqual([]);
+  });
+});
+
+describe("fieldValue", () => {
+  it("finds a named field's value on a formatted refusal", () => {
+    const f = formatRefusal(identityUnusable());
+    expect(fieldValue(f, "column")).toBe("id");
+  });
+
+  it("is undefined for a field the code does not carry", () => {
+    const f = formatRefusal(crsUndeclared());
+    expect(fieldValue(f, "candidate_columns")).toBeUndefined();
+  });
+});
+
+describe("refusalGuidance", () => {
+  it("engine.crs_assertion_conflict: states the file already declares a CRS, the assertion was not applied, and no comparison was made (I1)", () => {
+    const guidance = refusalGuidance("engine.crs_assertion_conflict");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/already declares/i);
+    expect(guidance).toMatch(/not applied/i);
+    expect(guidance).toMatch(/no comparison/i);
+  });
+
+  it("axis-order codes: state the file was refused, not reinterpreted, and that this is protective (D)", () => {
+    for (const code of ["engine.axis_order_unestablished", "engine.axis_order_unsupported"]) {
+      const guidance = refusalGuidance(code);
+      expect(guidance).not.toBeNull();
+      expect(guidance).toMatch(/x-first axis order/i);
+      expect(guidance).toMatch(/refused, not/i);
+      expect(guidance).toMatch(/protective/i);
+    }
+  });
+
+  it("every other code (including crs_undeclared/identity_unusable, whose own form carries the extra copy) has no extra guidance", () => {
+    expect(refusalGuidance("engine.crs_undeclared")).toBeNull();
+    expect(refusalGuidance("engine.identity_unusable")).toBeNull();
+    expect(refusalGuidance("engine.ceiling_exceeded")).toBeNull();
   });
 });
