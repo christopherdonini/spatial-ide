@@ -92,7 +92,13 @@ pub enum EngineError {
     /// a negative value, and a column that is not unique. All four are the same failure from a
     /// consumer's side — the id it is handed does not identify one feature — so they share a
     /// variant and are distinguished by `detail`.
-    IdentityUnusable { column: String, detail: String },
+    ///
+    /// `candidate_columns` (NEXT-CUT.md P0): the file's 64-bit integer columns (`Int64` and
+    /// `UInt64`), in schema order, unranked and unpreselected — no scoring, no "looks like an id"
+    /// guess (that is Alpha data-doctor territory, `docs/05`). A remediation UI lists them; it does
+    /// not recommend one. Carried only in this structured field — `Display` below does not mention
+    /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
+    IdentityUnusable { column: String, detail: String, candidate_columns: Vec<String> },
 
     /// One feature alone is larger than the largest batch this engine will emit.
     ///
@@ -195,7 +201,7 @@ impl fmt::Display for EngineError {
             Self::CeilingExceeded { ceiling, limit, saw } => {
                 write!(f, "declared ceiling {ceiling} exceeded: limit {limit}, saw {saw}")
             }
-            Self::IdentityUnusable { column, detail } => write!(
+            Self::IdentityUnusable { column, detail, candidate_columns: _ } => write!(
                 f,
                 "refused: `{column}` cannot serve as stable feature identity — {detail}. \
                  Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"

@@ -25,6 +25,37 @@ pub struct OpenDatasetRequest {
     /// Client-minted (SKP-V0.md §3): names this specific open so `cancel` can stop it before it
     /// returns a handle.
     pub cancel_key: String,
+    /// `skp/0.2`: an explicit CRS assertion, admitted only over a file that declares none
+    /// (ADR-015 §4). `null` declares "no assertion" — matches `bbox_crs`/`filter`'s own discipline
+    /// (SKP-V0.md §7.2): the field carries no `#[serde(default)]`, always present on the wire, and
+    /// a plain `Option<CrsAssertion>` with `None` still serializes to JSON `null`, never an absent
+    /// key. The wire carries no attribution (`by`/`at`) — the host mints those (ADR-004
+    /// Amendment 4; ADR-024 F-5).
+    pub crs_assertion: Option<CrsAssertion>,
+    /// `skp/0.2`: an explicit declaration of which column carries feature identity (ADR-016
+    /// §3–§7). Same discipline as `crs_assertion` above: `null` means "no declaration", never an
+    /// absent key.
+    pub identity: Option<IdentityDeclaration>,
+}
+
+/// `skp/0.2`: a caller-asserted CRS for `open_dataset` (ADR-015 §4). Admitted only over a file
+/// that declares no CRS; refused, without comparing, over a file that already declares one
+/// (`engine.crs_assertion_conflict`). No attribution field here — the wire never carries `by`/`at`
+/// (ADR-004 Amendment 4); the host mints both when it records the assertion.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CrsAssertion {
+    pub identifier: String,
+    pub definition_json: String,
+}
+
+/// `skp/0.2`: a caller declaration of which column carries stable feature identity (ADR-016
+/// §3–§7), used to admit a file whose identity is not its own `id` column. No attribution field
+/// here either, for the same reason as [`CrsAssertion`].
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct IdentityDeclaration {
+    pub column: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -277,9 +308,11 @@ mod tests {
     #[test]
     fn every_request_and_response_round_trips_and_refuses_unknown_fields() {
         let req = OpenDatasetRequest {
-            skp: "skp/0.1".into(),
+            skp: SKP_VERSION.into(),
             path: "C:/data/parcels.parquet".into(),
             cancel_key: "open-1".into(),
+            crs_assertion: None,
+            identity: None,
         };
         let json = serde_json::to_string(&req).unwrap();
         let _back: OpenDatasetRequest = serde_json::from_str(&json).unwrap();
@@ -287,6 +320,43 @@ mod tests {
         let mut v: serde_json::Value = serde_json::from_str(&json).unwrap();
         v.as_object_mut().unwrap().insert("extra".into(), serde_json::Value::Bool(true));
         assert!(serde_json::from_value::<OpenDatasetRequest>(v).is_err());
+    }
+
+    /// `skp/0.2`: `crs_assertion`/`identity` follow the exact `bbox_crs`/`filter` discipline —
+    /// `null` on the wire is a present, explicit "none declared", never an omitted key.
+    #[test]
+    fn open_dataset_request_carries_crs_assertion_and_identity_as_explicit_null_when_absent() {
+        let req = OpenDatasetRequest {
+            skp: SKP_VERSION.into(),
+            path: "C:/data/parcels.parquet".into(),
+            cancel_key: "open-1".into(),
+            crs_assertion: None,
+            identity: None,
+        };
+        let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+        let obj = v.as_object().unwrap();
+        assert!(obj.contains_key("crs_assertion"), "crs_assertion key must be present");
+        assert!(obj.contains_key("identity"), "identity key must be present");
+        assert_eq!(v["crs_assertion"], serde_json::Value::Null);
+        assert_eq!(v["identity"], serde_json::Value::Null);
+    }
+
+    #[test]
+    fn open_dataset_request_with_crs_assertion_and_identity_round_trips() {
+        let req = OpenDatasetRequest {
+            skp: SKP_VERSION.into(),
+            path: "C:/data/parcels.parquet".into(),
+            cancel_key: "open-1".into(),
+            crs_assertion: Some(CrsAssertion {
+                identifier: "EPSG:2056".into(),
+                definition_json: "{\"type\":\"GeographicCRS\"}".into(),
+            }),
+            identity: Some(IdentityDeclaration { column: "parcel_key".into() }),
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let back: OpenDatasetRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.crs_assertion.unwrap().identifier, "EPSG:2056");
+        assert_eq!(back.identity.unwrap().column, "parcel_key");
     }
 
     #[test]

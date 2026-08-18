@@ -1,5 +1,7 @@
 {
-  "skp": "skp/0.1",
+  "skp": "skp/0.2",
   "path": "C:/data/parcels.parquet",
-  "cancel_key": "open-1"
+  "cancel_key": "open-1",
+  "crs_assertion": null,
+  "identity": null
 }

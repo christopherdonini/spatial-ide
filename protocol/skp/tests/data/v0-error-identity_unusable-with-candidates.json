@@ -1,0 +1,9 @@
+{
+  "code": "engine.identity_unusable",
+  "message": "refused: `id` cannot serve as stable feature identity — the file has no such column, and no identity mapping was declared. Stable per-feature identity is required (docs/11); declare a mapping to a column that carries it. Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent",
+  "fields": {
+    "column": "id",
+    "detail": "the file has no such column, and no identity mapping was declared. Stable per-feature identity is required (docs/11); declare a mapping to a column that carries it",
+    "candidate_columns": "parcel_key,tax_lot_number"
+  }
+}

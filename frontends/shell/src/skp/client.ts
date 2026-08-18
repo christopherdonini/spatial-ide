@@ -8,8 +8,10 @@ import {
   Bbox,
   CancelResponse,
   CloseDatasetResponse,
+  CrsAssertion,
   DescribeResponse,
   Filter,
+  IdentityDeclaration,
   OpenDatasetResponse,
   SkpError,
   SKP_VERSION,
@@ -49,8 +51,27 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
   }
 }
 
-export function openDataset(path: string, cancelKey: string): Promise<OpenDatasetResponse> {
-  return call("open_dataset", { skp: SKP_VERSION, path, cancel_key: cancelKey });
+/**
+ * `crs_assertion`/`identity` are `null`, defaulting to `null` -- the cut-1 open path is
+ * unaffected. Sent explicitly (never omitted), matching `filter`'s own discipline above: both are
+ * `Option<T>` on the Rust side with no `#[serde(default)]`. This function does not admit either
+ * value; only the kernel does, and it may refuse it (NEXT-CUT.md P0: protocol only, no logic
+ * here). The wire carries no attribution -- no `by`, no `at` -- the host mints both (ADR-004
+ * Amendment 4; ADR-024 F-5).
+ */
+export function openDataset(
+  path: string,
+  cancelKey: string,
+  crsAssertion: CrsAssertion | null = null,
+  identity: IdentityDeclaration | null = null
+): Promise<OpenDatasetResponse> {
+  return call("open_dataset", {
+    skp: SKP_VERSION,
+    path,
+    cancel_key: cancelKey,
+    crs_assertion: crsAssertion,
+    identity,
+  });
 }
 
 export function describe(dataset: string): Promise<DescribeResponse> {

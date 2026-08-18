@@ -37,6 +37,47 @@ fn open_dataset_fixtures_round_trip() {
     round_trip::<OpenDatasetResponse>("v0-open_dataset-response");
 }
 
+/// `skp/0.2`: `crs_assertion`/`identity` are present (never omitted) on every `open_dataset`
+/// request, including the unremediated one above (both `null`) and this variant, which carries
+/// both — exactly `filter`'s own `viewport_query_request_with_a_filter_round_trips` precedent.
+#[test]
+fn open_dataset_request_with_crs_assertion_and_identity_round_trips() {
+    let v = fixture("v0-open_dataset-request-with-crs_assertion-and-identity");
+    let parsed: OpenDatasetRequest = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as OpenDatasetRequest: {e}"));
+    let crs = parsed.crs_assertion.as_ref().expect("this fixture's point is a present crs_assertion");
+    assert_eq!(crs.identifier, "EPSG:2056");
+    let identity = parsed.identity.as_ref().expect("this fixture's point is a present identity");
+    assert_eq!(identity.column, "parcel_key");
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
+/// **Known gap, not introduced by this piece.** `SKP-V0.md` §7.2 describes `bbox_crs`/`filter`'s
+/// discipline as "the field carries no `#[serde(default)]`, so a request that omits the key
+/// entirely is a deserialize failure" — but plain `Option<T>` struct fields are deserialized by
+/// serde as `None` when their key is absent **regardless of `#[serde(default)]`'s presence or
+/// absence**; there is no existing mechanism in this crate that makes an `Option<T>` field
+/// wire-required (`Filter`'s own custom `Deserialize` validates *dialect*, not key presence, and
+/// no field-presence check exists anywhere else in `v0::commands`). Confirmed against
+/// `ViewportQueryRequest.filter` before writing this test, and reproduced here for the new
+/// `crs_assertion`/`identity` fields, faithfully replicating (not inventing a fix for) the
+/// existing mechanism per this piece's brief ("replicate the exact mechanism, do not invent a new
+/// one"). Flagged for the custodian; a working "omitted key is refused" property, if wanted, is a
+/// new mechanism applied uniformly to every optional field on the wire, not a P0 change.
+#[test]
+fn omitting_crs_assertion_or_identity_key_is_currently_tolerated_not_refused() {
+    let v = serde_json::json!({
+        "skp": SKP_VERSION,
+        "path": "C:/data/parcels.parquet",
+        "cancel_key": "open-1",
+        "identity": null,
+        // crs_assertion key omitted entirely
+    });
+    let parsed: OpenDatasetRequest = serde_json::from_value(v)
+        .expect("documents current behavior: an omitted Option<T> key deserializes as None, not a failure");
+    assert!(parsed.crs_assertion.is_none());
+}
+
 #[test]
 fn describe_fixtures_round_trip() {
     round_trip::<DescribeRequest>("v0-describe-request");
@@ -79,11 +120,29 @@ fn error_fixture_round_trips() {
     round_trip::<SkpError>("v0-error-example");
 }
 
+/// `skp/0.2`: `engine.identity_unusable` gains a `candidate_columns` field (NEXT-CUT.md P0) — the
+/// file's 64-bit integer columns, schema order, comma-joined (`SkpError::fields` has no list shape
+/// on the wire — `kernel/src/skp.rs::error_of`). `message` stays whatever `EngineError::Display`
+/// already produced; the candidate list rides only in `fields`.
+#[test]
+fn identity_unusable_error_fixture_carries_candidate_columns() {
+    let v = fixture("v0-error-identity_unusable-with-candidates");
+    let parsed: SkpError = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as SkpError: {e}"));
+    assert_eq!(parsed.code, "engine.identity_unusable");
+    assert_eq!(
+        parsed.fields.get("candidate_columns").map(String::as_str),
+        Some("parcel_key,tax_lot_number")
+    );
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
 /// Every request fixture actually carries the version string a real host would check.
 #[test]
 fn every_request_fixture_carries_the_current_skp_version() {
     for name in [
         "v0-open_dataset-request",
+        "v0-open_dataset-request-with-crs_assertion-and-identity",
         "v0-describe-request",
         "v0-viewport_query-request",
         "v0-viewport_query-request-with-filter",

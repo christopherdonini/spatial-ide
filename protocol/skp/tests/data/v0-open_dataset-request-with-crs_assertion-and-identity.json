@@ -1,0 +1,12 @@
+{
+  "skp": "skp/0.2",
+  "path": "C:/data/parcels.parquet",
+  "cancel_key": "open-1",
+  "crs_assertion": {
+    "identifier": "EPSG:2056",
+    "definition_json": "{\"type\":\"ProjectedCRS\",\"id\":{\"authority\":\"EPSG\",\"code\":2056}}"
+  },
+  "identity": {
+    "column": "parcel_key"
+  }
+}

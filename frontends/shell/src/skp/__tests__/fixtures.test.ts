@@ -53,14 +53,42 @@ function assertExactKeys(value: unknown, expected: readonly string[], label: str
 describe("SKP v0 shared fixtures", () => {
   it("open_dataset request/response", () => {
     const req = loadFixture<OpenDatasetRequest>("v0-open_dataset-request");
-    assertExactKeys(req, ["skp", "path", "cancel_key"], "open_dataset request");
+    assertExactKeys(
+      req,
+      ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+      "open_dataset request"
+    );
     expect(req.skp).toBe(SKP_VERSION);
     expect(typeof req.path).toBe("string");
     expect(typeof req.cancel_key).toBe("string");
+    expect(req.crs_assertion).toBeNull(); // skp/0.2: absent assertion is `null`, never omitted
+    expect(req.identity).toBeNull(); // skp/0.2: absent declaration is `null`, never omitted
 
     const res = loadFixture<OpenDatasetResponse>("v0-open_dataset-response");
     assertExactKeys(res, ["dataset"], "open_dataset response");
     expect(res.dataset).toMatch(/^ds_[0-9a-f]{32}$/);
+  });
+
+  it("open_dataset request with crs_assertion and identity present (skp/0.2)", () => {
+    const req = loadFixture<OpenDatasetRequest>(
+      "v0-open_dataset-request-with-crs_assertion-and-identity"
+    );
+    assertExactKeys(
+      req,
+      ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+      "open_dataset request (with crs_assertion and identity)"
+    );
+    expect(req.skp).toBe(SKP_VERSION);
+    expect(req.crs_assertion).not.toBeNull();
+    assertExactKeys(
+      req.crs_assertion,
+      ["identifier", "definition_json"],
+      "open_dataset request .crs_assertion"
+    );
+    expect(req.crs_assertion!.identifier).toBe("EPSG:2056");
+    expect(req.identity).not.toBeNull();
+    assertExactKeys(req.identity, ["column"], "open_dataset request .identity");
+    expect(req.identity!.column).toBe("parcel_key");
   });
 
   it("describe request/response, including the two brief corrections (extent, row_count)", () => {
@@ -179,9 +207,19 @@ describe("SKP v0 shared fixtures", () => {
     expect(err.fields.detail).toBeDefined();
   });
 
+  it("an identity_unusable refusal carries candidate_columns, schema order, comma-joined (skp/0.2)", () => {
+    const err = loadFixture<SkpError>("v0-error-identity_unusable-with-candidates");
+    assertExactKeys(err, ["code", "message", "fields"], "identity_unusable error example");
+    expect(err.code).toBe("engine.identity_unusable");
+    // `SkpError.fields` is `Record<string, string>` -- no list shape on the wire
+    // (`kernel/src/skp.rs::error_of`), so the candidate list is comma-joined.
+    expect(err.fields.candidate_columns).toBe("parcel_key,tax_lot_number");
+  });
+
   it("every request fixture carries the current SKP_VERSION this client also sends", () => {
     for (const name of [
       "v0-open_dataset-request",
+      "v0-open_dataset-request-with-crs_assertion-and-identity",
       "v0-describe-request",
       "v0-viewport_query-request",
       "v0-viewport_query-request-with-filter",

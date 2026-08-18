@@ -157,6 +157,24 @@ impl DatasetIdentity {
     }
 }
 
+/// The file's 64-bit integer columns — `Int64` and `UInt64` only, narrower than the widths
+/// [`admit_column_type`] below still accepts — in schema order (NEXT-CUT.md P0, the
+/// admission-remediation cut's declare-identity flow).
+///
+/// Unranked and unpreselected: ADR-016 §3's "declared, never inferred" extends to this list
+/// itself. It names candidates a remediation UI may offer a caller to choose among; it is never a
+/// recommendation, a score, or a "looks like an id" guess (that inference is Alpha data-doctor
+/// territory, `docs/05`).
+pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -> Vec<String> {
+    use arrow::datatypes::DataType as D;
+    schema
+        .fields()
+        .iter()
+        .filter(|f| matches!(f.data_type(), D::Int64 | D::UInt64))
+        .map(|f| f.name().clone())
+        .collect()
+}
+
 /// The SQL type of a candidate identity column, classified by whether reading it into `u64`
 /// **preserves the value**.
 ///
@@ -164,7 +182,11 @@ impl DatasetIdentity {
 /// Anything that would require a hash, a dictionary index, or a scan-order ordinal is refused: those
 /// are synthesized ordinals wearing a mapping's clothes, and §2 already refuses synthesized
 /// ordinals — a mapping may not readmit them under another name.
-pub(crate) fn admit_column_type(column: &str, ty: &arrow::datatypes::DataType) -> Result<()> {
+pub(crate) fn admit_column_type(
+    column: &str,
+    ty: &arrow::datatypes::DataType,
+    schema: &arrow::datatypes::SchemaRef,
+) -> Result<()> {
     use arrow::datatypes::DataType as D;
     match ty {
         // Widening into u64 is exact. A signed type is admitted here and its *values* are checked
@@ -179,6 +201,7 @@ pub(crate) fn admit_column_type(column: &str, ty: &arrow::datatypes::DataType) -
                  transformation. A hash, a dictionary index or a row ordinal is not a mapping — it \
                  is a synthesized identity, which ADR-016 refuses"
             ),
+            candidate_columns: candidate_identity_columns(schema),
         }),
     }
 }
@@ -188,16 +211,41 @@ mod tests {
     use super::*;
     use arrow::datatypes::DataType as D;
 
+    fn schema_with(name: &str, ty: D) -> arrow::datatypes::SchemaRef {
+        std::sync::Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
+            name, ty, true,
+        )]))
+    }
+
     #[test]
     fn only_value_preserving_integer_types_are_admitted() {
         for ty in [D::UInt64, D::Int64, D::UInt32, D::Int32, D::Int16, D::UInt8] {
-            assert!(admit_column_type("k", &ty).is_ok(), "{ty} should widen exactly");
+            let schema = schema_with("k", ty.clone());
+            assert!(admit_column_type("k", &ty, &schema).is_ok(), "{ty} should widen exactly");
         }
         // Each of these would need a transform to become a u64, and a transform is where
         // collisions and scan-order dependence enter.
         for ty in [D::Utf8, D::Float64, D::Binary, D::Boolean] {
-            assert!(admit_column_type("k", &ty).is_err(), "{ty} must be refused");
+            let schema = schema_with("k", ty.clone());
+            assert!(admit_column_type("k", &ty, &schema).is_err(), "{ty} must be refused");
         }
+    }
+
+    #[test]
+    fn candidate_columns_are_the_64_bit_integer_columns_in_schema_order_unranked() {
+        use arrow::datatypes::Field;
+        let schema = std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
+            Field::new("name", D::Utf8, true),
+            Field::new("big_signed", D::Int64, false),
+            Field::new("small_signed", D::Int32, false),
+            Field::new("big_unsigned", D::UInt64, false),
+            Field::new("geometry", D::Binary, false),
+        ]));
+        assert_eq!(
+            candidate_identity_columns(&schema),
+            vec!["big_signed".to_string(), "big_unsigned".to_string()],
+            "schema order, Int64 and UInt64 only — no Int32, no ranking"
+        );
     }
 
     #[test]

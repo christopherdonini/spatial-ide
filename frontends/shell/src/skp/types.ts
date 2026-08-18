@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.1";
+export const SKP_VERSION = "skp/0.2";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -25,10 +25,30 @@ export interface SkpError {
   fields: Record<string, string>;
 }
 
+/** `skp/0.2`: a caller-asserted CRS for `open_dataset` (ADR-015 §4). Admitted only over a file
+ * that declares no CRS; refused, without comparing, over a file that already declares one
+ * (`engine.crs_assertion_conflict`). No attribution field -- the wire never carries `by`/`at`
+ * (ADR-004 Amendment 4); the host mints both when it records the assertion. */
+export interface CrsAssertion {
+  identifier: string;
+  definition_json: string;
+}
+
+/** `skp/0.2`: a caller declaration of which column carries stable feature identity (ADR-016
+ * §3-§7). No attribution field, for the same reason as `CrsAssertion`. */
+export interface IdentityDeclaration {
+  column: string;
+}
+
 export interface OpenDatasetRequest {
   skp: string;
   path: string;
   cancel_key: string;
+  /** `skp/0.2`. `null` declares "no assertion" -- always present on the wire, matches
+   * `bbox_crs`/`filter`'s own discipline (never an omitted key). */
+  crs_assertion: CrsAssertion | null;
+  /** `skp/0.2`. `null` declares "no declaration" -- same discipline as `crs_assertion`. */
+  identity: IdentityDeclaration | null;
 }
 export interface OpenDatasetResponse {
   dataset: string;

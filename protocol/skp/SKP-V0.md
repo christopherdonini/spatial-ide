@@ -20,13 +20,28 @@ directions, so schema evolution is impossible without a new version string.
 ### `open_dataset`
 
 ```
-{ skp, path: String, cancel_key: String }  →  { dataset: DatasetHandle }
+{ skp, path: String, cancel_key: String,
+  crs_assertion: Option<{ identifier: String, definition_json: String }>,
+  identity: Option<{ column: String }> }
+  →  { dataset: DatasetHandle }
 ```
 
 `path` is UTF-8, absolute, and comes from the OS file picker. The host canonicalizes it and refuses
-a non-file with `EngineError::Source`'s own text. **Cut 1 offers no `crs_assertion` and no
-`identity` field** — the remediation flows that would use them are cut-2 UI work, and the fields
-arrive with the UI that exercises them, not before.
+a non-file with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
+`identity` field** — the remediation flows that use them were cut-2 UI work, and the fields arrived
+with the UI that exercises them, not before. **`skp/0.2` (§8) adds both fields to the wire**,
+following exactly `viewport_query.bbox_crs`/`filter`'s own discipline (§7.2) as written: `null`
+declares "none declared" and the key is always present, never omitted, on anything this codebase
+writes; the wire carries no attribution — no `by`, no `at` — the host mints both when it records an
+assertion or a declaration (ADR-004 Amendment 4; ADR-024 F-5). *(§7.2's own text goes further and
+states an omitted key is a deserialize failure on the **reading** side too; `P0` found — and left
+in place, not being P0's fix to make — that a plain `Option<T>` field with no `#[serde(default)]`
+does not actually refuse an omitted key under this crate's derive, for `bbox_crs`/`filter` or for
+these two new fields alike; see `protocol/skp/tests/fixtures.rs`'s
+`omitting_crs_assertion_or_identity_key_is_currently_tolerated_not_refused`.)* Admission of either
+value (ADR-015 §4, ADR-016 §3–§7) and the host-minted attribution are P1 work, threaded through
+`open_cancellable`; this section states the wire shape `skp/0.2` opened, not that P0 alone admits
+anything.
 
 `cancel_key` is a client-minted string (see §3) naming this specific open so `cancel` can stop it
 before it returns a handle. **`open_dataset` is cancellable but not progress-reporting** — a named
@@ -398,3 +413,49 @@ a working cancel, no wire change.)*
 Full design, consequences, and the security property this carries:
 `docs/adr/ADR-021-row-filter-on-viewport-query.md` (**Accepted 2026-08-13**, carrying the human's
 filter-panel liveness/cancel acceptance condition — see that ADR's Status line).
+
+## 8. Change log
+
+**Append-only from here down.** Each entry records what a version bump changed; **earlier entries
+are never rewritten**, only added to below. §§1–7 above stay the live, current-shape description of
+the protocol (updated in place where a version note says so, per each section's own discipline);
+this section is the dated history of how it got there.
+
+### skp/0.2 — admission-remediation cut, P0 (2026-08-18)
+
+- **`open_dataset` gains two optional members**: `crs_assertion: Option<{ identifier: String,
+  definition_json: String }>` (ADR-015 §4 — a caller-asserted CRS, admitted only over a file
+  declaring none) and `identity: Option<{ column: String }>` (ADR-016 §3–§7 — a caller-declared
+  identity column). Both follow `bbox_crs`/`filter`'s discipline as written (§7.2): `null` is a
+  present, explicit "none declared"; `deny_unknown_fields` stays on both directions; no new
+  command. The wire carries no attribution — no `by`, no `at`, no timestamp, no username — the
+  host mints `by`/`at` when it records either (ADR-004 Amendment 4; ADR-024 F-5); that minting is
+  P1 work, not this version bump.
+- **`engine.identity_unusable`'s refusal payload gains `candidate_columns`**: the file's 64-bit
+  integer columns (`Int64` and `UInt64` only), in schema order, unranked and unpreselected — no
+  scoring, no "looks like an id" guess (ADR-016 §3's "declared, never inferred" extended to the
+  candidate list itself). Carried as a comma-joined string in `SkpError.fields.candidate_columns`
+  (the envelope has no list shape — §5). `EngineError::IdentityUnusable`'s `Display` text is
+  unchanged, byte-for-byte, from `skp/0.1` — the walkthrough verbatim message and an E2E assertion
+  both depend on that text staying exactly what it was; the new data rides only in the structured
+  field.
+- Every fixture on both the Rust (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`)
+  and TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire was
+  updated in this same commit, per §4 item 13's own discipline, applied again.
+
+**DRAFT — re-deferral of §4 item 5's scan-progress debt, PENDING HUMAN CONFIRMATION
+(DECISIONS-PENDING entry 9).** §4 item 5's dated 2026-08-14 entry parked the true-scan-progress
+debt on "the next SKP version that opens the wire for any reason — a `skp/0.2`, or `docs/07`'s 1.0
+freeze, whichever comes first." This version, `skp/0.2`, is that version: it opens the wire (the
+two `open_dataset` fields above), so item 5's carrier clause fires. The debt is explicitly
+re-deferred again, with the same three reasons item 5 already gives — **(1)** no batch-independent
+data-plane carrier exists (`TAG_PROGRESS` still fires only after a batch, and this cut touches no
+data-plane frame); **(2)** what the quantity *is* — rows scanned, bytes read, row groups completed,
+elapsed-since-first-source-row — remains undecided and is an ADR-class question, not an
+implementation detail; **(3)** the interim the acceptance condition asked for already shipped
+(indeterminate liveness + a working cancel, client-derived, no wire change) — plus a **stronger
+carrier than last time**: the quantity question is to be filed as its own
+Proposed-with-open-decision ADR (the ADR-023 pattern), due before `docs/07`'s Prototype exit, so
+"the next version" can no longer roll over silently. **Because this clause descends from ADR-021's
+human acceptance condition, the human confirms it — this text is drafted and flagged, not merged as
+discharged.** See `DECISIONS-PENDING.md` entry 9 for the standing recommendation this text mirrors.

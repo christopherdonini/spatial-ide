@@ -740,11 +740,12 @@ fn admit_identity(
             } else {
                 "the file has no such column".to_string()
             },
+            candidate_columns: identity::candidate_identity_columns(schema),
         }
     })?;
 
     // §4's value-preserving test. A type needing a transform to reach u64 is refused outright.
-    identity::admit_column_type(&column, field.data_type())?;
+    identity::admit_column_type(&column, field.data_type(), schema)?;
 
     if skip {
         // Recorded, not hidden. A caller may take responsibility for uniqueness; it may not make
@@ -781,6 +782,7 @@ fn admit_identity(
                     "holds a negative value ({m}); identity is carried as u64 and a negative \
                      source value cannot widen into it without changing the value"
                 ),
+                candidate_columns: identity::candidate_identity_columns(schema),
             });
         }
     }
@@ -792,6 +794,7 @@ fn admit_identity(
                  an identity. ADR-010 rule 2 resolves a pick through this id, and a shared id \
                  returns a wrong-but-plausible feature with nothing raised"
             ),
+            candidate_columns: identity::candidate_identity_columns(schema),
         });
     }
 

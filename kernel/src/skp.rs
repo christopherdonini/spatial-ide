@@ -571,9 +571,17 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "ceiling_exceeded",
             vec![("ceiling", ceiling.to_string()), ("limit", limit.to_string()), ("saw", saw.to_string())],
         ),
-        EngineError::IdentityUnusable { column, detail } => {
-            ("identity_unusable", vec![("column", column.clone()), ("detail", detail.clone())])
-        }
+        EngineError::IdentityUnusable { column, detail, candidate_columns } => (
+            "identity_unusable",
+            vec![
+                ("column", column.clone()),
+                ("detail", detail.clone()),
+                // `SkpError::fields` is `BTreeMap<String, String>` (SKP-V0.md §5) — no list shape
+                // on the wire, so the schema-ordered, unranked candidate list is comma-joined into
+                // one string field. Empty when the file carries no 64-bit integer column at all.
+                ("candidate_columns", candidate_columns.join(",")),
+            ],
+        ),
         EngineError::FeatureTooLarge { id, limit, saw } => (
             "feature_too_large",
             vec![("id", id.to_string()), ("limit", limit.to_string()), ("saw", saw.to_string())],
@@ -815,7 +823,7 @@ mod tests {
 
     #[test]
     fn version_mismatch_is_refused_before_anything_else() {
-        assert!(check_version("skp/0.1").is_ok());
+        assert!(check_version(SKP_VERSION).is_ok());
         let e = check_version("skp/9").unwrap_err();
         assert_eq!(e.code, "skp.version_unsupported");
     }

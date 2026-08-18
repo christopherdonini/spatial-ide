@@ -98,9 +98,13 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
     let (path, _) =
         write("duplicate", &FixtureSpec { identity: IdentityMode::DuplicateIds, ..small() });
     match Dataset::open(&path) {
-        Err(EngineError::IdentityUnusable { column, detail }) => {
+        Err(EngineError::IdentityUnusable { column, detail, candidate_columns }) => {
             assert_eq!(column, "id");
             assert!(detail.contains("distinct"), "the refusal must say why: {detail}");
+            assert!(
+                candidate_columns.contains(&"id".to_string()),
+                "the file's own 64-bit `id` column must be among the candidates: {candidate_columns:?}"
+            );
         }
         other => panic!("expected a typed refusal, got {:?}", other.err()),
     }

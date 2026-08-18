@@ -21,4 +21,9 @@ pub use handles::{CancelKey, DatasetHandle, StreamHandle};
 /// directions and the comparison stays `==`, so a `skp/0` client and a `skp/0.1` host still fail on
 /// the first call rather than silently tolerating the new field either way. `skp/1` is RESERVED
 /// (docs/07's 1.0 freeze) and must not be used for any interim version.
-pub const SKP_VERSION: &str = "skp/0.1";
+///
+/// `skp/0.2` (admission-remediation cut, P0): adds `open_dataset.crs_assertion` and
+/// `open_dataset.identity`, plus `candidate_columns` on the `engine.identity_unusable` refusal.
+/// Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, every fixture on
+/// both sides of the wire updated in this commit (`SKP-V0.md` §8).
+pub const SKP_VERSION: &str = "skp/0.2";
