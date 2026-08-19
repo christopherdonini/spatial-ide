@@ -565,38 +565,154 @@ async function stepA8(page, consoleHandle) {
   return `16 alternating pan/zoom gestures, no settle waits between; settled after=${settle.settled}; no refusal/banner; no too_many_pending_streams`;
 }
 
-// A9'' zoom-in fix (action-console cut P8, DECISIONS-PENDING.md entry 20, option (a),
-// human-authorized 2026-08-19): P5c's two isolation experiments (`e2e/README.md`'s own dated
-// notes) established the failing assumption was never this drawer's layout or the
-// interior-verification hardening itself, but a narrower one baked into both: "an interior fill
-// pixel exists at DEFAULT zoom." It does not, at this canvas's own post-A8' default-zoom camera
-// state (committed evidence in `e2e/README.md`'s note: densest alpha 45 vs a fill's own 180,
-// zero 5x5-interior candidates among any of the 3 read-back-verified samplePoints). A9's own
-// assertion (hover a rendered feature -> the hover panel shows the feature id) is
-// zoom-independent, so this fix zooms in MODESTLY -- real wheel-zoom mechanics, the same
-// `doWheel` helper A5'/A6'/A8' already drive, centred on the canvas -- before any target is
-// selected, then reruns the UNCHANGED capture -> interior-verify -> hover sequence at that zoom
-// level. Bounded at 2 zoom attempts total (entry 20's own terms): if neither yields an
-// interior-verified candidate, that is no longer an instrument limitation -- zoomed-in fill
-// ALSO absent is evidence of a real render defect, and this step STOPS (throws) with full
-// per-attempt evidence rather than falling back to the old first-non-background heuristic (the
-// exact fallback that let the original edge-pixel miss through before 2e345d4's own hardening).
-const ZOOM_NOTCH_DELTA_Y = -300; // one "zoom in" wheel notch -- the same magnitude A5'/A6'
-// already use for their own single in/out zoom gesture, just repeated here rather than reinvented.
-const ZOOM_ATTEMPT_NOTCHES = [3, 2]; // attempt 1: 3 notches in (within the entry's own "2-4
-// notches"); attempt 2, only if attempt 1 finds no interior candidate: 2 MORE notches in
-// (cumulative 5) -- "one more modest zoom-in," per the entry's own bounded-retry wording.
+// A9' candidate selection fix (action-console cut P11, DECISIONS-PENDING.md entries 20/21,
+// CUT-STATE.md's own P10 record). P10's evidence-driven zoom search (its own shape kept below,
+// notch budget unchanged) exhausted all 15 notches on both fresh runs: frame-wide non-background
+// pixels climbed to 90,250/256,000 at notch 2, then fell to exactly 0 by notch 7 -- and EVERY
+// candidate along the way sat at buffer row y=0, the frame's own top edge. That is not P9's own
+// scale diagnosis failing (entry 21 stays uncontradicted) -- it is a candidate-SELECTION defect:
+// `WorkingCanvas.tsx`'s `summarizePixels` documents its own `samplePoint` (per-region AND
+// frame-wide alike) as "the first non-background pixel encountered in that region's row-major
+// scan" -- structurally the TOP EDGE of whatever content a region contains, at every zoom, never
+// an interior pixel by construction. `verifyInteriorCandidate` (P5c, kept UNCHANGED below)
+// demands a full 5x5-interior patch; a structurally-top-edge point can only ever supply one by
+// accident. (The pre-P5c green worked through deck.gl's own pick tolerance around an edge pixel,
+// never because an interior pixel was actually sampled -- P10's own CUT-STATE.md synthesis.)
+//
+// The fix, entirely e2e-side, never touching `WorkingCanvas.tsx`: `findInteriorCandidate` (below)
+// replaces `samplePoint`-based selection with densest-PATCH bisection, reusing the same
+// already-exposed `capturePixels(regions)` hook P9 drove per-row. A coarse grid over the whole
+// buffer picks its densest region; that region is subdivided and the densest sub-region kept;
+// repeated once more only if the patch is still bigger than ~12x12px. The FINAL patch's CENTER
+// pixel is the candidate -- interior by construction whenever the patch's own non-background
+// fraction is high, unlike a row-major "first pixel" scan. The densest grid region's own
+// `samplePoint` rides along as a second, fallback candidate; `verifyInteriorCandidate` still
+// decides, unchanged, so a wrong bisection guess can never silently pass.
+//
+// The zoom search keeps P10's shape (one notch at a time, re-verifying after each) with two
+// changes: notch 0 (the CURRENT camera, no zoom yet) is tried FIRST -- P10 never tried pre-zoom
+// at all -- and an early-stop: if the frame's own non-background pixel count decreases for two
+// consecutive notches, the search stops (P10's own rise-then-fall-to-zero curve is exactly that
+// signature -- zooming further only walks the viewport away from data, never named a fix target
+// here since this piece is selection-only). A miss even after that still fails loudly with full
+// per-notch evidence, never silently falling back to the old first-non-background heuristic.
+const ZOOM_NOTCH_DELTA_Y = -300; // one "zoom in" wheel notch -- the same magnitude A5'/A6'/A8'
+// already use for their own zoom gestures, just repeated here rather than reinvented.
+const MAX_ZOOM_NOTCHES = 15; // entry 21/P10's own bound, unchanged by this fix -- the search below
+// tries notch 0 (no zoom) FIRST, then up to this many zoom-in notches, so up to 16 attempts total.
 
-/** Wheels in `notches` times from the canvas centre (`doWheel`'s own mechanics, unchanged),
- * settles, and reports whether the render trace actually moved -- evidence for the escalation
- * report if it didn't. */
-async function zoomInNotches(page, consoleHandle, center, notches) {
+/** Wheels in ONE notch from the canvas centre (`doWheel`'s own mechanics, unchanged), settles,
+ * and reports whether the render trace actually moved -- evidence for the per-notch report
+ * either way. Settling once per notch, not once per fixed-size batch (the attempt this replaces),
+ * is what "evidence-driven" means here: the loop below re-evaluates the interior check against a
+ * fully-settled frame before ever deciding whether to zoom again. */
+async function zoomInOneNotch(page, consoleHandle, center) {
   const before = consoleHandle.renderTrace().length;
-  for (let i = 0; i < notches; i++) {
-    await doWheel(page, center, ZOOM_NOTCH_DELTA_Y);
-  }
+  await doWheel(page, center, ZOOM_NOTCH_DELTA_Y);
   const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
   return { motion: hasFreshRenderTraceMotion(consoleHandle.renderTrace(), before), settled: settle.settled };
+}
+
+const BISECTION_COARSE_COLS = 8; // task's own "e.g. 8x5" coarse grid
+const BISECTION_COARSE_ROWS = 5;
+const BISECTION_SUBDIVIDE = 4; // 4x4, both bisection levels
+const BISECTION_FINAL_PATCH_MAX_PX = 12; // "repeat once more if the sub-region is still larger
+// than ~12x12 px" -- task's own stopping bound.
+const BISECTION_DENSE_FRACTION_TARGET = 0.9; // task's own confidence bar for the final patch;
+// not a loop-control value -- `findInteriorCandidate` always runs its full 2-3 levels and simply
+// reports whether this bar was met, leaving the actual accept/reject call to
+// `verifyInteriorCandidate` (unchanged) as before.
+
+/** Splits `region` (a `PixelRegion`-shaped fractional rectangle, `capturePixels`' own convention)
+ * into a `cols`x`rows` grid of equal-sized sub-regions, same convention throughout. */
+function subdivideRegion(region, cols, rows) {
+  const out = [];
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      out.push({
+        x: region.x + (gx / cols) * region.w,
+        y: region.y + (gy / rows) * region.h,
+        w: region.w / cols,
+        h: region.h / rows,
+      });
+    }
+  }
+  return out;
+}
+
+/** One `capturePixels(regions)` call, returning the densest (highest non-background fraction)
+ * region among them alongside the full summary -- callers need `summary.width`/`summary.height`
+ * to convert the winning region's own fractional rectangle to buffer pixels. */
+async function captureDensest(page, regions) {
+  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
+  let idx = 0;
+  for (let i = 1; i < summary.regions.length; i++) {
+    if (fractionOf(summary.regions[i]) > fractionOf(summary.regions[idx])) idx = i;
+  }
+  return { summary, region: regions[idx], fraction: fractionOf(summary.regions[idx]) };
+}
+
+/**
+ * Densest-patch bisection (action-console P11 -- see this section's own top comment for the full
+ * account of why `samplePoint` alone cannot supply an interior candidate). Never touches
+ * `WorkingCanvas.tsx`; only calls the already-exposed `capturePixels(regions)` hook, same as every
+ * other candidate-selection fix in this file. (a) coarse grid over the whole buffer, densest
+ * region kept; (b) that region subdivided, densest sub-region kept; (c) repeated once more only if
+ * the sub-region from (b) is still bigger than `BISECTION_FINAL_PATCH_MAX_PX` per side; (d) the
+ * final patch's CENTER pixel (buffer coordinates) is returned as `candidate`, interior by
+ * construction whenever `finalFraction` is high -- `denseEnough` names the task's own 0.9 bar,
+ * reported for evidence but never itself gating anything (`verifyInteriorCandidate` decides).
+ */
+async function findInteriorCandidate(page) {
+  const levels = [];
+  const whole = { x: 0, y: 0, w: 1, h: 1 };
+
+  // (a) coarse grid over the whole buffer.
+  let picked = await captureDensest(page, subdivideRegion(whole, BISECTION_COARSE_COLS, BISECTION_COARSE_ROWS));
+  levels.push({ label: `coarse ${BISECTION_COARSE_COLS}x${BISECTION_COARSE_ROWS}`, fraction: picked.fraction });
+  let bufferWidth = picked.summary.width;
+  let bufferHeight = picked.summary.height;
+  let bestRegion = picked.region;
+  let bestFraction = picked.fraction;
+
+  if (picked.fraction > 0) {
+    // (b) subdivide the densest coarse region.
+    picked = await captureDensest(page, subdivideRegion(bestRegion, BISECTION_SUBDIVIDE, BISECTION_SUBDIVIDE));
+    levels.push({ label: `subdivide ${BISECTION_SUBDIVIDE}x${BISECTION_SUBDIVIDE} (level 1)`, fraction: picked.fraction });
+    bufferWidth = picked.summary.width;
+    bufferHeight = picked.summary.height;
+    bestRegion = picked.region;
+    bestFraction = picked.fraction;
+
+    // (c) repeat once more only if that sub-region is still bigger than ~12x12px.
+    const patchPxW = bestRegion.w * bufferWidth;
+    const patchPxH = bestRegion.h * bufferHeight;
+    if (bestFraction > 0 && (patchPxW > BISECTION_FINAL_PATCH_MAX_PX || patchPxH > BISECTION_FINAL_PATCH_MAX_PX)) {
+      picked = await captureDensest(page, subdivideRegion(bestRegion, BISECTION_SUBDIVIDE, BISECTION_SUBDIVIDE));
+      levels.push({ label: `subdivide ${BISECTION_SUBDIVIDE}x${BISECTION_SUBDIVIDE} (level 2)`, fraction: picked.fraction });
+      bufferWidth = picked.summary.width;
+      bufferHeight = picked.summary.height;
+      bestRegion = picked.region;
+      bestFraction = picked.fraction;
+    }
+  }
+
+  // (d) the final patch's CENTER pixel is the candidate.
+  const centerXFrac = bestRegion.x + bestRegion.w / 2;
+  const centerYFrac = bestRegion.y + bestRegion.h / 2;
+  const candidate = {
+    x: Math.min(bufferWidth - 1, Math.max(0, Math.round(centerXFrac * bufferWidth))),
+    y: Math.min(bufferHeight - 1, Math.max(0, Math.round(centerYFrac * bufferHeight))),
+  };
+
+  return {
+    candidate,
+    bufferWidth,
+    bufferHeight,
+    finalFraction: bestFraction,
+    denseEnough: bestFraction >= BISECTION_DENSE_FRACTION_TARGET,
+    levels,
+  };
 }
 
 async function stepA9(page, consoleHandle) {
@@ -604,24 +720,33 @@ async function stepA9(page, consoleHandle) {
   if (!initialRect) throw new Error("A9': .working-canvas not found");
   const center = { x: initialRect.left + initialRect.width / 2, y: initialRect.top + initialRect.height / 2 };
 
-  let cumulativeNotches = 0;
-  let attemptsUsed = 0;
-  let grid, rect, fractions, denseIdx, emptyIdx, candidates, verifications, interiorVerified, orderedCandidates;
-  const zoomEvidence = [];
+  let notchesUsed = 0;
+  let rect = initialRect;
+  let grid, fractions, denseIdx, emptyIdx, interiorVerified, orderedCandidates;
+  let successBisectionFraction = null;
+  const notchEvidence = [];
+  let previousNonBackgroundCount = null;
+  let declineStreak = 0;
+  let overshootStopped = false;
 
-  for (; attemptsUsed < ZOOM_ATTEMPT_NOTCHES.length; attemptsUsed++) {
-    const notches = ZOOM_ATTEMPT_NOTCHES[attemptsUsed];
-    cumulativeNotches += notches;
-    const zoomResult = await zoomInNotches(page, consoleHandle, center, notches);
-    await assertNoRefusalOrBanner(page, `A9' (zoom attempt ${attemptsUsed + 1}, +${notches} notches)`);
+  // Notch 0 = the CURRENT camera, tried FIRST (P10 never tried pre-zoom at all); notches
+  // 1..MAX_ZOOM_NOTCHES are real wheel-zoom-ins, exactly as P10 drove them.
+  for (let notch = 0; notch <= MAX_ZOOM_NOTCHES; notch++) {
+    let zoomMotion = null;
+    let zoomSettled = null;
+    if (notch > 0) {
+      const zoomResult = await zoomInOneNotch(page, consoleHandle, center);
+      zoomMotion = zoomResult.motion;
+      zoomSettled = zoomResult.settled;
+      await assertNoRefusalOrBanner(page, `A9' (zoom notch ${notch})`);
+      rect = await canvasRect(page);
+      if (!rect) throw new Error("A9': .working-canvas not found after zoom");
+    }
 
-    // Fresh grid, taken now (after this attempt's own zoom, A7''s re-fit, and A8''s burst) --
-    // never A4''s, which is stale the moment A5'-A8' start moving the camera (the piece's own
-    // original ordering note, still true after this fix).
+    // Fresh grid, taken now -- never a stale one from before this notch's own zoom (the piece's
+    // own original ordering note, still true here). Still used for the emptiest-cell move-away
+    // check at the end, and for its own densest region's `samplePoint` as the fallback candidate.
     grid = await page.evaluate((regions) => window.__SPATIAL_E2E__.capturePixels(regions), gridRegions());
-    rect = await canvasRect(page);
-    if (!rect) throw new Error("A9': .working-canvas not found after zoom");
-
     fractions = grid.regions.map(fractionOf);
     denseIdx = 0;
     emptyIdx = 0;
@@ -629,42 +754,46 @@ async function stepA9(page, consoleHandle) {
       if (fractions[i] > fractions[denseIdx]) denseIdx = i;
       if (fractions[i] < fractions[emptyIdx]) emptyIdx = i;
     }
-    let secondDenseIdx = -1;
-    for (let i = 0; i < fractions.length; i++) {
-      if (i === denseIdx) continue;
-      if (secondDenseIdx === -1 || fractions[i] > fractions[secondDenseIdx]) secondDenseIdx = i;
+
+    const nonBackgroundCount = grid.nonBackgroundCount;
+    // Early-stop: two consecutive notch-over-notch DECREASES in frame-wide non-background pixels
+    // is P10's own rise-then-fall-to-zero signature (peak at notch 2, zero by notch 7 in both of
+    // its runs) -- content is leaving the viewport, so further zooming cannot help.
+    if (previousNonBackgroundCount !== null) {
+      declineStreak = nonBackgroundCount < previousNonBackgroundCount ? declineStreak + 1 : 0;
     }
-    if (fractions[denseIdx] <= 0) {
-      throw new Error(
-        `A9': no non-background grid cell to hover after ${cumulativeNotches} zoom-in notch(es) (fractions: ${fractions.map((f) => (f * 100).toFixed(1) + "%").join(", ")})`
-      );
+    previousNonBackgroundCount = nonBackgroundCount;
+    notchesUsed = notch;
+
+    if (nonBackgroundCount <= 0) {
+      notchEvidence.push({
+        notch,
+        zoomMotion,
+        zoomSettled,
+        bufferSize: `${grid.width}x${grid.height}`,
+        nonBackgroundCount,
+        declineStreak,
+        best: "(no non-background pixel at all this notch -- nothing to bisect)",
+      });
+      if (declineStreak >= 2) {
+        overshootStopped = true;
+        break;
+      }
+      continue;
     }
 
-    // 2026-08-13 fix, unchanged: deterministic, read-back-verified targets from `capturePixels`'s
-    // `samplePoint` field, not a heuristic cell-center guess (the failure mode traced to a prior
-    // A9' run's own ledger: full delivery, no errors, a guessed center landing in a gap between
-    // parcels). Up to 3 distinct candidates, each tried under both plausible row-0 conventions.
-    candidates = [];
+    // The fix itself: densest-patch bisection candidate, plus the densest grid region's own
+    // `samplePoint` as a fallback second candidate (task's own spec) -- `verifyInteriorCandidate`
+    // (UNCHANGED below) still decides between them, never a silent trust of either.
+    const bisection = await findInteriorCandidate(page);
+    const candidates = [];
     const pushCandidate = (point) => {
       if (point && !candidates.some((c) => samePoint(c, point))) candidates.push(point);
     };
+    pushCandidate(bisection.candidate);
     pushCandidate(grid.regions[denseIdx].samplePoint);
-    pushCandidate(grid.samplePoint);
-    if (secondDenseIdx >= 0 && fractions[secondDenseIdx] > 0) {
-      pushCandidate(grid.regions[secondDenseIdx].samplePoint);
-    }
-    if (candidates.length === 0) {
-      throw new Error(
-        "A9': every candidate region reported a non-background fraction > 0 but no samplePoint -- capturePixels contract violated"
-      );
-    }
 
-    // P5c fix 2 (`verifyInteriorCandidate`'s own doc comment has the full account, KEPT UNCHANGED
-    // per this fix's own scope): verify each candidate against the interior + alpha signals, then
-    // try INTERIOR-VERIFIED candidates first (their own relative order preserved). Unlike before
-    // P8, no silent fallback to the rest when none verify at THIS zoom level -- see the escalation
-    // block below the loop.
-    verifications = [];
+    const verifications = [];
     for (const point of candidates) {
       const verdict = await verifyInteriorCandidate(page, point, grid.width, grid.height);
       verifications.push({ point, ...verdict });
@@ -675,54 +804,65 @@ async function stepA9(page, consoleHandle) {
         ? [...interiorVerified, ...candidates.filter((c) => !interiorVerified.some((v) => samePoint(v, c)))]
         : candidates;
 
-    zoomEvidence.push({
-      attempt: attemptsUsed + 1,
-      notchesThisAttempt: notches,
-      cumulativeNotches,
-      zoomMotion: zoomResult.motion,
-      zoomSettled: zoomResult.settled,
+    // Best candidate this notch, for the per-notch evidence line -- "best" = fewest neighbourhood
+    // misses (0 for an interior-verified one), read straight out of `verifyInteriorCandidate`'s
+    // own "N/M neighbourhood pixels touch background" reason string, never recomputed separately.
+    const missCountOf = (v) => {
+      if (v.ok) return 0;
+      const m = /^(\d+)\/\d+ neighbourhood/.exec(v.reason);
+      return m ? Number(m[1]) : Number.POSITIVE_INFINITY;
+    };
+    const best = verifications.reduce((a, b) => (missCountOf(b) < missCountOf(a) ? b : a));
+
+    notchEvidence.push({
+      notch,
+      zoomMotion,
+      zoomSettled,
       bufferSize: `${grid.width}x${grid.height}`,
-      fractions: fractions.map((f) => (f * 100).toFixed(1) + "%"),
-      candidates: candidates.map((c) => `(${c.x},${c.y})`),
-      verifications: verifications.map((v, i) => `#${i + 1} buffer(${v.point.x},${v.point.y}): ${v.ok ? "OK" : "MISS"} -- ${v.reason}`),
+      nonBackgroundCount,
+      declineStreak,
+      bisectionLevels: bisection.levels.map((l) => `${l.label}: ${(l.fraction * 100).toFixed(1)}%`).join(" -> "),
+      bisectionFinalFraction: bisection.finalFraction,
+      best: `buffer(${best.point.x},${best.point.y}): ${best.ok ? "OK" : "MISS"} -- ${best.reason}`,
     });
 
-    if (interiorVerified.length > 0) break;
-
-    console.error(
-      `A9': no interior-verified sample point after zoom attempt ${attemptsUsed + 1} (${cumulativeNotches} cumulative notch(es)) -- ` +
-        (attemptsUsed + 1 < ZOOM_ATTEMPT_NOTCHES.length
-          ? "trying one more modest zoom-in per entry 20a's bounded-retry terms"
-          : "both bounded zoom attempts exhausted") +
-        `. Per-candidate reasons:\n${verifications.map((v, i) => `  #${i + 1} buffer(${v.point.x},${v.point.y}): ${v.reason}`).join("\n")}`
-    );
+    if (interiorVerified.length > 0) {
+      successBisectionFraction = bisection.finalFraction;
+      break;
+    }
+    if (declineStreak >= 2) {
+      overshootStopped = true;
+      break;
+    }
   }
 
-  if (interiorVerified.length === 0) {
-    // Escalation, verbatim per entry 20a's own terms: zoomed-in fill ALSO absent after both
-    // bounded zoom attempts is evidence of a real render defect, not an instrument limitation --
-    // STOP here with full evidence rather than falling back to the old first-non-background
-    // heuristic (which is exactly what let the original P5b/P5c-diagnosed edge-pixel miss through).
+  if (!interiorVerified || interiorVerified.length === 0) {
+    // Loud and evidence-carrying either way: an early overshoot stop names itself as such (P10's
+    // own signature, not a new render-defect claim); an exhausted budget is still, as P10 named
+    // it, evidence worth surfacing rather than silently falling back to the old heuristic.
     throw new Error(
-      `A9': no interior-verified fill pixel found after ${attemptsUsed} bounded zoom-in attempt(s) (${cumulativeNotches} cumulative ` +
-        `notch(es), entry 20a's own bound of ${ZOOM_ATTEMPT_NOTCHES.length}) -- per DECISIONS-PENDING.md entry 20, this is evidence of ` +
-        `a real render defect, not an instrument miss. Evidence per attempt:\n\n` +
-        zoomEvidence
+      `A9': no interior-verified candidate found ${
+        overshootStopped
+          ? `-- stopped early at notch ${notchesUsed} after 2 consecutive notch-over-notch non-background pixel decreases ` +
+            `(overshoot: content leaving the viewport, P10's own rise-then-fall signature)`
+          : `after trying notch 0 (no zoom) plus ${MAX_ZOOM_NOTCHES} zoom-in notch(es)`
+      }. Per-notch evidence (densest-patch bisection, action-console P11):\n\n` +
+        notchEvidence
           .map(
             (e) =>
-              `attempt ${e.attempt} (+${e.notchesThisAttempt} notches, ${e.cumulativeNotches} cumulative, buffer ${e.bufferSize}, ` +
-              `motion=${e.zoomMotion}, settled=${e.zoomSettled}):\n  grid fractions: ${e.fractions.join(", ")}\n  candidates: ${e.candidates.join(", ")}\n  verifications:\n    ${e.verifications.join("\n    ")}`
+              `notch ${e.notch} (buffer ${e.bufferSize}, motion=${e.zoomMotion}, settled=${e.zoomSettled}, ` +
+              `frame-wide non-bg=${e.nonBackgroundCount}px, declineStreak=${e.declineStreak}` +
+              `${e.bisectionLevels ? `, bisection [${e.bisectionLevels}]` : ""}): best candidate ${e.best}`
           )
-          .join("\n\n")
+          .join("\n")
     );
   }
 
   let found = null;
   const attempts = [];
-  // `candidates` is already capped at 3 entries by `pushCandidate`'s own three call sites above
-  // (dense region, frame-wide, second-densest region) -- no `.slice(0, 3)` needed here; a prior
-  // version had one, dead (it could never actually truncate anything). `orderedCandidates` is the
-  // same set, just reordered (interior-verified first) by the block above.
+  // `candidates` is capped at 2 entries by `pushCandidate`'s own two call sites above (bisection
+  // patch centre, densest-region samplePoint fallback). `orderedCandidates` is the same set, just
+  // reordered (interior-verified first) by the block above.
   outer: for (const point of orderedCandidates) {
     for (const flipY of [true, false]) {
       const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
@@ -780,7 +920,10 @@ async function stepA9(page, consoleHandle) {
   }
 
   return (
-    `hovered a verified non-background pixel (buffer ${found.point.x},${found.point.y}, flipY=${found.flipY}, ` +
+    `interior-verified candidate found at zoom notch ${notchesUsed}/${MAX_ZOOM_NOTCHES} ` +
+    `(densest-patch bisection final fraction ${
+      successBisectionFraction !== null ? (successBisectionFraction * 100).toFixed(1) + "%" : "n/a (fallback samplePoint verified instead)"
+    }); hovered a verified non-background pixel (buffer ${found.point.x},${found.point.y}, flipY=${found.flipY}, ` +
     `css ${found.css.x.toFixed(1)},${found.css.y.toFixed(1)}) after ${attempts.length} attempt(s) -> "${found.text}"; ` +
     `moved to emptiest cell (#${emptyIdx}, ${(fractions[emptyIdx] * 100).toFixed(1)}%) -> hover-readout gone`
   );

@@ -51,8 +51,12 @@ walkthrough (its own coverage table maps exactly which step each covers). Prints
 PASS/FAIL table (`NET'` informational only); exit is non-zero iff any step FAILed; leaves the app
 running afterward, same as `e2e:debug`.
 
-**Currently RED on `A5'`-`A9'`**: a queued shell defect trips a spurious ceiling refusal early in
-every run (`DECISIONS-PENDING.md` entry 0) -- read a fresh run's own output, not this file.
+**Historical note (stale as of the action-console cut, corrected here):** this section once read
+"Currently RED on `A5'`-`A9'`: a queued shell defect trips a spurious ceiling refusal early in
+every run (`DECISIONS-PENDING.md` entry 0)." That entry resolved 2026-08-13 (`DECISIONS-PENDING.md`'s
+own Resolved section) and `A5'`-`A8'` have been green in every run since -- only `A9'` went red
+later, for an unrelated reason (candidate-selection during hover-pick, its own saga below, entries
+20/21 and P8-P11). Read a fresh run's own output, not this file, for current status.
 
 ## Filter spec (sql-filter cut, P5)
 
@@ -273,3 +277,124 @@ and the deck.gl layer/pick configuration are out of scope for an e2e-only piece)
 escalates per custodian rule 7. Both fixes are otherwise real, independently-verified corrections
 (the layout one in particular is unconditionally worth keeping) -- both committed (`720b6a1`,
 `2e345d4`); see that piece's own final report for the full run transcripts.
+
+**Entry 20 (2026-08-19), bounded third attempt, escalated again:** rule 7's precedent (two failed
+attempts stop, a third needs the human's word) held `A9'` for the human; authorized option (a) --
+a bounded, test-side-only third attempt, `stepA9` zooming in a FIXED `[3, 2]`-notch budget before
+hovering, interior-verification kept unchanged. Committed as `54526d5` (the step red and loud by
+design, an evidence instrument, not a claimed fix). Ran same day: escalation trigger hit --
+**zero interior-verified candidates at both +3 and +5 cumulative notches**, several candidates
+sitting at buffer row `y=0` (the 200px-tall frame's own top edge -- features look CLIPPED at the
+canvas boundary, not merely small). Queued as entry 21: authorize one instrumented
+render-diagnosis session (the entry-0 pattern) -- diagnose only, any fix through the normal gates
+after.
+
+**Entry 21 (2026-08-19), P9 instrumented session -- DECISIVE diagnosis, none of the named
+mechanisms confirmed except a new one:** the human authorized the session ("start it"); it ran
+against A9's exact post-A1'-A8' camera state, capturing view-state, fit-anchor, layer draw params,
+and full-frame read-backs at several camera states. Findings: content is **not** clipped (rows
+20-179 of the buffer are populated pre-zoom, ruling out the entry-21-named "features clipped at
+the canvas boundary" reading of entry 20's own evidence); the fill layer is **healthy** (two
+independent baselines each showed 22,000+ px sitting at the EXACT configured fill alpha, 180/255 --
+this suite's own `ALPHA_INTERIOR_THRESHOLD` = 150 sits comfortably below that); that alpha-180
+population is strongly **zoom-dependent** -- A9's own starting camera (post-A7' "Zoom to layer",
+a whole-dataset fit of the fixture's 100,000 features onto a 1280x200 canvas) sits roughly **11.6x**
+further out than the zoom level P9's baselines showed as interior-rich. **The one-line diagnosis:
+feature-scale-vs-canvas-scale at the whole-dataset-fit zoom** -- at that scale, individual features
+are near-sub-pixel, so no 5x5 interior patch (`INTERIOR_PATCH_RADIUS`) can exist for ANY feature,
+regardless of which pixel a heuristic picks; entry 20's own fixed 2-4-notch budget was simply far
+too small for a camera this far out, not itself evidence of a render defect. No product trace line
+was needed to reach this; the product-UX question this raises (hover-pick at whole-dataset zoom
+with individually sub-pixel features) is a real one, but is **not this suite's to own or fix** --
+see the NOTE at the end of this section.
+
+**P10 (2026-08-19), the fix authorized by entries 20/21 together -- bounded evidence-driven zoom
+search, interior-verification retained verbatim:** `stepA9`'s fixed `[3, 2]`-notch budget (entry
+20) is gone; the current `stepA9` instead searches for the zoom the interior check itself needs,
+one wheel-in notch at a time (`doWheel`, canvas centre, unchanged), up to `MAX_ZOOM_NOTCHES` = 15,
+re-capturing and re-running the UNCHANGED `verifyInteriorCandidate` (interior 5x5 + alpha >= 150,
+untouched by this fix) after every single notch, settling between notches, stopping at the first
+notch that yields a verified candidate. **Empirical result, run twice, fresh sessions, byte-
+identical per-notch evidence both times: still RED -- but with a signature DIFFERENT from entry
+20's, and one that CONTRADICTS P9's own diagnosis rather than confirming it.** The frame's
+frame-wide non-background pixel count does not climb monotonically toward an interior-rich state
+as the search zooms in: it rises for the first two notches (peaking at 90,250 of the buffer's
+256,000 px, notch 2 of 15), then falls -- 63,400 / 44,433 / 27,707 / 7,557 px at notches 3-6 --
+reaching **exactly 0 non-background pixels at notch 7 and staying there through notch 15**. Every
+candidate through notch 6 sits at buffer row `y=0` -- the same top-edge row entry 20's own evidence
+named -- so its own neighbourhood is edge-clipped to 15 pixels (3 of the full 5x5 patch's 5 rows),
+of which 1-8 touch background each time; none ever reaches full interior coverage at any notch
+tried. Since P9's own diagnosis predicts a camera only ~11.6x out needs a search well inside a 15-notch budget at
+this `doWheel` magnitude, a full-budget miss is new evidence, not a confirmation -- surfaced here
+per this piece's own instruction, not absorbed. A plausible mechanism, named but **not diagnosed
+further here** (out of this test-side-only piece's own scope; `WorkingCanvas.tsx` and the deck.gl
+camera/pick configuration are untouched): the zoom search anchors every notch on the CANVAS
+CENTRE, not on the data's own densest region: the rise-then-fall-to-zero curve above is consistent
+with the canvas-centre world point, at this exact post-A1'-A8' camera state, sitting nearer a gap
+or edge of the dataset's density than its interior, so zooming in around it walks the visible frame
+away from data rather than into more of it. **`A9'` therefore remains EXPECTED-FAIL** -- entries
+20 and 21 are both resolved (their own recommendations were followed exactly, and the fill-layer/
+scale diagnosis they produced is not contradicted, only entry 21's implicit "a modest zoom-in
+resolves it" corollary is), but the step itself has not gone green; this is a NEW, undiagnosed
+result, not a restatement of the entry-20/P5c evidence above. `npm run e2e:console`'s own
+`REGRESS'` step (which re-runs `e2e:regression` as a subprocess) fails for the same reason; `npm
+run e2e:admission` is unaffected and independently green (11/11).
+
+**P11 (2026-08-19), GREEN -- the custodian's code-verified re-synthesis of the P9+P10 evidence,
+fixing candidate SELECTION rather than the zoom search:** P10's own contradiction (a full 15-notch
+evidence-driven search finding nothing, despite 90,250 non-background px existing at notch 2) sent
+the investigation back to the code rather than another zoom attempt. Reading
+`WorkingCanvas.tsx::summarizePixels` directly settled it: every `samplePoint` this suite has ever
+used -- per-region AND frame-wide alike -- is documented BY ITS OWN TESTS as "the first
+non-background pixel encountered in that region's row-major scan," i.e. structurally the TOP EDGE
+of whatever content a region contains, at ANY zoom. `verifyInteriorCandidate` (P5c, unchanged
+throughout P8-P11) demands a full 5x5-interior patch; a structurally-top-edge point can only ever
+supply one by accident. The **complete three-part mechanism**, all three now consistent with every
+prior run's evidence: (1) P9's scale diagnosis holds exactly as stated, at A9's original zoom (only
+~3 alpha-180 px exist frame-wide there); (2) at P10's own notch 2-3, genuine interior fill exists
+in abundance (90k+ non-background px) but the top-edge-biased `samplePoint` never once offers one
+of those interior pixels as a candidate, regardless of notch; (3) the pre-P5c green (before the
+interior-hardening verifier existed) worked anyway, through deck.gl's own pick tolerance around an
+edge pixel -- never through an actually-sampled interior pixel, which is why hardening the
+verifier (P5c) surfaced a defect that had been latent, not newly introduced, since.
+
+**The fix, entirely e2e-side, `WorkingCanvas.tsx` and `verifyInteriorCandidate` both untouched:**
+`findInteriorCandidate` (`regression.mjs`) replaces `samplePoint`-based selection with
+densest-PATCH bisection over the ALREADY-exposed `capturePixels(regions)` hook -- a coarse 8x5
+grid over the whole buffer picks its densest region; that region is subdivided 4x4 and the densest
+sub-region kept; repeated once more only if the patch is still bigger than ~12x12px; the FINAL
+patch's own CENTER pixel is the candidate, interior by construction whenever the patch's own
+non-background fraction is high. The densest grid region's own (still top-edge-biased) `samplePoint`
+rides along as a second, fallback candidate -- `verifyInteriorCandidate` decides between the two,
+unchanged, so a wrong bisection guess can never silently pass. The zoom search keeps P10's shape
+(one notch at a time, re-verifying after each, `MAX_ZOOM_NOTCHES` = 15 unchanged) but now tries
+notch 0 -- the CURRENT camera, no zoom at all -- FIRST (P10 never tried pre-zoom), and adds an
+early-stop: two consecutive notch-over-notch decreases in frame-wide non-background pixel count
+stops the search (P10's own rise-then-fall-to-zero curve is exactly that signature).
+
+**Empirical result, run twice, fresh sessions, byte-identical: GREEN at notch 0/15 both times**,
+densest-patch bisection final fraction **100.0%** -- the very first coarse-to-fine bisection at the
+UNCHANGED starting camera (no zoom-in needed at all) already lands a fully non-background 5x5
+patch. This does not contradict P9's own per-FEATURE scale diagnosis (individually near-sub-pixel
+at this zoom, never re-tested or refuted here): a 100%-dense small patch at this zoom is consistent
+with a locally dense CLUSTER of many adjacent tiny features whose combined fill covers every pixel
+in that patch contiguously, which is exactly what a real hover there would correctly pick -- not
+with any single feature suddenly being large enough to fill a 5x5 area on its own. The fix bisects
+toward wherever the DATA is densest, not toward a bigger single feature; on this fixture, at this
+camera, that was enough on its own, with zero notches spent. `npm run e2e:regression` GREEN 2/2
+fresh runs (12/12 steps each); `npm run e2e:console` GREEN 10/10 -- the first time `REGRESS'`
+(which re-runs `e2e:regression` AND `e2e:admission` as subprocesses) has ever passed; `npm run
+e2e:admission` independently GREEN 11/11. See DECISIONS-PENDING.md entries 20/21 (both RESOLVED,
+neither's own diagnosis contradicted by this outcome) for the full authorization trail this fix
+completes.
+
+**NOTE, flagged for the architect at the next consult, not a decision made here:** hover-pick UX
+at whole-dataset zoom with individually sub-pixel features (P9's own diagnosis, restated above,
+never re-tested by P11's own fix -- P11 fixed candidate SELECTION, not the underlying per-feature
+scale question) is a real product question, but this suite is not the place to answer it -- it is
+owned by ADR-011's tiled render batches / GPU cache lifecycle direction (its own LOD slice, gate
+8's territory: pick targets at a scale where individual features cannot resolve to a distinct
+screen pixel need a tiling/LOD answer, not a bigger E2E zoom budget or a smarter E2E candidate
+picker). This note records the question for that slice's own eventual work, not an attempt to
+answer it here -- P11's own green result is an E2E-harness fix, not evidence the product-UX
+question is closed.
