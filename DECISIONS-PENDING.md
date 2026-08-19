@@ -5,49 +5,19 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-21. **[RESOLVED 2026-08-19 — human: "start it" → one instrumented session authorized.]**
-    **A9' escalation: the fill genuinely has no interior pixels even zoomed in — authorize one
-    instrumented render-diagnosis session (the entry-0 pattern)?** Your entry-20 attempt ran
-    exactly as bounded and hit its own escalation trigger: at +3 and +5 wheel notches from
-    canvas center, zero interior-verified candidates exist; every candidate is edge-adjacent,
-    and several sit at buffer row y=0 — the 200px-tall frame's own top edge, i.e. features
-    look CLIPPED at the canvas boundary, not merely small. This is no longer a test-assumption
-    question. What is known: the observed pixel alpha is ~45 (anti-aliased edge coverage), the
-    configured fill opacity is 180; your own hover worked in Parts A–D on a taller canvas; no
-    product code in either recent cut touched the render or pick paths; the canvas sits at its
-    200px floor with all four panels present. Plausible mechanisms (named, not asserted): the
-    camera state A1'–A8' leaves behind at a 6.4:1 canvas aspect puts the feature band mostly
-    outside the 200px strip; or the fit/letterbox math misplaces content vertically at extreme
-    aspects; or a real fill-layer regression. Recommendation: **one instrumented session** —
-    drive the app to A9's exact state, capture view-state, fit-anchor, layer draw params, and
-    full-frame read-backs at several camera states; diagnose only; any fix goes through the
-    normal gates after. The attempt's evidence instrument is committed (54526d5, the step red
-    and loud by design). The action-console PR continues to wait.
-
-20. **[RESOLVED 2026-08-19 — human: "let's go with entry 20" → option (a) authorized; ran
-    same day, hit the escalation trigger → entry 21.]**
-    **A9' (regression-suite hover-pick) is RED — rule 7 reached; authorize the third, bounded
-    attempt?** The action-console cut's evidence run exposed it; two fix attempts ran and
-    stopped. What is KNOWN: the drawer's layout overflow was real and is fixed (canvas back to
-    full 1280px, no scrollbar — mechanically verified); the hover-pick step STILL fails there,
-    because at its camera state the frame contains **zero interior-verified pixels** — every
-    non-background candidate is an edge patch (densest alpha 45 vs the fill's real 180). The
-    console bar legitimately costs ~18px of canvas height; features render slightly smaller;
-    at this fixture/zoom they appear to draw as edges with no solid fill interior. Your own
-    hover worked in Parts A–D, and nothing touched the pick or render paths — the failing
-    ASSUMPTION is the test's ("an interior pixel exists at default zoom"), not obviously the
-    product's. Options: **(a) authorize a bounded third attempt, test-side only** — A9' zooms
-    in modestly before hovering (its assertion — hover shows the feature id — is
-    zoom-independent), keeping the interior-verification hardening so it can never go
-    accidentally-green again; if zoomed-in fill is ALSO absent, that instant becomes evidence
-    of a real render defect and stops there; (b) an instrumented render-diagnosis session now
-    (the entry-0 pattern) if you suspect the fill itself regressed; (c) accept the step as
-    EXPECTED-FAIL with the evidence note and let the cut's PR carry the disclosure.
-    Recommendation: **(a)** — it resolves the question either way (green = test assumption
-    fixed; red-when-zoomed = a real defect, escalated with evidence). **Held for your word per
-    rule 7's precedent** (the entry-0 pattern: two failed attempts stop, the human authorizes
-    the third). The cut's own console suite is 10/10 green; only this inherited step is red;
-    P6 (docs) proceeds meanwhile, the PR waits on this entry.
+22. **Batch sequencing + a deliberately idle cut pipeline (architect-recommended hold).** The
+    operator batch is full (Parts H, I, J — a complete session, all against the single pinned
+    build `807648f`, pre-filled in the three result logs) and every worthwhile next cut is
+    either gated on entries below or — the ADR-011 tiling/LOD slice, the honest next cut — is
+    genuinely AIMED by what Part H will teach (gate 8 asks what replaces whole-dataset
+    residency for the 5 GB case; H's evidence plus PR #15's hover-at-scale question are
+    three-quarters of its problem statement, and its first artifact is a preregistration,
+    cheaper to write after the batch). So the pipeline holds until the batch runs and entries
+    7/8/9/16 clear. Named idle work meanwhile (bounded, non-red-line): the ADR-020 owed
+    fail-closed defect (`tauri build --debug` origin — mechanism-internal fix, reviewer-gated);
+    unit tests for the console's two named-unexercised branches; drafting (NOT filing) entry
+    9's carrier ADR. **Override available:** say the word if you'd rather have a fourth part
+    queued than an idle stretch.
 
 16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
     admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
@@ -151,7 +121,9 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    CancelToken + a phase label into prepare — small, host-side) or declare it in H6's step text
    and let your observation decide whether it becomes a third binding condition on the exposure
    ruling. Architect and custodian both recommend **declare-and-observe**. Proceeding on that
-   unless you override before the run.
+   unless you override before the run. *(Expiry note, 2026-08-19, architect: declare-and-observe
+   is honest only while Part H is imminent — if the batch slips much past a week, the pre-fix
+   option gets re-offered rather than "observe" quietly becoming "tolerate".)*
 
 8. **Part H8b — complete a whole-file 5 GB publish to demonstrate the dead-artifact gap?** There
    is NO publish-side refusal above the reader's ceilings: a whole-file publish succeeds (~100s,
@@ -219,6 +191,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-08-19 — entries 20 + 21 (the A9' hover-pick red), resolved through to green.**
+  Entry 20 (human: "let's go with entry 20"): the bounded zoom attempt ran and hit its own
+  escalation trigger. Entry 21 (human: "start it"): the instrumented render-diagnosis session
+  proved the fill layer healthy (22k–32k px at the exact configured alpha 180 in baselines;
+  content unclipped) and the follow-up evidence closed the full mechanism: the test surface's
+  sample-pixel selector is BY ITS OWN TESTS "the first non-background pixel in row-major scan"
+  — structurally a content top-edge pixel — which the P5c interior verification could never
+  pass; earlier greens predated the verifier and passed via deck's pick tolerance. Fix
+  (harness-only, `dc3c7aa`): densest-patch bisection candidate selection; interior candidate
+  verified at zoom notch 0 with patch fraction 100%, double-green, first all-green
+  `e2e:console` run. **No product render/pick code was touched at any point.** The
+  hover-at-whole-dataset-zoom UX question is owned by ADR-011's tiling/LOD slice (gate 8),
+  flagged for the next architect consult. Full trail: `.cut-archive/CUT-STATE-action-console.md`,
+  `e2e/README.md`'s resolution note, PR #15 disclosure 1.
 
 - **2026-08-18 — action-console cut gates cleared by the human ("let's roll with the next
   cut").** Entry 17: the docs/07 Alpha split append applied as drafted (the Prototype ships the

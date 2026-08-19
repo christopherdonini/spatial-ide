@@ -608,7 +608,12 @@ is separately **E2E-verified** (driven through real IPC and a real render loop v
 `openPath`/`queryWithFilter`/`publishPrepareWithDestination` in-page hooks) — a distinct,
 weaker-than-neither, not-a-replacement pairing, `e2e/README.md`'s own evidence-class paragraph.
 
-**Honest note, read before running this Part:** `DECISIONS-PENDING.md` entry 20 records that the
+**Honest note (updated 2026-08-19 — the original note below is superseded, kept for the record):**
+entries 20/21 RESOLVED same day: the A9' red was a harness defect (a structurally top-edge-biased
+sample-pixel selector meeting the new interior verification; the product's fill and pick paths were
+proven healthy by an instrumented session), fixed by densest-patch candidate selection (commit
+`dc3c7aa`); the regression suite is fully green, and `e2e:console` had its first all-green run.
+*(Original note, historical:)* `DECISIONS-PENDING.md` entry 20 records that the
 REGRESSION suite's `A9'` (hover-pick) step is RED, with a fix decision queued to the human. **Part J
 does not depend on hover** — none of J1–J6 below reads or asserts a hover readout — so this Part's
 own pass/fail is independent of entry 20's outcome; do not treat A9' being red as a reason to skip
@@ -771,7 +776,9 @@ exit judgment there, in their own words, not a checkbox.
 
 - **Date run:** —
 - **Run by:** —
-- **Build/commit:** —
+- **Build/commit:** `807648f` pinned for the batch (main tip 2026-08-19 — all three cuts'
+  surfaces in one tree; Parts H, I and J must record this same commit so Part J's REGRESS'
+  claim is meaningful).
 - **Part H (H1–H9):** —
 - **H10 — the ruling (the human's own words):** —
 
@@ -782,17 +789,17 @@ actually run by an operator, queued for the next batch session per this cut's ow
 
 - **Date run:** —
 - **Run by:** —
-- **Build/commit:** —
+- **Build/commit:** `807648f` pinned for the batch (same single tree as Parts H and J).
 - **Part I (I1–I8):** —
 
 ### Part J run (separate pass — the action console)
 
 Part J did not exist during any run recorded above. Fill in the fields below when Part J is
-actually run by an operator, queued for the next batch session per this cut's own P6 brief. Note
-before running: `DECISIONS-PENDING.md` entry 20 (REGRESSION suite `A9'` hover-pick, RED) is a queued
-decision Part J does not depend on — see this Part's own honest note above.
+actually run by an operator, queued for the next batch session per this cut's own P6 brief.
+(Entries 20/21 resolved 2026-08-19 — the A9' red was harness-side, fixed, all suites green; see
+this Part's own honest note above.)
 
 - **Date run:** —
 - **Run by:** —
-- **Build/commit:** —
+- **Build/commit:** `807648f` pinned for the batch (same single tree as Parts H and I).
 - **Part J (J1–J6):** —
