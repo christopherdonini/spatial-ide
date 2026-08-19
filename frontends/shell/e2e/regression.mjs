@@ -565,74 +565,155 @@ async function stepA8(page, consoleHandle) {
   return `16 alternating pan/zoom gestures, no settle waits between; settled after=${settle.settled}; no refusal/banner; no too_many_pending_streams`;
 }
 
+// A9'' zoom-in fix (action-console cut P8, DECISIONS-PENDING.md entry 20, option (a),
+// human-authorized 2026-08-19): P5c's two isolation experiments (`e2e/README.md`'s own dated
+// notes) established the failing assumption was never this drawer's layout or the
+// interior-verification hardening itself, but a narrower one baked into both: "an interior fill
+// pixel exists at DEFAULT zoom." It does not, at this canvas's own post-A8' default-zoom camera
+// state (committed evidence in `e2e/README.md`'s note: densest alpha 45 vs a fill's own 180,
+// zero 5x5-interior candidates among any of the 3 read-back-verified samplePoints). A9's own
+// assertion (hover a rendered feature -> the hover panel shows the feature id) is
+// zoom-independent, so this fix zooms in MODESTLY -- real wheel-zoom mechanics, the same
+// `doWheel` helper A5'/A6'/A8' already drive, centred on the canvas -- before any target is
+// selected, then reruns the UNCHANGED capture -> interior-verify -> hover sequence at that zoom
+// level. Bounded at 2 zoom attempts total (entry 20's own terms): if neither yields an
+// interior-verified candidate, that is no longer an instrument limitation -- zoomed-in fill
+// ALSO absent is evidence of a real render defect, and this step STOPS (throws) with full
+// per-attempt evidence rather than falling back to the old first-non-background heuristic (the
+// exact fallback that let the original edge-pixel miss through before 2e345d4's own hardening).
+const ZOOM_NOTCH_DELTA_Y = -300; // one "zoom in" wheel notch -- the same magnitude A5'/A6'
+// already use for their own single in/out zoom gesture, just repeated here rather than reinvented.
+const ZOOM_ATTEMPT_NOTCHES = [3, 2]; // attempt 1: 3 notches in (within the entry's own "2-4
+// notches"); attempt 2, only if attempt 1 finds no interior candidate: 2 MORE notches in
+// (cumulative 5) -- "one more modest zoom-in," per the entry's own bounded-retry wording.
+
+/** Wheels in `notches` times from the canvas centre (`doWheel`'s own mechanics, unchanged),
+ * settles, and reports whether the render trace actually moved -- evidence for the escalation
+ * report if it didn't. */
+async function zoomInNotches(page, consoleHandle, center, notches) {
+  const before = consoleHandle.renderTrace().length;
+  for (let i = 0; i < notches; i++) {
+    await doWheel(page, center, ZOOM_NOTCH_DELTA_Y);
+  }
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
+  return { motion: hasFreshRenderTraceMotion(consoleHandle.renderTrace(), before), settled: settle.settled };
+}
+
 async function stepA9(page, consoleHandle) {
-  // Fresh grid, taken now (after A7''s re-fit *and* A8''s burst) -- never A4''s, which is
-  // stale the moment A5'-A8' start moving the camera (the piece's own ordering note).
-  const grid = await page.evaluate((regions) => window.__SPATIAL_E2E__.capturePixels(regions), gridRegions());
-  const rect = await canvasRect(page);
-  if (!rect) throw new Error("A9': .working-canvas not found");
+  const initialRect = await canvasRect(page);
+  if (!initialRect) throw new Error("A9': .working-canvas not found");
+  const center = { x: initialRect.left + initialRect.width / 2, y: initialRect.top + initialRect.height / 2 };
 
-  const fractions = grid.regions.map(fractionOf);
-  let denseIdx = 0;
-  let emptyIdx = 0;
-  for (let i = 1; i < fractions.length; i++) {
-    if (fractions[i] > fractions[denseIdx]) denseIdx = i;
-    if (fractions[i] < fractions[emptyIdx]) emptyIdx = i;
-  }
-  let secondDenseIdx = -1;
-  for (let i = 0; i < fractions.length; i++) {
-    if (i === denseIdx) continue;
-    if (secondDenseIdx === -1 || fractions[i] > fractions[secondDenseIdx]) secondDenseIdx = i;
-  }
-  if (fractions[denseIdx] <= 0) {
-    throw new Error(
-      `A9': no non-background grid cell to hover (fractions: ${fractions.map((f) => (f * 100).toFixed(1) + "%").join(", ")})`
-    );
-  }
+  let cumulativeNotches = 0;
+  let attemptsUsed = 0;
+  let grid, rect, fractions, denseIdx, emptyIdx, candidates, verifications, interiorVerified, orderedCandidates;
+  const zoomEvidence = [];
 
-  // 2026-08-13 fix: deterministic, read-back-verified targets from `capturePixels`'s new
-  // `samplePoint` field, not a heuristic cell-center guess (the failure mode traced to a prior
-  // A9' run's own ledger: full delivery, no errors, a guessed center landing in a gap between
-  // parcels). Up to 3 distinct candidates, each tried under both plausible row-0 conventions.
-  const candidates = [];
-  const pushCandidate = (point) => {
-    if (point && !candidates.some((c) => samePoint(c, point))) candidates.push(point);
-  };
-  pushCandidate(grid.regions[denseIdx].samplePoint);
-  pushCandidate(grid.samplePoint);
-  if (secondDenseIdx >= 0 && fractions[secondDenseIdx] > 0) {
-    pushCandidate(grid.regions[secondDenseIdx].samplePoint);
-  }
-  if (candidates.length === 0) {
-    throw new Error(
-      "A9': every candidate region reported a non-background fraction > 0 but no samplePoint -- capturePixels contract violated"
-    );
-  }
+  for (; attemptsUsed < ZOOM_ATTEMPT_NOTCHES.length; attemptsUsed++) {
+    const notches = ZOOM_ATTEMPT_NOTCHES[attemptsUsed];
+    cumulativeNotches += notches;
+    const zoomResult = await zoomInNotches(page, consoleHandle, center, notches);
+    await assertNoRefusalOrBanner(page, `A9' (zoom attempt ${attemptsUsed + 1}, +${notches} notches)`);
 
-  // P5c fix 2 (this file's own `verifyInteriorCandidate` doc comment has the full account): verify
-  // each candidate against the interior + alpha signals, then try INTERIOR-VERIFIED candidates
-  // first (their own relative order preserved), falling back to the rest -- old behavior -- only if
-  // none verify. Never removes a candidate, never changes what the mouse-move loop below asserts;
-  // only reorders which one it tries first.
-  const verifications = [];
-  for (const point of candidates) {
-    const verdict = await verifyInteriorCandidate(page, point, grid.width, grid.height);
-    verifications.push({ point, ...verdict });
-  }
-  const interiorVerified = verifications.filter((v) => v.ok).map((v) => v.point);
-  const orderedCandidates =
-    interiorVerified.length > 0
-      ? [...interiorVerified, ...candidates.filter((c) => !interiorVerified.some((v) => samePoint(v, c)))]
-      : candidates;
-  if (interiorVerified.length === 0) {
-    // Loud, per the piece's own instruction: this is not a silent fallback -- tiny/thin features
-    // can legitimately have no interior pixel wide enough to survive a 5x5 patch, and that is a
-    // real fact about this run worth a human's attention even when A9' still goes on to PASS via
-    // the old first-non-background heuristic below.
+    // Fresh grid, taken now (after this attempt's own zoom, A7''s re-fit, and A8''s burst) --
+    // never A4''s, which is stale the moment A5'-A8' start moving the camera (the piece's own
+    // original ordering note, still true after this fix).
+    grid = await page.evaluate((regions) => window.__SPATIAL_E2E__.capturePixels(regions), gridRegions());
+    rect = await canvasRect(page);
+    if (!rect) throw new Error("A9': .working-canvas not found after zoom");
+
+    fractions = grid.regions.map(fractionOf);
+    denseIdx = 0;
+    emptyIdx = 0;
+    for (let i = 1; i < fractions.length; i++) {
+      if (fractions[i] > fractions[denseIdx]) denseIdx = i;
+      if (fractions[i] < fractions[emptyIdx]) emptyIdx = i;
+    }
+    let secondDenseIdx = -1;
+    for (let i = 0; i < fractions.length; i++) {
+      if (i === denseIdx) continue;
+      if (secondDenseIdx === -1 || fractions[i] > fractions[secondDenseIdx]) secondDenseIdx = i;
+    }
+    if (fractions[denseIdx] <= 0) {
+      throw new Error(
+        `A9': no non-background grid cell to hover after ${cumulativeNotches} zoom-in notch(es) (fractions: ${fractions.map((f) => (f * 100).toFixed(1) + "%").join(", ")})`
+      );
+    }
+
+    // 2026-08-13 fix, unchanged: deterministic, read-back-verified targets from `capturePixels`'s
+    // `samplePoint` field, not a heuristic cell-center guess (the failure mode traced to a prior
+    // A9' run's own ledger: full delivery, no errors, a guessed center landing in a gap between
+    // parcels). Up to 3 distinct candidates, each tried under both plausible row-0 conventions.
+    candidates = [];
+    const pushCandidate = (point) => {
+      if (point && !candidates.some((c) => samePoint(c, point))) candidates.push(point);
+    };
+    pushCandidate(grid.regions[denseIdx].samplePoint);
+    pushCandidate(grid.samplePoint);
+    if (secondDenseIdx >= 0 && fractions[secondDenseIdx] > 0) {
+      pushCandidate(grid.regions[secondDenseIdx].samplePoint);
+    }
+    if (candidates.length === 0) {
+      throw new Error(
+        "A9': every candidate region reported a non-background fraction > 0 but no samplePoint -- capturePixels contract violated"
+      );
+    }
+
+    // P5c fix 2 (`verifyInteriorCandidate`'s own doc comment has the full account, KEPT UNCHANGED
+    // per this fix's own scope): verify each candidate against the interior + alpha signals, then
+    // try INTERIOR-VERIFIED candidates first (their own relative order preserved). Unlike before
+    // P8, no silent fallback to the rest when none verify at THIS zoom level -- see the escalation
+    // block below the loop.
+    verifications = [];
+    for (const point of candidates) {
+      const verdict = await verifyInteriorCandidate(page, point, grid.width, grid.height);
+      verifications.push({ point, ...verdict });
+    }
+    interiorVerified = verifications.filter((v) => v.ok).map((v) => v.point);
+    orderedCandidates =
+      interiorVerified.length > 0
+        ? [...interiorVerified, ...candidates.filter((c) => !interiorVerified.some((v) => samePoint(v, c)))]
+        : candidates;
+
+    zoomEvidence.push({
+      attempt: attemptsUsed + 1,
+      notchesThisAttempt: notches,
+      cumulativeNotches,
+      zoomMotion: zoomResult.motion,
+      zoomSettled: zoomResult.settled,
+      bufferSize: `${grid.width}x${grid.height}`,
+      fractions: fractions.map((f) => (f * 100).toFixed(1) + "%"),
+      candidates: candidates.map((c) => `(${c.x},${c.y})`),
+      verifications: verifications.map((v, i) => `#${i + 1} buffer(${v.point.x},${v.point.y}): ${v.ok ? "OK" : "MISS"} -- ${v.reason}`),
+    });
+
+    if (interiorVerified.length > 0) break;
+
     console.error(
-      `A9': no interior-verified sample point among ${candidates.length} candidate(s) -- falling back to the ` +
-        `old first-non-background heuristic (tiny feature, or a genuinely low-alpha frame). Per-candidate reasons:\n` +
-        verifications.map((v, i) => `  #${i + 1} buffer(${v.point.x},${v.point.y}): ${v.reason}`).join("\n")
+      `A9': no interior-verified sample point after zoom attempt ${attemptsUsed + 1} (${cumulativeNotches} cumulative notch(es)) -- ` +
+        (attemptsUsed + 1 < ZOOM_ATTEMPT_NOTCHES.length
+          ? "trying one more modest zoom-in per entry 20a's bounded-retry terms"
+          : "both bounded zoom attempts exhausted") +
+        `. Per-candidate reasons:\n${verifications.map((v, i) => `  #${i + 1} buffer(${v.point.x},${v.point.y}): ${v.reason}`).join("\n")}`
+    );
+  }
+
+  if (interiorVerified.length === 0) {
+    // Escalation, verbatim per entry 20a's own terms: zoomed-in fill ALSO absent after both
+    // bounded zoom attempts is evidence of a real render defect, not an instrument limitation --
+    // STOP here with full evidence rather than falling back to the old first-non-background
+    // heuristic (which is exactly what let the original P5b/P5c-diagnosed edge-pixel miss through).
+    throw new Error(
+      `A9': no interior-verified fill pixel found after ${attemptsUsed} bounded zoom-in attempt(s) (${cumulativeNotches} cumulative ` +
+        `notch(es), entry 20a's own bound of ${ZOOM_ATTEMPT_NOTCHES.length}) -- per DECISIONS-PENDING.md entry 20, this is evidence of ` +
+        `a real render defect, not an instrument miss. Evidence per attempt:\n\n` +
+        zoomEvidence
+          .map(
+            (e) =>
+              `attempt ${e.attempt} (+${e.notchesThisAttempt} notches, ${e.cumulativeNotches} cumulative, buffer ${e.bufferSize}, ` +
+              `motion=${e.zoomMotion}, settled=${e.zoomSettled}):\n  grid fractions: ${e.fractions.join(", ")}\n  candidates: ${e.candidates.join(", ")}\n  verifications:\n    ${e.verifications.join("\n    ")}`
+          )
+          .join("\n\n")
     );
   }
 
@@ -1017,10 +1098,11 @@ async function main() {
     // 10 rounds of a ~10s settle bound could ever actually need in practice.
     await runStep("A7'", 150_000, () => stepA7(page, consoleHandle));
     await runStep("A8'", 45_000, () => stepA8(page, consoleHandle));
-    // Up to 3 candidate points x 2 orientations x 5s bounded wait each = 30s worst case, plus the
-    // grid capture and the empty-space half -- 60s gives comfortable headroom without masking a
-    // genuine hang (the per-candidate 5s bound is what actually limits any single wait).
-    await runStep("A9'", 60_000, () => stepA9(page, consoleHandle));
+    // P8 zoom-in fix: up to 2 zoom attempts, each bounded at a 15s settle, ahead of the original
+    // budget below -- up to 3 candidate points x 2 orientations x 5s bounded wait each = 30s worst
+    // case, plus the grid capture and the empty-space half. 120s gives comfortable headroom without
+    // masking a genuine hang (every individual wait inside stays independently bounded).
+    await runStep("A9'", 120_000, () => stepA9(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
     );
