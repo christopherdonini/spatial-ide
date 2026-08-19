@@ -5,7 +5,27 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-20. **A9' (regression-suite hover-pick) is RED — rule 7 reached; authorize the third, bounded
+21. **A9' escalation: the fill genuinely has no interior pixels even zoomed in — authorize one
+    instrumented render-diagnosis session (the entry-0 pattern)?** Your entry-20 attempt ran
+    exactly as bounded and hit its own escalation trigger: at +3 and +5 wheel notches from
+    canvas center, zero interior-verified candidates exist; every candidate is edge-adjacent,
+    and several sit at buffer row y=0 — the 200px-tall frame's own top edge, i.e. features
+    look CLIPPED at the canvas boundary, not merely small. This is no longer a test-assumption
+    question. What is known: the observed pixel alpha is ~45 (anti-aliased edge coverage), the
+    configured fill opacity is 180; your own hover worked in Parts A–D on a taller canvas; no
+    product code in either recent cut touched the render or pick paths; the canvas sits at its
+    200px floor with all four panels present. Plausible mechanisms (named, not asserted): the
+    camera state A1'–A8' leaves behind at a 6.4:1 canvas aspect puts the feature band mostly
+    outside the 200px strip; or the fit/letterbox math misplaces content vertically at extreme
+    aspects; or a real fill-layer regression. Recommendation: **one instrumented session** —
+    drive the app to A9's exact state, capture view-state, fit-anchor, layer draw params, and
+    full-frame read-backs at several camera states; diagnose only; any fix goes through the
+    normal gates after. The attempt's evidence instrument is committed (54526d5, the step red
+    and loud by design). The action-console PR continues to wait.
+
+20. **[RESOLVED 2026-08-19 — human: "let's go with entry 20" → option (a) authorized; ran
+    same day, hit the escalation trigger → entry 21.]**
+    **A9' (regression-suite hover-pick) is RED — rule 7 reached; authorize the third, bounded
     attempt?** The action-console cut's evidence run exposed it; two fix attempts ran and
     stopped. What is KNOWN: the drawer's layout overflow was real and is fixed (canvas back to
     full 1280px, no scrollbar — mechanically verified); the hover-pick step STILL fails there,
