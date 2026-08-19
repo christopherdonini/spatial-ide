@@ -5,7 +5,8 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-21. **A9' escalation: the fill genuinely has no interior pixels even zoomed in — authorize one
+21. **[RESOLVED 2026-08-19 — human: "start it" → one instrumented session authorized.]**
+    **A9' escalation: the fill genuinely has no interior pixels even zoomed in — authorize one
     instrumented render-diagnosis session (the entry-0 pattern)?** Your entry-20 attempt ran
     exactly as bounded and hit its own escalation trigger: at +3 and +5 wheel notches from
     canvas center, zero interior-verified candidates exist; every candidate is edge-adjacent,
