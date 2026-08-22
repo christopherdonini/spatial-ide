@@ -7,7 +7,7 @@ additions ride alongside as dated companions and move with the parent document w
 scheduled. Like the parent, this note binds nothing and may not be cited to justify starting the
 work.
 
-## Two requirements on any future run
+## Three requirements on any future run
 
 1. **Each candidate's buffer-memory strategy is part of the run record.** For every candidate,
    the run must state — before results are read — how vertex/attribute memory is allocated,
@@ -24,6 +24,21 @@ work.
    the spike record's own measurement hardware (`spikes/adr-003-crs-rendering/README.md`, M4's
    two-GPU protocol). **The UMA question is a dimension of this bake-off, not a separate
    project** — it gets a column in the run record, not its own preregistration.
+
+3. **Each candidate measures input-to-photon latency — pointer event → presented frame, p50/p95,
+   on both GPU profiles** (docs/08's own metric form). Method honesty declared up front: true
+   photon time needs external instrumentation; a software proxy (the present/flip timestamp
+   nearest the compositor's hand-off) is acceptable only if it is named as a proxy and captured
+   identically across candidates — a candidate measured at `requestAnimationFrame` compared
+   against one measured at swapchain present is not a comparison. **Why this metric is
+   structural, not incidental:** the WebView path presents through the webview's own compositor
+   chain before the OS compositor — a queue of frames no workload-shaping lever (culling, LOD,
+   per-tile buffers) can shorten, because it exists regardless of how little is drawn. It is the
+   one WebView penalty every earlier step of the campaign leaves standing. **And it bounds the
+   trigger's interpretation:** if the preregistration's trigger ever fires — a docs/08 budget
+   failure surviving the workload-shaping levers — compositor-chain latency is the most likely
+   honest cause, so the bake-off must measure it directly on both candidates rather than infer
+   it from frame-rate figures that never see the queue.
 
 ## The bound on expectations, stated before anyone runs anything
 
