@@ -774,13 +774,41 @@ Part H did not exist during any run recorded above. Fill in the fields below whe
 actually run by an operator. **H10 is not a pass/fail step** — record the human's own ruling on the
 exit judgment there, in their own words, not a checkbox.
 
-- **Date run:** —
-- **Run by:** —
-- **Build/commit:** `807648f` pinned for the batch (main tip 2026-08-19 — all three cuts'
-  surfaces in one tree; Parts H, I and J must record this same commit so Part J's REGRESS'
-  claim is meaningful).
-- **Part H (H1–H9):** —
-- **H10 — the ruling (the human's own words):** —
+- **Date run:** 2026-08-20 (H1–H6, H8a) and 2026-08-22 (H6 retry, H7, H9, H8b), over RustDesk.
+- **Run by:** the human (Christopher), custodian serving machine-side steps.
+- **Build/commit:** `807648f` pinned for the batch (app launched from `main` @ `29b74ae`, a
+  docs-only delta — product tree identical to the pin). Parts I and J must record the same.
+- **Part H (H1–H9):** H1–H5 run with no deviations reported (the operator reports exceptions).
+  **H6 first attempt blocked** — the operator read the informational filter-scope sentence as
+  the blocking message while the actual blocker was the settled-view requirement ("Current
+  view" needs a completed bbox-carrying query; the filter's first look issues none, and the
+  operator's sizing viewport was separately 2.4% over the render ceiling, session-log
+  corroborated). Resolved by a one-notch zoom to settle a view; whether the greyed
+  disabled-reason line was visible/legible went unanswered — **open legibility observation**
+  (G3-class): the honest filter sentence can upstage the real reason. Two successful publishes
+  followed: 24 rows/1 partition (tighter viewport than briefed), then 10,571 rows/22 partitions
+  — audit-recorded, served, and **H7 verified in the browser** (22/22 partitions). **H8a
+  (2026-08-20):** whole-file publish cancelled ~4.5 min in — clean-cancel sentence on screen,
+  audit intent/cancelled pair, destination verified empty by the custodian. **H8b (the human's
+  live call, taken):** whole-dataset publish COMPLETED with no warning at any point —
+  3,300,000 rows, 6,636 partitions, ~5.4 GB, ~11 min — and the viewer then REFUSED it on
+  screen, typed and plain; the operator judged the sequence working-as-intended. The complete
+  ADR-025 evidence chain now exists at the UI. One incidental: a first H8b attempt was REFUSED
+  on a mistyped confirmation phrase — the phrase check worked exactly as designed AND is live
+  evidence for the operator's own UX finding (below). **H9:** the operator's verdict verbatim:
+  *"h9 is crystal clear."* **Operator UX findings for ADR-024's acceptance:** typing the
+  destination name again after picking it reads as unintuitive; proposal — keep the typed
+  phrase (its deliberateness role was explained and stood) but progressively disclose the
+  dialog's and phases' detail ("we need all that data … later we don't show it unless asked").
+  The "Preparing…" silence (decision 7's declare-and-observe) was endured twice at 5 GB —
+  tens of seconds, and on first contact it read as "it doesn't publish": decision 7's question
+  now has its observation.
+- **H10 — the ruling (the human's own words):** *"everything is perfect"* — given immediately
+  after the H8b viewer-refusal demonstration, closing the full sequence: every verb of the
+  hero slice (open → filter in SQL → style → publish → serve → view, plus the honesty
+  demonstrations) run at 5 GB by the operator's own hand. Recorded as the Part H exit ruling;
+  the operator may expand it in a later session, and the durations discipline holds (no
+  figures beyond the buckets above, all machine-side figures audit- or log-sourced).
 
 ### Part I run (separate pass — admission remediation)
 
