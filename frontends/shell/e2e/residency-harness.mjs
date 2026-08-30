@@ -997,7 +997,19 @@ async function sweepStaleCdpProcess() {
     console.error(`residency-harness: sweeping stale app on CDP port ${CDP_PORT} -- killing process tree PID ${pid}`);
     await killProcessTreeLoudly(pid);
   }
-  return pids;
+
+  // Live-found (2026-08-30, the Polygons dry-run's hung relaunch): killing the CDP-port tree can
+  // strand a vite dev-server on the app's own dev port; the fresh launch then wedges against the
+  // stale server (port conflict, or worse: serving STALE client code to the new app). Sweep it too.
+  const DEV_SERVER_PORT = 5180;
+  const vitePids = findPidsListeningOnPort(DEV_SERVER_PORT).filter((p) => !pids.includes(p));
+  for (const pid of vitePids) {
+    console.error(
+      `residency-harness: sweeping orphaned dev-server on port ${DEV_SERVER_PORT} -- killing process tree PID ${pid}`
+    );
+    await killProcessTreeLoudly(pid);
+  }
+  return [...pids, ...vitePids];
 }
 
 async function main() {
@@ -1018,6 +1030,9 @@ async function main() {
   const arm = control ? "control" : wireIdentity ? "identity-guard" : cellArgs.arm;
 
   const watchdog = setTimeout(() => {
+    // Live-found (2026-08-30): process.exit inside this callback was observed racing the exit
+    // path to a final code of 0 -- a watchdog that fires must never read as success.
+    process.exitCode = 2;
     console.error("residency-harness: overall watchdog exceeded -- presumed hung, failing loudly");
     process.exit(2);
   }, TRIAL_WATCHDOG_MS + 120_000); // trial watchdog + generous headroom for launch/mount

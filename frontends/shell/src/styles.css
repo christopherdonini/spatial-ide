@@ -224,6 +224,16 @@ body,
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* The comment above says the stack "stays clear of … `.zoom-to-layer`" — true of its visible
+     children, FALSE of this full-width box, which silently intercepted clicks on the button
+     whenever any child was present (found live by the residency harness's Polygons dry-run,
+     2026-08-30: dismissing the banner moved the interception from `.canvas-refusal` to this
+     wrapper). The wrapper is passive by design; children that take input re-enable below. */
+  pointer-events: none;
+}
+
+.canvas-status-stack > * {
+  pointer-events: auto;
 }
 
 .canvas-refusal {
