@@ -20,7 +20,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     with (a) noted as a follow-up question, not a condition, unless you want it binding.
     Touches on acceptance: ADR-027's Status line + docs/02/README index entries.
 
-22. **Batch sequencing + a deliberately idle cut pipeline (architect-recommended hold).** The
+22. **[RESOLVED 2026-08-30 — human: "Let's go with the next cut" → the hold lifts; the
+    ADR-011 tiling/LOD slice opens with its preregistration piece. The remaining queue
+    entries stay pending at the human's pace and no longer gate the pipeline.]**
+    **Batch sequencing + a deliberately idle cut pipeline (architect-recommended hold).** The
     operator batch is full (Parts H, I, J — a complete session, all against the single pinned
     build `807648f`, pre-filled in the three result logs) and every worthwhile next cut is
     either gated on entries below or — the ADR-011 tiling/LOD slice, the honest next cut — is
