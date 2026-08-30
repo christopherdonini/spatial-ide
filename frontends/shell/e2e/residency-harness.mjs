@@ -84,12 +84,19 @@ const ZOOM_OUT_WHEEL_DELTA = 1200;
 const BUILD_CLASS = "vite-dev (tauri dev; DEV-gated hooks; unminified client)";
 
 // S13 (M4's own divergence, carried into evidence per the fold-in this piece's instructions name):
-// the REAL §6 definition of the input-to-present proxy quantity, quoted verbatim from
-// RESIDENCY-PREREGISTRATION.md §6's own table row ("Input-to-present proxy"), followed by this
+// the REAL §6 definition of the input-to-present proxy quantity, from
+// RESIDENCY-PREREGISTRATION.md §6's own "Input-to-present proxy" table row, followed by this
 // harness's own code proxy, stated explicitly as a divergence, never presented as the same thing.
+// `real_section_6_definition` below is that row's own INSTRUMENT cell, quoted verbatim (P1d B1/B2's
+// own citation-integrity fix corrected its arrow character to match the source exactly).
+// `real_section_6_class_and_notes` is P1d nit 18's own relabeling: recomposed from §6's table cells
+// (content-faithful, not a single verbatim cell) -- it joins that SAME row's CLASS cell and NOTES
+// cell with this comment's own "(class)"/"(notes)" labels added for readability, which an earlier
+// version of this comment called "quoted verbatim" despite the added labels and the join across two
+// cells making that claim untrue.
 const INPUT_TO_PRESENT_PROXY_DIVERGENCE = {
-  real_section_6_definition:
-    "client clock, pointer/keyboard event -> next composited frame carrying its effect (reported, never gated -- proxy only, not a docs/08 row, no budget attaches)",
+  real_section_6_definition: "client clock, pointer/keyboard event → next composited frame carrying its effect",
+  real_section_6_class_and_notes: "reported, never gated (class); proxy only -- not a docs/08 row, no budget attaches (notes)",
   this_code_proxy:
     "pointer/keyboard event timestamp (residencyMarkInput, called by this driver immediately before dispatching a synthetic gesture) -> the NEXT deck.gl onAfterRender fire observed while WorkingCanvas.tsx's per-step hook is armed (residencyArmFirstPixel/residencyDisarmFirstPixel window only, not the app's whole lifetime)",
   divergence:
@@ -314,7 +321,7 @@ async function clampedPanDrag(page, box, cx, cy, dxScreenTotal, dyScreenTotal) {
  * itself (step 11) -- the SAME real button a real operator would click, never a parallel path.
  *
  * **M8 fix (reviewer gate, P1b): the diagonal pan's per-axis components.** §4b step 6's own text:
- * "one full viewport diagonal (√2 x the pan distance above, same direction convention)" -- Amendment
+ * "one full viewport diagonal (√2 × the pan distance above, same direction convention)" -- Amendment
  * 1 resolved "the pan distance above" as step 5's WIDTH basis, so `distance = width * sqrt(2)` is the
  * step's declared TOTAL magnitude. P1's own `applyStep` set BOTH the x and y screen components to
  * this full `distance` (one `dyScreen += distance` from the "N" branch, one `dxScreen -= distance`
@@ -438,9 +445,40 @@ async function waitForMountReady(page, timeoutMs = MOUNT_READY_TIMEOUT_MS) {
 
 /** One measured step: begin (if instrumented), arm the first-pixel/frame-tick hook CONCURRENTLY with
  * the gesture, wait for BOTH-conditions settle (M6), disarm (S7, boolean recorded), end, and (S1)
- * capture pre/post view-state + realized displacement. Shared by the M7 `open-drain` pre-step and
- * every regular trace step below -- `applyStepFn` is `null` for `open-drain` (its own "gesture" is
- * `openFixture`, applied by the caller, not by this function).
+ * capture pre/post view-state + realized displacement. Shared by the M7 `open-drain` pre-step, every
+ * regular trace step below, AND (P1d B3) the `--wire-identity` mode's own three steps -- `applyStepFn`
+ * is `null` for `open-drain` (its own "gesture" is `openFixture`, applied by the caller, not by this
+ * function).
+ *
+ * **P1d B5: the arm watchdog is scaled to `step.settle.timeoutMs`, not a fixed 5000.** Passed straight
+ * through to `residencyArmFirstPixel` (`WorkingCanvas.tsx`'s own `armFirstPixelRenderHook`'s doc
+ * comment carries the full mechanism) -- an armed measurement can no longer self-restore before its
+ * OWN step's settle bound has even been reached (the `open-drain` pre-step's 60s settle vs. the old
+ * fixed 5s watchdog was exactly this bug, re-review finding B5).
+ *
+ * **P1d B3: `alwaysCallHooks` (default `false`, preserving every existing caller's behavior).** When
+ * `true`, this function calls `residencyBeginStep`/`residencyArmFirstPixel`/`residencyDisarmFirstPixel`/
+ * `residencyEndStep` UNCONDITIONALLY, regardless of `instrumentEnabled` -- relying on each exported
+ * hook's OWN internal `enabled` check to no-op when the instrument is off
+ * (`residencyInstrument.ts`'s "off means zero work" discipline), rather than this driver's own
+ * conditional skipping the calls entirely. Only `--wire-identity` sets this (see
+ * `runShortTraceForFieldSequence` below) -- the driver-side CALL PATTERN (timing, sequence, CDP round
+ * trips) must be identical whether the instrument is ON or OFF for the identity comparison to mean
+ * anything; skipping the calls when off (every other mode's existing, intentional behavior --
+ * `--control`'s own "instrument compiled out" simulation) would reintroduce exactly the vacuous
+ * "ON differs from OFF by a flag gating nothing" defect this fix closes (re-review finding B3).
+ * `instrumentEnabled` still governs `frameStats`'/the return shape's OWN reading of `result` (`null`
+ * while disabled, since `residencyEndStep` itself returns `null` when off) -- only the CALL DECISION
+ * changes, never what a disabled instrument reports.
+ *
+ * **P1d suggestion 11: `postSettleFlushMs` (default `0`).** When set, sleeps that long AFTER settle
+ * resolves but BEFORE capturing `postViewState` -- `waitForSettleWithInFlight` only awaits console-LINE
+ * -COUNT quiescence + in-flight===0, not the separate `viewStateListener`'s own async `jsonValue()`
+ * resolution for the LAST `view-state` line, so a post-snapshot taken immediately after settle can race
+ * that resolution and read a stale (pre-step) view-state. `runShortTraceForFieldSequence` is the only
+ * caller that sets this (its own S1 capture is new as of B3 above; every other caller's existing
+ * settle-then-snapshot ordering predates this fix and is left unchanged here, out of this piece's own
+ * scope to re-verify at that call site).
  *
  * **Concurrency fix, found live verifying M7 (P1b).** `residencyArmFirstPixel`'s own hook now polls
  * (bounded, `App.tsx`'s own doc comment) for a live `WorkingCanvas`/`deck` instance to exist before it
@@ -454,12 +492,19 @@ async function waitForMountReady(page, timeoutMs = MOUNT_READY_TIMEOUT_MS) {
  * and the gesture together, lets the arm's in-page poll and `openFixture`'s own admission run
  * concurrently in the SAME page -- the poll picks up the canvas the moment `openFixture` creates it,
  * comfortably inside its 4s bound. */
-async function measureOneStep(page, consoleHandle, viewStateListener, step, { instrumentEnabled, applyStepFn }) {
-  if (instrumentEnabled) {
+async function measureOneStep(
+  page,
+  consoleHandle,
+  viewStateListener,
+  step,
+  { instrumentEnabled, applyStepFn, alwaysCallHooks = false, postSettleFlushMs = 0 }
+) {
+  const callHooks = instrumentEnabled || alwaysCallHooks; // P1d B3
+  if (callHooks) {
     await page.evaluate((id) => window.__SPATIAL_E2E__.residencyBeginStep(id), step.id);
   }
-  const armPromise = instrumentEnabled
-    ? page.evaluate(() => window.__SPATIAL_E2E__.residencyArmFirstPixel?.())
+  const armPromise = callHooks
+    ? page.evaluate((watchdogMs) => window.__SPATIAL_E2E__.residencyArmFirstPixel?.(watchdogMs), step.settle.timeoutMs) // P1d B5
     : Promise.resolve();
 
   const preViewState = lastViewState(viewStateListener);
@@ -472,15 +517,18 @@ async function measureOneStep(page, consoleHandle, viewStateListener, step, { in
   const settle = await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), step.settle);
   const postCount = consoleHandle.renderTrace().length;
   const wallMs = Date.now() - stepStartWallMs;
+  if (postSettleFlushMs > 0) {
+    await sleep(postSettleFlushMs); // P1d suggestion 11 -- see this function's own doc comment.
+  }
   const postViewState = lastViewState(viewStateListener);
 
   let armDisarmedCleanly = null;
-  if (instrumentEnabled) {
+  if (callHooks) {
     armDisarmedCleanly = await page.evaluate(() => window.__SPATIAL_E2E__.residencyDisarmFirstPixel?.() ?? null);
   }
 
   let result = null;
-  if (instrumentEnabled) {
+  if (callHooks) {
     result = await page.evaluate(() => window.__SPATIAL_E2E__.residencyEndStep());
   }
 
@@ -488,17 +536,40 @@ async function measureOneStep(page, consoleHandle, viewStateListener, step, { in
     ? frameTimeStatsMs(result.frameTimestamps, result.frameTimestampsTruncated)
     : { p50: null, p95: null, max: null, sampleCount: 0, truncated: false };
 
+  // S1: pre/post view-state + realized displacement (world units, origin-corrected) + a genuine
+  // assertion, not merely a recording -- a `pan` step that SETTLED but realized ZERO displacement is
+  // a real anomaly (the camera transform is exactly what `waitForSettle`'s own quiescence is supposed
+  // to be waiting to see change), flagged here so a reader never has to notice its own absence by
+  // inference.
+  const displacement = realizedDisplacement(preViewState, postViewState);
+  let viewStateAssertion = "not-applicable"; // non-pan steps (zoom/fit/open/identity) don't carry this
+  if (step.kind === "pan" && settle.settled) {
+    viewStateAssertion = displacement && displacement.distance > 0 ? "ok" : "FAIL: zero realized displacement for a settled pan step";
+  }
+  const displacementFailed = typeof viewStateAssertion === "string" && viewStateAssertion.startsWith("FAIL");
+
+  // P1d suggestion 12: a realized-displacement FAIL is a real anomaly, not a footnote -- it now also
+  // demotes this row's own `status` to "unmeasured" (never silently left "measured" beside a FAIL
+  // string a reader could miss), and `runTrace`/`main()` below fold any such row into the process exit
+  // code, not only a settle-watchdog invalidation.
+  const status = !settle.settled ? "unmeasured" : displacementFailed ? "unmeasured" : "measured";
+  const reason = !settle.settled
+    ? `settle watchdog at step (${step.id}): ${settle.reason ?? "unknown"}`
+    : displacementFailed
+      ? `S1 realized-displacement assertion failed: ${viewStateAssertion}`
+      : undefined;
+
   return {
     stepId: step.id,
     kind: step.kind,
-    status: settle.settled ? "measured" : "unmeasured",
-    reason: settle.settled ? undefined : `settle watchdog at step (${step.id}): ${settle.reason ?? "unknown"}`,
+    status,
+    reason,
     wallMs,
     settled: settle.settled,
     inFlightAtSettle: settle.inFlight,
     renderTraceLinesDuringStep: postCount - preCount,
     gesture: gestureResult,
-    armDisarmedCleanly, // S7: true = disarmed before the 5s watchdog, false = watchdog already fired, null = instrument off
+    armDisarmedCleanly, // S7: true = disarmed before the arm's own watchdog, false = watchdog already fired, null = hooks not called
     counters: result ? result.counters : undefined,
     firstPixelMs: result ? result.firstPixelMs : undefined,
     firstPixelReason: result ? result.firstPixelReason : undefined,
@@ -506,19 +577,7 @@ async function measureOneStep(page, consoleHandle, viewStateListener, step, { in
     inputToPresentProxiesMs: result ? result.inputToPresentProxiesMs : undefined,
     inputToPresentProxiesTruncated: result ? result.inputToPresentProxiesTruncated : undefined,
     residentAtEndStep: result ? result.residentAtEndStep : undefined, // N4, G6 instrument
-    // S1: pre/post view-state + realized displacement (world units, origin-corrected) + a genuine
-    // assertion, not merely a recording -- a `pan` step that SETTLED but realized ZERO displacement
-    // is a real anomaly (the camera transform is exactly what `waitForSettle`'s own quiescence is
-    // supposed to be waiting to see change), flagged here so a reader never has to notice its own
-    // absence by inference.
-    viewState: (() => {
-      const displacement = realizedDisplacement(preViewState, postViewState);
-      let assertion = "not-applicable"; // non-pan steps (zoom/fit) don't carry this same expectation
-      if (step.kind === "pan" && settle.settled) {
-        assertion = displacement && displacement.distance > 0 ? "ok" : "FAIL: zero realized displacement for a settled pan step";
-      }
-      return { pre: preViewState, post: postViewState, realizedDisplacement: displacement, assertion };
-    })(),
+    viewState: { pre: preViewState, post: postViewState, realizedDisplacement: displacement, assertion: viewStateAssertion },
   };
 }
 
@@ -677,22 +736,59 @@ async function applyIdentityViewStateStep(page, step) {
  * `applyIdentityViewStateStep` (a literal, declared camera pose via the DEV-gated `e2eSetViewState`
  * seam) instead of `applyStep`'s real pointer/wheel gesture, and waits the FULL
  * `waitForSettleWithInFlight` (quiescence + in-flight===0) before the next step -- never racing the
- * shell's own 120ms pan/zoom debounce the way a fast, real drag could. */
+ * shell's own 120ms pan/zoom debounce the way a fast, real drag could.
+ *
+ * **P1d B3 fix (re-review finding): every step now goes through `measureOneStep`'s REAL per-step
+ * machinery -- `residencyBeginStep` -> arm -> settle -> disarm -> `residencyEndStep` -- exactly as a
+ * MEASURED trace step does (`runTrace`'s own regular steps, the `open-drain` pre-step).** An earlier
+ * version of this function called ONLY `residencyInstrumentSetEnabled(enabled)` and then drove the
+ * gesture/settle loop directly -- it never began a step or armed the render-tick hook at all, so an
+ * `enabled=true` ("ON") run and an `enabled=false` ("OFF") run differed by nothing except a flag that
+ * gated NO code this function itself ever reached: a vacuous identity proof. `alwaysCallHooks: true`
+ * below makes both ON and OFF runs issue the IDENTICAL sequence of driver-side calls (same CDP round
+ * trips, same timing) -- it is each exported hook's OWN internal `enabled` check
+ * (`residencyInstrument.ts`'s "off means zero work" discipline) that makes an OFF run's calls no-op,
+ * never a driver-side skip. That symmetry of CALL PATTERN, with only the instrument's own internal
+ * state differing, is what makes "OFF vs ON" an honest comparison of the instrument's OWN wire effect
+ * rather than of two structurally different code paths. `postSettleFlushMs: 500` matches this
+ * function's own prior end-of-run flush (below), now needed PER STEP too: `measureOneStep`'s S1
+ * view-state capture is new to this path as of this fix, and its post-snapshot would otherwise race
+ * the separate `view-state` listener's own async `jsonValue()` resolution (suggestion 11). The
+ * fixture-open itself is wrapped the same way, as an `identity-open` step, for the same reason
+ * `open-drain` wraps the real trial's own fixture-open -- not merely the three camera-pose steps. */
 async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
   const listener = attachRenderTraceValueListener(page, FIELD_SEQUENCE_EVENTS);
+  const viewStateListener = attachRenderTraceValueListener(page, ["view-state"]);
   try {
     await page.evaluate((v) => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(v), enabled);
-    await openFixture(page);
-    await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 });
+
+    await measureOneStep(
+      page,
+      consoleHandle,
+      viewStateListener,
+      { id: "identity-open", kind: "open", settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 } },
+      { instrumentEnabled: enabled, applyStepFn: () => openFixture(page), alwaysCallHooks: true, postSettleFlushMs: 500 }
+    );
     for (const step of IDENTITY_VIEW_STATE_STEPS) {
-      await applyIdentityViewStateStep(page, step);
-      await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 });
+      await measureOneStep(
+        page,
+        consoleHandle,
+        viewStateListener,
+        { id: step.id, kind: "identity-view-state", settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 } },
+        {
+          instrumentEnabled: enabled,
+          applyStepFn: () => applyIdentityViewStateStep(page, step),
+          alwaysCallHooks: true,
+          postSettleFlushMs: 500,
+        }
+      );
     }
     // Let any final in-flight console messages resolve their jsonValue() promises.
     await sleep(500);
     return listener.sorted().map(normalizeFieldSequenceLine);
   } finally {
     listener.dispose();
+    viewStateListener.dispose();
   }
 }
 
@@ -814,6 +910,20 @@ async function main() {
     rows: [],
     invalidated: false,
     inputToPresentProxyDivergence: INPUT_TO_PRESENT_PROXY_DIVERGENCE, // S13
+    // P1d suggestion 8: client-clock GATED quantities (first pixels, frame time, cancellation --
+    // §6's own "client clock"/"client compositor-frame timer" rows) are only ever populated in an
+    // instrument-ON cell (`counters`/`firstPixelMs`/`frameTimeMs` are `undefined` in `--control`,
+    // since `--control`'s own hooks are never called, per suggestion 7's own invariant above). A
+    // `--control` cell exists to guard WIRE BEHAVIOR (the §8 wire-bytes-identity assertion this
+    // piece's own `--wire-identity` mode measures) -- it does not, and cannot, supply a
+    // control-arm VALUE for any gated quantity to be scored against; there is no control-arm p95.
+    // A custodian amendment should restate this at RESIDENCY-PREREGISTRATION.md §6's own table
+    // (reported here, not made here -- out of this piece's own scope to amend the preregistration).
+    gatedQuantityAvailability:
+      "gated client-clock quantities (first pixels, frame time p50/p95, cancellation) exist only in " +
+      "instrument-on cells; the --control cell's own readback-hard-throw (suggestion 7) guards that " +
+      "the wire is unperturbed when the instrument is off, it does not and cannot supply a control-arm " +
+      "value for any gated quantity -- there is no control-arm p95 to compare against",
     cell: {
       // M9: the full cell declaration.
       arm,
@@ -868,6 +978,19 @@ async function main() {
     }
     evidence.cell.instrumentEnabledReadback = instrumentEnabledReadback;
 
+    // P1d suggestion 7: `--control` is only a real control cell if the instrument is PROVABLY off --
+    // a readback that is anything other than the literal `false` (a stale hook, a race with M10's own
+    // off-then-on sequencing, a future regression re-ordering these calls) must fail loudly here,
+    // never be silently recorded and measured through anyway.
+    if (control && instrumentEnabledReadback !== false) {
+      throw new Error(
+        `residency-harness: --control INVARIANT VIOLATED -- residencyInstrumentIsEnabled() read back ` +
+          `${JSON.stringify(instrumentEnabledReadback)}, not false, for a --control run. A control cell ` +
+          `whose own instrument readback is not provably off is not a control cell; this is a ` +
+          `harness/product defect, not a data result.`
+      );
+    }
+
     const instrumentEnabled = !control;
     const viewStateListener = attachRenderTraceValueListener(page, ["view-state"]);
 
@@ -875,8 +998,11 @@ async function main() {
     // query + first-batch paint (G7's real "cold first view" subject), strictly BEFORE step 1
     // ("fit") ever runs, then requires a full drain (in-flight===0 + settle) before continuing.
     // **fitAnchorRef-vs-declared-extent observation (reported here per this piece's own instruction,
-    // not resolved in code):** §4b step 1 reads "Fit -- Zoom-to-layer-equivalent fit-to-declared-
-    // extent FROM A COLD, EMPTY RESIDENT SET." By the time step 1 actually runs (after this
+    // not resolved in code):** §4b step 1's own text (paraphrased, not quoted -- P1d B1/B2's own
+    // citation-integrity fix: an earlier version of this comment quoted it with a capitalization
+    // change the source does not carry) describes Fit as the Zoom-to-layer-equivalent fit to the
+    // declared extent, FROM a cold, empty resident set (emphasis this comment's own, not the
+    // source's). By the time step 1 actually runs (after this
     // `open-drain` pre-step has already admitted the dataset and let its own first batch settle),
     // the resident set is no longer cold/empty -- `WorkingCanvas.tsx`'s own one-shot auto-fit
     // (`hasAutoFitRef`) has already fired once, and `fitToBounds`'s own `chooseFitTarget
@@ -912,6 +1038,19 @@ async function main() {
     evidence.rows = rows;
     evidence.invalidated = invalidated;
     evidence.invalidatedAtStep = invalidatedAtStep;
+
+    // P1d B4: `evidence.openDrain` is assigned OUTSIDE `rows` (a pre-step, not one of
+    // `runTrace`'s own trace steps), so `runTrace`'s S8 rewrite (every row in `rows` demoted to
+    // `"unmeasured"` on whole-trial invalidation) never reached it -- the re-review's own finding:
+    // a mid-trace watchdog fire invalidates the WHOLE TRIAL per §4b's letter, and `open-drain` is
+    // part of that same trial's evidence, not a separate one. Re-stamped here, the same way, the
+    // moment `invalidated` is known -- never left at whatever per-step status it individually earned.
+    if (invalidated && evidence.openDrain) {
+      evidence.openDrain.status = "unmeasured";
+      evidence.openDrain.wholeTrialInvalidatedReason = `settle watchdog at step ${invalidatedAtStep} (${
+        (stepLimit ? CAMERA_TRACE_STEPS.slice(0, stepLimit) : CAMERA_TRACE_STEPS)[invalidatedAtStep]?.id ?? "?"
+      })`;
+    }
     viewStateListener.dispose();
 
     // MEASURED-MODE VIEW-STATE SEAM ASSERTION (P1c, Amendment 6): this whole code path (`open-drain`
@@ -920,6 +1059,17 @@ async function main() {
     // `e2eSetViewState` seam. Read AFTER the trace, not merely asserted by omission: a call count of
     // exactly 0 is checked and recorded into the evidence file itself, so a future regression (a
     // stray call added to `applyStep` by mistake) fails loudly here rather than silently drifting.
+    //
+    // **P1d suggestion 9, corrected: the counter's real reset semantics.** `e2eSetViewStateCallCount`
+    // (`WorkingCanvas.tsx`) is a `useEffect([])`-scoped closure variable -- it resets to 0 on every
+    // MOUNT of a `WorkingCanvas` instance, not merely "on a fresh page load" (an earlier version of
+    // this comment, and of `e2e-test-surface.ts`'s own doc comment, claimed the latter). A dataset
+    // (re-)admission can remount `WorkingCanvas` (`firstPixelArmedRef`'s own doc comment, above,
+    // documents the same remount for a DIFFERENT reason). So this assertion's real WINDOW is "since
+    // the currently-mounted `WorkingCanvas` instance's own last mount," not "for this whole run" --
+    // in practice that is "since `open-drain`'s own `openFixture` call" for every mode this file
+    // drives (nothing re-admits the dataset a second time within one measured run), but this comment
+    // no longer overclaims a page-load-scoped guarantee the code does not provide.
     const measuredModeViewStateSeamCallCount = await page.evaluate(
       () => window.__SPATIAL_E2E__.e2eSetViewStateCallCount?.() ?? 0
     );
@@ -938,6 +1088,15 @@ async function main() {
       );
     }
 
+    // P1d suggestion 10: session-wide total, read once at the end of the run (the counter is not
+    // step-scoped -- `residencyInstrument.ts`'s own `supersededBytesDropped` doc comment). A `0`
+    // reading here is not suppressed or treated as an error -- a short trace against a small fixture
+    // may simply never supersede a stream mid-flight; `0` while `--control`/the instrument was ever
+    // disabled is the same disclosed limitation `residencyInFlightStreamCount` already carries.
+    evidence.supersededBytesDropped = await page.evaluate(
+      () => window.__SPATIAL_E2E__.residencySupersededBytesDropped?.() ?? 0
+    );
+
     if (!control) {
       await page.evaluate(() => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(false));
     }
@@ -954,12 +1113,39 @@ async function main() {
       console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit}`);
     }
 
-    process.exitCode = evidence.invalidated ? 1 : 0;
+    // P1d suggestion 12: a realized-displacement FAIL (measureOneStep's own `viewState.assertion`)
+    // demotes its row to `status: "unmeasured"` even on an otherwise-settled step -- folded into the
+    // exit code here alongside `evidence.invalidated` (the settle-watchdog path, S8) so BOTH honest
+    // failure shapes are non-zero-exit, never only the watchdog one.
+    const anyRowUnmeasured = [openDrainRow, ...rows].some((r) => r?.status === "unmeasured");
+    evidence.anyRowUnmeasured = anyRowUnmeasured;
+    process.exitCode = evidence.invalidated || anyRowUnmeasured ? 1 : 0;
   } catch (e) {
     console.error(`residency-harness: harness failure: ${e.stack ?? e.message}`);
     evidence.harnessError = e.message;
     process.exitCode = 1;
   } finally {
+    // P1d suggestion 9: the measured-mode view-state-seam assertion (above, inside `try`) is normally
+    // read right after `runTrace` resolves -- if anything earlier in the `try` block threw first
+    // (`waitForMountReady`, `open-drain`, `runTrace` itself), that read never ran, and a genuine seam
+    // violation earlier in the run would go completely unrecorded. This finally-block check ALSO runs
+    // it, but ONLY if the try block never got there (`evidence.measuredModeViewStateSeamAssertion` is
+    // still unset) and this is not `--wire-identity` (which legitimately calls the seam) -- so the
+    // assertion is captured regardless of how the try block exited, never only when it completed
+    // normally, and is never double-run when the try block already recorded one.
+    if (!wireIdentity && !evidence.measuredModeViewStateSeamAssertion) {
+      try {
+        const observed = await page.evaluate(() => window.__SPATIAL_E2E__.e2eSetViewStateCallCount?.() ?? 0);
+        evidence.measuredModeViewStateSeamAssertion = {
+          expected: 0,
+          observed,
+          ok: observed === 0,
+          note: "recorded from the finally block -- the try block exited before reaching its own check",
+        };
+      } catch (e) {
+        evidence.measuredModeViewStateSeamAssertionError = e.message;
+      }
+    }
     // M9: re-hash the fixture at the end too, matching §8's own "hashed before the trial loop AND
     // re-hashed after the last trial" discipline -- a mismatch is recorded, never silently ignored.
     try {

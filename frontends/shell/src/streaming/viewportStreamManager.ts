@@ -3,7 +3,11 @@
 
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
-import { recordResidencyStreamEnded, recordResidencyStreamIssued } from "../instrument/residencyInstrument";
+import {
+  recordResidencyStreamEnded,
+  recordResidencyStreamIssued,
+  recordResidencySupersededBytes,
+} from "../instrument/residencyInstrument";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
@@ -185,6 +189,13 @@ export class ViewportStreamManager {
         // was superseded is dropped here, never handed to the canvas -- this is the check D3.7's
         // acceptance criterion asks to be asserted rather than eyeballed.
         if (this.currentStreamHandle !== streamHandleAtStart) {
+          // P1d suggestion 10: `payload` HAS already arrived over the wire at this point -- only
+          // forwarding it is skipped. Counted here (DEV-gated, same discipline as
+          // `recordResidencyStreamIssued` above) so this driver's own reported byte totals do not
+          // silently under-report a superseded stream's genuinely-received bytes.
+          if (import.meta.env.DEV) {
+            recordResidencySupersededBytes(payload.byteLength);
+          }
           return;
         }
         const seq = this.nextBatchSeq++;

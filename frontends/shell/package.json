@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "verify": "npm run typecheck && npm run build && npm run check:dist-clean && npm run test && npm run test:residency-trace",
+    "verify": "npm run typecheck && npm run build && npm run check:dist-clean && npm run test && npm run test:residency-trace && npm run test:citation-integrity",
     "check:dist-clean": "node e2e/checkDistClean.mjs",
     "tauri": "tauri",
     "e2e:debug": "node e2e/debug-session.mjs",
@@ -22,7 +22,8 @@
     "e2e:publish": "node e2e/publish.mjs",
     "e2e:console": "node e2e/console.mjs",
     "e2e:residency-harness": "node e2e/residency-harness.mjs",
-    "test:residency-trace": "node e2e/residencyTrace.test.mjs"
+    "test:residency-trace": "node e2e/residencyTrace.test.mjs",
+    "test:citation-integrity": "node e2e/citationIntegrity.test.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.7",

@@ -125,12 +125,18 @@ export interface WorkingCanvasHandle {
    * -- see this file's own doc comment on `firstPixelArmedRef` for why this is exposed as a METHOD
    * (reached via `canvasRef.current` from `App.tsx`, which can poll for a live instance) rather than
    * self-registered inside a mount-scoped effect. Returns `false` (and arms nothing) if `deck` is not
-   * yet initialized on THIS instance -- the caller's own signal to retry. 5s watchdog-restore, same
-   * as `capturePixels`' precedent. */
-  armFirstPixelRenderHook(): boolean;
+   * yet initialized on THIS instance -- the caller's own signal to retry.
+   *
+   * **P1d B5 fix.** `watchdogMs` (self-restore deadline) is now the CALLER'S OWN choice, not a fixed
+   * 5000 -- the original fixed 5s watchdog silently capped every armed measurement at 5s even when
+   * the calling step's own declared settle timeout (`RESIDENCY-PREREGISTRATION.md` §7's per-step/
+   * open-drain rows) allowed longer, e.g. the `open-drain` pre-step's 60s settle bound. Defaults to
+   * 5000 when omitted, preserving the original ceiling for any caller that does not pass one. */
+  armFirstPixelRenderHook(watchdogMs?: number): boolean;
   /** S7: disarms the hook `armFirstPixelRenderHook` installed, restoring `onAfterRender` to a real
-   * no-op. Returns `true` iff disarmed BEFORE the 5s watchdog fired (or nothing was ever armed --
-   * vacuously clean), `false` iff the watchdog had already fired and self-restored first. */
+   * no-op. Returns `true` iff disarmed BEFORE the arm's own (P1d B5: caller-chosen, no longer fixed)
+   * watchdog fired (or nothing was ever armed -- vacuously clean), `false` iff the watchdog had
+   * already fired and self-restored first. */
   disarmFirstPixelRenderHook(): boolean;
 }
 
@@ -640,7 +646,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         };
       },
 
-      armFirstPixelRenderHook() {
+      armFirstPixelRenderHook(watchdogMs) {
         const deck = deckRef.current;
         if (!deck) return false;
         clearFirstPixelWatchdog();
@@ -649,14 +655,28 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         deck.setProps({
           onAfterRender: () => {
             if (!firstPixelArmedRef.current) return;
-            recordResidencyRenderTick();
+            // P1d B6a: gated at the call site, like every other reach into `residencyInstrument.ts`
+            // from product code -- `armFirstPixelRenderHook` itself (this whole method) is always
+            // compiled in (a real imperative-handle member, reachable in principle even in a
+            // production build, `armFirstPixelRenderHook`'s own interface doc comment), so this was
+            // previously the ONE call site into that module NOT wrapped in `import.meta.env.DEV`,
+            // making `residencyInstrument.ts`'s own top doc comment's "every call site... is
+            // additionally wrapped" claim false for exactly this closure. Wrapping it here restores
+            // that claim and lets Vite's literal-`false` replacement + esbuild's minifier actually
+            // dead-code-eliminate this reference in a production build, the same as every sibling
+            // call site already does.
+            if (import.meta.env.DEV) {
+              recordResidencyRenderTick();
+            }
           },
         });
+        // P1d B5: the self-restore deadline is the caller's own bound, not a fixed 5000 -- see this
+        // method's own interface doc comment.
         firstPixelWatchdogRef.current = setTimeout(() => {
           firstPixelWatchdogRef.current = null;
           firstPixelTimedOutRef.current = true;
           restoreFirstPixelHookToNoop();
-        }, 5000);
+        }, watchdogMs ?? 5000);
         return true;
       },
 

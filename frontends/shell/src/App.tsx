@@ -19,6 +19,7 @@ import {
   enableResidencyInstrument,
   endResidencyStep,
   getResidencyInFlightStreamCount,
+  getResidencySupersededBytesDropped,
   isResidencyInstrumentEnabled,
   recordResidencyInput,
 } from "./instrument/residencyInstrument";
@@ -777,11 +778,18 @@ export default function App() {
     // M6 (P1b): driver-visible in-flight `viewport_query` count -- `waitForSettle` for a residency
     // trace step reads this alongside console quiescence (§4b's letter).
     registerE2eHook("residencyInFlightStreamCount", async () => getResidencyInFlightStreamCount());
+    // P1d suggestion 10: driver-visible session-wide total of superseded-stream bytes dropped
+    // (`residencyInstrument.ts`'s own `supersededBytesDropped` doc comment has the full mechanism).
+    registerE2eHook("residencySupersededBytesDropped", async () => getResidencySupersededBytesDropped());
     // M7/S7 fix: see this effect's own doc comment above.
-    registerE2eHook("residencyArmFirstPixel", async () => {
+    // P1d B5: `watchdogMs` is threaded through to `armFirstPixelRenderHook` unchanged -- the caller
+    // (the driver) passes the step's own `settle.timeoutMs`, no longer a fixed 5000 baked in here.
+    // The 4s poll bound below is a SEPARATE concern (waiting for a live `WorkingCanvas`/`deck` to
+    // exist at all) and is not scaled by this fix.
+    registerE2eHook("residencyArmFirstPixel", async (watchdogMs?: number) => {
       const deadlineMs = Date.now() + 4000;
       while (Date.now() < deadlineMs) {
-        if (canvasRef.current?.armFirstPixelRenderHook()) return;
+        if (canvasRef.current?.armFirstPixelRenderHook(watchdogMs)) return;
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
       // Gave up -- no WorkingCanvas/deck ever became available within the bound. An honest no-op,
@@ -797,6 +805,7 @@ export default function App() {
       unregisterE2eHook("residencyEndStep");
       unregisterE2eHook("residencyMarkInput");
       unregisterE2eHook("residencyInFlightStreamCount");
+      unregisterE2eHook("residencySupersededBytesDropped");
       unregisterE2eHook("residencyArmFirstPixel");
       unregisterE2eHook("residencyDisarmFirstPixel");
     };

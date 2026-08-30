@@ -2,7 +2,7 @@
   "_gate_artifact": "viewport-residency cut -- render-trace field-sequence identity (proxy) evidence, committed under e2e/ (NOT e2e/out/, which is gitignored) so the gate's claim has a real, checked-in artifact behind it (P1b's own S11 instruction, still followed here).",
   "_produced_by": "npm run e2e:residency-harness -- --wire-identity, a real run against the live app (frontends/shell/e2e/residency-harness.mjs), captured verbatim (trimmed of nothing but this file's own JSON formatting) -- not hand-edited.",
   "_run_command": "node e2e/residency-harness.mjs --wire-identity",
-  "_current_status": "PASS as of the P1c attempt below (2026-08-30T17:32:54.946Z) -- all 6 pairwise comparisons across OFF-ON-ON-OFF are byte-sequence-identical. This supersedes P1b's 'not established' record; the P1b attempt is kept below as history, per this piece's own instruction ('keep the old record inside the file as history -- an array of dated attempts'), never deleted.",
+  "_current_status": "PASS as of the P1d attempt below (2026-08-30T18:46:57.417Z) -- all 6 pairwise comparisons across OFF-ON-ON-OFF are byte-sequence-identical, with the REAL per-step machinery (residencyBeginStep -> arm -> settle -> disarm -> residencyEndStep) actually exercised in both ON and OFF runs (P1d B3 fix -- the P1c attempt below PASSED without ever calling any of these, an earlier-discovered vacuous identity proof) AND with a third camera pose that genuinely delivers data (P1d suggestion 14 -- the original identity-pan-east-equivalent pose returned zero rows against this fixture in every observed run, replaced with identity-zoom-in-equivalent). This supersedes the P1c record as the file's current status; P1b and P1c are kept below as history, per this piece's own instruction ('keep the old record inside the file as history -- an array of dated attempts'), never deleted.",
   "attempts": [
     {
       "_piece": "P1b (reviewer-gate remediation, M11/S11)",
@@ -151,6 +151,83 @@
           { "event": "stream-issued" }
         ],
         "evidence_file": "e2e/out/residency-harness-wire-identity-1788111193005.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
+      }
+    },
+    {
+      "_piece": "P1d (re-review remediation, B3: the identity proof armed for real; supersedes this piece's own first P1d capture below, which used the still-then-unfixed identity-pan-east-equivalent pose, superseded before commit -- suggestion 14)",
+      "_capturedAt": "2026-08-30T18:46:57.417Z",
+      "_buildCommit": "c4d12ebd18c50364d91cd8625fd0409a0853aef2",
+      "_camera_control_mechanism": "IDENTITY_VIEW_STATE_STEPS via the DEV-gated e2eSetViewState seam, 3 declared literal world-space poses, no synthetic gesture -- the THIRD pose is now identity-zoom-in-equivalent (P1d suggestion 14: identity-pan-east-equivalent's own landing pose was found, live, to return ZERO rows against this fixture in every observed run, so it never exercised a real batch delivery; replaced with CAMERA_TRACE_STEPS' own zoom-in-1 semantics, live-verified to return 1305 rows). What ALSO changed vs P1c (B3): every ON and OFF run now calls the SAME sequence -- residencyBeginStep -> residencyArmFirstPixel(watchdogMs) -> settle -> residencyDisarmFirstPixel -> residencyEndStep -- via measureOneStep's alwaysCallHooks:true path (residency-harness.mjs), for the fixture-open (a new 'identity-open' step) and each of the 3 camera-pose steps. Previously (P1c and earlier) this driver called ONLY residencyInstrumentSetEnabled(enabled) and then drove the gesture/settle loop directly -- it never began a step or armed the render-tick hook at all, so P1c's PASS above was a vacuous comparison: ON differed from OFF by a flag gating no code this driver ever reached (re-review finding B3, third occurrence of the fabricated/vacuous-proof class this piece exists to close).",
+      "_honest_result": {
+        "literal_check_result": "PASS -- all 6 pairwise comparisons across OFF-ON-ON-OFF are byte-sequence-identical.",
+        "what_the_evidence_actually_shows": "All 4 runs (off#0, on#1, on#2, off#3) observed the identical 18-line field sequence (viewport_query+stream-issued+3 batches for identity-open, then viewport_query+stream-issued+2 batches for identity-fit-equivalent's own re-issue, then viewport_query+stream-issued+1 batch for identity-pan-north-equivalent, then viewport_query+stream-issued+3 batches for identity-zoom-in-equivalent) -- with residencyBeginStep/residencyArmFirstPixel/residencyDisarmFirstPixel/residencyEndStep genuinely invoked on every run, ON and OFF alike (the OFF runs' calls no-op internally via residencyInstrument.ts's own `enabled` check -- that no-op, not a driver-side skip, is what makes this an honest OFF/ON comparison of the SAME call pattern), and with the third step now genuinely delivering data (1305 cumulative rows) rather than an empty response. The instrument's on/off state produced zero observable difference in the wire-relevant render-trace field sequence.",
+        "why_this_differs_from_P1c": "P1c's own driver code (runShortTraceForFieldSequence) called residencyInstrumentSetEnabled(enabled) and then went straight into the gesture/settle loop -- residencyBeginStep, residencyArmFirstPixel, residencyDisarmFirstPixel, and residencyEndStep were never called anywhere in that function. The render-tick hook (onAfterRender -> recordResidencyRenderTick) was therefore never armed in EITHER the ON or the OFF runs, so the comparison never actually exercised the code path §8's wire-bytes-identity assertion is meant to guard. B3's fix makes every run -- ON and OFF -- call the full begin/arm/settle/disarm/end sequence identically; only the instrument's own internal `enabled` flag differs between an ON and an OFF run now.",
+        "run_environment": "Fresh live session, per this piece's own instruction: seven stale spatial-ide-shell.exe process trees (PIDs 15364, 24968, 37880, 41904, 44988, 45668, 46344, accumulated across prior work sessions) were found holding/orphaning CDP port 9223 and killed (taskkill /T /F, whole tree, each) BEFORE this piece's first live run; this capture reuses that same already-launched app instance (a second `--wire-identity` invocation, after the suggestion-14 fix landed), attaching rather than relaunching."
+      },
+      "cell": {
+        "arm": "baseline",
+        "tileSize": null,
+        "buildCommit": "c4d12ebd18c50364d91cd8625fd0409a0853aef2",
+        "fixturePath": "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet",
+        "fixtureSha256": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+        "fixtureSha256AtEnd": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+        "fixtureHashMatchedAcrossRun": true,
+        "coldOrWarm": "warm",
+        "traceVersion": "1",
+        "instrumentEnabledReadback": false,
+        "buildClass": "vite-dev (tauri dev; DEV-gated hooks; unminified client)"
+      },
+      "fieldSequenceIdentity": {
+        "identical": true,
+        "order": ["off", "on", "on", "off"],
+        "comparisons": [
+          { "a": "off#0", "b": "on#1", "identical": true },
+          { "a": "off#0", "b": "on#2", "identical": true },
+          { "a": "off#0", "b": "off#3", "identical": true },
+          { "a": "on#1", "b": "on#2", "identical": true },
+          { "a": "on#1", "b": "off#3", "identical": true },
+          { "a": "on#2", "b": "off#3", "identical": true }
+        ],
+        "excludedLineTypes": [
+          "residency (push/clear -- traceResidency, canvas-side bookkeeping, not wire content)"
+        ],
+        "excludedRequestFields": [
+          "limit (viewportQuery's own call carries it; traceViewportQuery never logs it)",
+          "filter (viewportQuery's own call carries it; traceViewportQuery never logs it)"
+        ],
+        "all_four_runs_identical_sequence": [
+          { "event": "viewport_query", "bbox": null, "bboxCrs": null },
+          { "event": "stream-issued" },
+          { "event": "batch", "rows": 262, "vertices": 3109, "cumulativeRows": 262, "cumulativeVertices": 3109 },
+          { "event": "batch", "rows": 1030, "vertices": 12475, "cumulativeRows": 1292, "cumulativeVertices": 15584 },
+          { "event": "batch", "rows": 708, "vertices": 8430, "cumulativeRows": 2000, "cumulativeVertices": 24014 },
+          {
+            "event": "viewport_query",
+            "bbox": { "xmin": "4143c9e0702b4e69", "ymin": "41324ea343cfd197", "xmax": "4143e5e3c0df9cfd", "ymax": "413257644d082a25" },
+            "bboxCrs": null
+          },
+          { "event": "stream-issued" },
+          { "event": "batch", "rows": 262, "vertices": 3109, "cumulativeRows": 262, "cumulativeVertices": 3109 },
+          { "event": "batch", "rows": 1030, "vertices": 12475, "cumulativeRows": 1292, "cumulativeVertices": 15584 },
+          { "event": "batch", "rows": 708, "vertices": 8430, "cumulativeRows": 2000, "cumulativeVertices": 24014 },
+          {
+            "event": "viewport_query",
+            "bbox": { "xmin": "4143c9e0702b4e69", "ymin": "41325614253fb675", "xmax": "4143e5e3c0df9cfd", "ymax": "41325ed52e780f03" },
+            "bboxCrs": null
+          },
+          { "event": "stream-issued" },
+          { "event": "batch", "rows": 110, "vertices": 1302, "cumulativeRows": 110, "cumulativeVertices": 1302 },
+          {
+            "event": "viewport_query",
+            "bbox": { "xmin": "4143d0e14458620e", "ymin": "413250d3861de7ba", "xmax": "4143dee2ecb28958", "ymax": "413255340aba1402" },
+            "bboxCrs": null
+          },
+          { "event": "stream-issued" },
+          { "event": "batch", "rows": 259, "vertices": 3119, "cumulativeRows": 259, "cumulativeVertices": 3119 },
+          { "event": "batch", "rows": 1039, "vertices": 12482, "cumulativeRows": 1298, "cumulativeVertices": 15601 },
+          { "event": "batch", "rows": 7, "vertices": 83, "cumulativeRows": 1305, "cumulativeVertices": 15684 }
+        ],
+        "evidence_file": "e2e/out/residency-harness-wire-identity-1788115645472.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
       }
     }
   ]

@@ -4,8 +4,12 @@
 
 // Plain Node unit test for `residencyTrace.mjs`'s committed pure functions -- NOT part of
 // `npm run test` (vitest's own `include` is `src/**/*.test.ts`/`.test.tsx` only, matching every
-// other file directly under `e2e/`, none of which run under vitest either). Run directly:
-//   node e2e/residencyTrace.test.mjs
+// other file directly under `e2e/`, none of which run under vitest either). P1d nit 17: an earlier
+// version of this comment said "Run directly" as the only invocation path -- stale even at the time
+// it was written, since `package.json`'s own `test:residency-trace` script (in turn part of
+// `npm run verify`'s own chain) already wired this file in. Run via either:
+//   npm run test:residency-trace   (also runs as part of `npm run verify`)
+//   node e2e/residencyTrace.test.mjs   (the same script, invoked directly)
 // Exits non-zero on any failure, matching this repository's e2e scripts' own exit-code convention.
 
 import assert from "node:assert/strict";

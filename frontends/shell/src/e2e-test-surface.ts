@@ -191,17 +191,32 @@ export interface E2eTestSurface {
    * EVERY render observed while armed -- both the frame-time series and the first-pixel stamp are
    * driven by this. The driver calls this once per step, right after `residencyBeginStep`, and
    * disarms it (`residencyDisarmFirstPixel`) once the step settles. A no-op while the instrument is
-   * disabled or no `WorkingCanvas` is mounted. Self-restores after a 5s watchdog if never disarmed. */
-  residencyArmFirstPixel?: () => Promise<void>;
+   * disabled or no `WorkingCanvas` is mounted.
+   *
+   * **P1d B5 fix.** `watchdogMs` (self-restore deadline) is the caller's own choice -- the driver
+   * passes the step's own declared `settle.timeoutMs`, so an armed measurement is never capped
+   * shorter than the settle bound already governing that same step (an earlier, fixed 5000 silently
+   * capped every armed window at 5s regardless of the step's own settle timeout, e.g. `open-drain`'s
+   * 60s). Defaults to 5000 when omitted (`WorkingCanvas.tsx`'s own `armFirstPixelRenderHook` doc
+   * comment), preserving the original ceiling for any future caller that does not pass one. */
+  residencyArmFirstPixel?: (watchdogMs?: number) => Promise<void>;
   /** S7: explicitly disarms the hook `residencyArmFirstPixel` installed, restoring `onAfterRender`
-   * to a real no-op. Resolves `true` iff this call disarmed BEFORE the 5s watchdog fired (a clean
-   * disarm), `false` iff the watchdog had already fired and self-restored first. */
+   * to a real no-op. Resolves `true` iff this call disarmed BEFORE the arm's own watchdog fired (a
+   * clean disarm), `false` iff the watchdog had already fired and self-restored first. P1d B5: the
+   * watchdog's own deadline is whatever `residencyArmFirstPixel`'s caller passed it (no longer a
+   * fixed 5s), so "the watchdog" here means that same caller-chosen deadline, not a hardcoded one. */
   residencyDisarmFirstPixel?: () => Promise<boolean>;
   /** M6 (P1b): the driver-visible, session-wide in-flight `viewport_query` count
    * (`getResidencyInFlightStreamCount`) -- always `0` while the instrument is disabled (a disclosed
    * limitation, `residencyInstrument.ts`'s own `inFlightStreamCount` doc comment). `waitForSettle`
    * for a residency trace step requires BOTH console quiescence AND this reading `0` (§4b's letter). */
   residencyInFlightStreamCount?: () => Promise<number>;
+  /** P1d suggestion 10: session-wide total of bytes a superseded stream's batch carried when it
+   * arrived AFTER its own supersession (`viewportStreamManager.ts`'s `onBatch` drop branch;
+   * `residencyInstrument.ts`'s own `supersededBytesDropped`/`recordResidencySupersededBytes` doc
+   * comments have the full mechanism). Always `0` while the instrument is disabled, the same
+   * disclosed control-arm limitation `residencyInFlightStreamCount` above already carries. */
+  residencySupersededBytesDropped?: () => Promise<number>;
   /** **DEV-ONLY, IDENTITY-MODE-ONLY E2E TEST SEAM** (viewport-residency cut P1c,
    * `RESIDENCY-PREREGISTRATION.md` §12 Amendment 6). Moves the camera to an EXACT, caller-supplied
    * world-space (authoritative-CRS) `(targetX, targetY)` at the given `zoom`, reusing the same
@@ -220,7 +235,13 @@ export interface E2eTestSurface {
   /** The call counter `e2eSetViewState` above increments on every invocation, for exactly one
    * reason: letting `e2e/residency-harness.mjs`'s own driver assert, after any MEASURED run, that
    * this identity-mode-only seam was never touched (Amendment 6's own restriction). Never read by
-   * product code; never reset except by a fresh page load. */
+   * product code.
+   *
+   * **P1d suggestion 9, corrected.** This counter is a `useEffect([])`-scoped closure variable
+   * (`WorkingCanvas.tsx`) -- it resets to 0 on every MOUNT of a `WorkingCanvas` instance (a dataset
+   * (re-)admission can remount one), not "only by a fresh page load" as an earlier version of this
+   * comment claimed. The driver's own assertion window is therefore "since the currently-mounted
+   * instance's own last mount," restated at its own call site (`residency-harness.mjs`). */
   e2eSetViewStateCallCount?: () => Promise<number>;
 }
 

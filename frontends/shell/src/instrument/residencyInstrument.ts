@@ -15,12 +15,30 @@
  * module's runtime `enabled` flag can ever become `true`); every other exported mutator below gates
  * on that ALREADY-false-unless-enabled-in-DEV flag alone, so calling any of them before
  * `enableResidencyInstrument` ever ran costs exactly one boolean read and a return -- no timer, no
- * state mutation. Every call site that reaches this module from PRODUCT code (`WorkingCanvas.tsx`,
- * `streaming/viewportStreamManager.ts`, `App.tsx`) is additionally wrapped in its own
- * `if (import.meta.env.DEV)` check at the call site itself -- not merely inside this module -- so a
- * production build's dead-code elimination removes the call, and this module's own code, entirely
- * (the same mechanism that already gets `__SPATIAL_E2E__` to zero dist hits despite
- * `e2e-test-surface.ts` being imported unconditionally at the top of those same files).
+ * state mutation.
+ *
+ * **P1d B6a: the REAL two-layer mechanism, stated precisely (an earlier version of this comment
+ * overclaimed uniformity that did not hold).** (1) PRIMARY: every call site that reaches this module
+ * from PRODUCT code (`WorkingCanvas.tsx`, `streaming/viewportStreamManager.ts`, `App.tsx`) is meant
+ * to be wrapped in its OWN `if (import.meta.env.DEV)` check at the call site itself -- not merely
+ * inside this module -- so Vite's literal-`false` replacement plus esbuild's minifier's dead-code
+ * elimination removes the call, and (via tree-shaking, once nothing reachable references this
+ * module's exports) this module's own code, entirely from a production build (the same mechanism
+ * that already gets `__SPATIAL_E2E__` to zero dist hits despite `e2e-test-surface.ts` being imported
+ * unconditionally at the top of those same files). This is what `check:dist-clean` actually tests
+ * for (absence of the literal identifier strings) -- **it was NOT uniformly true**:
+ * `WorkingCanvas.tsx`'s own persistent `onAfterRender` closure (installed by
+ * `armFirstPixelRenderHook`) called `recordResidencyRenderTick()` with no such guard, found and
+ * fixed at that call site (P1d B6a) rather than merely disclosed here. (2) SECONDARY, independent
+ * safety net: even if some reference to this module's code survived un-eliminated in a production
+ * build (exactly the shape the bug just fixed could have produced), it would still be a RUNTIME
+ * no-op, because `enabled` can only ever become `true` via `enableResidencyInstrument`, which is
+ * ITSELF `import.meta.env.DEV`-gated and therefore always takes its early-return branch in
+ * production regardless of whether its own call site happens to survive -- this is enabled-constant
+ * propagation as a BACKSTOP, never a substitute for (1)'s own DCE, and never by itself what
+ * `check:dist-clean` measures (see that script's own doc comment for the resulting one-directional
+ * limit: a hit proves a leak; a miss proves absence of the literal identifier, never absence of the
+ * underlying call).
  *
  * **P1b reviewer-gate remediation (M1/M2/M3/M6, this file's own share of it):**
  * - **M1.** `firstPixelMs`'s clock now starts at the step's FIRST `recordStreamIssued` (the query
@@ -133,7 +151,7 @@ export interface ResidencyStepResult {
   frameTimestampsTruncated: boolean;
   /** One entry per input event whose next render was observed before `endStep` -- each entry is that
    * render's timestamp minus the input event's own timestamp. A PROXY (§6's own "Input-to-present
-   * proxy" row: "client clock, pointer/keyboard event -> next composited frame carrying its effect"),
+   * proxy" row: "client clock, pointer/keyboard event → next composited frame carrying its effect"),
    * not a true present-time measurement -- reported, never gated. **Disclosed divergence from §6's
    * own text (M4, carried into evidence per S13):** this proxy resolves against the NEXT
    * `recordFrame` (a real deck.gl `onAfterRender` fire while armed), not against the browser's own
@@ -325,6 +343,21 @@ let enabled = false;
  * like every other counter in this module -- a `--control` run therefore always reads `0` here; a
  * disclosed limitation (this piece's own report), not a silent one. */
 let inFlightStreamCount = 0;
+/** P1d suggestion 10: a driver-visible, session-wide (mirroring `inFlightStreamCount`'s own scope,
+ * not step-scoped) running total of bytes a superseded stream's batch carried when it arrived AFTER
+ * its own supersession (`viewportStreamManager.ts`'s `onBatch` drop branch -- see that call site's
+ * own doc comment: "a batch that arrives after its stream was superseded is dropped here, never
+ * handed to the canvas"). These bytes are cheaply observable AT THE MANAGER (the payload has already
+ * arrived; only forwarding it is skipped) -- `RESIDENCY-PREREGISTRATION.md` §6's own "Refill work per
+ * step" row is reported-never-gated, and this closes what would otherwise be a silent under-count of
+ * it: bytes genuinely received over the wire for a step whose supersession this driver's own
+ * `bytesDecoded`/`bytesRefused` counters never see (neither counter fires for a dropped batch --
+ * `recordResidencyBatch` is only ever called from `WorkingCanvas.tsx`'s `pushBatch`, which a dropped
+ * batch never reaches). Kept SESSION-WIDE, not folded into `ResidencyStepCounters`, deliberately: a
+ * supersede can legitimately straddle a step boundary (the same reasoning `inFlightStreamCount`'s own
+ * doc comment gives), and adding a new field to the tested per-step counters shape was judged riskier
+ * than a parallel, independently-read total for this piece's own bounded scope. */
+let supersededBytesDropped = 0;
 
 export function isResidencyInstrumentEnabled(): boolean {
   return enabled;
@@ -347,6 +380,7 @@ export function disableResidencyInstrument(): void {
   // An honest reset -- a disabled instrument tracks nothing, matching every other "off means zero
   // work" mutator in this module; a driver reading this mid-disable sees 0, never a stale count.
   inFlightStreamCount = 0;
+  supersededBytesDropped = 0; // P1d suggestion 10 -- same reset discipline as inFlightStreamCount.
   core.endStep();
 }
 
@@ -392,6 +426,23 @@ export function getResidencyInFlightStreamCount(): number {
 export function recordResidencyBatch(features: number, bytes: number, refused: boolean): void {
   if (!enabled) return;
   core.recordBatch(features, bytes, refused);
+}
+
+/** P1d suggestion 10: called from `viewportStreamManager.ts`'s own `onBatch` drop branch, once per
+ * batch that arrived AFTER its stream was superseded -- never counted by `recordResidencyBatch`
+ * above (a dropped batch never reaches `WorkingCanvas.tsx`'s `pushBatch`, the only caller of that
+ * function). See `supersededBytesDropped`'s own doc comment for why this is a session-wide total,
+ * not a per-step counter. */
+export function recordResidencySupersededBytes(bytes: number): void {
+  if (!enabled) return;
+  supersededBytesDropped += bytes;
+}
+
+/** P1d suggestion 10: driver-visible total, read via the `residencySupersededBytesDropped` E2E hook
+ * (`App.tsx`). Always `0` while disabled, the same disclosed control-arm limitation
+ * `getResidencyInFlightStreamCount`'s own doc comment already names for its sibling counter. */
+export function getResidencySupersededBytesDropped(): number {
+  return supersededBytesDropped;
 }
 
 /** M3: called from `WorkingCanvas.tsx`'s own persistent per-step `onAfterRender` hook, once per REAL

@@ -18,6 +18,23 @@
 // produced would either find nothing (false confidence) or fail for the wrong reason (missing
 // directory, not a real leak), so this script also fails loudly, distinctly, if `dist/` does not
 // exist yet.
+//
+// **P1d B6b: what this check DOES and does NOT establish (disclosed, not merely implied by a passing
+// run).** A HIT is real signal: the literal identifier string survived, so the guarded code (or a
+// fragment quoting its own name, e.g. in a stack trace string) reached the bundle. A MISS is
+// ONE-DIRECTIONAL, never a proof the underlying CODE PATH is absent -- a production minifier is free
+// to RENAME a local binding (an imported function used only internally, never as a property access
+// or a preserved export) to a short, unrelated token while leaving the CALL itself intact; this
+// script would then read a clean 0-hit pass over a bundle that still executes the guarded code under
+// a different name. What actually makes the code path itself absent is dead-code elimination at the
+// GUARDED CALL SITE (`residencyInstrument.ts`'s own top doc comment, P1d B6a) -- this script is a
+// grep-based PROOF that the twelve identifiers below are not LEXICALLY PRESENT, offered as
+// corroborating evidence for that DCE claim, never as an independent, sufficient proof of it on its
+// own. `residencyInstrument.ts`'s own exported function/class names were chosen distinctive enough
+// (B6a's own doc comment: "no short/common word among them") that in practice a surviving CALL to
+// one, even under a renamed local binding, would very likely still carry an unrelated literal string
+// hit somewhere in the same bundle (an error message, a `.name` property read, a source map) -- but
+// that is a probabilistic argument, not this script's own guarantee.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -41,6 +58,7 @@ const INSTRUMENT_IDENTIFIERS = [
   "recordResidencyStreamEnded",
   "recordResidencyRenderTick",
   "recordResidencyInput",
+  "recordResidencySupersededBytes", // P1d suggestion 10
   "beginResidencyStep",
   "endResidencyStep",
   "enableResidencyInstrument",
@@ -49,6 +67,20 @@ const INSTRUMENT_IDENTIFIERS = [
   "applyDeterministicE2eViewState",
   "e2eSetViewStateCallCount",
 ];
+
+// P1d B6c: three `WorkingCanvas.tsx` imperative-handle METHOD NAMES (product code, never
+// `residencyInstrument.ts` exports) that are EXPECTED, by design, to remain present in a production
+// bundle -- re-review nit 19. Unlike `INSTRUMENT_IDENTIFIERS` above (whose owning module has no
+// non-DEV reason to exist, so DCE is expected to remove it entirely), these three are real,
+// unconditionally-constructed object-literal methods on `WorkingCanvasHandle` (never behind their
+// OWN `import.meta.env.DEV` check at definition time -- only their SOLE real callers, `App.tsx`'s
+// DEV-gated E2E hook registrations, are gated). esbuild's default minifier does not mangle
+// object-literal property names, so these NAMES legitimately survive as ordinary method-name tokens;
+// treating that as a leak would be a false positive. What must NOT survive is a CALL reaching them --
+// checked below as "the identifier immediately preceded by `.` or `?.`" (a member-expression
+// invocation), never as "the bare identifier is absent" (which IS expected to be present, as a
+// method-shorthand definition, preceded by `,`/`{`/whitespace, never `.`).
+const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = ["getResidentCounts", "armFirstPixelRenderHook", "disarmFirstPixelRenderHook"];
 
 function collectFiles(dir) {
   const out = [];
@@ -90,20 +122,47 @@ function main() {
     }
   }
 
-  if (hits.length > 0) {
-    console.error(`check:dist-clean: FAIL -- ${hits.length} instrument-identifier hit(s) survived into dist/:`);
-    for (const h of hits) {
-      console.error(`  ${h.id} in ${h.file}`);
+  // P1d B6c: a SEPARATE pass for the three expected-present, caller-checked identifiers -- see
+  // `EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS`'s own doc comment. A bare occurrence is NOT a hit
+  // (expected: the method-shorthand definition); only an occurrence immediately preceded by `.` or
+  // `?.` (a real call site surviving) counts.
+  const callerHits = [];
+  for (const file of files) {
+    const text = readFileSync(file, "utf8");
+    for (const id of EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS) {
+      const callPattern = new RegExp(`[.?]\\s*${id}\\s*\\(`, "g");
+      const matches = text.match(callPattern);
+      if (matches) {
+        callerHits.push({ file, id, count: matches.length });
+      }
     }
-    console.error(
-      "This means the residency instrument's DEV-only code (or a fragment of it) reached a production build -- the wire-bytes-identity / zero-product-change claim it depends on does not hold."
-    );
+  }
+
+  if (hits.length > 0 || callerHits.length > 0) {
+    if (hits.length > 0) {
+      console.error(`check:dist-clean: FAIL -- ${hits.length} instrument-identifier hit(s) survived into dist/:`);
+      for (const h of hits) {
+        console.error(`  ${h.id} in ${h.file}`);
+      }
+      console.error(
+        "This means the residency instrument's DEV-only code (or a fragment of it) reached a production build -- the wire-bytes-identity / zero-product-change claim it depends on does not hold."
+      );
+    }
+    if (callerHits.length > 0) {
+      console.error(`check:dist-clean: FAIL -- ${callerHits.length} surviving CALL SITE(s) for expected-present-but-unreachable identifiers:`);
+      for (const h of callerHits) {
+        console.error(`  ${h.count} call-shaped occurrence(s) of ${h.id} in ${h.file}`);
+      }
+      console.error(
+        "The bare identifier surviving is expected (a real WorkingCanvasHandle method name, B6c); a CALL to it surviving means its DEV-gated caller (App.tsx's E2E hook registrations) was not dead-code-eliminated -- a real regression, not the expected shape."
+      );
+    }
     process.exitCode = 1;
     return;
   }
 
   console.log(
-    `check:dist-clean: PASS -- 0 hits for ${INSTRUMENT_IDENTIFIERS.length} instrument identifiers across ${files.length} dist file(s).`
+    `check:dist-clean: PASS -- 0 hits for ${INSTRUMENT_IDENTIFIERS.length} instrument identifiers, and 0 surviving call sites for ${EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS.length} expected-present identifiers, across ${files.length} dist file(s).`
   );
 }
 

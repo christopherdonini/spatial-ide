@@ -443,8 +443,10 @@ persistent per-step `onAfterRender` hook (`WorkingCanvasHandle.armFirstPixelRend
 `disarmFirstPixelRenderHook`, proxied through a retrying `App.tsx`-level E2E hook so it can find
 whichever `WorkingCanvas` instance is CURRENTLY mounted -- or none yet, for `open-drain` -- rather
 than a stale one) feeds both the real frame-time series and the first-pixel stamp, which only fires
-once a step's first ACCEPTED batch has ALSO arrived (never a bare gesture repaint). S7: 5s
-timeout-restore + explicit disarm, boolean recorded (`armDisarmedCleanly`).
+once a step's first ACCEPTED batch has ALSO arrived (never a bare gesture repaint). S7: explicit
+disarm, boolean recorded (`armDisarmedCleanly`); the self-restore watchdog is scaled to the calling
+step's own `settle.timeoutMs` (P1d B5 fix -- a fixed 5s previously capped `open-drain`'s 60s-settle
+measurement at 5s regardless).
 
 **M8 -- the diagonal pan's realized magnitude.** `pan-northeast`'s declared total is `distance =
 width * sqrt(2)` (Amendment 1's width basis); each SCREEN-axis component is `distance / sqrt(2)` (NOT
@@ -471,18 +473,38 @@ interleaved (S4)**, every pairwise comparison recorded, not just one ON-vs-OFF p
 excluded** (named, not silently absorbed): the `residency` push/clear lines (canvas-side bookkeeping,
 not wire content), and two REQUEST fields render-trace never logs at all -- `limit` and `filter`.
 
-**Live-verified findings from running this repeatedly while building it (P1b):** a genuine
-self-inflicted bug (separate mousedown/mouseup per pan leg, fixed to one continuous press) and a
-one-time "first synthetic gesture of a fresh session" warm-up effect (absorbed by an unmeasured
-warm-up run before the four measured runs) were found and fixed. A RESIDUAL source of run-to-run
-non-determinism remains, understood and disclosed: real CDP/Playwright timing jitter can
-occasionally let an intermediate view-state settle for >=120ms mid-drag, firing one extra premature
-debounced `viewport_query` -- confirmed to be unrelated to instrument state (two `on` runs have been
-observed to disagree with EACH OTHER while three of four runs spanning both states agreed exactly).
-The committed gate artifact below documents this finding directly rather than presenting a
-cherry-picked clean pass.
+**Camera control: a deterministic literal camera SCRIPT, not a synthetic gesture (P1c,
+`RESIDENCY-PREREGISTRATION.md` §12 Amendment 6).** `IDENTITY_VIEW_STATE_STEPS` (`residencyTrace.mjs`)
+-- 3 declared literal world-space (authoritative-CRS) target/zoom poses, applied programmatically via
+the DEV-gated `e2eSetViewState` seam (`WorkingCanvas.tsx`), never a real pointer/wheel gesture. Every
+MEASURED cell (`--smoke`/`--control`/plain instrument-on runs) still drives real synthetic gestures
+unchanged -- `e2eSetViewState` is reachable ONLY from `--wire-identity`, and the driver asserts a call
+count of exactly 0 from every other mode (`measuredModeViewStateSeamAssertion` in the evidence file,
+now ALSO re-checked from a `finally` block if the try block exited early, P1d suggestion 9).
+
+**Per-step machinery, genuinely armed on every run, ON and OFF alike (P1d B3 fix).** Both an ON run
+and an OFF run call the identical sequence -- `residencyBeginStep` -> `residencyArmFirstPixel` ->
+settle -> `residencyDisarmFirstPixel` -> `residencyEndStep` -- for the fixture-open (`identity-open`)
+and each of the 3 camera-pose steps, via `measureOneStep`'s `alwaysCallHooks: true` path. It is each
+hook's OWN internal `enabled` check that no-ops on an OFF run, never a driver-side skip -- that is the
+comparison this mode exists to make (an OFF run whose driver never even CALLED the instrument's own
+functions would not be comparable to an ON run that did).
+
+**Attempt history (kept as dated records in the committed gate artifact below, never overwritten):**
+- **P1b** -- real synthetic pointer/wheel gestures drove the identity check. FAIL: 2 `on` runs
+  disagreed with EACH OTHER (proof of a timing artifact, not an instrument effect) -- traced to CDP
+  pointer-drag interpolation racing the shell's own 120ms pan/zoom debounce.
+- **P1c** -- Amendment 6's deterministic camera script replaced the gesture, removing the race's own
+  precondition. PASS, all 6 pairwise comparisons identical -- but the driver never called
+  `residencyBeginStep`/`residencyArmFirstPixel`/`residencyDisarmFirstPixel`/`residencyEndStep` at all,
+  so the PASS was later found (P1d re-review, finding B3) to be vacuous: ON differed from OFF only by
+  a flag gating no code this driver ever reached.
+- **P1d** -- B3's fix (above) arms the real per-step machinery on every run. Re-run live, fresh
+  session (seven stale `spatial-ide-shell.exe` process trees found holding CDP port 9223 from prior
+  work sessions, killed first). PASS, all 6 pairwise comparisons identical, this time with the
+  instrument's own code genuinely exercised on both ON and OFF runs.
 
 **Committed gate artifact (S11):** `e2e/residency-field-sequence-identity-gate-evidence.json` -- a
-small, committed (NOT gitignored `out/`) JSON capturing one real `--wire-identity` run verbatim, with
-an explicit `_honest_result` block naming the literal FAIL alongside why the underlying claim
-("the instrument does not perturb the wire") is still supported by that same run's own evidence.
+small, committed (NOT gitignored `out/`) JSON capturing each of the three attempts above verbatim (an
+array of dated attempts, oldest first, none ever deleted), each with its own `_honest_result` block.
+`_current_status` at the top of the file always names which attempt is authoritative and why.

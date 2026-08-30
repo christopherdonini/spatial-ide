@@ -8,10 +8,11 @@
 // page. Kept dependency-free deliberately so `residencyTrace.test.mjs` can assert its determinism
 // and shape with nothing more than `node:assert`.
 //
-// **Never uses `Date.now()`, `Math.random()`, or any other non-deterministic source** -- this
-// repository's standing rule (CLAUDE.md's workflow section: "Date/random are unavailable anyway per
-// workflow rules") and RESIDENCY-PREREGISTRATION.md §8's own "interleaving arms by a committed pure
-// function -- never by hand, never by a live random call."
+// **Never uses `Date.now()`, `Math.random()`, or any other non-deterministic source** -- paraphrase
+// of RESIDENCY-PREREGISTRATION.md §8's own text, not a quotation of it: trial interleaving happens
+// by a committed pure function, never by hand, never by a live random call. (P1d B1: an earlier
+// version of this comment additionally attributed a fabricated sentence to CLAUDE.md's workflow
+// section -- no such text exists there; that attribution is removed here, not merely reworded.)
 
 // ---------------------------------------------------------------------------------------
 // §4d/§4e/§2d: the three proposed-pending-the-human's-sight values, named in ONE place.
@@ -19,7 +20,10 @@
 
 /**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (RESIDENCY-PREREGISTRATION.md §2d, gate G7) -- not settled.
- * "candidate arm's cold first-view first-pixels p95 ... <= 110% of the baseline arm's." Named here so
+ * Paraphrase of G7's own margin (not a quotation of it -- P1d B1/B2's own citation-integrity fix
+ * corrected this to a paraphrase, since the real text carries markdown/Unicode this comment does not
+ * reproduce character-for-character): the candidate arm's cold first-view first-pixels p95 must not
+ * exceed 110% of the baseline arm's own cold first-view first-pixels p95. Named here so
  * no later piece (P3/P6) hard-wires scoring logic to a bare `1.10` literal; this piece itself scores
  * nothing (the piece text: "NO scoring, NO budget comparison in this piece"), so this constant is
  * declared and exported, never referenced by any comparison in this file or in
@@ -56,27 +60,34 @@ export const MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED = 3;
 // §4b: the committed camera trace, as data.
 // ---------------------------------------------------------------------------------------
 
-/** Settle criterion, identical at every step (§4b): "a step is complete when (a) the camera
- * transform has not changed for 300 ms, AND (b) zero in-flight `viewport_query` streams remain for
- * that step's request set." `quietMs` is (a)'s own figure; `timeoutMs` is the per-step watchdog (§7:
- * "per-step settle: 5 s") -- a step that has not settled within it invalidates the whole trial (§4b),
- * never a partial success. See `residency-harness.mjs`'s own doc comment for the concrete signal
- * (render-trace console quiescence) it uses to detect (a)+(b) together, and why that signal suffices. */
+/** Settle criterion, identical at every step. Paraphrase of §4b's own settle criteria, not a
+ * quotation of it (P1d B1/B2's own citation-integrity fix -- the real text wraps across the doc's
+ * own markdown line-length and carries bold/backtick markup this comment does not reproduce
+ * character-for-character): a step is complete when (a) the camera transform has not changed for
+ * 300 ms, AND (b) zero in-flight `viewport_query` streams remain for that step's request set,
+ * fully drained or cancelled-and-observed. `quietMs` is (a)'s own figure; `timeoutMs` is the
+ * per-step watchdog, §7's own declared ceiling of 5 s for "per-step settle (§4b)" -- a step that has
+ * not settled within it invalidates the whole trial (§4b), never a partial success. See
+ * `residency-harness.mjs`'s own doc comment for the concrete signal (render-trace console
+ * quiescence) it uses to detect (a)+(b) together, and why that signal suffices. */
 export const SETTLE_QUIET_MS = 300;
 export const SETTLE_PER_STEP_TIMEOUT_MS = 5_000;
 
-/** §7: "one full camera-trace trial (all 11 steps, one arm/fixture/tile-size cell): 180 s." */
+/** §7's own declared ceiling of 180 s for "one full camera-trace trial (all 11 steps, one
+ * arm/fixture/tile-size cell)" -- that quoted fragment is verbatim (§7's own table cell); "180 s" is
+ * carried as this constant's own value, not re-quoted, since joining table cells with a colon (as an
+ * earlier version of this comment did) is not how the source table itself reads (P1d B1/B2). */
 export const TRIAL_WATCHDOG_MS = 180_000;
 
 /**
  * The 11-step camera trace (§4b), as DATA -- `kind`/`params` are interpreted by the driver
  * (`residency-harness.mjs`'s own `applyStep`), never by this module. Every step shares the same
- * `settle` object (identical at every step, §4b) by reference -- deliberate: a test asserting "every
- * step's settle criterion is well-formed" is asserting one shape, not eleven independent ones.
+ * `settle` object (identical at every step, §4b) by reference -- deliberate: a test asserting every
+ * step's settle criterion is well-formed is asserting one shape, not eleven independent ones.
  *
  * **Disclosed interpretation, `pan-northeast`'s magnitude (a preregistration ambiguity, reported per
  * this piece's own instructions rather than amending the frozen preregistration).** §4b step 6 reads
- * "one full viewport diagonal (√2 x the pan distance above, same direction convention)" -- "the pan
+ * "one full viewport diagonal (√2 × the pan distance above, same direction convention)" -- "the pan
  * distance above" does not unambiguously name which of step 2's height-based distance or step 5's
  * width-based distance it means (steps 2/4 use viewport HEIGHT, steps 3/5 use viewport WIDTH, and
  * step 6 immediately follows step 5). This module resolves it as **step 5's own basis (viewport
@@ -214,8 +225,9 @@ export function validateCameraTrace(steps) {
 
 /**
  * ABBA interleave across arm x tile-size cells (§8: "ABBA by committed pure function, both across
- * arms and across tile-size levels -- never a fixed order that could let session drift ... masquerade
- * as an arm or tile-size effect"). Pure and deterministic: the SAME `(cellCount, trialsPerCell)` pair
+ * arms and across tile-size levels -- never a fixed order that could let session drift (thermal,
+ * cache warmth, background load) masquerade as an arm or tile-size effect"). Pure and deterministic:
+ * the SAME `(cellCount, trialsPerCell)` pair
  * always produces the SAME play order -- no `Date`/`Math.random`, matching this file's own top
  * doc comment.
  *
@@ -239,8 +251,11 @@ export function validateCameraTrace(steps) {
 
 /**
  * S2: the NEAREST-RANK percentile convention this repository's own driver uses for every p50/p95
- * figure it reports (§6: "p50/p95 are the driver's own job, never computed here" -- this module is
- * the ONE declared, tested definition every such computation goes through). `sortedAscending` must
+ * figure it reports (paraphrase of `residencyInstrument.ts`'s own comment -- p50/p95 scoring is the
+ * driver's job, never computed inside the instrument -- not a quotation of §6; P1d B2: an earlier
+ * version of this comment misattributed that phrasing to §6's own text, which contains no such
+ * sentence). This module is the ONE declared, tested definition every such computation goes
+ * through. `sortedAscending` must
  * already be sorted ascending (this function does not sort -- the caller's own sort is the one
  * source of truth for what "ascending" means for its particular value type, e.g. numeric vs.
  * lexicographic). `p` is 0..100.
@@ -290,16 +305,29 @@ export function percentileNearestRank(sortedAscending, p) {
  * so Amendment 6 replaces the gesture with an exact, declared camera pose instead.
  *
  * **Derivation ("derive from the same bboxes the smoke steps visit," this piece's own
- * instruction).** These three world-space camera poses are the REAL, observed `viewState.post`
- * values (`targetX + originX`, `targetY + originY`, `zoom`) a genuine `--smoke` run's own first
- * three steps (`fit`, `pan-north`, `pan-east`) actually landed on against the same fixture this
- * mode always opens (`FIXTURE_FILTER_ZONED`) -- captured from
+ * instruction).** The first two poses are the REAL, observed `viewState.post` values
+ * (`targetX + originX`, `targetY + originY`, `zoom`) a genuine `--smoke` run's own first two steps
+ * (`fit`, `pan-north`) actually landed on against the same fixture this mode always opens
+ * (`FIXTURE_FILTER_ZONED`) -- captured from
  * `e2e/out/residency-harness-instrument-on-smoke-1788108725642.json` (P1c, pre-run capture,
- * 2026-08-30), not invented. Because they are real camera poses a real fit-to-extent and two real
- * pans actually reached against this fixture, they are guaranteed to intersect its extent (the
- * `fit` step's own target is the dataset's own bbox centre; the two pans stay within one viewport
- * step of it). Frozen as LITERAL numbers here -- this mode never recomputes them from a live bbox
- * at run time.
+ * 2026-08-30), not invented.
+ *
+ * **P1d suggestion 14: the third pose is `identity-zoom-in-equivalent`, not
+ * `identity-pan-east-equivalent`.** Live re-verification (P1d, this piece's own re-review
+ * remediation) found `pan-east`'s own landing pose returns ZERO rows against this fixture in EVERY
+ * observed run (both the `--smoke` capture above and a fresh full 11-step trace run live for this
+ * fix) -- the fixture's own data does not extend east of the `pan-north` position, so a
+ * `--wire-identity` run built on that pose would compare an empty response on every arm, never
+ * exercising a real batch delivery. Replaced with `CAMERA_TRACE_STEPS`' OWN "zoom-in-1" semantics
+ * instead (×2 magnification, same focal point as the PRECEDING pose -- here, `fit`'s own target,
+ * `zoom + 1` in deck.gl's logarithmic scale) -- live-verified (a direct `e2eSetViewState` probe
+ * against a running session, this piece's own report) to return 1305 rows across 3 batches against
+ * this same fixture, comfortably nonzero.
+ *
+ * Because the first two poses are real camera poses a real fit-to-extent and one real pan actually
+ * reached against this fixture, and the third is a live-verified zoom from the first, all three are
+ * guaranteed to intersect its extent (the `fit` step's own target is the dataset's own bbox centre).
+ * Frozen as LITERAL numbers here -- this mode never recomputes them from a live bbox at run time.
  *
  * **Window-size dependency, disclosed.** Like every `CAMERA_TRACE_STEPS` pan/zoom step (whose own
  * distances are `box.width`/`box.height`-relative), these literals are only exactly reproducible
@@ -311,7 +339,7 @@ export const IDENTITY_VIEW_STATE_STEPS = Object.freeze(
   [
     { id: "identity-fit-equivalent", targetX: 2600900.1915728687, targetY: 1200899.782897822, zoom: -3.486093929686878 },
     { id: "identity-pan-north-equivalent", targetX: 2600900.1915728687, targetY: 1202804.6635114393, zoom: -3.486093929686878 },
-    { id: "identity-pan-east-equivalent", targetX: 2613808.5590251468, targetY: 1202804.6635114393, zoom: -3.486093929686878 },
+    { id: "identity-zoom-in-equivalent", targetX: 2600900.1915728687, targetY: 1200899.782897822, zoom: -2.486093929686878 },
   ].map((step) => Object.freeze(step))
 );
 
