@@ -815,10 +815,23 @@ exit judgment there, in their own words, not a checkbox.
 Part I did not exist during any run recorded above. Fill in the fields below when Part I is
 actually run by an operator, queued for the next batch session per this cut's own P5 brief.
 
-- **Date run:** —
-- **Run by:** —
-- **Build/commit:** `807648f` pinned for the batch (same single tree as Parts H and J).
-- **Part I (I1–I8):** —
+- **Date run:** 2026-08-30 (same batch as Part H, spread across sessions), partly at the
+  laptop directly (I6's re-test), otherwise over RustDesk.
+- **Run by:** the human (Christopher).
+- **Build/commit:** `807648f` pinned for the batch (every `main` commit since the pin is
+  docs-only, so any launch in the window is product-identical).
+- **Part I (I1–I8):** run in full. The operator's verdict verbatim: *"Honestly everything is
+  pretty comprehensible, it is accurate, you know exactly where and what is the problem."* —
+  covering the Part's operator-only judgments: the asserted-CRS summary reads as a claim with
+  its provenance (I2), the axis-trap refusal reads as protective with the form still reachable
+  (I3), the candidate list and both-remediations carried-claim line legible (I4/I5), the cost
+  sentence accurate (I8), nothing persisted on reopen (I7). **I6 (cancel during a declared
+  open): the Cancel affordance was never catchable — the operator re-tested at the laptop
+  directly, not just over RustDesk: "You see it for a microsecond."** That is the step's own
+  pre-declared honest outcome at this fixture's size (a 100-row uniqueness scan resolves
+  faster than a human reaction), recorded as the observation it is, not a failure; the
+  affordance's function is covered by the E2E CANCELOPEN' step, which catches the window
+  mechanically on a large fixture.
 
 ### Part J run (separate pass — the action console)
 
