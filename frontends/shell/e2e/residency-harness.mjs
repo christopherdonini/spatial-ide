@@ -73,6 +73,16 @@ const OUT_DIR = join(SHELL_DIR, "e2e", "out");
 const MOUNT_READY_TIMEOUT_MS = 90_000;
 
 const FIXTURE_FILTER_ZONED = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet";
+
+/** P2 pre-flight (custodian, post-gate, harness-only): §3 names three fixtures but the harness
+ * hard-coded one. `--fixture <path>` selects the run's fixture; the default stays the small
+ * smoke/identity fixture above. Every existing use site routes through this. */
+function resolveFixturePath(argv) {
+  const i = argv.indexOf("--fixture");
+  if (i !== -1 && argv[i + 1]) return argv[i + 1];
+  return FIXTURE_FILTER_ZONED;
+}
+const FIXTURE_PATH = resolveFixturePath(process.argv.slice(2));
 const REGEN_FILTER_ZONED =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_zoned_fixture -- --ignored --nocapture";
 
@@ -628,9 +638,9 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
 }
 
 async function openFixture(page) {
-  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_FILTER_ZONED);
+  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_PATH);
   if (outcome.kind !== "admitted") {
-    throw new Error(`openFixture: expected {kind:"admitted"}, got ${JSON.stringify(outcome)} -- ${FIXTURE_FILTER_ZONED}`);
+    throw new Error(`openFixture: expected {kind:"admitted"}, got ${JSON.stringify(outcome)} -- ${FIXTURE_PATH}`);
   }
 }
 
@@ -882,15 +892,15 @@ async function main() {
   }, TRIAL_WATCHDOG_MS + 120_000); // trial watchdog + generous headroom for launch/mount
   watchdog.unref();
 
-  if (!existsSync(FIXTURE_FILTER_ZONED)) {
-    console.error(`residency-harness: fixture not found: ${FIXTURE_FILTER_ZONED}`);
-    console.error(`Regenerate with:\n  ${REGEN_FILTER_ZONED}`);
+  if (!existsSync(FIXTURE_PATH)) {
+    console.error(`residency-harness: fixture not found: ${FIXTURE_PATH}`);
+    if (FIXTURE_PATH === FIXTURE_FILTER_ZONED) console.error(`Regenerate with:\n  ${REGEN_FILTER_ZONED}`);
     process.exitCode = 1;
     return;
   }
 
   const buildCommit = gitRevParseHead();
-  const fixtureSha256AtStart = await sha256File(FIXTURE_FILTER_ZONED);
+  const fixtureSha256AtStart = await sha256File(FIXTURE_PATH);
 
   let session;
   try {
@@ -907,7 +917,7 @@ async function main() {
     startedAt: new Date().toISOString(),
     mode: wireIdentity ? "wire-identity" : control ? "control" : "instrument-on",
     smoke,
-    fixture: FIXTURE_FILTER_ZONED,
+    fixture: FIXTURE_PATH,
     stepLimit: stepLimit ?? CAMERA_TRACE_STEPS.length,
     rows: [],
     invalidated: false,
@@ -931,7 +941,7 @@ async function main() {
       arm,
       tileSize: null, // pre-P3 -- no tile grid exists yet
       buildCommit,
-      fixturePath: FIXTURE_FILTER_ZONED,
+      fixturePath: FIXTURE_PATH,
       fixtureSha256: fixtureSha256AtStart,
       coldOrWarm: cellArgs.coldOrWarm,
       traceVersion: TRACE_VERSION,
@@ -1151,7 +1161,7 @@ async function main() {
     // M9: re-hash the fixture at the end too, matching §8's own "hashed before the trial loop AND
     // re-hashed after the last trial" discipline -- a mismatch is recorded, never silently ignored.
     try {
-      evidence.cell.fixtureSha256AtEnd = await sha256File(FIXTURE_FILTER_ZONED);
+      evidence.cell.fixtureSha256AtEnd = await sha256File(FIXTURE_PATH);
       evidence.cell.fixtureHashMatchedAcrossRun = evidence.cell.fixtureSha256AtEnd === evidence.cell.fixtureSha256;
     } catch (e) {
       evidence.cell.fixtureHashAtEndError = e.message;
