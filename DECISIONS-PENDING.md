@@ -5,7 +5,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-24. **Tiling/LOD cut: seven decisions before code — (a)–(c) GATE the cut's P0.** The architect's
+24. **[(a)–(c) RESOLVED 2026-08-30 — human: "a is yes, b approved, c go with your
+    recommendation"]**: over-budget renders as a declared partial view with the persistent
+    status retained; the rider-1 status meaning change approved, exact wording on sight at the
+    PR; hover below pick resolution refuses by name. (d)–(f) ride their recommendations;
+    (g) scheduling of headed measurement sessions remains to be agreed when P2/P6 are ready.
+    **Tiling/LOD cut: seven decisions before code — (a)–(c) GATE the cut's P0.** The architect's
     design note (2026-08-30, binding for the cut) restates the target honestly: at fit-to-extent
     the viewport IS the dataset, so this cut retires the *error-shaped* refusal, not the ceiling
     itself — over-budget becomes a declared partial view. Yours to decide:
