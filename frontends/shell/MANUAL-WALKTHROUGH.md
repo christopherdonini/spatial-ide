@@ -840,7 +840,31 @@ actually run by an operator, queued for the next batch session per this cut's ow
 (Entries 20/21 resolved 2026-08-19 — the A9' red was harness-side, fixed, all suites green; see
 this Part's own honest note above.)
 
-- **Date run:** —
-- **Run by:** —
-- **Build/commit:** `807648f` pinned for the batch (same single tree as Parts H and I).
+- **Date run:** 2026-08-30, over RustDesk (same batch as Parts H and I).
+- **Run by:** the human (Christopher).
+- **Build/commit:** `807648f` pinned for the batch (fresh relaunch same day; every `main`
+  commit since the pin is docs-only, product-identical).
+- **Part J (J1–J6):** run in full; the operator's running verdict: *"It is comprehensible so
+  far."* **J1:** one open produced `open_dataset` + `describe` + a `viewport_query` (the
+  operator pasted its exact text — explicit `null`s for `bbox`/`bbox_crs`/`limit`/`filter`
+  visible, `skp/0.2` labelled) + the `binding_data_plane_attach` class-B row — the
+  one-click-many-commands truth read as legible. **J2:** panning produced a `viewport_query`
+  with real bbox members; **zooming did not visibly produce one where panning did** — recorded
+  as an open observation (plausibly the refill debounce/coalescing; not diagnosed in-session);
+  the hex-coordinate tolerability question was answered only implicitly by the comprehensibility
+  verdict. **J3:** fill-color change → the ADR-022-owned "no API equivalent … never sent to the
+  kernel" row, as designed. **J4:** the fence held on screen — `binding_publish_prepare` and
+  `_execute` rendered as prose naming the grant/approval mechanics, "not callable by a script,
+  plugin, notebook, CLI, or AI client", outcome ok, ×2 grouping visible, **no arguments and no
+  destination path anywhere**. **J5:** the operator's report did not include the refused-entry
+  confirmation (the pasted row was an unrelated view-state entry); the property stands
+  E2E-verified (`REFUSAL'`), operator confirmation open. **J6 verbatim:** *"it's fine to me
+  either way, with the console open you feel like that everything you do will be repeatable.
+  But it doesn't feel different"* — canvas feel unchanged with the console open (the
+  structural-budget claim's operator check), plus the repeatability feeling recorded BOTH as
+  the console's intended effect and as the exact perception the standing header
+  ("a faithful record, not a script you can run") exists to keep honest. **Operator finding
+  (from the pastes, not a complaint):** the console's reflexive view-state rows (its own
+  toggles, panel disclosures) dominate the visible tail around each action of interest —
+  honest but noisy; a de-emphasis/grouping question for ADR-027's acceptance.
 - **Part J (J1–J6):** —
