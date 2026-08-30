@@ -447,3 +447,40 @@ in `e2e/residencyTrace.mjs` (the P1 harness worker found the ambiguity and repor
 than amending this document — this amendment records the resolution so the committed trace and
 this preregistration agree before the first measured run). No run had occurred when this
 amendment was made; no measured quantity is affected.
+
+**Amendment 2 (2026-08-30, pre-run — supersedes Amendment 1's "as implemented" certification.)**
+The P0–P1 reviewer gate found (its M8) that the code Amendment 1 certified realized the diagonal
+at **2 × width** (full distance applied to both axes), not the declared √2 × width. Fixed in
+P1b: the realized diagonal is now total = width·√2, per-axis screen components = distance/√2
+(each axis moves exactly one viewport width). Amendment 1's basis resolution stands; its
+certification of the then-implementation does not. No measured cell existed at any point.
+
+**Amendment 3 (2026-08-30, pre-run.)** §6's quantities table scored G5 (cancellation) on the
+client clock; §2e's own quotation of the docs/08 row defines it on the **producer's clock**
+(`cancel_requested → cancel_observed`, ADR-018), and §1 forbids exactly that cross-attribution.
+Corrected: **G5 is scored producer-side from the kernel's existing ADR-018 instrumentation; the
+client-observed figure is reported beside it, never gated, never compared across clocks.**
+
+**Amendment 4 (2026-08-30, pre-run.)** Build-class disclosure: every measured cell this
+document governs runs the **Vite dev build** (`tauri dev`; DEV-gated hooks; unminified client)
+— the harness cannot drive a release build at all, since its hooks compile out. Every evidence
+file carries `buildClass` stating this; no figure from these cells may be read as a
+release-build product number, and any future release-build measurement is a new campaign under
+its own amendment.
+
+**Amendment 5 (2026-08-30, pre-run.)** §4b step 1's "from a cold, empty resident set"
+precondition is not literally met by the sequenced trace: the `open-drain` pre-step (added in
+P1b so G7's cold first view is measured at all — the reviewer's M7) populates residency before
+the fit step runs. Resolution: **the campaign's cold first view lives in the `open-drain`
+pre-step; step 1 measures fit-over-drained-residency** and is read as such in analysis. G7's
+cold-view comparison uses the pre-step's figures on both arms.
+
+**Amendment 6 (2026-08-30, pre-run.)** The §8 instrument-identity guard, as first implemented
+(exact render-trace field-sequence comparison under real synthetic gestures), cannot
+discriminate instrument effects: instrument-ON runs disagree with each other as much as ON vs
+OFF (CDP timing jitter interacting with the 120 ms issue debounce — proven by the committed
+gate evidence, which records the non-pass rather than a cherry-picked pass). Resolution: **the
+identity mode drives a deterministic programmatic camera path** (realism is not the property
+under test in that mode; measured cells keep real gestures); until that mode passes
+OFF-ON-ON-OFF with all pairwise comparisons identical, the identity claim is recorded as
+"not established", never "passed".
