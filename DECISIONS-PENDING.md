@@ -5,6 +5,28 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+24. **Tiling/LOD cut: seven decisions before code — (a)–(c) GATE the cut's P0.** The architect's
+    design note (2026-08-30, binding for the cut) restates the target honestly: at fit-to-extent
+    the viewport IS the dataset, so this cut retires the *error-shaped* refusal, not the ceiling
+    itself — over-budget becomes a declared partial view. Yours to decide:
+    **(a) May an over-budget viewport render at all without an error?** Today it refuses and
+    cancels the stream. Converting refusal → declared, labelled partial view with
+    distance-ordered eviction is the cut's core honesty call (principle 8). Rec: **yes** — it
+    is the cut's entire point, with the persistent rendered/total status RETAINED.
+    **(b) The ceiling-status semantics are your rider 1** (Parts D and H judged its wording):
+    under (a) the status stops meaning "refused above ceiling" and starts meaning "showing N of
+    M — farthest tiles evicted". Approve the meaning change (exact wording on sight at the PR).
+    **(c) Hover at whole-dataset zoom** (PR #15's question, routed here): (i) declared refusal
+    — "features here are below pick resolution, zoom in" (architect rec: the declared-not-
+    discovered discipline applied to picking); (ii) topmost-with-caveat; (iii) leave as is.
+    **(d)** Is eviction visible? Rec: the status line's N-of-M is the visibility; no tile
+    readout. **(e)** Console fan-out: N tile requests per pan will amplify Part J's noise
+    finding — grouping/de-emphasis decided with entry 23(a). **(f)** Client-clock results live
+    in a NEW `frontends/shell/RESULTS.md` (never mixed into kernel/RESULTS.md's producer-clock
+    records). Rec: approve. **(g) Scheduling:** the measured arms need headed, foreground,
+    non-remoted sessions on this machine — your physical time, to be agreed when P2/P6 are
+    ready (no RustDesk measurement, ever). (d)–(f) proceed on recommendation unless overridden.
+
 23. **ADR-027 acceptance — the action console and display truth.** Filed Proposed by the
     console cut's P6 with your accepted-with-deadline ruling recorded as decision 6; the
     ADR-022 pattern's operator confirmation is now in: Part J run 2026-08-30, verdict
