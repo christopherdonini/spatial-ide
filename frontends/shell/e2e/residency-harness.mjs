@@ -194,27 +194,76 @@ function parseCellArgs(argv) {
 // M6: settle requires BOTH console quiescence AND in-flight === 0.
 // ---------------------------------------------------------------------------------------
 
+/** P2-prep2 (viewport-residency cut): a settle-watchdog fire, on its own, only ever named ONE of
+ * the two counters that decide whether it fired ("console quiescence not reached" told a reader
+ * nothing about whether a stream was still genuinely in flight, or how busy the console actually
+ * was) -- diagnosed live against the Polygons over-ceiling fixture (10M vertices, 5x
+ * MAX_RESIDENT_VERTICES; the evidence file this fix is named for in this piece's own report), whose
+ * `fit` step failed with `inFlightAtSettle: null` and no way to tell, from the evidence file alone,
+ * whether that null meant "never checked" or "checked and still nonzero." Captures BOTH at the
+ * moment of failure: a best-effort in-flight readback (even on the console-quiescence-never-reached
+ * branch, which previously never polled it at all) and every console line (not just
+ * `[render-trace]` ones -- `consoleHandle.entries`, unfiltered) observed in the last 5000ms, per
+ * this piece's own instruction ("capture 5s of them"). Folded into BOTH the machine-readable
+ * `diagnostic` field (kept on the row as `settleFailureDiagnostic`, `measureOneStep` below) and the
+ * human-readable `reason` string itself -- a reader scanning only the evidence file's top-level
+ * `reason`/`wholeTrialInvalidatedReason` text (never opening the nested diagnostic object) still
+ * sees the actual in-flight count and how much console traffic was live, not just "watchdog fired." */
+async function captureSettleFailureDiagnostic(page, consoleHandle) {
+  let inFlightAtFailure = null;
+  try {
+    inFlightAtFailure = await page.evaluate(() => window.__SPATIAL_E2E__.residencyInFlightStreamCount?.() ?? null);
+  } catch {
+    inFlightAtFailure = null; // best-effort -- a failed readback must not itself throw out of the watchdog path
+  }
+  const cutoffMs = Date.now() - 5000;
+  const recentConsoleLines = consoleHandle.entries.filter((e) => e.at >= cutoffMs).map((e) => `[${e.type}] ${e.text}`);
+  return { inFlightAtFailure, recentConsoleLineCount: recentConsoleLines.length, recentConsoleLines };
+}
+
 /** §4b's own two-part settle criterion, both halves now driver-checked: console-line-count
  * quiescence (`waitForSettle`, `lib.mjs`, unchanged) AND `residencyInFlightStreamCount() === 0`
  * (M6's new driver-visible counter). Loops between the two checks up to `timeoutMs` total -- console
  * quiescence can be satisfied while a stream is still in flight (a stream whose batches have all
  * arrived but whose terminal has not yet reached the manager), in which case this polls again rather
  * than declaring settle early. See this file's own top comment for the control-arm disclosure
- * (in-flight always reads 0 while the instrument is disabled). */
-async function waitForSettleWithInFlight(page, traceFn, { quietMs, timeoutMs }) {
+ * (in-flight always reads 0 while the instrument is disabled).
+ *
+ * **P2-prep2: takes `consoleHandle` (not a bare `traceFn`) so a settle failure can also read
+ * `consoleHandle.entries` for `captureSettleFailureDiagnostic` above.** */
+async function waitForSettleWithInFlight(page, consoleHandle, { quietMs, timeoutMs }) {
+  const traceFn = () => consoleHandle.renderTrace();
   const start = Date.now();
   while (true) {
     const remaining = Math.max(200, timeoutMs - (Date.now() - start));
     const consoleSettle = await waitForSettle(traceFn, { quietMs, timeoutMs: remaining });
     if (!consoleSettle.settled) {
-      return { settled: false, count: consoleSettle.count, inFlight: null, reason: "console quiescence not reached" };
+      const diagnostic = await captureSettleFailureDiagnostic(page, consoleHandle);
+      return {
+        settled: false,
+        count: consoleSettle.count,
+        inFlight: diagnostic.inFlightAtFailure,
+        reason:
+          `console quiescence not reached (in-flight=${diagnostic.inFlightAtFailure ?? "unknown"}, ` +
+          `${diagnostic.recentConsoleLineCount} console line(s) in the last 5000ms)`,
+        diagnostic,
+      };
     }
     const inFlight = await page.evaluate(() => window.__SPATIAL_E2E__.residencyInFlightStreamCount?.() ?? 0);
     if (inFlight === 0) {
       return { settled: true, count: consoleSettle.count, inFlight };
     }
     if (Date.now() - start >= timeoutMs) {
-      return { settled: false, count: consoleSettle.count, inFlight, reason: "in-flight never reached 0" };
+      const diagnostic = await captureSettleFailureDiagnostic(page, consoleHandle);
+      return {
+        settled: false,
+        count: consoleSettle.count,
+        inFlight,
+        reason:
+          `in-flight never reached 0 (last observed in-flight=${inFlight}, ` +
+          `${diagnostic.recentConsoleLineCount} console line(s) in the last 5000ms)`,
+        diagnostic,
+      };
     }
     // Console went quiet but a stream is still in flight -- give it a short beat and re-check BOTH
     // conditions together (a fresh render-trace line could arrive while we wait, which is exactly
@@ -560,7 +609,7 @@ async function measureOneStep(
   const gestureResult = applyStepFn ? await applyStepFn() : null;
   await armPromise; // ensure the arm has resolved (armed successfully or gave up) before settling
 
-  const settle = await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), step.settle);
+  const settle = await waitForSettleWithInFlight(page, consoleHandle, step.settle);
   const postCount = consoleHandle.renderTrace().length;
   const wallMs = Date.now() - stepStartWallMs;
   if (postSettleFlushMs > 0) {
@@ -624,6 +673,10 @@ async function measureOneStep(
     inputToPresentProxiesTruncated: result ? result.inputToPresentProxiesTruncated : undefined,
     residentAtEndStep: result ? result.residentAtEndStep : undefined, // N4, G6 instrument
     viewState: { pre: preViewState, post: postViewState, realizedDisplacement: displacement, assertion: viewStateAssertion },
+    // P2-prep2: only ever present on a settle-watchdog failure (`captureSettleFailureDiagnostic`) --
+    // in-flight count + last-5000ms console lines at the moment the watchdog fired, kept as structured
+    // evidence alongside the same information already folded into `reason` above.
+    settleFailureDiagnostic: settle.settled ? undefined : settle.diagnostic,
   };
 }
 
@@ -1340,6 +1393,17 @@ async function main() {
       console.log(`[open-drain] ${openDrainRow.status} wallMs=${openDrainRow.wallMs ?? "n/a"} ${fp}`);
     }
     for (const r of rows) {
+      // P2-prep2: a row `runTrace`'s own early-continue pushed for a step AFTER the one that failed
+      // the settle watchdog (`invalidatedAtStep`) never reached `measureOneStep` at all -- it has no
+      // `wallMs` (every real `measureOneStep` row always sets one, even on its own settle failure).
+      // Printing "counters=(instrument off)" beside such a row was cosmetically dishonest: the
+      // instrument was never off, the step was simply never attempted once the trial was already
+      // invalidated. Named plainly instead, distinct from a genuine `--control` row (which DOES have
+      // a `wallMs` -- it ran, its hooks were just never called).
+      if (r.wallMs === undefined) {
+        console.log(`[${r.stepId}] skipped (trial invalidated at step ${invalidatedAtStep})`);
+        continue;
+      }
       const featureBit = r.counters ? `features=${r.counters.featuresDecoded} bytes=${r.counters.bytesDecoded}` : "counters=(instrument off)";
       const fp = r.firstPixelMs != null ? `firstPixel=${r.firstPixelMs}ms` : `firstPixel=n/a (${r.firstPixelReason ?? "n/a"})`;
       console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit}`);
