@@ -66,6 +66,7 @@ import {
   SETTLE_QUIET_MS,
   TRACE_VERSION,
   TRIAL_WATCHDOG_MS,
+  settleTimeoutForFixture,
 } from "./residencyTrace.mjs";
 
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -598,8 +599,12 @@ async function measureOneStep(
   if (callHooks) {
     await page.evaluate((id) => window.__SPATIAL_E2E__.residencyBeginStep(id), step.id);
   }
+  // Amendment 9: the step's own timeoutMs is the small-fixture value; the driver scales it for
+  // the declared large fixtures (Polygons class, 5 GB). The arm watchdog (P1d B5) scales with it.
+  const effectiveTimeoutMs = settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs);
+  const effectiveSettle = { quietMs: step.settle.quietMs, timeoutMs: effectiveTimeoutMs };
   const armPromise = callHooks
-    ? page.evaluate((watchdogMs) => window.__SPATIAL_E2E__.residencyArmFirstPixel?.(watchdogMs), step.settle.timeoutMs) // P1d B5
+    ? page.evaluate((watchdogMs) => window.__SPATIAL_E2E__.residencyArmFirstPixel?.(watchdogMs), effectiveTimeoutMs) // P1d B5
     : Promise.resolve();
 
   const preViewState = lastViewState(viewStateListener);
@@ -609,7 +614,7 @@ async function measureOneStep(
   const gestureResult = applyStepFn ? await applyStepFn() : null;
   await armPromise; // ensure the arm has resolved (armed successfully or gave up) before settling
 
-  const settle = await waitForSettleWithInFlight(page, consoleHandle, step.settle);
+  const settle = await waitForSettleWithInFlight(page, consoleHandle, effectiveSettle);
   const postCount = consoleHandle.renderTrace().length;
   const wallMs = Date.now() - stepStartWallMs;
   if (postSettleFlushMs > 0) {

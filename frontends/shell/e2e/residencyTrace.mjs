@@ -73,6 +73,22 @@ export const MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED = 3;
 export const SETTLE_QUIET_MS = 300;
 export const SETTLE_PER_STEP_TIMEOUT_MS = 5_000;
 
+/** Amendment 9 (2026-08-31, proposed-pending-sight): the 5 s per-step bound is structurally too
+ * small on the over-ceiling fixtures -- the Polygons dry-run had genuine healthy streaming still
+ * in flight at 5 s, and open-drain's own declared bound for the same full-extent stream shape is
+ * 60 s (observed need 47-51 s). The trace's per-step `timeoutMs` stays the SMALL-fixture value
+ * (the trace is fixture-agnostic data); the DRIVER scales it via `settleTimeoutForFixture` when
+ * the run's fixture is one of the declared large ones. Locks with the other
+ * proposed-pending-sight values at the baseline run. */
+export const SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS = 60_000;
+export const LARGE_FIXTURE_BASENAMES = Object.freeze(["polygons-100k.parquet", "parcels-5gb.parquet"]);
+
+/** Pure: the effective per-step settle timeout for a fixture path (Amendment 9's scaling). */
+export function settleTimeoutForFixture(fixturePath, stepTimeoutMs) {
+  const base = String(fixturePath).replace(/\\/g, "/").split("/").pop() ?? "";
+  return LARGE_FIXTURE_BASENAMES.includes(base) ? SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS : stepTimeoutMs;
+}
+
 /** §7's own declared ceiling of 180 s for "one full camera-trace trial (all 11 steps, one
  * arm/fixture/tile-size cell)" -- that quoted fragment is verbatim (§7's own table cell); "180 s" is
  * carried as this constant's own value, not re-quoted, since joining table cells with a colon (as an

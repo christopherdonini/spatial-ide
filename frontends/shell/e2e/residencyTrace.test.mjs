@@ -24,6 +24,9 @@ import {
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
   percentileNearestRank,
   SETTLE_PER_STEP_TIMEOUT_MS,
+  SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
+  LARGE_FIXTURE_BASENAMES,
+  settleTimeoutForFixture,
   SETTLE_QUIET_MS,
   TILE_SIZE_LEVELS_PROPOSED,
   TRACE_VERSION,
@@ -107,6 +110,13 @@ test("every step's settle criterion is IDENTICAL (§4b: 'identical at every step
 test("quietMs is 300ms and timeoutMs is 5000ms, per §4b/§7", () => {
   assert.equal(SETTLE_QUIET_MS, 300);
   assert.equal(SETTLE_PER_STEP_TIMEOUT_MS, 5_000);
+  // Amendment 9 (proposed-pending-sight): the driver scales the per-step bound for the declared
+  // large fixtures; the trace data itself stays fixture-agnostic. Pin the scaling here.
+  assert.equal(SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS, 60_000);
+  assert.deepEqual([...LARGE_FIXTURE_BASENAMES], ["polygons-100k.parquet", "parcels-5gb.parquet"]);
+  assert.equal(settleTimeoutForFixture("C:\\x\\polygons-100k.parquet", 5_000), 60_000);
+  assert.equal(settleTimeoutForFixture("/a/b/parcels-5gb.parquet", 5_000), 60_000);
+  assert.equal(settleTimeoutForFixture("C:\\x\\filter-zoned.parquet", 5_000), 5_000);
 });
 
 test("CAMERA_TRACE_STEPS and every step are frozen (Object.isFrozen) -- nothing, including a careless driver, can mutate the committed trace out from under a later step", () => {

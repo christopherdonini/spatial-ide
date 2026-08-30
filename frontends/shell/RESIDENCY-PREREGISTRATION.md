@@ -501,3 +501,14 @@ cell guards wire behavior, not quantities, and can never produce a gated client-
 "Measured twice per cell" is therefore satisfiable for those quantities only across
 instrument-on trials; the control cell's role is the identity guard plus driver-observed wall
 facts. Every evidence file carries a `gatedQuantityAvailability` note stating this.
+
+**Amendment 9 (2026-08-31, pre-run — PROPOSED-PENDING-SIGHT, joining the three §2/§4 values.)**
+§7's per-step settle timeout (5,000 ms) is structurally too small for the over-ceiling fixtures:
+the Polygons-class dry-run showed genuine, healthy streaming still in flight at the 5 s mark
+(in-flight 1, real batch traffic, resident total climbing), and the open-drain pre-step's own
+declared bound for the same full-extent stream shape is 60 s (observed need: 47–51 s). Proposed:
+**the per-step settle timeout is fixture-scaled — 60,000 ms on the docs/08 Polygons class and
+the 5 GB fixture, 5,000 ms retained on the small fixtures** — mirroring the open-drain
+precedent rather than inventing a new bound. A step that exceeds its scaled bound still
+invalidates the whole trial (§4b unchanged). This value locks with the other
+proposed-pending-sight figures at the baseline run.
