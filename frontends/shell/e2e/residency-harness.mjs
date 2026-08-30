@@ -53,7 +53,7 @@
 // piece's own report, not silently narrowed.
 
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -340,6 +340,38 @@ async function clampedPanDrag(page, box, cx, cy, dxScreenTotal, dyScreenTotal) {
  * diagonal. Dividing each nonzero component by `Math.SQRT2` when BOTH an x and a y component are set
  * (a genuinely diagonal direction) restores the realized total to exactly `distance` -- see this
  * file's own report for the resulting formula, restated for Amendment 2. */
+/** F1 fix (viewport-residency cut P2-prep dry-run; the surfacing evidence file is named in this
+ * piece's own report). A ceiling-refusal banner (App.tsx's `canvasRefusal` state, rendered as
+ * `.canvas-refusal`, set by `handleCanvasCeilingRefusal` the moment a stream's batch crosses
+ * MAX_RESIDENT_VERTICES) visually covers `.zoom-to-layer`: `.canvas-status-stack` (styles.css)
+ * spans `left: 0.5rem` to `right: 0.5rem` at `top: 0.5rem` -- the SAME top strip `.zoom-to-layer`
+ * (`top: 0.5rem; right: 0.5rem`) sits in -- and neither declares a `pointer-events` override, so
+ * the banner intercepts the fit step's own click. Live-confirmed by the dry-run's own evidence
+ * file: Playwright's `page.click` call log recorded the `.canvas-refusal` div, inside
+ * `.canvas-status-stack`, intercepting pointer events, then timing out after 30s. On a fixture
+ * several times over the declared ceiling (Polygons, 5x MAX_RESIDENT_VERTICES), this banner
+ * appears on the dataset's own FIRST query -- before the `fit` step's own click ever lands.
+ *
+ * A real operator hitting this would click the banner's own Dismiss button first -- this does
+ * exactly that, via a real, actionability-checked Playwright click (`.first()` handles the rare
+ * case both `.canvas-refusal` divs -- `canvasRefusal` and `viewportRefusal`, App.tsx -- are present
+ * at once; never `force: true`, which would paper over a genuinely still-obscured element instead
+ * of performing the same gesture a real user would). `.canvas-refusal button` is the same selector
+ * `regression.mjs`'s own OVERCEIL' step already establishes as this banner's real Dismiss control.
+ * Never touches `.residency-status` -- that status has no Dismiss button to find in the first
+ * place (rider 1, DECISIONS-PENDING.md entry 0: dismiss hides the banner, never the status
+ * indicator). The banner can reappear after a LATER refill also crosses the ceiling (a fresh
+ * `.canvas-refusal` mount) -- this is called before every fit-kind step's own click, never only
+ * once per trial. Returns whether it found and clicked one, so the caller can record it honestly
+ * on the step's own evidence row (`bannerDismissed`). */
+async function dismissCeilingBannerIfPresent(page) {
+  const locator = page.locator(".canvas-refusal button").first();
+  const present = (await locator.count()) > 0;
+  if (!present) return false;
+  await locator.click();
+  return true;
+}
+
 async function applyStep(page, step) {
   const box = await page.locator(".working-canvas").boundingBox();
   if (!box) throw new Error(`applyStep(${step.id}): .working-canvas has no bounding box (not mounted/visible?)`);
@@ -347,9 +379,13 @@ async function applyStep(page, step) {
   const cy = box.y + box.height / 2;
 
   if (step.kind === "fit" || step.kind === "zoom-to-layer") {
+    // F1: dismiss any intercepting ceiling banner FIRST -- an unrelated real-user action, kept
+    // outside the residencyMarkInput/click pair below so the input-to-present proxy still measures
+    // only the fit gesture itself, not this cleanup step.
+    const bannerDismissed = await dismissCeilingBannerIfPresent(page);
     await page.evaluate(() => window.__SPATIAL_E2E__.residencyMarkInput?.());
     await page.click(".zoom-to-layer");
-    return { kind: "fit" };
+    return { kind: "fit", bannerDismissed };
   }
 
   if (step.kind === "pan") {
@@ -869,6 +905,101 @@ async function runFieldSequenceIdentityCheck(page, consoleHandle) {
   };
 }
 
+// ---------------------------------------------------------------------------------------
+// F2 fix (P2-prep dry-run): this harness never attaches to a leftover app -- see
+// `sweepStaleCdpProcess`'s own doc comment for the full rationale.
+// ---------------------------------------------------------------------------------------
+
+/** Windows-only (this repo's own declared environment, CLAUDE.md: Windows 10 Pro, MSVC), reading
+ * `netstat -ano`'s own fixed columnar output -- one `LISTENING` row per bound socket, PID always
+ * the last whitespace-delimited token. Returns every distinct PID found listening on `port` (a
+ * `Set` de-dupes multiple matching rows, e.g. IPv4 and a loopback-only rebind, that share one PID). */
+function findPidsListeningOnPort(port) {
+  if (process.platform !== "win32") return [];
+  let output;
+  try {
+    output = execFileSync("netstat", ["-ano"], { encoding: "utf8" });
+  } catch (e) {
+    console.error(`residency-harness: "netstat -ano" failed while probing CDP port ${port}: ${e.message}`);
+    return [];
+  }
+  const pids = new Set();
+  for (const line of output.split(/\r?\n/)) {
+    const m = line.match(/^\s*TCP\s+\S*:(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$/i);
+    if (m && Number(m[1]) === port) pids.add(Number(m[2]));
+  }
+  return [...pids];
+}
+
+/** Same bounded-taskkill shape as `lib.mjs`'s own private (unexported) `killTree` -- duplicated
+ * here rather than imported, per this piece's own harness-only scope and the sibling-file
+ * duplication convention this file's own top comment already names (`admission-remediation.mjs`'s
+ * "duplicate rather than cross-import for the identical reason"). A wedged `taskkill` must not hang
+ * this driver forever, the same reasoning `lib.mjs`'s own version states for itself. */
+function killProcessTreeLoudly(pid) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32") {
+      try {
+        process.kill(pid, "SIGKILL");
+      } catch {
+        // already gone
+      }
+      resolve();
+      return;
+    }
+    const k = spawn("taskkill", ["/T", "/F", "/PID", String(pid)], { stdio: "ignore" });
+    const timer = setTimeout(() => {
+      console.error(`residency-harness: taskkill for PID ${pid} did not exit within 10s -- giving up (best-effort)`);
+      resolve();
+    }, 10_000);
+    k.on("exit", () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    k.on("error", () => {
+      clearTimeout(timer);
+      resolve(); // best-effort -- the process may already be gone
+    });
+  });
+}
+
+/** F2: a stale app already listening on `CDP_PORT` before this run starts makes this run's own
+ * trial non-comparable to a fresh launch's own cold-start behaviour -- `lib.mjs`'s own
+ * `attachOrLaunch` happily ATTACHES to whatever it finds there instead of launching fresh (its own
+ * documented purpose: making REPEATED INTERACTIVE runs fast by reusing a still-running app). This
+ * harness measures; every measured cell must start from the same cold state, so it never attaches.
+ * Called once, before this driver's own `attachOrLaunch` call: kills (loudly, naming the PID)
+ * whatever already answers CDP's `/json/version` probe on `CDP_PORT`, so the subsequent
+ * `attachOrLaunch` call finds the port empty and takes its own launch path instead. Returns the
+ * swept PIDs, possibly empty (nothing was there -- the common case) -- recorded into
+ * `evidence.cell` either way, never silently discarded. */
+async function sweepStaleCdpProcess() {
+  const cdpUrl = `http://127.0.0.1:${CDP_PORT}`;
+  let occupied = false;
+  try {
+    const res = await fetch(`${cdpUrl}/json/version`);
+    occupied = res.ok;
+  } catch {
+    occupied = false;
+  }
+  if (!occupied) return [];
+
+  const pids = findPidsListeningOnPort(CDP_PORT);
+  if (pids.length === 0) {
+    console.error(
+      `residency-harness: CDP port ${CDP_PORT} answered /json/version but no owning PID was found via ` +
+        `"netstat -ano" -- cannot sweep automatically; the fresh-launch invariant below will fail loudly ` +
+        `if this run ends up attaching instead of launching.`
+    );
+    return [];
+  }
+  for (const pid of pids) {
+    console.error(`residency-harness: sweeping stale app on CDP port ${CDP_PORT} -- killing process tree PID ${pid}`);
+    await killProcessTreeLoudly(pid);
+  }
+  return pids;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const argSet = new Set(args);
@@ -902,6 +1033,9 @@ async function main() {
   const buildCommit = gitRevParseHead();
   const fixtureSha256AtStart = await sha256File(FIXTURE_PATH);
 
+  // F2: sweep BEFORE attaching/launching -- see `sweepStaleCdpProcess`'s own doc comment.
+  const sweptPids = await sweepStaleCdpProcess();
+
   let session;
   try {
     session = await attachOrLaunch();
@@ -911,6 +1045,22 @@ async function main() {
     return;
   }
   const { page, browser, launched } = session;
+  // F2: no attach path remains in this harness -- the sweep above must have left CDP_PORT empty,
+  // so `attachOrLaunch` should always take its own launch path here. Asserted, not merely assumed:
+  // `launched === false` means either the sweep missed a PID (already logged above) or a NEW
+  // process raced onto the port between the sweep and this call -- either way a harness/environment
+  // defect this run's own evidence must never silently paper over as a normal launch.
+  if (!launched) {
+    console.error(
+      `residency-harness: FRESH-LAUNCH INVARIANT VIOLATED -- attachOrLaunch attached to an existing app ` +
+        `on CDP port ${CDP_PORT} instead of launching fresh, even after sweeping ${sweptPids.length} PID(s) ` +
+        `(${sweptPids.join(", ") || "none"}). This harness measures; every measured cell must start from a ` +
+        `cold, freshly-launched app.`
+    );
+    await browser.close().catch(() => {});
+    process.exitCode = 1;
+    return;
+  }
   const consoleHandle = attachConsole(page);
 
   const evidence = {
@@ -948,6 +1098,8 @@ async function main() {
       machineAttestation: cellArgs.machineAttestation,
       instrumentEnabledReadback: null, // filled in below, after M10's own off-then-on sequencing
       buildClass: BUILD_CLASS, // M13
+      launchedFresh: launched, // F2: always true -- the fresh-launch invariant above already returned if not
+      sweptPids, // F2: PIDs killed on CDP_PORT before this run's own launch, possibly empty
     },
   };
 
@@ -1041,6 +1193,59 @@ async function main() {
     } catch (e) {
       openDrainRow = { stepId: "open-drain", kind: "open", status: "unmeasured", reason: e.message };
     }
+
+    // F4 fix (P2-prep dry-run, evidence file `residency-harness-instrument-on-smoke-
+    // 1788123308934.json`): that run's own open-drain row read `status: "measured"` while
+    // `firstPixelMs` was `null` and every `frameTimeMs` figure (p50/p95/max/sampleCount) was also
+    // `null`/`0` -- despite `counters` showing real, nonzero work (`batchesReceived: 40`,
+    // `featuresDecoded: 19055`). `measureOneStep`'s own `status` computation (this file, above) only
+    // ever demotes a row for a settle-watchdog failure or (pan steps only) a zero-displacement
+    // assertion -- it never checks whether the render-timing quantities it also reports were
+    // actually captured, so a step that settled fine but never observed a paint stayed "measured"
+    // beside otherwise-honest `null` fields.
+    //
+    // **Diagnosed cause (code-read only, this piece's own scope is harness-only -- not a live-
+    // instrumented render-diagnosis session, which this piece's own instruction does not authorize).**
+    // `firstPixelReason: "no-paint"` (`residencyInstrument.ts`'s own three-way reason) means a stream
+    // WAS issued and a batch WAS accepted, yet no `recordFrame` call was ever observed before
+    // `endStep` -- i.e. `WorkingCanvas.tsx`'s armed `onAfterRender` hook never fired while armed. The
+    // most likely mechanism found reading the code: `App.tsx`'s `residencyArmFirstPixel` E2E hook
+    // polls for a live `canvasRef.current`/`deckRef.current` for a FIXED 4000ms before silently
+    // giving up (its own comment: "Gave up -- no WorkingCanvas/deck ever became available within the
+    // bound... An honest no-op") -- a bound independent of, and much shorter than, the step's own
+    // 60_000ms settle timeout passed to `measureOneStep` above. If that poll ever exhausts its 4s
+    // bound before a live deck exists (plausible on this fixture: Polygons, 5x MAX_RESIDENT_VERTICES,
+    // whose first admit/mount/decode is heavier than the filter-zoned smoke fixture this mechanism was
+    // last live-verified against), NOTHING is ever armed for that step. Critically,
+    // `WorkingCanvas.tsx`'s own `disarmFirstPixelRenderHook` returns the SAME `true` for "never armed
+    // at all" as for "armed and cleanly disarmed before its own internal watchdog"
+    // (`!firstPixelTimedOutRef.current`, and both that ref and `firstPixelWatchdogRef.current` are
+    // still at their untouched initial values in the never-armed case) -- so this driver's own
+    // `armDisarmedCleanly: true` reading cannot currently distinguish the two, which is why this row
+    // still looked superficially healthy. This is a real product-code signal-quality gap (the fixed
+    // 4s poll bound and the disarm-outcome ambiguity); reported here per this piece's own instruction,
+    // not fixed here (no product code in this piece's scope).
+    //
+    // The fix within this harness's own scope: never leave a row "measured" beside these missing
+    // quantities -- if open-drain settled but its own `firstPixelReason` is set at all (any of
+    // `"no-query"`/`"no-batch"`/`"no-paint"` -- for a genuine dataset open, every one of the three
+    // names a real capture gap, never a legitimate empty result the way it might for a later
+    // camera-trace step), demote it to `"unmeasured"` with a reason that names the gap explicitly.
+    if (openDrainRow && openDrainRow.status === "measured" && openDrainRow.firstPixelReason != null) {
+      const diagnosis =
+        openDrainRow.firstPixelReason === "no-paint"
+          ? " Diagnosed cause (code-read, not live-confirmed -- see this driver's own inline F4 comment): " +
+            "the residencyArmFirstPixel E2E hook's fixed 4s poll bound for a live WorkingCanvas/deck may " +
+            "have exhausted before one existed on this fixture, and disarmFirstPixelRenderHook's own " +
+            "never-armed and cleanly-disarmed outcomes are indistinguishable from this driver's side."
+          : "";
+      openDrainRow.reason =
+        `open-drain settled and counters show real work, but firstPixelMs/frameTimeMs were never ` +
+        `captured (firstPixelReason: "${openDrainRow.firstPixelReason}") -- never recorded "measured" ` +
+        `beside None first-pixel/frame-time quantities.${diagnosis}`;
+      openDrainRow.status = "unmeasured";
+    }
+
     evidence.openDrain = openDrainRow;
 
     const { rows, invalidated, invalidatedAtStep } = await runTrace(page, consoleHandle, viewStateListener, {
@@ -1137,6 +1342,19 @@ async function main() {
     evidence.harnessError = e.message;
     process.exitCode = 1;
   } finally {
+    // F3 fix (P2-prep dry-run): a canonical guarantee, in this ONE shared flush path every mode
+    // already exits through, that a recorded `harnessError` never exits 0 -- independent of
+    // whatever code path set `evidence.harnessError` (the catch block above already also sets
+    // `process.exitCode = 1` itself; this is a backstop, not a replacement for it, in case a future
+    // call site ever sets the field without remembering the exit code too).
+    if (evidence.harnessError && process.exitCode !== 1) {
+      console.error(
+        `residency-harness: harnessError was recorded (${JSON.stringify(evidence.harnessError)}) but ` +
+          `process.exitCode was ${JSON.stringify(process.exitCode)}, not 1 -- correcting it here (F3).`
+      );
+      process.exitCode = 1;
+    }
+
     // P1d suggestion 9: the measured-mode view-state-seam assertion (above, inside `try`) is normally
     // read right after `runTrace` resolves -- if anything earlier in the `try` block threw first
     // (`waitForMountReady`, `open-drain`, `runTrace` itself), that read never ran, and a genuine seam
