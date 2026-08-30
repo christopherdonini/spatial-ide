@@ -7,6 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
+import { recordResidencyAfterRender, recordResidencyBatch } from "../instrument/residencyInstrument";
 import {
   traceCanvasLifecycle,
   traceLayerUpdate,
@@ -472,6 +473,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         }
         end("buffer-build");
 
+        // Viewport-residency cut P1 (RESIDENCY-PREREGISTRATION.md §6, refill-work counters):
+        // DEV-only, and gated a second time inside `recordResidencyBatch` itself (the instrument's
+        // own `enabled` flag) -- see `instrument/residencyInstrument.ts`'s own top doc comment for
+        // why the check is duplicated at every product call site rather than relied on solely
+        // inside that module. `ipcBytes.byteLength` is the exact wire payload size this call
+        // decoded, the same value `decodeBatch` was handed above -- never re-derived from
+        // `batch.totalVertices` or any other post-decode figure.
+        if (import.meta.env.DEV) {
+          recordResidencyBatch(batch.ids.length, ipcBytes.byteLength);
+        }
+
         const stats = streamStatsRef.current.get(streamHandle) ?? { rows: 0, vertices: 0 };
         stats.rows += batch.ids.length;
         stats.vertices += batch.totalVertices;
@@ -776,6 +788,47 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
 
     registerE2eHook("capturePixels", capturePixels);
     return () => unregisterE2eHook("capturePixels");
+  }, []);
+
+  // E2E TEST SURFACE (dev builds only, viewport-residency cut P1, RESIDENCY-PREREGISTRATION.md
+  // §6): arms a ONE-SHOT `onAfterRender` hook that stamps the residency instrument's first-pixel
+  // timestamp on the very next frame deck actually renders -- REUSES `capturePixels`' own
+  // arm-then-restore-to-a-real-noop pattern (this file's doc comment on that effect), deliberately
+  // NOT its full machinery: no framebuffer read, no `flush()`/`layerManager.updateLayers()` forcing
+  // (this hook waits for the NEXT NATURAL render, exactly what "first pixel after a step begins"
+  // means -- forcing a redraw here would measure this hook's own forced frame, not the real one).
+  //
+  // Registered as an INDEPENDENT `deck.setProps({onAfterRender})` owner, not composed with
+  // `capturePixels` above: this piece's own driver (`e2e/residency-harness.mjs`) never calls
+  // `capturePixels` during a residency trace, so the two hooks never actually contend for deck's one
+  // `onAfterRender` prop in practice -- a known, disclosed limitation (this piece's own report), not
+  // a silent gap: a caller that DID invoke both concurrently would have one hook's arm silently
+  // overwrite the other's, exactly as two overlapping `capturePixels` calls already cannot coexist
+  // (`capturePixels`' own `captureInFlight` guard exists for exactly that single-owner reason).
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    async function armFirstPixel(): Promise<void> {
+      const deck = deckRef.current;
+      if (!deck) return;
+      let fired = false;
+      // Never restores to `undefined` -- same reason `capturePixels`' own `restore` doesn't: deck.gl
+      // (`@deck.gl/core@9.3.7`'s `_drawLayers`) calls `this.props.onAfterRender(...)` with no
+      // null-check once anything has ever set the prop, so an unset value throws on the very next
+      // render.
+      const restore = () => deck.setProps({ onAfterRender: () => {} });
+      deck.setProps({
+        onAfterRender: () => {
+          if (fired) return;
+          fired = true;
+          restore();
+          recordResidencyAfterRender();
+        },
+      });
+    }
+
+    registerE2eHook("residencyArmFirstPixel", armFirstPixel);
+    return () => unregisterE2eHook("residencyArmFirstPixel");
   }, []);
 
   return (

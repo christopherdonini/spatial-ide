@@ -13,6 +13,13 @@ import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
+import {
+  beginResidencyStep,
+  disableResidencyInstrument,
+  enableResidencyInstrument,
+  endResidencyStep,
+  recordResidencyInput,
+} from "./instrument/residencyInstrument";
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import PublishPanel from "./publish/PublishPanel";
@@ -719,6 +726,38 @@ export default function App() {
     // already states (`AdmissionPanel`'s `admitPath`/E2E-hook `useEffect` chain).
     [commitActiveFilter, commitScanState]
   );
+
+  // E2E TEST SURFACE (dev builds only, viewport-residency cut P1, RESIDENCY-PREREGISTRATION.md).
+  // Registered ONCE, at the top level -- unlike `capturePixels`/`queryWithFilter` (dataset-scoped,
+  // registered inside `WorkingCanvas`/the `[admitted]` effect), a driver legitimately wants the
+  // instrument's enable/disable and step boundaries available BEFORE any dataset is admitted: the
+  // trace's own step 1 ("Fit") measures the very first `viewport_query` a dataset open issues.
+  // `residencyMarkInput` reaches `recordResidencyInput` directly (no WorkingCanvas dependency); the
+  // first-pixel arm (`residencyArmFirstPixel`) stays WorkingCanvas-scoped since it needs a live
+  // `Deck` instance, registered separately there.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    registerE2eHook("residencyInstrumentSetEnabled", async (value: boolean) => {
+      if (value) {
+        enableResidencyInstrument();
+      } else {
+        disableResidencyInstrument();
+      }
+    });
+    registerE2eHook("residencyBeginStep", async (stepId: string) => {
+      beginResidencyStep(stepId);
+    });
+    registerE2eHook("residencyEndStep", async () => endResidencyStep());
+    registerE2eHook("residencyMarkInput", async () => {
+      recordResidencyInput();
+    });
+    return () => {
+      unregisterE2eHook("residencyInstrumentSetEnabled");
+      unregisterE2eHook("residencyBeginStep");
+      unregisterE2eHook("residencyEndStep");
+      unregisterE2eHook("residencyMarkInput");
+    };
+  }, []);
 
   function reportViewportOutcome(promise: Promise<RequestOutcome>) {
     promise.then(

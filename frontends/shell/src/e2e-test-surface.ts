@@ -22,6 +22,7 @@
  */
 
 import type { ApplyFilterOutcome } from "./App";
+import type { ResidencyStepResult } from "./instrument/residencyInstrument";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
 import type { CrsCatalogEntry } from "./skp/crsCatalog";
 
@@ -153,6 +154,30 @@ export interface E2eTestSurface {
     destination: string,
     scope?: "whole" | "current"
   ) => Promise<PrepareOutcome>;
+  /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P1, `RESIDENCY-PREREGISTRATION.md`).
+   * Flips `instrument/residencyInstrument.ts`'s runtime `enabled` flag -- OFF by default, so a
+   * driver run that never calls this exercises the exact same code paths (and, per §8's
+   * wire-bytes-identity assertion, the exact same wire traffic) as a build with the instrument
+   * compiled out entirely. Registered at the top level (`App.tsx`), not dataset-scoped: a driver may
+   * legitimately want the instrument on BEFORE a dataset is even opened (the `fit` trace step's own
+   * first-pixel timing starts at that step, not at instrument-enable time). */
+  residencyInstrumentSetEnabled?: (enabled: boolean) => Promise<void>;
+  /** Starts a new camera-trace step's counters/timings. A no-op (returns nothing meaningful) unless
+   * `residencyInstrumentSetEnabled(true)` was already called. */
+  residencyBeginStep?: (stepId: string) => Promise<void>;
+  /** Ends the active step and returns its snapshot -- `null` if the instrument is disabled or no
+   * step was active (`residencyInstrument.ts`'s own `endResidencyStep` doc comment). */
+  residencyEndStep?: () => Promise<ResidencyStepResult | null>;
+  /** Marks "an input happened right now" for the input-to-present proxy (§6) -- the driver calls
+   * this immediately before dispatching a real pointer/wheel gesture that drives a pan or zoom step,
+   * so the NEXT rendered frame's timestamp becomes that gesture's proxy latency
+   * (`ResidencyInstrumentCore.recordInput`'s own doc comment). A no-op while disabled. */
+  residencyMarkInput?: () => Promise<void>;
+  /** Arms a ONE-SHOT `onAfterRender` hook (`WorkingCanvas.tsx`, reusing `capturePixels`' own
+   * arm/restore pattern) that stamps the active step's first-pixel timestamp on the next frame deck
+   * actually renders. The driver calls this once per step, right after `residencyBeginStep`. A
+   * no-op while the instrument is disabled or no `WorkingCanvas` is mounted. */
+  residencyArmFirstPixel?: () => Promise<void>;
 }
 
 declare global {

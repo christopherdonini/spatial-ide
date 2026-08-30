@@ -3,6 +3,7 @@
 
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
+import { recordResidencyStreamIssued } from "../instrument/residencyInstrument";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
@@ -214,6 +215,12 @@ export class ViewportStreamManager {
     // P6 review, should-fix 3: logged at the moment of the real mint, not before -- `traceViewportQuery`
     // above fires on every attempt (throttled or not), this fires only once a ticket actually issued.
     traceStreamIssued(this.opts.dataset, stream);
+    // Viewport-residency cut P1 (RESIDENCY-PREREGISTRATION.md §6): DEV-only, same moment
+    // `traceStreamIssued` fires -- see `instrument/residencyInstrument.ts`'s own top doc comment
+    // for why this check is duplicated at every product call site.
+    if (import.meta.env.DEV) {
+      recordResidencyStreamIssued();
+    }
     return { kind: "issued", streamHandle: stream };
   }
 
