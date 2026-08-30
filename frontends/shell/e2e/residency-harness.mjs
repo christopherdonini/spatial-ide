@@ -16,16 +16,30 @@
 // PREREGISTRATION.md §2d's gates.
 //
 // **Camera control: real synthetic pointer/wheel gestures over `.working-canvas`, not a
-// programmatic view-state hook.** This is a disclosed engineering choice, not a preregistration
-// requirement: it drives the EXACT SAME deck.gl controller code path a real operator's drag/scroll
-// would (no new product-code seam needed for camera control at all -- lower risk for a piece whose
-// defining constraint is zero product-behavior change), at the cost of two approximations flagged
-// here and in this piece's own report for a later piece to calibrate against a live app:
+// programmatic view-state hook -- for every MEASURED cell (`--smoke`, `--control`, plain
+// instrument-on runs, i.e. `applyStep`/`runTrace` below).** This is a disclosed engineering choice,
+// not a preregistration requirement: it drives the EXACT SAME deck.gl controller code path a real
+// operator's drag/scroll would (no new product-code seam needed for camera control at all -- lower
+// risk for a piece whose defining constraint is zero product-behavior change), at the cost of two
+// approximations flagged here and in this piece's own report for a later piece to calibrate
+// against a live app:
 //   1. Zoom steps ("x2 magnification") use a fixed wheel-delta constant (`ZOOM_WHEEL_DELTA` below)
 //      -- deck.gl/mjolnir.js's own wheel-to-zoom-factor mapping was not empirically calibrated
 //      within this piece's own scope, so the resulting zoom factor is approximate, not exactly x2.
 //   2. Pan direction's screen-to-world mapping (`PAN_SCREEN_DELTA` below) assumes north-is-up-on-
 //      -screen in this fixture's stored CRS; not verified against a live render.
+//
+// **P1c exception, `--wire-identity`'s identity mode ONLY (RESIDENCY-PREREGISTRATION.md §12
+// Amendment 6): a fixed, deterministic PROGRAMMATIC camera script, `IDENTITY_VIEW_STATE_STEPS`
+// (`residencyTrace.mjs`), via the DEV-gated `e2eSetViewState` seam -- never a synthetic gesture.**
+// P1b's real-gesture identity check could not discriminate instrument effects: CDP-driven pointer
+// timing jitter interacting with the shell's own real 120ms pan/zoom debounce made two ON runs
+// disagree with each other as much as ON vs OFF (see the committed gate evidence file's own P1b
+// record). Realism is not the property under test in the identity mode -- only whether the
+// instrument itself perturbs the wire. `applyIdentityViewStateStep` below is the ONLY caller of
+// `e2eSetViewState` in this whole file; `applyStep` (measured cells) never references it, and
+// `main()`'s own driver assertion (search `MEASURED-MODE VIEW-STATE SEAM ASSERTION` below) fails
+// loudly if a measured run's own call counter is ever non-zero.
 //
 // **Settle criterion (P1b, M6): BOTH console quiescence AND in-flight === 0 (§4b's own letter --
 // "zero in-flight viewport_query streams remain").** P1's own version of this driver used console
@@ -47,6 +61,7 @@ import { fileURLToPath } from "node:url";
 import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
 import {
   CAMERA_TRACE_STEPS,
+  IDENTITY_VIEW_STATE_STEPS,
   percentileNearestRank,
   SETTLE_QUIET_MS,
   TRACE_VERSION,
@@ -584,7 +599,17 @@ async function openFixture(page) {
 // infer the gap from the comparison's own silence.
 // ---------------------------------------------------------------------------------------
 
-const FIELD_SEQUENCE_STEP_LIMIT = 3; // "a short trace" (piece text) -- steps 1-3, matching --smoke's own scope
+// P1c (Amendment 6): no longer slices CAMERA_TRACE_STEPS -- the identity mode drives
+// IDENTITY_VIEW_STATE_STEPS instead (residencyTrace.mjs), which is itself declared at exactly 3
+// steps, matching this constant's own original "a short trace" scope. Retained (rather than
+// deleted) as the single declared source of that scope, and asserted against
+// IDENTITY_VIEW_STATE_STEPS.length below rather than left to drift silently out of sync with it.
+const FIELD_SEQUENCE_STEP_LIMIT = 3;
+if (IDENTITY_VIEW_STATE_STEPS.length !== FIELD_SEQUENCE_STEP_LIMIT) {
+  throw new Error(
+    `residency-harness: IDENTITY_VIEW_STATE_STEPS has ${IDENTITY_VIEW_STATE_STEPS.length} steps, expected FIELD_SEQUENCE_STEP_LIMIT=${FIELD_SEQUENCE_STEP_LIMIT}`
+  );
+}
 const FIELD_SEQUENCE_EVENTS = ["viewport_query", "stream-issued", "batch"];
 const EXCLUDED_LINE_TYPES = ["residency (push/clear -- traceResidency, canvas-side bookkeeping, not wire content)"];
 const EXCLUDED_REQUEST_FIELDS = [
@@ -614,6 +639,24 @@ function normalizeFieldSequenceLine(line) {
   };
 }
 
+/** P1c (Amendment 6): the identity mode's ONLY caller of `e2eSetViewState` -- dispatches one of
+ * `IDENTITY_VIEW_STATE_STEPS`'s declared literal camera poses directly, never a synthetic
+ * pointer/wheel gesture (see this file's own top comment). `applyStep` (measured cells) never
+ * calls this function and never references `e2eSetViewState` -- the two camera-control paths are
+ * kept structurally separate, not merely by convention. Throws if the DEV-gated seam reports it
+ * moved nothing (`false` -- no `WorkingCanvas`/`Deck` mounted), the same "loud, not silent" failure
+ * shape `openFixture` above already uses. */
+async function applyIdentityViewStateStep(page, step) {
+  const applied = await page.evaluate(
+    ({ targetX, targetY, zoom }) => window.__SPATIAL_E2E__.e2eSetViewState?.(targetX, targetY, zoom) ?? false,
+    { targetX: step.targetX, targetY: step.targetY, zoom: step.zoom }
+  );
+  if (!applied) {
+    throw new Error(`applyIdentityViewStateStep(${step.id}): e2eSetViewState returned false (no WorkingCanvas/Deck mounted?)`);
+  }
+  return { kind: "identity-view-state", targetX: step.targetX, targetY: step.targetY, zoom: step.zoom };
+}
+
 /** Runs the short trace once with the instrument in the given `enabled` state, returns the
  * normalized field sequence observed. Reopens the fixture fresh each call (the same "reopen the
  * same path" pattern `admission-remediation.mjs`'s own steps already rely on repeatedly).
@@ -628,17 +671,22 @@ function normalizeFieldSequenceLine(line) {
  * that same run). Fixed by reusing the SAME combined settle check (`waitForSettleWithInFlight`, M6)
  * every trace step already uses, rather than a fixed sleep -- still not a hard determinism
  * guarantee (no settle mechanism can be, over a real transport), but a materially stronger one than a
- * blind sleep. */
+ * blind sleep.
+ *
+ * **P1c (Amendment 6): no synthetic gesture, no debounce-racing.** Every step below now dispatches
+ * `applyIdentityViewStateStep` (a literal, declared camera pose via the DEV-gated `e2eSetViewState`
+ * seam) instead of `applyStep`'s real pointer/wheel gesture, and waits the FULL
+ * `waitForSettleWithInFlight` (quiescence + in-flight===0) before the next step -- never racing the
+ * shell's own 120ms pan/zoom debounce the way a fast, real drag could. */
 async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
   const listener = attachRenderTraceValueListener(page, FIELD_SEQUENCE_EVENTS);
   try {
     await page.evaluate((v) => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(v), enabled);
     await openFixture(page);
     await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 });
-    const steps = CAMERA_TRACE_STEPS.slice(0, FIELD_SEQUENCE_STEP_LIMIT);
-    for (const step of steps) {
-      await applyStep(page, step);
-      await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), step.settle);
+    for (const step of IDENTITY_VIEW_STATE_STEPS) {
+      await applyIdentityViewStateStep(page, step);
+      await waitForSettleWithInFlight(page, () => consoleHandle.renderTrace(), { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 });
     }
     // Let any final in-flight console messages resolve their jsonValue() promises.
     await sleep(500);
@@ -657,17 +705,22 @@ async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
  * uses (P1's own version duplicated that teardown here; fixed).
  */
 async function runFieldSequenceIdentityCheck(page, consoleHandle) {
-  // **Warm-up run, live-verified finding (P1b).** The FIRST synthetic gesture ever dispatched
-  // against a freshly-mounted `.working-canvas` in a session realizes a measurably different camera
-  // position than every later, otherwise-identical gesture -- confirmed live: an initial OFF-ON-ON-
-  // OFF run showed `off#0` differing from `on#1`/`on#2`/`off#3` (which were byte-identical to EACH
-  // OTHER across BOTH instrument states) in exactly one field, the third step's realized bbox --
-  // never in anything the instrument could plausibly influence. Consistent with a one-time
-  // synthetic-pointer/first-frame warm-up effect (this file's own disclosed approximation #2: pan
-  // realization is not independently verified against a live render), not a wire-bytes divergence.
-  // Absorbed here, ONCE, before any of the four MEASURED runs below -- so the anomaly (whatever its
-  // exact cause) happens on a run that is never compared against anything.
-  console.log("residency-harness --wire-identity: warm-up run (absorbs the first-gesture effect, not measured/compared)...");
+  // **Warm-up run, P1b live-verified finding, ORIGINAL rationale carried forward with a P1c
+  // disclosure.** P1b's own account: the FIRST synthetic gesture ever dispatched against a
+  // freshly-mounted `.working-canvas` in a session realized a measurably different camera position
+  // than every later, otherwise-identical gesture -- confirmed live, and consistent with a one-time
+  // synthetic-pointer/first-frame warm-up effect, not a wire-bytes divergence.
+  //
+  // **P1c (Amendment 6) no longer dispatches any synthetic gesture in this function at all** (see
+  // `runShortTraceForFieldSequence`'s own doc comment) -- the ORIGINAL gesture-specific mechanism
+  // this warm-up run absorbed no longer runs here, so it may no longer be strictly necessary.
+  // Retained anyway, unproven-but-cheap: a first-frame/first-open warm-up effect independent of
+  // gestures (a fresh WebGL context's first real draw, a cold dataset-admission path) is still a
+  // plausible source of session-position anomalies this file has not independently ruled out, and
+  // running one extra, unmeasured trial before the four MEASURED runs costs one trial's wall time
+  // against the alternative of re-introducing exactly the kind of anomaly P1b found live. A later
+  // piece may remove this once it is shown unnecessary under the new mechanism; not shown here.
+  console.log("residency-harness --wire-identity: warm-up run (absorbs any first-open/first-frame effect, not measured/compared)...");
   await runShortTraceForFieldSequence(page, consoleHandle, false);
 
   const order = ["off", "on", "on", "off"];
@@ -860,6 +913,30 @@ async function main() {
     evidence.invalidated = invalidated;
     evidence.invalidatedAtStep = invalidatedAtStep;
     viewStateListener.dispose();
+
+    // MEASURED-MODE VIEW-STATE SEAM ASSERTION (P1c, Amendment 6): this whole code path (`open-drain`
+    // + `runTrace`/`applyStep`, reached from every mode EXCEPT `--wire-identity`, which returns
+    // early above) is a MEASURED cell -- it must never touch the identity-mode-only
+    // `e2eSetViewState` seam. Read AFTER the trace, not merely asserted by omission: a call count of
+    // exactly 0 is checked and recorded into the evidence file itself, so a future regression (a
+    // stray call added to `applyStep` by mistake) fails loudly here rather than silently drifting.
+    const measuredModeViewStateSeamCallCount = await page.evaluate(
+      () => window.__SPATIAL_E2E__.e2eSetViewStateCallCount?.() ?? 0
+    );
+    evidence.measuredModeViewStateSeamAssertion = {
+      expected: 0,
+      observed: measuredModeViewStateSeamCallCount,
+      ok: measuredModeViewStateSeamCallCount === 0,
+    };
+    if (measuredModeViewStateSeamCallCount !== 0) {
+      throw new Error(
+        `residency-harness: MEASURED-MODE INVARIANT VIOLATED -- the identity-mode-only deterministic ` +
+          `camera seam (e2eSetViewState) was called ${measuredModeViewStateSeamCallCount} time(s) during a ` +
+          `MEASURED run (mode=${evidence.mode}). Amendment 6 restricts this seam to the identity mode only; ` +
+          `every measured cell must drive real synthetic gestures (applyStep). This is a harness/product ` +
+          `defect, not a data result.`
+      );
+    }
 
     if (!control) {
       await page.evaluate(() => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(false));

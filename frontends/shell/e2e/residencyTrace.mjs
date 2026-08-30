@@ -268,6 +268,53 @@ export function percentileNearestRank(sortedAscending, p) {
   return sortedAscending[index];
 }
 
+// ---------------------------------------------------------------------------------------
+// §12 Amendment 6: the instrument-identity mode's own deterministic camera SCRIPT.
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Three programmatic view-state steps, literal world-space (authoritative-CRS) targets and zooms
+ * -- never randomness, never `Date`, matching this module's own top doc comment. Consumed ONLY by
+ * `residency-harness.mjs`'s identity mode (`--wire-identity`), via the DEV-gated `e2eSetViewState`
+ * seam (`WorkingCanvas.tsx`) -- **measured cells never touch this array**; they keep driving
+ * `CAMERA_TRACE_STEPS` through real synthetic gestures (`applyStep`), unchanged.
+ *
+ * **Why this mode exists at all (RESIDENCY-PREREGISTRATION.md §12 Amendment 6).** The identity
+ * guard's ORIGINAL implementation drove real synthetic pointer/wheel gestures -- the same
+ * `CAMERA_TRACE_STEPS` measured cells still use. CDP-driven synthetic-pointer timing jitter
+ * interacting with the shell's own real 120ms pan/zoom debounce
+ * (`VIEWPORT_QUERY_MIN_INTERVAL_MS`) made two ON runs disagree with each other as much as ON vs
+ * OFF -- proven, not assumed, by the committed gate evidence
+ * (`e2e/residency-field-sequence-identity-gate-evidence.json`'s P1b record: `on#1` differed from
+ * `on#2`, the SAME instrument state). Realism is not the property under test in the identity mode,
+ * so Amendment 6 replaces the gesture with an exact, declared camera pose instead.
+ *
+ * **Derivation ("derive from the same bboxes the smoke steps visit," this piece's own
+ * instruction).** These three world-space camera poses are the REAL, observed `viewState.post`
+ * values (`targetX + originX`, `targetY + originY`, `zoom`) a genuine `--smoke` run's own first
+ * three steps (`fit`, `pan-north`, `pan-east`) actually landed on against the same fixture this
+ * mode always opens (`FIXTURE_FILTER_ZONED`) -- captured from
+ * `e2e/out/residency-harness-instrument-on-smoke-1788108725642.json` (P1c, pre-run capture,
+ * 2026-08-30), not invented. Because they are real camera poses a real fit-to-extent and two real
+ * pans actually reached against this fixture, they are guaranteed to intersect its extent (the
+ * `fit` step's own target is the dataset's own bbox centre; the two pans stay within one viewport
+ * step of it). Frozen as LITERAL numbers here -- this mode never recomputes them from a live bbox
+ * at run time.
+ *
+ * **Window-size dependency, disclosed.** Like every `CAMERA_TRACE_STEPS` pan/zoom step (whose own
+ * distances are `box.width`/`box.height`-relative), these literals are only exactly reproducible
+ * against the SAME window dimensions (`src-tauri/tauri.conf.json`'s `app.windows[0]`) the
+ * capturing run used -- not a new fragility this mode introduces, the same standing dependency the
+ * rest of this file already carries.
+ */
+export const IDENTITY_VIEW_STATE_STEPS = Object.freeze(
+  [
+    { id: "identity-fit-equivalent", targetX: 2600900.1915728687, targetY: 1200899.782897822, zoom: -3.486093929686878 },
+    { id: "identity-pan-north-equivalent", targetX: 2600900.1915728687, targetY: 1202804.6635114393, zoom: -3.486093929686878 },
+    { id: "identity-pan-east-equivalent", targetX: 2613808.5590251468, targetY: 1202804.6635114393, zoom: -3.486093929686878 },
+  ].map((step) => Object.freeze(step))
+);
+
 export function abbaInterleave(cellCount, trialsPerCell) {
   if (!Number.isInteger(cellCount) || cellCount < 1) {
     throw new Error(`abbaInterleave: cellCount must be a positive integer, got ${cellCount}`);

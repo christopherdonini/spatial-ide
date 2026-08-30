@@ -897,6 +897,56 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     return () => unregisterE2eHook("capturePixels");
   }, []);
 
+  // E2E TEST SURFACE (dev builds only, e2e/README.md): viewport-residency cut P1c,
+  // RESIDENCY-PREREGISTRATION.md §12 Amendment 6 -- the instrument-identity guard's own
+  // deterministic camera seam. **NEVER reached by a measured cell** -- every measured-cell step
+  // (`residency-harness.mjs`'s own `applyStep`) still drives a real synthetic pointer/wheel gesture
+  // over `.working-canvas`, exactly as P1b left it; this seam exists ONLY for the identity mode's
+  // own literal camera script (`residencyTrace.mjs`'s `IDENTITY_VIEW_STATE_STEPS`), and the driver
+  // asserts that restriction itself via `e2eSetViewStateCallCount` below, never merely by
+  // convention.
+  //
+  // Reuses the EXACT primitives `fitToExtent`/the real interactive `onViewStateChange` handler
+  // already use -- `OffsetFrame.forceRecenter`, deck's own uncontrolled `initialViewState` (this
+  // file's own top doc comment on why `initialViewState`, never `viewState`), and
+  // `onViewportChangedRef` (the SAME choke point a real pan/zoom or "zoom to layer" click reaches,
+  // `App.tsx`'s `onViewportChanged` -> debounced `requestViewport`) -- there is no second, parallel
+  // query-issuing path here, only a different way of producing the camera pose that feeds the SAME
+  // one. Unlike `fitToExtent`, there is no bbox to fit here -- the caller supplies the exact
+  // world-space (authoritative-CRS) target and zoom directly.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    let e2eSetViewStateCallCount = 0;
+
+    async function applyDeterministicE2eViewState(targetX: number, targetY: number, zoom: number): Promise<boolean> {
+      e2eSetViewStateCallCount++;
+      const canvas = canvasElRef.current;
+      const deck = deckRef.current;
+      if (!canvas || !deck) return false;
+      const widthPx = canvas.clientWidth || 1;
+      const heightPx = canvas.clientHeight || 1;
+      const frame = frameRef.current;
+      frame.forceRecenter(targetX, targetY);
+      frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(zoom), RECENTER_BUDGET_PX));
+      traceViewState(0, 0, zoom, frame.originX, frame.originY);
+      // See this file's own doc comment: `initialViewState`, never `viewState`.
+      deck.setProps({ initialViewState: { target: [0, 0, 0], zoom } });
+      render();
+      onViewportChangedRef.current(
+        bboxForFit({ target: [0, 0], zoom, centerX: targetX, centerY: targetY }, frame.originX, frame.originY, widthPx, heightPx)
+      );
+      return true;
+    }
+
+    registerE2eHook("e2eSetViewState", applyDeterministicE2eViewState);
+    registerE2eHook("e2eSetViewStateCallCount", async () => e2eSetViewStateCallCount);
+    return () => {
+      unregisterE2eHook("e2eSetViewState");
+      unregisterE2eHook("e2eSetViewStateCallCount");
+    };
+  }, []);
+
   // M1/M3/M7/S7 (viewport-residency cut P1b): the persistent per-step render-tick hook itself is now
   // `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` on the imperative handle above (see
   // `firstPixelArmedRef`'s own doc comment for the live-verified remount race that moved it there

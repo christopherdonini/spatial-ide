@@ -202,6 +202,26 @@ export interface E2eTestSurface {
    * limitation, `residencyInstrument.ts`'s own `inFlightStreamCount` doc comment). `waitForSettle`
    * for a residency trace step requires BOTH console quiescence AND this reading `0` (§4b's letter). */
   residencyInFlightStreamCount?: () => Promise<number>;
+  /** **DEV-ONLY, IDENTITY-MODE-ONLY E2E TEST SEAM** (viewport-residency cut P1c,
+   * `RESIDENCY-PREREGISTRATION.md` §12 Amendment 6). Moves the camera to an EXACT, caller-supplied
+   * world-space (authoritative-CRS) `(targetX, targetY)` at the given `zoom`, reusing the same
+   * `OffsetFrame.forceRecenter` + uncontrolled `initialViewState` primitives a real "zoom to layer"
+   * click or interactive pan/zoom already drives (`WorkingCanvas.tsx`'s own doc comment on the
+   * effect that registers this) -- there is no second, parallel query-issuing path: the resulting
+   * `viewport_query` goes through the identical `onViewportChanged` -> debounced `requestViewport`
+   * choke point every other camera move reaches. Amendment 6's own fix: the instrument-identity
+   * guard's real-synthetic-gesture camera control could not discriminate instrument effects
+   * (CDP pointer timing jitter racing the shell's own pan/zoom debounce, independent of instrument
+   * state -- the committed gate evidence records the finding); this seam replaces that ONLY for the
+   * identity mode. **NEVER called by a measured cell** -- `e2e/residency-harness.mjs`'s own driver
+   * asserts this (`e2eSetViewStateCallCount` below) and its own `applyStep` never references this
+   * hook. Resolves `false` (moves nothing) if no `WorkingCanvas`/`Deck` instance is mounted. */
+  e2eSetViewState?: (targetX: number, targetY: number, zoom: number) => Promise<boolean>;
+  /** The call counter `e2eSetViewState` above increments on every invocation, for exactly one
+   * reason: letting `e2e/residency-harness.mjs`'s own driver assert, after any MEASURED run, that
+   * this identity-mode-only seam was never touched (Amendment 6's own restriction). Never read by
+   * product code; never reset except by a fresh page load. */
+  e2eSetViewStateCallCount?: () => Promise<number>;
 }
 
 declare global {

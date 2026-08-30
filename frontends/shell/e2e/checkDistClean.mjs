@@ -26,8 +26,11 @@ import { fileURLToPath } from "node:url";
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const DIST_DIR = join(SHELL_DIR, "dist");
 
-// The ten identifiers -- every exported symbol `residencyInstrument.ts`'s DEV-only singleton wiring
-// and pure core class expose. Chosen because each is a distinctive, unlikely-to-collide token (no
+// The twelve identifiers -- every exported symbol `residencyInstrument.ts`'s DEV-only singleton
+// wiring and pure core class expose, PLUS (P1c, RESIDENCY-PREREGISTRATION.md §12 Amendment 6) the
+// two identifiers unique to `WorkingCanvas.tsx`'s own DEV-gated instrument-identity view-state seam
+// (`applyDeterministicE2eViewState`, its call-counter closure variable
+// `e2eSetViewStateCallCount`). Chosen because each is a distinctive, unlikely-to-collide token (no
 // short/common word among them) -- a minifier that actually ran would either delete this dead code
 // entirely (the expected, passing case) or, if it somehow didn't, rename local bindings but NOT
 // arbitrary string literals matching these identifiers that might appear in, say, an unrelated
@@ -43,6 +46,8 @@ const INSTRUMENT_IDENTIFIERS = [
   "enableResidencyInstrument",
   "disableResidencyInstrument",
   "ResidencyInstrumentCore",
+  "applyDeterministicE2eViewState",
+  "e2eSetViewStateCallCount",
 ];
 
 function collectFiles(dir) {

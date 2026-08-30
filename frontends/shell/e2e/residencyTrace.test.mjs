@@ -9,11 +9,13 @@
 // Exits non-zero on any failure, matching this repository's e2e scripts' own exit-code convention.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   abbaInterleave,
   CAMERA_TRACE_STEPS,
   G7_COLD_FIRST_VIEW_MARGIN_PROPOSED,
+  IDENTITY_VIEW_STATE_STEPS,
   isWellFormedSettleCriterion,
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
   percentileNearestRank,
@@ -243,6 +245,51 @@ test("p50/p95/max agree with a hand-worked 10-element example", () => {
 
 test("throws on an empty array rather than returning undefined silently", () => {
   assert.throws(() => percentileNearestRank([], 50));
+});
+
+console.log("");
+console.log("residencyTrace.mjs -- IDENTITY_VIEW_STATE_STEPS (§12 Amendment 6: the instrument-identity mode's deterministic camera script)");
+
+test("has exactly 3 steps (residency-harness.mjs's own FIELD_SEQUENCE_STEP_LIMIT)", () => {
+  assert.equal(IDENTITY_VIEW_STATE_STEPS.length, 3);
+});
+
+test("every step has a non-empty string id and finite targetX/targetY/zoom", () => {
+  for (const step of IDENTITY_VIEW_STATE_STEPS) {
+    assert.equal(typeof step.id, "string");
+    assert.ok(step.id.length > 0);
+    assert.ok(Number.isFinite(step.targetX), `${step.id}: targetX is not finite`);
+    assert.ok(Number.isFinite(step.targetY), `${step.id}: targetY is not finite`);
+    assert.ok(Number.isFinite(step.zoom), `${step.id}: zoom is not finite`);
+  }
+});
+
+test("step ids are unique", () => {
+  const ids = IDENTITY_VIEW_STATE_STEPS.map((s) => s.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("IDENTITY_VIEW_STATE_STEPS and every step are frozen (Object.isFrozen) -- a literal script, not mutable state", () => {
+  assert.ok(Object.isFrozen(IDENTITY_VIEW_STATE_STEPS));
+  for (const step of IDENTITY_VIEW_STATE_STEPS) {
+    assert.ok(Object.isFrozen(step), `step ${step.id} is not frozen`);
+  }
+});
+
+await testAsync(
+  "is a pure, referentially-stable literal -- re-importing this module as a fresh instance yields a deep-equal IDENTITY_VIEW_STATE_STEPS",
+  async () => {
+    const fresh = await import("./residencyTrace.mjs?fresh-instance-check-identity");
+    assert.deepEqual(fresh.IDENTITY_VIEW_STATE_STEPS, IDENTITY_VIEW_STATE_STEPS);
+  }
+);
+
+test("residencyTrace.mjs's own CODE (comments stripped) contains no Math.random/Date.now/`new Date(` -- the identity script (and everything else this module declares) is deterministic data, never derived from a non-deterministic source, matching this module's own top doc comment (which names both tokens IN PROSE, hence the comment-stripping: a literal substring check without it would false-positive on the very sentence disclosing their absence)", () => {
+  const src = readFileSync(new URL("./residencyTrace.mjs", import.meta.url), "utf8");
+  const codeOnly = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  assert.ok(!/Math\.random/.test(codeOnly), "found Math.random in residencyTrace.mjs's own code (outside comments)");
+  assert.ok(!/Date\.now/.test(codeOnly), "found Date.now in residencyTrace.mjs's own code (outside comments)");
+  assert.ok(!/new Date\(/.test(codeOnly), "found `new Date(` in residencyTrace.mjs's own code (outside comments)");
 });
 
 console.log("");
