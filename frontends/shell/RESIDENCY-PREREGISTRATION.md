@@ -483,4 +483,21 @@ gate evidence, which records the non-pass rather than a cherry-picked pass). Res
 identity mode drives a deterministic programmatic camera path** (realism is not the property
 under test in that mode; measured cells keep real gestures); until that mode passes
 OFF-ON-ON-OFF with all pairwise comparisons identical, the identity claim is recorded as
-"not established", never "passed".
+"not established", never "passed". *(Discharged same day: P1d's live run passes all six
+pairwise comparisons with the per-step machinery genuinely armed on every run — the committed
+gate-evidence file holds all three dated attempts.)*
+
+**Amendment 7 (2026-08-30, pre-run.)** §7 gains a watchdog row the instrument's implementation
+made necessary: the first-pixel render-hook arm carries its own self-restore watchdog, **scaled
+to the owning step's declared `settle.timeoutMs`** (never a fixed constant shorter than the
+step's own allowance — the re-review's B5 found a fixed 5 s cap that would have made slow cold
+opens systematically unmeasurable, exactly G7's subject). A watchdog-restored arm records
+`armDisarmedCleanly: false` and the step's first-pixel quantity is honestly absent, never a
+stale number.
+
+**Amendment 8 (2026-08-30, pre-run.)** §6 availability note: client-clock gated quantities
+(first-pixels, frame series) exist **only in instrument-on cells** — the instrument-off control
+cell guards wire behavior, not quantities, and can never produce a gated client-clock figure.
+"Measured twice per cell" is therefore satisfiable for those quantities only across
+instrument-on trials; the control cell's role is the identity guard plus driver-observed wall
+facts. Every evidence file carries a `gatedQuantityAvailability` note stating this.

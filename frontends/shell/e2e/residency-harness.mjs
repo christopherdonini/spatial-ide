@@ -872,7 +872,9 @@ async function main() {
   // forward compatibility only; `--control` overrides it to the literal "control" (this harness's own
   // disclosed reading of M9's three-value field: today's only real axis besides baseline is
   // instrument on/off, and `--control` IS that axis's off state).
-  const arm = control ? "control" : cellArgs.arm;
+  // Re-review suggestion 15: the identity-guard run is neither measurement arm -- labelling it
+  // with parseCellArgs' "baseline" default would let a scorer mistake guard evidence for a cell.
+  const arm = control ? "control" : wireIdentity ? "identity-guard" : cellArgs.arm;
 
   const watchdog = setTimeout(() => {
     console.error("residency-harness: overall watchdog exceeded -- presumed hung, failing loudly");
