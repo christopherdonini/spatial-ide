@@ -36,8 +36,9 @@ export const G7_COLD_FIRST_VIEW_MARGIN_PROPOSED = 1.1;
  * shape changes, so every evidence file can declare exactly which committed-trace definition
  * produced it (`residency-harness.mjs` carries this into `evidence.cell.traceVersion`). "1" is this
  * literal's inception value -- there is no prior version to have bumped from.
+ * "2" (2026-08-31): Amendment 10's step reorder (zoom-to-layer precedes the zoom block).
  */
-export const TRACE_VERSION = "1";
+export const TRACE_VERSION = "2";
 
 /**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4d) -- three grid resolutions, candidate arm only, swept not
@@ -151,6 +152,16 @@ export const CAMERA_TRACE_STEPS = Object.freeze([
     params: { direction: "NE", distanceBasis: "width", distanceMultiplier: Math.SQRT2 },
     settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: SETTLE_PER_STEP_TIMEOUT_MS },
   },
+  // Amendment 10 (2026-08-31): Zoom-to-layer precedes the zoom block -- the dry-run proved the
+  // diagonal pan exits the data field, leaving every zoom to query an empty region (zero batches,
+  // an empty G3 zoom bucket by construction). Zoom-to-layer fits the visited union (data-rich),
+  // so the zooms that follow operate over data. Order only; definitions unchanged.
+  {
+    id: "zoom-to-layer",
+    kind: "zoom-to-layer",
+    params: {},
+    settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: SETTLE_PER_STEP_TIMEOUT_MS },
+  },
   {
     id: "zoom-in-1",
     kind: "zoom",
@@ -173,12 +184,6 @@ export const CAMERA_TRACE_STEPS = Object.freeze([
     id: "zoom-out-1",
     kind: "zoom",
     params: { factor: 0.5, focal: "center" },
-    settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: SETTLE_PER_STEP_TIMEOUT_MS },
-  },
-  {
-    id: "zoom-to-layer",
-    kind: "zoom-to-layer",
-    params: {},
     settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: SETTLE_PER_STEP_TIMEOUT_MS },
   },
 ].map(frozenStep));

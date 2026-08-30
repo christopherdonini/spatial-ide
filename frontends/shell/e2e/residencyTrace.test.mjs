@@ -71,7 +71,7 @@ test("has exactly 11 steps (RESIDENCY-PREREGISTRATION.md §4b)", () => {
   assert.equal(CAMERA_TRACE_STEPS.length, 11);
 });
 
-test("step ids are exactly, and in order: fit, 5 pans, 3 zoom-ins, 1 zoom-out, zoom-to-layer", () => {
+test("step ids are exactly, and in order (amendment 10): fit, 5 pans, zoom-to-layer, 3 zoom-ins, 1 zoom-out", () => {
   assert.deepEqual(
     CAMERA_TRACE_STEPS.map((s) => s.id),
     [
@@ -81,11 +81,11 @@ test("step ids are exactly, and in order: fit, 5 pans, 3 zoom-ins, 1 zoom-out, z
       "pan-south",
       "pan-west",
       "pan-northeast",
+      "zoom-to-layer",
       "zoom-in-1",
       "zoom-in-2",
       "zoom-in-3",
       "zoom-out-1",
-      "zoom-to-layer",
     ]
   );
 });

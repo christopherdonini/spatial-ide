@@ -512,3 +512,13 @@ the 5 GB fixture, 5,000 ms retained on the small fixtures** — mirroring the op
 precedent rather than inventing a new bound. A step that exceeds its scaled bound still
 invalidates the whole trial (§4b unchanged). This value locks with the other
 proposed-pending-sight figures at the baseline run.
+
+**Amendment 10 (2026-08-31, pre-run.)** The full-trace Polygons dry-run showed §4b's step order
+makes the zoom step-class unmeasurable by construction on the scored fixture: the diagonal pan
+exits the data field, so all three zoom-ins and the zoom-out query an empty region (each issued
+exactly one real stream — the gestures and queries work — and each honestly returned zero
+batches, leaving G3's zoom class with no first-pixel samples). Resolution: **the trace's step
+order becomes fit → 5 pans → Zoom-to-layer → 3 zoom-ins → 1 zoom-out** — Zoom-to-layer (which
+fits the visited union, data-rich by construction) precedes the zoom block so zooms operate
+over data. Step definitions, settle criteria, and counts are unchanged; only the order moves.
+No measured cell existed when this amendment was made.
