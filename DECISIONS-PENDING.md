@@ -5,6 +5,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+23. **ADR-027 acceptance — the action console and display truth.** Filed Proposed by the
+    console cut's P6 with your accepted-with-deadline ruling recorded as decision 6; the
+    ADR-022 pattern's operator confirmation is now in: Part J run 2026-08-30, verdict
+    "comprehensible", the class-B fence held on screen (no arguments, no destination path, no
+    copy), and your J6 line — "with the console open you feel like everything you do will be
+    repeatable" — recorded as both the intended effect and the reason the standing header
+    exists. **Three Part J findings to weigh at acceptance:** (a) the console's reflexive
+    view-state rows (its own toggles, panel disclosures) crowd the tail around each action of
+    interest — honest but noisy; a de-emphasis/grouping question; (b) zooming did not visibly
+    produce a viewport_query entry where panning did (open observation, plausibly refill
+    debounce — worth one diagnosis before or at acceptance); (c) J5's refused-entry operator
+    confirmation stayed open (E2E REFUSAL' carries the property). Recommendation: **accept**,
+    with (a) noted as a follow-up question, not a condition, unless you want it binding.
+    Touches on acceptance: ADR-027's Status line + docs/02/README index entries.
+
 22. **Batch sequencing + a deliberately idle cut pipeline (architect-recommended hold).** The
     operator batch is full (Parts H, I, J — a complete session, all against the single pinned
     build `807648f`, pre-filled in the three result logs) and every worthwhile next cut is
@@ -18,6 +33,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     unit tests for the console's two named-unexercised branches; drafting (NOT filing) entry
     9's carrier ADR. **Override available:** say the word if you'd rather have a fourth part
     queued than an idle stretch.
+    **Progress note 2026-08-30: the batch RAN in full (Parts H, I, J — all three result logs
+    written), entry 8 resolved by your live H8b, decision 7's observation is in, ADR-025
+    filed.** The hold's remaining condition is entries 7/9/16 (+ acceptances 3/16/23 and the
+    ADR-022/024 pair at your pace); the next cut — the ADR-011 tiling/LOD slice, opening with
+    its preregistration piece, now aimed by Part H's evidence and PR #15's hover-at-scale
+    question — starts on your word or when those clear.
 
 16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
     admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
@@ -113,7 +134,13 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     the Alpha data doctor's detect→propose→preview→apply territory (docs/05) and stays out.
     Recommendation: **confirm**; the cut proceeds on it. (ADR-016 acceptance is entry 16.)
 
-7. **Part H: the principle-7 publish-prepare gap — pre-fix or declare-and-observe?** The shell's
+7. **[OBSERVATION IN, 2026-08-30 — your ruling now ripe.]** You sat through the "Preparing…"
+   silence twice at 5 GB, and on first contact it read as "it doesn't publish" (Part H result
+   log). The question this entry always carried is now concretely yours: does the gap become a
+   third binding condition on the exposure ruling (thread the CancelToken + a phase label into
+   prepare — small, host-side), or is declare-and-observe's observation enough to schedule the
+   fix as ordinary debt? Original entry follows.
+   **Part H: the principle-7 publish-prepare gap — pre-fix or declare-and-observe?** The shell's
    publish-prepare runs an **uncancellable, progress-less whole-file SHA-256** ("Preparing…" for
    tens of seconds at 5 GB; the only figure on record is a withdrawn 20s) before the approval
    dialog appears — a named docs/01 principle-7 gap, pre-existing and disclosed in the code's own
@@ -125,7 +152,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    is honest only while Part H is imminent — if the batch slips much past a week, the pre-fix
    option gets re-offered rather than "observe" quietly becoming "tolerate".)*
 
-8. **Part H8b — complete a whole-file 5 GB publish to demonstrate the dead-artifact gap?** There
+8. **[RESOLVED 2026-08-30 — you took H8b live and completed it]**: 3.3M rows / 6,636
+   partitions published unwarned, viewer refusal read on screen, artifact deleted after;
+   **ADR-025 filed Proposed with its decision deliberately open** (refuse / warn / stay
+   silent — yours at acceptance, no recommendation recorded). Original entry follows.
+   **Part H8b — complete a whole-file 5 GB publish to demonstrate the dead-artifact gap?** There
    is NO publish-side refusal above the reader's ceilings: a whole-file publish succeeds (~100s,
    5.7 GB written, irreversible) and only the viewer then refuses with ceiling-exceeded — meaning
    the product's hero path can produce an unviewable artifact with no warning (RESULTS finding 2,

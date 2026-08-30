@@ -241,6 +241,9 @@ the manifest's own claim and by an independent reader's decode).
 - **Filtered-subset bundles remain out of reach, by construction.** Publishing the SQL-filtered
   subset would be `bundle_version` 2 — the ADR-021 materialization fence, and a candidate future
   **ADR-025**, which this ADR does not schedule or license. The human's to schedule (QUEUED).
+  *(Numbering correction, 2026-08-30: the ADR-025 number was taken by the publish-above-reader-
+  ceilings filing on Part H8b's evidence; the filtered-subset candidate renumbers when
+  scheduled. The substance of this bullet is unchanged.)*
 - **The dev-only E2E test seam is a named, bounded carve-out** (Decision, above): compiled out of a
   release build, and even through it the grant is minted host-side from the supplied destination —
   but an E2E run through it never exercises the real native picker, which is why the operator's
