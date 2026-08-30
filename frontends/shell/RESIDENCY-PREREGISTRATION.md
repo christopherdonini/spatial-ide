@@ -522,3 +522,12 @@ order becomes fit → 5 pans → Zoom-to-layer → 3 zoom-ins → 1 zoom-out** �
 fits the visited union, data-rich by construction) precedes the zoom block so zooms operate
 over data. Step definitions, settle criteria, and counts are unchanged; only the order moves.
 No measured cell existed when this amendment was made.
+
+**Amendment 11 (2026-08-31 — THE LOCK.)** The human approved all four proposed-pending-sight
+values at the baseline session's start, in their own words: "all four approved, I'm at the
+machine." Locked as of this amendment, before the first measured cell: **G7 cold-first-view
+margin 110%; tile-size sweep 8×8 / 16×16 / 32×32; max-in-flight tile streams 3; per-step
+settle timeout fixture-scaled (60,000 ms on the Polygons class and the 5 GB fixture, 5,000 ms
+on small fixtures).** These figures are no longer proposed anywhere; every "proposed-pending-
+sight" marker above and in the harness constants reads historically from here on. RustDesk was
+verified stopped (process-level, not merely disconnected) before the first cell.
