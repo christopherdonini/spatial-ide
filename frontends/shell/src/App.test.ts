@@ -319,6 +319,9 @@ function fakeCanvasHandle(): WorkingCanvasHandle {
     clearStream: vi.fn(),
     fitToBounds: vi.fn(() => false),
     resetFitForNewGeneration: vi.fn(),
+    getResidentCounts: vi.fn(() => ({ totalResidentVertices: 0, totalResidentFeatures: 0 })),
+    armFirstPixelRenderHook: vi.fn(() => true),
+    disarmFirstPixelRenderHook: vi.fn(() => true),
   };
 }
 
@@ -404,6 +407,9 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
       clearStream: vi.fn(),
       fitToBounds: vi.fn(() => false),
       resetFitForNewGeneration: vi.fn(),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 0, totalResidentFeatures: 0 })),
+    armFirstPixelRenderHook: vi.fn(() => true),
+    disarmFirstPixelRenderHook: vi.fn(() => true),
     };
     const onBatchRows = vi.fn();
     const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });

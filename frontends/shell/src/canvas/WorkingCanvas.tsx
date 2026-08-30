@@ -7,7 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
-import { recordResidencyAfterRender, recordResidencyBatch } from "../instrument/residencyInstrument";
+import { recordResidencyBatch, recordResidencyRenderTick } from "../instrument/residencyInstrument";
 import {
   traceCanvasLifecycle,
   traceLayerUpdate,
@@ -115,6 +115,30 @@ export interface WorkingCanvasHandle {
    * (dataset, filter generation), not (dataset) alone.
    */
   resetFitForNewGeneration(): void;
+  /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
+   * read directly off the same `ResidentSet` `pushBatch`/`clearStream` already maintain -- no new
+   * counting logic, a read-only accessor. Reached only from the DEV-only `residencyEndStep` E2E hook
+   * (`App.tsx`), never from product code. */
+  getResidentCounts(): ResidentCounts;
+  /** M1/M3/M7/S7 (viewport-residency cut P1b): arms a PERSISTENT `onAfterRender` render-tick hook on
+   * THIS instance's `deck`, feeding `recordResidencyRenderTick` on every render observed while armed
+   * -- see this file's own doc comment on `firstPixelArmedRef` for why this is exposed as a METHOD
+   * (reached via `canvasRef.current` from `App.tsx`, which can poll for a live instance) rather than
+   * self-registered inside a mount-scoped effect. Returns `false` (and arms nothing) if `deck` is not
+   * yet initialized on THIS instance -- the caller's own signal to retry. 5s watchdog-restore, same
+   * as `capturePixels`' precedent. */
+  armFirstPixelRenderHook(): boolean;
+  /** S7: disarms the hook `armFirstPixelRenderHook` installed, restoring `onAfterRender` to a real
+   * no-op. Returns `true` iff disarmed BEFORE the 5s watchdog fired (or nothing was ever armed --
+   * vacuously clean), `false` iff the watchdog had already fired and self-restored first. */
+  disarmFirstPixelRenderHook(): boolean;
+}
+
+/** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
+ * `e2e-test-surface.ts`'s hook type can both reference it without duplicating the field list. */
+export interface ResidentCounts {
+  totalResidentVertices: number;
+  totalResidentFeatures: number;
 }
 
 export interface WorkingCanvasProps {
@@ -335,6 +359,25 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * walkthrough finding), reset per stream handle since a superseded stream's batches are dropped
    * but its handle is never reused. */
   const streamStatsRef = useRef(new Map<string, { rows: number; vertices: number }>());
+  /** M7 fix (viewport-residency cut P1b): the persistent per-step `onAfterRender` render-tick hook's
+   * own armed/timeout state, held in REFS (not effect-scoped closure locals, P1's own original
+   * shape) so `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` can be exposed as imperative
+   * handle METHODS, reachable via `canvasRef.current` from `App.tsx`'s own TOP-LEVEL (persists across
+   * every dataset admission, unlike this component) E2E hook registration. **Why this moved out of a
+   * WorkingCanvas-owned `useEffect`, live-verified finding:** the M7 `open-drain` pre-step calls
+   * `residencyArmFirstPixel` BEFORE `openFixture` -- i.e. before ANY `WorkingCanvas` instance has
+   * ever mounted (a truly cold session) or while a PRIOR dataset's soon-to-unmount instance is still
+   * live (a warm re-attach, e.g. this driver attaching to a session `e2e:regression` left running). A
+   * hook registered INSIDE this component's own mount-scoped effect either does not exist yet (cold)
+   * or arms the WRONG, about-to-be-torn-down `deck` instance (warm) -- confirmed live: a smoke run's
+   * `open-drain` row showed `armDisarmedCleanly: true` (something WAS armed) but
+   * `firstPixelReason: "no-paint"` despite 3 batches / 2000 features actually arriving and rendering
+   * -- the arm target was the STALE instance's `deck`, not the new one `openFixture` was about to
+   * create. Exposing these as ref-methods lets `App.tsx`'s hook poll `canvasRef.current` (always the
+   * CURRENTLY mounted instance, or `null`) until a real, live `deck` exists, then arm THAT one. */
+  const firstPixelArmedRef = useRef(false);
+  const firstPixelTimedOutRef = useRef(false);
+  const firstPixelWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The Deck instance is constructed once (empty deps below) and its callbacks close over these
   // props at that moment. Routing every prop through a ref -- read inside the callback, written on
@@ -426,12 +469,29 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       .reduce<AuthoritativeBbox | null>((acc, b) => unionBbox(acc, extentOfBatch(b)), null);
   }
 
+  /** M7 fix's own helpers -- see `firstPixelArmedRef`'s doc comment for why this state lives in refs
+   * reachable from `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` rather than an effect
+   * closure. Never restores `onAfterRender` to `undefined` -- same reason `capturePixels`' own
+   * `restore` doesn't (this file's doc comment on that effect): deck.gl calls
+   * `this.props.onAfterRender(...)` with no null-check once anything has ever set the prop. */
+  function restoreFirstPixelHookToNoop(): void {
+    deckRef.current?.setProps({ onAfterRender: () => {} });
+    firstPixelArmedRef.current = false;
+  }
+
+  function clearFirstPixelWatchdog(): void {
+    if (firstPixelWatchdogRef.current !== null) {
+      clearTimeout(firstPixelWatchdogRef.current);
+      firstPixelWatchdogRef.current = null;
+    }
+  }
+
   useImperativeHandle(
     ref,
     () => ({
       pushBatch(streamHandle, batchSeq, ipcBytes) {
         begin("frame-decode");
-        let batch;
+        let batch: ReturnType<typeof decodeBatch>;
         try {
           batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
         } finally {
@@ -454,6 +514,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           attemptedTotal > MAX_RESIDENT_VERTICES
         );
 
+        // Viewport-residency cut P1b reviewer-gate remediation, M2: `recordResidencyBatch` now fires
+        // on BOTH exit paths below (accepted AND refused), each passing its own `refused` boolean --
+        // a single local closure so the DEV-gate/argument list is written once, not duplicated. Fixes
+        // the P1 defect where a ceiling-refused batch was silently dropped from every counter (the
+        // early `return 0` below used to exit before `recordResidencyBatch` was ever reached).
+        function recordThisBatchForInstrument(refused: boolean): void {
+          if (import.meta.env.DEV) {
+            recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, refused);
+          }
+        }
+
         begin("buffer-build");
         try {
           residentRef.current.addBatch(batch);
@@ -467,6 +538,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
               // "resident features at the moment of refusal" -- rider 1's own definition.
               onResidentCeilingExceededRef.current(streamHandle, residentRef.current.totalResidentFeatures);
             }
+            recordThisBatchForInstrument(true); // M2: decoded-and-refused, counted separately
             return 0; // nothing admitted -- see this method's own doc comment on the interface
           }
           throw e;
@@ -480,9 +552,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // inside that module. `ipcBytes.byteLength` is the exact wire payload size this call
         // decoded, the same value `decodeBatch` was handed above -- never re-derived from
         // `batch.totalVertices` or any other post-decode figure.
-        if (import.meta.env.DEV) {
-          recordResidencyBatch(batch.ids.length, ipcBytes.byteLength);
-        }
+        recordThisBatchForInstrument(false); // M2: decoded-and-accepted
 
         const stats = streamStatsRef.current.get(streamHandle) ?? { rows: 0, vertices: 0 };
         stats.rows += batch.ids.length;
@@ -561,6 +631,43 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       resetFitForNewGeneration() {
         fitAnchorRef.current = null;
         hasAutoFitRef.current = false;
+      },
+
+      getResidentCounts() {
+        return {
+          totalResidentVertices: residentRef.current.totalResidentVertices,
+          totalResidentFeatures: residentRef.current.totalResidentFeatures,
+        };
+      },
+
+      armFirstPixelRenderHook() {
+        const deck = deckRef.current;
+        if (!deck) return false;
+        clearFirstPixelWatchdog();
+        firstPixelTimedOutRef.current = false;
+        firstPixelArmedRef.current = true;
+        deck.setProps({
+          onAfterRender: () => {
+            if (!firstPixelArmedRef.current) return;
+            recordResidencyRenderTick();
+          },
+        });
+        firstPixelWatchdogRef.current = setTimeout(() => {
+          firstPixelWatchdogRef.current = null;
+          firstPixelTimedOutRef.current = true;
+          restoreFirstPixelHookToNoop();
+        }, 5000);
+        return true;
+      },
+
+      disarmFirstPixelRenderHook() {
+        if (!firstPixelArmedRef.current && firstPixelWatchdogRef.current === null) {
+          return !firstPixelTimedOutRef.current;
+        }
+        const disarmedBeforeTimeout = firstPixelWatchdogRef.current !== null;
+        clearFirstPixelWatchdog();
+        restoreFirstPixelHookToNoop();
+        return disarmedBeforeTimeout;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -790,45 +897,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     return () => unregisterE2eHook("capturePixels");
   }, []);
 
-  // E2E TEST SURFACE (dev builds only, viewport-residency cut P1, RESIDENCY-PREREGISTRATION.md
-  // §6): arms a ONE-SHOT `onAfterRender` hook that stamps the residency instrument's first-pixel
-  // timestamp on the very next frame deck actually renders -- REUSES `capturePixels`' own
-  // arm-then-restore-to-a-real-noop pattern (this file's doc comment on that effect), deliberately
-  // NOT its full machinery: no framebuffer read, no `flush()`/`layerManager.updateLayers()` forcing
-  // (this hook waits for the NEXT NATURAL render, exactly what "first pixel after a step begins"
-  // means -- forcing a redraw here would measure this hook's own forced frame, not the real one).
-  //
-  // Registered as an INDEPENDENT `deck.setProps({onAfterRender})` owner, not composed with
-  // `capturePixels` above: this piece's own driver (`e2e/residency-harness.mjs`) never calls
-  // `capturePixels` during a residency trace, so the two hooks never actually contend for deck's one
-  // `onAfterRender` prop in practice -- a known, disclosed limitation (this piece's own report), not
-  // a silent gap: a caller that DID invoke both concurrently would have one hook's arm silently
-  // overwrite the other's, exactly as two overlapping `capturePixels` calls already cannot coexist
-  // (`capturePixels`' own `captureInFlight` guard exists for exactly that single-owner reason).
+  // M1/M3/M7/S7 (viewport-residency cut P1b): the persistent per-step render-tick hook itself is now
+  // `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` on the imperative handle above (see
+  // `firstPixelArmedRef`'s own doc comment for the live-verified remount race that moved it there
+  // from a self-registered E2E hook) -- `App.tsx`'s persistent top-level effect is what registers
+  // `residencyArmFirstPixel`/`residencyDisarmFirstPixel` and proxies to whichever `WorkingCanvas`
+  // instance is CURRENTLY mounted. This unmount cleanup only guards against a leaked watchdog timer
+  // outliving this instance (belt-and-suspenders, matching this file's other `return () => ...`
+  // cleanups) -- `restoreFirstPixelHookToNoop`'s own `deckRef.current?.` guard already makes calling
+  // it after `deck.finalize()` harmless regardless.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
-
-    async function armFirstPixel(): Promise<void> {
-      const deck = deckRef.current;
-      if (!deck) return;
-      let fired = false;
-      // Never restores to `undefined` -- same reason `capturePixels`' own `restore` doesn't: deck.gl
-      // (`@deck.gl/core@9.3.7`'s `_drawLayers`) calls `this.props.onAfterRender(...)` with no
-      // null-check once anything has ever set the prop, so an unset value throws on the very next
-      // render.
-      const restore = () => deck.setProps({ onAfterRender: () => {} });
-      deck.setProps({
-        onAfterRender: () => {
-          if (fired) return;
-          fired = true;
-          restore();
-          recordResidencyAfterRender();
-        },
-      });
-    }
-
-    registerE2eHook("residencyArmFirstPixel", armFirstPixel);
-    return () => unregisterE2eHook("residencyArmFirstPixel");
+    return () => clearFirstPixelWatchdog();
   }, []);
 
   return (

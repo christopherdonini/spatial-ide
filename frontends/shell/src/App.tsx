@@ -18,6 +18,8 @@ import {
   disableResidencyInstrument,
   enableResidencyInstrument,
   endResidencyStep,
+  getResidencyInFlightStreamCount,
+  isResidencyInstrumentEnabled,
   recordResidencyInput,
 } from "./instrument/residencyInstrument";
 import { predicateTextToFilter } from "./filter/predicateInput";
@@ -727,14 +729,24 @@ export default function App() {
     [commitActiveFilter, commitScanState]
   );
 
-  // E2E TEST SURFACE (dev builds only, viewport-residency cut P1, RESIDENCY-PREREGISTRATION.md).
+  // E2E TEST SURFACE (dev builds only, viewport-residency cut P1/P1b, RESIDENCY-PREREGISTRATION.md).
   // Registered ONCE, at the top level -- unlike `capturePixels`/`queryWithFilter` (dataset-scoped,
   // registered inside `WorkingCanvas`/the `[admitted]` effect), a driver legitimately wants the
   // instrument's enable/disable and step boundaries available BEFORE any dataset is admitted: the
-  // trace's own step 1 ("Fit") measures the very first `viewport_query` a dataset open issues.
-  // `residencyMarkInput` reaches `recordResidencyInput` directly (no WorkingCanvas dependency); the
-  // first-pixel arm (`residencyArmFirstPixel`) stays WorkingCanvas-scoped since it needs a live
-  // `Deck` instance, registered separately there.
+  // M7 `open-drain` pre-step measures the very first `viewport_query` a dataset open issues, before
+  // any `WorkingCanvas` has ever mounted. `residencyMarkInput` reaches `recordResidencyInput`
+  // directly (no WorkingCanvas dependency).
+  //
+  // **`residencyArmFirstPixel`/`residencyDisarmFirstPixel` moved HERE from a WorkingCanvas-owned
+  // effect (P1b, M7 fix, live-verified finding).** They now proxy to `canvasRef.current`'s own
+  // `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` methods -- ALWAYS whichever `WorkingCanvas`
+  // instance is CURRENTLY mounted (or none), never a closure captured at some earlier mount. `arm`
+  // POLLS (bounded, 4s, 25ms interval) until a live `deck` exists on that instance: calling it BEFORE
+  // any dataset is ever admitted (the `open-drain` pre-step's own case) previously either found no
+  // hook registered at all (a truly cold session) or armed a STALE, about-to-unmount instance (a warm
+  // re-attach to a session with a dataset already open) -- confirmed live, a smoke run's `open-drain`
+  // row showed `armDisarmedCleanly: true` (something WAS armed) yet `firstPixelReason: "no-paint"`
+  // despite batches genuinely arriving and rendering, because the arm target was the wrong instance.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     registerE2eHook("residencyInstrumentSetEnabled", async (value: boolean) => {
@@ -744,18 +756,49 @@ export default function App() {
         disableResidencyInstrument();
       }
     });
+    // M10 (P1b): the dev-surface readback half of `--control`'s off-ness assertion.
+    registerE2eHook("residencyInstrumentIsEnabled", async () => isResidencyInstrumentEnabled());
     registerE2eHook("residencyBeginStep", async (stepId: string) => {
       beginResidencyStep(stepId);
     });
-    registerE2eHook("residencyEndStep", async () => endResidencyStep());
+    // N4 (P1b, the G6 instrument): merges the pure step snapshot with the CURRENT resident
+    // vertex/feature totals read off `WorkingCanvas` at the same moment (`getResidentCounts`) --
+    // read-only, reached only from this DEV-only hook, never from product code. `canvasRef.current`
+    // is `null` whenever no dataset is admitted (e.g. a step measured before the first `openPath`
+    // resolves), in which case `residentAtEndStep` is honestly `null`, never a fabricated zero.
+    registerE2eHook("residencyEndStep", async () => {
+      const result = endResidencyStep();
+      if (!result) return null;
+      return { ...result, residentAtEndStep: canvasRef.current?.getResidentCounts() ?? null };
+    });
     registerE2eHook("residencyMarkInput", async () => {
       recordResidencyInput();
     });
+    // M6 (P1b): driver-visible in-flight `viewport_query` count -- `waitForSettle` for a residency
+    // trace step reads this alongside console quiescence (§4b's letter).
+    registerE2eHook("residencyInFlightStreamCount", async () => getResidencyInFlightStreamCount());
+    // M7/S7 fix: see this effect's own doc comment above.
+    registerE2eHook("residencyArmFirstPixel", async () => {
+      const deadlineMs = Date.now() + 4000;
+      while (Date.now() < deadlineMs) {
+        if (canvasRef.current?.armFirstPixelRenderHook()) return;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      // Gave up -- no WorkingCanvas/deck ever became available within the bound. An honest no-op,
+      // matching this hook's own "a no-op ... while no WorkingCanvas is mounted" doc comment
+      // (`e2e-test-surface.ts`) -- the caller's own `residencyEndStep` will report `firstPixelReason`
+      // accordingly (never a fabricated stamp).
+    });
+    registerE2eHook("residencyDisarmFirstPixel", async () => canvasRef.current?.disarmFirstPixelRenderHook() ?? true);
     return () => {
       unregisterE2eHook("residencyInstrumentSetEnabled");
+      unregisterE2eHook("residencyInstrumentIsEnabled");
       unregisterE2eHook("residencyBeginStep");
       unregisterE2eHook("residencyEndStep");
       unregisterE2eHook("residencyMarkInput");
+      unregisterE2eHook("residencyInFlightStreamCount");
+      unregisterE2eHook("residencyArmFirstPixel");
+      unregisterE2eHook("residencyDisarmFirstPixel");
     };
   }, []);
 

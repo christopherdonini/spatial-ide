@@ -3,7 +3,7 @@
 
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
-import { recordResidencyStreamIssued } from "../instrument/residencyInstrument";
+import { recordResidencyStreamEnded, recordResidencyStreamIssued } from "../instrument/residencyInstrument";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
@@ -194,6 +194,16 @@ export class ViewportStreamManager {
       onTerminal: (terminal) => {
         if (this.currentStreamHandle === streamHandleAtStart) {
           this.currentStreamHandle = null;
+        }
+        // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
+        // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the
+        // self-cancel-suppression check below -- a self-cancelled stream's terminal is suppressed
+        // from reaching `this.opts.onTerminal`, but it still ENDED, and the driver-visible in-flight
+        // count (§4b's own "zero in-flight viewport_query streams") must reach zero on every
+        // terminal, not only the ones the app's own UI ever hears about. DEV-gated exactly like
+        // `recordResidencyStreamIssued` above.
+        if (import.meta.env.DEV) {
+          recordResidencyStreamEnded();
         }
         // A terminal for a handle this manager itself cancelled (supersede or `cancelStream`) is
         // an expected outcome, not a failure -- even when its `kind` is `ProducerFailed`

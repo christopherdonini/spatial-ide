@@ -22,9 +22,18 @@
  */
 
 import type { ApplyFilterOutcome } from "./App";
+import type { ResidentCounts } from "./canvas/WorkingCanvas";
 import type { ResidencyStepResult } from "./instrument/residencyInstrument";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
 import type { CrsCatalogEntry } from "./skp/crsCatalog";
+
+/** Viewport-residency cut P1b (N4, the G6 instrument): `residencyEndStep`'s real return shape --
+ * the pure `ResidencyStepResult` plus the resident vertex/feature totals read off `WorkingCanvas` at
+ * the same moment, merged by `App.tsx`'s own hook body. `null` when no `WorkingCanvas` is mounted
+ * (no dataset admitted yet -- e.g. a step measured before any `openPath` call ever completes). */
+export interface ResidencyEndStepResult extends ResidencyStepResult {
+  residentAtEndStep: ResidentCounts | null;
+}
 
 export interface PixelRegion {
   /** Fraction of the drawing buffer, 0..1, in WebGL's own `readPixels` origin (bottom-left). */
@@ -162,22 +171,37 @@ export interface E2eTestSurface {
    * legitimately want the instrument on BEFORE a dataset is even opened (the `fit` trace step's own
    * first-pixel timing starts at that step, not at instrument-enable time). */
   residencyInstrumentSetEnabled?: (enabled: boolean) => Promise<void>;
+  /** M10 (P1b): reads the instrument's own runtime `enabled` flag back -- the dev-surface half of
+   * `--control`'s off-ness assertion (`residencyInstrument.ts`'s `isResidencyInstrumentEnabled`). */
+  residencyInstrumentIsEnabled?: () => Promise<boolean>;
   /** Starts a new camera-trace step's counters/timings. A no-op (returns nothing meaningful) unless
    * `residencyInstrumentSetEnabled(true)` was already called. */
   residencyBeginStep?: (stepId: string) => Promise<void>;
-  /** Ends the active step and returns its snapshot -- `null` if the instrument is disabled or no
+  /** Ends the active step and returns its snapshot (P1b, N4: merged with the resident vertex/feature
+   * totals read off `WorkingCanvas` at the same moment) -- `null` if the instrument is disabled or no
    * step was active (`residencyInstrument.ts`'s own `endResidencyStep` doc comment). */
-  residencyEndStep?: () => Promise<ResidencyStepResult | null>;
+  residencyEndStep?: () => Promise<ResidencyEndStepResult | null>;
   /** Marks "an input happened right now" for the input-to-present proxy (§6) -- the driver calls
    * this immediately before dispatching a real pointer/wheel gesture that drives a pan or zoom step,
    * so the NEXT rendered frame's timestamp becomes that gesture's proxy latency
    * (`ResidencyInstrumentCore.recordInput`'s own doc comment). A no-op while disabled. */
   residencyMarkInput?: () => Promise<void>;
-  /** Arms a ONE-SHOT `onAfterRender` hook (`WorkingCanvas.tsx`, reusing `capturePixels`' own
-   * arm/restore pattern) that stamps the active step's first-pixel timestamp on the next frame deck
-   * actually renders. The driver calls this once per step, right after `residencyBeginStep`. A
-   * no-op while the instrument is disabled or no `WorkingCanvas` is mounted. */
+  /** M1/M3/S7 (P1b): arms a PERSISTENT (not one-shot) `onAfterRender` hook (`WorkingCanvas.tsx`,
+   * reusing `capturePixels`' own arm/restore pattern) that feeds `recordResidencyRenderTick` on
+   * EVERY render observed while armed -- both the frame-time series and the first-pixel stamp are
+   * driven by this. The driver calls this once per step, right after `residencyBeginStep`, and
+   * disarms it (`residencyDisarmFirstPixel`) once the step settles. A no-op while the instrument is
+   * disabled or no `WorkingCanvas` is mounted. Self-restores after a 5s watchdog if never disarmed. */
   residencyArmFirstPixel?: () => Promise<void>;
+  /** S7: explicitly disarms the hook `residencyArmFirstPixel` installed, restoring `onAfterRender`
+   * to a real no-op. Resolves `true` iff this call disarmed BEFORE the 5s watchdog fired (a clean
+   * disarm), `false` iff the watchdog had already fired and self-restored first. */
+  residencyDisarmFirstPixel?: () => Promise<boolean>;
+  /** M6 (P1b): the driver-visible, session-wide in-flight `viewport_query` count
+   * (`getResidencyInFlightStreamCount`) -- always `0` while the instrument is disabled (a disclosed
+   * limitation, `residencyInstrument.ts`'s own `inFlightStreamCount` doc comment). `waitForSettle`
+   * for a residency trace step requires BOTH console quiescence AND this reading `0` (§4b's letter). */
+  residencyInFlightStreamCount?: () => Promise<number>;
 }
 
 declare global {

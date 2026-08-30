@@ -16,9 +16,11 @@ import {
   G7_COLD_FIRST_VIEW_MARGIN_PROPOSED,
   isWellFormedSettleCriterion,
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
+  percentileNearestRank,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
   TILE_SIZE_LEVELS_PROPOSED,
+  TRACE_VERSION,
   validateCameraTrace,
 } from "./residencyTrace.mjs";
 
@@ -28,6 +30,23 @@ let failed = 0;
 function test(name, fn) {
   try {
     fn();
+    passed++;
+    console.log(`  ok - ${name}`);
+  } catch (e) {
+    failed++;
+    console.error(`  FAIL - ${name}`);
+    console.error(`    ${e.stack ?? e.message}`);
+  }
+}
+
+/** N3 fix's own async sibling -- `test` above never awaits `fn()`, so an async test body's own
+ * rejection would silently escape as an unhandled rejection rather than being counted as a failure.
+ * Used ONLY where a test genuinely needs `await` (dynamic `import()`, below) -- every other test in
+ * this file stays synchronous via `test` unchanged. Node ESM supports top-level `await`, so callers
+ * `await testAsync(...)` at module scope, keeping this file's overall test order deterministic. */
+async function testAsync(name, fn) {
+  try {
+    await fn();
     passed++;
     console.log(`  ok - ${name}`);
   } catch (e) {
@@ -84,13 +103,36 @@ test("quietMs is 300ms and timeoutMs is 5000ms, per §4b/§7", () => {
   assert.equal(SETTLE_PER_STEP_TIMEOUT_MS, 5_000);
 });
 
-test("the trace is DATA -- calling CAMERA_TRACE_STEPS twice in the same process yields deep-equal, frozen arrays", () => {
-  // `Object.freeze` on the exported array/step objects is this module's own determinism guarantee:
-  // nothing (including a careless driver) can mutate the committed trace out from under a later step.
+test("CAMERA_TRACE_STEPS and every step are frozen (Object.isFrozen) -- nothing, including a careless driver, can mutate the committed trace out from under a later step", () => {
   assert.ok(Object.isFrozen(CAMERA_TRACE_STEPS));
   for (const step of CAMERA_TRACE_STEPS) {
     assert.ok(Object.isFrozen(step), `step ${step.id} is not frozen`);
   }
+});
+
+// N3 (P1b reviewer-gate remediation): the test ABOVE used to be misnamed "calling CAMERA_TRACE_STEPS
+// twice in the same process yields deep-equal, frozen arrays" while its own body never called
+// anything twice and never asserted a deep-equal comparison -- only freeze-ness. Fixed two ways: the
+// test above is renamed to what it actually does, and THIS test genuinely does what the old name
+// claimed -- re-imports this module as a FRESH ESM module instance (a cache-busting query string
+// forces Node's module loader to re-evaluate `residencyTrace.mjs` from scratch, not return the
+// already-cached instance `import` at this file's top already holds) and asserts the two
+// independently-produced `CAMERA_TRACE_STEPS` arrays are deep-equal but NOT the same object
+// reference -- the real "the trace is DATA, not incidentally-shared identity" claim.
+await testAsync(
+  "re-importing this module as a fresh instance yields a deep-equal, but not reference-equal, CAMERA_TRACE_STEPS (N3: the trace is DATA)",
+  async () => {
+    // A query string distinct from the static top-of-file import specifier forces Node's ESM loader
+    // to instantiate a genuinely SEPARATE module record, not return the already-cached one.
+    const fresh = await import("./residencyTrace.mjs?fresh-instance-check");
+    assert.deepEqual(fresh.CAMERA_TRACE_STEPS, CAMERA_TRACE_STEPS);
+    assert.notEqual(fresh.CAMERA_TRACE_STEPS, CAMERA_TRACE_STEPS);
+  }
+);
+
+test("TRACE_VERSION (M9) is a declared, non-empty string literal", () => {
+  assert.equal(typeof TRACE_VERSION, "string");
+  assert.ok(TRACE_VERSION.length > 0);
 });
 
 test("validateCameraTrace flags a malformed trace instead of throwing", () => {
@@ -169,6 +211,38 @@ test("rejects a non-positive-integer cellCount or trialsPerCell rather than sile
   assert.throws(() => abbaInterleave(1, 0));
   assert.throws(() => abbaInterleave(1.5, 1));
   assert.throws(() => abbaInterleave(1, -1));
+});
+
+console.log("");
+console.log("residencyTrace.mjs -- percentileNearestRank (S2: declared, tested percentile convention)");
+
+test("p95 equals the max for every n in [1, 20]", () => {
+  for (let n = 1; n <= 20; n++) {
+    const sorted = Array.from({ length: n }, (_, i) => i); // 0, 1, ..., n-1 -- max is n-1
+    assert.equal(percentileNearestRank(sorted, 95), n - 1, `n=${n}: p95 should equal the max (${n - 1})`);
+  }
+});
+
+test("at n=21, p95 first stops being the max", () => {
+  const sorted = Array.from({ length: 21 }, (_, i) => i); // max is 20
+  assert.equal(percentileNearestRank(sorted, 95), 19); // second-to-last, not 20
+});
+
+test("p50 of a 4-element sorted array: floor(0.5*4)=2 -> index 2", () => {
+  assert.equal(percentileNearestRank([10, 20, 30, 40], 50), 30);
+});
+
+test("p50/p95/max agree with a hand-worked 10-element example", () => {
+  const sorted = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  // floor(0.5*10)=5 -> index 5 -> value 6
+  assert.equal(percentileNearestRank(sorted, 50), 6);
+  // floor(0.95*10)=9 -> index 9 -> value 10 (the max)
+  assert.equal(percentileNearestRank(sorted, 95), 10);
+  assert.equal(percentileNearestRank(sorted, 100), 10);
+});
+
+test("throws on an empty array rather than returning undefined silently", () => {
+  assert.throws(() => percentileNearestRank([], 50));
 });
 
 console.log("");

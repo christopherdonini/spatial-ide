@@ -398,3 +398,91 @@ screen pixel need a tiling/LOD answer, not a bigger E2E zoom budget or a smarter
 picker). This note records the question for that slice's own eventual work, not an attempt to
 answer it here -- P11's own green result is an E2E-harness fix, not evidence the product-UX
 question is closed.
+
+## Residency measurement harness (viewport-residency cut, P1/P1b)
+
+```
+npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate]
+```
+
+`e2e/residency-harness.mjs` -- `RESIDENCY-PREREGISTRATION.md` is this suite's ENTIRE spec (§4b the
+camera trace, §6 instruments/quantities, §7 watchdogs, §8 standing rules). **This piece MEASURES, it
+does not SCORE** -- no G1-G7 verdict anywhere in this file; every evidence file (`e2e/out/residency-
+harness-*.json`, gitignored) is a flat record for a later piece (P2 baseline / P6 tester) to score.
+
+Real synthetic pointer/wheel gestures over `.working-canvas` drive the exact deck.gl controller code
+path a real operator's drag/scroll would (two disclosed approximations: zoom's wheel-delta-to-factor
+mapping is not empirically calibrated to exactly x2, and pan's screen-to-world mapping assumes
+north-is-up in this fixture's stored CRS -- both named in the script's own top comment).
+
+**Modes:** default (instrument-on baseline trial) · `--smoke` (first 3 steps only) · `--control`
+(instrument-off, the §6/§8 control cell -- asserts off-ness unconditionally at run start, M10) ·
+`--wire-identity` (the render-trace field-sequence identity proxy, below). `--attest`/`--cold`/
+`--warm`/`--arm` declare M9's own cell-metadata fields (machine attestation, cache state, baseline vs
+candidate); every evidence file also carries `buildCommit` (git rev-parse at run start),
+`fixtureSha256` (hashed at start AND end, mismatch recorded), `traceVersion`
+(`residencyTrace.mjs`'s own literal), and `buildClass` (a constant: `"vite-dev (tauri dev; DEV-gated
+hooks; unminified client)"`, M13).
+
+**M7 -- the `open-drain` pre-step.** Before step 1 ("fit") ever runs, this driver measures the
+dataset OPEN's own natural query + first-batch paint (G7's real "cold first view" subject) as its own
+row, then drains (waits for in-flight===0 + settle) before continuing. **Reported observation, not
+resolved here (for the custodian's amendment):** §4b step 1's own text describes fitting "from a
+cold, empty resident set" -- by the time step 1 actually runs, `open-drain` has already populated the
+resident set once, so step 1's own precondition is not literally met by this trace as currently
+sequenced.
+
+**M6 -- settle requires BOTH console quiescence AND in-flight===0**, §4b's own letter
+(`waitForSettleWithInFlight`), not console quiescence alone. **Disclosed limitation:** the in-flight
+counter is gated by the residency instrument's own `enabled` flag (S3, no-op when off) -- in
+`--control` mode it always reads 0, so a control-arm step's settle still rests on console quiescence
+alone.
+
+**M1/M3 -- first-pixel and frame-time series.** The old `requestAnimationFrame` loop is gone; a
+persistent per-step `onAfterRender` hook (`WorkingCanvasHandle.armFirstPixelRenderHook`/
+`disarmFirstPixelRenderHook`, proxied through a retrying `App.tsx`-level E2E hook so it can find
+whichever `WorkingCanvas` instance is CURRENTLY mounted -- or none yet, for `open-drain` -- rather
+than a stale one) feeds both the real frame-time series and the first-pixel stamp, which only fires
+once a step's first ACCEPTED batch has ALSO arrived (never a bare gesture repaint). S7: 5s
+timeout-restore + explicit disarm, boolean recorded (`armDisarmedCleanly`).
+
+**M8 -- the diagonal pan's realized magnitude.** `pan-northeast`'s declared total is `distance =
+width * sqrt(2)` (Amendment 1's width basis); each SCREEN-axis component is `distance / sqrt(2)` (NOT
+`distance` on both axes, which would realize `distance * sqrt(2)` -- doubly diagonal). See
+`applyStep`'s own doc comment in `residency-harness.mjs`.
+
+**S1 -- pre/post view-state + realized displacement**, captured from the always-on `traceViewState`
+render-trace line (world units, origin-corrected across any recenter) per step, with a genuine
+assertion (not just a recording): a settled `pan` step realizing exactly zero displacement is flagged
+`"FAIL: zero realized displacement for a settled pan step"`. A pan whose declared screen distance
+would exceed the canvas's own footprint splits into multiple MOVE LEGS within a single continuous
+mousedown -> mouseup (never released mid-pan -- releasing between legs was found, live, to risk an
+extra premature debounced query; see the field-sequence identity note below).
+
+### Render-trace field-sequence identity (proxy) -- `--wire-identity` (M11, renamed from P1's
+"wire-bytes-identity assertion")
+
+`RESIDENCY-PREREGISTRATION.md` §6/§8 asks for the bytes ACTUALLY ON THE WIRE to be identical
+instrument-on vs instrument-off. This harness has no raw-byte capture (a disclosed upgrade path, not
+built here) -- what it actually proves is narrower, named for exactly that: a PROXY over the ordered
+sequence of typed values three always-on render-trace lines carry (`viewport_query`, `stream-issued`
+-- folded in per S6, `dataset`/`streamHandle` normalized out -- and `batch`), run **OFF-ON-ON-OFF,
+interleaved (S4)**, every pairwise comparison recorded, not just one ON-vs-OFF pair. **Explicitly
+excluded** (named, not silently absorbed): the `residency` push/clear lines (canvas-side bookkeeping,
+not wire content), and two REQUEST fields render-trace never logs at all -- `limit` and `filter`.
+
+**Live-verified findings from running this repeatedly while building it (P1b):** a genuine
+self-inflicted bug (separate mousedown/mouseup per pan leg, fixed to one continuous press) and a
+one-time "first synthetic gesture of a fresh session" warm-up effect (absorbed by an unmeasured
+warm-up run before the four measured runs) were found and fixed. A RESIDUAL source of run-to-run
+non-determinism remains, understood and disclosed: real CDP/Playwright timing jitter can
+occasionally let an intermediate view-state settle for >=120ms mid-drag, firing one extra premature
+debounced `viewport_query` -- confirmed to be unrelated to instrument state (two `on` runs have been
+observed to disagree with EACH OTHER while three of four runs spanning both states agreed exactly).
+The committed gate artifact below documents this finding directly rather than presenting a
+cherry-picked clean pass.
+
+**Committed gate artifact (S11):** `e2e/residency-field-sequence-identity-gate-evidence.json` -- a
+small, committed (NOT gitignored `out/`) JSON capturing one real `--wire-identity` run verbatim, with
+an explicit `_honest_result` block naming the literal FAIL alongside why the underlying claim
+("the instrument does not perturb the wire") is still supported by that same run's own evidence.

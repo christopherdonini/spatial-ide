@@ -28,6 +28,14 @@
 export const G7_COLD_FIRST_VIEW_MARGIN_PROPOSED = 1.1;
 
 /**
+ * M9 (P1b reviewer-gate remediation): a literal, bumped whenever this module's own trace/interleave
+ * shape changes, so every evidence file can declare exactly which committed-trace definition
+ * produced it (`residency-harness.mjs` carries this into `evidence.cell.traceVersion`). "1" is this
+ * literal's inception value -- there is no prior version to have bumped from.
+ */
+export const TRACE_VERSION = "1";
+
+/**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4d) -- three grid resolutions, candidate arm only, swept not
  * chosen. Named here for the same reason as `G7_COLD_FIRST_VIEW_MARGIN_PROPOSED` above; this piece's
  * own driver never issues a tile-keyed query (the tile concept arrives in P3, §9), so this constant
@@ -224,6 +232,42 @@ export function validateCameraTrace(steps) {
  * `cellCount > 1` (baseline appears once per candidate block, `cellCount - 1` blocks), or
  * `trialsPerCell` long for `cellCount === 1` (nothing to interleave against).
  */
+// ---------------------------------------------------------------------------------------
+// S2 (P1b reviewer-gate remediation): the percentile convention, declared and unit-tested here
+// rather than left as an undocumented formula inline in `residency-harness.mjs`.
+// ---------------------------------------------------------------------------------------
+
+/**
+ * S2: the NEAREST-RANK percentile convention this repository's own driver uses for every p50/p95
+ * figure it reports (§6: "p50/p95 are the driver's own job, never computed here" -- this module is
+ * the ONE declared, tested definition every such computation goes through). `sortedAscending` must
+ * already be sorted ascending (this function does not sort -- the caller's own sort is the one
+ * source of truth for what "ascending" means for its particular value type, e.g. numeric vs.
+ * lexicographic). `p` is 0..100.
+ *
+ * **Definition:** `index = floor((p / 100) * n)`, clamped to `[0, n - 1]`, 0-indexed into
+ * `sortedAscending` -- a floor-based nearest-rank variant, not the textbook ceil-based one (the two
+ * agree everywhere except exactly at ranks landing on an integer boundary, where floor's own
+ * clamping keeps the result inside the array rather than one item past a would-be `n`-th rank).
+ *
+ * **Declared property: p95 equals the max for every `n` in `[1, 20]`.** `floor(0.95 * n) === n - 1`
+ * (the last index) for every integer `n` from 1 through 20 inclusive -- e.g. `n=20`:
+ * `floor(0.95*20) = floor(19.0) = 19`, the last index of a 20-element array. At `n=21`,
+ * `floor(0.95*21) = floor(19.95) = 19`, the SECOND-to-last index of a 21-element array -- the first
+ * `n` where p95 stops being the max. This is exactly the shape `kernel/IMPORT-LAYOUT-
+ * PREREGISTRATION.md`-style preregistrations elsewhere in this repository declare for small-`n`
+ * percentiles, restated here as a tested property rather than an assumed one (`residencyTrace.test
+ * .mjs`'s own "p95 is max for n<=20" test).
+ */
+export function percentileNearestRank(sortedAscending, p) {
+  if (!Array.isArray(sortedAscending) || sortedAscending.length === 0) {
+    throw new Error("percentileNearestRank: sortedAscending must be a non-empty array");
+  }
+  const n = sortedAscending.length;
+  const index = Math.min(n - 1, Math.max(0, Math.floor((p / 100) * n)));
+  return sortedAscending[index];
+}
+
 export function abbaInterleave(cellCount, trialsPerCell) {
   if (!Number.isInteger(cellCount) || cellCount < 1) {
     throw new Error(`abbaInterleave: cellCount must be a positive integer, got ${cellCount}`);
