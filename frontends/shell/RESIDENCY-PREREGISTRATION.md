@@ -440,4 +440,10 @@ the human's, on this evidence, per C4.
 
 ## 12. Amendments
 
-*(none)*
+**Amendment 1 (2026-08-30, pre-run — before any measured cell exists).** §4b step 6's phrase
+"√2 × the pan distance above" is ambiguous between step 2's (viewport-height) and step 5's
+(viewport-width) basis. Resolved: **step 5's width basis**, as implemented and disclosed inline
+in `e2e/residencyTrace.mjs` (the P1 harness worker found the ambiguity and reported it rather
+than amending this document — this amendment records the resolution so the committed trace and
+this preregistration agree before the first measured run). No run had occurred when this
+amendment was made; no measured quantity is affected.
