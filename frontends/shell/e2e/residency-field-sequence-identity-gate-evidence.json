@@ -1,8 +1,8 @@
 {
   "_gate_artifact": "viewport-residency cut -- render-trace field-sequence identity (proxy) evidence, committed under e2e/ (NOT e2e/out/, which is gitignored) so the gate's claim has a real, checked-in artifact behind it (P1b's own S11 instruction, still followed here).",
   "_produced_by": "npm run e2e:residency-harness -- --wire-identity, a real run against the live app (frontends/shell/e2e/residency-harness.mjs), captured verbatim (trimmed of nothing but this file's own JSON formatting) -- not hand-edited.",
-  "_run_command": "node e2e/residency-harness.mjs --wire-identity",
-  "_current_status": "PASS as of the P1d attempt below (2026-08-30T18:46:57.417Z) -- all 6 pairwise comparisons across OFF-ON-ON-OFF are byte-sequence-identical, with the REAL per-step machinery (residencyBeginStep -> arm -> settle -> disarm -> residencyEndStep) actually exercised in both ON and OFF runs (P1d B3 fix -- the P1c attempt below PASSED without ever calling any of these, an earlier-discovered vacuous identity proof) AND with a third camera pose that genuinely delivers data (P1d suggestion 14 -- the original identity-pan-east-equivalent pose returned zero rows against this fixture in every observed run, replaced with identity-zoom-in-equivalent). This supersedes the P1c record as the file's current status; P1b and P1c are kept below as history, per this piece's own instruction ('keep the old record inside the file as history -- an array of dated attempts'), never deleted.",
+  "_run_command": "node e2e/residency-harness.mjs --wire-identity (baseline arm) AND node e2e/residency-harness.mjs --wire-identity --arm candidate (candidate arm, P3i-b B4: two separate process launches, not one run)",
+  "_current_status": "PASS for BOTH arms as of the P3i-b attempt below (2026-08-31T, both sub-results) -- baseline's own 6 pairwise comparisons are byte-sequence-identical (unchanged from P1d). The candidate arm's own 6 pairwise comparisons are ALSO byte-sequence-identical, but this PASS is DISCLOSED AS VACUOUS: every one of the candidate arm's 4 runs observed ZERO field-sequence-relevant render-trace lines (viewport_query/stream-issued/batch) -- tileViewportStreamManager.ts/candidateArmSession.ts never call traceViewportQuery/traceStreamIssued at all (only viewportStreamManager.ts, baseline's own manager, does), a pre-existing product-code gap out of this piece's own instrument+harness scope to fix. Real tile traffic WAS confirmed independently (tilesRequested=767, duplicatesDropped=1252 across the two ON runs, via a NEW counter-based coverage check this piece added specifically because the field-sequence proxy could not see it) -- so the candidate arm's cycle genuinely ran and genuinely exercised TileViewportStreamManager/candidateArmSession.ts/WorkingCanvas.pushTileBatch, but the WIRE-IDENTITY comparison itself proves nothing for that arm today (two empty sequences trivially match). This supersedes the P1d record as the file's current status for BASELINE; there is no PRIOR candidate-arm record to supersede (P3i-b is the first piece to run this check under the candidate arm at all). P1b/P1c/P1d are kept below as history, per this piece's own instruction ('keep the old record inside the file as history -- an array of dated attempts'), never deleted.",
   "attempts": [
     {
       "_piece": "P1b (reviewer-gate remediation, M11/S11)",
@@ -228,6 +228,81 @@
           { "event": "batch", "rows": 7, "vertices": 83, "cumulativeRows": 1305, "cumulativeVertices": 15684 }
         ],
         "evidence_file": "e2e/out/residency-harness-wire-identity-1788115645472.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
+      }
+    },
+    {
+      "_piece": "P3i-b (instrument mini-review remediation, B4: the identity guard extended to run under BOTH residency arms, not baseline only)",
+      "_capturedAt": "2026-08-31T00:00:00.000Z",
+      "_buildCommit": "37af344b164b123b1812afcfea1902713345838f",
+      "_camera_control_mechanism": "IDENTITY_VIEW_STATE_STEPS via the DEV-gated e2eSetViewState seam, unchanged from P1d -- B4's own doc comment: this seam is arm-agnostic (a literal camera pose feeds the SAME onViewportChangedRef choke point either arm's own manager is subscribed to), so no new camera script was needed for the candidate arm.",
+      "_mechanism_note": "Run as TWO SEPARATE process launches (node e2e/residency-harness.mjs --wire-identity for baseline, then --wire-identity --arm candidate for candidate), reusing the SAME F2 fresh-launch discipline and the SAME setResidencyArm('candidate') arm-switch block main() already runs for the plain measured-cell path, before either run's own first openFixture call -- NOT an in-process page.reload() (residencyArm.ts's own setResidencyArm refuses a change while a dataset stays open; this piece found no lower-risk, already-precedented way to force a genuine close-without-reopen from this driver short of a full CDP-attached page reload, which has no precedent anywhere in this harness suite). See runFieldSequenceIdentityCheck's own doc comment (residency-harness.mjs) for the full account.",
+      "_honest_result": {
+        "literal_check_result": "PASS for both arms -- baseline's own 6 pairwise comparisons AND candidate's own 6 pairwise comparisons are each byte-sequence-identical across their own OFF-ON-ON-OFF cycle.",
+        "baseline_unchanged_from_P1d": "Baseline's own result is byte-for-byte the same shape as the P1d record above (same 18-line all_four_runs_identical_sequence, same instrumentEnabledReadback:false, same fixture) -- re-run live under this piece's own build commit to confirm the instrument mini-review's own fixes (B1/B2/S5/S6/S7, the enableResidencyInstrument -> isInstrumentedBuild() swap) did not perturb baseline's own wire behavior.",
+        "candidate_result_is_a_disclosed_vacuous_pass_not_loosened_and_not_hidden": "Every one of the candidate arm's 4 runs (off#0, on#1, on#2, off#3) observed ZERO field-sequence-relevant render-trace lines (FIELD_SEQUENCE_EVENTS: viewport_query/stream-issued/batch) -- 'PASS' here only proves four empty sequences matched each other, not that the wire is unperturbed by the instrument for this arm. Root cause (code-read, live-confirmed by the zero-line observation itself): tileViewportStreamManager.ts and candidateArmSession.ts never call traceViewportQuery/traceStreamIssued at all -- only viewportStreamManager.ts (baseline's own manager) does; the candidate arm's own console-visible trace is a DIFFERENT event (WorkingCanvas.tsx's traceTileIngest), which FIELD_SEQUENCE_EVENTS does not include. This is a PRE-EXISTING PRODUCT-CODE gap (P3w's own scope, not this piece's instrument+harness boundary) -- not fixed here, per this piece's own do-not-touch/scope discipline; disclosed instead, loudly, both in the harness's own console output (a VACUOUS PASS WARNING line) and in this evidence file's own fieldSequenceProxyVacuousForThisArm:true field below. Per this piece's own instruction ('if the candidate arm's cycle FAILS identity, capture the diff and report -- do not loosen'): this is not a FAIL, so nothing was loosened to force a pass -- but a vacuous pass is exactly the kind of finding that instruction's own spirit (report, do not paper over) requires surfacing just as loudly as a real failure would be.",
+        "candidate_coverage_confirmed_independently_of_the_vacuous_field_sequence_proxy": "B4 also required confirming the candidate cycle actually exercised TileViewportStreamManager.onBatch (tileViewportStreamManager.ts:355), candidateArmSession.ts's own countTileStreamIssuedOnce (:144) and untiled-look onBatch sink (:234), and WorkingCanvas.pushTileBatch (:846/:874) -- done via a NEW counter-based check this piece added (runShortTraceForFieldSequence's own per-run tileCounters, summed across the two ON runs only), independent of the vacuous field-sequence proxy above. Result: tilesRequested=767, duplicatesDropped=1252, evictionsApplied=0 across the two ON runs -- real, non-zero tile-keyed traffic, confirming the candidate cycle genuinely ran through the candidate arm's own data path (duplicatesDropped>0 in particular can only come from WorkingCanvas.pushTileBatch's own outcome.duplicatesDropped, i.e. decode+ingest genuinely happened, not merely planning-time issuance)."
+      },
+      "baseline": {
+        "cell": {
+          "arm": "identity-guard(baseline)",
+          "tileSize": null,
+          "buildCommit": "37af344b164b123b1812afcfea1902713345838f",
+          "fixturePath": "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet",
+          "fixtureSha256": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "fixtureSha256AtEnd": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "fixtureHashMatchedAcrossRun": true,
+          "coldOrWarm": "warm",
+          "traceVersion": "2",
+          "instrumentEnabledReadback": false,
+          "buildClass": "vite-dev (tauri dev; DEV-gated hooks; unminified client)"
+        },
+        "fieldSequenceIdentity": {
+          "arm": "baseline",
+          "identical": true,
+          "order": ["off", "on", "on", "off"],
+          "comparisons": [
+            { "a": "off#0", "b": "on#1", "identical": true },
+            { "a": "off#0", "b": "on#2", "identical": true },
+            { "a": "off#0", "b": "off#3", "identical": true },
+            { "a": "on#1", "b": "on#2", "identical": true },
+            { "a": "on#1", "b": "off#3", "identical": true },
+            { "a": "on#2", "b": "off#3", "identical": true }
+          ],
+          "sequenceLengthPerRun": [18, 18, 18, 18],
+          "evidence_file": "e2e/out/residency-harness-wire-identity-1788162555822.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
+        }
+      },
+      "candidate": {
+        "cell": {
+          "arm": "identity-guard(candidate)",
+          "tileSize": null,
+          "buildCommit": "37af344b164b123b1812afcfea1902713345838f",
+          "fixturePath": "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet",
+          "fixtureSha256": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "fixtureSha256AtEnd": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "fixtureHashMatchedAcrossRun": true,
+          "coldOrWarm": "warm",
+          "traceVersion": "2",
+          "instrumentEnabledReadback": false,
+          "buildClass": "vite-dev (tauri dev; DEV-gated hooks; unminified client)"
+        },
+        "fieldSequenceIdentity": {
+          "arm": "candidate",
+          "identical": true,
+          "fieldSequenceProxyVacuousForThisArm": true,
+          "order": ["off", "on", "on", "off"],
+          "comparisons": [
+            { "a": "off#0", "b": "on#1", "identical": true },
+            { "a": "off#0", "b": "on#2", "identical": true },
+            { "a": "off#0", "b": "off#3", "identical": true },
+            { "a": "on#1", "b": "on#2", "identical": true },
+            { "a": "on#1", "b": "off#3", "identical": true },
+            { "a": "on#2", "b": "off#3", "identical": true }
+          ],
+          "sequenceLengthPerRun": [0, 0, 0, 0],
+          "candidateCountersObservedAcrossOnRuns": { "tilesRequested": 767, "duplicatesDropped": 1252, "evictionsApplied": 0 },
+          "evidence_file": "e2e/out/residency-harness-wire-identity-1788162620373.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
+        }
       }
     }
   ]

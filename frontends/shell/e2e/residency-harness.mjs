@@ -41,6 +41,15 @@
 // `main()`'s own driver assertion (search `MEASURED-MODE VIEW-STATE SEAM ASSERTION` below) fails
 // loudly if a measured run's own call counter is ever non-zero.
 //
+// **P3i-b B4 (instrument mini-review): the identity guard now covers BOTH residency arms, not
+// baseline only.** `--wire-identity --arm candidate` runs the identical OFF-ON-ON-OFF cycle under
+// the candidate arm (`setResidencyArm("candidate")`, `main()`'s own arm-switch block, before this
+// run's first `openFixture` call) -- `IDENTITY_VIEW_STATE_STEPS` itself is unchanged and
+// arm-agnostic (a literal camera pose applies identically regardless of which manager is planning
+// queries underneath it). Run as a SEPARATE process/launch from the baseline check (`node
+// residency-harness.mjs --wire-identity` for baseline, `... --wire-identity --arm candidate` for
+// candidate) -- see `runFieldSequenceIdentityCheck`'s own doc comment for why.
+//
 // **Settle criterion (P1b, M6): BOTH console quiescence AND in-flight === 0 (§4b's own letter --
 // "zero in-flight viewport_query streams remain").** P1's own version of this driver used console
 // quiescence ALONE as a proxy for both halves of §4b's criterion; `waitForSettleWithInFlight` below
@@ -120,6 +129,19 @@ const INPUT_TO_PRESENT_PROXY_DIVERGENCE = {
     "pointer/keyboard event timestamp (residencyMarkInput, called by this driver immediately before dispatching a synthetic gesture) -> the NEXT deck.gl onAfterRender fire observed while WorkingCanvas.tsx's per-step hook is armed (residencyArmFirstPixel/residencyDisarmFirstPixel window only, not the app's whole lifetime)",
   divergence:
     "deck.gl's onAfterRender fires once its WebGL draw call issues; the browser's own compositor may actually PRESENT the resulting pixels on a later frame boundary than this timestamp reflects. This proxy is therefore closer to 'issue the GPU draw call' than to a true browser compositor-present event, and is only observed inside the driver-controlled arm/disarm window, not continuously.",
+};
+
+// P3i-b B3 (instrument mini-review): a sibling evidence constant to INPUT_TO_PRESENT_PROXY_DIVERGENCE
+// above -- the P3i segments (`queryToFirstByteMs`/`firstByteToDecodedMs`/`decodedToPaintedMs`, every
+// row's own `segments` field, `formatSegmentsSummary` above) are ALSO a defined proxy, not a true
+// wire-level measurement, and B2's mixed-batch finding is a real caveat on how to read them --
+// disclosed here as its own top-level evidence constant rather than only living in code comments,
+// mirroring how S13's own divergence is surfaced.
+const SEGMENTS_PROXY_DIVERGENCE = {
+  first_byte_hook:
+    "sink.onBatch (viewportStreamManager.ts / tileViewportStreamManager.ts / candidateArmSession.ts's own untiled-look sink) -- the earliest client-observable moment for a batch's own data-plane bytes, BEFORE decode. This is a FULLY-RECEIVED message handed up by this codebase's transport layer in one call, not a true first-TCP-byte timestamp -- RESIDENCY-PREREGISTRATION.md §12 Amendment 15 says 'first data-plane bytes'; this is the defined proxy for that, per residencyInstrument.ts's own recordBatchArrived doc comment (no lower-level hook this shell can observe).",
+  mixed_batch_caveat:
+    "queryToFirstByteMs/firstByteToDecodedMs key on the step's FIRST batch to arrive, any accept/refuse fate; decodedToPaintedMs/firstPixelMs key on the step's FIRST ACCEPTED batch (residencyInstrument.ts's own P3i top doc comment). When those are different physical batches -- the step's first batch was refused, a LATER batch is the first accepted one -- the three spans still telescope to exactly firstPixelMs (same clock, shared endpoints; structural, not merely common-case, per that file's own B1 fix), but decodedToPaintedMs silently absorbs the accepted batch's own transport+decode time, mislabeled as pure paint time. `segments.segmentsSpanSingleBatch` is `false` exactly in this case -- see formatSegmentsSummary's own 'segments(mixed)' marker, printed beside the row this happened on.",
 };
 
 function sleep(ms) {
@@ -576,6 +598,8 @@ function frameTimeStatsMs(frameTimestamps, truncated) {
 // P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): a compact one-line rendering of a row's own
 // `segments` field for the console summary -- no scoring, purely a print-time convenience so a
 // human scanning the summary does not have to open the evidence JSON to see the split.
+// P3i-b B3: see `SEGMENTS_PROXY_DIVERGENCE` below for the segments' own defined-proxy disclosure
+// (the `sink.onBatch` first-byte hook + B2's mixed-batch caveat) this field name is shorthand for.
 // ---------------------------------------------------------------------------------------
 
 function formatOneSegment(ms, reason) {
@@ -584,13 +608,21 @@ function formatOneSegment(ms, reason) {
 
 /** `row.segments` is `undefined` when `residencyEndStep` itself was never called (hooks off/no
  * result) -- printed plainly rather than three "n/a" fields that would misleadingly suggest the
- * spans were measured and simply absent. */
+ * spans were measured and simply absent. P3i-b B2: appends a `segments(mixed)` marker when
+ * `segmentsSpanSingleBatch === false` (residencyInstrument.ts's own B2 field) -- the step's first
+ * ACCEPTED batch was NOT its first batch overall, so `decodedToPaintedMs` above silently absorbs a
+ * later batch's own transport+decode time, mislabeled as pure paint (see `SEGMENTS_PROXY_DIVERGENCE`
+ * below for the full account). Absent (no marker) when `segmentsSpanSingleBatch` is `true` or
+ * `undefined` (an older evidence shape, or a step where `firstBatchArrived` never armed at all --
+ * nothing to mislabel). */
 function formatSegmentsSummary(segments) {
   if (!segments) return "segments=(instrument off)";
+  const mixedMarker = segments.segmentsSpanSingleBatch === false ? " segments(mixed)" : "";
   return (
     `segments=byte=${formatOneSegment(segments.queryToFirstByteMs, segments.queryToFirstByteReason)}` +
     ` decode=${formatOneSegment(segments.firstByteToDecodedMs, segments.firstByteToDecodedReason)}` +
-    ` paint=${formatOneSegment(segments.decodedToPaintedMs, segments.decodedToPaintedReason)}`
+    ` paint=${formatOneSegment(segments.decodedToPaintedMs, segments.decodedToPaintedReason)}` +
+    mixedMarker
   );
 }
 
@@ -769,7 +801,10 @@ async function measureOneStep(
     // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the three
     // per-step sub-spans, REPORTED-BESIDE `firstPixelMs` above, never gated -- `undefined` (not a
     // fabricated null) whenever `residencyEndStep` itself was never called (hooks off/no result),
-    // mirroring `firstPixelMs`'s own `undefined`-vs-`null` distinction on this same row.
+    // mirroring `firstPixelMs`'s own `undefined`-vs-`null` distinction on this same row. A DEFINED
+    // PROXY, not a wire-level measurement -- see `SEGMENTS_PROXY_DIVERGENCE` (this file's own top
+    // constant) for the first-byte hook's own disclosure and B2's mixed-batch caveat, which
+    // `segmentsSpanSingleBatch` below names per-row (P3i-b B2).
     segments: result
       ? {
           queryToFirstByteMs: result.queryToFirstByteMs,
@@ -778,6 +813,7 @@ async function measureOneStep(
           firstByteToDecodedReason: result.firstByteToDecodedReason,
           decodedToPaintedMs: result.decodedToPaintedMs,
           decodedToPaintedReason: result.decodedToPaintedReason,
+          segmentsSpanSingleBatch: result.segmentsSpanSingleBatch,
         }
       : undefined,
     frameTimeMs: frameStats,
@@ -966,22 +1002,38 @@ async function applyIdentityViewStateStep(page, step) {
  * view-state capture is new to this path as of this fix, and its post-snapshot would otherwise race
  * the separate `view-state` listener's own async `jsonValue()` resolution (suggestion 11). The
  * fixture-open itself is wrapped the same way, as an `identity-open` step, for the same reason
- * `open-drain` wraps the real trial's own fixture-open -- not merely the three camera-pose steps. */
+ * `open-drain` wraps the real trial's own fixture-open -- not merely the three camera-pose steps.
+ *
+ * **P3i-b B4: also accumulates this run's own candidate-arm-only counters
+ * (`tilesRequested`/`duplicatesDropped`/`evictionsApplied`).** Always `{0,0,0}` for the baseline arm
+ * (those counters are candidate-only by construction, `ResidencyStepCounters`'s own doc comment) --
+ * returned alongside the field sequence so the candidate arm's own identity-check caller can confirm
+ * its ON runs genuinely exercised `TileViewportStreamManager`/`candidateArmSession.ts`'s/
+ * `WorkingCanvas.pushTileBatch`'s own tile-keyed recorder calls, not merely that `setResidencyArm
+ * ("candidate")` was set with no tile traffic ever actually observed. */
 async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
   const listener = attachRenderTraceValueListener(page, FIELD_SEQUENCE_EVENTS);
   const viewStateListener = attachRenderTraceValueListener(page, ["view-state"]);
+  const tileCounters = { tilesRequested: 0, duplicatesDropped: 0, evictionsApplied: 0 };
+  const accumulateTileCounters = (row) => {
+    if (!row || !row.counters) return;
+    tileCounters.tilesRequested += row.counters.tilesRequested ?? 0;
+    tileCounters.duplicatesDropped += row.counters.duplicatesDropped ?? 0;
+    tileCounters.evictionsApplied += row.counters.evictionsApplied ?? 0;
+  };
   try {
     await page.evaluate((v) => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(v), enabled);
 
-    await measureOneStep(
+    const openRow = await measureOneStep(
       page,
       consoleHandle,
       viewStateListener,
       { id: "identity-open", kind: "open", settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: 60_000 } },
       { instrumentEnabled: enabled, applyStepFn: () => openFixture(page), alwaysCallHooks: true, postSettleFlushMs: 500 }
     );
+    accumulateTileCounters(openRow);
     for (const step of IDENTITY_VIEW_STATE_STEPS) {
-      await measureOneStep(
+      const stepRow = await measureOneStep(
         page,
         consoleHandle,
         viewStateListener,
@@ -993,10 +1045,11 @@ async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
           postSettleFlushMs: 500,
         }
       );
+      accumulateTileCounters(stepRow);
     }
     // Let any final in-flight console messages resolve their jsonValue() promises.
     await sleep(500);
-    return listener.sorted().map(normalizeFieldSequenceLine);
+    return { sequence: listener.sorted().map(normalizeFieldSequenceLine), tileCounters };
   } finally {
     listener.dispose();
     viewStateListener.dispose();
@@ -1005,13 +1058,48 @@ async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
 
 /**
  * S4: runs the comparison OFF-ON-ON-OFF (2 OFF, 2 ON, interleaved), never just ON-then-OFF once
- * each. Every pairwise comparison across the 4 runs is recorded (S4: "each comparison recorded"),
- * not only adjacent ones -- 6 comparisons for 4 runs, cheap (a JSON string compare each). S12: this
- * function does NOT write its own evidence file or exit the process -- it returns a plain result for
- * `main()`'s own SHARED `finally` block to write and exit through, the same path every other mode
- * uses (P1's own version duplicated that teardown here; fixed).
+ * each, for ONE arm (`activeArm`, purely a label for this result -- the arm itself was already
+ * selected by `main()`'s own arm-switch block, BEFORE this function's first `openFixture` call, per
+ * `residencyArm.ts`'s own "refused while a dataset is open" contract). Every pairwise comparison
+ * across the 4 runs is recorded (S4: "each comparison recorded"), not only adjacent ones -- 6
+ * comparisons for 4 runs, cheap (a JSON string compare each). S12: this function does NOT write its
+ * own evidence file or exit the process -- it returns a plain result for `main()`'s own SHARED
+ * `finally` block to write and exit through, the same path every other mode uses (P1's own version
+ * duplicated that teardown here; fixed).
+ *
+ * **P3i-b B4: dual-arm coverage.** This function itself still measures exactly ONE arm per call --
+ * `main()` (the only caller) is invoked twice, as two SEPARATE processes/launches
+ * (`node residency-harness.mjs --wire-identity` for baseline, `node residency-harness.mjs
+ * --wire-identity --arm candidate` for candidate), reusing the SAME F2 fresh-launch discipline and
+ * the SAME `if (cellArgs.arm === "candidate") { setResidencyArm("candidate") ... }` block `main()`
+ * already runs for the plain measured-cell path, BEFORE this function or `runShortTraceForFieldSequence`
+ * ever calls `openFixture`. This was deliberately NOT implemented as a single in-process run
+ * (`page.reload()` mid-check to close the first arm's dataset before switching) -- `setResidencyArm`
+ * is refused while a dataset stays open and the arm would change, and this piece found no
+ * lower-risk, already-precedented way to force a genuine close-without-reopen from this driver
+ * short of a full page reload, which has no precedent anywhere in this harness suite and was judged
+ * riskier (untested interaction with the Tauri/WebView2 IPC bridge across a CDP-attached reload)
+ * than reusing the launch-per-process pattern this file already trusts for `--arm candidate`
+ * elsewhere. The two runs' own results are combined into ONE dated gate-evidence entry by this
+ * piece's own report/validation step, not by this file at runtime.
+ *
+ * For the candidate arm specifically, this function also reports `candidateCountersObservedAcrossOnRuns`
+ * -- the SUM of `tilesRequested`/`duplicatesDropped`/`evictionsApplied` across the two ON runs only
+ * (`runShortTraceForFieldSequence`'s own per-run `tileCounters`) -- so a reader can confirm the
+ * candidate cycle genuinely exercised `TileViewportStreamManager.onBatch`
+ * (`tileViewportStreamManager.ts`), `candidateArmSession.ts`'s own `countTileStreamIssuedOnce`/
+ * untiled-look `onBatch` sink, and `WorkingCanvas.pushTileBatch`'s own recorder calls, not merely
+ * that `setResidencyArm("candidate")` was set with zero tile traffic ever actually observed. Always
+ * `undefined` for the baseline arm (nothing candidate-only to confirm).
+ *
+ * **"If the candidate arm's cycle FAILS identity, capture the diff and report -- do not loosen"
+ * (this piece's own instruction): this function does neither of those things itself.** It reports
+ * `identical: false` and the full `comparisons`/`runs` array exactly the same way for either arm --
+ * no arm-specific leniency, no pose substitution, no retry-until-pass. Any loosening (e.g. excluding
+ * a field the candidate arm's own tile-keyed planning made non-deterministic) would need its own
+ * documented amendment, not a silent change here.
  */
-async function runFieldSequenceIdentityCheck(page, consoleHandle) {
+async function runFieldSequenceIdentityCheck(page, consoleHandle, activeArm) {
   // **Warm-up run, P1b live-verified finding, ORIGINAL rationale carried forward with a P1c
   // disclosure.** P1b's own account: the FIRST synthetic gesture ever dispatched against a
   // freshly-mounted `.working-canvas` in a session realized a measurably different camera position
@@ -1027,16 +1115,24 @@ async function runFieldSequenceIdentityCheck(page, consoleHandle) {
   // running one extra, unmeasured trial before the four MEASURED runs costs one trial's wall time
   // against the alternative of re-introducing exactly the kind of anomaly P1b found live. A later
   // piece may remove this once it is shown unnecessary under the new mechanism; not shown here.
-  console.log("residency-harness --wire-identity: warm-up run (absorbs any first-open/first-frame effect, not measured/compared)...");
+  console.log(
+    `residency-harness --wire-identity: [arm=${activeArm}] warm-up run (absorbs any first-open/first-frame effect, not measured/compared)...`
+  );
   await runShortTraceForFieldSequence(page, consoleHandle, false);
 
   const order = ["off", "on", "on", "off"];
   const runs = [];
+  const onRunsTileCounters = { tilesRequested: 0, duplicatesDropped: 0, evictionsApplied: 0 };
   for (let i = 0; i < order.length; i++) {
     const state = order[i];
-    console.log(`residency-harness --wire-identity: run ${i + 1}/${order.length}, instrument ${state.toUpperCase()}...`);
-    const sequence = await runShortTraceForFieldSequence(page, consoleHandle, state === "on");
+    console.log(`residency-harness --wire-identity: [arm=${activeArm}] run ${i + 1}/${order.length}, instrument ${state.toUpperCase()}...`);
+    const { sequence, tileCounters } = await runShortTraceForFieldSequence(page, consoleHandle, state === "on");
     console.log(`  observed ${sequence.length} field-sequence-relevant render-trace lines`);
+    if (state === "on") {
+      onRunsTileCounters.tilesRequested += tileCounters.tilesRequested;
+      onRunsTileCounters.duplicatesDropped += tileCounters.duplicatesDropped;
+      onRunsTileCounters.evictionsApplied += tileCounters.evictionsApplied;
+    }
     runs.push({ index: i, state, sequence });
   }
 
@@ -1050,23 +1146,67 @@ async function runFieldSequenceIdentityCheck(page, consoleHandle) {
   }
   const identical = comparisons.every((c) => c.identical);
 
+  // P3i-b B4, live-found running this piece's own validation: EVERY run observed ZERO
+  // field-sequence-relevant lines for the candidate arm (`FIELD_SEQUENCE_EVENTS` --
+  // `viewport_query`/`stream-issued`/`batch`) -- `tileViewportStreamManager.ts` and
+  // `candidateArmSession.ts` never call `traceViewportQuery`/`traceStreamIssued` at all (only
+  // `viewportStreamManager.ts`, baseline's own manager, does; `WorkingCanvas.tsx`'s own
+  // `traceTileIngest` call is the candidate arm's actual console-visible trace, a DIFFERENT event
+  // name this comparison's own `FIELD_SEQUENCE_EVENTS` constant does not include). A run of "0 lines"
+  // compared against another run of "0 lines" is trivially `identical: true` while proving NOTHING
+  // about wire identity for this arm -- exactly the vacuous-comparison class B3/P1d already fought
+  // for the gesture-vs-hooks case. Detected here (never silently reported as an ordinary PASS) via
+  // the SAME two-axis check this function's own tile-counter confirmation already established:
+  // real tile traffic (`onRunsTileCounters.tilesRequested > 0`, confirmed non-zero live) alongside a
+  // field-sequence proxy that structurally cannot see any of it. This is a PRODUCT-CODE gap
+  // (`tileViewportStreamManager.ts`/`candidateArmSession.ts` missing render-trace calls
+  // `viewportStreamManager.ts` already has) -- out of this piece's own instrument+harness scope to
+  // fix; disclosed here, and in this piece's own report, rather than left for a reader to discover by
+  // noticing "0" four times over.
+  const everyRunSawZeroRelevantLines = runs.every((r) => r.sequence.length === 0);
+  const fieldSequenceProxyVacuousForThisArm =
+    activeArm === "candidate" && everyRunSawZeroRelevantLines && onRunsTileCounters.tilesRequested > 0;
+
   console.log("");
   console.log(
-    `== render-trace field-sequence identity (proxy): ${identical ? "PASS -- byte-sequence-identical across OFF-ON-ON-OFF" : "FAIL -- sequences differ"} ==`
+    `== [arm=${activeArm}] render-trace field-sequence identity (proxy): ${
+      identical ? "PASS -- byte-sequence-identical across OFF-ON-ON-OFF" : "FAIL -- sequences differ"
+    } ==`
   );
   if (!identical) {
     for (const c of comparisons.filter((c) => !c.identical)) {
-      console.error(`  DIFFERS: ${c.a} vs ${c.b}`);
+      console.error(`  [arm=${activeArm}] DIFFERS: ${c.a} vs ${c.b}`);
     }
+  }
+  if (activeArm === "candidate") {
+    console.log(
+      `  [arm=candidate] tile counters observed across the two ON runs: tilesRequested=${onRunsTileCounters.tilesRequested} ` +
+        `duplicatesDropped=${onRunsTileCounters.duplicatesDropped} evictionsApplied=${onRunsTileCounters.evictionsApplied}` +
+        (onRunsTileCounters.tilesRequested === 0
+          ? " -- WARNING: zero tiles requested; this cycle may not have exercised the candidate arm's own tile-keyed path at all"
+          : "")
+    );
+  }
+  if (fieldSequenceProxyVacuousForThisArm) {
+    console.error(
+      `  [arm=candidate] VACUOUS PASS WARNING: every run observed 0 field-sequence-relevant render-trace lines ` +
+        `(viewport_query/stream-issued/batch), even though real tile traffic was confirmed (tilesRequested=${onRunsTileCounters.tilesRequested}). ` +
+        `tileViewportStreamManager.ts/candidateArmSession.ts do not call traceViewportQuery/traceStreamIssued (a pre-existing ` +
+        `product-code gap, out of this piece's own scope) -- "identical: true" above is therefore NOT evidence of wire identity ` +
+        `for the candidate arm; it only proves two empty sequences matched. See fieldSequenceProxyVacuousForThisArm in this result.`
+    );
   }
 
   return {
+    arm: activeArm,
     identical,
+    fieldSequenceProxyVacuousForThisArm, // P3i-b B4: see this function's own doc comment
     order,
     runs: runs.map((r) => ({ index: r.index, state: r.state, sequence: r.sequence })),
     comparisons,
     excludedLineTypes: EXCLUDED_LINE_TYPES,
     excludedRequestFields: EXCLUDED_REQUEST_FIELDS,
+    candidateCountersObservedAcrossOnRuns: activeArm === "candidate" ? onRunsTileCounters : undefined,
   };
 }
 
@@ -1196,14 +1336,24 @@ async function main() {
     return;
   }
   const cellArgs = parseCellArgs(args);
-  // M9: `arm` (baseline/candidate/control) -- this harness has no `--arm=candidate` PRODUCER yet (P3
-  // has not landed the tile-keyed residency this piece measures against), so `--arm` exists for
-  // forward compatibility only; `--control` overrides it to the literal "control" (this harness's own
-  // disclosed reading of M9's three-value field: today's only real axis besides baseline is
-  // instrument on/off, and `--control` IS that axis's off state).
+  // M9: `arm` (baseline/candidate/control) -- P3r's own handoff note (P3i-b): this comment used to
+  // say the harness had no `--arm=candidate` PRODUCER at all; false since P3w landed the candidate
+  // arm's own end-to-end tile-keyed data path (`candidateArmSession.ts`) -- `main()`'s own arm-switch
+  // block below (`if (cellArgs.arm === "candidate")`) genuinely drives it, and the smoke/instrument-on
+  // measured-cell path (`runTrace`) has exercised it since. `--control` still overrides `arm` to the
+  // literal "control" (this harness's own disclosed reading of M9's three-value field: instrument
+  // on/off is a real axis independent of baseline/candidate, and `--control` IS that axis's off
+  // state).
   // Re-review suggestion 15: the identity-guard run is neither measurement arm -- labelling it
   // with parseCellArgs' "baseline" default would let a scorer mistake guard evidence for a cell.
-  const arm = control ? "control" : wireIdentity ? "identity-guard" : cellArgs.arm;
+  // P3i-b B4: `--wire-identity` now ALSO respects `cellArgs.arm` (the SAME `--arm candidate` flag the
+  // measured-cell path already reads) -- the label below embeds which arm this identity-guard run
+  // actually measured (`identity-guard(baseline)` / `identity-guard(candidate)`), since the arm-switch
+  // block below sets the underlying arm before `runFieldSequenceIdentityCheck` ever opens a fixture,
+  // exactly the same "before any dataset open" precondition the plain candidate path already
+  // satisfies -- see B4's own doc comment on `runFieldSequenceIdentityCheck` for the full account of
+  // why this piece did NOT need a page reload/in-process arm-switch to satisfy both arms.
+  const arm = control ? "control" : wireIdentity ? `identity-guard(${cellArgs.arm})` : cellArgs.arm;
 
   // Amendment 12 (RESIDENCY-PREREGISTRATION.md §12): §7's own 180 s figure (`TRIAL_WATCHDOG_MS`,
   // kept exported and documented as historical -- see its own doc comment in residencyTrace.mjs)
@@ -1279,6 +1429,7 @@ async function main() {
     rows: [],
     invalidated: false,
     inputToPresentProxyDivergence: INPUT_TO_PRESENT_PROXY_DIVERGENCE, // S13
+    segmentsProxyDivergence: SEGMENTS_PROXY_DIVERGENCE, // P3i-b B3
     // P1d suggestion 8: client-clock GATED quantities (first pixels, frame time, cancellation --
     // §6's own "client clock"/"client compositor-frame timer" rows) are only ever populated in an
     // instrument-ON cell (`counters`/`firstPixelMs`/`frameTimeMs` are `undefined` in `--control`,
@@ -1296,7 +1447,14 @@ async function main() {
     cell: {
       // M9: the full cell declaration.
       arm,
-      tileSize: null, // pre-P3 -- no tile grid exists yet
+      // P3i-b N12: this comment was stale -- P3/P3w already landed the candidate arm's own tile grid
+      // (tileGridConstants.ts's TileGridLevel: "coarse"/"medium"/"fine", DEFAULT_TILE_GRID_LEVEL:
+      // "medium") well before this piece. Still `null` for BOTH arms today, but for a different,
+      // honest reason: no `__SPATIAL_E2E__` hook exposes a live candidate session's own
+      // `TileViewportStreamManager.activeLevel` for this harness to read back -- a gap for a later
+      // piece to close (adding that hook is product-code scope this piece's own instrument+harness
+      // boundary does not cover), not evidence the grid itself is missing.
+      tileSize: null,
       buildCommit,
       fixturePath: FIXTURE_PATH,
       fixtureSha256: fixtureSha256AtStart,
@@ -1329,9 +1487,15 @@ async function main() {
     // Viewport-residency cut P3w item C: the arm switch, driven AFTER mount, BEFORE any
     // `openFixture` call (`setResidencyArm` is refused once a dataset is open, `residencyArm.ts`'s
     // own contract) -- `cellArgs.arm` (M9) already carries `"candidate"` when `--arm candidate` was
-    // given; `--control`/`--wire-identity` never select the candidate arm (both override `arm` to
-    // their own literal label, `main()`'s own comment above), so this only ever fires for a plain
-    // `--arm candidate` run.
+    // given. **P3i-b B4:** `--control` still never selects candidate (control measures wire behavior
+    // under baseline), but `--wire-identity --arm candidate` NOW does reach this branch -- `arm`
+    // (the `evidence.cell.arm` label) is overridden to `identity-guard(candidate)` above, but
+    // `cellArgs.arm` itself is untouched, so this check (and `runFieldSequenceIdentityCheck`'s own
+    // `activeArm` label below) both see the real requested arm. This is how B4's dual-arm identity
+    // guard is satisfied: two separate process launches, `--wire-identity` (baseline, unchanged) and
+    // `--wire-identity --arm candidate`, each selecting its own arm here, before either run's first
+    // `openFixture` call -- see `runFieldSequenceIdentityCheck`'s own doc comment for why this was
+    // chosen over an in-process reload.
     if (cellArgs.arm === "candidate") {
       const setResult = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("candidate"));
       if (!setResult || setResult.ok !== true) {
@@ -1363,7 +1527,7 @@ async function main() {
       // before that dance begins), recorded into `evidence.cell` for consistency with every other
       // mode.
       evidence.cell.instrumentEnabledReadback = instrumentEnabledReadback;
-      const result = await runFieldSequenceIdentityCheck(page, consoleHandle);
+      const result = await runFieldSequenceIdentityCheck(page, consoleHandle, cellArgs.arm); // P3i-b B4
       evidence.fieldSequenceIdentity = result; // M11: renamed evidence key
       process.exitCode = result.identical ? 0 : 1;
       // S12: no separate teardown here -- falls through to the SHARED `finally` block below, the

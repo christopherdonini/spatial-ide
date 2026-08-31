@@ -263,6 +263,95 @@ describe("ResidencyInstrumentCore -- pure state machine, synthetic clock", () =>
     });
   });
 
+  describe("P3i-b (instrument mini-review): B2 mixed-batch mislabeling + S5 null-without-reason holes / negative-span clamp", () => {
+    it("B2: a REFUSED batch #1 followed by an ACCEPTED batch #2 -- segmentsSpanSingleBatch is false, but the three spans still sum to exactly firstPixelMs (B1's algebra, mislabeled, never inconsistent)", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000); // clock origin
+      core.recordBatchArrived(1020); // batch #1's own arrival -- the one-shot marker
+      core.recordBatchDecoded(1035); // batch #1's own decode -- the one-shot marker
+      core.recordBatch(10, 100, true); // batch #1 REFUSED
+      core.recordBatchArrived(1060); // batch #2's own arrival -- one-shot already set, this is a no-op on the marker
+      core.recordBatchDecoded(1080); // batch #2's own decode -- one-shot already set, this is a no-op on the marker
+      core.recordBatch(20, 200, false); // batch #2 ACCEPTED -- arms firstBatchArrived; NOT the step's first batch overall
+      core.recordFrame(1200); // batch #2's own paint
+      const result = core.endStep();
+      expect(result!.segmentsSpanSingleBatch).toBe(false);
+      // The labels are wrong (decodedToPaintedMs below is really "batch #1's own decode to batch #2's
+      // own paint", not "batch #2's own decode to paint"), but the raw markers never moved off batch
+      // #1's own arrival/decode (one-shot), so the numbers themselves are exactly what this file's own
+      // top doc comment (B2) describes:
+      expect(result!.queryToFirstByteMs).toBe(20); // 1020 - 1000 (batch #1's own arrival)
+      expect(result!.firstByteToDecodedMs).toBe(15); // 1035 - 1020 (batch #1's own decode)
+      expect(result!.decodedToPaintedMs).toBe(165); // 1200 - 1035 (batch #2's own eventual paint)
+      expect(result!.firstPixelMs).toBe(200); // 1200 - 1000
+      expect(
+        result!.queryToFirstByteMs! + result!.firstByteToDecodedMs! + result!.decodedToPaintedMs!
+      ).toBe(result!.firstPixelMs); // B1: always sums, exactly, real integers here -- no tolerance needed
+    });
+
+    it('S5 hole 1 (closed): a batch arrives but its own decode is never observed before endStep -- firstByteToDecodedMs is null WITH a reason, never undefined', () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000);
+      core.recordBatchArrived(1020); // arrival observed
+      // recordBatchDecoded is deliberately never called -- believed unreachable (synchronous decode),
+      // guarded anyway per S7's own qualification.
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBe(20); // arrival alone is enough for this span
+      expect(result!.firstByteToDecodedMs).toBeNull();
+      expect(result!.firstByteToDecodedReason).toBe("no-batch"); // defined, never left undefined
+    });
+
+    it("S5 hole 2 (closed): a batch arrival observed with no recordStreamIssued this step at all (an ordering violation this pure state machine does not itself prevent) -- both byte spans null WITH a reason", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      // recordStreamIssued deliberately never called this step.
+      core.recordBatchArrived(1020);
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBeNull();
+      expect(result!.queryToFirstByteReason).toBe("no-query"); // defined, never left undefined
+      expect(result!.firstByteToDecodedMs).toBeNull();
+      expect(result!.firstByteToDecodedReason).toBe("no-query");
+    });
+
+    it("S5: a negative queryToFirstByteMs (a batch arrival timestamp predating the step's own clock origin) clamps to null with reason cross-step-stream, never a negative duration", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(2000);
+      core.recordBatchArrived(1000); // predates the clock origin -- would be -1000 unclamped
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBeNull();
+      expect(result!.queryToFirstByteReason).toBe("cross-step-stream");
+    });
+
+    it("S5: a negative firstByteToDecodedMs clamps to null with reason cross-step-stream, independent of queryToFirstByteMs staying positive", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000);
+      core.recordBatchArrived(2000);
+      core.recordBatchDecoded(1500); // predates its own arrival -- would be -500 unclamped
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBe(1000); // unaffected -- still positive, no clamp
+      expect(result!.firstByteToDecodedMs).toBeNull();
+      expect(result!.firstByteToDecodedReason).toBe("cross-step-stream");
+    });
+
+    it("S5: a negative decodedToPaintedMs clamps to null with reason cross-step-stream -- firstPixelMs itself is a separate, unclamped stamp", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000);
+      core.recordBatchArrived(1010);
+      core.recordBatchDecoded(1020);
+      core.recordBatch(10, 100, false); // accepted -- arms firstBatchArrived
+      core.recordFrame(1015); // predates the decode marker -- would be -5 unclamped
+      const result = core.endStep();
+      expect(result!.decodedToPaintedMs).toBeNull();
+      expect(result!.decodedToPaintedReason).toBe("cross-step-stream");
+      expect(result!.firstPixelMs).toBe(15); // 1015 - 1000 -- this stamp is not itself clamped by S5
+    });
+  });
+
   describe("P3i: tilesRequested/duplicatesDropped/evictionsApplied counters", () => {
     it("recordTileRequested increments tilesRequested once per call", () => {
       const core = new ResidencyInstrumentCore();
@@ -470,9 +559,21 @@ describe("DEV-only singleton wiring -- instrument-off registers/tracks nothing",
     expect(result!.queryToFirstByteMs).not.toBeNull();
     expect(result!.firstByteToDecodedMs).not.toBeNull();
     expect(result!.decodedToPaintedMs).not.toBeNull();
+    // P3i-b N13: this run is driven by the REAL singleton wiring (`performance.now()`, not a
+    // synthetic integer clock like every `ResidencyInstrumentCore` test above) -- a bit-exact `toBe`
+    // on a sum of three independently-derived floating-point subtractions is not something IEEE 754
+    // addition/subtraction guarantees bit-for-bit even though the underlying real-number arithmetic
+    // telescopes exactly (residencyInstrument.ts's own B1 doc comment has the algebra). `toBeCloseTo`
+    // with a generous (sub-microsecond) precision keeps this assertion meaningful -- it still fails
+    // if the three spans do not actually sum to `firstPixelMs` -- without depending on float
+    // rounding happening to land on the identical bit pattern this specific run's own real timings
+    // produced.
     expect(
       result!.queryToFirstByteMs! + result!.firstByteToDecodedMs! + result!.decodedToPaintedMs!
-    ).toBe(result!.firstPixelMs);
+    ).toBeCloseTo(result!.firstPixelMs!, 6);
+    // P3i-b B2: a single accepted batch this step, with nothing refused first -- the honest,
+    // non-mixed case.
+    expect(result!.segmentsSpanSingleBatch).toBe(true);
     expect(result!.counters.tilesRequested).toBe(2);
     expect(result!.counters.duplicatesDropped).toBe(4);
     expect(result!.counters.evictionsApplied).toBe(1);

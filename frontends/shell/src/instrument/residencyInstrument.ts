@@ -69,22 +69,60 @@
  * sink -- literally the earliest client-observable moment for a batch's own data-plane bytes, BEFORE
  * decode; see that method's own doc comment for why this is a DEFINED PROXY, not a true
  * first-TCP-byte timestamp), `recordBatchDecoded` right after `WorkingCanvas.tsx`'s own
- * `decodeBatch` call completes, for either arm's own `pushBatch`/`pushTileBatch`. Because decode runs
- * synchronously, immediately after arrival, in this codebase's single-threaded ingest path, the FIRST
- * `recordBatchArrived` and the FIRST `recordBatchDecoded` this step observes are always the SAME
- * physical batch -- literally the step's first batch to arrive, whatever its eventual accept/refuse
- * fate. `endStep` derives `queryToFirstByteMs` (arrival minus `firstStreamIssuedAtMs`),
+ * `decodeBatch` call completes, for either arm's own `pushBatch`/`pushTileBatch`.
+ *
+ * **P3i-b S7 (instrument mini-review): the "same physical batch" claim, qualified, not asserted
+ * absolutely.** In the common case -- decode running synchronously, immediately after arrival, in
+ * this codebase's single-threaded ingest path, with no `await` between a manager's own
+ * `recordBatchArrived` call and `WorkingCanvas.tsx`'s own paired `recordBatchDecoded` call -- the
+ * FIRST `recordBatchArrived` and the FIRST `recordBatchDecoded` this step observes describe the SAME
+ * physical batch. This module cannot itself PROVE that from in here: it observes two independent
+ * one-shot markers, never a shared batch identity token passed between them, so the guarantee rests
+ * entirely on each caller's own code shape staying as it is today, not on anything this module
+ * enforces. Two known "drop sites" already exist upstream of the SECOND marker only in principle --
+ * `viewportStreamManager.ts`'s own supersession check in `onBatch` (baseline) and
+ * `tileViewportStreamManager.ts`'s own equivalent (candidate) -- both of which are placed BEFORE
+ * their own `recordBatchArrived` call today (so a superseded batch never arms the marker at all, the
+ * pairing holds for THAT specific hazard) -- but neither this module nor those call sites assert
+ * that no OTHER early return can ever separate a batch's own arrival from its own decode (a null
+ * `canvas` ref, a thrown decode, or a future refactor could). Not fixed by pairing the markers with a
+ * shared token here (a larger, riskier change across three call sites, out of this piece's own
+ * scope) -- documented as a qualification instead, and backstopped structurally: `endStep` below
+ * derives `firstByteToDecodedMs` from each of its own two operands independently (never from a
+ * single shared "was something null" flag), so the case this qualification names -- arrival recorded,
+ * decode never observed -- reports a real, honest `null` with a real reason, never a silently wrong
+ * number (S5).
+ *
+ * `endStep` derives `queryToFirstByteMs` (arrival minus `firstStreamIssuedAtMs`),
  * `firstByteToDecodedMs` (decode minus arrival), and `decodedToPaintedMs` (the existing
  * `firstPixelMs` stamp's own raw paint timestamp minus decode) from these two markers plus the
- * existing M1 stamp -- never a new clock, never a new render hook. **Disclosed divergence:** because
- * the first TWO spans key on literally the step's first batch (any fate) while `firstPixelMs`/
- * `decodedToPaintedMs` key on the first ACCEPTED batch (M1's own criterion, unchanged), a step whose
- * first batch is REFUSED and never followed by an accepted one reports real, non-null
- * `queryToFirstByteMs`/`firstByteToDecodedMs` (that batch genuinely arrived and decoded) beside a
- * null `decodedToPaintedMs`/`firstPixelMs` (reason `"no-batch"`, per M1's existing rule: zero
- * ACCEPTED batches) -- the three spans therefore sum to exactly `firstPixelMs` only in the common
- * case (the first batch itself is the one that gets accepted), never asserted here, only recorded for
- * a scorer to check.
+ * existing M1 stamp -- never a new clock, never a new render hook.
+ *
+ * **Disclosed divergence, corrected (P3i-b B1: the original wording here inverted the structural
+ * truth).** The first TWO spans key on literally the step's first batch (any fate) while
+ * `firstPixelMs`/`decodedToPaintedMs` key on the first ACCEPTED batch (M1's own criterion,
+ * unchanged) -- but whenever all four raw timestamps this derivation needs are non-null, the three
+ * spans sum to EXACTLY `firstPixelMs` ALWAYS, by simple construction (a telescoping chain of
+ * subtractions sharing endpoints on the SAME clock: `(arrived - issued) + (decoded - arrived) +
+ * (painted - decoded) = painted - issued`, algebraically, in every case, not "only in the common
+ * case"). A step whose first batch is REFUSED and never followed by an accepted one does not produce
+ * an inconsistent sum -- it produces a NULL `decodedToPaintedMs`/`firstPixelMs` (reason `"no-batch"`,
+ * per M1's existing rule: zero ACCEPTED batches) beside real, non-null `queryToFirstByteMs`/
+ * `firstByteToDecodedMs` (that first batch genuinely arrived and decoded); there is no partial or
+ * mismatched sum to observe, because the fourth operand the sum would need (`firstPixelAtMs`) is
+ * itself null in that case.
+ *
+ * **P3i-b B2 (the real divergence -- a MISLABELING, not a missing sum): mixed refused-then-accepted
+ * batches.** When the step's first batch is REFUSED but a LATER batch within the SAME step is the
+ * first ACCEPTED one, `queryToFirstByteMs`/`firstByteToDecodedMs` still describe the (refused) first
+ * batch, while `decodedToPaintedMs` is computed against the ACCEPTED batch's own `firstPixelAtMs` but
+ * subtracts the FIRST (refused) batch's own `firstBatchDecodedAtMs` -- the three spans still sum to
+ * exactly `firstPixelMs` (B1's own algebra does not care which batches the endpoints came from), but
+ * `decodedToPaintedMs` in this case silently ABSORBS the accepted batch's own transport+decode time,
+ * mislabeled as pure "paint" time. `segmentsSpanSingleBatch` (below) is `false` exactly in this case
+ * -- `false` whenever the batch that armed `firstBatchArrived` (the first ACCEPTED one) was not also
+ * the step's very first batch overall (any fate) -- so a scorer/reader can tell the two situations
+ * apart without re-deriving it from the raw counters each time.
  *
  * **A measurement SIBLING to `console/recorder.ts`, not an extension of it** (this piece's own
  * instruction) -- same discipline (a subscriber-shaped consumer failing must never break the frame
@@ -103,6 +141,8 @@
  * (`applyStyleChange`, `summarizePixels`): "DOM-free testability... a pure seam a unit test can
  * actually drive."
  */
+
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 
 export interface ResidencyStepCounters {
   streamsIssued: number;
@@ -168,11 +208,17 @@ const MAX_INPUT_PROXIES = 1000;
 
 export type FirstPixelReason = "no-query" | "no-batch" | "no-paint";
 
-/** P3i: the same three-value vocabulary `FirstPixelReason` already uses, reused rather than
- * duplicated -- `queryToFirstByteReason`/`firstByteToDecodedReason`/`decodedToPaintedReason` below
- * all draw from it, per this file's own top doc comment on the P3i paragraph (the disclosed
- * divergence between "step's first batch, any fate" and "step's first ACCEPTED batch"). */
-export type SegmentReason = FirstPixelReason;
+/** P3i: `FirstPixelReason`'s own three-value vocabulary, reused rather than duplicated --
+ * `queryToFirstByteReason`/`firstByteToDecodedReason`/`decodedToPaintedReason` below all draw from
+ * it, per this file's own top doc comment on the P3i paragraph (the disclosed divergence between
+ * "step's first batch, any fate" and "step's first ACCEPTED batch"). **P3i-b S5: extended with one
+ * segment-only value, `"cross-step-stream"`** -- a span's own two raw endpoints share one clock
+ * (`performance.now()`), so a negative delta would mean the "later" marker's own timestamp predates
+ * the "earlier" one's: structurally impossible within one step's own consistent ordering, but not
+ * something this pure state machine can itself prevent if ever fed timestamps whose stream/batch
+ * pair straddled a step boundary. Guarded in `endStep` (clamped to `null` with this reason), never
+ * asserted unreachable outright -- believed unreachable in a clean trial, per S5's own report. */
+export type SegmentReason = FirstPixelReason | "cross-step-stream";
 
 export interface ResidencyStepResult {
   stepId: string;
@@ -197,23 +243,49 @@ export interface ResidencyStepResult {
   queryToFirstByteReason?: SegmentReason;
   /** P3i: ms from that same first-batch arrival to `recordBatchDecoded`'s own one-shot timestamp for
    * the same batch (around `WorkingCanvas.tsx`'s own `decodeBatch` call). `null` when the arrival
-   * itself never happened (decode is synchronous and immediate after arrival in this codebase's
-   * ingest path, so there is no distinct "arrived but never decoded" case in practice). */
+   * itself never happened, OR (P3i-b S5/S7, guarded rather than assumed unreachable) when arrival
+   * happened but decode was never observed before `endStep` -- believed unreachable given decode's
+   * own synchronous, immediate-after-arrival placement in this codebase's ingest path, but this
+   * module cannot itself prove that from in here (see this file's own top doc comment, S7's
+   * qualification of the "same physical batch" claim); either way `firstByteToDecodedReason` below is
+   * always set, never left `undefined` beside a `null` value. */
   firstByteToDecodedMs: number | null;
-  /** Mirrors `queryToFirstByteReason` exactly -- decode's own one-shot marker is paired 1:1 with the
-   * arrival marker (this file's own top doc comment), so the same absence reason applies. */
+  /** P3i-b S5: derived from this span's OWN two operands directly, no longer a value mirrored from
+   * `queryToFirstByteReason` (an earlier version of this field shared one variable across both
+   * reasons, which could leave this one `undefined` beside a `null` value in an edge ordering that
+   * variable's own single null-check did not cover -- see S5's own report). `"no-query"` (zero
+   * streams issued), `"no-batch"` (a stream issued but no batch ever arrived, OR a batch arrived but
+   * was never observed decoding -- S7's qualified case), never `"no-paint"`: this span does not
+   * depend on painting at all. */
   firstByteToDecodedReason?: SegmentReason;
   /** P3i: ms from that same batch's decode completing to `firstPixelMs`'s own raw paint timestamp
    * (the existing M1 stamp, never a new render hook). `null` whenever `firstPixelMs` is `null` -- see
-   * `decodedToPaintedReason`. **Not asserted against `firstPixelMs` here** (`queryToFirstByteMs` +
-   * `firstByteToDecodedMs` + `decodedToPaintedMs` sum to exactly `firstPixelMs` only when the step's
-   * first batch is also its first ACCEPTED batch -- the common case, but this file's own top doc
-   * comment discloses the divergence when it is not); recorded for a scorer to check, never enforced
-   * by this module. */
+   * `decodedToPaintedReason`. **P3i-b B1 (corrected structural claim):** `queryToFirstByteMs` +
+   * `firstByteToDecodedMs` + `decodedToPaintedMs` sum to exactly `firstPixelMs` ALWAYS whenever all
+   * four raw timestamps are present -- a telescoping chain on one shared clock, algebraically true
+   * regardless of whether the step's first batch (any fate) is also its first ACCEPTED batch (this
+   * file's own top doc comment has the full account, including B2's mixed-batch mislabeling case,
+   * where the sum still holds but `decodedToPaintedMs` no longer means only "paint"). Recorded for a
+   * scorer to check, never enforced by this module -- see `segmentsSpanSingleBatch` for whether this
+   * step's own labels can be trusted at face value. */
   decodedToPaintedMs: number | null;
   /** Mirrors `firstPixelReason` exactly -- this span's own numerator is `firstPixelMs`'s raw
    * timestamp, so whatever kept `firstPixelMs` `null` keeps this `null` too, for the same reason. */
   decodedToPaintedReason?: SegmentReason;
+  /** P3i-b B2 (instrument mini-review): `true` iff the batch that armed `firstBatchArrived` (the
+   * step's first ACCEPTED batch, M1's own criterion) was ALSO the step's very first batch overall,
+   * any fate -- i.e. `queryToFirstByteMs`/`firstByteToDecodedMs` (keyed on "first batch, any fate")
+   * and `decodedToPaintedMs`/`firstPixelMs` (keyed on "first ACCEPTED batch") describe the SAME
+   * physical batch, so the three spans are honestly labeled, not merely arithmetically summing.
+   * `false` in the mixed refused-then-accepted case this file's own top doc comment (B2) discloses --
+   * `decodedToPaintedMs` still sums correctly but silently absorbs a LATER batch's own transport+
+   * decode time, mislabeled as pure paint time. Defaults to `true` (vacuously) when
+   * `firstBatchArrived` never arms this step at all (no accepted batch -- nothing to mislabel);
+   * captured exactly once, the FIRST time `firstBatchArrived` arms, never re-evaluated by a later
+   * accepted batch the same step (`recordBatch`'s own doc comment has the capture-site detail,
+   * including why `batchesReceived === 1` alone -- the reviewer's original sketch -- needed
+   * `batchesRefused === 0` added to it). */
+  segmentsSpanSingleBatch: boolean;
   /** M3: one raw timestamp per REAL render observed while the step was active (`WorkingCanvas.tsx`'s
    * own persistent per-step `onAfterRender` hook, via `recordResidencyRenderTick`) -- p50/p95 are the
    * driver's own job (§6), never computed here. */
@@ -257,6 +329,10 @@ interface ActiveStep {
   /** P3i: one-shot -- the timestamp of the FIRST `recordBatchDecoded` call this step observes, paired
    * 1:1 with `firstBatchArrivedAtMs` in practice (synchronous decode). `null` until that first call. */
   firstBatchDecodedAtMs: number | null;
+  /** P3i-b B2: mirrors `ResidencyStepResult.segmentsSpanSingleBatch`'s own doc comment -- captured
+   * once, in `recordBatch`, the first time `firstBatchArrived` arms this step; `true` until then
+   * (the field's own default-vacuous-true, matching the returned snapshot's own default). */
+  segmentsSpanSingleBatch: boolean;
   frameTimestamps: number[];
   frameTimestampsTruncated: boolean;
   inputToPresentProxiesMs: number[];
@@ -279,6 +355,22 @@ export class ResidencyInstrumentCore {
     return this.active !== null;
   }
 
+  /** P3i-b S6: `true` once this step's one-shot `firstBatchArrivedAtMs` marker is already set --
+   * exposed so the DEV-only singleton wrapper below can check this BEFORE computing a
+   * `performance.now()` reading at all, rather than always reading the clock and handing it to
+   * `recordBatchArrived`, which would then discard it internally on every call after the step's
+   * first (the one-shot check was always correctly placed AHEAD of the STORE inside that method --
+   * S6's finding is that the wrapper's own clock READ happened unconditionally, one level further
+   * out, where this class could not previously be consulted first). */
+  get firstBatchArrivedRecorded(): boolean {
+    return this.active !== null && this.active.firstBatchArrivedAtMs !== null;
+  }
+
+  /** P3i-b S6: mirrors `firstBatchArrivedRecorded` for `firstBatchDecodedAtMs`/`recordBatchDecoded`. */
+  get firstBatchDecodedRecorded(): boolean {
+    return this.active !== null && this.active.firstBatchDecodedAtMs !== null;
+  }
+
   beginStep(stepId: string, _nowMs: number): void {
     // `_nowMs` kept as a parameter (unused beyond documenting call-time) for API stability with
     // existing callers/tests -- M1 moved the step's own clock origin to the first
@@ -292,6 +384,7 @@ export class ResidencyInstrumentCore {
       firstPixelAtMs: null,
       firstBatchArrivedAtMs: null,
       firstBatchDecodedAtMs: null,
+      segmentsSpanSingleBatch: true, // P3i-b B2: vacuously true until firstBatchArrived arms
       frameTimestamps: [],
       frameTimestampsTruncated: false,
       inputToPresentProxiesMs: [],
@@ -318,28 +411,63 @@ export class ResidencyInstrumentCore {
       }
     }
 
-    // P3i: the arrival/decode pair's own absence reason -- shares "no-query"/"no-batch" with
-    // `firstPixelReason` above (never "no-paint": this pair does not depend on painting at all), but
-    // computed separately because it keys on `firstBatchArrivedAtMs` (the step's first batch, ANY
-    // fate), not on `firstBatchArrived` (the first ACCEPTED batch, `firstPixelReason`'s own
-    // criterion) -- see this file's own top doc comment for the disclosed divergence between the two.
-    let arrivalReason: SegmentReason | undefined;
-    if (s.firstBatchArrivedAtMs === null) {
-      arrivalReason = s.counters.streamsIssued === 0 ? "no-query" : "no-batch";
+    // P3i-b S5: each span below is derived from ITS OWN operands directly -- never from one shared
+    // variable computed off a single different null-check (the earlier `arrivalReason`, keyed only
+    // on `firstBatchArrivedAtMs === null`, could leave a span's own reason `undefined` beside a
+    // `null` value whenever THAT span's own null cause was something `arrivalReason`'s one check
+    // didn't cover -- see S5's own report for both holes this closes: `firstByteToDecodedMs` null
+    // because `firstBatchDecodedAtMs` alone is null (arrival happened, decode did not -- S7's
+    // qualified "believed unreachable" case), and `queryToFirstByteMs` null because
+    // `firstStreamIssuedAtMs` alone is null while `firstBatchArrivedAtMs` is somehow non-null, an
+    // ordering violation this pure state machine does not itself prevent). Both are guarded here even
+    // though neither is believed reachable in a clean trial.
+    let queryToFirstByteMs: number | null = null;
+    let queryToFirstByteReason: SegmentReason | undefined;
+    if (s.firstStreamIssuedAtMs === null) {
+      queryToFirstByteReason = "no-query";
+    } else if (s.firstBatchArrivedAtMs === null) {
+      queryToFirstByteReason = "no-batch";
+    } else {
+      queryToFirstByteMs = s.firstBatchArrivedAtMs - s.firstStreamIssuedAtMs;
     }
 
-    const queryToFirstByteMs =
-      s.firstStreamIssuedAtMs !== null && s.firstBatchArrivedAtMs !== null
-        ? s.firstBatchArrivedAtMs - s.firstStreamIssuedAtMs
-        : null;
-    const firstByteToDecodedMs =
-      s.firstBatchArrivedAtMs !== null && s.firstBatchDecodedAtMs !== null
-        ? s.firstBatchDecodedAtMs - s.firstBatchArrivedAtMs
-        : null;
-    const decodedToPaintedMs =
-      s.firstBatchDecodedAtMs !== null && s.firstPixelAtMs !== null
-        ? s.firstPixelAtMs - s.firstBatchDecodedAtMs
-        : null;
+    let firstByteToDecodedMs: number | null = null;
+    let firstByteToDecodedReason: SegmentReason | undefined;
+    if (s.firstStreamIssuedAtMs === null) {
+      firstByteToDecodedReason = "no-query";
+    } else if (s.firstBatchArrivedAtMs === null) {
+      firstByteToDecodedReason = "no-batch";
+    } else if (s.firstBatchDecodedAtMs === null) {
+      // S7's qualified case: arrival was observed, decode never was -- believed unreachable given
+      // synchronous decode, guarded anyway rather than left to fall through to `undefined`.
+      firstByteToDecodedReason = "no-batch";
+    } else {
+      firstByteToDecodedMs = s.firstBatchDecodedAtMs - s.firstBatchArrivedAtMs;
+    }
+
+    let decodedToPaintedMs: number | null = null;
+    let decodedToPaintedReason: SegmentReason | undefined = firstPixelReason;
+    if (s.firstBatchDecodedAtMs !== null && s.firstPixelAtMs !== null) {
+      decodedToPaintedMs = s.firstPixelAtMs - s.firstBatchDecodedAtMs;
+      decodedToPaintedReason = undefined;
+    }
+
+    // S5: the negative-span clamp -- see `SegmentReason`'s own doc comment for the full rationale.
+    // Applied last, after each span's own honest value/reason pair above is already computed, so a
+    // clamp never has to re-derive anything -- it only ever downgrades an already-honest `{ms,
+    // reason}` pair to a `{null, "cross-step-stream"}` one.
+    if (queryToFirstByteMs !== null && queryToFirstByteMs < 0) {
+      queryToFirstByteMs = null;
+      queryToFirstByteReason = "cross-step-stream";
+    }
+    if (firstByteToDecodedMs !== null && firstByteToDecodedMs < 0) {
+      firstByteToDecodedMs = null;
+      firstByteToDecodedReason = "cross-step-stream";
+    }
+    if (decodedToPaintedMs !== null && decodedToPaintedMs < 0) {
+      decodedToPaintedMs = null;
+      decodedToPaintedReason = "cross-step-stream";
+    }
 
     return {
       stepId: s.stepId,
@@ -347,11 +475,12 @@ export class ResidencyInstrumentCore {
       firstPixelMs: s.firstPixelMs,
       firstPixelReason,
       queryToFirstByteMs,
-      queryToFirstByteReason: queryToFirstByteMs === null ? arrivalReason : undefined,
+      queryToFirstByteReason,
       firstByteToDecodedMs,
-      firstByteToDecodedReason: firstByteToDecodedMs === null ? arrivalReason : undefined,
+      firstByteToDecodedReason,
       decodedToPaintedMs,
-      decodedToPaintedReason: decodedToPaintedMs === null ? firstPixelReason : undefined,
+      decodedToPaintedReason,
+      segmentsSpanSingleBatch: s.segmentsSpanSingleBatch, // P3i-b B2
       frameTimestamps: s.frameTimestamps,
       frameTimestampsTruncated: s.frameTimestampsTruncated,
       inputToPresentProxiesMs: s.inputToPresentProxiesMs,
@@ -378,7 +507,18 @@ export class ResidencyInstrumentCore {
   }
 
   /** M2: `refused` splits decoded-and-accepted from decoded-and-refused counting. A refused batch
-   * never renders anything new, so it never arms `firstBatchArrived` either (M1). */
+   * never renders anything new, so it never arms `firstBatchArrived` either (M1).
+   *
+   * **P3i-b B2: `segmentsSpanSingleBatch` captured here, exactly once, the first time this call arms
+   * `firstBatchArrived`.** The reviewer's original sketch was `counters.batchesReceived === 1` alone
+   * (after this call's own increment) -- verified against the actual counter semantics and found
+   * insufficient on its own: `batchesReceived` only counts ACCEPTED batches, so a batch refused
+   * earlier this step leaves it at `0` right up until this call, satisfying `=== 1` after increment
+   * even though a refusal genuinely preceded it (exactly the mixed case B2 exists to detect).
+   * `batchesRefused === 0` closes that gap: together, `batchesReceived === 1 && batchesRefused === 0`
+   * at the moment `firstBatchArrived` arms means this accepted batch is BOTH the step's first
+   * accepted batch AND its first batch of any fate -- the two markers this file's own top doc
+   * comment discusses (`firstBatchArrivedAtMs`/`firstBatchDecodedAtMs`) describe this SAME batch. */
   recordBatch(features: number, bytes: number, refused: boolean): void {
     if (!this.active) return;
     if (refused) {
@@ -390,6 +530,10 @@ export class ResidencyInstrumentCore {
     this.active.counters.batchesReceived++;
     this.active.counters.featuresDecoded += features;
     this.active.counters.bytesDecoded += bytes;
+    if (!this.active.firstBatchArrived) {
+      this.active.segmentsSpanSingleBatch =
+        this.active.counters.batchesReceived === 1 && this.active.counters.batchesRefused === 0;
+    }
     this.active.firstBatchArrived = true;
   }
 
@@ -519,12 +663,31 @@ export function isResidencyInstrumentEnabled(): boolean {
   return enabled;
 }
 
-/** Flips the instrument on. Driver-only in practice (via a dev-only E2E hook `App.tsx` registers) --
- * a no-op, `enabled` staying `false`, outside a dev build, matching `registerE2eHook`'s own guard in
- * `e2e-test-surface.ts`. This is the ONE function in this module that checks `import.meta.env.DEV`
- * itself, since it is the only place `enabled` can ever become `true`. */
+/** Flips the instrument on. Driver-only in practice (via a dev-only/measure-build-only E2E hook
+ * `App.tsx` registers) -- a no-op, `enabled` staying `false`, outside a dev or measure build,
+ * matching `registerE2eHook`'s own guard in `e2e-test-surface.ts`. This is the ONE function in this
+ * module that checks a build-class gate itself, since it is the only place `enabled` can ever become
+ * `true`.
+ *
+ * **P3r handoff, closed here (P3i-b):** `isInstrumentedBuild.ts`'s own top doc comment named this
+ * exact line as the one gate its shared predicate could not reach when that piece landed --
+ * `import.meta.env.DEV` alone, unlike every other DEV-only gate that piece's own scope touched, kept
+ * this module's `enabled` flag permanently `false` even in the measure build
+ * (`VITE_MEASURE_BUILD === "1"`), so the residency instrument itself could never actually turn on
+ * inside the release-optimized-but-instrumented measure artifact -- Amendment 16's whole point.
+ * Replaced with `isInstrumentedBuild()` (`true` for DEV OR the measure build, `false` for a plain
+ * production build, same literal-replacement + dead-code-elimination guarantee `isInstrumentedBuild
+ * .ts`'s own doc comment documents), the one line that makes the measure build's instrument live.
+ * `disableResidencyInstrument` below is DELIBERATELY left on its own plain `import.meta.env.DEV`
+ * guard -- out of this piece's own scope (P3r's handoff names this ONE line only) -- a disclosed
+ * asymmetry: in a measure build, `enabled` can be flipped true here but `disableResidencyInstrument`
+ * itself is a no-op, so nothing in THIS module can ever flip it back off within that same process.
+ * Harmless for every validation this piece runs (module-load default is already `false`, and a plain
+ * measure-build smoke never needs to re-disable mid-run), but a real gap for a later piece that needs
+ * an ON-then-OFF toggle inside one measure-build session (e.g. a measure-build `--wire-identity` run,
+ * not attempted by this piece). */
 export function enableResidencyInstrument(): void {
-  if (!import.meta.env.DEV) return;
+  if (!isInstrumentedBuild()) return;
   enabled = true;
 }
 
