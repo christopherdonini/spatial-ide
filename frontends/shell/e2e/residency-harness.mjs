@@ -72,6 +72,7 @@ import {
   CAMERA_TRACE_STEPS,
   dismissThenClickRetry,
   IDENTITY_VIEW_STATE_STEPS,
+  parseTileSizeArg,
   percentileNearestRank,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
@@ -200,7 +201,12 @@ function gitRevParseHead() {
 
 /** M9: parses this driver's own declared cell-metadata CLI flags -- kept separate from the
  * `--smoke`/`--control`/`--wire-identity` mode flags `main()` already parses via `Set`, since these
- * carry VALUES, not just presence. */
+ * carry VALUES, not just presence.
+ *
+ * P7 (the tile-size sweep selector): `tileSize` is `null` unless `--tile-size coarse|medium|fine` was
+ * given -- parsing/validation itself is `parseTileSizeArg` (`residencyTrace.mjs`, pure and unit-tested
+ * there), reused rather than reimplemented here; an invalid value throws loudly straight out of this
+ * function (`main()`'s own call site catches it and exits non-zero, never a silent default). */
 function parseCellArgs(argv) {
   let arm = "baseline";
   let coldOrWarm = "warm"; // declared default -- see this function's own doc comment on why
@@ -218,7 +224,8 @@ function parseCellArgs(argv) {
       i++;
     }
   }
-  return { arm, coldOrWarm, machineAttestation };
+  const tileSize = parseTileSizeArg(argv); // P7: throws loudly on a malformed value, never silent
+  return { arm, coldOrWarm, machineAttestation, tileSize };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1833,7 +1840,17 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const cellArgs = parseCellArgs(args);
+  // P7: a malformed `--tile-size` value (`parseTileSizeArg`, inside `parseCellArgs`) is an operator
+  // input error to fail loudly on, matching `--measure-build`'s own missing-argument handling
+  // immediately above -- console.error + non-zero exit, not an uncaught throw with a raw stack trace.
+  let cellArgs;
+  try {
+    cellArgs = parseCellArgs(args);
+  } catch (e) {
+    console.error(`residency-harness: ${e.message}`);
+    process.exitCode = 1;
+    return;
+  }
   // M9: `arm` (baseline/candidate/control) -- P3r's own handoff note (P3i-b): this comment used to
   // say the harness had no `--arm=candidate` PRODUCER at all; false since P3w landed the candidate
   // arm's own end-to-end tile-keyed data path (`candidateArmSession.ts`) -- `main()`'s own arm-switch
@@ -1956,13 +1973,16 @@ async function main() {
     cell: {
       // M9: the full cell declaration.
       arm,
-      // P3i-b N12: this comment was stale -- P3/P3w already landed the candidate arm's own tile grid
-      // (tileGridConstants.ts's TileGridLevel: "coarse"/"medium"/"fine", DEFAULT_TILE_GRID_LEVEL:
-      // "medium") well before this piece. Still `null` for BOTH arms today, but for a different,
-      // honest reason: no `__SPATIAL_E2E__` hook exposes a live candidate session's own
-      // `TileViewportStreamManager.activeLevel` for this harness to read back -- a gap for a later
-      // piece to close (adding that hook is product-code scope this piece's own instrument+harness
-      // boundary does not cover), not evidence the grid itself is missing.
+      // P7 (the tile-size sweep selector -- the campaign's last missing wire): the P3i-b N12 gap this
+      // comment used to describe is closed. `null` here is only a placeholder for the object literal's
+      // own shape -- the REAL value is assigned below, once `evidence.gridFrame` has been read
+      // (`evidence.gridFrame.level`, `TileViewportStreamManager.activeLevel` via the existing
+      // `residencyGridFrame` hook, re-review S5) -- the ACTUAL level this run's candidate session
+      // established, not merely what `--tile-size` requested (which could in principle differ if the
+      // setter silently failed to apply; sourcing from the SAME read `evidence.gridFrame` already uses
+      // means the two can never disagree by construction). `null` for the baseline arm or a
+      // candidate-arm run whose grid frame never established, matching `evidence.gridFrame`'s own null
+      // discipline exactly.
       tileSize: null,
       buildCommit,
       fixturePath: FIXTURE_PATH,
@@ -2015,6 +2035,41 @@ async function main() {
         throw new Error(`residency-harness: getResidencyArm() readback was ${JSON.stringify(armReadback)}, expected "candidate"`);
       }
       console.log("residency-harness: candidate arm selected and read back before any dataset open");
+    }
+
+    // P7 (the tile-size sweep selector -- the campaign's last missing wire): driven at the exact same
+    // point, for the exact same reason, as the arm switch immediately above -- `setResidencyTileSizeLevel`
+    // is refused once a dataset is open (`residencyTileSizeLevel.ts`'s own contract, mirroring
+    // `residencyArm.ts`'s). Candidate-arm-only BY THE SAME CONDITION the arm switch itself just used
+    // (`cellArgs.arm === "candidate"`, not the display-only `arm`/`evidence.cell.arm` label) -- a
+    // baseline session never constructs a `TileViewportStreamManager`, so applying this ahead of one
+    // would silently have no observable effect; WARNED loudly and skipped rather than applied, so a
+    // sweep run's own evidence can never be mistaken for having actually exercised the requested level.
+    if (cellArgs.tileSize !== null) {
+      if (cellArgs.arm !== "candidate") {
+        console.warn(
+          `residency-harness: --tile-size ${cellArgs.tileSize} given but --arm is "${cellArgs.arm}", not ` +
+            `"candidate" -- the tile grid selector has no effect on a baseline session (it never constructs ` +
+            `a TileViewportStreamManager); NOT applied for this run.`
+        );
+      } else {
+        const tileSizeResult = await page.evaluate(
+          (level) => window.__SPATIAL_E2E__.setResidencyTileSizeLevel?.(level),
+          cellArgs.tileSize
+        );
+        if (!tileSizeResult || tileSizeResult.ok !== true) {
+          throw new Error(
+            `residency-harness: setResidencyTileSizeLevel(${JSON.stringify(cellArgs.tileSize)}) failed: ${JSON.stringify(tileSizeResult)}`
+          );
+        }
+        const tileSizeReadback = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyTileSizeLevel?.());
+        if (tileSizeReadback !== cellArgs.tileSize) {
+          throw new Error(
+            `residency-harness: getResidencyTileSizeLevel() readback was ${JSON.stringify(tileSizeReadback)}, expected ${JSON.stringify(cellArgs.tileSize)}`
+          );
+        }
+        console.log(`residency-harness: tile-size level "${cellArgs.tileSize}" selected and read back before any dataset open`);
+      }
     }
 
     await page
@@ -2255,6 +2310,9 @@ async function main() {
     // first recorded product-side at establishment (`candidateArmSession.ts`'s own session-log line,
     // `logSessionEvent("candidate-grid-frame-established", ...)`, not duplicated here).
     evidence.gridFrame = await page.evaluate(() => window.__SPATIAL_E2E__.residencyGridFrame?.() ?? null);
+    // P7: `cell.tileSize`'s own real assignment -- see that field's own doc comment above for why this
+    // is sourced from `evidence.gridFrame.level` rather than a second, independent readback.
+    evidence.cell.tileSize = evidence.gridFrame ? evidence.gridFrame.level : null;
 
     if (!control) {
       await page.evaluate(() => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(false));

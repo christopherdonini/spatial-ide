@@ -24,6 +24,7 @@ import {
   IDENTITY_VIEW_STATE_STEPS,
   isWellFormedSettleCriterion,
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
+  parseTileSizeArg,
   percentileNearestRank,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
@@ -388,6 +389,31 @@ test("G7 margin, tile-size levels, and max-in-flight are each named, single-sour
   assert.deepEqual(TILE_SIZE_LEVELS_PROPOSED, ["coarse", "medium", "fine"]);
   assert.equal(MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED, 3);
   assert.ok(Object.isFrozen(TILE_SIZE_LEVELS_PROPOSED));
+});
+
+console.log("");
+console.log("residencyTrace.mjs -- parseTileSizeArg (P7: the tile-size sweep selector's own harness arg parsing)");
+
+test("returns null when --tile-size was not given at all", () => {
+  assert.equal(parseTileSizeArg([]), null);
+  assert.equal(parseTileSizeArg(["--smoke", "--arm", "candidate"]), null);
+});
+
+test("parses each of the three locked levels", () => {
+  for (const level of TILE_SIZE_LEVELS_PROPOSED) {
+    assert.equal(parseTileSizeArg(["--tile-size", level]), level);
+    // Order-independent -- a real argv can carry other flags before/after it.
+    assert.equal(parseTileSizeArg(["--arm", "candidate", "--tile-size", level, "--smoke"]), level);
+  }
+});
+
+test("throws loudly on a missing value (--tile-size as the last argv token)", () => {
+  assert.throws(() => parseTileSizeArg(["--smoke", "--tile-size"]), /--tile-size requires one of/);
+});
+
+test("throws loudly on an unrecognized value", () => {
+  assert.throws(() => parseTileSizeArg(["--tile-size", "extra-fine"]), /--tile-size requires one of/);
+  assert.throws(() => parseTileSizeArg(["--tile-size", "8"]), /--tile-size requires one of/);
 });
 
 console.log("");

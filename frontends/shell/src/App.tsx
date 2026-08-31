@@ -34,6 +34,12 @@ import {
   notifyResidencyArmDatasetOpened,
   setResidencyArm,
 } from "./residency/residencyArm";
+import {
+  getResidencyTileSizeLevel,
+  notifyResidencyTileSizeLevelDatasetClosed,
+  notifyResidencyTileSizeLevelDatasetOpened,
+  setResidencyTileSizeLevel,
+} from "./residency/residencyTileSizeLevel";
 import { startCandidateArmSession } from "./residency/candidateArmSession";
 import {
   nextResidencyStatus,
@@ -875,6 +881,12 @@ export default function App() {
     // admitted (the setter is refused once one is open, `residencyArm.ts`'s own contract).
     registerE2eHook("setResidencyArm", async (arm) => setResidencyArm(arm));
     registerE2eHook("getResidencyArm", async () => getResidencyArm());
+    // Viewport-residency cut P7 (the tile-size sweep selector): same DEV-only, registered-at-top-level
+    // (not dataset-scoped) discipline as the arm switch immediately above -- a driver selects the tile
+    // grid level BEFORE any dataset is admitted (the setter is refused once one is open,
+    // `residencyTileSizeLevel.ts`'s own contract, mirroring `residencyArm.ts`'s).
+    registerE2eHook("setResidencyTileSizeLevel", async (level) => setResidencyTileSizeLevel(level));
+    registerE2eHook("getResidencyTileSizeLevel", async () => getResidencyTileSizeLevel());
     return () => {
       unregisterE2eHook("residencyInstrumentSetEnabled");
       unregisterE2eHook("residencyInstrumentIsEnabled");
@@ -889,6 +901,8 @@ export default function App() {
       unregisterE2eHook("residencyDisarmFirstPixel");
       unregisterE2eHook("setResidencyArm");
       unregisterE2eHook("getResidencyArm");
+      unregisterE2eHook("setResidencyTileSizeLevel");
+      unregisterE2eHook("getResidencyTileSizeLevel");
     };
   }, []);
 
@@ -918,6 +932,9 @@ export default function App() {
     // additive, so `residency/residencyArm.ts` never runs, or is even referenced, in a production
     // build (`check:dist-clean`'s own extended identifier list covers this).
     if (isInstrumentedBuild()) notifyResidencyArmDatasetOpened();
+    // P7: same bookkeeping, same reason -- `setResidencyTileSizeLevel`'s own "refused while a
+    // dataset is open" contract (`residencyTileSizeLevel.ts`'s own top doc comment).
+    if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetOpened();
 
     // Rider 3: captured once, here, never re-read as `canvasRef.current` inside a callback below --
     // see `makeManagerCallbacks`'s own doc comment for the remount race this closes. This effect's
@@ -957,6 +974,13 @@ export default function App() {
       const session = startCandidateArmSession({
         dataset: admitted.dataset,
         canvas,
+        // P7: the tile-size sweep selector's own dev-gated read, at the exact point the candidate
+        // session is constructed -- `getResidencyTileSizeLevel()` returns `null` (unset) unless a
+        // driver's own `setResidencyTileSizeLevel` call (before this dataset opened) succeeded, in
+        // which case `session`'s own `manager` fixes on it for its whole lifetime (see
+        // `CandidateArmSessionDeps.tileGridLevel`'s own doc comment for the "unset means unchanged
+        // behavior" contract).
+        tileGridLevel: getResidencyTileSizeLevel(),
         // Viewport-residency cut P4 (decisions 24(a)/(b)): the session emits the SAME
         // `ResidencyStatusEvent`s this file's own baseline branch feeds `nextResidencyStatus` --
         // "reuse the existing transition machinery, arm-aware" -- so `.residency-status` renders the
@@ -1004,6 +1028,7 @@ export default function App() {
         void closeDataset(admitted.dataset).catch(() => {});
         managerRef.current = null;
         if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
+        if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetClosed(); // P7: symmetric close
       };
     }
 
@@ -1143,6 +1168,7 @@ export default function App() {
       managerRef.current = null;
       // Viewport-residency cut P3: symmetric with `notifyResidencyArmDatasetOpened` above.
       if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
+      if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetClosed(); // P7: symmetric close
     };
     // `reportViewportOutcome`/`applyScanEvent`/`commitActiveFilter` are stable across renders (each
     // only reaches a `useCallback([])` or React `useState` setter) and `manager`/`debounced` are

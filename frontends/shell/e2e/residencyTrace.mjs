@@ -52,6 +52,33 @@ export const TRACE_VERSION = "3";
 export const TILE_SIZE_LEVELS_PROPOSED = Object.freeze(["coarse", "medium", "fine"]);
 
 /**
+ * P7 (viewport-residency cut, "the tile-size sweep selector -- the campaign's last missing wire"):
+ * parses a `--tile-size <level>` flag from a raw `argv`-shaped array -- pure, no CDP, matching this
+ * module's own top doc comment discipline ("this module is pure DATA and MATH"), so
+ * `residency-harness.mjs`'s own CLI parsing (`parseCellArgs`) has one thing to call and this file's
+ * own dependency-free test (`residencyTrace.test.mjs`) has something to assert against without
+ * spinning up a browser. Returns `null` when the flag was not given at all -- `residency-harness.mjs`'s
+ * own declared "unset" default, distinct from an explicitly wrong value. Never silently accepts a
+ * malformed value: a `--tile-size` with no following argument, or a following argument that is not one
+ * of `TILE_SIZE_LEVELS_PROPOSED` (the three LOCKED grid resolutions this constant already names, now
+ * genuinely locked -- Amendment 11, mirrored product-side by `tileGridConstants.ts`'s own
+ * `TILE_GRID_LEVELS`), throws a descriptive `Error` -- an invalid CLI argument is an operator error to
+ * fix, not a value to silently default around (docs/01 principle 8: absence/refusal is honest, a wrong
+ * silent guess is not).
+ */
+export function parseTileSizeArg(argv) {
+  const idx = argv.indexOf("--tile-size");
+  if (idx === -1) return null;
+  const value = argv[idx + 1];
+  if (!value || !TILE_SIZE_LEVELS_PROPOSED.includes(value)) {
+    throw new Error(
+      `--tile-size requires one of ${TILE_SIZE_LEVELS_PROPOSED.join("|")}, got ${JSON.stringify(value ?? null)}`
+    );
+  }
+  return value;
+}
+
+/**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4e) -- the shell's own declared fan-out ceiling for
  * concurrent `viewport_query` streams a single pan/zoom step may issue, once tiling exists (P3).
  * Named here for the same reason as the two constants above; unused by this piece's own driver,

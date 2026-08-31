@@ -402,7 +402,7 @@ question is closed.
 ## Residency measurement harness (viewport-residency cut, P1/P1b)
 
 ```
-npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate]
+npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate] [--tile-size coarse|medium|fine]
 ```
 
 `e2e/residency-harness.mjs` -- `RESIDENCY-PREREGISTRATION.md` is this suite's ENTIRE spec (§4b the
@@ -423,6 +423,18 @@ candidate); every evidence file also carries `buildCommit` (git rev-parse at run
 `fixtureSha256` (hashed at start AND end, mismatch recorded), `traceVersion`
 (`residencyTrace.mjs`'s own literal), and `buildClass` (a constant: `"vite-dev (tauri dev; DEV-gated
 hooks; unminified client)"`, M13).
+
+**`--tile-size coarse|medium|fine`** (viewport-residency cut P7, "the tile-size sweep selector -- the
+campaign's last missing wire"): selects one of the three LOCKED grid resolutions
+(`tileGridConstants.ts`'s own `TILE_GRID_LEVELS`, Amendment 11) for a candidate-arm run's own
+`TileViewportStreamManager`, set pre-open via `__SPATIAL_E2E__.setResidencyTileSizeLevel`. Candidate
+arm only -- given without `--arm candidate` it is WARNED loudly and NOT applied (a baseline session
+never constructs a tile grid); an unrecognized value is REFUSED loudly (non-zero exit) before any
+browser launch. Omitted entirely, a candidate-arm run keeps today's implicit default
+(`DEFAULT_TILE_GRID_LEVEL`, currently `"medium"`) unchanged. `evidence.cell.tileSize` records the
+ACTUAL level the run established (`evidence.gridFrame.level`, `TileViewportStreamManager.activeLevel`)
+-- not merely what was requested -- `null` for the baseline arm or a run whose grid frame never
+established.
 
 **M7 -- the `open-drain` pre-step.** Before step 1 ("fit") ever runs, this driver measures the
 dataset OPEN's own natural query + first-batch paint (G7's real "cold first view" subject) as its own

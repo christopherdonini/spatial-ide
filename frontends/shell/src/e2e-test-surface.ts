@@ -32,6 +32,7 @@ import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import type { ResidencyStepResult } from "./instrument/residencyInstrument";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
 import type { ResidencyArm, SetResidencyArmResult } from "./residency/residencyArm";
+import type { SetResidencyTileSizeLevelResult } from "./residency/residencyTileSizeLevel";
 import type { CrsCatalogEntry } from "./skp/crsCatalog";
 
 /** Viewport-residency cut P1b (N4, the G6 instrument): `residencyEndStep`'s real return shape --
@@ -281,6 +282,23 @@ export interface E2eTestSurface {
   /** Reads the current arm back -- `"baseline"` unless a prior `setResidencyArm("candidate")` call
    * on this same session succeeded. */
   getResidencyArm?: () => Promise<ResidencyArm>;
+  /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P7, "the tile-size sweep selector -- the
+   * campaign's last missing wire"). Selects one of the three LOCKED grid resolutions
+   * (`tileGridConstants.ts`'s own `TILE_GRID_LEVELS`) for the NEXT candidate-arm dataset session's
+   * `TileViewportStreamManager` -- refused (a typed `SetResidencyTileSizeLevelResult`, never a thrown
+   * exception) while a dataset is currently open (`residency/residencyTileSizeLevel.ts`'s own doc
+   * comment has the full contract, mirroring `setResidencyArm`'s). Meaningful only for the candidate
+   * arm -- a baseline session never constructs a `TileViewportStreamManager` at all, so calling this
+   * ahead of a baseline session succeeds (the value is simply never read) but has no observable effect;
+   * `residency-harness.mjs`'s own `--tile-size` flag only ever calls this when `--arm candidate` was
+   * also given. */
+  setResidencyTileSizeLevel?: (level: TileGridLevel) => Promise<SetResidencyTileSizeLevelResult>;
+  /** Reads the current selection back -- `null` (unset) unless a prior `setResidencyTileSizeLevel`
+   * call on this same session succeeded. `null` here does NOT mean "no level is active": an unset
+   * selector still resolves to `DEFAULT_TILE_GRID_LEVEL` inside `TileViewportStreamManager`'s own
+   * constructor (`residencyTileSizeLevel.ts`'s own top doc comment) -- for the level a session
+   * actually ESTABLISHED, read `residencyGridFrame()`'s own `level` field instead, not this getter. */
+  getResidencyTileSizeLevel?: () => Promise<TileGridLevel | null>;
 }
 
 declare global {

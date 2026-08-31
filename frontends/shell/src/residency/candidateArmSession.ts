@@ -5,6 +5,7 @@ import type { WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { chooseFitTarget } from "../canvas/extent";
 import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
 import { INITIAL_TILE_KEY, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
+import type { TileGridLevel } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { traceCandidateResidencyStatus, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
@@ -129,6 +130,19 @@ export interface CandidateArmSessionDeps {
    * Cancel's own visibility needs. Optional, defaulted to a no-op, so every pre-existing test/call
    * site of this function keeps compiling and behaving unchanged. */
   applyScanEvent?: (event: { kind: "issued"; streamHandle: string } | { kind: "reset" }) => void;
+  /**
+   * Viewport-residency cut P7: the tile grid level this session's own `TileViewportStreamManager`
+   * constructs against -- `App.tsx`'s own dev-gated read of `residencyTileSizeLevel.ts`'s
+   * `getResidencyTileSizeLevel()`, passed through as a plain value rather than this module importing
+   * that DEV-only selector itself (the same "the caller reads DEV-gated state, this module only
+   * consumes a value" separation `App.tsx`'s own arm check/`startCandidateArmSession` boundary already
+   * establishes for `getResidencyArm()` -- this module has never imported `residencyArm.ts` either).
+   * `undefined` or `null` (the selector's own "unset" value, `residencyTileSizeLevel.ts`'s own top doc
+   * comment) both reach `TileViewportStreamManager`'s constructor as `level: undefined`, which resolves
+   * to `DEFAULT_TILE_GRID_LEVEL` there -- EXACTLY today's implicit default, unchanged: before this
+   * piece, the `TileViewportStreamManager` construction below passed no `level` option at all. Optional
+   * so every pre-existing test/call site of this function keeps compiling and behaving unchanged. */
+  tileGridLevel?: TileGridLevel | null;
 }
 
 /** The single, session-lifetime sentinel `streamHandle` this session's own `{kind:"issued"}` dispatch
@@ -427,6 +441,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
 
   const manager = new TileViewportStreamManager({
     dataset,
+    // P7: `deps.tileGridLevel ?? undefined` collapses BOTH "never passed" (`undefined`) and the
+    // selector's own "unset" value (`null`) to the same `undefined` the constructor's own
+    // `opts.level ?? DEFAULT_TILE_GRID_LEVEL` fallback already handles -- see `tileGridLevel`'s own
+    // doc comment above for why that reproduces this session's pre-P7 behavior exactly when unset.
+    level: deps.tileGridLevel ?? undefined,
     residency: {
       // Defect A: "planning treats partial as non-resident" -- `isTileCompleteInCandidateSet`, not
       // the older, weaker `isTileResidentInCandidateSet` (which stays `true` for a partial tile; that

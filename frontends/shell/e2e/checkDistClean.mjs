@@ -99,6 +99,16 @@ const INSTRUMENT_IDENTIFIERS = [
   "recordResidencyTileRequested",
   "recordResidencyDuplicatesDropped",
   "recordResidencyEvictionsApplied",
+  // Viewport-residency cut P7 (the tile-size sweep selector): the DEV-only identifiers unique to
+  // `residency/residencyTileSizeLevel.ts` -- every real call site (`App.tsx`'s
+  // `setResidencyTileSizeLevel`/`getResidencyTileSizeLevel` hook registrations, and the
+  // `notifyResidencyTileSizeLevelDataset{Opened,Closed}` bookkeeping calls) is gated behind
+  // `import.meta.env.DEV`, the same DCE claim the arm-switch identifiers above already rely on --
+  // see `residencyTileSizeLevel.ts`'s own top doc comment (it mirrors `residencyArm.ts` exactly).
+  "setResidencyTileSizeLevel",
+  "getResidencyTileSizeLevel",
+  "notifyResidencyTileSizeLevelDatasetOpened",
+  "notifyResidencyTileSizeLevelDatasetClosed",
 ];
 
 // P1d B6c: three `WorkingCanvas.tsx` imperative-handle METHOD NAMES (product code, never

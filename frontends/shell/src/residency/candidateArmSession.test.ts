@@ -29,7 +29,7 @@ vi.mock("../instrument/residencyInstrument", () => ({
 
 import type { TileBatchIngestOutcome, WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
-import { UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
+import { DEFAULT_TILE_GRID_LEVEL, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import { encodeDecU64 } from "../skp/codec";
 import type { StreamSink } from "../streaming/transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "../streaming/viewportStreamManager";
@@ -95,6 +95,36 @@ describe("startCandidateArmSession", () => {
     cancelMock.mockReset().mockResolvedValue({ state: "requested" });
     dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
     startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  // P7: the tile-size sweep selector's own product-side wire -- `deps.tileGridLevel` reaches
+  // `TileViewportStreamManager`'s own `level` constructor option, which drives `establishGridFrame`'s
+  // own per-level cell math (`cellSizeForLevel`, `tileGrid.ts`) for this session's whole lifetime.
+  it("deps.tileGridLevel reaches the manager's own activeLevel, for each of the three locked levels", () => {
+    for (const level of ["coarse", "medium", "fine"] as const) {
+      const canvas = fakeCanvas();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, tileGridLevel: level });
+      expect(session.manager.activeLevel).toBe(level);
+    }
+  });
+
+  // P7: "default = the current implicit level, unchanged behavior when unset" -- omitting
+  // `tileGridLevel` entirely (every pre-existing call site) reproduces `DEFAULT_TILE_GRID_LEVEL`
+  // exactly, the same as before this piece existed (no `level` option was ever passed).
+  it("omitting tileGridLevel reproduces DEFAULT_TILE_GRID_LEVEL -- unset means unchanged behavior", () => {
+    const canvas = fakeCanvas();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    expect(session.manager.activeLevel).toBe(DEFAULT_TILE_GRID_LEVEL);
+  });
+
+  // P7: the selector's own explicit "unset" value (`null`, `residencyTileSizeLevel.ts`'s own
+  // `getResidencyTileSizeLevel()` default) must collapse to the SAME default as omitting the field
+  // entirely -- `App.tsx` always passes a `TileGridLevel | null`, never `undefined` itself, so this is
+  // the shape this session actually receives at its one real call site.
+  it("an explicit null tileGridLevel also reproduces DEFAULT_TILE_GRID_LEVEL", () => {
+    const canvas = fakeCanvas();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, tileGridLevel: null });
+    expect(session.manager.activeLevel).toBe(DEFAULT_TILE_GRID_LEVEL);
   });
 
   it("reissueUnrestricted issues ONE plain, untiled viewport_query (bbox: null) -- the tile grid's own anchor problem", async () => {
