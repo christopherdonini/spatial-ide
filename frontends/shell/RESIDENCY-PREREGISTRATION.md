@@ -582,3 +582,16 @@ client cost is the dev build). Reported-only, never gated, never quotable as the
 release numbers — but it bounds every claim built on the dev-build cells. The flag's compiled-in
 port stays inside docs/09's dev/debug-gate discipline: never a shipped default, the measure
 build is a locally-built artifact for this campaign only.
+
+**Amendment 17 (2026-08-31, pre-candidate-cells — the candidate arm's identity criterion).**
+With real render-trace emission (P3i-c), the candidate arm's identity guard found ALL SIX
+pairwise sequence comparisons differing — including OFF-vs-OFF — with identical line counts
+(3,252) in every run, and a custodian multiset comparison then proved **the four runs' line
+multisets byte-identical**. Diagnosis: the candidate's up-to-3-concurrent tile streams complete
+in scheduling-dependent order, permuting the issue interleaving run-to-run — an arm-intrinsic
+property independent of instrument state, not an instrument effect. Resolution: **the candidate
+arm's identity criterion is multiset identity over the normalized line set** (exact-sequence
+identity stays the baseline arm's criterion, where it passes); the ordering nondeterminism is
+recorded as the candidate arm's own declared property, and per-step COUNTS remain governed by
+Amendment 14's 2% band (this run: counts exactly equal across all four runs). A candidate cell
+is admissible when the multiset criterion passes across OFF-ON-ON-OFF.

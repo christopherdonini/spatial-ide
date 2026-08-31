@@ -1136,12 +1136,28 @@ async function runFieldSequenceIdentityCheck(page, consoleHandle, activeArm) {
     runs.push({ index: i, state, sequence });
   }
 
+  // Amendment 17: the candidate arm's criterion is MULTISET identity (its up-to-3-concurrent
+  // tile streams permute the issue interleaving run-to-run — proven arm-intrinsic: OFF-vs-OFF
+  // differed while all four runs' line multisets were byte-identical). The baseline arm keeps
+  // exact-sequence identity, where it passes. Both representations are recorded per comparison.
+  const canonicalize = (seq) =>
+    activeArm === "candidate"
+      ? JSON.stringify(seq.map((l) => JSON.stringify(l)).sort())
+      : JSON.stringify(seq);
   const comparisons = [];
   for (let i = 0; i < runs.length; i++) {
     for (let j = i + 1; j < runs.length; j++) {
-      const aJson = JSON.stringify(runs[i].sequence);
-      const bJson = JSON.stringify(runs[j].sequence);
-      comparisons.push({ a: `${runs[i].state}#${runs[i].index}`, b: `${runs[j].state}#${runs[j].index}`, identical: aJson === bJson });
+      const aJson = canonicalize(runs[i].sequence);
+      const bJson = canonicalize(runs[j].sequence);
+      const exactA = JSON.stringify(runs[i].sequence);
+      const exactB = JSON.stringify(runs[j].sequence);
+      comparisons.push({
+        a: `${runs[i].state}#${runs[i].index}`,
+        b: `${runs[j].state}#${runs[j].index}`,
+        identical: aJson === bJson,
+        exactSequenceIdentical: exactA === exactB,
+        criterion: activeArm === "candidate" ? "multiset (amendment 17)" : "exact-sequence",
+      });
     }
   }
   const identical = comparisons.every((c) => c.identical);
@@ -1170,7 +1186,11 @@ async function runFieldSequenceIdentityCheck(page, consoleHandle, activeArm) {
   console.log("");
   console.log(
     `== [arm=${activeArm}] render-trace field-sequence identity (proxy): ${
-      identical ? "PASS -- byte-sequence-identical across OFF-ON-ON-OFF" : "FAIL -- sequences differ"
+      identical
+        ? activeArm === "candidate"
+          ? "PASS -- line-multiset-identical across OFF-ON-ON-OFF (amendment 17's criterion; exact order is arm-nondeterministic by declared property)"
+          : "PASS -- byte-sequence-identical across OFF-ON-ON-OFF"
+        : "FAIL -- sequences differ"
     } ==`
   );
   if (!identical) {
@@ -1366,7 +1386,18 @@ async function main() {
   // generous outer ceiling, not itself a per-step or per-trial scored quantity, so it stays
   // correct (if generous) even for a `--smoke` run's own shorter `stepLimit`.
   const resolvedPerStepBoundMs = settleTimeoutForFixture(FIXTURE_PATH, SETTLE_PER_STEP_TIMEOUT_MS);
-  const trialWatchdogMs = (CAMERA_TRACE_STEPS.length + 1) * resolvedPerStepBoundMs;
+  // P3i-c follow-up (live-found): the single-trial formula below is too small for
+  // `--wire-identity`'s OWN structure -- an OFF-ON-ON-OFF cycle is 4 subruns of
+  // (open + IDENTITY_VIEW_STATE_STEPS) each, which exceeded one trial's bound the moment the
+  // candidate arm's settle cost became real (G-B). The identity mode gets its own formula on
+  // the same per-step basis; the measured-trial formula is unchanged.
+  // Identity mode is a GUARD, not a measured cell: no quantity rides on its wall time, so its
+  // watchdog exists only to catch hangs. A per-step formula understated the candidate arm's real
+  // (and legitimate) chattiness twice (100s fired at ~3252 observed lines); a flat generous
+  // bound is the honest shape for a hang-catch.
+  const trialWatchdogMs = wireIdentity
+    ? 600_000
+    : (CAMERA_TRACE_STEPS.length + 1) * resolvedPerStepBoundMs;
   const watchdog = setTimeout(() => {
     // Live-found (2026-08-30): process.exit inside this callback was observed racing the exit
     // path to a final code of 0 -- a watchdog that fires must never read as success.
