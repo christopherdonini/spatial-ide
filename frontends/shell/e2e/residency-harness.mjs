@@ -61,8 +61,10 @@ import { fileURLToPath } from "node:url";
 import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
 import {
   CAMERA_TRACE_STEPS,
+  dismissThenClickRetry,
   IDENTITY_VIEW_STATE_STEPS,
   percentileNearestRank,
+  SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
   TRACE_VERSION,
   TRIAL_WATCHDOG_MS,
@@ -411,15 +413,56 @@ async function clampedPanDrag(page, box, cx, cy, dxScreenTotal, dyScreenTotal) {
  * Never touches `.residency-status` -- that status has no Dismiss button to find in the first
  * place (rider 1, DECISIONS-PENDING.md entry 0: dismiss hides the banner, never the status
  * indicator). The banner can reappear after a LATER refill also crosses the ceiling (a fresh
- * `.canvas-refusal` mount) -- this is called before every fit-kind step's own click, never only
- * once per trial. Returns whether it found and clicked one, so the caller can record it honestly
- * on the step's own evidence row (`bannerDismissed`). */
+ * `.canvas-refusal` mount) -- this is called before every attempt of the retry below, never only
+ * once per trial. Returns whether it found and clicked one this attempt, so the caller can record
+ * it honestly on the step's own evidence row (Amendment 13: `gesture.bannerDismissed` is now a
+ * count across every attempt, not a single boolean). */
 async function dismissCeilingBannerIfPresent(page) {
   const locator = page.locator(".canvas-refusal button").first();
   const present = (await locator.count()) > 0;
   if (!present) return false;
   await locator.click();
   return true;
+}
+
+/** Amendment 13's own `clickFn` for `dismissThenClickRetry`: a single, SHORT-timeout attempt at
+ * clicking `.zoom-to-layer`, reporting an intercepted click as data (`{ intercepted: true }`)
+ * rather than letting Playwright's own `TimeoutError` propagate -- the retry loop needs to tell
+ * "the banner re-raised and blocked this click" apart from every other possible click failure,
+ * which it still rethrows unswallowed. `BANNER_RETRY_CLICK_TIMEOUT_MS` is deliberately short
+ * (never the full per-step settle bound) so a genuinely intercepted click fails fast enough for a
+ * fresh `dismissCeilingBannerIfPresent` + re-click to still fit inside
+ * `BANNER_DISMISS_CLICK_MAX_ATTEMPTS` attempts within the step's own settle timeout. The message
+ * match ("intercepts pointer events") is the exact phrase this file's own F1 doc comment above
+ * already disclosed Playwright's call log uses for this failure mode -- live-confirmed, not
+ * guessed. */
+const BANNER_RETRY_CLICK_TIMEOUT_MS = 5_000;
+async function clickZoomToLayerDetectingInterception(page) {
+  try {
+    await page.click(".zoom-to-layer", { timeout: BANNER_RETRY_CLICK_TIMEOUT_MS });
+    return { intercepted: false };
+  } catch (e) {
+    const message = String(e && e.message ? e.message : e);
+    if (/intercepts pointer events/i.test(message)) {
+      return { intercepted: true };
+    }
+    throw e;
+  }
+}
+
+/** Amendment 13: "a third intercepted click fails the step with the banner state captured in the
+ * row" -- this captures exactly that state (never throws itself; a capture failure must not mask
+ * the real failure it is describing). */
+async function captureBannerState(page) {
+  try {
+    const locator = page.locator(".canvas-refusal");
+    const count = await locator.count();
+    if (count === 0) return { present: false, count: 0, texts: [] };
+    const texts = await locator.allTextContents();
+    return { present: true, count, texts };
+  } catch (e) {
+    return { present: null, count: null, texts: [], captureError: String(e && e.message ? e.message : e) };
+  }
 }
 
 async function applyStep(page, step) {
@@ -429,13 +472,35 @@ async function applyStep(page, step) {
   const cy = box.y + box.height / 2;
 
   if (step.kind === "fit" || step.kind === "zoom-to-layer") {
-    // F1: dismiss any intercepting ceiling banner FIRST -- an unrelated real-user action, kept
-    // outside the residencyMarkInput/click pair below so the input-to-present proxy still measures
-    // only the fit gesture itself, not this cleanup step.
-    const bannerDismissed = await dismissCeilingBannerIfPresent(page);
+    // F1/Amendment 13: dismiss any intercepting ceiling banner, then click -- kept as a unit
+    // outside residencyMarkInput below only for the FIRST such pair, so the input-to-present proxy
+    // still measures only the fit gesture itself in the (overwhelmingly common) no-banner or
+    // banner-dismissed-once case. Amendment 13: baseline t11 showed the banner can RE-RAISE
+    // between a dismissal and the click landing (the 5 GB fit view, every refill re-trips the
+    // ceiling) -- `dismissThenClickRetry` (residencyTrace.mjs) bounds this to
+    // BANNER_DISMISS_CLICK_MAX_ATTEMPTS (3) dismiss-then-click attempts, recording every attempt.
     await page.evaluate(() => window.__SPATIAL_E2E__.residencyMarkInput?.());
-    await page.click(".zoom-to-layer");
-    return { kind: "fit", bannerDismissed };
+    const retry = await dismissThenClickRetry(
+      () => dismissCeilingBannerIfPresent(page),
+      () => clickZoomToLayerDetectingInterception(page)
+    );
+    if (!retry.succeeded) {
+      const bannerState = await captureBannerState(page);
+      // Amendment 13: "a third intercepted click fails the step with the banner state captured
+      // in the row" -- this throw is caught by main()'s own outer try/catch (no per-step catch
+      // exists anywhere else in this file either, e.g. the bounding-box check above), which
+      // records `evidence.harnessError`; `bannerState` is attached to the thrown error itself
+      // (not only interpolated into its message) so that same outer catch can also record it as
+      // its own structured `evidence.harnessErrorBannerState` field, never only a string.
+      const err = new Error(
+        `applyStep(${step.id}): .zoom-to-layer click intercepted on all ${retry.attempts.length} attempts ` +
+          `(Amendment 13) -- banner state: ${JSON.stringify(bannerState)}`
+      );
+      err.bannerState = bannerState;
+      err.bannerDismissalAttempts = retry.attempts;
+      throw err;
+    }
+    return { kind: "fit", bannerDismissed: retry.dismissals, bannerDismissalAttempts: retry.attempts };
   }
 
   if (step.kind === "pan") {
@@ -1087,13 +1152,25 @@ async function main() {
   // with parseCellArgs' "baseline" default would let a scorer mistake guard evidence for a cell.
   const arm = control ? "control" : wireIdentity ? "identity-guard" : cellArgs.arm;
 
+  // Amendment 12 (RESIDENCY-PREREGISTRATION.md §12): §7's own 180 s figure (`TRIAL_WATCHDOG_MS`,
+  // kept exported and documented as historical -- see its own doc comment in residencyTrace.mjs)
+  // was never fixture-scaled, so it fired by construction once the per-step bound itself grew
+  // (exactly what invalidated both baseline 5 GB attempts, RESULTS.md §5 t10/t11). The outer
+  // watchdog now scales to `(step count + 1) * the fixture's own resolved per-step bound` --
+  // `+1` covers the `open-drain` pre-step (measured the same way as a trace step, ahead of the 11
+  // trace steps proper, per `measureOneStep`'s own shared machinery above). Computed from
+  // `CAMERA_TRACE_STEPS.length` (the full committed trace), not `stepLimit` -- this bound is a
+  // generous outer ceiling, not itself a per-step or per-trial scored quantity, so it stays
+  // correct (if generous) even for a `--smoke` run's own shorter `stepLimit`.
+  const resolvedPerStepBoundMs = settleTimeoutForFixture(FIXTURE_PATH, SETTLE_PER_STEP_TIMEOUT_MS);
+  const trialWatchdogMs = (CAMERA_TRACE_STEPS.length + 1) * resolvedPerStepBoundMs;
   const watchdog = setTimeout(() => {
     // Live-found (2026-08-30): process.exit inside this callback was observed racing the exit
     // path to a final code of 0 -- a watchdog that fires must never read as success.
     process.exitCode = 2;
     console.error("residency-harness: overall watchdog exceeded -- presumed hung, failing loudly");
     process.exit(2);
-  }, TRIAL_WATCHDOG_MS + 120_000); // trial watchdog + generous headroom for launch/mount
+  }, trialWatchdogMs);
   watchdog.unref();
 
   if (!existsSync(FIXTURE_PATH)) {
@@ -1173,6 +1250,16 @@ async function main() {
       buildClass: BUILD_CLASS, // M13
       launchedFresh: launched, // F2: always true -- the fresh-launch invariant above already returned if not
       sweptPids, // F2: PIDs killed on CDP_PORT before this run's own launch, possibly empty
+      // Amendment 12: the outer trial watchdog's own resolved inputs, recorded honestly rather than
+      // only living in a `setTimeout` argument -- `legacyTrialWatchdogMs` is §7's own originally-
+      // declared, now-historical figure (`TRIAL_WATCHDOG_MS`), kept beside the live value so a
+      // reader can see how far this run's own fixture-scaled bound diverges from it.
+      watchdog: {
+        resolvedPerStepBoundMs,
+        stepCountUsed: CAMERA_TRACE_STEPS.length,
+        trialWatchdogMs,
+        legacyTrialWatchdogMs: TRIAL_WATCHDOG_MS,
+      },
     },
   };
 
@@ -1424,6 +1511,11 @@ async function main() {
   } catch (e) {
     console.error(`residency-harness: harness failure: ${e.stack ?? e.message}`);
     evidence.harnessError = e.message;
+    // Amendment 13: a third intercepted `.zoom-to-layer` click (`applyStep`'s own thrown error,
+    // above) attaches `bannerState`/`bannerDismissalAttempts` to the error object -- surfaced here
+    // as their own structured evidence fields, not only folded into the message string.
+    if (e.bannerState !== undefined) evidence.harnessErrorBannerState = e.bannerState;
+    if (e.bannerDismissalAttempts !== undefined) evidence.harnessErrorBannerDismissalAttempts = e.bannerDismissalAttempts;
     process.exitCode = 1;
   } finally {
     // F3 fix (P2-prep dry-run): a canonical guarantee, in this ONE shared flush path every mode

@@ -17,7 +17,9 @@ import { readFileSync } from "node:fs";
 
 import {
   abbaInterleave,
+  BANNER_DISMISS_CLICK_MAX_ATTEMPTS,
   CAMERA_TRACE_STEPS,
+  dismissThenClickRetry,
   G7_COLD_FIRST_VIEW_MARGIN_PROPOSED,
   IDENTITY_VIEW_STATE_STEPS,
   isWellFormedSettleCriterion,
@@ -25,11 +27,13 @@ import {
   percentileNearestRank,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
-  LARGE_FIXTURE_BASENAMES,
+  SETTLE_PER_STEP_TIMEOUT_5GB_MS,
+  SETTLE_TIMEOUT_BY_BASENAME_MS,
   settleTimeoutForFixture,
   SETTLE_QUIET_MS,
   TILE_SIZE_LEVELS_PROPOSED,
   TRACE_VERSION,
+  TRIAL_WATCHDOG_MS,
   validateCameraTrace,
 } from "./residencyTrace.mjs";
 
@@ -110,13 +114,30 @@ test("every step's settle criterion is IDENTICAL (§4b: 'identical at every step
 test("quietMs is 300ms and timeoutMs is 5000ms, per §4b/§7", () => {
   assert.equal(SETTLE_QUIET_MS, 300);
   assert.equal(SETTLE_PER_STEP_TIMEOUT_MS, 5_000);
-  // Amendment 9 (proposed-pending-sight): the driver scales the per-step bound for the declared
-  // large fixtures; the trace data itself stays fixture-agnostic. Pin the scaling here.
+  // Amendment 9 (proposed-pending-sight, LOCKED): the driver scales the per-step bound for the
+  // Polygons class; the trace data itself stays fixture-agnostic. Pin the scaling here.
   assert.equal(SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS, 60_000);
-  assert.deepEqual([...LARGE_FIXTURE_BASENAMES], ["polygons-100k.parquet", "parcels-5gb.parquet"]);
+  // Amendment 12 (2026-08-31): the 5 GB fixture gets its OWN, larger bound -- no longer shares
+  // SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS with the Polygons class.
+  assert.equal(SETTLE_PER_STEP_TIMEOUT_5GB_MS, 150_000);
+  assert.deepEqual(SETTLE_TIMEOUT_BY_BASENAME_MS, {
+    "polygons-100k.parquet": 60_000,
+    "parcels-5gb.parquet": 150_000,
+  });
+  assert.ok(Object.isFrozen(SETTLE_TIMEOUT_BY_BASENAME_MS));
   assert.equal(settleTimeoutForFixture("C:\\x\\polygons-100k.parquet", 5_000), 60_000);
-  assert.equal(settleTimeoutForFixture("/a/b/parcels-5gb.parquet", 5_000), 60_000);
+  assert.equal(settleTimeoutForFixture("/a/b/parcels-5gb.parquet", 5_000), 150_000);
   assert.equal(settleTimeoutForFixture("C:\\x\\filter-zoned.parquet", 5_000), 5_000);
+});
+
+test("TRIAL_WATCHDOG_MS (§7's own 180s figure) is kept exported at its ORIGINAL value, now historical (Amendment 12: the live outer watchdog is computed by residency-harness.mjs as (CAMERA_TRACE_STEPS.length + 1) * the resolved per-step bound, never this constant directly)", () => {
+  assert.equal(TRIAL_WATCHDOG_MS, 180_000);
+  // The historical figure's own documented relationship: on a SMALL fixture (resolved per-step
+  // bound = SETTLE_PER_STEP_TIMEOUT_MS), the new formula stays comfortably under this constant.
+  assert.ok((CAMERA_TRACE_STEPS.length + 1) * SETTLE_PER_STEP_TIMEOUT_MS < TRIAL_WATCHDOG_MS);
+  // On the 5 GB fixture, the new formula now EXCEEDS the historical constant -- exactly the gap
+  // Amendment 12 exists to close (the historical constant would have fired by construction).
+  assert.ok((CAMERA_TRACE_STEPS.length + 1) * SETTLE_PER_STEP_TIMEOUT_5GB_MS > TRIAL_WATCHDOG_MS);
 });
 
 test("CAMERA_TRACE_STEPS and every step are frozen (Object.isFrozen) -- nothing, including a careless driver, can mutate the committed trace out from under a later step", () => {
@@ -315,6 +336,108 @@ test("G7 margin, tile-size levels, and max-in-flight are each named, single-sour
   assert.equal(MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED, 3);
   assert.ok(Object.isFrozen(TILE_SIZE_LEVELS_PROPOSED));
 });
+
+console.log("");
+console.log("residencyTrace.mjs -- dismissThenClickRetry (§12 Amendment 13: bounded dismiss-then-click retry)");
+
+test("BANNER_DISMISS_CLICK_MAX_ATTEMPTS is 3 (Amendment 13's own '<=3 attempts')", () => {
+  assert.equal(BANNER_DISMISS_CLICK_MAX_ATTEMPTS, 3);
+});
+
+await testAsync("succeeds immediately when the first click is never intercepted -- one attempt, no dismissal needed", async () => {
+  let dismissCalls = 0;
+  let clickCalls = 0;
+  const result = await dismissThenClickRetry(
+    async () => {
+      dismissCalls++;
+      return false; // no banner present
+    },
+    async () => {
+      clickCalls++;
+      return { intercepted: false };
+    }
+  );
+  assert.deepEqual(result, { succeeded: true, attempts: [{ dismissed: false, intercepted: false }], dismissals: 0 });
+  assert.equal(dismissCalls, 1);
+  assert.equal(clickCalls, 1);
+});
+
+await testAsync("one banner present, dismissed, then the click succeeds -- one attempt, one dismissal recorded", async () => {
+  const result = await dismissThenClickRetry(
+    async () => true, // banner present and dismissed
+    async () => ({ intercepted: false })
+  );
+  assert.deepEqual(result, { succeeded: true, attempts: [{ dismissed: true, intercepted: false }], dismissals: 1 });
+});
+
+await testAsync("banner re-raises twice, dismissed and re-clicked each time, third attempt succeeds -- all three attempts recorded", async () => {
+  let attempt = 0;
+  const result = await dismissThenClickRetry(
+    async () => true, // a fresh banner every attempt
+    async () => {
+      attempt++;
+      return { intercepted: attempt < 3 };
+    }
+  );
+  assert.equal(result.succeeded, true);
+  assert.deepEqual(result.attempts, [
+    { dismissed: true, intercepted: true },
+    { dismissed: true, intercepted: true },
+    { dismissed: true, intercepted: false },
+  ]);
+  assert.equal(result.dismissals, 3);
+});
+
+await testAsync("every attempt up to maxAttempts intercepted -- fails the step, per Amendment 13 ('a third intercepted click fails the step')", async () => {
+  const result = await dismissThenClickRetry(
+    async () => true,
+    async () => ({ intercepted: true })
+  );
+  assert.equal(result.succeeded, false);
+  assert.equal(result.attempts.length, BANNER_DISMISS_CLICK_MAX_ATTEMPTS);
+  assert.ok(result.attempts.every((a) => a.intercepted === true && a.dismissed === true));
+  assert.equal(result.dismissals, BANNER_DISMISS_CLICK_MAX_ATTEMPTS);
+});
+
+await testAsync("respects a custom maxAttempts (never hard-wired to 3 inside the loop itself)", async () => {
+  let clickCalls = 0;
+  const result = await dismissThenClickRetry(
+    async () => false,
+    async () => {
+      clickCalls++;
+      return { intercepted: true };
+    },
+    { maxAttempts: 1 }
+  );
+  assert.equal(result.succeeded, false);
+  assert.equal(clickCalls, 1);
+  assert.equal(result.attempts.length, 1);
+});
+
+await testAsync("never swallows a genuine click error -- only an { intercepted: true } result is treated as the race", async () => {
+  const boom = new Error("boom -- an unrelated click failure");
+  await assert.rejects(
+    () =>
+      dismissThenClickRetry(
+        async () => false,
+        async () => {
+          throw boom;
+        }
+      ),
+    (e) => e === boom
+  );
+});
+
+await testAsync(
+  "rejects a non-function dismissFn/clickFn or a non-positive-integer maxAttempts rather than silently producing garbage",
+  async () => {
+    await assert.rejects(() => dismissThenClickRetry(null, async () => ({ intercepted: false })));
+    await assert.rejects(() => dismissThenClickRetry(async () => false, null));
+    await assert.rejects(() =>
+      dismissThenClickRetry(async () => false, async () => ({ intercepted: false }), { maxAttempts: 0 })
+    );
+  }
+);
 
 console.log("");
 console.log(`== ${passed} passed, ${failed} failed ==`);

@@ -74,27 +74,112 @@ export const MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED = 3;
 export const SETTLE_QUIET_MS = 300;
 export const SETTLE_PER_STEP_TIMEOUT_MS = 5_000;
 
-/** Amendment 9 (2026-08-31, proposed-pending-sight): the 5 s per-step bound is structurally too
- * small on the over-ceiling fixtures -- the Polygons dry-run had genuine healthy streaming still
- * in flight at 5 s, and open-drain's own declared bound for the same full-extent stream shape is
- * 60 s (observed need 47-51 s). The trace's per-step `timeoutMs` stays the SMALL-fixture value
- * (the trace is fixture-agnostic data); the DRIVER scales it via `settleTimeoutForFixture` when
- * the run's fixture is one of the declared large ones. Locks with the other
- * proposed-pending-sight values at the baseline run. */
+/** Amendment 9 (2026-08-31, proposed-pending-sight, LOCKED by Amendment 11): the 5 s per-step
+ * bound is structurally too small on the over-ceiling fixtures -- the Polygons dry-run had
+ * genuine healthy streaming still in flight at 5 s, and open-drain's own declared bound for the
+ * same full-extent stream shape is 60 s (observed need 47-51 s). The trace's per-step `timeoutMs`
+ * stays the SMALL-fixture value (the trace is fixture-agnostic data); the DRIVER scales it via
+ * `settleTimeoutForFixture` per fixture basename below. Kept exported for the pins: this is now
+ * specifically the Polygons-class bound, not every over-ceiling fixture -- Amendment 12 gave
+ * the 5 GB fixture its OWN, larger bound instead of sharing this one. */
 export const SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS = 60_000;
-export const LARGE_FIXTURE_BASENAMES = Object.freeze(["polygons-100k.parquet", "parcels-5gb.parquet"]);
 
-/** Pure: the effective per-step settle timeout for a fixture path (Amendment 9's scaling). */
+/** Amendment 12 (2026-08-31, post-baseline, pre-candidate): both baseline 5 GB attempts were
+ * invalid -- the 5 GB fixture's own steps need more than Amendment 9's 60 s (observed: open-drain
+ * 64.7-64.8 s, fit 90.2 s, pan-north 65.1 s). Resolution: the 5 GB fixture's per-step settle bound
+ * becomes 150,000 ms (observed worst 90.2 s + the same ~60% headroom Amendment 9's 60 s gave its
+ * 47-51 s evidence); the Polygons class keeps 60 s (the constant above, unchanged). */
+export const SETTLE_PER_STEP_TIMEOUT_5GB_MS = 150_000;
+
+/** Amendment 12: a per-basename map, not a single "large fixture" constant -- the two
+ * over-ceiling fixtures no longer share one bound. Frozen; consulted only by
+ * `settleTimeoutForFixture` below. */
+export const SETTLE_TIMEOUT_BY_BASENAME_MS = Object.freeze({
+  "polygons-100k.parquet": SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
+  "parcels-5gb.parquet": SETTLE_PER_STEP_TIMEOUT_5GB_MS,
+});
+
+/** Pure: the effective per-step settle timeout for a fixture path (Amendment 9's scaling,
+ * Amendment 12's per-basename map). Falls back to the caller's own `stepTimeoutMs` (the small-
+ * fixture value, in practice) for any basename not in the map. */
 export function settleTimeoutForFixture(fixturePath, stepTimeoutMs) {
   const base = String(fixturePath).replace(/\\/g, "/").split("/").pop() ?? "";
-  return LARGE_FIXTURE_BASENAMES.includes(base) ? SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS : stepTimeoutMs;
+  return SETTLE_TIMEOUT_BY_BASENAME_MS[base] ?? stepTimeoutMs;
 }
 
 /** §7's own declared ceiling of 180 s for "one full camera-trace trial (all 11 steps, one
  * arm/fixture/tile-size cell)" -- that quoted fragment is verbatim (§7's own table cell); "180 s" is
  * carried as this constant's own value, not re-quoted, since joining table cells with a colon (as an
- * earlier version of this comment did) is not how the source table itself reads (P1d B1/B2). */
+ * earlier version of this comment did) is not how the source table itself reads (P1d B1/B2).
+ *
+ * **Amendment 12 (2026-08-31): this constant's own MEANING is now historical, not the driver's
+ * live outer-watchdog bound.** §7's own 180 s figure was never fixture-scaled, so it fired by
+ * construction once the per-step bound itself grew past a fraction of 180 s (exactly the failure
+ * the 5 GB baseline attempts hit -- `RESULTS.md` §5, t10/t11). `residency-harness.mjs`'s own outer
+ * watchdog is now computed as `(CAMERA_TRACE_STEPS.length + 1) * <the run's resolved per-step
+ * bound>` (via `settleTimeoutForFixture`), never this fixed constant. This export is KEPT (other
+ * references/tests pin it) as the record of §7's own originally-declared 180 s ceiling -- still
+ * the correct figure to expect on any run against a SMALL fixture, where the resolved per-step
+ * bound is `SETTLE_PER_STEP_TIMEOUT_MS` (5 s) and `(11 + 1) * 5_000 = 60_000`, comfortably under
+ * this constant's own 180 s -- but it is no longer read by the live watchdog computation itself. */
 export const TRIAL_WATCHDOG_MS = 180_000;
+
+// ---------------------------------------------------------------------------------------
+// §12 Amendment 13: the pre-click banner dismissal, as a bounded dismiss-then-click retry.
+// ---------------------------------------------------------------------------------------
+
+/** Amendment 13's own default: "≤3 attempts". Named here so no caller hard-wires the literal
+ * `3` -- see `dismissThenClickRetry` below. */
+export const BANNER_DISMISS_CLICK_MAX_ATTEMPTS = 3;
+
+/**
+ * Amendment 13 (RESIDENCY-PREREGISTRATION.md §12): baseline t11 failed because the over-ceiling
+ * banner RE-RAISES between the harness's own dismissal and its next click at the 5 GB fit view --
+ * every refill re-trips the ceiling, a race smaller fixtures cannot produce. This is the bounded
+ * dismiss-then-click retry that resolution names, factored as a generic, dependency-injected
+ * control-flow primitive so it stays inside this module's own "no CDP, no DOM, no fetch"
+ * discipline (this file's own top doc comment) even though its CALLERS
+ * (`residency-harness.mjs`) touch a real page -- this function itself only ever invokes what it is
+ * given, which is what makes it unit-testable with fakes (`residencyTrace.test.mjs`) rather than a
+ * live browser.
+ *
+ * `dismissFn()` -- async, called once per attempt BEFORE `clickFn()`. Returns `true` iff it found
+ * and dismissed a banner on this attempt; `false` if none was present. Never throws for "no
+ * banner" -- that is the ordinary, expected case on most attempts.
+ * `clickFn()` -- async, called once per attempt AFTER `dismissFn()`. Returns `{ intercepted:
+ * boolean }` -- `true` means the click itself was blocked by a re-raised banner (the exact race
+ * this helper exists to survive); this helper never interprets a thrown error from `clickFn` as an
+ * interception -- a genuine click failure propagates, unswallowed.
+ *
+ * Attempts at most `maxAttempts` times (default `BANNER_DISMISS_CLICK_MAX_ATTEMPTS`, 3, per
+ * Amendment 13's own "≤3 attempts"). Returns `{ succeeded, attempts, dismissals }`:
+ *   - `attempts`: the full per-attempt record, `{ dismissed, intercepted }` each -- Amendment 13's
+ *     own "each dismissal recorded on the step's evidence row."
+ *   - `dismissals`: the count of attempts where `dismissed === true` -- the count Amendment 13
+ *     says extends `gesture.bannerDismissed` from a single boolean to a count.
+ *   - `succeeded`: `false` iff EVERY attempt up to `maxAttempts` was intercepted -- Amendment 13's
+ *     own "a third intercepted click fails the step." This helper has no DOM access of its own to
+ *     capture the banner's live state at that point; the caller (the harness) is responsible for
+ *     capturing it and failing the step, per Amendment 13's own text.
+ */
+export async function dismissThenClickRetry(dismissFn, clickFn, { maxAttempts = BANNER_DISMISS_CLICK_MAX_ATTEMPTS } = {}) {
+  if (typeof dismissFn !== "function" || typeof clickFn !== "function") {
+    throw new Error("dismissThenClickRetry: dismissFn and clickFn must both be functions");
+  }
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new Error(`dismissThenClickRetry: maxAttempts must be a positive integer, got ${maxAttempts}`);
+  }
+  const attempts = [];
+  for (let i = 0; i < maxAttempts; i++) {
+    const dismissed = await dismissFn();
+    const { intercepted } = await clickFn();
+    attempts.push({ dismissed, intercepted });
+    if (!intercepted) {
+      return { succeeded: true, attempts, dismissals: attempts.filter((a) => a.dismissed).length };
+    }
+  }
+  return { succeeded: false, attempts, dismissals: attempts.filter((a) => a.dismissed).length };
+}
 
 /**
  * The 11-step camera trace (§4b), as DATA -- `kind`/`params` are interpreted by the driver
