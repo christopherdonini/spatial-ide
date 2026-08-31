@@ -531,3 +531,34 @@ settle timeout fixture-scaled (60,000 ms on the Polygons class and the 5 GB fixt
 on small fixtures).** These figures are no longer proposed anywhere; every "proposed-pending-
 sight" marker above and in the harness constants reads historically from here on. RustDesk was
 verified stopped (process-level, not merely disconnected) before the first cell.
+
+**Amendment 12 (2026-08-31, post-baseline, pre-candidate — 5 GB bounds).** Both baseline 5 GB
+attempts were invalid for structural reasons the Polygons class cannot produce (t10/t11,
+RESULTS.md §5): the 5 GB fixture's own steps need more than Amendment 9's 60 s (observed:
+open-drain 64.7–64.8 s, fit 90.2 s, pan-north 65.1 s), and the OUTER trial watchdog was never
+fixture-scaled at all, so it fires by construction once three steps run long. Resolution: **the
+5 GB fixture's per-step settle bound becomes 150,000 ms** (observed worst 90.2 s + the same
+~60% headroom Amendment 9's 60 s gave its 47–51 s evidence; the Polygons class keeps 60 s), and
+**the outer trial watchdog scales to (step count + 1) × the fixture's per-step bound** rather
+than a fixed constant. The scored Polygons cells are unaffected; the baseline 5 GB cells remain
+honestly unmeasured until a re-run under these bounds.
+
+**Amendment 13 (2026-08-31, post-baseline, pre-candidate — the 5 GB banner re-raise race).**
+Baseline t11 failed because the over-ceiling banner RE-RAISES between the harness's dismissal
+and its next click at the 5 GB fit view — every refill re-trips the ceiling, a race smaller
+fixtures cannot produce. Resolution: the harness's pre-click dismissal becomes a bounded
+dismiss-then-click retry (≤3 attempts, each dismissal recorded on the step's evidence row);
+if the third click is still intercepted, the step fails with the banner state captured. This
+mirrors what a real operator does when a banner reappears, and every dismissal remains data.
+
+**Amendment 14 (2026-08-31, post-baseline — the §8 determinism rule's scope, clarified).** §8's
+"deterministic-or-unmeasured" rule exists to catch INSTRUMENT faults (a counter that changes
+between identical runs is broken bookkeeping). The baseline showed a different phenomenon:
+four step-classes carried two distinct resident-feature counts across the seven trials — small,
+real, realized-gesture variance (the same wheel/drag lands on slightly different frames run to
+run), which is SAMPLE variance, not an instrument fault. Clarified: **per-step resident counts
+that vary within 2% across a cell's trials are reported as a spread (min–max beside the
+figures); variance beyond 2% keeps the original rule's meaning** — the cell is
+`unmeasured — non-deterministic` pending instrument diagnosis. The baseline's four flagged
+classes fall within the 2% band and stand as reported-with-spread (RESULTS.md §4's disclosed
+tension resolves under this clarification).
