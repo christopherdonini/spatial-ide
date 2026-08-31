@@ -4,6 +4,7 @@ target/
 # Node
 node_modules/
 dist/
+dist-measure/
 .vite/
 
 # Tauri

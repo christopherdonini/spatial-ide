@@ -25,6 +25,7 @@ import {
 } from "./instrument/residencyInstrument";
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
+import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import PublishPanel from "./publish/PublishPanel";
 import {
   getResidencyArm,
@@ -777,7 +778,7 @@ export default function App() {
   // row showed `armDisarmedCleanly: true` (something WAS armed) yet `firstPixelReason: "no-paint"`
   // despite batches genuinely arriving and rendering, because the arm target was the wrong instance.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!isInstrumentedBuild()) return;
     registerE2eHook("residencyInstrumentSetEnabled", async (value: boolean) => {
       if (value) {
         enableResidencyInstrument();
@@ -871,7 +872,7 @@ export default function App() {
     // dataset is open" contract -- DEV-gated (the arm switch is a dev/E2E-only concern) and purely
     // additive, so `residency/residencyArm.ts` never runs, or is even referenced, in a production
     // build (`check:dist-clean`'s own extended identifier list covers this).
-    if (import.meta.env.DEV) notifyResidencyArmDatasetOpened();
+    if (isInstrumentedBuild()) notifyResidencyArmDatasetOpened();
 
     // Rider 3: captured once, here, never re-read as `canvasRef.current` inside a callback below --
     // see `makeManagerCallbacks`'s own doc comment for the remount race this closes. This effect's
@@ -907,7 +908,7 @@ export default function App() {
     // | null]>` shape baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX
     // below (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is
     // active without an arm check of its own.
-    if (import.meta.env.DEV && getResidencyArm() === "candidate") {
+    if (isInstrumentedBuild() && getResidencyArm() === "candidate") {
       const session = startCandidateArmSession({ dataset: admitted.dataset, canvas });
       managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
       viewportDebounceRef.current = debounce(
@@ -916,7 +917,7 @@ export default function App() {
       );
       issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
 
-      if (import.meta.env.DEV) {
+      if (isInstrumentedBuild()) {
         registerE2eHook("queryWithFilter", (predicate: string) =>
           applyFilter(predicateTextToFilter(predicate), {
             requestViewport: (bbox, f) => (issueQueryRef.current ? issueQueryRef.current(bbox, null, f) : Promise.resolve({ kind: "stopped" })),
@@ -939,10 +940,10 @@ export default function App() {
         viewportDebounceRef.current = null;
         issueQueryRef.current = null;
         void session.stop();
-        if (import.meta.env.DEV) unregisterE2eHook("queryWithFilter");
+        if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
         void closeDataset(admitted.dataset).catch(() => {});
         managerRef.current = null;
-        if (import.meta.env.DEV) notifyResidencyArmDatasetClosed();
+        if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
       };
     }
 
@@ -1013,7 +1014,7 @@ export default function App() {
     // registered here, inside this effect, because `issueViewportQuery` (and therefore anything to
     // query) only exists once a dataset is admitted -- mirrors `capturePixels` only existing once
     // `WorkingCanvas` mounts.
-    if (import.meta.env.DEV) {
+    if (isInstrumentedBuild()) {
       registerE2eHook("queryWithFilter", (predicate: string) =>
         applyFilter(
           // P6 review, nit: routed through the SAME `predicateTextToFilter` mapping the real panel's
@@ -1074,13 +1075,13 @@ export default function App() {
       viewportDebounceRef.current = null;
       issueQueryRef.current = null;
       void manager.stop();
-      if (import.meta.env.DEV) unregisterE2eHook("queryWithFilter");
+      if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
       // Every admitted dataset stays open (and its DuckDB pool resident) until explicitly closed;
       // opening a second one must not leak the first (S1, architect review of this cut).
       void closeDataset(admitted.dataset).catch(() => {});
       managerRef.current = null;
       // Viewport-residency cut P3: symmetric with `notifyResidencyArmDatasetOpened` above.
-      if (import.meta.env.DEV) notifyResidencyArmDatasetClosed();
+      if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
     };
     // `reportViewportOutcome`/`applyScanEvent`/`commitActiveFilter` are stable across renders (each
     // only reaches a `useCallback([])` or React `useState` setter) and `manager`/`debounced` are

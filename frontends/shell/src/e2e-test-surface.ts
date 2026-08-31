@@ -2,10 +2,14 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * E2E TEST SURFACE -- dev builds only. Never present in a production bundle: every export here is
- * a no-op unless `import.meta.env.DEV`, which Vite replaces with a literal `false` for `npm run
- * build`, letting esbuild's minifier dead-code-eliminate the guarded branches (`npm run verify`'s
- * production build succeeding is what proves this, not a claim in this comment).
+ * E2E TEST SURFACE -- dev builds and measure builds only (`isInstrumentedBuild()`,
+ * `RESIDENCY-PREREGISTRATION.md` §12 Amendment 16 -- viewport-residency cut P3r widened this
+ * file's own gate from bare `import.meta.env.DEV`). Never present in a PLAIN production bundle:
+ * every export here is a no-op unless `isInstrumentedBuild()`, which reduces to a Vite-replaced
+ * literal `false` for `npm run build` (`vite build`, no mode), letting esbuild's minifier
+ * dead-code-eliminate the guarded branches (`npm run verify`'s production build succeeding is what
+ * proves this, not a claim in this comment) -- a measure build (`vite build --mode measure`)
+ * deliberately keeps the same branches compiled in, on top of the same release optimizations.
  *
  * Referenced by `frontends/shell/e2e/README.md`. Exists for exactly one reason: a Playwright
  * driver attached over CDP can drive every part of this app except the native OS file-picker
@@ -23,6 +27,7 @@
 
 import type { ApplyFilterOutcome } from "./App";
 import type { ResidentCounts } from "./canvas/WorkingCanvas";
+import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import type { ResidencyStepResult } from "./instrument/residencyInstrument";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
 import type { ResidencyArm, SetResidencyArmResult } from "./residency/residencyArm";
@@ -263,20 +268,21 @@ declare global {
   }
 }
 
-/** No-ops outside dev builds -- see this file's top comment for why that is load-bearing, not a
- * convenience default. */
+/** No-ops outside an instrumented build (`isInstrumentedBuild()`: a dev build, or a measure build
+ * -- `RESIDENCY-PREREGISTRATION.md` §12 Amendment 16) -- see this file's top comment for why that
+ * is load-bearing, not a convenience default. */
 export function registerE2eHook<K extends keyof E2eTestSurface>(
   name: K,
   fn: NonNullable<E2eTestSurface[K]>
 ): void {
-  if (!import.meta.env.DEV) return;
+  if (!isInstrumentedBuild()) return;
   const surface = window.__SPATIAL_E2E__ ?? {};
   surface[name] = fn as E2eTestSurface[K];
   window.__SPATIAL_E2E__ = surface;
 }
 
 export function unregisterE2eHook(name: keyof E2eTestSurface): void {
-  if (!import.meta.env.DEV) return;
+  if (!isInstrumentedBuild()) return;
   if (window.__SPATIAL_E2E__) {
     delete window.__SPATIAL_E2E__[name];
   }

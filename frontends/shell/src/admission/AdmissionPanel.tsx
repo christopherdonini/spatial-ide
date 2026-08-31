@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { cancel as cancelClient } from "../skp/client";
 import { crsCatalog } from "../skp/crsCatalog";
 import { pickFile } from "../skp/dialog";
@@ -301,7 +302,7 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
   // would, camelCased for JS-side ergonomics; `crsCatalog` is exposed read-only alongside it so
   // P5's suite can inspect the pinned catalog without going through the DOM.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!isInstrumentedBuild()) return;
     registerE2eHook("openPath", async (path, opts) => {
       const options: AdmitOptions | undefined = opts
         ? {

@@ -49,6 +49,18 @@ pub fn run() {
             // `Session`'s default (deriving its expected origin from the data plane's own bound
             // port) assumed a same-origin browser consumer and silently 403'd every WebSocket
             // upgrade from this webview -- ADR-020.
+            //
+            // **P3r/Amendment 16 note:** this selector reads `cfg!(debug_assertions)`, NOT the
+            // `measure-build` feature -- a measure build is `cargo build --release`/`tauri build`
+            // (never `--debug`), so `debug_assertions` is `false` regardless of the feature, and this
+            // takes the SAME `"http://tauri.localhost"` branch a plain packaged release build does.
+            // That is the correct origin for streaming to work: `tauri build`'s own frontend is served
+            // over Tauri's packaged custom-protocol origin (`ADR-020`'s already-validated path), not
+            // the dev server, and this selector already matches only on `debug_assertions`, which the
+            // measure build's own release profile leaves unset. The KNOWN fail-closed defect this
+            // selector's own doc history names is `tauri build --debug`'s mismatch (a *debug* packaged
+            // build still reads `debug_assertions == true` and would wrongly expect the dev-server
+            // origin) -- not exercised here, since `npm run build:measure` never passes `--debug`.
             let webview_origin = if cfg!(debug_assertions) {
                 "http://localhost:5180".to_string()
             } else {
@@ -98,6 +110,55 @@ pub fn run() {
             // call (`publish::RunningPublishes`'s own doc comment). Dies with the process, same as
             // every other publish-seam state above.
             app.manage(Arc::new(publish::RunningPublishes::new()));
+
+            // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16, the "measure
+            // build") -- the debug-gated CDP port, compiled in via this NAMED cargo feature, never a
+            // shipped default. There is no `#[cfg(debug_assertions)]`-gated Rust site that already
+            // opens a CDP port to widen (verified while writing this: `additionalBrowserArgs` is set
+            // ONLY by `e2e/lib.mjs`'s `writeConfigOverlay` for `tauri dev --config <path>`, a Node-side
+            // JSON overlay with no Rust equivalent; `tauri.conf.json` itself carries no
+            // `additionalBrowserArgs` key at all) -- this block is that site, built new, following the
+            // same idiom (`e2e/lib.mjs`'s own `WRY_DEFAULT_BROWSER_ARGS` comment: `additionalBrowserArgs`
+            // REPLACES wry's own defaults rather than appending to them, so they must be repeated here).
+            //
+            // **Always paired, at build time, with a config overlay that sets this window's own
+            // `create: false`** (`npm run build:measure`'s generated `e2e/out/tauri.measure.conf.json`,
+            // `e2e/writeMeasureConfigOverlay.mjs`) -- Tauri's own internal `setup()` creates every
+            // `app.config().app.windows` entry whose `create` is `true` BEFORE this closure ever runs
+            // (verified against `tauri-2.11.5/src/app.rs`'s own `setup()` function, not assumed), so
+            // without that overlay this block would race the declarative auto-created window for the
+            // same `"main"` label and `.build()?` below would return `Err` -- a loud `setup` failure
+            // (`.expect(...)` below), never a silent second window or a silently-missing CDP port.
+            //
+            // Reads the CDP port from `SPATIAL_E2E_CDP_PORT` (the SAME env var `e2e/lib.mjs`'s own
+            // `CDP_PORT` reads, so one flag governs both the harness's own attach target and this
+            // process's own open port), defaulting to `9223` -- `CDP_PORT`'s own default.
+            #[cfg(feature = "measure-build")]
+            {
+                let window_config = app
+                    .config()
+                    .app
+                    .windows
+                    .first()
+                    .cloned()
+                    .expect(
+                        "measure-build: tauri.conf.json (as merged with the measure build's own \
+                         config overlay) has no app.windows[0] to build the measure window from",
+                    );
+                let cdp_port =
+                    std::env::var("SPATIAL_E2E_CDP_PORT").unwrap_or_else(|_| "9223".to_string());
+                let browser_args = format!(
+                    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection \
+                     --autoplay-policy=no-user-gesture-required --remote-debugging-port={cdp_port}"
+                );
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &window_config)?
+                    .additional_browser_args(&browser_args)
+                    .build()?;
+                eprintln!(
+                    "[spatial-ide-shell] measure-build: CDP remote-debugging port {cdp_port} opened"
+                );
+            }
+
             // `running` is intentionally leaked into a `Box` rather than dropped: dropping it would
             // shut the data plane down while the app is still starting. It lives for the process's
             // whole lifetime, exactly as `slice-host`'s own `running` does until its Ctrl-C.

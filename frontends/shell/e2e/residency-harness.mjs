@@ -58,7 +58,7 @@ import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+import { attachOrLaunch, attachOrLaunchExe, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
 import {
   CAMERA_TRACE_STEPS,
   dismissThenClickRetry,
@@ -94,7 +94,13 @@ const ZOOM_WHEEL_DELTA = -1200; // negative deltaY == "scroll up" == zoom in, in
 const ZOOM_OUT_WHEEL_DELTA = 1200;
 
 // M13: a constant, stated honestly, carried into every evidence file's own `cell.buildClass`.
-const BUILD_CLASS = "vite-dev (tauri dev; DEV-gated hooks; unminified client)";
+const BUILD_CLASS_DEV = "vite-dev (tauri dev; DEV-gated hooks; unminified client)";
+// Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): the third build class
+// -- `--measure-build <exePath>` below selects it. Declared in full per Amendment 16's own
+// instruction: "neither pure release nor dev," reported-only, never quotable as the product's
+// release numbers, never gated.
+const BUILD_CLASS_MEASURE =
+  "measure (release-optimized + instrument + debug-gated CDP via cargo feature measure-build; NOT a product release build)";
 
 // S13 (M4's own divergence, carried into evidence per the fold-in this piece's instructions name):
 // the REAL §6 definition of the input-to-present proxy quantity, from
@@ -1178,6 +1184,17 @@ async function main() {
   const control = argSet.has("--control");
   const wireIdentity = argSet.has("--wire-identity");
   const stepLimit = smoke ? 3 : undefined;
+  // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): `--measure-build
+  // <exePath>` selects the third build class -- everything else about this run (mode, steps,
+  // watchdogs, evidence shape) stays identical to a normal `tauri dev` run; only the launch route
+  // (`attachOrLaunchExe` instead of `attachOrLaunch`, `lib.mjs`) and `cell.buildClass` change.
+  const measureBuildIdx = args.indexOf("--measure-build");
+  const measureBuildExePath = measureBuildIdx !== -1 ? args[measureBuildIdx + 1] : null;
+  if (measureBuildIdx !== -1 && !measureBuildExePath) {
+    console.error("residency-harness: --measure-build requires an exe path argument");
+    process.exitCode = 1;
+    return;
+  }
   const cellArgs = parseCellArgs(args);
   // M9: `arm` (baseline/candidate/control) -- this harness has no `--arm=candidate` PRODUCER yet (P3
   // has not landed the tile-keyed residency this piece measures against), so `--arm` exists for
@@ -1224,7 +1241,10 @@ async function main() {
 
   let session;
   try {
-    session = await attachOrLaunch();
+    // P3r: the ONLY branch on `measureBuildExePath` in this whole file -- everything downstream
+    // (mode, steps, watchdogs, evidence shape) is identical either way; only the launch route and
+    // `cell.buildClass` (below) differ.
+    session = measureBuildExePath ? await attachOrLaunchExe(measureBuildExePath) : await attachOrLaunch();
   } catch (e) {
     console.error(`residency-harness: could not attach to or launch the app: ${e.message}`);
     process.exitCode = 1;
@@ -1232,13 +1252,14 @@ async function main() {
   }
   const { page, browser, launched } = session;
   // F2: no attach path remains in this harness -- the sweep above must have left CDP_PORT empty,
-  // so `attachOrLaunch` should always take its own launch path here. Asserted, not merely assumed:
-  // `launched === false` means either the sweep missed a PID (already logged above) or a NEW
-  // process raced onto the port between the sweep and this call -- either way a harness/environment
-  // defect this run's own evidence must never silently paper over as a normal launch.
+  // so `attachOrLaunch`/`attachOrLaunchExe` should always take its own launch path here. Asserted,
+  // not merely assumed: `launched === false` means either the sweep missed a PID (already logged
+  // above) or a NEW process raced onto the port between the sweep and this call -- either way a
+  // harness/environment defect this run's own evidence must never silently paper over as a normal
+  // launch.
   if (!launched) {
     console.error(
-      `residency-harness: FRESH-LAUNCH INVARIANT VIOLATED -- attachOrLaunch attached to an existing app ` +
+      `residency-harness: FRESH-LAUNCH INVARIANT VIOLATED -- attachOrLaunch(Exe) attached to an existing app ` +
         `on CDP port ${CDP_PORT} instead of launching fresh, even after sweeping ${sweptPids.length} PID(s) ` +
         `(${sweptPids.join(", ") || "none"}). This harness measures; every measured cell must start from a ` +
         `cold, freshly-launched app.`
@@ -1283,7 +1304,8 @@ async function main() {
       traceVersion: TRACE_VERSION,
       machineAttestation: cellArgs.machineAttestation,
       instrumentEnabledReadback: null, // filled in below, after M10's own off-then-on sequencing
-      buildClass: BUILD_CLASS, // M13
+      buildClass: measureBuildExePath ? BUILD_CLASS_MEASURE : BUILD_CLASS_DEV, // M13 / P3r Amendment 16
+      measureBuildExePath, // P3r: null unless --measure-build was given -- which exe this cell ran against
       launchedFresh: launched, // F2: always true -- the fresh-launch invariant above already returned if not
       sweptPids, // F2: PIDs killed on CDP_PORT before this run's own launch, possibly empty
       // Amendment 12: the outer trial watchdog's own resolved inputs, recorded honestly rather than
@@ -1622,7 +1644,9 @@ async function main() {
     }
     try {
       mkdirSync(OUT_DIR, { recursive: true });
-      const suffix = wireIdentity ? "wire-identity" : `${control ? "control" : "instrument-on"}${smoke ? "-smoke" : ""}`;
+      const suffix =
+        (wireIdentity ? "wire-identity" : `${control ? "control" : "instrument-on"}${smoke ? "-smoke" : ""}`) +
+        (measureBuildExePath ? "-measure" : ""); // P3r: distinguishes a measure-build evidence file at a glance
       const evidencePath = join(OUT_DIR, `residency-harness-${suffix}-${Date.now()}.json`);
       writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
       console.log(`Evidence file: ${evidencePath}`);

@@ -12,6 +12,18 @@ license = "AGPL-3.0-or-later"
 name = "spatial_ide_shell_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): the "measure build" --
+# a release-profile (`cargo build --release`/`tauri build`) artifact that ALSO opens the debug-gated
+# CDP remote-debugging port the harness needs, so the residency harness can drive a release-optimized
+# binary the same way it drives `tauri dev`. Empty by default (inert): this feature only ever changes
+# behavior in `lib.rs`'s own `#[cfg(feature = "measure-build")]` block, always paired at build time
+# with the config overlay `npm run build:measure` generates (`create: false` on the declarative
+# window -- see that block's own doc comment for why the two must always travel together). Never a
+# shipped default (docs/09's dev/debug-gate discipline) -- no default feature enables it, and nothing
+# in this crate's own `default` feature set (there is none) references it.
+[features]
+measure-build = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

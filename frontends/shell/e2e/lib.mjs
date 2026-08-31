@@ -24,7 +24,7 @@
 
 import { chromium } from "playwright-core";
 import { spawn } from "node:child_process";
-import { mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -65,18 +65,23 @@ async function waitForCdpUp(cdpUrl, timeoutMs) {
 
 /** The app's own page among whatever WebView2 exposes over CDP (devtools frames, workers, and any
  * other browser chrome besides). Polls rather than trusting the first page found -- immediately
- * after the port opens the app's own navigation to `APP_URL_PREFIX` may not have landed yet. */
-async function findAppPage(browser) {
+ * after the port opens the app's own navigation to `urlPrefix` may not have landed yet.
+ *
+ * `urlPrefix` defaults to `APP_URL_PREFIX` (the `tauri dev` case, this file's own original scope) --
+ * `attachOrLaunchExe` below passes `"http://tauri.localhost"` instead, the packaged custom-protocol
+ * origin a `tauri build` frontend actually loads under (`lib.rs`'s own `webview_origin` selector,
+ * `ADR-020`). */
+async function findAppPage(browser, urlPrefix = APP_URL_PREFIX) {
   const start = Date.now();
   while (Date.now() - start < 60_000) {
     const pages = browser.contexts().flatMap((ctx) => ctx.pages());
-    const match = pages.find((p) => p.url().startsWith(APP_URL_PREFIX));
+    const match = pages.find((p) => p.url().startsWith(urlPrefix));
     if (match) return match;
     await sleep(300);
   }
   const urls = browser.contexts().flatMap((ctx) => ctx.pages().map((p) => p.url()));
   throw new Error(
-    `findAppPage: no page with URL starting with "${APP_URL_PREFIX}" appeared within 60s. ` +
+    `findAppPage: no page with URL starting with "${urlPrefix}" appeared within 60s. ` +
       `Pages seen: ${urls.length ? urls.join(", ") : "(none)"}`
   );
 }
@@ -216,6 +221,82 @@ export async function attachOrLaunch({ timeoutMs = 300_000 } = {}) {
 
   browser = await chromium.connectOverCDP(cdpUrl);
   const page = await findAppPage(browser);
+  return { browser, page, launched: true, stop: () => stopSession(browser, true, child) };
+}
+
+// Tauri's packaged custom-protocol origin (`ADR-020`, `lib.rs`'s own `webview_origin` selector,
+// verified there: a release build -- `cfg!(debug_assertions) == false`, which a measure build's own
+// release profile always leaves unset regardless of the `measure-build` feature -- expects exactly
+// this origin, not the dev-server one `APP_URL_PREFIX` above names).
+const MEASURE_APP_URL_PREFIX = "http://tauri.localhost";
+
+/**
+ * Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): the measure build's
+ * own launch route -- spawns a PRE-BUILT exe directly (`npm run build:measure`'s own output,
+ * documented in that script's own report as `src-tauri/target/release/spatial-ide-shell.exe`),
+ * never `tauri dev`, never a config overlay. The CDP port is compiled in via the `measure-build`
+ * cargo feature (`lib.rs`'s own `#[cfg(feature = "measure-build")]` block) and reads it from
+ * `SPATIAL_E2E_CDP_PORT` at the child's own startup -- this function only needs to WAIT for the port
+ * to come up, not open it, and passes the SAME env var through via `env: process.env` (this file's
+ * own `CDP_PORT` already reads it too, so one flag governs both the harness's own attach target and
+ * the spawned process's own open port).
+ *
+ * Same attach-first discipline as `attachOrLaunch` above (a still-listening process from a previous
+ * run is reused rather than doubly launched) and the same detached+unref'd, raw-fd-logged spawn
+ * shape (`attachOrLaunch`'s own doc comment states why each choice is load-bearing, unchanged here)
+ * -- logged separately, to `measure-app.log`, so a measure-build run's own log never interleaves
+ * with a `tauri dev` session's `app.log`. `shell: false` (unlike `attachOrLaunch`'s `npx tauri dev`
+ * spawn): `exePath` is a plain `.exe`, not a `.cmd`, so none of `attachOrLaunch`'s own CVE-2024-27980
+ * `.cmd`-under-`shell:false` concern applies here.
+ */
+export async function attachOrLaunchExe(exePath, { timeoutMs = 300_000 } = {}) {
+  const cdpUrl = `http://127.0.0.1:${CDP_PORT}`;
+
+  let browser = null;
+  try {
+    browser = await chromium.connectOverCDP(cdpUrl, { timeout: 2000 });
+  } catch {
+    browser = null;
+  }
+
+  if (browser) {
+    const page = await findAppPage(browser, MEASURE_APP_URL_PREFIX);
+    return { browser, page, launched: false, stop: () => stopSession(browser, false, null) };
+  }
+
+  if (!existsSync(exePath)) {
+    throw new Error(`attachOrLaunchExe: exe not found at ${exePath} -- run "npm run build:measure" first`);
+  }
+
+  mkdirSync(OUT_DIR, { recursive: true });
+  const logFd = openSync(join(OUT_DIR, "measure-app.log"), "a");
+  const child = spawn(exePath, [], {
+    cwd: dirname(exePath),
+    shell: false,
+    env: process.env,
+    detached: true,
+    windowsHide: true,
+    stdio: ["ignore", logFd, logFd],
+  });
+  const spawnErrorPromise = new Promise((_resolve, reject) => {
+    child.on("error", (err) => {
+      reject(
+        new Error(`attachOrLaunchExe: failed to spawn "${exePath}": ${err.message} -- see e2e/out/measure-app.log`)
+      );
+    });
+  });
+  child.unref();
+
+  const up = await Promise.race([waitForCdpUp(cdpUrl, timeoutMs), spawnErrorPromise]);
+  if (!up) {
+    await killTree(child.pid);
+    throw new Error(
+      `attachOrLaunchExe: ${cdpUrl}/json/version never came up within ${timeoutMs}ms -- see e2e/out/measure-app.log`
+    );
+  }
+
+  browser = await chromium.connectOverCDP(cdpUrl);
+  const page = await findAppPage(browser, MEASURE_APP_URL_PREFIX);
   return { browser, page, launched: true, stop: () => stopSession(browser, true, child) };
 }
 

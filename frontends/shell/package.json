@@ -23,7 +23,9 @@
     "e2e:console": "node e2e/console.mjs",
     "e2e:residency-harness": "node e2e/residency-harness.mjs",
     "test:residency-trace": "node e2e/residencyTrace.test.mjs",
-    "test:citation-integrity": "node e2e/citationIntegrity.test.mjs"
+    "test:citation-integrity": "node e2e/citationIntegrity.test.mjs",
+    "build:frontend:measure": "tsc --noEmit && vite build --mode measure --outDir dist-measure",
+    "build:measure": "node e2e/writeMeasureConfigOverlay.mjs && npx tauri build --config e2e/out/tauri.measure.conf.json --features measure-build --no-bundle"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.7",
