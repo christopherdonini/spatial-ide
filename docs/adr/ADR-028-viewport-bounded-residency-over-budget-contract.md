@@ -69,3 +69,23 @@ These resolutions are recorded here as the state the preregistration
 (`frontends/shell/RESIDENCY-PREREGISTRATION.md` §2c) cites and assumes; they do not
 themselves accept or reject the candidate decision above, which still awaits the
 preregistered measurement's evidence.
+
+## Architect-gate clarifications to the candidate Decision (2026-08-31, appended — Proposed)
+
+The architect gate at the complex's tip found the as-built code diverging from the candidate's
+Decision text in three ways the evidence session would otherwise silently absorb. Proposed
+clarifications (the human rules at acceptance):
+
+1. Item 1's grid is *fixed for a dataset session and declared in shape, derived in position*
+   from a bounded bootstrap query — the derivation, its declared row bound, and its unproven
+   representativeness are part of the decision, not an implementation detail.
+2. Item 2 requires partiality to be a **durable property of the resident set** — a truncated
+   or superseded-partial tile is marked partial, is re-requestable when headroom returns, and
+   no completeness claim ("Showing all N…") may be emitted while any covering tile is partial
+   or unfilled.
+3. Item 3's "never evict a tile intersecting the current viewport" admits one declared
+   exception — the dedupe-owner cascade — or the cascade is replaced by a re-fetch marker.
+
+Item 4 (sub-pixel pick refusal by name) had no implementation at the gate's tip; ADR-028's
+candidate cannot be accepted or rejected on evidence until it exists, since the
+preregistration's pick-agreement assertion has no subject without it.

@@ -615,3 +615,28 @@ the final configuration, in the same session and build class as the candidate ce
 cells remain the valid record of the shipped dev-build's own behavior at their recorded
 configuration — citable as that, never as the candidate's comparison arm. G7's margin applies
 against the re-run baseline.
+
+**Amendment 20 (2026-08-31 — MADE AFTER A RESULT HAS BEEN SEEN; it invalidates the pan
+step-class cells it touches).** Context: under identical declared gestures, §4b step 6's
+diagonal realizes either an off-data no-batch or a ~172 s fan-out — the step's geometry sits
+on the fixture's data boundary, so it measures gesture jitter rather than the product; 172 s
+also exceeds both Amendment 9's and Amendment 12's per-step bounds, which invalidates the
+whole trial by §4b. Decision (architect-recommended option (a), its conditions met): step 6
+becomes **0.5 viewport width per screen axis (total 0.5·√2·width)** — trace **v3** — chosen
+structurally (bounded inside the fit extent for any fixture whose extent ≥ 2 viewport widths),
+not fitted to an observed run. Both arms are measured under v3; Amendment 19 already mandates
+a fresh baseline, so comparability is preserved at no additional cost. Step 6 is now
+predicted data-bearing at every trial; a no-batch realization is a reportable trace defect.
+Each step-6 row records realized covering-tile delta and pre/post view state. Consequences:
+the existing pan-class cells are not comparison arms for v3; the non-axis-aligned corner
+crossing G1's dedupe/cascade assertion depends on is retained.
+
+**Amendment 21 (2026-08-31, pre-run).** §8 gains: every evidence file records the derived
+`gridFrame {originX, originY, baseSpan, level}`; a frame that differs across a cell's trials
+records the cell `unmeasured — grid frame drift`. §6's wire-bytes-identity assertion is
+restated as **per-request** byte identity (each `viewport_query` request and its response
+frame set), order-independent — Amendment 17's multiset reasoning applied to the assertion
+that had silently retained the old wording. Amendment 16's calibration cell declares its arm
+and is never compared across build classes or arms. G6's pass is recorded as **structural**
+(admission trims before insert; the ceiling is unexceedable by construction) — an argument,
+not a sampled measurement, and stated as such wherever G6 is reported.
