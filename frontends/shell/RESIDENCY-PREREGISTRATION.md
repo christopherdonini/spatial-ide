@@ -562,3 +562,23 @@ figures); variance beyond 2% keeps the original rule's meaning** — the cell is
 `unmeasured — non-deterministic` pending instrument diagnosis. The baseline's four flagged
 classes fall within the 2% band and stand as reported-with-spread (RESULTS.md §4's disclosed
 tension resolves under this clarification).
+
+**Amendment 15 (2026-08-31, human-directed — client-side segment decomposition; reopens the
+instrument gate in bounded form).** §6 gains three per-step sub-spans, REPORTED-BESIDE and
+never gated (G3's row stays the total): **query→first-byte** (issue to the first data-plane
+bytes of the step's first batch), **first-byte→decoded** (to the batch decoded), and
+**decoded→painted** (to the first-pixel stamp). Rationale, the human's own: without the split,
+P6 cannot attribute candidate gains, and no one can say how much of the baseline's ~470 ms is
+client-addressable at all. Because the P1 instrument gate has passed, this instrument change
+carries its own bounded mini-review before the next measured cell; the baseline's existing
+cells remain valid as recorded (totals are unaffected by decomposition added later).
+
+**Amendment 16 (2026-08-31, human-directed — one release-class calibration cell).** Before any
+budget-vs-reality ruling, ONE Polygons-class cell runs on a **measure build**: release-profile
+compilation (cargo release; minified client) with the instrument hooks and the debug-gated CDP
+port explicitly compiled in via a named build flag — honestly a THIRD build class, declared in
+full in `buildClass` (neither pure release nor dev; its purpose is calibrating how much of the
+client cost is the dev build). Reported-only, never gated, never quotable as the product's
+release numbers — but it bounds every claim built on the dev-build cells. The flag's compiled-in
+port stays inside docs/09's dev/debug-gate discipline: never a shipped default, the measure
+build is a locally-built artifact for this campaign only.
