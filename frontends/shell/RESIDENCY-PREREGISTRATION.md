@@ -640,3 +640,19 @@ that had silently retained the old wording. Amendment 16's calibration cell decl
 and is never compared across build classes or arms. G6's pass is recorded as **structural**
 (admission trims before insert; the ceiling is unexceedable by construction) — an argument,
 not a sampled measurement, and stated as such wherever G6 is reported.
+
+**Amendment 22 (2026-08-31, pre-session — the screening reading, chosen by the human:
+"Let's go with option 3".)** The tile-size sweep's purpose is SELECTING a level; only the
+chosen level's cell is scored. Protocol: **(1) screening** — n=3 trials per level
+(coarse/medium/fine, ABBA-interleaved); **(2) selection by the pre-declared criterion**: the
+level with the most valid trials wins; ties break by lower fit-step first-pixels p50 across
+its valid trials; a level whose screening trials ALL invalidate is eliminated (its
+invalidation is reported as the sweep's own finding); **(3) top-up** — the winning level runs
+4 further trials (its 3 screening trials count toward the scored cell's n=7: same
+configuration, same session, same build — declared here); **(4) the fresh baseline** (n=7 +
+2 instrument-off controls, Amendment 19) and **(5) the Amendment 16 calibration cell** run in
+the same sitting. Non-winning levels' screening figures are REPORTED-NEVER-SCORED selection
+data. The 5 GB reported-only cells are DEFERRED to a separate optional session (they are
+never scored; no scored conclusion depends on them; they remain honestly unmeasured until
+run). Same sitting also records: the human approved the four user-facing strings verbatim
+("wording approved", this date) — the 24(b)/24(c) sight condition is discharged.
