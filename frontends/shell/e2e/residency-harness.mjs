@@ -1040,11 +1040,19 @@ async function measureOneStep(
 // `lib.mjs` (the one target that genuinely has no such hazard) was judged too large a change to
 // `regression.mjs`'s own working, already-hardened hover path for this piece's declared scope, so
 // this is instead a deliberately SMALLER, self-contained version of the same "densest-patch
-// bisection" concept: ONE coarse grid pass, ONE subdivide, that final region's own CENTER pixel --
-// never `stepA9`'s own second bisection level, 5x5 interior-neighbourhood/alpha verification, or
-// zoom-notch search. Good enough for "does hovering a real, densest patch of data resolve a feature
-// id at all" (this lane's own question); NOT a replacement for `stepA9`'s own hardened, multi-signal
-// interior check, which stays the baseline-arm regression suite's own more rigorous gate.
+// bisection" concept: ONE coarse grid pass, ONE subdivide, that final region's own CENTER pixel,
+// PLUS the densest 3x3-grid region's own `samplePoint` as a fallback candidate -- never `stepA9`'s
+// own second bisection level, 5x5 interior-neighbourhood/alpha verification, or zoom-notch search.
+// **The fallback candidate was added after a live trial (Polygons, candidate arm) found the bisected
+// centre pixel alone insufficient** -- a densely-non-background sub-region's own geometric CENTRE is
+// not guaranteed to be an interior pixel of any ONE feature (it can straddle a real boundary even
+// while the region AROUND it scores densely), exactly the class of miss `regression.mjs`'s own
+// stepA9/P11 doc comment documents at length; `capturePixels`'s own per-region `samplePoint` is a
+// REAL pixel the app itself already found non-background, a materially different (and, live-observed,
+// more reliable) second attempt. Good enough for "does hovering a real, densest patch of data resolve
+// a feature id at all" (this lane's own question); NOT a replacement for `stepA9`'s own hardened,
+// multi-signal interior+alpha check, which stays the baseline-arm regression suite's own more
+// rigorous gate.
 // ---------------------------------------------------------------------------------------
 
 const HOVER_EVIDENCE_COARSE_COLS = 8;
@@ -1142,6 +1150,39 @@ async function hoverEvidenceWaitForCondition(getValue, predicate, timeoutMs, pol
  * and a SEPARATE densest-patch search at that new camera, on top of an already-tight smoke budget) --
  * per this piece's own instruction, it stays unit-tested only (`pickResolution.test.ts`).
  */
+/** The fixed 3x3 grid `regression.mjs`'s own `gridRegions` uses (this section's own top comment has
+ * the "why duplicated, not imported" account) -- `capturePixels`'s own per-region `samplePoint` is a
+ * REAL pixel the app itself found non-background while summarizing that region, not a geometric
+ * guess, so the densest region's own `samplePoint` is a genuinely different (and, live-observed,
+ * sometimes MORE reliable) candidate than `findDensestPatchHoverCandidate`'s own bisected region
+ * CENTER -- the second candidate below exists because a live trial found the bisection centre alone
+ * insufficient (a densely-non-background sub-region's own geometric centre is not guaranteed to be
+ * an interior pixel of any ONE feature, exactly the miss `regression.mjs`'s own stepA9/P11 doc
+ * comment already names at length for the very same reason). */
+function hoverEvidenceGridRegions() {
+  const regions = [];
+  for (let gy = 0; gy < 3; gy++) {
+    for (let gx = 0; gx < 3; gx++) {
+      regions.push({ x: gx / 3, y: gy / 3, w: 1 / 3, h: 1 / 3 });
+    }
+  }
+  return regions;
+}
+
+async function tryHoverCandidate(page, rect, point, bufferWidth, bufferHeight, label) {
+  for (const flipY of [true, false]) {
+    const css = hoverEvidenceBufferPointToCss(point, rect, bufferWidth, bufferHeight, flipY);
+    await page.mouse.move(css.x, css.y);
+    const result = await hoverEvidenceWaitForCondition(
+      () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
+      (text) => text !== null && /^id \d+/.test(text),
+      5_000
+    );
+    if (result.ok) return { ok: true, resolvedId: result.last, point, flipY, candidateLabel: label };
+  }
+  return { ok: false };
+}
+
 async function candidateHoverEvidenceCheck(page) {
   const rect = await page.evaluate(() => {
     const el = document.querySelector(".working-canvas");
@@ -1156,29 +1197,31 @@ async function candidateHoverEvidenceCheck(page) {
     return { ok: false, thresholdState: "unresolved", reason: "no non-background patch found to hover (fit step's own frame is empty)" };
   }
 
-  for (const flipY of [true, false]) {
-    const css = hoverEvidenceBufferPointToCss(candidate.point, rect, candidate.bufferWidth, candidate.bufferHeight, flipY);
-    await page.mouse.move(css.x, css.y);
-    const result = await hoverEvidenceWaitForCondition(
-      () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
-      (text) => text !== null && /^id \d+/.test(text),
-      5_000
-    );
-    if (result.ok) {
-      return {
-        ok: true,
-        thresholdState: "above-threshold",
-        resolvedId: result.last,
-        point: candidate.point,
-        flipY,
-        finalFraction: candidate.finalFraction,
-      };
+  const bisectionResult = await tryHoverCandidate(page, rect, candidate.point, candidate.bufferWidth, candidate.bufferHeight, "bisection-centre");
+  if (bisectionResult.ok) {
+    return { ok: true, thresholdState: "above-threshold", finalFraction: candidate.finalFraction, ...bisectionResult };
+  }
+
+  // Fallback (see `hoverEvidenceGridRegions`'s own doc comment): the densest 3x3-grid region's own
+  // `samplePoint`, a real non-background pixel `capturePixels` itself already found while summarizing
+  // that region -- tried only once the bisected centre pixel has failed both orientations.
+  const grid = await page.evaluate((regions) => window.__SPATIAL_E2E__.capturePixels(regions), hoverEvidenceGridRegions());
+  let denseIdx = 0;
+  for (let i = 1; i < grid.regions.length; i++) {
+    if (hoverEvidenceFractionOf(grid.regions[i]) > hoverEvidenceFractionOf(grid.regions[denseIdx])) denseIdx = i;
+  }
+  const samplePoint = grid.regions[denseIdx].samplePoint;
+  if (samplePoint) {
+    const sampleResult = await tryHoverCandidate(page, rect, samplePoint, grid.width, grid.height, "grid-densest-samplePoint");
+    if (sampleResult.ok) {
+      return { ok: true, thresholdState: "above-threshold", finalFraction: candidate.finalFraction, ...sampleResult };
     }
   }
+
   return {
     ok: false,
     thresholdState: "unresolved",
-    reason: "hover-readout never resolved a feature id at the densest patch (either flipY orientation)",
+    reason: "hover-readout never resolved a feature id at either the densest-patch bisection centre or the grid's own densest-region samplePoint",
     point: candidate.point,
     finalFraction: candidate.finalFraction,
   };
