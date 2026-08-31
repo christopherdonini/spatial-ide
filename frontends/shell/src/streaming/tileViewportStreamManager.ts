@@ -7,6 +7,7 @@ import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
+import { logSessionEvent } from "../diagnostics/log";
 import { recordResidencyBatchArrived } from "../instrument/residencyInstrument";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { encodeHexF64 } from "../skp/codec";
@@ -110,6 +111,21 @@ function toWireBbox(bbox: AuthoritativeBbox): Bbox {
     xmax: encodeHexF64(bbox.xmax),
     ymax: encodeHexF64(bbox.ymax),
   };
+}
+
+/** Architect re-verification, viewport-residency cut P6b, item 4: every `skpCancel(...).catch(...)`
+ * site in this module used to swallow a rejected cancel silently (`.catch(() => {})`) -- a genuinely
+ * rejected cancel (as opposed to the ordinary "already terminal"/"unknown" SKP response, which
+ * resolves rather than rejects) is a real fact this module is the only thing that knows, and rule 7
+ * ("reported, not dropped") applies to it exactly as it does to any other handler-side failure. Never
+ * thrown (a cancel's own caller is not awaiting a correctness result from it, only firing-and-
+ * forgetting the request) and never silent -- routed through the SAME always-on session-log sink
+ * `candidateArmSession.ts`'s own `onTerminal`/`covering-truncated` lines already use. */
+function logRejectedCancel(context: string, streamHandle: string, err: unknown): void {
+  logSessionEvent(
+    "tile-stream-cancel-rejected",
+    `${context} ${streamHandle}: cancel rejected -- ${err instanceof Error ? err.message : String(err)}`
+  );
 }
 
 /** `"queued"`: waiting in `queue` for a concurrency slot. `"issuing"`: a slot was claimed and
@@ -397,7 +413,7 @@ export class TileViewportStreamManager {
     this.stopped = true;
     for (const entry of this.inFlightStreams.values()) {
       this.selfCancelledHandles.add(entry.streamHandle);
-      void skpCancel(entry.streamHandle).catch(() => {});
+      void skpCancel(entry.streamHandle).catch((err) => logRejectedCancel("stop", entry.streamHandle, err));
     }
     this.inFlightStreams.clear();
     for (const key of this.queue) {
@@ -461,13 +477,13 @@ export class TileViewportStreamManager {
     }
 
     if (this.stopped || this.issueEpoch.get(tileKey) !== epoch) {
-      await skpCancel(ticket.stream).catch(() => {});
+      await skpCancel(ticket.stream).catch((err) => logRejectedCancel("mintAndStart(abandoned-pre-attach)", ticket.stream, err));
       return;
     }
 
     const attach = await dataPlaneAttach();
     if (this.stopped || this.issueEpoch.get(tileKey) !== epoch) {
-      await skpCancel(ticket.stream).catch(() => {});
+      await skpCancel(ticket.stream).catch((err) => logRejectedCancel("mintAndStart(abandoned-post-attach)", ticket.stream, err));
       return;
     }
 
@@ -518,7 +534,7 @@ export class TileViewportStreamManager {
     this.tileState.delete(tileKey);
     this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
     this.selfCancelledHandles.add(streamHandle);
-    void skpCancel(streamHandle).catch(() => {});
+    void skpCancel(streamHandle).catch((err) => logRejectedCancel("cancelTileStream", streamHandle, err));
     if (reportSuperseded) {
       this.opts.onTileSuperseded(tileKey, streamHandle);
     }

@@ -29,6 +29,17 @@ import type { ResidentBatch } from "./decodeBatch";
  * check would be (a handful of oversized features could pull the average up even in a genuinely dense
  * area, or vice versa) -- an honest simplification, not a precise one, consistent with "keep the
  * mechanic simple."
+ *
+ * **Declared limitation (architect re-verification, viewport-residency cut P6b, item 6b).** This
+ * threshold is style-independent: `averageFeatureExtent` measures each feature's own GEOMETRIC
+ * extent (the rings `decodeBatch` carries), never a style-resolved on-screen symbol size, while
+ * ADR-022 (style v0 as the project's single style model) lets a resolved point/symbol radius vary
+ * independently of the geometry underneath it -- a tiny point rendered with a large circle symbol
+ * can be genuinely pickable well past this threshold, and a large polygon styled with a hairline
+ * stroke may not be. Rule 6's own framing applies to the gap itself, not only the number: a
+ * style-dependent threshold (folding the resolved symbol/stroke size into the on-screen extent this
+ * module compares) is future work, owed once pick discrimination becomes style-aware -- not
+ * attempted here.
  */
 export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 2;
 

@@ -138,6 +138,17 @@ export interface CandidateArmSessionDeps {
  * is deliberately shaped so it could never collide with one. */
 const CANDIDATE_SCAN_HANDLE = "candidate-session-scan";
 
+/** Architect re-verification, viewport-residency cut P6b, item 7: the declared margin `hasHeadroom`
+ * (this session's own `TileResidencyAccessor`, below) tightens to -- a partial tile is let back into
+ * planning only while resident vertices sit strictly BELOW this fraction of `MAX_RESIDENT_VERTICES`,
+ * not merely below the hard ceiling itself. Named and declared here (ADR-010 rule 6: "declared, not
+ * discovered") rather than inlined at its one call site, so its own value and rationale are legible
+ * without reading `hasHeadroom`'s own body. `0.9` is a DECLARED choice, not a derived or measured
+ * one -- see `hasHeadroom`'s own doc comment for what it prevents and why this number, not a smaller
+ * or larger one, was picked (one full tile's own worth of margin against the re-scan/trim/cancel
+ * thrash the architect's item 7 names). */
+const HEADROOM_REFETCH_FRACTION = 0.9;
+
 export interface CandidateArmSession {
   manager: TileViewportStreamManager;
   /** Wired directly into the SAME `debounce(fn, VIEWPORT_QUERY_MIN_INTERVAL_MS)` call baseline's own
@@ -189,6 +200,22 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * `false` on `reissueUnrestricted` -- a fresh generation starts with no truncation history of its
    * own, mirroring `lastCoveringTileKeys`'s own reset. */
   let lastCoveringTruncated = false;
+  /** Architect re-verification, viewport-residency cut P6b, item 1-2: the sentinel `isFillComplete`
+   * below reads FIRST -- `false` until `handleViewportChange`'s own camera-change plan has run at
+   * least once THIS generation. Before this fix, `isFillComplete()` read `lastCoveringTileKeys`
+   * (initialized empty, above) and found nothing to disagree with an empty covering set -- vacuously
+   * `true` -- so the bootstrap untiled first look's own ingest (`ingestAndMaybeEstablishFrame`, called
+   * from `issueUntiledQuery`'s `onBatch`, which runs BEFORE any real camera-change plan ever could,
+   * since planning needs a real `onViewportChanged` event) could emit `candidate-within-budget`
+   * ("Showing all N features in view") over a set that was never planned at all, merely whatever the
+   * row-limited bootstrap (`UNTILED_FIRST_LOOK_ROW_LIMIT`) happened to admit so far -- the surviving
+   * sibling of Defect A. Set `true` the moment `manager.onCameraChange` returns `{kind: "planned"}`
+   * (`handleViewportChange` below) -- a plan that returns "planned" with a genuinely EMPTY covering
+   * set (e.g. a viewport outside every tile the grid frame covers) still counts as "a plan ran": this
+   * sentinel gates only "has planning ever had a chance to disagree", never re-derives from the
+   * covering set's own size. Reset to `false` on `reissueUnrestricted` -- a fresh generation has no
+   * plan of its own yet either, exactly like every other per-generation flag this function resets. */
+  let hasPlanned = false;
   /** P5f complex-gate should-fix 4: the running union of every batch the CURRENT untiled first-look/
    * reissue stream has delivered so far (`ingestAndMaybeEstablishFrame`'s own `outcome.unionedExtent`,
    * which already accumulates across calls) -- read once, at that stream's own natural terminal
@@ -197,6 +224,19 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * implicitly by `reissueUnrestricted`'s own full clear (a fresh generation's untiled query starts
    * this accumulation over, the same way `evictedTileCountSession`/`lastCoveringTileKeys` reset). */
   let latestUnionedExtent: AuthoritativeBbox | null = null;
+  /** Architect re-verification, viewport-residency cut P6b, item 2b: the running count of rows the
+   * CURRENT untiled first-look/reissue stream has delivered so far under `INITIAL_TILE_KEY`
+   * (`outcome.rowsAdmitted + outcome.duplicatesDropped` -- every row the server actually sent this
+   * batch, before any budget trim; a trim event already marks this tile partial through
+   * `tileIngest.ts`'s own `trimmed` path regardless, so the undercount that specific case would
+   * introduce here is harmless -- it is already partial by a different, correct route). Compared
+   * against `UNTILED_FIRST_LOOK_ROW_LIMIT` at the stream's own terminal (`issueUntiledQuery`'s
+   * `onTerminal` below) to tell the two terminals honestly apart: a stream that delivered `>=` the
+   * limit was truncated BY it (real rows may exist beyond what this look ever saw), a stream that
+   * completed with fewer rows than the limit ran to its own genuine end. Reset on
+   * `reissueUnrestricted`, exactly like `latestUnionedExtent` above -- a fresh generation's own
+   * untiled query starts this count over. */
+  let untiledRowsSeen = 0;
   /** The initial/reissued untiled stream's own handle, if one is currently running -- so `stop()`
    * can cancel it (mirrors `ViewportStreamManager.stop`'s own `supersedeCurrent`, simplified: this
    * session issues at most one untiled stream at a time, never superseding a still-running one with
@@ -306,8 +346,24 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * as readily as for one that holds everything its bbox covers, so "Showing all N features in view"
    * could fire over a covering set that included a genuinely truncated tile. `isTileCompleteInCandidateSet`
    * (`WorkingCanvasHandle`, backed by `TileResidentSet.isTileComplete`) is the stronger fact: resident
-   * AND not durably partial. */
+   * AND not durably partial.
+   *
+   * **Architect re-verification, viewport-residency cut P6b, items 1-2 (the lift condition): "vacuously
+   * true before the first camera-change plan."** Before this fix, a bootstrap batch arriving via the
+   * untiled first look (`issueUntiledQuery`'s `onBatch`, which runs before `handleViewportChange` ever
+   * could -- planning needs a real `onViewportChanged` event) reached this function with
+   * `lastCoveringTileKeys` still its own empty initial value: `trackedTileCount === 0` (no real tile
+   * has ever been tracked yet), `lastCoveringTruncated === false` (nothing has ever been truncated),
+   * and the `for` loop below iterates zero times over an empty set -- every check trivially passes and
+   * this function returned `true` with NOTHING ever having been planned. `hasPlanned` (this session's
+   * own sentinel, set above) is checked FIRST, before any of the checks that follow: "no plan has ever
+   * run" now reads `false` unconditionally, regardless of how vacuously the other checks would agree. A
+   * plan that HAS run with a genuinely empty covering set (e.g. the current viewport sits outside every
+   * tile the grid frame covers) still reaches the loop below and returns `true` from it exactly as
+   * before -- `hasPlanned` gates only whether planning ever had the chance to disagree, never
+   * re-derives "complete" from the covering set's own size. */
   function isFillComplete(): boolean {
+    if (!hasPlanned) return false;
     if (manager.overBudget) return false;
     if (manager.trackedTileCount > 0) return false;
     // Re-review S4: a truncated covering set (`TilePlanOutcome.coveringTruncated`) means real,
@@ -359,10 +415,22 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // meaning is still needed elsewhere, e.g. `ingestAndMaybeEstablishFrame`'s own "genuinely no
       // data at all" diagnostic listing below, so it was not repurposed here).
       isTileResident: (tileKey) => canvas?.isTileCompleteInCandidateSet(tileKey) ?? false,
-      // Defect A's own drain-stop exception: "when budget allows" -- headroom is simply "the resident
-      // set has not yet reached the declared ceiling," the same figure `emitResidencyStatus` already
-      // reads off `canvas.getResidentCounts()`.
-      hasHeadroom: () => (canvas?.getResidentCounts().totalResidentVertices ?? 0) < MAX_RESIDENT_VERTICES,
+      // Architect re-verification, viewport-residency cut P6b, item 7: tightened to a DECLARED margin
+      // below the hard ceiling, not "any room at all" -- before this fix, `hasHeadroom` read `true` for
+      // literally one vertex of headroom under `MAX_RESIDENT_VERTICES`, which let a partial tile back
+      // into planning (Defect A's own drain-stop exception), immediately re-mint a stream, receive its
+      // first batch, get trimmed to near-zero admitted rows by the SAME budget check it just barely
+      // cleared, and cancel again -- a re-scan/trim/cancel thrash for near-zero benefit, exactly what
+      // the architect's item 7 names. `HEADROOM_REFETCH_FRACTION` (below) is the fix: headroom now
+      // means "genuinely below `HEADROOM_REFETCH_FRACTION` of budget," not "below budget by any
+      // amount" -- one full tile's own worth of margin re-pays finding-4's per-tile first-batch cost
+      // (kernel finding 4: a tighter viewport is a slower first batch) once per pan, instead of paying
+      // it again for a re-fetch admitting next to nothing. The alternative considered (recording a
+      // near-zero-admission tile as a "contaminant" and refusing to re-plan it specifically) was
+      // superseded by this: tightening the margin fixes the thrash for every tile uniformly, without
+      // needing to track a second, tile-specific "was this a wasted re-fetch" history of its own.
+      hasHeadroom: () =>
+        (canvas?.getResidentCounts().totalResidentVertices ?? 0) < HEADROOM_REFETCH_FRACTION * MAX_RESIDENT_VERTICES,
     },
     onBatch: (tileKey, streamHandle, batchSeq, payload) => {
       countTileStreamIssuedOnce(tileKey); // catches a queued-then-issued tile never seen in `issued`
@@ -418,6 +486,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // (`issueUntiledQuery` below) is the one place that actually calls `establishFrameFromExtent`,
     // once, at that stream's own natural end.
     latestUnionedExtent = outcome.fitAnchor;
+    // Architect re-verification, viewport-residency cut P6b, item 2b: only the untiled first
+    // look's own rows count toward `UNTILED_FIRST_LOOK_ROW_LIMIT` -- a real tile's own per-tile query
+    // (`mintAndStart`'s `limit: null`) is never row-limited, so it has no "terminated by the limit"
+    // terminal to distinguish in the first place.
+    if (tileKey === INITIAL_TILE_KEY) {
+      untiledRowsSeen += outcome.rowsAdmitted + outcome.duplicatesDropped;
+    }
     if (outcome.overBudget) {
       const unrequested = [...lastCoveringTileKeys].filter((k) => !canvas.isTileResidentInCandidateSet(k));
       manager.setOverBudget(true, unrequested);
@@ -542,6 +617,17 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // own natural end) has now delivered everything it ever will; `latestUnionedExtent` is its
         // own complete, final union.
         establishFrameFromExtent(latestUnionedExtent);
+        // Architect re-verification, viewport-residency cut P6b, item 2b: the two-terminal
+        // distinction, honestly told apart. `untiledRowsSeen >= UNTILED_FIRST_LOOK_ROW_LIMIT` means
+        // this look was truncated BY the row limit -- real rows may exist beyond what it ever saw, so
+        // `INITIAL_TILE_KEY` is marked durably partial by construction, the same fact `markTilePartial`
+        // already records for a budget-trimmed tile (Defect A's own machinery, reused here rather than
+        // reimplemented). Fewer rows than the limit means the stream ran to its own genuine end --
+        // left unmarked; `TileEntry.partial` already defaults to `false`, and there is nothing to
+        // correct about a tile that is honestly complete.
+        if (untiledRowsSeen >= UNTILED_FIRST_LOOK_ROW_LIMIT) {
+          canvas?.markTilePartial(INITIAL_TILE_KEY);
+        }
         syncScanLiveness(); // P5f should-fix 3: covers a genuine terminal (failure/complete/cancel)
       },
     };
@@ -561,6 +647,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     if (stopped) return;
     const outcome = manager.onCameraChange(bbox, currentFilter);
     if (outcome.kind !== "planned") return;
+    // Architect re-verification, viewport-residency cut P6b, items 1-2: `isFillComplete`'s own
+    // sentinel -- a plan has now genuinely run this generation, whatever its own covering set turns
+    // out to be (even legitimately empty). See that function's own doc comment for the vacuous-true
+    // bug this closes.
+    hasPlanned = true;
     // The common case: a tile the manager just began minting a real ticket for (`beginIssue`) --
     // counted here, at plan time, rather than waiting for its first batch/terminal to prove it.
     for (const tileKey of outcome.issued) {
@@ -619,7 +710,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       frameEstablished = false;
       lastCoveringTileKeys = new Set();
       lastCoveringTruncated = false; // re-review S4: a fresh generation starts with no truncation history
+      hasPlanned = false; // P6b items 1-2: a fresh generation has no plan of its own yet either
       latestUnionedExtent = null; // a fresh generation's own untiled query starts its own union over
+      untiledRowsSeen = 0; // P6b item 2b: a fresh generation's own untiled query starts this count over
       evictedTileCountSession = 0; // a fresh generation starts a fresh eviction history
       // P5f complex-gate should-fix 5: before this fix, `countedIssuedTileKeys` survived a full clear
       // untouched -- a tile key counted "issued" in a PRIOR generation stayed in this set forever, so

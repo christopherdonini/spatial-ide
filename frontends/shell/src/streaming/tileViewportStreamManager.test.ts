@@ -13,6 +13,13 @@ vi.mock("./dataPlaneClient", () => ({ dataPlaneAttach: dataPlaneAttachMock }));
 const startStreamMock = vi.hoisted(() => vi.fn());
 vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 
+// Architect re-verification, viewport-residency cut P6b, item 4: `logSessionEvent` mocked directly
+// (rather than mocking `@tauri-apps/api/core`'s own `invoke`, `diagnostics/log.test.ts`'s own
+// approach) so this file's own tests can assert the rejected-cancel logging call itself, one level
+// up from the binding-command plumbing `logSessionEvent`'s own test already covers.
+const logSessionEventMock = vi.hoisted(() => vi.fn());
+vi.mock("../diagnostics/log", () => ({ logSessionEvent: logSessionEventMock }));
+
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
 import type { StreamSink } from "./transport";
@@ -56,6 +63,7 @@ describe("TileViewportStreamManager", () => {
     cancelMock.mockReset().mockResolvedValue({ state: "requested" });
     dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
     startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+    logSessionEventMock.mockReset();
   });
 
   describe("grid frame establishment", () => {
@@ -581,6 +589,57 @@ describe("TileViewportStreamManager", () => {
 
       expect(cancelMock).toHaveBeenCalledWith("sh_1");
       expect(manager.onCameraChange(bbox)).toEqual({ kind: "stopped" });
+    });
+  });
+
+  // Architect re-verification, viewport-residency cut P6b, item 4: every `skpCancel(...).catch(...)`
+  // site in this module used to swallow a rejection silently (`.catch(() => {})`) -- rule 7's own
+  // "reported, not dropped" now applies: a genuinely rejected cancel is logged via the always-on
+  // session-log sink (`logSessionEvent`), never thrown into the caller, never silent.
+  describe("a rejected cancel is logged, never thrown, never silent (P6b item 4)", () => {
+    it("stop()'s own cancel loop logs a rejected cancel and still resolves", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      manager.onCameraChange(bbox);
+      await flushMicrotasks();
+
+      cancelMock.mockReset().mockRejectedValue(new Error("cancel refused: unknown stream"));
+
+      await expect(manager.stop()).resolves.toBeUndefined(); // never thrown into the caller
+      await flushMicrotasks();
+
+      expect(logSessionEventMock).toHaveBeenCalledWith(
+        "tile-stream-cancel-rejected",
+        expect.stringContaining("sh_1")
+      );
+    });
+
+    it("cancelTileStream's own out-of-view supersede logs a rejected cancel, and the supersede itself still reports", async () => {
+      const { manager, onTileSuperseded } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const tileABbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      manager.onCameraChange(tileABbox);
+      await flushMicrotasks();
+
+      cancelMock.mockReset().mockRejectedValue(new Error("cancel refused: unknown stream"));
+
+      // Pan far away -- tile "0:0" is no longer covered, cancelled via `cancelTileStream`.
+      const farBbox = { xmin: 10_000, ymin: 10_000, xmax: 10_000 + cellSize, ymax: 10_000 + cellSize };
+      manager.onCameraChange(farBbox);
+      await flushMicrotasks();
+
+      expect(onTileSuperseded).toHaveBeenCalledWith("0:0", "sh_1"); // the supersede itself is unaffected
+      expect(logSessionEventMock).toHaveBeenCalledWith(
+        "tile-stream-cancel-rejected",
+        expect.stringContaining("sh_1")
+      );
     });
   });
 });

@@ -28,6 +28,7 @@ vi.mock("../instrument/residencyInstrument", () => ({
 }));
 
 import type { TileBatchIngestOutcome, WorkingCanvasHandle } from "../canvas/WorkingCanvas";
+import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
 import { UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import { encodeDecU64 } from "../skp/codec";
 import type { StreamSink } from "../streaming/transport";
@@ -316,7 +317,12 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
     startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
   });
 
-  it("a within-budget batch emits candidate-within-budget with the resident feature count read off canvas.getResidentCounts()", async () => {
+  // Architect re-verification, viewport-residency cut P6b, items 1-2 (the lift condition): before this
+  // fix, this test asserted the WRONG behavior as intended -- a bootstrap batch, arriving BEFORE any
+  // camera-change plan has ever run, used to emit `candidate-within-budget` ("Showing all N features in
+  // view") over `lastCoveringTileKeys`'s own vacuously-empty initial value. The fix (`isFillComplete`'s
+  // own `hasPlanned` sentinel) makes that emission impossible; this test now asserts the OPPOSITE.
+  it("a bootstrap batch (before any camera-change plan has ever run) never emits candidate-within-budget -- the surviving sibling of Defect A", async () => {
     const canvas = fakeCanvas({
       pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 30, totalResidentFeatures: 3 })),
@@ -328,7 +334,36 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
     onResidencyStatusChange.mockClear(); // drop reissueUnrestricted's own query-issued event(s)
     lastSink().onBatch(new Uint8Array([1]), true);
 
-    expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "candidate-within-budget", residentFeatureCount: 3 });
+    // No plan has run yet (no `onViewportChanged` call ever happened) -- absence is the honest
+    // status here, not a premature "all of it" claim over a merely row-limited bootstrap set.
+    expect(onResidencyStatusChange).not.toHaveBeenCalled();
+  });
+
+  // The legitimate path the sentinel must NOT block: once a real camera-change plan has run and every
+  // covering tile it planned is complete, candidate-within-budget fires exactly as before.
+  it("candidate-within-budget fires once a real camera-change plan's own covering tiles are all complete", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        isTileResidentInCandidateSet: vi.fn(() => true),
+        isTileCompleteInCandidateSet: vi.fn(() => true),
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 30, totalResidentFeatures: 3 })),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+
+      onResidencyStatusChange.mockClear();
+      session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "candidate-within-budget", residentFeatureCount: 3 });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("an over-budget batch emits candidate-over-budget with viewportTotal: null -- no honest viewport total is ever known here", async () => {
@@ -585,5 +620,127 @@ describe("applyScanEvent wiring (P5f complex-gate should-fix 3: the Cancel affor
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
     }).not.toThrow();
+  });
+});
+
+// Architect re-verification, viewport-residency cut P6b, item 2b: the two-terminal distinction --
+// `INITIAL_TILE_KEY`'s own ingest must be marked durably partial by construction whenever the untiled
+// first look's own terminal was actually the row limit (`UNTILED_FIRST_LOOK_ROW_LIMIT`), and left
+// unmarked when the stream genuinely completed under it.
+describe("INITIAL_TILE_KEY's own two-terminal bootstrap marking (P6b item 2b)", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  it("marks INITIAL_TILE_KEY durably partial when the untiled first look delivered >= UNTILED_FIRST_LOOK_ROW_LIMIT rows -- the row limit, not a natural end, terminated it", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({
+        ...OK_INGEST,
+        rowsAdmitted: UNTILED_FIRST_LOOK_ROW_LIMIT,
+        fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
+      })),
+    });
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+
+    expect(canvas.markTilePartial).toHaveBeenCalledWith(INITIAL_TILE_KEY);
+  });
+
+  it("leaves INITIAL_TILE_KEY unmarked when the untiled first look completed genuinely, under the limit", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({
+        ...OK_INGEST,
+        rowsAdmitted: 1, // well under UNTILED_FIRST_LOOK_ROW_LIMIT -- a genuinely small dataset
+        fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
+      })),
+    });
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+
+    expect(canvas.markTilePartial).not.toHaveBeenCalled();
+  });
+});
+
+// Architect re-verification, viewport-residency cut P6b, item 7: `hasHeadroom` tightened to a
+// DECLARED margin (`HEADROOM_REFETCH_FRACTION = 0.9`) below `MAX_RESIDENT_VERTICES`, not merely
+// "any room at all" under the hard ceiling -- proven here through the one seam that reads it,
+// planning's own drain-stop exception (`TileViewportStreamManager.onCameraChange`'s own
+// `headroomDespiteOverBudget`), by driving a real tile into an over-budget self-cancel and then
+// re-planning while resident vertices sit on either side of the declared margin.
+describe("hasHeadroom tightened to a declared 0.9 margin (P6b item 7)", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  // With this suite's own `{xmin:0,ymin:0,xmax:0,ymax:0}` fitAnchor (a degenerate, zero-span batch),
+  // `deriveTileGridFrame` (`tileGrid.ts`) derives origin (-1,-1), `baseSpan` 2 (`MIN_ANCHOR_SPAN` x
+  // `PAD_FACTOR`) -- at the default "medium" (16x16) level, one cell is 2/16 = 0.125 wide. This bbox
+  // covers EXACTLY the 2x2 = 4 cells starting at cell (0,0), a small, non-truncated covering set
+  // (well under `MAX_QUEUED_TILES`) so the test's own tile bookkeeping stays exactly traceable.
+  const SMALL_COVERING_BBOX = { xmin: -1, ymin: -1, xmax: -0.75, ymax: -0.75 };
+
+  /** Arms a session into a genuine `manager.overBudget === true` state (a real tile issued, then its
+   * own batch reports overBudget, self-cancelling it) with `getResidentCounts` fixed at
+   * `residentVertices` for the whole test -- returns `viewportQueryMock`, cleared right before the
+   * SECOND (headroom-gated) camera-change plan, so the caller's own assertion measures only that
+   * re-plan's own tile issuance. */
+  async function armOverBudgetThenReplan(residentVertices: number): Promise<ReturnType<typeof vi.fn>> {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi
+        .fn()
+        .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }) // the untiled bootstrap batch
+        .mockReturnValue({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }), // the real tile's own batch
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: residentVertices, totalResidentFeatures: 1 })),
+      applyTileViewportContext: vi.fn(() => false), // stays over budget after the re-check
+    });
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValue({ stream: "sh_tile_1" });
+    session.onViewportChanged(SMALL_COVERING_BBOX); // plans the 4-tile covering set -- 3 issued, 1 queued
+    await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    const tileSink = lastSink();
+    tileSink.onBatch(new Uint8Array([2]), true); // one issued tile reports overBudget -- self-cancels, sets manager.overBudget
+    await Promise.resolve();
+    expect(session.manager.overBudget).toBe(true);
+
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValue({ stream: "sh_tile_2" });
+    session.onViewportChanged(SMALL_COVERING_BBOX); // re-plan, same covering set -- the cancelled tile is the ONE new candidate
+    await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    return viewportQueryMock;
+  }
+
+  it("re-requests the partial tile when resident vertices sit below the 0.9 margin", async () => {
+    vi.useFakeTimers();
+    try {
+      const q = await armOverBudgetThenReplan(Math.floor(MAX_RESIDENT_VERTICES * 0.9) - 1000);
+      expect(q).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("refuses to re-request once resident vertices reach the 0.9 margin, even though MAX_RESIDENT_VERTICES itself is not yet exceeded", async () => {
+    vi.useFakeTimers();
+    try {
+      const q = await armOverBudgetThenReplan(Math.floor(MAX_RESIDENT_VERTICES * 0.9));
+      expect(q).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
