@@ -254,3 +254,311 @@ Raw per-trial console logs (redirected stdout/stderr, `> log 2>&1`), also gitign
   (candidate-arm scoring) leans on it.
 - Session total: **9 valid trials, 2 invalid trials, 11 harness invocations**, ~100 minutes wall,
   one machine, one session, ABBA-ordered per §1 above.
+
+---
+
+## Dual-arm campaign, 2026-08-31/09-01 (P8, Amendment 22's screening reading)
+
+**§1 (binding, restated).** Client-clock only, `e2e/residency-harness.mjs` driving the real dev-mode
+WebView2 app over CDP (measure-build cell excepted, its own build class declared throughout),
+`buildCommit` **`0da5ef59092264ab18d98457470588532b0f03d7`** (branch `cut/viewport-residency`,
+verified unchanged for every trial in this section), `traceVersion` **`"3"`** (Amendment 20's step
+order: fit → 5 pans → zoom-to-layer → 3 zoom-ins → 1 zoom-out, the pan-northeast diagonal at
+0.5·√2·width), Polygons fixture (`target/fixtures/slice-budgets/polygons-100k.parquet`) throughout —
+the 5 GB cells are **DEFERRED per Amendment 22**, not run, honestly unmeasured. Machine: Windows 10
+Pro 22H2 build 19045, headed, foreground, human present, RustDesk verified stopped process-level
+(`--attest "headed, foreground, human present, RustDesk stopped (amendment 22 session)"` on every
+trial). **Verified before burning trials**: the first evidence file's `traceVersion` field reads
+`"3"`; `gridFrame {originX, originY, baseSpan, level}` is present and, checked across every one of
+the 7 valid fine-cell trials, **identical** (`{originX:2593666.478597825, originY:1187966.5220883386,
+baseSpan:25346.943496502936, level:"fine"}` in all 7) — no grid-frame drift, so the fine cell is
+measured per Amendment 21's own condition. This session's own scored gates are **G3, G4, G6, G7**
+plus segments/refill/grid-frame-drift, per this piece's task scope — **G1, G2, G5 are out of this
+session's scope** (G1/G2 are 5 GB-fixture assertions, deferred; G5 is scored producer-side from the
+kernel's own ADR-018 instrumentation, a separate measurement this client-side campaign does not run).
+
+### 1. ABBA order, applied to a 3-arm screening the committed function was not built for — disclosed
+
+`abbaInterleave` (`e2e/residencyTrace.mjs`) pairs a single "cell 0" against each other cell in turn
+(its own `for (candidate = 1; candidate < cellCount; candidate++)` loop) — built for the 2-arm
+baseline-vs-control shape P2 used it for, not a 3-way peer sweep. Applied literally,
+`abbaInterleave(3, 3)` (cell 0 = coarse, 1 = medium, 2 = fine) replays coarse's own 3 trials TWICE
+(once interleaved against medium, once against fine) and would over-count it 6:3:3. **Resolution,
+applied mechanically and disclosed rather than silently reinterpreted:** the raw literal output of
+`abbaInterleave(3, 3)` — `(0,0),(1,0),(1,1),(0,1),(0,2),(1,2),(0,0),(2,0),(2,1),(0,1),(0,2),(2,2)` —
+is deduplicated by first occurrence, preserving order, which yields exactly 9 unique (level, trial)
+pairs, 3 per level: **coarse-0, medium-0, medium-1, coarse-1, coarse-2, medium-2, fine-0, fine-1,
+fine-2.** This is the order actually run below. A dedicated 3-arm screening interleave function does
+not exist in this codebase; this derivation is the committed function's own output, mechanically
+reduced, not a hand-picked order.
+
+### 2. Screening — n=3 per level, reported-never-scored (Amendment 22 step 1)
+
+Each screening "trial" slot follows this repository's standing invalidator rule (§8: record, then one
+licensed re-run; never a third attempt): a fired per-step settle watchdog invalidates the whole
+trial (§4b), the trial gets exactly one re-run, and if the re-run also invalidates, the slot is
+recorded invalid with no further attempt.
+
+| level | slot 0 | slot 1 | slot 2 | valid/3 |
+|---|---|---|---|---|
+| coarse | INVALID×2 (pan-north watchdog, 62,570ms then 73,205ms > the 60,000ms Polygons-class bound) | INVALID×2 (pan-north watchdog, 61,866ms then re-run also invalid at pan-north) | **valid** (all 11 rows measured) | **1/3** |
+| medium | **valid** | **valid** | INVALID×2 (zoom-out-1 watchdog, both attempts) | **2/3** |
+| fine | **valid** | **valid** | INVALID once (zoom-in-1 watchdog) then **valid** on the licensed re-run | **3/3** |
+
+**Selection, by Amendment 22's pre-declared criterion ("most valid trials; ties by lower fit-step
+first-pixels p50; an all-invalid level is eliminated"):** fine wins outright, 3/3 valid vs. medium's
+2/3 and coarse's 1/3 — **no tie exists, no tie-break arithmetic needed, no level is all-invalid so no
+elimination-finding applies.** Coarse's own screening result is itself a finding, reported here and
+never scored: coarse invalidated on the SAME step (`pan-north`) in every one of its 4 attempts
+(2 slots × 1 re-run each), a reproducible structural failure — the fewer, larger coarse tiles' own
+per-request fan-out at that specific pan exceeds the fixture-scaled 60 s per-step bound consistently,
+not flakily. This is exactly the shape §4a's named risk (finding-4's inversion) predicted: at coarse,
+individual tile requests are cheap, but the pan crosses enough of the misaligned grid that the
+fan-out itself becomes the slow path.
+
+### 3. Top-up — fine's 4 further trials (Amendment 22 step 3)
+
+Fine's own 3 screening trials count toward its n=7 (Amendment 22, "same configuration, same session,
+same build"). 4 further trials were needed; 2 of the 4 slots invalidated once before re-running
+valid:
+
+| topup slot | attempt 1 | attempt 2 (licensed re-run) |
+|---|---|---|
+| 1 | INVALID (pan-northeast watchdog, 119,926ms) | INVALID (zoom-in-3 watchdog) — **slot exhausted, no 3rd attempt (§8)** |
+| 2 | INVALID (pan-northeast watchdog, 71,462ms) | **valid** |
+| 3 | **valid** (first attempt) | — |
+| 4 | INVALID (zoom-out-1 watchdog, 66,239ms) | **valid** |
+| 5 | **valid** (first attempt) | — |
+
+Topup slot 1 is the only fully-lost slot in this campaign (both its attempts invalid, for two
+DIFFERENT steps — a genuine second, independent cause, not session noise, so no further re-run per
+§8). 4 valid topup trials were still reached (slots 2, 3, 4, 5) inside the time budget, giving fine
+**n=7 valid total** (3 screening + 4 topup), matching G3/G7's own n≥7 discipline.
+
+**pan-northeast at fine is bimodal** (119,926ms / 71,462ms watchdog fires in 2 of 5 topup attempts,
+vs. clean sub-10s completions in the other 3 and in all 3 screening trials) — consistent with
+`CUT-STATE.md`'s own P5h-era finding ("pan-northeast BIMODAL no-batch vs 172s") persisting into trace
+v3 at the fine tile size specifically; reported here as a real, reproducible property of the fine
+cell, not netted against its otherwise-passing gates below.
+
+### 4. Fresh baseline — n=7 + 2 controls (Amendment 22 step 4, superseding P2 per Amendment 19)
+
+All 9 trials (7 instrument-on ON, 2 instrument-off OFF/control) **valid on first attempt, zero
+re-runs** — ABBA order `abbaInterleave(2,2)` then sequential: ON, OFF, OFF, ON, ON, ON, ON, ON, ON.
+Both control trials assert `instrumentEnabledReadback` off-ness unconditionally at start (Amendment
+8's own limitation stands: a control cell supplies no gated client-clock value, only the wire/mount
+identity guard).
+
+### 5. Calibration cell — Amendment 16 (measure build), reported-only
+
+`npm run build:measure` was **stale** (built 2026-08-31 10:15, before trace v3 / P6c / P6d / the P7
+sweep selector all landed later that day) — **rebuilt** before use (`cargo` release recompile of the
+single changed crate, ~2m02s, `EXIT=0`). One trial, **candidate arm, fine tile size** (the winning
+cell — chosen so the calibration bears directly on this campaign's own headline comparison, not on
+baseline's already-P3r-smoke-tested shape; disclosed choice, not defaulted), `--measure-build
+"C:\dev\spatial-ide\frontends\shell\src-tauri\target\release\spatial-ide-shell.exe"`. **Valid, all 11
+rows measured**, `buildClass` = `"measure (release-optimized + instrument + debug-gated CDP via cargo
+feature measure-build; NOT a product release build)"`, `fixtureHashMatchedAcrossRun: true`.
+
+---
+
+### 6. G7 — cold first-view margin (open-drain), gated
+
+| arm | n | p50 | p95 | max |
+|---|---|---|---|---|
+| candidate, fine | 7 | 233.0ms | 294.0ms | 294.0ms |
+| baseline (fresh) | 7 | 497.9ms | 596.4ms | 596.4ms |
+
+**Margin = candidate p95 / baseline p95 = 294.0 / 596.4 = 49.3%.** Preregistration ceiling: ≤110%.
+**G7: PASS — comfortably**, not a near-miss: candidate's cold first view is roughly **2× FASTER**
+than the fresh baseline's, not merely non-regressed. Segments explain the mechanism (§9 below):
+candidate's open-drain `queryToFirstByteMs` (mean 154.3ms) is under half baseline's (mean 413.4ms) —
+fine tiling's first tile arrives faster than baseline's whole-viewport-refill first batch.
+
+### 7. G3 — first-pixels per step-class, gated (winning cell + fresh baseline, n≥7, nearest-rank)
+
+| step-class | candidate (fine) n / p50 / p95 / max | baseline n / p50 / p95 / max | vs. 100ms row (candidate) |
+|---|---|---|---|---|
+| open-drain (G7's own subject, restated) | 7 / 233.0 / 294.0 / 294.0 | 7 / 497.9 / 596.4 / 596.4 | 2.3x–2.9x over |
+| fit | 2/7 (5 no-batch) / 3373.9 / 3373.9 / 3373.9 | 0/7 (7/7 no-batch) | n/a — baseline's fit is no-batch every trial (post-open-drain residency already covers the fit view under whole-viewport refill, Amendment 5) |
+| pan | 23/35 (12 no-batch) / 656.8 / 3443.3 / 3658.1 | 23/35 (12 no-batch) / 1216.5 / 2217.9 / 2290.9 | median 6.6x over, **tail 34x–37x over** |
+| zoom-to-layer | 5/7 (2 no-batch) / 977.1 / 1073.4 / 1073.4 | 0/7 (7/7 no-batch) | n/a — same no-batch shape as `fit` |
+| zoom-in | 15/21 (6 no-batch) / 995.6 / 1962.9 / 1962.9 | 21/21 / 915.8 / 1040.4 / 1105.9 | 10x–20x over |
+| zoom-out | 7/7 / 926.6 / 1358.6 / 1358.6 | 7/7 / 969.7 / 1130.2 / 1130.2 | 9.3x–13.6x over |
+
+**Reading, plainly, per-class not netted:** candidate wins decisively at `open-drain` (G7's own gated
+subject) and at `pan`'s median; candidate's `pan` TAIL (p95/max) is markedly worse than baseline's —
+the fan-out cost showing up exactly where §4a predicted it would, at the far tail rather than the
+median. `zoom-in` favors baseline (tighter, lower). `zoom-out` is close, baseline's p50 slightly
+better, candidate's p95 slightly better. `fit`/`zoom-to-layer` are not comparable between arms at all
+(baseline is no-batch there in all 7 trials by construction — nothing to time); this is disclosed,
+not treated as a candidate win by default. **No class here is netted against another** (§1's own
+prohibition, restated): the pan-median win does not buy back the pan-tail loss, and vice versa.
+
+### 8. G4 — frame time, worst-step p50/p95 proxy per trial (same method as the P2 section), gated
+
+| | mean-of-worst-step p50 | mean-of-worst-step p95 | trial range (p95) |
+|---|---|---|---|
+| candidate, fine (n=7) | 1626.9ms | 2305.4ms | 1500.5ms – 3378.3ms |
+| baseline (fresh, n=7) | 708.3ms | 1274.4ms | 1160.6ms – 1403.8ms |
+
+**G4: FAIL — candidate regresses against the fresh baseline** on this proxy, ~2.3x worse mean-worst
+p50, ~1.8x worse mean-worst p95, and a far wider trial-to-trial spread (baseline's own range is
+tight, 1160–1404ms; candidate's swings 1500–3378ms). Both arms sit far over the docs/08 vsync-interval
+row regardless (~16.7ms @ 60Hz) — this gate's own text is "no regression **vs. baseline**", scored
+exactly that way: candidate is measurably, consistently worse than the same-session baseline on this
+proxy, not just far from an already-unreachable vsync floor.
+
+### 9. Segments (query→first-byte / first-byte→decoded / decoded→painted), reported beside, never netted
+
+| step-class | candidate mean byte / decode / paint (ms) | baseline mean byte / decode / paint (ms) |
+|---|---|---|
+| open-drain | 154.3 / 28.0 / 56.2 | 413.4 / 26.8 / 62.0 |
+| pan | 445.6 / 10.9 / 921.1 | 1030.7 / 4.9 / 24.5 |
+| zoom-in | 67.4 / 23.3 / 1170.4 | 878.3 / 5.0 / 19.2 |
+| zoom-out | 136.8 / 15.6 / 1326.1 | 961.5 / 15.6 / 1326.1 (n=3, see note) |
+
+**The load-bearing decomposition finding, disclosed plainly, not absorbed into G4's headline
+number:** candidate's own `byte` segment is consistently SMALLER than baseline's (smaller per-tile
+payloads reach first byte faster — this is the tiling win, and it is what drives G7's pass). But
+candidate's `paint` segment is dramatically LARGER than baseline's at every non-open-drain
+class — pan 921ms vs. 25ms, zoom-in 1170ms vs. 19ms, zoom-out 1326ms vs. baseline's own (small-n)
+figure. **This is where G4's regression actually lives**: not in fetching data, in painting it —
+consistent with `CUT-STATE.md`'s own prior note about per-batch render cost (P5g/P5h's "coalesced
+renders" fix addressed open-drain specifically; this session's own fresh measurement shows the paint
+cost still elevated for candidate outside open-drain, at pan/zoom). Reported here as the mechanism,
+never netted against the byte-segment win above or against G7's pass — a fast fetch and a slow paint
+are two different facts, not one that cancels the other.
+
+### 10. Refill work per step-class, reported beside first-pixels, never netted
+
+| step-class | candidate mean features / bytes | baseline mean features / bytes |
+|---|---|---|
+| open-drain | 10,000 / 17,399,024 | 19,055 / 33,134,336 |
+| fit | 1,864.7 / 3,291,990 | 0 / 0 (no-batch every trial) |
+| pan | 6,056.9 / 10,646,868 | 11,576 / 20,106,818 |
+| zoom-to-layer | 9,189.1 / 16,237,376 | 0 / 0 (no-batch every trial) |
+| zoom-in | 1,983.6 / 3,486,948 | 17,693.1 / 30,769,701 |
+| zoom-out | 3,714.7 / 6,537,957 | 19,027 / 33,131,648 |
+
+Candidate refills markedly less data per step across the board (roughly half at open-drain/pan, an
+order of magnitude less at zoom-in/zoom-out) — registered prediction 2 (§5 of the preregistration,
+reuse net-reduces refill) reads consistent with this shape, though this session's trace measures
+per-step-class refill, not the specific step-1-vs-step-11 fit comparison prediction 2 names; a direct
+test of that exact prediction is not run here and is not claimed. **Not netted against G4's paint-cost
+finding above**: less data moved does not mean less time spent painting it.
+
+### 11. G6 — budget adherence, structural per Amendment 21
+
+Per Amendment 21, G6's pass is **structural** (admission trims before insert; the ceiling is
+unexceedable by construction), not a sampled measurement — stated as such, not re-derived here.
+Observed resident-vertex high-water marks, reported beside as context, not as the gate's mechanism:
+
+| arm | max observed vertices | % of 2,000,000 budget |
+|---|---|---|
+| candidate, fine | 1,997,834 | 99.89% |
+| baseline (fresh) | 1,994,977 | 99.75% |
+
+No excess observed either arm, consistent with the structural argument. Budget-calibration
+observation (reported never gated, per §6): both arms sit within a quarter of a percent of the
+2,000,000 ceiling at this fixture's own scale — no change to the constant is proposed here.
+
+### 12. Determinism (Amendment 14's 2% band, Amendment 18's over-budget carve-out)
+
+**Baseline:** clean — only `pan-northeast` (1.32% spread) and `zoom-in-3` (2.75% spread, marginally
+outside the 2% band) show any per-step resident-count variation across the 7 trials; every other step
+is exactly deterministic.
+
+**Candidate (fine):** resident-FEATURE-count spreads of 19%–113% appear at nearly every step past
+`fit`. **Per Amendment 18 (pre-decided, not re-litigated here):** the fine cell runs consistently
+over-budget/declared-partial (the `.canvas-status-stack` "Showing N features — the farthest areas...
+not drawn" text appeared repeatedly across trials), and the candidate's up-to-3-concurrent tile
+streams make the SURVIVING feature set interleaving-dependent at an over-budget boundary — exactly
+the property Amendment 18 named in advance. **Every one of these flagged steps is marked
+`non-deterministic — over-budget interleaving` for its RESIDENT-COUNT quantity specifically; G3/G4/G7
+above (first-pixels, segments, frame times) are single-batch/clock quantities Amendment 18 states are
+unaffected, and are not invalidated by this.** `zoom-out-1`'s 113% spread (one trial's low outlier,
+8,900 vs. six trials clustered 17,761–18,979) is the widest and is disclosed rather than smoothed
+over; it does not by itself invalidate any gated quantity above, per Amendment 18's own letter.
+
+### 13. Calibration cell — dev-vs-measure delta, reported-only, never gated, never quotable as product numbers
+
+| build class | open-drain firstPixel |
+|---|---|
+| measure (this cell, n=1) | 120.7ms |
+| dev (fine cell, n=7, p50) | 233.0ms |
+
+**Headline delta: the measure build's open-drain first-pixel is ~52% of the dev build's own p50** —
+roughly half the client-observed cost at this step is dev-build/instrumentation overhead, not
+product-inherent cost, AT THIS ONE SAMPLE. Chosen on the candidate/fine arm (this campaign's own
+winning cell), disclosed as a choice: baseline's dev-vs-measure delta is not measured this session
+(P3r's own earlier smoke measured baseline/measure but against the small filter-zoned fixture, a
+different fixture class, not comparable here). n=1, reported-only per Amendment 16 — this single
+point is not a percentile and is never used to adjust any G3/G4/G7 figure above; it bounds how much
+of this campaign's own dev-build numbers might shrink under a true release build, nothing more.
+
+---
+
+### 14. Invalid trials — full list with reasons (every rerun disclosed, §8)
+
+| trial | cell | step | reason | reran? |
+|---|---|---|---|---|
+| coarse screening slot 0, attempt 1 | candidate/coarse | pan-north | settle watchdog: in-flight never reached 0 (62,570ms) | yes → also invalid |
+| coarse screening slot 0, attempt 2 | candidate/coarse | pan-north | settle watchdog: console quiescence not reached (73,205ms) | no (§8, slot exhausted) |
+| coarse screening slot 1, attempt 1 | candidate/coarse | pan-north | settle watchdog: in-flight never reached 0 (61,866ms) | yes → also invalid |
+| coarse screening slot 1, attempt 2 | candidate/coarse | pan-north | settle watchdog: in-flight never reached 0 | no (§8, slot exhausted) |
+| medium screening slot 2, attempt 1 | candidate/medium | zoom-out-1 | settle watchdog: console quiescence not reached (63,196ms wall) | yes → also invalid |
+| medium screening slot 2, attempt 2 | candidate/medium | zoom-out-1 | settle watchdog: console quiescence not reached | no (§8, slot exhausted) |
+| fine screening slot 2, attempt 1 | candidate/fine | zoom-in-1 | settle watchdog: console quiescence not reached | yes → **valid** |
+| fine topup slot 1, attempt 1 | candidate/fine | pan-northeast | settle watchdog: in-flight never reached 0 (119,926ms) | yes → also invalid (different step) |
+| fine topup slot 1, attempt 2 | candidate/fine | zoom-in-3 | settle watchdog: console quiescence not reached | no (§8, slot exhausted — 2 independent causes) |
+| fine topup slot 2, attempt 1 | candidate/fine | pan-northeast | settle watchdog: in-flight never reached 0 (71,462ms) | yes → **valid** |
+| fine topup slot 4, attempt 1 | candidate/fine | zoom-out-1 | settle watchdog: console quiescence not reached (66,239ms) | yes → **valid** |
+
+**Total: 11 invalid attempts across the whole session** (8 screening-phase, 3 topup-phase); 2 slots
+(coarse-0, coarse-1) and 1 slot (fine topup-1) were fully lost after their licensed re-run also
+invalidated. Zero invalid trials in the fresh baseline or control cells (9/9 valid, first attempt).
+Zero invalid trials in the calibration cell (1/1 valid, first attempt).
+
+### 15. Evidence-file inventory (gitignored under `e2e/out/`; this section is their durable record)
+
+Fine candidate cell (n=7, scored): `residency-harness-instrument-on-{1788210266746,1788210454782,
+1788211105198,1788212651341,1788212900614,1788213504811,1788213676438}.json`. Fresh baseline (n=7):
+`residency-harness-instrument-on-{1788213915102,1788214526695,1788214779024,1788215003297,
+1788215226837,1788215475677,1788215725383}.json`. Control (n=2): `residency-harness-control-
+{1788214109416,1788214305909}.json`. Calibration (n=1, measure build): `residency-harness-
+instrument-on-measure-1788215912125.json`. Screening/topup invalid + coarse/medium valid trials:
+`residency-harness-instrument-on-{1788208274350,1788208398870,1788208650326,1788208877221,
+1788208971572,1788209075286,1788209395294,1788209695057,1788209981610,1788210727003,1788211352069,
+1788211653052,1788211826352,1788212241249}.json`. Raw per-trial console logs (redirected, gitignored):
+`p8-t01-candidate-coarse.log` … `p8-t15-candidate-fine-topup.log`, `p8-b01…b09`, `p8-cal01`,
+`p8-build-measure.log`. Scratch analysis scripts `e2e/out/p8-analyze.mjs`, `e2e/out/p8-score.mjs`
+(gitignored, retained for this session, not deleted, unlike P2's own deleted scratch script — kept
+here since this section's own numbers are directly reproducible from them against the evidence files
+above).
+
+### 16. Session mechanics
+
+Rebuilt the stale measure-build exe first (§5). 23 harness invocations total (12 screening/topup
+attempts across coarse/medium/fine including re-runs, 9 fresh-baseline/control, 1 calibration; +1
+build). Wall time, trial execution only (first trial launch to last trial's evidence write): **~133
+minutes**. One machine, one session, ABBA-ordered per §1/§8 throughout, RustDesk verified stopped
+before the first trial.
+
+---
+
+### 17. The campaign's own answer
+
+**Does tile-keyed residency (fine tile size, the screening-selected level) beat the baseline, where,
+and by how much?** Mixed, gate-by-gate, nothing netted: it wins G7 decisively (cold first view ~2x
+faster, 49.3% of baseline's p95 against a 110% ceiling) and wins G3's `pan`-median and `open-drain`
+classes, driven by a genuinely smaller byte-transfer segment per tile; it loses G4 (frame time,
+~1.8–2.3x worse than the fresh baseline on the same worst-step proxy) and G3's `pan`-tail and
+`zoom-in` classes, both traced to a dramatically larger PAINT segment, not a fetch problem. G6 holds
+structurally on both arms. The coarse level failed its own screening on a single reproducible
+step (`pan-north` fan-out cost), independently confirming §4a's named risk at the OTHER end of the
+sweep from where this session's gates were spent. **This is not a clean win for the candidate**: the
+declared-partial-view contract (24(a)) is real and the cold-open number is a genuine, large
+improvement, but the paint-cost regression is real too, and per §1/§11 neither is allowed to buy back
+the other. ADR-011 gate 8 is not marked met here (C4) — this is the written evidence, the ruling
+stays the human's.
