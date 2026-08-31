@@ -741,6 +741,40 @@ function formatSegmentsSummary(segments) {
   );
 }
 
+// ---------------------------------------------------------------------------------------
+// Viewport-residency cut P6c (RESIDENCY-PREREGISTRATION.md §12 Amendment 20, trace v3): step 6's
+// own realized covering-tile delta and no-batch trace-defect marker.
+// ---------------------------------------------------------------------------------------
+
+/** Amendment 20: "Each step-6 row records realized covering-tile delta and pre/post view state."
+ * Pre/post view state already exists on every row (S1, `viewState.pre`/`viewState.post`, unchanged
+ * here). This is the covering-tile delta half -- derived from the SAME per-step tile counters and
+ * plan outcome this file already records on every row (`row.counters`, `row.firstPixelReason`), per
+ * this piece's own instruction and its "touch nothing under src/" scope -- no new instrument hook.
+ *
+ * `counters.tilesRequested` (`ResidencyStepCounters`, `residencyInstrument.ts`) counts a real
+ * per-tile fetch ISSUED this step, deduped by tile key -- candidate-arm-only, honestly 0 (never
+ * null) for the baseline arm. `counters.evictionsApplied` counts tiles actually evicted this step.
+ * `counters.duplicatesDropped` (already-resident tiles re-delivered) does not enter: a duplicate
+ * never changed the covering set's own size in either direction.
+ *
+ * **`firstPixelReason` is the second input this delta must honor to be REALIZED, not merely
+ * declared.** `tilesRequested` increments at stream-ISSUE time, not at admission time -- a step
+ * whose plan outcome is `"no-batch"` (a stream issued, zero batches ever received,
+ * `residencyInstrument.ts`'s own three-way vocabulary) requested tiles that never arrived, so
+ * nothing was actually added to the covering set: the realized delta is honestly 0 there, never
+ * `tilesRequested`'s own raw request count (which would overstate what the set actually gained).
+ * Every other outcome (a batch DID arrive, painted or not) lets tiles actually reach admission, so
+ * `tilesRequested - evictionsApplied` -- net tiles gained minus tiles evicted this step -- stands.
+ *
+ * `null` when `counters` itself is absent (instrument off / hooks not called, e.g. `--control`) --
+ * an honest absence, matching this row's own `counters: undefined` convention, never a fabricated 0. */
+function coveringTileDeltaFromCounters(counters, firstPixelReason) {
+  if (!counters) return null;
+  if (firstPixelReason === "no-batch") return 0;
+  return counters.tilesRequested - counters.evictionsApplied;
+}
+
 /** Same gate every sibling suite duplicates (regression.mjs/admission-remediation.mjs's own doc
  * comment on why: the 2026-08-12 fresh-launch race this closes). This suite additionally requires
  * `residencyBeginStep` present, since every trace step depends on it. */
@@ -1012,6 +1046,20 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
       };
     }
     rows.push(row);
+
+    // Viewport-residency cut P6c (Amendment 20, trace v3): step 6 ("pan-northeast") only -- realized
+    // covering-tile delta (see `coveringTileDeltaFromCounters`'s own doc comment) and the no-batch
+    // trace-defect marker. A no-batch realization is a REPORTABLE TRACE DEFECT (a loud log + a row
+    // marker), never a trial failure -- Amendment 20 predicts step 6 is data-bearing at every trial,
+    // so a no-batch realization means the trace itself, not the product, failed to exercise data this
+    // trial; `row.status`/the settle-watchdog invalidation path are entirely unaffected by this block.
+    if (step.id === "pan-northeast") {
+      row.coveringTileDelta = coveringTileDeltaFromCounters(row.counters, row.firstPixelReason);
+      row.traceDefect = row.firstPixelReason === "no-batch";
+      if (row.traceDefect) {
+        console.log("trace-defect: step-6 realized off-data (amendment 20 predicts data-bearing)");
+      }
+    }
 
     // Viewport-residency cut P4 (decisions 24(a)/(b)): diagnostic-only, console-printed (never
     // folded into the evidence row schema, which stays this piece's own concern untouched) --
@@ -1968,7 +2016,11 @@ async function main() {
       // without this marker -- a real condition worth seeing at a glance, not a footnote buried in
       // `gesture.calmWait`.
       const calmBit = r.gesture?.calmWait && r.gesture.calmWait.calmed === false ? ` calmed=false(waitedMs=${r.gesture.calmWait.waitedMs})` : "";
-      console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit} ${formatSegmentsSummary(r.segments)}${calmBit}`);
+      // P6c (Amendment 20, trace v3): step 6 only -- `coveringTileDelta` is `undefined` on every
+      // other step's row (never computed there), so this bit is naturally absent everywhere else.
+      const coveringBit =
+        r.coveringTileDelta !== undefined ? ` coveringTileDelta=${r.coveringTileDelta}${r.traceDefect ? " TRACE-DEFECT" : ""}` : "";
+      console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit} ${formatSegmentsSummary(r.segments)}${calmBit}${coveringBit}`);
     }
 
     // P1d suggestion 12: a realized-displacement FAIL (measureOneStep's own `viewState.assertion`)

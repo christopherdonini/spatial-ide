@@ -37,8 +37,11 @@ export const G7_COLD_FIRST_VIEW_MARGIN_PROPOSED = 1.1;
  * produced it (`residency-harness.mjs` carries this into `evidence.cell.traceVersion`). "1" is this
  * literal's inception value -- there is no prior version to have bumped from.
  * "2" (2026-08-31): Amendment 10's step reorder (zoom-to-layer precedes the zoom block).
+ * "3" (2026-08-31): Amendment 20's step-6 magnitude change (0.5 viewport width per screen axis,
+ * total 0.5 * sqrt(2) * width, distanceMultiplier: Math.SQRT1_2) plus the harness's own step-6
+ * coveringTileDelta/traceDefect additions (residency-harness.mjs).
  */
-export const TRACE_VERSION = "2";
+export const TRACE_VERSION = "3";
 
 /**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4d) -- three grid resolutions, candidate arm only, swept not
@@ -187,15 +190,35 @@ export async function dismissThenClickRetry(dismissFn, clickFn, { maxAttempts = 
  * `settle` object (identical at every step, §4b) by reference -- deliberate: a test asserting every
  * step's settle criterion is well-formed is asserting one shape, not eleven independent ones.
  *
- * **Disclosed interpretation, `pan-northeast`'s magnitude (a preregistration ambiguity, reported per
- * this piece's own instructions rather than amending the frozen preregistration).** §4b step 6 reads
- * "one full viewport diagonal (√2 × the pan distance above, same direction convention)" -- "the pan
- * distance above" does not unambiguously name which of step 2's height-based distance or step 5's
- * width-based distance it means (steps 2/4 use viewport HEIGHT, steps 3/5 use viewport WIDTH, and
- * step 6 immediately follows step 5). This module resolves it as **step 5's own basis (viewport
- * WIDTH), scaled by sqrt(2)** -- "the pan distance above" read as "the immediately preceding step's
- * distance" -- and both the numerator basis (`"width"`) and the multiplier are carried explicitly in
- * `params` below so a reader (or a later piece) never has to re-derive the choice from prose.
+ * **Historical: `pan-northeast`'s original magnitude (a preregistration ambiguity, superseded by
+ * Amendment 20 below).** §4b step 6's original text read "one full viewport diagonal (√2 × the pan
+ * distance above, same direction convention)" -- "the pan distance above" did not unambiguously name
+ * which of step 2's height-based distance or step 5's width-based distance it meant (steps 2/4 use
+ * viewport HEIGHT, steps 3/5 use viewport WIDTH, and step 6 immediately follows step 5). This module
+ * resolved it as step 5's own basis (viewport WIDTH), scaled by sqrt(2) -- "the pan distance above"
+ * read as "the immediately preceding step's distance." Amendment 1 recorded this basis resolution;
+ * Amendment 2 fixed the harness's own realization arithmetic to match it. Amendment 20 (below)
+ * replaces the MAGNITUDE this basis is scaled by; the WIDTH basis itself is unchanged.
+ *
+ * **Amendment 20 (2026-08-31, RESIDENCY-PREREGISTRATION.md §12 -- made after a result had been seen,
+ * invalidating the pan step-class cells it touched): step 6 becomes "0.5 viewport width per screen
+ * axis (total 0.5·√2·width)"** -- that quoted fragment is the amendment's own formula, copied
+ * verbatim. Trace **v3** (`TRACE_VERSION` below). Context: under the original (Amendment 1/2)
+ * magnitude, the diagonal sat exactly on the fixture's data boundary and realized either an off-data
+ * no-batch or a ~172s fan-out exceeding every declared per-step bound -- see Amendment 20's own text
+ * for the full account. The new magnitude was chosen structurally (bounded inside the fit extent for
+ * any fixture whose extent >= 2 viewport widths), not fitted to an observed run.
+ *
+ * **Deriving `distanceMultiplier` from the amendment's own formula, through the SAME arithmetic
+ * `residency-harness.mjs`'s own `applyStep` already applies (unchanged by this amendment -- only
+ * this trace datum's multiplier moves):** `applyStep` computes `distance = dxBase *
+ * distanceMultiplier` (`dxBase` = `box.width` here, `distanceBasis: "width"`), sets BOTH screen axes
+ * to that same `distance` for a genuinely diagonal direction, then (M8's own fix) divides EACH axis
+ * by `Math.SQRT2`, so the REALIZED per-axis screen distance is `distance / sqrt(2)`. Solving
+ * `width * distanceMultiplier / sqrt(2) = 0.5 * width` for `distanceMultiplier` gives
+ * `distanceMultiplier = 0.5 * sqrt(2) = 1 / sqrt(2)`, i.e. `Math.SQRT1_2` -- the value `params` below
+ * carries. Realized total: `(0.5 * width) * sqrt(2) = 0.5 * sqrt(2) * width`, exactly the amendment's
+ * own "total 0.5·√2·width".
  */
 function frozenStep(step) {
   Object.freeze(step.params);
@@ -232,9 +255,11 @@ export const CAMERA_TRACE_STEPS = Object.freeze([
   {
     id: "pan-northeast",
     kind: "pan",
-    // See this export's own doc comment ("Disclosed interpretation") for why `distanceBasis` is
-    // "width" (step 5's own basis) here, not "height".
-    params: { direction: "NE", distanceBasis: "width", distanceMultiplier: Math.SQRT2 },
+    // Amendment 20 (trace v3): "0.5 viewport width per screen axis (total 0.5·√2·width)" -- see
+    // this export's own doc comment ("Amendment 20" / "Deriving distanceMultiplier") for the full
+    // derivation of `Math.SQRT1_2` from that formula. `distanceBasis` stays "width" (step 5's own
+    // basis, Amendment 1, unchanged by Amendment 20).
+    params: { direction: "NE", distanceBasis: "width", distanceMultiplier: Math.SQRT1_2 },
     settle: { quietMs: SETTLE_QUIET_MS, timeoutMs: SETTLE_PER_STEP_TIMEOUT_MS },
   },
   // Amendment 10 (2026-08-31): Zoom-to-layer precedes the zoom block -- the dry-run proved the

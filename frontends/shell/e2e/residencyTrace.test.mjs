@@ -167,9 +167,10 @@ await testAsync(
   }
 );
 
-test("TRACE_VERSION (M9) is a declared, non-empty string literal", () => {
+test("TRACE_VERSION (M9) is a declared, non-empty string literal, pinned at \"3\" (Amendment 20's step-6 magnitude change)", () => {
   assert.equal(typeof TRACE_VERSION, "string");
   assert.ok(TRACE_VERSION.length > 0);
+  assert.equal(TRACE_VERSION, "3");
 });
 
 test("validateCameraTrace flags a malformed trace instead of throwing", () => {
@@ -180,6 +181,58 @@ test("validateCameraTrace flags a malformed trace instead of throwing", () => {
   ]);
   assert.ok(problems.length >= 3, `expected at least 3 problems, got ${problems.length}: ${JSON.stringify(problems)}`);
 });
+
+console.log("");
+console.log("residencyTrace.mjs -- pan-northeast (step 6), Amendment 20's magnitude rule (trace v3)");
+
+test("pan-northeast's params encode Amendment 20's rule: width basis, unchanged; multiplier = 1/sqrt(2) (Math.SQRT1_2)", () => {
+  const step = CAMERA_TRACE_STEPS.find((s) => s.id === "pan-northeast");
+  assert.ok(step, "pan-northeast step not found in CAMERA_TRACE_STEPS");
+  assert.deepEqual(step.params, { direction: "NE", distanceBasis: "width", distanceMultiplier: Math.SQRT1_2 });
+});
+
+test(
+  "pan-northeast realizes exactly 0.5*width per screen axis (total 0.5*sqrt(2)*width), through the SAME " +
+    "arithmetic residency-harness.mjs's own applyStep applies (mirrors the M8-era realization-formula check)",
+  () => {
+    const step = CAMERA_TRACE_STEPS.find((s) => s.id === "pan-northeast");
+    for (const width of [1600, 800, 1234.5]) {
+      // Mirrors residency-harness.mjs's applyStep exactly (its own "pan" branch): dxBase (this
+      // step's distanceBasis is "width") * distanceMultiplier gives the declared scalar `distance`;
+      // a genuinely diagonal direction (both N/S and E/W present, as "NE" is) sets BOTH screen axes
+      // to that same scalar; M8's own fix then divides EACH axis by Math.SQRT2 once both are
+      // nonzero -- exactly `applyStep`'s own three steps, in the same order, on the same inputs.
+      const dxBase = width; // step.params.distanceBasis === "width"
+      const distance = dxBase * step.params.distanceMultiplier;
+      let dxScreen = 0;
+      let dyScreen = 0;
+      if (step.params.direction.includes("N")) dyScreen += distance;
+      if (step.params.direction.includes("S")) dyScreen -= distance;
+      if (step.params.direction.includes("E")) dxScreen -= distance;
+      if (step.params.direction.includes("W")) dxScreen += distance;
+      if (dxScreen !== 0 && dyScreen !== 0) {
+        dxScreen /= Math.SQRT2;
+        dyScreen /= Math.SQRT2;
+      }
+      const expectedPerAxis = 0.5 * width;
+      assert.ok(
+        Math.abs(Math.abs(dxScreen) - expectedPerAxis) < 1e-9,
+        `width=${width}: |dxScreen|=${Math.abs(dxScreen)}, expected ${expectedPerAxis}`
+      );
+      assert.ok(
+        Math.abs(Math.abs(dyScreen) - expectedPerAxis) < 1e-9,
+        `width=${width}: |dyScreen|=${Math.abs(dyScreen)}, expected ${expectedPerAxis}`
+      );
+      // Amendment 20's own declared total: "0.5·√2·width".
+      const realizedTotal = Math.hypot(dxScreen, dyScreen);
+      const expectedTotal = 0.5 * Math.SQRT2 * width;
+      assert.ok(
+        Math.abs(realizedTotal - expectedTotal) < 1e-9,
+        `width=${width}: realizedTotal=${realizedTotal}, expected 0.5*sqrt(2)*width=${expectedTotal}`
+      );
+    }
+  }
+);
 
 console.log("");
 console.log("residencyTrace.mjs -- abbaInterleave (ABBA, committed pure function)");
