@@ -75,6 +75,22 @@ const INSTRUMENT_IDENTIFIERS = [
   "getResidencyArm",
   "notifyResidencyArmDatasetOpened",
   "notifyResidencyArmDatasetClosed",
+  // Viewport-residency cut P3w: the candidate arm's own SOLE construction entry point -- its only
+  // call site (`App.tsx`'s `[admitted]` effect) is `if (import.meta.env.DEV && getResidencyArm()
+  // === "candidate")`, the identical guard the arm-switch identifiers above already prove dead in a
+  // production build -- checked here too as the SAME kind of corroborating evidence P3's own pair
+  // above already established (not a new, independent gate; `startCandidateArmSession` lives inside
+  // that exact same branch). Everything `candidateArmSession.ts` itself imports unconditionally
+  // (`TileViewportStreamManager`, etc.) is expected to be tree-shaken away WITH it once this one
+  // import has no live reference left -- not independently re-checked here, per this script's own
+  // disclosed scope (P1d B6b): a hit against one of the identifiers below is the load-bearing proof,
+  // not an exhaustive enumeration of every identifier in the whole candidate-arm module graph
+  // (`canvas/tileGrid.ts`/`tileResidentSet.ts`/`tileIngest.ts` are NOT purely DEV-only artifacts the
+  // way `residencyInstrument.ts`/`residencyArm.ts` are -- `WorkingCanvas.tsx`'s own `tileResidentRef
+  // = useRef(new TileResidentSet())` constructs one UNCONDITIONALLY, arm-agnostic, so that class's
+  // own code is expected, correctly, to survive into a production bundle -- inert, never reachable at
+  // runtime there, but genuinely live code, not a leak).
+  "startCandidateArmSession",
 ];
 
 // P1d B6c: three `WorkingCanvas.tsx` imperative-handle METHOD NAMES (product code, never
@@ -89,7 +105,22 @@ const INSTRUMENT_IDENTIFIERS = [
 // checked below as "the identifier immediately preceded by `.` or `?.`" (a member-expression
 // invocation), never as "the bare identifier is absent" (which IS expected to be present, as a
 // method-shorthand definition, preceded by `,`/`{`/whitespace, never `.`).
-const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = ["getResidentCounts", "armFirstPixelRenderHook", "disarmFirstPixelRenderHook"];
+// Viewport-residency cut P3w item B: the candidate arm's own `WorkingCanvasHandle` methods --
+// unconditionally-constructed object-literal methods (exactly like the three above), whose SOLE real
+// callers all live inside `residency/candidateArmSession.ts`, itself only ever constructed from the
+// SAME DEV-gated branch `startCandidateArmSession` above already covers. Bare method-shorthand
+// definitions surviving is expected (same reasoning as the three above); a surviving CALL SITE is not.
+const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = [
+  "getResidentCounts",
+  "armFirstPixelRenderHook",
+  "disarmFirstPixelRenderHook",
+  "pushTileBatch",
+  "clearTile",
+  "clearAllTiles",
+  "isTileResidentInCandidateSet",
+  "establishTileGridContext",
+  "applyTileViewportContext",
+];
 
 function collectFiles(dir) {
   const out = [];

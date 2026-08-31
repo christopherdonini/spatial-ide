@@ -1268,6 +1268,24 @@ async function main() {
     const mountReady = await waitForMountReady(page);
     console.log(`residency-harness: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms`);
 
+    // Viewport-residency cut P3w item C: the arm switch, driven AFTER mount, BEFORE any
+    // `openFixture` call (`setResidencyArm` is refused once a dataset is open, `residencyArm.ts`'s
+    // own contract) -- `cellArgs.arm` (M9) already carries `"candidate"` when `--arm candidate` was
+    // given; `--control`/`--wire-identity` never select the candidate arm (both override `arm` to
+    // their own literal label, `main()`'s own comment above), so this only ever fires for a plain
+    // `--arm candidate` run.
+    if (cellArgs.arm === "candidate") {
+      const setResult = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("candidate"));
+      if (!setResult || setResult.ok !== true) {
+        throw new Error(`residency-harness: setResidencyArm("candidate") failed: ${JSON.stringify(setResult)}`);
+      }
+      const armReadback = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyArm?.());
+      if (armReadback !== "candidate") {
+        throw new Error(`residency-harness: getResidencyArm() readback was ${JSON.stringify(armReadback)}, expected "candidate"`);
+      }
+      console.log("residency-harness: candidate arm selected and read back before any dataset open");
+    }
+
     await page
       .evaluate(() => {
         document.querySelectorAll(".canvas-refusal button, .error-banner button").forEach((b) => b.click());

@@ -71,6 +71,24 @@ export function traceResidency(
   console.debug(PREFIX, "residency", { event, streamHandle, batchSeq, vertexDelta, residentTotalBefore, residentTotalAfter, refused });
 }
 
+/** Viewport-residency cut P3w items C/D: one line per candidate-arm tile batch ingest --
+ * `tileResidentSet.ts`'s own dedupe (`duplicatesDropped`) and `tileIngest.ts`'s own eviction/budget
+ * decision (`evictedTileKeys`, `overBudget`), console-visible the same way `traceResidency` already
+ * makes baseline's ledger visible. Never gated on `import.meta.env.DEV` (matching every other
+ * function in this file -- this whole module is "console-only diagnostic instrumentation," not the
+ * separately-gated `instrument/residencyInstrument.ts`), and called unconditionally per batch (not
+ * only when something notable happened) so a reader can see the ordinary case too, not just the
+ * exceptional one. */
+export function traceTileIngest(
+  tileKey: string,
+  rowsAdmitted: number,
+  duplicatesDropped: number,
+  evictedTileKeys: readonly string[],
+  overBudget: boolean
+): void {
+  console.debug(PREFIX, "tile-ingest", { tileKey, rowsAdmitted, duplicatesDropped, evictedTileKeys, overBudget });
+}
+
 /** One line per `WorkingCanvas` mount/unmount, naming the dataset handle it was keyed on (D4's
  * remount fix, `App.tsx`) -- lets a session's ledger show exactly how many canvas instances
  * existed and which dataset each owned, without inferring it from `"push"`/`"clear"` lines alone. */

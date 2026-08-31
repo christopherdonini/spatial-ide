@@ -14,6 +14,7 @@ import {
   tracePositionsSample,
   traceResidency,
   traceStreamBatch,
+  traceTileIngest,
   traceViewState,
 } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
@@ -23,6 +24,7 @@ import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayer
 import type { ResolvedDrawParams } from "./buildLayers";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import { decodeBatch } from "./decodeBatch";
+import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import {
   DECKGL_PICK_INDEX_CEILING,
@@ -33,6 +35,13 @@ import {
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import { PickResult, resolvePick } from "./pick";
 import { ResidentSet } from "./residentSet";
+import { getResidencyArm } from "../residency/residencyArm";
+import { ingestTileBatch } from "./tileIngest";
+import type { TileGridContext } from "./tileIngest";
+import { tileDistanceToPoint } from "./tileGrid";
+import type { TileGridFrame, TileKey } from "./tileGrid";
+import type { TileGridLevel } from "./tileGridConstants";
+import { planTileEviction, TileResidentSet } from "./tileResidentSet";
 import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportBbox";
 
 /**
@@ -138,6 +147,65 @@ export interface WorkingCanvasHandle {
    * watchdog fired (or nothing was ever armed -- vacuously clean), `false` iff the watchdog had
    * already fired and self-restored first. */
   disarmFirstPixelRenderHook(): boolean;
+
+  /**
+   * Viewport-residency cut P3w item B: the candidate arm's own ingest -- decode one batch and add
+   * it to the TILE-KEYED resident set (`TileResidentSet`, a sibling of the baseline `ResidentSet`
+   * `pushBatch` above uses), never called for the baseline arm (`App.tsx`'s candidate-only
+   * construction branch is this method's only real caller). Cross-tile dedupe (item C) and
+   * budget/eviction (item D) both happen here, via `tileIngest.ts`'s own pure `ingestTileBatch` --
+   * this method never throws `ResidentVertexCeilingExceeded`/`PickCeilingExceeded` and never calls
+   * `onCanvasRefusal`/`onResidentCeilingExceeded`: the candidate arm never raises the baseline's
+   * declared-ceiling refusal (item B's own contract; P4 renders the over-budget state this method
+   * only maintains via `TileViewportStreamManager.setOverBudget`, applied by the caller from this
+   * method's own return value).
+   */
+  pushTileBatch(tileKey: string, streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): TileBatchIngestOutcome;
+  /** Drops one tile's residency -- per-tile supersede-on-pan, or an explicit eviction. Mirrors
+   * `clearStream` above, tile-keyed instead of stream-keyed. */
+  clearTile(tileKey: string): void;
+  /** Wholesale candidate-arm residency clear (item A: "Filter changes ... still clear everything").
+   * A dataset change instead remounts this whole `WorkingCanvas` instance (keyed on
+   * `admitted.dataset`, `App.tsx`), discarding the `TileResidentSet` with it -- this method is only
+   * needed for a filter change, which reuses the same instance. */
+  clearAllTiles(): void;
+  /** Whether `tileKey` is currently resident in the candidate-arm's own `TileResidentSet` -- backs
+   * the `TileResidencyAccessor` `TileViewportStreamManager` needs at construction (`App.tsx`'s
+   * candidate session). Deliberately NOT named `isTileResident` (the method this delegates to,
+   * `TileResidentSet.isTileResident`, already has that exact name) -- `check:dist-clean`'s own
+   * caller-checked identifier grep cannot distinguish "a call to THIS handle method" from "a call to
+   * `TileResidentSet`'s own always-live method of the same name", so sharing the name would make
+   * that check permanently, spuriously fail (found live writing this piece). */
+  isTileResidentInCandidateSet(tileKey: string): boolean;
+  /** Declares the tile grid frame/level this canvas instance's own eviction ordering should use --
+   * called once, by `App.tsx`'s candidate session, immediately after
+   * `TileViewportStreamManager.establishGridFrame` succeeds. Idempotent past the first call, mirroring
+   * that method's own "no-op past the first call" contract. */
+  establishTileGridContext(frame: TileGridFrame, level: TileGridLevel): void;
+  /** Updates the "current viewport" context (the covering tile set + view centre) eviction ordering
+   * and over-budget re-evaluation need -- called by `App.tsx`'s candidate session after every
+   * `TileViewportStreamManager.onCameraChange`. Also re-attempts eviction against the NEW covering
+   * set with zero incoming vertices (item B: "clear it when a later camera change fits within budget
+   * again") and applies any eviction that succeeds. Returns whether current residency now fits within
+   * `MAX_RESIDENT_VERTICES` -- the caller (`App.tsx`) uses this to clear `manager`'s own over-budget
+   * flag when `true`.
+   */
+  applyTileViewportContext(coveringTileKeys: readonly string[], viewCentre: { x: number; y: number }): boolean;
+}
+
+/** `WorkingCanvasHandle.pushTileBatch`'s own return shape (viewport-residency cut P3w item B) --
+ * mirrors `tileIngest.ts`'s own `TileBatchIngestResult`, plus the row count `App.tsx`'s eventual
+ * scan-liveness/status wiring would need (kept here rather than importing `TileBatchIngestResult`
+ * directly so this interface's own shape stays legible without a second file open). */
+export interface TileBatchIngestOutcome {
+  rowsAdmitted: number;
+  duplicatesDropped: number;
+  evictedTileKeys: string[];
+  overBudget: boolean;
+  /** Non-null once this canvas instance has ever admitted any geometry via `pushTileBatch` -- the
+   * candidate session's own fit-anchor read, used to `establishGridFrame` exactly once, ever, per
+   * dataset session (`tileGrid.ts`'s own top doc comment). */
+  fitAnchor: AuthoritativeBbox | null;
 }
 
 /** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
@@ -145,6 +213,16 @@ export interface WorkingCanvasHandle {
 export interface ResidentCounts {
   totalResidentVertices: number;
   totalResidentFeatures: number;
+}
+
+/** `tileGrid.ts`'s own `tileKeyToString` is deliberately one-way ("there is no `tileKeyFromString`;
+ * nothing needs to parse this back") -- `applyTileViewportContext`'s eviction ordering is one of the
+ * few places that genuinely does, since `TileResidentSet` only ever stores the STRING form
+ * (`tileIngest.ts`'s own identical local helper, duplicated rather than exported from `tileGrid.ts`
+ * itself for the same reason that module states). */
+function parseTileKey(key: string): TileKey {
+  const [row, col] = key.split(":").map(Number);
+  return { row, col };
 }
 
 export interface WorkingCanvasProps {
@@ -318,6 +396,33 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck<OrthographicView> | null>(null);
   const residentRef = useRef(new ResidentSet());
+  /** Viewport-residency cut P3w item B: the candidate arm's own tile-keyed sibling of `residentRef`
+   * -- always constructed (cheap, empty until ever used), but only ever WRITTEN to by
+   * `pushTileBatch`/`clearTile`/`clearAllTiles`, which `App.tsx`'s candidate-only construction
+   * branch is the sole caller of. `armRef` below (read once, at construction -- the arm is fixed for
+   * a dataset session, `residencyArm.ts`'s own "refused while a dataset is open" contract) is what
+   * `render()` uses to pick which of these two sets actually feeds `buildLayers`, so the baseline arm
+   * never reads from this at all. */
+  const tileResidentRef = useRef(new TileResidentSet());
+  /** Read ONCE, at construction -- never re-read from `getResidencyArm()` on every render, since the
+   * arm cannot change mid-session (`residencyArm.ts`'s own contract). For the baseline arm (the
+   * default, and the only value the full vitest/E2E regression suites ever observe), every branch
+   * this ref gates reduces to exactly the pre-P3w code path -- see `render()`'s own comment. */
+  const armRef = useRef(getResidencyArm());
+  /** Frame/level for the candidate arm's own eviction ordering (`tileIngest.ts`'s `ingestTileBatch`)
+   * -- `null` until `establishTileGridContext` is called (once, by `App.tsx`'s candidate session,
+   * right after `TileViewportStreamManager.establishGridFrame` succeeds). */
+  const tileGridContextRef = useRef<TileGridContext | null>(null);
+  /** The current viewport's own covering tile-key set -- eviction never drops a tile in here,
+   * however far the budget overshoots (`planTileEviction`'s own "never evict the current viewport"
+   * rule). Updated by `applyTileViewportContext`, read by `pushTileBatch`/`applyTileViewportContext`
+   * itself. */
+  const currentViewportTileKeysRef = useRef<ReadonlySet<string>>(new Set());
+  /** The current viewport's own centre, authoritative-CRS -- `planTileEviction`'s own
+   * farthest-first ordering measures distance from this. `{x:0,y:0}` before the first real viewport
+   * change ever arrives (harmless: eviction never runs before any batch has pushed residency past
+   * budget, which cannot happen before a real viewport has driven any tile planning at all). */
+  const viewCentreRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerMetreAtZoom(INITIAL_ZOOM))));
   /** The style prop, already resolved to what `buildLayers` needs (deck.gl's 0-255 RGBA accessor
    * convention -- `buildLayers.ts`'s own `ResolvedDrawParams`). Initialized synchronously from the
@@ -403,7 +508,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     if (!deck) return;
     begin("layer-construct");
     try {
-      const batches = residentRef.current.getBatches();
+      // Viewport-residency cut P3w item B: the candidate arm's `TileResidentSet` feeds the SAME
+      // `buildLayers` path, unioning its own tile-keyed batches into the render layer set exactly as
+      // `ResidentSet.getBatches()` already does for baseline -- no other change to this function, and
+      // for the baseline arm (`armRef.current === "baseline"`, the only value the full vitest/E2E
+      // regression suites ever observe) this ternary always takes the SAME branch it already did,
+      // byte-identical.
+      const batches: readonly ResidentBatch[] =
+        armRef.current === "candidate" ? tileResidentRef.current.getBatches() : residentRef.current.getBatches();
       const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
       deck.setProps({ layers });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
@@ -640,6 +752,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       },
 
       getResidentCounts() {
+        // Candidate arm (P3w): reads `tileResidentRef`'s own totals instead -- see `render()`'s
+        // identical `armRef.current` ternary; for baseline this is byte-identical to before.
+        if (armRef.current === "candidate") {
+          return {
+            totalResidentVertices: tileResidentRef.current.totalResidentVertices,
+            totalResidentFeatures: tileResidentRef.current.totalResidentFeatures,
+          };
+        }
         return {
           totalResidentVertices: residentRef.current.totalResidentVertices,
           totalResidentFeatures: residentRef.current.totalResidentFeatures,
@@ -688,6 +808,112 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         clearFirstPixelWatchdog();
         restoreFirstPixelHookToNoop();
         return disarmedBeforeTimeout;
+      },
+
+      // Viewport-residency cut P3w item B (candidate-arm ingest): never called for the baseline arm
+      // -- `App.tsx`'s candidate-only construction branch is the sole real caller of every method
+      // below. Decode/dedupe/eviction/budget logic itself lives in `tileIngest.ts`'s pure
+      // `ingestTileBatch`; these methods are thin glue (decode, delegate, `render()`), the same
+      // "extract the pure decision, keep the imperative handle thin" split `pushBatch` above already
+      // could not follow (no WebGL-free way to test it) but this NEW logic can, and does
+      // (`tileIngest.test.ts`).
+      pushTileBatch(tileKey, streamHandle, batchSeq, ipcBytes) {
+        begin("frame-decode");
+        let batch: ReturnType<typeof decodeBatch>;
+        try {
+          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
+        } finally {
+          end("frame-decode");
+        }
+
+        const outcome = ingestTileBatch({
+          tileSet: tileResidentRef.current,
+          tileKey,
+          batch,
+          grid: tileGridContextRef.current,
+          viewportTileKeys: currentViewportTileKeysRef.current,
+          viewCentre: viewCentreRef.current,
+          maxResidentVertices: MAX_RESIDENT_VERTICES,
+          priorExtent: fitAnchorRef.current,
+          extentOfBatch,
+          unionBbox,
+        });
+        traceTileIngest(tileKey, outcome.rowsAdmitted, outcome.duplicatesDropped, outcome.evictedTileKeys, outcome.overBudget);
+
+        // P3w's own smoke-evidence wiring: the candidate arm never refuses a batch (item B), so this
+        // is always `recordResidencyBatch(..., refused: false)` -- unlike `pushBatch`'s own
+        // accepted/refused split above, there is no second branch here. `batch.ids.length` (not
+        // `outcome.rowsAdmitted`) mirrors `pushBatch`'s own convention: DECODED counts, not
+        // post-dedupe/post-trim admitted counts -- `recordResidencyBatch`'s own contract is "a batch
+        // ResidentSet.addBatch actually admitted" for baseline, and the closest candidate-arm analogue
+        // of "this batch was decoded and processed" is the batch as decoded, before this arm's own
+        // dedupe/eviction/budget trimming (which `residencyInstrument.ts` has no field for at all --
+        // this piece does not touch that module, see `candidateArmSession.ts`'s own doc comment).
+        if (import.meta.env.DEV) {
+          recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, false);
+        }
+
+        // Same one-shot auto-fit `pushBatch` above performs, over the SAME `fitAnchorRef`/
+        // `residentExtentRef`/`hasAutoFitRef` -- only one of `pushBatch`/`pushTileBatch` is ever
+        // called in a given dataset session (the arm is fixed at open), so sharing these refs is
+        // safe and is what lets `fitToBounds`/"Zoom to layer" keep working unchanged for both arms.
+        fitAnchorRef.current = outcome.unionedExtent;
+        residentExtentRef.current = outcome.unionedExtent;
+        if (!hasAutoFitRef.current && residentExtentRef.current) {
+          hasAutoFitRef.current = true;
+          fitToExtent(residentExtentRef.current, false);
+        }
+
+        render();
+        return {
+          rowsAdmitted: outcome.rowsAdmitted,
+          duplicatesDropped: outcome.duplicatesDropped,
+          evictedTileKeys: outcome.evictedTileKeys,
+          overBudget: outcome.overBudget,
+          fitAnchor: outcome.unionedExtent,
+        };
+      },
+
+      clearTile(tileKey) {
+        tileResidentRef.current.evictTile(tileKey);
+        render();
+      },
+
+      clearAllTiles() {
+        tileResidentRef.current.clear();
+        residentExtentRef.current = null;
+        render();
+      },
+
+      isTileResidentInCandidateSet(tileKey) {
+        return tileResidentRef.current.isTileResident(tileKey);
+      },
+
+      establishTileGridContext(frame, level) {
+        if (tileGridContextRef.current !== null) return; // idempotent, mirrors establishGridFrame
+        tileGridContextRef.current = { frame, level };
+      },
+
+      applyTileViewportContext(coveringTileKeys, viewCentre) {
+        currentViewportTileKeysRef.current = new Set(coveringTileKeys);
+        viewCentreRef.current = viewCentre;
+        const grid = tileGridContextRef.current;
+        const tileSet = tileResidentRef.current;
+        if (!grid) return true; // nothing established yet -- nothing to have exceeded budget with
+        const plan = planTileEviction({
+          residentTileKeys: tileSet.residentTileKeys(),
+          tileVertices: (k) => tileSet.tileVertexCount(k),
+          viewportTileKeys: currentViewportTileKeysRef.current,
+          incomingVertices: 0,
+          currentTotalVertices: tileSet.totalResidentVertices,
+          maxResidentVertices: MAX_RESIDENT_VERTICES,
+          distanceToViewCentre: (k) => tileDistanceToPoint(grid.frame, grid.level, parseTileKey(k), viewCentre),
+        });
+        if (plan.evict.length > 0) {
+          for (const key of plan.evict) tileSet.evictTile(key);
+          render();
+        }
+        return !plan.overBudget;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps

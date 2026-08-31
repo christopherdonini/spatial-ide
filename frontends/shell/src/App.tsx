@@ -32,13 +32,14 @@ import {
   notifyResidencyArmDatasetOpened,
   setResidencyArm,
 } from "./residency/residencyArm";
+import { startCandidateArmSession } from "./residency/candidateArmSession";
 import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
 import ErrorBanner from "./ErrorBanner";
-import { encodeHexF64 } from "./skp/codec";
+import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import type { Bbox, Filter } from "./skp/types";
 import {
@@ -54,6 +55,27 @@ function toWireBbox(bbox: AuthoritativeBbox): Bbox {
     ymin: encodeHexF64(bbox.ymin),
     xmax: encodeHexF64(bbox.xmax),
     ymax: encodeHexF64(bbox.ymax),
+  };
+}
+
+/**
+ * Viewport-residency cut P3w: the inverse of `toWireBbox`, needed ONLY by the candidate arm's own
+ * `viewportDebounceRef` wiring (`[admitted]` effect below) -- baseline never calls this. The shared
+ * JSX's `onViewportChanged` callback always converts to wire form BEFORE calling
+ * `viewportDebounceRef.current?.call(...)` (unmodified by this piece, so baseline stays
+ * byte-identical); reusing that SAME ref/shape for the candidate arm's own debounced handler means
+ * decoding back to the authoritative numbers `TileViewportStreamManager.onCameraChange` needs, rather
+ * than adding a second ref/JSX prop. `bboxCrs` is accepted (matching `Debounced<[Bbox, string |
+ * null]>`'s own shape) but unused: every real call site passes `null` (ADR-010's own arbitrary-CRS
+ * gate is Windows/WebView2-only territory this shell does not yet reach past the authoritative
+ * project CRS).
+ */
+function fromWireBbox(bbox: Bbox, _bboxCrs: string | null): AuthoritativeBbox {
+  return {
+    xmin: decodeHexF64(bbox.xmin),
+    ymin: decodeHexF64(bbox.ymin),
+    xmax: decodeHexF64(bbox.xmax),
+    ymax: decodeHexF64(bbox.ymax),
   };
 }
 
@@ -873,6 +895,58 @@ export default function App() {
         `admitted.dataset=${admitted.dataset}: canvasRef.current was null when this effect captured it -- every batch/supersede for this dataset will silently no-op for this manager's whole lifetime`
       );
     }
+
+    // Viewport-residency cut P3w: SELECT BETWEEN two constructions -- candidate arm returns here,
+    // before a single line of the baseline `ViewportStreamManager` construction below ever runs, so
+    // that construction's own code path is untouched in shape (no conditional added inside it) and
+    // stays bit-identical for the default/only arm the full vitest/E2E regression suites ever
+    // observe. `getResidencyArm()` itself defaults to `"baseline"` and only a dev-gated
+    // `setResidencyArm("candidate")` call (the dev/E2E surface) can ever move a session off it --
+    // `residencyArm.ts`'s own top doc comment. `viewportDebounceRef` is REUSED (not a new ref): the
+    // candidate session's own `onViewportChanged` conforms to the identical `Debounced<[Bbox, string
+    // | null]>` shape baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX
+    // below (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is
+    // active without an arm check of its own.
+    if (import.meta.env.DEV && getResidencyArm() === "candidate") {
+      const session = startCandidateArmSession({ dataset: admitted.dataset, canvas });
+      managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
+      viewportDebounceRef.current = debounce(
+        (bbox, bboxCrs) => session.onViewportChanged(fromWireBbox(bbox, bboxCrs)),
+        VIEWPORT_QUERY_MIN_INTERVAL_MS
+      );
+      issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
+
+      if (import.meta.env.DEV) {
+        registerE2eHook("queryWithFilter", (predicate: string) =>
+          applyFilter(predicateTextToFilter(predicate), {
+            requestViewport: (bbox, f) => (issueQueryRef.current ? issueQueryRef.current(bbox, null, f) : Promise.resolve({ kind: "stopped" })),
+            cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
+            getLastViewportBbox: () => lastViewportBboxRef.current,
+            getActiveFilter: () => activeFilterRef.current,
+            commitActiveFilter,
+            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+          })
+        );
+      }
+
+      // The dataset's own "first look" -- the SAME unrestricted (`bbox: null`) shape baseline's own
+      // initial issue uses, immediately, not debounced (see this module's own doc comment for why
+      // this is what establishes the tile grid's own anchor).
+      reportViewportOutcome(session.reissueUnrestricted(null, activeFilterRef.current));
+
+      return () => {
+        viewportDebounceRef.current?.cancel();
+        viewportDebounceRef.current = null;
+        issueQueryRef.current = null;
+        void session.stop();
+        if (import.meta.env.DEV) unregisterE2eHook("queryWithFilter");
+        void closeDataset(admitted.dataset).catch(() => {});
+        managerRef.current = null;
+        if (import.meta.env.DEV) notifyResidencyArmDatasetClosed();
+      };
+    }
+
+    // BASELINE -- unchanged below this point (viewport-residency cut P3w).
     // NEXT-CUT.md P4 item 1: `batch(rows cumulative)` -- the running total for whichever stream this
     // scan machine is currently tracking. Effect-local (not a ref/useState): reset implicitly on
     // every effect rerun (a fresh dataset), and explicitly whenever `issueViewportQuery` below

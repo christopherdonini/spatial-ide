@@ -322,6 +322,15 @@ function fakeCanvasHandle(): WorkingCanvasHandle {
     getResidentCounts: vi.fn(() => ({ totalResidentVertices: 0, totalResidentFeatures: 0 })),
     armFirstPixelRenderHook: vi.fn(() => true),
     disarmFirstPixelRenderHook: vi.fn(() => true),
+    // Viewport-residency cut P3w item B: the candidate arm's own ingest methods -- stubbed here
+    // purely so this fake keeps satisfying `WorkingCanvasHandle`'s full shape; none of the tests in
+    // this file (baseline-arm only) ever call them.
+    pushTileBatch: vi.fn(() => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null })),
+    clearTile: vi.fn(),
+    clearAllTiles: vi.fn(),
+    isTileResidentInCandidateSet: vi.fn(() => false),
+    establishTileGridContext: vi.fn(),
+    applyTileViewportContext: vi.fn(() => true),
   };
 }
 
@@ -410,6 +419,12 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 0, totalResidentFeatures: 0 })),
     armFirstPixelRenderHook: vi.fn(() => true),
     disarmFirstPixelRenderHook: vi.fn(() => true),
+    pushTileBatch: vi.fn(() => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null })),
+    clearTile: vi.fn(),
+    clearAllTiles: vi.fn(),
+    isTileResidentInCandidateSet: vi.fn(() => false),
+    establishTileGridContext: vi.fn(),
+    applyTileViewportContext: vi.fn(() => true),
     };
     const onBatchRows = vi.fn();
     const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });
