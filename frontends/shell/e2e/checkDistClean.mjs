@@ -91,6 +91,14 @@ const INSTRUMENT_IDENTIFIERS = [
   // own code is expected, correctly, to survive into a production bundle -- inert, never reachable at
   // runtime there, but genuinely live code, not a leak).
   "startCandidateArmSession",
+  // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the segment
+  // decomposition's own new exports -- same DEV-gated call-site discipline every identifier above
+  // already relies on (`residencyInstrument.ts`'s own top doc comment, P3i paragraph).
+  "recordResidencyBatchArrived",
+  "recordResidencyBatchDecoded",
+  "recordResidencyTileRequested",
+  "recordResidencyDuplicatesDropped",
+  "recordResidencyEvictionsApplied",
 ];
 
 // P1d B6c: three `WorkingCanvas.tsx` imperative-handle METHOD NAMES (product code, never

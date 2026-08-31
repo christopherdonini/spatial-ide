@@ -7,7 +7,13 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
-import { recordResidencyBatch, recordResidencyRenderTick } from "../instrument/residencyInstrument";
+import {
+  recordResidencyBatch,
+  recordResidencyBatchDecoded,
+  recordResidencyDuplicatesDropped,
+  recordResidencyEvictionsApplied,
+  recordResidencyRenderTick,
+} from "../instrument/residencyInstrument";
 import {
   traceCanvasLifecycle,
   traceLayerUpdate,
@@ -615,6 +621,13 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         } finally {
           end("frame-decode");
         }
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, right
+        // where decode completes -- `firstByteToDecodedMs`'s own endpoint (`residencyInstrument.ts`'s
+        // own `recordBatchDecoded` doc comment has the full pairing account with
+        // `recordBatchArrived`, the manager-side hook this decode's own batch already passed through).
+        if (import.meta.env.DEV) {
+          recordResidencyBatchDecoded();
+        }
 
         // Ledger line logged before `addBatch`'s own ceiling check runs, so a refused attempt is
         // recorded too, not only an admitted one (DECISIONS-PENDING.md entry 0). `attemptedTotal`
@@ -825,6 +838,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         } finally {
           end("frame-decode");
         }
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
+        // same decode-complete hook `pushBatch` above carries, for this arm's own decode call.
+        if (import.meta.env.DEV) {
+          recordResidencyBatchDecoded();
+        }
 
         const outcome = ingestTileBatch({
           tileSet: tileResidentRef.current,
@@ -847,10 +865,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // post-dedupe/post-trim admitted counts -- `recordResidencyBatch`'s own contract is "a batch
         // ResidentSet.addBatch actually admitted" for baseline, and the closest candidate-arm analogue
         // of "this batch was decoded and processed" is the batch as decoded, before this arm's own
-        // dedupe/eviction/budget trimming (which `residencyInstrument.ts` has no field for at all --
-        // this piece does not touch that module, see `candidateArmSession.ts`'s own doc comment).
+        // dedupe/eviction/budget trimming. P3i (this piece) closes the gap the old version of this
+        // comment named ("residencyInstrument.ts has no field for at all"): `outcome.duplicatesDropped`/
+        // `outcome.evictedTileKeys.length` now feed `ResidencyStepCounters.duplicatesDropped`/
+        // `.evictionsApplied` directly, this call's own pre-aggregated totals for this ONE batch.
         if (import.meta.env.DEV) {
           recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, false);
+          recordResidencyDuplicatesDropped(outcome.duplicatesDropped);
+          recordResidencyEvictionsApplied(outcome.evictedTileKeys.length);
         }
 
         // Same one-shot auto-fit `pushBatch` above performs, over the SAME `fitAnchorRef`/

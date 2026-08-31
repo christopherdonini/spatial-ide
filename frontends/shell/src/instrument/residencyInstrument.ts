@@ -61,6 +61,31 @@
  *   in-flight stream count (`getResidencyInFlightStreamCount`), so a driver's settle check can
  *   require in-flight === 0, not merely console quiescence.
  *
+ * **P3i (RESIDENCY-PREREGISTRATION.md's own §12 Amendment 15, paraphrased, not quoted): three
+ * per-step sub-spans, REPORTED-BESIDE `firstPixelMs`, never gated.** `recordBatchArrived`/
+ * `recordBatchDecoded` are two new ONE-SHOT-per-step markers, each set only by the FIRST call this
+ * step observes: `recordBatchArrived` at each arm's own manager batch-arrival hook
+ * (`viewportStreamManager.ts`/`tileViewportStreamManager.ts`/`candidateArmSession.ts`'s own untiled
+ * sink -- literally the earliest client-observable moment for a batch's own data-plane bytes, BEFORE
+ * decode; see that method's own doc comment for why this is a DEFINED PROXY, not a true
+ * first-TCP-byte timestamp), `recordBatchDecoded` right after `WorkingCanvas.tsx`'s own
+ * `decodeBatch` call completes, for either arm's own `pushBatch`/`pushTileBatch`. Because decode runs
+ * synchronously, immediately after arrival, in this codebase's single-threaded ingest path, the FIRST
+ * `recordBatchArrived` and the FIRST `recordBatchDecoded` this step observes are always the SAME
+ * physical batch -- literally the step's first batch to arrive, whatever its eventual accept/refuse
+ * fate. `endStep` derives `queryToFirstByteMs` (arrival minus `firstStreamIssuedAtMs`),
+ * `firstByteToDecodedMs` (decode minus arrival), and `decodedToPaintedMs` (the existing
+ * `firstPixelMs` stamp's own raw paint timestamp minus decode) from these two markers plus the
+ * existing M1 stamp -- never a new clock, never a new render hook. **Disclosed divergence:** because
+ * the first TWO spans key on literally the step's first batch (any fate) while `firstPixelMs`/
+ * `decodedToPaintedMs` key on the first ACCEPTED batch (M1's own criterion, unchanged), a step whose
+ * first batch is REFUSED and never followed by an accepted one reports real, non-null
+ * `queryToFirstByteMs`/`firstByteToDecodedMs` (that batch genuinely arrived and decoded) beside a
+ * null `decodedToPaintedMs`/`firstPixelMs` (reason `"no-batch"`, per M1's existing rule: zero
+ * ACCEPTED batches) -- the three spans therefore sum to exactly `firstPixelMs` only in the common
+ * case (the first batch itself is the one that gets accepted), never asserted here, only recorded for
+ * a scorer to check.
+ *
  * **A measurement SIBLING to `console/recorder.ts`, not an extension of it** (this piece's own
  * instruction) -- same discipline (a subscriber-shaped consumer failing must never break the frame
  * that produced the event it consumes), but a completely separate bounded state machine with no
@@ -96,12 +121,24 @@ export interface ResidencyStepCounters {
   batchesRefused: number;
   featuresRefused: number;
   bytesRefused: number;
-  /** Placeholder -- the tile concept arrives in P3 (`RESIDENCY-PREREGISTRATION.md` §4d/§9). Always
-   * 0 through this piece's own wiring; the field exists now, and `recordTileRequested` below already
-   * exists to increment it, so P3 plugs a real per-tile-fetch count in without reshaping this
-   * interface or any of its consumers (the driver's evidence-file schema, `endResidencyStep`'s
-   * return shape). */
+  /** P3w's own placeholder, wired by P3i (this piece): incremented once per real per-tile fetch the
+   * candidate arm's own `TileViewportStreamManager` issues (`candidateArmSession.ts`'s
+   * `countTileStreamIssuedOnce`, deduped by tile key -- the SAME dedupe `streamsIssued` already gets
+   * for the candidate arm, just under a tile-specific name a scorer can read without inferring it
+   * from the general stream counter). The baseline arm never calls `recordTileRequested` -- always 0
+   * for a baseline step, never null (the instrument's own "off means zero work" discipline applies
+   * per-counter, not per-arm; see this field's own consumers for how a reader tells baseline's
+   * honest-zero from the candidate arm's own zero-because-no-tiles-this-step). */
   tilesRequested: number;
+  /** P3i: candidate-arm-only, summed across every `WorkingCanvas.pushTileBatch` call this step
+   * (`tileIngest.ts`'s own `ingestTileBatch` -- `outcome.duplicatesDropped`). Always 0 for the
+   * baseline arm, which has no tile-keyed dedupe concept at all -- `pushBatch` never calls the
+   * recorder this field is fed by. */
+  duplicatesDropped: number;
+  /** P3i: candidate-arm-only, summed `outcome.evictedTileKeys.length` across every
+   * `pushTileBatch` call this step. Always 0 for the baseline arm, same reasoning as
+   * `duplicatesDropped` above -- `ResidentSet` (baseline) has no per-tile eviction concept. */
+  evictionsApplied: number;
 }
 
 function zeroCounters(): ResidencyStepCounters {
@@ -115,6 +152,8 @@ function zeroCounters(): ResidencyStepCounters {
     featuresRefused: 0,
     bytesRefused: 0,
     tilesRequested: 0,
+    duplicatesDropped: 0,
+    evictionsApplied: 0,
   };
 }
 
@@ -129,6 +168,12 @@ const MAX_INPUT_PROXIES = 1000;
 
 export type FirstPixelReason = "no-query" | "no-batch" | "no-paint";
 
+/** P3i: the same three-value vocabulary `FirstPixelReason` already uses, reused rather than
+ * duplicated -- `queryToFirstByteReason`/`firstByteToDecodedReason`/`decodedToPaintedReason` below
+ * all draw from it, per this file's own top doc comment on the P3i paragraph (the disclosed
+ * divergence between "step's first batch, any fate" and "step's first ACCEPTED batch"). */
+export type SegmentReason = FirstPixelReason;
+
 export interface ResidencyStepResult {
   stepId: string;
   counters: ResidencyStepCounters;
@@ -142,6 +187,33 @@ export interface ResidencyStepResult {
    * observed before `endStep` -- an honest residual case, never silently absorbed into one of the
    * other two). `undefined` when `firstPixelMs` is non-null. */
   firstPixelReason?: FirstPixelReason;
+  /** P3i: ms from the step's first `recordStreamIssued` call to `recordBatchArrived`'s own one-shot
+   * timestamp for the step's FIRST batch to arrive (any accept/refuse fate -- see this file's own top
+   * doc comment). `null` when either never happened this step; see `queryToFirstByteReason`. */
+  queryToFirstByteMs: number | null;
+  /** Present iff `queryToFirstByteMs` is `null` -- `"no-query"` (zero streams issued this step) or
+   * `"no-batch"` (a stream issued, but no batch ever arrived before `endStep`). Never `"no-paint"`:
+   * this span does not depend on painting at all. */
+  queryToFirstByteReason?: SegmentReason;
+  /** P3i: ms from that same first-batch arrival to `recordBatchDecoded`'s own one-shot timestamp for
+   * the same batch (around `WorkingCanvas.tsx`'s own `decodeBatch` call). `null` when the arrival
+   * itself never happened (decode is synchronous and immediate after arrival in this codebase's
+   * ingest path, so there is no distinct "arrived but never decoded" case in practice). */
+  firstByteToDecodedMs: number | null;
+  /** Mirrors `queryToFirstByteReason` exactly -- decode's own one-shot marker is paired 1:1 with the
+   * arrival marker (this file's own top doc comment), so the same absence reason applies. */
+  firstByteToDecodedReason?: SegmentReason;
+  /** P3i: ms from that same batch's decode completing to `firstPixelMs`'s own raw paint timestamp
+   * (the existing M1 stamp, never a new render hook). `null` whenever `firstPixelMs` is `null` -- see
+   * `decodedToPaintedReason`. **Not asserted against `firstPixelMs` here** (`queryToFirstByteMs` +
+   * `firstByteToDecodedMs` + `decodedToPaintedMs` sum to exactly `firstPixelMs` only when the step's
+   * first batch is also its first ACCEPTED batch -- the common case, but this file's own top doc
+   * comment discloses the divergence when it is not); recorded for a scorer to check, never enforced
+   * by this module. */
+  decodedToPaintedMs: number | null;
+  /** Mirrors `firstPixelReason` exactly -- this span's own numerator is `firstPixelMs`'s raw
+   * timestamp, so whatever kept `firstPixelMs` `null` keeps this `null` too, for the same reason. */
+  decodedToPaintedReason?: SegmentReason;
   /** M3: one raw timestamp per REAL render observed while the step was active (`WorkingCanvas.tsx`'s
    * own persistent per-step `onAfterRender` hook, via `recordResidencyRenderTick`) -- p50/p95 are the
    * driver's own job (§6), never computed here. */
@@ -173,6 +245,18 @@ interface ActiveStep {
   /** M1: has this step's first ACCEPTED (non-refused) batch arrived yet. */
   firstBatchArrived: boolean;
   firstPixelMs: number | null;
+  /** P3i: raw `performance.now()`-scale companion to `firstPixelMs` (which stores the already-computed
+   * delta) -- needed so `endStep` can derive `decodedToPaintedMs` (a delta against
+   * `firstBatchDecodedAtMs`, another raw timestamp) without re-deriving `firstStreamIssuedAtMs +
+   * firstPixelMs` (equivalent arithmetically, but this is the more direct source). Set at the exact
+   * same call, in `recordFrame`, that sets `firstPixelMs`. */
+  firstPixelAtMs: number | null;
+  /** P3i: one-shot -- the timestamp of the FIRST `recordBatchArrived` call this step observes, any
+   * accept/refuse fate (this file's own top doc comment). `null` until that first call. */
+  firstBatchArrivedAtMs: number | null;
+  /** P3i: one-shot -- the timestamp of the FIRST `recordBatchDecoded` call this step observes, paired
+   * 1:1 with `firstBatchArrivedAtMs` in practice (synchronous decode). `null` until that first call. */
+  firstBatchDecodedAtMs: number | null;
   frameTimestamps: number[];
   frameTimestampsTruncated: boolean;
   inputToPresentProxiesMs: number[];
@@ -205,6 +289,9 @@ export class ResidencyInstrumentCore {
       firstStreamIssuedAtMs: null,
       firstBatchArrived: false,
       firstPixelMs: null,
+      firstPixelAtMs: null,
+      firstBatchArrivedAtMs: null,
+      firstBatchDecodedAtMs: null,
       frameTimestamps: [],
       frameTimestampsTruncated: false,
       inputToPresentProxiesMs: [],
@@ -231,11 +318,40 @@ export class ResidencyInstrumentCore {
       }
     }
 
+    // P3i: the arrival/decode pair's own absence reason -- shares "no-query"/"no-batch" with
+    // `firstPixelReason` above (never "no-paint": this pair does not depend on painting at all), but
+    // computed separately because it keys on `firstBatchArrivedAtMs` (the step's first batch, ANY
+    // fate), not on `firstBatchArrived` (the first ACCEPTED batch, `firstPixelReason`'s own
+    // criterion) -- see this file's own top doc comment for the disclosed divergence between the two.
+    let arrivalReason: SegmentReason | undefined;
+    if (s.firstBatchArrivedAtMs === null) {
+      arrivalReason = s.counters.streamsIssued === 0 ? "no-query" : "no-batch";
+    }
+
+    const queryToFirstByteMs =
+      s.firstStreamIssuedAtMs !== null && s.firstBatchArrivedAtMs !== null
+        ? s.firstBatchArrivedAtMs - s.firstStreamIssuedAtMs
+        : null;
+    const firstByteToDecodedMs =
+      s.firstBatchArrivedAtMs !== null && s.firstBatchDecodedAtMs !== null
+        ? s.firstBatchDecodedAtMs - s.firstBatchArrivedAtMs
+        : null;
+    const decodedToPaintedMs =
+      s.firstBatchDecodedAtMs !== null && s.firstPixelAtMs !== null
+        ? s.firstPixelAtMs - s.firstBatchDecodedAtMs
+        : null;
+
     return {
       stepId: s.stepId,
       counters: s.counters,
       firstPixelMs: s.firstPixelMs,
       firstPixelReason,
+      queryToFirstByteMs,
+      queryToFirstByteReason: queryToFirstByteMs === null ? arrivalReason : undefined,
+      firstByteToDecodedMs,
+      firstByteToDecodedReason: firstByteToDecodedMs === null ? arrivalReason : undefined,
+      decodedToPaintedMs,
+      decodedToPaintedReason: decodedToPaintedMs === null ? firstPixelReason : undefined,
       frameTimestamps: s.frameTimestamps,
       frameTimestampsTruncated: s.frameTimestampsTruncated,
       inputToPresentProxiesMs: s.inputToPresentProxiesMs,
@@ -277,11 +393,49 @@ export class ResidencyInstrumentCore {
     this.active.firstBatchArrived = true;
   }
 
-  /** `tilesRequested` placeholder increment -- P3's own extension point (this interface's doc
-   * comment). Unreachable from anywhere this piece itself wires. */
+  /** `tilesRequested` increment -- P3w's own placeholder, wired by P3i (this piece,
+   * `candidateArmSession.ts`'s `countTileStreamIssuedOnce`, once per real per-tile fetch). Never
+   * called by the baseline arm. */
   recordTileRequested(): void {
     if (!this.active) return;
     this.active.counters.tilesRequested++;
+  }
+
+  /** P3i: `count` is the caller's own pre-aggregated total for ONE `pushTileBatch` call (`tileIngest
+   * .ts`'s `outcome.duplicatesDropped`) -- summed across the step, not called once per duplicate. */
+  recordDuplicatesDropped(count: number): void {
+    if (!this.active) return;
+    this.active.counters.duplicatesDropped += count;
+  }
+
+  /** P3i: `count` is the caller's own pre-aggregated total for ONE `pushTileBatch` call
+   * (`outcome.evictedTileKeys.length`) -- summed across the step, not called once per evicted tile. */
+  recordEvictionsApplied(count: number): void {
+    if (!this.active) return;
+    this.active.counters.evictionsApplied += count;
+  }
+
+  /** P3i: called once per batch's own data-plane bytes arriving, at each arm's own manager
+   * batch-arrival hook -- BEFORE decode. One-shot per step: only the FIRST call sets
+   * `firstBatchArrivedAtMs`; this file's own top doc comment has the full "honest earliest hook"
+   * account (a DEFINED PROXY for "first byte," never a true first-TCP-byte timestamp -- this
+   * codebase's transport layer hands a fully-received message to `StreamSink.onBatch` in one call,
+   * with no lower-level hook this shell can observe). */
+  recordBatchArrived(nowMs: number): void {
+    if (!this.active) return;
+    if (this.active.firstBatchArrivedAtMs === null) {
+      this.active.firstBatchArrivedAtMs = nowMs;
+    }
+  }
+
+  /** P3i: called once per batch's decode completing, around `WorkingCanvas.tsx`'s own `decodeBatch`
+   * call. One-shot per step, pairing 1:1 with `recordBatchArrived` in practice (this file's own top
+   * doc comment: decode is synchronous and immediate after arrival in this codebase's ingest path). */
+  recordBatchDecoded(nowMs: number): void {
+    if (!this.active) return;
+    if (this.active.firstBatchDecodedAtMs === null) {
+      this.active.firstBatchDecodedAtMs = nowMs;
+    }
   }
 
   /**
@@ -315,6 +469,7 @@ export class ResidencyInstrumentCore {
 
     if (s.firstBatchArrived && s.firstPixelMs === null && s.firstStreamIssuedAtMs !== null) {
       s.firstPixelMs = nowMs - s.firstStreamIssuedAtMs;
+      s.firstPixelAtMs = nowMs; // P3i: raw companion -- `firstPixelAtMs`'s own doc comment.
     }
   }
 
@@ -330,9 +485,10 @@ export class ResidencyInstrumentCore {
 
 // ---------------------------------------------------------------------------------------
 // DEV-only singleton wiring -- the seam every product call site (WorkingCanvas.tsx,
-// streaming/viewportStreamManager.ts, App.tsx) reaches, each behind its OWN `import.meta.env.DEV`
-// check at the call site (this module's own top doc comment explains why the check is duplicated
-// there rather than relied on solely here).
+// streaming/viewportStreamManager.ts, App.tsx, and, since P3i, streaming/tileViewportStreamManager.ts
+// and residency/candidateArmSession.ts) reaches, each behind its OWN `import.meta.env.DEV` check at
+// the call site (this module's own top doc comment explains why the check is duplicated there rather
+// than relied on solely here).
 // ---------------------------------------------------------------------------------------
 
 const core = new ResidencyInstrumentCore();
@@ -426,6 +582,46 @@ export function getResidencyInFlightStreamCount(): number {
 export function recordResidencyBatch(features: number, bytes: number, refused: boolean): void {
   if (!enabled) return;
   core.recordBatch(features, bytes, refused);
+}
+
+/** P3i: called at each arm's own manager batch-arrival hook -- `viewportStreamManager.ts`'s and
+ * `tileViewportStreamManager.ts`'s own `sink.onBatch` (the "still active" branch, never the
+ * dropped/superseded one), and `candidateArmSession.ts`'s own untiled "first look" sink -- BEFORE
+ * decode. `ResidencyInstrumentCore.recordBatchArrived`'s own doc comment has the full "honest
+ * earliest hook" account. */
+export function recordResidencyBatchArrived(): void {
+  if (!enabled) return;
+  core.recordBatchArrived(performance.now());
+}
+
+/** P3i: called from `WorkingCanvas.tsx`'s own `pushBatch`/`pushTileBatch`, right after their shared
+ * `decodeBatch` call completes -- `ResidencyInstrumentCore.recordBatchDecoded`'s own doc comment. */
+export function recordResidencyBatchDecoded(): void {
+  if (!enabled) return;
+  core.recordBatchDecoded(performance.now());
+}
+
+/** P3i: called from `candidateArmSession.ts`'s own `countTileStreamIssuedOnce` -- once per real
+ * per-tile fetch the candidate arm issues, deduped by tile key. Never called by the baseline arm. */
+export function recordResidencyTileRequested(): void {
+  if (!enabled) return;
+  core.recordTileRequested();
+}
+
+/** P3i: called from `WorkingCanvas.tsx`'s own `pushTileBatch`, once per call, with that call's own
+ * pre-aggregated `outcome.duplicatesDropped` total (`tileIngest.ts`). Never called for baseline's
+ * `pushBatch`, which has no tile-keyed dedupe concept. */
+export function recordResidencyDuplicatesDropped(count: number): void {
+  if (!enabled) return;
+  core.recordDuplicatesDropped(count);
+}
+
+/** P3i: called from `WorkingCanvas.tsx`'s own `pushTileBatch`, once per call, with that call's own
+ * pre-aggregated `outcome.evictedTileKeys.length` total. Never called for baseline's `pushBatch`,
+ * which has no per-tile eviction concept. */
+export function recordResidencyEvictionsApplied(count: number): void {
+  if (!enabled) return;
+  core.recordEvictionsApplied(count);
 }
 
 /** P1d suggestion 10: called from `viewportStreamManager.ts`'s own `onBatch` drop branch, once per

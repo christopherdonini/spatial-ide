@@ -4,6 +4,7 @@
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import {
+  recordResidencyBatchArrived,
   recordResidencyStreamEnded,
   recordResidencyStreamIssued,
   recordResidencySupersededBytes,
@@ -197,6 +198,14 @@ export class ViewportStreamManager {
             recordResidencySupersededBytes(payload.byteLength);
           }
           return;
+        }
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
+        // earliest client-observable moment for this batch's own data-plane bytes -- BEFORE decode,
+        // right here where the transport layer hands this manager a fully-received message. See
+        // `residencyInstrument.ts`'s own `recordBatchArrived` doc comment for why this is a defined
+        // proxy, not a true first-TCP-byte timestamp.
+        if (import.meta.env.DEV) {
+          recordResidencyBatchArrived();
         }
         const seq = this.nextBatchSeq++;
         this.opts.onBatch(streamHandleAtStart, seq, payload);

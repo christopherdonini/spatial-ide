@@ -566,6 +566,28 @@ function frameTimeStatsMs(frameTimestamps, truncated) {
   };
 }
 
+// ---------------------------------------------------------------------------------------
+// P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): a compact one-line rendering of a row's own
+// `segments` field for the console summary -- no scoring, purely a print-time convenience so a
+// human scanning the summary does not have to open the evidence JSON to see the split.
+// ---------------------------------------------------------------------------------------
+
+function formatOneSegment(ms, reason) {
+  return ms != null ? `${ms}ms` : `n/a(${reason ?? "n/a"})`;
+}
+
+/** `row.segments` is `undefined` when `residencyEndStep` itself was never called (hooks off/no
+ * result) -- printed plainly rather than three "n/a" fields that would misleadingly suggest the
+ * spans were measured and simply absent. */
+function formatSegmentsSummary(segments) {
+  if (!segments) return "segments=(instrument off)";
+  return (
+    `segments=byte=${formatOneSegment(segments.queryToFirstByteMs, segments.queryToFirstByteReason)}` +
+    ` decode=${formatOneSegment(segments.firstByteToDecodedMs, segments.firstByteToDecodedReason)}` +
+    ` paint=${formatOneSegment(segments.decodedToPaintedMs, segments.decodedToPaintedReason)}`
+  );
+}
+
 /** Same gate every sibling suite duplicates (regression.mjs/admission-remediation.mjs's own doc
  * comment on why: the 2026-08-12 fresh-launch race this closes). This suite additionally requires
  * `residencyBeginStep` present, since every trace step depends on it. */
@@ -738,6 +760,20 @@ async function measureOneStep(
     counters: result ? result.counters : undefined,
     firstPixelMs: result ? result.firstPixelMs : undefined,
     firstPixelReason: result ? result.firstPixelReason : undefined,
+    // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the three
+    // per-step sub-spans, REPORTED-BESIDE `firstPixelMs` above, never gated -- `undefined` (not a
+    // fabricated null) whenever `residencyEndStep` itself was never called (hooks off/no result),
+    // mirroring `firstPixelMs`'s own `undefined`-vs-`null` distinction on this same row.
+    segments: result
+      ? {
+          queryToFirstByteMs: result.queryToFirstByteMs,
+          queryToFirstByteReason: result.queryToFirstByteReason,
+          firstByteToDecodedMs: result.firstByteToDecodedMs,
+          firstByteToDecodedReason: result.firstByteToDecodedReason,
+          decodedToPaintedMs: result.decodedToPaintedMs,
+          decodedToPaintedReason: result.decodedToPaintedReason,
+        }
+      : undefined,
     frameTimeMs: frameStats,
     inputToPresentProxiesMs: result ? result.inputToPresentProxiesMs : undefined,
     inputToPresentProxiesTruncated: result ? result.inputToPresentProxiesTruncated : undefined,
@@ -1500,7 +1536,7 @@ async function main() {
     console.log(`== residency-harness (${evidence.mode}${smoke ? ", smoke" : ""}) -- open-drain + per-step summary ==`);
     if (openDrainRow) {
       const fp = openDrainRow.firstPixelMs != null ? `firstPixel=${openDrainRow.firstPixelMs}ms` : `firstPixel=n/a (${openDrainRow.firstPixelReason ?? openDrainRow.reason ?? "n/a"})`;
-      console.log(`[open-drain] ${openDrainRow.status} wallMs=${openDrainRow.wallMs ?? "n/a"} ${fp}`);
+      console.log(`[open-drain] ${openDrainRow.status} wallMs=${openDrainRow.wallMs ?? "n/a"} ${fp} ${formatSegmentsSummary(openDrainRow.segments)}`);
     }
     for (const r of rows) {
       // P2-prep2: a row `runTrace`'s own early-continue pushed for a step AFTER the one that failed
@@ -1514,9 +1550,15 @@ async function main() {
         console.log(`[${r.stepId}] skipped (trial invalidated at step ${invalidatedAtStep})`);
         continue;
       }
-      const featureBit = r.counters ? `features=${r.counters.featuresDecoded} bytes=${r.counters.bytesDecoded}` : "counters=(instrument off)";
+      // P3i: `tiles=`/`dup=`/`evict=` surface the P3w gap this piece closes (`ResidencyStepCounters`'s
+      // own `tilesRequested`/`duplicatesDropped`/`evictionsApplied`) -- candidate-arm-only in
+      // practice, honestly `0` (never fabricated) for a baseline step, since baseline never calls
+      // the recorders these counters are fed by.
+      const featureBit = r.counters
+        ? `features=${r.counters.featuresDecoded} bytes=${r.counters.bytesDecoded} tiles=${r.counters.tilesRequested} dup=${r.counters.duplicatesDropped} evict=${r.counters.evictionsApplied}`
+        : "counters=(instrument off)";
       const fp = r.firstPixelMs != null ? `firstPixel=${r.firstPixelMs}ms` : `firstPixel=n/a (${r.firstPixelReason ?? "n/a"})`;
-      console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit}`);
+      console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit} ${formatSegmentsSummary(r.segments)}`);
     }
 
     // P1d suggestion 12: a realized-displacement FAIL (measureOneStep's own `viewState.assertion`)

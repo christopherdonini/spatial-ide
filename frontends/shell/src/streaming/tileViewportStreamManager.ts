@@ -6,6 +6,7 @@ import { deriveTileGridFrame, tileBbox, tileKeyToString, tilesCoveringBbox } fro
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
+import { recordResidencyBatchArrived } from "../instrument/residencyInstrument";
 import { encodeHexF64 } from "../skp/codec";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
@@ -351,6 +352,12 @@ export class TileViewportStreamManager {
       onOpen: () => {},
       onBatch: (payload) => {
         if (this.inFlightStreams.get(tileKey)?.streamHandle !== streamHandleAtStart) return;
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
+        // candidate arm's own analogue of `viewportStreamManager.ts`'s identical hook -- the earliest
+        // client-observable moment for this batch's own data-plane bytes, before decode.
+        if (import.meta.env.DEV) {
+          recordResidencyBatchArrived();
+        }
         const seq = this.nextBatchSeqByStream.get(streamHandleAtStart) ?? 0;
         this.nextBatchSeqByStream.set(streamHandleAtStart, seq + 1);
         this.opts.onBatch(tileKey, streamHandleAtStart, seq, payload);

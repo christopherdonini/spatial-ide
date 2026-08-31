@@ -5,7 +5,12 @@ import type { WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { chooseFitTarget } from "../canvas/extent";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { logSessionEvent } from "../diagnostics/log";
-import { recordResidencyStreamEnded, recordResidencyStreamIssued } from "../instrument/residencyInstrument";
+import {
+  recordResidencyBatchArrived,
+  recordResidencyStreamEnded,
+  recordResidencyStreamIssued,
+  recordResidencyTileRequested,
+} from "../instrument/residencyInstrument";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "../streaming/adapterWs";
@@ -124,12 +129,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * at PLANNING time (`onCameraChange`'s own `issued` array, the common case) is never counted a
    * second time when its `onBatch`/`onTerminal` later fires too, and so a tile that was only ever
    * QUEUED at planning time (capped by `MAX_IN_FLIGHT_TILE_STREAMS`) still gets counted once its
-   * `onBatch`/`onTerminal` eventually proves a real stream was minted for it. Not itself a claim
-   * about `tilesRequested` (`residencyInstrument.ts`'s own placeholder counter) -- this piece does
-   * not touch `src/instrument/` (out of scope, reserved for a later piece), so only the GENERAL
-   * `streamsIssued`/`streamsEnded` counters baseline already feeds are wired here, from these new
-   * call sites, reusing that module's existing exported API exactly as `viewportStreamManager.ts`
-   * already does -- never editing that module itself. */
+   * `onBatch`/`onTerminal` eventually proves a real stream was minted for it. P3w's own version of
+   * this comment disclosed that `tilesRequested` was out of scope for that piece, reserved for a
+   * later one -- P3i (this piece) is that later piece: the SAME dedupe now also feeds
+   * `recordResidencyTileRequested` below, a tile-specific count under its own name rather than only
+   * the general `streamsIssued`/`streamsEnded` counters baseline already shares. */
   const countedIssuedTileKeys = new Set<string>();
 
   function countTileStreamIssuedOnce(tileKey: string): void {
@@ -137,6 +141,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     countedIssuedTileKeys.add(tileKey);
     if (import.meta.env.DEV) {
       recordResidencyStreamIssued();
+      recordResidencyTileRequested();
     }
   }
 
@@ -222,6 +227,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       onOpen: () => {},
       onBatch: (batchPayload) => {
         if (untiledStreamHandle !== stream) return; // superseded by a later reissue
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only --
+        // this session IS the manager for the untiled "first look" stream (no separate
+        // `TileViewportStreamManager` object owns it), so this is the earliest client-observable
+        // moment for its own data-plane bytes, mirroring `viewportStreamManager.ts`'s own hook.
+        if (import.meta.env.DEV) {
+          recordResidencyBatchArrived();
+        }
         const seq = nextSeq++;
         ingestAndMaybeEstablishFrame(INITIAL_TILE_KEY, stream, seq, batchPayload);
         // The untiled "first look" exists ONLY to establish the tile grid's own anchor
