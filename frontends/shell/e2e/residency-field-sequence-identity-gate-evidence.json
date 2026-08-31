@@ -2,7 +2,7 @@
   "_gate_artifact": "viewport-residency cut -- render-trace field-sequence identity (proxy) evidence, committed under e2e/ (NOT e2e/out/, which is gitignored) so the gate's claim has a real, checked-in artifact behind it (P1b's own S11 instruction, still followed here).",
   "_produced_by": "npm run e2e:residency-harness -- --wire-identity, a real run against the live app (frontends/shell/e2e/residency-harness.mjs), captured verbatim (trimmed of nothing but this file's own JSON formatting) -- not hand-edited.",
   "_run_command": "node e2e/residency-harness.mjs --wire-identity (baseline arm) AND node e2e/residency-harness.mjs --wire-identity --arm candidate (candidate arm, P3i-b B4: two separate process launches, not one run)",
-  "_current_status": "PASS for BOTH arms as of the P3i-b attempt below (2026-08-31T, both sub-results) -- baseline's own 6 pairwise comparisons are byte-sequence-identical (unchanged from P1d). The candidate arm's own 6 pairwise comparisons are ALSO byte-sequence-identical, but this PASS is DISCLOSED AS VACUOUS: every one of the candidate arm's 4 runs observed ZERO field-sequence-relevant render-trace lines (viewport_query/stream-issued/batch) -- tileViewportStreamManager.ts/candidateArmSession.ts never call traceViewportQuery/traceStreamIssued at all (only viewportStreamManager.ts, baseline's own manager, does), a pre-existing product-code gap out of this piece's own instrument+harness scope to fix. Real tile traffic WAS confirmed independently (tilesRequested=767, duplicatesDropped=1252 across the two ON runs, via a NEW counter-based coverage check this piece added specifically because the field-sequence proxy could not see it) -- so the candidate arm's cycle genuinely ran and genuinely exercised TileViewportStreamManager/candidateArmSession.ts/WorkingCanvas.pushTileBatch, but the WIRE-IDENTITY comparison itself proves nothing for that arm today (two empty sequences trivially match). This supersedes the P1d record as the file's current status for BASELINE; there is no PRIOR candidate-arm record to supersede (P3i-b is the first piece to run this check under the candidate arm at all). P1b/P1c/P1d are kept below as history, per this piece's own instruction ('keep the old record inside the file as history -- an array of dated attempts'), never deleted.",
+  "_current_status": "P3i-c (RESIDENCY-PREREGISTRATION.md §12, gap G-B closed) now has BASELINE re-confirmed PASS (6/6 pairwise identical, unchanged 18-line-per-run sequence) but the CANDIDATE arm's own wire-identity check no longer even completes: with G-B's `traceViewportQuery`/`traceStreamIssued`/`traceStreamBatch` calls now genuinely wired into `tileViewportStreamManager.ts`/`candidateArmSession.ts`/`WorkingCanvas.pushTileBatch`, the candidate arm's field sequence is no longer vacuous (real per-tile lines now flow) -- but this exposes a SEPARATE, pre-existing harness miscalibration: `--wire-identity`'s own overall watchdog (`trialWatchdogMs`, computed as `(CAMERA_TRACE_STEPS.length+1) * settleTimeoutForFixture(...)`, a formula scoped for a SINGLE 12-step measured trial) also bounds `--wire-identity` mode's own, entirely different 5-subrun (1 warm-up + 4 measured) x 4-step (open + 3 identity poses) design, each step separately budgeted up to 60_000ms internally (`runShortTraceForFieldSequence`'s own hard-coded `timeoutMs: 60_000`) -- for the filter-zoned fixture, `trialWatchdogMs` itself resolves to exactly 60000ms (see the P3i-b baseline record's own `watchdog` block below), i.e. the WHOLE wire-identity run's outer ceiling equals a SINGLE step's own inner budget. This was invisible while the candidate arm's own per-step settle cost was ~0 (P3i-b's disclosed vacuous PASS); now that real per-tile traffic takes genuine multi-second settle time per step (confirmed independently via the `--smoke --arm candidate` run in the SAME piece: `fit` wallMs=1379, `pan-north` wallMs=1610, `pan-east` wallMs=2614), summing that across 5 subruns x 4 steps reliably exceeds the 60s outer ceiling before even one full OFF-ON-ON-OFF cycle completes. Reproduced twice, deterministically: both attempts ran for EXACTLY 60000ms (measured wall-clock, `date +%s` bracketing) before `residency-harness: overall watchdog exceeded -- presumed hung, failing loudly` fired and the process exited 2, both times mid-way through run 1/4 (instrument OFF) -- not a flaky/racy failure, and not (as far as this piece's own time budget allowed investigating) an infinite loop in the new product code: `--smoke --arm candidate`'s own real per-tile traffic (same session, same build) completes in single-digit seconds per step, consistent with 'genuinely slow relative to a 60s TOTAL budget for 5 runs' rather than 'never terminates.' PER THIS PIECE'S OWN INSTRUCTION ('if the candidate arm's cycle FAILS identity, capture the diff and report -- do not loosen'): nothing about the harness's watchdog constants was touched to force a pass; this is reported as a finding for a follow-up piece (rescale `--wire-identity`'s own outer watchdog to its own actual run/step count, independently of `trialWatchdogMs`'s measured-trial-scoped formula). G-A (the recorder call-site gate swap to `isInstrumentedBuild()`) is unaffected by and unrelated to this finding -- `npm run verify` (incl. `check:dist-clean` on the normal build) and both `--smoke` arms passed cleanly under the SAME build. This supersedes the P1d record as the file's current status for BASELINE (unchanged, re-confirmed under G-A's build); the P3i-b candidate record's own vacuous-PASS status is superseded by this NON-COMPLETING result -- the candidate arm's wire-identity check has not yet, as of this attempt, produced a real completed comparison one way or the other. P1b/P1c/P1d/P3i-b are kept below as history, per this piece's own instruction ('keep the old record inside the file as history -- an array of dated attempts'), never deleted.",
   "attempts": [
     {
       "_piece": "P1b (reviewer-gate remediation, M11/S11)",
@@ -302,6 +302,73 @@
           "sequenceLengthPerRun": [0, 0, 0, 0],
           "candidateCountersObservedAcrossOnRuns": { "tilesRequested": 767, "duplicatesDropped": 1252, "evictionsApplied": 0 },
           "evidence_file": "e2e/out/residency-harness-wire-identity-1788162620373.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
+        }
+      }
+    },
+    {
+      "_piece": "P3i-c (two disclosed wiring gaps from P3i-b: G-A recorder call-site gates -> isInstrumentedBuild(), G-B candidate managers now emit traceViewportQuery/traceStreamIssued/traceStreamBatch)",
+      "_capturedAt": "2026-08-31T10:06:00.000Z",
+      "_buildCommit": "2ad3f1679d39c9e2e1c138f79e2e1e2e5230bd67",
+      "_camera_control_mechanism": "Unchanged from P1c/P1d/P3i-b: IDENTITY_VIEW_STATE_STEPS via the DEV-gated e2eSetViewState seam, no synthetic gesture.",
+      "_honest_result": {
+        "literal_check_result": "BASELINE: PASS, unchanged (6/6 pairwise identical, 18-line-per-run sequence, byte-identical to the P1d/P3i-b record). CANDIDATE: DID NOT COMPLETE -- the harness process itself exited 2 ('overall watchdog exceeded -- presumed hung, failing loudly') partway through run 1/4 (instrument OFF), before a single OFF-ON-ON-OFF comparison could be produced. No evidence JSON was written for either candidate attempt (the overall-watchdog kill path calls process.exit(2) before any writeFileSync -- confirmed by absence: no new e2e/out/residency-harness-wire-identity-*.json file exists for either attempt, only for the baseline run captured the same session).",
+        "what_the_evidence_actually_shows": "G-B is genuinely wired: unit tests (candidateArmSession.test.ts, run inside this piece's own `npm run verify`) now show real `[render-trace] viewport_query`/`stream-issued` console lines from the candidate arm's own managers, and the live `--smoke --arm candidate` run (same build, same piece) shows real per-tile traffic settling in single-digit seconds per step (fit wallMs=1379, pan-north wallMs=1610, pan-east wallMs=2614, tiles/dup counts nonzero) -- so the candidate arm's field sequence is no longer vacuous BY CONSTRUCTION, the goal G-B was scoped to reach. But `--wire-identity --arm candidate` cannot currently PROVE that non-vacuous sequence is instrument-unperturbed, because the run never finishes: reproduced twice, deterministically, both attempts ran for EXACTLY 60000ms of real wall-clock time (measured externally via `date +%s` bracketing the whole process, not merely read from a log) before the SAME watchdog fired at the SAME point (mid-run-1/4-OFF) both times.",
+        "diagnosed_root_cause": "`--wire-identity`'s OWN outer watchdog (`trialWatchdogMs` in `main()`, `residency-harness.mjs`) is computed as `(CAMERA_TRACE_STEPS.length + 1) * settleTimeoutForFixture(FIXTURE_PATH, SETTLE_PER_STEP_TIMEOUT_MS)` -- a formula scoped for ONE 12-step MEASURED TRIAL (the `--smoke`/`--control`/plain measured-cell path, `runTrace`). For the filter-zoned fixture this resolves to exactly 60000ms (confirmed in the baseline sub-record's own `cell.watchdog` block below, captured the same session). `--wire-identity` mode's own design is structurally unrelated to that formula: 1 warm-up run + 4 measured runs (5 total), each running 4 of ITS OWN steps (`identity-open` + 3 `IDENTITY_VIEW_STATE_STEPS` poses), each of THOSE steps carrying its OWN separate `timeoutMs: 60_000` budget hard-coded directly in `runShortTraceForFieldSequence` (NOT derived from `settleTimeoutForFixture` at all). The outer watchdog (60000ms total) is therefore, by construction, no larger than a SINGLE inner step's own budget (also 60000ms) -- an 8x-or-more undercount (5 runs x 4 steps = 20 step-settles that could each legitimately need real time, bounded by an 'outer' ceiling sized for 1). This was invisible through P1c/P1d/P3i-b because the ONLY arm ever measured under real per-tile traffic (baseline) settles fast (sub-2s per step even before this piece, per the baseline record above), and the candidate arm's own per-step settle cost was, until G-B, genuinely ~0 (P3i-b's disclosed vacuous PASS) -- so the SUM across 5 runs x 4 steps stayed comfortably under 60s in every prior observation. G-B's own fix (real trace lines now flowing) is what first gives the candidate arm's steps genuine, multi-second settle cost, which is what first exposes this pre-existing outer/inner watchdog mismatch.",
+        "not_a_flaky_result_and_not_investigated_further_as_a_possible_infinite_loop": "Both attempts hung at the identical elapsed time (60000ms, not 60001 or 61500 -- i.e. the setTimeout fired on schedule both times, not 'eventually, whenever something unrelated happened') and at the identical logical point (run 1/4, OFF). Cross-checked against the SAME session's own `--smoke --arm candidate` run (same build commit, same fixture, same live app class), which completed its own full open-drain+fit+pan-north+pan-east sequence in ~6.4s of measured wallMs with real, nonzero tile/dup counts throughout -- evidence against 'the new trace calls introduced an infinite loop or a genuine never-settles hang in product code,' and consistent instead with 'wire-identity's own 5x-4-step design, at real (not vacuous) per-step candidate-arm cost, needs meaningfully more than 60s total for this fixture, and the outer watchdog does not know that.' Not chased further within this piece's own declared 75-minute budget and 2-gap (G-A/G-B) scope -- `residency-harness.mjs`'s own watchdog constants are test-infrastructure for a gate, not one of this piece's two named gaps, and widening a watchdog to force a pass would be exactly the 'loosening' this piece's own instruction says not to do.",
+        "not_fixed_in_this_piece": "`--wire-identity` mode's own outer watchdog needs its own scaling (e.g. `(subRunCount * stepsPerSubRun) * its own per-step timeoutMs`, independent of `trialWatchdogMs`'s measured-trial-scoped formula) -- flagged here, loudly, as this piece's own disclosed finding, for a follow-up piece to fix and then re-run this exact check to get a REAL (not vacuous, not a watchdog kill) candidate-arm wire-identity result for the first time.",
+        "g_a_unaffected": "G-A (the recorder call-site gate swap, `import.meta.env.DEV` -> `isInstrumentedBuild()`, 4 sites in viewportStreamManager.ts, 1 in tileViewportStreamManager.ts, 5 in WorkingCanvas.tsx, 5 in candidateArmSession.ts) is orthogonal to this finding: `npm run verify` (typecheck, build, check:dist-clean on the NORMAL production build, all 571 unit tests, residency-trace tests, citation-integrity) passed cleanly EXIT=0 under the exact same build this wire-identity attempt ran against, and both `--smoke` arms (baseline and candidate) also completed cleanly EXIT=0 under it."
+      },
+      "baseline": {
+        "cell": {
+          "arm": "identity-guard(baseline)",
+          "tileSize": null,
+          "buildCommit": "2ad3f1679d39c9e2e1c138f79e2e1e2e5230bd67",
+          "fixturePath": "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet",
+          "fixtureSha256": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "fixtureSha256AtEnd": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "fixtureHashMatchedAcrossRun": true,
+          "coldOrWarm": "warm",
+          "traceVersion": "2",
+          "instrumentEnabledReadback": false,
+          "buildClass": "vite-dev (tauri dev; DEV-gated hooks; unminified client)",
+          "watchdog": { "resolvedPerStepBoundMs": 5000, "stepCountUsed": 11, "trialWatchdogMs": 60000, "legacyTrialWatchdogMs": 180000 }
+        },
+        "fieldSequenceIdentity": {
+          "arm": "baseline",
+          "identical": true,
+          "order": ["off", "on", "on", "off"],
+          "comparisons": [
+            { "a": "off#0", "b": "on#1", "identical": true },
+            { "a": "off#0", "b": "on#2", "identical": true },
+            { "a": "off#0", "b": "off#3", "identical": true },
+            { "a": "on#1", "b": "on#2", "identical": true },
+            { "a": "on#1", "b": "off#3", "identical": true },
+            { "a": "on#2", "b": "off#3", "identical": true }
+          ],
+          "sequenceLengthPerRun": [18, 18, 18, 18],
+          "evidence_file": "e2e/out/residency-harness-wire-identity-1788163547178.json (gitignored -- this record is the trimmed, checked-in copy per this file's own top comment)"
+        }
+      },
+      "candidate": {
+        "cell": {
+          "arm": "identity-guard(candidate)",
+          "tileSize": null,
+          "buildCommit": "2ad3f1679d39c9e2e1c138f79e2e1e2e5230bd67",
+          "fixturePath": "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet",
+          "fixtureSha256": "92ed800ccbcc335e9078406bc0893d5b3c375b404e7e96b36ed43c4515112e46",
+          "coldOrWarm": "warm",
+          "traceVersion": "2",
+          "buildClass": "vite-dev (tauri dev; DEV-gated hooks; unminified client)"
+        },
+        "fieldSequenceIdentity": {
+          "arm": "candidate",
+          "completed": false,
+          "exitCode": 2,
+          "failureReason": "residency-harness: overall watchdog exceeded -- presumed hung, failing loudly (process.exit(2), mid run 1/4 instrument OFF)",
+          "attemptsRun": 2,
+          "elapsedMsPerAttempt": [60000, 60000],
+          "evidence_file": null,
+          "note": "No comparisons/sequence to report -- see _honest_result.diagnosed_root_cause above. Superseded the P3i-b vacuous-PASS record for candidate; not itself a PASS or a FAIL of the identity claim, an incomplete run."
         }
       }
     }

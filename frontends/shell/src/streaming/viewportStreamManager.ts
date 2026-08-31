@@ -3,6 +3,7 @@
 
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import {
   recordResidencyBatchArrived,
   recordResidencyStreamEnded,
@@ -194,7 +195,7 @@ export class ViewportStreamManager {
           // forwarding it is skipped. Counted here (DEV-gated, same discipline as
           // `recordResidencyStreamIssued` above) so this driver's own reported byte totals do not
           // silently under-report a superseded stream's genuinely-received bytes.
-          if (import.meta.env.DEV) {
+          if (isInstrumentedBuild()) {
             recordResidencySupersededBytes(payload.byteLength);
           }
           return;
@@ -204,7 +205,7 @@ export class ViewportStreamManager {
         // right here where the transport layer hands this manager a fully-received message. See
         // `residencyInstrument.ts`'s own `recordBatchArrived` doc comment for why this is a defined
         // proxy, not a true first-TCP-byte timestamp.
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyBatchArrived();
         }
         const seq = this.nextBatchSeq++;
@@ -222,7 +223,7 @@ export class ViewportStreamManager {
         // count (§4b's own "zero in-flight viewport_query streams") must reach zero on every
         // terminal, not only the ones the app's own UI ever hears about. DEV-gated exactly like
         // `recordResidencyStreamIssued` above.
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyStreamEnded();
         }
         // A terminal for a handle this manager itself cancelled (supersede or `cancelStream`) is
@@ -248,7 +249,7 @@ export class ViewportStreamManager {
     // Viewport-residency cut P1 (RESIDENCY-PREREGISTRATION.md §6): DEV-only, same moment
     // `traceStreamIssued` fires -- see `instrument/residencyInstrument.ts`'s own top doc comment
     // for why this check is duplicated at every product call site.
-    if (import.meta.env.DEV) {
+    if (isInstrumentedBuild()) {
       recordResidencyStreamIssued();
     }
     return { kind: "issued", streamHandle: stream };

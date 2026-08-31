@@ -6,7 +6,9 @@ import { deriveTileGridFrame, tileBbox, tileKeyToString, tilesCoveringBbox } fro
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
+import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { recordResidencyBatchArrived } from "../instrument/residencyInstrument";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { encodeHexF64 } from "../skp/codec";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
@@ -321,6 +323,11 @@ export class TileViewportStreamManager {
     const bbox = tileBbox(frame, this.level, key);
     const wireBbox = toWireBbox(bbox);
 
+    // Viewport-residency cut P3i-c (gap G-B): mirrors `ViewportStreamManager.requestViewport`'s own
+    // `traceViewportQuery` call -- always-on render-trace (never instrument-gated), one line per
+    // per-tile query attempt, the tiled analogue of baseline's per-viewport-change attempt.
+    traceViewportQuery(this.opts.dataset, wireBbox, null);
+
     let ticket: { stream: string };
     try {
       ticket = await viewportQuery(this.opts.dataset, wireBbox, null, null, this.currentFilter);
@@ -355,7 +362,7 @@ export class TileViewportStreamManager {
         // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
         // candidate arm's own analogue of `viewportStreamManager.ts`'s identical hook -- the earliest
         // client-observable moment for this batch's own data-plane bytes, before decode.
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyBatchArrived();
         }
         const seq = this.nextBatchSeqByStream.get(streamHandleAtStart) ?? 0;
@@ -380,6 +387,9 @@ export class TileViewportStreamManager {
     };
 
     startStream({ url: attach.url, subprotocols: attach.subprotocols, ticketHandle: ticket.stream, sink });
+    // Viewport-residency cut P3i-c (gap G-B): mirrors `ViewportStreamManager.requestViewport`'s own
+    // `traceStreamIssued` call, fired at the same moment -- right after the real mint, never before.
+    traceStreamIssued(this.opts.dataset, ticket.stream);
   }
 
   private cancelTileStream(tileKey: string, streamHandle: string, reportSuperseded: boolean): void {

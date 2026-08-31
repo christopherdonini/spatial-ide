@@ -24,6 +24,7 @@ import {
   traceViewState,
 } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import type { StyleState } from "../style/document";
 import { resolveDrawParameters } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
@@ -625,7 +626,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // where decode completes -- `firstByteToDecodedMs`'s own endpoint (`residencyInstrument.ts`'s
         // own `recordBatchDecoded` doc comment has the full pairing account with
         // `recordBatchArrived`, the manager-side hook this decode's own batch already passed through).
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyBatchDecoded();
         }
 
@@ -651,7 +652,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // the P1 defect where a ceiling-refused batch was silently dropped from every counter (the
         // early `return 0` below used to exit before `recordResidencyBatch` was ever reached).
         function recordThisBatchForInstrument(refused: boolean): void {
-          if (import.meta.env.DEV) {
+          if (isInstrumentedBuild()) {
             recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, refused);
           }
         }
@@ -798,7 +799,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
             // that claim and lets Vite's literal-`false` replacement + esbuild's minifier actually
             // dead-code-eliminate this reference in a production build, the same as every sibling
             // call site already does.
-            if (import.meta.env.DEV) {
+            if (isInstrumentedBuild()) {
               recordResidencyRenderTick();
             }
           },
@@ -840,7 +841,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         }
         // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
         // same decode-complete hook `pushBatch` above carries, for this arm's own decode call.
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyBatchDecoded();
         }
 
@@ -857,6 +858,22 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           unionBbox,
         });
         traceTileIngest(tileKey, outcome.rowsAdmitted, outcome.duplicatesDropped, outcome.evictedTileKeys, outcome.overBudget);
+        // Viewport-residency cut P3i-c (gap G-B): mirrors `pushBatch`'s own `traceStreamBatch` call
+        // above -- same always-on render-trace class, same DECODED (not post-dedupe/post-trim
+        // admitted) `rows`/`vertices` convention, keyed into the SAME `streamStatsRef` map (stream
+        // handles never collide across arms within one session, the arm is fixed at open). This is
+        // the "batch arrival" trace line the identity guard's `FIELD_SEQUENCE_EVENTS` looks for;
+        // `tileViewportStreamManager.ts`'s own `onBatch` sink only ever sees the raw, pre-decode
+        // payload, so this is the earliest point in this arm's own path where real rows/vertices
+        // exist to log -- the true equivalent moment to where `traceStreamBatch` already lives for
+        // baseline (decode-complete, not manager-side mint).
+        {
+          const tileStats = streamStatsRef.current.get(streamHandle) ?? { rows: 0, vertices: 0 };
+          tileStats.rows += batch.ids.length;
+          tileStats.vertices += batch.totalVertices;
+          streamStatsRef.current.set(streamHandle, tileStats);
+          traceStreamBatch(streamHandle, batchSeq, batch.ids.length, batch.totalVertices, tileStats.rows, tileStats.vertices);
+        }
 
         // P3w's own smoke-evidence wiring: the candidate arm never refuses a batch (item B), so this
         // is always `recordResidencyBatch(..., refused: false)` -- unlike `pushBatch`'s own
@@ -869,7 +886,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // comment named ("residencyInstrument.ts has no field for at all"): `outcome.duplicatesDropped`/
         // `outcome.evictedTileKeys.length` now feed `ResidencyStepCounters.duplicatesDropped`/
         // `.evictionsApplied` directly, this call's own pre-aggregated totals for this ONE batch.
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, false);
           recordResidencyDuplicatesDropped(outcome.duplicatesDropped);
           recordResidencyEvictionsApplied(outcome.evictedTileKeys.length);

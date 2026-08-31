@@ -4,6 +4,7 @@
 import type { WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { chooseFitTarget } from "../canvas/extent";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
+import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatchArrived,
@@ -11,6 +12,7 @@ import {
   recordResidencyStreamIssued,
   recordResidencyTileRequested,
 } from "../instrument/residencyInstrument";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "../streaming/adapterWs";
@@ -139,7 +141,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   function countTileStreamIssuedOnce(tileKey: string): void {
     if (countedIssuedTileKeys.has(tileKey)) return;
     countedIssuedTileKeys.add(tileKey);
-    if (import.meta.env.DEV) {
+    if (isInstrumentedBuild()) {
       recordResidencyStreamIssued();
       recordResidencyTileRequested();
     }
@@ -147,7 +149,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
 
   function countTileStreamEndedOnce(tileKey: string): void {
     if (!countedIssuedTileKeys.delete(tileKey)) return; // never counted as issued -- nothing to end
-    if (import.meta.env.DEV) {
+    if (isInstrumentedBuild()) {
       recordResidencyStreamEnded();
     }
   }
@@ -207,6 +209,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
 
   async function issueUntiledQuery(bbox: Bbox | null, filter: Filter | null): Promise<RequestOutcome> {
     if (stopped) return { kind: "stopped" };
+    // Viewport-residency cut P3i-c (gap G-B): mirrors `ViewportStreamManager.requestViewport`'s own
+    // `traceViewportQuery` call -- always-on render-trace (never instrument-gated), fired on this
+    // session's own untiled "first look"/reissue attempt, the candidate arm's own analogue of
+    // baseline's initial unfiltered query.
+    traceViewportQuery(dataset, bbox, null);
     // Propagates a refusal (`SkpCallError`) unchanged -- see this module's own doc comment.
     const { stream } = await viewportQuery(dataset, bbox, null, null, filter);
     if (stopped) {
@@ -220,7 +227,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     }
     untiledStreamHandle = stream;
     let nextSeq = 0;
-    if (import.meta.env.DEV) {
+    if (isInstrumentedBuild()) {
       recordResidencyStreamIssued();
     }
     const sink: StreamSink = {
@@ -231,7 +238,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // this session IS the manager for the untiled "first look" stream (no separate
         // `TileViewportStreamManager` object owns it), so this is the earliest client-observable
         // moment for its own data-plane bytes, mirroring `viewportStreamManager.ts`'s own hook.
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyBatchArrived();
         }
         const seq = nextSeq++;
@@ -253,12 +260,15 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       onProgress: () => {},
       onTerminal: () => {
         if (untiledStreamHandle === stream) untiledStreamHandle = null;
-        if (import.meta.env.DEV) {
+        if (isInstrumentedBuild()) {
           recordResidencyStreamEnded();
         }
       },
     };
     startStream({ url: attach.url, subprotocols: attach.subprotocols, ticketHandle: stream, sink });
+    // Viewport-residency cut P3i-c (gap G-B): mirrors `ViewportStreamManager.requestViewport`'s own
+    // `traceStreamIssued` call, fired at the same moment -- right after the real mint, never before.
+    traceStreamIssued(dataset, stream);
     return { kind: "issued", streamHandle: stream };
   }
 
