@@ -73,6 +73,7 @@ function fakeCanvas(overrides: Partial<WorkingCanvasHandle> = {}): WorkingCanvas
     // already override `isTileResidentInCandidateSet` for the older, weaker check.
     isTileCompleteInCandidateSet: vi.fn(() => false),
     markTilePartial: vi.fn(),
+    markTileComplete: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
     ...overrides,
@@ -742,5 +743,117 @@ describe("hasHeadroom tightened to a declared 0.9 margin (P6b item 7)", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  // Viewport-residency cut P6d (the code re-verification's own blocker, the sticky-partial exit).
+  // Before this piece, `TileEntry.partial` (`tileResidentSet.ts`) cleared ONLY via evict-and-
+  // re-ingest -- but a covering (current-viewport) tile is eviction-protected by absolute rule
+  // (`TileResidentSet.evictTile`'s own top-of-function guard), so a trimmed, still-covered tile could
+  // never reach that reset: trim -> partial -> headroom opens -> refetch admits every row -> `partial`
+  // NEVER CLEARS -> permanently over-budget, `isFillComplete` false forever, the same tile's stream
+  // re-issued every camera change and deduped to nothing. This test walks the full lifecycle the fix
+  // (per-tile refetch-generation tracking, `candidateArmSession.ts`'s own `tileGenerationUntrimmed`)
+  // closes: trim -> partial -> headroom -> refetch (untrimmed, `Completed`) -> complete, IN PLACE,
+  // never evicted -- `isFillComplete` reads true again, and the next camera change over the SAME
+  // covering set never re-issues the tile.
+  it("the sticky-partial exit: trim -> partial -> headroom refetch (untrimmed, Completed) -> complete -> isFillComplete true -> no further re-issue", async () => {
+    // A single-cell bbox, entirely inside cell (0,0) at this suite's own established grid (see this
+    // describe block's own top doc comment: origin (-1,-1), baseSpan 2, 0.125-wide cells at the
+    // default level) -- exactly ONE tile is ever in play, so every assertion below is traceable to
+    // that one tile key without any covering-set bookkeeping of its own.
+    const ONE_TILE_BBOX = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 };
+
+    // A minimal stand-in for `TileResidentSet`'s own completeness bookkeeping -- just enough to
+    // observe the REAL production wiring under test (`candidateArmSession.ts`'s own per-tile
+    // generation tracking, and its calls to `markTilePartial`/`markTileComplete`) actually drive a
+    // tile from incomplete to complete, in place, rather than asserting on call arguments alone.
+    const completeTileKeys = new Set<string>();
+    const canvas = fakeCanvas({
+      pushTileBatch: vi
+        .fn()
+        .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }) // untiled bootstrap
+        .mockReturnValueOnce({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }) // trim
+        .mockReturnValue({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }), // the refetch -- untrimmed
+      // Headroom: comfortably below the declared 0.9 margin (`HEADROOM_REFETCH_FRACTION`) the whole way.
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 100, totalResidentFeatures: 1 })),
+      isTileResidentInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+      isTileCompleteInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+      markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
+      markTileComplete: vi.fn((tileKey: string) => completeTileKeys.add(tileKey)),
+    });
+    const onResidencyStatusChange = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+    expect(session.manager.gridFrame).not.toBeNull();
+
+    // 1) First plan: the tile is genuinely new -- issued.
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValueOnce({ stream: "sh_tile_1" });
+    vi.useFakeTimers();
+    try {
+      session.onViewportChanged(ONE_TILE_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(viewportQueryMock).toHaveBeenCalledTimes(1);
+    const tileSink1 = lastSink();
+
+    // 2) Trim: the batch reports overBudget -- the manager self-cancels this tile's own stream and
+    // marks it partial (kept, never blanked).
+    cancelMock.mockClear();
+    tileSink1.onBatch(new Uint8Array([2]), true);
+    await Promise.resolve(); // the self-cancel's own synchronous path settles
+
+    const [tileKey] = (canvas.pushTileBatch as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+    expect(cancelMock).toHaveBeenCalledWith("sh_tile_1");
+    expect(canvas.markTilePartial).toHaveBeenCalledWith(tileKey);
+    expect(completeTileKeys.has(tileKey)).toBe(false); // durably partial
+    expect(session.manager.overBudget).toBe(true);
+
+    // 3) Headroom: a later camera-change re-plans the SAME covering set. The tile reads
+    // `isTileCompleteInCandidateSet === false` (still partial), so it is a fresh candidate again;
+    // the over-budget drain-stop exception lets it through because resident vertices sit well under
+    // the declared 0.9 margin -- a genuine refetch, a NEW stream handle.
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValueOnce({ stream: "sh_tile_2" });
+    vi.useFakeTimers();
+    try {
+      session.onViewportChanged(ONE_TILE_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(viewportQueryMock).toHaveBeenCalledTimes(1); // exactly one refetch, the same one tile
+    const tileSink2 = lastSink();
+
+    // 4) Refetch: everything the tile's bbox holds arrives untrimmed this time, and the stream
+    // reaches its own natural end -- the caller's own proof that this generation is genuinely whole.
+    tileSink2.onBatch(new Uint8Array([3]), true);
+    tileSink2.onTerminal({ kind: "Completed", detail: "" });
+
+    expect(canvas.markTileComplete).toHaveBeenCalledWith(tileKey);
+    expect(completeTileKeys.has(tileKey)).toBe(true); // complete again, IN PLACE -- never evicted
+
+    // 5) No further re-issue: the next camera-change over the SAME covering set reads the tile as
+    // already complete and does not reissue it -- and the status machine agrees the fill is now
+    // genuinely complete (`isFillComplete()`'s own internal truth, observed via the event it gates).
+    viewportQueryMock.mockClear();
+    onResidencyStatusChange.mockClear();
+    vi.useFakeTimers();
+    try {
+      session.onViewportChanged(ONE_TILE_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(viewportQueryMock).not.toHaveBeenCalled(); // no re-issue -- already complete
+    expect(onResidencyStatusChange).toHaveBeenCalledWith({
+      kind: "candidate-within-budget",
+      residentFeatureCount: 1,
+    });
   });
 });

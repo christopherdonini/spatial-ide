@@ -344,6 +344,7 @@ function fakeCanvasHandle(): WorkingCanvasHandle {
     isTileResidentInCandidateSet: vi.fn(() => false),
     isTileCompleteInCandidateSet: vi.fn(() => false),
     markTilePartial: vi.fn(),
+    markTileComplete: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
   };
@@ -440,6 +441,7 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
     isTileResidentInCandidateSet: vi.fn(() => false),
     isTileCompleteInCandidateSet: vi.fn(() => false),
     markTilePartial: vi.fn(),
+    markTileComplete: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
     };

@@ -200,6 +200,17 @@ export interface WorkingCanvasHandle {
    * discard, and this is how that fact survives the cancellation). A no-op for a tile not currently
    * resident (`TileResidentSet.markTilePartial`'s own contract). */
   markTilePartial(tileKey: string): void;
+  /** Viewport-residency cut P6d (the sticky-partial exit): clears an already-tracked tile's own
+   * durably-partial flag back to `false` IN PLACE -- the caller-proven counterpart to
+   * `markTilePartial` above, used only once `candidateArmSession.ts`'s own per-tile generation
+   * tracking has real proof (a refetch's every batch arrived untrimmed AND its stream reached its own
+   * natural `Completed` terminal). See `TileResidentSet.markTileComplete`'s own doc comment
+   * (`tileResidentSet.ts`) for the full account of why this exists: a covering (eviction-protected)
+   * tile can never reach the OTHER reset path (evict + re-ingest), so without this method a
+   * once-trimmed, still-covered tile stayed durably partial forever, even after a later refetch
+   * genuinely admitted everything its bbox holds. A no-op for a tile not currently resident, exactly
+   * like `markTilePartial`'s own contract. */
+  markTileComplete(tileKey: string): void;
   /** Declares the tile grid frame/level this canvas instance's own eviction ordering should use --
    * called once, by `App.tsx`'s candidate session, immediately after
    * `TileViewportStreamManager.establishGridFrame` succeeds. Idempotent past the first call, mirroring
@@ -328,7 +339,7 @@ export interface WorkingCanvasProps {
 
 const INITIAL_ZOOM = 0;
 
-function pixelsPerMetreAtZoom(zoom: number): number {
+function pixelsPerWorldUnitAtZoom(zoom: number): number {
   // deck.gl's OrthographicView: one world unit is 2^zoom CSS pixels -- the same units as
   // `canvas.clientWidth`/`clientHeight` below, not device (physical, DPR-scaled) pixels. A
   // HiDPI backing-store resolution changes what one CSS pixel costs in GPU samples, never what
@@ -494,7 +505,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * change ever arrives (harmless: eviction never runs before any batch has pushed residency past
    * budget, which cannot happen before a real viewport has driven any tile planning at all). */
   const viewCentreRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerMetreAtZoom(INITIAL_ZOOM))));
+  const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(INITIAL_ZOOM))));
   /** The style prop, already resolved to what `buildLayers` needs (deck.gl's 0-255 RGBA accessor
    * convention -- `buildLayers.ts`'s own `ResolvedDrawParams`). Initialized synchronously from the
    * INITIAL `style` prop (never left undefined for a window before the first effect commits, the
@@ -673,7 +684,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     currentZoomRef.current = fit.zoom; // decision 24(c): the hover site's own current-zoom read
     const frame = frameRef.current;
     frame.forceRecenter(fit.centerX, fit.centerY);
-    frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(fit.zoom), RECENTER_BUDGET_PX));
+    frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX));
     traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
     // See this file's own doc comment: `initialViewState`, never `viewState`.
     deckRef.current?.setProps({ initialViewState: { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom } });
@@ -1058,6 +1069,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         tileResidentRef.current.markTilePartial(tileKey);
       },
 
+      markTileComplete(tileKey) {
+        tileResidentRef.current.markTileComplete(tileKey);
+      },
+
       establishTileGridContext(frame, level) {
         if (tileGridContextRef.current !== null) return; // idempotent, mirrors establishGridFrame
         tileGridContextRef.current = { frame, level };
@@ -1170,7 +1185,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const vs = viewState as { target: [number, number, number]; zoom: number };
         currentZoomRef.current = vs.zoom; // decision 24(c): the hover site's own current-zoom read
         const frame = frameRef.current;
-        frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(vs.zoom), RECENTER_BUDGET_PX));
+        frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(vs.zoom), RECENTER_BUDGET_PX));
         traceViewState(vs.target[0], vs.target[1], vs.zoom, frame.originX, frame.originY);
 
         // Captured *before* any recenter below: `vs.target` is a local-frame value produced
@@ -1222,7 +1237,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // feature size at the current zoom is below the declared threshold, naming ANY one feature
         // among many equally-plausible candidates at this pixel would be arbitrary -- refuse by name
         // instead (`PickBelowResolution`), a distinct hover-readout state, never null-silence.
-        if (isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerMetreAtZoom(currentZoomRef.current))) {
+        if (isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current))) {
           onHoverRef.current({ kind: "below-pick-resolution" });
           return;
         }
@@ -1380,7 +1395,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       currentZoomRef.current = zoom; // decision 24(c): the hover site's own current-zoom read
       const frame = frameRef.current;
       frame.forceRecenter(targetX, targetY);
-      frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(zoom), RECENTER_BUDGET_PX));
+      frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX));
       traceViewState(0, 0, zoom, frame.originX, frame.originY);
       // See this file's own doc comment: `initialViewState`, never `viewState`.
       deck.setProps({ initialViewState: { target: [0, 0, 0], zoom } });

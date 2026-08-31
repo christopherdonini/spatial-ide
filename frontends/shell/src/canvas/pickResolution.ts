@@ -79,7 +79,7 @@ export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "ring
 
 /**
  * The pure threshold comparison -- `averageFeatureExtentWorldUnits` (`averageFeatureExtent` above)
- * times `pixelsPerWorldUnit` (`WorkingCanvas.tsx`'s own `pixelsPerMetreAtZoom`, evaluated at the
+ * times `pixelsPerWorldUnit` (`WorkingCanvas.tsx`'s own `pixelsPerWorldUnitAtZoom`, evaluated at the
  * CURRENT zoom) is the average feature's own on-screen size in CSS pixels; below the declared
  * threshold, a single pick is refused by name rather than answered.
  */

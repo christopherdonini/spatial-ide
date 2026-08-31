@@ -99,6 +99,68 @@ describe("TileResidentSet: durable partiality (Defect A)", () => {
     expect(set.isTilePartial("0:0")).toBe(false);
     expect(set.isTileComplete("0:0")).toBe(true);
   });
+
+  // Viewport-residency cut P6d (the sticky-partial exit): a covering tile is eviction-protected, so
+  // the ONLY reset above (evict + re-ingest) can never fire for it -- `markTileComplete` is the
+  // caller-proven, in-place alternative `candidateArmSession.ts`'s own refetch-generation tracking
+  // uses once it holds real proof (every batch of a refetch arrived untrimmed, terminal `Completed`).
+  describe("markTileComplete (P6d): the in-place partial-clear a caller with proof can reach for", () => {
+    it("clears partial in place -- no eviction, no re-ingest needed", () => {
+      const set = new TileResidentSet();
+      set.addBatch("0:0", batch("sh_a", 0, [1]), true); // trimmed once -- partial, sticky
+      expect(set.isTilePartial("0:0")).toBe(true);
+      expect(set.isTileComplete("0:0")).toBe(false);
+
+      set.markTileComplete("0:0");
+
+      expect(set.isTilePartial("0:0")).toBe(false);
+      expect(set.isTileComplete("0:0")).toBe(true);
+      expect(set.isTileResident("0:0")).toBe(true); // residency itself untouched -- only the flag moves
+    });
+
+    it("is a no-op for a tile that was never tracked -- no phantom entry is created", () => {
+      const set = new TileResidentSet();
+      set.markTileComplete("9:9");
+      expect(set.isTileResident("9:9")).toBe(false);
+      expect(set.isTilePartial("9:9")).toBe(false);
+    });
+
+    it("is a harmless no-op for a tile that was never partial", () => {
+      const set = new TileResidentSet();
+      set.addBatch("0:0", batch("sh_a", 0, [1]), false);
+      set.markTileComplete("0:0");
+      expect(set.isTileComplete("0:0")).toBe(true);
+    });
+
+    // The full lifecycle this piece's own blocker names: trim -> partial -> (headroom opens
+    // elsewhere) -> refetch delivers everything, untrimmed -> the caller's own proof arrives ->
+    // markTileComplete -> the tile reads complete again, in place, still the SAME entry throughout
+    // (never evicted -- `evictTile` is never called anywhere in this test).
+    it("the full sticky-partial-exit lifecycle: trim, partial, refetch (untrimmed), complete -- in place", () => {
+      const set = new TileResidentSet();
+      const tileKey = "0:0";
+
+      // Trim: the first delivery only fit {1,2} of a wider bbox before the budget boundary cut it.
+      set.addBatch(tileKey, batch("sh_a", 0, [1, 2]), true);
+      expect(set.isTilePartial(tileKey)).toBe(true);
+      expect(set.isTileComplete(tileKey)).toBe(false);
+
+      // Headroom opens elsewhere (some other tile's own eviction, not modeled here -- this class
+      // itself has no opinion on WHY a refetch was planned, only what arrives).
+      // Refetch: a fresh stream for the SAME tile key delivers the rest, untrimmed this time.
+      const refetch = set.addBatch(tileKey, batch("sh_b", 0, [3, 4]), false);
+      expect(refetch.duplicatesDropped).toBe(0); // genuinely new rows this bbox never delivered before
+      expect(set.isTilePartial(tileKey)).toBe(true); // still sticky -- addBatch alone never clears it
+
+      // The caller's own proof (this stream's generation was entirely untrimmed, Completed terminal)
+      // arrives, and it clears the flag in place.
+      set.markTileComplete(tileKey);
+
+      expect(set.isTilePartial(tileKey)).toBe(false);
+      expect(set.isTileComplete(tileKey)).toBe(true);
+      expect(set.totalResidentFeatures).toBe(4); // 1,2,3,4 -- nothing was ever evicted or lost
+    });
+  });
 });
 
 describe("TileResidentSet: cross-tile dedupe by stable feature id (item C)", () => {
@@ -136,6 +198,55 @@ describe("TileResidentSet: cross-tile dedupe by stable feature id (item C)", () 
     const result = set.addBatch("0:0", b);
     expect(result.duplicatesDropped).toBe(0);
     expect(result.accepted).toBe(b);
+  });
+
+  // Viewport-residency cut P6d (nit): a tile re-delivering rows it already owns itself (the ordinary
+  // shape of a refetch's own batch -- it necessarily re-sends everything in its bbox, including rows
+  // this SAME tile already admitted in an earlier generation) is a self-duplicate, not a cross-tile
+  // ownership conflict -- it must never register the tile as its own suppressor.
+  it("a tile re-delivering its own already-owned id is a self-duplicate, counted, but never registers the tile as its own suppressor", () => {
+    const set = new TileResidentSet();
+    set.addBatch("A", batch("sh_a", 0, [1, 2])); // A owns 1, 2
+    const redeliver = set.addBatch("A", batch("sh_a2", 0, [1, 3])); // 1 is A's own id again; 3 is new
+    expect(redeliver.duplicatesDropped).toBe(1); // still counted, exactly as any duplicate is
+    expect(Array.from(redeliver.accepted?.ids ?? [])).toEqual([3n]);
+
+    // Observable proof of no self-suppression: evicting A (its own eviction, unprotected) must name
+    // ONLY A -- a self-registered suppressor entry would be indistinguishable from a genuine second
+    // suppressor tile that also needed evicting/marking partial in the same cascade.
+    const evicted = set.evictTile("A");
+    expect(evicted).toEqual(["A"]);
+    expect(set.totalResidentFeatures).toBe(0);
+
+    // Fully recoverable, exactly like any other evicted tile's own ids -- no residual bookkeeping
+    // from the self-duplicate left id 1 in a half-owned state.
+    const reAdd = set.addBatch("A", batch("sh_a3", 0, [1, 2, 3]));
+    expect(reAdd.duplicatesDropped).toBe(0);
+    expect(reAdd.accepted?.ids.length).toBe(3);
+  });
+
+  // The sibling of the test above, at the point the guard is actually meant to matter: a PROTECTED
+  // tile that has self-duplicated one of its own ids must never be marked partial "against itself"
+  // when some OTHER, unrelated tile's own eviction cascade later touches a DIFFERENT id it genuinely
+  // suppressed -- the self-duplicate entry (if the guard were absent) would be indistinguishable
+  // bookkeeping-wise from a real cross-tile suppression of the SAME id it owns.
+  it("a protected tile's self-duplicate never interferes with a genuine, unrelated suppressor cascade", () => {
+    const set = new TileResidentSet();
+    const protectedTile = "viewport-tile";
+    set.addBatch(protectedTile, batch("sh_p", 0, [1, 2])); // owns 1, 2
+    set.addBatch(protectedTile, batch("sh_p2", 0, [1, 4])); // self-redelivers 1 (self-dup); 4 is new
+
+    // A different, evictable tile genuinely tries to deliver id 2 too (loses -- protectedTile owns it).
+    const other = set.addBatch("other", batch("sh_o", 0, [2, 5]));
+    expect(other.duplicatesDropped).toBe(1);
+
+    const protectedKeys = new Set([protectedTile]);
+    const evicted = set.evictTile(protectedTile, protectedKeys);
+    expect(evicted).toEqual([]); // never evicted -- protected
+    expect(set.isTileResident(protectedTile)).toBe(true);
+    expect(set.isTilePartial(protectedTile)).toBe(false); // its own eviction never even runs
+    // Its surviving content (1, 2, 4) is untouched -- the self-duplicate cost it nothing.
+    expect(set.totalResidentFeatures).toBe(4); // 1, 2, 4 (protectedTile) + 5 (other)
   });
 });
 

@@ -32,10 +32,20 @@ interface TileEntry {
    * own resident content is known to be INCOMPLETE relative to what its bbox actually covers -- either
    * a delivered batch was trimmed to the vertex budget boundary (`ingestTileBatch`'s own `overBudget`
    * outcome) or the tile's own stream was cancelled mid-delivery because the manager already knew the
-   * remainder could not be admitted (`candidateArmSession.ts`'s budget-exhaustion cancel). Sticky:
-   * once true, only clears when the WHOLE entry is evicted (`evictTile`) and later re-ingested fresh --
-   * there is no "un-mark partial in place" operation, since nothing here can prove the tile's own
-   * remaining data was ever actually recovered short of a clean re-fetch. */
+   * remainder could not be admitted (`candidateArmSession.ts`'s budget-exhaustion cancel). Sticky by
+   * default: once true, `addBatch`/`markTileResidentEmpty` alone never clear it back in place -- an
+   * ordinary later batch proves nothing about whatever the FIRST, trimmed delivery already dropped.
+   *
+   * **Viewport-residency cut P6d (the sticky-partial exit).** A covering (eviction-protected) tile
+   * can never reach the OTHER reset path (`evictTile` + fresh re-ingest) either -- protection is
+   * exactly what stops it from ever being evicted, so before this piece a partial, still-covered tile
+   * stayed partial forever, even once a later headroom re-fetch genuinely admitted everything its bbox
+   * holds. `markTileComplete` (below) is the fix: an EXPLICIT, caller-supplied "in place" clear, used
+   * only when the caller holds real proof -- `candidateArmSession.ts`'s own per-tile generation
+   * tracking that a refetch's every batch arrived untrimmed AND the stream reached its own natural
+   * `Completed` terminal. This class still never decides that FOR itself (it has no notion of streams
+   * or terminals); it only supplies the flag and the explicit method that clears it, so a caller with
+   * genuine proof is not stuck waiting for an eviction that structurally can never happen. */
   partial: boolean;
 }
 
@@ -177,18 +187,29 @@ export class TileResidentSet {
         // M2's own suppressor bookkeeping: `tileKey` genuinely tried to deliver `id` too, but lost
         // to whichever tile already owns it -- recorded BOTH directions (id -> suppressor tiles, and
         // tile -> suppressed ids) so `evictTile` can cascade correctly in either direction later.
-        let suppressors = this.suppressorsOf.get(id);
-        if (!suppressors) {
-          suppressors = new Set();
-          this.suppressorsOf.set(id, suppressors);
+        //
+        // Viewport-residency cut P6d (nit): NEVER when `tileKey` is `id`'s own OWNER -- a tile
+        // re-delivering a row it already owns (a refetch's own batch necessarily re-sends everything
+        // in its bbox, including rows this same tile admitted in an earlier generation) is an
+        // ordinary self-duplicate, not a cross-tile ownership conflict; `duplicatesDropped` still
+        // counts it identically either way (below, unconditionally), but registering `tileKey` as its
+        // OWN suppressor here would be a self-referential entry `evictTile`'s cascade (`suppressorsOf`)
+        // was never designed to hold -- a tile cannot legitimately be evicted-and-diverted-to-partial
+        // "against itself" for losing a race it was never actually running.
+        if (this.idOwner.get(id) !== tileKey) {
+          let suppressors = this.suppressorsOf.get(id);
+          if (!suppressors) {
+            suppressors = new Set();
+            this.suppressorsOf.set(id, suppressors);
+          }
+          suppressors.add(tileKey);
+          let suppressed = this.suppressedIdsByTile.get(tileKey);
+          if (!suppressed) {
+            suppressed = new Set();
+            this.suppressedIdsByTile.set(tileKey, suppressed);
+          }
+          suppressed.add(id);
         }
-        suppressors.add(tileKey);
-        let suppressed = this.suppressedIdsByTile.get(tileKey);
-        if (!suppressed) {
-          suppressed = new Set();
-          this.suppressedIdsByTile.set(tileKey, suppressed);
-        }
-        suppressed.add(id);
       } else {
         keepIdx.push(i);
       }
@@ -257,6 +278,20 @@ export class TileResidentSet {
   markTilePartial(tileKey: string): void {
     const entry = this.tiles.get(tileKey);
     if (entry) entry.partial = true;
+  }
+
+  /** Viewport-residency cut P6d (the sticky-partial exit): clears `tileKey`'s own `partial` flag back
+   * to `false` IN PLACE, without an evict-and-re-ingest cycle -- `TileEntry.partial`'s own doc comment
+   * above has the full account of why this method exists and what proof it assumes the caller already
+   * holds (a refetch generation that delivered everything untrimmed and reached its own natural
+   * `Completed` terminal). This class does not verify that proof itself; it has no notion of streams,
+   * batches-per-generation, or terminals to verify it WITH -- the caller supplies the fact, this method
+   * only applies it. A no-op for a tile this set has never heard of, exactly like `markTilePartial`'s
+   * own contract -- there is nothing to complete for a tile that was never even resident. Also a no-op
+   * (harmlessly) for a tile that was never partial in the first place. */
+  markTileComplete(tileKey: string): void {
+    const entry = this.tiles.get(tileKey);
+    if (entry) entry.partial = false;
   }
 
   /**

@@ -3,6 +3,12 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+// Viewport-residency cut P6d (nit 3): mocked directly, mirroring `tileViewportStreamManager.test.ts`'s
+// own precedent for `logSessionEvent` -- the binding-command plumbing itself is `diagnostics/log.test.ts`'s
+// own subject, not this module's.
+const logSessionEventMock = vi.hoisted(() => vi.fn());
+vi.mock("../diagnostics/log", () => ({ logSessionEvent: logSessionEventMock }));
+
 import { startStream } from "./adapterWs";
 import type { StreamSink } from "./transport";
 import { controlFrame, TAG } from "./wire";
@@ -78,6 +84,7 @@ describe("startStream: a throw from a StreamSink callback (re-review S9)", () =>
   afterEach(() => {
     (globalThis as { WebSocket: unknown }).WebSocket = originalWebSocket;
     FakeWebSocket.instances = [];
+    logSessionEventMock.mockClear();
   });
 
   it("a throw from onBatch is caught at the adapter boundary -- a typed SinkPoisoned terminal, the connection closes, no further credit is granted", () => {
@@ -119,6 +126,39 @@ describe("startStream: a throw from a StreamSink callback (re-review S9)", () =>
     // more `send()` call (part of the clean shutdown, asserted separately below), so this checks
     // nothing NEW beyond that one expected cancel landed on the wire.
     expect(ws.sent.length).toBe(sentBeforePoison + 1);
+  });
+
+  // Viewport-residency cut P6d (nit 3, rule 7 -- "nothing escapes uncaught"): the poisoned sink's OWN
+  // `onTerminal` callback is exactly as suspect as its `onBatch` -- a second throw, delivering the
+  // very terminal that reports the sink is broken, must not itself escape `abandonStream` uncaught
+  // (which would ALSO skip the cancel/close cleanup right below it, leaking the connection open).
+  it("if the poisoned sink's own onTerminal ALSO throws, it is caught, logged, and cleanup still runs", () => {
+    (globalThis as { WebSocket: unknown }).WebSocket = FakeWebSocket;
+    const onBatch = vi.fn(() => {
+      throw new Error("boom -- pushTileBatch's own bug");
+    });
+    const onTerminal = vi.fn(() => {
+      throw new Error("onTerminal itself is broken too");
+    });
+    const sink = fakeSink({ onBatch, onTerminal });
+
+    startStream({ url: "ws://x", subprotocols: ["spatial-dp.v0", "tok.x"], ticketHandle: "sh_1", sink });
+    const ws = FakeWebSocket.instances.at(-1)!;
+
+    expect(() =>
+      ws.emit("message", { data: controlFrame(TAG.BATCH, new Uint8Array([1, 2, 3])).buffer })
+    ).not.toThrow(); // the second throw never escapes the message handler uncaught
+
+    expect(onTerminal).toHaveBeenCalledTimes(1);
+    expect(onTerminal).toHaveBeenCalledWith({ kind: "SinkPoisoned", detail: "boom -- pushTileBatch's own bug" });
+    expect(logSessionEventMock).toHaveBeenCalledWith(
+      "stream-sink-onterminal-threw",
+      expect.stringContaining("onTerminal itself is broken too")
+    );
+    // Cleanup still ran despite the second throw -- never left open, waiting for frames that would
+    // only be discarded on arrival.
+    expect(ws.closeCalls).toBe(1);
+    expect(ws.readyState).toBe(FakeWebSocket.CLOSED);
   });
 
   it("SinkPoisoned is distinct from DecodeFailed -- a genuine frame-decode fault (not a sink throw) still reports DecodeFailed", () => {

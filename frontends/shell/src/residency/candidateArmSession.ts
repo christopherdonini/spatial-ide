@@ -407,6 +407,24 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   // asynchronous window between the two (`TileViewportStreamManager.cancelTileStream` calls it inline).
   const budgetCancelledTileKeys = new Set<string>();
 
+  /** Viewport-residency cut P6d (the sticky-partial exit's own proof). Per-tile: whether EVERY batch
+   * the tile's CURRENT stream (`streamHandle`) has delivered so far arrived untrimmed
+   * (`!outcome.overBudget`, `ingestAndMaybeEstablishFrame` below). Consumed -- read, then deleted --
+   * at that same stream's own `manager.onTerminal` callback: `terminal.kind === "Completed"` AND this
+   * flag still `true` is exactly `TileResidentSet.markTileComplete`'s own required proof ("a refetch
+   * generation that delivered everything untrimmed and reached its own natural Completed terminal" --
+   * see that method's own doc comment, `tileResidentSet.ts`). Keyed by tile key, not stream handle
+   * alone: `TileViewportStreamManager` guarantees at most one in-flight stream per tile key at a time,
+   * so a batch whose OWN `streamHandle` differs from what this map has on file for that tile names
+   * exactly "a new generation has begun" -- the stored `streamHandle` is what lets `onBatch` tell that
+   * apart from "another batch of the SAME generation" without a separate counter. An entry whose
+   * stream never reaches `Completed` (cancelled, self-cancelled for budget, failed, superseded) is
+   * simply abandoned here with no partial-clearing consequence -- exactly `TileEntry.partial`'s own
+   * "only a clean re-fetch can prove it" contract. Never populated for `INITIAL_TILE_KEY`: the untiled
+   * first look has its own, separate, always-fully-cleared partial mechanism (`untiledRowsSeen`'s own
+   * row-limit check below), never the sticky, evict-can-never-reach-it kind this map exists for. */
+  const tileGenerationUntrimmed = new Map<string, { streamHandle: string; allUntrimmed: boolean }>();
+
   const manager = new TileViewportStreamManager({
     dataset,
     residency: {
@@ -448,6 +466,10 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       } else {
         canvas?.clearTile(tileKey);
       }
+      // P6d: this tile's own generation (if any -- a superseded tile may never have delivered a
+      // batch at all) is abandoned, never completed -- no partial-clearing consequence, and no stale
+      // entry left behind for a LATER generation's own tracking to be confused by.
+      tileGenerationUntrimmed.delete(tileKey);
       syncScanLiveness(); // P5f should-fix 3: a tile just left this manager's tracked set
     },
     onTerminal: (tileKey, streamHandle, terminal) => {
@@ -458,18 +480,33 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // never raises) has no dedicated UI wiring yet -- P4's own job ("P4 renders the state"), not
       // this piece's. Logged so it is at least visible, not silently dropped (ADR-010 rule 8).
       logSessionEvent("candidate-tile-terminal", `${tileKey} ${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
+      // Viewport-residency cut P6d (the sticky-partial exit): `manager.onTerminal` is never called
+      // for a self-cancel (`TileViewportStreamManager.mintAndStart`'s own `selfCancelledHandles`
+      // short-circuit) -- every terminal reaching HERE is a genuine one, never one this session
+      // itself triggered. `terminal.kind === "Completed"` combined with this generation's own
+      // `allUntrimmed` flag (still bound to THIS `streamHandle` -- a stale, already-superseded
+      // generation's tracking entry would have a DIFFERENT stored handle and is correctly ignored)
+      // is exactly the proof `TileResidentSet.markTileComplete` needs: every batch this refetch
+      // delivered arrived untrimmed, and the stream reached its own natural end, never cut off by
+      // this session's own budget-exhaustion cancel (that path keeps the tile partial via
+      // `budgetCancelledTileKeys` above, and never reaches a `Completed` terminal here at all).
+      const generation = tileGenerationUntrimmed.get(tileKey);
+      if (terminal.kind === "Completed" && generation?.streamHandle === streamHandle && generation.allUntrimmed) {
+        canvas?.markTileComplete(tileKey);
+      }
+      tileGenerationUntrimmed.delete(tileKey);
       syncScanLiveness(); // P5f should-fix 3: this tile's own stream just reached a terminal state
     },
   });
 
   function ingestAndMaybeEstablishFrame(
     tileKey: string,
-    _streamHandle: string,
+    streamHandle: string,
     _batchSeq: number,
     payload: Uint8Array
   ): void {
     if (!canvas) return;
-    const outcome = canvas.pushTileBatch(tileKey, _streamHandle, _batchSeq, payload);
+    const outcome = canvas.pushTileBatch(tileKey, streamHandle, _batchSeq, payload);
     // Item C/D evidence (this piece's own smoke-validation criterion): dedupe/eviction counters are
     // console-visible via `WorkingCanvas.tsx`'s own `traceTileIngest` call, right where `pushTileBatch`
     // computes `outcome` -- `diagnostics/renderTrace.ts` is this codebase's own "console-only
@@ -492,6 +529,16 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // terminal to distinguish in the first place.
     if (tileKey === INITIAL_TILE_KEY) {
       untiledRowsSeen += outcome.rowsAdmitted + outcome.duplicatesDropped;
+    } else {
+      // Viewport-residency cut P6d (the sticky-partial exit's own proof): fold this batch's own
+      // untrimmed-ness into the tile's CURRENT generation, keyed by `streamHandle` -- a batch whose
+      // handle differs from what this map has on file names a fresh generation (a refetch has begun),
+      // so `allUntrimmed` resets to `true` before this batch's own outcome is ANDed in, rather than
+      // inheriting a PRIOR generation's history. `manager`'s own `onTerminal` (above) reads this at
+      // the stream's own `Completed` terminal.
+      const existingGeneration = tileGenerationUntrimmed.get(tileKey);
+      const carriedOver = existingGeneration?.streamHandle === streamHandle ? existingGeneration.allUntrimmed : true;
+      tileGenerationUntrimmed.set(tileKey, { streamHandle, allUntrimmed: carriedOver && !outcome.overBudget });
     }
     if (outcome.overBudget) {
       const unrequested = [...lastCoveringTileKeys].filter((k) => !canvas.isTileResidentInCandidateSet(k));
@@ -728,6 +775,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // same "swept alongside every other per-generation counter" discipline the comment above already
       // states, so a stale key can never survive into a later generation's own budget-exhaustion cancel.
       budgetCancelledTileKeys.clear();
+      // P6d: a fresh generation starts with no refetch-untrimmed history of its own either -- swept
+      // alongside every other per-generation map/counter this function already resets above.
+      tileGenerationUntrimmed.clear();
       // Viewport-residency cut P4 (decisions 24(a)/(b)): "clears on ... query-issued" -- the SAME
       // event baseline's own `issueViewportQuery` feeds `nextResidencyStatus` for an Apply/Clear
       // (App.tsx). Fired here, at the clear itself (residency truly is empty at this instant), not

@@ -225,6 +225,30 @@ function parseCellArgs(argv) {
 // M6: settle requires BOTH console quiescence AND in-flight === 0.
 // ---------------------------------------------------------------------------------------
 
+/** Viewport-residency cut P6d (P6b's own finding, harness-owned): the WIRE-relevant `[render-trace]`
+ * line classes -- the same three the dual-arm identity guard's own field-sequence comparison reads
+ * (`normalizeFieldSequenceLine`/`attachRenderTraceValueListener` below both key off this exact set,
+ * moved up here so the quiescence counter and the identity guard share ONE source of truth rather
+ * than two independently-maintained copies that could drift). `viewport_query`/`stream-issued`/
+ * `batch` are the only lines that correspond to real wire activity a settle decision should ever wait
+ * on; every OTHER `[render-trace]` class (`view-state`, `layers`, `residency`, `tile-ingest`,
+ * `candidate-residency-status`, `canvas-lifecycle`, `describe.extent`, `pre-offset`/`post-offset`
+ * position samples) is instrument/status chatter -- real, honest console output, but never itself
+ * evidence that a query/stream/batch is still moving. */
+const FIELD_SEQUENCE_EVENTS = ["viewport_query", "stream-issued", "batch"];
+
+/** Viewport-residency cut P6d: `true` iff `entry.text` (an `attachConsole`/`consoleHandle.renderTrace()`
+ * entry, `lib.mjs`) is one of `FIELD_SEQUENCE_EVENTS`'s own three wire classes -- string-matched the
+ * same way `regression.mjs`'s own `hasFreshRenderTraceMotion` already does (`/view-state|viewport_query/
+ * .test(e.text)`), since `console.debug(PREFIX, "<class>", {...})`'s class argument is always a
+ * plain string literal, never re-serialized in a way that would break a `startsWith` match on it.
+ * The trailing space distinguishes a real class match from a coincidental prefix of a longer,
+ * unrelated class name (none exist among today's classes, but this is the same discipline either
+ * way -- see the constant above for the full class list this excludes). */
+function isWireRelevantRenderTraceLine(entry) {
+  return FIELD_SEQUENCE_EVENTS.some((cls) => entry.text.includes(`[render-trace] ${cls} `));
+}
+
 /** P2-prep2 (viewport-residency cut): a settle-watchdog fire, on its own, only ever named ONE of
  * the two counters that decide whether it fired ("console quiescence not reached" told a reader
  * nothing about whether a stream was still genuinely in flight, or how busy the console actually
@@ -261,9 +285,25 @@ async function captureSettleFailureDiagnostic(page, consoleHandle) {
  * (in-flight always reads 0 while the instrument is disabled).
  *
  * **P2-prep2: takes `consoleHandle` (not a bare `traceFn`) so a settle failure can also read
- * `consoleHandle.entries` for `captureSettleFailureDiagnostic` above.** */
+ * `consoleHandle.entries` for `captureSettleFailureDiagnostic` above.**
+ *
+ * **Viewport-residency cut P6d (P6b's own finding, harness-owned): the quiescence half now counts
+ * ONLY `FIELD_SEQUENCE_EVENTS`'s three wire-relevant line classes, never every `[render-trace]` line.**
+ * At high fan-out (~320 tile streams, instrument-on) the OLD `traceFn` -- every `[render-trace]`
+ * line, unfiltered -- could not close this criterion's own `SETTLE_QUIET_MS` (300ms) window even as
+ * `in-flight===0` was reached: `recordResidencyBatchArrived`/`recordResidencyTileRequested`'s own
+ * per-tile instrument counters and this arm's `candidate-residency-status`/`tile-ingest` status lines
+ * keep emitting for a beat AFTER the last genuine wire event, at a rate that outpaces 300ms of true
+ * silence across hundreds of concurrent tiles -- diagnosed live against the candidate-arm fit step
+ * (was invalidating there specifically, never on baseline, which has none of this per-tile chatter).
+ * None of that is a wire fact; it is status/diagnostic OUTPUT the wire facts themselves already
+ * produced. `isWireRelevantRenderTraceLine` (above) restricts `traceFn` to exactly the three classes
+ * `viewport_query`/`stream-issued`/`batch` -- the same set `FIELD_SEQUENCE_EVENTS` already names for
+ * the dual-arm identity guard -- so instrument/status chatter can never starve this half of settle;
+ * the `in-flight===0` half (right below) is UNCHANGED, still the real backstop against declaring
+ * settle while a stream genuinely has not finished. */
 async function waitForSettleWithInFlight(page, consoleHandle, { quietMs, timeoutMs }) {
-  const traceFn = () => consoleHandle.renderTrace();
+  const traceFn = () => consoleHandle.renderTrace().filter(isWireRelevantRenderTraceLine);
   const start = Date.now();
   while (true) {
     const remaining = Math.max(200, timeoutMs - (Date.now() - start));
@@ -982,6 +1022,168 @@ async function measureOneStep(
   };
 }
 
+// ---------------------------------------------------------------------------------------
+// Viewport-residency cut P6d: candidate-hover live evidence (the code re-verification's own
+// suggestion 1). Defect B's fix (ADR-028 decision 24(c), the arm-independent sub-pixel pick refusal
+// living behind `WorkingCanvas.tsx`'s shared hover site) had NO live E2E lane -- unit-tested only.
+// This is that lane's own above-threshold half: after the candidate arm's fit step settles, find a
+// densest non-background patch and confirm hovering it resolves `.hover-readout` to a real feature
+// id, exactly `regression.mjs`'s own `stepA9` proves for the baseline arm.
+//
+// **A minimal inline version, not a reuse of `regression.mjs`'s own exported helpers -- disclosed,
+// per this piece's own instruction's explicit fallback.** `regression.mjs` is not safely importable
+// from here: its own module body ends with an UNCONDITIONAL top-level `await main()` (no
+// `import.meta.url === process.argv[1]`-style entry-point guard), so importing it as a module would
+// launch/attach a SECOND browser session and run the WHOLE baseline regression suite (A1'-A9',
+// refusal steps, `process.exit()` at its own end) as a side effect of the import alone -- discovered
+// live while drafting this piece, not assumed. Moving `stepA9`'s own bisection machinery into
+// `lib.mjs` (the one target that genuinely has no such hazard) was judged too large a change to
+// `regression.mjs`'s own working, already-hardened hover path for this piece's declared scope, so
+// this is instead a deliberately SMALLER, self-contained version of the same "densest-patch
+// bisection" concept: ONE coarse grid pass, ONE subdivide, that final region's own CENTER pixel --
+// never `stepA9`'s own second bisection level, 5x5 interior-neighbourhood/alpha verification, or
+// zoom-notch search. Good enough for "does hovering a real, densest patch of data resolve a feature
+// id at all" (this lane's own question); NOT a replacement for `stepA9`'s own hardened, multi-signal
+// interior check, which stays the baseline-arm regression suite's own more rigorous gate.
+// ---------------------------------------------------------------------------------------
+
+const HOVER_EVIDENCE_COARSE_COLS = 8;
+const HOVER_EVIDENCE_COARSE_ROWS = 5;
+const HOVER_EVIDENCE_SUBDIVIDE = 4;
+
+function hoverEvidenceSubdivideRegion(region, cols, rows) {
+  const out = [];
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      out.push({ x: region.x + (gx / cols) * region.w, y: region.y + (gy / rows) * region.h, w: region.w / cols, h: region.h / rows });
+    }
+  }
+  return out;
+}
+
+function hoverEvidenceFractionOf(summary) {
+  return summary.totalPixels > 0 ? summary.nonBackgroundCount / summary.totalPixels : 0;
+}
+
+async function hoverEvidenceCaptureDensest(page, regions) {
+  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
+  let idx = 0;
+  for (let i = 1; i < summary.regions.length; i++) {
+    if (hoverEvidenceFractionOf(summary.regions[i]) > hoverEvidenceFractionOf(summary.regions[idx])) idx = i;
+  }
+  return { summary, region: regions[idx], fraction: hoverEvidenceFractionOf(summary.regions[idx]) };
+}
+
+/** One coarse grid pass + one subdivide (see this section's own top comment for why this stops one
+ * bisection level short of `regression.mjs`'s own `findInteriorCandidate`) -- `null` when even the
+ * coarse pass found nothing non-background at all (nothing to bisect). */
+async function findDensestPatchHoverCandidate(page) {
+  const whole = { x: 0, y: 0, w: 1, h: 1 };
+  let picked = await hoverEvidenceCaptureDensest(page, hoverEvidenceSubdivideRegion(whole, HOVER_EVIDENCE_COARSE_COLS, HOVER_EVIDENCE_COARSE_ROWS));
+  if (picked.fraction <= 0) return null;
+  const bufferWidth = picked.summary.width;
+  const bufferHeight = picked.summary.height;
+  picked = await hoverEvidenceCaptureDensest(page, hoverEvidenceSubdivideRegion(picked.region, HOVER_EVIDENCE_SUBDIVIDE, HOVER_EVIDENCE_SUBDIVIDE));
+  if (picked.fraction <= 0) return null;
+  const centerXFrac = picked.region.x + picked.region.w / 2;
+  const centerYFrac = picked.region.y + picked.region.h / 2;
+  return {
+    point: {
+      x: Math.min(bufferWidth - 1, Math.max(0, Math.round(centerXFrac * bufferWidth))),
+      y: Math.min(bufferHeight - 1, Math.max(0, Math.round(centerYFrac * bufferHeight))),
+    },
+    bufferWidth,
+    bufferHeight,
+    finalFraction: picked.fraction,
+  };
+}
+
+/** Mirrors `regression.mjs`'s own `bufferPointToCss` exactly (half-pixel centering, `flipY` toggling
+ * WebGL's row-0-is-bottom convention, clamped into the box) -- see that function's own doc comment
+ * for the full account; duplicated rather than imported for the same reason this whole section is
+ * inline (this section's own top comment). */
+function hoverEvidenceBufferPointToCss(point, rect, bufferWidth, bufferHeight, flipY) {
+  const scaleX = rect.width / bufferWidth;
+  const scaleY = rect.height / bufferHeight;
+  const cssX = rect.left + (point.x + 0.5) * scaleX;
+  const cssY = flipY ? rect.top + rect.height - (point.y + 0.5) * scaleY : rect.top + (point.y + 0.5) * scaleY;
+  return {
+    x: Math.min(rect.left + rect.width, Math.max(rect.left, cssX)),
+    y: Math.min(rect.top + rect.height, Math.max(rect.top, cssY)),
+  };
+}
+
+/** Polls `getValue()` until `predicate` is satisfied or `timeoutMs` elapses -- the same shape
+ * `regression.mjs`'s own `waitForCondition` has, duplicated minimally (this section's own top
+ * comment) rather than imported. Never rejects. */
+async function hoverEvidenceWaitForCondition(getValue, predicate, timeoutMs, pollMs = 200) {
+  const start = Date.now();
+  let last = await getValue();
+  while (!predicate(last)) {
+    if (Date.now() - start >= timeoutMs) return { ok: false, last };
+    await sleep(pollMs);
+    last = await getValue();
+  }
+  return { ok: true, last };
+}
+
+/**
+ * The live evidence lane itself: finds the densest patch (`findDensestPatchHoverCandidate`), hovers
+ * its centre pixel (trying both `flipY` orientations, since this minimal version skips
+ * `stepA9`'s own interior-neighbourhood pre-verification that would otherwise pin one down), and
+ * confirms `.hover-readout` resolves a real feature id (`/^id \d+/`) -- the above-threshold case
+ * (ADR-028 decision 24(c)). Never throws; the caller (`runTrace` below) decides what a `{ok:false}`
+ * means for the trial as a whole.
+ *
+ * **Below-threshold refusal (decision 24(c)'s OTHER half) is deliberately NOT exercised here.**
+ * Reaching it live would need a genuine zoomed-out camera where the average resident feature's own
+ * on-screen extent drops under `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` (`pickResolution.ts`) -- not
+ * cheaply reachable from this smoke step alone (it would need its own zoom-out gesture, settle wait,
+ * and a SEPARATE densest-patch search at that new camera, on top of an already-tight smoke budget) --
+ * per this piece's own instruction, it stays unit-tested only (`pickResolution.test.ts`).
+ */
+async function candidateHoverEvidenceCheck(page) {
+  const rect = await page.evaluate(() => {
+    const el = document.querySelector(".working-canvas");
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  });
+  if (!rect) return { ok: false, thresholdState: "unresolved", reason: "no .working-canvas found" };
+
+  const candidate = await findDensestPatchHoverCandidate(page);
+  if (!candidate) {
+    return { ok: false, thresholdState: "unresolved", reason: "no non-background patch found to hover (fit step's own frame is empty)" };
+  }
+
+  for (const flipY of [true, false]) {
+    const css = hoverEvidenceBufferPointToCss(candidate.point, rect, candidate.bufferWidth, candidate.bufferHeight, flipY);
+    await page.mouse.move(css.x, css.y);
+    const result = await hoverEvidenceWaitForCondition(
+      () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
+      (text) => text !== null && /^id \d+/.test(text),
+      5_000
+    );
+    if (result.ok) {
+      return {
+        ok: true,
+        thresholdState: "above-threshold",
+        resolvedId: result.last,
+        point: candidate.point,
+        flipY,
+        finalFraction: candidate.finalFraction,
+      };
+    }
+  }
+  return {
+    ok: false,
+    thresholdState: "unresolved",
+    reason: "hover-readout never resolved a feature id at the densest patch (either flipY orientation)",
+    point: candidate.point,
+    finalFraction: candidate.finalFraction,
+  };
+}
+
 /**
  * Runs the committed trace (or its first `stepLimit` steps, for `--smoke`) against the currently
  * admitted dataset. Per §4b: a step that does not settle within its own `timeoutMs` invalidates the
@@ -993,7 +1195,7 @@ async function measureOneStep(
  * a `wholeTrialInvalidatedReason` note) as a final pass after the loop, never during it (so the loop
  * itself still records each row's own honest per-step outcome first).
  */
-async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, instrumentEnabled }) {
+async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, instrumentEnabled, smoke, arm }) {
   const steps = stepLimit ? CAMERA_TRACE_STEPS.slice(0, stepLimit) : CAMERA_TRACE_STEPS;
   const rows = [];
   let invalidatedAtStep = null;
@@ -1002,6 +1204,11 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
   // threw: ..." for a thrown gesture, and an S1 realized-displacement assertion failure, each its own
   // distinct cause class), never a hardcoded "settle watchdog" string regardless of which one it was.
   let invalidationReason = null;
+  // Viewport-residency cut P6d: `null` unless this run is `--smoke --arm candidate` AND the fit step
+  // genuinely settled -- see this file's own "candidate-hover live evidence" section (above) for the
+  // full account. Recorded on `evidence.hoverEvidence` (`main()` below), never folded into `rows`
+  // itself (a session-wide fact about this ONE step, not a per-row measurement quantity).
+  let hoverEvidence = null;
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
@@ -1070,6 +1277,16 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
       console.log(`P4-RESIDENCY-STATUS-TEXT[${step.id}]: ${JSON.stringify(residencyStatus)}`);
     }
 
+    // Viewport-residency cut P6d (candidate-hover live evidence): smoke mode, candidate arm ONLY,
+    // right after the fit step's own settle -- "the viewport IS the dataset" the moment fit
+    // completes (`candidateArmSession.ts`'s own top doc comment), so the densest patch of the whole
+    // frame is reliably there to hover; never on `zoom-to-layer` or any later step, which this
+    // trace's own fixture was never chosen to guarantee data for.
+    if (smoke && arm === "candidate" && step.id === "fit" && row.settled) {
+      hoverEvidence = await candidateHoverEvidenceCheck(page);
+      console.log(`P6D-HOVER-EVIDENCE[${step.id}]: ${JSON.stringify(hoverEvidence)}`);
+    }
+
     if (!row.settled) {
       invalidatedAtStep = i;
       invalidationReason = row.reason ?? "unknown"; // N19 -- see this function's own doc comment above
@@ -1087,7 +1304,7 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
     }
   }
 
-  return { rows, invalidated, invalidatedAtStep, invalidationReason };
+  return { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence };
 }
 
 async function openFixture(page) {
@@ -1132,7 +1349,9 @@ if (IDENTITY_VIEW_STATE_STEPS.length !== FIELD_SEQUENCE_STEP_LIMIT) {
     `residency-harness: IDENTITY_VIEW_STATE_STEPS has ${IDENTITY_VIEW_STATE_STEPS.length} steps, expected FIELD_SEQUENCE_STEP_LIMIT=${FIELD_SEQUENCE_STEP_LIMIT}`
   );
 }
-const FIELD_SEQUENCE_EVENTS = ["viewport_query", "stream-issued", "batch"];
+// FIELD_SEQUENCE_EVENTS itself now lives in the "M6: settle" section above (P6d) -- the settle
+// quiescence counter and this identity guard share the one declaration rather than two copies that
+// could drift.
 const EXCLUDED_LINE_TYPES = ["residency (push/clear -- traceResidency, canvas-side bookkeeping, not wire content)"];
 const EXCLUDED_REQUEST_FIELDS = [
   "limit (viewportQuery's own call carries it; traceViewportQuery never logs it)",
@@ -1895,14 +2114,32 @@ async function main() {
 
     evidence.openDrain = openDrainRow;
 
-    const { rows, invalidated, invalidatedAtStep, invalidationReason } = await runTrace(page, consoleHandle, viewStateListener, {
+    const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(page, consoleHandle, viewStateListener, {
       stepLimit,
       instrumentEnabled,
+      smoke,
+      arm: cellArgs.arm,
     });
     evidence.rows = rows;
     evidence.invalidated = invalidated;
     evidence.invalidatedAtStep = invalidatedAtStep;
     evidence.invalidationReason = invalidationReason; // N19 -- the actual cause class, see runTrace's own doc comment
+    // Viewport-residency cut P6d: `null` unless this was a `--smoke --arm candidate` run whose fit
+    // step settled -- see `runTrace`'s own doc comment on the field. Recorded on the evidence file
+    // regardless of `ok`, so a failed live check still leaves a readable record of WHAT was tried.
+    if (hoverEvidence) evidence.hoverEvidence = hoverEvidence;
+    // The assertion itself: an above-threshold hover that never resolves a feature id, in a run this
+    // piece's own instruction asked to prove it DOES, is a genuine harness/product-visibility gap,
+    // never silently narrowed to "evidence only" -- thrown here (not inside `runTrace`) so every row
+    // this trial already measured (including the fit row itself) is safely on `evidence.rows` first,
+    // the same "never lose prior rows to an uncaught throw" discipline P5g's own fix established for
+    // a step's gesture throwing.
+    if (hoverEvidence && !hoverEvidence.ok) {
+      throw new Error(
+        `residency-harness: P6D CANDIDATE-HOVER LIVE EVIDENCE FAILED -- the fit step settled but the ` +
+          `densest-patch hover never resolved a feature id: ${JSON.stringify(hoverEvidence)}`
+      );
+    }
 
     // P1d B4: `evidence.openDrain` is assigned OUTSIDE `rows` (a pre-step, not one of
     // `runTrace`'s own trace steps), so `runTrace`'s S8 rewrite (every row in `rows` demoted to

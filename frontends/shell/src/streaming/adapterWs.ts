@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { logSessionEvent } from "../diagnostics/log";
 import { cancelFrame, creditFrame, FrameDecoder, startFrame } from "./wire";
 import type { RunningStream, StreamSink } from "./transport";
 
@@ -66,7 +67,23 @@ export function startStream(opts: ConnectOptions): RunningStream {
   function abandonStream(terminal: { kind: "DecodeFailed" | "SinkPoisoned"; detail: string }): void {
     if (!finished) {
       finished = true;
-      opts.sink.onTerminal(terminal);
+      // Viewport-residency cut P6d (nit 3, rule 7 -- nothing escapes uncaught): `onTerminal` is a
+      // caller-supplied `StreamSink` callback exactly like `onBatch`/`onOpen`/`onProgress` -- the same
+      // "a sink callback can throw" fact `SinkPoisoned` itself already exists to handle applies here
+      // too, on the delivery of the terminal that reports a sink is poisoned in the first place. A
+      // SECOND throw here (the sink's own cleanup path is exactly as suspect as its ordinary one) must
+      // never propagate uncaught out of this function -- doing so would ALSO skip the cancel/close
+      // cleanup below, leaving the connection open and granting no further credit to nothing. Caught
+      // and reported via `logSessionEvent` (that function's own doc comment: "never throws"), then
+      // cleanup proceeds exactly as if `onTerminal` had returned normally.
+      try {
+        opts.sink.onTerminal(terminal);
+      } catch (err) {
+        logSessionEvent(
+          "stream-sink-onterminal-threw",
+          `${terminal.kind} ${terminal.detail}: onTerminal itself threw -- ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
     }
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(cancelFrame());
