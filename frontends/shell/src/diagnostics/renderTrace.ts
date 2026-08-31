@@ -89,6 +89,23 @@ export function traceTileIngest(
   console.debug(PREFIX, "tile-ingest", { tileKey, rowsAdmitted, duplicatesDropped, evictedTileKeys, overBudget });
 }
 
+/** Viewport-residency cut P4 (decisions 24(a)/(b)), item C: one line per candidate-arm
+ * `.residency-status` recomputation (`candidateArmSession.ts`'s own `emitResidencyStatus`) --
+ * `evictedTileCountSession` is the SESSION-CUMULATIVE eviction count (not one batch's own
+ * `evictedTileKeys.length`, which `traceTileIngest` above already carries per call), so a
+ * diagnosis session can read "how many tiles has this whole session evicted so far" off one line
+ * rather than summing every `tile-ingest` line itself. This is the console-only diagnostic
+ * counterpart to the user-facing `.residency-status` text (item C's own words: "the status line IS
+ * the visibility -- no tile readout"), never a second UI surface. */
+export function traceCandidateResidencyStatus(
+  dataset: string,
+  overBudget: boolean,
+  residentFeatureCount: number,
+  evictedTileCountSession: number
+): void {
+  console.debug(PREFIX, "candidate-residency-status", { dataset, overBudget, residentFeatureCount, evictedTileCountSession });
+}
+
 /** One line per `WorkingCanvas` mount/unmount, naming the dataset handle it was keyed on (D4's
  * remount fix, `App.tsx`) -- lets a session's ledger show exactly how many canvas instances
  * existed and which dataset each owned, without inferring it from `"push"`/`"clear"` lines alone. */

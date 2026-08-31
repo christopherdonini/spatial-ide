@@ -34,6 +34,18 @@ import {
   setResidencyArm,
 } from "./residency/residencyArm";
 import { startCandidateArmSession } from "./residency/candidateArmSession";
+import {
+  nextResidencyStatus,
+  residencyStatusText,
+  ResidencyStatus,
+  ResidencyStatusEvent,
+} from "./residency/residencyStatus";
+// Re-exported so every existing `import { nextResidencyStatus, ResidencyStatus, ... } from "./App"`
+// call site (`App.test.ts` included) keeps working unchanged -- `residencyStatus.ts`'s own doc
+// comment has the full reason this moved (candidateArmSession.ts needs the same event union without
+// a circular import back into this file).
+export { nextResidencyStatus, residencyStatusText };
+export type { ResidencyStatus, ResidencyStatusEvent };
 import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
@@ -286,57 +298,13 @@ export function makeDebouncedViewportQuery(
 }
 
 /**
- * Rider 1's persistent ceiling-refusal status ("N of M features rendered — declared ceiling
- * reached (MAX_RESIDENT_VERTICES)"), or `null` while nothing about the current dataset's rendering
- * is truncated.
+ * Rider 1's persistent status indicator and its transition machinery now live in
+ * `residency/residencyStatus.ts` (viewport-residency cut P4, decisions 24(a)/(b)) -- `ResidencyStatus`/
+ * `nextResidencyStatus`/`residencyStatusText`, re-exported above so this stays a drop-in for every
+ * existing call site. See that module's own doc comment for why the move happened (P4's own need:
+ * `residency/candidateArmSession.ts` constructs the SAME events this file reduces, without a circular
+ * import back into this one).
  */
-export interface ResidencyStatus {
-  residentFeatureCount: number;
-  /** `describe.row_count.value` verbatim (a `DecU64` string) -- never narrowed to `Number`, the
-   * same discipline `skp/codec.ts`'s own doc comment states for every wire `DecU64`. */
-  datasetRowCount: string;
-}
-
-/**
- * Rider 1's status-indicator state machine, kept pure and outside React state updates for the same
- * testability reason `admitAndResetStaleUiState` above is: `App.test.ts` asserts every transition
- * here directly, without a DOM/WebGL harness this package does not carry.
- *
- * - `"ceiling-refusal"`: a batch was refused by `ResidentVertexCeilingExceeded` -- (re)sets the
- *   status to the counts that refusal carried.
- * - `"delivery-complete"`: a stream's own natural `Completed` terminal reached `App` -- the human's
- *   own words, "a later stream completes fully without a ceiling refusal" (a stream this session
- *   itself cancelled for hitting the ceiling never reaches this event: `ViewportStreamManager`
- *   suppresses the terminal of any stream it cancelled itself, whatever that terminal's `kind` --
- *   see its own `selfCancelledHandles` doc comment).
- * - `"dataset-changed"`: a fresh admission -- unconditional clear, wired through
- *   `admitAndResetStaleUiState` above.
- *
- * Dismissing the `.canvas-refusal` banner is deliberately NOT a transition here -- rider 1, the
- * human's words: "dismiss hides the banner, never the status indicator". The banner's Dismiss
- * button only ever calls `setCanvasRefusal(null)`, never touching this state.
- */
-export function nextResidencyStatus(
-  event:
-    | { kind: "ceiling-refusal"; residentFeatureCount: number; datasetRowCount: string }
-    | { kind: "delivery-complete" }
-    | { kind: "dataset-changed" }
-    /** Rider-1 refinement (DECISIONS-PENDING.md entry 1, architect recommendation, approved to
-     * proceed): applying a filter supersedes and clears the canvas exactly as a dataset change or a
-     * full delivery does -- a stale "N of M features rendered" claim must not survive a query the
-     * operator themselves just superseded. Named in DECISIONS-PENDING.md and the PR per the human's
-     * own rider being amended here, not silently absorbed. */
-    | { kind: "query-issued" }
-): ResidencyStatus | null {
-  switch (event.kind) {
-    case "ceiling-refusal":
-      return { residentFeatureCount: event.residentFeatureCount, datasetRowCount: event.datasetRowCount };
-    case "delivery-complete":
-    case "dataset-changed":
-    case "query-issued":
-      return null;
-  }
-}
 
 /**
  * NEXT-CUT.md (filter-panel cut) P4, ADR-021's binding acceptance condition: "before any user-facing
@@ -909,7 +877,15 @@ export default function App() {
     // below (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is
     // active without an arm check of its own.
     if (isInstrumentedBuild() && getResidencyArm() === "candidate") {
-      const session = startCandidateArmSession({ dataset: admitted.dataset, canvas });
+      const session = startCandidateArmSession({
+        dataset: admitted.dataset,
+        canvas,
+        // Viewport-residency cut P4 (decisions 24(a)/(b)): the session emits the SAME
+        // `ResidencyStatusEvent`s this file's own baseline branch feeds `nextResidencyStatus` --
+        // "reuse the existing transition machinery, arm-aware" -- so `.residency-status` renders the
+        // declared-partial-view contract without a second, parallel state machine.
+        onResidencyStatusChange: (event) => setResidencyStatus(nextResidencyStatus(event)),
+      });
       managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
       viewportDebounceRef.current = debounce(
         (bbox, bboxCrs) => session.onViewportChanged(fromWireBbox(bbox, bboxCrs)),
@@ -1267,12 +1243,14 @@ export default function App() {
                 {/* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): NOT dismissible -- no close
                   * control, deliberately. Dismissing a `.canvas-refusal` above must never remove
                   * this; it only ever clears via `nextResidencyStatus`'s own "delivery-complete" /
-                  * "dataset-changed" transitions. Plain digits, no thousands separators (this
-                  * file's own `ResidencyStatus` doc comment: `datasetRowCount` is a wire `DecU64`
-                  * string, never narrowed to `Number`). */}
+                  * "dataset-changed" / "query-issued" transitions. Viewport-residency cut P4
+                  * (decisions 24(a)/(b)): content is now arm-dependent -- `residencyStatusText`
+                  * (`residency/residencyStatus.ts`) is the ONE place that renders any of the three
+                  * `ResidencyStatus` variants (baseline's own ceiling wording untouched by this
+                  * piece) to a string, so this JSX stays a one-line lookup. */}
                 {residencyStatus && (
                   <div className="residency-status" role="status">
-                    {`${residencyStatus.residentFeatureCount} of ${residencyStatus.datasetRowCount} features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`}
+                    {residencyStatusText(residencyStatus)}
                   </div>
                 )}
                 {/* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close

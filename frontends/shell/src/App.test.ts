@@ -174,7 +174,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       canvasRefusal: "accepting this batch would carry 2012436 resident vertices...",
       viewportRefusal: refusalFixture(),
       hover: pickResultFixture(),
-      residencyStatus: { residentFeatureCount: 97_500, datasetRowCount: "100000" },
+      residencyStatus: { kind: "baseline-ceiling", residentFeatureCount: 97_500, datasetRowCount: "100000" },
       activeFilter: filterFixture(),
       lastViewportBbox: bboxFixture(),
       scanState: { kind: "delivering", streamHandle: "sh_a", rows: 42 },
@@ -240,6 +240,13 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
 // the banner, never the status indicator." This suite asserts the pure state machine directly --
 // App.tsx wires it to real events (a ResidentVertexCeilingExceeded refusal, a stream's Completed
 // terminal, a fresh admission) but none of that needs a DOM to assert.
+// Viewport-residency cut P4 (decisions 24(a)/(b)): `ResidencyStatus`/`nextResidencyStatus` now live in
+// `residency/residencyStatus.ts` (re-exported here, unchanged import surface) and gained a `kind`
+// discriminant once the type became a union of three shapes (baseline's own `"baseline-ceiling"` plus
+// two candidate-arm variants). Baseline's own rendered WORDING is untouched by this piece --
+// `residencyStatusText`'s own tests (`residency/residencyStatus.test.ts`) prove that byte-for-byte; the
+// candidate-arm variants and the shared clearing transitions are also tested there, not duplicated
+// here -- this describe block stays scoped to baseline, as it always was.
 describe("nextResidencyStatus (rider 1's persistent ceiling-refusal status indicator)", () => {
   it("a ceiling-refusal event sets the status to the counts it carries", () => {
     const status = nextResidencyStatus({
@@ -247,14 +254,14 @@ describe("nextResidencyStatus (rider 1's persistent ceiling-refusal status indic
       residentFeatureCount: 97_500,
       datasetRowCount: "100000",
     });
-    expect(status).toEqual<ResidencyStatus>({ residentFeatureCount: 97_500, datasetRowCount: "100000" });
+    expect(status).toEqual<ResidencyStatus>({ kind: "baseline-ceiling", residentFeatureCount: 97_500, datasetRowCount: "100000" });
   });
 
   it("a second ceiling-refusal event replaces the previous counts, not accumulates them", () => {
     const first = nextResidencyStatus({ kind: "ceiling-refusal", residentFeatureCount: 40_000, datasetRowCount: "100000" });
     expect(first).not.toBeNull();
     const second = nextResidencyStatus({ kind: "ceiling-refusal", residentFeatureCount: 97_500, datasetRowCount: "100000" });
-    expect(second).toEqual<ResidencyStatus>({ residentFeatureCount: 97_500, datasetRowCount: "100000" });
+    expect(second).toEqual<ResidencyStatus>({ kind: "baseline-ceiling", residentFeatureCount: 97_500, datasetRowCount: "100000" });
   });
 
   it("a delivery-complete event clears the status -- rider 1's condition (a)", () => {
@@ -309,7 +316,11 @@ describe("banner-dismissal semantics (rider 1, point 3): dismissing .canvas-refu
     setCanvasRefusal(null);
 
     expect(state.canvasRefusal).toBeNull();
-    expect(state.residencyStatus).toEqual<ResidencyStatus>({ residentFeatureCount: 97_500, datasetRowCount: "100000" });
+    expect(state.residencyStatus).toEqual<ResidencyStatus>({
+      kind: "baseline-ceiling",
+      residentFeatureCount: 97_500,
+      datasetRowCount: "100000",
+    });
   });
 });
 

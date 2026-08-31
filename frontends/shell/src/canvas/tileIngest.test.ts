@@ -193,6 +193,30 @@ describe("ingestTileBatch: item D eviction at the budget boundary", () => {
     expect(result.overBudget).toBe(true);
     expect(tileSet.totalResidentVertices).toBeLessThanOrEqual(300);
   });
+
+  // Viewport-residency cut P4, item B: "the refusal event is never fired by candidate ingest" --
+  // `ingestTileBatch` is the deepest layer of that chain (`WorkingCanvas.tsx`'s `pushTileBatch` calls
+  // this directly, with no try/catch of its own, unlike baseline's `pushBatch`). This asserts the
+  // "never throws" half of that claim directly, at the MOST extreme over-budget condition this
+  // function can reach (zero budget, nothing evictable) -- it returns `overBudget: true` with an
+  // empty admitted batch, never a `ResidentVertexCeilingExceeded`-style exception.
+  it("never throws, even at zero remaining budget with nothing evictable -- returns overBudget: true, not a baseline-style refusal", () => {
+    const tileSet = new TileResidentSet();
+    let result: ReturnType<typeof ingestTileBatch> | undefined;
+    expect(() => {
+      result = ingestTileBatch(
+        baseParams({
+          tileSet,
+          tileKey: "0:0",
+          batch: batch("sh_a", 0, [1, 2, 3], 100),
+          maxResidentVertices: 0,
+          viewportTileKeys: new Set(["0:0"]), // the only tile is the viewport itself -- unevictable
+        })
+      );
+    }).not.toThrow();
+    expect(result?.overBudget).toBe(true);
+    expect(result?.rowsAdmitted).toBe(0);
+  });
 });
 
 describe("ingestTileBatch: unionedExtent mirrors fitAnchorRef's own accumulation", () => {

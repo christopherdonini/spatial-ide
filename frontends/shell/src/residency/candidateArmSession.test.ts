@@ -193,3 +193,142 @@ describe("startCandidateArmSession", () => {
     expect(outcome).toEqual({ kind: "stopped" });
   });
 });
+
+// Viewport-residency cut P4 (decisions 24(a)/(b)): `onResidencyStatusChange` drives the SAME
+// `ResidencyStatusEvent`s `App.tsx`'s own `nextResidencyStatus` reduces -- these tests assert the
+// events this session actually emits, at the actual call sites, not just the manager/canvas state
+// those call sites read.
+describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency cut P4)", () => {
+  // Sibling to `describe("startCandidateArmSession", ...)` above, not nested inside it -- vitest
+  // hooks are NOT inherited across sibling describes, so this block needs its own copy of the exact
+  // same per-test mock reset that block's own `beforeEach` performs (mirrored, not shared).
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  it("a within-budget batch emits candidate-within-budget with the resident feature count read off canvas.getResidentCounts()", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 30, totalResidentFeatures: 3 })),
+    });
+    const onResidencyStatusChange = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+
+    await session.reissueUnrestricted(null, null);
+    onResidencyStatusChange.mockClear(); // drop reissueUnrestricted's own query-issued event(s)
+    lastSink().onBatch(new Uint8Array([1]), true);
+
+    expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "candidate-within-budget", residentFeatureCount: 3 });
+  });
+
+  it("an over-budget batch emits candidate-over-budget with viewportTotal: null -- no honest viewport total is ever known here", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({
+        ...OK_INGEST,
+        overBudget: true,
+        fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
+      })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 2_000_000, totalResidentFeatures: 900 })),
+    });
+    const onResidencyStatusChange = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+
+    await session.reissueUnrestricted(null, null);
+    onResidencyStatusChange.mockClear();
+    lastSink().onBatch(new Uint8Array([1]), true);
+
+    expect(onResidencyStatusChange).toHaveBeenCalledWith({
+      kind: "candidate-over-budget",
+      residentFeatureCount: 900,
+      viewportTotal: null,
+    });
+  });
+
+  it("reissueUnrestricted (Apply/Clear, or the dataset's own first look) emits query-issued at the clear", async () => {
+    const canvas = fakeCanvas();
+    const onResidencyStatusChange = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+
+    await session.reissueUnrestricted(null, null);
+
+    expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "query-issued" });
+  });
+
+  it("a pan/zoom (handleViewportChange, via onViewportChanged) re-emits the status even with no new batch arriving -- persists/refreshes across pans while over budget", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        applyTileViewportContext: vi.fn(() => false), // still over budget after re-checking fit
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 2_000_000, totalResidentFeatures: 900 })),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+
+      viewportQueryMock.mockClear();
+      viewportQueryMock.mockImplementation(() => new Promise(() => {}));
+      onResidencyStatusChange.mockClear();
+
+      session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      expect(onResidencyStatusChange).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("onResidencyStatusChange is optional -- a batch never throws when it is omitted", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+    });
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+
+    expect(() => lastSink().onBatch(new Uint8Array([1]), true)).not.toThrow();
+  });
+});
+
+// Viewport-residency cut P4, item B: "assert (test) that under candidate arm no `.canvas-refusal`
+// ceiling banner can render (the refusal event is never fired by candidate ingest -- P3w); make the
+// impossibility a test, not an assumption." `.canvas-refusal` (App.tsx) renders ONLY from
+// `canvasRefusal` state, which is set ONLY by `handleCanvasCeilingRefusal` (App.tsx), reached ONLY via
+// `WorkingCanvas`'s `onCanvasRefusal` prop -- itself called ONLY from `WorkingCanvasHandle.pushBatch`'s
+// own `ResidentVertexCeilingExceeded`/`PickCeilingExceeded` catch (`WorkingCanvas.tsx`), a method the
+// candidate arm never calls (it calls `pushTileBatch` exclusively). `CandidateArmSessionDeps` (this
+// module) never even DECLARES an `onCanvasRefusal`-shaped callback -- there is no wired path from here
+// to `setCanvasRefusal` for App.tsx's candidate branch to have constructed in the first place, refusal
+// or not. This suite proves the ingest side of that chain never throws/refuses even at the most
+// extreme over-budget condition, the one case that WOULD have refused on the baseline arm.
+describe("banner impossibility under the candidate arm (item B, P4)", () => {
+  // See the sibling-describe note above -- this block's own mock reset, mirrored.
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  it("an over-budget batch never throws a ceiling-style refusal, and no onCanvasRefusal-shaped callback exists to reach even if it wanted to", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({
+        ...OK_INGEST,
+        overBudget: true,
+        fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
+      })),
+    });
+    // `CandidateArmSessionDeps` (this file's own interface) has exactly three fields:
+    // `dataset`/`canvas`/`onResidencyStatusChange` -- no `onCanvasRefusal` field exists for this
+    // object literal to populate even deliberately; TypeScript itself would refuse one.
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+
+    await expect(session.reissueUnrestricted(null, null)).resolves.toEqual({ kind: "issued", streamHandle: "sh_1" });
+    expect(() => lastSink().onBatch(new Uint8Array([1]), true)).not.toThrow();
+    expect(session.manager.overBudget).toBe(true);
+  });
+});

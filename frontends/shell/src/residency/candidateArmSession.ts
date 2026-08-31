@@ -4,7 +4,7 @@
 import type { WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { chooseFitTarget } from "../canvas/extent";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
-import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
+import { traceCandidateResidencyStatus, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatchArrived,
@@ -13,6 +13,7 @@ import {
   recordResidencyTileRequested,
 } from "../instrument/residencyInstrument";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
+import type { ResidencyStatusEvent } from "./residencyStatus";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "../streaming/adapterWs";
@@ -82,6 +83,15 @@ export interface CandidateArmSessionDeps {
    * chained) rather than assumed unreachable, mirroring `makeManagerCallbacks`'s own defensive
    * stance. */
   canvas: WorkingCanvasHandle | null;
+  /** Viewport-residency cut P4 (decisions 24(a)/(b)): fired every time this session's own
+   * over-budget/resident-count state may have changed (a batch ingested, a pan/zoom re-evaluates
+   * fit, a filter/dataset-open reissue clears everything) -- ALWAYS one of the
+   * `ResidencyStatusEvent` shapes `App.tsx`'s own `nextResidencyStatus` already reduces, so this
+   * session drives the SAME state machine baseline's ceiling-refusal status does, arm-aware, rather
+   * than a second parallel one (see `emitResidencyStatus`'s own doc comment below for exactly when
+   * each event fires). Optional so every pre-existing test/call site of this function keeps
+   * compiling unchanged. */
+  onResidencyStatusChange?: (event: ResidencyStatusEvent) => void;
 }
 
 export interface CandidateArmSession {
@@ -154,6 +164,42 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     }
   }
 
+  /** Viewport-residency cut P4, item C (24(d)'s own recommendation): "the status line IS the
+   * visibility -- no tile readout," so this is never surfaced in `.residency-status` itself, only in
+   * the always-on `[render-trace]` console class (`traceCandidateResidencyStatus` below) --
+   * cumulative across this WHOLE session (not one batch's own `evictedTileKeys.length`, which
+   * `traceTileIngest`/`WorkingCanvas.tsx` already logs per call), so a diagnosis session can read
+   * "how many tiles has this session evicted so far" off ONE line rather than summing every
+   * `tile-ingest` line itself. Reset on `reissueUnrestricted` (a fresh generation starts a fresh
+   * eviction history, mirroring `manager.clearAll()`'s own "a fresh generation starts unconstrained"
+   * doc comment). */
+  let evictedTileCountSession = 0;
+
+  /** Viewport-residency cut P4 (decisions 24(a)/(b)): recomputes the declared-partial-view status
+   * from this session's own current truth -- `manager.overBudget` (item D's own "callback/state
+   * field only" seam, set exclusively by `ingestAndMaybeEstablishFrame`'s over-budget batch outcome
+   * and cleared by `handleViewportChange`'s own fit re-check) and `canvas.getResidentCounts()`'s
+   * `totalResidentFeatures` -- and forwards ONE `ResidencyStatusEvent` to `deps.onResidencyStatusChange`
+   * so `App.tsx` reduces it through the exact same `nextResidencyStatus` machine baseline's own
+   * ceiling-refusal status already goes through.
+   *
+   * `viewportTotal` is always `null` here: no wire mechanism in this cut reports an undelivered
+   * tile's own feature count (`ResidencyStatus`'s own doc comment, `residencyStatus.ts`), so an
+   * honest per-viewport total never exists to report -- `residencyStatusText` degrades to the
+   * no-total wording accordingly. Never called when `canvas` is `null` (nothing to read counts off,
+   * and no session UI is mounted to show a status to). */
+  function emitResidencyStatus(): void {
+    if (!canvas) return;
+    const { totalResidentFeatures } = canvas.getResidentCounts();
+    const overBudget = manager.overBudget;
+    traceCandidateResidencyStatus(dataset, overBudget, totalResidentFeatures, evictedTileCountSession);
+    deps.onResidencyStatusChange?.(
+      overBudget
+        ? { kind: "candidate-over-budget", residentFeatureCount: totalResidentFeatures, viewportTotal: null }
+        : { kind: "candidate-within-budget", residentFeatureCount: totalResidentFeatures }
+    );
+  }
+
   const manager = new TileViewportStreamManager({
     dataset,
     residency: { isTileResident: (tileKey) => canvas?.isTileResidentInCandidateSet(tileKey) ?? false },
@@ -205,6 +251,10 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       const unrequested = [...lastCoveringTileKeys].filter((k) => !canvas.isTileResidentInCandidateSet(k));
       manager.setOverBudget(true, unrequested);
     }
+    evictedTileCountSession += outcome.evictedTileKeys.length;
+    // Viewport-residency cut P4: every ingest may have moved `manager.overBudget` or the resident
+    // feature count -- recompute and forward the declared-partial-view status after each one.
+    emitResidencyStatus();
   }
 
   async function issueUntiledQuery(bbox: Bbox | null, filter: Filter | null): Promise<RequestOutcome> {
@@ -291,6 +341,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
     const fits = canvas?.applyTileViewportContext(covering, viewCentre) ?? true;
     if (fits) manager.setOverBudget(false);
+    // Viewport-residency cut P4: a pan/zoom re-plan may have changed `manager.overBudget` (cleared
+    // above) or the resident feature count (eviction inside `applyTileViewportContext`) even with no
+    // new batch arriving -- recompute and forward the status here too, so it stays current across a
+    // pan while over budget (D's own transition requirement), not only on the next batch.
+    emitResidencyStatus();
   }
 
   return {
@@ -304,6 +359,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       canvas?.resetFitForNewGeneration();
       frameEstablished = false;
       lastCoveringTileKeys = new Set();
+      evictedTileCountSession = 0; // a fresh generation starts a fresh eviction history
+      // Viewport-residency cut P4 (decisions 24(a)/(b)): "clears on ... query-issued" -- the SAME
+      // event baseline's own `issueViewportQuery` feeds `nextResidencyStatus` for an Apply/Clear
+      // (App.tsx). Fired here, at the clear itself (residency truly is empty at this instant), not
+      // only in App.tsx's dataset-open call to this function -- Apply/Clear reach this same seam.
+      deps.onResidencyStatusChange?.({ kind: "query-issued" });
       return issueUntiledQuery(bbox, filter);
     },
     stop: async () => {

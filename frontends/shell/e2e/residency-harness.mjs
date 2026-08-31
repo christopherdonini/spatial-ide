@@ -493,6 +493,23 @@ async function captureBannerState(page) {
   }
 }
 
+/** Viewport-residency cut P4 (decisions 24(a)/(b)): diagnostic-only capture of `.residency-status`'s
+ * own rendered text at the fit/zoom-to-layer step, console-logged so the smoke run's own output
+ * shows what the human's sight-facing status wording actually rendered live -- NOT folded into the
+ * evidence row schema (that stays this piece's own concern, untouched), mirrors `captureBannerState`
+ * above (never throws; a capture failure is reported, not masked). */
+async function captureResidencyStatusText(page) {
+  try {
+    const locator = page.locator(".residency-status");
+    const count = await locator.count();
+    if (count === 0) return { present: false, text: null };
+    const text = await locator.first().textContent();
+    return { present: true, text };
+  } catch (e) {
+    return { present: null, text: null, captureError: String(e && e.message ? e.message : e) };
+  }
+}
+
 async function applyStep(page, step) {
   const box = await page.locator(".working-canvas").boundingBox();
   if (!box) throw new Error(`applyStep(${step.id}): .working-canvas has no bounding box (not mounted/visible?)`);
@@ -856,6 +873,15 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
       applyStepFn: () => applyStep(page, step),
     });
     rows.push(row);
+
+    // Viewport-residency cut P4 (decisions 24(a)/(b)): diagnostic-only, console-printed (never
+    // folded into the evidence row schema, which stays this piece's own concern untouched) --
+    // captured AFTER `measureOneStep`'s own settle wait, at the fit/zoom-to-layer steps only, so this
+    // reads the status once the step has actually settled, not a mid-stream transient.
+    if (step.kind === "fit" || step.kind === "zoom-to-layer") {
+      const residencyStatus = await captureResidencyStatusText(page);
+      console.log(`P4-RESIDENCY-STATUS-TEXT[${step.id}]: ${JSON.stringify(residencyStatus)}`);
+    }
 
     if (!row.settled) {
       invalidatedAtStep = i;
