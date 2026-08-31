@@ -823,6 +823,13 @@ export default function App() {
     // M6 (P1b): driver-visible in-flight `viewport_query` count -- `waitForSettle` for a residency
     // trace step reads this alongside console quiescence (§4b's letter).
     registerE2eHook("residencyInFlightStreamCount", async () => getResidencyInFlightStreamCount());
+    // Viewport-residency cut P5g (diagnosis piece): the candidate arm's own tile-queue depth --
+    // `residencyInFlightStreamCount` above only ever counts a tile once its stream has truly minted
+    // (`candidateArmSession.ts`'s `countTileStreamIssuedOnce`), never a tile still waiting behind
+    // `MAX_IN_FLIGHT_TILE_STREAMS`'s cap. `candidateManagerRef.current` is `null` for the baseline
+    // arm and while no candidate-arm session is open -- honestly `0`, never fabricated, matching
+    // `residencyInFlightStreamCount`'s own disclosed-zero discipline.
+    registerE2eHook("residencyQueuedTileCount", async () => candidateManagerRef.current?.queuedCount ?? 0);
     // P1d suggestion 10: driver-visible session-wide total of superseded-stream bytes dropped
     // (`residencyInstrument.ts`'s own `supersededBytesDropped` doc comment has the full mechanism).
     registerE2eHook("residencySupersededBytesDropped", async () => getResidencySupersededBytesDropped());
@@ -855,6 +862,7 @@ export default function App() {
       unregisterE2eHook("residencyEndStep");
       unregisterE2eHook("residencyMarkInput");
       unregisterE2eHook("residencyInFlightStreamCount");
+      unregisterE2eHook("residencyQueuedTileCount");
       unregisterE2eHook("residencySupersededBytesDropped");
       unregisterE2eHook("residencyArmFirstPixel");
       unregisterE2eHook("residencyDisarmFirstPixel");

@@ -217,6 +217,17 @@ export interface E2eTestSurface {
    * limitation, `residencyInstrument.ts`'s own `inFlightStreamCount` doc comment). `waitForSettle`
    * for a residency trace step requires BOTH console quiescence AND this reading `0` (§4b's letter). */
   residencyInFlightStreamCount?: () => Promise<number>;
+  /** Viewport-residency cut P5g (diagnosis piece, candidate zoom-to-layer click hang): the
+   * candidate arm's own `TileViewportStreamManager.queuedCount` -- tiles waiting for a
+   * `MAX_IN_FLIGHT_TILE_STREAMS` slot, the half of "in-flight+queued" `residencyInFlightStreamCount`
+   * above does NOT cover (that counter only increments once a tile's stream has actually minted,
+   * `candidateArmSession.ts`'s `countTileStreamIssuedOnce`). `residency-harness.mjs`'s own pre-click
+   * calm wait (`waitForCalmBeforeClick`) sums both counters as its own "is real candidate-arm work
+   * still outstanding" signal, mirroring the settle discipline's own in-flight check but bounded and
+   * applied BEFORE a `.zoom-to-layer` click rather than after a step's gesture. Always `0` for the
+   * baseline arm (no `TileViewportStreamManager` exists) and always `0` while no candidate-arm
+   * session is currently open -- never a fabricated value. */
+  residencyQueuedTileCount?: () => Promise<number>;
   /** P1d suggestion 10: session-wide total of bytes a superseded stream's batch carried when it
    * arrived AFTER its own supersession (`viewportStreamManager.ts`'s `onBatch` drop branch;
    * `residencyInstrument.ts`'s own `supersededBytesDropped`/`recordResidencySupersededBytes` doc

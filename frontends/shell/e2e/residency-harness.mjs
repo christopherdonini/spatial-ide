@@ -453,6 +453,69 @@ async function dismissCeilingBannerIfPresent(page) {
   return true;
 }
 
+// ---------------------------------------------------------------------------------------
+// P5g (diagnosis piece): pre-click calm wait -- the `.zoom-to-layer` click hang this piece exists
+// to diagnose.
+// ---------------------------------------------------------------------------------------
+
+/** P5g's own diagnosis: a candidate-arm evidence file (`residency-harness-instrument-on-
+ * 1788171258523.json`, this piece's own named evidence) captured `page.click(".zoom-to-layer")`
+ * dying with a raw Playwright `TimeoutError` mid-way through its OWN internal actionability
+ * sequence -- the call log shows "click action done" already logged (the click itself landed)
+ * followed by "waiting for scheduled navigations to finish" as the LAST phase before the 5000ms
+ * (`BANNER_RETRY_CLICK_TIMEOUT_MS`) bound fired. That phase has nothing to do with THIS app --
+ * `.zoom-to-layer` never navigates -- and the same evidence file's `openDrain.settleFailureDiagnostic
+ * .recentConsoleLines` shows sustained per-batch churn at the same moment (`tile-ingest`/`layers`/
+ * `candidate-residency-status` lines recurring roughly once a second, `WorkingCanvas.tsx`'s
+ * `pushTileBatch` calling `render()` -- a full `deck.setProps({layers})` rebuild over the WHOLE
+ * resident set -- unconditionally on every batch, including a fully-refused, zero-admitted one).
+ * The working theory (not literally provable from CDP's black box, but consistent with both this
+ * evidence and `waitForSettleWithInFlight`'s own established "in-flight is the driver-visible calm
+ * signal" discipline): a main thread pinned by that per-batch relayout starves WebView2/CDP's own
+ * ability to service Playwright's post-click bookkeeping in time. This wait does not (and cannot)
+ * prove that theory; it treats it as the most likely mechanism and mitigates it the same way this
+ * file already mitigates "is real work still outstanding" everywhere else -- polling the SAME class
+ * of driver-visible counters `waitForSettleWithInFlight` already trusts, bounded, never `force`.
+ *
+ * Sums `residencyInFlightStreamCount` (real, minted streams -- untiled bootstrap OR tile) and
+ * `residencyQueuedTileCount` (tiles waiting behind `MAX_IN_FLIGHT_TILE_STREAMS`, P5g's own new
+ * hook) -- "in-flight+queued," the same two halves of "real candidate-arm work outstanding"
+ * `TileViewportStreamManager.trackedTileCount`'s own doc comment names, read through two disjoint
+ * counters instead of one combined one so this file's existing `residencyInFlightStreamCount`
+ * hook (baseline AND candidate) needed no change. Always reads `0` for baseline (no tile queue
+ * exists) and `0`/`0` while the instrument is off (both hooks' own disclosed limitation, carried
+ * forward unchanged).
+ *
+ * **Bounded, never indefinite.** `timeoutMs` is the caller's own effective (fixture-scaled) per-step
+ * settle bound -- the SAME figure `waitForSettleWithInFlight` uses for that step's POST-gesture
+ * settle, mirrored here for the PRE-gesture calm check per this piece's own instruction. If the sum
+ * never drops to (or below) `threshold` within that bound -- e.g. the untiled first-look's own
+ * documented "runs to its natural terminal" behaviour (`candidateArmSession.ts`, should-fix 4) can
+ * legitimately keep in-flight at 1 for minutes on the Polygons fixture -- this returns `calmed:
+ * false` and the caller proceeds to click anyway: a real user does not wait forever for an app to go
+ * fully idle before clicking a visible, enabled button, and an indefinite wait here would just move
+ * the hang from Playwright's own internal check to this one. The attempt itself is still recorded
+ * (`calmed`, `waitedMs`, the final counts) so a reader can tell "clicked calm" from "gave up and
+ * clicked busy" on any given row. */
+async function waitForCalmBeforeClick(page, { timeoutMs, threshold = 0, pollMs = 150 }) {
+  const start = Date.now();
+  let inFlight = 0;
+  let queued = 0;
+  while (true) {
+    [inFlight, queued] = await Promise.all([
+      page.evaluate(() => window.__SPATIAL_E2E__.residencyInFlightStreamCount?.() ?? 0),
+      page.evaluate(() => window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? 0),
+    ]);
+    if (inFlight + queued <= threshold) {
+      return { calmed: true, waitedMs: Date.now() - start, inFlight, queued };
+    }
+    if (Date.now() - start >= timeoutMs) {
+      return { calmed: false, waitedMs: Date.now() - start, inFlight, queued };
+    }
+    await sleep(pollMs);
+  }
+}
+
 /** Amendment 13's own `clickFn` for `dismissThenClickRetry`: a single, SHORT-timeout attempt at
  * clicking `.zoom-to-layer`, reporting an intercepted click as data (`{ intercepted: true }`)
  * rather than letting Playwright's own `TimeoutError` propagate -- the retry loop needs to tell
@@ -463,11 +526,21 @@ async function dismissCeilingBannerIfPresent(page) {
  * `BANNER_DISMISS_CLICK_MAX_ATTEMPTS` attempts within the step's own settle timeout. The message
  * match ("intercepts pointer events") is the exact phrase this file's own F1 doc comment above
  * already disclosed Playwright's call log uses for this failure mode -- live-confirmed, not
- * guessed. */
+ * guessed.
+ *
+ * **P5g: `noWaitAfter: true`.** Not `force` (every actionability check -- visible/enabled/stable/
+ * receives-events -- still runs unchanged); this only skips Playwright's OWN post-click wait for a
+ * navigation the click might have started. `.zoom-to-layer` never navigates anything (an SPA canvas
+ * button), so that wait is spurious for this app by construction, and P5g's own named evidence file
+ * shows it as the EXACT phase ("waiting for scheduled navigations to finish") the observed hang died
+ * in, logged AFTER "click action done" -- the click itself already landed every time this was
+ * observed. Paired with `waitForCalmBeforeClick` above (reduces how often a busy main thread is ever
+ * clicked into) rather than a substitute for it -- this addresses the specific spurious wait
+ * directly; that addresses the churn most likely starving it. */
 const BANNER_RETRY_CLICK_TIMEOUT_MS = 5_000;
 async function clickZoomToLayerDetectingInterception(page) {
   try {
-    await page.click(".zoom-to-layer", { timeout: BANNER_RETRY_CLICK_TIMEOUT_MS });
+    await page.click(".zoom-to-layer", { timeout: BANNER_RETRY_CLICK_TIMEOUT_MS, noWaitAfter: true });
     return { intercepted: false };
   } catch (e) {
     const message = String(e && e.message ? e.message : e);
@@ -524,6 +597,12 @@ async function applyStep(page, step) {
     // between a dismissal and the click landing (the 5 GB fit view, every refill re-trips the
     // ceiling) -- `dismissThenClickRetry` (residencyTrace.mjs) bounds this to
     // BANNER_DISMISS_CLICK_MAX_ATTEMPTS (3) dismiss-then-click attempts, recording every attempt.
+    //
+    // P5g: waits for calm BEFORE marking input/clicking -- `waitForCalmBeforeClick`'s own doc
+    // comment has the full diagnosis and rationale. Bounded by this step's own effective (fixture-
+    // scaled) settle timeout, mirroring `measureOneStep`'s POST-gesture settle wait for the
+    // PRE-gesture side of the same step.
+    const calmWait = await waitForCalmBeforeClick(page, { timeoutMs: settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs) });
     await page.evaluate(() => window.__SPATIAL_E2E__.residencyMarkInput?.());
     const retry = await dismissThenClickRetry(
       () => dismissCeilingBannerIfPresent(page),
@@ -545,7 +624,7 @@ async function applyStep(page, step) {
       err.bannerDismissalAttempts = retry.attempts;
       throw err;
     }
-    return { kind: "fit", bannerDismissed: retry.dismissals, bannerDismissalAttempts: retry.attempts };
+    return { kind: "fit", bannerDismissed: retry.dismissals, bannerDismissalAttempts: retry.attempts, calmWait };
   }
 
   if (step.kind === "pan") {
@@ -868,10 +947,36 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
       continue;
     }
 
-    const row = await measureOneStep(page, consoleHandle, viewStateListener, step, {
-      instrumentEnabled,
-      applyStepFn: () => applyStep(page, step),
-    });
+    // P5g (diagnosis piece, evidence-quality fix): before this, a step's own gesture throwing
+    // (`applyStep`'s `.zoom-to-layer` click hang this piece diagnoses -- a genuine, non-"intercepted"
+    // Playwright error `dismissThenClickRetry`'s own `clickFn` re-throws unswallowed, by design)
+    // propagated all the way out of THIS loop uncaught, out of `runTrace` uncaught, into `main()`'s
+    // outer catch -- which records `evidence.harnessError` but never reaches the `evidence.rows =
+    // rows` assignment below (only set after this function returns normally), so every row this
+    // trial HAD already measured (every step before the one that threw) was silently lost, leaving
+    // only an opaque top-level error string. `residency-harness-instrument-on-1788171258523.json`
+    // (this piece's own named evidence) shows exactly that: `"rows": []` despite `harnessError`
+    // naming a `.zoom-to-layer` failure that, by construction, cannot be the very first step. Caught
+    // here instead and folded into the SAME "unmeasured" row shape a settle-watchdog failure already
+    // produces (never a fabricated success) -- `row.settled` reads `false` below either way, so S8's
+    // own whole-trial-invalidation rule still fires unchanged; only the EVIDENCE this trial keeps
+    // changes; the trial's own honest failure verdict does not.
+    let row;
+    try {
+      row = await measureOneStep(page, consoleHandle, viewStateListener, step, {
+        instrumentEnabled,
+        applyStepFn: () => applyStep(page, step),
+      });
+    } catch (e) {
+      row = {
+        stepId: step.id,
+        kind: step.kind,
+        status: "unmeasured",
+        reason: `step threw: ${e && e.message ? e.message : String(e)}`,
+        settled: false,
+        wallMs: null,
+      };
+    }
     rows.push(row);
 
     // Viewport-residency cut P4 (decisions 24(a)/(b)): diagnostic-only, console-printed (never
