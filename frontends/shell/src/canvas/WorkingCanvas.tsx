@@ -216,6 +216,26 @@ export interface TileBatchIngestOutcome {
   fitAnchor: AuthoritativeBbox | null;
 }
 
+/**
+ * Viewport-residency cut P5h (F1 fix): whether `pushTileBatch`'s own ingest outcome should schedule
+ * a render AT ALL -- pure, so `WorkingCanvas.test.ts` can pin the "zero-admission schedules nothing"
+ * contract directly, the same `applyStyleChange`-style pure seam this file already uses for the parts
+ * a real `Deck` construction (no WebGL context in a jsdom test, this file's own S6 comment) keeps out
+ * of a unit test's reach.
+ *
+ * P5g's convicted evidence: `pushTileBatch` used to call `render()` unconditionally, on EVERY batch
+ * from up to `MAX_IN_FLIGHT_TILE_STREAMS` concurrently fanned-out tile streams -- including a fully
+ * REFUSED batch (e.g. duplicate-only rows landing on an already-resident tile, or a batch a
+ * since-superseded viewport no longer covers), sustaining ~1/sec main-thread churn with nothing new
+ * to actually draw. `rowsAdmitted === 0 && evictedTileKeys.length === 0` is exactly "nothing changed
+ * in the resident set this call" -- the one condition under which skipping the render entirely is
+ * correct, not merely cheap: `buildLayers`'s own output over an unchanged `TileResidentSet` would be
+ * byte-identical to what is already on screen.
+ */
+export function shouldScheduleTileRender(outcome: Pick<TileBatchIngestOutcome, "rowsAdmitted" | "evictedTileKeys">): boolean {
+  return outcome.rowsAdmitted > 0 || outcome.evictedTileKeys.length > 0;
+}
+
 /** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
  * `e2e-test-surface.ts`'s hook type can both reference it without duplicating the field list. */
 export interface ResidentCounts {
@@ -922,12 +942,25 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // safe and is what lets `fitToBounds`/"Zoom to layer" keep working unchanged for both arms.
         fitAnchorRef.current = outcome.unionedExtent;
         residentExtentRef.current = outcome.unionedExtent;
+        let renderedByAutoFit = false;
         if (!hasAutoFitRef.current && residentExtentRef.current) {
           hasAutoFitRef.current = true;
-          fitToExtent(residentExtentRef.current, false);
+          fitToExtent(residentExtentRef.current, false); // renders synchronously, once, right here
+          renderedByAutoFit = true;
         }
 
-        render();
+        // F1 fix (viewport-residency cut P5h; P5g's convicted evidence). Coalesced through the SAME
+        // per-frame discipline the style-panel path already established (`coalescedRenderRef`, S5
+        // above) instead of a synchronous `render()` on every one of up to
+        // `MAX_IN_FLIGHT_TILE_STREAMS` concurrently fanned-out tile streams' own batches.
+        // `shouldScheduleTileRender` (this file's own pure seam, exported above for
+        // `WorkingCanvas.test.ts`) is the "nothing changed" gate: a fully-refused batch schedules NO
+        // render at all, not even a coalesced one. Skipped when the auto-fit branch just above already
+        // rendered this same call synchronously -- no double render on the one-shot first-geometry
+        // batch.
+        if (!renderedByAutoFit && shouldScheduleTileRender(outcome)) {
+          coalescedRenderRef.current.schedule();
+        }
         return {
           rowsAdmitted: outcome.rowsAdmitted,
           duplicatesDropped: outcome.duplicatesDropped,

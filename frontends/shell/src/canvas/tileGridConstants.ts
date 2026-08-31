@@ -55,15 +55,35 @@ export const MAX_QUEUED_TILES = 512;
 
 /** P5f complex-gate should-fix 4: the row limit the candidate arm's own untiled "first look" query
  * (`residency/candidateArmSession.ts`'s `issueUntiledQuery`) passes as `viewport_query`'s own `limit`
- * -- before this piece, that query was UNBOUNDED (`limit: null`, mirroring baseline's initial load)
- * and self-cancelled the instant its first batch delivered anything, so a ~10M-vertex fixture's own
+ * -- before P5f, that query was UNBOUNDED (`limit: null`, mirroring baseline's initial load) and
+ * self-cancelled the instant its first batch delivered anything, so a ~10M-vertex fixture's own
  * untiled first look "ran past 60s without completing" (`issueUntiledQuery`'s own doc comment has the
- * full account) before ever reaching that self-cancel. Declared (not measured, ADR-010 rule 6 style):
- * generous enough that almost any real dataset's first look completes in well under a second (this
- * query exists ONLY to derive a representative extent for the tile grid's own anchor, never to render
- * anything from it directly -- real tile-keyed queries are what actually populate the canvas), while
- * still bounding the worst case a truly enormous, ungridded dataset would otherwise hit. */
-export const UNTILED_FIRST_LOOK_ROW_LIMIT = 200_000;
+ * full account) before ever reaching that self-cancel. This query exists ONLY to derive a
+ * representative extent for the tile grid's own anchor (S4: the WHOLE untiled first look's own
+ * union, not merely a batch's own extent -- `tileGrid.ts`'s own top doc comment) -- never to render
+ * anything from it directly.
+ *
+ * **P5h fix: 10,000, down from P5f's own 200,000.** P5f's bound was still convicted evidence
+ * (P5g): running to its own natural terminal at 200,000 rows decoded ~20M mostly-refused vertices
+ * purely to observe an extent, 70-121s observed and variable -- the bootstrap over-fetching relative
+ * to the one thing it actually needs. 10,000 is a DECLARED design choice (ADR-010 rule 6 style), not
+ * a measured or proven one: this piece asserts that 10k rows of the docs/08-spec'd fixtures span
+ * statistically the same extent the full untiled scan would, but that is NOT demonstrated here --
+ * state it as the declared bound it is, not as fact. Determinism is preserved in exactly the sense
+ * this module already claims elsewhere (this constant's own original comment, and `tileGrid.ts`'s own
+ * doc comment): the limit is a fixed, declared input, and row order is whatever the engine's own scan
+ * already deterministically produces for a given query -- this smaller bound adds no NEW source of
+ * run-to-run variance beyond what the 200,000 bound already had or lacked.
+ *
+ * **Ingestion, not merely extent-observation, is retained by design -- unchanged by this fix.** The
+ * bootstrap's own rows are still ingested through the SAME `WorkingCanvas.pushTileBatch` seam every
+ * real tile stream's batches are (under the reserved `INITIAL_TILE_KEY`) -- P5f's own reserved-tile
+ * ingest (`WorkingCanvas.tsx`'s `RESERVED_TILE_KEYS`) and `tileResidentSet.ts`'s own "evicted LAST
+ * resort" policy for that key both exist BECAUSE that retention was already the design (cross-tile
+ * dedupe needs the bootstrap's own content resident to compare newly-arriving tiles against). A
+ * smaller declared limit only makes that existing retention cheaper -- it does not change what is
+ * retained or how; redesigning that split is explicitly out of THIS piece's scope. */
+export const UNTILED_FIRST_LOOK_ROW_LIMIT = 10_000;
 
 /** Reserved tile key for the candidate arm's initial, untiled "first look" query's own batches
  * (`residency/candidateArmSession.ts`'s own top doc comment has the full account of why this query
