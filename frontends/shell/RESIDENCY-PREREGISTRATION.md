@@ -595,3 +595,23 @@ identity stays the baseline arm's criterion, where it passes); the ordering nond
 recorded as the candidate arm's own declared property, and per-step COUNTS remain governed by
 Amendment 14's 2% band (this run: counts exactly equal across all four runs). A candidate cell
 is admissible when the multiset criterion passes across OFF-ON-ON-OFF.
+
+**Amendment 18 (2026-08-31, pre-candidate-cells — over-budget steps' determinism, decided in
+advance).** At the vertex-budget boundary the candidate's three concurrent tile streams make
+the surviving feature set interleaving-dependent (whole-feature prefix per batch, but the
+interleaving decides which batch hits the boundary). Decided now rather than mid-campaign: an
+over-budget step's RESIDENT-COUNT quantity is evaluated under Amendment 14's 2% band like any
+other; if its spread exceeds the band, THAT quantity for THAT step is marked
+`non-deterministic — over-budget interleaving` **without invalidating the trial's other
+quantities** (first-pixels, segments, frame times are single-batch/clock quantities unaffected
+by which features survived). G6's budget-adherence assertion is unaffected (adherence is about
+the ceiling, not the survivor identity).
+
+**Amendment 19 (2026-08-31, pre-candidate-cells — the P2 baseline cells are superseded for
+comparison purposes).** The complex review (S8) established that the P2 baseline cells predate
+both the instrument's final shape (P3i's baseline-path arrival marker) and the build-class
+machinery. Therefore: **the campaign's scored comparison uses a fresh baseline arm re-run under
+the final configuration, in the same session and build class as the candidate cells.** The P2
+cells remain the valid record of the shipped dev-build's own behavior at their recorded
+configuration — citable as that, never as the candidate's comparison arm. G7's margin applies
+against the re-run baseline.
