@@ -2,9 +2,9 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { TileGridFrame, TileKey } from "../canvas/tileGrid";
-import { deriveTileGridFrame, tileBbox, tileKeyToString, tilesCoveringBbox } from "../canvas/tileGrid";
+import { deriveTileGridFrame, tileBbox, tileDistanceToPoint, tileKeyToString, tilesCoveringBbox } from "../canvas/tileGrid";
 import type { TileGridLevel } from "../canvas/tileGridConstants";
-import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS } from "../canvas/tileGridConstants";
+import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { recordResidencyBatchArrived } from "../instrument/residencyInstrument";
@@ -66,7 +66,23 @@ export interface TileViewportStreamManagerOptions {
 }
 
 export type TilePlanOutcome =
-  | { kind: "planned"; issued: string[]; queued: string[]; alreadyResident: string[] }
+  | {
+      kind: "planned";
+      issued: string[];
+      queued: string[];
+      alreadyResident: string[];
+      /** P5f complex-gate should-fix 2: `true` only when this round's NEW (neither already tracked
+       * nor already resident) covering tiles exceeded this manager's own issuing/queueing capacity
+       * (`MAX_IN_FLIGHT_TILE_STREAMS`'s free slots plus `MAX_QUEUED_TILES`'s own remaining room) and
+       * had to be truncated, farthest-from-view-centre-first, to fit. Omitted entirely (never `false`)
+       * on the ordinary, untruncated path -- so every pre-existing `toEqual({kind:"planned", ...})`
+       * assertion that predates this field keeps matching (`toEqual` treats an absent property and an
+       * explicit `undefined` as equivalent). */
+      coveringTruncated?: true;
+      /** Present iff `coveringTruncated` is -- how many of this round's new candidate tiles were
+       * dropped (never queued, never issued) by the truncation above. */
+      truncatedCount?: number;
+    }
   /** `onCameraChange` called before `establishGridFrame` ever ran -- nothing to plan against yet. */
   | { kind: "no-frame" }
   | { kind: "stopped" };
@@ -135,6 +151,17 @@ export class TileViewportStreamManager {
     return this.queue.length;
   }
 
+  /** P5f complex-gate should-fix 1: every tile this manager is currently tracking in ANY of the
+   * three `TileRequestState`s -- `"queued"` PLUS `"issuing"` PLUS `"in-flight"` -- i.e.
+   * `queuedCount + inFlightCount` PLUS the `"issuing"` (mid-mint, no stream handle yet) tiles neither
+   * of those two getters counts on its own. A caller that needs "is there ANY outstanding tile work
+   * right now" (the candidate arm's own within-budget fill-completeness check, `candidateArmSession
+   * .ts`'s `emitResidencyStatus`) needs exactly this, not `inFlightCount`/`queuedCount` individually --
+   * `inFlightCount === 0 && queuedCount === 0` can still be true with tiles genuinely `"issuing"`. */
+  get trackedTileCount(): number {
+    return this.tileState.size;
+  }
+
   /** Tiles currently occupying a `MAX_IN_FLIGHT_TILE_STREAMS` slot -- `"issuing"` (mid-mint) plus
    * `"in-flight"` (a real stream running); `"queued"` tiles do not count, they are exactly what is
    * waiting for a slot to free. */
@@ -166,6 +193,12 @@ export class TileViewportStreamManager {
   setOverBudget(overBudget: boolean, unrequestedTileKeys: string[] = []): void {
     this.overBudgetFlag = overBudget;
     this.unrequestedTileKeysOverBudget = unrequestedTileKeys;
+    // P5f complex-gate should-fix 2 ("drain ignores over-budget", the resume half): a tile already
+    // sitting in `queue` from BEFORE this flag was set stays there until a slot frees AND this flag
+    // clears -- `drainQueueIfRoom` itself now refuses to mint while `overBudgetFlag` is set (see its
+    // own doc comment), so nothing resumes it automatically the moment the flag clears unless this
+    // call does. A no-op when the queue is already empty or the flag is still set.
+    if (!overBudget) this.drainQueueIfRoom();
   }
 
   /**
@@ -182,10 +215,11 @@ export class TileViewportStreamManager {
    */
   onCameraChange(bbox: AuthoritativeBbox, filter: Filter | null = null): TilePlanOutcome {
     if (this.stopped) return { kind: "stopped" };
-    if (this.frame === null) return { kind: "no-frame" };
+    const frame = this.frame;
+    if (frame === null) return { kind: "no-frame" };
     this.currentFilter = filter;
 
-    const covering = tilesCoveringBbox(this.frame, this.level, bbox);
+    const covering = tilesCoveringBbox(frame, this.level, bbox);
     const coveringKeys = new Set(covering.map(tileKeyToString));
 
     for (const [tileKey, state] of [...this.tileState.entries()]) {
@@ -217,6 +251,11 @@ export class TileViewportStreamManager {
     const queuedNow: string[] = [];
     const alreadyResident: string[] = [];
 
+    // P5f complex-gate should-fix 2 (the "undeclared fan-out" half): split "which covering tiles are
+    // genuinely NEW candidates this round" from "how many of those can this manager actually take on"
+    // -- already-tracked/already-resident tiles are NEVER part of either the candidate list or the
+    // truncation below; only tiles that would otherwise start fresh minting/queueing are bounded.
+    const newCandidates: TileKey[] = [];
     for (const key of covering) {
       const tileKey = tileKeyToString(key);
       if (this.tileState.has(tileKey)) continue;
@@ -224,6 +263,31 @@ export class TileViewportStreamManager {
         alreadyResident.push(tileKey);
         continue;
       }
+      newCandidates.push(key);
+    }
+
+    let toConsider = newCandidates;
+    let coveringTruncated: true | undefined;
+    let truncatedCount: number | undefined;
+    const freeSlots = Math.max(0, MAX_IN_FLIGHT_TILE_STREAMS - this.activeSlotCount());
+    const availableQueueRoom = Math.max(0, MAX_QUEUED_TILES - this.queue.length);
+    const capacity = freeSlots + availableQueueRoom;
+    if (newCandidates.length > capacity) {
+      const centre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
+      const withDistance = newCandidates.map((key) => ({
+        key,
+        distance: tileDistanceToPoint(frame, this.level, key, centre),
+      }));
+      // Nearest-first keep, farthest-first drop -- `Array.prototype.sort` is stable (ties, e.g. two
+      // cells equidistant from centre, keep `tilesCoveringBbox`'s own deterministic row-major order).
+      withDistance.sort((a, b) => a.distance - b.distance);
+      toConsider = withDistance.slice(0, capacity).map((e) => e.key);
+      coveringTruncated = true;
+      truncatedCount = newCandidates.length - capacity;
+    }
+
+    for (const key of toConsider) {
+      const tileKey = tileKeyToString(key);
       if (this.overBudgetFlag) continue;
 
       if (this.activeSlotCount() < MAX_IN_FLIGHT_TILE_STREAMS) {
@@ -236,7 +300,7 @@ export class TileViewportStreamManager {
       }
     }
 
-    return { kind: "planned", issued, queued: queuedNow, alreadyResident };
+    return { kind: "planned", issued, queued: queuedNow, alreadyResident, coveringTruncated, truncatedCount };
   }
 
   /**
@@ -247,6 +311,20 @@ export class TileViewportStreamManager {
    * mirroring `ViewportStreamManager.supersedeCurrent`'s wholesale `clearResidency`, enumerated per
    * tile since there is no single stream handle to name here. Also clears `overBudget` -- a fresh
    * generation starts unconstrained.
+   *
+   * **P5f complex-gate must-fix 1.** A tile mid-ticket-mint (`"issuing"` -- a slot claimed,
+   * `viewportQuery`/`dataPlaneAttach` awaits in flight, no stream handle exists yet) is tracked in
+   * `tileState` but NOT in `inFlightStreams` (no stream to cancel) and NOT in `queue` (already
+   * dequeued by `beginIssue`) -- before this fix, neither loop above ever reached it, so its
+   * `tileState`/`issueEpoch` entries survived this call untouched. Its ticket then resolved AFTER
+   * this clear, `mintAndStart`'s own epoch check found nothing had bumped its epoch, and it started a
+   * real stream into the NEW generation carrying a filter/residency state from the OLD one -- and
+   * because `tileState` still (wrongly) named it tracked, planning never re-requested it either.
+   * Swept here exactly like `onCameraChange`'s own `"issuing"` branch does (`:199-207` above): epoch
+   * bumped (so `mintAndStart`'s eventual resolve abandons its ticket) and the `tileState` entry
+   * dropped (so the tile is `NOT tracked` and therefore genuinely re-queryable on the very next
+   * `onCameraChange`). Runs AFTER the two loops above, which already emptied `tileState` of every
+   * `"queued"`/`"in-flight"` entry -- what remains is exactly the `"issuing"` set.
    */
   clearAll(residentTileKeysHint: readonly string[] = []): void {
     for (const [tileKey, entry] of [...this.inFlightStreams.entries()]) {
@@ -258,6 +336,15 @@ export class TileViewportStreamManager {
       this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
     }
     this.queue = [];
+    for (const [tileKey, state] of [...this.tileState.entries()]) {
+      // The two loops above already emptied `tileState` of every `"queued"`/`"in-flight"` entry, so
+      // this `state !== "issuing"` guard should never actually skip anything -- kept explicit
+      // (rather than assuming the invariant) so a future change to either loop above fails loudly
+      // here instead of silently leaving a non-`"issuing"` entry behind uncleared.
+      if (state !== "issuing") continue;
+      this.tileState.delete(tileKey);
+      this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
+    }
     for (const tileKey of residentTileKeysHint) {
       this.opts.onTileSuperseded(tileKey, null);
     }
@@ -308,7 +395,18 @@ export class TileViewportStreamManager {
     void this.mintAndStart(key, tileKey, epoch);
   }
 
+  /**
+   * P5f complex-gate should-fix 2 (the "drain ignores over-budget" half): before this fix, a tile
+   * already sitting in `queue` from BEFORE `setOverBudget(true, ...)` was called would still mint the
+   * moment an unrelated in-flight stream ended and freed a slot -- `onCameraChange`'s own `overBudget
+   * Flag` check (`:227` above) only ever gated NEW tiles at plan time, never this queue drain, which
+   * runs independently from several call sites (a terminal, a supersede, `clearAll`). Guarded here
+   * instead so every call site is covered at once: while over budget, queued tiles simply wait,
+   * however many slots free up, until `setOverBudget(false, ...)` resumes draining (that method's own
+   * doc comment has the resume half).
+   */
   private drainQueueIfRoom(): void {
+    if (this.overBudgetFlag) return;
     while (this.queue.length > 0 && this.activeSlotCount() < MAX_IN_FLIGHT_TILE_STREAMS) {
       const key = this.queue.shift()!;
       const tileKey = tileKeyToString(key);

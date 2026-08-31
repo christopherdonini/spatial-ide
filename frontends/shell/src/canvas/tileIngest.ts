@@ -4,8 +4,14 @@
 import type { ResidentBatch } from "./decodeBatch";
 import { EvictionPlan, planTileEviction, TileResidentSet } from "./tileResidentSet";
 import { tileDistanceToPoint, TileGridFrame, TileKey } from "./tileGrid";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { TileGridLevel } from "./tileGridConstants";
 import type { AuthoritativeBbox } from "./viewportBbox";
+
+/** P5f complex-gate must-fix 3: the reserved-key set every `planTileEviction` call in this module
+ * passes as `reservedTileKeys` -- a module-level singleton (never mutated) rather than allocated per
+ * call, since it names exactly one key today and never varies. */
+const RESERVED_TILE_KEYS: ReadonlySet<string> = new Set([INITIAL_TILE_KEY]);
 
 /**
  * Viewport-residency cut P3w item B: the candidate arm's own ingest DECISION, pulled out of
@@ -20,9 +26,26 @@ import type { AuthoritativeBbox } from "./viewportBbox";
 /** `tileGrid.ts`'s own `tileKeyToString` is one-way by design ("there is no `tileKeyFromString`;
  * nothing needs to parse this back") -- eviction ordering here is the one place that genuinely
  * does, since `TileResidentSet` only ever stores the STRING form. A local, minimal parse of that
- * same stable `"${row}:${col}"` format, not exported from `tileGrid.ts` itself. */
+ * same stable `"${row}:${col}"` format, not exported from `tileGrid.ts` itself.
+ *
+ * P5f complex-gate must-fix 3: fails loudly (throws) on anything that is not exactly two
+ * finite-numeric, colon-separated parts -- before this fix, a non-`"row:col"` input (the reserved
+ * `INITIAL_TILE_KEY`, `"initial-untiled-look"`, being the one that actually reached this in
+ * practice) silently produced `{ row: NaN, col: undefined }`, and a `NaN` distance made
+ * `planTileEviction`'s own `Array.prototype.sort` comparator return `false` for every comparison
+ * involving it -- not a total order, so the sort's own result became engine-dependent (a
+ * "comparator artifact"), observed as the reserved key's own tile evicting first, nondeterministically.
+ * The real fix is `RESERVED_TILE_KEYS` above (this key is never handed to `planTileEviction`'s own
+ * `distanceToViewCentre` callback, so this function is never actually called with it any more) --
+ * this throw is the loud safety net for any OTHER caller that reaches this function with a genuinely
+ * malformed key, so a future such bug fails fast instead of silently corrupting eviction order again. */
 function parseTileKey(key: string): TileKey {
-  const [row, col] = key.split(":").map(Number);
+  const parts = key.split(":");
+  const row = parts.length === 2 ? Number(parts[0]) : NaN;
+  const col = parts.length === 2 ? Number(parts[1]) : NaN;
+  if (!Number.isFinite(row) || !Number.isFinite(col)) {
+    throw new Error(`parseTileKey: not a "row:col" tile key: ${JSON.stringify(key)}`);
+  }
   return { row, col };
 }
 
@@ -102,6 +125,7 @@ export function ingestTileBatch(params: {
         currentTotalVertices: tileSet.totalResidentVertices,
         maxResidentVertices,
         distanceToViewCentre: (k) => tileDistanceToPoint(grid.frame, grid.level, parseTileKey(k), viewCentre),
+        reservedTileKeys: RESERVED_TILE_KEYS,
       });
       for (const key of plan.evict) {
         tileSet.evictTile(key);

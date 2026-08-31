@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { ResidentBatch } from "./decodeBatch";
 import { extentOfBatch, unionBbox } from "./extent";
 import { deriveTileGridFrame } from "./tileGrid";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import { TileResidentSet } from "./tileResidentSet";
 import { ingestTileBatch, trimBatchToVertexBudget } from "./tileIngest";
 
@@ -177,6 +178,55 @@ describe("ingestTileBatch: item D eviction at the budget boundary", () => {
     expect(result.rowsAdmitted).toBe(4); // 400 remaining budget / 100 per feature
     expect(tileSet.totalResidentVertices).toBe(900); // ceiling never exceeded
     expect(tileSet.isTileResident("1:1")).toBe(false);
+  });
+
+  // P5f complex-gate must-fix 3: the reserved `INITIAL_TILE_KEY` (never a real `"row:col"` key) used
+  // to reach `parseTileKey` during eviction ordering -- `"initial-untiled-look".split(":")` has no
+  // colon, so `Number(...)` produced `NaN`, and a `NaN` distance made `Array.prototype.sort`'s own
+  // comparator return `false` for every comparison involving it: not a total order, so which tile
+  // sorted where (including "does the reserved tile evict first") became a per-engine artifact, not a
+  // distance decision. Reproduced here: if the exclusion regressed, `parseTileKey`'s own new
+  // fail-loudly throw would fire (a real `"row:col"` key never contains `INITIAL_TILE_KEY`'s letters),
+  // so this test doubles as that regression's own tripwire -- it passing at all proves the reserved
+  // key was never handed to `distanceToViewCentre`.
+  it("the reserved INITIAL_TILE_KEY is excluded from distance-ordered eviction and evicted LAST -- never a NaN/comparator-artifact order", () => {
+    const tileSet = new TileResidentSet();
+    // Setup ingests use a generous budget (10,000) so neither one triggers eviction on its own --
+    // only the FINAL, triggering ingest below uses the tight 250 ceiling this test is actually about.
+    // The reserved tile -- "its content is what everything deduped against" (M3's own declared
+    // policy): 2 features @ 100 vertices = 200.
+    ingestTileBatch(
+      baseParams({ tileSet, tileKey: INITIAL_TILE_KEY, batch: batch("sh_initial", 0, [1, 2], 100), maxResidentVertices: 10_000 })
+    );
+    // A real, evictable tile: 1 feature @ 100 = 100.
+    ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "5:5",
+        batch: batch("sh_far", 0, [3], 100),
+        maxResidentVertices: 10_000,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+    expect(tileSet.totalResidentVertices).toBe(300); // 200 (reserved) + 100 ("5:5")
+
+    // Incoming: 1 feature @ 100 = 100. projected = 300 + 100 = 400 > 250 -- evicting "5:5" (100)
+    // alone still leaves 300 > 250, so the reserved tile must ALSO be evicted to fit (100 <= 250).
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "0:0",
+        batch: batch("sh_view", 0, [4], 100),
+        maxResidentVertices: 250,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+
+    // Deterministic, declared order: the real tile evicts BEFORE the reserved one, never the reverse.
+    expect(result.evictedTileKeys).toEqual(["5:5", INITIAL_TILE_KEY]);
+    expect(result.overBudget).toBe(false);
+    expect(result.rowsAdmitted).toBe(1); // the incoming batch admitted whole -- eviction made room
+    expect(tileSet.isTileResident(INITIAL_TILE_KEY)).toBe(false);
   });
 
   it("with no grid context yet, degrades to truncate-at-budget rather than exceeding the ceiling", () => {

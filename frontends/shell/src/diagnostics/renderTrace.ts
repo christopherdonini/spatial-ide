@@ -74,11 +74,17 @@ export function traceResidency(
 /** Viewport-residency cut P3w items C/D: one line per candidate-arm tile batch ingest --
  * `tileResidentSet.ts`'s own dedupe (`duplicatesDropped`) and `tileIngest.ts`'s own eviction/budget
  * decision (`evictedTileKeys`, `overBudget`), console-visible the same way `traceResidency` already
- * makes baseline's ledger visible. Never gated on `import.meta.env.DEV` (matching every other
- * function in this file -- this whole module is "console-only diagnostic instrumentation," not the
- * separately-gated `instrument/residencyInstrument.ts`), and called unconditionally per batch (not
- * only when something notable happened) so a reader can see the ordinary case too, not just the
- * exceptional one. */
+ * makes baseline's ledger visible.
+ *
+ * P5f complex-gate should-fix 6 (superseding the prior "never gated" framing this comment used to
+ * carry): the CALL SITE (`WorkingCanvas.tsx`'s `pushTileBatch`) now gates this behind
+ * `isInstrumentedBuild()`, unlike every other function in this file -- one line per tile batch is a
+ * real trace-volume cost non-instrumented builds never needed, and this event's own kind
+ * (`"tile-ingest"`) is not one of `residency-harness.mjs`'s own `FIELD_SEQUENCE_EVENTS`
+ * (`["viewport_query", "stream-issued", "batch"]`), so gating it does not change what the dual-arm
+ * identity guard compares. This function itself is unchanged (still an unconditional `console.debug`
+ * -- the gate lives at the call site, matching how `instrument/residencyInstrument.ts`'s own
+ * `record*` functions are always gated by their CALLERS, never internally). */
 export function traceTileIngest(
   tileKey: string,
   rowsAdmitted: number,
@@ -96,7 +102,13 @@ export function traceTileIngest(
  * diagnosis session can read "how many tiles has this whole session evicted so far" off one line
  * rather than summing every `tile-ingest` line itself. This is the console-only diagnostic
  * counterpart to the user-facing `.residency-status` text (item C's own words: "the status line IS
- * the visibility -- no tile readout"), never a second UI surface. */
+ * the visibility -- no tile readout"), never a second UI surface.
+ *
+ * P5f complex-gate should-fix 6: the CALL SITE (`candidateArmSession.ts`'s `emitResidencyStatus`) now
+ * gates this behind `isInstrumentedBuild()`, matching `traceTileIngest`'s own identical fix above and
+ * for the same reason -- this event's own kind (`"candidate-residency-status"`) is not one of
+ * `residency-harness.mjs`'s own `FIELD_SEQUENCE_EVENTS`, so gating it does not change the dual-arm
+ * identity guard's own coverage. */
 export function traceCandidateResidencyStatus(
   dataset: string,
   overBudget: boolean,

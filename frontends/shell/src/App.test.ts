@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Admitted } from "./admission/admitDataset";
 import type { FormattedRefusal } from "./admission/formatRefusal";
 import type { PickResult } from "./canvas/pick";
+import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import type { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import {
   admitAndResetStaleUiState,
@@ -13,6 +14,7 @@ import {
   applyFilter,
   handleCanvasCeilingRefusal,
   isScanInFlight,
+  makeCandidateViewportDispatcher,
   makeDebouncedViewportQuery,
   makeManagerCallbacks,
   nextResidencyStatus,
@@ -946,6 +948,54 @@ describe("makeDebouncedViewportQuery (P2 item 1: activeFilterRef read at FIRE ti
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS + 10);
 
       expect(requestViewport).toHaveBeenCalledWith(bbox, null, null);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+// P5f complex-gate must-fix 4 (the double-debounce fix): before this piece, `App.tsx`'s own
+// `[admitted]` effect wrapped the candidate arm's `session.onViewportChanged` in a SECOND
+// `debounce(fn, VIEWPORT_QUERY_MIN_INTERVAL_MS)` -- stacked on top of `candidateArmSession.ts`'s own
+// internal debounce (`onViewportChanged` IS already that module's debounced entry point). The
+// reviewer's own finding: "the existing test can't see the App layer" -- `candidateArmSession.test.ts`
+// only ever drove `session.onViewportChanged` directly, in isolation, so a stacked SECOND layer added
+// at the `App.tsx` call site was invisible to it. This test closes that blindness: it wires
+// `makeCandidateViewportDispatcher` around a fake session whose OWN `onViewportChanged` debounces via
+// the REAL `debounce()` module (mirroring `candidateArmSession.ts`'s own real internal wiring
+// byte-for-byte), and asserts the WHOLE path -- from a raw `dispatcher.call(...)` through to the
+// underlying handler actually firing -- crosses exactly ONE `VIEWPORT_QUERY_MIN_INTERVAL_MS` settle
+// window, not two.
+describe("makeCandidateViewportDispatcher (P5f complex-gate must-fix 4: the double-debounce fix)", () => {
+  it("a raw viewport-change call settles after exactly ONE debounce window end to end, never two stacked ones", async () => {
+    vi.useFakeTimers();
+    try {
+      const handler = vi.fn();
+      // Mirrors `candidateArmSession.ts`'s own internal debounce exactly -- the real `debounce()`
+      // module, the same constant, never a reimplementation.
+      const sessionDebounced = debounce(handler, VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      const session = {
+        onViewportChanged: (bbox: AuthoritativeBbox) => sessionDebounced.call(bbox),
+        cancelPendingViewportChange: () => sessionDebounced.cancel(),
+      };
+      const dispatcher = makeCandidateViewportDispatcher(session);
+      const bbox = bboxFixture();
+
+      dispatcher.call(bbox, null);
+      expect(handler).not.toHaveBeenCalled(); // still debouncing -- zero elapsed
+
+      // Before this fix: a SECOND, App-owned debounce layer meant the underlying handler had not
+      // fired even after this FULL settle window (the outer layer's own timer would still be
+      // running, needing a second full window on top). This is the fix's own direct assertion.
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(handler).toHaveBeenCalledTimes(1);
+
+      // `dispatcher.cancel()` reaches the session's own internal debounce directly (no App-owned
+      // layer of its own to cancel instead) -- a call scheduled then cancelled never fires at all.
+      dispatcher.call(bbox, null);
+      dispatcher.cancel();
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(handler).toHaveBeenCalledTimes(1); // unchanged -- the second call was cancelled
     } finally {
       vi.useRealTimers();
     }

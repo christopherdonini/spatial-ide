@@ -20,6 +20,23 @@ import { TILE_GRID_DIMENSIONS, TileGridLevel } from "./tileGridConstants";
  * per dataset session -- the frame this returns is then declared frozen (`TileViewportStreamManager
  * .establishGridFrame`'s own doc comment has the freeze contract).
  *
+ * **P5f complex-gate should-fix 4: "all been unioned" means the WHOLE untiled first look, not its
+ * first delivering batch alone.** `candidateArmSession.ts`'s own untiled "first look" query is what
+ * plays the "caller" role above (`issueUntiledQuery`) -- before this fix, it self-cancelled the
+ * instant its FIRST batch carried any geometry, and `anchor` was that one batch's own extent alone,
+ * contradicting this doc comment's own "all been unioned" claim (a real gap between the declared
+ * contract and the code, caught by review). The fix: the untiled query is now BOUNDED by a declared
+ * row limit (`tileGridConstants.ts`'s own `UNTILED_FIRST_LOOK_ROW_LIMIT`, reconciling with the
+ * separate "never fetch the whole dataset through one giant stream" fix `issueUntiledQuery`'s own doc
+ * comment already names) rather than an unbounded `bbox: null` stream self-cancelled early, and runs
+ * to its own natural terminal -- `anchor` is `extentOfBatch`/`unionBbox`'s own running union across
+ * EVERY batch that stream ever delivers, read at that terminal, exactly matching this doc's own
+ * words. Deterministic per dataset in the sense this piece can actually claim: `bbox: null` and the
+ * declared row limit are fixed inputs to the SAME `viewport_query` call baseline's own initial
+ * unfiltered load already issues (unbounded there, bounded here) -- this piece introduces no NEW
+ * source of run-to-run variance beyond whatever row-order stability that existing call already has or
+ * lacks server-side (out of scope here to establish either way; not a new claim this piece makes).
+ *
  * **The frame has no boundary.** `TileGridFrame` names cell `(0, 0)`'s own origin and a
  * level-independent base span (`cellSizeForLevel` divides it per level) -- everything else is cell
  * arithmetic. `TileKey.row`/`.col` may be negative or arbitrarily large; a bbox far outside the

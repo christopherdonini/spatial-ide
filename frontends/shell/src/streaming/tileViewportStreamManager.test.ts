@@ -14,7 +14,7 @@ const startStreamMock = vi.hoisted(() => vi.fn());
 vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 
 import type { TileGridLevel } from "../canvas/tileGridConstants";
-import { MAX_IN_FLIGHT_TILE_STREAMS } from "../canvas/tileGridConstants";
+import { MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
 import type { StreamSink } from "./transport";
 import type { TileResidencyAccessor, TileViewportStreamManagerOptions } from "./tileViewportStreamManager";
 import { TileViewportStreamManager } from "./tileViewportStreamManager";
@@ -341,6 +341,50 @@ describe("TileViewportStreamManager", () => {
       expect(manager.inFlightCount).toBe(0);
     });
 
+    // P5f complex-gate must-fix 1: the reproduced scenario -- a tile mid-ticket-mint ("issuing": a
+    // slot claimed, `viewportQuery`/`dataPlaneAttach` still awaiting, no stream handle yet) survives
+    // a `clearAll` that only ever swept `inFlightStreams`/`queue` before this fix. The old ticket's
+    // eventual resolve must be abandoned entirely (never `dataPlaneAttach`/`startStream`), and the
+    // tile must be genuinely re-queryable afterward (not still wrongly tracked).
+    it("clearAll sweeps a tile mid-ticket-mint (\"issuing\") -- the old ticket's eventual resolve is abandoned, the tile is re-queryable", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      let resolveTicket: ((v: { stream: string; expires_in_ms: number }) => void) | null = null;
+      viewportQueryMock.mockImplementationOnce(
+        () => new Promise((resolve) => { resolveTicket = resolve; })
+      );
+
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.issued).toEqual(["0:0"]); // began minting ("issuing") -- no stream yet
+      expect(manager.inFlightCount).toBe(0);
+
+      manager.clearAll();
+
+      // The old ticket now resolves AFTER clearAll -- must be abandoned: cancelled immediately,
+      // never reaching `dataPlaneAttach`/`startStream` (no batch could ever be delivered from it).
+      cancelMock.mockClear();
+      dataPlaneAttachMock.mockClear();
+      startStreamMock.mockClear();
+      resolveTicket!({ stream: "sh_stale", expires_in_ms: 30_000 });
+      await flushMicrotasks();
+
+      expect(cancelMock).toHaveBeenCalledWith("sh_stale");
+      expect(dataPlaneAttachMock).not.toHaveBeenCalled();
+      expect(startStreamMock).not.toHaveBeenCalled();
+      expect(manager.inFlightCount).toBe(0);
+
+      // Re-queryable: a fresh camera change for the SAME bbox issues a genuinely NEW mint -- if the
+      // tile were still (wrongly) tracked as "issuing", this would plan nothing at all.
+      viewportQueryMock.mockImplementationOnce(() => new Promise(() => {}));
+      const outcome2 = manager.onCameraChange(bbox);
+      if (outcome2.kind !== "planned") throw new Error("unreachable");
+      expect(outcome2.issued).toEqual(["0:0"]);
+    });
+
     it("clearAll also drops the queue and resets overBudget", () => {
       const { manager } = makeManager();
       manager.establishGridFrame(ANCHOR);
@@ -395,6 +439,97 @@ describe("TileViewportStreamManager", () => {
       const outcome = manager.onCameraChange(bbox);
       if (outcome.kind !== "planned") throw new Error("unreachable");
       expect(outcome.issued).toEqual(["0:0"]);
+    });
+  });
+
+  describe("covering-set truncation (P5f complex-gate should-fix 2, the \"undeclared fan-out\" half)", () => {
+    it("a covering set exceeding capacity truncates farthest-first, deterministically, and records it (never silent)", () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockReturnValue(new Promise(() => {})); // never resolves -- inspect planning only
+
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      // 40 x 40 = 1,600 covering tiles -- capacity is MAX_IN_FLIGHT_TILE_STREAMS + MAX_QUEUED_TILES
+      // = 515, so this MUST truncate.
+      const n = 40;
+      const bbox = {
+        xmin: frame.originX,
+        ymin: frame.originY,
+        xmax: frame.originX + n * cellSize,
+        ymax: frame.originY + n * cellSize,
+      };
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      const capacity = MAX_IN_FLIGHT_TILE_STREAMS + MAX_QUEUED_TILES;
+      expect(outcome.issued.length + outcome.queued.length).toBe(capacity);
+      expect(outcome.coveringTruncated).toBe(true);
+      expect(outcome.truncatedCount).toBe(n * n - capacity);
+
+      // Deterministic: an identically-constructed manager planning the SAME bbox keeps the identical
+      // set, in the identical order -- never a comparator-artifact/engine-dependent result.
+      const { manager: manager2 } = makeManager();
+      manager2.establishGridFrame(ANCHOR);
+      const outcome2 = manager2.onCameraChange(bbox);
+      if (outcome2.kind !== "planned") throw new Error("unreachable");
+      expect([...outcome2.issued, ...outcome2.queued]).toEqual([...outcome.issued, ...outcome.queued]);
+    });
+
+    it("an ordinary, small covering set is never marked truncated", () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockReturnValue(new Promise(() => {}));
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.coveringTruncated).toBeUndefined();
+      expect(outcome.truncatedCount).toBeUndefined();
+    });
+  });
+
+  describe("drainQueueIfRoom respects overBudget (P5f complex-gate should-fix 2, the \"drain ignores over-budget\" half)", () => {
+    it("never mints a queued tile while overBudget is set, however many slots free up -- resumes the moment it clears", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = {
+        xmin: frame.originX,
+        ymin: frame.originY,
+        xmax: frame.originX + 4 * cellSize, // 4 tiles: 3 issued (the in-flight cap), 1 queued
+        ymax: frame.originY + cellSize,
+      };
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_3", expires_in_ms: 30_000 });
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.queued).toHaveLength(1);
+      await flushMicrotasks();
+      expect(manager.inFlightCount).toBe(3);
+
+      manager.setOverBudget(true);
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_4", expires_in_ms: 30_000 });
+      // End one in-flight stream -- a slot frees, but overBudget must block the queued tile from
+      // minting into it (before this fix, `drainQueueIfRoom` ran unconditionally from every call
+      // site, including this one -- a terminal).
+      const sink = startStreamMock.mock.calls[0][0].sink as StreamSink;
+      sink.onTerminal({ kind: "Completed", detail: "" });
+      await flushMicrotasks();
+
+      expect(manager.queuedCount).toBe(1); // still queued -- never drained while over budget
+      expect(startStreamMock).toHaveBeenCalledTimes(3); // no 4th stream started
+
+      manager.setOverBudget(false); // resumes draining immediately, per this method's own doc comment
+      await flushMicrotasks();
+
+      expect(manager.queuedCount).toBe(0);
+      expect(startStreamMock).toHaveBeenCalledTimes(4);
     });
   });
 

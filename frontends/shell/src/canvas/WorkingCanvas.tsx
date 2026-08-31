@@ -47,6 +47,7 @@ import { ingestTileBatch } from "./tileIngest";
 import type { TileGridContext } from "./tileIngest";
 import { tileDistanceToPoint } from "./tileGrid";
 import type { TileGridFrame, TileKey } from "./tileGrid";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { TileGridLevel } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
 import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportBbox";
@@ -226,11 +227,25 @@ export interface ResidentCounts {
  * nothing needs to parse this back") -- `applyTileViewportContext`'s eviction ordering is one of the
  * few places that genuinely does, since `TileResidentSet` only ever stores the STRING form
  * (`tileIngest.ts`'s own identical local helper, duplicated rather than exported from `tileGrid.ts`
- * itself for the same reason that module states). */
+ * itself for the same reason that module states).
+ *
+ * P5f complex-gate must-fix 3: fails loudly on a non-`"row:col"` input -- see `tileIngest.ts`'s own
+ * identical fix for the full account (the reserved `INITIAL_TILE_KEY` producing a `NaN` distance and
+ * a nondeterministic eviction-order comparator artifact). `RESERVED_TILE_KEYS` below is the real fix
+ * (this function is never actually called with that key any more); this throw is the loud safety net. */
 function parseTileKey(key: string): TileKey {
-  const [row, col] = key.split(":").map(Number);
+  const parts = key.split(":");
+  const row = parts.length === 2 ? Number(parts[0]) : NaN;
+  const col = parts.length === 2 ? Number(parts[1]) : NaN;
+  if (!Number.isFinite(row) || !Number.isFinite(col)) {
+    throw new Error(`parseTileKey: not a "row:col" tile key: ${JSON.stringify(key)}`);
+  }
   return { row, col };
 }
+
+/** P5f complex-gate must-fix 3: mirrors `tileIngest.ts`'s own identical constant -- the reserved-key
+ * set `applyTileViewportContext`'s own `planTileEviction` call passes as `reservedTileKeys`. */
+const RESERVED_TILE_KEYS: ReadonlySet<string> = new Set([INITIAL_TILE_KEY]);
 
 export interface WorkingCanvasProps {
   /** Diagnostics-only (DECISIONS-PENDING.md entry 0's residency ledger): identifies this instance
@@ -857,7 +872,16 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           extentOfBatch,
           unionBbox,
         });
-        traceTileIngest(tileKey, outcome.rowsAdmitted, outcome.duplicatesDropped, outcome.evictedTileKeys, outcome.overBudget);
+        // P5f complex-gate should-fix 6: gated behind the instrument's own enable (unlike every other
+        // call in this file's `traceXxx` family, which stays always-on) -- `tile-ingest` is NOT one of
+        // `residency-harness.mjs`'s own `FIELD_SEQUENCE_EVENTS` (`["viewport_query", "stream-issued",
+        // "batch"]`), so gating it does not change what the dual-arm identity guard compares; it only
+        // trims a high-volume line (one per tile batch) that non-instrumented builds never needed
+        // console-visible in the first place, matching `recordResidencyBatchDecoded`'s own gate two
+        // lines above.
+        if (isInstrumentedBuild()) {
+          traceTileIngest(tileKey, outcome.rowsAdmitted, outcome.duplicatesDropped, outcome.evictedTileKeys, outcome.overBudget);
+        }
         // Viewport-residency cut P3i-c (gap G-B): mirrors `pushBatch`'s own `traceStreamBatch` call
         // above -- same always-on render-trace class, same DECODED (not post-dedupe/post-trim
         // admitted) `rows`/`vertices` convention, keyed into the SAME `streamStatsRef` map (stream
@@ -947,6 +971,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           currentTotalVertices: tileSet.totalResidentVertices,
           maxResidentVertices: MAX_RESIDENT_VERTICES,
           distanceToViewCentre: (k) => tileDistanceToPoint(grid.frame, grid.level, parseTileKey(k), viewCentre),
+          reservedTileKeys: RESERVED_TILE_KEYS,
         });
         if (plan.evict.length > 0) {
           for (const key of plan.evict) tileSet.evictTile(key);

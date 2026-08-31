@@ -51,6 +51,7 @@ import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
+import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
 import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
@@ -89,6 +90,42 @@ function fromWireBbox(bbox: Bbox, _bboxCrs: string | null): AuthoritativeBbox {
     ymin: decodeHexF64(bbox.ymin),
     xmax: decodeHexF64(bbox.xmax),
     ymax: decodeHexF64(bbox.ymax),
+  };
+}
+
+/**
+ * P5f complex-gate must-fix 4 (the double-debounce fix). Before this piece, the `[admitted]` effect's
+ * candidate-arm branch wrapped `session.onViewportChanged` in its OWN `debounce(fn,
+ * VIEWPORT_QUERY_MIN_INTERVAL_MS)` call here -- stacked directly on top of `candidateArmSession.ts`'s
+ * own internal debounce (`onViewportChanged` IS already that module's debounced entry point, wired
+ * through the identical constant). Two 120ms trailing-edge debounces in series meant a settled pan/
+ * zoom took 240ms to actually issue a query: a systematic +120ms handicap on the candidate arm's own
+ * primary measured quantity, invisible to anyone reading either debounce's own unit tests in
+ * isolation (each one individually looked correct).
+ *
+ * The fix keeps the SESSION's own debounce (its unit tests, `candidateArmSession.test.ts`, drive
+ * `onViewportChanged` directly through the real `debounce()` module and assert real timing against
+ * it -- removing that inner layer would make those tests meaningless, the finding's own OTHER option)
+ * and makes THIS layer, `App.tsx`'s own, a raw pass-through instead: `.call` forwards straight into
+ * `session.onViewportChanged` with no timer of its own; `.cancel` forwards to the session's own
+ * `cancelPendingViewportChange` -- the new seam `candidateArmSession.ts` exposes for exactly this, so
+ * `viewportDebounceRef.current?.cancel()` (Apply/Clear's own `cancelPendingDebounce`, the E2E
+ * `queryWithFilter` hook) still reaches a real, cancellable pending call.
+ *
+ * Exported and parameterized (rather than an inline closure inside the `[admitted]` effect) so
+ * `App.test.ts` can drive a REAL `startCandidateArmSession` session's REAL internal debounce through
+ * this and assert the whole path -- from a raw viewport-change call here to the manager's own
+ * `onCameraChange` plan -- crosses exactly ONE settle window, not two. This is the "fix that
+ * blindness" half of the finding: the prior test suite could only ever see `candidateArmSession.ts`'s
+ * own internal debounce in isolation, never this file's own layer stacked on top of it.
+ */
+export function makeCandidateViewportDispatcher(session: {
+  onViewportChanged: (bbox: AuthoritativeBbox) => void;
+  cancelPendingViewportChange: () => void;
+}): Debounced<[Bbox, string | null]> {
+  return {
+    call: (bbox, bboxCrs) => session.onViewportChanged(fromWireBbox(bbox, bboxCrs)),
+    cancel: () => session.cancelPendingViewportChange(),
   };
 }
 
@@ -596,6 +633,17 @@ export default function App() {
   const [hasSettledView, setHasSettledView] = useState(false);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
+  /** P5f complex-gate should-fix 3: set ONLY inside the `[admitted]` effect's candidate-arm branch
+   * (`null` for baseline, and reset to `null` in every cleanup) -- the Cancel JSX handler below reads
+   * this to decide which arm's own cancel path to take: candidate calls `session.manager.stop()`
+   * (this manager's own doc comment: "cancels every in-flight tile stream and refuses every future
+   * `onCameraChange` call"), baseline calls `managerRef.current?.cancelStream(handle)` as it always
+   * has. Never the whole `CandidateArmSession`, deliberately -- Cancel only ever needs to reach the
+   * tile-planning manager's own `stop()`, not `session.stop()`'s wider dataset-close scope (which also
+   * tears down the untiled first-look stream and permanently refuses this session's own future
+   * `reissueUnrestricted`/`onViewportChanged` calls -- correct for a dataset close, more than Cancel
+   * itself needs to do). */
+  const candidateManagerRef = useRef<TileViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
   // NEXT-CUT.md P4: App-owned (not FilterPanel-owned) precisely because indicator scope is "EVERY
   // in-flight viewport stream" (item 6), not filter-only -- an ordinary pan/zoom drives this too.
@@ -885,12 +933,18 @@ export default function App() {
         // "reuse the existing transition machinery, arm-aware" -- so `.residency-status` renders the
         // declared-partial-view contract without a second, parallel state machine.
         onResidencyStatusChange: (event) => setResidencyStatus(nextResidencyStatus(event)),
+        // P5f complex-gate should-fix 3: wires this session into the SAME scan-liveness state machine
+        // baseline's own manager already drives (`applyScanEvent`'s own doc comment above) -- before
+        // this, `scanState` stayed `{kind:"idle"}` for a candidate-arm session's entire life, so
+        // Cancel (gated on `isScanInFlight(scanState)`) was never even visible while real tile/
+        // untiled work was in flight. `applyScanEvent` itself accepts the FULL `ScanEvent` union;
+        // `CandidateArmSessionDeps.applyScanEvent`'s own narrower type is a safe target by function-
+        // parameter contravariance (that field's own doc comment has the full account).
+        applyScanEvent,
       });
       managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
-      viewportDebounceRef.current = debounce(
-        (bbox, bboxCrs) => session.onViewportChanged(fromWireBbox(bbox, bboxCrs)),
-        VIEWPORT_QUERY_MIN_INTERVAL_MS
-      );
+      candidateManagerRef.current = session.manager;
+      viewportDebounceRef.current = makeCandidateViewportDispatcher(session);
       issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
 
       if (isInstrumentedBuild()) {
@@ -915,6 +969,7 @@ export default function App() {
         viewportDebounceRef.current?.cancel();
         viewportDebounceRef.current = null;
         issueQueryRef.current = null;
+        candidateManagerRef.current = null;
         void session.stop();
         if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
         void closeDataset(admitted.dataset).catch(() => {});
@@ -930,6 +985,7 @@ export default function App() {
     // observes a NEW `issued` outcome, exactly the same "one scan tracked at a time" discipline
     // `nextScanState`'s own doc comment states.
     let scanRowsAccumulator: { streamHandle: string | null; rows: number } = { streamHandle: null, rows: 0 };
+    candidateManagerRef.current = null; // no candidate-arm TileViewportStreamManager exists for this arm
 
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
@@ -1107,6 +1163,23 @@ export default function App() {
               // exact same, freshest-possible read.
               const current = scanStateRef.current;
               if (!isScanInFlight(current)) return;
+              // P5f complex-gate should-fix 3: candidate arm's own cancel path -- before this piece,
+              // `candidateManagerRef.current` never existed and no scan event was ever dispatched for
+              // this arm at all, so Cancel was never reachable (`isScanInFlight` never true).
+              // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) applies here too:
+              // `{kind:"reset"}` fires SYNCHRONOUSLY, before ever awaiting `manager.stop()`, so a
+              // dataset-close/remount racing this call can never leave a stale `scanState` behind
+              // (`candidateArmSession.ts`'s own `stop()` doc comment explains why THAT method
+              // deliberately never dispatches this itself -- the same hazard, avoided by dispatching
+              // here instead). `manager.stop()` (the tile-planning `TileViewportStreamManager`, NOT
+              // the whole `session.stop()`) cancels every in-flight tile stream and drops the queue
+              // -- deliberately NOT the untiled first-look stream too, a known, documented scope
+              // boundary (`candidateManagerRef`'s own doc comment above has the full account).
+              if (candidateManagerRef.current) {
+                applyScanEvent({ kind: "reset" });
+                void candidateManagerRef.current.stop();
+                return;
+              }
               const handle = current.streamHandle;
               // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- dispatched synchronously
               // here, in the SAME handler that calls `cancelStream`, never awaiting anything: a

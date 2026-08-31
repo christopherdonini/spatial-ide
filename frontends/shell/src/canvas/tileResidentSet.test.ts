@@ -102,6 +102,57 @@ describe("TileResidentSet: eviction apply (evictTile)", () => {
     const set = new TileResidentSet();
     expect(() => set.evictTile("9:9")).not.toThrow();
   });
+
+  // P5f complex-gate must-fix 2: the reproduced boundary-feature-loss scenario. Tile A delivers
+  // {100,101} first (owns both); tile B's own delivery of {100,102} has 100 suppressed as a
+  // duplicate (the SAME feature genuinely intersects both tiles' bboxes at a misaligned grid
+  // boundary) -- only 102 is admitted under B. Before this fix, evicting A (100's owner) simply
+  // deleted 100 from the flat dedupe set while B -- which also tried to deliver it -- stayed
+  // resident with no way to ever recover it: the feature vanished from the render set though it
+  // still intersected the viewport, unrecoverable until an unrelated clear. This design's own
+  // promise: B becomes non-resident (re-queryable) the moment A is evicted.
+  it("M2: evicting the owner of a boundary feature also evicts every still-resident tile that tried to deliver it -- re-queryable, never silently lost", () => {
+    const set = new TileResidentSet();
+    const resultA = set.addBatch("A", batch("sh_a", 0, [100, 101]));
+    expect(resultA.duplicatesDropped).toBe(0);
+    const resultB = set.addBatch("B", batch("sh_b", 0, [100, 102]));
+    expect(resultB.duplicatesDropped).toBe(1); // B's own 100 suppressed -- A already owns it
+    expect(Array.from(resultB.accepted?.ids ?? [])).toEqual([102n]);
+    expect(set.totalResidentFeatures).toBe(3); // 100, 101, 102 -- one resident copy of 100
+
+    set.evictTile("A");
+
+    expect(set.isTileResident("A")).toBe(false);
+    // B is evicted too (this design's own promise) -- assert WHICHEVER the design promises: here,
+    // B becomes re-queryable, not silently stuck with a permanent hole.
+    expect(set.isTileResident("B")).toBe(false);
+    expect(set.totalResidentFeatures).toBe(0);
+    expect(set.totalResidentVertices).toBe(0);
+    expect(set.getBatches()).toHaveLength(0);
+
+    // Fully recoverable: re-fetching either tile treats every id as genuinely new again, and counts
+    // stay honest (`duplicatesDropped` semantics unchanged).
+    const reAddA = set.addBatch("A", batch("sh_a2", 0, [100, 101]));
+    expect(reAddA.duplicatesDropped).toBe(0);
+    expect(reAddA.accepted?.ids.length).toBe(2);
+    const reAddB = set.addBatch("B", batch("sh_b2", 0, [100, 102]));
+    expect(reAddB.duplicatesDropped).toBe(1); // A (re-added) owns 100 again
+    expect(Array.from(reAddB.accepted?.ids ?? [])).toEqual([102n]);
+  });
+
+  it("M2: evicting the suppressed tile FIRST (its own unrelated reason) cleans up bookkeeping -- evicting the owner afterward is still safe", () => {
+    const set = new TileResidentSet();
+    set.addBatch("A", batch("sh_a", 0, [100, 101]));
+    set.addBatch("B", batch("sh_b", 0, [100, 102]));
+
+    set.evictTile("B"); // evicted first, for its own reason (e.g. ordinary budget eviction)
+    expect(set.isTileResident("B")).toBe(false);
+    expect(set.totalResidentFeatures).toBe(2); // A's own {100, 101} untouched
+
+    expect(() => set.evictTile("A")).not.toThrow();
+    expect(set.isTileResident("A")).toBe(false);
+    expect(set.totalResidentFeatures).toBe(0);
+  });
 });
 
 describe("TileResidentSet: clear", () => {
@@ -189,5 +240,78 @@ describe("planTileEviction (item D)", () => {
     });
     // Needs to evict all three to fit (30+1000 way over 40) -- order must be c, b, a.
     expect(plan.evict).toEqual(["c", "b", "a"]);
+  });
+
+  describe("reservedTileKeys (P5f complex-gate must-fix 3)", () => {
+    // `distanceToViewCentre` throws for the reserved key here -- exactly like `tileIngest.ts`'s own
+    // real `parseTileKey` now does for a non-`"row:col"` input -- so this test doubles as proof the
+    // reserved key is NEVER handed to it (a NaN-producing/comparator-artifact call would throw here
+    // instead of silently corrupting the sort).
+    function distanceOrThrowForReserved(key: string): number {
+      if (key === "reserved") throw new Error(`distanceToViewCentre must never be called for: ${key}`);
+      return distances[key];
+    }
+
+    it("never calls distanceToViewCentre for a reserved key -- NaN is structurally impossible", () => {
+      expect(() =>
+        planTileEviction({
+          residentTileKeys: ["a", "b", "reserved"],
+          tileVertices: () => 10,
+          viewportTileKeys: new Set(),
+          incomingVertices: 1000,
+          currentTotalVertices: 30,
+          maxResidentVertices: 40,
+          distanceToViewCentre: distanceOrThrowForReserved,
+          reservedTileKeys: new Set(["reserved"]),
+        })
+      ).not.toThrow();
+    });
+
+    it("evicts the reserved key LAST, only once every ordinary evictable tile is gone", () => {
+      // Budget so tight that BOTH ordinary evictable tiles ("a", "b") AND the reserved one must go.
+      const plan = planTileEviction({
+        residentTileKeys: ["a", "b", "reserved"],
+        tileVertices: () => 10,
+        viewportTileKeys: new Set(),
+        incomingVertices: 1000,
+        currentTotalVertices: 30,
+        maxResidentVertices: 40,
+        distanceToViewCentre: distanceOrThrowForReserved,
+        reservedTileKeys: new Set(["reserved"]),
+      });
+      // Ordinary tiles farthest-first ("b" dist 50, "a" dist 10), reserved key LAST regardless.
+      expect(plan.evict).toEqual(["b", "a", "reserved"]);
+    });
+
+    it("does NOT evict the reserved key when evicting ordinary tiles alone already makes room", () => {
+      const plan = planTileEviction({
+        residentTileKeys: ["a", "b", "reserved"],
+        tileVertices: () => 40,
+        viewportTileKeys: new Set(),
+        incomingVertices: 30,
+        currentTotalVertices: 100, // a+b+reserved = 120, but no double-counted overlap in this synthetic case
+        maxResidentVertices: 100,
+        distanceToViewCentre: distanceOrThrowForReserved,
+        reservedTileKeys: new Set(["reserved"]),
+      });
+      // Mirrors "evicts the farthest tiles first" above: evicting "b" (dist 50, farthest ordinary
+      // tile) alone already fits -- the reserved key is never touched.
+      expect(plan.evict).toEqual(["b"]);
+    });
+
+    it("a reserved key that is ALSO the current viewport is never evicted, same absolute rule every other tile gets", () => {
+      const plan = planTileEviction({
+        residentTileKeys: ["reserved"],
+        tileVertices: () => 5000,
+        viewportTileKeys: new Set(["reserved"]),
+        incomingVertices: 500,
+        currentTotalVertices: 5000,
+        maxResidentVertices: 1000,
+        distanceToViewCentre: distanceOrThrowForReserved,
+        reservedTileKeys: new Set(["reserved"]),
+      });
+      expect(plan.evict).toEqual([]);
+      expect(plan.overBudget).toBe(true);
+    });
   });
 });
