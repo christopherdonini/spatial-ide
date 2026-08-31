@@ -8,7 +8,8 @@ import { Admitted } from "./admission/admitDataset";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
-import type { PickResult } from "./canvas/pick";
+import type { HoverReadout } from "./canvas/pick";
+import { isPickBelowResolution } from "./canvas/pick";
 import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
@@ -113,11 +114,17 @@ function fromWireBbox(bbox: Bbox, _bboxCrs: string | null): AuthoritativeBbox {
  * `queryWithFilter` hook) still reaches a real, cancellable pending call.
  *
  * Exported and parameterized (rather than an inline closure inside the `[admitted]` effect) so
- * `App.test.ts` can drive a REAL `startCandidateArmSession` session's REAL internal debounce through
- * this and assert the whole path -- from a raw viewport-change call here to the manager's own
- * `onCameraChange` plan -- crosses exactly ONE settle window, not two. This is the "fix that
- * blindness" half of the finding: the prior test suite could only ever see `candidateArmSession.ts`'s
- * own internal debounce in isolation, never this file's own layer stacked on top of it.
+ * `App.test.ts` can drive this function directly against a FAKE session shaped exactly like
+ * `candidateArmSession.ts`'s own real internal debounce wiring -- `onViewportChanged` calling
+ * `debounce()`'s own `.call`, `cancelPendingViewportChange` calling its own `.cancel` -- and assert the
+ * whole path from a raw `dispatcher.call(...)` here through to the underlying handler actually firing
+ * crosses exactly ONE `VIEWPORT_QUERY_MIN_INTERVAL_MS` settle window, not two (re-review S8: this is
+ * what the test asserts; it does not construct a real `startCandidateArmSession` session, which would
+ * pull in the transport mocks that module's own test file already carries -- unnecessary here, since
+ * this function's own contract is about debounce composition, not the session's wire behaviour). This
+ * is the "fix that blindness" half of the finding: the prior test suite could only ever see
+ * `candidateArmSession.ts`'s own internal debounce in isolation, never this file's own layer stacked
+ * on top of it.
  */
 export function makeCandidateViewportDispatcher(session: {
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
@@ -142,7 +149,7 @@ export function admitAndResetStaleUiState(
   setters: {
     setCanvasRefusal: (value: string | null) => void;
     setViewportRefusal: (value: FormattedRefusal | null) => void;
-    setHover: (value: PickResult | null) => void;
+    setHover: (value: HoverReadout) => void;
     setResidencyStatus: (value: ResidencyStatus | null) => void;
     /** NEXT-CUT.md (filter-panel cut) design section: "Dataset change clears the filter via
      * `admitAndResetStaleUiState`." A predicate scoped to one dataset's columns must never ride
@@ -596,7 +603,7 @@ export function handleCanvasCeilingRefusal(
  */
 export default function App() {
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
-  const [hover, setHover] = useState<PickResult | null>(null);
+  const [hover, setHover] = useState<HoverReadout>(null);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
@@ -833,6 +840,19 @@ export default function App() {
     // P1d suggestion 10: driver-visible session-wide total of superseded-stream bytes dropped
     // (`residencyInstrument.ts`'s own `supersededBytesDropped` doc comment has the full mechanism).
     registerE2eHook("residencySupersededBytesDropped", async () => getResidencySupersededBytesDropped());
+    // Re-review S5 (Amendment 21): the tile grid frame's own declared shape, at whatever point the
+    // driver reads it -- `null` until `TileViewportStreamManager.establishGridFrame` has actually run
+    // (baseline arm, or a candidate-arm session before its own untiled first look reaches its
+    // terminal). `level` rides alongside `frame` rather than as a separate hook -- the two are only
+    // ever meaningful together (`cellSizeForLevel`'s own contract). This is a READ of state the
+    // product already derives and logs (`candidateArmSession.ts`'s own establishment log line); this
+    // hook adds no new derivation of its own.
+    registerE2eHook("residencyGridFrame", async () => {
+      const manager = candidateManagerRef.current;
+      if (!manager || !manager.gridFrame) return null;
+      const { originX, originY, baseSpan } = manager.gridFrame;
+      return { originX, originY, baseSpan, level: manager.activeLevel };
+    });
     // M7/S7 fix: see this effect's own doc comment above.
     // P1d B5: `watchdogMs` is threaded through to `armFirstPixelRenderHook` unchanged -- the caller
     // (the driver) passes the step's own `settle.timeoutMs`, no longer a fixed 5000 baked in here.
@@ -864,6 +884,7 @@ export default function App() {
       unregisterE2eHook("residencyInFlightStreamCount");
       unregisterE2eHook("residencyQueuedTileCount");
       unregisterE2eHook("residencySupersededBytesDropped");
+      unregisterE2eHook("residencyGridFrame");
       unregisterE2eHook("residencyArmFirstPixel");
       unregisterE2eHook("residencyDisarmFirstPixel");
       unregisterE2eHook("setResidencyArm");
@@ -1271,7 +1292,16 @@ export default function App() {
             >
               Zoom to layer
             </button>
-            {hover && (
+            {/* Viewport-residency cut P6a, decision 24(c): `hover` is `HoverReadout`, not merely
+              * `PickResult | null` -- a below-pick-resolution refusal is its own distinct branch, a
+              * typed hover-readout state (never null-silence), rendered in the SAME `.hover-readout`
+              * slot an ordinary pick uses. */}
+            {hover && isPickBelowResolution(hover) && (
+              <div className="hover-readout hover-readout-below-resolution">
+                Features here are below pick resolution — zoom in to inspect them.
+              </div>
+            )}
+            {hover && !isPickBelowResolution(hover) && (
               <div className="hover-readout">
                 id {hover.id.toString()}
                 {hover.anchor && ` @ (${hover.anchor[0].toFixed(3)}, ${hover.anchor[1].toFixed(3)})`}

@@ -27,6 +27,7 @@
 
 import type { ApplyFilterOutcome } from "./App";
 import type { ResidentCounts } from "./canvas/WorkingCanvas";
+import type { TileGridLevel } from "./canvas/tileGridConstants";
 import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import type { ResidencyStepResult } from "./instrument/residencyInstrument";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
@@ -234,6 +235,15 @@ export interface E2eTestSurface {
    * comments have the full mechanism). Always `0` while the instrument is disabled, the same
    * disclosed control-arm limitation `residencyInFlightStreamCount` above already carries. */
   residencySupersededBytesDropped?: () => Promise<number>;
+  /** Re-review S5 (Amendment 21 -- harness file touchable for this): the candidate arm's own tile
+   * grid frame, declared-fixed-for-the-session shape (`tileGrid.ts`'s `TileGridFrame`) plus the
+   * active level, exactly as `TileViewportStreamManager` currently holds them -- `null` before
+   * `establishGridFrame` has ever run (baseline arm; or a candidate-arm session whose untiled first
+   * look has not yet reached its own terminal). Carried into `residency-harness.mjs`'s own evidence
+   * so a diagnosis session can compare the frozen `baseSpan` against a MUCH LATER observed dataset
+   * extent from the same run without re-deriving anything -- the frame-drift hypothesis's own
+   * observable, first recorded at establishment by `candidateArmSession.ts`'s own session-log line. */
+  residencyGridFrame?: () => Promise<{ originX: number; originY: number; baseSpan: number; level: TileGridLevel } | null>;
   /** **DEV-ONLY, IDENTITY-MODE-ONLY E2E TEST SEAM** (viewport-residency cut P1c,
    * `RESIDENCY-PREREGISTRATION.md` §12 Amendment 6). Moves the camera to an EXACT, caller-supplied
    * world-space (authoritative-CRS) `(targetX, targetY)` at the given `zoom`, reusing the same

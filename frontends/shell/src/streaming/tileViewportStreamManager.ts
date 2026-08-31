@@ -41,7 +41,23 @@ import type { StreamSink, Terminal } from "./transport";
  * this manager tracks its own in-flight/queued bookkeeping separately and never mutates residency
  * itself. */
 export interface TileResidencyAccessor {
+  /** Viewport-residency cut P6a, Defect A: "already satisfied for planning purposes" -- `false` for
+   * a tile that is either genuinely missing OR durably partial (`TileResidentSet.isTileComplete`'s
+   * own contract), so `onCameraChange` treats it as a fresh candidate and, subject to
+   * `hasHeadroom` below, re-requests it. The real accessor (`candidateArmSession.ts`) wires this to
+   * `WorkingCanvasHandle.isTileCompleteInCandidateSet`, not the older, weaker `isTileResidentInCandidateSet`
+   * (which stays `true` for a partial tile -- that older meaning is still needed elsewhere, e.g.
+   * diagnostic "which covering tiles have no data at all" listings, so it was not repurposed here). */
   isTileResident(tileKey: string): boolean;
+  /**
+   * Viewport-residency cut P6a, Defect A (the over-budget drain-stop exception): true iff there is
+   * currently room to admit more resident vertices -- called ONLY while `overBudget` is set, to decide
+   * whether a partial/evicted VIEWPORT tile is still worth re-requesting despite the historical flag.
+   * Optional; a caller that omits it gets the pre-existing behaviour (no exception -- `overBudget`
+   * blocks every new candidate unconditionally), so every pre-existing `TileResidencyAccessor` in this
+   * codebase's own tests keeps compiling and behaving unchanged.
+   */
+  hasHeadroom?(): boolean;
 }
 
 export interface TileViewportStreamManagerOptions {
@@ -286,9 +302,16 @@ export class TileViewportStreamManager {
       truncatedCount = newCandidates.length - capacity;
     }
 
+    // Viewport-residency cut P6a, Defect A: the drain-stop exception -- while `overBudgetFlag` is
+    // set, a candidate is still let through if the residency accessor reports current headroom
+    // (`hasHeadroom`, optional -- absent means "no exception," the pre-existing behaviour). Computed
+    // ONCE per plan, not per candidate: headroom is a fact about the resident set as a whole at this
+    // moment, not about any one tile.
+    const headroomDespiteOverBudget = this.overBudgetFlag ? (this.opts.residency.hasHeadroom?.() ?? false) : true;
+
     for (const key of toConsider) {
       const tileKey = tileKeyToString(key);
-      if (this.overBudgetFlag) continue;
+      if (this.overBudgetFlag && !headroomDespiteOverBudget) continue;
 
       if (this.activeSlotCount() < MAX_IN_FLIGHT_TILE_STREAMS) {
         this.beginIssue(key, tileKey);

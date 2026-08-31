@@ -269,6 +269,97 @@ describe("ingestTileBatch: item D eviction at the budget boundary", () => {
   });
 });
 
+// Viewport-residency cut P6a, Defect A (architect gate, blocking): a batch trimmed to the budget
+// boundary must mark its own tile durably partial -- not merely "resident" (even empty), which is
+// what a caller like `isFillComplete` (`candidateArmSession.ts`) would otherwise wrongly read as
+// "done."
+describe("ingestTileBatch: Defect A durable partiality", () => {
+  it("a batch trimmed at the budget boundary marks its own tile partial, not merely resident", () => {
+    const tileSet = new TileResidentSet();
+    ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "0:0",
+        batch: batch("sh_view", 0, [1, 2, 3, 4, 5], 100),
+        maxResidentVertices: 900,
+      })
+    );
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "5:5",
+        batch: batch("sh_over", 0, [11, 12, 13, 14, 15], 100),
+        maxResidentVertices: 900,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+    expect(result.overBudget).toBe(true);
+    expect(result.rowsAdmitted).toBeGreaterThan(0); // some rows DID land -- not an empty refusal
+    expect(tileSet.isTileResident("5:5")).toBe(true);
+    expect(tileSet.isTilePartial("5:5")).toBe(true);
+    expect(tileSet.isTileComplete("5:5")).toBe(false);
+  });
+
+  it("a whole (untrimmed) admitted batch leaves its tile complete, even when eviction ran to make room", () => {
+    const tileSet = new TileResidentSet();
+    ingestTileBatch(
+      baseParams({ tileSet, tileKey: "10:10", batch: batch("sh_far", 0, [1, 2, 3, 4, 5], 100), maxResidentVertices: 900 })
+    );
+    ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "0:0",
+        batch: batch("sh_near", 0, [6, 7, 8, 9, 10], 100),
+        maxResidentVertices: 900,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+    expect(tileSet.isTilePartial("0:0")).toBe(false);
+    expect(tileSet.isTileComplete("0:0")).toBe(true);
+  });
+
+  // B1's own fix, exercised through the real `ingestTileBatch` call pattern (not `evictTile` alone):
+  // a protected (viewport) tile that suppressed a duplicate id owned by the tile being evicted must
+  // survive, and `evictedTileKeys` must report the TRUE list, never the eviction plan's own candidate
+  // list.
+  it("B1: evictedTileKeys is the TRUE list -- a protected suppressor survives eviction of the id's owner, marked partial", () => {
+    const tileSet = new TileResidentSet();
+    // The bootstrap/owner tile: ids 1, 2 -- far from the view centre, evictable.
+    ingestTileBatch(
+      baseParams({ tileSet, tileKey: "10:10", batch: batch("sh_owner", 0, [1, 2], 100), maxResidentVertices: 10_000 })
+    );
+    // The viewport tile: attempts ids 1, 2 (both suppressed as duplicates -- "10:10" already owns
+    // them) plus its own genuinely new id 3.
+    ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "0:0",
+        batch: batch("sh_viewport", 0, [1, 2, 3], 100),
+        maxResidentVertices: 10_000,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+    expect(tileSet.totalResidentVertices).toBe(300); // owner's {1,2} (200) + viewport's own {3} (100)
+
+    // A tight budget forces eviction of "10:10" (the only evictable tile) to admit a new incoming
+    // batch -- the cascade this would trigger (owner evicted -> its suppressor "0:0" implicated) must
+    // divert around "0:0" (protected) rather than blank it.
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "7:7",
+        batch: batch("sh_new", 0, [4], 100),
+        maxResidentVertices: 350,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+
+    expect(result.evictedTileKeys).toEqual(["10:10"]); // "0:0" is never in the TRUE evicted list
+    expect(tileSet.isTileResident("0:0")).toBe(true); // survives
+    expect(tileSet.isTilePartial("0:0")).toBe(true); // marked for re-fetch (ids 1, 2 are now missing)
+  });
+});
+
 describe("ingestTileBatch: unionedExtent mirrors fitAnchorRef's own accumulation", () => {
   it("unions across calls and never shrinks", () => {
     const tileSet = new TileResidentSet();

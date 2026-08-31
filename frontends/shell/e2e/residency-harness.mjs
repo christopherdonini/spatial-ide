@@ -602,6 +602,14 @@ async function applyStep(page, step) {
     // comment has the full diagnosis and rationale. Bounded by this step's own effective (fixture-
     // scaled) settle timeout, mirroring `measureOneStep`'s POST-gesture settle wait for the
     // PRE-gesture side of the same step.
+    //
+    // Re-review S6: this wait runs BEFORE `measureOneStep`'s own `stepStartWallMs` stamp even has a
+    // chance to matter -- `stepStartWallMs` is captured before `applyStepFn()` (this whole function)
+    // is ever called, so the calm wait's own duration is already inside the window
+    // `wallMs = Date.now() - stepStartWallMs` measures. `calmWaitMs` is recorded HERE, on the
+    // gesture, as its own named field (not only nested inside `calmWait`) so a reader scanning one
+    // row can see exactly how much of that row's own `wallMs` this pre-gesture wait, not the fit
+    // gesture itself, accounts for.
     const calmWait = await waitForCalmBeforeClick(page, { timeoutMs: settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs) });
     await page.evaluate(() => window.__SPATIAL_E2E__.residencyMarkInput?.());
     const retry = await dismissThenClickRetry(
@@ -624,7 +632,18 @@ async function applyStep(page, step) {
       err.bannerDismissalAttempts = retry.attempts;
       throw err;
     }
-    return { kind: "fit", bannerDismissed: retry.dismissals, bannerDismissalAttempts: retry.attempts, calmWait };
+    return {
+      // N20 (re-review): the STEP's own real kind ("fit" or "zoom-to-layer"), not a hardcoded "fit"
+      // regardless of which one this actually was -- before this fix, a `zoom-to-layer` step's own
+      // gesture record was indistinguishable from an ordinary `fit` step's, though the product itself
+      // (`WorkingCanvas.tsx`'s `!renderedByAutoFit` coalesced-render branch) treats a re-fit
+      // differently once the layer has already auto-fit once.
+      kind: step.kind,
+      bannerDismissed: retry.dismissals,
+      bannerDismissalAttempts: retry.attempts,
+      calmWait,
+      calmWaitMs: calmWait.waitedMs, // re-review S6 -- see this block's own doc comment above
+    };
   }
 
   if (step.kind === "pan") {
@@ -837,6 +856,11 @@ async function measureOneStep(
 
   const settle = await waitForSettleWithInFlight(page, consoleHandle, effectiveSettle);
   const postCount = consoleHandle.renderTrace().length;
+  // Re-review S6: `wallMs` measures from BEFORE `applyStepFn()` runs to AFTER settle -- for a `fit`/
+  // `zoom-to-layer` step, `applyStepFn` (`applyStep` above) itself begins with `waitForCalmBeforeClick`,
+  // so `wallMs` INCLUDES that pre-gesture calm wait's own duration, not merely the click-to-settle
+  // span. `gestureResult.calmWaitMs` (fit steps only) is that duration named on its own -- read it
+  // alongside `wallMs`, never assume `wallMs` is purely post-click time for those steps.
   const wallMs = Date.now() - stepStartWallMs;
   if (postSettleFlushMs > 0) {
     await sleep(postSettleFlushMs); // P1d suggestion 11 -- see this function's own doc comment.
@@ -939,11 +963,21 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
   const steps = stepLimit ? CAMERA_TRACE_STEPS.slice(0, stepLimit) : CAMERA_TRACE_STEPS;
   const rows = [];
   let invalidatedAtStep = null;
+  // N19 (re-review): the ACTUAL cause of the invalidating row's own failure -- copied verbatim from
+  // that row's own `reason` field (which already distinguishes a settle-watchdog timeout, "step
+  // threw: ..." for a thrown gesture, and an S1 realized-displacement assertion failure, each its own
+  // distinct cause class), never a hardcoded "settle watchdog" string regardless of which one it was.
+  let invalidationReason = null;
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     if (invalidatedAtStep !== null) {
-      rows.push({ stepId: step.id, kind: step.kind, status: "unmeasured", reason: `settle watchdog at step ${invalidatedAtStep}` });
+      rows.push({
+        stepId: step.id,
+        kind: step.kind,
+        status: "unmeasured",
+        reason: `trial already invalidated at step ${invalidatedAtStep} (${invalidationReason})`,
+      });
       continue;
     }
 
@@ -990,19 +1024,22 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
 
     if (!row.settled) {
       invalidatedAtStep = i;
+      invalidationReason = row.reason ?? "unknown"; // N19 -- see this function's own doc comment above
     }
   }
 
   const invalidated = invalidatedAtStep !== null;
   if (invalidated) {
     // S8: whole-trial invalidation stamps EVERY row, not only the ones from the failing step onward.
+    // N19: the reason names the ACTUAL cause class (`invalidationReason`, copied from the invalidating
+    // row's own `reason`), not a hardcoded "settle watchdog" regardless of what really happened.
     for (const row of rows) {
       row.status = "unmeasured";
-      row.wholeTrialInvalidatedReason = `settle watchdog at step ${invalidatedAtStep} (${steps[invalidatedAtStep]?.id ?? "?"})`;
+      row.wholeTrialInvalidatedReason = `${invalidationReason} (whole trial invalidated at step ${invalidatedAtStep}: ${steps[invalidatedAtStep]?.id ?? "?"})`;
     }
   }
 
-  return { rows, invalidated, invalidatedAtStep };
+  return { rows, invalidated, invalidatedAtStep, invalidationReason };
 }
 
 async function openFixture(page) {
@@ -1810,13 +1847,14 @@ async function main() {
 
     evidence.openDrain = openDrainRow;
 
-    const { rows, invalidated, invalidatedAtStep } = await runTrace(page, consoleHandle, viewStateListener, {
+    const { rows, invalidated, invalidatedAtStep, invalidationReason } = await runTrace(page, consoleHandle, viewStateListener, {
       stepLimit,
       instrumentEnabled,
     });
     evidence.rows = rows;
     evidence.invalidated = invalidated;
     evidence.invalidatedAtStep = invalidatedAtStep;
+    evidence.invalidationReason = invalidationReason; // N19 -- the actual cause class, see runTrace's own doc comment
 
     // P1d B4: `evidence.openDrain` is assigned OUTSIDE `rows` (a pre-step, not one of
     // `runTrace`'s own trace steps), so `runTrace`'s S8 rewrite (every row in `rows` demoted to
@@ -1826,7 +1864,10 @@ async function main() {
     // moment `invalidated` is known -- never left at whatever per-step status it individually earned.
     if (invalidated && evidence.openDrain) {
       evidence.openDrain.status = "unmeasured";
-      evidence.openDrain.wholeTrialInvalidatedReason = `settle watchdog at step ${invalidatedAtStep} (${
+      // N19: the actual cause class (`invalidationReason`), never a hardcoded "settle watchdog"
+      // regardless of whether this trial's own invalidation was really a settle-watchdog timeout, a
+      // thrown gesture, or an S1 displacement-assertion failure.
+      evidence.openDrain.wholeTrialInvalidatedReason = `${invalidationReason} (whole trial invalidated at step ${invalidatedAtStep}: ${
         (stepLimit ? CAMERA_TRACE_STEPS.slice(0, stepLimit) : CAMERA_TRACE_STEPS)[invalidatedAtStep]?.id ?? "?"
       })`;
     }
@@ -1876,12 +1917,26 @@ async function main() {
       () => window.__SPATIAL_E2E__.residencySupersededBytesDropped?.() ?? 0
     );
 
+    // Re-review S5 (Amendment 21 -- harness file touchable for this): the frozen tile grid frame
+    // {originX, originY, baseSpan, level}, read once at the end of the run (the frame does not move
+    // mid-session once established, `tileGrid.ts`'s own contract) -- `null` for the baseline arm and
+    // for a candidate-arm run whose own untiled first look never reached its terminal. Carried into
+    // the evidence file so a later diagnosis session can compare this run's own frozen `baseSpan`
+    // against the dataset's own observed extent elsewhere in the same evidence (e.g. the fit step's
+    // realized view state) without re-deriving it -- the frame-drift hypothesis's own observable,
+    // first recorded product-side at establishment (`candidateArmSession.ts`'s own session-log line,
+    // `logSessionEvent("candidate-grid-frame-established", ...)`, not duplicated here).
+    evidence.gridFrame = await page.evaluate(() => window.__SPATIAL_E2E__.residencyGridFrame?.() ?? null);
+
     if (!control) {
       await page.evaluate(() => window.__SPATIAL_E2E__.residencyInstrumentSetEnabled(false));
     }
 
     console.log("");
     console.log(`== residency-harness (${evidence.mode}${smoke ? ", smoke" : ""}) -- open-drain + per-step summary ==`);
+    // Re-review S5: printed once per run, beside the summary -- see `evidence.gridFrame`'s own
+    // assignment above for the full account of what this is for.
+    console.log(`[gridFrame] ${evidence.gridFrame ? JSON.stringify(evidence.gridFrame) : "null (baseline arm, or frame never established)"}`);
     if (openDrainRow) {
       const fp = openDrainRow.firstPixelMs != null ? `firstPixel=${openDrainRow.firstPixelMs}ms` : `firstPixel=n/a (${openDrainRow.firstPixelReason ?? openDrainRow.reason ?? "n/a"})`;
       console.log(`[open-drain] ${openDrainRow.status} wallMs=${openDrainRow.wallMs ?? "n/a"} ${fp} ${formatSegmentsSummary(openDrainRow.segments)}`);
@@ -1906,7 +1961,14 @@ async function main() {
         ? `features=${r.counters.featuresDecoded} bytes=${r.counters.bytesDecoded} tiles=${r.counters.tilesRequested} dup=${r.counters.duplicatesDropped} evict=${r.counters.evictionsApplied}`
         : "counters=(instrument off)";
       const fp = r.firstPixelMs != null ? `firstPixel=${r.firstPixelMs}ms` : `firstPixel=n/a (${r.firstPixelReason ?? "n/a"})`;
-      console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit} ${formatSegmentsSummary(r.segments)}`);
+      // Re-review S7: `waitForCalmBeforeClick`'s own doc comment already declares giving up
+      // (`calmed: false`) as an EXPECTED, non-failing outcome on a busy fixture -- `status` correctly
+      // stays "measured" for such a row. But a reader scanning ONLY the printed summary line (not the
+      // full JSON evidence file) had no way to tell "clicked calm" from "gave up and clicked busy"
+      // without this marker -- a real condition worth seeing at a glance, not a footnote buried in
+      // `gesture.calmWait`.
+      const calmBit = r.gesture?.calmWait && r.gesture.calmWait.calmed === false ? ` calmed=false(waitedMs=${r.gesture.calmWait.waitedMs})` : "";
+      console.log(`[${r.stepId}] ${r.status} wallMs=${r.wallMs ?? "n/a"} ${fp} ${featureBit} ${formatSegmentsSummary(r.segments)}${calmBit}`);
     }
 
     // P1d suggestion 12: a realized-displacement FAIL (measureOneStep's own `viewState.assertion`)

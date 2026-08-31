@@ -25,9 +25,9 @@ function flushMicrotasks(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
 }
 
-function fakeResidency(residentKeys: string[] = []): TileResidencyAccessor {
+function fakeResidency(residentKeys: string[] = [], hasHeadroom?: () => boolean): TileResidencyAccessor {
   const set = new Set(residentKeys);
-  return { isTileResident: (k) => set.has(k) };
+  return { isTileResident: (k) => set.has(k), hasHeadroom };
 }
 
 function makeManager(overrides: Partial<TileViewportStreamManagerOptions> = {}) {
@@ -439,6 +439,39 @@ describe("TileViewportStreamManager", () => {
       const outcome = manager.onCameraChange(bbox);
       if (outcome.kind !== "planned") throw new Error("unreachable");
       expect(outcome.issued).toEqual(["0:0"]);
+    });
+
+    // Viewport-residency cut P6a, Defect A: the drain-stop exception -- a residency accessor that
+    // reports headroom lets a NEW candidate through even while `overBudgetFlag` is still set,
+    // mirroring "re-fetch of partial/evicted VIEWPORT tiles is permitted when headroom exists even
+    // while the historical flag was set."
+    it("hasHeadroom() true lets a new candidate through despite overBudget being set", () => {
+      const { manager } = makeManager({ residency: fakeResidency([], () => true) });
+      manager.establishGridFrame(ANCHOR);
+      manager.setOverBudget(true);
+      viewportQueryMock.mockReturnValue(new Promise(() => {}));
+
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.issued).toEqual(["0:0"]);
+      expect(manager.overBudget).toBe(true); // the flag itself is untouched -- only the gate relaxes
+    });
+
+    it("hasHeadroom() false (or absent) keeps blocking every new candidate while overBudget is set -- the pre-existing behaviour", () => {
+      const { manager } = makeManager({ residency: fakeResidency([], () => false) });
+      manager.establishGridFrame(ANCHOR);
+      manager.setOverBudget(true);
+
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.issued).toEqual([]);
+      expect(viewportQueryMock).not.toHaveBeenCalled();
     });
   });
 

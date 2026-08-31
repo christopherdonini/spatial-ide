@@ -58,13 +58,43 @@ export function startStream(opts: ConnectOptions): RunningStream {
     ws.addEventListener("open", begin);
   }
 
+  /**
+   * Re-review S9: closes the connection cleanly and stops granting any further credit -- shared by
+   * both failure paths below (a decode fault, or a poisoned sink) so neither one has its own
+   * half-written copy of "cancel, then close" to drift out of sync with the other.
+   */
+  function abandonStream(terminal: { kind: "DecodeFailed" | "SinkPoisoned"; detail: string }): void {
+    if (!finished) {
+      finished = true;
+      opts.sink.onTerminal(terminal);
+    }
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(cancelFrame());
+      ws.close();
+    }
+  }
+
   ws.addEventListener("message", (ev) => {
     const chunk = new Uint8Array(ev.data as ArrayBuffer);
     // Decoding is inside the taxonomy, not outside it: a batch whose envelope is wrong or an Arrow
     // layout that contradicts it throws, and an uncaught throw here would abandon the frames
     // already parsed with no terminal at all -- the silent async death ADR-010 rule 7 forbids.
+    let frames: ReturnType<typeof decoder.push>;
     try {
-      for (const frame of decoder.push(chunk)) {
+      frames = decoder.push(chunk);
+    } catch (err) {
+      abandonStream({ kind: "DecodeFailed", detail: err instanceof Error ? err.message : String(err) });
+      return;
+    }
+    for (const frame of frames) {
+      // Re-review S9: a throw from a `StreamSink` callback itself (`pushTileBatch`'s own decode/
+      // ingest logic, reached synchronously through `onBatch`) is a bug in THIS client's own
+      // consumption of an otherwise well-formed frame -- caught here, separately from the decode try
+      // above, so it is never conflated with a genuine wire/framing fault: a distinct, typed
+      // `"SinkPoisoned"` terminal (`transport.ts`), never silently stalling the stream (no further
+      // frame in THIS chunk is processed once poisoned; no further credit is granted -- the batch
+      // case's own `grant` call below is skipped by the same `finished` check `abandonStream` sets).
+      try {
         switch (frame.t) {
           case "open":
             opts.sink.onOpen(frame.handle);
@@ -86,19 +116,10 @@ export function startStream(opts: ConnectOptions): RunningStream {
             ws.close();
             break;
         }
+      } catch (err) {
+        abandonStream({ kind: "SinkPoisoned", detail: err instanceof Error ? err.message : String(err) });
       }
-    } catch (err) {
-      if (!finished) {
-        finished = true;
-        opts.sink.onTerminal({
-          kind: "DecodeFailed",
-          detail: err instanceof Error ? err.message : String(err),
-        });
-      }
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(cancelFrame());
-        ws.close();
-      }
+      if (finished) break; // poisoned or terminated -- the rest of this chunk's frames are moot
     }
   });
 

@@ -66,6 +66,12 @@ function fakeCanvas(overrides: Partial<WorkingCanvasHandle> = {}): WorkingCanvas
     clearTile: vi.fn(),
     clearAllTiles: vi.fn(),
     isTileResidentInCandidateSet: vi.fn(() => false),
+    // Mirrors `isTileResidentInCandidateSet`'s own default: a tile this fake has never been told
+    // about is neither resident nor complete -- a test that needs a covering tile to read as
+    // COMPLETE (Defect A's own stronger fact) overrides this explicitly, the same way it would
+    // already override `isTileResidentInCandidateSet` for the older, weaker check.
+    isTileCompleteInCandidateSet: vi.fn(() => false),
+    markTilePartial: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
     ...overrides,
@@ -238,6 +244,60 @@ describe("startCandidateArmSession", () => {
     expect(cancelMock).toHaveBeenCalledWith("sh_1");
     const outcome = await session.reissueUnrestricted(null, null);
     expect(outcome).toEqual({ kind: "stopped" });
+  });
+
+  // Viewport-residency cut P6a, Defect A (principle 7 -- stop decoding-to-discard): "the manager
+  // knows remaining ≈ 0." A real tile's own batch trimmed to the budget boundary must cancel that
+  // SAME tile's own in-flight stream -- never left running to decode-and-discard further batches --
+  // and the tile's own residency must be KEPT (marked partial), never blanked via `clearTile`.
+  it("a real tile batch reporting overBudget cancels that tile's own stream and marks it partial, never clears it", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi
+        .fn()
+        .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })
+        .mockReturnValue({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }),
+    });
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValue({ stream: "sh_tile_1" });
+    cancelMock.mockClear();
+    vi.useFakeTimers();
+    try {
+      session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    } finally {
+      vi.useRealTimers();
+    }
+    const tileSink = lastSink();
+    tileSink.onBatch(new Uint8Array([2]), true); // reports overBudget -- trimmed at ingest
+    await Promise.resolve(); // manager.cancelTile's own synchronous cancel path settles
+
+    expect(cancelMock).toHaveBeenCalledWith("sh_tile_1");
+    const [tileKey] = (canvas.pushTileBatch as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+    expect(canvas.markTilePartial).toHaveBeenCalledWith(tileKey);
+    expect(canvas.clearTile).not.toHaveBeenCalledWith(tileKey);
+  });
+
+  // The untiled first-look/reissue stream is never tracked by `manager` at all -- an overBudget
+  // outcome reported under `INITIAL_TILE_KEY` must never attempt `manager.cancelTile` for it (a
+  // silent no-op regardless, but this proves the exclusion, not merely relies on the no-op).
+  it("an overBudget outcome under INITIAL_TILE_KEY (the untiled first look) never cancels a real tile stream", async () => {
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+    });
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+    cancelMock.mockClear();
+
+    lastSink().onBatch(new Uint8Array([1]), true); // the untiled stream's own batch, over budget
+    await Promise.resolve();
+
+    expect(cancelMock).not.toHaveBeenCalled();
+    expect(canvas.markTilePartial).not.toHaveBeenCalled();
   });
 });
 

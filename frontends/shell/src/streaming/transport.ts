@@ -14,7 +14,16 @@
  * `viewportStreamManager.ts` already holds before any transport code runs.
  */
 
-export type TerminalKind = "Completed" | "Cancelled" | "ProducerFailed" | "TransportFailed" | "DecodeFailed";
+/**
+ * Re-review S9 (viewport-residency cut P6a): `"SinkPoisoned"` is a CLIENT-LOCAL terminal, never sent
+ * by the producer -- appended LAST so every existing wire ordinal `TERMINAL_KINDS[payload[0]]`
+ * (`wire.ts`) already decodes stays unchanged; the same precedent `"DecodeFailed"`/`"TransportFailed"`
+ * already set (both are also synthesized client-side, never producer-sent). It names a batch-sink
+ * callback (`StreamSink.onBatch`/`onOpen`/`onProgress`) throwing -- a bug in THIS client's own
+ * consumption of an otherwise well-formed frame, never a wire/framing defect (`"DecodeFailed"`'s own
+ * meaning, unchanged) -- so a diagnosis reading this kind knows to look at the consumer, not the wire.
+ */
+export type TerminalKind = "Completed" | "Cancelled" | "ProducerFailed" | "TransportFailed" | "DecodeFailed" | "SinkPoisoned";
 
 export const TERMINAL_KINDS: TerminalKind[] = [
   "Completed",
@@ -22,6 +31,7 @@ export const TERMINAL_KINDS: TerminalKind[] = [
   "ProducerFailed",
   "TransportFailed",
   "DecodeFailed",
+  "SinkPoisoned",
 ];
 
 /** The data-plane's own per-process instrument identities (`protocol/data-plane/src/transport.rs`'s

@@ -127,10 +127,17 @@ export function ingestTileBatch(params: {
         distanceToViewCentre: (k) => tileDistanceToPoint(grid.frame, grid.level, parseTileKey(k), viewCentre),
         reservedTileKeys: RESERVED_TILE_KEYS,
       });
+      // B1 (re-review, blocking): `TileResidentSet.evictTile`'s own cascade can now divert a
+      // PROTECTED (current-viewport) suppressor away from eviction (marks it partial instead, never
+      // blanks it) -- its true return value, not `plan.evict` itself, is what actually happened.
+      // `evictedTileKeys` -- the counters a caller (`WorkingCanvas.tsx`'s `traceTileIngest`,
+      // `residencyInstrument.ts`'s `recordResidencyEvictionsApplied`) reads -- must report that TRUE
+      // list, never the candidate plan, or a protected-suppressor diversion would silently overcount.
+      const actuallyEvicted: string[] = [];
       for (const key of plan.evict) {
-        tileSet.evictTile(key);
+        actuallyEvicted.push(...tileSet.evictTile(key, viewportTileKeys));
       }
-      evictedTileKeys = plan.evict;
+      evictedTileKeys = actuallyEvicted;
       overBudget = plan.overBudget;
     } else {
       // No frame yet to order eviction by -- nothing evictable is identified, so this degrades
@@ -143,7 +150,11 @@ export function ingestTileBatch(params: {
     }
   }
 
-  const result = tileSet.addBatch(tileKey, toAdmit);
+  // Defect A (architect gate, blocking): a batch trimmed to the budget boundary is durably partial --
+  // `toAdmit !== batch` iff `trimBatchToVertexBudget` above actually cut something (the untrimmed,
+  // whole-batch case reassigns `toAdmit = batch` nowhere; it simply stays the parameter's own value).
+  const trimmed = overBudget && toAdmit.ids.length < batch.ids.length;
+  const result = tileSet.addBatch(tileKey, toAdmit, trimmed);
   const unionedExtent = params.unionBbox(params.priorExtent, params.extentOfBatch(batch));
 
   return {

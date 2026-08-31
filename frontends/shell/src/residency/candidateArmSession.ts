@@ -3,6 +3,7 @@
 
 import type { WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { chooseFitTarget } from "../canvas/extent";
+import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
 import { INITIAL_TILE_KEY, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { traceCandidateResidencyStatus, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
@@ -180,6 +181,14 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   let stopped = false;
   let currentFilter: Filter | null = null;
   let lastCoveringTileKeys: ReadonlySet<string> = new Set();
+  /** Re-review S4: the MOST RECENT `TilePlanOutcome.coveringTruncated` (`TileViewportStreamManager
+   * .onCameraChange`'s own "more covering tiles existed than this round's capacity allowed" flag) --
+   * `isFillComplete` below reads this too, alongside every covering tile's own completeness, so a
+   * truncated covering set can never read as "all" even when every tile this round DID attempt is
+   * itself fully resident (there is a whole tile it never even tried, by construction). Reset to
+   * `false` on `reissueUnrestricted` -- a fresh generation starts with no truncation history of its
+   * own, mirroring `lastCoveringTileKeys`'s own reset. */
+  let lastCoveringTruncated = false;
   /** P5f complex-gate should-fix 4: the running union of every batch the CURRENT untiled first-look/
    * reissue stream has delivered so far (`ingestAndMaybeEstablishFrame`'s own `outcome.unionedExtent`,
    * which already accumulates across calls) -- read once, at that stream's own natural terminal
@@ -289,13 +298,25 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * complete, this function emits NOTHING (docs/01: absence is honest; a wrong "all" is not) -- the
    * prior status, if any, is left exactly as it was until this session next has something true to say
    * (the next `emitResidencyStatus` call once the fill actually completes, or one of the shared
-   * `query-issued`/`dataset-changed`/`delivery-complete` clears). */
+   * `query-issued`/`dataset-changed`/`delivery-complete` clears).
+   *
+   * **Viewport-residency cut P6a, Defect A (architect gate, blocking): "requires all covering tiles
+   * COMPLETE (not merely present)."** Before this piece, the per-tile check below read
+   * `isTileResidentInCandidateSet` -- `true` for a tile that was trimmed to the budget boundary just
+   * as readily as for one that holds everything its bbox covers, so "Showing all N features in view"
+   * could fire over a covering set that included a genuinely truncated tile. `isTileCompleteInCandidateSet`
+   * (`WorkingCanvasHandle`, backed by `TileResidentSet.isTileComplete`) is the stronger fact: resident
+   * AND not durably partial. */
   function isFillComplete(): boolean {
     if (manager.overBudget) return false;
     if (manager.trackedTileCount > 0) return false;
+    // Re-review S4: a truncated covering set (`TilePlanOutcome.coveringTruncated`) means real,
+    // never-even-attempted tiles exist beyond this round's own issuing/queueing capacity -- "truncated
+    // ⇒ never all," regardless of how complete every ATTEMPTED tile is.
+    if (lastCoveringTruncated) return false;
     if (!canvas) return false;
     for (const tileKey of lastCoveringTileKeys) {
-      if (!canvas.isTileResidentInCandidateSet(tileKey)) return false;
+      if (!canvas.isTileCompleteInCandidateSet(tileKey)) return false;
     }
     return true;
   }
@@ -319,16 +340,46 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     deps.onResidencyStatusChange?.({ kind: "candidate-within-budget", residentFeatureCount: totalResidentFeatures });
   }
 
+  // Viewport-residency cut P6a, Defect A: tile keys this session cancelled itself because it already
+  // knew the remainder of that tile's own stream could not be admitted (`ingestAndMaybeEstablishFrame`'s
+  // own `outcome.overBudget` branch, principle 7 -- stop decoding-to-discard). `onTileSuperseded` reads
+  // this to tell "self-cancelled for budget reasons, keep what was admitted, mark partial" apart from
+  // an ordinary out-of-view supersede, which drops the tile's residency entirely -- the two are
+  // structurally different outcomes for `WorkingCanvasHandle`, not distinguishable from `tileKey`/
+  // `streamHandle` alone. `.delete` (not `.has`) below consumes the entry synchronously, in the same
+  // call this session's own `manager.cancelTile` triggers `onTileSuperseded` from -- there is no
+  // asynchronous window between the two (`TileViewportStreamManager.cancelTileStream` calls it inline).
+  const budgetCancelledTileKeys = new Set<string>();
+
   const manager = new TileViewportStreamManager({
     dataset,
-    residency: { isTileResident: (tileKey) => canvas?.isTileResidentInCandidateSet(tileKey) ?? false },
+    residency: {
+      // Defect A: "planning treats partial as non-resident" -- `isTileCompleteInCandidateSet`, not
+      // the older, weaker `isTileResidentInCandidateSet` (which stays `true` for a partial tile; that
+      // meaning is still needed elsewhere, e.g. `ingestAndMaybeEstablishFrame`'s own "genuinely no
+      // data at all" diagnostic listing below, so it was not repurposed here).
+      isTileResident: (tileKey) => canvas?.isTileCompleteInCandidateSet(tileKey) ?? false,
+      // Defect A's own drain-stop exception: "when budget allows" -- headroom is simply "the resident
+      // set has not yet reached the declared ceiling," the same figure `emitResidencyStatus` already
+      // reads off `canvas.getResidentCounts()`.
+      hasHeadroom: () => (canvas?.getResidentCounts().totalResidentVertices ?? 0) < MAX_RESIDENT_VERTICES,
+    },
     onBatch: (tileKey, streamHandle, batchSeq, payload) => {
       countTileStreamIssuedOnce(tileKey); // catches a queued-then-issued tile never seen in `issued`
       ingestAndMaybeEstablishFrame(tileKey, streamHandle, batchSeq, payload);
     },
     onTileSuperseded: (tileKey) => {
       countTileStreamEndedOnce(tileKey);
-      canvas?.clearTile(tileKey);
+      // Defect A: a self-cancel for "remaining could not be admitted" keeps whatever was already
+      // ingested (already marked partial at ingest -- see `ingestAndMaybeEstablishFrame`) and marks
+      // the tile partial again here defensively (idempotent, sticky) rather than blanking it via
+      // `clearTile` -- an ordinary out-of-view supersede (this set does NOT contain the key) still
+      // clears the tile's residency entirely, unchanged from before this piece.
+      if (budgetCancelledTileKeys.delete(tileKey)) {
+        canvas?.markTilePartial(tileKey);
+      } else {
+        canvas?.clearTile(tileKey);
+      }
       syncScanLiveness(); // P5f should-fix 3: a tile just left this manager's tracked set
     },
     onTerminal: (tileKey, streamHandle, terminal) => {
@@ -370,6 +421,23 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     if (outcome.overBudget) {
       const unrequested = [...lastCoveringTileKeys].filter((k) => !canvas.isTileResidentInCandidateSet(k));
       manager.setOverBudget(true, unrequested);
+      // Viewport-residency cut P6a, Defect A (principle 7 -- stop decoding-to-discard): this tile's
+      // own batch was just trimmed to the budget boundary -- evicting everything evictable already
+      // could not make room for it (`ingestTileBatch`'s own `overBudget` contract) -- so the manager
+      // already knows any further bytes still in flight for THIS tile's own stream cannot be admitted
+      // either; "the manager knows remaining ≈ 0." Cancelling now, rather than letting more batches
+      // arrive only to be decoded and trimmed to nothing, is that fact acted on. Never for
+      // `INITIAL_TILE_KEY`: the untiled first-look stream has its own separate lifecycle
+      // (`issueUntiledQuery` below), never tracked by `manager` at all -- `manager.cancelTile` would
+      // be a silent no-op for it regardless, but the exclusion is named here to keep the intent
+      // explicit rather than relying on that no-op. `budgetCancelledTileKeys` is what lets
+      // `onTileSuperseded` (this session's own manager construction) tell this self-cancel apart from
+      // an ordinary out-of-view supersede, so the tile's already-admitted (partial) content is KEPT,
+      // never blanked.
+      if (tileKey !== INITIAL_TILE_KEY) {
+        budgetCancelledTileKeys.add(tileKey);
+        void manager.cancelTile(tileKey);
+      }
     }
     evictedTileCountSession += outcome.evictedTileKeys.length;
     // Viewport-residency cut P4: every ingest may have moved `manager.overBudget` or the resident
@@ -397,6 +465,22 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     if (frame) {
       canvas?.establishTileGridContext(frame, manager.activeLevel);
       frameEstablished = true;
+      // Re-review S5: one always-on session-log line, at the exact moment the frame freezes -- the
+      // derived `baseSpan` (`deriveTileGridFrame`'s own `anchorSpan * PAD_FACTOR`, `tileGrid.ts`)
+      // beside the observed union extent (`target`, the untiled first look's own COMPLETE union,
+      // `chooseFitTarget(extent)`'s input) it was derived FROM. By construction the two agree at this
+      // one instant (`baseSpan` is a pure function of `target`'s own span); the point of logging it
+      // is the frame-drift hypothesis's own observable -- a LATER point in the same session log (e.g.
+      // a full-trace run's own final "zoom to layer" union) can be compared against this one
+      // establishment-time record to see whether the anchor the frame froze on ever drifted away from
+      // the dataset's own real extent. `logSessionEvent` (not `traceViewportQuery`'s render-trace
+      // class): this is a persisted, Rust-side session-log fact meant for a later diagnosis session to
+      // read back, not a console-only line a live CDP capture would need to see in the moment.
+      logSessionEvent(
+        "candidate-grid-frame-established",
+        `dataset=${dataset} baseSpan=${frame.baseSpan} originX=${frame.originX} originY=${frame.originY} ` +
+          `level=${manager.activeLevel} observedUnion={xmin:${extent.xmin},ymin:${extent.ymin},xmax:${extent.xmax},ymax:${extent.ymax}}`
+      );
     }
   }
 
@@ -484,10 +568,22 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     }
     const covering = [...outcome.issued, ...outcome.queued, ...outcome.alreadyResident];
     lastCoveringTileKeys = new Set(covering);
+    lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4
     const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
     const fits = canvas?.applyTileViewportContext(covering, viewCentre) ?? true;
-    if (fits) manager.setOverBudget(false);
-    // Viewport-residency cut P4: a pan/zoom re-plan may have changed `manager.overBudget` (cleared
+    // Viewport-residency cut P6a, Defect A: unconditional now, in BOTH directions -- before this
+    // piece, only `if (fits) manager.setOverBudget(false)` ran here, so a camera change that left the
+    // flag `true` relied entirely on some earlier ingest call to have set it, and a camera change
+    // whose own `applyTileViewportContext` re-check happened to fit (trivially likely the very next
+    // call after a trim -- see that method's own doc comment) cleared it regardless of whether the
+    // covering set still held a durably partial tile. `fits` is now DERIVED (partial-aware, not a bare
+    // vertex-sum check), so recomputing it unconditionally on every camera change is what "kills the
+    // one-camera-change transience": the flag is never stale, in either direction, past this call.
+    manager.setOverBudget(
+      !fits,
+      fits ? [] : [...lastCoveringTileKeys].filter((k) => !canvas?.isTileResidentInCandidateSet(k))
+    );
+    // Viewport-residency cut P4: a pan/zoom re-plan may have changed `manager.overBudget` (recomputed
     // above) or the resident feature count (eviction inside `applyTileViewportContext`) even with no
     // new batch arriving -- recompute and forward the status here too, so it stays current across a
     // pan while over budget (D's own transition requirement), not only on the next batch.
@@ -522,6 +618,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       canvas?.resetFitForNewGeneration();
       frameEstablished = false;
       lastCoveringTileKeys = new Set();
+      lastCoveringTruncated = false; // re-review S4: a fresh generation starts with no truncation history
       latestUnionedExtent = null; // a fresh generation's own untiled query starts its own union over
       evictedTileCountSession = 0; // a fresh generation starts a fresh eviction history
       // P5f complex-gate should-fix 5: before this fix, `countedIssuedTileKeys` survived a full clear
@@ -532,6 +629,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // every generation after the first. Swept here, alongside every other per-generation counter
       // this function already resets (`evictedTileCountSession` immediately above).
       countedIssuedTileKeys.clear();
+      // Viewport-residency cut P6a, Defect A: `manager.clearAll()` above already cancels every
+      // in-flight tile stream and reports it superseded (out-of-view style, via `onTileSuperseded`),
+      // so any entry this set still held is consumed there -- cleared again here defensively, the
+      // same "swept alongside every other per-generation counter" discipline the comment above already
+      // states, so a stale key can never survive into a later generation's own budget-exhaustion cancel.
+      budgetCancelledTileKeys.clear();
       // Viewport-residency cut P4 (decisions 24(a)/(b)): "clears on ... query-issued" -- the SAME
       // event baseline's own `issueViewportQuery` feeds `nextResidencyStatus` for an Apply/Clear
       // (App.tsx). Fired here, at the clear itself (residency truly is empty at this instant), not

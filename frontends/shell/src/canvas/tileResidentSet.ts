@@ -28,6 +28,15 @@ interface TileEntry {
   batches: ResidentBatch[];
   vertices: number;
   features: number;
+  /** Viewport-residency cut P6a, Defect A / ADR-028 architect clarification 2: true iff this tile's
+   * own resident content is known to be INCOMPLETE relative to what its bbox actually covers -- either
+   * a delivered batch was trimmed to the vertex budget boundary (`ingestTileBatch`'s own `overBudget`
+   * outcome) or the tile's own stream was cancelled mid-delivery because the manager already knew the
+   * remainder could not be admitted (`candidateArmSession.ts`'s budget-exhaustion cancel). Sticky:
+   * once true, only clears when the WHOLE entry is evicted (`evictTile`) and later re-ingested fresh --
+   * there is no "un-mark partial in place" operation, since nothing here can prove the tile's own
+   * remaining data was ever actually recovered short of a clean re-fetch. */
+  partial: boolean;
 }
 
 /**
@@ -61,6 +70,8 @@ interface TileEntry {
  * would-be-owner AND every tile that ever tried to deliver it are all marked non-resident together,
  * so the very next camera-change plan re-requests every one of them.
  */
+const EMPTY_PROTECTED_TILE_KEYS: ReadonlySet<string> = new Set();
+
 export class TileResidentSet {
   private tiles = new Map<string, TileEntry>();
   /** Every feature id currently resident, via ANY tile -- the dedupe set item C's own contract
@@ -104,6 +115,24 @@ export class TileResidentSet {
     return this.tiles.has(tileKey);
   }
 
+  /** Viewport-residency cut P6a, Defect A: true iff `tileKey` is both resident (`isTileResident`) AND
+   * NOT `partial` -- "we asked for this tile's own bbox and hold everything it delivered," the
+   * stronger fact `isFillComplete` (`candidateArmSession.ts`) and planning's own re-fetch decision
+   * both need instead of mere presence. False for a tile that was never ingested at all (nothing to be
+   * complete about) -- callers that need to distinguish "missing" from "partial" read `isTileResident`/
+   * `isTilePartial` directly. */
+  isTileComplete(tileKey: string): boolean {
+    const entry = this.tiles.get(tileKey);
+    return entry !== undefined && !entry.partial;
+  }
+
+  /** Whether `tileKey` is currently tracked as durably partial -- `false` for a tile that was never
+   * ingested at all, exactly like `isTileResident` would be (there is nothing partial about a tile
+   * this set has never heard of). */
+  isTilePartial(tileKey: string): boolean {
+    return this.tiles.get(tileKey)?.partial ?? false;
+  }
+
   residentTileKeys(): string[] {
     return [...this.tiles.keys()];
   }
@@ -129,8 +158,16 @@ export class TileResidentSet {
    * function a caller runs first (typically: attempt eviction, then call this only if evicting made
    * room, or accept over-budget per item D's own contract). This keeps `addBatch` itself a pure
    * bookkeeping operation, never a refusal.
+   *
+   * **`partial` (viewport-residency cut P6a, Defect A):** the caller's own declaration that `batch`
+   * was already trimmed to the vertex budget boundary before reaching here (`ingestTileBatch`'s own
+   * `overBudget` outcome) -- this method never decides that itself (it has no budget of its own to
+   * compare against). `false` by default so every pre-existing call site (nothing was ever trimmed)
+   * keeps its old, non-partial behaviour unchanged. Sticky: a tile already marked partial by an
+   * earlier call stays partial even if THIS call passes `false` -- see `markTileResidentEmpty`'s own
+   * doc comment for why downgrading in place is never correct.
    */
-  addBatch(tileKey: string, batch: ResidentBatch): TileIngestResult {
+  addBatch(tileKey: string, batch: ResidentBatch, partial = false): TileIngestResult {
     const keepIdx: number[] = [];
     let duplicatesDropped = 0;
     for (let i = 0; i < batch.ids.length; i++) {
@@ -157,7 +194,7 @@ export class TileResidentSet {
       }
     }
 
-    this.markTileResidentEmpty(tileKey); // ingesting at all makes this tile resident, even if trimmed to nothing
+    this.markTileResidentEmpty(tileKey, partial); // ingesting at all makes this tile resident, even if trimmed to nothing
 
     if (keepIdx.length === 0) {
       return { accepted: null, duplicatesDropped };
@@ -196,12 +233,30 @@ export class TileResidentSet {
 
   /** Marks `tileKey` resident with no data of its own yet -- a stream whose own tile bbox genuinely
    * carries nothing (an empty delivery, or a delivery entirely deduped away) still counts as
-   * "already have this tile" for planning purposes. A no-op if the tile is already tracked (via a
-   * prior `addBatch` or an earlier call to this method). */
-  markTileResidentEmpty(tileKey: string): void {
-    if (!this.tiles.has(tileKey)) {
-      this.tiles.set(tileKey, { batches: [], vertices: 0, features: 0 });
+   * "already have this tile" for planning purposes. Creates the entry as `partial` iff `partial` is
+   * `true`; if the tile is ALREADY tracked, `partial: true` still upgrades the existing entry (sticky,
+   * never downgrades it back to `false` here -- see `TileEntry.partial`'s own doc comment for why
+   * there is no in-place "un-mark partial" operation). `partial` defaults to `false` so every
+   * pre-existing call site keeps its old behaviour unchanged. */
+  markTileResidentEmpty(tileKey: string, partial = false): void {
+    const existing = this.tiles.get(tileKey);
+    if (!existing) {
+      this.tiles.set(tileKey, { batches: [], vertices: 0, features: 0, partial });
+      return;
     }
+    if (partial) existing.partial = true;
+  }
+
+  /** Viewport-residency cut P6a, Defect A: marks an ALREADY-tracked tile partial without adding a
+   * batch -- the "stream superseded mid-delivery" trigger (`candidateArmSession.ts`'s own
+   * budget-exhaustion cancel: the manager knows the remainder could not be admitted, cancels the
+   * stream, and this is how that fact survives the cancellation instead of being silently lost). A
+   * no-op for a tile this set has never heard of (`isTileResident(tileKey) === false`) -- there is no
+   * entry to mark, and creating an empty-but-partial one for a tile that was never even asked for
+   * would misrepresent it as "attempted and incomplete" rather than "never requested." */
+  markTilePartial(tileKey: string): void {
+    const entry = this.tiles.get(tileKey);
+    if (entry) entry.partial = true;
   }
 
   /**
@@ -221,10 +276,34 @@ export class TileResidentSet {
    * that ever delivered it is evicted together, and `isTileResident` for every one of them becomes
    * `false` in the same synchronous call -- the very next planning pass re-fetches whichever of them
    * the current viewport still covers, rather than leaving a permanent, unrecoverable hole.
+   *
+   * **Viewport-residency cut P6a, B1: the cascade above ignored `viewportTileKeys` entirely.** A
+   * suppressor found by step (2) could itself be a tile the CURRENT viewport covers -- the cascade
+   * evicted it anyway, blanking a tile the "never evict a tile intersecting the current viewport"
+   * rule (this class's own `planTileEviction`, and `applyTileViewportContext`'s own doc comment)
+   * exists to protect, and did so through `evictedTileKeys`/`plan.evict`-derived counters that never
+   * even recorded it happened. `protectedTileKeys` (typically the caller's own current covering set)
+   * is the fix: a suppressor named in it is never evicted by the cascade -- only its own suppression
+   * RECORD for the one id being cascaded is dropped (it may still legitimately suppress other ids
+   * whose owner survives), and the tile itself is marked `partial` (Defect A's own machinery) so the
+   * very next planning pass re-fetches it once headroom allows, recovering that id's geometry under
+   * its own delivery this time -- geometry is never re-attributed in place (this class's own top doc
+   * comment: design A was rejected), so a fresh delivery is the only honest way to recover it. The
+   * return value is now the TRUE list of tile keys this call actually evicted (this tile plus every
+   * cascaded, non-protected suppressor) -- a caller's own eviction counters read this, never assume
+   * it equals whatever eviction PLAN it started from, since a plan's own candidate list and reality
+   * can now differ exactly where a protected suppressor was involved.
    */
-  evictTile(tileKey: string): void {
+  evictTile(tileKey: string, protectedTileKeys: ReadonlySet<string> = EMPTY_PROTECTED_TILE_KEYS): string[] {
     const entry = this.tiles.get(tileKey);
-    if (!entry) return;
+    if (!entry) return [];
+    if (protectedTileKeys.has(tileKey)) {
+      // Never blank a protected tile directly. `planTileEviction`'s own `viewportTileKeys` exclusion
+      // already keeps a protected key out of a plan's `evict` list in the ordinary case; this guard
+      // is the structural backstop for the one OTHER route that could reach a protected tile here --
+      // a cascade landing on it as a suppressor is handled per-id below, never by evicting it outright.
+      return [];
+    }
     this.tiles.delete(tileKey);
     this.totalVertices -= entry.vertices;
     this.totalFeatures -= entry.features;
@@ -245,6 +324,8 @@ export class TileResidentSet {
 
     // (2) Ids THIS tile owned -- gone from the dedupe set; any still-resident suppressor of one of
     // them must be evicted too (cascade), collected first so mutating `this.tiles` mid-loop is safe.
+    // A PROTECTED suppressor is diverted into `markTilePartial` instead of the cascade set (B1).
+    const evicted: string[] = [tileKey];
     const cascadeTiles = new Set<string>();
     for (const b of entry.batches) {
       for (const id of b.ids) {
@@ -252,14 +333,26 @@ export class TileResidentSet {
         this.idOwner.delete(id);
         const suppressors = this.suppressorsOf.get(id);
         if (suppressors) {
-          for (const t of suppressors) cascadeTiles.add(t);
+          for (const t of suppressors) {
+            if (protectedTileKeys.has(t)) {
+              const suppressedByT = this.suppressedIdsByTile.get(t);
+              if (suppressedByT) {
+                suppressedByT.delete(id);
+                if (suppressedByT.size === 0) this.suppressedIdsByTile.delete(t);
+              }
+              this.markTilePartial(t);
+            } else {
+              cascadeTiles.add(t);
+            }
+          }
           this.suppressorsOf.delete(id);
         }
       }
     }
     for (const t of cascadeTiles) {
-      if (t !== tileKey) this.evictTile(t);
+      if (t !== tileKey) evicted.push(...this.evictTile(t, protectedTileKeys));
     }
+    return evicted;
   }
 
   clear(): void {

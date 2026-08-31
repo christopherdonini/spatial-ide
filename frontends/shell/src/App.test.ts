@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Admitted } from "./admission/admitDataset";
 import type { FormattedRefusal } from "./admission/formatRefusal";
-import type { PickResult } from "./canvas/pick";
+import type { HoverReadout, PickResult } from "./canvas/pick";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import type { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import {
@@ -167,7 +167,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const state: {
       canvasRefusal: string | null;
       viewportRefusal: FormattedRefusal | null;
-      hover: PickResult | null;
+      hover: HoverReadout;
       residencyStatus: ResidencyStatus | null;
       activeFilter: Filter | null;
       lastViewportBbox: Bbox | null;
@@ -183,7 +183,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     };
     const setCanvasRefusal = vi.fn((v: string | null) => (state.canvasRefusal = v));
     const setViewportRefusal = vi.fn((v: FormattedRefusal | null) => (state.viewportRefusal = v));
-    const setHover = vi.fn((v: PickResult | null) => (state.hover = v));
+    const setHover = vi.fn((v: HoverReadout) => (state.hover = v));
     const setResidencyStatus = vi.fn((v: ResidencyStatus | null) => (state.residencyStatus = v));
     const setActiveFilter = vi.fn((v: Filter | null) => (state.activeFilter = v));
     const setLastViewportBbox = vi.fn((v: Bbox | null) => (state.lastViewportBbox = v));
@@ -342,6 +342,8 @@ function fakeCanvasHandle(): WorkingCanvasHandle {
     clearTile: vi.fn(),
     clearAllTiles: vi.fn(),
     isTileResidentInCandidateSet: vi.fn(() => false),
+    isTileCompleteInCandidateSet: vi.fn(() => false),
+    markTilePartial: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
   };
@@ -436,6 +438,8 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
     clearTile: vi.fn(),
     clearAllTiles: vi.fn(),
     isTileResidentInCandidateSet: vi.fn(() => false),
+    isTileCompleteInCandidateSet: vi.fn(() => false),
+    markTilePartial: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
     };

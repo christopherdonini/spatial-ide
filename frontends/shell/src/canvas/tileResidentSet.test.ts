@@ -42,6 +42,65 @@ describe("TileResidentSet: per-tile bookkeeping", () => {
   });
 });
 
+// Viewport-residency cut P6a, Defect A (architect gate, blocking): durable partiality as a property
+// of the resident set itself, per ADR-028's appended clarification 2.
+describe("TileResidentSet: durable partiality (Defect A)", () => {
+  it("a tile with no batch ever admitted is neither resident, partial, nor complete", () => {
+    const set = new TileResidentSet();
+    expect(set.isTileResident("0:0")).toBe(false);
+    expect(set.isTilePartial("0:0")).toBe(false);
+    expect(set.isTileComplete("0:0")).toBe(false);
+  });
+
+  it("an ordinary (non-trimmed) addBatch leaves the tile complete, not partial", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1, 2]));
+    expect(set.isTilePartial("0:0")).toBe(false);
+    expect(set.isTileComplete("0:0")).toBe(true);
+  });
+
+  it("addBatch(..., partial: true) marks the tile durably partial -- resident but not complete", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1, 2]), true);
+    expect(set.isTileResident("0:0")).toBe(true);
+    expect(set.isTilePartial("0:0")).toBe(true);
+    expect(set.isTileComplete("0:0")).toBe(false);
+  });
+
+  it("partial is sticky: a LATER non-partial addBatch to the same tile does not clear it", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1]), true); // trimmed once -- partial
+    set.addBatch("0:0", batch("sh_b", 0, [2]), false); // a later, whole batch for the same tile
+    expect(set.isTilePartial("0:0")).toBe(true); // still partial -- nothing here proves recovery
+  });
+
+  it("markTilePartial marks an already-tracked tile without adding a batch (the mid-delivery-cancel case)", () => {
+    const set = new TileResidentSet();
+    set.markTileResidentEmpty("0:0");
+    expect(set.isTilePartial("0:0")).toBe(false);
+    set.markTilePartial("0:0");
+    expect(set.isTilePartial("0:0")).toBe(true);
+    expect(set.isTileComplete("0:0")).toBe(false);
+  });
+
+  it("markTilePartial is a no-op for a tile that was never tracked -- no phantom entry is created", () => {
+    const set = new TileResidentSet();
+    set.markTilePartial("9:9");
+    expect(set.isTileResident("9:9")).toBe(false);
+    expect(set.isTilePartial("9:9")).toBe(false);
+  });
+
+  it("evicting a partial tile and re-ingesting it fresh clears partial -- eviction is the only reset", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1]), true);
+    expect(set.isTilePartial("0:0")).toBe(true);
+    set.evictTile("0:0");
+    set.addBatch("0:0", batch("sh_b", 0, [1]), false);
+    expect(set.isTilePartial("0:0")).toBe(false);
+    expect(set.isTileComplete("0:0")).toBe(true);
+  });
+});
+
 describe("TileResidentSet: cross-tile dedupe by stable feature id (item C)", () => {
   it("a feature id already resident via tile A is dropped when it arrives again via tile B, counted", () => {
     const set = new TileResidentSet();
@@ -152,6 +211,56 @@ describe("TileResidentSet: eviction apply (evictTile)", () => {
     expect(() => set.evictTile("A")).not.toThrow();
     expect(set.isTileResident("A")).toBe(false);
     expect(set.totalResidentFeatures).toBe(0);
+  });
+
+  // Viewport-residency cut P6a, B1 (re-review, blocking): the reviewer's own reproduced probe
+  // scenario, extended into a real test. A "bootstrap" tile (the reserved untiled first-look key in
+  // real production use; a plain owner tile here) owns ids {1, 2, 3}. A real, current-VIEWPORT tile
+  // also attempts to deliver {1, 2, 3} (all suppressed as duplicates, the bootstrap already owns them)
+  // plus a genuinely new id 4 of its own. Under a tight budget the bootstrap tile is evicted; before
+  // this fix, the cascade (M2's own suppressor sweep) evicted the viewport tile too, BLANKING a tile
+  // the "never evict a tile intersecting the current viewport" rule exists to protect, with no honest
+  // record that it had happened. The fix: the viewport tile is named PROTECTED, survives with its own
+  // surviving content (id 4) intact, is marked partial (Defect A's own re-fetch machinery, so planning
+  // recovers ids 1-3 under the viewport tile's own delivery once headroom allows), and the returned
+  // evicted list -- what a caller's own counters must read, never `plan.evict` itself -- names only
+  // the tile that was ACTUALLY blanked.
+  it("B1: a protected (current-viewport) suppressor survives a cascade -- its record is dropped, it is marked partial, never evicted; the returned list is the true one", () => {
+    const set = new TileResidentSet();
+    const bootstrap = "bootstrap";
+    const viewportTile = "viewport-tile";
+    set.addBatch(bootstrap, batch("sh_bootstrap", 0, [1, 2, 3])); // bootstrap owns 1, 2, 3
+    const viewportResult = set.addBatch(viewportTile, batch("sh_viewport", 0, [1, 2, 3, 4]));
+    expect(viewportResult.duplicatesDropped).toBe(3); // 1, 2, 3 all lost to the bootstrap's own ownership
+    expect(Array.from(viewportResult.accepted?.ids ?? [])).toEqual([4n]); // only its own new id survives ingest
+
+    const protectedTileKeys = new Set([viewportTile]); // the current covering set, protected absolutely
+    const evicted = set.evictTile(bootstrap, protectedTileKeys);
+
+    // The TRUE evicted list -- the viewport tile is never in it, however far the cascade reached.
+    expect(evicted).toEqual([bootstrap]);
+    expect(set.isTileResident(bootstrap)).toBe(false);
+    // The protected tile survives, with its own surviving content untouched.
+    expect(set.isTileResident(viewportTile)).toBe(true);
+    expect(set.totalResidentFeatures).toBe(1); // only id 4 -- the bootstrap's {1,2,3} geometry is gone
+    // Marked partial: it once tried to deliver 1-3 and lost that ownership race, and now that the
+    // owner is gone, its own delivery of them was never stored either -- planning must re-fetch it.
+    expect(set.isTilePartial(viewportTile)).toBe(true);
+    expect(set.isTileComplete(viewportTile)).toBe(false);
+
+    // Re-queryable: a fresh delivery from the viewport tile itself now owns 1-3 cleanly (the owner
+    // slot is genuinely open -- evicting the bootstrap really did clear `knownIds` for them).
+    const refetch = set.addBatch(viewportTile, batch("sh_viewport2", 0, [1, 2, 3]));
+    expect(refetch.duplicatesDropped).toBe(0);
+    expect(Array.from(refetch.accepted?.ids ?? [])).toEqual([1n, 2n, 3n]);
+  });
+
+  it("B1: a protected tile can never be evicted directly either, even if named in the caller's own evict list", () => {
+    const set = new TileResidentSet();
+    set.addBatch("viewport-tile", batch("sh_a", 0, [1]));
+    const evicted = set.evictTile("viewport-tile", new Set(["viewport-tile"]));
+    expect(evicted).toEqual([]);
+    expect(set.isTileResident("viewport-tile")).toBe(true);
   });
 });
 

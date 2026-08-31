@@ -40,7 +40,9 @@ import {
   ResidentVertexCeilingExceeded,
 } from "./limits";
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
-import { PickResult, resolvePick } from "./pick";
+import type { HoverReadout } from "./pick";
+import { resolvePick } from "./pick";
+import { averageFeatureExtent, isBelowPickResolution } from "./pickResolution";
 import { ResidentSet } from "./residentSet";
 import { getResidencyArm } from "../residency/residencyArm";
 import { ingestTileBatch } from "./tileIngest";
@@ -185,6 +187,19 @@ export interface WorkingCanvasHandle {
    * `TileResidentSet`'s own always-live method of the same name", so sharing the name would make
    * that check permanently, spuriously fail (found live writing this piece). */
   isTileResidentInCandidateSet(tileKey: string): boolean;
+  /** Viewport-residency cut P6a, Defect A: whether `tileKey` is resident AND NOT durably partial
+   * (`TileResidentSet.isTileComplete`) -- the stronger fact planning's own re-fetch decision and
+   * `isFillComplete`'s own "Showing all N" gate both need instead of `isTileResidentInCandidateSet`'s
+   * weaker "present at all, whole or trimmed" meaning. See that method's own doc comment for why the
+   * two are kept separate rather than one repurposed. */
+  isTileCompleteInCandidateSet(tileKey: string): boolean;
+  /** Viewport-residency cut P6a, Defect A: marks an already-tracked tile durably partial without
+   * touching its residency otherwise -- the "stream superseded mid-delivery" trigger
+   * (`candidateArmSession.ts`'s budget-exhaustion cancel: the manager already knows the remainder of
+   * that tile's own stream could not have been admitted, so it cancels rather than decoding to
+   * discard, and this is how that fact survives the cancellation). A no-op for a tile not currently
+   * resident (`TileResidentSet.markTilePartial`'s own contract). */
+  markTilePartial(tileKey: string): void;
   /** Declares the tile grid frame/level this canvas instance's own eviction ordering should use --
    * called once, by `App.tsx`'s candidate session, immediately after
    * `TileViewportStreamManager.establishGridFrame` succeeds. Idempotent past the first call, mirroring
@@ -194,9 +209,21 @@ export interface WorkingCanvasHandle {
    * and over-budget re-evaluation need -- called by `App.tsx`'s candidate session after every
    * `TileViewportStreamManager.onCameraChange`. Also re-attempts eviction against the NEW covering
    * set with zero incoming vertices (item B: "clear it when a later camera change fits within budget
-   * again") and applies any eviction that succeeds. Returns whether current residency now fits within
-   * `MAX_RESIDENT_VERTICES` -- the caller (`App.tsx`) uses this to clear `manager`'s own over-budget
-   * flag when `true`.
+   * again") and applies any eviction that succeeds (B1: the protected/current-viewport set itself,
+   * threaded into `TileResidentSet.evictTile` so a cascade can never blank one of these tiles).
+   *
+   * **Viewport-residency cut P6a, Defect A: the return value is now DERIVED, not a bare vertex-sum
+   * check.** Before this piece, "fits" meant only "the covering tiles' own CURRENT resident vertex
+   * total is within budget" -- a check that is trivially true the very next call after a trim, since
+   * trimming exists precisely to bring residency back within budget; the caller's own `overBudget`
+   * flag therefore reset on the next camera change regardless of whether the just-trimmed tile still
+   * held less than its bbox actually covers. This method now ALSO returns `false` while any tile in
+   * `coveringTileKeys` is durably partial (`TileResidentSet.isTilePartial`) -- so the caller's derived
+   * over-budget state stays true for as long as a covering tile genuinely remains incomplete, and
+   * clears only once every covering tile is either evicted-and-refetched-whole or was never trimmed to
+   * begin with. Planning's own `TileResidencyAccessor.isTileResident`/`hasHeadroom` (`candidateArmSession
+   * .ts`) is what actually lets a partial tile back into a fresh request despite this staying `false` --
+   * see that module's own doc comment for the drain-stop exception.
    */
   applyTileViewportContext(coveringTileKeys: readonly string[], viewCentre: { x: number; y: number }): boolean;
 }
@@ -272,7 +299,9 @@ export interface WorkingCanvasProps {
    * in `[render-trace] canvas-lifecycle` lines. Not read for any rendering decision. */
   dataset: string;
   geometryColumn: string;
-  onHover: (pick: PickResult | null) => void;
+  /** Viewport-residency cut P6a, decision 24(c): `HoverReadout`, not merely `PickResult | null` --
+   * a below-threshold pick reports the typed refusal (`PickBelowResolution`), never null-silence. */
+  onHover: (pick: HoverReadout) => void;
   /** A declared ceiling (`ResidentVertexCeilingExceeded`, `PickCeilingExceeded`) refused a batch for
    * `streamHandle`. This is a report, not an action: `limits.ts`'s own contract says the offending
    * stream must be *cancelled*, and only the caller (which owns the `ViewportStreamManager`) can
@@ -545,6 +574,39 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   const onViewportChangedRef = useRef(onViewportChanged);
   onViewportChangedRef.current = onViewportChanged;
 
+  /**
+   * Viewport-residency cut P6a, Defect B (architect gate, blocking): the ONE arm-selected batch-list
+   * accessor `render()` and the hover site (`onHover` below) both call -- before this piece, the two
+   * had separately hand-rolled the SAME `armRef.current === "candidate" ? ... : ...` ternary,
+   * `render()`'s copy correct and the hover site's copy simply never written (it read `residentRef`
+   * unconditionally), so candidate-arm hover resolved picks against baseline's own EMPTY resident set
+   * regardless of what was actually on screen. One function, one place the arm check lives, used by
+   * both -- a structural fix, not a second copy kept in sync by convention. For the baseline arm (the
+   * only value the full vitest/E2E regression suites ever observe) this is byte-identical to what
+   * `render()`'s own inline ternary already computed.
+   */
+  function activeBatches(): readonly ResidentBatch[] {
+    return armRef.current === "candidate" ? tileResidentRef.current.getBatches() : residentRef.current.getBatches();
+  }
+
+  /** Viewport-residency cut P6a, decision 24(c): the resident set's own average feature on-screen
+   * extent (dataset CRS units, `pickResolution.ts`'s own `averageFeatureExtent`) as of the MOST RECENT
+   * `render()` call -- recomputed there (one pass over `activeBatches()`, the same order of work
+   * `buildLayers` already does over them each render) rather than per hover event, which would repeat
+   * that whole pass on every mouse-move. `0` before the first render, or whenever nothing resident
+   * carries any real geometry -- the hover site never reaches `isBelowPickResolution` in that state
+   * regardless of what it would compute, since a GPU pick ordinal can only be valid once something is
+   * actually resident and drawn (`onHover`'s own `info.index` guard runs first). */
+  const averageFeatureExtentRef = useRef(0);
+
+  /** Viewport-residency cut P6a, decision 24(c): the current camera zoom, mirrored into a ref so the
+   * hover site (a `Deck` callback closed over at construction, `onHover` below) can read it without a
+   * component re-render -- the same "route every live value through a ref" discipline this file's own
+   * `onHoverRef`/`onViewportChangedRef` already follow. Updated everywhere the camera zoom is actually
+   * set: the real interactive `onViewStateChange` handler, `fitToExtent`, and the E2E-only
+   * deterministic view-state seam. */
+  const currentZoomRef = useRef(INITIAL_ZOOM);
+
   function render(): void {
     const deck = deckRef.current;
     if (!deck) return;
@@ -555,9 +617,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `ResidentSet.getBatches()` already does for baseline -- no other change to this function, and
       // for the baseline arm (`armRef.current === "baseline"`, the only value the full vitest/E2E
       // regression suites ever observe) this ternary always takes the SAME branch it already did,
-      // byte-identical.
-      const batches: readonly ResidentBatch[] =
-        armRef.current === "candidate" ? tileResidentRef.current.getBatches() : residentRef.current.getBatches();
+      // byte-identical. Defect B: now the SAME `activeBatches()` accessor the hover site also calls.
+      const batches = activeBatches();
       const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
       deck.setProps({ layers });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
@@ -565,6 +626,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `decodeBatch` and carried on each `ResidentBatch` rather than re-walked here.
       const totalPositions = batches.reduce((sum, b) => sum + b.totalVertices, 0);
       traceLayerUpdate(layers.length, totalPositions);
+      // Decision 24(c): recomputed here, once per render, never per hover event -- see
+      // `averageFeatureExtentRef`'s own doc comment.
+      averageFeatureExtentRef.current = averageFeatureExtent(batches);
     } finally {
       end("layer-construct");
     }
@@ -606,6 +670,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     const widthPx = canvas?.clientWidth || 1;
     const heightPx = canvas?.clientHeight || 1;
     const fit = fitViewStateForBbox(bbox, widthPx, heightPx);
+    currentZoomRef.current = fit.zoom; // decision 24(c): the hover site's own current-zoom read
     const frame = frameRef.current;
     frame.forceRecenter(fit.centerX, fit.centerY);
     frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(fit.zoom), RECENTER_BUDGET_PX));
@@ -985,6 +1050,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         return tileResidentRef.current.isTileResident(tileKey);
       },
 
+      isTileCompleteInCandidateSet(tileKey) {
+        return tileResidentRef.current.isTileComplete(tileKey);
+      },
+
+      markTilePartial(tileKey) {
+        tileResidentRef.current.markTilePartial(tileKey);
+      },
+
       establishTileGridContext(frame, level) {
         if (tileGridContextRef.current !== null) return; // idempotent, mirrors establishGridFrame
         tileGridContextRef.current = { frame, level };
@@ -1007,10 +1080,28 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           reservedTileKeys: RESERVED_TILE_KEYS,
         });
         if (plan.evict.length > 0) {
-          for (const key of plan.evict) tileSet.evictTile(key);
-          render();
+          // B1: the protected set (this method's own `coveringTileKeys`) is threaded into `evictTile`
+          // itself -- a cascade can divert around one of these tiles (mark partial, keep it resident)
+          // but never blank it. `anyEvicted` (not `plan.evict.length > 0` blindly) is what decides
+          // whether a render is actually owed -- a call whose ENTIRE plan diverted to partial-marking
+          // (every candidate protected) changed no drawn geometry.
+          let anyEvicted = false;
+          for (const key of plan.evict) {
+            if (tileSet.evictTile(key, currentViewportTileKeysRef.current).length > 0) anyEvicted = true;
+          }
+          if (anyEvicted) render();
         }
-        return !plan.overBudget;
+        // Defect A: derived, not a bare vertex-sum check -- see this method's own interface doc
+        // comment for why `plan.overBudget` alone is not enough (it is trivially false the moment
+        // after a trim, which is exactly the transience defect this fixes).
+        let anyPartialAmongCovering = false;
+        for (const key of currentViewportTileKeysRef.current) {
+          if (tileSet.isTilePartial(key)) {
+            anyPartialAmongCovering = true;
+            break;
+          }
+        }
+        return !plan.overBudget && !anyPartialAmongCovering;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1077,6 +1168,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       onLoad: () => end("deck-init"),
       onViewStateChange: ({ viewState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
+        currentZoomRef.current = vs.zoom; // decision 24(c): the hover site's own current-zoom read
         const frame = frameRef.current;
         frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(vs.zoom), RECENTER_BUDGET_PX));
         traceViewState(vs.target[0], vs.target[1], vs.zoom, frame.originX, frame.originY);
@@ -1117,8 +1209,24 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           onHoverRef.current(null);
           return;
         }
-        const batch = batchForLayerId(residentRef.current.getBatches(), info.layer.id);
-        onHoverRef.current(batch ? resolvePick(batch, info.index) : null);
+        // Viewport-residency cut P6a, Defect B (architect gate, blocking): `activeBatches()`, the
+        // SAME arm-selected accessor `render()` uses -- before this fix this line read `residentRef`
+        // (baseline's own set) unconditionally, so a candidate-arm hover resolved against an empty
+        // set regardless of what was actually resident and drawn.
+        const batch = batchForLayerId(activeBatches(), info.layer.id);
+        if (!batch) {
+          onHoverRef.current(null);
+          return;
+        }
+        // Decision 24(c): a real GPU pick landed on SOMETHING, but if the resident data's own average
+        // feature size at the current zoom is below the declared threshold, naming ANY one feature
+        // among many equally-plausible candidates at this pixel would be arbitrary -- refuse by name
+        // instead (`PickBelowResolution`), a distinct hover-readout state, never null-silence.
+        if (isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerMetreAtZoom(currentZoomRef.current))) {
+          onHoverRef.current({ kind: "below-pick-resolution" });
+          return;
+        }
+        onHoverRef.current(resolvePick(batch, info.index));
       },
       onError: (error: Error) => {
         // ADR-010 rule 7: deck.gl's own render-loop failures must not vanish into the console --
@@ -1269,6 +1377,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       if (!canvas || !deck) return false;
       const widthPx = canvas.clientWidth || 1;
       const heightPx = canvas.clientHeight || 1;
+      currentZoomRef.current = zoom; // decision 24(c): the hover site's own current-zoom read
       const frame = frameRef.current;
       frame.forceRecenter(targetX, targetY);
       frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(zoom), RECENTER_BUDGET_PX));
