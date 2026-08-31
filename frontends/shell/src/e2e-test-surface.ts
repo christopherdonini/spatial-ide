@@ -25,6 +25,7 @@ import type { ApplyFilterOutcome } from "./App";
 import type { ResidentCounts } from "./canvas/WorkingCanvas";
 import type { ResidencyStepResult } from "./instrument/residencyInstrument";
 import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
+import type { ResidencyArm, SetResidencyArmResult } from "./residency/residencyArm";
 import type { CrsCatalogEntry } from "./skp/crsCatalog";
 
 /** Viewport-residency cut P1b (N4, the G6 instrument): `residencyEndStep`'s real return shape --
@@ -243,6 +244,17 @@ export interface E2eTestSurface {
    * comment claimed. The driver's own assertion window is therefore "since the currently-mounted
    * instance's own last mount," restated at its own call site (`residency-harness.mjs`). */
   e2eSetViewStateCallCount?: () => Promise<number>;
+  /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P3, `NEXT-CUT.md`'s own "THE ARM SWITCH").
+   * Selects `"baseline"` (the default, and the ONLY value the full vitest/E2E regression suites
+   * ever observe) or `"candidate"` for the NEXT dataset session -- refused (a typed
+   * `SetResidencyArmResult`, never a thrown exception) while a dataset is currently open
+   * (`residency/residencyArm.ts`'s own doc comment has the full contract). The harness itself does
+   * not yet drive this (`--arm=candidate` is a LATER piece's own addition); this hook exists now so
+   * a driver -- or a manual dev-console call -- can already flip it. */
+  setResidencyArm?: (arm: ResidencyArm) => Promise<SetResidencyArmResult>;
+  /** Reads the current arm back -- `"baseline"` unless a prior `setResidencyArm("candidate")` call
+   * on this same session succeeded. */
+  getResidencyArm?: () => Promise<ResidencyArm>;
 }
 
 declare global {

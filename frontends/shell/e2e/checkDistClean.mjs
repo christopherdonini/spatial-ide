@@ -66,6 +66,15 @@ const INSTRUMENT_IDENTIFIERS = [
   "ResidencyInstrumentCore",
   "applyDeterministicE2eViewState",
   "e2eSetViewStateCallCount",
+  // Viewport-residency cut P3: the arm-switch's own DEV-only identifiers -- every real call site
+  // (`App.tsx`'s `setResidencyArm`/`getResidencyArm` hook registrations, and the
+  // `notifyResidencyArmDataset{Opened,Closed}` bookkeeping calls in the `[admitted]` effect) is
+  // gated behind `import.meta.env.DEV`, the same DCE claim the instrument identifiers above depend
+  // on -- see `residency/residencyArm.ts`'s own top doc comment.
+  "setResidencyArm",
+  "getResidencyArm",
+  "notifyResidencyArmDatasetOpened",
+  "notifyResidencyArmDatasetClosed",
 ];
 
 // P1d B6c: three `WorkingCanvas.tsx` imperative-handle METHOD NAMES (product code, never

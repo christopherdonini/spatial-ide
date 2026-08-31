@@ -26,6 +26,12 @@ import {
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import PublishPanel from "./publish/PublishPanel";
+import {
+  getResidencyArm,
+  notifyResidencyArmDatasetClosed,
+  notifyResidencyArmDatasetOpened,
+  setResidencyArm,
+} from "./residency/residencyArm";
 import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
@@ -798,6 +804,11 @@ export default function App() {
       // accordingly (never a fabricated stamp).
     });
     registerE2eHook("residencyDisarmFirstPixel", async () => canvasRef.current?.disarmFirstPixelRenderHook() ?? true);
+    // Viewport-residency cut P3 ("THE ARM SWITCH"): registered at this same top level, not
+    // dataset-scoped -- a driver legitimately wants to select the arm BEFORE any dataset is ever
+    // admitted (the setter is refused once one is open, `residencyArm.ts`'s own contract).
+    registerE2eHook("setResidencyArm", async (arm) => setResidencyArm(arm));
+    registerE2eHook("getResidencyArm", async () => getResidencyArm());
     return () => {
       unregisterE2eHook("residencyInstrumentSetEnabled");
       unregisterE2eHook("residencyInstrumentIsEnabled");
@@ -808,6 +819,8 @@ export default function App() {
       unregisterE2eHook("residencySupersededBytesDropped");
       unregisterE2eHook("residencyArmFirstPixel");
       unregisterE2eHook("residencyDisarmFirstPixel");
+      unregisterE2eHook("setResidencyArm");
+      unregisterE2eHook("getResidencyArm");
     };
   }, []);
 
@@ -831,6 +844,12 @@ export default function App() {
       issueQueryRef.current = null;
       return;
     }
+
+    // Viewport-residency cut P3: bookkeeping only, for `setResidencyArm`'s own "refused while a
+    // dataset is open" contract -- DEV-gated (the arm switch is a dev/E2E-only concern) and purely
+    // additive, so `residency/residencyArm.ts` never runs, or is even referenced, in a production
+    // build (`check:dist-clean`'s own extended identifier list covers this).
+    if (import.meta.env.DEV) notifyResidencyArmDatasetOpened();
 
     // Rider 3: captured once, here, never re-read as `canvasRef.current` inside a callback below --
     // see `makeManagerCallbacks`'s own doc comment for the remount race this closes. This effect's
@@ -986,6 +1005,8 @@ export default function App() {
       // opening a second one must not leak the first (S1, architect review of this cut).
       void closeDataset(admitted.dataset).catch(() => {});
       managerRef.current = null;
+      // Viewport-residency cut P3: symmetric with `notifyResidencyArmDatasetOpened` above.
+      if (import.meta.env.DEV) notifyResidencyArmDatasetClosed();
     };
     // `reportViewportOutcome`/`applyScanEvent`/`commitActiveFilter` are stable across renders (each
     // only reaches a `useCallback([])` or React `useState` setter) and `manager`/`debounced` are
