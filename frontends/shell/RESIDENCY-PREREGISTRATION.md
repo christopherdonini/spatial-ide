@@ -656,3 +656,19 @@ data. The 5 GB reported-only cells are DEFERRED to a separate optional session (
 never scored; no scored conclusion depends on them; they remain honestly unmeasured until
 run). Same sitting also records: the human approved the four user-facing strings verbatim
 ("wording approved", this date) — the 24(b)/24(c) sight condition is discharged.
+
+**Amendment 23 (2026-09-01 — MADE AFTER THE CAMPAIGN'S RESULTS WERE SEEN; the iteration
+protocol, chosen by the human: "Let's iterate").** The campaign returned a mixed verdict
+(G7 pass at ~2×; G4 fail, attributed by the Amendment-15 segments to a paint-segment
+regression, not fetch). The human elected iteration over acceptance or rejection. Protocol:
+**(1)** a bounded product fix targeting the paint regression only (layer construction/identity
+for the candidate's resident tiles — fetch, planning, dedupe, eviction, and the over-budget
+contract are OUT of the fix's scope; any change there voids this amendment's re-measure);
+**(2) the re-measure session**: candidate at FINE only (the sweep's selection stands — its
+criterion was trial validity and fit first-pixels, neither altered in direction by a
+paint-side fix; re-screening would spend ~40 minutes to re-ask an answered question) at n=7,
+plus a fresh baseline n=7 + 2 controls + 1 calibration cell, same sitting, same build class,
+all three gates (G3/G4/G7) RE-SCORED in full — the prior campaign's scored section remains
+the record of the pre-fix candidate, never averaged with the re-measure; **(3)** the gate-8
+ruling happens on the re-measure's evidence. Dev-build smoke paint-segment deltas guide the
+fix's development but are directional only, never quoted as results.
