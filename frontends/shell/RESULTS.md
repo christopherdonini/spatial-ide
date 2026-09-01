@@ -562,3 +562,355 @@ declared-partial-view contract (24(a)) is real and the cold-open number is a gen
 improvement, but the paint-cost regression is real too, and per §1/§11 neither is allowed to buy back
 the other. ADR-011 gate 8 is not marked met here (C4) — this is the written evidence, the ruling
 stays the human's.
+
+---
+
+## Amendment-23 re-measure — the paint fix under full protocol, 2026-09-01 (P10)
+
+**§1 (binding, restated).** Client-clock only, `e2e/residency-harness.mjs` driving the real dev-mode
+WebView2 app over CDP (the calibration cell excepted, its own build class declared throughout),
+branch `cut/viewport-residency` @ **`c796ba7da65fa16b51e82f38ac3517bab37b8069`** (the P9 paint fix —
+`buildLayers.ts`'s per-tile geometry cache, keyed by `(ResidentBatch` object identity, frame
+origin`)`, `git rev-parse HEAD` verified before the first trial and never switched during this
+session), `traceVersion` **`"3"`** (unchanged from the P8 campaign — trace v3's step order and the
+0.5·√2·width diagonal), `buildClass` **`vite-dev`** throughout except the calibration cell (measure
+build, declared per-row). Fixture: `target/fixtures/slice-budgets/polygons-100k.parquet`, hashed
+before the trial loop and re-hashed after the last trial — **identical**
+(`9ecd79242ac7d99e09f1989c8c124fd53dcd697689546ec6013949f806ca6043`, both times; every one of the 17
+evidence files below also carries its own `cell.fixtureHashMatchedAcrossRun: true`). The 5 GB cells
+remain **DEFERRED** (Amendment 22, untouched by Amendment 23) — G1/G2/G5 stay **out of this session's
+scope**, same as the P8 campaign (G1/G2 are 5 GB-fixture assertions; G5 is scored producer-side, a
+separate measurement this client-side campaign does not run). Machine: Windows 10 Pro 22H2 build
+19045, headed, foreground, human present, RustDesk verified absent, 46 stale processes swept before
+this session began (per the launching brief); every trial's own `--attest` string:
+`"headed, foreground, human present, RustDesk absent (amendment 23 re-measure)"`.
+
+**Scope, per Amendment 23's own protocol.** Candidate arm at **FINE only** (the P8 sweep's own
+screening-selected level stands; Amendment 23 does not re-screen), n=7; a **fresh** baseline arm
+(same session, same build, per Amendment 19's own standing rule), n=7, plus 2 instrument-off
+controls; **one** Amendment-16 calibration cell on a freshly **rebuilt** measure build (`npm run
+build:measure`, ~2m02s, `EXIT=0` — confirmed to carry the P9 fix: the measure build's own source
+tree is the same working tree `git rev-parse HEAD` reads at `c796ba7`). All three gates G3/G4/G7
+re-scored in full below, against this session's own fresh baseline — never against the prior
+section's baseline, which predates the fix and stays that section's own pre-fix record (§1 of this
+document, restated: **no cross-session netting**).
+
+### 1. Pre-checks, before burning any scored trial
+
+1. **Build identity.** `git rev-parse HEAD` at session start: `c796ba7da65fa16b51e82f38ac3517bab37b8069`
+   — matches the launching brief's pinned commit exactly. Branch `cut/viewport-residency`, unchanged
+   throughout.
+2. **`npm run build:measure` rebuilt first** (the P9 fix must be IN the measure build before the
+   calibration cell runs, not the P8-era stale artifact): frontend build 7.40s, Rust release
+   recompile 1m59s, `Finished release [optimized]`, `EXIT=0`.
+3. **Dual-arm identity guard, at its declared config (the default fixture, `filter-zoned.parquet`,
+   no `--fixture` override) — both arms:**
+
+   | arm | evidence file | `identical` | criterion | `fieldSequenceProxyVacuousForThisArm` | tile traffic confirmed |
+   |---|---|---|---|---|---|
+   | baseline | `residency-harness-wire-identity-1788290603853.json` | **true** | exact-sequence (18 lines/run, all 4 runs) | `false` | n/a (baseline has no tile counters) |
+   | candidate | `residency-harness-wire-identity-1788290734894.json` | **true** | multiset (Amendment 17; 2,415 lines/run, all 4 runs) | **`false`** | `tilesRequested=2344, duplicatesDropped=4992, evictionsApplied=0` (both ON runs, summed) |
+
+   Both arms **PASS**. Candidate's own line count is 2,415 > 0 per run (not the vacuous-pass shape
+   this pre-check exists to catch), and `fieldSequenceProxyVacuousForThisArm` reads `false` on both
+   — the guard did not fire its own vacuous-pass warning. Cleared to proceed.
+4. **First scored evidence file** (`residency-harness-instrument-on-1788290926973.json`, baseline
+   trial 1, cold): `cell.traceVersion: "3"` ✓, `cell.buildCommit` matches `c796ba7...` ✓, `gridFrame:
+   null` (expected — baseline never establishes a tile grid; the candidate's own first evidence file,
+   `...1788291093560.json`, carries `gridFrame:
+   {"originX":2593666.478597825,"originY":1187966.5220883386,"baseSpan":25346.943496502936,"level":"fine"}`,
+   **identical across all 7 candidate trials** — no grid-frame drift, Amendment 21's own condition
+   satisfied). `invalidated: false`, 11/11 rows measured.
+
+All four pre-checks pass; proceeded to the scored trial loop.
+
+### 2. Trial order (mechanically derived, disclosed) and outcomes
+
+Same technique the P8 campaign used to adapt `abbaInterleave` (built for exactly 2 cells) to this
+session's **3** cells (candidate-fine, baseline, control): `abbaInterleave(3, 7)` computed literally
+with cell 0 = baseline, cell 1 = candidate, cell 2 = control, then deduplicated by first occurrence,
+preserving order — yielding baseline/candidate fully ABBA-interleaved for all 14 scored trials
+(`B,C,C,B,B,C,C,B,B,C,C,B,B,C`, the canonical repeating block), followed by control's own slots
+truncated to the 2 Amendment 23 actually calls for (Amendment 8: a control cell needs no matched
+statistical power, only session-drift-guarding alternation — reported as a disclosed truncation of
+the mechanically-derived order, not a hand-picked one).
+
+**Every one of the 17 trials run this session was valid on first attempt. Zero invalidations, zero
+re-runs.**
+
+| # | cell | mode | cold/warm | evidence file | valid? |
+|---|---|---|---|---|---|
+| 1 | baseline | on | **cold** | `...1788290926973.json` | valid |
+| 2 | candidate/fine | on | warm | `...1788291093560.json` | valid |
+| 3 | candidate/fine | on | warm | `...1788291202624.json` | valid |
+| 4 | baseline | on | warm | `...1788291295827.json` | valid |
+| 5 | baseline | on | warm | `...1788291376648.json` | valid |
+| 6 | candidate/fine | on | warm | `...1788291490405.json` | valid |
+| 7 | candidate/fine | on | warm | `...1788291615109.json` | valid |
+| 8 | baseline | on | warm | `...1788291696585.json` | valid |
+| 9 | baseline | on | warm | `...1788291777278.json` | valid |
+| 10 | candidate/fine | on | warm | `...1788291881195.json` | valid |
+| 11 | candidate/fine | on | warm | `...1788292007179.json` | valid |
+| 12 | baseline | on | warm | `...1788292090561.json` | valid |
+| 13 | baseline | on | warm | `...1788292182892.json` | valid |
+| 14 | candidate/fine | on | warm | `...1788292257500.json` | valid |
+| 15 | baseline | control (off) | warm | `residency-harness-control-1788292383485.json` | valid |
+| 16 | baseline | control (off) | warm | `residency-harness-control-1788292460955.json` | valid |
+| 17 | candidate/fine | on, **measure build** | warm | `residency-harness-instrument-on-measure-1788292522137.json` | valid |
+
+Both control trials assert `cell.instrumentEnabledReadback: false` unconditionally (Amendment 8's own
+limitation stands: a control cell supplies no gated client-clock value, only the wire/mount identity
+guard). **n=7 candidate, n=7 baseline, n=2 control, n=1 calibration — every cell reached its full
+declared n with no licensed re-run needed.**
+
+### 3. G7 — cold first-view margin (open-drain), gated
+
+| arm | n | p50 | p95 | max |
+|---|---|---|---|---|
+| candidate, fine | 7 | 249.2ms | 257.8ms | 257.8ms |
+| baseline (fresh) | 7 | 469.2ms | 558.8ms | 558.8ms |
+
+**Margin = candidate p95 / baseline p95 = 257.8 / 558.8 = 46.1%.** Preregistration ceiling: ≤110%.
+**G7: PASS — comfortably**, candidate's cold first view remains roughly **2.2× faster** than the
+fresh baseline's. Essentially unchanged from the P8 campaign's own 49.3% (§14 below has the full
+comparison) — expected, since G7's own mechanism (open-drain is a single untiled bootstrap query,
+never touched by the P9 fix at all: `open-drain`'s own `tiles=0` in every candidate row) was never
+the fix's target.
+
+### 4. G3 — first-pixels per step-class, gated (fine cell + fresh baseline, n≥7, nearest-rank)
+
+| step-class | candidate (fine) n(measured)/no-batch / p50 / p95 / max | baseline n(measured)/no-batch / p50 / p95 / max | reading |
+|---|---|---|---|---|
+| open-drain | 7/0 / 249.2 / 257.8 / 257.8 | 7/0 / 469.2 / 558.8 / 558.8 | candidate wins decisively (G7's own subject, restated) |
+| fit | 2/5 / 2543.0 / 2543.0 / 2543.0 | 0/7 (no-batch every trial) | not comparable — baseline's `fit` is no-batch every trial (post-open-drain residency already covers the fit view, Amendment 5) |
+| pan | 28/7 / 663.1 / 2913.1 / 2974.0 | 23/12 / 709.8 / 1839.9 / 1846.3 | candidate wins the **median** (663.1 vs 709.8); baseline wins the **tail** (1839.9 vs 2913.1) — see §5's mechanism note |
+| zoom-to-layer | 7/0 / 92.3 / 145.6 / 145.6 | 0/7 (no-batch every trial) | not comparable — same no-batch shape as `fit`; candidate now measures this class on **every** trial (was 5/7 in P8) |
+| zoom-in | 19/2 / 72.1 / 836.5 / 836.5 | 21/0 / 818.6 / 1016.8 / 1035.4 | **candidate now wins decisively at both p50 and p95** — reversed from P8, where baseline won this class (995.6/1962.9 candidate vs 915.8/1040.4 baseline) |
+| zoom-out | 5/2 / 135.5 / 789.4 / 789.4 | 7/0 / 879.9 / 1298.6 / 1298.6 | candidate now wins decisively — close in P8, a clear win now |
+
+**Reading, per-class, nothing netted (§1's own prohibition, restated):** the fix flips `zoom-in` and
+`zoom-out` decisively into the candidate's favor, and holds `open-drain`. `pan`'s median favors
+candidate, its tail still favors baseline — narrower story than before (§7 below identifies the two
+distinct mechanisms behind the remaining tail cost). `fit`/`zoom-to-layer` remain structurally
+uncomparable to baseline (no-batch there by construction).
+
+### 5. G4 — frame time, worst-step p50/p95 proxy per trial (same method as prior sections), gated — THE HEADLINE
+
+| | mean-of-worst-step p50 | mean-of-worst-step p95 | trial range (p95) |
+|---|---|---|---|
+| candidate, fine (n=7) | 169.4ms | 1203.0ms | 1079.2ms – 1325.4ms |
+| baseline (fresh, n=7) | 151.5ms | 325.6ms | 196.4ms – 831.2ms |
+
+**G4: still FAIL — but the shape of the failure changed completely.** At the **median** the
+regression is now nearly closed: candidate's mean-worst-step p50 is only **11.8% above** baseline's
+(169.4ms vs 151.5ms — down from **130% over** pre-fix, §14). At the **tail**, the picture inverts:
+candidate's mean-worst-step p95 is **3.70× baseline's** (1203.0ms vs 325.6ms) — **wider**, not
+narrower, than the pre-fix session's own 1.81× (§14). Scored on the gate's own strict letter ("no
+regression vs. baseline," no declared tolerance band the way G7 has one) this is an unambiguous FAIL
+on both p50 and p95, though the p50 figure is now close enough that a future tolerance-banded reading
+of G4 (not this preregistration's own wording) would read very differently from the p95 figure.
+
+**Mechanism, identified by direct per-step attribution (not guessed):** for **all 7** candidate
+trials, the step contributing the worst-step p95 is the **same one every time — `zoom-to-layer`**
+(p95 1079–1325ms across the 7 trials; contrast baseline, whose worst step varies trial to trial —
+`pan-east`, `zoom-in-1`, `open-drain`, `zoom-out-1`, `zoom-in-3` ×2, `zoom-in-2` — with p95 never
+exceeding 831ms). `zoom-to-layer`'s own **first-batch** paint cost is already fast under the fix
+(mean 92ms, §6 below) — its problem is not the first batch, it is the **tail across the step's own
+long window**: `zoom-to-layer` runs ~20–23s wall per trial (`wallMs` 19,757–22,863 across the 7
+trials) while requesting **83 distinct tiles**, and the vast majority of those tiles are being
+admitted for the **first time this trace** (a genuinely new `ResidentBatch` object per tile,
+correctly a cache miss by the fix's own stated invalidation rule — "Invalidated correctly by a
+genuinely new batch object"). Sampled directly on one representative trial
+(`...1788291881195.json`): `zoom-to-layer` frameTimeMs p50 117.2ms / **p95 1325.4ms** / max 1705.5ms
+over 79 samples — a step whose *typical* frame is fast but whose tail, sustained by ~20 seconds of
+genuinely-new-tile admissions, is not. **A second, distinct outlier — never the worst-step winner,
+but visible in `max`** — sits at `pan-west`: 5 of 7 candidate trials show a large, reproducible spike
+(`duplicatesDropped` 10,140–11,098, `firstPixelMs` 2,587–2,974ms, `decodedToPaintedMs` 2,083–2,430ms;
+the other 2 trials show ordinary `pan-west` behaviour, `dup` ~978–1,037, paint ~56–90ms) — a large
+batch of already-resident tiles being **re-delivered as fresh objects** (dedupe correctly drops them
+as duplicate *features*, but each arrives as a new `ResidentBatch`, so the geometry cache correctly,
+if expensively, misses for all of them). Neither mechanism is a defect in the P9 fix as scoped — both
+are genuinely-new-object admissions the fix's own doc comment says must miss — but both are real,
+reproducible, unresolved costs this session's evidence pins to specific, named steps rather than
+leaving as a diffuse "candidate paints slower" finding.
+
+### 6. Segments (query→first-byte / first-byte→decoded / decoded→painted), reported beside, never netted
+
+| step-class | candidate mean byte / decode / paint (ms), n | baseline mean byte / decode / paint (ms), n |
+|---|---|---|
+| open-drain | 149.0 / 26.0 / 55.7, n=7 | 396.3 / 26.8 / 59.8, n=7 |
+| fit | 487.4 / 7.8 / 2042.5, n=2 | n/a (no-batch every trial), n=0 |
+| pan | 575.3 / 6.9 / 451.9, n=26 | 847.6 / 4.7 / 27.9, n=23 |
+| zoom-to-layer | 0 / 6.6 / 92.0, n=7 | n/a (no-batch every trial), n=0 |
+| zoom-in | 92.4 / 6.3 / 175.7, n=14 | 804.6 / 4.4 / 26.0, n=21 |
+| zoom-out | 267.2 / 6.1 / 89.2, n=5 | 900.9 / 4.4 / 30.1, n=7 |
+
+**The paint segment collapsed exactly where the fix targets it.** Compare against the P8 (pre-fix)
+section's own §9 table: candidate `pan` paint 921.1ms → **451.9ms** (still elevated vs baseline's
+27.9ms, but roughly **halved**); `zoom-in` paint 1170.4ms → **175.7ms** (**~6.7× smaller** — this is
+what flipped G3's `zoom-in` class, §4); `zoom-out` paint 1326.1ms → **89.2ms** (**~14.9× smaller**).
+`fit`'s own paint (2042.5ms, n=2 — the two trials where a real batch arrived on `fit` rather than
+no-batch) is the one class that stayed large: `fit` is the step immediately after `open-drain`, so
+every tile it touches is, by construction, being admitted for the first time this trace — the
+cache's own necessary cold-start cost, not a fix failure. Candidate's `byte` segment stays smaller
+than baseline's at every class except `fit` (unaffected by this fix, transport/decode are untouched
+code) — the tiling win the P8 campaign already identified is intact, unchanged in kind.
+
+### 7. Refill work per step-class, reported beside first-pixels, never netted
+
+| step-class | candidate mean features / bytes | baseline mean features / bytes |
+|---|---|---|
+| open-drain | 10,000 / 17,399,024 | 19,055 / 33,134,336 |
+| fit | 5,368.3 / 9,446,420.6 | 0 / 0 (no-batch every trial) |
+| pan | 7,083.5 / 12,470,089.4 | 11,385.4 / 19,784,876.1 |
+| zoom-to-layer | 12,611.4 / 22,278,278.9 | 0 / 0 (no-batch every trial) |
+| zoom-in | 8,534.9 / 15,014,580.6 | 17,712.3 / 30,803,242.7 |
+| zoom-out | 4,661.7 / 8,195,732.6 | 19,027 / 33,131,648 |
+
+Same shape as the P8 campaign (candidate moves markedly less data per step throughout) — the P9 fix
+touches only client-side layer construction, never the fetch/plan/dedupe path, so this table is
+expected to be unchanged in kind and is reported for completeness, not as new evidence.
+
+### 8. G6 — budget adherence, structural per Amendment 21
+
+| arm | max observed vertices | % of 2,000,000 budget | where |
+|---|---|---|---|
+| candidate, fine | 1,999,978 | **99.9989%** | trial `...1788291881195.json`, step `zoom-out-1` |
+| baseline (fresh) | 1,994,977 | 99.7489% | trial `...1788290926973.json`, step `open-drain` |
+
+Per Amendment 21, G6's pass is **structural** (admission trims before insert; the ceiling is
+unexceedable by construction), not a sampled measurement — stated as such, not re-derived here. No
+excess observed either arm. Candidate's high-water mark sits closer to the ceiling than any prior
+session recorded (99.9989% vs P8's own 99.89%) — reported as a budget-calibration observation
+(never gated, per §6 of the preregistration): the 2,000,000 figure is not proposed for change here,
+only flagged as consistently near-saturated at this fixture's own scale.
+
+### 9. Determinism (Amendment 14's 2% band, Amendment 18's over-budget carve-out)
+
+**Baseline:** clean — every step exactly deterministic (0.00% spread) except `pan-northeast`
+(0.15%), well inside the 2% band.
+
+**Candidate (fine):** resident-FEATURE-count spreads far outside the 2% band at nearly every step
+past `open-drain` (`fit` 77.5%, `pan-north` 90.2%, `pan-east`/`pan-south` 176.7%, `pan-west` 6.75%,
+`pan-northeast` 41.4%, `zoom-to-layer` 28.6%, `zoom-in-1` 21.7%, `zoom-in-2` 2.41%, `zoom-in-3` 4.3%,
+`zoom-out-1` 2.74%) — wider than the P8 campaign's own 19–113% range. **Per Amendment 18
+(pre-decided, unaffected by the P9 fix, which touches only paint, not planning/dedupe/eviction): the
+fine cell runs consistently over-budget/declared-partial, and the candidate's up-to-3-concurrent tile
+streams make the SURVIVING feature set interleaving-dependent at that boundary — exactly the property
+Amendment 18 named in advance.** Every one of these flagged steps is marked
+`non-deterministic — over-budget interleaving` for its RESIDENT-COUNT quantity specifically; G3/G4/G7
+above (first-pixels, segments, frame times) are single-batch/clock quantities Amendment 18 states are
+unaffected, and are not invalidated by this. `pan-east` and `pan-south` show **identical** value
+arrays (`[16902,17518,15619,13380,18567,6711,16525]` both) — not a measurement error:
+`pan-south` is `no-batch` in all 7 candidate trials (no new admission), so its own
+`residentAtEndStep` simply carries forward `pan-east`'s unchanged count, disclosed rather than left
+looking like a coincidence.
+
+### 10. Calibration cell — dev-vs-measure delta, reported-only, never gated, never quotable as product numbers
+
+| build class | open-drain firstPixel |
+|---|---|
+| measure (this cell, n=1, rebuilt with the P9 fix) | 101.3ms |
+| dev (fine cell, n=7, p50) | 249.2ms |
+
+**Delta: the measure build's open-drain first-pixel is ~40.7% of the dev build's own p50** — roughly
+three-fifths of the client-observed cost at this step is dev-build/instrumentation overhead, similar
+in shape to the P8 campaign's own ~51.8% figure (§14 below), n=1 both times, reported-only, never
+used to adjust any G3/G4/G7 figure above.
+
+### 11. Controls (instrument-off, n=2)
+
+No gated client-clock quantity is available from a control cell (Amendment 8). Both trials:
+`cell.instrumentEnabledReadback: false` (asserted, not merely read), `invalidated: false`, all 11
+rows measured. Existence of these two trials is the control cell's own claim — they do not feed any
+figure above.
+
+### 12. Invalid trials
+
+**None.** Every one of the 17 trials this session ran (14 scored + 2 controls + 1 calibration) was
+valid on first attempt. Zero watchdog fires, zero banner-intercept retries, zero re-runs. This is a
+genuine session property, not an artifact of a looser bound: every watchdog from the P8 campaign
+(fixture-scaled per-step timeouts, the scaled outer trial watchdog, the 3-attempt banner
+dismiss-retry) stayed in force, unmodified, throughout.
+
+### 13. Evidence-file inventory (gitignored under `e2e/out/`; this section is their durable record)
+
+Candidate/fine (n=7, scored): `residency-harness-instrument-on-{1788291093560,1788291202624,
+1788291490405,1788291615109,1788291881195,1788292007179,1788292257500}.json`. Fresh baseline (n=7):
+`residency-harness-instrument-on-{1788290926973,1788291295827,1788291376648,1788291696585,
+1788291777278,1788292090561,1788292182892}.json`. Control (n=2):
+`residency-harness-control-{1788292383485,1788292460955}.json`. Calibration (n=1, measure build):
+`residency-harness-instrument-on-measure-1788292522137.json`. Identity-guard pre-check (both arms):
+`residency-harness-wire-identity-{1788290603853,1788290734894}.json`. Raw per-trial console logs
+(redirected, gitignored): `a23-t01-baseline-cold.log` … `a23-t17-calibration.log`,
+`a23-identity-baseline.log`, `a23-identity-candidate.log`, `a23-build-measure.log`. Scratch analysis
+script `e2e/out/a23-analyze.mjs` (gitignored, retained rather than deleted, same convention the P8
+section's own scratch scripts follow) — this section's own figures are directly reproducible from it
+against the evidence files above.
+
+### 14. Pre-fix (P8) vs post-fix (this session) — directional-across-sessions context only
+
+**Labeled explicitly: same protocol, different code.** Both sessions run the identical preregistered
+protocol (same fixture, same trace v3, same tile size, same fresh-baseline discipline) but at two
+different commits — P8 at the pre-fix candidate (`0da5ef5`-era), this session at `c796ba7` (the P9
+fix). **The scored gate verdicts above are within-session only** (§1); this table is context for
+reading the *direction* the fix moved things, never a third session's worth of statistical power and
+never itself a gate verdict.
+
+| quantity | pre-fix (P8) | post-fix (this session) | direction |
+|---|---|---|---|
+| G7 margin (candidate p95 / baseline p95) | 49.3% | 46.1% | flat (both comfortably under the 110% ceiling; open-drain was never the fix's target) |
+| G4 mean-worst-step **p50**, candidate | 1,626.9ms | 169.4ms | **−89.6%** |
+| G4 mean-worst-step **p50**, baseline | 708.3ms | 151.5ms | **−78.6%** |
+| G4 mean-worst-step **p95**, candidate | 2,305.4ms | 1,203.0ms | **−47.8%** |
+| G4 mean-worst-step **p95**, baseline | 1,274.4ms | 325.6ms | **−74.5%** |
+| G4 verdict | FAIL | FAIL | unchanged at the gate level; p50 ratio candidate/baseline closed from 2.30× to 1.12×; p95 ratio widened from 1.81× to 3.70× (§5) |
+| G3 `zoom-in`, winner | baseline (995.6/1962.9 vs 915.8/1040.4) | **candidate** (72.1/836.5 vs 818.6/1016.8) | **flipped** |
+| G3 `zoom-out`, winner | roughly even (926.6/1358.6 vs 969.7/1130.2) | **candidate**, decisively (135.5/789.4 vs 879.9/1298.6) | **strengthened for candidate** |
+| G3 `pan`, median winner | candidate (656.8 vs 1216.5) | candidate (663.1 vs 709.8) | narrower win, same direction |
+| G3 `pan`, tail winner | baseline (p95/max 2217.9/2290.9 vs candidate's 3443.3/3658.1) | baseline, still (p95/max 1839.9/1846.3 vs candidate's 2913.1/2974.0) | unchanged direction |
+| segments: `pan` paint, candidate | 921.1ms | 451.9ms | **−51.0%** |
+| segments: `zoom-in` paint, candidate | 1,170.4ms | 175.7ms | **−85.0%** |
+| segments: `zoom-out` paint, candidate | 1,326.1ms | 89.2ms | **−93.3%** |
+| calibration delta (measure / dev p50) | 51.8% (n=1 vs n=7) | 40.7% (n=1 vs n=7) | similar magnitude, both n=1 |
+| G6 high-water mark, candidate | 99.89% of budget | 99.9989% of budget | closer to saturated (both structural passes) |
+
+**Reading this table plainly, nothing netted against the scored verdicts above:** the fix delivered a
+large, real, broad-based paint-cost reduction — visible in the segments table directly and in G3's
+`zoom-in`/`zoom-out` classes flipping outright — and it closed the **median** frame-time gap between
+the two arms to near-parity. It did **not** flip G4's own gate verdict, because G4 is scored on
+p50 **and** p95 with no declared tolerance, and the **tail** got relatively worse even as it got
+absolutely faster in both arms — the `zoom-to-layer` long-tail mechanism (§5) is a genuinely
+different cost than the one P8's segments table diagnosed, and this session is what surfaced it.
+
+### 15. Session mechanics
+
+Pre-hash + rebuild `build:measure` + dual-arm identity guard pre-check + 17 harness invocations (14
+scored trials, 2 controls, 1 calibration) + post-hash + process cleanup. **Zero invalid trials, zero
+re-runs.** One machine, one session, ABBA-ordered per §1/§8 throughout, RustDesk verified absent
+before the first trial. Wall time, pre-checks through the last trial's evidence write: **~39
+minutes** (21:19–21:58, machine clock) — well inside the 140-minute declared session bound, leaving
+ample margin that was spent on this write-up rather than banked as unused trials (the preregistration
+does not call for more than the declared n at this scope).
+
+### 16. This session's own answer
+
+**Did the P9 paint fix flip the campaign's verdict?** Partially, and precisely where the fix's own
+diagnosed mechanism predicts it would. **G7 stands PASS, unchanged in kind** (candidate's cold first
+view is ~2.2× faster than baseline's fresh p95, comfortably inside the 110% ceiling — open-drain was
+never touched by this fix). **G3 improved materially**: `zoom-in` and `zoom-out` flip from
+baseline-favored (or even) to decisively candidate-favored, driven by the same paint-segment collapse
+the fix's own commit message predicted (`zoom-in` paint −85%, `zoom-out` paint −93%). **G4 remains a
+FAIL** — but not the same failure: the **median** frame-time gap between candidate and baseline
+closed from roughly 2.3× to 1.12× (near-parity), while the **tail** gap widened from 1.81× to 3.70×,
+now traced to one specific, reproducible mechanism present in all 7 candidate trials
+(`zoom-to-layer`'s own long tail across ~20s of genuinely-new-tile admission) plus a second,
+independent one visible in 5 of 7 trials (`pan-west`'s large-batch re-admission spike). Both are
+real, both are `ResidentBatch`-identity cache misses the fix's own doc comment says are correct to
+miss — meaning closing them, if pursued, is separate future work, not a defect in this fix as scoped.
+**Confirming the report's own question directly: baseline's own frame time improved substantially
+too** (mean-worst-step p95 fell 74.5%, p50 fell 78.6%) — `buildLayers.ts` is shared code, and P9's
+cache benefits any repeated call over a growing resident set, which baseline's own multi-batch
+open-drain/pan/zoom streaming does just as candidate's tiling does, only with fewer, larger batches.
+ADR-011 gate 8 is not marked met here (C4) — this is the written evidence under the iterated fix, the
+ruling stays the human's, per Amendment 23 point 3.
