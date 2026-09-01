@@ -89,7 +89,11 @@ describe("buildLayers (ADR-010 rules 3 and 6)", () => {
     expect(typeof data[1][0][0][0]).toBe("number"); // and each pair holds plain numbers
   });
 
-  it("recomputes from the authoritative source on every call -- a later recenter changes the output", () => {
+  it("recomputes from the authoritative source for a genuinely new batch object -- a later recenter changes the output", () => {
+    // `batch("sh_a", 0)` returns a FRESH object on each call (a real cache miss regardless of the
+    // P9 caching fix below), so this asserts the same thing it always has: a later recenter is
+    // reflected in freshly-computed output. See the next `describe` block for the caching fix's own
+    // reference-stability coverage (same object, unchanged origin -> same `data` reference).
     const frame = new OffsetFrame(100);
     frame.maybeRecenter(2_600_000, 1_200_000);
     const before = buildLayers([batch("sh_a", 0)], frame, FIXED_DRAW)[0].props.data as number[][][][];
@@ -105,6 +109,46 @@ describe("buildLayers (ADR-010 rules 3 and 6)", () => {
     const oversizedIds = { length: 16_777_216 } as unknown as BigUint64Array;
     const huge: ResidentBatch = { ...batch("sh_a", 0), ids: oversizedIds };
     expect(() => buildLayers([huge], frame, FIXED_DRAW)).toThrow(PickCeilingExceeded);
+  });
+});
+
+describe("buildLayers -- P9 paint-cost fix (viewport-residency cut, Amendment 23): cached, reference-stable `data`", () => {
+  it("the SAME batch object at an UNCHANGED frame origin gets the exact same `data` array reference across two calls -- what lets deck.gl's own reference-only `diffDataProps` skip attribute regeneration", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const b = batch("sh_a", 0); // ONE object, reused across both calls -- unlike the tests above
+    const first = buildLayers([b], frame, FIXED_DRAW)[0].props.data;
+    const second = buildLayers([b], frame, FIXED_DRAW)[0].props.data;
+    expect(second).toBe(first); // reference equality, not merely deep equality
+  });
+
+  it("the outline layer's `data` is also reference-stable for the same batch and unchanged origin", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const draw: ResolvedDrawParams = { fillColor: [1, 2, 3, 4], outlineColor: [5, 6, 7, 255], outlineWidth: 2 };
+    const b = batch("sh_a", 0);
+    const first = buildLayers([b], frame, draw)[1].props.data;
+    const second = buildLayers([b], frame, draw)[1].props.data;
+    expect(second).toBe(first);
+  });
+
+  it("a recenter (origin move) invalidates the cache for the SAME batch object -- a fresh `data` reference, with recomputed values", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const b = batch("sh_a", 0);
+    const before = buildLayers([b], frame, FIXED_DRAW)[0].props.data as number[][][][];
+    frame.maybeRecenter(2_600_500, 1_200_500); // past the threshold; forces a recenter
+    const after = buildLayers([b], frame, FIXED_DRAW)[0].props.data as number[][][][];
+    expect(after).not.toBe(before);
+    expect(before[0][0][0]).not.toEqual(after[0][0][0]);
+  });
+
+  it("a genuinely different batch object (e.g. a real refetch) never reuses another batch's cached geometry", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const first = buildLayers([batch("sh_a", 0)], frame, FIXED_DRAW)[0].props.data;
+    const second = buildLayers([batch("sh_a", 0)], frame, FIXED_DRAW)[0].props.data; // a NEW object, same field values
+    expect(second).not.toBe(first);
   });
 });
 

@@ -71,16 +71,112 @@ export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
 }
 
 /**
+ * Per-batch offset-relative geometry, cached by `ResidentBatch` object identity and the frame
+ * origin it was last computed against -- **the viewport-residency cut P9 paint fix (Amendment
+ * 23)**.
+ *
+ * **The diagnosed mechanism, with numbers** (instrumented dev-build candidate smoke/full-trace
+ * runs against this piece's own `--fixture .../polygons-100k.parquet --tile-size fine`, this
+ * piece's own report has the evidence-file names -- dev-build only, directional, never quoted as
+ * a scored result per Amendment 23 point 2): the candidate arm keeps residency tile-keyed
+ * (`TileResidentSet`), and at the fine tile size a single pan step leaves on the order of 120-170
+ * small resident batches (observed `tilesRequested`: 119, 128, 142, 167 across four separate
+ * pan-class steps), versus baseline's ~40 stream-keyed ones (`RESULTS.md` §11's high-water mark:
+ * candidate 1,997,834 vertices spread thin across many small tiles vs. baseline's near-identical
+ * total in ~40 batches). Every one of those batches went through `buildLayers` on EVERY coalesced
+ * render -- including a render fired by a batch arriving for just ONE tile -- and this function
+ * used to allocate a brand-new `polygons` array for EVERY batch on EVERY call, unconditionally.
+ * The pre-fix cost this produced, sampled directly (per-render `frameTimeMs`, every render during
+ * one such pan step, 113 samples): p50 712ms, p95 1042ms, max 1126ms. Per this file's own prior
+ * investigation (still accurate for `getFillColor`, below) and confirmed again here by reading the
+ * same installed `@deck.gl/core@9.3.9` source directly: `diffDataProps` (`lifecycle/props.js`)
+ * compares `data` by REFERENCE ONLY (`props.data !== oldProps.data`, no `dataComparator` supplied
+ * here), and `Layer.shouldUpdateState`/`updateState` (`lib/layer.js`) gate the ENTIRE attribute
+ * invalidation/GPU-re-tessellation path on that one boolean folded into `propsOrDataChanged`
+ * (`updateState`: `if (dataChanged && attributeManager) attributeManager.invalidateAll()`) -- so
+ * a fresh array every render meant every layer's full geometry was re-tessellated and
+ * re-uploaded on every render, hundreds of times per pan, regardless of whether that tile's own
+ * content had changed at all. This is exactly what this file's own pre-existing comment (below)
+ * already named as true of `data` without yet fixing it ("`dataChanged` is already true on every
+ * `render()`... the fine-grained update-trigger path is bypassed on every render regardless").
+ * Post-fix, the same per-render sampling at a comparable tile count (128 tiles, 116 samples):
+ * p50 53ms, p95 166ms, max 264ms -- directional, one dev-build run each side, not a scored
+ * campaign figure (the re-measure session owns that number), but consistent in direction and
+ * rough magnitude with the mechanism above.
+ *
+ * **The fix**: cache `polygons` (and the outline's flattened positions) per `(batch,
+ * frame.originX, frame.originY)` and hand deck.gl the SAME array reference for an unchanged
+ * batch at an unchanged origin. Unchanged tiles then read `dataChanged: false` and skip
+ * attribute regeneration entirely -- on any render triggered by only a handful of newly-arrived
+ * or newly-evicted tiles (the common case for a pan/zoom step), the bulk of the resident set now
+ * costs nothing to redraw. Invalidated by object identity (a genuinely NEW `ResidentBatch` --
+ * e.g. a real refetch -- always misses) or by an origin move (`OffsetFrame.forceRecenter`/
+ * `maybeRecenter`: every resident batch's offset-relative coordinates are stale the instant the
+ * origin moves, so every cache entry misses on the very next render and is rebuilt once,
+ * correctly, never silently stale). `getPolygon`/`getPath` stay fresh closures every call
+ * (`(d) => d`) -- deliberately: `compareProps`'s own `accessor`-type `equal` treats any two
+ * functions as equal regardless of reference (this file's own prior comment, verified again),
+ * so a fresh closure here was never part of the cost this cache addresses.
+ *
+ * A `WeakMap` keyed by the batch object itself needs no manual eviction: once a tile's batch is
+ * dropped from `TileResidentSet`/`ResidentSet` (eviction, supersede, dataset close) and nothing
+ * else references it, its cache entry is collected right along with it.
+ */
+interface CachedBatchGeometry {
+  originX: number;
+  originY: number;
+  polygons: Position[][][];
+  /** Computed lazily -- most styles carry no outline (`outlineWidth === 0`), so this stays
+   * `undefined` for the common case rather than doing work `buildLayers` was never asked for. */
+  outlinePositions?: Position[][];
+}
+
+const geometryCache = new WeakMap<ResidentBatch, CachedBatchGeometry>();
+
+function geometryForBatch(batch: ResidentBatch, frame: OffsetFrame): CachedBatchGeometry {
+  const cached = geometryCache.get(batch);
+  if (cached && cached.originX === frame.originX && cached.originY === frame.originY) {
+    return cached;
+  }
+  // Nested `[x,y]` pairs per ring, deliberately not a flat `[x,y,x,y,...]` array: deck.gl's own
+  // polygon normalizer (`@deck.gl/layers/solid-polygon-layer/polygon.js`) distinguishes a
+  // "complex polygon" (multiple rings, i.e. holes) from a "simple flat" one by checking whether
+  // `polygon[0][0]` is itself a finite number -- a flat ring would satisfy that check and get
+  // silently misread as one ring's flat vertex list, dropping every hole. Verified against the
+  // installed deck.gl 9.3.9 source rather than assumed.
+  const polygons: Position[][][] = batch.rings.map((rings) =>
+    rings.map((ring) => ring.map(([x, y]) => frame.toLocal(x, y) as Position))
+  );
+  const fresh: CachedBatchGeometry = { originX: frame.originX, originY: frame.originY, polygons };
+  geometryCache.set(batch, fresh);
+  return fresh;
+}
+
+/** Every ring of every feature in `geometry`'s batch, exterior and holes alike, flattened one
+ * level -- the outline `PathLayer`'s own `data` shape (NEXT-CUT.md P5). Cached alongside
+ * `polygons` itself so an unchanged batch's outline layer gets the same reference-stability fix
+ * as its fill layer, computed at most once per `(batch, origin)` pair regardless of how many
+ * renders ask for it. */
+function outlinePositionsFor(geometry: CachedBatchGeometry): Position[][] {
+  if (geometry.outlinePositions === undefined) {
+    geometry.outlinePositions = geometry.polygons.flatMap((rings) => rings);
+  }
+  return geometry.outlinePositions;
+}
+
+/**
  * One deck.gl layer per resident batch. **Never one layer for everything** -- a batch's own
  * feature count is what the 24-bit pick ceiling (ADR-010 rule 6) is checked against, and a batch is
  * bounded by the data plane's frame-size ceiling, so per-layer counts sit orders of magnitude below
  * 16,777,215 by construction.
  *
  * Coordinates cross into `getPolygon` **already offset-relative** (`frame.toLocal`, an f64
- * subtraction): deck.gl's own attribute-buffer construction is what narrows them to f32 afterward,
- * and doing the subtraction here, in f64, before that narrowing, is ADR-010 rule 3 in its entirety.
- * `frame.toLocal` is called fresh for every render, so a `maybeRecenter` is picked up automatically
- * without this function needing to know whether the origin just moved.
+ * subtraction, via `geometryForBatch` above): deck.gl's own attribute-buffer construction is what
+ * narrows them to f32 afterward, and doing the subtraction here, in f64, before that narrowing, is
+ * ADR-010 rule 3 in its entirety. `geometryForBatch` recomputes from `frame.toLocal` whenever the
+ * frame's origin no longer matches its cache entry, so a `maybeRecenter`/`forceRecenter` is still
+ * picked up automatically (P9: on the very next render after the origin actually moved, not every
+ * render regardless) without this function needing to know whether the origin just moved.
  *
  * **`SolidPolygonLayer`, not the composite `PolygonLayer`, and deliberately so.** `PolygonLayer`
  * draws its outline via an internal `PathLayer` sub-layer, and a pick against that sub-layer
@@ -138,6 +234,17 @@ export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
  * costs nothing and a caller need not reason about which of these several value-comparisons would
  * otherwise have made a fresh array's cost identical -- not because reference stability itself buys
  * anything measurable on this path.
+ *
+ * **P9 fix (viewport-residency cut, Amendment 23): the `data` finding two paragraphs up is now the
+ * PRE-fix account, not the current behaviour.** This comment's own prior reading was correct at the
+ * time -- `data` genuinely was a brand-new array on every call, and `dataChanged` genuinely was true
+ * on every render regardless of colour -- but that is exactly what made `data` (never `getFillColor`)
+ * the real cost this file's earlier authors diagnosed without yet fixing. `geometryForBatch`
+ * (above) is that fix: `data` is now the cached `polygons`/outline-positions reference, reused
+ * byte-for-byte across renders for a batch whose object identity and frame origin have not changed,
+ * so `dataChanged` reads `false` for the (typically large) majority of a pan or zoom step's resident
+ * batches -- unlike `getFillColor`, `data`'s reference stability WAS load-bearing all along; this
+ * file simply had not yet supplied it.
  */
 export function buildLayers(
   batches: readonly ResidentBatch[],
@@ -147,19 +254,16 @@ export function buildLayers(
   const layers: (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] = [];
   for (const batch of batches) {
     checkPickCeiling(batch.ids.length);
-    // Nested `[x,y]` pairs per ring, deliberately not a flat `[x,y,x,y,...]` array: deck.gl's own
-    // polygon normalizer (`@deck.gl/layers/solid-polygon-layer/polygon.js`) distinguishes a
-    // "complex polygon" (multiple rings, i.e. holes) from a "simple flat" one by checking whether
-    // `polygon[0][0]` is itself a finite number -- a flat ring would satisfy that check and get
-    // silently misread as one ring's flat vertex list, dropping every hole. Verified against the
-    // installed deck.gl 9.3.9 source rather than assumed.
-    const polygons: Position[][][] = batch.rings.map((rings) =>
-      rings.map((ring) => ring.map(([x, y]) => frame.toLocal(x, y) as Position))
-    );
+    // P9 fix: `geometryForBatch` (above) returns the SAME `polygons` array reference across
+    // renders for a batch whose object identity and frame origin have not changed -- the whole
+    // point being that `data: geometry.polygons` below then reads as reference-unchanged to
+    // deck.gl's own `diffDataProps`, which is what actually skips attribute regeneration for an
+    // unchanged tile (see this function's own doc comment above for the full mechanism).
+    const geometry = geometryForBatch(batch, frame);
     layers.push(
       new SolidPolygonLayer<Position[][]>({
         id: layerId(batch),
-        data: polygons,
+        data: geometry.polygons,
         getPolygon: (d) => d,
         coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
         pickable: true,
@@ -172,11 +276,13 @@ export function buildLayers(
     // `SolidPolygonLayer` above (see that layer's own doc comment for the `PolygonLayer` composite-id
     // pick hazard this avoids). Built only when there is an outline to actually draw
     // (`outlineWidth > 0`) -- never an invisible zero-width layer sitting in deck.gl's own layer list
-    // for nothing. Reuses `polygons` (already frame-offset, already computed above for the fill
-    // layer) flattened one level: every ring of every feature in this batch, exterior and holes
-    // alike, becomes its own path -- a ring's own vertex list is already a closed loop (GeoArrow/
-    // WKB-derived rings repeat their first vertex as their last), so `PathLayer` draws it closed with
-    // no `_pathType`/`closeLoop` prop needed.
+    // for nothing. Reuses `geometry`'s own cached, already frame-offset positions
+    // (`outlinePositionsFor`, above) flattened one level: every ring of every feature in this batch,
+    // exterior and holes alike, becomes its own path -- a ring's own vertex list is already a closed
+    // loop (GeoArrow/WKB-derived rings repeat their first vertex as their last), so `PathLayer` draws
+    // it closed with no `_pathType`/`closeLoop` prop needed. Same P9 reference-stability fix as the
+    // fill layer above: an unchanged batch's outline `data` is also reference-identical across
+    // renders.
     //
     // **Structurally incapable of producing a pick, not merely unlikely to.** `pickable: false`
     // removes this layer from deck.gl's pick-index space entirely -- there is no code path from a GPU
@@ -197,7 +303,7 @@ export function buildLayers(
       layers.push(
         new PathLayer<Position[]>({
           id: `${layerId(batch)}-outline`,
-          data: polygons.flatMap((rings) => rings),
+          data: outlinePositionsFor(geometry),
           getPath: (d) => d,
           coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
           pickable: false,
