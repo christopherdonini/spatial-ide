@@ -5,24 +5,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-25. **Candidate arm's per-tile geometry cache adds an unmeasured third coordinate copy per
-    resident vertex — worth measuring before ADR-028 acceptance, or after?** The 2026-09-02
-    reviewer pass on the P9 paint fix (`buildLayers.ts`'s `geometryCache`) found the candidate
-    arm now retains a third `[x,y]` array per cached resident vertex, on top of the two
-    `MAX_RESIDENT_VERTICES`'s own comment already accounts for (`limits.ts`) — bounded by the
-    same ceiling via `WeakMap` keying (cannot grow past the resident set independently), but its
-    actual heap delta is unmeasured, and the candidate arm's own high-water mark already sits at
-    the ceiling (1,997,834/2,000,000). The false "does not start tiling" claim the same comment
-    carried (predating the candidate arm entirely) is corrected alongside this, both comment-only
-    (`7e86928`, viewport-residency P11) — the measurement itself is not done. Recommendation:
-    **not blocking** — this is a memory-footprint question, distinct from the two frame-time-tail
-    mechanisms your gate-8 ruling already named as binding debt, and MAX_RESIDENT_VERTICES stays
-    a client-side declared constant, not a docs/08 row; a real measurement (`performance.memory`
-    or a host-process probe, matching kernel/RESULTS.md's own memory-sampling convention) is
-    worth doing before or alongside whatever cut next touches tile admission, not before this
-    one's PR merges. Touches nothing until measured; `limits.ts`/`buildLayers.ts` comments already
-    updated to disclose the gap honestly rather than assert a number.
-
 24. **[(a)–(c) RESOLVED 2026-08-30 — human: "a is yes, b approved, c go with your
     recommendation"]**: over-budget renders as a declared partial view with the persistent
     status retained; the rider-1 status meaning change approved, exact wording on sight at the
@@ -270,6 +252,17 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-02 — entry 25, the P9 heap-footprint measurement: FOLDED INTO THE NEXT CAMPAIGN'S
+  INSTRUMENT, no standalone session.** The human's ruling, applied verbatim: the
+  candidate-arm geometry cache's unmeasured third coordinate copy per resident vertex
+  (`limits.ts`/`buildLayers.ts`, disclosed not measured — commit `7e86928`) gets its heap-delta
+  measurement added to whatever scored campaign's client instrument next runs — a heap sample
+  (`performance.memory` or a host-process probe, matching `kernel/RESULTS.md`'s own convention)
+  alongside quantities that campaign already collects — rather than a dedicated session of its
+  own. Not scheduled by this resolution; owed whenever a future cut next touches tile admission
+  and runs its own measured campaign. Touches nothing now — `limits.ts`/`buildLayers.ts`'s own
+  comments already disclose the gap honestly, unchanged by this resolution.
 
 - **2026-09-02 — entry 26, PR #16's red DCO check: no rewrite, resolved the entry-15 way.** The
   human's ruling, verbatim: *"no rewrite — red line stands, and these three hashes are
