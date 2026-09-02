@@ -171,3 +171,81 @@ operator in practice — **reopens this ruling** rather than leaving it standing
 recorded above. When both land clean, moving the Status line to Accepted, marking ADR-011 gate 8
 met, and the `docs/02`/`docs/README` index entries are a subsequent, separate custodian action
 recording an outcome already decided here — not a new judgment call.
+
+## Design seed — pan-west's binding debt, a candidate mechanism (2026-09-02, appended — a seed for a future slice, not scheduled, not itself a proposal)
+
+Recorded per the ADR-021-condition pattern's own discipline (binding debt is "resolved there or
+explicitly re-deferred with reason, never silently dropped") so that whenever a future cut next
+touches tile admission, `ResidentBatch` object identity, or the candidate residency planner, it
+does not have to rediscover pan-west's own shape from nothing. **This is ADR-011 item 4's
+"candidate mechanism" territory made concrete for the CURRENT single-origin implementation**
+(ADR-011's own per-tile-origin proposal is untouched, unbuilt, and this seed does not depend on
+it) — ADR-011 itself gains only a cross-reference pointer to here, per the point-don't-duplicate
+discipline this project applies everywhere else.
+
+**The candidate design.** Replace the render-layer geometry cache's current keying
+(`buildLayers.ts`'s `WeakMap<ResidentBatch, CachedBatchGeometry>`, keyed on batch object
+identity — see this ADR's own P9/P11 comment corrections above) with **request-identity keying**:
+a structural key composed of —
+
+1. **Open-generation** — a counter bumped on every dataset (re)open, so no cache entry ever
+   survives across a close/reopen boundary by accident.
+2. **Tile ID + grid frame** — spatial identity against the declared, derived-in-position grid
+   (this ADR's own architect-gate clarification 1: the grid is fixed for a session but its
+   position is bootstrap-derived, so the frame itself is part of the key, not assumed constant).
+3. **Filter predicate identity** — so a filtered view's cache entries can never collide with a
+   differently-filtered or unfiltered one.
+4. **Render origin** — unchanged from today's need: local coordinates are origin-relative
+   (`OffsetFrame`), so an origin move must still invalidate, exactly as it does now.
+5. **A geometry-affecting style revision, per ADR-022** — a style edit that changes GEOMETRY
+   (e.g. outline width crossing the zero/nonzero boundary, which changes whether
+   `outlinePositionsFor` even runs) must invalidate; a paint-only edit (fill colour) must not,
+   since it never touches this cache's own `polygons`/`outlinePositions` fields. Style v0's own
+   class-C "no API equivalent, local state only" discipline (ADR-022) is what makes "geometry-
+   affecting vs. paint-only" a decidable, small, closed set rather than an open one.
+
+**Gated by a completed-untrimmed flag.** Request-identity keying applies ONLY to a tile whose
+admission was completed and untrimmed. **Partial/trimmed tiles stay identity-keyed the current
+way** (object identity, today's WeakMap) — never migrated to request-identity keying — because
+Amendment 18 already established that a partial/trimmed tile's resident content is
+interleaving-dependent: two requests carrying an identical request-identity key could legitimately
+resolve to different trimmed content depending on timing, so a request-identity cache entry for a
+partial tile would risk silently serving one trial's trimmed content against a different trial's
+differently-trimmed request. Semantically unkeyable, not merely an engineering inconvenience —
+Amendment 18's own nondeterminism is the reason, cited not re-derived.
+
+**Constraints.** No content hashing on the hot path — the key stays structural/metadata-only, so
+a lookup costs no more than today's object-identity `WeakMap` get. No wire/SKP change — entirely
+`renderer`/`frontends/shell`-scoped, the protocol untouched. The escalation path, if
+request-identity keying alone ever proves insufficient, is a **producer-minted etag** (the
+kernel/producer stamping each tile response with a content-derived version the client could trust
+directly) — that requires a wire change and **would be its own SKP ADR**, explicitly not proposed
+or scheduled here, named only as the next lever if this one doesn't fully close the gap.
+
+**Precondition before scheduling — the diagnosis pass, run 2026-09-02, result: genuinely open,
+not answered by existing evidence.** The question this design's own value turns on: of pan-west's
+re-admitted tiles in the P10 spiking trials, what fraction were previously completed/untrimmed
+(the recoverable fraction under this design) versus previously partial/trimmed (unrecoverable by
+any keying scheme, per the carve-out above)? A diagnosis pass over the seven P10 evidence files
+(`frontends/shell/e2e/out/residency-harness-instrument-on-{1788291093560,1788291202624,
+1788291490405,1788291615109,1788291881195,1788292007179,1788292257500}.json`, all still present
+and intact) found this **not answerable from what's on disk**: every step, including `pan-west`,
+carries only aggregate per-step counters (`tilesRequested`, `duplicatesDropped`,
+`evictionsApplied`, etc.) — zero per-tile trim-status breakdown, in either the evidence JSON or
+the raw per-trial logs. **The hook a future instrumented pass would read already exists as real
+internal state, just never exported:** `tileIngest.ts`'s admission path computes
+`trimmed = overBudget && toAdmit.ids.length < batch.ids.length` before calling
+`tileSet.addBatch(tileKey, toAdmit, trimmed)`, and `TileResidentSet`'s own resident-tile record
+carries a `partial: boolean` field, sticky (upgrades on a partial admission, never downgrades
+back to `false`). A future pass would log, per re-admitted tile during `pan-west`, whether the
+tile's PRIOR resident entry had `partial === true` at the moment it was superseded/duplicated —
+new instrumentation and a re-run, not a re-read of P10's existing files. **Scheduling this design
+without that diagnosis would be building on an assumption, not evidence** — record the
+precondition as still open, not quietly dropped.
+
+**Explicitly out of this seed's scope: zoom-to-layer's own tail.** ADR-028's OTHER named binding
+debt (the sustained new-tile admission window) is a different mechanism — genuinely-new-tile
+admission, first-time cache misses by construction, which the P9 fix's own doc comment already
+says are correct to miss. Request-identity keying only helps when the SAME logical request
+recurs; it has no purchase on a tile being admitted for the first time. Zoom-to-layer's tail
+needs its own, different lever, not named here.
