@@ -253,6 +253,37 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Resolved
 
+- **2026-09-02 — three rulings closing the sitting: ADR-028 accepted, the architect consult
+  adopted in full, and the 5 GB fixture's single-point-of-failure ordered fixed this week.**
+  **(1) ADR-028 ACCEPTED per the human's own (d) ruling** — the gate-8 rider is discharged (G2
+  clean at 5 GB, escape/cancel felt immediate at scale, the partial view held and read honest in
+  Part K). The acceptance text carries: the architect-verified correction to the futility-pruning
+  seed; the scale calibration (zoom-to-layer's 5 GB non-settle, now understood as a held-queue
+  principle-7 item); the two Polygons-scale mechanisms as named binding debt (unchanged); and
+  **finding 3 (the second undeclared eviction exception) recorded as a named open item** —
+  neither declared nor fixed, its resolution decided from the debt slice's own 1a diagnosis, due
+  at 1b (applied to `ADR-028` and `RESULTS.md` both). **Merge-ready**: the human will click PR
+  #16 (`cut/viewport-residency`) and PR #17 (the Track 2 batch, `worktree-decision-queue-batch`)
+  themselves — the custodian does not merge (standing session restriction).
+  **(2) The architect consult adopted in full**: the debt slice's own **1a** is a diagnosis
+  spike — no gate — answering three questions: the queue-disposition question (how the held
+  queue should actually be resolved, not whether it needs to be — that's already settled as a
+  `docs/01` principle 7 obligation); finding 3's own pressure-valve-vs-thrash question (does
+  evicting partial covering tiles under over-budget pressure help or harm); and pan-west's own
+  recoverable fraction (the request-identity-keying seed's unmet precondition). **1b** is scoped
+  from 1a's own findings and owns the held-queue fix outright (a principle-7 obligation,
+  independent of what 1a's other two questions turn up) plus whatever else 1a's evidence
+  justifies scheduling. **The LOD slice's own problem statement is drafted only after 1a**,
+  explicitly including the architect's own wrong-module check (P12's own per-tile arithmetic
+  points at the query/producer side, not client paint — worth confirming before assuming a
+  renderer-side LOD slice is even the right lever).
+  **(3) The 5 GB fixture's single-point-of-failure gets fixed this week**: its provenance and
+  hash recorded durably (not just living as a file on disk), a copy made to a second physical
+  location, and whatever regeneration spec is honestly possible written down — before any
+  further campaign depends on it existing. Custodian dispatched research on known
+  provenance/generation parameters; the physical second-location copy needs the human's own
+  target location (not something the custodian can pick unprompted).
+
 - **2026-09-02 — entry 25, the P9 heap-footprint measurement: FOLDED INTO THE NEXT CAMPAIGN'S
   INSTRUMENT, no standalone session.** The human's ruling, applied verbatim: the
   candidate-arm geometry cache's unmeasured third coordinate copy per resident vertex

@@ -308,9 +308,17 @@ item), not futile traffic crossing a stable frontier. The correction, and a seco
 undecided finding it surfaced (partial covering tiles are evictable during over-budget — a
 second, undeclared exception to this ADR's own "never evict a tile intersecting the viewport,"
 beyond the dedupe-owner cascade architect-gate clarification 3 already names), are both recorded
-in full in `RESULTS.md`'s own section, not restated here. The second finding is **not decided by
-this update** — whether it is intended behavior needing its own amendment, or a defect, is the
-human's own call, queued.
+in full in `RESULTS.md`'s own section, not restated here.
+
+**Finding 3 — the second undeclared eviction exception — is a NAMED OPEN ITEM, not resolved by
+this update or by this ADR's own acceptance.** Per the human's own ruling, 2026-09-02: neither
+declared nor fixed yet; its resolution — amendment-with-rationale (declaring it intended, the
+same way clarification 3 already declares the dedupe-owner cascade) versus a fix (closing it) —
+is decided from the debt slice's own 1a diagnosis phase evidence (specifically, whether evicting
+partial covering tiles under over-budget pressure functions as a sensible pressure valve or as
+harmful thrash), and is **due at 1b**. This ADR's acceptance (below) does not wait on finding 3's
+own resolution — it is carried forward as accepted, named, binding-debt-adjacent open work, the
+same way the two Polygons-scale mechanisms are, not a blocker to Accepted status.
 
 **ADR-011 gate 8 is now marked met.** The written answer (this file's own gate-8 section), the
 human's ruling (accept, with binding debt), and both discharge conditions (Part K, the 5 GB

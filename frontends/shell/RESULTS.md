@@ -1110,9 +1110,11 @@ and `WorkingCanvas.tsx` directly, on four independent counts:
    (`candidateArmSession.ts:454,726`). **Partial covering tiles are therefore unprotected and
    evictable — a second, undeclared exception to ADR-028's "never evict a tile intersecting the
    viewport"** (its own architect-gate clarification 3 names exactly one: the dedupe-owner
-   cascade). Recorded here as a finding; whether this is intended behavior needing an ADR-028
-   amendment, or a defect needing a fix, is **not decided by this note** — the human's own call,
-   queued.
+   cascade). **Named open item, per the human's own ruling (2026-09-02):** neither declared nor
+   fixed yet; resolution — amendment-with-rationale (declaring it intended, the pressure-valve
+   reading) versus a fix (the thrash reading) — is decided from the debt slice's own 1a diagnosis
+   phase, due at 1b. Not a blocker to ADR-028's own Accepted status; carried forward as named
+   open work, the same way the two Polygons-scale mechanisms are.
 4. **The camera-change over-budget recheck can never evict, and reduces to a pure partiality
    test.** `applyTileViewportContext` calls `planTileEviction` with `incomingVertices: 0`
    (`WorkingCanvas.tsx:1091`); since residency stays ≤ ceiling by construction (Amendment 21),
