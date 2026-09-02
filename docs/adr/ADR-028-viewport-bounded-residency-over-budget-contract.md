@@ -1,7 +1,9 @@
 # ADR-028 — Viewport-bounded residency and the over-budget render contract
 
-Status: Proposed — binds nothing. Filed as the home of record for ADR-011 gate 8's
-"what replaces whole-dataset residency" question. Not architect-blockable until accepted.
+Status: **Accepted, 2026-09-02** — the gate-8 rider's own two conditions (Part K's felt verdict;
+the deferred 5 GB trace) are both in and neither contradicts the accept-class reading; see this
+file's own "Acceptance discharged" section, appended below, for the full record. Not
+architect-blockable (unchanged by this acceptance — not raised as a question at acceptance time).
 Related: ADR-010 (rules 1, 3, 5, 6 — the invariants this must satisfy, not replace),
 ADR-011 (the unmeasured tiled direction this works toward; not presumed),
 ADR-016 (stable identity, which cross-tile de-duplication depends on),
@@ -247,5 +249,54 @@ precondition as still open, not quietly dropped.
 debt (the sustained new-tile admission window) is a different mechanism — genuinely-new-tile
 admission, first-time cache misses by construction, which the P9 fix's own doc comment already
 says are correct to miss. Request-identity keying only helps when the SAME logical request
+recurs; it has no purchase on a tile being admitted for the first time. Zoom-to-layer's tail
+needs its own, different lever, not named here.
+
+## Acceptance discharged (2026-09-02, appended — Accepted)
+
+**The rider, quoted from this file's own earlier gate-8 section, discharged in full:** *"if K's
+felt verdict or the 5 GB trace contradicts the accept-class reading (error-shaped refusals still
+reachable, or the partial view illegible in practice), the ruling reopens rather than stands."*
+Both halves are now in.
+
+- **Walkthrough Part K** (`frontends/shell/MANUAL-WALKTHROUGH.md`) ran 2026-09-02. The core
+  legibility judgments read favorably, not contradicting: K2's own verdict on the declared
+  partial-view status, verbatim, *"it's better like this"* — a direct, positive comparison
+  against the old ceiling-refusal banner. K3 raised a real, concrete, non-blocking tone
+  suggestion (yellow instead of red for the within-budget case) — a follow-up for whenever the
+  status styling is next touched, not a legibility failure. Two further findings — K4's
+  scattered-gaps observation (folded into this section's own 5 GB reading below) and K6's
+  sub-pixel-hover staleness deviation (a picking-freshness bug, unrelated to the partial-view
+  status's own legibility) — are real and recorded in Part K's own result log, but neither
+  contradicts "the partial view illegible in practice": the status itself, and the concept it
+  communicates, read as clear and honest to the operator throughout.
+- **The deferred 5 GB G1/G2 cells** (`RESULTS.md`'s own "The 5 GB G1/G2 cells — 2026-09-02 (P12)"
+  section, above) ran 2026-09-02: **G2 PASS** — zero error-shaped refusals anywhere in the trace
+  at 5 GB, the declared partial-view status shown instead, at the exact scale the whole cut exists
+  for. **G1 supported-not-established** — an honest instrument gap (no rendered-⊆-authoritative
+  cross-check exists in this preregistration's own tooling), not a contradiction of correctness.
+  Neither rider condition fires: no error-shaped refusal was reachable, and the partial view did
+  not read as illegible — it read as exactly what it claims to be.
+
+**The ruling stands: (d), accept, with the two Polygons-scale mechanisms as named binding debt on
+the ADR-011 tiling/LOD line of work** (this file's own gate-8 section, recorded verbatim
+2026-09-02) — unchanged by this discharge, carried forward as-is.
+
+**One scale-calibration addition, not a new binding-debt mechanism in the same class:** the 5 GB
+cell surfaced that `zoom-to-layer` does not reach quiescence within its own 150-second per-step
+bound at 5 GB scale (`RESULTS.md` §5, above) — the SAME admission-window shape named at Polygons
+scale, but recalibrated: at 5 GB, fit-to-extent means fitting to the dataset's own full extent,
+which no amount of tile-cache pacing, keying, or eviction can shorten, because the window's
+length is proportional to the dataset, not to any caching inefficiency. **This finding is filed
+against the LOD/aggregate-overview slice's own future problem statement, by name — not added to
+the ADR-011 tiling line's own binding debt** (pan-west's design seed, above), because the lever
+that would close it is different: overview/decimation work, not a better cache. Recorded here so
+it is not rediscovered when that slice's own preregistration gets written.
+
+**ADR-011 gate 8 is now marked met.** The written answer (this file's own gate-8 section), the
+human's ruling (accept, with binding debt), and both discharge conditions (Part K, the 5 GB
+cells) are all on record. ADR-011 itself remains Proposed and unmeasured on every other item and
+gate (1–7) — this closes gate 8 only, per its own original text: *"what replaces whole-dataset
+residency for the 5 GB case"* — the answer is this ADR's own Decision, now Accepted.
 recurs; it has no purchase on a tile being admitted for the first time. Zoom-to-layer's tail
 needs its own, different lever, not named here.

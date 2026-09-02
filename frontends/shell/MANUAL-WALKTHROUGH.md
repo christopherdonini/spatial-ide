@@ -940,12 +940,45 @@ this Part's own honest note above.)
 
 ### Part K run (separate pass — viewport-bounded residency at over-budget)
 
-Part K did not exist during any run recorded above. Fill in the fields below when Part K is
-actually run by an operator, queued for the next batch session per rule 11 — bundled with the
-deferred 5 GB G1/G2 cells (Amendment 12) and any other walkthrough parts accumulated by then, one
-headed sitting.
-
-- **Date run:**
-- **Run by:**
-- **Build/commit:**
-- **Part K (K1–K6):**
+- **Date run:** 2026-09-02 (session spanned an overnight pause between handoff and the walkthrough
+  itself; the deferred 5 GB G1/G2 cells ran the same sitting, immediately after — see
+  `RESULTS.md`'s own "The 5 GB G1/G2 cells — 2026-09-02 (P12)" section).
+- **Run by:** the human (Christopher).
+- **Build/commit:** `32defc0fd3da7add69d07b94ff2daf842be18968` (pinned for the whole sitting,
+  unchanged throughout — the design-seed and entry-25/26 doc commits that later landed on top of
+  it were held back until this sitting closed, per the human's own build-freeze instruction).
+- **Part K (K1–K6):** run in full. **K1** (reference, not separately described — captured only
+  comparatively via K4). **K2:** verbatim, *"the tiles appear and some disappear and reappear and
+  disappear again. Now that I zoomed all the way out I see the status. To me it's better like
+  this."* — churn observed live during the settle (not asked for by the step text, recorded
+  because it's exactly the felt detail this Part exists to catch); once fully zoomed out, the
+  declared partial-view status read favorably against K1's old ceiling-refusal-banner shape.
+  **K3:** verbatim, *"maybe yellow might be a better color? Otherwise red feels like there's some
+  error"* — confirms the tone question directly; concrete suggestion, yellow instead of red for
+  the within-budget "Showing all N" case. **K4:** verbatim, *"the result feels worse, there're
+  missing tiles here and there in the middle. IT might be faster than K1, not sure about that,
+  maybe not"* — worse than K1's reference, with a live follow-up, verbatim: *"I'm just not sure
+  about the K2 leaving holes in the middle randomly, maybe try to remove the things on the sides
+  either left or right or top or bottom, but have at least the center rendered, i think, don't you
+  think?"* The operator's own proposal is already the design (ADR-028 Decision item 2,
+  distance-ordered eviction) — scattered mid-view holes are not that policy's expected shape.
+  **Resolved, not left open**: the deferred 5 GB cell's own `zoom-to-layer` finding (`RESULTS.md`
+  §5, the same sitting) explains this directly — the step never reached quiescence within its own
+  150s bound, so the view was still actively churning admissions/evictions throughout, the same
+  root cause both the "holes in the middle" and the "feels worse" judgments describe. Filed
+  against the LOD slice's own future problem statement (ADR-028's "Acceptance discharged"
+  section), not chased as a live bug. Speed judgment: genuinely uncertain, no duration claimed
+  either way (ADR-018 discipline held naturally, unprompted). **K5:** verbatim, *"seems
+  incremental, i think i might have seen a pan which felt bigger, but i'm not sure cause there
+  were no feature in sight"* — a genuine "maybe," matching the step's own pre-declared
+  honest-uncertain outcome; not a clean catch, not a clean miss. **K6:** verbatim, *"is fine to
+  me, you should be able to have the id of something you can't see. But if I zoom in all the way
+  and keep the mouse on one feature and zoom back I can still see the id even when subpixel"* —
+  the refusal's tone judged fine, matching the step's own intent. **Deviation found, live repro,
+  not yet fixed**: zoom in fully, hover a feature (id readout appears), zoom back out without
+  moving the mouse — the id readout persists even once the feature is sub-pixel again, where a
+  fresh hover at that zoom would show the below-pick-resolution refusal instead. Suggests the
+  refusal check runs on hover-entry/pointer-move only, not re-evaluated against the current zoom
+  level on every render while the pointer stays stationary — a stale hover state, not a fresh one.
+  Recorded as a real, open defect; not diagnosed or fixed this sitting (out of Part K's own scope
+  — a walkthrough records judgment, it doesn't debug live).

@@ -914,3 +914,163 @@ cache benefits any repeated call over a growing resident set, which baseline's o
 open-drain/pan/zoom streaming does just as candidate's tiling does, only with fewer, larger batches.
 ADR-011 gate 8 is not marked met here (C4) — this is the written evidence under the iterated fix, the
 ruling stays the human's, per Amendment 23 point 3.
+
+---
+
+## The 5 GB G1/G2 cells — 2026-09-02 (P12, the deferred cells)
+
+**§1 (binding, restated).** Client-clock only, `e2e/residency-harness.mjs` driving the real
+dev-mode WebView2 app over CDP, branch `cut/viewport-residency` @
+**`32defc0fd3da7add69d07b94ff2daf842be18968`**, `git rev-parse HEAD` verified before the trial,
+unchanged throughout. Fixture: `target/slice-evidence/scale-pass/parcels-5gb.parquet`
+(5,004,376,705 bytes), hashed before and after —
+`sha256:5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` both times, identical
+(`cell.fixtureHashMatchedAcrossRun: true`). Candidate arm, **fine** tile size (the campaign's own
+screening-selected level), **one trial** (`--cold`) — per the preregistration, G1/G2 are per-step
+assertions, n=1 sufficient per step, every trial checked; no statistical n is claimed or needed.
+Machine: headed, foreground, human present, RustDesk verified absent immediately before the trial
+(`--attest "headed, foreground, human present, RustDesk stopped (part-k / 5gb sitting)"`).
+**This is the first-ever attempt at this exact combination** — candidate arm, tile-keyed
+residency, against the 5 GB fixture. Both prior 5 GB attempts (P2 baseline session) were
+baseline-arm and both were structurally invalid for harness reasons Amendments 12/13 have since
+fixed; neither tells us anything about the candidate machinery, which did not exist when they ran.
+Evidence file: `e2e/out/residency-harness-instrument-on-1788380132954.json`.
+
+### 2. Per-step summary
+
+| step | wallMs | settled | armDisarmedCleanly | tiles req. | dup dropped | evict | resident features (end) |
+|---|---|---|---|---|---|---|---|
+| open-drain | 5,063 | true | true | 0 | 0 | 0 | 10,000 |
+| fit | 739 | true | true | 3 | 0 | 0 | 10,000 |
+| pan-north | 1,872 | true | true | 11 | 0 | 0 | 10,000 |
+| pan-east | 53,896 | true | true | 163 | 153 | 32 | 10,057 |
+| pan-south | 5,405 | true | true | 84 | 0 | 0 | 10,057 |
+| pan-west | 6,837 | true | true | 47 | 5,491 | 0 | 10,067 |
+| pan-northeast | 96,389 | true | true | 29 | 1,637 | 72 | 17,896 |
+| **zoom-to-layer** | **152,152** | **false** | **false** | 70 | 899 | 513 | 11,425 |
+| zoom-in-1 | 1,313 | true | true | 3 | 0 | 0 | 11,425 |
+| zoom-in-2 | 6,081 | true | true | 6 | 2 | 5 | 17,292 |
+| zoom-in-3 | 13,986 | true | true | 3 | 228 | 18 | 16,599 |
+| zoom-out-1 | 140,687 | true | true | 30 | 446 | 578 | 19,089 |
+
+Top-level: `invalidated: false`, `invalidatedAtStep: null`, `anyRowUnmeasured: false`,
+`measuredModeViewStateSeamAssertion.ok: true`, `supersededBytesDropped: 0`. By the harness's own
+validity criteria this trial is **fully valid** — zoom-to-layer's own non-settle (below) did not
+trip the per-trial invalidation path, only its own per-step calm-wait bound (Amendment 12,
+150,000ms), which is designed to let the trace continue rather than fail the whole trial.
+
+### 3. G2 — zero error-shaped refusals at 5 GB: **PASS**
+
+Direct per-step assertion, stated plainly, the cut's core claim: `batchesRefused`,
+`featuresRefused`, and `bytesRefused` are **all `0` at every single step**, including
+`zoom-to-layer` and both multi-minute pans. No ceiling-exceeded-shaped refusal fired anywhere in
+the committed camera trace at the 5 GB fixture. Where the trace crossed the declared budget, the
+shell showed the declared partial-view status instead of any refusal — confirmed live at
+`zoom-to-layer` (§5 below). This is exactly the restated target's own claim (`NEXT-CUT.md`): at
+fit-to-extent the viewport IS the dataset, and the cut's job was never to make the whole dataset
+render, only to retire the *error-shaped* refusal — which it does, at 5 GB, on this evidence.
+
+### 4. G1 — correctness (rendered ⊆ authoritative; dedupe exact; no superseded batch): **supported, not established**
+
+What the evidence supports: refusal counters clean throughout (as G2 above); dedupe activity
+looks proportionate to the gesture (`pan-west`: 5,501 features decoded, 5,491 correctly dropped as
+duplicates — an almost-entirely-already-resident pan, exactly the shape a small westward drag
+over already-visited tiles should produce); `supersededBytesDropped: 0` throughout — no stale
+in-flight response was ever dropped as superseded, because none arose to test the mechanism
+against, not because the mechanism was exercised and passed.
+
+**What it does not establish:** this preregistration's own instrument has no
+rendered-⊆-authoritative cross-check — no field or assertion anywhere in the evidence schema
+compares the client's resident set against the kernel's own authoritative response set by stable
+feature id. G1 is a genuine assertion this instrument was never built to make; its per-step
+counters are consistent with correctness, not proof of it. **This is a preregistration instrument
+gap, recorded as a future addition — not grounds for a re-run of this trial**, and not attempted
+live: no re-runs, no further probing, per the human's own direction closing this cell out.
+
+### 5. `zoom-to-layer` never reached quiescence — a complete finding, not a defect to chase
+
+```
+"calmWait": {"calmed": false, "waitedMs": 150058, "inFlight": 2, "queued": 14},
+"armDisarmedCleanly": false
+```
+
+The step hit its full per-step calm-wait bound (Amendment 12's own 150,000ms 5 GB-class figure)
+and the harness moved on regardless — 2 streams still in flight, 14 still queued, the
+instrumentation arm unable to disarm cleanly as a direct consequence. `pan-east` (53,896ms) and
+`pan-northeast` (96,389ms) were also unusually long but both did settle cleanly (`calmed: true`);
+only `zoom-to-layer` failed to reach quiescence at all within its own declared bound.
+
+**This is the same named mechanism ADR-028's gate-8 section already records as binding debt at
+Polygons scale** (zoom-to-layer's sustained new-tile admission window, ~20–23s wall there,
+83 first-time admissions) — **but it is not the same finding at a bigger number. At 5 GB, the
+mechanism's own scale changes its character.** Polygons-scale zoom-to-layer fits to a bounded,
+finite extent that a tile-keyed cache can eventually exhaust; 5 GB-scale zoom-to-layer fits to
+the dataset's own full extent, which is exactly the case the restated target already names as
+structural, not a caching problem: *"at fit-to-extent the viewport IS the dataset — viewport
+scoping cannot make 3.3M features appear (that is LOD's job, NOT this cut)"* (`NEXT-CUT.md`).
+A tile cache — however well it paces, keys, or evicts — cannot make a fit-to-5-GB-extent
+admission window short, because the window's own length is proportional to the dataset itself,
+not to any tiling inefficiency. **Pacing can't fix "the viewport is the dataset."** This finding
+therefore does not belong on the ADR-011 tiling/pan-west line of binding debt (request-identity
+keying, the pan-west design seed, etc. — all mechanisms that make an already-bounded admission
+cheaper) — it belongs to the LOD/aggregate-overview slice's own problem statement
+(`NEXT-CUT.md`'s own Non-goals: *"LOD/decimation/aggregate overviews (owes its own preregistered
+gate)"*), which is the only lever that can shrink what fit-to-extent means at 5 GB in the first
+place. **Recorded as complete — no further probing, no re-run**, per the human's own direction;
+the diagnostic question raised when this cell first ran (timing artifact vs. eviction-metric bug)
+is superseded by this reading: the length of the window is the finding, not a symptom to debug
+away.
+
+### 6. The status-text discrepancy — resolved by code-reading, not measurement
+
+`zoom-to-layer`'s own row shows `residentAtEndStep.totalResidentFeatures: 11425`; the console's
+own `P4-RESIDENCY-STATUS-TEXT[zoom-to-layer]` probe captured the on-screen status reading
+*"Showing 16362 features…"* — a different, higher count. Per the human's own direction, this is
+explained by reading the code that drives each value, not by re-running or further probing:
+
+- `residentAtEndStep` is captured **synchronously**, inside the `residencyEndStep` E2E hook
+  (`frontends/shell/src/App.tsx:828-832`), which merges `endResidencyStep()`'s own step-end
+  snapshot with `canvasRef.current?.getResidentCounts()` read "at the same moment" (the hook's
+  own N4/G6 comment) — this fires the instant the step's calm-wait attempt exhausts, whether or
+  not it actually calmed.
+- The status-text probe (`captureResidencyStatusText`,
+  `frontends/shell/e2e/residency-harness.mjs:621-631`) is a **separate, later** Playwright
+  round-trip — `page.locator(".residency-status").textContent()` — issued only *after*
+  `measureOneStep` has already returned and the row (including `residentAtEndStep`) has been
+  pushed (`residency-harness.mjs:1305` precedes the probe at `:1325-1327`). The harness's own
+  comment at that call site claims it "reads the status once the step has actually settled, not a
+  mid-stream transient" — an assumption that holds when `calmed: true`, and does not hold here,
+  where `calmed: false`.
+
+**The two values are therefore sequential reads of a still-churning count, not two measurements
+of one instant.** With 2 streams in flight and 14 queued at the moment `residentAtEndStep` was
+snapshotted, admission plausibly continued during the async gap before the later DOM read,
+raising the on-screen count from 11,425 to 16,362 in between. This is a direct consequence of §5's
+own finding (the step never quiesced) — not an independent status-accuracy defect, and not
+evidence the status ever *overstated* completeness at a moment it claimed to represent: each read
+was accurate to its own instant, and the instants differ. No code change follows from this
+reading; it is recorded as the mechanism, not chased further.
+
+### 7. Session mechanics
+
+One process, one trial, `--cold`, ABBA not applicable (single-cell measurement, no baseline
+comparison at this scale — 5 GB has no G3/G4/G7 role, per §1 of both dual-arm campaigns above:
+"reported at its own scale only, NEVER scored against any docs/08 matrix row"). Mount-readiness
+gate passed after 1,868ms. Total wall time across all measured steps ≈ 8.1 minutes (summed
+per-step `wallMs`); the full session including launch/mount/hash overhead landed inside the
+declared 10–30 minute estimate, well under the 30-minute per-trial outer-watchdog ceiling. Zero
+re-runs. App left running on CDP port 9223 per the harness's own end-of-run note (informational,
+not itself part of this record).
+
+### 8. This cell's own answer
+
+G2 stands **PASS** at 5 GB — the cut's central honesty claim (declared partial view, never an
+error-shaped refusal) holds at the scale that motivated the whole cut. G1 stands
+**supported-not-established** — nothing observed contradicts correctness, but this instrument was
+never built to prove it, a preregistration gap for a future addition, not a defect in this
+evidence. One genuinely new, complete finding: `zoom-to-layer` does not reach quiescence within
+150 seconds at 5 GB, a scale-calibrated instance of the same admission-window mechanism named at
+Polygons scale — but its own lever is different, and it is filed against the LOD slice's problem
+statement by name, not the tiling line's own binding debt. ADR-011 gate 8's own ruling — and
+whether this evidence and Part K's own felt verdict together discharge the gate-8 rider — is
+recorded in ADR-028's own acceptance section, not re-derived here.
