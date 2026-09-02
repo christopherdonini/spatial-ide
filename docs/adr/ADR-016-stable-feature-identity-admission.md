@@ -1,8 +1,13 @@
 # ADR-016 — Stable Feature Identity Admission and Source-Key Mapping
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. The engine
-implements the refusal half today because an engine that opens a file must do *something* at open,
-and refusing is the only option that cannot be silently wrong.
+**Status:** Accepted, 2026-09-02, **and architect-blockable as of acceptance**
+(`DECISIONS-PENDING.md`'s resolved entry 16 — the architect's own recommendation, taken: this ADR
+governs an admission policy of the same weight ADR-015 does, and ADR-010 rule 2 resolves picking
+*through* the identity this ADR admits, the same relationship that made ADR-015 architect-blockable
+on its own acceptance). OPEN item 1 (the envelope record) is settled below, appended; OPEN items 2
+and 3 remain open, unchanged by this acceptance. The engine implements the refusal half today
+because an engine that opens a file must do *something* at open, and refusing is the only option
+that cannot be silently wrong.
 **Split from:** **ADR-015 §8** and its source-key OPEN block, 2026-08-05. ADR-015 is about *CRS*
 admission; feature identity is a different subject that had been carried along in it because both
 are decided at open. Splitting is not a change of policy — the refusal below is what ADR-015 §8
@@ -141,6 +146,27 @@ for deciding the mapping question below.
 > verification (that it ran, and over how many rows) is the open half — a consumer that cannot tell a
 > verified identity from an unverified one is in the position §"Context" describes. **Must be settled
 > at acceptance.**
+
+**SETTLED at acceptance, 2026-09-02 (appended, the OPEN block above kept verbatim as the day's
+record) — the shipped envelope, in `describe.identity`'s own field names:**
+
+- **Native vs mapped, and which column** — `source` is `"file:id"` or `"mapped:<col>"`, so a
+  consumer tells a declared identity space from a file's own without asking the engine.
+- **Uniqueness as what-was-checked, never as a fact** — `uniqueness` is
+  `"verified-at-open-full-file"` or `"declared-not-verified"`, with `verified_rows` populated
+  only under the former; the bare word "unique" appears nowhere. `max_value`/`js_exact` carry
+  §7's width contract, and `js_exact` is `null` when unverified rather than defaulted true. The
+  verification runs over the **mapped** values and runs for a **native** `id` column too, closing
+  the gap the ADR's own Context names.
+- **The declaration is host-attributed.** The wire carries no `by`/`at` and must not (`skp/0.2`,
+  ADR-004 Amendment 4); the host mints both — `Principal::OsUser` + `rfc3339_utc_now` — at one
+  boundary, the ADR-024 F-5 form. There is no wire field for skipping the uniqueness check, so a
+  declared mapping is **always** verified.
+- **The candidate list is part of the refusal, not the record** — 64-bit integer columns in
+  schema order, unranked, unpreselected, no confidence; §3's "declared, never inferred" extended
+  to the list itself. **This is entry 11's own scope confirmation, retroactively affirmed**: the
+  cut lists candidates by type-eligibility only; anything smarter ("this looks like an id") stays
+  the data doctor's detect→propose→preview→apply territory (`docs/05`), out of this ADR's floor.
 
 > **OPEN:** *Stability across reopen, and what pins it.* Uniqueness at open says nothing about two
 > opens agreeing, or about two different files presenting the same identities. `docs/11`'s

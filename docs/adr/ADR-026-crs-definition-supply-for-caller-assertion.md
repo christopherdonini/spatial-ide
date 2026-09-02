@@ -1,8 +1,11 @@
 # ADR-026 — CRS definition supply for a caller assertion
 
-**Status:** Proposed (2026-08-18) — binds nothing until accepted. Its supply-route decision is
-queued for the human (DECISIONS-PENDING entry 10); the admission-remediation cut's P2 builds to
-the recommendation below unless overridden.
+**Status:** Accepted, 2026-09-02 — **both supply routes**, as recommended and as already built
+(`DECISIONS-PENDING.md`'s resolved entry 10). **Rule-7 note:** this acceptance settles decision
+1 (both routes) only; the "Architect note for acceptance" section below flags its own separate,
+still-open wording question (the `pasted` provenance string vs. `not-in-catalog`) that this
+ruling did not address — that stays queued (`DECISIONS-PENDING.md`, new entry), not decided by
+this Status change.
 
 **Related:** ADR-015 §3/§5 (Accepted, architect-blockable); docs/05 (CRS identity by definitional
 equivalence; grids identified by content hash, not filename); docs/01 principle 8 (plain text

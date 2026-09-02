@@ -1,8 +1,9 @@
 # ADR-027 — The action console and display truth
 
-**Status:** Proposed — binds nothing until accepted. Not architect-blockable. Filed 2026-08-18 by
-the `cut/action-console` P6 piece from the architect design consult's skeleton (2026-08-18), per
-CLAUDE.md's architect-first rule.
+**Status:** Accepted, 2026-09-02 (`DECISIONS-PENDING.md`'s resolved entry 23) — see this file's
+own "Acceptance" section below for the three Part J findings weighed at acceptance. Not
+architect-blockable. Filed 2026-08-18 by the `cut/action-console` P6 piece from the architect
+design consult's skeleton (2026-08-18), per CLAUDE.md's architect-first rule.
 **Related:** docs/01 principle 4 and principle 8; docs/03 "The action console"; docs/07 Alpha (with
 its 2026-08-18 split note); ADR-004 amendment 1 (bit-critical control-plane scalars) and Amendment 4
 (instrument surface is never an SKP field — governs the wire, not this display); ADR-006 (why
@@ -69,6 +70,36 @@ idempotency.
   the operator's own actions, never written, never collected (docs/09).
 - No docs/08 figure is claimed for the console; the only budget assertion is structural (the
   recorder is outside the frame path, and a closed console does no DOM work).
+
+## Acceptance (2026-09-02, appended)
+
+Accepted per the human's direct ruling, weighing `MANUAL-WALKTHROUGH.md`'s Part J run
+(2026-08-30, operator verdict *"comprehensible"*; the class-B fence held on screen; J6's own line
+— *"with the console open you feel like everything you do will be repeatable"* — recorded as
+both the intended effect and the reason the standing header exists) against three findings that
+run raised:
+
+- **Finding (a) — the console's reflexive view-state rows (its own toggles, panel disclosures)
+  crowd the tail around each action of interest.** Honest but noisy. **Recorded as a follow-up
+  question, not an acceptance condition** — a de-emphasis/grouping question for whenever the
+  console's own display next gets touched, not a debt this ADR's acceptance is conditioned on.
+- **Finding (b) — zooming did not visibly produce a `viewport_query` entry where panning did.**
+  Open observation at Part J time, plausibly the refill debounce/coalescing path rather than a
+  display-truth defect (a zoom that never issues a fresh query has nothing to display, which
+  would be correct; a zoom that issues one the console fails to capture would not be). **Gets one
+  bounded diagnosis, noted at acceptance, not re-opening this ADR's own scope**: trace one zoom
+  gesture through `consoleRecorder`'s own choke point (the same one this ADR's decision 3 already
+  names as the sole source) and confirm which of the two it is. Owned by whoever next touches the
+  console or the refill debounce path; not scheduled by this note.
+- **Finding (c) — J5's refused-entry operator confirmation stayed open** (the pasted row at Part J
+  time was an unrelated view-state entry, not the refusal itself; the property stands
+  E2E-verified via `REFUSAL'`). **Stands as recorded** — acceptance does not require re-running
+  J5; the E2E coverage already carries the property, and a future walkthrough batch can close the
+  operator-confirmation gap without reopening acceptance.
+
+None of the three blocks acceptance. Principle 4's own partial-discharge accounting (Consequences,
+above) is unchanged by this acceptance — style and publish stay accepted-with-a-deadline per
+decision 6, not settled here.
 
 ## What this ADR does not decide
 
