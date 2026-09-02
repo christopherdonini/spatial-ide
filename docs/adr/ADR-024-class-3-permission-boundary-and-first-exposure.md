@@ -189,8 +189,10 @@ about a different field. **Expiry clause, stated so this cannot be forgotten:** 
 holds only for as long as it remains true that nothing outside this log's own writer and its own
 reader reads it. The day an external reader exists — a log viewer, a support tool, an aggregator,
 any second consumer of `spatial-audit/1` — this value-domain widening becomes a real schema
-decision this ADR did not make, and needs its own. **QUEUED for the human, as an explicit decision
-item** (`NEXT-CUT.md`'s Design/Audit paragraph), not settled by this filing.
+decision this ADR did not make, and needs its own. **APPROVED by the human, 2026-09-02**
+(`DECISIONS-PENDING.md`'s resolved entry 6) — the widening stands, on exactly the expiry terms
+stated above; this paragraph is not itself ADR-024's own overall acceptance, which remains
+Proposed and queued (the ADR-017 exposure review still owed first).
 
 **One `AuditLog` per attempt (F-9), closed by construction.** `execute()` calls
 `AuditLog::open_for` fresh on every call — never a log the shell holds across attempts — proven by
