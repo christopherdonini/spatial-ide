@@ -5,6 +5,25 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+26. **PR #16's DCO check is red — 3 pre-existing commits lack Signed-off-by, and the clean fix
+    is a red-line action.** `de67713` (P2), `8211723` (P8), `0e4449c` (P10) — all pre-existing,
+    none from this dispatch's own 3 commits (which used `git commit -s` throughout) — carry no
+    `Signed-off-by` trailer, diagnosed from the CI log, not guessed. Unlike entry 15's already-
+    accepted historical gap (commits on/before 2026-08-10), these are recent and sit in an OPEN,
+    unmerged PR — exactly what the DCO gate exists to catch before merge. The clean fix
+    (`git rebase --signoff`, per the check's own suggested remedy) rewrites every commit from
+    `de67713` onward, including this dispatch's own 3 — a history rewrite + force-push, an
+    explicit custodian red line, never taken without your say-so — and would invalidate every
+    exact-hash citation across `RESULTS.md`, `ADR-028`'s new section, `CUT-STATE.md`'s ledger,
+    and PR #16's own body, all of which would need updating to match. `main` carries no branch
+    protection, so this does not technically block merging. Recommendation: **your call** —
+    (a) authorize the rebase + force-push (I'd then need to sweep every hash citation those files
+    carry to match — a real follow-up, not a formality); (b) merge as-is, accept the red check,
+    note it (closer to entry 15's own precedent, though these commits are far more recent);
+    (c) something else. Worth asking separately: were these 3 from a tester-subagent dispatch
+    that isn't passing `-s` — if so, that's a process gap worth closing regardless of what happens
+    to these specific commits. Touches: `cut/viewport-residency`'s history if (a); nothing if (b).
+
 25. **Candidate arm's per-tile geometry cache adds an unmeasured third coordinate copy per
     resident vertex — worth measuring before ADR-028 acceptance, or after?** The 2026-09-02
     reviewer pass on the P9 paint fix (`buildLayers.ts`'s `geometryCache`) found the candidate
