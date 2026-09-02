@@ -970,6 +970,14 @@ shell showed the declared partial-view status instead of any refusal — confirm
 fit-to-extent the viewport IS the dataset, and the cut's job was never to make the whole dataset
 render, only to retire the *error-shaped* refusal — which it does, at 5 GB, on this evidence.
 
+**Operator addendum, same sitting, cancel felt at scale:** hand-exploring the same candidate-arm
+5 GB session after this cell ran, the operator confirmed the Cancel affordance appeared during
+`zoom-to-layer`'s own churn and that a mid-churn gesture (zoom-in) was "immediate and very
+smooth" — escape from the stuck-looking state was felt to work, not merely present in the DOM.
+Recorded beside G2 because it is the same honesty claim at the interaction level: a long-running,
+never-settling operation still leaves the operator in control, never trapped behind a frozen or
+uncancellable UI (`MANUAL-WALKTHROUGH.md`'s own Part K "5 GB addendum").
+
 ### 4. G1 — correctness (rendered ⊆ authoritative; dedupe exact; no superseded batch): **supported, not established**
 
 What the evidence supports: refusal counters clean throughout (as G2 above); dedupe activity
@@ -1020,6 +1028,68 @@ place. **Recorded as complete — no further probing, no re-run**, per the human
 the diagnostic question raised when this cell first ran (timing artifact vs. eviction-metric bug)
 is superseded by this reading: the length of the window is the finding, not a symptom to debug
 away.
+
+**Operator follow-up, same sitting — refines the framing above, kept verbatim rather than
+rewritten.** Hand-exploring the same candidate-arm 5 GB session after this cell ran, the operator
+found, verbatim: *"Zoom to layer reads as a dead button — the camera was already at fit, the
+count climbed briefly then plateaued (19,089), and the view never visibly changed again while
+work continued. Cancel affordance appeared. Mid-churn zoom-in was immediate and very smooth —
+escape confirmed felt. Counter visibly ticking early confirms the two-snapshots reading of the
+status discrepancy."* (`MANUAL-WALKTHROUGH.md`'s own Part K "5 GB addendum".) The plateau figure
+— 19,089 — is not a new number: it is exactly this cell's own `zoom-out-1`
+`residentAtEndStep.totalResidentFeatures` (§2, above). Two independent sessions, the same
+practical ceiling for this camera position, landing on the same figure.
+
+**This sharpens, and partly corrects, the "pacing can't fix it" claim two paragraphs up.** The
+felt shape is not raw slowness across the whole 150-second window — resident count saturates in
+*seconds*, and the view stops visibly changing at that point. What fills the remaining ~140+
+seconds is **work-yield mismatch**: under distance-ordered eviction, once nearer content has
+already claimed the budget, every further queued tile beyond that eviction frontier is
+*provably* never going to be kept resident — the system keeps requesting and processing tiles
+that cannot contribute to the final view, and nothing signals "this is as complete as it will
+get" once that frontier is reached. The dataset-proportional claim above is still true of the
+*theoretical* admission space (fit-to-5-GB-extent implies an unbounded number of tiles a naive
+scheme could request) — but it overstated what THIS mechanism's own 150-second window is actually
+spending its time on, which the operator's own live evidence shows is mostly futile continuation,
+not proportional necessary work. **A design seed follows this section, filed against the
+ADR-011 tiling line (not the LOD slice)**, because recognizing and pruning that futility is a
+tiling-mechanism question, distinct from the "can the whole dataset ever render" question LOD
+alone answers.
+
+#### Design seed — futility pruning + a quiescent-partial signal (2026-09-02, a seed for a future slice, not scheduled)
+
+**The candidate design, from the operator's own reading, recorded not yet built:** once the
+render budget is saturated by nearer content under distance-ordered eviction, queued tiles beyond
+the resulting eviction frontier are provably non-contributing — they will keep losing the
+eviction contest to already-resident nearer tiles for as long as the camera doesn't move. Two
+paired mechanisms: **(1) futility pruning** — stop requesting/processing tiles known to be beyond
+that frontier once it stabilizes, rather than continuing to stream and immediately discard them;
+**(2) a quiescent-partial status signal** — once pruning has run and nothing outstanding could
+still change the resident set, the status can honestly declare the partial view *settled*
+(distinct from today's open-ended "still working" churn), even though the dataset itself was
+never fully rendered.
+
+**Why this is filed separately from the raw non-settle finding above, not as the same claim
+restated:** the raw finding (this section, before this addendum) says the *admission space* is
+proportional to the dataset and LOD is the only lever that shrinks it. This seed does not
+dispute that — a genuinely small camera move at 5 GB scale would still admit a large number of
+tiles. It targets a narrower, cheaper claim: **once the budget is already saturated and the
+frontier has stabilized, most of the remaining 150-second window is spent on work whose outcome
+is already decided.** Pruning that specific futile tail is a tiling-line mechanism (eviction/
+admission logic), not an overview/decimation one — **could plausibly retire most of the
+150-second churn without LOD**, per the operator's own reading, though this is a hypothesis from
+one session's evidence, not a measured claim.
+
+**Explicit precondition before anyone builds this, not yet met:** the "eviction frontier" argument
+needs verifying against the *actual* eviction ordering in code — is eviction genuinely
+distance-ordered from a stable reference point in a way that makes "beyond the frontier" a
+well-defined, computable set at any given moment, or does the real ordering have edge cases
+(the pan-west re-admission spike's own design seed already names one source of non-determinism,
+Amendment 18) that would make "provably non-contributing" a weaker guarantee than it sounds?
+**Not verified here — no further probing this sitting, per the human's own direction.** Needs its
+own reviewed slice: the frontier argument checked against code first, a preregistered gate if it
+holds, before any implementation. Filed here so it is not rediscovered, same as the pan-west seed
+above.
 
 ### 6. The status-text discrepancy — resolved by code-reading, not measurement
 

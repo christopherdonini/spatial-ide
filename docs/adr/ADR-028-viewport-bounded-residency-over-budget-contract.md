@@ -293,6 +293,16 @@ the ADR-011 tiling line's own binding debt** (pan-west's design seed, above), be
 that would close it is different: overview/decimation work, not a better cache. Recorded here so
 it is not rediscovered when that slice's own preregistration gets written.
 
+**A second design seed, filed in `RESULTS.md` rather than duplicated here** (its own "5 GB G1/G2
+cells" section, the "futility pruning + a quiescent-partial signal" subsection, appended
+2026-09-02 as an operator follow-up in the same sitting): a candidate mechanism for the ADR-011
+tiling line — NOT the LOD slice above, a different lever — that could retire most of the 5 GB
+`zoom-to-layer` non-settle window without LOD, by recognizing when queued tiles beyond a
+saturated eviction frontier are provably non-contributing and pruning them, then declaring the
+partial view quiescent-settled rather than leaving it looking like open work. Its own explicit,
+unmet precondition (verify the eviction-frontier argument against the actual eviction ordering in
+code) is stated there, not repeated here.
+
 **ADR-011 gate 8 is now marked met.** The written answer (this file's own gate-8 section), the
 human's ruling (accept, with binding debt), and both discharge conditions (Part K, the 5 GB
 cells) are all on record. ADR-011 itself remains Proposed and unmeasured on every other item and

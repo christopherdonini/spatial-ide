@@ -982,3 +982,14 @@ this Part's own honest note above.)
   level on every render while the pointer stays stationary — a stale hover state, not a fresh one.
   Recorded as a real, open defect; not diagnosed or fixed this sitting (out of Part K's own scope
   — a walkthrough records judgment, it doesn't debug live).
+- **5 GB addendum (operator, same sitting):** after the deferred 5 GB G1/G2 cell ran
+  (`RESULTS.md`'s own P12 section), the operator explored the same candidate-arm, 5 GB session by
+  hand. Verbatim: *"Zoom to layer reads as a dead button — the camera was already at fit, the
+  count climbed briefly then plateaued (19,089), and the view never visibly changed again while
+  work continued. Cancel affordance appeared. Mid-churn zoom-in was immediate and very smooth —
+  escape confirmed felt. Counter visibly ticking early confirms the two-snapshots reading of the
+  status discrepancy."* The plateau figure (19,089) matches the automated trial's own
+  `zoom-out-1` `residentAtEndStep.totalResidentFeatures` exactly — independent corroboration from
+  two different sessions, not a coincidence. See `RESULTS.md` §5's own operator-follow-up
+  refinement and the futility-pruning design seed (`ADR-028`) for the analysis this addendum
+  drives.
