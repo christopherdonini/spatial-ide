@@ -5,25 +5,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-26. **PR #16's DCO check is red — 3 pre-existing commits lack Signed-off-by, and the clean fix
-    is a red-line action.** `de67713` (P2), `8211723` (P8), `0e4449c` (P10) — all pre-existing,
-    none from this dispatch's own 3 commits (which used `git commit -s` throughout) — carry no
-    `Signed-off-by` trailer, diagnosed from the CI log, not guessed. Unlike entry 15's already-
-    accepted historical gap (commits on/before 2026-08-10), these are recent and sit in an OPEN,
-    unmerged PR — exactly what the DCO gate exists to catch before merge. The clean fix
-    (`git rebase --signoff`, per the check's own suggested remedy) rewrites every commit from
-    `de67713` onward, including this dispatch's own 3 — a history rewrite + force-push, an
-    explicit custodian red line, never taken without your say-so — and would invalidate every
-    exact-hash citation across `RESULTS.md`, `ADR-028`'s new section, `CUT-STATE.md`'s ledger,
-    and PR #16's own body, all of which would need updating to match. `main` carries no branch
-    protection, so this does not technically block merging. Recommendation: **your call** —
-    (a) authorize the rebase + force-push (I'd then need to sweep every hash citation those files
-    carry to match — a real follow-up, not a formality); (b) merge as-is, accept the red check,
-    note it (closer to entry 15's own precedent, though these commits are far more recent);
-    (c) something else. Worth asking separately: were these 3 from a tester-subagent dispatch
-    that isn't passing `-s` — if so, that's a process gap worth closing regardless of what happens
-    to these specific commits. Touches: `cut/viewport-residency`'s history if (a); nothing if (b).
-
 25. **Candidate arm's per-tile geometry cache adds an unmeasured third coordinate copy per
     resident vertex — worth measuring before ADR-028 acceptance, or after?** The 2026-09-02
     reviewer pass on the P9 paint fix (`buildLayers.ts`'s `geometryCache`) found the candidate
@@ -289,6 +270,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-02 — entry 26, PR #16's red DCO check: no rewrite, resolved the entry-15 way.** The
+  human's ruling, verbatim: *"no rewrite — red line stands, and these three hashes are
+  load-bearing (evidence files and RESULTS.md §1 cite them as buildCommit provenance; rewriting
+  them would falsify the measurement chain, which is worse than a red check)."* Applied: (1) a PR
+  #16 comment carries the human's own retroactive DCO 1.1 certification for `de67713`/`8211723`/
+  `0e4449c` verbatim, plus a one-line note beside entry 15's own finding in
+  `PRE-PUBLIC-CHECKLIST.md` §6 — the check stays red on that PR by design, the honest state, not
+  a fixed one; (2) the class fix, so this is the last one: `AI_DEVELOPMENT.md`'s Custodian
+  mechanics gains item 12, naming headed-measurement-session commits (tester dispatches, result-
+  committing scripts) as the specific place `-s` gets missed, and `CONTRIBUTING.md` documents a
+  new committed local hook (`.githooks/commit-msg`, enabled via
+  `git config core.hooksPath .githooks`) that refuses an unsigned commit before it ever reaches a
+  PR — tested against both a signed and unsigned sample message, both correct. Does not gate the
+  merge or the gate-8 work, per the human's own "then proceed" instruction.
 
 - **2026-09-02 — the ADR-011 gate-8 ruling: option (d), accept with the two tail mechanisms as
   named binding debt (the ADR-021-condition pattern), rider attached.** Presented 2026-09-01 as
