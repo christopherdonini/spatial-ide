@@ -1091,6 +1091,58 @@ own reviewed slice: the frontier argument checked against code first, a preregis
 holds, before any implementation. Filed here so it is not rediscovered, same as the pan-west seed
 above.
 
+**VERIFIED, 2026-09-02, architect consult — the precondition above is now checked and does NOT
+hold. Kept verbatim above rather than rewritten; this is the correction, appended.** Reading
+`tileIngest.ts`, `tileResidentSet.ts`, `tileViewportStreamManager.ts`, `candidateArmSession.ts`,
+and `WorkingCanvas.tsx` directly, on four independent counts:
+
+1. **Admission is arrival-ordered, not distance-ordered.** `ingestTileBatch` admits a prefix by
+   feature index of whatever batch arrives first (`tileIngest.ts:117-157`,
+   `trimBatchToVertexBudget:179-198`) — distance never enters admission, so there is no distance
+   at which "nearer content holds the budget" becomes a true statement.
+2. **Distance ordering governs only non-covering tiles.** `planTileEviction` filters
+   `viewportTileKeys` out *before* sorting (`tileResidentSet.ts:460-463`) — it orders eviction
+   among tiles the viewport does NOT cover. At fit-to-extent, the exact case this finding is
+   about, that set is nearly empty by construction.
+3. **During over-budget, the protected set collapses to *complete* covering tiles only** —
+   `onCameraChange` skips every candidate when over budget without headroom
+   (`tileViewportStreamManager.ts:326-340`), reducing `covering` to `isTileCompleteInCandidateSet`
+   (`candidateArmSession.ts:454,726`). **Partial covering tiles are therefore unprotected and
+   evictable — a second, undeclared exception to ADR-028's "never evict a tile intersecting the
+   viewport"** (its own architect-gate clarification 3 names exactly one: the dedupe-owner
+   cascade). Recorded here as a finding; whether this is intended behavior needing an ADR-028
+   amendment, or a defect needing a fix, is **not decided by this note** — the human's own call,
+   queued.
+4. **The camera-change over-budget recheck can never evict, and reduces to a pure partiality
+   test.** `applyTileViewportContext` calls `planTileEviction` with `incomingVertices: 0`
+   (`WorkingCanvas.tsx:1091`); since residency stays ≤ ceiling by construction (Amendment 21),
+   that call always returns no evictions. So `fits` reduces to `!anyPartialAmongCovering`
+   (`WorkingCanvas.tsx:1112-1119`) — **partiality (an honesty property) and budget exhaustion (a
+   capacity property) are wired to the same flag**, which then gates all new issuance.
+
+**What the 150-second window actually is, corrected:** `drainQueueIfRoom` refuses to drain while
+`overBudgetFlag` is set (`tileViewportStreamManager.ts:447-455`), and only a camera change resumes
+it. With no camera change during a single step, **queued tiles are held indefinitely — never
+dropped, never cancelled, still reported as outstanding work.** §2's own terminal state
+(`inFlight: 2, queued: 14` after 150,058ms) is exactly that: a held queue plus two long-running
+in-flight per-tile queries, not a stable frontier being crossed by futile traffic. Per-tile
+round-trip arithmetic from §2's own counters (`pan-east` 53,896ms/163 tiles ≈ 1s/tile;
+`pan-northeast` 96,389ms/29 tiles ≈ 3.3s/tile) against Polygons-scale's own ~92ms first-batch
+paint (ADR-028's gate-8 section) points at **the producer/query side, not client-side futile
+work** — an attribution the existing segment instrument cannot settle (three of twelve steps in
+this cell's own evidence file carry `queryToFirstByteMs: null`).
+
+**Corrected framing:** "futility pruning" named an optimization for a mechanism that is not
+running. The real, code-grounded item underneath it is stronger and cheaper: **a queue the
+planner has already decided not to drain is held, uncancelled, and reported as pending** — a
+`docs/01` principle 7 item ("every operation cancellable, streaming, progress-reporting" — a held
+queue is none of the three), not a performance optimization. This reframing also survives LOD,
+which an eviction-frontier heuristic would not have. **The design seed above is superseded by
+this correction for scheduling purposes** — its own rescoping (queue disposition and a
+settled-partial signal as two separate, dependent items, with the queue-disposition question
+worth a diagnosis pass before either is preregistered) is cut-planning content, not evidence, and
+lives in the architect consult for the next cut, not here.
+
 ### 6. The status-text discrepancy — resolved by code-reading, not measurement
 
 `zoom-to-layer`'s own row shows `residentAtEndStep.totalResidentFeatures: 11425`; the console's

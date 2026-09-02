@@ -301,7 +301,16 @@ tiling line — NOT the LOD slice above, a different lever — that could retire
 saturated eviction frontier are provably non-contributing and pruning them, then declaring the
 partial view quiescent-settled rather than leaving it looking like open work. Its own explicit,
 unmet precondition (verify the eviction-frontier argument against the actual eviction ordering in
-code) is stated there, not repeated here.
+code) is stated there, not repeated here. **UPDATE, 2026-09-02, architect consult: that
+precondition has since been checked and does NOT hold** — admission is arrival-ordered, not
+distance-ordered, and the 150-second window is a held, uncancelled queue (a `docs/01` principle 7
+item), not futile traffic crossing a stable frontier. The correction, and a second, separately
+undecided finding it surfaced (partial covering tiles are evictable during over-budget — a
+second, undeclared exception to this ADR's own "never evict a tile intersecting the viewport,"
+beyond the dedupe-owner cascade architect-gate clarification 3 already names), are both recorded
+in full in `RESULTS.md`'s own section, not restated here. The second finding is **not decided by
+this update** — whether it is intended behavior needing its own amendment, or a defect, is the
+human's own call, queued.
 
 **ADR-011 gate 8 is now marked met.** The written answer (this file's own gate-8 section), the
 human's ruling (accept, with binding debt), and both discharge conditions (Part K, the 5 GB
