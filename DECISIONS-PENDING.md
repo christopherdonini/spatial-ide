@@ -253,6 +253,23 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Resolved
 
+- **2026-09-02 — the ADR-011 gate-8 ruling: option (d), accept with the two tail mechanisms as
+  named binding debt (the ADR-021-condition pattern), rider attached.** Presented 2026-09-01 as
+  four options against the completed dual-arm campaign (`frontends/shell/RESULTS.md`, P8 pre-fix
+  + Amendment-23/P10 post-fix): (a) accept as-is; (b) reject; (c) iterate the two tails; **(d)
+  accept, with zoom-to-layer's sustained new-tile admission window and pan-west's large-batch
+  re-admission spike recorded as named binding debt in ADR-028, never silently dropped from a
+  future cut's scope (custodian recommendation, taken).** The human's own rider, verbatim:
+  *"ADR-028's acceptance itself is NOT discharged by this ruling — it waits until walkthrough
+  Part K and the deferred 5 GB G1/G2 cells are in; if K's felt verdict or the 5 GB trace
+  contradicts the accept-class reading (error-shaped refusals still reachable, or the partial
+  view illegible in practice), the ruling reopens rather than stands."* Applied: ADR-028 gains a
+  dated, appended gate-8 section (both campaigns' evidence gate-by-gate, the two mechanisms named
+  by direct per-step attribution, the ruling and rider recorded verbatim) — its Status line stays
+  **Proposed**, not moved to Accepted, per the rider. Touches on the eventual acceptance (not yet
+  triggered): ADR-028's Status line, ADR-011 gate 8 marked met, `docs/02`/`docs/README` index
+  entries — a later, separate custodian action once Part K + the 5 GB G1/G2 cells land clean.
+
 - **2026-08-19 — entries 20 + 21 (the A9' hover-pick red), resolved through to green.**
   Entry 20 (human: "let's go with entry 20"): the bounded zoom attempt ran and hit its own
   escalation trigger. Entry 21 (human: "start it"): the instrumented render-diagnosis session
