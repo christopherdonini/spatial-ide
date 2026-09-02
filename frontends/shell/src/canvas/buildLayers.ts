@@ -108,19 +108,25 @@ export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
  * frame.originX, frame.originY)` and hand deck.gl the SAME array reference for an unchanged
  * batch at an unchanged origin. Unchanged tiles then read `dataChanged: false` and skip
  * attribute regeneration entirely -- on any render triggered by only a handful of newly-arrived
- * or newly-evicted tiles (the common case for a pan/zoom step), the bulk of the resident set now
- * costs nothing to redraw. Invalidated by object identity (a genuinely NEW `ResidentBatch` --
- * e.g. a real refetch -- always misses) or by an origin move (`OffsetFrame.forceRecenter`/
- * `maybeRecenter`: every resident batch's offset-relative coordinates are stale the instant the
- * origin moves, so every cache entry misses on the very next render and is rebuilt once,
- * correctly, never silently stale). `getPolygon`/`getPath` stay fresh closures every call
- * (`(d) => d`) -- deliberately: `compareProps`'s own `accessor`-type `equal` treats any two
- * functions as equal regardless of reference (this file's own prior comment, verified again),
- * so a fresh closure here was never part of the cost this cache addresses.
+ * or newly-evicted tiles (the common case for a pan/zoom step), the bulk of the resident set
+ * still runs `buildLayers`'s own per-batch construction (a fresh `SolidPolygonLayer` per resident
+ * batch, still diffed by deck.gl every render -- the post-fix p50 53ms/p95 166ms above is that
+ * residual, not zero), but skips the far more expensive attribute re-tessellation/re-upload path.
+ * Invalidated by object identity (a genuinely NEW `ResidentBatch` -- e.g. a real refetch --
+ * always misses) or by an origin move (`OffsetFrame.forceRecenter`/`maybeRecenter`: every
+ * resident batch's offset-relative coordinates are stale the instant the origin moves, so every
+ * cache entry misses on the very next render and is rebuilt once, correctly, never silently
+ * stale). `getPolygon`/`getPath` stay fresh closures every call (`(d) => d`) -- deliberately:
+ * `compareProps`'s own `accessor`-type `equal` treats any two functions as equal regardless of
+ * reference (this file's own prior comment, verified again), so a fresh closure here was never
+ * part of the cost this cache addresses.
  *
  * A `WeakMap` keyed by the batch object itself needs no manual eviction: once a tile's batch is
  * dropped from `TileResidentSet`/`ResidentSet` (eviction, supersede, dataset close) and nothing
- * else references it, its cache entry is collected right along with it.
+ * else references it, its cache entry is collected right along with it. **This retention has an
+ * unmeasured heap cost** -- see `limits.ts`'s `MAX_RESIDENT_VERTICES` comment for the full
+ * disclosure: this cache is a third retained coordinate copy per cached vertex, on top of the two
+ * that comment already accounts for, bounded by the same ceiling but not independently measured.
  */
 interface CachedBatchGeometry {
   originX: number;

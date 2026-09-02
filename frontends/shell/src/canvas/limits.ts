@@ -22,10 +22,21 @@ export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
 /**
  * Bounds the cost of rule 2's own requirement: keeping the authoritative f64 lookup table resident
  * doubles coordinate memory against f32-only rendering. This is the resident-vertex ceiling across
- * every batch of every live stream in the shell, not per-batch -- past it the shell stops accepting
- * further batches for that stream, cancels it, and shows a visible typed refusal naming this
- * constant. It does not evict silently (a partial view presented as complete) and it does not
- * start tiling (ADR-011 binds nothing and is not implemented here).
+ * every batch of every live stream in the shell, not per-batch. **Baseline arm** (the default):
+ * past it the shell stops accepting further batches for that stream, cancels it, and shows a
+ * visible typed refusal naming this constant -- no silent eviction, no partial view presented as
+ * complete. **Candidate arm** (behind the residency-arm switch; ADR-028, Proposed, not accepted):
+ * past it, distance-ordered eviction keeps the resident set under this same ceiling and the shell
+ * shows a declared partial-view status instead of a refusal (`residencyStatus.ts`) -- the ceiling
+ * value itself is unchanged, only what happens at it differs by arm.
+ *
+ * **Open, unmeasured cost (2026-09-02 reviewer finding, viewport-residency P9):** the candidate
+ * arm's per-tile render-layer cache (`buildLayers.ts`'s `geometryCache`) retains a THIRD `[x, y]`
+ * copy per cached resident vertex -- the authoritative f64 array above, this file's own f32-render
+ * doubling, and now the cache's own retained local-coordinate copy -- for as long as each batch
+ * stays resident. Bounded by this same ceiling via the cache's `WeakMap` keying (it cannot grow
+ * past the resident set independently), but the actual heap delta this adds at the ceiling is not
+ * measured anywhere in this cut. Named debt, not silently folded into "doubles" above.
  */
 export const MAX_RESIDENT_VERTICES = 2_000_000;
 
