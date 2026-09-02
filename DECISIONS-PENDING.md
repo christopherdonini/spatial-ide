@@ -5,6 +5,24 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+25. **Candidate arm's per-tile geometry cache adds an unmeasured third coordinate copy per
+    resident vertex — worth measuring before ADR-028 acceptance, or after?** The 2026-09-02
+    reviewer pass on the P9 paint fix (`buildLayers.ts`'s `geometryCache`) found the candidate
+    arm now retains a third `[x,y]` array per cached resident vertex, on top of the two
+    `MAX_RESIDENT_VERTICES`'s own comment already accounts for (`limits.ts`) — bounded by the
+    same ceiling via `WeakMap` keying (cannot grow past the resident set independently), but its
+    actual heap delta is unmeasured, and the candidate arm's own high-water mark already sits at
+    the ceiling (1,997,834/2,000,000). The false "does not start tiling" claim the same comment
+    carried (predating the candidate arm entirely) is corrected alongside this, both comment-only
+    (`7e86928`, viewport-residency P11) — the measurement itself is not done. Recommendation:
+    **not blocking** — this is a memory-footprint question, distinct from the two frame-time-tail
+    mechanisms your gate-8 ruling already named as binding debt, and MAX_RESIDENT_VERTICES stays
+    a client-side declared constant, not a docs/08 row; a real measurement (`performance.memory`
+    or a host-process probe, matching kernel/RESULTS.md's own memory-sampling convention) is
+    worth doing before or alongside whatever cut next touches tile admission, not before this
+    one's PR merges. Touches nothing until measured; `limits.ts`/`buildLayers.ts` comments already
+    updated to disclose the gap honestly rather than assert a number.
+
 24. **[(a)–(c) RESOLVED 2026-08-30 — human: "a is yes, b approved, c go with your
     recommendation"]**: over-budget renders as a declared partial view with the persistent
     status retained; the rider-1 status meaning change approved, exact wording on sight at the
