@@ -1,9 +1,11 @@
 # ADR-022 — Style v0 as the Project's Single Style Model, Beyond the Bundle
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. Implemented
-ahead of acceptance under already-accepted **ADR-017** (whose §5a defines the document this ADR
-widens the *role* of, without changing its shape) and `docs/07`'s Prototype hero-slice scope — the
-ADR-019/ADR-020/ADR-021 precedent.
+**Status:** Accepted, 2026-09-02 — as recommended, no condition attached
+(`DECISIONS-PENDING.md`'s resolved entry 3). Not architect-blockable. Implemented ahead of
+acceptance under already-accepted **ADR-017** (whose §5a defines the document this ADR widens
+the *role* of, without changing its shape) and `docs/07`'s Prototype hero-slice scope — the
+ADR-019/ADR-020/ADR-021 precedent; operator-confirmed end to end via the style-panel cut's
+walkthrough Part F (shell-and-viewer visual agreement, the F7 round-trip).
 **Drafted by:** the architect design consult for the `cut/style-panel` branch (2026-08-15), filed
 from that consult's skeleton by the custodian.
 **Related:** ADR-017 §5a (the style document: format, refusal set, canonical form), ADR-008

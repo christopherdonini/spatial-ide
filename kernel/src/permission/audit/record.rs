@@ -87,14 +87,16 @@ pub enum ApprovalRoute {
     /// Supplied as `--approve <destination>`.
     Flag,
     /// Typed into a host-composed DOM prompt in `frontends/shell`, compared in Rust
-    /// (`NEXT-CUT.md`'s publish cut). **Value-domain widening within `spatial-audit/1`** — the
+    /// (the publish cut). **Value-domain widening within `spatial-audit/1`** — the
     /// schema tag does not change; a reader already tolerant of an unrecognized `approval_route`
     /// string (this crate's own reader is not, but no external reader of this file is known to
     /// exist — `kernel/PERMISSION-BOUNDARY.md`'s "8 MiB × 4 remains one module's ceiling, not
     /// project policy" is the same posture on a different field) sees a third channel rather than a
-    /// schema break. **Dated, no-external-readers justification, 2026-08-16, QUEUED for the human**:
-    /// this is a decision the custodian records rather than settles — see `NEXT-CUT.md`'s Design
-    /// section, "Audit" paragraph.
+    /// schema break. **Dated, no-external-readers justification, 2026-08-16, APPROVED 2026-09-02**
+    /// (`DECISIONS-PENDING.md`'s resolved entry 6): the human confirmed the widening, with an
+    /// **expiry clause** — this justification holds only while no external reader of this log
+    /// exists; the day one does, the widening becomes a real schema decision this comment does
+    /// not make, and needs its own.
     ShellDialog,
 }
 

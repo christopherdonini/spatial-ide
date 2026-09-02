@@ -517,8 +517,8 @@ fixture (SF10 — `v0-describe-response-caller-asserted`, `source: caller_assert
 `asserted_by`/`asserted_at`/`definition_provenance` all populated together, the shape no existing
 fixture exercised). Flagged for the cut's architect re-review alongside the P2 addendum above.
 
-**DRAFT — re-deferral of §4 item 5's scan-progress debt, PENDING HUMAN CONFIRMATION
-(DECISIONS-PENDING entry 9).** §4 item 5's dated 2026-08-14 entry parked the true-scan-progress
+**CONFIRMED, 2026-09-02 — re-deferral of §4 item 5's scan-progress debt
+(`DECISIONS-PENDING.md`'s resolved entry 9).** §4 item 5's dated 2026-08-14 entry parked the true-scan-progress
 debt on "the next SKP version that opens the wire for any reason — a `skp/0.2`, or `docs/07`'s 1.0
 freeze, whichever comes first." This version, `skp/0.2`, is that version: it opens the wire (the
 two `open_dataset` fields above), so item 5's carrier clause fires. The debt is explicitly
@@ -528,11 +528,11 @@ data-plane frame); **(2)** what the quantity *is* — rows scanned, bytes read, 
 elapsed-since-first-source-row — remains undecided and is an ADR-class question, not an
 implementation detail; **(3)** the interim the acceptance condition asked for already shipped
 (indeterminate liveness + a working cancel, client-derived, no wire change) — plus a **stronger
-carrier than last time**: the quantity question is to be filed as its own
-Proposed-with-open-decision ADR (the ADR-023 pattern), due before `docs/07`'s Prototype exit, so
-"the next version" can no longer roll over silently. **Because this clause descends from ADR-021's
-human acceptance condition, the human confirms it — this text is drafted and flagged, not merged as
-discharged.** See `DECISIONS-PENDING.md` entry 9 for the standing recommendation this text mirrors.
+carrier than last time**: the quantity question is filed as its own Proposed-with-open-decision
+ADR — **ADR-029** (filed 2026-09-02, the ADR-023 pattern), due before `docs/07`'s Prototype
+exit, so "the next version" can no longer roll over silently. **This clause descends from
+ADR-021's human acceptance condition, and the human has confirmed it, 2026-09-02** — this text is
+**merged as discharged**, no longer flagged. See `DECISIONS-PENDING.md`'s resolved entry 9.
 
 **P6 architect re-review (2026-08-18, appended):** the cut's scheduled merge-gating architect
 re-review returned **pass with notes** and ruled on this entry's three flagged questions: (1) §7.2's
@@ -542,6 +542,6 @@ text is not contradicted, only this spec's own sentence was; a wire-required-key
 applied to a provenance record, exact-byte bookkeeping that nothing branches on; the `pasted`
 naming question goes to ADR-026's acceptance (DECISIONS-PENDING entry 10), not this review.
 (3) The within-version assembly is blessed under §4 item 13's appended four-condition rule —
-**`skp/0.2` freezes at merge**; its §8 entries above are its full field set. The DRAFT re-deferral
-above remains **PENDING HUMAN CONFIRMATION** — unchanged by this review, which has no standing over
-a clause descending from the human's ADR-021 acceptance condition.
+**`skp/0.2` freezes at merge**; its §8 entries above are its full field set. The re-deferral
+above is now **CONFIRMED** (2026-09-02, entry 9) — this review had no standing over a clause
+descending from the human's ADR-021 acceptance condition, and did not decide it; the human did.

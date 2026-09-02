@@ -5,6 +5,24 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+25. **[Rule-7 item, surfaced 2026-09-02 while applying entry 10's ADR-026 acceptance — NOT
+    decided by that ruling.]** ADR-026's own "Architect note for acceptance" section (filed
+    2026-08-18, unresolved) flags one wording question left explicitly "the human's": the
+    `pasted` provenance-string value names only that a definition was **not byte-identical to
+    any pinned catalog entry** — not that it was necessarily hand-typed — while
+    `definition_provenance(None)` also returns it for `--assert-crs`'s own no-definition case.
+    ADR-015 §5's `none-performed` / ADR-016 §6's "the record says what was checked" both argue
+    for a value naming the check instead (`not-in-catalog`). The string is wire-visible in
+    `skp/0.2` — free to change before merge-freeze, a version bump after. Recommendation: **your
+    call, no default assumed** — this is exactly the kind of wire-wording precision this project
+    treats as never a detail. Touches, if changed: `kernel/src/skp.rs::host_minted_crs_assertion`
+    (or wherever `definition_provenance` is minted), `ADR-026`'s own text, both-side fixtures.
+    *(Numbering note, resolved by the merge, 2026-09-03: the viewport-residency branch
+    independently used 25 and 26 for unrelated entries — the P9 heap-footprint measurement and
+    PR #16's red DCO check — both already resolved (see this file's own Resolved section) by the
+    time of the merge, so no renumbering was actually needed: this Pending entry is the only
+    LIVE use of "25" post-merge, the other two being historical record only. No action taken.)*
+
 24. **[(a)–(c) RESOLVED 2026-08-30 — human: "a is yes, b approved, c go with your
     recommendation"]**: over-budget renders as a declared partial view with the persistent
     status retained; the rider-1 status meaning change approved, exact wording on sight at the
@@ -32,21 +50,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     non-remoted sessions on this machine — your physical time, to be agreed when P2/P6 are
     ready (no RustDesk measurement, ever). (d)–(f) proceed on recommendation unless overridden.
 
-23. **ADR-027 acceptance — the action console and display truth.** Filed Proposed by the
-    console cut's P6 with your accepted-with-deadline ruling recorded as decision 6; the
-    ADR-022 pattern's operator confirmation is now in: Part J run 2026-08-30, verdict
-    "comprehensible", the class-B fence held on screen (no arguments, no destination path, no
-    copy), and your J6 line — "with the console open you feel like everything you do will be
-    repeatable" — recorded as both the intended effect and the reason the standing header
-    exists. **Three Part J findings to weigh at acceptance:** (a) the console's reflexive
-    view-state rows (its own toggles, panel disclosures) crowd the tail around each action of
-    interest — honest but noisy; a de-emphasis/grouping question; (b) zooming did not visibly
-    produce a viewport_query entry where panning did (open observation, plausibly refill
-    debounce — worth one diagnosis before or at acceptance); (c) J5's refused-entry operator
-    confirmation stayed open (E2E REFUSAL' carries the property). Recommendation: **accept**,
-    with (a) noted as a follow-up question, not a condition, unless you want it binding.
-    Touches on acceptance: ADR-027's Status line + docs/02/README index entries.
-
 22. **[RESOLVED 2026-08-30 — human: "Let's go with the next cut" → the hold lifts; the
     ADR-011 tiling/LOD slice opens with its preregistration piece. The remaining queue
     entries stay pending at the human's pace and no longer gate the pipeline.]**
@@ -69,40 +72,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     ADR-022/024 pair at your pace); the next cut — the ADR-011 tiling/LOD slice, opening with
     its preregistration piece, now aimed by Part H's evidence and PR #15's hover-at-scale
     question — starts on your word or when those clear.
-
-16. **ADR-016 acceptance — stable feature identity admission and source-key mapping.** The
-    admission-remediation cut builds the mapping half ADR-016 §3–§7 describes and **settles its
-    OPEN item 1** ("what the envelope records for a mapped identity — must be settled at
-    acceptance"). The acceptance text should record the shipped envelope as the answer, in
-    `describe.identity`'s own field names:
-    - **Native vs mapped, and which column** — `source` is `"file:id"` or `"mapped:<col>"`, so a
-      consumer tells a declared identity space from a file's own without asking the engine.
-    - **Uniqueness as what-was-checked, never as a fact** — `uniqueness` is
-      `"verified-at-open-full-file"` or `"declared-not-verified"`, with `verified_rows` populated
-      only under the former; the bare word "unique" appears nowhere. `max_value`/`js_exact` carry
-      §7's width contract, and `js_exact` is `null` when unverified rather than defaulted true.
-      The verification runs over the **mapped** values and runs for a **native** `id` column too,
-      closing the gap the ADR's Context names.
-    - **The declaration is host-attributed.** The wire carries no `by`/`at` and must not
-      (`skp/0.2`, ADR-004 Amendment 4); the host mints both — `Principal::OsUser` +
-      `rfc3339_utc_now` — at one boundary, the ADR-024 F-5 form. There is no wire field for
-      skipping the uniqueness check, so a declared mapping is **always** verified.
-    - **The candidate list is part of the refusal, not the record** — 64-bit integer columns in
-      schema order, unranked, unpreselected, no confidence; §3's "declared, never inferred"
-      extended to the list itself.
-    **OPEN item 2 (stability across reopen, and what pins it) stays open, and nothing persists** —
-    reopen means re-declare, no `ResourceRef`, no content-hash pinning, no ADR-005 grade claimed.
-    OPEN item 3 (composite and non-integer keys) stays open. **No performance number is claimed
-    or implied:** the whole-column scan's cost lands on the same docs/08 cold-open budget
-    `kernel/RESULTS.md` still records as unmeasured; this cut ships liveness + a working Cancel
-    instead of a figure (ADR-018).
-    **One thing acceptance must not leave silent:** ADR-016 is currently "Not
-    architect-blockable." Architect recommendation — **make it architect-blockable on acceptance,
-    as ADR-015 was**: it governs an admission policy of the same weight, and ADR-010 rule 2
-    (Accepted, architect-blockable) resolves picking *through* the identity this ADR admits.
-    Recommendation: **accept**, with the envelope record above. Touches on acceptance: ADR-016's
-    Status line + OPEN item 1 marked settled (appended, never rewritten), `docs/02` and
-    `docs/README` index entries.
 
 12. **ADR-009 pre-public checklist: mechanically COMPLETE — ready for your go/no-go, three
     residual judgments (13–15).** The 2026-08-18 verification pass confirmed the 2026-08-07 work
@@ -136,52 +105,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     fact, no rewrite** — the CI check already gates every future external commit, which is what
     DCO 1.1 is for. Optional: a one-line note in `PRE-PUBLIC-CHECKLIST.md` §6.
 
-9. **The `skp/0.2` scan-progress carrier clause — your ADR-021 condition's lineage fires.** Your
-   filter-panel condition let the true-scan-progress debt be "resolved there or explicitly
-   re-deferred with reason"; the dated re-deferral (SKP-V0 §4 item 5, 2026-08-14) parked it with
-   "the next SKP version that opens the wire for any reason" — and the admission-remediation cut's
-   `skp/0.2` IS that version. All three of item 5's reasons still hold (no batch-independent
-   data-plane carrier; the quantity is undecided and ADR-class; the interim liveness+cancel
-   shipped), and this cut touches no data plane. Recommendation: **explicit second re-deferral
-   with reason, plus a stronger carrier** — the quantity question filed as its own
-   Proposed-with-open-decision ADR (the ADR-023 pattern), due before Prototype exit, so "next
-   version" can never roll over silently again. Because the clause discharges your acceptance
-   condition, the re-deferral is yours to confirm: the drafted §8 text ships flagged in the cut's
-   PR and is not merged as discharged until you say so.
-
-10. **ADR-026 (CRS definition supply) — which supply route?** An operator cannot assert a CRS by
-    typing "EPSG:2056": ADR-015 §5 requires axis order established *from the definition*, and the
-    engine has no PROJ. Options: a pinned, versioned, content-hashed, in-tree plain-text
-    definition set (displayed in full before assertion, never fetched at runtime — the ADR-021
-    static-link security property applied here); paste-PROJJSON-verbatim; or both.
-    Recommendation: **both**; filed Proposed as ADR-026; the cut's P2 builds to it unless you
-    override. Choosing a catalog entry is recorded as provenance (entry id + content hash, or
-    `pasted`), never as an equivalence judgment — docs/05's grid rule applied to definitions.
-
-11. **Scope confirmation — remediation is *declare*, never *detect*.** The cut lists candidate
-    identity columns by type-eligibility only (64-bit integers, schema order, unranked, no
-    preselection, no confidence) per ADR-016 §3; anything smarter ("this looks like an id") is
-    the Alpha data doctor's detect→propose→preview→apply territory (docs/05) and stays out.
-    Recommendation: **confirm**; the cut proceeds on it. (ADR-016 acceptance is entry 16.)
-
-7. **[OBSERVATION IN, 2026-08-30 — your ruling now ripe.]** You sat through the "Preparing…"
-   silence twice at 5 GB, and on first contact it read as "it doesn't publish" (Part H result
-   log). The question this entry always carried is now concretely yours: does the gap become a
-   third binding condition on the exposure ruling (thread the CancelToken + a phase label into
-   prepare — small, host-side), or is declare-and-observe's observation enough to schedule the
-   fix as ordinary debt? Original entry follows.
-   **Part H: the principle-7 publish-prepare gap — pre-fix or declare-and-observe?** The shell's
-   publish-prepare runs an **uncancellable, progress-less whole-file SHA-256** ("Preparing…" for
-   tens of seconds at 5 GB; the only figure on record is a withdrawn 20s) before the approval
-   dialog appears — a named docs/01 principle-7 gap, pre-existing and disclosed in the code's own
-   comment, but Part H is the first time a human meets it. Options: pre-fix now (thread the
-   CancelToken + a phase label into prepare — small, host-side) or declare it in H6's step text
-   and let your observation decide whether it becomes a third binding condition on the exposure
-   ruling. Architect and custodian both recommend **declare-and-observe**. Proceeding on that
-   unless you override before the run. *(Expiry note, 2026-08-19, architect: declare-and-observe
-   is honest only while Part H is imminent — if the batch slips much past a week, the pre-fix
-   option gets re-offered rather than "observe" quietly becoming "tolerate".)*
-
 8. **[RESOLVED 2026-08-30 — you took H8b live and completed it]**: 3.3M rows / 6,636
    partitions published unwarned, viewer refusal read on screen, artifact deleted after;
    **ADR-025 filed Proposed with its decision deliberately open** (refuse / warn / stay
@@ -205,23 +128,6 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    the approval surface, never silently dropped. The hero sentence still reads: the filter is how
    you *find* what to publish; the artifact records the viewport. Recommendation: leave
    bundle_version 2 unscheduled until real need. No action = the recommendation.
-
-6. **Audit format: `ApprovalRoute` gains `"shell-dialog"` within `spatial-audit/1`.** The audit
-   record's approval_route currently knows "interactive" (stdin) and "flag" (--approve); a shell
-   dialog approval recorded as either would be false. Adding the value is a value-domain widening
-   inside an unchanged key set — permissible without a spatial-audit/2 bump ONLY on the dated
-   no-external-readers fact (the C1/C3 discipline), with an expiry clause when a reader exists.
-   The architect flags it as your decision, not a detail. Recommendation: **approve**; the cut
-   proceeds on it unless you override. Touches: `kernel/src/permission/audit/`, ADR-024's text.
-
-3. **ADR-022 acceptance — style v0 as the project's single style model.** Filed Proposed and
-   implemented this cut under the ADR-019/020/021 precedent: the shell became §5a's second
-   consumer via the renderer-owned extracted resolver (`renderer/style-ts`), the agreement vector
-   gained a third reader, CI gates now watch the extracted module, and the operator's F7
-   round-trip visually confirmed shell-and-viewer agreement. The ephemeral-view-state
-   consequences (no undo; persistence triggers class-2 + docs/11 in the same commit) are stated
-   in the ADR. Recommendation: **accept**. Touches on acceptance: ADR-022's status line +
-   docs/02/README index entries.
 
 4. **ADR-023 — attribute projection on `viewport_query` (decision deliberately open).** Filed as
    the named home for the categorical/live-attributes deferral (the ADR-011-gate-8 pattern) — no
@@ -326,6 +232,67 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
   **Proposed**, not moved to Accepted, per the rider. Touches on the eventual acceptance (not yet
   triggered): ADR-028's Status line, ADR-011 gate 8 marked met, `docs/02`/`docs/README` index
   entries — a later, separate custodian action once Part K + the 5 GB G1/G2 cells land clean.
+
+- **2026-09-02 — entry 3, ADR-022 acceptance: ACCEPTED as recommended, no condition.** Applied:
+  ADR-022's Status line to Accepted; `docs/02`/`docs/README` index entries updated.
+
+- **2026-09-02 — entry 23, ADR-027 acceptance: ACCEPTED.** The human's ruling: finding (a)
+  (console noise) recorded as a follow-up question, not an acceptance condition; finding (b)
+  (zoom not visibly producing a `viewport_query` entry) gets one bounded diagnosis noted at
+  acceptance, not re-opening the ADR; finding (c) (J5's operator confirmation) stands as
+  recorded, open. Applied: ADR-027's Status line to Accepted, a new dated "Acceptance" section
+  recording all three findings verbatim; `docs/02`/`docs/README` index entries updated.
+
+- **2026-09-02 — entry 16, ADR-016 acceptance: ACCEPTED with the envelope record exactly as
+  drafted, made architect-blockable per the architect's own recommendation.** OPEN item 1
+  settled (the drafted envelope record appended, the original OPEN block kept verbatim per this
+  project's own append-never-rewrite discipline); OPEN items 2 (stability across reopen) and 3
+  (composite/non-integer keys) stay open, untouched. Applied: ADR-016's Status line to Accepted
+  + architect-blockable; item 1's settlement appended; `docs/02`/`docs/README` index entries
+  updated.
+
+- **2026-09-02 — entry 11, scope confirmation (declare, never detect): CONFIRMED.** No separate
+  edit — the ADR-016 Decision (item 3) already states this discipline; the confirmation is
+  recorded inline in ADR-016's own new settlement text (entry 16, above) as a retroactive
+  affirmation of the shipped cut's scope.
+
+- **2026-09-02 — entry 7, the principle-7 publish-prepare gap: PRE-FIX.** The human's ruling,
+  reversing the prior declare-and-observe default now that Part H's observation is in: thread
+  the `CancelToken` + a phase label into `publish-prepare`. **Not implemented by this batch** —
+  a small, host-side cut from `main`, reviewer-gated, scheduled to run only after tonight's
+  sitting closes (its own brief is not drafted here, to avoid clobbering `NEXT-CUT.md`'s current
+  occupant, the still-open viewport-residency cut). Touches, when dispatched: the shell's
+  publish-prepare path (`frontends/shell/src-tauri`, wherever the whole-file SHA-256 runs
+  uncancellably today).
+
+- **2026-09-02 — entry 9, the `skp/0.2` scan-progress carrier clause: second explicit
+  re-deferral CONFIRMED, stronger carrier filed.** The human confirmed the re-deferral (the
+  clause descends from ADR-021's own acceptance condition, so only the human could discharge
+  it) and its own drafted §8 text in `SKP-V0.md` **ships merged as discharged**, no longer
+  flagged DRAFT/PENDING. **ADR-029 — the scan-progress carrier quantity** filed (Proposed,
+  decision deliberately undrafted, the ADR-023 pattern), due before `docs/07`'s Prototype exit;
+  no third silent rollover to "the next SKP version" is available without amending ADR-029
+  first. Applied: `SKP-V0.md`'s two "PENDING HUMAN CONFIRMATION" markers updated to CONFIRMED;
+  `docs/adr/ADR-029-scan-progress-carrier-quantity.md` filed; `docs/02`/`docs/README` index
+  entries added.
+
+- **2026-09-02 — entry 10, ADR-026 (CRS definition supply route): ACCEPTED, both routes.**
+  Applied: ADR-026's Status line to Accepted, both routes confirmed as recommended and as
+  already built; `docs/02`/`docs/README` index entries updated. **Rule-7 note — a genuinely new
+  item surfaced while applying this and is NOT resolved by this ruling:** ADR-026's own
+  "Architect note for acceptance" section flags a separate, still-open wording question (the
+  `pasted` provenance string vs. `not-in-catalog`) that the human's ruling did not address. Not
+  decided inline — see the new Pending entry below.
+
+- **2026-09-02 — entry 6, audit format widening (`ApprovalRoute::ShellDialog`): APPROVED.** The
+  code was already fully shipped on `main` (`kernel/src/permission/audit/record.rs`, tests
+  green, `reader.rs` mapping present) — only two doc markers needed updating from "QUEUED for
+  the human" to "APPROVED 2026-09-02", with the expiry clause (holds only until an external
+  reader of `spatial-audit/1` exists) restated, not weakened. Applied: `record.rs`'s doc
+  comment (also fixed a stale `NEXT-CUT.md` cross-reference to the since-overwritten publish
+  cut's own brief) and `ADR-024`'s matching paragraph (lines 180-193) — comment-only, zero
+  behavior change. ADR-024's own overall Status is untouched, still Proposed, still queued
+  (below) — this entry approves only the one value-domain widening, not the ADR.
 
 - **2026-08-19 — entries 20 + 21 (the A9' hover-pick red), resolved through to green.**
   Entry 20 (human: "let's go with entry 20"): the bounded zoom attempt ran and hit its own
