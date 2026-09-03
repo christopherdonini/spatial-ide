@@ -116,10 +116,13 @@ pub fn find_by_definition_hash(definition_hash: &str) -> Option<&'static Catalog
 /// Hashes `definition_json` **exactly as received** — no parsing, no reformatting, no
 /// normalization before hashing — and compares against the catalog's own pinned hashes. A match
 /// records `catalog:<id>@sha256:<first-12-hex>`; anything else, including a definition that
-/// differs from a catalog entry by even one byte of whitespace, records `pasted`. `None` (no
-/// definition text at all) also records `pasted`: it trivially cannot match a catalog entry, and
-/// `crs::admit` refuses such an assertion for establishing no axis order before this value is
-/// ever surfaced (`AxisOrderUnestablished`).
+/// differs from a catalog entry by even one byte of whitespace, records `pasted` (retained per
+/// DECISIONS-PENDING entry 25's 2026-09-03 ruling: the value records the route the operator took,
+/// not the catalog check's outcome). `None` (no definition text at all) records `none-supplied`
+/// (entry 30, same ruling's corollary): `pasted` here asserted an action that never happened —
+/// the honest record of the None case is that no definition was supplied, so no hash and no
+/// catalog comparison ever ran. `crs::admit` still refuses such an assertion for establishing no
+/// axis order before this value is ever surfaced (`AxisOrderUnestablished`).
 ///
 /// **This is the only place that compares a supplied definition against the catalog.** Nothing
 /// else in this module — or ADR-026 — performs matching, scoring, or suggestion (decision 4); this
@@ -127,7 +130,7 @@ pub fn find_by_definition_hash(definition_hash: &str) -> Option<&'static Catalog
 /// about what should happen.
 pub fn definition_provenance(definition_json: Option<&str>) -> String {
     let Some(text) = definition_json else {
-        return "pasted".to_string();
+        return "none-supplied".to_string();
     };
     let hash = sha256_hex(text);
     match find_by_definition_hash(&hash) {
@@ -226,7 +229,9 @@ mod tests {
     }
 
     #[test]
-    fn no_definition_text_is_pasted_not_a_panic_or_a_false_match() {
-        assert_eq!(definition_provenance(None), "pasted");
+    fn no_definition_text_is_none_supplied_not_pasted_nor_a_panic_nor_a_false_match() {
+        // Entry 30 (2026-09-03): `pasted` here asserted an action that never happened. The None
+        // case records the observed non-supply — no hash, no catalog comparison ever ran.
+        assert_eq!(definition_provenance(None), "none-supplied");
     }
 }

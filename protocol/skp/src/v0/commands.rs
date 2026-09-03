@@ -96,7 +96,11 @@ pub struct CrsInfo {
     /// in-tree catalog entry's own content hash exactly, `pasted` otherwise. Host-derived at open
     /// (`kernel/src/skp.rs::host_minted_crs_assertion`) — never present on any request; a file's
     /// own declared CRS never went through either ADR-026 supply route, so this is `None` for
-    /// `source == "file"`.
+    /// `source == "file"`. **Entry 30 (2026-09-03):** an assertion carrying no definition at all
+    /// (the CLI `--assert-crs` route, `definition_provenance(None)`) records `none-supplied` — it
+    /// previously recorded `pasted`, asserting an action that never happened. Value-set change
+    /// within `skp/0.2`'s frozen field set; versioning disposition recorded in `SKP-V0.md`'s own
+    /// entry-30 addendum.
     pub definition_provenance: Option<String>,
     pub axis_order: String,
     /// Always `"none-performed"` in this slice — no axis normalization is performed anywhere.
