@@ -953,6 +953,15 @@ Evidence file: `e2e/out/residency-harness-instrument-on-1788380132954.json`.
 | zoom-in-3 | 13,986 | true | true | 3 | 228 | 18 | 16,599 |
 | zoom-out-1 | 140,687 | true | true | 30 | 446 | 578 | 19,089 |
 
+*(Correction, 2026-09-03, appended — the attribution pass
+(`spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`) checked this table against the
+evidence file: zoom-to-layer's `settled` column above reads `false` but the evidence JSON
+records `"settled": true` for that row — the table transcribed `calmWait.calmed: false` into
+the settled column. The evidence file is authoritative: `settled: true`,
+`armDisarmedCleanly: false`, `calmWait: {"calmed": false, "waitedMs": 150058, "inFlight": 2,
+"queued": 14}`. The table row is kept as written per this file's own append-only correction
+practice; read it with this note.)*
+
 Top-level: `invalidated: false`, `invalidatedAtStep: null`, `anyRowUnmeasured: false`,
 `measuredModeViewStateSeamAssertion.ok: true`, `supersededBytesDropped: 0`. By the harness's own
 validity criteria this trial is **fully valid** — zoom-to-layer's own non-settle (below) did not
@@ -1147,6 +1156,22 @@ this correction for scheduling purposes** — its own rescoping (queue dispositi
 settled-partial signal as two separate, dependent items, with the queue-disposition question
 worth a diagnosis pass before either is preregistered) is cut-planning content, not evidence, and
 lives in the architect consult for the next cut, not here.
+
+*(Two corrections to the paragraphs above, 2026-09-03, appended — the attribution pass,
+`spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`, originals kept verbatim per this
+file's practice. **First**, "three of twelve steps... carry `queryToFirstByteMs: null`" is
+wrong about its own cited file: the evidence file carries **8 nulls of 12 rows**, plus two rows
+whose value is exactly `0` — a clock-quantum artifact of the instrument's arrival-before-issue
+ordering that must never be quoted as a measurement — leaving **2 of 12 usable**. **Second**,
+the held-queue attribution of the 150-second window is recalibrated: the hold mechanism is real
+code exactly as cited, but the trial's own session log shows ~65 tile streams reached genuine
+`Completed` terminals *inside* the calm-wait window at 3-way concurrency (~4.4 MB/s sustained)
+— this window was overwhelmingly **continuous slow drainage**, not held-queue idle. The
+principle-7 gap stands and is sharpened: the system was working the whole time, and no
+operator-facing signal could distinguish that from a stall. The producer-side attribution
+above also stops being arithmetic: time-to-data dominates by one to two orders of magnitude on
+direct records — see the attribution pass §3-4, including why "152s / 70 tiles" is a category
+error that must not be quoted as a per-gesture round-trip figure.)*
 
 ### 6. The status-text discrepancy — resolved by code-reading, not measurement
 

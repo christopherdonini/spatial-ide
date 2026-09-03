@@ -357,3 +357,17 @@ created. The settled-partial signal (the debt slice's own Item B), whenever buil
 its predicate accounting for this exception — an eviction under this clause frees vertices,
 which reopens headroom, which reopens issuance, so "settled" may never be declared from a state
 this exception can still change.
+
+## Correction — the 150-second window's attribution (2026-09-03, appended)
+
+The "Acceptance discharged" section above carries, from the 2026-09-02 architect consult, the
+statement that *"the 150-second window is a held, uncancelled queue (a `docs/01` principle 7
+item), not futile traffic crossing a stable frontier."* The attribution pass ordered by the
+human on 2026-09-03 (`spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`) recalibrates
+the first half against the trial's own persisted session log: the hold mechanism is real code
+exactly as cited, but the recorded window was overwhelmingly **continuous slow drainage** (~65
+tile-stream terminals inside the calm-wait window at 3-way concurrency), not held-queue idle —
+time-to-data upstream of paint dominates on direct records. The principle-7 obligation (scoped
+cancellation, honest progress reporting) is unchanged and sharpened: continuous work was
+indistinguishable from a stall in every operator-facing signal. The "not futile traffic" half,
+and everything else in that section, stands as written.

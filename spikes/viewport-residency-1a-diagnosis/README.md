@@ -81,3 +81,16 @@ every quantitative-sounding statement above is either a citation of existing cod
 explicitly labelled as not determinable without a runtime trace. This spike does not decide finding
 3's amendment-vs-fix question (ADR-028's own text: "the human's own call, not a worker's") — that
 decision, and 1b's own scope, follow this write-up as a separate step.
+
+## Correction to Q1's window attribution (2026-09-03, appended)
+
+The attribution pass that followed this spike (`ATTRIBUTION-PASS.md`, this directory) checked
+the recorded 150-second window against the trial's own persisted session log and corrects one
+characterization above: Q1's code citations all stand (the drain refusal, the camera-change-only
+resume, the kill-switch-only Cancel, and the principle-7 gap on scoped cancellation and honest
+progress reporting), but **the recorded trial's 150s window was not held-queue idle — it was
+overwhelmingly continuous slow drainage** (~65 tile-stream terminals inside the calm-wait window
+at 3-way concurrency, ~4.4 MB/s sustained). The hold mechanism is real code; it was not the
+dominant story of that particular window. The principle-7 finding is *sharpened*, not weakened:
+the system worked continuously for 150 seconds while no operator-facing signal could distinguish
+that from a stall.

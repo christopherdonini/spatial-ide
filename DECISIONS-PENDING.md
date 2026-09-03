@@ -5,6 +5,23 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+31. **[Instrument defects, surfaced 2026-09-03 by the entry-28 attribution pass — promoted per
+    the standing "open defects don't live only in walkthrough logs" instruction.]** Three
+    related defects in the residency instrument's per-step segment capture, all traced in
+    `spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md` §2: (1) the negative-span clamp
+    (`residencyInstrument.ts:459-462`) is one-sided (`< 0` only), so a cross-step
+    arrival-before-issue delta of exactly `0` survives as an apparent measurement — two such
+    `queryToFirstByteMs: 0` impostors sit in the P12 evidence file; (2) cross-step rows can
+    carry seconds-scale `decodedToPaintedMs` values that are not paint times (13.6s/16.4s in
+    P12's zoom-in-3/zoom-out-1); (3) the per-step one-shot design cannot attribute streams
+    whose lifetimes span step boundaries — at 5 GB, nearly all of them — so a re-run populates
+    nothing. Recommendation: fix (1) and (2) (cheap validity-check tightening: clamp `<= 0`
+    with a distinct reason; suppress or flag cross-step paint spans) in whichever cut next
+    touches the instrument — 1b's campaign if it runs one; adopt the pass's harness-only
+    per-stream design (§6) only if the kernel-vs-transport split ever becomes load-bearing.
+    Touches: `frontends/shell/src/instrument/residencyInstrument.ts` + its tests; instrument
+    surface only, no product behaviour.
+
 30. **[Corollary of entry 25's own ruling, surfaced 2026-09-03 while applying it — NOT decided
     by that ruling.]** `definition_provenance(None)` returns `pasted` for `--assert-crs`'s
     no-definition case (`engine/src/crs_catalog.rs:128-137`, verified in code 2026-09-03) —
@@ -36,7 +53,17 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 28. **[RESOLVED 2026-09-03 — human: "(a) — dispatch the read-only attribution pass (the null
     queryToFirstByteMs angle first); LOD's brief finalizes only after its answer." Pass
     dispatched the same day, read-only, no product code; the LOD problem statement in
-    `NEXT-CUT.md` stays draft until it returns. Original entry below, kept for the record.]**
+    `NEXT-CUT.md` stays draft until it returns. Original entry below, kept for the record.
+    COMPLETED same day: `spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`. Verdict:
+    "upstream of paint" is now a grounded finding on direct records (time-to-data dominates by
+    1-2 orders of magnitude; the 150s window decomposes into a 150.058s backlog-drain phase,
+    continuously streaming at ~4.4 MB/s, plus ~2.1s gesture-to-settle) — renderer-side LOD would
+    target the minor cost pool; the kernel-vs-transport-vs-backpressure split within
+    time-to-data remains open (harness-only instrumented design named in the pass). One
+    correction to this entry's own original text below: "3-of-12" was the consult's error,
+    propagated unverified — the file carries 8 nulls of 12 with 2 usable; two further rows are
+    `0`-value clock artifacts that must never be quoted as measurements (instrument defects
+    queued as entry 31).]**
     **[LOD problem-statement gap, surfaced 2026-09-03 drafting the LOD brief from 1a's findings —
     NOT decided here.]** The architect consult that scoped this cut (`a8f4c2c0cb1ff80ed`,
     2026-09-02) named a "wrong-module check" as a precondition for the LOD brief: P12's own
