@@ -1,0 +1,198 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+import type { ResidentBatch } from "./decodeBatch";
+import { EvictionPlan, planTileEviction, TileResidentSet } from "./tileResidentSet";
+import { tileDistanceToPoint, TileGridFrame, TileKey } from "./tileGrid";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
+import type { TileGridLevel } from "./tileGridConstants";
+import type { AuthoritativeBbox } from "./viewportBbox";
+
+/** P5f complex-gate must-fix 3: the reserved-key set every `planTileEviction` call in this module
+ * passes as `reservedTileKeys` -- a module-level singleton (never mutated) rather than allocated per
+ * call, since it names exactly one key today and never varies. */
+const RESERVED_TILE_KEYS: ReadonlySet<string> = new Set([INITIAL_TILE_KEY]);
+
+/**
+ * Viewport-residency cut P3w item B: the candidate arm's own ingest DECISION, pulled out of
+ * `WorkingCanvas.tsx`'s imperative handle into a pure, DI-free function -- the same testability
+ * reason `applyStyleChange`/`admitAndResetStaleUiState` are pure functions in their own files
+ * (`WorkingCanvas`'s real `Deck` construction needs a WebGL context jsdom does not provide, so
+ * nothing that needs a live canvas can be unit-tested directly; everything that does NOT need one
+ * lives here instead). `WorkingCanvas.tsx`'s own `pushTileBatch` method is a thin wrapper: decode,
+ * call `ingestTileBatch`, `render()`.
+ */
+
+/** `tileGrid.ts`'s own `tileKeyToString` is one-way by design ("there is no `tileKeyFromString`;
+ * nothing needs to parse this back") -- eviction ordering here is the one place that genuinely
+ * does, since `TileResidentSet` only ever stores the STRING form. A local, minimal parse of that
+ * same stable `"${row}:${col}"` format, not exported from `tileGrid.ts` itself.
+ *
+ * P5f complex-gate must-fix 3: fails loudly (throws) on anything that is not exactly two
+ * finite-numeric, colon-separated parts -- before this fix, a non-`"row:col"` input (the reserved
+ * `INITIAL_TILE_KEY`, `"initial-untiled-look"`, being the one that actually reached this in
+ * practice) silently produced `{ row: NaN, col: undefined }`, and a `NaN` distance made
+ * `planTileEviction`'s own `Array.prototype.sort` comparator return `false` for every comparison
+ * involving it -- not a total order, so the sort's own result became engine-dependent (a
+ * "comparator artifact"), observed as the reserved key's own tile evicting first, nondeterministically.
+ * The real fix is `RESERVED_TILE_KEYS` above (this key is never handed to `planTileEviction`'s own
+ * `distanceToViewCentre` callback, so this function is never actually called with it any more) --
+ * this throw is the loud safety net for any OTHER caller that reaches this function with a genuinely
+ * malformed key, so a future such bug fails fast instead of silently corrupting eviction order again. */
+function parseTileKey(key: string): TileKey {
+  const parts = key.split(":");
+  const row = parts.length === 2 ? Number(parts[0]) : NaN;
+  const col = parts.length === 2 ? Number(parts[1]) : NaN;
+  if (!Number.isFinite(row) || !Number.isFinite(col)) {
+    throw new Error(`parseTileKey: not a "row:col" tile key: ${JSON.stringify(key)}`);
+  }
+  return { row, col };
+}
+
+export interface TileGridContext {
+  frame: TileGridFrame;
+  level: TileGridLevel;
+}
+
+export interface TileBatchIngestResult {
+  /** Rows/features this call actually admitted into `tileSet` -- `0` when every row was either a
+   * cross-tile duplicate (item C) or trimmed away by the budget boundary (item D). */
+  rowsAdmitted: number;
+  duplicatesDropped: number;
+  /** Tile keys evicted (farthest-from-view-centre first, `planTileEviction`'s own order) to make
+   * room for this batch, if any. */
+  evictedTileKeys: string[];
+  /** True iff evicting every evictable tile still could not make room for this batch, so it was
+   * trimmed to the remaining budget boundary rather than admitted whole (item D's own contract:
+   * "accept up to the budget boundary" -- never the baseline's `ResidentVertexCeilingExceeded`
+   * refusal, which this function never throws or references). */
+  overBudget: boolean;
+  /** The dataset-lifetime union of every batch extent this tile set has ever admitted, unioned with
+   * this batch's own extent -- mirrors `WorkingCanvas.tsx`'s own `fitAnchorRef` accumulation
+   * (`tileGrid.ts`'s own top doc comment: "the same anchor `WorkingCanvas.tsx`'s `fitAnchorRef`
+   * already accumulates"). Provided so a caller (`WorkingCanvas.tsx`) can feed it straight into that
+   * same ref rather than this function reaching into React state itself. `null` only when this
+   * batch AND every prior one carried no geometry at all. */
+  unionedExtent: AuthoritativeBbox | null;
+}
+
+/**
+ * The item-B/item-D ingest decision for one batch, tagged with the tile key its stream was issued
+ * for: budget check (`planTileEviction`) BEFORE admission, apply any resulting eviction, trim the
+ * batch to the remaining budget boundary if eviction alone could not make room, then admit via
+ * `tileSet.addBatch` (which performs item C's own cross-tile dedupe internally, unconditionally).
+ *
+ * **Ordering note, disclosed:** the budget check runs against the batch's OWN (undeduped)
+ * `totalVertices` -- exactly item B's own wording ("a batch that would exceed MAX_RESIDENT_VERTICES"
+ * names the incoming batch, not its post-dedupe remainder, since dedupe is `addBatch`'s own internal
+ * concern and this function trims BEFORE handing anything to it). A trimmed-in feature that later
+ * turns out to be a cross-tile duplicate is "wasted" budget room that could in principle have gone to
+ * a later, non-duplicate feature in the same batch -- a real but minor inefficiency, not a
+ * correctness gap: the declared ceiling is never exceeded either way.
+ *
+ * `grid` is `null` until `TileViewportStreamManager.establishGridFrame` has run at least once this
+ * session (`WorkingCanvas.tsx`'s own `establishTileGridContext` call) -- eviction cannot be ordered
+ * by distance without a frame/level to derive tile centres from. A batch arriving before that (should
+ * not happen in practice: the very first stream IS what establishes the frame) still cannot be left
+ * to silently exceed the ceiling, so it is trimmed to budget with no eviction attempted.
+ */
+export function ingestTileBatch(params: {
+  tileSet: TileResidentSet;
+  tileKey: string;
+  batch: ResidentBatch;
+  grid: TileGridContext | null;
+  viewportTileKeys: ReadonlySet<string>;
+  viewCentre: { x: number; y: number };
+  maxResidentVertices: number;
+  priorExtent: AuthoritativeBbox | null;
+  extentOfBatch: (batch: Pick<ResidentBatch, "rings">) => AuthoritativeBbox | null;
+  unionBbox: (a: AuthoritativeBbox | null, b: AuthoritativeBbox | null) => AuthoritativeBbox | null;
+}): TileBatchIngestResult {
+  const { tileSet, tileKey, batch, grid, viewportTileKeys, viewCentre, maxResidentVertices } = params;
+
+  let evictedTileKeys: string[] = [];
+  let overBudget = false;
+  let toAdmit = batch;
+
+  const projected = tileSet.totalResidentVertices + batch.totalVertices;
+  if (projected > maxResidentVertices) {
+    if (grid) {
+      const plan: EvictionPlan = planTileEviction({
+        residentTileKeys: tileSet.residentTileKeys(),
+        tileVertices: (k) => tileSet.tileVertexCount(k),
+        viewportTileKeys,
+        incomingVertices: batch.totalVertices,
+        currentTotalVertices: tileSet.totalResidentVertices,
+        maxResidentVertices,
+        distanceToViewCentre: (k) => tileDistanceToPoint(grid.frame, grid.level, parseTileKey(k), viewCentre),
+        reservedTileKeys: RESERVED_TILE_KEYS,
+      });
+      // B1 (re-review, blocking): `TileResidentSet.evictTile`'s own cascade can now divert a
+      // PROTECTED (current-viewport) suppressor away from eviction (marks it partial instead, never
+      // blanks it) -- its true return value, not `plan.evict` itself, is what actually happened.
+      // `evictedTileKeys` -- the counters a caller (`WorkingCanvas.tsx`'s `traceTileIngest`,
+      // `residencyInstrument.ts`'s `recordResidencyEvictionsApplied`) reads -- must report that TRUE
+      // list, never the candidate plan, or a protected-suppressor diversion would silently overcount.
+      const actuallyEvicted: string[] = [];
+      for (const key of plan.evict) {
+        actuallyEvicted.push(...tileSet.evictTile(key, viewportTileKeys));
+      }
+      evictedTileKeys = actuallyEvicted;
+      overBudget = plan.overBudget;
+    } else {
+      // No frame yet to order eviction by -- nothing evictable is identified, so this degrades
+      // straight to "truncate at budget" rather than ever exceeding the declared ceiling.
+      overBudget = true;
+    }
+    if (overBudget) {
+      const remaining = Math.max(0, maxResidentVertices - tileSet.totalResidentVertices);
+      toAdmit = trimBatchToVertexBudget(batch, remaining);
+    }
+  }
+
+  // Defect A (architect gate, blocking): a batch trimmed to the budget boundary is durably partial --
+  // `toAdmit !== batch` iff `trimBatchToVertexBudget` above actually cut something (the untrimmed,
+  // whole-batch case reassigns `toAdmit = batch` nowhere; it simply stays the parameter's own value).
+  const trimmed = overBudget && toAdmit.ids.length < batch.ids.length;
+  const result = tileSet.addBatch(tileKey, toAdmit, trimmed);
+  const unionedExtent = params.unionBbox(params.priorExtent, params.extentOfBatch(batch));
+
+  return {
+    rowsAdmitted: result.accepted?.ids.length ?? 0,
+    duplicatesDropped: result.duplicatesDropped,
+    evictedTileKeys,
+    overBudget,
+    unionedExtent,
+  };
+}
+
+/**
+ * The largest PREFIX of `batch` (by feature index -- the same "ids and rings built together, one
+ * pass" discipline `decodeBatch.ts`'s own `ResidentBatch` doc comment names) whose cumulative vertex
+ * count does not exceed `remainingVertices`. A feature is included only whole -- there is no
+ * per-vertex truncation of an individual polygon's own rings, since a ring/feature is `decodeBatch`'s
+ * own atomic unit (rule 2: "any cull, chunk, sort or LOD [that] desyncs an ordinal from its identity"
+ * is the hazard building `ids`/`rings` together in one pass exists to avoid; slicing a `ResidentBatch`
+ * by feature index preserves that pairing exactly). `remainingVertices <= 0` yields an empty batch,
+ * never a negative-length slice.
+ */
+export function trimBatchToVertexBudget(batch: ResidentBatch, remainingVertices: number): ResidentBatch {
+  let vertices = 0;
+  let count = 0;
+  while (count < batch.ids.length) {
+    let featureVertices = 0;
+    for (const ring of batch.rings[count]) {
+      featureVertices += ring.length;
+    }
+    if (vertices + featureVertices > remainingVertices) break;
+    vertices += featureVertices;
+    count++;
+  }
+  return {
+    streamHandle: batch.streamHandle,
+    batchSeq: batch.batchSeq,
+    ids: batch.ids.slice(0, count),
+    rings: batch.rings.slice(0, count),
+    totalVertices: vertices,
+  };
+}

@@ -570,7 +570,8 @@ invalidators named, and are reported in the write-up beside the run of record.
 **The fixture is byte-identical across attempts 1 and 2** —
 `sha256:5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` both times, from
 independent generations. The generator is deterministic under its seed, which §1c assumed and
-nothing had yet established.
+nothing had yet established. *(This confirmation, the exact generation spec, and the fixture's
+backup status are consolidated in `kernel/FIXTURES.md`, 2026-09-02.)*
 
 ### A5 — 2026-08-07 — what the canary invalidator is *for*, and which phases it therefore gates
 

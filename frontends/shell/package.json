@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "verify": "npm run typecheck && npm run build && npm run test",
+    "verify": "npm run typecheck && npm run build && npm run check:dist-clean && npm run test && npm run test:residency-trace && npm run test:citation-integrity",
+    "check:dist-clean": "node e2e/checkDistClean.mjs",
     "tauri": "tauri",
     "e2e:debug": "node e2e/debug-session.mjs",
     "e2e:regression": "node e2e/regression.mjs",
@@ -19,7 +20,12 @@
     "e2e:filter-panel": "node e2e/filter-panel.mjs",
     "e2e:style": "node e2e/style.mjs",
     "e2e:publish": "node e2e/publish.mjs",
-    "e2e:console": "node e2e/console.mjs"
+    "e2e:console": "node e2e/console.mjs",
+    "e2e:residency-harness": "node e2e/residency-harness.mjs",
+    "test:residency-trace": "node e2e/residencyTrace.test.mjs",
+    "test:citation-integrity": "node e2e/citationIntegrity.test.mjs",
+    "build:frontend:measure": "tsc --noEmit && vite build --mode measure --outDir dist-measure",
+    "build:measure": "node e2e/writeMeasureConfigOverlay.mjs && npx tauri build --config e2e/out/tauri.measure.conf.json --features measure-build --no-bundle"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.7",

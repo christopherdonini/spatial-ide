@@ -15,6 +15,28 @@ export interface PickResult {
 }
 
 /**
+ * Viewport-residency cut P6a, decision 24(c) (ADR-028 item 4): the typed refusal a hover shows when
+ * the cursor resolves to a real GPU pick ordinal but the resident data's own average feature size at
+ * the current zoom is below `pickResolution.ts`'s declared threshold -- a distinct hover-readout
+ * state, never null-silence (a plausible-but-arbitrary single feature would otherwise be shown, or
+ * the hover would say nothing at all, both dishonest here). `kind` is the only field: there is no
+ * feature identity to report, by construction -- naming one would be exactly the arbitrary answer
+ * this state exists to refuse.
+ */
+export interface PickBelowResolution {
+  kind: "below-pick-resolution";
+}
+
+/** `WorkingCanvasProps.onHover`'s own full result type -- `null` (nothing under the cursor),
+ * `PickResult` (an ordinary, above-threshold pick), or `PickBelowResolution` (24(c)'s refusal).
+ * Discriminate with `isPickBelowResolution` below, never a bare `"kind" in value` at a call site. */
+export type HoverReadout = PickResult | PickBelowResolution | null;
+
+export function isPickBelowResolution(value: HoverReadout): value is PickBelowResolution {
+  return value !== null && "kind" in value && value.kind === "below-pick-resolution";
+}
+
+/**
  * Resolve a GPU pick ordinal against the resident batch its layer was built from -- ADR-010 rule
  * 2's whole indirection, restated as code: **GPU ordinal → stable feature ID → authoritative f64**.
  *

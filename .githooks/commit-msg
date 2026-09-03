@@ -1,0 +1,25 @@
+#!/bin/sh
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+#
+# Refuses a commit with no Signed-off-by trailer -- a local, fast mirror of the real gate
+# (.github/workflows/dco.yml). This exists because three headed-measurement-session commits
+# (viewport-residency cut, 2026-09-02) reached an open PR unsigned before the real gate caught
+# them; the fix at the time was a retroactive DCO certification (see DECISIONS-PENDING.md's
+# resolved entry 26), not a rewrite -- this hook is the "catch it at commit one, not at PR
+# sixteen" half of that resolution. Enable with: git config core.hooksPath .githooks
+set -eu
+
+# Matches dco.yml's own scope: merge commits carry no author affirmation to check.
+commit_source="${2:-}"
+if [ "$commit_source" = "merge" ]; then
+  exit 0
+fi
+
+msg_file="$1"
+if ! grep -qE '^Signed-off-by: .+ <.+>$' "$msg_file"; then
+  echo "error: commit has no Signed-off-by trailer (DCO 1.1 -- see CONTRIBUTING.md)." >&2
+  echo "  fix:   git commit -s" >&2
+  echo "  amend: git commit --amend -s" >&2
+  exit 1
+fi

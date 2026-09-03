@@ -6,8 +6,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { PixelRegion } from "../e2e-test-surface";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
-import { applyStyleChange, summarizePixels } from "./WorkingCanvas";
-import type { ApplyStyleChangeDeps } from "./WorkingCanvas";
+import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
+import { applyStyleChange, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
+import type { ApplyStyleChangeDeps, TileBatchIngestOutcome } from "./WorkingCanvas";
 
 // Reviewer gate, style-panel cut P7 fixes, S2: the previous "issues no viewport query" test built a
 // `manager`-shaped mock (`requestViewport`/`cancelStream`) and asserted neither was called -- but
@@ -138,5 +139,115 @@ describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
       outlineColor: [17, 17, 17, 255],
       outlineWidth: 3,
     });
+  });
+});
+
+// Viewport-residency cut P5h (F1 fix): `pushTileBatch`'s own render-scheduling decision, tested at
+// the two seams a jsdom test can actually reach without a real `Deck`/WebGL context (this file's own
+// S6/`applyStyleChange` note) -- the pure "should a render happen at all" gate (`shouldScheduleTileRender`),
+// and the per-frame coalescer (`coalesceOncePerFrame`, already exhaustively unit-tested on its own in
+// `coalesceOncePerFrame.test.ts`) driven exactly the way `pushTileBatch`'s own product code drives it:
+// `if (shouldScheduleTileRender(outcome)) coalescedRenderRef.current.schedule();` per batch.
+
+/** A small, fully controlled fake rAF -- the identical pattern `coalesceOncePerFrame.test.ts` already
+ * uses (not jsdom's own `requestAnimationFrame`, whose scheduling this test has no reason to depend
+ * on), duplicated here rather than imported across two `.test.ts` files. */
+function fakeFrame() {
+  let nextHandle = 1;
+  const queued = new Map<number, FrameRequestCallback>();
+  const requestFrame = vi.fn((cb: FrameRequestCallback) => {
+    const handle = nextHandle++;
+    queued.set(handle, cb);
+    return handle;
+  });
+  const cancelFrame = vi.fn((handle: number) => {
+    queued.delete(handle);
+  });
+  function flush(): void {
+    const callbacks = [...queued.values()];
+    queued.clear();
+    for (const cb of callbacks) cb(0);
+  }
+  return { requestFrame, cancelFrame, flush };
+}
+
+function ingestOutcome(overrides: Partial<TileBatchIngestOutcome> = {}): TileBatchIngestOutcome {
+  return { rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, ...overrides };
+}
+
+describe("shouldScheduleTileRender (P5h, F1)", () => {
+  it("true when rows were admitted", () => {
+    expect(shouldScheduleTileRender(ingestOutcome({ rowsAdmitted: 3 }))).toBe(true);
+  });
+
+  it("true when a tile was evicted, even with zero rows admitted", () => {
+    expect(shouldScheduleTileRender(ingestOutcome({ rowsAdmitted: 0, evictedTileKeys: ["1:1"] }))).toBe(true);
+  });
+
+  it("false for a fully-refused batch -- nothing admitted, nothing evicted", () => {
+    expect(shouldScheduleTileRender(ingestOutcome({ rowsAdmitted: 0, evictedTileKeys: [], duplicatesDropped: 5 }))).toBe(false);
+  });
+
+  it("false for a genuinely empty batch (no rows, no dupes, no eviction)", () => {
+    expect(shouldScheduleTileRender(ingestOutcome())).toBe(false);
+  });
+});
+
+describe("pushTileBatch's own render-scheduling pattern (P5h, F1) -- shouldScheduleTileRender gating coalesceOncePerFrame", () => {
+  it("N admitting batches arriving within one frame collapse to exactly one render", () => {
+    const render = vi.fn();
+    const { requestFrame, cancelFrame, flush } = fakeFrame();
+    const coalesced = coalesceOncePerFrame(render, requestFrame, cancelFrame);
+
+    // Mirrors up to `MAX_IN_FLIGHT_TILE_STREAMS` concurrently fanned-out tile streams each delivering
+    // a batch before the browser gets to paint -- the exact churn P5g convicted.
+    const outcomes = [
+      ingestOutcome({ rowsAdmitted: 4 }),
+      ingestOutcome({ rowsAdmitted: 0, evictedTileKeys: ["2:2"] }),
+      ingestOutcome({ rowsAdmitted: 7 }),
+    ];
+    for (const outcome of outcomes) {
+      if (shouldScheduleTileRender(outcome)) coalesced.schedule();
+    }
+
+    expect(requestFrame).toHaveBeenCalledTimes(1);
+    expect(render).not.toHaveBeenCalled();
+    flush();
+    expect(render).toHaveBeenCalledTimes(1);
+  });
+
+  it("a batch of entirely zero-admission outcomes schedules NO render at all", () => {
+    const render = vi.fn();
+    const { requestFrame, cancelFrame, flush } = fakeFrame();
+    const coalesced = coalesceOncePerFrame(render, requestFrame, cancelFrame);
+
+    const outcomes = [
+      ingestOutcome({ duplicatesDropped: 2 }),
+      ingestOutcome({ duplicatesDropped: 1 }),
+      ingestOutcome(),
+    ];
+    for (const outcome of outcomes) {
+      if (shouldScheduleTileRender(outcome)) coalesced.schedule();
+    }
+
+    expect(requestFrame).not.toHaveBeenCalled();
+    flush();
+    expect(render).not.toHaveBeenCalled();
+  });
+
+  it("a mix across two frames: zero-admission batches in frame 1 render nothing; an admitting batch in frame 2 renders once", () => {
+    const render = vi.fn();
+    const { requestFrame, cancelFrame, flush } = fakeFrame();
+    const coalesced = coalesceOncePerFrame(render, requestFrame, cancelFrame);
+
+    if (shouldScheduleTileRender(ingestOutcome())) coalesced.schedule();
+    if (shouldScheduleTileRender(ingestOutcome({ duplicatesDropped: 9 }))) coalesced.schedule();
+    flush();
+    expect(render).not.toHaveBeenCalled();
+
+    if (shouldScheduleTileRender(ingestOutcome({ rowsAdmitted: 1 }))) coalesced.schedule();
+    flush();
+    expect(render).toHaveBeenCalledTimes(1);
+    expect(requestFrame).toHaveBeenCalledTimes(1); // only the admitting batch ever called schedule()
   });
 });

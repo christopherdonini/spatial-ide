@@ -3,6 +3,13 @@
 
 import { traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
+import {
+  recordResidencyBatchArrived,
+  recordResidencyStreamEnded,
+  recordResidencyStreamIssued,
+  recordResidencySupersededBytes,
+} from "../instrument/residencyInstrument";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
@@ -184,7 +191,22 @@ export class ViewportStreamManager {
         // was superseded is dropped here, never handed to the canvas -- this is the check D3.7's
         // acceptance criterion asks to be asserted rather than eyeballed.
         if (this.currentStreamHandle !== streamHandleAtStart) {
+          // P1d suggestion 10: `payload` HAS already arrived over the wire at this point -- only
+          // forwarding it is skipped. Counted here (DEV-gated, same discipline as
+          // `recordResidencyStreamIssued` above) so this driver's own reported byte totals do not
+          // silently under-report a superseded stream's genuinely-received bytes.
+          if (isInstrumentedBuild()) {
+            recordResidencySupersededBytes(payload.byteLength);
+          }
           return;
+        }
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
+        // earliest client-observable moment for this batch's own data-plane bytes -- BEFORE decode,
+        // right here where the transport layer hands this manager a fully-received message. See
+        // `residencyInstrument.ts`'s own `recordBatchArrived` doc comment for why this is a defined
+        // proxy, not a true first-TCP-byte timestamp.
+        if (isInstrumentedBuild()) {
+          recordResidencyBatchArrived();
         }
         const seq = this.nextBatchSeq++;
         this.opts.onBatch(streamHandleAtStart, seq, payload);
@@ -193,6 +215,16 @@ export class ViewportStreamManager {
       onTerminal: (terminal) => {
         if (this.currentStreamHandle === streamHandleAtStart) {
           this.currentStreamHandle = null;
+        }
+        // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
+        // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the
+        // self-cancel-suppression check below -- a self-cancelled stream's terminal is suppressed
+        // from reaching `this.opts.onTerminal`, but it still ENDED, and the driver-visible in-flight
+        // count (§4b's own "zero in-flight viewport_query streams") must reach zero on every
+        // terminal, not only the ones the app's own UI ever hears about. DEV-gated exactly like
+        // `recordResidencyStreamIssued` above.
+        if (isInstrumentedBuild()) {
+          recordResidencyStreamEnded();
         }
         // A terminal for a handle this manager itself cancelled (supersede or `cancelStream`) is
         // an expected outcome, not a failure -- even when its `kind` is `ProducerFailed`
@@ -214,6 +246,12 @@ export class ViewportStreamManager {
     // P6 review, should-fix 3: logged at the moment of the real mint, not before -- `traceViewportQuery`
     // above fires on every attempt (throttled or not), this fires only once a ticket actually issued.
     traceStreamIssued(this.opts.dataset, stream);
+    // Viewport-residency cut P1 (RESIDENCY-PREREGISTRATION.md §6): DEV-only, same moment
+    // `traceStreamIssued` fires -- see `instrument/residencyInstrument.ts`'s own top doc comment
+    // for why this check is duplicated at every product call site.
+    if (isInstrumentedBuild()) {
+      recordResidencyStreamIssued();
+    }
     return { kind: "issued", streamHandle: stream };
   }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { logSessionEvent } from "../diagnostics/log";
 import { cancelFrame, creditFrame, FrameDecoder, startFrame } from "./wire";
 import type { RunningStream, StreamSink } from "./transport";
 
@@ -58,13 +59,59 @@ export function startStream(opts: ConnectOptions): RunningStream {
     ws.addEventListener("open", begin);
   }
 
+  /**
+   * Re-review S9: closes the connection cleanly and stops granting any further credit -- shared by
+   * both failure paths below (a decode fault, or a poisoned sink) so neither one has its own
+   * half-written copy of "cancel, then close" to drift out of sync with the other.
+   */
+  function abandonStream(terminal: { kind: "DecodeFailed" | "SinkPoisoned"; detail: string }): void {
+    if (!finished) {
+      finished = true;
+      // Viewport-residency cut P6d (nit 3, rule 7 -- nothing escapes uncaught): `onTerminal` is a
+      // caller-supplied `StreamSink` callback exactly like `onBatch`/`onOpen`/`onProgress` -- the same
+      // "a sink callback can throw" fact `SinkPoisoned` itself already exists to handle applies here
+      // too, on the delivery of the terminal that reports a sink is poisoned in the first place. A
+      // SECOND throw here (the sink's own cleanup path is exactly as suspect as its ordinary one) must
+      // never propagate uncaught out of this function -- doing so would ALSO skip the cancel/close
+      // cleanup below, leaving the connection open and granting no further credit to nothing. Caught
+      // and reported via `logSessionEvent` (that function's own doc comment: "never throws"), then
+      // cleanup proceeds exactly as if `onTerminal` had returned normally.
+      try {
+        opts.sink.onTerminal(terminal);
+      } catch (err) {
+        logSessionEvent(
+          "stream-sink-onterminal-threw",
+          `${terminal.kind} ${terminal.detail}: onTerminal itself threw -- ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+    }
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(cancelFrame());
+      ws.close();
+    }
+  }
+
   ws.addEventListener("message", (ev) => {
     const chunk = new Uint8Array(ev.data as ArrayBuffer);
     // Decoding is inside the taxonomy, not outside it: a batch whose envelope is wrong or an Arrow
     // layout that contradicts it throws, and an uncaught throw here would abandon the frames
     // already parsed with no terminal at all -- the silent async death ADR-010 rule 7 forbids.
+    let frames: ReturnType<typeof decoder.push>;
     try {
-      for (const frame of decoder.push(chunk)) {
+      frames = decoder.push(chunk);
+    } catch (err) {
+      abandonStream({ kind: "DecodeFailed", detail: err instanceof Error ? err.message : String(err) });
+      return;
+    }
+    for (const frame of frames) {
+      // Re-review S9: a throw from a `StreamSink` callback itself (`pushTileBatch`'s own decode/
+      // ingest logic, reached synchronously through `onBatch`) is a bug in THIS client's own
+      // consumption of an otherwise well-formed frame -- caught here, separately from the decode try
+      // above, so it is never conflated with a genuine wire/framing fault: a distinct, typed
+      // `"SinkPoisoned"` terminal (`transport.ts`), never silently stalling the stream (no further
+      // frame in THIS chunk is processed once poisoned; no further credit is granted -- the batch
+      // case's own `grant` call below is skipped by the same `finished` check `abandonStream` sets).
+      try {
         switch (frame.t) {
           case "open":
             opts.sink.onOpen(frame.handle);
@@ -86,19 +133,10 @@ export function startStream(opts: ConnectOptions): RunningStream {
             ws.close();
             break;
         }
+      } catch (err) {
+        abandonStream({ kind: "SinkPoisoned", detail: err instanceof Error ? err.message : String(err) });
       }
-    } catch (err) {
-      if (!finished) {
-        finished = true;
-        opts.sink.onTerminal({
-          kind: "DecodeFailed",
-          detail: err instanceof Error ? err.message : String(err),
-        });
-      }
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(cancelFrame());
-        ws.close();
-      }
+      if (finished) break; // poisoned or terminated -- the rest of this chunk's frames are moot
     }
   });
 

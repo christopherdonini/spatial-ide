@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
-import { resolvePick } from "./pick";
+import { isPickBelowResolution, resolvePick } from "./pick";
 
 function batch(): ResidentBatch {
   return {
@@ -50,5 +50,20 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
     expect(resolvePick(batch(), -1)).toBeNull();
     expect(resolvePick(batch(), 3)).toBeNull();
     expect(resolvePick(batch(), 1.5)).toBeNull();
+  });
+});
+
+// Viewport-residency cut P6a, decision 24(c): the typed sub-pixel pick refusal's own discriminant.
+describe("isPickBelowResolution", () => {
+  it("is false for null (nothing under the cursor)", () => {
+    expect(isPickBelowResolution(null)).toBe(false);
+  });
+
+  it("is false for an ordinary PickResult (no kind field at all)", () => {
+    expect(isPickBelowResolution(resolvePick(batch(), 0))).toBe(false);
+  });
+
+  it("is true for the refusal shape", () => {
+    expect(isPickBelowResolution({ kind: "below-pick-resolution" })).toBe(true);
   });
 });

@@ -139,3 +139,12 @@ carrying the accumulated context forward.
     batch in one sitting. The away-mode evidence rule's "deferred, queued for the human's return"
     is the default rhythm, not the fallback. Also standing: the macOS track is paused until the
     Windows app is complete — cross-OS walkthroughs happen in one go.
+12. **Headed measurement/campaign session commits need `-s` too — item 1 above, restated for the
+    place it actually got missed.** Three commits from headed measurement sessions (viewport-
+    residency cut's P2/P8/P10 — baseline arm, dual-arm campaign, re-measure) reached an open PR
+    unsigned; the fix was a retroactive DCO certification, not a rewrite, since the hashes are
+    load-bearing measurement-chain provenance (`DECISIONS-PENDING.md`'s resolved entry 26). A
+    result-committing script or tester-agent dispatch is exactly where `-s` is easiest to forget —
+    it isn't a hand-typed `git commit`. Run `git config core.hooksPath .githooks` once per clone
+    (`CONTRIBUTING.md`'s own "Catch it at commit time, not at the PR") so this is caught locally
+    at commit one, not discovered at the PR. (Added 2026-09-02.)

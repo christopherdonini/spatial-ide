@@ -17,10 +17,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     call, no default assumed** — this is exactly the kind of wire-wording precision this project
     treats as never a detail. Touches, if changed: `kernel/src/skp.rs::host_minted_crs_assertion`
     (or wherever `definition_provenance` is minted), `ADR-026`'s own text, both-side fixtures.
-    *(Numbering note: this branch's own next-available slot is 25; the still-open
-    viewport-residency PR's `DECISIONS-PENDING.md` independently used 25 and 26 for unrelated
-    entries — a renumbering collision to resolve, mechanically, whenever that PR merges. Not a
-    judgment call, flagged so it isn't a silent surprise at merge time.)*
+    *(Numbering note, resolved by the merge, 2026-09-03: the viewport-residency branch
+    independently used 25 and 26 for unrelated entries — the P9 heap-footprint measurement and
+    PR #16's red DCO check — both already resolved (see this file's own Resolved section) by the
+    time of the merge, so no renumbering was actually needed: this Pending entry is the only
+    LIVE use of "25" post-merge, the other two being historical record only. No action taken.)*
 
 24. **[(a)–(c) RESOLVED 2026-08-30 — human: "a is yes, b approved, c go with your
     recommendation"]**: over-budget renders as a declared partial view with the persistent
@@ -157,6 +158,80 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-02 — three rulings closing the sitting: ADR-028 accepted, the architect consult
+  adopted in full, and the 5 GB fixture's single-point-of-failure ordered fixed this week.**
+  **(1) ADR-028 ACCEPTED per the human's own (d) ruling** — the gate-8 rider is discharged (G2
+  clean at 5 GB, escape/cancel felt immediate at scale, the partial view held and read honest in
+  Part K). The acceptance text carries: the architect-verified correction to the futility-pruning
+  seed; the scale calibration (zoom-to-layer's 5 GB non-settle, now understood as a held-queue
+  principle-7 item); the two Polygons-scale mechanisms as named binding debt (unchanged); and
+  **finding 3 (the second undeclared eviction exception) recorded as a named open item** —
+  neither declared nor fixed, its resolution decided from the debt slice's own 1a diagnosis, due
+  at 1b (applied to `ADR-028` and `RESULTS.md` both). **Merge-ready**: the human will click PR
+  #16 (`cut/viewport-residency`) and PR #17 (the Track 2 batch, `worktree-decision-queue-batch`)
+  themselves — the custodian does not merge (standing session restriction).
+  **(2) The architect consult adopted in full**: the debt slice's own **1a** is a diagnosis
+  spike — no gate — answering three questions: the queue-disposition question (how the held
+  queue should actually be resolved, not whether it needs to be — that's already settled as a
+  `docs/01` principle 7 obligation); finding 3's own pressure-valve-vs-thrash question (does
+  evicting partial covering tiles under over-budget pressure help or harm); and pan-west's own
+  recoverable fraction (the request-identity-keying seed's unmet precondition). **1b** is scoped
+  from 1a's own findings and owns the held-queue fix outright (a principle-7 obligation,
+  independent of what 1a's other two questions turn up) plus whatever else 1a's evidence
+  justifies scheduling. **The LOD slice's own problem statement is drafted only after 1a**,
+  explicitly including the architect's own wrong-module check (P12's own per-tile arithmetic
+  points at the query/producer side, not client paint — worth confirming before assuming a
+  renderer-side LOD slice is even the right lever).
+  **(3) The 5 GB fixture's single-point-of-failure gets fixed this week**: its provenance and
+  hash recorded durably (not just living as a file on disk), a copy made to a second physical
+  location, and whatever regeneration spec is honestly possible written down — before any
+  further campaign depends on it existing. Custodian dispatched research on known
+  provenance/generation parameters; the physical second-location copy needs the human's own
+  target location (not something the custodian can pick unprompted).
+
+- **2026-09-02 — entry 25, the P9 heap-footprint measurement: FOLDED INTO THE NEXT CAMPAIGN'S
+  INSTRUMENT, no standalone session.** The human's ruling, applied verbatim: the
+  candidate-arm geometry cache's unmeasured third coordinate copy per resident vertex
+  (`limits.ts`/`buildLayers.ts`, disclosed not measured — commit `7e86928`) gets its heap-delta
+  measurement added to whatever scored campaign's client instrument next runs — a heap sample
+  (`performance.memory` or a host-process probe, matching `kernel/RESULTS.md`'s own convention)
+  alongside quantities that campaign already collects — rather than a dedicated session of its
+  own. Not scheduled by this resolution; owed whenever a future cut next touches tile admission
+  and runs its own measured campaign. Touches nothing now — `limits.ts`/`buildLayers.ts`'s own
+  comments already disclose the gap honestly, unchanged by this resolution.
+
+- **2026-09-02 — entry 26, PR #16's red DCO check: no rewrite, resolved the entry-15 way.** The
+  human's ruling, verbatim: *"no rewrite — red line stands, and these three hashes are
+  load-bearing (evidence files and RESULTS.md §1 cite them as buildCommit provenance; rewriting
+  them would falsify the measurement chain, which is worse than a red check)."* Applied: (1) a PR
+  #16 comment carries the human's own retroactive DCO 1.1 certification for `de67713`/`8211723`/
+  `0e4449c` verbatim, plus a one-line note beside entry 15's own finding in
+  `PRE-PUBLIC-CHECKLIST.md` §6 — the check stays red on that PR by design, the honest state, not
+  a fixed one; (2) the class fix, so this is the last one: `AI_DEVELOPMENT.md`'s Custodian
+  mechanics gains item 12, naming headed-measurement-session commits (tester dispatches, result-
+  committing scripts) as the specific place `-s` gets missed, and `CONTRIBUTING.md` documents a
+  new committed local hook (`.githooks/commit-msg`, enabled via
+  `git config core.hooksPath .githooks`) that refuses an unsigned commit before it ever reaches a
+  PR — tested against both a signed and unsigned sample message, both correct. Does not gate the
+  merge or the gate-8 work, per the human's own "then proceed" instruction.
+
+- **2026-09-02 — the ADR-011 gate-8 ruling: option (d), accept with the two tail mechanisms as
+  named binding debt (the ADR-021-condition pattern), rider attached.** Presented 2026-09-01 as
+  four options against the completed dual-arm campaign (`frontends/shell/RESULTS.md`, P8 pre-fix
+  + Amendment-23/P10 post-fix): (a) accept as-is; (b) reject; (c) iterate the two tails; **(d)
+  accept, with zoom-to-layer's sustained new-tile admission window and pan-west's large-batch
+  re-admission spike recorded as named binding debt in ADR-028, never silently dropped from a
+  future cut's scope (custodian recommendation, taken).** The human's own rider, verbatim:
+  *"ADR-028's acceptance itself is NOT discharged by this ruling — it waits until walkthrough
+  Part K and the deferred 5 GB G1/G2 cells are in; if K's felt verdict or the 5 GB trace
+  contradicts the accept-class reading (error-shaped refusals still reachable, or the partial
+  view illegible in practice), the ruling reopens rather than stands."* Applied: ADR-028 gains a
+  dated, appended gate-8 section (both campaigns' evidence gate-by-gate, the two mechanisms named
+  by direct per-step attribution, the ruling and rider recorded verbatim) — its Status line stays
+  **Proposed**, not moved to Accepted, per the rider. Touches on the eventual acceptance (not yet
+  triggered): ADR-028's Status line, ADR-011 gate 8 marked met, `docs/02`/`docs/README` index
+  entries — a later, separate custodian action once Part K + the 5 GB G1/G2 cells land clean.
 
 - **2026-09-02 — entry 3, ADR-022 acceptance: ACCEPTED as recommended, no condition.** Applied:
   ADR-022's Status line to Accepted; `docs/02`/`docs/README` index entries updated.

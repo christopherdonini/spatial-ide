@@ -659,6 +659,75 @@ lists only what the numbered Part J step *claims* that the script cannot assert.
 
 ---
 
+## Part K — viewport-bounded residency at over-budget (viewport-residency cut, ADR-028 gate 8)
+
+`NEXT-CUT.md` P8's own framing: the written gate-8 answer plus this Part are the cut's deliverable;
+the ruling itself is the human's (recorded in ADR-028's own gate-8 section, 2026-09-02). The
+`frontends/shell/RESIDENCY-PREREGISTRATION.md` campaign (`RESULTS.md`, both dual-arm sections) is a
+**measured** evidence class — client-clock first-pixels, frame times, budget adherence — and it
+already answers G3/G4/G6/G7 on its own terms; it cannot and does not answer whether the declared
+partial view *reads* as honest rather than broken, whether the sub-pixel hover refusal *reads* as
+protective rather than a dead control, or whether the two tail mechanisms ADR-028's gate-8 answer
+names as binding debt (zoom-to-layer's sustained new-tile admission window; pan-west's large-batch
+re-admission spike) are perceptible to a human at all, let alone how they feel. Those are this
+Part's own ground, same division of labor every earlier Part in this document draws between itself
+and its own automated suite. **Evidence-class wording, as every earlier Part uses it:** the steps
+below are **operator-verified**; `e2e/residency-harness.mjs` is a distinct, **measured** evidence
+class (not E2E-verified in the DOM-assertion sense Parts E–J's own suites are — see its own note
+below) — a different, not-a-replacement pairing. **No duration appears anywhere in this Part**
+(ADR-018): K4/K5 ask only whether a cost is *perceptible*, never how long it lasted.
+
+**Honest note — reaching the candidate arm has no shipped UI control.** Unlike every earlier Part,
+this one cannot be reached by clicking through the ordinary app. `residencyArm.ts`'s `currentArm`
+is in-memory JS state, defaulting to `"baseline"` on every load, changeable only through the same
+dev/E2E hook `residency-harness.mjs` itself drives over CDP — `window.__SPATIAL_E2E__.setResidencyArm`
+— reachable from a human operator only by opening the app's own DevTools console (WebView2, since
+this is Tauri) before opening any dataset. This is not a shortcut around the product; it is the
+literal absence of a shipped control, itself worth the human noticing while running this Part — the
+candidate arm this Part exercises is not yet something an ordinary user could reach at all, only an
+operator with DevTools open. The same hook refuses (`{ok:false, code:"dataset-open"}`, not a crash)
+if a dataset is already open; a full window reload (Ctrl+R) returns to a clean, no-dataset state
+between arm switches.
+
+Fixture: `target/fixtures/slice-budgets/polygons-100k.parquet` — the same docs/08 Polygons-class
+fixture (100k features / ~10M vertices) both `RESULTS.md` dual-arm campaigns scored. Regenerate if
+missing: `cargo run --release -p spatial-engine --features fixture --example make-fixture -- --out
+target/fixtures/slice-budgets/polygons-100k.parquet --features 100000 --vertices 100` (the harness
+also writes it itself from the same spec and seed if absent, so this is a fallback, not a
+prerequisite most operators will need to run by hand).
+
+| # | Step | Expected outcome |
+|---|---|---|
+| K1 | **Reference step, not itself judged.** With the app freshly launched (default arm — no console action needed), click **Open GeoParquet…** and select `polygons-100k.parquet`. Let it settle at its initial fit-to-extent view, then click **Zoom to layer**. | The old, whole-dataset ceiling behavior (Part D's own shape) — either a clean render or the declared-ceiling refusal banner, depending on this fixture's own vertex total against `MAX_RESIDENT_VERTICES`. Whichever it is, form a felt impression of the settle/fill/fit rhythm on THIS fixture, in THIS session — the comparison point K4 asks you to reach for is this one, not a memory of an earlier Part. |
+| K2 | Reload the app window (Ctrl+R) to return to idle. Open DevTools and run `await window.__SPATIAL_E2E__.setResidencyArm("candidate")`, confirm it resolves `{ok:true}`, then run `await window.__SPATIAL_E2E__.setResidencyTileSizeLevel("fine")` (the campaign's own scored/screening-selected level — matching what ADR-028's evidence is actually about), confirm `{ok:true}`. Click **Open GeoParquet…** and reselect `polygons-100k.parquet`. Let it settle at its initial fit-to-extent view. | A `.residency-status` line appears, reading (verbatim, `residencyStatus.ts`'s ordinary case): *"Showing `<N>` features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail."* This is decision 24(a)/(b)'s own shape: a declared partial view, not an error, not a cancelled stream — the ceiling-refusal banner from K1/Part D does NOT appear. **Judge:** reading it cold, does "the farthest areas of this view are not drawn" read as an honest, specific account of what happened to the missing features — or as vague/evasive compared to Part D's blunter "ceiling reached" wording? Does "Zoom in to see more detail" read as actionable guidance, not an apology? |
+| K3 | Zoom in repeatedly (several notches, any direction) until the status text itself changes. | The text switches to (verbatim): *"Showing all `<N>` features in view"* — the whole-budget-adherent case. **Look at the status line's own background color across both K2 and this step — it has not changed** (same dark red, `.residency-status`, unconditional on which of the two texts is showing). **Judge — the tone question named for this Part:** does an alarm-red background on a state that is telling you everything rendered successfully ("Showing ALL N features") read as wrong or alarming — the same visual weight as K2's genuinely-partial state — or does the wording alone carry enough distinction that the shared color doesn't mislead? This was left open at P4 (out of that phase's scope) rather than silently resolved either way. |
+| K4 | Zoom/pan back out to roughly K2's original framing, then click **Zoom to layer**. | Per the campaign's own evidence (`RESULTS.md`, Amendment-23 §5), this is the step that requests the most new tiles in one continuous window (83 distinct tiles across ~20-23s wall-clock in the scored trials) — a real, reproducible, `ResidentBatch`-identity cache-miss cost. **Judge, no figure attached (ADR-018):** compared to K1's felt reference on the same fixture moments ago, is the fill/settle rhythm here noticeably slower, choppier, or does it read as roughly the same kind of wait? If it stutters or pauses visibly, describe what you see (partial fills arriving in bursts, a long pause then a jump, steady incremental fill) — the shape of the wait, not a duration. |
+| K5 | **Lightly scoped — the campaign's own evidence caught this in only 5 of 7 trials, so a miss here is not a deviation.** Pan the canvas repeatedly toward the west (several drags in the same direction), watching for any single pan that feels like it re-fetches a large amount already-seen area rather than incrementally extending the view. | The campaign's second named mechanism (`pan-west`'s large-batch re-admission spike — already-resident tiles re-delivered as fresh objects) may or may not be perceptible at this fixture's scale and at ordinary drag speed. If you notice one pan feeling like a bigger hitch than the others in the same sequence, record it plainly. If nothing stands out, record that too — it is the step's own honestly possible outcome, the same way Part I's I6 treated an uncatchable Cancel window. |
+| K6 | With the view still zoomed out enough that individual polygons are sub-pixel (roughly K2's original fit-to-extent framing), hover the mouse over the dense fill. | A readout appears reading (verbatim, `App.tsx`): *"Features here are below pick resolution — zoom in to inspect them."* — decision 24(c)'s own shape: a declared, typed refusal by name, never a snap to a plausible-but-arbitrary feature and never a silent nothing. **Judge:** does this read as the app protecting you from a meaningless answer — the same honest-refusal register Part B/C's CRS/identity refusals use — or does a hover that produces text instead of a feature id read as broken? Then zoom in until individual polygons are clearly larger than a pixel and hover one again — confirm the ordinary `id <number>` readout (Part A's A9) returns once picking has an honest answer. |
+
+**If anything deviates** (the ceiling-refusal banner appearing under the candidate arm instead of a
+declared-partial status; the status text not matching either verbatim string; a hover producing a
+wrong/arbitrary feature id instead of the below-resolution refusal, or vice versa at a zoom where
+picking should be honest): stop, record the exact step and what you saw, and report it — do not
+continue assuming it was unrelated. K5's own "nothing stood out" and K1's whichever-shape-K1-shows
+are both named expected outcomes, not deviations.
+
+## What `e2e/residency-harness.mjs` covers
+
+Unlike Parts E–J's own dedicated DOM-assertion suites, `residency-harness.mjs` is the **measured**
+campaign instrument `RESULTS.md`'s two dual-arm sections are built from — it drives the real app
+over CDP and scores first-pixels/frame-time/budget-adherence, plus runs the smoke/regression passes
+CUT-STATE's own ledger records green (fresh-session regression, candidate smokes exit-0 across all
+steps). It structurally proves the candidate mechanism runs without crashing or leaving a stale
+state, on this same fixture, many times over — but it asserts no wording, no color, and no felt
+judgment, and (per Amendment 22, `RESULTS.md` §1 of both dual-arm sections) it has never yet run
+against the 5 GB fixture, so it does not independently confirm G1 (rendered ⊆ authoritative; dedupe
+exact) or G2 (zero error-shaped refusals) at the scale ADR-028's own Context section is actually
+about — those stay the deferred 5 GB G1/G2 cells' own job, not this Part's and not this harness's,
+at the scale that matters most.
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -868,3 +937,59 @@ this Part's own honest note above.)
   toggles, panel disclosures) dominate the visible tail around each action of interest —
   honest but noisy; a de-emphasis/grouping question for ADR-027's acceptance.
 - **Part J (J1–J6):** —
+
+### Part K run (separate pass — viewport-bounded residency at over-budget)
+
+- **Date run:** 2026-09-02 (session spanned an overnight pause between handoff and the walkthrough
+  itself; the deferred 5 GB G1/G2 cells ran the same sitting, immediately after — see
+  `RESULTS.md`'s own "The 5 GB G1/G2 cells — 2026-09-02 (P12)" section).
+- **Run by:** the human (Christopher).
+- **Build/commit:** `32defc0fd3da7add69d07b94ff2daf842be18968` (pinned for the whole sitting,
+  unchanged throughout — the design-seed and entry-25/26 doc commits that later landed on top of
+  it were held back until this sitting closed, per the human's own build-freeze instruction).
+- **Part K (K1–K6):** run in full. **K1** (reference, not separately described — captured only
+  comparatively via K4). **K2:** verbatim, *"the tiles appear and some disappear and reappear and
+  disappear again. Now that I zoomed all the way out I see the status. To me it's better like
+  this."* — churn observed live during the settle (not asked for by the step text, recorded
+  because it's exactly the felt detail this Part exists to catch); once fully zoomed out, the
+  declared partial-view status read favorably against K1's old ceiling-refusal-banner shape.
+  **K3:** verbatim, *"maybe yellow might be a better color? Otherwise red feels like there's some
+  error"* — confirms the tone question directly; concrete suggestion, yellow instead of red for
+  the within-budget "Showing all N" case. **K4:** verbatim, *"the result feels worse, there're
+  missing tiles here and there in the middle. IT might be faster than K1, not sure about that,
+  maybe not"* — worse than K1's reference, with a live follow-up, verbatim: *"I'm just not sure
+  about the K2 leaving holes in the middle randomly, maybe try to remove the things on the sides
+  either left or right or top or bottom, but have at least the center rendered, i think, don't you
+  think?"* The operator's own proposal is already the design (ADR-028 Decision item 2,
+  distance-ordered eviction) — scattered mid-view holes are not that policy's expected shape.
+  **Resolved, not left open**: the deferred 5 GB cell's own `zoom-to-layer` finding (`RESULTS.md`
+  §5, the same sitting) explains this directly — the step never reached quiescence within its own
+  150s bound, so the view was still actively churning admissions/evictions throughout, the same
+  root cause both the "holes in the middle" and the "feels worse" judgments describe. Filed
+  against the LOD slice's own future problem statement (ADR-028's "Acceptance discharged"
+  section), not chased as a live bug. Speed judgment: genuinely uncertain, no duration claimed
+  either way (ADR-018 discipline held naturally, unprompted). **K5:** verbatim, *"seems
+  incremental, i think i might have seen a pan which felt bigger, but i'm not sure cause there
+  were no feature in sight"* — a genuine "maybe," matching the step's own pre-declared
+  honest-uncertain outcome; not a clean catch, not a clean miss. **K6:** verbatim, *"is fine to
+  me, you should be able to have the id of something you can't see. But if I zoom in all the way
+  and keep the mouse on one feature and zoom back I can still see the id even when subpixel"* —
+  the refusal's tone judged fine, matching the step's own intent. **Deviation found, live repro,
+  not yet fixed**: zoom in fully, hover a feature (id readout appears), zoom back out without
+  moving the mouse — the id readout persists even once the feature is sub-pixel again, where a
+  fresh hover at that zoom would show the below-pick-resolution refusal instead. Suggests the
+  refusal check runs on hover-entry/pointer-move only, not re-evaluated against the current zoom
+  level on every render while the pointer stays stationary — a stale hover state, not a fresh one.
+  Recorded as a real, open defect; not diagnosed or fixed this sitting (out of Part K's own scope
+  — a walkthrough records judgment, it doesn't debug live).
+- **5 GB addendum (operator, same sitting):** after the deferred 5 GB G1/G2 cell ran
+  (`RESULTS.md`'s own P12 section), the operator explored the same candidate-arm, 5 GB session by
+  hand. Verbatim: *"Zoom to layer reads as a dead button — the camera was already at fit, the
+  count climbed briefly then plateaued (19,089), and the view never visibly changed again while
+  work continued. Cancel affordance appeared. Mid-churn zoom-in was immediate and very smooth —
+  escape confirmed felt. Counter visibly ticking early confirms the two-snapshots reading of the
+  status discrepancy."* The plateau figure (19,089) matches the automated trial's own
+  `zoom-out-1` `residentAtEndStep.totalResidentFeatures` exactly — independent corroboration from
+  two different sessions, not a coincidence. See `RESULTS.md` §5's own operator-follow-up
+  refinement and the futility-pruning design seed (`ADR-028`) for the analysis this addendum
+  drives.

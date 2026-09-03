@@ -49,6 +49,10 @@ The **same two files** the scale pass used, unmodified and not regenerated:
 | 5 GB | `target/slice-evidence/scale-pass/parcels-5gb.parquet` | 5,004,376,705 | `sha256:5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` |
 | 145 MB control | `target/slice-evidence/scale-pass/parcels-control-145mb.parquet` | 151,987,739 | recorded in `scale-pass.json` |
 
+*(The 5 GB fixture's full provenance — generation command, exact spec, determinism confirmation,
+and backup status — is consolidated in `kernel/FIXTURES.md`, 2026-09-02, rather than duplicated
+across every document that cites this hash.)*
+
 **The harness re-hashes the 5 GB file and refuses to run on a mismatch.** It also **refuses to
 generate a fixture**: a pass that could silently create its own input could measure a different file
 from the one it names, which is the failure the scale pass's own §5 guarded against.

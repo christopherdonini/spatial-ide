@@ -34,6 +34,21 @@ git rebase --signoff <base>                # every commit since <base>
 `.github/workflows/dco.yml` checks every commit in a pull request and reports which ones are missing
 the trailer.
 
+### Catch it at commit time, not at the PR
+
+A committed hook (`.githooks/commit-msg`) refuses a commit with no `Signed-off-by` trailer locally,
+before it ever reaches a PR. Enable it once per clone:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+This exists because three headed-measurement-session commits reached an open PR unsigned before
+`dco.yml` caught them (viewport-residency cut, 2026-09-02) — see `DECISIONS-PENDING.md`'s resolved
+entry 26. The hook is optional (`core.hooksPath` is a local, per-clone setting, never enforced from
+the repository itself) but recommended for anyone running headed measurement/campaign sessions,
+where a commit is more likely to come from a tester agent or a script than a hand-typed `git commit`.
+
 ### Why DCO and not a CLA — and what that permanently rules out
 
 `docs/14` required this to be decided **before the first external contribution**, because

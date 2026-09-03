@@ -8,21 +8,59 @@ import { Admitted } from "./admission/admitDataset";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
-import type { PickResult } from "./canvas/pick";
+import type { HoverReadout } from "./canvas/pick";
+import { isPickBelowResolution } from "./canvas/pick";
 import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
+import {
+  beginResidencyStep,
+  disableResidencyInstrument,
+  enableResidencyInstrument,
+  endResidencyStep,
+  getResidencyInFlightStreamCount,
+  getResidencySupersededBytesDropped,
+  isResidencyInstrumentEnabled,
+  recordResidencyInput,
+} from "./instrument/residencyInstrument";
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
+import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import PublishPanel from "./publish/PublishPanel";
+import {
+  getResidencyArm,
+  notifyResidencyArmDatasetClosed,
+  notifyResidencyArmDatasetOpened,
+  setResidencyArm,
+} from "./residency/residencyArm";
+import {
+  getResidencyTileSizeLevel,
+  notifyResidencyTileSizeLevelDatasetClosed,
+  notifyResidencyTileSizeLevelDatasetOpened,
+  setResidencyTileSizeLevel,
+} from "./residency/residencyTileSizeLevel";
+import { startCandidateArmSession } from "./residency/candidateArmSession";
+import {
+  nextResidencyStatus,
+  residencyStatusText,
+  ResidencyStatus,
+  ResidencyStatusEvent,
+} from "./residency/residencyStatus";
+// Re-exported so every existing `import { nextResidencyStatus, ResidencyStatus, ... } from "./App"`
+// call site (`App.test.ts` included) keeps working unchanged -- `residencyStatus.ts`'s own doc
+// comment has the full reason this moved (candidateArmSession.ts needs the same event union without
+// a circular import back into this file).
+export { nextResidencyStatus, residencyStatusText };
+export type { ResidencyStatus, ResidencyStatusEvent };
 import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
+import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
-import { encodeHexF64 } from "./skp/codec";
+import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import type { Bbox, Filter } from "./skp/types";
 import {
@@ -42,6 +80,69 @@ function toWireBbox(bbox: AuthoritativeBbox): Bbox {
 }
 
 /**
+ * Viewport-residency cut P3w: the inverse of `toWireBbox`, needed ONLY by the candidate arm's own
+ * `viewportDebounceRef` wiring (`[admitted]` effect below) -- baseline never calls this. The shared
+ * JSX's `onViewportChanged` callback always converts to wire form BEFORE calling
+ * `viewportDebounceRef.current?.call(...)` (unmodified by this piece, so baseline stays
+ * byte-identical); reusing that SAME ref/shape for the candidate arm's own debounced handler means
+ * decoding back to the authoritative numbers `TileViewportStreamManager.onCameraChange` needs, rather
+ * than adding a second ref/JSX prop. `bboxCrs` is accepted (matching `Debounced<[Bbox, string |
+ * null]>`'s own shape) but unused: every real call site passes `null` (ADR-010's own arbitrary-CRS
+ * gate is Windows/WebView2-only territory this shell does not yet reach past the authoritative
+ * project CRS).
+ */
+function fromWireBbox(bbox: Bbox, _bboxCrs: string | null): AuthoritativeBbox {
+  return {
+    xmin: decodeHexF64(bbox.xmin),
+    ymin: decodeHexF64(bbox.ymin),
+    xmax: decodeHexF64(bbox.xmax),
+    ymax: decodeHexF64(bbox.ymax),
+  };
+}
+
+/**
+ * P5f complex-gate must-fix 4 (the double-debounce fix). Before this piece, the `[admitted]` effect's
+ * candidate-arm branch wrapped `session.onViewportChanged` in its OWN `debounce(fn,
+ * VIEWPORT_QUERY_MIN_INTERVAL_MS)` call here -- stacked directly on top of `candidateArmSession.ts`'s
+ * own internal debounce (`onViewportChanged` IS already that module's debounced entry point, wired
+ * through the identical constant). Two 120ms trailing-edge debounces in series meant a settled pan/
+ * zoom took 240ms to actually issue a query: a systematic +120ms handicap on the candidate arm's own
+ * primary measured quantity, invisible to anyone reading either debounce's own unit tests in
+ * isolation (each one individually looked correct).
+ *
+ * The fix keeps the SESSION's own debounce (its unit tests, `candidateArmSession.test.ts`, drive
+ * `onViewportChanged` directly through the real `debounce()` module and assert real timing against
+ * it -- removing that inner layer would make those tests meaningless, the finding's own OTHER option)
+ * and makes THIS layer, `App.tsx`'s own, a raw pass-through instead: `.call` forwards straight into
+ * `session.onViewportChanged` with no timer of its own; `.cancel` forwards to the session's own
+ * `cancelPendingViewportChange` -- the new seam `candidateArmSession.ts` exposes for exactly this, so
+ * `viewportDebounceRef.current?.cancel()` (Apply/Clear's own `cancelPendingDebounce`, the E2E
+ * `queryWithFilter` hook) still reaches a real, cancellable pending call.
+ *
+ * Exported and parameterized (rather than an inline closure inside the `[admitted]` effect) so
+ * `App.test.ts` can drive this function directly against a FAKE session shaped exactly like
+ * `candidateArmSession.ts`'s own real internal debounce wiring -- `onViewportChanged` calling
+ * `debounce()`'s own `.call`, `cancelPendingViewportChange` calling its own `.cancel` -- and assert the
+ * whole path from a raw `dispatcher.call(...)` here through to the underlying handler actually firing
+ * crosses exactly ONE `VIEWPORT_QUERY_MIN_INTERVAL_MS` settle window, not two (re-review S8: this is
+ * what the test asserts; it does not construct a real `startCandidateArmSession` session, which would
+ * pull in the transport mocks that module's own test file already carries -- unnecessary here, since
+ * this function's own contract is about debounce composition, not the session's wire behaviour). This
+ * is the "fix that blindness" half of the finding: the prior test suite could only ever see
+ * `candidateArmSession.ts`'s own internal debounce in isolation, never this file's own layer stacked
+ * on top of it.
+ */
+export function makeCandidateViewportDispatcher(session: {
+  onViewportChanged: (bbox: AuthoritativeBbox) => void;
+  cancelPendingViewportChange: () => void;
+}): Debounced<[Bbox, string | null]> {
+  return {
+    call: (bbox, bboxCrs) => session.onViewportChanged(fromWireBbox(bbox, bboxCrs)),
+    cancel: () => session.cancelPendingViewportChange(),
+  };
+}
+
+/**
  * D4's stale-banner fix, isolated from React rendering: every `App`-level piece of UI state that
  * names something about the *previous* dataset (a canvas refusal, a viewport refusal, a hover
  * readout naming a feature id) is cleared before the new `Admitted` value is adopted. Exported and
@@ -54,7 +155,7 @@ export function admitAndResetStaleUiState(
   setters: {
     setCanvasRefusal: (value: string | null) => void;
     setViewportRefusal: (value: FormattedRefusal | null) => void;
-    setHover: (value: PickResult | null) => void;
+    setHover: (value: HoverReadout) => void;
     setResidencyStatus: (value: ResidencyStatus | null) => void;
     /** NEXT-CUT.md (filter-panel cut) design section: "Dataset change clears the filter via
      * `admitAndResetStaleUiState`." A predicate scoped to one dataset's columns must never ride
@@ -247,57 +348,13 @@ export function makeDebouncedViewportQuery(
 }
 
 /**
- * Rider 1's persistent ceiling-refusal status ("N of M features rendered — declared ceiling
- * reached (MAX_RESIDENT_VERTICES)"), or `null` while nothing about the current dataset's rendering
- * is truncated.
+ * Rider 1's persistent status indicator and its transition machinery now live in
+ * `residency/residencyStatus.ts` (viewport-residency cut P4, decisions 24(a)/(b)) -- `ResidencyStatus`/
+ * `nextResidencyStatus`/`residencyStatusText`, re-exported above so this stays a drop-in for every
+ * existing call site. See that module's own doc comment for why the move happened (P4's own need:
+ * `residency/candidateArmSession.ts` constructs the SAME events this file reduces, without a circular
+ * import back into this one).
  */
-export interface ResidencyStatus {
-  residentFeatureCount: number;
-  /** `describe.row_count.value` verbatim (a `DecU64` string) -- never narrowed to `Number`, the
-   * same discipline `skp/codec.ts`'s own doc comment states for every wire `DecU64`. */
-  datasetRowCount: string;
-}
-
-/**
- * Rider 1's status-indicator state machine, kept pure and outside React state updates for the same
- * testability reason `admitAndResetStaleUiState` above is: `App.test.ts` asserts every transition
- * here directly, without a DOM/WebGL harness this package does not carry.
- *
- * - `"ceiling-refusal"`: a batch was refused by `ResidentVertexCeilingExceeded` -- (re)sets the
- *   status to the counts that refusal carried.
- * - `"delivery-complete"`: a stream's own natural `Completed` terminal reached `App` -- the human's
- *   own words, "a later stream completes fully without a ceiling refusal" (a stream this session
- *   itself cancelled for hitting the ceiling never reaches this event: `ViewportStreamManager`
- *   suppresses the terminal of any stream it cancelled itself, whatever that terminal's `kind` --
- *   see its own `selfCancelledHandles` doc comment).
- * - `"dataset-changed"`: a fresh admission -- unconditional clear, wired through
- *   `admitAndResetStaleUiState` above.
- *
- * Dismissing the `.canvas-refusal` banner is deliberately NOT a transition here -- rider 1, the
- * human's words: "dismiss hides the banner, never the status indicator". The banner's Dismiss
- * button only ever calls `setCanvasRefusal(null)`, never touching this state.
- */
-export function nextResidencyStatus(
-  event:
-    | { kind: "ceiling-refusal"; residentFeatureCount: number; datasetRowCount: string }
-    | { kind: "delivery-complete" }
-    | { kind: "dataset-changed" }
-    /** Rider-1 refinement (DECISIONS-PENDING.md entry 1, architect recommendation, approved to
-     * proceed): applying a filter supersedes and clears the canvas exactly as a dataset change or a
-     * full delivery does -- a stale "N of M features rendered" claim must not survive a query the
-     * operator themselves just superseded. Named in DECISIONS-PENDING.md and the PR per the human's
-     * own rider being amended here, not silently absorbed. */
-    | { kind: "query-issued" }
-): ResidencyStatus | null {
-  switch (event.kind) {
-    case "ceiling-refusal":
-      return { residentFeatureCount: event.residentFeatureCount, datasetRowCount: event.datasetRowCount };
-    case "delivery-complete":
-    case "dataset-changed":
-    case "query-issued":
-      return null;
-  }
-}
 
 /**
  * NEXT-CUT.md (filter-panel cut) P4, ADR-021's binding acceptance condition: "before any user-facing
@@ -552,7 +609,7 @@ export function handleCanvasCeilingRefusal(
  */
 export default function App() {
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
-  const [hover, setHover] = useState<PickResult | null>(null);
+  const [hover, setHover] = useState<HoverReadout>(null);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
@@ -589,6 +646,17 @@ export default function App() {
   const [hasSettledView, setHasSettledView] = useState(false);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
+  /** P5f complex-gate should-fix 3: set ONLY inside the `[admitted]` effect's candidate-arm branch
+   * (`null` for baseline, and reset to `null` in every cleanup) -- the Cancel JSX handler below reads
+   * this to decide which arm's own cancel path to take: candidate calls `session.manager.stop()`
+   * (this manager's own doc comment: "cancels every in-flight tile stream and refuses every future
+   * `onCameraChange` call"), baseline calls `managerRef.current?.cancelStream(handle)` as it always
+   * has. Never the whole `CandidateArmSession`, deliberately -- Cancel only ever needs to reach the
+   * tile-planning manager's own `stop()`, not `session.stop()`'s wider dataset-close scope (which also
+   * tears down the untiled first-look stream and permanently refuses this session's own future
+   * `reissueUnrestricted`/`onViewportChanged` calls -- correct for a dataset close, more than Cancel
+   * itself needs to do). */
+  const candidateManagerRef = useRef<TileViewportStreamManager | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
   // NEXT-CUT.md P4: App-owned (not FilterPanel-owned) precisely because indicator scope is "EVERY
   // in-flight viewport stream" (item 6), not filter-only -- an ordinary pan/zoom drives this too.
@@ -720,6 +788,124 @@ export default function App() {
     [commitActiveFilter, commitScanState]
   );
 
+  // E2E TEST SURFACE (dev builds only, viewport-residency cut P1/P1b, RESIDENCY-PREREGISTRATION.md).
+  // Registered ONCE, at the top level -- unlike `capturePixels`/`queryWithFilter` (dataset-scoped,
+  // registered inside `WorkingCanvas`/the `[admitted]` effect), a driver legitimately wants the
+  // instrument's enable/disable and step boundaries available BEFORE any dataset is admitted: the
+  // M7 `open-drain` pre-step measures the very first `viewport_query` a dataset open issues, before
+  // any `WorkingCanvas` has ever mounted. `residencyMarkInput` reaches `recordResidencyInput`
+  // directly (no WorkingCanvas dependency).
+  //
+  // **`residencyArmFirstPixel`/`residencyDisarmFirstPixel` moved HERE from a WorkingCanvas-owned
+  // effect (P1b, M7 fix, live-verified finding).** They now proxy to `canvasRef.current`'s own
+  // `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` methods -- ALWAYS whichever `WorkingCanvas`
+  // instance is CURRENTLY mounted (or none), never a closure captured at some earlier mount. `arm`
+  // POLLS (bounded, 4s, 25ms interval) until a live `deck` exists on that instance: calling it BEFORE
+  // any dataset is ever admitted (the `open-drain` pre-step's own case) previously either found no
+  // hook registered at all (a truly cold session) or armed a STALE, about-to-unmount instance (a warm
+  // re-attach to a session with a dataset already open) -- confirmed live, a smoke run's `open-drain`
+  // row showed `armDisarmedCleanly: true` (something WAS armed) yet `firstPixelReason: "no-paint"`
+  // despite batches genuinely arriving and rendering, because the arm target was the wrong instance.
+  useEffect(() => {
+    if (!isInstrumentedBuild()) return;
+    registerE2eHook("residencyInstrumentSetEnabled", async (value: boolean) => {
+      if (value) {
+        enableResidencyInstrument();
+      } else {
+        disableResidencyInstrument();
+      }
+    });
+    // M10 (P1b): the dev-surface readback half of `--control`'s off-ness assertion.
+    registerE2eHook("residencyInstrumentIsEnabled", async () => isResidencyInstrumentEnabled());
+    registerE2eHook("residencyBeginStep", async (stepId: string) => {
+      beginResidencyStep(stepId);
+    });
+    // N4 (P1b, the G6 instrument): merges the pure step snapshot with the CURRENT resident
+    // vertex/feature totals read off `WorkingCanvas` at the same moment (`getResidentCounts`) --
+    // read-only, reached only from this DEV-only hook, never from product code. `canvasRef.current`
+    // is `null` whenever no dataset is admitted (e.g. a step measured before the first `openPath`
+    // resolves), in which case `residentAtEndStep` is honestly `null`, never a fabricated zero.
+    registerE2eHook("residencyEndStep", async () => {
+      const result = endResidencyStep();
+      if (!result) return null;
+      return { ...result, residentAtEndStep: canvasRef.current?.getResidentCounts() ?? null };
+    });
+    registerE2eHook("residencyMarkInput", async () => {
+      recordResidencyInput();
+    });
+    // M6 (P1b): driver-visible in-flight `viewport_query` count -- `waitForSettle` for a residency
+    // trace step reads this alongside console quiescence (§4b's letter).
+    registerE2eHook("residencyInFlightStreamCount", async () => getResidencyInFlightStreamCount());
+    // Viewport-residency cut P5g (diagnosis piece): the candidate arm's own tile-queue depth --
+    // `residencyInFlightStreamCount` above only ever counts a tile once its stream has truly minted
+    // (`candidateArmSession.ts`'s `countTileStreamIssuedOnce`), never a tile still waiting behind
+    // `MAX_IN_FLIGHT_TILE_STREAMS`'s cap. `candidateManagerRef.current` is `null` for the baseline
+    // arm and while no candidate-arm session is open -- honestly `0`, never fabricated, matching
+    // `residencyInFlightStreamCount`'s own disclosed-zero discipline.
+    registerE2eHook("residencyQueuedTileCount", async () => candidateManagerRef.current?.queuedCount ?? 0);
+    // P1d suggestion 10: driver-visible session-wide total of superseded-stream bytes dropped
+    // (`residencyInstrument.ts`'s own `supersededBytesDropped` doc comment has the full mechanism).
+    registerE2eHook("residencySupersededBytesDropped", async () => getResidencySupersededBytesDropped());
+    // Re-review S5 (Amendment 21): the tile grid frame's own declared shape, at whatever point the
+    // driver reads it -- `null` until `TileViewportStreamManager.establishGridFrame` has actually run
+    // (baseline arm, or a candidate-arm session before its own untiled first look reaches its
+    // terminal). `level` rides alongside `frame` rather than as a separate hook -- the two are only
+    // ever meaningful together (`cellSizeForLevel`'s own contract). This is a READ of state the
+    // product already derives and logs (`candidateArmSession.ts`'s own establishment log line); this
+    // hook adds no new derivation of its own.
+    registerE2eHook("residencyGridFrame", async () => {
+      const manager = candidateManagerRef.current;
+      if (!manager || !manager.gridFrame) return null;
+      const { originX, originY, baseSpan } = manager.gridFrame;
+      return { originX, originY, baseSpan, level: manager.activeLevel };
+    });
+    // M7/S7 fix: see this effect's own doc comment above.
+    // P1d B5: `watchdogMs` is threaded through to `armFirstPixelRenderHook` unchanged -- the caller
+    // (the driver) passes the step's own `settle.timeoutMs`, no longer a fixed 5000 baked in here.
+    // The 4s poll bound below is a SEPARATE concern (waiting for a live `WorkingCanvas`/`deck` to
+    // exist at all) and is not scaled by this fix.
+    registerE2eHook("residencyArmFirstPixel", async (watchdogMs?: number) => {
+      const deadlineMs = Date.now() + 4000;
+      while (Date.now() < deadlineMs) {
+        if (canvasRef.current?.armFirstPixelRenderHook(watchdogMs)) return;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      // Gave up -- no WorkingCanvas/deck ever became available within the bound. An honest no-op,
+      // matching this hook's own "a no-op ... while no WorkingCanvas is mounted" doc comment
+      // (`e2e-test-surface.ts`) -- the caller's own `residencyEndStep` will report `firstPixelReason`
+      // accordingly (never a fabricated stamp).
+    });
+    registerE2eHook("residencyDisarmFirstPixel", async () => canvasRef.current?.disarmFirstPixelRenderHook() ?? true);
+    // Viewport-residency cut P3 ("THE ARM SWITCH"): registered at this same top level, not
+    // dataset-scoped -- a driver legitimately wants to select the arm BEFORE any dataset is ever
+    // admitted (the setter is refused once one is open, `residencyArm.ts`'s own contract).
+    registerE2eHook("setResidencyArm", async (arm) => setResidencyArm(arm));
+    registerE2eHook("getResidencyArm", async () => getResidencyArm());
+    // Viewport-residency cut P7 (the tile-size sweep selector): same DEV-only, registered-at-top-level
+    // (not dataset-scoped) discipline as the arm switch immediately above -- a driver selects the tile
+    // grid level BEFORE any dataset is admitted (the setter is refused once one is open,
+    // `residencyTileSizeLevel.ts`'s own contract, mirroring `residencyArm.ts`'s).
+    registerE2eHook("setResidencyTileSizeLevel", async (level) => setResidencyTileSizeLevel(level));
+    registerE2eHook("getResidencyTileSizeLevel", async () => getResidencyTileSizeLevel());
+    return () => {
+      unregisterE2eHook("residencyInstrumentSetEnabled");
+      unregisterE2eHook("residencyInstrumentIsEnabled");
+      unregisterE2eHook("residencyBeginStep");
+      unregisterE2eHook("residencyEndStep");
+      unregisterE2eHook("residencyMarkInput");
+      unregisterE2eHook("residencyInFlightStreamCount");
+      unregisterE2eHook("residencyQueuedTileCount");
+      unregisterE2eHook("residencySupersededBytesDropped");
+      unregisterE2eHook("residencyGridFrame");
+      unregisterE2eHook("residencyArmFirstPixel");
+      unregisterE2eHook("residencyDisarmFirstPixel");
+      unregisterE2eHook("setResidencyArm");
+      unregisterE2eHook("getResidencyArm");
+      unregisterE2eHook("setResidencyTileSizeLevel");
+      unregisterE2eHook("getResidencyTileSizeLevel");
+    };
+  }, []);
+
   function reportViewportOutcome(promise: Promise<RequestOutcome>) {
     promise.then(
       () => setViewportRefusal(null),
@@ -740,6 +926,15 @@ export default function App() {
       issueQueryRef.current = null;
       return;
     }
+
+    // Viewport-residency cut P3: bookkeeping only, for `setResidencyArm`'s own "refused while a
+    // dataset is open" contract -- DEV-gated (the arm switch is a dev/E2E-only concern) and purely
+    // additive, so `residency/residencyArm.ts` never runs, or is even referenced, in a production
+    // build (`check:dist-clean`'s own extended identifier list covers this).
+    if (isInstrumentedBuild()) notifyResidencyArmDatasetOpened();
+    // P7: same bookkeeping, same reason -- `setResidencyTileSizeLevel`'s own "refused while a
+    // dataset is open" contract (`residencyTileSizeLevel.ts`'s own top doc comment).
+    if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetOpened();
 
     // Rider 3: captured once, here, never re-read as `canvasRef.current` inside a callback below --
     // see `makeManagerCallbacks`'s own doc comment for the remount race this closes. This effect's
@@ -763,12 +958,88 @@ export default function App() {
         `admitted.dataset=${admitted.dataset}: canvasRef.current was null when this effect captured it -- every batch/supersede for this dataset will silently no-op for this manager's whole lifetime`
       );
     }
+
+    // Viewport-residency cut P3w: SELECT BETWEEN two constructions -- candidate arm returns here,
+    // before a single line of the baseline `ViewportStreamManager` construction below ever runs, so
+    // that construction's own code path is untouched in shape (no conditional added inside it) and
+    // stays bit-identical for the default/only arm the full vitest/E2E regression suites ever
+    // observe. `getResidencyArm()` itself defaults to `"baseline"` and only a dev-gated
+    // `setResidencyArm("candidate")` call (the dev/E2E surface) can ever move a session off it --
+    // `residencyArm.ts`'s own top doc comment. `viewportDebounceRef` is REUSED (not a new ref): the
+    // candidate session's own `onViewportChanged` conforms to the identical `Debounced<[Bbox, string
+    // | null]>` shape baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX
+    // below (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is
+    // active without an arm check of its own.
+    if (isInstrumentedBuild() && getResidencyArm() === "candidate") {
+      const session = startCandidateArmSession({
+        dataset: admitted.dataset,
+        canvas,
+        // P7: the tile-size sweep selector's own dev-gated read, at the exact point the candidate
+        // session is constructed -- `getResidencyTileSizeLevel()` returns `null` (unset) unless a
+        // driver's own `setResidencyTileSizeLevel` call (before this dataset opened) succeeded, in
+        // which case `session`'s own `manager` fixes on it for its whole lifetime (see
+        // `CandidateArmSessionDeps.tileGridLevel`'s own doc comment for the "unset means unchanged
+        // behavior" contract).
+        tileGridLevel: getResidencyTileSizeLevel(),
+        // Viewport-residency cut P4 (decisions 24(a)/(b)): the session emits the SAME
+        // `ResidencyStatusEvent`s this file's own baseline branch feeds `nextResidencyStatus` --
+        // "reuse the existing transition machinery, arm-aware" -- so `.residency-status` renders the
+        // declared-partial-view contract without a second, parallel state machine.
+        onResidencyStatusChange: (event) => setResidencyStatus(nextResidencyStatus(event)),
+        // P5f complex-gate should-fix 3: wires this session into the SAME scan-liveness state machine
+        // baseline's own manager already drives (`applyScanEvent`'s own doc comment above) -- before
+        // this, `scanState` stayed `{kind:"idle"}` for a candidate-arm session's entire life, so
+        // Cancel (gated on `isScanInFlight(scanState)`) was never even visible while real tile/
+        // untiled work was in flight. `applyScanEvent` itself accepts the FULL `ScanEvent` union;
+        // `CandidateArmSessionDeps.applyScanEvent`'s own narrower type is a safe target by function-
+        // parameter contravariance (that field's own doc comment has the full account).
+        applyScanEvent,
+      });
+      managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
+      candidateManagerRef.current = session.manager;
+      viewportDebounceRef.current = makeCandidateViewportDispatcher(session);
+      issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
+
+      if (isInstrumentedBuild()) {
+        registerE2eHook("queryWithFilter", (predicate: string) =>
+          applyFilter(predicateTextToFilter(predicate), {
+            requestViewport: (bbox, f) => (issueQueryRef.current ? issueQueryRef.current(bbox, null, f) : Promise.resolve({ kind: "stopped" })),
+            cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
+            getLastViewportBbox: () => lastViewportBboxRef.current,
+            getActiveFilter: () => activeFilterRef.current,
+            commitActiveFilter,
+            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+          })
+        );
+      }
+
+      // The dataset's own "first look" -- the SAME unrestricted (`bbox: null`) shape baseline's own
+      // initial issue uses, immediately, not debounced (see this module's own doc comment for why
+      // this is what establishes the tile grid's own anchor).
+      reportViewportOutcome(session.reissueUnrestricted(null, activeFilterRef.current));
+
+      return () => {
+        viewportDebounceRef.current?.cancel();
+        viewportDebounceRef.current = null;
+        issueQueryRef.current = null;
+        candidateManagerRef.current = null;
+        void session.stop();
+        if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
+        void closeDataset(admitted.dataset).catch(() => {});
+        managerRef.current = null;
+        if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
+        if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetClosed(); // P7: symmetric close
+      };
+    }
+
+    // BASELINE -- unchanged below this point (viewport-residency cut P3w).
     // NEXT-CUT.md P4 item 1: `batch(rows cumulative)` -- the running total for whichever stream this
     // scan machine is currently tracking. Effect-local (not a ref/useState): reset implicitly on
     // every effect rerun (a fresh dataset), and explicitly whenever `issueViewportQuery` below
     // observes a NEW `issued` outcome, exactly the same "one scan tracked at a time" discipline
     // `nextScanState`'s own doc comment states.
     let scanRowsAccumulator: { streamHandle: string | null; rows: number } = { streamHandle: null, rows: 0 };
+    candidateManagerRef.current = null; // no candidate-arm TileViewportStreamManager exists for this arm
 
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
@@ -829,7 +1100,7 @@ export default function App() {
     // registered here, inside this effect, because `issueViewportQuery` (and therefore anything to
     // query) only exists once a dataset is admitted -- mirrors `capturePixels` only existing once
     // `WorkingCanvas` mounts.
-    if (import.meta.env.DEV) {
+    if (isInstrumentedBuild()) {
       registerE2eHook("queryWithFilter", (predicate: string) =>
         applyFilter(
           // P6 review, nit: routed through the SAME `predicateTextToFilter` mapping the real panel's
@@ -890,11 +1161,14 @@ export default function App() {
       viewportDebounceRef.current = null;
       issueQueryRef.current = null;
       void manager.stop();
-      if (import.meta.env.DEV) unregisterE2eHook("queryWithFilter");
+      if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
       // Every admitted dataset stays open (and its DuckDB pool resident) until explicitly closed;
       // opening a second one must not leak the first (S1, architect review of this cut).
       void closeDataset(admitted.dataset).catch(() => {});
       managerRef.current = null;
+      // Viewport-residency cut P3: symmetric with `notifyResidencyArmDatasetOpened` above.
+      if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
+      if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetClosed(); // P7: symmetric close
     };
     // `reportViewportOutcome`/`applyScanEvent`/`commitActiveFilter` are stable across renders (each
     // only reaches a `useCallback([])` or React `useState` setter) and `manager`/`debounced` are
@@ -944,6 +1218,23 @@ export default function App() {
               // exact same, freshest-possible read.
               const current = scanStateRef.current;
               if (!isScanInFlight(current)) return;
+              // P5f complex-gate should-fix 3: candidate arm's own cancel path -- before this piece,
+              // `candidateManagerRef.current` never existed and no scan event was ever dispatched for
+              // this arm at all, so Cancel was never reachable (`isScanInFlight` never true).
+              // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) applies here too:
+              // `{kind:"reset"}` fires SYNCHRONOUSLY, before ever awaiting `manager.stop()`, so a
+              // dataset-close/remount racing this call can never leave a stale `scanState` behind
+              // (`candidateArmSession.ts`'s own `stop()` doc comment explains why THAT method
+              // deliberately never dispatches this itself -- the same hazard, avoided by dispatching
+              // here instead). `manager.stop()` (the tile-planning `TileViewportStreamManager`, NOT
+              // the whole `session.stop()`) cancels every in-flight tile stream and drops the queue
+              // -- deliberately NOT the untiled first-look stream too, a known, documented scope
+              // boundary (`candidateManagerRef`'s own doc comment above has the full account).
+              if (candidateManagerRef.current) {
+                applyScanEvent({ kind: "reset" });
+                void candidateManagerRef.current.stop();
+                return;
+              }
               const handle = current.streamHandle;
               // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- dispatched synchronously
               // here, in the SAME handler that calls `cancelStream`, never awaiting anything: a
@@ -1027,7 +1318,16 @@ export default function App() {
             >
               Zoom to layer
             </button>
-            {hover && (
+            {/* Viewport-residency cut P6a, decision 24(c): `hover` is `HoverReadout`, not merely
+              * `PickResult | null` -- a below-pick-resolution refusal is its own distinct branch, a
+              * typed hover-readout state (never null-silence), rendered in the SAME `.hover-readout`
+              * slot an ordinary pick uses. */}
+            {hover && isPickBelowResolution(hover) && (
+              <div className="hover-readout hover-readout-below-resolution">
+                Features here are below pick resolution — zoom in to inspect them.
+              </div>
+            )}
+            {hover && !isPickBelowResolution(hover) && (
               <div className="hover-readout">
                 id {hover.id.toString()}
                 {hover.anchor && ` @ (${hover.anchor[0].toFixed(3)}, ${hover.anchor[1].toFixed(3)})`}
@@ -1080,12 +1380,14 @@ export default function App() {
                 {/* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): NOT dismissible -- no close
                   * control, deliberately. Dismissing a `.canvas-refusal` above must never remove
                   * this; it only ever clears via `nextResidencyStatus`'s own "delivery-complete" /
-                  * "dataset-changed" transitions. Plain digits, no thousands separators (this
-                  * file's own `ResidencyStatus` doc comment: `datasetRowCount` is a wire `DecU64`
-                  * string, never narrowed to `Number`). */}
+                  * "dataset-changed" / "query-issued" transitions. Viewport-residency cut P4
+                  * (decisions 24(a)/(b)): content is now arm-dependent -- `residencyStatusText`
+                  * (`residency/residencyStatus.ts`) is the ONE place that renders any of the three
+                  * `ResidencyStatus` variants (baseline's own ceiling wording untouched by this
+                  * piece) to a string, so this JSX stays a one-line lookup. */}
                 {residencyStatus && (
                   <div className="residency-status" role="status">
-                    {`${residencyStatus.residentFeatureCount} of ${residencyStatus.datasetRowCount} features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`}
+                    {residencyStatusText(residencyStatus)}
                   </div>
                 )}
                 {/* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close

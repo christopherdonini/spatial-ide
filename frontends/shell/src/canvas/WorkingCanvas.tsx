@@ -8,20 +8,30 @@ import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
 import { logSessionEvent } from "../diagnostics/log";
 import {
+  recordResidencyBatch,
+  recordResidencyBatchDecoded,
+  recordResidencyDuplicatesDropped,
+  recordResidencyEvictionsApplied,
+  recordResidencyRenderTick,
+} from "../instrument/residencyInstrument";
+import {
   traceCanvasLifecycle,
   traceLayerUpdate,
   tracePositionsSample,
   traceResidency,
   traceStreamBatch,
+  traceTileIngest,
   traceViewState,
 } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
+import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import type { StyleState } from "../style/document";
 import { resolveDrawParameters } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import { decodeBatch } from "./decodeBatch";
+import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import {
   DECKGL_PICK_INDEX_CEILING,
@@ -30,8 +40,18 @@ import {
   ResidentVertexCeilingExceeded,
 } from "./limits";
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
-import { PickResult, resolvePick } from "./pick";
+import type { HoverReadout } from "./pick";
+import { resolvePick } from "./pick";
+import { averageFeatureExtent, isBelowPickResolution } from "./pickResolution";
 import { ResidentSet } from "./residentSet";
+import { getResidencyArm } from "../residency/residencyArm";
+import { ingestTileBatch } from "./tileIngest";
+import type { TileGridContext } from "./tileIngest";
+import { tileDistanceToPoint } from "./tileGrid";
+import type { TileGridFrame, TileKey } from "./tileGrid";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
+import type { TileGridLevel } from "./tileGridConstants";
+import { planTileEviction, TileResidentSet } from "./tileResidentSet";
 import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportBbox";
 
 /**
@@ -114,14 +134,185 @@ export interface WorkingCanvasHandle {
    * (dataset, filter generation), not (dataset) alone.
    */
   resetFitForNewGeneration(): void;
+  /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
+   * read directly off the same `ResidentSet` `pushBatch`/`clearStream` already maintain -- no new
+   * counting logic, a read-only accessor. Reached only from the DEV-only `residencyEndStep` E2E hook
+   * (`App.tsx`), never from product code. */
+  getResidentCounts(): ResidentCounts;
+  /** M1/M3/M7/S7 (viewport-residency cut P1b): arms a PERSISTENT `onAfterRender` render-tick hook on
+   * THIS instance's `deck`, feeding `recordResidencyRenderTick` on every render observed while armed
+   * -- see this file's own doc comment on `firstPixelArmedRef` for why this is exposed as a METHOD
+   * (reached via `canvasRef.current` from `App.tsx`, which can poll for a live instance) rather than
+   * self-registered inside a mount-scoped effect. Returns `false` (and arms nothing) if `deck` is not
+   * yet initialized on THIS instance -- the caller's own signal to retry.
+   *
+   * **P1d B5 fix.** `watchdogMs` (self-restore deadline) is now the CALLER'S OWN choice, not a fixed
+   * 5000 -- the original fixed 5s watchdog silently capped every armed measurement at 5s even when
+   * the calling step's own declared settle timeout (`RESIDENCY-PREREGISTRATION.md` §7's per-step/
+   * open-drain rows) allowed longer, e.g. the `open-drain` pre-step's 60s settle bound. Defaults to
+   * 5000 when omitted, preserving the original ceiling for any caller that does not pass one. */
+  armFirstPixelRenderHook(watchdogMs?: number): boolean;
+  /** S7: disarms the hook `armFirstPixelRenderHook` installed, restoring `onAfterRender` to a real
+   * no-op. Returns `true` iff disarmed BEFORE the arm's own (P1d B5: caller-chosen, no longer fixed)
+   * watchdog fired (or nothing was ever armed -- vacuously clean), `false` iff the watchdog had
+   * already fired and self-restored first. */
+  disarmFirstPixelRenderHook(): boolean;
+
+  /**
+   * Viewport-residency cut P3w item B: the candidate arm's own ingest -- decode one batch and add
+   * it to the TILE-KEYED resident set (`TileResidentSet`, a sibling of the baseline `ResidentSet`
+   * `pushBatch` above uses), never called for the baseline arm (`App.tsx`'s candidate-only
+   * construction branch is this method's only real caller). Cross-tile dedupe (item C) and
+   * budget/eviction (item D) both happen here, via `tileIngest.ts`'s own pure `ingestTileBatch` --
+   * this method never throws `ResidentVertexCeilingExceeded`/`PickCeilingExceeded` and never calls
+   * `onCanvasRefusal`/`onResidentCeilingExceeded`: the candidate arm never raises the baseline's
+   * declared-ceiling refusal (item B's own contract; P4 renders the over-budget state this method
+   * only maintains via `TileViewportStreamManager.setOverBudget`, applied by the caller from this
+   * method's own return value).
+   */
+  pushTileBatch(tileKey: string, streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): TileBatchIngestOutcome;
+  /** Drops one tile's residency -- per-tile supersede-on-pan, or an explicit eviction. Mirrors
+   * `clearStream` above, tile-keyed instead of stream-keyed. */
+  clearTile(tileKey: string): void;
+  /** Wholesale candidate-arm residency clear (item A: "Filter changes ... still clear everything").
+   * A dataset change instead remounts this whole `WorkingCanvas` instance (keyed on
+   * `admitted.dataset`, `App.tsx`), discarding the `TileResidentSet` with it -- this method is only
+   * needed for a filter change, which reuses the same instance. */
+  clearAllTiles(): void;
+  /** Whether `tileKey` is currently resident in the candidate-arm's own `TileResidentSet` -- backs
+   * the `TileResidencyAccessor` `TileViewportStreamManager` needs at construction (`App.tsx`'s
+   * candidate session). Deliberately NOT named `isTileResident` (the method this delegates to,
+   * `TileResidentSet.isTileResident`, already has that exact name) -- `check:dist-clean`'s own
+   * caller-checked identifier grep cannot distinguish "a call to THIS handle method" from "a call to
+   * `TileResidentSet`'s own always-live method of the same name", so sharing the name would make
+   * that check permanently, spuriously fail (found live writing this piece). */
+  isTileResidentInCandidateSet(tileKey: string): boolean;
+  /** Viewport-residency cut P6a, Defect A: whether `tileKey` is resident AND NOT durably partial
+   * (`TileResidentSet.isTileComplete`) -- the stronger fact planning's own re-fetch decision and
+   * `isFillComplete`'s own "Showing all N" gate both need instead of `isTileResidentInCandidateSet`'s
+   * weaker "present at all, whole or trimmed" meaning. See that method's own doc comment for why the
+   * two are kept separate rather than one repurposed. */
+  isTileCompleteInCandidateSet(tileKey: string): boolean;
+  /** Viewport-residency cut P6a, Defect A: marks an already-tracked tile durably partial without
+   * touching its residency otherwise -- the "stream superseded mid-delivery" trigger
+   * (`candidateArmSession.ts`'s budget-exhaustion cancel: the manager already knows the remainder of
+   * that tile's own stream could not have been admitted, so it cancels rather than decoding to
+   * discard, and this is how that fact survives the cancellation). A no-op for a tile not currently
+   * resident (`TileResidentSet.markTilePartial`'s own contract). */
+  markTilePartial(tileKey: string): void;
+  /** Viewport-residency cut P6d (the sticky-partial exit): clears an already-tracked tile's own
+   * durably-partial flag back to `false` IN PLACE -- the caller-proven counterpart to
+   * `markTilePartial` above, used only once `candidateArmSession.ts`'s own per-tile generation
+   * tracking has real proof (a refetch's every batch arrived untrimmed AND its stream reached its own
+   * natural `Completed` terminal). See `TileResidentSet.markTileComplete`'s own doc comment
+   * (`tileResidentSet.ts`) for the full account of why this exists: a covering (eviction-protected)
+   * tile can never reach the OTHER reset path (evict + re-ingest), so without this method a
+   * once-trimmed, still-covered tile stayed durably partial forever, even after a later refetch
+   * genuinely admitted everything its bbox holds. A no-op for a tile not currently resident, exactly
+   * like `markTilePartial`'s own contract. */
+  markTileComplete(tileKey: string): void;
+  /** Declares the tile grid frame/level this canvas instance's own eviction ordering should use --
+   * called once, by `App.tsx`'s candidate session, immediately after
+   * `TileViewportStreamManager.establishGridFrame` succeeds. Idempotent past the first call, mirroring
+   * that method's own "no-op past the first call" contract. */
+  establishTileGridContext(frame: TileGridFrame, level: TileGridLevel): void;
+  /** Updates the "current viewport" context (the covering tile set + view centre) eviction ordering
+   * and over-budget re-evaluation need -- called by `App.tsx`'s candidate session after every
+   * `TileViewportStreamManager.onCameraChange`. Also re-attempts eviction against the NEW covering
+   * set with zero incoming vertices (item B: "clear it when a later camera change fits within budget
+   * again") and applies any eviction that succeeds (B1: the protected/current-viewport set itself,
+   * threaded into `TileResidentSet.evictTile` so a cascade can never blank one of these tiles).
+   *
+   * **Viewport-residency cut P6a, Defect A: the return value is now DERIVED, not a bare vertex-sum
+   * check.** Before this piece, "fits" meant only "the covering tiles' own CURRENT resident vertex
+   * total is within budget" -- a check that is trivially true the very next call after a trim, since
+   * trimming exists precisely to bring residency back within budget; the caller's own `overBudget`
+   * flag therefore reset on the next camera change regardless of whether the just-trimmed tile still
+   * held less than its bbox actually covers. This method now ALSO returns `false` while any tile in
+   * `coveringTileKeys` is durably partial (`TileResidentSet.isTilePartial`) -- so the caller's derived
+   * over-budget state stays true for as long as a covering tile genuinely remains incomplete, and
+   * clears only once every covering tile is either evicted-and-refetched-whole or was never trimmed to
+   * begin with. Planning's own `TileResidencyAccessor.isTileResident`/`hasHeadroom` (`candidateArmSession
+   * .ts`) is what actually lets a partial tile back into a fresh request despite this staying `false` --
+   * see that module's own doc comment for the drain-stop exception.
+   */
+  applyTileViewportContext(coveringTileKeys: readonly string[], viewCentre: { x: number; y: number }): boolean;
 }
+
+/** `WorkingCanvasHandle.pushTileBatch`'s own return shape (viewport-residency cut P3w item B) --
+ * mirrors `tileIngest.ts`'s own `TileBatchIngestResult`, plus the row count `App.tsx`'s eventual
+ * scan-liveness/status wiring would need (kept here rather than importing `TileBatchIngestResult`
+ * directly so this interface's own shape stays legible without a second file open). */
+export interface TileBatchIngestOutcome {
+  rowsAdmitted: number;
+  duplicatesDropped: number;
+  evictedTileKeys: string[];
+  overBudget: boolean;
+  /** Non-null once this canvas instance has ever admitted any geometry via `pushTileBatch` -- the
+   * candidate session's own fit-anchor read, used to `establishGridFrame` exactly once, ever, per
+   * dataset session (`tileGrid.ts`'s own top doc comment). */
+  fitAnchor: AuthoritativeBbox | null;
+}
+
+/**
+ * Viewport-residency cut P5h (F1 fix): whether `pushTileBatch`'s own ingest outcome should schedule
+ * a render AT ALL -- pure, so `WorkingCanvas.test.ts` can pin the "zero-admission schedules nothing"
+ * contract directly, the same `applyStyleChange`-style pure seam this file already uses for the parts
+ * a real `Deck` construction (no WebGL context in a jsdom test, this file's own S6 comment) keeps out
+ * of a unit test's reach.
+ *
+ * P5g's convicted evidence: `pushTileBatch` used to call `render()` unconditionally, on EVERY batch
+ * from up to `MAX_IN_FLIGHT_TILE_STREAMS` concurrently fanned-out tile streams -- including a fully
+ * REFUSED batch (e.g. duplicate-only rows landing on an already-resident tile, or a batch a
+ * since-superseded viewport no longer covers), sustaining ~1/sec main-thread churn with nothing new
+ * to actually draw. `rowsAdmitted === 0 && evictedTileKeys.length === 0` is exactly "nothing changed
+ * in the resident set this call" -- the one condition under which skipping the render entirely is
+ * correct, not merely cheap: `buildLayers`'s own output over an unchanged `TileResidentSet` would be
+ * byte-identical to what is already on screen.
+ */
+export function shouldScheduleTileRender(outcome: Pick<TileBatchIngestOutcome, "rowsAdmitted" | "evictedTileKeys">): boolean {
+  return outcome.rowsAdmitted > 0 || outcome.evictedTileKeys.length > 0;
+}
+
+/** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
+ * `e2e-test-surface.ts`'s hook type can both reference it without duplicating the field list. */
+export interface ResidentCounts {
+  totalResidentVertices: number;
+  totalResidentFeatures: number;
+}
+
+/** `tileGrid.ts`'s own `tileKeyToString` is deliberately one-way ("there is no `tileKeyFromString`;
+ * nothing needs to parse this back") -- `applyTileViewportContext`'s eviction ordering is one of the
+ * few places that genuinely does, since `TileResidentSet` only ever stores the STRING form
+ * (`tileIngest.ts`'s own identical local helper, duplicated rather than exported from `tileGrid.ts`
+ * itself for the same reason that module states).
+ *
+ * P5f complex-gate must-fix 3: fails loudly on a non-`"row:col"` input -- see `tileIngest.ts`'s own
+ * identical fix for the full account (the reserved `INITIAL_TILE_KEY` producing a `NaN` distance and
+ * a nondeterministic eviction-order comparator artifact). `RESERVED_TILE_KEYS` below is the real fix
+ * (this function is never actually called with that key any more); this throw is the loud safety net. */
+function parseTileKey(key: string): TileKey {
+  const parts = key.split(":");
+  const row = parts.length === 2 ? Number(parts[0]) : NaN;
+  const col = parts.length === 2 ? Number(parts[1]) : NaN;
+  if (!Number.isFinite(row) || !Number.isFinite(col)) {
+    throw new Error(`parseTileKey: not a "row:col" tile key: ${JSON.stringify(key)}`);
+  }
+  return { row, col };
+}
+
+/** P5f complex-gate must-fix 3: mirrors `tileIngest.ts`'s own identical constant -- the reserved-key
+ * set `applyTileViewportContext`'s own `planTileEviction` call passes as `reservedTileKeys`. */
+const RESERVED_TILE_KEYS: ReadonlySet<string> = new Set([INITIAL_TILE_KEY]);
 
 export interface WorkingCanvasProps {
   /** Diagnostics-only (DECISIONS-PENDING.md entry 0's residency ledger): identifies this instance
    * in `[render-trace] canvas-lifecycle` lines. Not read for any rendering decision. */
   dataset: string;
   geometryColumn: string;
-  onHover: (pick: PickResult | null) => void;
+  /** Viewport-residency cut P6a, decision 24(c): `HoverReadout`, not merely `PickResult | null` --
+   * a below-threshold pick reports the typed refusal (`PickBelowResolution`), never null-silence. */
+  onHover: (pick: HoverReadout) => void;
   /** A declared ceiling (`ResidentVertexCeilingExceeded`, `PickCeilingExceeded`) refused a batch for
    * `streamHandle`. This is a report, not an action: `limits.ts`'s own contract says the offending
    * stream must be *cancelled*, and only the caller (which owns the `ViewportStreamManager`) can
@@ -148,7 +339,7 @@ export interface WorkingCanvasProps {
 
 const INITIAL_ZOOM = 0;
 
-function pixelsPerMetreAtZoom(zoom: number): number {
+function pixelsPerWorldUnitAtZoom(zoom: number): number {
   // deck.gl's OrthographicView: one world unit is 2^zoom CSS pixels -- the same units as
   // `canvas.clientWidth`/`clientHeight` below, not device (physical, DPR-scaled) pixels. A
   // HiDPI backing-store resolution changes what one CSS pixel costs in GPU samples, never what
@@ -287,7 +478,34 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck<OrthographicView> | null>(null);
   const residentRef = useRef(new ResidentSet());
-  const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerMetreAtZoom(INITIAL_ZOOM))));
+  /** Viewport-residency cut P3w item B: the candidate arm's own tile-keyed sibling of `residentRef`
+   * -- always constructed (cheap, empty until ever used), but only ever WRITTEN to by
+   * `pushTileBatch`/`clearTile`/`clearAllTiles`, which `App.tsx`'s candidate-only construction
+   * branch is the sole caller of. `armRef` below (read once, at construction -- the arm is fixed for
+   * a dataset session, `residencyArm.ts`'s own "refused while a dataset is open" contract) is what
+   * `render()` uses to pick which of these two sets actually feeds `buildLayers`, so the baseline arm
+   * never reads from this at all. */
+  const tileResidentRef = useRef(new TileResidentSet());
+  /** Read ONCE, at construction -- never re-read from `getResidencyArm()` on every render, since the
+   * arm cannot change mid-session (`residencyArm.ts`'s own contract). For the baseline arm (the
+   * default, and the only value the full vitest/E2E regression suites ever observe), every branch
+   * this ref gates reduces to exactly the pre-P3w code path -- see `render()`'s own comment. */
+  const armRef = useRef(getResidencyArm());
+  /** Frame/level for the candidate arm's own eviction ordering (`tileIngest.ts`'s `ingestTileBatch`)
+   * -- `null` until `establishTileGridContext` is called (once, by `App.tsx`'s candidate session,
+   * right after `TileViewportStreamManager.establishGridFrame` succeeds). */
+  const tileGridContextRef = useRef<TileGridContext | null>(null);
+  /** The current viewport's own covering tile-key set -- eviction never drops a tile in here,
+   * however far the budget overshoots (`planTileEviction`'s own "never evict the current viewport"
+   * rule). Updated by `applyTileViewportContext`, read by `pushTileBatch`/`applyTileViewportContext`
+   * itself. */
+  const currentViewportTileKeysRef = useRef<ReadonlySet<string>>(new Set());
+  /** The current viewport's own centre, authoritative-CRS -- `planTileEviction`'s own
+   * farthest-first ordering measures distance from this. `{x:0,y:0}` before the first real viewport
+   * change ever arrives (harmless: eviction never runs before any batch has pushed residency past
+   * budget, which cannot happen before a real viewport has driven any tile planning at all). */
+  const viewCentreRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(INITIAL_ZOOM))));
   /** The style prop, already resolved to what `buildLayers` needs (deck.gl's 0-255 RGBA accessor
    * convention -- `buildLayers.ts`'s own `ResolvedDrawParams`). Initialized synchronously from the
    * INITIAL `style` prop (never left undefined for a window before the first effect commits, the
@@ -334,6 +552,25 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * walkthrough finding), reset per stream handle since a superseded stream's batches are dropped
    * but its handle is never reused. */
   const streamStatsRef = useRef(new Map<string, { rows: number; vertices: number }>());
+  /** M7 fix (viewport-residency cut P1b): the persistent per-step `onAfterRender` render-tick hook's
+   * own armed/timeout state, held in REFS (not effect-scoped closure locals, P1's own original
+   * shape) so `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` can be exposed as imperative
+   * handle METHODS, reachable via `canvasRef.current` from `App.tsx`'s own TOP-LEVEL (persists across
+   * every dataset admission, unlike this component) E2E hook registration. **Why this moved out of a
+   * WorkingCanvas-owned `useEffect`, live-verified finding:** the M7 `open-drain` pre-step calls
+   * `residencyArmFirstPixel` BEFORE `openFixture` -- i.e. before ANY `WorkingCanvas` instance has
+   * ever mounted (a truly cold session) or while a PRIOR dataset's soon-to-unmount instance is still
+   * live (a warm re-attach, e.g. this driver attaching to a session `e2e:regression` left running). A
+   * hook registered INSIDE this component's own mount-scoped effect either does not exist yet (cold)
+   * or arms the WRONG, about-to-be-torn-down `deck` instance (warm) -- confirmed live: a smoke run's
+   * `open-drain` row showed `armDisarmedCleanly: true` (something WAS armed) but
+   * `firstPixelReason: "no-paint"` despite 3 batches / 2000 features actually arriving and rendering
+   * -- the arm target was the STALE instance's `deck`, not the new one `openFixture` was about to
+   * create. Exposing these as ref-methods lets `App.tsx`'s hook poll `canvasRef.current` (always the
+   * CURRENTLY mounted instance, or `null`) until a real, live `deck` exists, then arm THAT one. */
+  const firstPixelArmedRef = useRef(false);
+  const firstPixelTimedOutRef = useRef(false);
+  const firstPixelWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The Deck instance is constructed once (empty deps below) and its callbacks close over these
   // props at that moment. Routing every prop through a ref -- read inside the callback, written on
@@ -348,12 +585,51 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   const onViewportChangedRef = useRef(onViewportChanged);
   onViewportChangedRef.current = onViewportChanged;
 
+  /**
+   * Viewport-residency cut P6a, Defect B (architect gate, blocking): the ONE arm-selected batch-list
+   * accessor `render()` and the hover site (`onHover` below) both call -- before this piece, the two
+   * had separately hand-rolled the SAME `armRef.current === "candidate" ? ... : ...` ternary,
+   * `render()`'s copy correct and the hover site's copy simply never written (it read `residentRef`
+   * unconditionally), so candidate-arm hover resolved picks against baseline's own EMPTY resident set
+   * regardless of what was actually on screen. One function, one place the arm check lives, used by
+   * both -- a structural fix, not a second copy kept in sync by convention. For the baseline arm (the
+   * only value the full vitest/E2E regression suites ever observe) this is byte-identical to what
+   * `render()`'s own inline ternary already computed.
+   */
+  function activeBatches(): readonly ResidentBatch[] {
+    return armRef.current === "candidate" ? tileResidentRef.current.getBatches() : residentRef.current.getBatches();
+  }
+
+  /** Viewport-residency cut P6a, decision 24(c): the resident set's own average feature on-screen
+   * extent (dataset CRS units, `pickResolution.ts`'s own `averageFeatureExtent`) as of the MOST RECENT
+   * `render()` call -- recomputed there (one pass over `activeBatches()`, the same order of work
+   * `buildLayers` already does over them each render) rather than per hover event, which would repeat
+   * that whole pass on every mouse-move. `0` before the first render, or whenever nothing resident
+   * carries any real geometry -- the hover site never reaches `isBelowPickResolution` in that state
+   * regardless of what it would compute, since a GPU pick ordinal can only be valid once something is
+   * actually resident and drawn (`onHover`'s own `info.index` guard runs first). */
+  const averageFeatureExtentRef = useRef(0);
+
+  /** Viewport-residency cut P6a, decision 24(c): the current camera zoom, mirrored into a ref so the
+   * hover site (a `Deck` callback closed over at construction, `onHover` below) can read it without a
+   * component re-render -- the same "route every live value through a ref" discipline this file's own
+   * `onHoverRef`/`onViewportChangedRef` already follow. Updated everywhere the camera zoom is actually
+   * set: the real interactive `onViewStateChange` handler, `fitToExtent`, and the E2E-only
+   * deterministic view-state seam. */
+  const currentZoomRef = useRef(INITIAL_ZOOM);
+
   function render(): void {
     const deck = deckRef.current;
     if (!deck) return;
     begin("layer-construct");
     try {
-      const batches = residentRef.current.getBatches();
+      // Viewport-residency cut P3w item B: the candidate arm's `TileResidentSet` feeds the SAME
+      // `buildLayers` path, unioning its own tile-keyed batches into the render layer set exactly as
+      // `ResidentSet.getBatches()` already does for baseline -- no other change to this function, and
+      // for the baseline arm (`armRef.current === "baseline"`, the only value the full vitest/E2E
+      // regression suites ever observe) this ternary always takes the SAME branch it already did,
+      // byte-identical. Defect B: now the SAME `activeBatches()` accessor the hover site also calls.
+      const batches = activeBatches();
       const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
       deck.setProps({ layers });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
@@ -361,6 +637,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `decodeBatch` and carried on each `ResidentBatch` rather than re-walked here.
       const totalPositions = batches.reduce((sum, b) => sum + b.totalVertices, 0);
       traceLayerUpdate(layers.length, totalPositions);
+      // Decision 24(c): recomputed here, once per render, never per hover event -- see
+      // `averageFeatureExtentRef`'s own doc comment.
+      averageFeatureExtentRef.current = averageFeatureExtent(batches);
     } finally {
       end("layer-construct");
     }
@@ -402,9 +681,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     const widthPx = canvas?.clientWidth || 1;
     const heightPx = canvas?.clientHeight || 1;
     const fit = fitViewStateForBbox(bbox, widthPx, heightPx);
+    currentZoomRef.current = fit.zoom; // decision 24(c): the hover site's own current-zoom read
     const frame = frameRef.current;
     frame.forceRecenter(fit.centerX, fit.centerY);
-    frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(fit.zoom), RECENTER_BUDGET_PX));
+    frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX));
     traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
     // See this file's own doc comment: `initialViewState`, never `viewState`.
     deckRef.current?.setProps({ initialViewState: { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom } });
@@ -425,16 +705,40 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       .reduce<AuthoritativeBbox | null>((acc, b) => unionBbox(acc, extentOfBatch(b)), null);
   }
 
+  /** M7 fix's own helpers -- see `firstPixelArmedRef`'s doc comment for why this state lives in refs
+   * reachable from `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` rather than an effect
+   * closure. Never restores `onAfterRender` to `undefined` -- same reason `capturePixels`' own
+   * `restore` doesn't (this file's doc comment on that effect): deck.gl calls
+   * `this.props.onAfterRender(...)` with no null-check once anything has ever set the prop. */
+  function restoreFirstPixelHookToNoop(): void {
+    deckRef.current?.setProps({ onAfterRender: () => {} });
+    firstPixelArmedRef.current = false;
+  }
+
+  function clearFirstPixelWatchdog(): void {
+    if (firstPixelWatchdogRef.current !== null) {
+      clearTimeout(firstPixelWatchdogRef.current);
+      firstPixelWatchdogRef.current = null;
+    }
+  }
+
   useImperativeHandle(
     ref,
     () => ({
       pushBatch(streamHandle, batchSeq, ipcBytes) {
         begin("frame-decode");
-        let batch;
+        let batch: ReturnType<typeof decodeBatch>;
         try {
           batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
         } finally {
           end("frame-decode");
+        }
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, right
+        // where decode completes -- `firstByteToDecodedMs`'s own endpoint (`residencyInstrument.ts`'s
+        // own `recordBatchDecoded` doc comment has the full pairing account with
+        // `recordBatchArrived`, the manager-side hook this decode's own batch already passed through).
+        if (isInstrumentedBuild()) {
+          recordResidencyBatchDecoded();
         }
 
         // Ledger line logged before `addBatch`'s own ceiling check runs, so a refused attempt is
@@ -453,6 +757,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           attemptedTotal > MAX_RESIDENT_VERTICES
         );
 
+        // Viewport-residency cut P1b reviewer-gate remediation, M2: `recordResidencyBatch` now fires
+        // on BOTH exit paths below (accepted AND refused), each passing its own `refused` boolean --
+        // a single local closure so the DEV-gate/argument list is written once, not duplicated. Fixes
+        // the P1 defect where a ceiling-refused batch was silently dropped from every counter (the
+        // early `return 0` below used to exit before `recordResidencyBatch` was ever reached).
+        function recordThisBatchForInstrument(refused: boolean): void {
+          if (isInstrumentedBuild()) {
+            recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, refused);
+          }
+        }
+
         begin("buffer-build");
         try {
           residentRef.current.addBatch(batch);
@@ -466,11 +781,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
               // "resident features at the moment of refusal" -- rider 1's own definition.
               onResidentCeilingExceededRef.current(streamHandle, residentRef.current.totalResidentFeatures);
             }
+            recordThisBatchForInstrument(true); // M2: decoded-and-refused, counted separately
             return 0; // nothing admitted -- see this method's own doc comment on the interface
           }
           throw e;
         }
         end("buffer-build");
+
+        // Viewport-residency cut P1 (RESIDENCY-PREREGISTRATION.md §6, refill-work counters):
+        // DEV-only, and gated a second time inside `recordResidencyBatch` itself (the instrument's
+        // own `enabled` flag) -- see `instrument/residencyInstrument.ts`'s own top doc comment for
+        // why the check is duplicated at every product call site rather than relied on solely
+        // inside that module. `ipcBytes.byteLength` is the exact wire payload size this call
+        // decoded, the same value `decodeBatch` was handed above -- never re-derived from
+        // `batch.totalVertices` or any other post-decode figure.
+        recordThisBatchForInstrument(false); // M2: decoded-and-accepted
 
         const stats = streamStatsRef.current.get(streamHandle) ?? { rows: 0, vertices: 0 };
         stats.rows += batch.ids.length;
@@ -550,6 +875,249 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         fitAnchorRef.current = null;
         hasAutoFitRef.current = false;
       },
+
+      getResidentCounts() {
+        // Candidate arm (P3w): reads `tileResidentRef`'s own totals instead -- see `render()`'s
+        // identical `armRef.current` ternary; for baseline this is byte-identical to before.
+        if (armRef.current === "candidate") {
+          return {
+            totalResidentVertices: tileResidentRef.current.totalResidentVertices,
+            totalResidentFeatures: tileResidentRef.current.totalResidentFeatures,
+          };
+        }
+        return {
+          totalResidentVertices: residentRef.current.totalResidentVertices,
+          totalResidentFeatures: residentRef.current.totalResidentFeatures,
+        };
+      },
+
+      armFirstPixelRenderHook(watchdogMs) {
+        const deck = deckRef.current;
+        if (!deck) return false;
+        clearFirstPixelWatchdog();
+        firstPixelTimedOutRef.current = false;
+        firstPixelArmedRef.current = true;
+        deck.setProps({
+          onAfterRender: () => {
+            if (!firstPixelArmedRef.current) return;
+            // P1d B6a: gated at the call site, like every other reach into `residencyInstrument.ts`
+            // from product code -- `armFirstPixelRenderHook` itself (this whole method) is always
+            // compiled in (a real imperative-handle member, reachable in principle even in a
+            // production build, `armFirstPixelRenderHook`'s own interface doc comment), so this was
+            // previously the ONE call site into that module NOT wrapped in `import.meta.env.DEV`,
+            // making `residencyInstrument.ts`'s own top doc comment's "every call site... is
+            // additionally wrapped" claim false for exactly this closure. Wrapping it here restores
+            // that claim and lets Vite's literal-`false` replacement + esbuild's minifier actually
+            // dead-code-eliminate this reference in a production build, the same as every sibling
+            // call site already does.
+            if (isInstrumentedBuild()) {
+              recordResidencyRenderTick();
+            }
+          },
+        });
+        // P1d B5: the self-restore deadline is the caller's own bound, not a fixed 5000 -- see this
+        // method's own interface doc comment.
+        firstPixelWatchdogRef.current = setTimeout(() => {
+          firstPixelWatchdogRef.current = null;
+          firstPixelTimedOutRef.current = true;
+          restoreFirstPixelHookToNoop();
+        }, watchdogMs ?? 5000);
+        return true;
+      },
+
+      disarmFirstPixelRenderHook() {
+        if (!firstPixelArmedRef.current && firstPixelWatchdogRef.current === null) {
+          return !firstPixelTimedOutRef.current;
+        }
+        const disarmedBeforeTimeout = firstPixelWatchdogRef.current !== null;
+        clearFirstPixelWatchdog();
+        restoreFirstPixelHookToNoop();
+        return disarmedBeforeTimeout;
+      },
+
+      // Viewport-residency cut P3w item B (candidate-arm ingest): never called for the baseline arm
+      // -- `App.tsx`'s candidate-only construction branch is the sole real caller of every method
+      // below. Decode/dedupe/eviction/budget logic itself lives in `tileIngest.ts`'s pure
+      // `ingestTileBatch`; these methods are thin glue (decode, delegate, `render()`), the same
+      // "extract the pure decision, keep the imperative handle thin" split `pushBatch` above already
+      // could not follow (no WebGL-free way to test it) but this NEW logic can, and does
+      // (`tileIngest.test.ts`).
+      pushTileBatch(tileKey, streamHandle, batchSeq, ipcBytes) {
+        begin("frame-decode");
+        let batch: ReturnType<typeof decodeBatch>;
+        try {
+          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
+        } finally {
+          end("frame-decode");
+        }
+        // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
+        // same decode-complete hook `pushBatch` above carries, for this arm's own decode call.
+        if (isInstrumentedBuild()) {
+          recordResidencyBatchDecoded();
+        }
+
+        const outcome = ingestTileBatch({
+          tileSet: tileResidentRef.current,
+          tileKey,
+          batch,
+          grid: tileGridContextRef.current,
+          viewportTileKeys: currentViewportTileKeysRef.current,
+          viewCentre: viewCentreRef.current,
+          maxResidentVertices: MAX_RESIDENT_VERTICES,
+          priorExtent: fitAnchorRef.current,
+          extentOfBatch,
+          unionBbox,
+        });
+        // P5f complex-gate should-fix 6: gated behind the instrument's own enable (unlike every other
+        // call in this file's `traceXxx` family, which stays always-on) -- `tile-ingest` is NOT one of
+        // `residency-harness.mjs`'s own `FIELD_SEQUENCE_EVENTS` (`["viewport_query", "stream-issued",
+        // "batch"]`), so gating it does not change what the dual-arm identity guard compares; it only
+        // trims a high-volume line (one per tile batch) that non-instrumented builds never needed
+        // console-visible in the first place, matching `recordResidencyBatchDecoded`'s own gate two
+        // lines above.
+        if (isInstrumentedBuild()) {
+          traceTileIngest(tileKey, outcome.rowsAdmitted, outcome.duplicatesDropped, outcome.evictedTileKeys, outcome.overBudget);
+        }
+        // Viewport-residency cut P3i-c (gap G-B): mirrors `pushBatch`'s own `traceStreamBatch` call
+        // above -- same always-on render-trace class, same DECODED (not post-dedupe/post-trim
+        // admitted) `rows`/`vertices` convention, keyed into the SAME `streamStatsRef` map (stream
+        // handles never collide across arms within one session, the arm is fixed at open). This is
+        // the "batch arrival" trace line the identity guard's `FIELD_SEQUENCE_EVENTS` looks for;
+        // `tileViewportStreamManager.ts`'s own `onBatch` sink only ever sees the raw, pre-decode
+        // payload, so this is the earliest point in this arm's own path where real rows/vertices
+        // exist to log -- the true equivalent moment to where `traceStreamBatch` already lives for
+        // baseline (decode-complete, not manager-side mint).
+        {
+          const tileStats = streamStatsRef.current.get(streamHandle) ?? { rows: 0, vertices: 0 };
+          tileStats.rows += batch.ids.length;
+          tileStats.vertices += batch.totalVertices;
+          streamStatsRef.current.set(streamHandle, tileStats);
+          traceStreamBatch(streamHandle, batchSeq, batch.ids.length, batch.totalVertices, tileStats.rows, tileStats.vertices);
+        }
+
+        // P3w's own smoke-evidence wiring: the candidate arm never refuses a batch (item B), so this
+        // is always `recordResidencyBatch(..., refused: false)` -- unlike `pushBatch`'s own
+        // accepted/refused split above, there is no second branch here. `batch.ids.length` (not
+        // `outcome.rowsAdmitted`) mirrors `pushBatch`'s own convention: DECODED counts, not
+        // post-dedupe/post-trim admitted counts -- `recordResidencyBatch`'s own contract is "a batch
+        // ResidentSet.addBatch actually admitted" for baseline, and the closest candidate-arm analogue
+        // of "this batch was decoded and processed" is the batch as decoded, before this arm's own
+        // dedupe/eviction/budget trimming. P3i (this piece) closes the gap the old version of this
+        // comment named ("residencyInstrument.ts has no field for at all"): `outcome.duplicatesDropped`/
+        // `outcome.evictedTileKeys.length` now feed `ResidencyStepCounters.duplicatesDropped`/
+        // `.evictionsApplied` directly, this call's own pre-aggregated totals for this ONE batch.
+        if (isInstrumentedBuild()) {
+          recordResidencyBatch(batch.ids.length, ipcBytes.byteLength, false);
+          recordResidencyDuplicatesDropped(outcome.duplicatesDropped);
+          recordResidencyEvictionsApplied(outcome.evictedTileKeys.length);
+        }
+
+        // Same one-shot auto-fit `pushBatch` above performs, over the SAME `fitAnchorRef`/
+        // `residentExtentRef`/`hasAutoFitRef` -- only one of `pushBatch`/`pushTileBatch` is ever
+        // called in a given dataset session (the arm is fixed at open), so sharing these refs is
+        // safe and is what lets `fitToBounds`/"Zoom to layer" keep working unchanged for both arms.
+        fitAnchorRef.current = outcome.unionedExtent;
+        residentExtentRef.current = outcome.unionedExtent;
+        let renderedByAutoFit = false;
+        if (!hasAutoFitRef.current && residentExtentRef.current) {
+          hasAutoFitRef.current = true;
+          fitToExtent(residentExtentRef.current, false); // renders synchronously, once, right here
+          renderedByAutoFit = true;
+        }
+
+        // F1 fix (viewport-residency cut P5h; P5g's convicted evidence). Coalesced through the SAME
+        // per-frame discipline the style-panel path already established (`coalescedRenderRef`, S5
+        // above) instead of a synchronous `render()` on every one of up to
+        // `MAX_IN_FLIGHT_TILE_STREAMS` concurrently fanned-out tile streams' own batches.
+        // `shouldScheduleTileRender` (this file's own pure seam, exported above for
+        // `WorkingCanvas.test.ts`) is the "nothing changed" gate: a fully-refused batch schedules NO
+        // render at all, not even a coalesced one. Skipped when the auto-fit branch just above already
+        // rendered this same call synchronously -- no double render on the one-shot first-geometry
+        // batch.
+        if (!renderedByAutoFit && shouldScheduleTileRender(outcome)) {
+          coalescedRenderRef.current.schedule();
+        }
+        return {
+          rowsAdmitted: outcome.rowsAdmitted,
+          duplicatesDropped: outcome.duplicatesDropped,
+          evictedTileKeys: outcome.evictedTileKeys,
+          overBudget: outcome.overBudget,
+          fitAnchor: outcome.unionedExtent,
+        };
+      },
+
+      clearTile(tileKey) {
+        tileResidentRef.current.evictTile(tileKey);
+        render();
+      },
+
+      clearAllTiles() {
+        tileResidentRef.current.clear();
+        residentExtentRef.current = null;
+        render();
+      },
+
+      isTileResidentInCandidateSet(tileKey) {
+        return tileResidentRef.current.isTileResident(tileKey);
+      },
+
+      isTileCompleteInCandidateSet(tileKey) {
+        return tileResidentRef.current.isTileComplete(tileKey);
+      },
+
+      markTilePartial(tileKey) {
+        tileResidentRef.current.markTilePartial(tileKey);
+      },
+
+      markTileComplete(tileKey) {
+        tileResidentRef.current.markTileComplete(tileKey);
+      },
+
+      establishTileGridContext(frame, level) {
+        if (tileGridContextRef.current !== null) return; // idempotent, mirrors establishGridFrame
+        tileGridContextRef.current = { frame, level };
+      },
+
+      applyTileViewportContext(coveringTileKeys, viewCentre) {
+        currentViewportTileKeysRef.current = new Set(coveringTileKeys);
+        viewCentreRef.current = viewCentre;
+        const grid = tileGridContextRef.current;
+        const tileSet = tileResidentRef.current;
+        if (!grid) return true; // nothing established yet -- nothing to have exceeded budget with
+        const plan = planTileEviction({
+          residentTileKeys: tileSet.residentTileKeys(),
+          tileVertices: (k) => tileSet.tileVertexCount(k),
+          viewportTileKeys: currentViewportTileKeysRef.current,
+          incomingVertices: 0,
+          currentTotalVertices: tileSet.totalResidentVertices,
+          maxResidentVertices: MAX_RESIDENT_VERTICES,
+          distanceToViewCentre: (k) => tileDistanceToPoint(grid.frame, grid.level, parseTileKey(k), viewCentre),
+          reservedTileKeys: RESERVED_TILE_KEYS,
+        });
+        if (plan.evict.length > 0) {
+          // B1: the protected set (this method's own `coveringTileKeys`) is threaded into `evictTile`
+          // itself -- a cascade can divert around one of these tiles (mark partial, keep it resident)
+          // but never blank it. `anyEvicted` (not `plan.evict.length > 0` blindly) is what decides
+          // whether a render is actually owed -- a call whose ENTIRE plan diverted to partial-marking
+          // (every candidate protected) changed no drawn geometry.
+          let anyEvicted = false;
+          for (const key of plan.evict) {
+            if (tileSet.evictTile(key, currentViewportTileKeysRef.current).length > 0) anyEvicted = true;
+          }
+          if (anyEvicted) render();
+        }
+        // Defect A: derived, not a bare vertex-sum check -- see this method's own interface doc
+        // comment for why `plan.overBudget` alone is not enough (it is trivially false the moment
+        // after a trim, which is exactly the transience defect this fixes).
+        let anyPartialAmongCovering = false;
+        for (const key of currentViewportTileKeysRef.current) {
+          if (tileSet.isTilePartial(key)) {
+            anyPartialAmongCovering = true;
+            break;
+          }
+        }
+        return !plan.overBudget && !anyPartialAmongCovering;
+      },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [geometryColumn]
@@ -615,8 +1183,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       onLoad: () => end("deck-init"),
       onViewStateChange: ({ viewState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
+        currentZoomRef.current = vs.zoom; // decision 24(c): the hover site's own current-zoom read
         const frame = frameRef.current;
-        frame.setThreshold(recenterThresholdForBudget(pixelsPerMetreAtZoom(vs.zoom), RECENTER_BUDGET_PX));
+        frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(vs.zoom), RECENTER_BUDGET_PX));
         traceViewState(vs.target[0], vs.target[1], vs.zoom, frame.originX, frame.originY);
 
         // Captured *before* any recenter below: `vs.target` is a local-frame value produced
@@ -655,8 +1224,24 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           onHoverRef.current(null);
           return;
         }
-        const batch = batchForLayerId(residentRef.current.getBatches(), info.layer.id);
-        onHoverRef.current(batch ? resolvePick(batch, info.index) : null);
+        // Viewport-residency cut P6a, Defect B (architect gate, blocking): `activeBatches()`, the
+        // SAME arm-selected accessor `render()` uses -- before this fix this line read `residentRef`
+        // (baseline's own set) unconditionally, so a candidate-arm hover resolved against an empty
+        // set regardless of what was actually resident and drawn.
+        const batch = batchForLayerId(activeBatches(), info.layer.id);
+        if (!batch) {
+          onHoverRef.current(null);
+          return;
+        }
+        // Decision 24(c): a real GPU pick landed on SOMETHING, but if the resident data's own average
+        // feature size at the current zoom is below the declared threshold, naming ANY one feature
+        // among many equally-plausible candidates at this pixel would be arbitrary -- refuse by name
+        // instead (`PickBelowResolution`), a distinct hover-readout state, never null-silence.
+        if (isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current))) {
+          onHoverRef.current({ kind: "below-pick-resolution" });
+          return;
+        }
+        onHoverRef.current(resolvePick(batch, info.index));
       },
       onError: (error: Error) => {
         // ADR-010 rule 7: deck.gl's own render-loop failures must not vanish into the console --
@@ -776,6 +1361,70 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
 
     registerE2eHook("capturePixels", capturePixels);
     return () => unregisterE2eHook("capturePixels");
+  }, []);
+
+  // E2E TEST SURFACE (dev builds only, e2e/README.md): viewport-residency cut P1c,
+  // RESIDENCY-PREREGISTRATION.md §12 Amendment 6 -- the instrument-identity guard's own
+  // deterministic camera seam. **NEVER reached by a measured cell** -- every measured-cell step
+  // (`residency-harness.mjs`'s own `applyStep`) still drives a real synthetic pointer/wheel gesture
+  // over `.working-canvas`, exactly as P1b left it; this seam exists ONLY for the identity mode's
+  // own literal camera script (`residencyTrace.mjs`'s `IDENTITY_VIEW_STATE_STEPS`), and the driver
+  // asserts that restriction itself via `e2eSetViewStateCallCount` below, never merely by
+  // convention.
+  //
+  // Reuses the EXACT primitives `fitToExtent`/the real interactive `onViewStateChange` handler
+  // already use -- `OffsetFrame.forceRecenter`, deck's own uncontrolled `initialViewState` (this
+  // file's own top doc comment on why `initialViewState`, never `viewState`), and
+  // `onViewportChangedRef` (the SAME choke point a real pan/zoom or "zoom to layer" click reaches,
+  // `App.tsx`'s `onViewportChanged` -> debounced `requestViewport`) -- there is no second, parallel
+  // query-issuing path here, only a different way of producing the camera pose that feeds the SAME
+  // one. Unlike `fitToExtent`, there is no bbox to fit here -- the caller supplies the exact
+  // world-space (authoritative-CRS) target and zoom directly.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    let e2eSetViewStateCallCount = 0;
+
+    async function applyDeterministicE2eViewState(targetX: number, targetY: number, zoom: number): Promise<boolean> {
+      e2eSetViewStateCallCount++;
+      const canvas = canvasElRef.current;
+      const deck = deckRef.current;
+      if (!canvas || !deck) return false;
+      const widthPx = canvas.clientWidth || 1;
+      const heightPx = canvas.clientHeight || 1;
+      currentZoomRef.current = zoom; // decision 24(c): the hover site's own current-zoom read
+      const frame = frameRef.current;
+      frame.forceRecenter(targetX, targetY);
+      frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX));
+      traceViewState(0, 0, zoom, frame.originX, frame.originY);
+      // See this file's own doc comment: `initialViewState`, never `viewState`.
+      deck.setProps({ initialViewState: { target: [0, 0, 0], zoom } });
+      render();
+      onViewportChangedRef.current(
+        bboxForFit({ target: [0, 0], zoom, centerX: targetX, centerY: targetY }, frame.originX, frame.originY, widthPx, heightPx)
+      );
+      return true;
+    }
+
+    registerE2eHook("e2eSetViewState", applyDeterministicE2eViewState);
+    registerE2eHook("e2eSetViewStateCallCount", async () => e2eSetViewStateCallCount);
+    return () => {
+      unregisterE2eHook("e2eSetViewState");
+      unregisterE2eHook("e2eSetViewStateCallCount");
+    };
+  }, []);
+
+  // M1/M3/M7/S7 (viewport-residency cut P1b): the persistent per-step render-tick hook itself is now
+  // `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` on the imperative handle above (see
+  // `firstPixelArmedRef`'s own doc comment for the live-verified remount race that moved it there
+  // from a self-registered E2E hook) -- `App.tsx`'s persistent top-level effect is what registers
+  // `residencyArmFirstPixel`/`residencyDisarmFirstPixel` and proxies to whichever `WorkingCanvas`
+  // instance is CURRENTLY mounted. This unmount cleanup only guards against a leaked watchdog timer
+  // outliving this instance (belt-and-suspenders, matching this file's other `return () => ...`
+  // cleanups) -- `restoreFirstPixelHookToNoop`'s own `deckRef.current?.` guard already makes calling
+  // it after `deck.finalize()` harmless regardless.
+  useEffect(() => {
+    return () => clearFirstPixelWatchdog();
   }, []);
 
   return (

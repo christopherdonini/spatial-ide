@@ -71,6 +71,53 @@ export function traceResidency(
   console.debug(PREFIX, "residency", { event, streamHandle, batchSeq, vertexDelta, residentTotalBefore, residentTotalAfter, refused });
 }
 
+/** Viewport-residency cut P3w items C/D: one line per candidate-arm tile batch ingest --
+ * `tileResidentSet.ts`'s own dedupe (`duplicatesDropped`) and `tileIngest.ts`'s own eviction/budget
+ * decision (`evictedTileKeys`, `overBudget`), console-visible the same way `traceResidency` already
+ * makes baseline's ledger visible.
+ *
+ * P5f complex-gate should-fix 6 (superseding the prior "never gated" framing this comment used to
+ * carry): the CALL SITE (`WorkingCanvas.tsx`'s `pushTileBatch`) now gates this behind
+ * `isInstrumentedBuild()`, unlike every other function in this file -- one line per tile batch is a
+ * real trace-volume cost non-instrumented builds never needed, and this event's own kind
+ * (`"tile-ingest"`) is not one of `residency-harness.mjs`'s own `FIELD_SEQUENCE_EVENTS`
+ * (`["viewport_query", "stream-issued", "batch"]`), so gating it does not change what the dual-arm
+ * identity guard compares. This function itself is unchanged (still an unconditional `console.debug`
+ * -- the gate lives at the call site, matching how `instrument/residencyInstrument.ts`'s own
+ * `record*` functions are always gated by their CALLERS, never internally). */
+export function traceTileIngest(
+  tileKey: string,
+  rowsAdmitted: number,
+  duplicatesDropped: number,
+  evictedTileKeys: readonly string[],
+  overBudget: boolean
+): void {
+  console.debug(PREFIX, "tile-ingest", { tileKey, rowsAdmitted, duplicatesDropped, evictedTileKeys, overBudget });
+}
+
+/** Viewport-residency cut P4 (decisions 24(a)/(b)), item C: one line per candidate-arm
+ * `.residency-status` recomputation (`candidateArmSession.ts`'s own `emitResidencyStatus`) --
+ * `evictedTileCountSession` is the SESSION-CUMULATIVE eviction count (not one batch's own
+ * `evictedTileKeys.length`, which `traceTileIngest` above already carries per call), so a
+ * diagnosis session can read "how many tiles has this whole session evicted so far" off one line
+ * rather than summing every `tile-ingest` line itself. This is the console-only diagnostic
+ * counterpart to the user-facing `.residency-status` text (item C's own words: "the status line IS
+ * the visibility -- no tile readout"), never a second UI surface.
+ *
+ * P5f complex-gate should-fix 6: the CALL SITE (`candidateArmSession.ts`'s `emitResidencyStatus`) now
+ * gates this behind `isInstrumentedBuild()`, matching `traceTileIngest`'s own identical fix above and
+ * for the same reason -- this event's own kind (`"candidate-residency-status"`) is not one of
+ * `residency-harness.mjs`'s own `FIELD_SEQUENCE_EVENTS`, so gating it does not change the dual-arm
+ * identity guard's own coverage. */
+export function traceCandidateResidencyStatus(
+  dataset: string,
+  overBudget: boolean,
+  residentFeatureCount: number,
+  evictedTileCountSession: number
+): void {
+  console.debug(PREFIX, "candidate-residency-status", { dataset, overBudget, residentFeatureCount, evictedTileCountSession });
+}
+
 /** One line per `WorkingCanvas` mount/unmount, naming the dataset handle it was keyed on (D4's
  * remount fix, `App.tsx`) -- lets a session's ledger show exactly how many canvas instances
  * existed and which dataset each owned, without inferring it from `"push"`/`"clear"` lines alone. */
