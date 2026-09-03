@@ -325,5 +325,3 @@ human's ruling (accept, with binding debt), and both discharge conditions (Part 
 cells) are all on record. ADR-011 itself remains Proposed and unmeasured on every other item and
 gate (1–7) — this closes gate 8 only, per its own original text: *"what replaces whole-dataset
 residency for the 5 GB case"* — the answer is this ADR's own Decision, now Accepted.
-recurs; it has no purchase on a tile being admitted for the first time. Zoom-to-layer's tail
-needs its own, different lever, not named here.
