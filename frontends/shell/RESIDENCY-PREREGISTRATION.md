@@ -679,13 +679,14 @@ number, and no gesture/settle protocol).** The DECISIONS-PENDING entry-31 attrib
 (`spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`) traced three instrument defects;
 the human ordered them fixed before any further attribution runs. This amendment records
 what changed, the Amendment-21 evidence-shape class: **(1)** the §6 segment clamp tightens —
-`queryToFirstByteMs` clamps at `<= 0` (exactly-0 is the cross-step arrival-before-issue chain
-inside one clock quantum, never a measurement; distinct reason `"cross-step-stream-zero"`);
+`queryToFirstByteMs` clamps at `<= 0` (exactly-0 is the in-chain arrival-then-issue delivery
+stamping both marks in one clock quantum — within one step, not a step-boundary straddle —
+never a measurement; distinct reason `"issue-arrival-same-quantum"`);
 `decodedToPaintedMs` is nulled iff the step's issue record postdates its decode record (the
 only shape where the span contains the issue-wait rather than paint — in-chain rows' genuine
-paint values are kept); `firstPixelCrossStepSuspect: true` flags a cross-step row's
-`firstPixelMs` as arrival→paint rather than query→paint (flagged, not nulled — it is §6-gated
-and stays reported). Applies from this commit forward; every already-recorded evidence file is
+paint values are kept); `firstPixelCrossStepSuspect: true` flags such a row's
+`firstPixelMs` as NOT query→paint — its baseline is the late/at-arrival issue stamp (flagged,
+not nulled — it is §6-gated and stays reported; emitted only when a `firstPixelMs` exists). Applies from this commit forward; every already-recorded evidence file is
 unchanged and P8/P10/P12's scored readings are not re-derived. **(2)** Every evidence file now
 also records `wireTraceLines` (the wire-relevant console lines with driver-receipt `at` stamps,
 declared a proxy in-band via `wireTraceTimestampBasis`) — passive, write-time only. **(3)** An

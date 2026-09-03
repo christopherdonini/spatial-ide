@@ -999,6 +999,10 @@ async function measureOneStep(
     counters: result ? result.counters : undefined,
     firstPixelMs: result ? result.firstPixelMs : undefined,
     firstPixelReason: result ? result.firstPixelReason : undefined,
+    // Entry 31, re-review S-A: the cross-step suspect flag qualifies the GATED headline above
+    // (not a segment), so it lands beside it -- without this line the flag exists only in unit
+    // tests and never reaches the evidence file the next attribution pass reads.
+    firstPixelCrossStepSuspect: result ? result.firstPixelCrossStepSuspect : undefined,
     // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the three
     // per-step sub-spans, REPORTED-BESIDE `firstPixelMs` above, never gated -- `undefined` (not a
     // fabricated null) whenever `residencyEndStep` itself was never called (hooks off/no result),

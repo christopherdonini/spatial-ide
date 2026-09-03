@@ -451,14 +451,16 @@ standings, split deliberately (this change's own reviewer gate, should-fix 7):**
   (drops `cumulativeVertices`; `streamHandle` survives, which is all the join needs). Recorded as
   `RESIDENCY-PREREGISTRATION.md` Amendment 24, the Amendment-21 evidence-shape class.
 - **Always-on, value-affecting, Amendment 24:** the instrument's segment clamp is tightened
-  (entry 31 fixes 1-2): `queryToFirstByteMs` clamps at `<= 0` (a 0 is the cross-step
-  arrival-before-issue chain landing in one clock quantum, never a measurement -- reason
-  `"cross-step-stream-zero"`, distinct from the negative case); `decodedToPaintedMs` is nulled
+  (entry 31 fixes 1-2): `queryToFirstByteMs` clamps at `<= 0` (a 0 is the IN-CHAIN
+  arrival-then-issue delivery stamping both marks in one clock quantum -- within one step, not a
+  step-boundary straddle -- never a measurement; reason `"issue-arrival-same-quantum"`, distinct
+  from the negative case); `decodedToPaintedMs` is nulled
   iff the step's issue record POSTDATES its decode record (only then does the span measure
   decode -> issue-wait -> frame -- P12's 13.6s/16.4s mislabels -- while the in-chain quantum
   rows' 15-501ms paint values are genuine and KEPT); and `firstPixelCrossStepSuspect: true`
-  flags a cross-step row's `firstPixelMs` as arrival->paint rather than query->paint, flagged
-  not nulled. **This is NOT diagnosis-only: it changes the segment values every future run
+  flags such a row's `firstPixelMs` as NOT query->paint (its baseline is the late/at-arrival
+  issue stamp), flagged not nulled, and only when a `firstPixelMs` exists to suspect. **This is
+  NOT diagnosis-only: it changes the segment values every future run
   reports**, disclosed via the amendment; past evidence files are unchanged.
 - **Opt-in, measurement-conditions-changing:** `--per-stream-trace` enables a ~1s queue-depth
   sampler (`queueDepthSamples`: `{at, inFlight, queued}` via the existing E2E hooks, awaited --

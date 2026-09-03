@@ -351,15 +351,17 @@ describe("ResidencyInstrumentCore -- pure state machine, synthetic clock", () =>
       expect(result!.firstPixelMs).toBe(15); // 1015 - 1000 -- this stamp is not itself clamped by S5
     });
 
-    it("entry-31 fix (1): queryToFirstByteMs of exactly 0 (arrival and issuance in one clock quantum -- P12's two impostor rows) clamps to null with the DISTINCT reason cross-step-stream-zero", () => {
+    it("entry-31 fix (1): queryToFirstByteMs of exactly 0 (arrival and issuance in one clock quantum -- P12's two impostor rows) clamps to null with the DISTINCT reason issue-arrival-same-quantum", () => {
       const core = new ResidencyInstrumentCore();
       core.beginStep("fit", 0);
       core.recordStreamIssued(1000);
       core.recordBatchArrived(1000); // same quantum -- the arrival-before-issue chain's degenerate case
       const result = core.endStep();
       expect(result!.queryToFirstByteMs).toBeNull();
-      expect(result!.queryToFirstByteReason).toBe("cross-step-stream-zero"); // distinguishable from the negative case post hoc
-      expect(result!.firstPixelCrossStepSuspect).toBe(true); // should-fix 5: the gated headline is flagged too
+      expect(result!.queryToFirstByteReason).toBe("issue-arrival-same-quantum"); // distinguishable from the negative case post hoc
+      // Flag gated on a non-null headline: this step has no accepted batch/frame, so there is no
+      // firstPixelMs to suspect -- the flag stays absent (re-review nit: no flag on an absent value).
+      expect(result!.firstPixelCrossStepSuspect).toBeUndefined();
     });
 
     it("entry-31 fix (2), the mechanism-true corrupt shape (P12's zoom-in-3: issue POSTDATES decode by seconds): decodedToPaintedMs nulled, firstByteToDecodedMs kept, firstPixel flagged suspect", () => {
@@ -379,7 +381,9 @@ describe("ResidencyInstrumentCore -- pure state machine, synthetic clock", () =>
       expect(result!.decodedToPaintedReason).toBe("cross-step-stream");
       expect(result!.firstByteToDecodedMs).toBe(5); // decode of that same batch -- real, kept
       expect(result!.firstPixelMs).toBe(191); // P12's own recorded value for this shape
-      expect(result!.firstPixelCrossStepSuspect).toBe(true); // flagged: arrival->paint, not query->paint
+      // Flagged: fp's baseline is the LATE issue stamp (191ms = late-issue->paint; true
+      // arrival->paint here would be ~13.6s) -- not query->paint either way (re-review S-B).
+      expect(result!.firstPixelCrossStepSuspect).toBe(true);
     });
 
     it("entry-31 fix (2), the in-chain quantum shape (P12's pan-east: issue PRECEDES decode): decodedToPaintedMs SURVIVES as a genuine paint measurement -- the reviewer's must-fix 2 case", () => {
