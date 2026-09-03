@@ -16,9 +16,17 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     re-review's corrected predicate; `firstByteToDecodedMs` deliberately kept — a real decode
     cost, and 0 is legitimate there), fix 3 as the pass's harness-only design (`wireTraceLines`
     always persisted at write time; `--per-stream-trace` opt-in queue-depth sampler, declared in
-    `cell.perStreamTraceEnabled` as a measurement-conditions change). Unit tests added; the
-    clean-instrument attribution run and the nulls-symptom answer follow as their own step.
-    Original entry below, kept for the record.]**
+    `cell.perStreamTraceEnabled` as a measurement-conditions change). Unit tests added; four
+    reviewer passes (first FAILED 2 must-fix, second FAILED 1 must-fix, third FAILED the
+    append-only must-fix, fourth affirmative PASS). RESIDENCY-PREREGISTRATION.md Amendments 24-25
+    record it. **The nulls-symptom question is ANSWERED structurally** (ATTRIBUTION-PASS.md §7):
+    the nulls are a symptom of the per-step one-shot instrument DESIGN, not of the clamp bug the
+    fix removed — a clean re-run would show MORE nulls (~10 of 12), because the fix converts the
+    two former `0`-impostors into honest nulls. **The empirical clean-instrument run is QUEUED,
+    not run** (ATTRIBUTION-PASS.md §8): it collects client-clock quantities, so 24(g)'s
+    "no RustDesk measurement, ever / headed foreground physical time" reserves it for the next
+    headed sitting (RustDesk was up at the human's request; custodian unattended). Original entry
+    below, kept for the record.]**
     **[Instrument defects, surfaced 2026-09-03 by the entry-28 attribution pass — promoted per
     the standing "open defects don't live only in walkthrough logs" instruction.]** Three
     related defects in the residency instrument's per-step segment capture, all traced in

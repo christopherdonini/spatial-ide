@@ -133,3 +133,47 @@ for queue depth. DEV-gated E2E hooks for `trackedTileCount`/`overBudget` (getter
 unexported) would be instrument-surface additions inside product files — the project's own
 established class, but declare them as such if taken. Kernel-internal timing (SQL vs. Arrow
 encode) is genuinely product-side and **not needed** for the renderer-vs-server module decision.
+
+## 7. Were the null `queryToFirstByteMs` values themselves a symptom? (2026-09-03, the entry-31 clean-instrument question, answered structurally)
+
+The human asked, ordering the instrument fixes: **"note whether the null `queryToFirstByteMs`
+values were themselves a symptom."** With the instrument now repaired (entry 31 / Amendments
+24-25), the answer is decidable from the fixed code alone, and it is counter-intuitive:
+
+**The nulls are a symptom — of the per-step, one-shot instrument DESIGN, not of the clamp bug the
+fix removed. The fix does not reduce the null count; on a clean re-run it would INCREASE it.**
+
+The eight nulls in the P12 file come from two mechanisms (§1-2 above), both at
+`residencyInstrument.ts:462-465` and the negative-span clamp:
+- **`no-batch` (4 rows):** the step issued streams but its first batch arrived in a *later* step's
+  window — at 5 GB a per-tile round trip routinely exceeds a step's own wall. Untouched by the fix.
+- **`cross-step-stream` (4 rows, negative raw span):** the step's first batch belonged to a stream
+  whose lifetime spanned the step boundary. Untouched by the fix (the `< 0` branch is unchanged).
+
+The entry-31 fix changed only three things, none of which adds a first-byte capture, changes
+`beginStep`'s per-step reset, or alters how streams are counted: (1) the `queryToFirstByteMs` clamp
+went `< 0` → `<= 0`, which **converts the two former `0`-value impostors into honest nulls** (reason
+`issue-arrival-same-quantum`); (2) `decodedToPaintedMs` gains the paint-arm-delayed null; (3) the
+`firstPixelCrossStepSuspect` flag. So a clean-instrument re-run would show roughly **10 nulls of 12,
+not fewer** — the 8 structural nulls unchanged, plus the 2 ex-impostors now correctly null. Fewer
+*apparent measurements*, more *honest nulls*: the fix makes the instrument tell the truth about how
+little of the 5 GB trace its per-step segments can attribute, it does not make them attribute more.
+
+**Consequence:** the nulls are not a bug a re-run retires — they are the per-step design meeting a
+workload whose stream lifetimes span step boundaries. Only the harness-only per-stream join (§6,
+now enabled by `wireTraceLines` + the session-log terminals) actually attributes that traffic. This
+is exactly why the module-level verdict (§4, "upstream of paint") rests on the per-stream/session-log
+evidence and the direct records, never on the per-step segment nulls.
+
+## 8. The empirical clean-instrument run — QUEUED for a headed session, not run 2026-09-03
+
+The structural answer above needs no run. An empirical clean-instrument trial (candidate/fine/cold,
+`--per-stream-trace`, against the 5 GB fixture) would additionally *demonstrate* the per-stream join
+end-to-end and confirm the ~10-of-12 null prediction — worth having, but **it collects client-clock
+quantities (frame series, first-pixel), and decision 24(g) reserves headed measurement for the
+human's foreground physical time with RustDesk stopped ("no RustDesk measurement, ever").** At the
+time of writing the custodian is running unattended with RustDesk active (started at the human's own
+request), so running the trial now would both violate 24(g) and yield a conditions-compromised file.
+It is therefore queued for the next headed foreground sitting (rule-11 batch), RustDesk stopped —
+alongside K6's own E2E step (entry 29) and whatever else that sitting carries. The instrument it will
+run on is the repaired one on this branch; nothing else blocks it but the conditions.
