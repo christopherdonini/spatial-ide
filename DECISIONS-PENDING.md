@@ -5,6 +5,54 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+28. **[LOD problem-statement gap, surfaced 2026-09-03 drafting the LOD brief from 1a's findings —
+    NOT decided here.]** The architect consult that scoped this cut (`a8f4c2c0cb1ff80ed`,
+    2026-09-02) named a "wrong-module check" as a precondition for the LOD brief: P12's own
+    per-tile arithmetic (arithmetic, not measurement — pan-east ~1s/tile, pan-northeast ~3.3s/tile,
+    zoom-to-layer 152s/70 tiles, against a ~92ms Polygons-scale first-batch-paint mean) suggests
+    the 5 GB wall is query/producer-side, not client-paint-side — meaning a renderer-side LOD
+    slice (client decimation) may be aimed at the wrong module entirely; server-side aggregation
+    or import-time overview tiers might be the real lever. The consult's own recommendation was
+    "1a is what tells you whether this is true; do not write the LOD brief before it." **1a's own
+    three-question scope, as the human explicitly dispatched it (queue disposition; finding-3
+    pressure-valve-vs-thrash; pan-west's recoverable fraction), did not include this check** — it
+    answers different questions and none of its findings bear on query-vs-paint attribution. The
+    LOD problem-statement draft below (`NEXT-CUT.md`) is therefore drafted with this gap named
+    explicitly, not silently assumed answered. Recommendation: **your call** — either (a)
+    authorize a small, additional read-only diagnosis pass specifically on this attribution
+    question before the LOD brief is treated as final (cheapest: re-check whether a fresh
+    instrumented run could populate `queryToFirstByteMs` for the 3-of-12 P12 steps that came back
+    `null`, or find another way to attribute the 150s window's own time), or (b) accept the LOD
+    problem statement with this named as an explicit, re-deferred open question the LOD cut's own
+    preregistration must answer before its architecture is chosen. Touches, if (a): a further
+    spike, no product code. Touches, if (b): nothing now: the LOD brief's own Q2 ("where does the
+    reduction happen") carries the flag forward.
+
+27. **[Finding 3 — the second undeclared eviction exception — amendment vs. fix, due at 1b per
+    ADR-028's own text, informed by the 1a diagnosis spike (`spikes/viewport-residency-1a-diagnosis/README.md`,
+    2026-09-03) — NOT decided here.]** 1a's Q2 traced the mechanism precisely: during over-budget,
+    `onCameraChange`'s per-round protected-set computation (`tileViewportStreamManager.ts:290-299,328-340`
+    + `candidateArmSession.ts:454,726`) omits durably-partial, currently-untracked covering tiles,
+    so they are evictable despite intersecting the viewport — a second, undeclared exception to
+    ADR-028's "never evict a tile intersecting the current viewport" (its own architect-gate
+    clarification 3 names exactly one, the dedupe-owner cascade). 1a could establish, from code
+    structure alone, that the freed budget is used productively and immediately (`tileIngest.ts:117-151`,
+    same synchronous call) — the "pressure valve" half. It could **not** establish, without a
+    runtime trace, how often an evicted partial tile's content visibly disappears from view before
+    a later pan happens to re-cover and re-admit it — the "thrash" half stays unmeasured, not
+    guessed. The architect's own drafted skeleton (consult `a8f4c2c0cb1ff80ed`, §"Drafted
+    skeletons: A") frames the two options plainly: **(i)** declare both as intended behaviour,
+    amending clarification 3 to name the second exception and the partiality/budget-flag coupling
+    it rides on (`WorkingCanvas.tsx:1112-1119`); or **(ii)** class them as defects owed a fix in
+    1b, which would also make ADR-028's already-accepted gate-8 evidence non-comparable for any
+    future arm and carry a re-measure obligation under the same preregistered protocol (Amendment
+    19's same-session-baseline precedent). Recommendation: **your call, no default assumed** — 1a's
+    evidence supports either reading (it neither proves the exception harmless nor proves it
+    costly); the consult itself calls this "an ADR-028 amendment question, human's call, not a
+    worker's." Touches, if (i): an ADR-028 amendment, append-only. Touches, if (ii): 1b's own
+    scope gains a fix item at `tileResidentSet.ts:426-482`/`tileViewportStreamManager.ts:290-340`,
+    plus the re-measure obligation.
+
 25. **[Rule-7 item, surfaced 2026-09-02 while applying entry 10's ADR-026 acceptance — NOT
     decided by that ruling.]** ADR-026's own "Architect note for acceptance" section (filed
     2026-08-18, unresolved) flags one wording question left explicitly "the human's": the
