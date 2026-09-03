@@ -402,7 +402,7 @@ question is closed.
 ## Residency measurement harness (viewport-residency cut, P1/P1b)
 
 ```
-npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate] [--tile-size coarse|medium|fine]
+npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate] [--tile-size coarse|medium|fine] [--fixture <path>] [--per-stream-trace]
 ```
 
 `e2e/residency-harness.mjs` -- `RESIDENCY-PREREGISTRATION.md` is this suite's ENTIRE spec (§4b the
@@ -435,6 +435,38 @@ browser launch. Omitted entirely, a candidate-arm run keeps today's implicit def
 ACTUAL level the run established (`evidence.gridFrame.level`, `TileViewportStreamManager.activeLevel`)
 -- not merely what was requested -- `null` for the baseline arm or a run whose grid frame never
 established.
+
+**Entry 31 (2026-09-03, post-campaign) -- three additions with three different protocol
+standings, split deliberately (this change's own reviewer gate, should-fix 7):**
+
+- **Always-on, passive, Amendment 24:** every run now persists `wireTraceLines` (the
+  wire-relevant `viewport_query`/`stream-issued`/`batch` console lines the harness already
+  captured, with `at` stamps -- copied at write time, zero run-time effect) plus
+  `wireTraceTimestampBasis` declaring `at` as a driver-receipt-time PROXY (Playwright delivery,
+  not page emit -- fine at seconds scale, never a wire timing), so an offline pass can join
+  per-stream lifecycles against the Rust session log's `candidate-tile-terminal` lines: the
+  cross-step attribution the per-step segments structurally cannot express (the P12 finding, the
+  attribution pass §6). Size note: a P12-shaped run carries ~2-3k wire lines, growing the
+  evidence file by roughly half a MB; the captured `batch` text is Chromium's console preview
+  (drops `cumulativeVertices`; `streamHandle` survives, which is all the join needs). Recorded as
+  `RESIDENCY-PREREGISTRATION.md` Amendment 24, the Amendment-21 evidence-shape class.
+- **Always-on, value-affecting, Amendment 24:** the instrument's segment clamp is tightened
+  (entry 31 fixes 1-2): `queryToFirstByteMs` clamps at `<= 0` (a 0 is the cross-step
+  arrival-before-issue chain landing in one clock quantum, never a measurement -- reason
+  `"cross-step-stream-zero"`, distinct from the negative case); `decodedToPaintedMs` is nulled
+  iff the step's issue record POSTDATES its decode record (only then does the span measure
+  decode -> issue-wait -> frame -- P12's 13.6s/16.4s mislabels -- while the in-chain quantum
+  rows' 15-501ms paint values are genuine and KEPT); and `firstPixelCrossStepSuspect: true`
+  flags a cross-step row's `firstPixelMs` as arrival->paint rather than query->paint, flagged
+  not nulled. **This is NOT diagnosis-only: it changes the segment values every future run
+  reports**, disclosed via the amendment; past evidence files are unchanged.
+- **Opt-in, measurement-conditions-changing:** `--per-stream-trace` enables a ~1s queue-depth
+  sampler (`queueDepthSamples`: `{at, inFlight, queued}` via the existing E2E hooks, awaited --
+  they are async -- with a runtime type guard so a serialization regression counts as
+  `queueDepthSampleErrors`, never an impostor sample) -- an extra `page.evaluate` per tick, so it
+  is opt-in and declared in `cell.perStreamTraceEnabled` (the EFFECTIVE value; gated off in
+  `--control`/`--wire-identity`, with `cell.perStreamTraceRequested` beside it); never use such
+  a cell for scored protocol readings.
 
 **M7 -- the `open-drain` pre-step.** Before step 1 ("fit") ever runs, this driver measures the
 dataset OPEN's own natural query + first-batch paint (G7's real "cold first view" subject) as its own

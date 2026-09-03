@@ -672,3 +672,24 @@ all three gates (G3/G4/G7) RE-SCORED in full — the prior campaign's scored sec
 the record of the pre-fix candidate, never averaged with the re-measure; **(3)** the gate-8
 ruling happens on the re-measure's evidence. Dev-build smoke paint-segment deltas guide the
 fix's development but are directional only, never quoted as results.
+
+**Amendment 24 (2026-09-03 — MADE AFTER ALL SCORED RESULTS WERE SEEN; entry-31 instrument
+repairs and the per-stream evidence-shape addition; changes no scored gate, no scored
+number, and no gesture/settle protocol).** The DECISIONS-PENDING entry-31 attribution pass
+(`spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`) traced three instrument defects;
+the human ordered them fixed before any further attribution runs. This amendment records
+what changed, the Amendment-21 evidence-shape class: **(1)** the §6 segment clamp tightens —
+`queryToFirstByteMs` clamps at `<= 0` (exactly-0 is the cross-step arrival-before-issue chain
+inside one clock quantum, never a measurement; distinct reason `"cross-step-stream-zero"`);
+`decodedToPaintedMs` is nulled iff the step's issue record postdates its decode record (the
+only shape where the span contains the issue-wait rather than paint — in-chain rows' genuine
+paint values are kept); `firstPixelCrossStepSuspect: true` flags a cross-step row's
+`firstPixelMs` as arrival→paint rather than query→paint (flagged, not nulled — it is §6-gated
+and stays reported). Applies from this commit forward; every already-recorded evidence file is
+unchanged and P8/P10/P12's scored readings are not re-derived. **(2)** Every evidence file now
+also records `wireTraceLines` (the wire-relevant console lines with driver-receipt `at` stamps,
+declared a proxy in-band via `wireTraceTimestampBasis`) — passive, write-time only. **(3)** An
+opt-in `--per-stream-trace` mode adds a ~1s queue-depth sampler; it is a measurement-conditions
+change, declared per-cell (`cell.perStreamTraceEnabled`), and a cell carrying it is never used
+for scored protocol readings. Nothing in this amendment alters §4b gestures, §7 watchdogs, §8
+standing rules, or any G1–G7 definition.

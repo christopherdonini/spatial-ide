@@ -350,6 +350,82 @@ describe("ResidencyInstrumentCore -- pure state machine, synthetic clock", () =>
       expect(result!.decodedToPaintedReason).toBe("cross-step-stream");
       expect(result!.firstPixelMs).toBe(15); // 1015 - 1000 -- this stamp is not itself clamped by S5
     });
+
+    it("entry-31 fix (1): queryToFirstByteMs of exactly 0 (arrival and issuance in one clock quantum -- P12's two impostor rows) clamps to null with the DISTINCT reason cross-step-stream-zero", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000);
+      core.recordBatchArrived(1000); // same quantum -- the arrival-before-issue chain's degenerate case
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBeNull();
+      expect(result!.queryToFirstByteReason).toBe("cross-step-stream-zero"); // distinguishable from the negative case post hoc
+      expect(result!.firstPixelCrossStepSuspect).toBe(true); // should-fix 5: the gated headline is flagged too
+    });
+
+    it("entry-31 fix (2), the mechanism-true corrupt shape (P12's zoom-in-3: issue POSTDATES decode by seconds): decodedToPaintedMs nulled, firstByteToDecodedMs kept, firstPixel flagged suspect", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      // P12 zoom-in-3's true ordering: a cross-step batch arrives and decodes long before this
+      // step records ANY issue; the paint stamp cannot arm until the late issue record lands.
+      core.recordBatchArrived(1000);
+      core.recordBatchDecoded(1005);
+      core.recordBatch(10, 100, false); // accepted -- arms firstBatchArrived
+      core.recordStreamIssued(14431); // 13.4s later -- the "waiting for any issue record" wait
+      core.recordFrame(14622);
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBeNull(); // raw -13431
+      expect(result!.queryToFirstByteReason).toBe("cross-step-stream");
+      expect(result!.decodedToPaintedMs).toBeNull(); // would be 13617 unfixed -- decode->issue-wait->frame, not paint
+      expect(result!.decodedToPaintedReason).toBe("cross-step-stream");
+      expect(result!.firstByteToDecodedMs).toBe(5); // decode of that same batch -- real, kept
+      expect(result!.firstPixelMs).toBe(191); // P12's own recorded value for this shape
+      expect(result!.firstPixelCrossStepSuspect).toBe(true); // flagged: arrival->paint, not query->paint
+    });
+
+    it("entry-31 fix (2), the in-chain quantum shape (P12's pan-east: issue PRECEDES decode): decodedToPaintedMs SURVIVES as a genuine paint measurement -- the reviewer's must-fix 2 case", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      // Pan-east's true ordering: arrival, then issue 1 quantum later IN the same delivery chain,
+      // then decode, then paint. The paint stamp was armable at decode time -- the 15ms below is
+      // real paint, and nulling it would have destroyed the attribution pass's own evidence.
+      core.recordBatchArrived(1000);
+      core.recordStreamIssued(1001); // raw q2b = -1: cross-step SIGN fires...
+      core.recordBatchDecoded(1013);
+      core.recordBatch(10, 100, false);
+      core.recordFrame(1028);
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBeNull();
+      expect(result!.queryToFirstByteReason).toBe("cross-step-stream");
+      expect(result!.decodedToPaintedMs).toBe(15); // ...but issue(1001) < decode(1013): genuine paint, KEPT
+      expect(result!.decodedToPaintedReason).toBeUndefined();
+      expect(result!.firstPixelCrossStepSuspect).toBe(true);
+    });
+
+    it("entry-31 fix boundary: firstByteToDecodedMs of exactly 0 SURVIVES (decode is synchronous with arrival -- same quantum is legitimate, the zero-clamp is queryToFirstByteMs-only)", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000);
+      core.recordBatchArrived(1200);
+      core.recordBatchDecoded(1200); // same quantum -- expected for synchronous decode
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBe(200); // a positive span is untouched
+      expect(result!.firstByteToDecodedMs).toBe(0); // legitimate, not clamped
+      expect(result!.firstByteToDecodedReason).toBeUndefined();
+    });
+
+    it("entry-31 fix boundary: a positive queryToFirstByteMs leaves decodedToPaintedMs alone -- the propagation fires only on the cross-step signature", () => {
+      const core = new ResidencyInstrumentCore();
+      core.beginStep("fit", 0);
+      core.recordStreamIssued(1000);
+      core.recordBatchArrived(1200);
+      core.recordBatchDecoded(1210);
+      core.recordBatch(10, 100, false);
+      core.recordFrame(1250);
+      const result = core.endStep();
+      expect(result!.queryToFirstByteMs).toBe(200);
+      expect(result!.decodedToPaintedMs).toBe(40);
+      expect(result!.decodedToPaintedReason).toBeUndefined();
+    });
   });
 
   describe("P3i: tilesRequested/duplicatesDropped/evictionsApplied counters", () => {

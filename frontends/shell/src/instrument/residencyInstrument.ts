@@ -110,7 +110,10 @@
  * per M1's existing rule: zero ACCEPTED batches) beside real, non-null `queryToFirstByteMs`/
  * `firstByteToDecodedMs` (that first batch genuinely arrived and decoded); there is no partial or
  * mismatched sum to observe, because the fourth operand the sum would need (`firstPixelAtMs`) is
- * itself null in that case.
+ * itself null in that case. **Entry 31 (2026-09-03): the sum is additionally unavailable in any
+ * row where the S5/entry-31 clamps fired** (reasons `"cross-step-stream"`/`"cross-step-stream-zero"`
+ * on any span) -- the clamps null one or two of the three terms in exactly those rows, so a scorer
+ * checking B1 must skip clamped rows rather than reading the missing terms as zero.
  *
  * **P3i-b B2 (the real divergence -- a MISLABELING, not a missing sum): mixed refused-then-accepted
  * batches.** When the step's first batch is REFUSED but a LATER batch within the SAME step is the
@@ -217,8 +220,21 @@ export type FirstPixelReason = "no-query" | "no-batch" | "no-paint";
  * the "earlier" one's: structurally impossible within one step's own consistent ordering, but not
  * something this pure state machine can itself prevent if ever fed timestamps whose stream/batch
  * pair straddled a step boundary. Guarded in `endStep` (clamped to `null` with this reason), never
- * asserted unreachable outright -- believed unreachable in a clean trial, per S5's own report. */
-export type SegmentReason = FirstPixelReason | "cross-step-stream";
+ * asserted unreachable outright -- believed unreachable in a clean trial, per S5's own report.
+ * **DECISIONS-PENDING entry 31 fix (2026-09-03): extended with `"cross-step-stream-zero"`**, for
+ * `queryToFirstByteMs` only -- the S5 pathology's degenerate case where arrival and issuance land
+ * in the SAME ~100us clock quantum, producing a delta of exactly 0 that the `< 0` clamp let
+ * through as an apparent measurement (two such impostors sit in the P12 evidence file). A genuine
+ * 0 is unreachable for THIS span: the issue stamp is recorded after the `viewport_query` mint and
+ * `dataPlaneAttach` awaits have already resolved, so a genuine span still covers the server
+ * producing and delivering the stream's first data frame -- the smallest clean value on record is
+ * ~200ms, and no reachable path produces a legitimate same-quantum pair (this change's own
+ * reviewer gate checked, including a new stream's issue coinciding with an OLDER stream's arrival
+ * -- still not a measurement). So 0 is always the cross-step signature. The other two spans keep
+ * their `< 0`-only clamps deliberately: 0 is legitimate for `firstByteToDecodedMs` (decode is
+ * synchronous with arrival -- same quantum is expected) and not provably impostor for
+ * `decodedToPaintedMs` (a frame callback can fire within one quantum of decode). */
+export type SegmentReason = FirstPixelReason | "cross-step-stream" | "cross-step-stream-zero";
 
 export interface ResidencyStepResult {
   stepId: string;
@@ -267,11 +283,24 @@ export interface ResidencyStepResult {
    * file's own top doc comment has the full account, including B2's mixed-batch mislabeling case,
    * where the sum still holds but `decodedToPaintedMs` no longer means only "paint"). Recorded for a
    * scorer to check, never enforced by this module -- see `segmentsSpanSingleBatch` for whether this
-   * step's own labels can be trusted at face value. */
+   * step's own labels can be trusted at face value. **Entry 31 (2026-09-03): the telescoping sum no
+   * longer holds in a row where a clamp fired** -- the clamps below null one or two of the three
+   * terms in exactly the cross-step rows; a scorer checking the B1 sum must skip rows carrying any
+   * `"cross-step-stream"`/`"cross-step-stream-zero"` reason. */
   decodedToPaintedMs: number | null;
-  /** Mirrors `firstPixelReason` exactly -- this span's own numerator is `firstPixelMs`'s raw
-   * timestamp, so whatever kept `firstPixelMs` `null` keeps this `null` too, for the same reason. */
+  /** Historically mirrored `firstPixelReason` exactly (this span's own numerator is `firstPixelMs`'s
+   * raw timestamp). **Entry 31 (2026-09-03): no longer an exact mirror** -- the paint-arm-delayed
+   * clamp in `endStep` can null this span (reason `"cross-step-stream"`) while `firstPixelMs` is
+   * non-null and `firstPixelReason` is `undefined`. */
   decodedToPaintedReason?: SegmentReason;
+  /** Entry 31 (2026-09-03, reviewer should-fix 5): `true` iff this step's cross-step signature
+   * fired (raw `queryToFirstByteMs` <= 0 -- the step's first batch arrived at-or-before its first
+   * issue record). In such a row `firstPixelMs` -- a §6-GATED quantity, unlike the reported-only
+   * segments -- is computed against the same issue stamp the clamp just declared not a
+   * measurement: it reads as arrival->paint, not query->paint (P12's pan-northeast 513.6ms /
+   * zoom-to-layer 125.8ms). Flagged, not nulled: the value is still a real span on a real clock,
+   * it just does not mean what the M1 label says in this row. Absent (`undefined`) when clean. */
+  firstPixelCrossStepSuspect?: boolean;
   /** P3i-b B2 (instrument mini-review): `true` iff the batch that armed `firstBatchArrived` (the
    * step's first ACCEPTED batch, M1's own criterion) was ALSO the step's very first batch overall,
    * any fate -- i.e. `queryToFirstByteMs`/`firstByteToDecodedMs` (keyed on "first batch, any fate")
@@ -456,15 +485,39 @@ export class ResidencyInstrumentCore {
     // Applied last, after each span's own honest value/reason pair above is already computed, so a
     // clamp never has to re-derive anything -- it only ever downgrades an already-honest `{ms,
     // reason}` pair to a `{null, "cross-step-stream"}` one.
-    if (queryToFirstByteMs !== null && queryToFirstByteMs < 0) {
+    //
+    // Entry-31 fix (2026-09-03), two tightenings, both attribution-pass-traced
+    // (spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md §2), the second's predicate
+    // corrected by this change's own reviewer gate:
+    // (1) `queryToFirstByteMs`'s clamp is `<= 0`, not `< 0` -- a delta of exactly 0 is the same
+    //     arrival-before-issue call chain landing inside one clock quantum, never a measurement
+    //     (see `SegmentReason`'s doc comment for why 0 is impossible for this span alone).
+    // (2) `decodedToPaintedMs` is invalidated iff the step's issue record POSTDATES its decode
+    //     record: only then could the paint stamp not arm at decode time (`recordFrame`'s
+    //     `firstStreamIssuedAtMs !== null` guard), so the span measures "decode -> waiting for
+    //     any issue record -> next frame" -- 13.6s/16.4s in P12's zoom-in-3/zoom-out-1 rows --
+    //     not paint. The cross-step SIGN signature alone (raw span <= 0) does NOT imply this:
+    //     in P12's four in-chain quantum rows (pan-east, zoom-in-2, pan-northeast,
+    //     zoom-to-layer) the issue record precedes the decode, the stamp was armable on time,
+    //     and their decodedToPaintedMs values (15-501ms) are genuine paint measurements --
+    //     nulling those would have destroyed the very evidence the attribution pass's verdict
+    //     rests on (the reviewer's must-fix 2). `firstByteToDecodedMs` always stays: arrival ->
+    //     decode of that same batch is a real decode cost regardless of which step issued the
+    //     stream.
+    const crossStepDetected = queryToFirstByteMs !== null && queryToFirstByteMs <= 0;
+    const paintArmDelayed =
+      s.firstStreamIssuedAtMs !== null &&
+      s.firstBatchDecodedAtMs !== null &&
+      s.firstStreamIssuedAtMs > s.firstBatchDecodedAtMs;
+    if (crossStepDetected) {
+      queryToFirstByteReason = queryToFirstByteMs! < 0 ? "cross-step-stream" : "cross-step-stream-zero";
       queryToFirstByteMs = null;
-      queryToFirstByteReason = "cross-step-stream";
     }
     if (firstByteToDecodedMs !== null && firstByteToDecodedMs < 0) {
       firstByteToDecodedMs = null;
       firstByteToDecodedReason = "cross-step-stream";
     }
-    if (decodedToPaintedMs !== null && decodedToPaintedMs < 0) {
+    if (decodedToPaintedMs !== null && (decodedToPaintedMs < 0 || paintArmDelayed)) {
       decodedToPaintedMs = null;
       decodedToPaintedReason = "cross-step-stream";
     }
@@ -480,6 +533,7 @@ export class ResidencyInstrumentCore {
       firstByteToDecodedReason,
       decodedToPaintedMs,
       decodedToPaintedReason,
+      ...(crossStepDetected ? { firstPixelCrossStepSuspect: true } : {}), // entry 31, should-fix 5
       segmentsSpanSingleBatch: s.segmentsSpanSingleBatch, // P3i-b B2
       frameTimestamps: s.frameTimestamps,
       frameTimestampsTruncated: s.frameTimestampsTruncated,
