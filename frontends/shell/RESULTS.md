@@ -1114,7 +1114,10 @@ and `WorkingCanvas.tsx` directly, on four independent counts:
    fixed yet; resolution — amendment-with-rationale (declaring it intended, the pressure-valve
    reading) versus a fix (the thrash reading) — is decided from the debt slice's own 1a diagnosis
    phase, due at 1b. Not a blocker to ADR-028's own Accepted status; carried forward as named
-   open work, the same way the two Polygons-scale mechanisms are.
+   open work, the same way the two Polygons-scale mechanisms are. *(RESOLVED 2026-09-03, appended:
+   the human ruled option (i) on 1a's evidence — declared intended, ADR-028 Amendment 1, docs
+   only, with an explicit reopen condition: evidence of visible in-viewport holes attributable to
+   partial-covering eviction reopens it as a defect. See the amendment for the full record.)*
 4. **The camera-change over-budget recheck can never evict, and reduces to a pure partiality
    test.** `applyTileViewportContext` calls `planTileEviction` with `incomingVertices: 0`
    (`WorkingCanvas.tsx:1091`); since residency stays ≤ ceiling by construction (Amendment 21),

@@ -325,3 +325,35 @@ human's ruling (accept, with binding debt), and both discharge conditions (Part 
 cells) are all on record. ADR-011 itself remains Proposed and unmeasured on every other item and
 gate (1–7) — this closes gate 8 only, per its own original text: *"what replaces whole-dataset
 residency for the 5 GB case"* — the answer is this ADR's own Decision, now Accepted.
+
+## Amendment 1 — finding 3 resolved: the second eviction exception is declared (2026-09-03, appended — Accepted)
+
+**The human's ruling (DECISIONS-PENDING entry 27, 2026-09-03): option (i), amendment — the
+behaviour is declared intended, docs only, no code change.** This section extends architect-gate
+clarification 3 above (which it cannot rewrite — accepted ADRs are append-only): item 3's "never
+evict a tile intersecting the current viewport" now admits **two** declared exceptions, not one —
+
+1. **The dedupe-owner cascade** (clarification 3's original exception, unchanged).
+2. **Partial covering tiles during over-budget.** While `overBudgetFlag` holds without headroom,
+   the per-round protected-set computation includes only *complete* covering tiles — a durably
+   partial, currently-untracked covering tile falls out of the protected set and is evictable
+   despite intersecting the viewport. Mechanism traced in full by the 1a diagnosis spike
+   (`spikes/viewport-residency-1a-diagnosis/README.md`, Q2): the protected set is built from
+   `onCameraChange`'s per-round outcome arrays, which skip already-tracked tiles and drop
+   headroom-starved candidates, and whose `alreadyResident` routing is gated on tile
+   *completeness*, not mere residency. The eviction, when it fires, frees budget that is consumed
+   productively and immediately by the incoming admission in the same synchronous call — the
+   "pressure valve" half, code-provable.
+
+**The reopen condition, per the ruling:** the visible-regression half is unmeasured — 1a could
+not determine, without a runtime trace, how often an evicted partial covering tile's
+previously-rendered content visibly disappears from the viewport before a later pan re-covers and
+re-admits it. **Evidence of visible in-viewport holes attributable to partial-covering eviction
+reopens this as a defect** — this declaration stands only while no such evidence exists.
+
+Because the resolution is declaration, not fix, option (ii)'s consequences do not attach: the
+gate-8 evidence above remains comparable as-is for future arms, and no re-measure obligation is
+created. The settled-partial signal (the debt slice's own Item B), whenever built, must derive
+its predicate accounting for this exception — an eviction under this clause frees vertices,
+which reopens headroom, which reopens issuance, so "settled" may never be declared from a state
+this exception can still change.
