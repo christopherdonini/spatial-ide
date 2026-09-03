@@ -303,7 +303,8 @@ export interface ResidencyStepResult {
    * is that late/at-arrival issue stamp, so it does NOT mean query->paint. In the near-zero rows
    * that makes it read close to arrival->paint (P12's pan-northeast 513.6ms / zoom-to-layer
    * 125.8ms); in the seconds-late-issue rows it reads as late-issue->paint (P12's zoom-in-3
-   * 191ms against a ~13.6s arrival->paint). Flagged, not nulled: the value is still a real span
+   * 191ms against a ~13.7s arrival->paint -- 103.2ms decode + 13617.6ms to frame). Flagged, not
+   * nulled: the value is still a real span
    * on a real clock, it just does not mean what the M1 label says in this row. Absent
    * (`undefined`) when clean or when there is no `firstPixelMs` to suspect. */
   firstPixelCrossStepSuspect?: boolean;

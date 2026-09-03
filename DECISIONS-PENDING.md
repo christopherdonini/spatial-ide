@@ -10,8 +10,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     corrupt; fix the three instrument defects first, then run the attribution on the clean
     instrument, and note whether the null queryToFirstByteMs values were themselves a symptom."
     Applied in this same branch: fixes 1-2 in `residencyInstrument.ts` (clamp `<= 0` for
-    `queryToFirstByteMs` only, new distinct reason `cross-step-stream-zero`; cross-step signature
-    also nulls `decodedToPaintedMs`; `firstByteToDecodedMs` deliberately kept — a real decode
+    `queryToFirstByteMs` only, new distinct reason `issue-arrival-same-quantum` — renamed from
+    the first draft's `cross-step-stream-zero` at the re-review's suggestion, mechanism-true;
+    `decodedToPaintedMs` nulled iff the issue record postdates the decode record, per the
+    re-review's corrected predicate; `firstByteToDecodedMs` deliberately kept — a real decode
     cost, and 0 is legitimate there), fix 3 as the pass's harness-only design (`wireTraceLines`
     always persisted at write time; `--per-stream-trace` opt-in queue-depth sampler, declared in
     `cell.perStreamTraceEnabled` as a measurement-conditions change). Unit tests added; the
