@@ -145,5 +145,9 @@ the implementing PR, not before the forks (entries 32/33) are ruled.
 ## Sequencing
 
 A before B (dependency). C parallelizable and unblocked — proceeds now. A/B implementation waits on
-entries 32/33. Reviewer gate before every merge. Close bundles the headed sitting (5 GB trial, C's
-E2E felt-verification, the human's felt re-verdict), rule-10 archive, then the LOD scheduling call.
+entries 32/33. Reviewer gate before every merge. At close: **C's E2E felt-verification and the
+human's felt re-verdict stay human-present** (24(g) unchanged for felt verdicts). **The 5 GB
+clean-instrument attribution trial is reported-only, so under the 2026-09-04 amendment to 24(g)
+(DECISIONS-PENDING) it MAY run unattended with RustDesk stopped, gated on the one-time
+kill-and-restore dry-run passing first** — it no longer has to wait for the human-present sitting.
+Then rule-10 archive, then the LOD scheduling call.

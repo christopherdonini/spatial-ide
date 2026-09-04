@@ -354,6 +354,41 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Resolved
 
+- **2026-09-04 — decision 24(g) AMENDED: reported-only measured cells may run unattended with
+  RustDesk stopped, under a proven-safe restore protocol. Scored cells and felt verdicts remain
+  human-present (the original 24(g) rule, unchanged, for those).** The human's amendment, recorded
+  verbatim in substance. This refines — does not erase — the 2026-09-03 "24(g) closed as superseded
+  by rule-11 batching" note: rule-11 batching stays the rhythm for scored/felt work; this carves
+  out reported-only *measured* cells (e.g. the queued 5 GB clean-instrument attribution trial,
+  which is a demonstration, not a scored gate) to run unattended IF AND ONLY IF the protocol below
+  holds. **The protocol (all conditions binding, per the human):**
+  1. **Restore armed BEFORE the kill, via TWO independent mechanisms that survive harness death:**
+     (a) an independent watchdog process (restores when the harness stops heart-beating), and
+     (b) a scheduled task at a hard wall-clock time bound (restores unconditionally, surviving even
+     the watchdog dying). Both armed before RustDesk is stopped; the restore is idempotent
+     ("ensure the RustDesk service is Running").
+  2. **Screen lock and display sleep disabled for the measurement window**, and the harness
+     **verifies display-awake AND session-unlocked before each trial** — a cell whose trial cannot
+     verify both is **invalidated** (`unmeasured — display/session unverified`), never kept.
+  3. **New honest attest string**, recorded here as the amendment's own artifact:
+     **"unattended, RustDesk stopped and verified absent, display-awake verified"** — used only in
+     a cell that actually met conditions 1–2; it replaces the human-present attestations (e.g.
+     P12's "headed, foreground, human present, RustDesk stopped") for these unattended cells, and
+     never appears on a scored cell or a felt verdict (those stay human-present, so keep their own
+     human-present attestations).
+  4. **Mandatory precondition before ANY real cell uses this:** a **no-measurement dry-run** of the
+     kill-and-restore cycle, run once, proving RustDesk comes back on BOTH the happy path (harness
+     completes and restores) AND a simulated harness hang (harness dies; the watchdog and/or the
+     hard-time-bound scheduled task restore). Until the dry-run passes, no unattended cell runs.
+  **Custodian execution:** the restore mechanism + dry-run are the custodian's to build and run
+  (operational tooling, not a red-line decision); the amendment itself (what is permitted, the
+  attest string, the conditions) is the human's ruling, applied here. The dry-run kills RustDesk —
+  a hard-to-reverse outward action — so the custodian proves the hard-time-bound scheduled-task
+  backstop actually FIRES (test-fired against a marker) BEFORE the first kill, bounding the worst
+  case to short auto-restored downtime. Touches: a committed restore/watchdog/arm tooling set
+  (near the residency harness) + forward-pointer appends to `RESIDENCY-PREREGISTRATION.md`'s own
+  "No RustDesk in any measured cell" rule and `RESIDENCY-DEBT-1B.md`'s headed-sitting section.
+
 - **2026-09-03 — the post-1a rulings batch: entries 27, 28, 25, 24(g) resolved; the LOD brief's
   Q4 ruled; K6 promoted.** The human's rulings, applied same day: **(27)** finding 3 → option
   (i), amendment — ADR-028 Amendment 1 declares partial-covering eviction during over-budget as
