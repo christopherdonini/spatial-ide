@@ -49,11 +49,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     discipline; show me the final string at the PR if you drafted fresh." Drafted fresh and
     applied: **`none-supplied`** (the recommendation below, confirmed against the ruled
     discipline — it asserts only the observed non-supply; no hash, no catalog comparison ever
-    ran). Shown at the carrying PR per the instruction. One sub-question put to the human at
-    that same PR, not decided here: `skp/0.2` froze at merge, so this value-set change's
-    versioning disposition (rides without a bump as a display-only value nothing branches on, vs.
-    requires `skp/0.3`) is theirs — `SKP-V0.md`'s entry-30 addendum carries both readings.
-    Original entry below, kept for the record.]**
+    ran). Shown at the carrying PR per the instruction. **The versioning sub-question RULED
+    2026-09-04 — human's rule: new value in an existing key's domain → stay `skp/0.2` as a
+    value-domain widening on the dated no-external-readers fact with the entry-6 expiry clause;
+    new key → `skp/0.3`.** Custodian classified: `none-supplied` is a new value in the existing
+    `definition_provenance` key's domain (no new field), so it STAYS `skp/0.2` — the entry-6
+    shape (`ApprovalRoute::ShellDialog`'s `spatial-audit/1` widening) applied, carrying entry 6's
+    own expiry clause (the widening rides only while no external reader of `skp/0.2` exists).
+    Recorded in `SKP-V0.md`'s entry-30 addendum, ADR-026's append, and `commands.rs`. Original
+    entry below, kept for the record.]**
     **[Corollary of entry 25's own ruling, surfaced 2026-09-03 while applying it — NOT decided
     by that ruling.]** `definition_provenance(None)` returns `pasted` for `--assert-crs`'s
     no-definition case (`engine/src/crs_catalog.rs:128-137`, verified in code 2026-09-03) —
