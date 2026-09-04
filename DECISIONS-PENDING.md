@@ -388,6 +388,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
   case to short auto-restored downtime. Touches: a committed restore/watchdog/arm tooling set
   (near the residency harness) + forward-pointer appends to `RESIDENCY-PREREGISTRATION.md`'s own
   "No RustDesk in any measured cell" rule and `RESIDENCY-DEBT-1B.md`'s headed-sitting section.
+  **DRY-RUN PASSED 2026-09-04** (`frontends/shell/e2e/rustdesk-guard/`, README + runtime log): all
+  three restore triggers proven with NO measurement. The SYSTEM scheduled-task backstop was proven
+  to fire and run the restore BEFORE any kill (bounding worst-case downtime); happy path (kill →
+  disarm restored → Running); simulated harness hang (kill → heartbeat abandoned → the watchdog
+  restored unaided in ~28s, `service=Running`, clean exit). Final state clean (RustDesk Running, no
+  stray task/process). The unattended reported-only cell path is now UNBLOCKED — the 5 GB
+  attribution trial may run under it. (Side effect flagged: `arm` sets monitor/standby timeouts to
+  0 for the window; monitor was already 0 on this machine, standby restored to 30 min after the
+  dry-run; the harness's happy-path `disarm` restores both automatically in normal operation.)
 
 - **2026-09-03 — the post-1a rulings batch: entries 27, 28, 25, 24(g) resolved; the LOD brief's
   Q4 ruled; K6 promoted.** The human's rulings, applied same day: **(27)** finding 3 → option
