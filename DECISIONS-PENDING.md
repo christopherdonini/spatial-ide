@@ -5,7 +5,66 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-28. **[LOD problem-statement gap, surfaced 2026-09-03 drafting the LOD brief from 1a's findings —
+31. **[Instrument defects, surfaced 2026-09-03 by the entry-28 attribution pass — promoted per
+    the standing "open defects don't live only in walkthrough logs" instruction.]** Three
+    related defects in the residency instrument's per-step segment capture, all traced in
+    `spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md` §2: (1) the negative-span clamp
+    (`residencyInstrument.ts:459-462`) is one-sided (`< 0` only), so a cross-step
+    arrival-before-issue delta of exactly `0` survives as an apparent measurement — two such
+    `queryToFirstByteMs: 0` impostors sit in the P12 evidence file; (2) cross-step rows can
+    carry seconds-scale `decodedToPaintedMs` values that are not paint times (13.6s/16.4s in
+    P12's zoom-in-3/zoom-out-1); (3) the per-step one-shot design cannot attribute streams
+    whose lifetimes span step boundaries — at 5 GB, nearly all of them — so a re-run populates
+    nothing. Recommendation: fix (1) and (2) (cheap validity-check tightening: clamp `<= 0`
+    with a distinct reason; suppress or flag cross-step paint spans) in whichever cut next
+    touches the instrument — 1b's campaign if it runs one; adopt the pass's harness-only
+    per-stream design (§6) only if the kernel-vs-transport split ever becomes load-bearing.
+    Touches: `frontends/shell/src/instrument/residencyInstrument.ts` + its tests; instrument
+    surface only, no product behaviour.
+
+30. **[Corollary of entry 25's own ruling, surfaced 2026-09-03 while applying it — NOT decided
+    by that ruling.]** `definition_provenance(None)` returns `pasted` for `--assert-crs`'s
+    no-definition case (`engine/src/crs_catalog.rs:128-137`, verified in code 2026-09-03) —
+    under the ruled principle ("prefer the wording that records the action"), that records an
+    action that did not happen, a stricter violation than the one the ruling resolved. The None
+    case needs its own honest value. Recommendation: **`none-supplied`** (echoing ADR-015 §5's
+    `none-performed` shape — record what the caller did: asserted a CRS without supplying a
+    definition), exact string on sight at the PR per the 24(b) precedent. Same wire-cost note as
+    entry 25: wire-visible in `skp/0.2`, free before merge-freeze, a version bump after.
+    Touches: `engine/src/crs_catalog.rs` + its pinned-literal test, ADR-026 (append), both-side
+    fixtures.
+
+29. **[Open defect, promoted from the Part K walkthrough log per the human's own instruction,
+    2026-09-03: "open defects don't live only in walkthrough logs".]** K6's sub-pixel hover
+    staleness, live-reproduced during the 2026-09-02 sitting: hover a feature at full zoom-in,
+    keep the pointer stationary, zoom out — the id readout persists past the zoom level where a
+    fresh hover would refuse by name ("features here are below pick resolution"), because the
+    refusal is not re-evaluated on zoom while the pointer does not move. A picking-freshness
+    defect: it undermines ADR-028 item 4's refusal-by-name discipline exactly where that
+    discipline matters (the stale readout claims a pick the current view cannot honor). The
+    decision is scheduling: fix in the debt slice (1b) as a bounded item, or defer to whichever
+    cut next touches picking. Recommendation: **1b** — it is small, adjacent to 1b's
+    honesty-signal work (Item B's settled-partial signal is the same "never claim what the
+    current state can't back" class), and leaving a known-stale honesty surface unfixed while
+    building a new one invites the same conviction twice. Touches: the hover/pick freshness path
+    (`frontends/shell/src/canvas/pickResolution.ts` + wherever hover re-evaluation hooks camera
+    changes), a unit test constructing the zoom-out-while-stationary case.
+
+28. **[RESOLVED 2026-09-03 — human: "(a) — dispatch the read-only attribution pass (the null
+    queryToFirstByteMs angle first); LOD's brief finalizes only after its answer." Pass
+    dispatched the same day, read-only, no product code; the LOD problem statement in
+    `NEXT-CUT.md` stays draft until it returns. Original entry below, kept for the record.
+    COMPLETED same day: `spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`. Verdict:
+    "upstream of paint" is now a grounded finding on direct records (time-to-data dominates by
+    1-2 orders of magnitude; the 150s window decomposes into a 150.058s backlog-drain phase,
+    continuously streaming at ~4.4 MB/s, plus ~2.1s gesture-to-settle) — renderer-side LOD would
+    target the minor cost pool; the kernel-vs-transport-vs-backpressure split within
+    time-to-data remains open (harness-only instrumented design named in the pass). One
+    correction to this entry's own original text below: "3-of-12" was the consult's error,
+    propagated unverified — the file carries 8 nulls of 12 with 2 usable; two further rows are
+    `0`-value clock artifacts that must never be quoted as measurements (instrument defects
+    queued as entry 31).]**
+    **[LOD problem-statement gap, surfaced 2026-09-03 drafting the LOD brief from 1a's findings —
     NOT decided here.]** The architect consult that scoped this cut (`a8f4c2c0cb1ff80ed`,
     2026-09-02) named a "wrong-module check" as a precondition for the LOD brief: P12's own
     per-tile arithmetic (arithmetic, not measurement — pan-east ~1s/tile, pan-northeast ~3.3s/tile,
@@ -28,7 +87,13 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     spike, no product code. Touches, if (b): nothing now: the LOD brief's own Q2 ("where does the
     reduction happen") carries the flag forward.
 
-27. **[Finding 3 — the second undeclared eviction exception — amendment vs. fix, due at 1b per
+27. **[RESOLVED 2026-09-03 — human: "(i) amendment — append to ADR-028's clarification 3 as the
+    second declared exception, with one added sentence: the visible-regression half is
+    unmeasured, and evidence of visible in-viewport holes attributable to partial-covering
+    eviction reopens this as a defect. Docs only." Applied as ADR-028 Amendment 1 (append-only;
+    option (ii)'s re-measure obligation does not attach). Original entry below, kept for the
+    record.]**
+    **[Finding 3 — the second undeclared eviction exception — amendment vs. fix, due at 1b per
     ADR-028's own text, informed by the 1a diagnosis spike (`spikes/viewport-residency-1a-diagnosis/README.md`,
     2026-09-03) — NOT decided here.]** 1a's Q2 traced the mechanism precisely: during over-budget,
     `onCameraChange`'s per-round protected-set computation (`tileViewportStreamManager.ts:290-299,328-340`
@@ -53,7 +118,14 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     scope gains a fix item at `tileResidentSet.ts:426-482`/`tileViewportStreamManager.ts:290-340`,
     plus the re-measure obligation.
 
-25. **[Rule-7 item, surfaced 2026-09-02 while applying entry 10's ADR-026 acceptance — NOT
+25. **[RESOLVED 2026-09-03 — human: "prefer the wording that records the action over one that
+    claims a search result." Applied as: `pasted` RETAINED, `not-in-catalog` rejected — ADR-026's
+    own framing maps the principle directly (`pasted` "names a route the operator took" = the
+    action; `not-in-catalog` names the check's outcome = a search result). No wire change, no
+    code change. One corollary the same principle surfaces — `definition_provenance(None)`
+    returning `pasted` records an action that did not happen — queued as entry 30, not decided
+    by this ruling. Original entry below, kept for the record.]**
+    **[Rule-7 item, surfaced 2026-09-02 while applying entry 10's ADR-026 acceptance — NOT
     decided by that ruling.]** ADR-026's own "Architect note for acceptance" section (filed
     2026-08-18, unresolved) flags one wording question left explicitly "the human's": the
     `pasted` provenance-string value names only that a definition was **not byte-identical to
@@ -72,7 +144,9 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     LIVE use of "25" post-merge, the other two being historical record only. No action taken.)*
 
 24. **[(a)–(c) RESOLVED 2026-08-30 — human: "a is yes, b approved, c go with your
-    recommendation"]**: over-budget renders as a declared partial view with the persistent
+    recommendation"; (g) CLOSED 2026-09-03 — human: "close as superseded by rule-11 batching."
+    With (d)–(f) riding their recommendations, this entry is now fully resolved.]**:
+    over-budget renders as a declared partial view with the persistent
     status retained; the rider-1 status meaning change approved, exact wording on sight at the
     PR; hover below pick resolution refuses by name. (d)–(f) ride their recommendations;
     (g) scheduling of headed measurement sessions remains to be agreed when P2/P6 are ready.
@@ -206,6 +280,26 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-03 — the post-1a rulings batch: entries 27, 28, 25, 24(g) resolved; the LOD brief's
+  Q4 ruled; K6 promoted.** The human's rulings, applied same day: **(27)** finding 3 → option
+  (i), amendment — ADR-028 Amendment 1 declares partial-covering eviction during over-budget as
+  the second declared exception to "never evict a tile intersecting the current viewport," with
+  the ruled reopen condition (evidence of visible in-viewport holes attributable to it reopens
+  the item as a defect); docs only, no re-measure obligation. **(28)** option (a) — the
+  read-only attribution pass dispatched (null-`queryToFirstByteMs` angle first); the LOD brief
+  finalizes only after its answer. **(Q4, the LOD brief's scorability question, ruled without a
+  numbered entry):** a NEW docs/08 scale-class row, landed WITH its measurement per ADR-011
+  gate 2, defined as a dataset class (feature/vertex brackets), not "the 5 GB file"; the 5 GB
+  assertion-only items retained besides — recorded into `NEXT-CUT.md`'s draft. **(25)** `pasted`
+  retained over `not-in-catalog` (the ruled principle: prefer the wording that records the
+  action over one that claims a search result); no change anywhere; the None-case corollary the
+  same principle exposes queued as new entry 30, not decided. **(24(g))** closed as superseded
+  by rule-11 batching — entry 24 now fully resolved. **(K6)** promoted from the Part K
+  walkthrough log to its own pending entry 29 ("open defects don't live only in walkthrough
+  logs"). Explicitly retained by the human, unruled: entries 12–15 (the ADR-009 public-flip
+  cluster), ADR-025, and the 5 GB fixture's second-location target (pending their own disk
+  topology check).
 
 - **2026-09-02 — three rulings closing the sitting: ADR-028 accepted, the architect consult
   adopted in full, and the 5 GB fixture's single-point-of-failure ordered fixed this week.**
