@@ -929,6 +929,106 @@ async function stepA9(page, consoleHandle) {
   );
 }
 
+// ---------------------------------------------------------------------------------------
+// K6 (residency-debt cut 1b, Item C; DECISIONS-PENDING entry 29; `RESIDENCY-DEBT-1B.md`): the
+// sub-pixel-hover pick refusal re-evaluated on a camera change while the pointer stays put.
+// Repro: hover a feature fully zoomed in (its id shows), keep the pointer stationary, zoom OUT
+// past `pickResolution.ts`'s declared threshold via real wheel events with NO interceding
+// `page.mouse.move` -- `WorkingCanvas.tsx`'s own `onHover` only fires on pointer MOVE, so before
+// the fix the stale id readout would persist past the zoom where a fresh hover would refuse by
+// name. This is the reason `page.mouse.wheel` is called directly below rather than through
+// `doWheel`/`zoomInOneNotch` (both of which `page.mouse.move` the pointer to `center` first) --
+// any pointer move here would let a real `onHover` re-fire and re-pick normally, which would mask
+// exactly the gap this step exists to catch (the fix under test is the camera-change
+// re-evaluation, not the ordinary pointer-move pick path A9' already covers).
+// ---------------------------------------------------------------------------------------
+const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after finding an
+// above-threshold candidate, independent of how many zoom-IN notches that search itself needed --
+// guards the case where a hoverable candidate is found at a low notch, which would otherwise leave
+// too few zoom-out notches to reliably cross back below the threshold.
+const K6_ZOOM_OUT_NOTCH_DELTA_Y = -ZOOM_NOTCH_DELTA_Y; // reverses A9''s own zoom-in notch magnitude
+// (positive deltaY = wheel-down = zoom out, the opposite of `ZOOM_NOTCH_DELTA_Y`'s zoom-in).
+
+async function stepK6(page, consoleHandle) {
+  const initialRect = await canvasRect(page);
+  if (!initialRect) throw new Error("K6: .working-canvas not found");
+  const center = { x: initialRect.left + initialRect.width / 2, y: initialRect.top + initialRect.height / 2 };
+
+  // Reuses A9''s own densest-patch bisection + interior verification (`findInteriorCandidate`/
+  // `verifyInteriorCandidate`, UNCHANGED) to find a real, confidently-pickable feature -- the
+  // below-threshold repro needs to START from an above-threshold hover (a real id showing), exactly
+  // as A9' establishes one, before this step's own zoom-out half exercises the fix.
+  let found = null;
+  let notchesUsed = 0;
+  for (let notch = 0; notch <= MAX_ZOOM_NOTCHES && !found; notch++) {
+    if (notch > 0) {
+      await zoomInOneNotch(page, consoleHandle, center);
+      await assertNoRefusalOrBanner(page, `K6 (zoom-in notch ${notch})`);
+    }
+    notchesUsed = notch;
+    const rect = await canvasRect(page);
+    if (!rect) throw new Error("K6: .working-canvas not found after zoom");
+    const bisection = await findInteriorCandidate(page);
+    if (bisection.finalFraction <= 0) continue;
+    const verdict = await verifyInteriorCandidate(page, bisection.candidate, bisection.bufferWidth, bisection.bufferHeight);
+    if (!verdict.ok) continue;
+
+    for (const flipY of [true, false]) {
+      const css = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, flipY);
+      await page.mouse.move(css.x, css.y);
+      const result = await waitForCondition(
+        () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
+        (text) => text !== null && /^id \d+/.test(text),
+        5_000
+      );
+      if (result.ok) {
+        found = { css, text: result.last };
+        break;
+      }
+    }
+  }
+
+  if (!found) {
+    throw new Error(
+      `K6: no above-threshold hoverable candidate found after trying notch 0 plus ${MAX_ZOOM_NOTCHES} zoom-in notch(es) -- ` +
+        `cannot exercise the below-threshold repro without first establishing a real id readout`
+    );
+  }
+
+  // The repro itself: zoom OUT past the declared threshold with NO further `page.mouse.move` (see
+  // this section's own top comment for why) -- `zoomOutNotches` deliberately exceeds however many
+  // zoom-IN notches it took to find `found`, so the camera provably crosses back below whatever
+  // notch first made the candidate resolvable.
+  const zoomOutNotches = Math.max(notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
+  for (let i = 0; i < zoomOutNotches; i++) {
+    await page.mouse.wheel(0, K6_ZOOM_OUT_NOTCH_DELTA_Y);
+  }
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
+
+  const refusal = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        text: document.querySelector(".hover-readout")?.textContent ?? null,
+        belowResolution: document.querySelector(".hover-readout-below-resolution") !== null,
+      })),
+    (v) => v.belowResolution,
+    10_000
+  );
+
+  if (!refusal.ok) {
+    throw new Error(
+      `K6: stationary-pointer zoom-out past the declared pick-resolution threshold did not re-evaluate to the named ` +
+        `refusal within 10000ms (hovered "${found.text}" at zoom-in notch ${notchesUsed}, then ${zoomOutNotches} ` +
+        `zoom-out notch(es) with no pointer move; last seen: ${JSON.stringify(refusal.last)})`
+    );
+  }
+
+  return (
+    `hovered a real feature ("${found.text}") at zoom-in notch ${notchesUsed}, then ${zoomOutNotches} stationary-pointer ` +
+    `zoom-out notch(es) -> .hover-readout re-evaluated to the named below-pick-resolution refusal (never a stale id)`
+  );
+}
+
 /**
  * P5 repair (admission-remediation cut): known-broken since P3 removed the blanket cut-2 note
  * (`RefusalBlock.tsx`'s own top comment -- "the blanket cut-2 note this block used to render ... is
@@ -1246,6 +1346,11 @@ async function main() {
     // case, plus the grid capture and the empty-space half. 120s gives comfortable headroom without
     // masking a genuine hang (every individual wait inside stays independently bounded).
     await runStep("A9'", 120_000, () => stepA9(page, consoleHandle));
+    // Residency-debt cut 1b, Item C (K6): its own zoom-in half reuses A9''s already-proven
+    // candidate-finding, bounded the same way; the zoom-out half is a small, fixed number of wheel
+    // notches with no settle-dependent search, so 90s gives comfortable headroom without masking a
+    // genuine hang.
+    await runStep("K6", 90_000, () => stepK6(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
     );

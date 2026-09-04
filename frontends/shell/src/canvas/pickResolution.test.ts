@@ -4,7 +4,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
-import { averageFeatureExtent, isBelowPickResolution, SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX } from "./pickResolution";
+import {
+  averageFeatureExtent,
+  isBelowPickResolution,
+  reevaluateStandingHoverOnCameraChange,
+  SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX,
+} from "./pickResolution";
 
 function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "rings"> {
   // One exterior ring per feature, no holes -- `features[i]` is that feature's own ring vertex list.
@@ -56,5 +61,40 @@ describe("isBelowPickResolution", () => {
 
   it("zero average extent (nothing real resident yet) computes as below resolution -- the pure comparison alone, never reached in practice without a real pick first (WorkingCanvas.tsx's own onHover gates on a valid GPU pick index before ever calling this)", () => {
     expect(isBelowPickResolution(0, 1)).toBe(true);
+  });
+});
+
+// Residency-debt cut 1b, Item C (DECISIONS-PENDING entry 29, "K6"): the standing hover re-evaluated
+// on a camera change, no GPU re-pick. Test cases are the ones pre-committed in
+// `RESIDENCY-DEBT-1B.md`'s Item C.
+describe("reevaluateStandingHoverOnCameraChange", () => {
+  const standingFeatureId = { streamHandle: "sh_test", batchSeq: 1, id: 42n, anchor: [0, 0] as [number, number] };
+  const standingRefusal = { kind: "below-pick-resolution" as const };
+
+  it("(a) standing feature id + zoom-out crosses below the threshold -> refuse by name", () => {
+    // extent 1 * 1 px/unit = 1px, below the 2px threshold.
+    const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, 1, 1);
+    expect(result).toEqual({ kind: "below-pick-resolution" });
+  });
+
+  it("(b) standing feature id + zoom stays above the threshold -> clear to null, never re-assert the id", () => {
+    // extent 5 * 1 px/unit = 5px, above the 2px threshold.
+    const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, 5, 1);
+    expect(result).toBeNull();
+  });
+
+  it("(c) standing refusal + zoom-in crosses above the threshold -> clear to null", () => {
+    const result = reevaluateStandingHoverOnCameraChange(standingRefusal, 5, 1);
+    expect(result).toBeNull();
+  });
+
+  it("(d) standing refusal + still below the threshold -> unchanged, no redundant re-emit", () => {
+    const result = reevaluateStandingHoverOnCameraChange(standingRefusal, 1, 1);
+    expect(result).toBeUndefined();
+  });
+
+  it("(e) null standing (nothing shown) -> no-op regardless of the new zoom", () => {
+    expect(reevaluateStandingHoverOnCameraChange(null, 1, 1)).toBeUndefined();
+    expect(reevaluateStandingHoverOnCameraChange(null, 5, 1)).toBeUndefined();
   });
 });
