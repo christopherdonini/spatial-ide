@@ -5,6 +5,39 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+34. **[1b headed-sitting scope, surfaced 2026-09-04 by the architect consult (Q6.4) — not
+    decided here, lower urgency than 32/33.]** Whether the headed sitting that closes 1b also runs
+    a **scored campaign** (which would adopt the queued 5 GB clean-instrument attribution trial,
+    the heap-footprint fold-in per entry 25, and the DECISIONS-PENDING #31 instrument defects) or
+    stays a correctness-verification sitting only (felt re-verdict + K6's E2E + the 5 GB trial as
+    a demonstration, not a scored gate). The architect: a scored campaign is **not compelled** by
+    1b's correctness fixes — none touches the hot admission/paint path. Measurement on this
+    machine is 24(g) headed-only either way. Recommendation: **decide at the sitting's own
+    scheduling, not now** — it does not gate any 1b code. Touches: the sitting's own agenda only.
+
+33. **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.2) — GATES Item A/B
+    code, not decided here.]** The scoped-relief lever's depth: does it cancel in-flight tile
+    streams too (via the existing `cancel` SKP command, ADR-018 — no new wire), or only drop the
+    queued backlog and let in-flight streams finish productively? Both are honest and both
+    client-side. The choice changes the settled/relinquished status wording and what "stop
+    filling" means to the operator. Recommendation: **your call, no default assumed** — lean
+    toward drop-queue-only (in-flight work already paid its query cost; letting it finish wastes
+    less), but the felt meaning of the Cancel affordance (entry 32) is coupled to this, so rule
+    them together. Touches, once ruled: `tileViewportStreamManager.ts`'s new `relinquishOutstanding`
+    method + `candidateArmSession.ts`'s session seam + the status wording.
+
+32. **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.1) — GATES Item A/B
+    code, not decided here.]** Cancel semantics, an operator-facing behavior change: today the
+    Cancel button kills tiling for the dataset permanently (`TileViewportStreamManager.stop()`
+    sets `stopped=true` with no reset; App.tsx:1233-1236). Item A needs a scoped lever that stops
+    filling but keeps the current view and allows future tiling. Does the existing Cancel button
+    get **repointed** to that scoped meaning, or does a **second affordance** get added (Cancel
+    stays a hard stop; a new control does the scoped relief)? The architect: "a felt/UX judgment,
+    not an architecture call." Recommendation: **your call, no default assumed** — repointing is
+    simpler and the hard-stop-per-dataset meaning has no evidenced operator need, but this is
+    exactly the felt call 24(b)-class decisions reserve to you. Rule with entry 33 (coupled).
+    Touches, once ruled: `App.tsx`'s candidate Cancel wiring + any new control's own affordance.
+
 31. **[RESOLVED 2026-09-03 — human's placement ruling: "the #28 attribution pass IS the next
     instrument-touching work, and its conclusion is exactly what cross-step paint mislabels
     corrupt; fix the three instrument defects first, then run the attribution on the clean
