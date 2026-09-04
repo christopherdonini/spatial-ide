@@ -999,6 +999,10 @@ async function measureOneStep(
     counters: result ? result.counters : undefined,
     firstPixelMs: result ? result.firstPixelMs : undefined,
     firstPixelReason: result ? result.firstPixelReason : undefined,
+    // Entry 31, re-review S-A: the cross-step suspect flag qualifies the GATED headline above
+    // (not a segment), so it lands beside it -- without this line the flag exists only in unit
+    // tests and never reaches the evidence file the next attribution pass reads.
+    firstPixelCrossStepSuspect: result ? result.firstPixelCrossStepSuspect : undefined,
     // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the three
     // per-step sub-spans, REPORTED-BESIDE `firstPixelMs` above, never gated -- `undefined` (not a
     // fabricated null) whenever `residencyEndStep` itself was never called (hooks off/no result),
@@ -1828,6 +1832,14 @@ async function main() {
   const smoke = argSet.has("--smoke");
   const control = argSet.has("--control");
   const wireIdentity = argSet.has("--wire-identity");
+  // DECISIONS-PENDING entry 31 / the attribution pass's harness-only per-stream design
+  // (spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md §6): `--per-stream-trace` is a
+  // DIAGNOSIS-ONLY addition, post-campaign (2026-09-03), NOT part of the preregistered protocol --
+  // it adds a ~1s queue-depth poll (an extra page.evaluate per tick, a measurement-conditions
+  // change), so it is opt-in and recorded in the cell, never silently on. The passive
+  // `wireTraceLines` persistence below is always-on: it only copies console entries the harness
+  // already captured, at write time, with zero effect on the run itself.
+  const perStreamTrace = argSet.has("--per-stream-trace");
   const stepLimit = smoke ? 3 : undefined;
   // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): `--measure-build
   // <exePath>` selects the third build class -- everything else about this run (mode, steps,
@@ -1946,6 +1958,47 @@ async function main() {
   }
   const consoleHandle = attachConsole(page);
 
+  // Entry 31 / attribution-pass §6: the opt-in queue-depth sampler. One page.evaluate per tick
+  // reading the two EXISTING E2E hooks (`residencyInFlightStreamCount`, `residencyQueuedTileCount`
+  // -- App.tsx's DEV-gated block; no product change), pushed with an epoch-ms stamp so samples
+  // join against `wireTraceLines` and the Rust session log's `candidate-tile-terminal` lines on
+  // one clock basis. Overlap-guarded (a slow evaluate never stacks a second one); errors recorded
+  // as a count, never thrown -- a sampler must not be able to fail a trial.
+  const queueDepthSamples = [];
+  let queueDepthSampleErrors = 0;
+  let queueDepthTimer = null;
+  // Reviewer must-fix 1: both hooks are ASYNC (App.tsx registers them as async functions), so a
+  // non-awaited property is a Promise and `page.evaluate`'s serialization turns it into `{}` --
+  // every sample would read `{inFlight: {}, queued: {}}` with the error count still 0, the exact
+  // plausible-looking-but-empty class this project keeps convicting. The evaluate body awaits
+  // each hook itself; a runtime type guard converts any non-number/non-null survivor into a
+  // counted error rather than a recorded impostor. `__SPATIAL_E2E__?.` (not `.`) so a pre-mount
+  // tick reads null cleanly instead of inflating the error count (reviewer nit).
+  const perStreamTraceActive = perStreamTrace && !control && !wireIdentity;
+  if (perStreamTraceActive) {
+    let sampling = false;
+    queueDepthTimer = setInterval(async () => {
+      if (sampling) return;
+      sampling = true;
+      try {
+        const s = await page.evaluate(async () => ({
+          inFlight: (await window.__SPATIAL_E2E__?.residencyInFlightStreamCount?.()) ?? null,
+          queued: (await window.__SPATIAL_E2E__?.residencyQueuedTileCount?.()) ?? null,
+        }));
+        const numOrNull = (v) => v === null || typeof v === "number";
+        if (!numOrNull(s.inFlight) || !numOrNull(s.queued)) {
+          queueDepthSampleErrors += 1;
+        } else {
+          queueDepthSamples.push({ at: Date.now(), inFlight: s.inFlight, queued: s.queued });
+        }
+      } catch {
+        queueDepthSampleErrors += 1;
+      } finally {
+        sampling = false;
+      }
+    }, 1000);
+  }
+
   const evidence = {
     startedAt: new Date().toISOString(),
     mode: wireIdentity ? "wire-identity" : control ? "control" : "instrument-on",
@@ -1993,6 +2046,13 @@ async function main() {
       instrumentEnabledReadback: null, // filled in below, after M10's own off-then-on sequencing
       buildClass: measureBuildExePath ? BUILD_CLASS_MEASURE : BUILD_CLASS_DEV, // M13 / P3r Amendment 16
       measureBuildExePath, // P3r: null unless --measure-build was given -- which exe this cell ran against
+      // Entry 31 (2026-09-03): whether this run carried the diagnosis-only per-stream additions
+      // (`--per-stream-trace`: the ~1s queue-depth sampler -- a measurement-conditions change,
+      // declared here so no scored reading ever mistakes such a cell for a protocol-clean one).
+      // Reviewer should-fix 6: the EFFECTIVE value (the sampler is gated off in --control/
+      // --wire-identity regardless of the flag), plus the raw request so a mismatch is visible.
+      perStreamTraceEnabled: perStreamTraceActive,
+      perStreamTraceRequested: perStreamTrace,
       launchedFresh: launched, // F2: always true -- the fresh-launch invariant above already returned if not
       sweptPids, // F2: PIDs killed on CDP_PORT before this run's own launch, possibly empty
       // Amendment 12: the outer trial watchdog's own resolved inputs, recorded honestly rather than
@@ -2419,6 +2479,32 @@ async function main() {
       evidence.cell.fixtureHashMatchedAcrossRun = evidence.cell.fixtureSha256AtEnd === evidence.cell.fixtureSha256;
     } catch (e) {
       evidence.cell.fixtureHashAtEndError = e.message;
+    }
+    // Entry 31 / attribution-pass §6, the per-stream trace record. `wireTraceLines` is passive
+    // and always-on: the wire-relevant console lines (`viewport_query`/`stream-issued`/`batch`,
+    // `FIELD_SEQUENCE_EVENTS`) the harness ALREADY captured, persisted with their epoch-ms `at`
+    // stamps so an offline pass can join them per streamHandle against the Rust session log's
+    // `candidate-tile-terminal` lines -- the cross-step attribution the per-step segments
+    // structurally cannot express (the P12 finding). Copied at write time; zero run-time effect.
+    if (queueDepthTimer !== null) clearInterval(queueDepthTimer);
+    try {
+      evidence.wireTraceLines = consoleHandle.entries
+        .filter(isWireRelevantRenderTraceLine)
+        .map((e) => ({ at: e.at, text: e.text }));
+      // Reviewer should-fix 8, the SEGMENTS_PROXY_DIVERGENCE pattern applied here: `at` is the
+      // DRIVER's Date.now() when Playwright delivered the console event, not the page's emit time
+      // -- a receipt-time proxy with unbounded (in practice small, but unmeasured) delivery
+      // jitter. Honest at the seconds scale the per-stream join targets; never quote it as a
+      // wire timing. Declared in-band so the next pass cannot miss it.
+      evidence.wireTraceTimestampBasis =
+        "driver receipt time (Date.now() at Playwright console-event delivery), not page emit time -- " +
+        "a defined proxy; fine at seconds scale, never a wire timing";
+    } catch (e) {
+      evidence.wireTraceLinesError = e.message;
+    }
+    if (perStreamTraceActive) {
+      evidence.queueDepthSamples = queueDepthSamples;
+      evidence.queueDepthSampleErrors = queueDepthSampleErrors;
     }
     try {
       mkdirSync(OUT_DIR, { recursive: true });

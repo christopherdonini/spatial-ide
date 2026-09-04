@@ -106,3 +106,21 @@ while the check establishes only *"not byte-identical to any pinned catalog entr
 "the record says what was checked" both argue for a value naming the check (`not-in-catalog`).
 The string is wire-visible in `skp/0.2`, so changing it is free before merge-freeze and a version
 bump afterwards. Raised, not decided here — decision 2's wording is the human's.
+
+## The `pasted` wording, settled (2026-09-03, appended — Accepted)
+
+The human ruled the item above in two parts (DECISIONS-PENDING entries 25 and 30):
+
+- **Entry 25: `pasted` RETAINED for the supplied-but-not-catalog-identical case**, over
+  `not-in-catalog`. The ruled principle, applied: prefer the wording that records the action
+  (the route the operator took — this ADR's own framing above) over one that claims a search
+  result. The paragraph above's argument for `not-in-catalog` is thereby answered, not erased:
+  it stands as the record of the alternative considered and declined.
+- **Entry 30: the None case now records `none-supplied`** — the same ruled principle's own
+  corollary, applied under a second instruction ("choose the string that asserts only what the
+  system did/verified, never implying an unrun action"): `pasted` for `None` asserted an action
+  that never happened; `none-supplied` records only the observed non-supply — no hash, no
+  catalog comparison ever ran. Implemented at `engine/src/crs_catalog.rs::definition_provenance`
+  with its pinned test; the versioning disposition for this value-set change within the frozen
+  `skp/0.2` is put to the human at the carrying PR, recorded in `SKP-V0.md`'s own entry-30
+  addendum — not decided by this append.

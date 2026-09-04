@@ -5,7 +5,29 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-31. **[Instrument defects, surfaced 2026-09-03 by the entry-28 attribution pass — promoted per
+31. **[RESOLVED 2026-09-03 — human's placement ruling: "the #28 attribution pass IS the next
+    instrument-touching work, and its conclusion is exactly what cross-step paint mislabels
+    corrupt; fix the three instrument defects first, then run the attribution on the clean
+    instrument, and note whether the null queryToFirstByteMs values were themselves a symptom."
+    Applied in this same branch: fixes 1-2 in `residencyInstrument.ts` (clamp `<= 0` for
+    `queryToFirstByteMs` only, new distinct reason `issue-arrival-same-quantum` — renamed from
+    the first draft's `cross-step-stream-zero` at the re-review's suggestion, mechanism-true;
+    `decodedToPaintedMs` nulled iff the issue record postdates the decode record, per the
+    re-review's corrected predicate; `firstByteToDecodedMs` deliberately kept — a real decode
+    cost, and 0 is legitimate there), fix 3 as the pass's harness-only design (`wireTraceLines`
+    always persisted at write time; `--per-stream-trace` opt-in queue-depth sampler, declared in
+    `cell.perStreamTraceEnabled` as a measurement-conditions change). Unit tests added; four
+    reviewer passes (first FAILED 2 must-fix, second FAILED 1 must-fix, third FAILED the
+    append-only must-fix, fourth affirmative PASS). RESIDENCY-PREREGISTRATION.md Amendments 24-25
+    record it. **The nulls-symptom question is ANSWERED structurally** (ATTRIBUTION-PASS.md §7):
+    the nulls are a symptom of the per-step one-shot instrument DESIGN, not of the clamp bug the
+    fix removed — a clean re-run would show MORE nulls (~10 of 12), because the fix converts the
+    two former `0`-impostors into honest nulls. **The empirical clean-instrument run is QUEUED,
+    not run** (ATTRIBUTION-PASS.md §8): it collects client-clock quantities, so 24(g)'s
+    "no RustDesk measurement, ever / headed foreground physical time" reserves it for the next
+    headed sitting (RustDesk was up at the human's request; custodian unattended). Original entry
+    below, kept for the record.]**
+    **[Instrument defects, surfaced 2026-09-03 by the entry-28 attribution pass — promoted per
     the standing "open defects don't live only in walkthrough logs" instruction.]** Three
     related defects in the residency instrument's per-step segment capture, all traced in
     `spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md` §2: (1) the negative-span clamp
@@ -22,7 +44,17 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     Touches: `frontends/shell/src/instrument/residencyInstrument.ts` + its tests; instrument
     surface only, no product behaviour.
 
-30. **[Corollary of entry 25's own ruling, surfaced 2026-09-03 while applying it — NOT decided
+30. **[RESOLVED 2026-09-03 — human: "choose (or draft) the string that asserts only what the
+    system did/verified, never implying an unrun action — the filter-null / declared-not-verified
+    discipline; show me the final string at the PR if you drafted fresh." Drafted fresh and
+    applied: **`none-supplied`** (the recommendation below, confirmed against the ruled
+    discipline — it asserts only the observed non-supply; no hash, no catalog comparison ever
+    ran). Shown at the carrying PR per the instruction. One sub-question put to the human at
+    that same PR, not decided here: `skp/0.2` froze at merge, so this value-set change's
+    versioning disposition (rides without a bump as a display-only value nothing branches on, vs.
+    requires `skp/0.3`) is theirs — `SKP-V0.md`'s entry-30 addendum carries both readings.
+    Original entry below, kept for the record.]**
+    **[Corollary of entry 25's own ruling, surfaced 2026-09-03 while applying it — NOT decided
     by that ruling.]** `definition_provenance(None)` returns `pasted` for `--assert-crs`'s
     no-definition case (`engine/src/crs_catalog.rs:128-137`, verified in code 2026-09-03) —
     under the ruled principle ("prefer the wording that records the action"), that records an
@@ -34,7 +66,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     Touches: `engine/src/crs_catalog.rs` + its pinned-literal test, ADR-026 (append), both-side
     fixtures.
 
-29. **[Open defect, promoted from the Part K walkthrough log per the human's own instruction,
+29. **[RESOLVED 2026-09-03 — human: "yes, into 1b as a named piece with its own E2E step; if it
+    grows beyond small once opened, it exits back to the queue." K6's hover-staleness fix is now
+    a named 1b piece with its own E2E step and an explicit growth escape-hatch; recorded in
+    `NEXT-CUT.md`'s 1b scope. Original entry below, kept for the record.]**
+    **[Open defect, promoted from the Part K walkthrough log per the human's own instruction,
     2026-09-03: "open defects don't live only in walkthrough logs".]** K6's sub-pixel hover
     staleness, live-reproduced during the 2026-09-02 sitting: hover a feature at full zoom-in,
     keep the pointer stationary, zoom out — the id readout persists past the zoom level where a

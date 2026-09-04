@@ -545,3 +545,17 @@ naming question goes to ADR-026's acceptance (DECISIONS-PENDING entry 10), not t
 **`skp/0.2` freezes at merge**; its §8 entries above are its full field set. The re-deferral
 above is now **CONFIRMED** (2026-09-02, entry 9) — this review had no standing over a clause
 descending from the human's ADR-021 acceptance condition, and did not decide it; the human did.
+
+**Entry-30 addendum (2026-09-03, appended): `definition_provenance`'s no-definition value.**
+Per the human's entry-25 ruling and its entry-30 corollary, an assertion carrying no definition
+at all (the CLI `--assert-crs` route, `definition_provenance(None)`) now records
+**`none-supplied`** instead of `pasted` — the old value asserted an action that never happened;
+the new one records only the observed non-supply (no hash, no catalog comparison ever ran).
+`pasted` is retained, unchanged, for the supplied-but-not-catalog-identical case (entry 25's own
+ruling). **Versioning disposition, put to the human at this change's own PR — not decided here:**
+`skp/0.2` froze at merge with its §8 entries as its full FIELD set; this changes no field, only
+one documented VALUE of a display-only string that nothing branches on (the F-5 form's own
+"exact-byte bookkeeping" blessing above). Whether a frozen version's value-set change of that
+class rides without a bump, or requires `skp/0.3`, is a versioning judgment the human rules at
+the PR that carries this addendum; no released reader exists either way (pre-ADR-009, repo
+private).
