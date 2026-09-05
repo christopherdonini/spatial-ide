@@ -5,7 +5,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-34. **[1b headed-sitting scope, surfaced 2026-09-04 by the architect consult (Q6.4) — not
+34. **[DEFERRED BY RULING 2026-09-05 — human: "34c — decide at the sitting's scheduling, leaning
+    (a): 1b makes no perf claim, and entry 25's heap debt rides the next intrinsically-scored
+    campaign instead." Stays open until the sitting is scheduled; the lean toward
+    correctness-only is recorded, not yet binding. Original entry below.]**
+    **[1b headed-sitting scope, surfaced 2026-09-04 by the architect consult (Q6.4) — not
     decided here, lower urgency than 32/33.]** Whether the headed sitting that closes 1b also runs
     a **scored campaign** (which would adopt the queued 5 GB clean-instrument attribution trial,
     the heap-footprint fold-in per entry 25, and the DECISIONS-PENDING #31 instrument defects) or
@@ -15,7 +19,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     machine is 24(g) headed-only either way. Recommendation: **decide at the sitting's own
     scheduling, not now** — it does not gate any 1b code. Touches: the sitting's own agenda only.
 
-33. **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.2) — GATES Item A/B
+33. **[RESOLVED 2026-09-05 — human, verbatim: "33b — cancel in-flight too, via the existing SKP
+    cancel: at 5 GB single streams run tens of seconds, so (a)'s 'settles within seconds' premise
+    fails exactly where the button matters most, and my own Part K verdict was about buttons that
+    don't visibly obey; ≤3 tiles of class-1 replayable work is the acceptable price for Cancel
+    meaning cancel. Rider: asserted as a property with ADR-018 instants, never timed." The
+    custodian's drop-queue-only recommendation was thereby overruled on the attribution pass's
+    own 6-17s per-tile service evidence. Consequence: `relinquishOutstanding()` cancels in-flight
+    streams (existing `cancel` SKP command, ADR-018 — no new wire) AND drops the queued backlog;
+    its tests assert cancellation as a PROPERTY (cancel issued, terminal observed, no post-cancel
+    batches; ADR-018 interval labels where an interval is even mentioned) — never a timed claim.
+    Original entry below, kept for the record.]**
+    **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.2) — GATES Item A/B
     code, not decided here.]** The scoped-relief lever's depth: does it cancel in-flight tile
     streams too (via the existing `cancel` SKP command, ADR-018 — no new wire), or only drop the
     queued backlog and let in-flight streams finish productively? Both are honest and both
@@ -26,7 +41,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     them together. Touches, once ruled: `tileViewportStreamManager.ts`'s new `relinquishOutstanding`
     method + `candidateArmSession.ts`'s session seam + the status wording.
 
-32. **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.1) — GATES Item A/B
+32. **[RESOLVED 2026-09-05 — human, verbatim: "32a — Cancel becomes the scoped relief, permanent
+    kill leaves the UI (close/reopen stays the hard reset); rider: post-relief status states the
+    partiality per the 24(b) discipline, a user-stopped fill never reads as complete."
+    Consequence: `App.tsx`'s candidate Cancel repoints from `manager.stop()` to the new scoped
+    seam; the relinquished status carries the partial-view statement (never "complete", never
+    silence); exact strings on sight at the implementing PR (24(b)). `stop()` itself remains for
+    teardown paths only, no longer operator-reachable. Original entry below, kept for the
+    record.]**
+    **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.1) — GATES Item A/B
     code, not decided here.]** Cancel semantics, an operator-facing behavior change: today the
     Cancel button kills tiling for the dataset permanently (`TileViewportStreamManager.stop()`
     sets `stopped=true` with no reset; App.tsx:1233-1236). Item A needs a scoped lever that stops

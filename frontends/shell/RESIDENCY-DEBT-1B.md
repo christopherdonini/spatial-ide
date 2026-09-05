@@ -151,3 +151,23 @@ clean-instrument attribution trial is reported-only, so under the 2026-09-04 ame
 (DECISIONS-PENDING) it MAY run unattended with RustDesk stopped, gated on the one-time
 kill-and-restore dry-run passing first** — it no longer has to wait for the human-present sitting.
 Then rule-10 archive, then the LOD scheduling call.
+
+## Forks resolved (2026-09-05, appended — the human's rulings, before any Item A/B code)
+
+- **Entry 32 → (a), repoint Cancel**, with the rider: the post-relief status states the
+  partiality per the 24(b) discipline — **a user-stopped fill never reads as complete.**
+- **Entry 33 → (b), cancel in-flight too** via the existing `cancel` SKP command (ADR-018, no new
+  wire), the human overruling the drop-queue-only recommendation on the attribution pass's own
+  evidence: at 5 GB single streams run tens of seconds, so "settles within seconds" fails exactly
+  where the button matters most, and Part K's verdict was about buttons that visibly obey; ≤3
+  tiles of class-1 replayable work is the acceptable price for Cancel meaning cancel. **Rider:
+  cancellation is asserted as a PROPERTY with ADR-018 instants (interval labels wherever an
+  interval is even mentioned), never timed** — no "cancels within X ms" claim anywhere in 1b.
+- **Entry 34 → (c)**, decided at the sitting's own scheduling, leaning correctness-only.
+
+**Item A's test cases, amended accordingly (pre-committed here before the code):** the three
+original cases stand, and case 4 is added — the lever issues a cancel for every in-flight stream
+and the property holds: cancel issued, terminal observed, **no post-cancel batches admitted for
+that stream's tile beyond the terminal**; asserted as a property, never a duration. Case 2's
+"reported, distinguishable" now covers BOTH drop classes: queued-dropped and in-flight-cancelled,
+each distinct from an out-of-view supersede and from a budget self-cancel.
