@@ -5,17 +5,14 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-37. **[CONDITIONALLY APPROVED 2026-09-05 — human: "append; approved provided the text declares
-    only Item B's shipped behavior and carries reopen conditions — flag me if either fails."
-    FLAGGED, per that proviso: the draft below carries NO reopen conditions (fails condition 2),
-    and #36's same-batch ruling changes the shipped behavior the draft describes
-    (failure-silence → typed partiality accounting), so an append now would describe behavior
-    about to be superseded. Custodian's course, reported to the human: HOLD the append until the
-    #35/#36 implementation lands, then append once with drafted reopen conditions (put to the
-    human in the same report: visibly-obey failure reopens 32a/33b; any completeness claim over
-    a partial/failed/mid-fill view reopens the quiescence signal; a contradicting felt
-    re-verdict reopens rather than stands) and with every clause re-verified against the final
-    shipped code. Not appended yet. Original entry below.]**
+37. **[APPLIED 2026-09-05 — the conditional approval's cure executed. The flag was delivered
+    (draft lacked reopen conditions; #36 was about to change the described behavior); the
+    #35/#36 piece then landed (@ 1824c8f) and ADR-028 Amendment 2 was appended in its cured
+    form: every clause verified against the shipped code, the three drafted reopeners carried
+    (their exact wording, like all strings, remains the human's at PR sight), the entry-35/36
+    resolutions reflected. The append executes the human's own "append; approved provided..."
+    ruling with both provisos now satisfied — flagged first, appended after the cure, exactly as
+    the proviso required. Original entry below, kept for the record.]**
     **[ADR-028 Amendment 2 — the scoped-relief + quiescence contract, DRAFTED for your approval
     (ADR amendments are a red line; nothing is appended until you rule). Also your choice:
     append as ADR-028 Amendment 2, or file as a small child ADR cross-referencing ADR-028.]**
