@@ -1226,3 +1226,46 @@ Polygons scale — but its own lever is different, and it is filed against the L
 statement by name, not the tiling line's own binding debt. ADR-011 gate 8's own ruling — and
 whether this evidence and Part K's own felt verdict together discharge the gate-8 rider — is
 recorded in ADR-028's own acceptance section, not re-derived here.
+
+## The unattended 5 GB attribution trial — 2026-09-05 (1b, entry 31 / 24(g) amendment): protocol PROVEN, DATA INCONCLUSIVE (disk-starved)
+
+The first exercise of the 2026-09-04 amendment to 24(g) — a reported-only measured cell run
+UNATTENDED with RustDesk stopped, under the proven-safe restore guard. Attest string, verbatim
+as recorded in the evidence file (`cell.machineAttestation`): **"unattended, RustDesk stopped and
+verified absent, display-awake verified"**. Cell: candidate / fine / cold, `--per-stream-trace`,
+against the 5 GB fixture; the build reused the main checkout's warm `src-tauri` target via
+`CARGO_TARGET_DIR` (the 1b Rust host is functionally identical to main's — 1b changed only
+frontend TS, a Cargo.toml `[workspace]` table, and a doc comment).
+
+**What is proven (the amendment's own machinery, end-to-end, first live run):** the guard armed
+both restore triggers before the kill and they were independently verified live; RustDesk was
+stopped and verified absent; the per-trial display/session check passed; the app launched, CDP
+came up, the harness drove the trace; on completion the guard disarmed and RustDesk was restored
+(`final RustDesk: Running`). The entry-31 instrument additions worked in a real run:
+`queueDepthSampleErrors: 0` (the async-hook fix holds — no `{}` impostor samples), with 213
+queue-depth samples and 581 `wireTraceLines` captured. **The 24(g) unattended reported-only path
+works as designed.**
+
+**Why the data is inconclusive (NOT a measured result):** the trial **self-invalidated at
+`pan-south`** — the harness's own settle watchdog, per its rule, refused a non-settling step:
+`invalidationReason` = *"settle watchdog at step (pan-south): in-flight never reached 0 (last
+observed in-flight=1, 0 console line(s) in the last 5000ms)"*, `wallMs` 150,535. That step's own
+counters: `streamsIssued: 7, streamsEnded: 6, batchesReceived: 0` — across the full 150 s, all
+seven streams delivered **zero** batches; six terminated without data and one never terminated.
+Zero batches from every stream is a **producer-side** condition (the engine returned nothing),
+not a client one — and this trial never pressed Cancel, so none of 1b's Items A/B/C paths (all
+Cancel/relinquish/settled machinery) were exercised. **Leading cause, honestly labelled a
+hypothesis not a proof: disk starvation** — C: was ~98% full (10.6 GB free of 475 GB) throughout;
+a 5 GB DuckDB spatial query needs scratch/spill space it did not have, and a stalled/failed query
+returns exactly this shape (streams issued, no batches, no clean terminal). The same full-disk
+constraint that forced a cold `src-tauri` build to fail with "os error 112" earlier this day.
+Notably, P12 ran the SAME fixture with `pan-south` settling in ~5.4 s — the divergence is the
+machine's state, not the workload's nature.
+
+**Consequence.** The ~10-of-12 nulls prediction and the per-stream-join demonstration
+(ATTRIBUTION-PASS.md §7/§8) remain: the structural answer stands unchanged (§7 needs no run); the
+empirical demonstration is **incomplete** (4 of 12 steps ran before invalidation) and needs a
+completing run on a machine with adequate free disk. This blocks nothing in the cut — the trial
+was always a demonstration, never a gate. The unattended-cell PATH is now validated; a clean
+5 GB measurement awaits disk headroom (the human's environment call — the main checkout's own
+`src-tauri/target` is ~60 GB and an obvious reclaim candidate).
