@@ -5,7 +5,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-34. **[1b headed-sitting scope, surfaced 2026-09-04 by the architect consult (Q6.4) — not
+34. **[RESOLVED 2026-09-05 — put to the human with a recommendation; answer: no preference
+    expressed → recommendation ADOPTED (the 24(c) "go with your recommendation" precedent,
+    recorded as such, never as an inline custodian decision): CORRECTNESS-ONLY sitting.** The 1b
+    closing sitting carries the felt re-verdict + K6's E2E felt-verification only; no scored
+    campaign. The 5 GB attribution trial runs UNATTENDED under the proven 24(g) restore protocol
+    (reported-only). The heap-footprint fold-in (entry 25's own "scored campaign" wording) stays
+    owed to whichever future cut next runs a scored campaign — not paid here. Original entry
+    below, kept for the record.]**
+    **[1b headed-sitting scope, surfaced 2026-09-04 by the architect consult (Q6.4) — not
     decided here, lower urgency than 32/33.]** Whether the headed sitting that closes 1b also runs
     a **scored campaign** (which would adopt the queued 5 GB clean-instrument attribution trial,
     the heap-footprint fold-in per entry 25, and the DECISIONS-PENDING #31 instrument defects) or
@@ -15,7 +23,14 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     machine is 24(g) headed-only either way. Recommendation: **decide at the sitting's own
     scheduling, not now** — it does not gate any 1b code. Touches: the sitting's own agenda only.
 
-33. **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.2) — GATES Item A/B
+33. **[RESOLVED 2026-09-05 — put to the human with a recommendation; answer: no preference
+    expressed → recommendation ADOPTED (24(c) precedent, recorded as such): DROP-QUEUE-ONLY.**
+    The scoped-relief lever drops the queued backlog only; in-flight streams (≤3) finish
+    delivering and their tiles land — nothing already paid for is discarded, and "stop filling"
+    means "no NEW work," settling within seconds as the in-flight finish. No SKP cancel is issued
+    by the lever. The settled/relinquished status wording reflects this meaning; exact strings on
+    sight at the implementing PR (24(b) precedent). Original entry below, kept for the record.]**
+    **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.2) — GATES Item A/B
     code, not decided here.]** The scoped-relief lever's depth: does it cancel in-flight tile
     streams too (via the existing `cancel` SKP command, ADR-018 — no new wire), or only drop the
     queued backlog and let in-flight streams finish productively? Both are honest and both
@@ -26,7 +41,14 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     them together. Touches, once ruled: `tileViewportStreamManager.ts`'s new `relinquishOutstanding`
     method + `candidateArmSession.ts`'s session seam + the status wording.
 
-32. **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.1) — GATES Item A/B
+32. **[RESOLVED 2026-09-05 — put to the human with a recommendation; answer: no preference
+    expressed → recommendation ADOPTED (24(c) precedent, recorded as such): REPOINT CANCEL.**
+    The existing Cancel button becomes the scoped relief: stop filling, keep the current partial
+    view, tiling resumes on the next camera change. The permanent kill switch leaves the UI
+    (dataset close/reopen remains the hard reset — `stop()` itself stays for teardown paths).
+    No second affordance. Exact button/status wording on sight at the implementing PR (24(b)
+    precedent). Original entry below, kept for the record.]**
+    **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.1) — GATES Item A/B
     code, not decided here.]** Cancel semantics, an operator-facing behavior change: today the
     Cancel button kills tiling for the dataset permanently (`TileViewportStreamManager.stop()`
     sets `stopped=true` with no reset; App.tsx:1233-1236). Item A needs a scoped lever that stops
