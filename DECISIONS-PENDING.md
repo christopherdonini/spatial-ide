@@ -5,6 +5,44 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+37. **[ADR-028 Amendment 2 — the scoped-relief + quiescence contract, DRAFTED for your approval
+    (ADR amendments are a red line; nothing is appended until you rule). Also your choice:
+    append as ADR-028 Amendment 2, or file as a small child ADR cross-referencing ADR-028.]**
+    The draft, from the architect's consult skeleton updated to the as-built, ruled shape:
+    ---
+    **Amendment 2 — Scoped residency relief and the quiescence signal (2026-09-0X, appended —
+    Accepted; discharges the 1b principle-7/8 debt).**
+    *Context.* ADR-028 delivered viewport-bounded residency and the over-budget partial-view
+    contract but left the held-queue disposition (docs/01 principle 7) and an affirmative
+    settled-partial declaration (principle 8) as named 1b debt. The only cancel lever was a
+    permanent kill switch; no client signal distinguished actively-filling from
+    queued-and-stalled or settled-partial.
+    *Decision.* (a) Per decisions 32a/33b: the operator Cancel repoints to a scoped-relief lever
+    (`TileViewportStreamManager.relinquishOutstanding`) that cancels every in-flight tile stream
+    (the existing `cancel` SKP command, ADR-018 — no new wire) AND drops the queued backlog,
+    reporting each affected tile distinctly (relinquish-cancelled vs relinquish-dropped, distinct
+    from supersede and budget self-cancel); it never sets `stopped`, never clears residency,
+    never resets the grid frame — future planning is unaffected; the permanent kill is
+    teardown-only. Cancellation is asserted as a property (ADR-018 instants), never timed.
+    (b) A residency-quiescence signal, pure functions of client-observable session state
+    (`fillActivity`: stalled iff queuedCount>0 && overBudget && !hasHeadroom; `settledState`:
+    settled iff hasPlanned && no pending re-plan && trackedTileCount===0 && the untiled
+    first-look/reissue stream is not running — classified settled-complete/settled-partial
+    against the fill-completeness predicate), surfaced through the existing status union — no
+    new SKP field (ADR-004 Amendment 4), no producer scan-progress dependency.
+    (c) A user-stopped fill can never read complete until a new plan runs (the relinquish latch),
+    and no completeness claim is emitted while any covering-tile stream or the untiled stream is
+    outstanding, or a re-plan is pending, or a covering tile's stream failed without a fresh plan
+    (the 1b reviewer-gate strengthenings).
+    *Consequences.* Discharges ADR-028's 1b principle-7/8 debt; ADR-006 class-1/derived-state
+    only; no wire change (ADR-010 rule 1 untouched); status wording is the human's per 24(b);
+    the untiled-stream Cancel scope (entry 35) and the within-budget-truncated staleness (entry
+    36) remain open, named, not silently absorbed.
+    ---
+    Recommendation: **append as ADR-028 Amendment 2** (the contract is ADR-028's own debt coming
+    home; a child ADR would split one contract across two files). Touches, once approved:
+    ADR-028 (append the text above, with your date and any edits), nothing else.
+
 36. **[Wording/status-kind gap, surfaced 2026-09-05 by Item B's reviewer gate (off-scope note b)
     — 24(b) territory, NOT decided inline.]** The settled-partial signal extends only the two
     existing status kinds (over-budget, within-budget), so a **within-budget-but-truncated/
