@@ -48,13 +48,23 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
     const overDegraded = residencyStatusText({ kind: "candidate-over-budget", residentFeatureCount: 1, viewportTotal: null });
     const stalled = residencyStatusText({ kind: "candidate-over-budget", residentFeatureCount: 1, viewportTotal: null, stalled: true });
     const settledPartial = residencyStatusText({ kind: "candidate-over-budget", residentFeatureCount: 1, viewportTotal: null, settled: "partial" });
+    const settledPartialFailure = residencyStatusText({ kind: "candidate-within-budget", residentFeatureCount: 1, settled: "partial-failure" });
     const relinquished = residencyStatusText({ kind: "candidate-relinquished", residentFeatureCount: 1 });
     const relinquishedUntiledRunning = residencyStatusText({
       kind: "candidate-relinquished",
       residentFeatureCount: 1,
       untiledStreamStillRunning: true,
     });
-    for (const text of [withinBudget, overHonest, overDegraded, stalled, settledPartial, relinquished, relinquishedUntiledRunning]) {
+    for (const text of [
+      withinBudget,
+      overHonest,
+      overDegraded,
+      stalled,
+      settledPartial,
+      settledPartialFailure,
+      relinquished,
+      relinquishedUntiledRunning,
+    ]) {
       expect(text).not.toMatch(/\b\d+\s?(ms|s|sec|secs|second|seconds|min|mins|minute|minutes)\b/i);
       expect(text).not.toMatch(/%|\beta\b/i);
     }
@@ -77,18 +87,22 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
       );
     });
 
+    // String 2, RULED 2026-09-05 (24(b) string sight): "not fetched" -> "not loaded", rest verbatim.
     it("candidate-relinquished: states the partiality, NEVER 'complete' (32a's own rider)", () => {
       const status: ResidencyStatus = { kind: "candidate-relinquished", residentFeatureCount: 500 };
       const text = residencyStatusText(status);
-      expect(text).toBe("Filling stopped — showing 500 features already loaded; the rest of this view was not fetched.");
+      expect(text).toBe("Filling stopped — showing 500 features already loaded; the rest of this view was not loaded.");
       expect(text.toLowerCase()).not.toContain("complete");
       expect(text.toLowerCase()).not.toContain("all ");
     });
 
-    // M1 (reviewer gate, residency-debt cut 1b): the third draft string -- the honest alternative
-    // when the untiled first-look/reissue stream is still running at relinquish time, when the
-    // ordinary "Filling stopped" wording above would be false (DECISIONS-PENDING.md entry 35).
-    it("candidate-relinquished, untiledStreamStillRunning: true: never claims 'Filling stopped' -- states the truth that Cancel does not reach that stream", () => {
+    // String 3, REWORDED 2026-09-05 per entry 35's own string-3 reachability re-check: the honest
+    // alternative when the untiled first-look/reissue stream is still running at relinquish time, when
+    // the ordinary "Filling stopped" wording above would be false -- now reachable ONLY from the
+    // frameless window (`candidateArmSession.ts`'s own `relinquishFill` doc comment has the trace), so
+    // it names the frame's own absence rather than "the initial data load" (a frameless Apply/Clear
+    // reissue racing the first look's own terminal is not "initial").
+    it("candidate-relinquished, untiledStreamStillRunning: true: never claims 'Filling stopped' -- states the truth that Cancel does not reach that stream while the frame is not yet established", () => {
       const status: ResidencyStatus = {
         kind: "candidate-relinquished",
         residentFeatureCount: 500,
@@ -96,18 +110,19 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
       };
       const text = residencyStatusText(status);
       expect(text).toBe(
-        "Tile filling stopped — showing 500 features already loaded; the initial data load for this view is still running and Cancel does not stop it."
+        "Tile filling stopped — showing 500 features already loaded; the data load for this view is still running and Cancel does not stop it while the view's frame is not yet established."
       );
       expect(text.toLowerCase()).not.toContain("complete");
+      expect(text.toLowerCase()).not.toContain("initial data load");
       // Never the plain "Filling stopped" claim -- that would be false while the untiled stream
       // keeps delivering.
-      expect(text).not.toBe("Filling stopped — showing 500 features already loaded; the rest of this view was not fetched.");
+      expect(text).not.toBe("Filling stopped — showing 500 features already loaded; the rest of this view was not loaded.");
     });
   });
 
-  // Item B (residency-debt cut 1b): the fourth new DRAFT string this piece adds -- asserted verbatim,
-  // same discipline as every other string in this describe block.
-  describe("Item B's settled-partial string (draft for the human's 24(b) sight)", () => {
+  // Item B (residency-debt cut 1b): the fourth DRAFT string this piece adds -- string 4, RULED
+  // 2026-09-05 (24(b) string sight): the human's own wording, applied verbatim.
+  describe("Item B's settled-partial string (RULED 2026-09-05, human's own wording)", () => {
     it("candidate-over-budget, settled: 'partial': the ordinary sentence PLUS the fill's own quiescence, never a completeness/total claim", () => {
       const status: ResidencyStatus = {
         kind: "candidate-over-budget",
@@ -117,7 +132,7 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
       };
       const text = residencyStatusText(status);
       expect(text).toBe(
-        "Showing 900 features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail. Filling has stopped for this view; pan or zoom to look for more."
+        "Showing 900 features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail. Filling has finished for this view — the render budget is full; pan or zoom to see other areas."
       );
       expect(text.toLowerCase()).not.toContain("complete");
       expect(text.toLowerCase()).not.toContain("all ");
@@ -131,7 +146,7 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
         settled: "partial",
       };
       expect(residencyStatusText(status)).toBe(
-        "Showing 900 of ~1500 features — areas farthest from view are not drawn, to stay within the render budget. Pan or zoom in to see them. Filling has stopped for this view; pan or zoom to look for more."
+        "Showing 900 of ~1500 features — areas farthest from view are not drawn, to stay within the render budget. Pan or zoom in to see them. Filling has finished for this view — the render budget is full; pan or zoom to see other areas."
       );
     });
 
@@ -155,6 +170,19 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
       expect(residencyStatusText(status)).toBe(
         "Showing 900 features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail. Filling is paused until the next pan or zoom."
       );
+    });
+  });
+
+  // Piece 2(ii) (residency-debt cut 1b, entry 36): the FIFTH new draft string -- the failure-partial
+  // reading on the WITHIN-budget event, distinct from string 4 (budget-only).
+  describe("Piece 2(ii)'s failure-partial string (draft for the human's 24(b) sight)", () => {
+    it("candidate-within-budget, settled: 'partial-failure': its own complete sentence, never 'Showing all N', never string 4's budget-only claim", () => {
+      const status: ResidencyStatus = { kind: "candidate-within-budget", residentFeatureCount: 3, settled: "partial-failure" };
+      const text = residencyStatusText(status);
+      expect(text).toBe("Filling has finished for this view, but part of it failed to load; pan or zoom to retry.");
+      expect(text.toLowerCase()).not.toContain("complete");
+      expect(text.toLowerCase()).not.toContain("showing all");
+      expect(text.toLowerCase()).not.toContain("render budget");
     });
   });
 });
@@ -216,6 +244,48 @@ describe("nextResidencyStatus: candidate-relinquished (Item A, decisions 32a/33b
     expect(nextResidencyStatus({ kind: "dataset-changed" })).toBeNull();
     expect(nextResidencyStatus({ kind: "query-issued" })).toBeNull();
     expect(nextResidencyStatus({ kind: "delivery-complete" })).toBeNull();
+  });
+});
+
+// Piece 1 (residency-debt cut 1b, entry 35, "sticky per entry-1"): the `current`-aware refusal rule --
+// a standing `candidate-relinquished` status is never silently replaced by a later batch-driven
+// within/over-budget reading, only by a clearing-class event or another relinquish.
+describe("nextResidencyStatus: the sticky-relinquished rule (Piece 1, entry 35)", () => {
+  const relinquished: ResidencyStatus = { kind: "candidate-relinquished", residentFeatureCount: 7 };
+
+  it("refuses a later candidate-within-budget/candidate-over-budget overwrite, returning the standing relinquished status unchanged", () => {
+    expect(
+      nextResidencyStatus({ kind: "candidate-within-budget", residentFeatureCount: 999, settled: "complete" }, relinquished)
+    ).toEqual(relinquished);
+    expect(
+      nextResidencyStatus({ kind: "candidate-over-budget", residentFeatureCount: 999, viewportTotal: null }, relinquished)
+    ).toEqual(relinquished);
+  });
+
+  it("every clearing-class event still clears it -- query-issued/dataset-changed/delivery-complete/candidate-fill-progress", () => {
+    expect(nextResidencyStatus({ kind: "query-issued" }, relinquished)).toBeNull();
+    expect(nextResidencyStatus({ kind: "dataset-changed" }, relinquished)).toBeNull();
+    expect(nextResidencyStatus({ kind: "delivery-complete" }, relinquished)).toBeNull();
+    expect(nextResidencyStatus({ kind: "candidate-fill-progress" }, relinquished)).toBeNull();
+  });
+
+  it("another relinquish still applies (updates the standing status, never refused)", () => {
+    expect(
+      nextResidencyStatus({ kind: "candidate-relinquished", residentFeatureCount: 12 }, relinquished)
+    ).toEqual<ResidencyStatus>({ kind: "candidate-relinquished", residentFeatureCount: 12 });
+  });
+
+  it("with no current supplied (every pre-existing call site's own shape), behaves exactly as before -- the refusal never fires", () => {
+    expect(
+      nextResidencyStatus({ kind: "candidate-within-budget", residentFeatureCount: 5, settled: "complete" })
+    ).toEqual<ResidencyStatus>({ kind: "candidate-within-budget", residentFeatureCount: 5, settled: "complete" });
+  });
+
+  it("a non-relinquished current never triggers the refusal -- ordinary over-budget/within-budget churn is untouched", () => {
+    const withinBudget: ResidencyStatus = { kind: "candidate-within-budget", residentFeatureCount: 1 };
+    expect(
+      nextResidencyStatus({ kind: "candidate-over-budget", residentFeatureCount: 2, viewportTotal: null }, withinBudget)
+    ).toEqual<ResidencyStatus>({ kind: "candidate-over-budget", residentFeatureCount: 2, viewportTotal: null });
   });
 });
 
@@ -299,25 +369,43 @@ describe("nextResidencyStatus (candidate-arm transitions, viewport-residency cut
       nextResidencyStatus({ kind: "candidate-over-budget", residentFeatureCount: 10, viewportTotal: null })
     ).toEqual<ResidencyStatus>({ kind: "candidate-over-budget", residentFeatureCount: 10, viewportTotal: null });
   });
+
+  // Piece 2(ii) (residency-debt cut 1b, entry 36): `settled: "partial-failure"` carried through
+  // unchanged, the same contract as `"complete"` above.
+  it("carries settled: 'partial-failure' through for candidate-within-budget unchanged", () => {
+    expect(
+      nextResidencyStatus({ kind: "candidate-within-budget", residentFeatureCount: 3, settled: "partial-failure" })
+    ).toEqual<ResidencyStatus>({ kind: "candidate-within-budget", residentFeatureCount: 3, settled: "partial-failure" });
+  });
+
+  // Piece 2(i) (residency-debt cut 1b, entry 36 rule (i)): the fourth clearing-class member.
+  it("candidate-fill-progress clears a standing candidate-within-budget status -- the fourth clearing-class member", () => {
+    const withStatus = nextResidencyStatus({ kind: "candidate-within-budget", residentFeatureCount: 40, settled: "complete" });
+    expect(withStatus).not.toBeNull();
+    expect(nextResidencyStatus({ kind: "candidate-fill-progress" }, withStatus)).toBeNull();
+  });
 });
 
-// Item B (residency-debt cut 1b, RESIDENCY-DEBT-1B.md, BS5): `settledState`'s own five pure inputs,
+// Item B (residency-debt cut 1b, RESIDENCY-DEBT-1B.md, BS5): `settledState`'s own pure inputs,
 // unit-tested directly -- no manager/canvas/timer anywhere in this describe block, matching
 // `fillActivity`'s own describe block immediately above it in this file.
-describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewportChange/trackedTileCount/untiledStreamRunning/fillComplete)", () => {
+describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewportChange/trackedTileCount/untiledStreamRunning/fillComplete/hasCoveringFailure)", () => {
   // The preregistration's own predicate, quoted verbatim (RESIDENCY-DEBT-1B.md, Item B section):
   // `isSettled = hasPlanned && !pendingViewportChange && manager.trackedTileCount === 0`. Classified
   // `"settled-complete"` when `fillComplete` also holds, `"settled-partial"` otherwise. M1 (reviewer
   // gate, residency-debt cut 1b, "Item B input-list amendment", dated 2026-09-05) widens the predicate by one
   // input, `untiledStreamRunning` -- `settledBase` below defaults it `false` (the ordinary case: the
   // untiled first-look/reissue stream has already reached its own terminal), so every PRE-EXISTING test
-  // in this describe block keeps exercising exactly the same three-input surface it always did.
+  // in this describe block keeps exercising exactly the same three-input surface it always did. Piece
+  // 2(ii) (residency-debt cut 1b, entry 36) widens it again by `hasCoveringFailure`, defaulted `false`
+  // here for the same "every pre-existing test keeps exercising the same surface" reason.
   const settledBase: SettledStateInputs = {
     hasPlanned: true,
     pendingViewportChange: false,
     trackedTileCount: 0,
     untiledStreamRunning: false,
     fillComplete: true,
+    hasCoveringFailure: false,
   };
 
   it("settled-complete: hasPlanned, no pending change, nothing tracked, the untiled stream at its own terminal, and the covering set reads complete", () => {
@@ -352,29 +440,56 @@ describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewpo
     expect(settledState({ ...settledBase, untiledStreamRunning: true, fillComplete: false })).toBe("not-settled");
   });
 
-  // The exhaustive combination table (BUILD instruction 6, doubled by M1): every reachable combination
-  // of the four boolean-shaped preconditions (`hasPlanned`, `pendingViewportChange`, `trackedTileCount
-  // === 0` vs `> 0`, `untiledStreamRunning`) crossed with `fillComplete` -- `isSettled` is `true` on
-  // exactly ONE combination of the four preconditions (all hold, `trackedTileCount === 0`), and
-  // `fillComplete` then selects the classification.
-  it("the exhaustive combination table: every reachable (hasPlanned, pendingViewportChange, trackedTileCount, untiledStreamRunning, fillComplete) combination", () => {
+  // Piece 2(ii) (residency-debt cut 1b, entry 36): `hasCoveringFailure` only ever changes the
+  // classification WHEN `fillComplete` is `false` (its own doc comment: `fillComplete` already
+  // excludes every failure case by construction, `isFillComplete()`'s own new check,
+  // `candidateArmSession.ts`) -- selecting `"settled-partial-failure"` over the budget/truncation
+  // reading `"settled-partial"`, never overriding a genuinely `fillComplete: true` reading.
+  it("settled-partial-failure: the SAME settled preconditions as settled-partial, but hasCoveringFailure is true -- typed accounting, replacing B1's silence", () => {
+    expect(settledState({ ...settledBase, fillComplete: false, hasCoveringFailure: true })).toBe("settled-partial-failure");
+  });
+
+  it("hasCoveringFailure is irrelevant once fillComplete is true -- still settled-complete, never overridden by a stale failure flag", () => {
+    expect(settledState({ ...settledBase, fillComplete: true, hasCoveringFailure: true })).toBe("settled-complete");
+  });
+
+  it("hasCoveringFailure is irrelevant while not settled -- still not-settled, regardless of the failure flag", () => {
+    expect(settledState({ ...settledBase, trackedTileCount: 1, hasCoveringFailure: true })).toBe("not-settled");
+  });
+
+  // The exhaustive combination table (BUILD instruction 6, doubled by M1, tripled by Piece 2(ii)):
+  // every reachable combination of the five boolean-shaped preconditions (`hasPlanned`,
+  // `pendingViewportChange`, `trackedTileCount === 0` vs `> 0`, `untiledStreamRunning`,
+  // `hasCoveringFailure`) crossed with `fillComplete` -- `isSettled` is `true` on exactly ONE
+  // combination of the first four preconditions (all hold, `trackedTileCount === 0`), and
+  // `fillComplete`/`hasCoveringFailure` then select the classification.
+  it("the exhaustive combination table: every reachable (hasPlanned, pendingViewportChange, trackedTileCount, untiledStreamRunning, fillComplete, hasCoveringFailure) combination", () => {
     const trackedCounts = [0, 1, 3];
     for (const hasPlanned of [true, false]) {
       for (const pendingViewportChange of [true, false]) {
         for (const trackedTileCount of trackedCounts) {
           for (const untiledStreamRunning of [true, false]) {
             for (const fillComplete of [true, false]) {
-              const input: SettledStateInputs = {
-                hasPlanned,
-                pendingViewportChange,
-                trackedTileCount,
-                untiledStreamRunning,
-                fillComplete,
-              };
-              const isSettled =
-                hasPlanned && !pendingViewportChange && trackedTileCount === 0 && !untiledStreamRunning;
-              const expected = !isSettled ? "not-settled" : fillComplete ? "settled-complete" : "settled-partial";
-              expect(settledState(input), JSON.stringify(input)).toBe(expected);
+              for (const hasCoveringFailure of [true, false]) {
+                const input: SettledStateInputs = {
+                  hasPlanned,
+                  pendingViewportChange,
+                  trackedTileCount,
+                  untiledStreamRunning,
+                  fillComplete,
+                  hasCoveringFailure,
+                };
+                const isSettled =
+                  hasPlanned && !pendingViewportChange && trackedTileCount === 0 && !untiledStreamRunning;
+                const expected = !isSettled
+                  ? "not-settled"
+                  : fillComplete
+                    ? "settled-complete"
+                    : hasCoveringFailure
+                      ? "settled-partial-failure"
+                      : "settled-partial";
+                expect(settledState(input), JSON.stringify(input)).toBe(expected);
+              }
             }
           }
         }
@@ -399,6 +514,7 @@ describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewpo
         trackedTileCount: 3,
         untiledStreamRunning: false,
         fillComplete: false,
+        hasCoveringFailure: false,
       })
     ).toBe("not-settled");
     // Even a single freshly re-admitted tile (the reopening exception's own admission) is enough.
@@ -409,6 +525,7 @@ describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewpo
         trackedTileCount: 1,
         untiledStreamRunning: false,
         fillComplete: false,
+        hasCoveringFailure: false,
       })
     ).toBe("not-settled");
   });
@@ -438,6 +555,7 @@ describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewpo
           trackedTileCount,
           untiledStreamRunning: false,
           fillComplete: true,
+          hasCoveringFailure: false,
         })
       ).toBe("not-settled");
     }

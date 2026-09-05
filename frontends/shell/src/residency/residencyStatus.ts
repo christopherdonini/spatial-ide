@@ -40,8 +40,16 @@ export type ResidencyStatus =
    * SYMMETRY with `candidate-over-budget`'s own `settled?: "partial"` (below), where the field DOES carry
    * information (an over-budget event fires whether or not it is settled): one consistent shape, `status
    * .settled === "complete"`/`"partial"`, either kind can be checked the same way without a caller needing
-   * to know which variant is the informationless one. */
-  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" }
+   * to know which variant is the informationless one.
+   *
+   * Piece 2(ii) (residency-debt cut 1b, entry 36): `settled` widens to `"partial-failure"` -- the
+   * typed-partiality reading for a fill that genuinely settled (nothing tracked, no pending re-plan,
+   * the untiled stream at its own terminal) but where a covering-tile terminal since the last plan
+   * failed (`settledState`'s own `hasCoveringFailure` input, `candidateArmSession.ts`'s
+   * `failedCoveringTerminals`) -- REPLACES B1's silent "nothing emitted" reading for exactly that
+   * case: never `"complete"` (BS6: no completeness claim over a set a stream failed for), and never
+   * silent either (entry 36's own ruling: "silence and staleness never represent state"). */
+  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" | "partial-failure" }
   /** Candidate arm, over budget: `residentFeatureCount` is what IS resident and drawn.
    * `viewportTotal` is an HONEST total feature count for the current viewport if one is EVER known --
    * today, never: the candidate arm has no wire mechanism that reports an undelivered tile's own
@@ -74,15 +82,17 @@ export type ResidencyStatus =
    * happens to sit to whatever the full covering set would have delivered (BS6: no completeness claim
    * over a partial set).
    *
-   * **M1 (reviewer gate, residency-debt cut 1b) -- `untiledStreamStillRunning`.** Entry 32 ruled
-   * Cancel repoints to the scoped relief of THE TILE FILL only; it never named the untiled first-
-   * look/reissue stream (`candidateArmSession.ts`'s own `untiledStreamHandle`), which the relief lever
-   * does NOT cancel -- that scope question is DECISIONS-PENDING.md entry 35, pending the human, NOT
-   * decided by this piece. While that stream is still running at the moment the lever fires, the
-   * ordinary "Filling stopped" wording below would be a false claim (batches keep landing) -- this
-   * field, `true` only in that window (omitted otherwise, the same "absent, never explicit `false`"
-   * idiom `TilePlanOutcome.coveringTruncated`/this file's own `stalled` field already use), tells
-   * `residencyStatusText` to render the honest alternative instead.
+   * **M1 (reviewer gate, residency-debt cut 1b) -- `untiledStreamStillRunning`, entry 35 RULED
+   * 2026-09-05.** Entry 32 ruled Cancel repoints to the scoped relief of THE TILE FILL; entry 35 later
+   * ruled the untiled first-look/reissue stream (`candidateArmSession.ts`'s own `untiledStreamHandle`)
+   * INTO scope too, but only conditionally: `relinquishFill` now cancels it as well whenever a grid
+   * frame already exists (no anchor hazard once the frame is frozen), leaving only the frameless
+   * bootstrap window uncancellable (the ruling's own "no at bootstrap"). This field is therefore `true`
+   * only in that narrower, frameless window now (omitted otherwise, the same "absent, never explicit
+   * `false`" idiom `TilePlanOutcome.coveringTruncated`/this file's own `stalled` field already use) --
+   * `candidateArmSession.ts`'s own `relinquishFill` doc comment has the full trace of why no OTHER
+   * window can reach this field any more. `residencyStatusText` renders the honest alternative
+   * (reworded per the ruling's own string-3 follow-on) whenever it does.
    *
    * Item B: deliberately carries NO `settled` field of its own -- `relinquishFill` (`candidateArmSession
    * .ts`) resets its session's own `hasPlanned` latch to `false`, so `settledState`'s own `isSettled`
@@ -97,14 +107,26 @@ export type ResidencyStatus =
  * candidate-only (never constructed by baseline code, which has no notion of tile budgets).
  * `"delivery-complete"`/`"dataset-changed"`/`"query-issued"` are shared -- both arms clear the status
  * on any of the three, exactly rider 1's own declared transitions plus its later `"query-issued"`
- * refinement (DECISIONS-PENDING.md entry 1).
+ * refinement (DECISIONS-PENDING.md entry 1). Piece 2(i) (residency-debt cut 1b, entry 36) adds a
+ * FOURTH clearing member, `"candidate-fill-progress"` -- see its own doc comment below.
  */
 export type ResidencyStatusEvent =
   | { kind: "ceiling-refusal"; residentFeatureCount: number; datasetRowCount: string }
   | { kind: "delivery-complete" }
   | { kind: "dataset-changed" }
   | { kind: "query-issued" }
-  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" }
+  /** Piece 2(i) (residency-debt cut 1b, entry 36 rule (i)): a clearing-class event the candidate arm
+   * emits whenever it has just learned that a prior complete-looking reading ("Showing all N features
+   * in view") no longer holds, so that reading is never left standing by inertia (the twice-convicted
+   * "Showing all N" class, BS6) -- `candidateArmSession.ts`'s own `emitResidencyStatus` fires this
+   * exactly once, right before falling silent, whenever the covering set just stopped reading
+   * complete after having read complete before. Also fired once by `handleViewportChange` when a
+   * genuinely fresh plan follows a `candidate-relinquished` status (entry 35's own sticky-clear rule,
+   * below), so a NEW plan can supersede a standing relinquished reading. Reduces to `null`
+   * (`nextResidencyStatus` below), the same shared clearing mechanism the three events above already
+   * are -- a fourth member of that family, not a second parallel signal. */
+  | { kind: "candidate-fill-progress" }
+  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" | "partial-failure" }
   | { kind: "candidate-over-budget"; residentFeatureCount: number; viewportTotal: number | null; stalled?: true; settled?: "partial" }
   /** Item A (decisions 32a/33b): fired once, synchronously, from `candidateArmSession.ts`'s own
    * `relinquishFill()` -- never derived from `nextResidencyStatus`'s other transitions, so it can
@@ -121,8 +143,30 @@ export type ResidencyStatusEvent =
  * Dismissing the `.canvas-refusal` banner is deliberately NOT a transition here (baseline, unchanged
  * from before this piece) -- rider 1, the human's words: "dismiss hides the banner, never the status
  * indicator".
+ *
+ * **Piece 1 (residency-debt cut 1b, entry 35 -- "sticky per entry-1"): the `current` parameter and its
+ * one refusal rule.** A standing `"candidate-relinquished"` status must persist until a
+ * query-issued-class transition clears it -- it is NEVER silently replaced by a later batch-driven
+ * `"candidate-within-budget"`/`"candidate-over-budget"` reading (the concrete, reachable case: the
+ * frameless bootstrap window's own untiled stream, left deliberately uncancelled, later reports
+ * over-budget on its own batch, and `emitResidencyStatus`'s over-budget branch emits unconditionally
+ * -- `candidateArmSession.ts`'s own doc comment on `relinquishFill` has the full trace). `current`
+ * defaults to `null` so every pre-existing call site/test that never threads a prior status through
+ * keeps behaving exactly as before (the refusal can only ever fire when a caller actually supplies a
+ * `"candidate-relinquished"` `current`, which none of them did before this piece). A NEW plan or
+ * dataset/filter change clears the sticky status honestly -- through one of the clearing-class events
+ * themselves (`"query-issued"`/`"dataset-changed"`/`"delivery-complete"`/`"candidate-fill-progress"`)
+ * or another relinquish, never by simply letting the next over/within-budget reading overwrite it in
+ * place (`candidateArmSession.ts`'s own `relinquishFill`/`handleViewportChange` wiring fires the
+ * clearing event at exactly that moment).
  */
-export function nextResidencyStatus(event: ResidencyStatusEvent): ResidencyStatus | null {
+export function nextResidencyStatus(event: ResidencyStatusEvent, current: ResidencyStatus | null = null): ResidencyStatus | null {
+  if (
+    current?.kind === "candidate-relinquished" &&
+    (event.kind === "candidate-within-budget" || event.kind === "candidate-over-budget")
+  ) {
+    return current; // sticky: refuse the overwrite -- neither a clearing class nor another relinquish
+  }
   switch (event.kind) {
     case "ceiling-refusal":
       return { kind: "baseline-ceiling", residentFeatureCount: event.residentFeatureCount, datasetRowCount: event.datasetRowCount };
@@ -145,6 +189,7 @@ export function nextResidencyStatus(event: ResidencyStatusEvent): ResidencyStatu
     case "delivery-complete":
     case "dataset-changed":
     case "query-issued":
+    case "candidate-fill-progress":
       return null;
   }
 }
@@ -247,17 +292,35 @@ export interface SettledStateInputs {
    * `candidateArmSession.ts`). */
   untiledStreamRunning: boolean;
   /** `candidateArmSession.ts`'s own `isFillComplete()` -- the SAME boolean `emitResidencyStatus`'s
-   * pre-existing within-budget gate already reads; not re-derived here. */
+   * pre-existing within-budget gate already reads; not re-derived here. Piece 2(ii) (residency-debt
+   * cut 1b, entry 36): `isFillComplete()` itself now also reads `false` whenever `hasCoveringFailure`
+   * (below) would be `true` (`candidateArmSession.ts`'s own `failedCoveringTerminals.size > 0` check),
+   * so `fillComplete` can never be `true` at the same time as `hasCoveringFailure` -- the two inputs
+   * are consulted in sequence below, never in conflict. */
   fillComplete: boolean;
+  /** Piece 2(ii) (residency-debt cut 1b, entry 36): `true` iff a covering-tile stream (or the untiled
+   * stream, Piece 2(iii)) has terminated with a non-`Completed` terminal since the last real plan --
+   * `candidateArmSession.ts`'s own `failedCoveringTerminals` set, recorded by `manager`'s own
+   * `onTerminal` callback and the untiled sink's `onTerminal`, cleared at the top of every fresh
+   * `handleViewportChange` plan. REPLACES the prior B1 fix's blunt, unconditional
+   * `hasPlanned = false` latch on any non-`Completed` terminal -- the typed accounting distinguishes
+   * WHY a fill is not complete (budget/truncation vs. a genuine failure), so `residencyStatusText` can
+   * finally say which, rather than falling silent (entry 36's own ruling: "silence and staleness never
+   * represent state"). Only consulted here when `fillComplete` is `false` -- `fillComplete` already
+   * excludes every failure case by construction (see that field's own doc comment), so this input
+   * exists purely to tell "not complete because of budget/truncation" apart from "not complete because
+   * something genuinely failed," never to override `fillComplete` itself. */
+  hasCoveringFailure: boolean;
 }
 
-export type SettledState = "not-settled" | "settled-complete" | "settled-partial";
+export type SettledState = "not-settled" | "settled-complete" | "settled-partial" | "settled-partial-failure";
 
 export function settledState(input: SettledStateInputs): SettledState {
   const isSettled =
     input.hasPlanned && !input.pendingViewportChange && input.trackedTileCount === 0 && !input.untiledStreamRunning;
   if (!isSettled) return "not-settled";
-  return input.fillComplete ? "settled-complete" : "settled-partial";
+  if (input.fillComplete) return "settled-complete";
+  return input.hasCoveringFailure ? "settled-partial-failure" : "settled-partial";
 }
 
 /**
@@ -287,8 +350,14 @@ export function settledState(input: SettledStateInputs): SettledState {
  * M1 (reviewer gate) adds a THIRD draft string, for the `untiledStreamStillRunning` case above: the
  * ordinary "Filling stopped" wording would be false while the untiled first-look/reissue stream keeps
  * delivering, so this one states the truth instead -- the tile backlog was relinquished, the initial/
- * filter data load is still running, and Cancel does not stop it (DECISIONS-PENDING.md entry 35's own
- * open scope question, not yet ruled).
+ * filter data load is still running, and Cancel does not stop it. **RULED 2026-09-05 (entry 35, the
+ * 24(b) string sight):** the human held string 3 for the string-3 reachability re-check this piece
+ * carries out -- see `candidateArmSession.ts`'s own `relinquishFill` doc comment for the trace. The
+ * survivor is REWORDED here per the human's own note ("reworded per my note if it survives"): with
+ * `relinquishFill` now also cancelling this stream whenever `manager.gridFrame` already exists, the
+ * ONLY window this variant can still fire from is the frameless one (bootstrap, or an Apply/Clear
+ * reissue racing the first look's own frame-establishing terminal) -- never "the initial data load"
+ * alone (a frameless reissue is not initial), so the string now names the frame itself, not "initial".
  *
  * Item B (residency-debt cut 1b) adds a FOURTH draft string, for `settled: "partial"` above: the fill
  * has genuinely come to rest for this viewport (no further request is outstanding, and none will start
@@ -298,25 +367,42 @@ export function settledState(input: SettledStateInputs): SettledState {
  * the partial set (BS6) -- `settled: "complete"` on the within-budget event, by contrast, needs no new
  * string at all: it renders the SAME pre-existing "Showing all N" text (see that function's own doc
  * comment on `emitResidencyStatus`, `candidateArmSession.ts`, for the new gate that guards it).
+ * **RULED 2026-09-05 (24(b) string sight):** the human's own wording, applied verbatim below.
+ *
+ * Piece 2(ii) (residency-debt cut 1b, entry 36) adds a FIFTH string, for `settled: "partial-failure"`
+ * on the WITHIN-budget event -- distinct from string 4 above, whose "the render budget is full" claim
+ * is budget-only and would be false here (nothing was evicted for space; a covering-tile stream
+ * genuinely failed instead). Draft-marked, for the human's 24(b) sight at this piece's own PR.
  */
 /** Item A draft (24(b) sight): appended to the ordinary over-budget sentence only when `fillActivity`
  * reads `"stalled"` -- never a duration, only the freeze and its remedy. */
 const STALLED_SUFFIX = " Filling is paused until the next pan or zoom.";
-/** Item B draft (24(b) sight): appended to the ordinary over-budget sentence only when `settledState`
- * reads `"settled-partial"` -- mutually exclusive with `STALLED_SUFFIX` above by construction (a
- * settled reading requires `trackedTileCount === 0`; a stalled reading requires `queuedCount > 0`,
- * which requires `trackedTileCount > 0`), so the two never compete for the same sentence. States the
- * fill's own quiescence, never a total or a completeness claim (BS6). */
-const SETTLED_PARTIAL_SUFFIX = " Filling has stopped for this view; pan or zoom to look for more.";
-/** Item A draft (24(b) sight): 32a's own rider -- never "complete", never silent. */
+/** Item B string, RULED 2026-09-05 (24(b) string sight) -- the human's own wording, applied verbatim:
+ * appended to the ordinary over-budget sentence only when `settledState` reads `"settled-partial"` --
+ * mutually exclusive with `STALLED_SUFFIX` above by construction (a settled reading requires
+ * `trackedTileCount === 0`; a stalled reading requires `queuedCount > 0`, which requires
+ * `trackedTileCount > 0`), so the two never compete for the same sentence. States the fill's own
+ * quiescence AND that the reason is the render budget, never a total or a completeness claim (BS6). */
+const SETTLED_PARTIAL_SUFFIX = " Filling has finished for this view — the render budget is full; pan or zoom to see other areas.";
+/** Piece 2(ii) draft (24(b) sight, entry 36): the failure-partial state's OWN distinct wording -- never
+ * `SETTLED_PARTIAL_SUFFIX` above, whose "the render budget is full" claim is budget-only and would be
+ * false here (`settledState`'s own doc comment: `hasCoveringFailure` is only ever consulted when
+ * `fillComplete` is otherwise false for a NON-budget reason). Rendered as a complete sentence on the
+ * WITHIN-budget event (never appended as a suffix -- nothing here is "the ordinary over-budget
+ * sentence" to append to), since the render budget was never the issue. */
+const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but part of it failed to load; pan or zoom to retry.";
+/** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
+ * rest verbatim): 32a's own rider -- never "complete", never silent. */
 function relinquishedText(residentFeatureCount: number): string {
-  return `Filling stopped — showing ${residentFeatureCount} features already loaded; the rest of this view was not fetched.`;
+  return `Filling stopped — showing ${residentFeatureCount} features already loaded; the rest of this view was not loaded.`;
 }
-/** M1 draft (24(b) sight): the honest alternative when the untiled first-look/reissue stream is still
- * running at relinquish time -- see `ResidencyStatus`'s own `untiledStreamStillRunning` doc comment
- * for the full account of why the ordinary `relinquishedText` above would be false here. */
+/** M1 draft (24(b) sight), REWORDED 2026-09-05 per entry 35's own string-3 reachability re-check (see
+ * this file's own doc comment on `residencyStatusText`, above, for the full account): the honest
+ * alternative when the untiled first-look/reissue stream is still running at relinquish time -- now
+ * reachable ONLY in the frameless window, so this names the frame's own absence, never "the initial
+ * data load" (a frameless Apply/Clear reissue racing the first look's own terminal is not "initial"). */
 function relinquishedUntiledStillRunningText(residentFeatureCount: number): string {
-  return `Tile filling stopped — showing ${residentFeatureCount} features already loaded; the initial data load for this view is still running and Cancel does not stop it.`;
+  return `Tile filling stopped — showing ${residentFeatureCount} features already loaded; the data load for this view is still running and Cancel does not stop it while the view's frame is not yet established.`;
 }
 
 export function residencyStatusText(status: ResidencyStatus): string {
@@ -324,6 +410,10 @@ export function residencyStatusText(status: ResidencyStatus): string {
     case "baseline-ceiling":
       return `${status.residentFeatureCount} of ${status.datasetRowCount} features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`;
     case "candidate-within-budget":
+      // Piece 2(ii) (residency-debt cut 1b, entry 36): the failure-partial reading gets its OWN
+      // complete sentence -- never the "Showing all N" claim, which would be false over a set a
+      // covering-tile (or the untiled) stream genuinely failed for (BS6).
+      if (status.settled === "partial-failure") return SETTLED_PARTIAL_FAILURE_TEXT;
       return `Showing all ${status.residentFeatureCount} features in view`;
     case "candidate-over-budget": {
       const base =

@@ -1000,7 +1000,16 @@ export default function App() {
         // `ResidencyStatusEvent`s this file's own baseline branch feeds `nextResidencyStatus` --
         // "reuse the existing transition machinery, arm-aware" -- so `.residency-status` renders the
         // declared-partial-view contract without a second, parallel state machine.
-        onResidencyStatusChange: (event) => setResidencyStatus(nextResidencyStatus(event)),
+        //
+        // Piece 1 (residency-debt cut 1b, entry 35, "sticky per entry-1"): the functional `useState`
+        // updater form -- NOT `setResidencyStatus(nextResidencyStatus(event))` -- so
+        // `nextResidencyStatus`'s own sticky-refusal rule (`residencyStatus.ts`'s own doc comment) can
+        // read the CURRENT status at the instant each event actually applies, never a stale render-scope
+        // closure over `residencyStatus`. This is the ONE call site that ever dispatches a
+        // `candidate-relinquished`/`candidate-within-budget`/`candidate-over-budget`/
+        // `candidate-fill-progress` event (baseline's `ceiling-refusal`/the shared clearing events below
+        // are dispatched elsewhere and never need `current` -- they clear unconditionally either way).
+        onResidencyStatusChange: (event) => setResidencyStatus((current) => nextResidencyStatus(event, current)),
         // P5f complex-gate should-fix 3: wires this session into the SAME scan-liveness state machine
         // baseline's own manager already drives (`applyScanEvent`'s own doc comment above) -- before
         // this, `scanState` stayed `{kind:"idle"}` for a candidate-arm session's entire life, so
@@ -1251,16 +1260,17 @@ export default function App() {
               // that the relief cancels in-flight tile streams too (the existing `cancel` SKP command,
               // ADR-018 -- no new wire), not merely the queued backlog.
               //
-              // **Scope boundary, restored (M1, reviewer gate) -- pointed at its own open question.**
-              // This lever reaches the TILE fill only: `relinquishFill` cancels every in-flight tile
-              // stream and drops the queued backlog (33b), but deliberately NOT the untiled first-
-              // look/reissue stream too -- the SAME known, documented scope boundary the old
-              // `stop()`-based version of this comment named (dropped when this branch was repointed,
-              // restored here). Whether Cancel should ALSO reach that stream is DECISIONS-PENDING.md
-              // entry 35's own open question, genuinely undecided by 32/33 -- not this piece's call.
-              // The status this branch triggers is honest about which case is live either way
-              // (`candidateArmSession.ts`'s own `emitResidencyRelinquished` doc comment has the full
-              // account of the `untiledStreamStillRunning` wording).
+              // **Scope boundary, entry 35 -- RULED 2026-09-05 ("yes with grid frame, no at
+              // bootstrap").** This lever reaches the TILE fill (`relinquishFill` cancels every
+              // in-flight tile stream and drops the queued backlog, 33b) AND, now, the untiled first-
+              // look/reissue stream too, but ONLY once a grid frame already exists -- the frameless
+              // bootstrap window stays uncancellable and documented (the anchor hazard: cancelling
+              // before that stream's own terminal would freeze the grid on a truncated union). See
+              // `candidateArmSession.ts`'s own `relinquishFill` doc comment for the full rule and the
+              // string-3 reachability trace it carries out. The status this branch triggers is honest
+              // about which case is live either way (`emitResidencyRelinquished`'s own doc comment has
+              // the full account of the `untiledStreamStillRunning` wording, now reachable only from
+              // the frameless window).
               //
               // `candidateSessionRef.current.relinquishFill()` (NOT `candidateManagerRef.current.stop()`)
               // is the call now -- it owns its OWN scan-liveness dispatch internally, unlike the OLD
