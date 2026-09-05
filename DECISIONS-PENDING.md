@@ -5,7 +5,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-37. **[ADR-028 Amendment 2 — the scoped-relief + quiescence contract, DRAFTED for your approval
+37. **[CONDITIONALLY APPROVED 2026-09-05 — human: "append; approved provided the text declares
+    only Item B's shipped behavior and carries reopen conditions — flag me if either fails."
+    FLAGGED, per that proviso: the draft below carries NO reopen conditions (fails condition 2),
+    and #36's same-batch ruling changes the shipped behavior the draft describes
+    (failure-silence → typed partiality accounting), so an append now would describe behavior
+    about to be superseded. Custodian's course, reported to the human: HOLD the append until the
+    #35/#36 implementation lands, then append once with drafted reopen conditions (put to the
+    human in the same report: visibly-obey failure reopens 32a/33b; any completeness claim over
+    a partial/failed/mid-fill view reopens the quiescence signal; a contradicting felt
+    re-verdict reopens rather than stands) and with every clause re-verified against the final
+    shipped code. Not appended yet. Original entry below.]**
+    **[ADR-028 Amendment 2 — the scoped-relief + quiescence contract, DRAFTED for your approval
     (ADR amendments are a red line; nothing is appended until you rule). Also your choice:
     append as ADR-028 Amendment 2, or file as a small child ADR cross-referencing ADR-028.]**
     The draft, from the architect's consult skeleton updated to the as-built, ruled shape:
@@ -43,7 +54,17 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     home; a child ADR would split one contract across two files). Touches, once approved:
     ADR-028 (append the text above, with your date and any edits), nothing else.
 
-36. **[Wording/status-kind gap, surfaced 2026-09-05 by Item B's reviewer gate (off-scope note b)
+36. **[RESOLVED 2026-09-05 — human, verbatim: "one rule for all three — silence and staleness
+    never represent state: the stale all-N clears on the invalidating gesture (entry-1's
+    query-issued transition), failed terminals feed the typed partiality accounting; draft to
+    that, wording at PR sight." Consequences, implemented in the #35/#36 piece: (i) a plan whose
+    covering set invalidates a standing within-budget claim clears/updates it through the
+    entry-1 transition class, never leaving "Showing all N" by inertia; (ii) a non-Completed
+    tile terminal records typed failure-partiality the settled classification consults — the
+    fill reads settled-partial-with-failure honestly instead of B1's silence; (iii) the untiled
+    sink's failed terminal is logged and feeds the same accounting. All wording drafts to the
+    human at PR sight. Original entry below.]**
+    **[Wording/status-kind gap, surfaced 2026-09-05 by Item B's reviewer gate (off-scope note b)
     — 24(b) territory, NOT decided inline.]** The settled-partial signal extends only the two
     existing status kinds (over-budget, within-budget), so a **within-budget-but-truncated/
     partial** settled state stays silent — and the real risk the reviewer named is not the
@@ -62,7 +83,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     once ruled: `residencyStatus.ts`'s union/clear rules + a draft string on sight; (iii) also
     the untiled sink's `onTerminal` (a log line at minimum).
 
-35. **[Rule-7 item, surfaced 2026-09-05 by Item A's reviewer gate (M1) — NOT decided inline.]**
+35. **[RESOLVED 2026-09-05 — human: "accept as recommended — yes with grid frame, no at
+    bootstrap; then re-check whether string 3's state is still reachable." Consequence:
+    `relinquishFill` also cancels the untiled first-look/reissue stream WHEN `manager.frame`
+    exists (the anchor hazard only lives in the frameless bootstrap window, which stays
+    uncancellable and documented); the string-3 reachability re-check rides the implementing
+    piece — expected residual: only the frameless window (bootstrap, or an Apply/Clear reissue
+    racing the first look's own terminal), with the string reworded accordingly and STICKY per
+    entry-1 (persists until a query-issued-class transition clears it, never replaced by a later
+    batch emission). Original entry below.]**
+    **[Rule-7 item, surfaced 2026-09-05 by Item A's reviewer gate (M1) — NOT decided inline.]**
     Entry 32 ruled Cancel repoints to the scoped relief of THE TILE FILL; it never named the
     **untiled first-look/reissue stream** (`candidateArmSession.ts`'s `untiledStreamHandle` — the
     dataset-open bootstrap and every Apply/Clear reissue), which the old Cancel path also never
@@ -451,6 +481,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-05 — the 24(b) string sight, ruled.** The human's rulings on the four 1b draft
+  strings, verbatim: *"Strings: 1 approved; 2 with 'not fetched'→'not loaded'; 3 held pending
+  #35's reachability check, reworded per my note if it survives, sticky per entry-1; 4
+  reworded — 'Filling has finished for this view — the render budget is full; pan or zoom to
+  see other areas.'"* Applied: string 1 (`STALLED_SUFFIX`) ships as drafted; string 2
+  (`relinquishedText`) ships with "not loaded"; string 4 (`SETTLED_PARTIAL_SUFFIX`) replaced
+  with the human's wording verbatim — and NOTE: that wording claims the render budget is full,
+  which is true for budget-partiality only, so the #36-ruled failure-partiality state gets its
+  own distinct draft wording (at PR sight), never this string; string 3 held for the #35
+  reachability re-check (sticky per entry-1 regardless of wording). All landing in the #35/#36
+  implementing piece.
 
 - **2026-09-04 — decision 24(g) AMENDED: reported-only measured cells may run unattended with
   RustDesk stopped, under a proven-safe restore protocol. Scored cells and felt verdicts remain
