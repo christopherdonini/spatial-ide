@@ -40,6 +40,7 @@ import {
   notifyResidencyTileSizeLevelDatasetOpened,
   setResidencyTileSizeLevel,
 } from "./residency/residencyTileSizeLevel";
+import type { CandidateArmSession } from "./residency/candidateArmSession";
 import { startCandidateArmSession } from "./residency/candidateArmSession";
 import {
   nextResidencyStatus,
@@ -648,15 +649,29 @@ export default function App() {
   const managerRef = useRef<ViewportStreamManager | null>(null);
   /** P5f complex-gate should-fix 3: set ONLY inside the `[admitted]` effect's candidate-arm branch
    * (`null` for baseline, and reset to `null` in every cleanup) -- the Cancel JSX handler below reads
-   * this to decide which arm's own cancel path to take: candidate calls `session.manager.stop()`
-   * (this manager's own doc comment: "cancels every in-flight tile stream and refuses every future
-   * `onCameraChange` call"), baseline calls `managerRef.current?.cancelStream(handle)` as it always
-   * has. Never the whole `CandidateArmSession`, deliberately -- Cancel only ever needs to reach the
-   * tile-planning manager's own `stop()`, not `session.stop()`'s wider dataset-close scope (which also
-   * tears down the untiled first-look stream and permanently refuses this session's own future
-   * `reissueUnrestricted`/`onViewportChanged` calls -- correct for a dataset close, more than Cancel
-   * itself needs to do). */
+   * this to decide which arm's own cancel path to take: baseline calls
+   * `managerRef.current?.cancelStream(handle)` as it always has; candidate now reads `candidateSessionRef`
+   * (below) for the actual call, this ref serving only as that branch's own discriminator (and every
+   * other pre-existing E2E-hook reader of `TileViewportStreamManager` state directly, e.g.
+   * `queuedCount`/`gridFrame`, unaffected by Item A).
+   *
+   * **Superseded by Item A (residency-debt cut 1b, decisions 32a/33b):** this comment used to read
+   * "candidate calls `session.manager.stop()` ... Never the whole `CandidateArmSession`, deliberately"
+   * -- true when Cancel meant a PERMANENT kill (`stop()`'s own "refuses every future `onCameraChange`"
+   * contract), reachable from the manager alone. 32a repoints Cancel to the scoped relief instead,
+   * which also needs to re-sync scan liveness and emit the post-relief status -- neither of which the
+   * manager alone can do -- so `candidateSessionRef` (below) now exists specifically for that call;
+   * this ref is kept only as the "is a candidate-arm session open" discriminator the JSX handler and
+   * every E2E hook already read it for. */
   const candidateManagerRef = useRef<TileViewportStreamManager | null>(null);
+  /** Item A (residency-debt cut 1b, decisions 32a/33b): the FULL `CandidateArmSession`, unlike
+   * `candidateManagerRef` above -- Cancel's own scoped-relief path (`relinquishFill`) also re-syncs
+   * scan liveness and emits the post-relief status, neither of which
+   * `TileViewportStreamManager.relinquishOutstanding()` alone can do (that method has no notion of
+   * `canvas`/`onResidencyStatusChange` at all -- see its own doc comment). Mirrors `candidateManagerRef`'s
+   * own lifecycle exactly: set together at construction, cleared together in every cleanup path,
+   * `null` for the baseline arm or while no dataset is open. */
+  const candidateSessionRef = useRef<CandidateArmSession | null>(null);
   const viewportDebounceRef = useRef<Debounced<[Bbox, string | null]> | null>(null);
   // NEXT-CUT.md P4: App-owned (not FilterPanel-owned) precisely because indicator scope is "EVERY
   // in-flight viewport stream" (item 6), not filter-only -- an ordinary pan/zoom drives this too.
@@ -997,6 +1012,7 @@ export default function App() {
       });
       managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
       candidateManagerRef.current = session.manager;
+      candidateSessionRef.current = session;
       viewportDebounceRef.current = makeCandidateViewportDispatcher(session);
       issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
 
@@ -1023,6 +1039,7 @@ export default function App() {
         viewportDebounceRef.current = null;
         issueQueryRef.current = null;
         candidateManagerRef.current = null;
+        candidateSessionRef.current = null;
         void session.stop();
         if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
         void closeDataset(admitted.dataset).catch(() => {});
@@ -1040,6 +1057,7 @@ export default function App() {
     // `nextScanState`'s own doc comment states.
     let scanRowsAccumulator: { streamHandle: string | null; rows: number } = { streamHandle: null, rows: 0 };
     candidateManagerRef.current = null; // no candidate-arm TileViewportStreamManager exists for this arm
+    candidateSessionRef.current = null; // no candidate-arm CandidateArmSession exists for this arm
 
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
@@ -1221,18 +1239,55 @@ export default function App() {
               // P5f complex-gate should-fix 3: candidate arm's own cancel path -- before this piece,
               // `candidateManagerRef.current` never existed and no scan event was ever dispatched for
               // this arm at all, so Cancel was never reachable (`isScanInFlight` never true).
-              // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) applies here too:
-              // `{kind:"reset"}` fires SYNCHRONOUSLY, before ever awaiting `manager.stop()`, so a
-              // dataset-close/remount racing this call can never leave a stale `scanState` behind
-              // (`candidateArmSession.ts`'s own `stop()` doc comment explains why THAT method
-              // deliberately never dispatches this itself -- the same hazard, avoided by dispatching
-              // here instead). `manager.stop()` (the tile-planning `TileViewportStreamManager`, NOT
-              // the whole `session.stop()`) cancels every in-flight tile stream and drops the queue
-              // -- deliberately NOT the untiled first-look stream too, a known, documented scope
-              // boundary (`candidateManagerRef`'s own doc comment above has the full account).
+              //
+              // Item A (residency-debt cut 1b, decisions 32a/33b) REPOINTS this branch: it used to
+              // dispatch `{kind:"reset"}` here and call `candidateManagerRef.current.stop()` (a
+              // PERMANENT kill -- every future `onCameraChange` for this dataset session refused
+              // forever, docs/01 principle 7's own conviction, `spikes/viewport-residency-1a-diagnosis/`).
+              // Entry 32's own ruling, verbatim (its rider elided here): "32a — Cancel becomes the
+              // scoped relief, permanent kill leaves the UI (close/reopen stays the hard reset)…".
+              // Concretely: stop filling,
+              // keep the current partial view, let tiling resume on the next camera change. 33b adds
+              // that the relief cancels in-flight tile streams too (the existing `cancel` SKP command,
+              // ADR-018 -- no new wire), not merely the queued backlog.
+              //
+              // **Scope boundary, restored (M1, reviewer gate) -- pointed at its own open question.**
+              // This lever reaches the TILE fill only: `relinquishFill` cancels every in-flight tile
+              // stream and drops the queued backlog (33b), but deliberately NOT the untiled first-
+              // look/reissue stream too -- the SAME known, documented scope boundary the old
+              // `stop()`-based version of this comment named (dropped when this branch was repointed,
+              // restored here). Whether Cancel should ALSO reach that stream is DECISIONS-PENDING.md
+              // entry 35's own open question, genuinely undecided by 32/33 -- not this piece's call.
+              // The status this branch triggers is honest about which case is live either way
+              // (`candidateArmSession.ts`'s own `emitResidencyRelinquished` doc comment has the full
+              // account of the `untiledStreamStillRunning` wording).
+              //
+              // `candidateSessionRef.current.relinquishFill()` (NOT `candidateManagerRef.current.stop()`)
+              // is the call now -- it owns its OWN scan-liveness dispatch internally, unlike the OLD
+              // `stop()` path this comment used to describe: `relinquishFill`/`relinquishOutstanding`
+              // never await anything (both methods' own doc comments), so there is no async gap for a
+              // dataset-close/remount to race, and dispatching `{kind:"reset"}` a SECOND time here
+              // would desync the session's own `scanActive` bookkeeping from what its internal
+              // `syncScanLiveness` believes, silently swallowing the next genuine `{kind:"issued"}`
+              // transition once tiling resumes (`candidateArmSession.ts`'s own `relinquishFill` doc
+              // comment has the full account of why the dispatch moved). `candidateManagerRef` itself
+              // is left as the branch discriminator -- it and `candidateSessionRef` share the exact
+              // same set/clear lifecycle (`candidateSessionRef`'s own doc comment above).
               if (candidateManagerRef.current) {
-                applyScanEvent({ kind: "reset" });
-                void candidateManagerRef.current.stop();
+                // S6 (reviewer gate, residency-debt cut 1b): never a silent no-op. `candidateManagerRef`
+                // being set is exactly this branch's own discriminator for "a candidate-arm
+                // CandidateArmSession exists" (the two refs share one set/clear lifecycle, above) -- a
+                // null `candidateSessionRef` here would mean that shared lifecycle broke, a genuine
+                // bug worth reporting loudly, never a click the button should quietly swallow.
+                const session = candidateSessionRef.current;
+                if (!session) {
+                  logSessionEvent(
+                    "candidate-cancel-session-missing",
+                    "Cancel clicked while candidateManagerRef was set but candidateSessionRef was null -- relinquishFill could not be called"
+                  );
+                  return;
+                }
+                session.relinquishFill();
                 return;
               }
               const handle = current.streamHandle;

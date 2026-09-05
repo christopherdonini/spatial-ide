@@ -16,6 +16,7 @@ import {
   recordResidencyTileRequested,
 } from "../instrument/residencyInstrument";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
+import { fillActivity } from "./residencyStatus";
 import type { ResidencyStatusEvent } from "./residencyStatus";
 import { encodeDecU64 } from "../skp/codec";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
@@ -189,8 +190,57 @@ export interface CandidateArmSession {
    */
   reissueUnrestricted: (bbox: Bbox | null, filter: Filter | null) => Promise<RequestOutcome>;
   /** Cancels the current stream a session's own initial/reissued untiled query may still be minting
-   * or running -- used by `App.tsx`'s `handleApplyFilter`-equivalent `cancelPendingDebounce`. */
+   * or running -- teardown-only since the entry-32a repoint: its sole caller is `App.tsx`'s
+   * dataset-close/unmount effect cleanup, never the operator's Cancel button. */
   stop: () => Promise<void>;
+  /**
+   * Item A (residency-debt cut 1b, decisions 32a/33b): the scoped relief the operator's Cancel button
+   * now repoints to for a candidate-arm session. Entry 32's own ruling, verbatim (its rider elided
+   * here): "32a — Cancel becomes the scoped relief, permanent kill leaves the UI (close/reopen
+   * stays the hard reset)…".
+   * Concretely: stop filling, keep the current partial view, let tiling resume on the next camera
+   * change -- never `stop()`'s permanent kill. Calls `manager.relinquishOutstanding()` (real
+   * `skpCancel` for every in-flight tile stream AND the queued/mid-mint backlog dropped, per 33b --
+   * no new wire, the existing `cancel` SKP command), marks every relinquish-CANCELLED tile (never the
+   * dropped-queued ones, which were never resident in the first place -- `markTilePartial`'s own "a
+   * no-op for a tile this set has never heard of" contract (`tileResidentSet.ts`) makes calling it on
+   * both harmless, but only the cancelled ones can possibly need it) durably partial so
+   * `isFillComplete` can never read this session's fill as complete afterward (32a's own rider), then
+   * re-syncs scan liveness and emits the `candidate-relinquished` status.
+   *
+   * **M1 (reviewer gate) -- deliberately does NOT reach the untiled first-look/reissue stream.** This
+   * lever's own scope is the TILE fill only (`manager.relinquishOutstanding()`, above) -- the untiled
+   * first-look/reissue stream (`untiledStreamHandle`, this module) is a KNOWN, DOCUMENTED scope
+   * boundary the old `stop()`-based Cancel path also never crossed, now recorded as DECISIONS-PENDING.md
+   * entry 35 (open, pending the human -- whether Cancel should ALSO cancel that stream). While it is
+   * still running at the moment this fires, `emitResidencyRelinquished` below emits the HONEST variant
+   * of the status (`untiledStreamStillRunning: true`) rather than the ordinary "Filling stopped"
+   * wording, which would be false in that window (the untiled stream keeps delivering batches).
+   *
+   * Deliberately does NOT stop this session (`stopped` stays `false`), does NOT clear residency
+   * (`canvas.clearTile`/`clearAllTiles` are never called -- the whole point is that the resident view
+   * is RETAINED), and does NOT reset the grid frame (`manager`'s own `establishGridFrame` is never
+   * re-invoked) -- see `TileViewportStreamManager.relinquishOutstanding`'s own doc comment for the
+   * identical guarantees at the manager layer this method sits directly on top of.
+   *
+   * **Synchronous, unlike `stop()` -- and that difference is why this method safely dispatches its
+   * OWN scan-liveness transition inline, rather than requiring the call site to pre-empt it (a
+   * hazard only for `stop()`, which truly awaits real work and could race a fresher
+   * `scanState`).** `manager.relinquishOutstanding()` never awaits anything (its own doc comment), so
+   * `syncScanLiveness()` here runs in the SAME tick as the caller's own click handler -- "transitions
+   * AT THE CANCEL CALL SITE" (P4 binding note 6) still holds, just one call frame deeper. Dispatching
+   * `{kind:"reset"}` a SECOND time at `App.tsx`'s own call site (mirroring the old `stop()` path) would
+   * desync this session's own `scanActive` bookkeeping from what `syncScanLiveness` believes, silently
+   * swallowing the very next genuine `{kind:"issued"}` transition once tiling resumes -- so this is the
+   * ONE place that dispatch happens for this lever, not the call site.
+   */
+  relinquishFill: () => { cancelledInFlight: string[]; droppedQueued: string[] };
+  /** M2 (reviewer gate, residency-debt cut 1b): a pure, read-only view of whether this session's own
+   * fill currently reads complete -- exposed for direct assertion (this module's own tests included),
+   * the same read-only-getter-for-assertion shape `manager.overBudget`/
+   * `manager.trackedTileCount`/`manager.gridFrame` already take. Never a second copy of the
+   * predicate -- `emitResidencyStatus`'s own within-budget claim gates on this SAME function. */
+  isFillComplete: () => boolean;
 }
 
 /**
@@ -228,7 +278,20 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * set (e.g. a viewport outside every tile the grid frame covers) still counts as "a plan ran": this
    * sentinel gates only "has planning ever had a chance to disagree", never re-derives from the
    * covering set's own size. Reset to `false` on `reissueUnrestricted` -- a fresh generation has no
-   * plan of its own yet either, exactly like every other per-generation flag this function resets. */
+   * plan of its own yet either, exactly like every other per-generation flag this function resets.
+   *
+   * **M2 (reviewer gate, residency-debt cut 1b): also reset by `relinquishFill`.** A tile carried
+   * in-flight across two plans is skipped by `onCameraChange`'s own new-candidate loop (already
+   * tracked, so neither re-issued nor re-added to `alreadyResident`), so it never lands in
+   * `lastCoveringTileKeys` at all -- if THAT tile is the one `relinquishFill` cancels,
+   * `manager.trackedTileCount` reaches 0 without `lastCoveringTileKeys` ever having named it, and
+   * `isFillComplete` below would read the fill complete over a user-stopped one (the surviving
+   * covering-set gap this sentinel does not otherwise catch, since `trackedTileCount === 0` is
+   * genuinely true by then). `relinquishFill` resets this flag to `false` for exactly the same reason
+   * it is `false` before the first plan ever ran: no plan has run yet SINCE the relief fired, so
+   * nothing has had the chance to disagree with whatever `lastCoveringTileKeys` happens to hold. The
+   * next real `handleViewportChange` plan sets it `true` again -- a LATCH, not a permanent flip:
+   * completeness can be earned again once a fresh plan has actually run. */
   let hasPlanned = false;
   /** P5f complex-gate should-fix 4: the running union of every batch the CURRENT untiled first-look/
    * reissue stream has delivered so far (`ingestAndMaybeEstablishFrame`'s own `outcome.unionedExtent`,
@@ -403,11 +466,50 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       traceCandidateResidencyStatus(dataset, overBudget, totalResidentFeatures, evictedTileCountSession);
     }
     if (overBudget) {
-      deps.onResidencyStatusChange?.({ kind: "candidate-over-budget", residentFeatureCount: totalResidentFeatures, viewportTotal: null });
+      // Item A (residency-debt cut 1b), BS3: `stalled` names the held-queue-is-provably-frozen case
+      // ("filling" is everything else about an over-budget state -- the ordinary wording already
+      // covers it, unamended; see `residencyStatusText`'s own doc comment). `fillActivity` is pure --
+      // this call site is what supplies its four inputs from this session's own state reads.
+      const stalled =
+        fillActivity({
+          queuedCount: manager.queuedCount,
+          overBudget,
+          hasHeadroom: hasHeadroom(),
+          inFlightCount: manager.inFlightCount,
+        }) === "stalled";
+      deps.onResidencyStatusChange?.({
+        kind: "candidate-over-budget",
+        residentFeatureCount: totalResidentFeatures,
+        viewportTotal: null,
+        stalled: stalled || undefined,
+      });
       return;
     }
     if (!isFillComplete()) return; // mid-fill -- see this function's own doc comment above
     deps.onResidencyStatusChange?.({ kind: "candidate-within-budget", residentFeatureCount: totalResidentFeatures });
+  }
+
+  /** Item A (decisions 32a/33b): the scoped-relief lever's own dedicated status emission -- NEVER
+   * routed through `emitResidencyStatus` above, which can either emit nothing at all (the "absence is
+   * honest" mid-fill branch) or, in principle, read a coincidentally-complete covering set as
+   * `candidate-within-budget` -- both wrong here: 32a's own rider is that a user-stopped fill NEVER
+   * reads as complete, stated explicitly, never silently. Called only from `relinquishFill` below.
+   *
+   * **M1 (reviewer gate, residency-debt cut 1b): the `untiledStreamStillRunning` branch.** This
+   * lever's own scope is the tile fill only -- it never touches the untiled first-look/reissue stream
+   * (`untiledStreamHandle`, this module; DECISIONS-PENDING.md entry 35's own open scope question,
+   * genuinely undecided). If that stream is STILL running at the moment `relinquishFill` fires, the
+   * ordinary `candidate-relinquished` wording ("Filling stopped") would be a FALSE claim -- batches
+   * for it keep landing after this call returns. `untiledStreamHandle !== null` is read here, at
+   * emission time, so the flag always reflects THIS instant's own truth, never a stale snapshot. */
+  function emitResidencyRelinquished(): void {
+    if (!canvas) return;
+    const { totalResidentFeatures } = canvas.getResidentCounts();
+    deps.onResidencyStatusChange?.({
+      kind: "candidate-relinquished",
+      residentFeatureCount: totalResidentFeatures,
+      untiledStreamStillRunning: untiledStreamHandle !== null ? true : undefined,
+    });
   }
 
   // Viewport-residency cut P6a, Defect A: tile keys this session cancelled itself because it already
@@ -439,6 +541,15 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * row-limit check below), never the sticky, evict-can-never-reach-it kind this map exists for. */
   const tileGenerationUntrimmed = new Map<string, { streamHandle: string; allUntrimmed: boolean }>();
 
+  /** Architect re-verification, viewport-residency cut P6b, item 7: extracted to a named function
+   * (previously inlined directly in the `residency` accessor below) so Item A's `emitResidencyStatus`
+   * can read the SAME declared-margin fact `fillActivity`'s own `hasHeadroom` input needs, without a
+   * second, possibly-diverging copy of this arithmetic. See the constant's own doc comment for why
+   * `HEADROOM_REFETCH_FRACTION`, not "any room at all", is the declared margin. */
+  function hasHeadroom(): boolean {
+    return (canvas?.getResidentCounts().totalResidentVertices ?? 0) < HEADROOM_REFETCH_FRACTION * MAX_RESIDENT_VERTICES;
+  }
+
   const manager = new TileViewportStreamManager({
     dataset,
     // P7: `deps.tileGridLevel ?? undefined` collapses BOTH "never passed" (`undefined`) and the
@@ -466,8 +577,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // near-zero-admission tile as a "contaminant" and refusing to re-plan it specifically) was
       // superseded by this: tightening the margin fixes the thrash for every tile uniformly, without
       // needing to track a second, tile-specific "was this a wasted re-fetch" history of its own.
-      hasHeadroom: () =>
-        (canvas?.getResidentCounts().totalResidentVertices ?? 0) < HEADROOM_REFETCH_FRACTION * MAX_RESIDENT_VERTICES,
+      hasHeadroom,
     },
     onBatch: (tileKey, streamHandle, batchSeq, payload) => {
       countTileStreamIssuedOnce(tileKey); // catches a queued-then-issued tile never seen in `issued`
@@ -814,13 +924,71 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         untiledStreamHandle = null;
       }
       // Deliberately NOT `syncScanLiveness()` here: this method resolves asynchronously, and by the
-      // time it does the caller (a dataset close, or `App.tsx`'s own effect cleanup on a REMOUNT) may
-      // no longer own the freshest `scanState` -- exactly rider 3's own wrong-instance-callback
-      // footgun (`makeManagerCallbacks`'s doc comment) for a different callback. Cancel's own scan
-      // transition happens SYNCHRONOUSLY at the cancel call site instead (`App.tsx`'s own Cancel
-      // handler dispatches `applyScanEvent` itself, before ever calling into this session) --
-      // "transitions AT THE CANCEL CALL SITE", the same discipline `nextScanState`'s own
-      // `cancelledByUser` case documents for baseline.
+      // time it does the caller may no longer own the freshest `scanState` -- exactly rider 3's own
+      // wrong-instance-callback footgun (`makeManagerCallbacks`'s doc comment) for a different
+      // callback.
+      //
+      // S3 (reviewer gate, residency-debt cut 1b): corrected -- this comment used to say `App.tsx`'s
+      // own Cancel handler calls this method and dispatches `applyScanEvent` itself first, "before
+      // ever calling into this session." False after the repoint (decisions 32a/33b): Cancel no
+      // longer calls `stop()` at all -- it calls `relinquishFill()` above, which owns its OWN
+      // synchronous scan-liveness dispatch (that method's own doc comment has the full account).
+      // `stop()` today is reached ONLY from `App.tsx`'s dataset-close/remount effect cleanup, which
+      // does not read this session's `scanState` at all by the time this promise resolves (the
+      // component is tearing down) -- so skipping `syncScanLiveness()` here is simply correct for
+      // that caller, not a race being avoided at a Cancel call site that no longer reaches this
+      // method.
     },
+    // Item A (residency-debt cut 1b, decisions 32a/33b): see this method's own doc comment on the
+    // `CandidateArmSession` interface above for the full account -- the scoped relief `App.tsx`'s
+    // Cancel handler now calls INSTEAD of `manager.stop()` (32a's own repoint).
+    relinquishFill: () => {
+      const summary = manager.relinquishOutstanding();
+      for (const tileKey of summary.cancelledInFlight) {
+        // 32a's own rider: a tile that already delivered SOME data is kept (never blanked -- the
+        // resident view is retained), but must never silently read as complete either. Mirrors the
+        // budget self-cancel path's own `markTilePartial` call for the identical "stopped this tile's
+        // own stream before it finished delivering" situation. A safe no-op for a tile that never
+        // delivered a single batch (`markTilePartial`'s own "a no-op for a tile this set has never
+        // heard of" contract, `tileResidentSet.ts`) -- never called for `droppedQueued` tiles here
+        // since none of them could possibly be resident in the first place (queued/mid-mint tiles
+        // never started a stream at all).
+        canvas?.markTilePartial(tileKey);
+      }
+      for (const tileKey of [...summary.cancelledInFlight, ...summary.droppedQueued]) {
+        // The same per-tile sweep every other manager-driven termination path in this module already
+        // performs (`onTerminal`/`onTileSuperseded` above) -- safe no-ops for a tile this bookkeeping
+        // never held an entry for.
+        countTileStreamEndedOnce(tileKey);
+        tileGenerationUntrimmed.delete(tileKey);
+        budgetCancelledTileKeys.delete(tileKey);
+      }
+      // M2 (reviewer gate, residency-debt cut 1b): the structural latch. A tile carried in-flight
+      // across two plans is skipped entirely by `onCameraChange`'s own new-candidate loop
+      // (`tileViewportStreamManager.ts`'s own `if (this.tileState.has(tileKey)) continue;`) -- it
+      // lands in NONE of that plan's `issued`/`queued`/`alreadyResident`, so it is silently absent
+      // from `lastCoveringTileKeys` even though it is genuinely still part of the viewport's covering
+      // set. If THAT tile is then the one this lever cancels, `manager.trackedTileCount` drops to 0
+      // with `lastCoveringTileKeys` never having named it -- `isFillComplete()` below would iterate
+      // only the tiles it DOES know about, find them all complete, and read the fill as complete over
+      // a user-stopped one (BS6, 32a's rider: never true). Resetting `hasPlanned` here latches
+      // `isFillComplete()` to `false` unconditionally (its own first check, above) until the NEXT real
+      // `handleViewportChange` plan sets it `true` again -- the same sentinel P6b's own fix already
+      // uses for "no plan has run yet," reused here for "no plan has run yet SINCE the relief fired."
+      // Covers BOTH readers named in the finding: `isFillComplete()` itself, and
+      // `emitResidencyStatus`'s own within-budget claim, which gates EXCLUSIVELY on `isFillComplete()`
+      // (`if (!isFillComplete()) return;`, above) -- there is no second copy of this arithmetic to
+      // separately patch.
+      hasPlanned = false;
+      syncScanLiveness(); // see this method's own interface-level doc comment for why THIS call site
+      emitResidencyRelinquished();
+      return summary;
+    },
+    // M2 (reviewer gate, residency-debt cut 1b): exposed so a caller (this module's own tests
+    // included) can observe the exact fact `emitResidencyStatus`'s within-budget claim gates on,
+    // directly -- the same read-only-getter-for-assertion shape this session
+    // already extends via `manager.overBudget`/`manager.trackedTileCount`/`manager.gridFrame` above.
+    // Never mutates anything; a pure read of this closure's own current truth.
+    isFillComplete: () => isFillComplete(),
   };
 }

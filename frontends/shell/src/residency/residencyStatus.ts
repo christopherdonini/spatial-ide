@@ -36,8 +36,33 @@ export type ResidencyStatus =
    * extrapolation (docs/08: no invented numbers) -- `residencyStatusText` degrades the wording when
    * `null` rather than guessing a figure. The field exists (rather than being omitted entirely) so a
    * future honest per-viewport total, if one is ever added on the wire, has somewhere to land without
-   * a second status shape. */
-  | { kind: "candidate-over-budget"; residentFeatureCount: number; viewportTotal: number | null };
+   * a second status shape.
+   *
+   * Item A (residency-debt cut 1b, BS3): `stalled` is `true` only -- never `false` -- when
+   * `fillActivity` below reads `"stalled"` (the held queue is provably frozen until the next camera
+   * change); omitted entirely otherwise (`"filling"`/`"idle"`), the same "absent property, not an
+   * explicit `false`" idiom `TilePlanOutcome.coveringTruncated` already established in this codebase,
+   * so every pre-existing `toEqual({kind:"candidate-over-budget", ...})` assertion that predates this
+   * field keeps matching (`toEqual` treats an absent property and an explicit `undefined` as
+   * equivalent). */
+  | { kind: "candidate-over-budget"; residentFeatureCount: number; viewportTotal: number | null; stalled?: true }
+  /** Item A (decisions 32a/33b): the scoped-relief lever fired -- queued/mid-mint tiles were dropped
+   * and every in-flight one was cancelled, but the resident view itself (`residentFeatureCount`) is
+   * retained untouched. 32a's own rider, binding on `residencyStatusText` below: this NEVER reads as
+   * complete -- a user-stopped fill is not a finished one, regardless of how close `residentFeatureCount`
+   * happens to sit to whatever the full covering set would have delivered (BS6: no completeness claim
+   * over a partial set).
+   *
+   * **M1 (reviewer gate, residency-debt cut 1b) -- `untiledStreamStillRunning`.** Entry 32 ruled
+   * Cancel repoints to the scoped relief of THE TILE FILL only; it never named the untiled first-
+   * look/reissue stream (`candidateArmSession.ts`'s own `untiledStreamHandle`), which the relief lever
+   * does NOT cancel -- that scope question is DECISIONS-PENDING.md entry 35, pending the human, NOT
+   * decided by this piece. While that stream is still running at the moment the lever fires, the
+   * ordinary "Filling stopped" wording below would be a false claim (batches keep landing) -- this
+   * field, `true` only in that window (omitted otherwise, the same "absent, never explicit `false`"
+   * idiom `TilePlanOutcome.coveringTruncated`/this file's own `stalled` field already use), tells
+   * `residencyStatusText` to render the honest alternative instead. */
+  | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true };
 
 /**
  * Every input this state machine accepts, arm-aware. `"ceiling-refusal"` is baseline-only (never
@@ -53,7 +78,13 @@ export type ResidencyStatusEvent =
   | { kind: "dataset-changed" }
   | { kind: "query-issued" }
   | { kind: "candidate-within-budget"; residentFeatureCount: number }
-  | { kind: "candidate-over-budget"; residentFeatureCount: number; viewportTotal: number | null };
+  | { kind: "candidate-over-budget"; residentFeatureCount: number; viewportTotal: number | null; stalled?: true }
+  /** Item A (decisions 32a/33b): fired once, synchronously, from `candidateArmSession.ts`'s own
+   * `relinquishFill()` -- never derived from `nextResidencyStatus`'s other transitions, so it can
+   * never be confused with the ordinary within/over-budget machinery this state machine already runs.
+   * M1: `untiledStreamStillRunning` mirrors the `ResidencyStatus` field of the same name above --
+   * see that doc comment for the full account. */
+  | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true };
 
 /**
  * The status-indicator state machine itself -- pure, outside React state updates, for the same
@@ -71,12 +102,58 @@ export function nextResidencyStatus(event: ResidencyStatusEvent): ResidencyStatu
     case "candidate-within-budget":
       return { kind: "candidate-within-budget", residentFeatureCount: event.residentFeatureCount };
     case "candidate-over-budget":
-      return { kind: "candidate-over-budget", residentFeatureCount: event.residentFeatureCount, viewportTotal: event.viewportTotal };
+      return {
+        kind: "candidate-over-budget",
+        residentFeatureCount: event.residentFeatureCount,
+        viewportTotal: event.viewportTotal,
+        stalled: event.stalled,
+      };
+    case "candidate-relinquished":
+      return {
+        kind: "candidate-relinquished",
+        residentFeatureCount: event.residentFeatureCount,
+        untiledStreamStillRunning: event.untiledStreamStillRunning,
+      };
     case "delivery-complete":
     case "dataset-changed":
     case "query-issued":
       return null;
   }
+}
+
+/** Item A (residency-debt cut 1b), BS3: exactly the inputs the block-on-sight condition names --
+ * `overBudget`/`queuedCount`/`inFlightCount`/`hasHeadroom`, nothing else (no producer scan-progress,
+ * no new SKP field). Pure -- no timer, no manager/canvas reference -- so it is unit-testable directly
+ * against these four inputs, per the pre-committed test case 3 (Item A's own, RESIDENCY-DEBT-1B.md).
+ *
+ * `"stalled"`: `queuedCount > 0 && overBudget && !hasHeadroom` -- the held queue is provably frozen:
+ * `TileViewportStreamManager.drainQueueIfRoom` refuses to mint while `overBudget` is set regardless of
+ * how many slots free up, and `hasHeadroom` being `false` means the SAME manager's own over-budget
+ * drain-stop exception (`onCameraChange`'s own `headroomDespiteOverBudget`) cannot let a new candidate
+ * through on the next camera change either -- nothing this session itself does moves it, only an
+ * externally-driven camera change (which recomputes `overBudget` from scratch) can.
+ *
+ * `"filling"`: not stalled, and at least one stream is genuinely in flight -- real, currently-running
+ * work, whether or not the viewport happens to be over budget right now.
+ *
+ * `"idle"`: neither -- nothing queued behind a frozen gate, nothing in flight either (e.g. between
+ * plans, or once a round has fully drained/completed). Never surfaced as its own status text (Item A's
+ * own scope is the HELD QUEUE; an idle read is simply "nothing to report" here, same as
+ * `emitResidencyStatus`'s pre-existing "absence is honest" branch for a mid-fill, under-budget state
+ * this predicate does not change). */
+export interface FillActivityInputs {
+  queuedCount: number;
+  overBudget: boolean;
+  hasHeadroom: boolean;
+  inFlightCount: number;
+}
+
+export type FillActivity = "filling" | "stalled" | "idle";
+
+export function fillActivity(input: FillActivityInputs): FillActivity {
+  if (input.queuedCount > 0 && input.overBudget && !input.hasHeadroom) return "stalled";
+  if (input.inFlightCount > 0) return "filling";
+  return "idle";
 }
 
 /**
@@ -93,16 +170,52 @@ export function nextResidencyStatus(event: ResidencyStatusEvent): ResidencyStatu
  *    "Showing {N} features — the farthest areas of this view are not drawn, to stay within the
  *    render budget. Zoom in to see more detail."
  * Baseline's own string is byte-identical to what it was before this piece.
+ *
+ * Item A (residency-debt cut 1b) adds two more, both DRAFTS for the human's 24(b) sight (see this
+ * piece's own report for the full "DRAFT STRINGS FOR HUMAN SIGHT" list) -- kept as named constants
+ * below (nit, reviewer gate: the report claiming these were already constants is only true once they
+ * actually are), still draft-marked:
+ *  - over budget AND `stalled` (the held queue is provably frozen, `fillActivity` above): the ordinary
+ *    over-budget sentence, plus one more naming the freeze and its own remedy -- never a duration.
+ *  - relinquished (32a's own rider -- NEVER "complete"): "Filling stopped — showing {N} features
+ *    already loaded; the rest of this view was not fetched."
+ *
+ * M1 (reviewer gate) adds a THIRD draft string, for the `untiledStreamStillRunning` case above: the
+ * ordinary "Filling stopped" wording would be false while the untiled first-look/reissue stream keeps
+ * delivering, so this one states the truth instead -- the tile backlog was relinquished, the initial/
+ * filter data load is still running, and Cancel does not stop it (DECISIONS-PENDING.md entry 35's own
+ * open scope question, not yet ruled).
  */
+/** Item A draft (24(b) sight): appended to the ordinary over-budget sentence only when `fillActivity`
+ * reads `"stalled"` -- never a duration, only the freeze and its remedy. */
+const STALLED_SUFFIX = " Filling is paused until the next pan or zoom.";
+/** Item A draft (24(b) sight): 32a's own rider -- never "complete", never silent. */
+function relinquishedText(residentFeatureCount: number): string {
+  return `Filling stopped — showing ${residentFeatureCount} features already loaded; the rest of this view was not fetched.`;
+}
+/** M1 draft (24(b) sight): the honest alternative when the untiled first-look/reissue stream is still
+ * running at relinquish time -- see `ResidencyStatus`'s own `untiledStreamStillRunning` doc comment
+ * for the full account of why the ordinary `relinquishedText` above would be false here. */
+function relinquishedUntiledStillRunningText(residentFeatureCount: number): string {
+  return `Tile filling stopped — showing ${residentFeatureCount} features already loaded; the initial data load for this view is still running and Cancel does not stop it.`;
+}
+
 export function residencyStatusText(status: ResidencyStatus): string {
   switch (status.kind) {
     case "baseline-ceiling":
       return `${status.residentFeatureCount} of ${status.datasetRowCount} features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`;
     case "candidate-within-budget":
       return `Showing all ${status.residentFeatureCount} features in view`;
-    case "candidate-over-budget":
-      return status.viewportTotal !== null
-        ? `Showing ${status.residentFeatureCount} of ~${status.viewportTotal} features — areas farthest from view are not drawn, to stay within the render budget. Pan or zoom in to see them.`
-        : `Showing ${status.residentFeatureCount} features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail.`;
+    case "candidate-over-budget": {
+      const base =
+        status.viewportTotal !== null
+          ? `Showing ${status.residentFeatureCount} of ~${status.viewportTotal} features — areas farthest from view are not drawn, to stay within the render budget. Pan or zoom in to see them.`
+          : `Showing ${status.residentFeatureCount} features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail.`;
+      return status.stalled ? `${base}${STALLED_SUFFIX}` : base;
+    }
+    case "candidate-relinquished":
+      return status.untiledStreamStillRunning
+        ? relinquishedUntiledStillRunningText(status.residentFeatureCount)
+        : relinquishedText(status.residentFeatureCount);
   }
 }
