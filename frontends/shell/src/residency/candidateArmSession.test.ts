@@ -31,9 +31,12 @@ import type { TileBatchIngestOutcome, WorkingCanvasHandle } from "../canvas/Work
 import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
 import { DEFAULT_TILE_GRID_LEVEL, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import { encodeDecU64 } from "../skp/codec";
+import { TileViewportStreamManager } from "../streaming/tileViewportStreamManager";
 import type { StreamSink } from "../streaming/transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "../streaming/viewportStreamManager";
 import { INITIAL_TILE_KEY, startCandidateArmSession } from "./candidateArmSession";
+import { residencyStatusText } from "./residencyStatus";
+import type { ResidencyStatus } from "./residencyStatus";
 
 /** P5f complex-gate should-fix 4: the untiled first-look query's own `onTerminal` is now the moment
  * `establishFrameFromExtent` actually runs (`candidateArmSession.ts`'s own doc comment on that
@@ -391,7 +394,15 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
       session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
 
-      expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "candidate-within-budget", residentFeatureCount: 3 });
+      // Item B (residency-debt cut 1b): this scenario is exactly `settledState`'s own
+      // `"settled-complete"` -- a real plan ran (`hasPlanned`), the debounce that fired it has already
+      // resolved (`!pendingViewportChange`), and `manager.trackedTileCount === 0` -- so the event now
+      // carries `settled: "complete"` too, never a second, competing signal.
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 3,
+        settled: "complete",
+      });
     } finally {
       vi.useRealTimers();
     }
@@ -458,10 +469,19 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
       session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
 
+      // Item B (residency-debt cut 1b): with resident vertices pinned at the hard ceiling itself
+      // (well over the declared 0.9 headroom margin), every new covering-tile candidate this plan
+      // considers is skipped by the headroom-gated over-budget exception BEFORE it is ever added to
+      // `issued`/`queued` (`TileViewportStreamManager.onCameraChange`'s own `continue` in that loop) --
+      // `manager.trackedTileCount` is genuinely `0` after this plan, so the settled predicate
+      // (`hasPlanned && !pendingViewportChange && trackedTileCount === 0`) reads `true`, and since
+      // `manager.overBudget` stays `true`, the classification is `"settled-partial"`, never
+      // `"settled-complete"`.
       expect(onResidencyStatusChange).toHaveBeenCalledWith({
         kind: "candidate-over-budget",
         residentFeatureCount: 900,
         viewportTotal: null,
+        settled: "partial",
       });
     } finally {
       vi.useRealTimers();
@@ -1047,7 +1067,146 @@ describe("M2: isFillComplete never reads true over a tile skipped-as-tracked acr
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
 
       expect(session.isFillComplete()).toBe(true);
-      expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "candidate-within-budget", residentFeatureCount: 2 });
+      // Item B: completeness re-earned by a fresh plan, with no viewport change left pending -- settled
+      // AND complete.
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 2,
+        settled: "complete",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+// B1 (re-reviewer gate, residency-debt cut 1b): the settling-moment sibling of M2's own repro just
+// above -- the SAME "tile carried in-flight across two plans, silently absent from
+// `lastCoveringTileKeys`" gap (`tileViewportStreamManager.ts`'s own
+// `if (this.tileState.has(tileKey)) continue;`), reached here by a GENUINE terminal
+// (`ProducerFailed`) rather than by `relinquishFill`'s own cancel. The re-reviewer's own trace:
+// nothing marks anything partial, `trackedTileCount` hits 0, and S2's own
+// `if (manager.trackedTileCount === 0) emitResidencyStatus();` (`onTerminal`, this module's manager
+// construction) would emit `candidate-within-budget`/`settled: "complete"` over a viewport whose
+// covering tile A never even finished -- the twice-convicted "Showing all N" class (BS6).
+describe("B1: a non-Completed terminal for a tile skipped-as-tracked across two plans never reads settled-complete (structural latch via manager.onTerminal)", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  /** Same helper as M2's own describe block above, redeclared per-describe-block per this file's own
+   * existing convention (`tileViewportStreamManager.test.ts`'s identical pattern, this file's own
+   * `sinkForHandle` at several other describe blocks). */
+  function sinkForHandle(handle: string): StreamSink {
+    const call = startStreamMock.mock.calls.find((c) => c[0].ticketHandle === handle);
+    if (!call) throw new Error(`no stream started for handle ${handle}`);
+    return call[0].sink as StreamSink;
+  }
+
+  it("plan1 issues A+B; B completes untrimmed; plan2 (same covering set) reads B alreadyResident and skips A as already-tracked; A then terminates ProducerFailed (trackedTileCount -> 0) -- NO candidate-within-budget emission, no settled field anywhere, isFillComplete() false; a fresh plan re-admits A, it completes -- settled-complete re-earned", async () => {
+    vi.useFakeTimers();
+    try {
+      const completeTileKeys = new Set<string>();
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 20, totalResidentFeatures: 2 })),
+        isTileResidentInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        isTileCompleteInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        markTileComplete: vi.fn((tileKey: string) => completeTileKeys.add(tileKey)),
+        markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      // Plan 1: a bbox covering exactly two tiles -- both issued directly (well under
+      // MAX_IN_FLIGHT_TILE_STREAMS), the same bbox/shape M2's own repro above uses.
+      viewportQueryMock.mockReset();
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_a" }).mockResolvedValueOnce({ stream: "sh_b" });
+      const bbox = { xmin: -1, ymin: -1, xmax: -0.75, ymax: -0.875 };
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.inFlightCount).toBe(2);
+
+      const covering1 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
+      expect(covering1).toHaveLength(2); // exactly A and B, both freshly issued this plan
+      const [tileA, tileB] = covering1;
+
+      // B completes untrimmed, reaching its own natural terminal -- `markTileComplete(B)` fires, and
+      // the manager stops tracking B (removed from `tileState`/`inFlightStreams`).
+      sinkForHandle("sh_b").onBatch(new Uint8Array([2]), true);
+      sinkForHandle("sh_b").onTerminal({ kind: "Completed", detail: "" });
+      expect(completeTileKeys.has(tileB)).toBe(true);
+      expect(session.manager.trackedTileCount).toBe(1); // only A remains tracked
+
+      // Plan 2: the SAME covering set. B is genuinely `alreadyResident` (complete); A is still
+      // tracked ("in-flight") from plan 1 -- the manager's own new-candidate loop skips it entirely
+      // (neither re-issued, re-queued, nor added to `alreadyResident`), so it is silently absent from
+      // THIS plan's own covering set.
+      viewportQueryMock.mockReset().mockImplementation(() => new Promise(() => {}));
+      onResidencyStatusChange.mockClear();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      const covering2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
+      expect(covering2).toEqual([tileB]); // A silently missing -- the same footprint M2's own repro has
+      expect(session.manager.trackedTileCount).toBe(1); // A is still genuinely outstanding right now
+
+      // THE TRACE: A terminates for real -- `ProducerFailed`, never a self-cancel (never routed
+      // through `selfCancelledHandles`, `tileViewportStreamManager.ts`) -- reaching `manager.onTerminal`
+      // genuinely, dropping `trackedTileCount` to 0 with plan 2's own `lastCoveringTileKeys` never
+      // having named A at all.
+      onResidencyStatusChange.mockClear();
+      sinkForHandle("sh_a").onTerminal({ kind: "ProducerFailed", detail: "engine.stream_failed" });
+      expect(session.manager.trackedTileCount).toBe(0);
+
+      // THE FIX: no emission at all here (the honest "absence" reading, `emitResidencyStatus`'s own
+      // doc comment) -- B1's own latch (`hasPlanned = false` on any non-`Completed` terminal) makes
+      // `isFillComplete()`/`settledState` read not-settled, so nothing fires. Asserted two ways: the
+      // call count itself (catches the pre-fix bug directly -- pre-fix, this DID emit
+      // `candidate-within-budget`/`settled: "complete"` here), and, defensively, that no call of any
+      // kind ever carries the false shape.
+      expect(onResidencyStatusChange).not.toHaveBeenCalled();
+      for (const call of onResidencyStatusChange.mock.calls) {
+        const event = call[0] as { kind?: string; settled?: unknown };
+        expect(event.kind).not.toBe("candidate-within-budget");
+        expect(event.settled).toBeUndefined();
+      }
+      expect(session.isFillComplete()).toBe(false);
+
+      // Completeness can be earned again: a fresh plan re-requests A (no longer tracked -- its failed
+      // stream was removed from the manager's own tracking, so it is a genuinely new candidate again),
+      // it completes untrimmed, and a FOLLOWING plan over the same covering set reads the fill
+      // complete again, honestly -- the same re-earning shape M2's own repro proves for the
+      // relinquish path.
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_a2" });
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.isFillComplete()).toBe(false); // A is issuing/in-flight again -- genuinely mid-fill
+
+      sinkForHandle("sh_a2").onBatch(new Uint8Array([3]), true);
+      sinkForHandle("sh_a2").onTerminal({ kind: "Completed", detail: "" });
+      expect(completeTileKeys.has(tileA)).toBe(true);
+
+      onResidencyStatusChange.mockClear();
+      viewportQueryMock.mockReset().mockImplementation(() => new Promise(() => {}));
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      expect(session.isFillComplete()).toBe(true);
+      // Item B: completeness re-earned by a fresh plan, with no viewport change left pending -- settled
+      // AND complete.
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 2,
+        settled: "complete",
+      });
     } finally {
       vi.useRealTimers();
     }
@@ -1281,9 +1440,595 @@ describe("hasHeadroom tightened to a declared 0.9 margin (P6b item 7)", () => {
       vi.useRealTimers();
     }
     expect(viewportQueryMock).not.toHaveBeenCalled(); // no re-issue -- already complete
+    // Item B: settled AND complete -- the covering set is genuinely whole, and no viewport change is
+    // pending.
     expect(onResidencyStatusChange).toHaveBeenCalledWith({
       kind: "candidate-within-budget",
       residentFeatureCount: 1,
+      settled: "complete",
     });
+  });
+});
+
+// Item B (residency-debt cut 1b, RESIDENCY-DEBT-1B.md): the settled-partial signal's own session-level
+// wiring (`emitResidencyStatus`'s own `settledState(...)` call, `candidateArmSession.ts`) -- the pure
+// predicate itself is unit-tested directly against its four inputs in `residencyStatus.test.ts`; this
+// describe block drives the REAL session+manager through the preregistration's own pre-committed
+// scenarios using this file's existing test fakes, per this piece's own BUILD instructions.
+describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  /** Finds the `StreamSink` `startStream` was called with for a SPECIFIC stream handle -- the same
+   * helper the M2 describe block above already defines for its own two-concurrent-streams repro
+   * (duplicated here rather than hoisted, to keep this describe block self-contained). */
+  function sinkForHandle(handle: string): StreamSink {
+    const call = startStreamMock.mock.calls.find((c) => c[0].ticketHandle === handle);
+    if (!call) throw new Error(`no stream started for handle ${handle}`);
+    return call[0].sink as StreamSink;
+  }
+
+  // The SAME small, deterministic 2x2 covering set (4 tiles) this file's own "hasHeadroom tightened..."
+  // describe block already establishes against the SAME `{xmin:0,...}` bootstrap fitAnchor: origin
+  // (-1,-1), baseSpan 2, 0.125-wide cells at the default "medium" level -- 3 of the 4 covering tiles
+  // issue directly (`MAX_IN_FLIGHT_TILE_STREAMS`), the 4th queues.
+  const SMALL_COVERING_BBOX = { xmin: -1, ymin: -1, xmax: -0.75, ymax: -0.75 };
+
+  // The preregistration's own pre-committed test case, paraphrased (not quoted) here: over-budget with
+  // a durably-partial covering tile plus queued work is not settled; the Amendment-1 reopening chain
+  // (a durably-partial, currently-untracked covering tile becomes a fresh candidate again and is
+  // re-admitted through the headroom-gated exception) is STILL not settled while that tile is tracked
+  // again; only once every covering tile has reached a terminal state does the session read settled,
+  // classified settled-partial because the viewport is still over budget. Amendment 1's own vertex-
+  // freeing eviction mechanism itself lives in canvas-side code (`tileResidentSet.ts`/
+  // `WorkingCanvas.tsx`), out of this session-level test's own scope -- headroom is modeled as already
+  // available throughout (a constant, comfortably-low `totalResidentVertices`), the same seam the
+  // "hasHeadroom tightened..." describe block's own tests already exercise directly.
+  it("the reopening case: not settled while over-budget with a partial covering tile + queued work; still not settled through the headroom-gated reopen; settled and classified settled-partial only once everything terminates", async () => {
+    vi.useFakeTimers();
+    try {
+      const completeTileKeys = new Set<string>();
+      const canvas = fakeCanvas({
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 5 })),
+        applyTileViewportContext: vi.fn(() => false), // stays over budget after every re-check, until noted otherwise
+        isTileResidentInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        isTileCompleteInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        markTileComplete: vi.fn((tileKey: string) => completeTileKeys.add(tileKey)),
+        markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+
+      // Bootstrap: establishes the frame. Untrimmed -- never affects `manager.overBudget`.
+      const pushTileBatch = canvas.pushTileBatch as ReturnType<typeof vi.fn>;
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }); // bootstrap
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      // Plan 1: 4 covering tiles -- 3 issued (A, B, C), 1 queued (D).
+      viewportQueryMock.mockReset();
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_a" })
+        .mockResolvedValueOnce({ stream: "sh_b" })
+        .mockResolvedValueOnce({ stream: "sh_c" });
+      session.onViewportChanged(SMALL_COVERING_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.inFlightCount).toBe(3);
+      expect(session.manager.queuedCount).toBe(1);
+      const covering1 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
+      expect(covering1).toHaveLength(4);
+      const [tileA] = covering1;
+
+      // A's own batch trims (overBudget) -- self-cancels, marked durably partial, untracked.
+      onResidencyStatusChange.mockClear();
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }); // A trims
+      sinkForHandle("sh_a").onBatch(new Uint8Array([2]), true);
+      await Promise.resolve(); // the self-cancel's own synchronous path settles
+      expect(session.manager.overBudget).toBe(true);
+      expect(completeTileKeys.has(tileA)).toBe(false);
+
+      // CHECKPOINT 1 (the preregistration's own first clause): over-budget, a durably-partial covering
+      // tile (A, now untracked), AND queued work (D) still outstanding -- `trackedTileCount > 0`, so
+      // this is never settled: the emitted event carries no `settled` field at all (BS5: "never
+      // declared while `trackedTileCount > 0` or a re-plan is pending").
+      expect(session.manager.trackedTileCount).toBeGreaterThan(0); // B, C in flight; D still queued
+      const afterTrim = onResidencyStatusChange.mock.calls.at(-1)![0] as { kind: string; settled?: unknown };
+      expect(afterTrim.kind).toBe("candidate-over-budget");
+      expect(afterTrim.settled).toBeUndefined();
+
+      // The reopening case itself: A (untracked, durably partial) becomes a genuinely NEW candidate on
+      // the next plan and is re-admitted through the headroom-gated exception (`onCameraChange`'s own
+      // `headroomDespiteOverBudget`) while `overBudgetFlag` is STILL `true`.
+      onResidencyStatusChange.mockClear();
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_a2" });
+      session.onViewportChanged(SMALL_COVERING_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      // CHECKPOINT 2 (BS5's own Amendment-1 clause): the reopening exception re-admitted A while D is
+      // STILL queued (draining stays refused while `overBudgetFlag` holds) -- `trackedTileCount` is
+      // STILL `> 0` (B, C, A-reissued in flight; D queued): still never settled. No event recorded
+      // during this reopening carries a `settled` field.
+      expect(session.manager.trackedTileCount).toBeGreaterThan(0);
+      expect(session.manager.queuedCount).toBeGreaterThan(0); // D untouched -- the queue never drains while over budget
+      expect(onResidencyStatusChange.mock.calls.length).toBeGreaterThan(0);
+      for (const call of onResidencyStatusChange.mock.calls) {
+        expect((call[0] as { settled?: unknown }).settled).toBeUndefined();
+      }
+
+      // A's reissued stream, B, and C all complete cleanly (untrimmed, `Completed`) -- each becomes
+      // resident/complete, removed from `manager.trackedTileCount`.
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }); // A's reopened batch, untrimmed
+      sinkForHandle("sh_a2").onBatch(new Uint8Array([3]), true);
+      sinkForHandle("sh_a2").onTerminal({ kind: "Completed", detail: "" });
+      expect(completeTileKeys.has(tileA)).toBe(true);
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }); // B, untrimmed
+      sinkForHandle("sh_b").onBatch(new Uint8Array([4]), true);
+      sinkForHandle("sh_b").onTerminal({ kind: "Completed", detail: "" });
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }); // C, untrimmed
+      sinkForHandle("sh_c").onBatch(new Uint8Array([5]), true);
+      sinkForHandle("sh_c").onTerminal({ kind: "Completed", detail: "" });
+      expect(session.manager.trackedTileCount).toBe(session.manager.queuedCount); // only D remains, still queued
+      expect(session.manager.queuedCount).toBeGreaterThan(0);
+      expect(session.manager.overBudget).toBe(true); // never cleared by ingest alone -- only a fit re-check clears it
+
+      // A third plan finally reports fit (A, B, C are all `alreadyResident` now -- no new candidates) --
+      // clears `overBudgetFlag`, which drains D into flight for the first time.
+      (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_d" });
+      session.onViewportChanged(SMALL_COVERING_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.overBudget).toBe(false);
+      expect(session.manager.trackedTileCount).toBe(1); // D now in flight -- still tracked, never settled here either
+
+      // D's own batch ALSO reports overBudget (the terminal state: still cannot fit) -- self-cancels,
+      // durably partial, untracked. `trackedTileCount` finally reaches 0.
+      onResidencyStatusChange.mockClear();
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }); // D trims
+      sinkForHandle("sh_d").onBatch(new Uint8Array([6]), true);
+      await Promise.resolve();
+
+      // CHECKPOINT 3 (the settled reading): everything has terminated (nothing tracked), no viewport
+      // change is pending, a real plan has run -- settled, and classified settled-partial (BS6: the
+      // viewport is still over budget -- no completeness claim over this partial set; `viewportTotal`
+      // stays `null`).
+      expect(session.manager.trackedTileCount).toBe(0);
+      expect(session.manager.overBudget).toBe(true);
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-over-budget",
+        residentFeatureCount: 5,
+        viewportTotal: null,
+        settled: "partial",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // BUILD test 2: the Amendment-1 clause, driven directly (not merely as a side effect of the larger
+  // reopening test above) -- a settled reading is never taken from a state where the partial-covering
+  // eviction exception could still fire (that exception only ever runs from WITHIN a live
+  // `onCameraChange` admission, which requires the tile to be freshly tracked again --
+  // `trackedTileCount > 0` -- before it can complete or trim again). Drives the manager directly
+  // (no session/canvas involved) through exactly the reopening admission -- a tile freed by the
+  // eviction exception becomes untracked, then a `hasHeadroom`-gated re-plan re-admits it while
+  // `overBudgetFlag` still holds -- and asserts `manager.trackedTileCount > 0` throughout that whole
+  // admission, the one fact `settledState` (`residencyStatus.ts`) excludes settled on unconditionally.
+  it("the Amendment-1 reopening admission itself never reaches trackedTileCount === 0 while in flight", () => {
+    const residency = { isTileResident: () => false, hasHeadroom: () => true };
+    const onTileSuperseded = vi.fn();
+    const manager = new TileViewportStreamManager({
+      dataset: "ds_x",
+      residency,
+      onBatch: vi.fn(),
+      onTileSuperseded,
+    });
+    manager.establishGridFrame({ xmin: 0, ymin: 0, xmax: 0, ymax: 0 });
+    const bbox = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 }; // a single-tile bbox at this frame
+    manager.setOverBudget(true, []);
+
+    // The re-plan that performs the reopening admission: a genuinely new (untracked) candidate,
+    // over budget, but headroom is available -- `headroomDespiteOverBudget` lets it through.
+    const outcome = manager.onCameraChange(bbox, null);
+    expect(outcome.kind).toBe("planned");
+    if (outcome.kind !== "planned") throw new Error("unreachable");
+    // The re-admitted tile is tracked (issuing/in-flight) the INSTANT this call returns -- synchronous,
+    // never a later microtask -- which is exactly why `settledState` reading `trackedTileCount` at any
+    // point during or immediately after this admission can never see `0` for this tile.
+    expect(outcome.issued.length + outcome.queued.length).toBeGreaterThan(0);
+    expect(manager.trackedTileCount).toBeGreaterThan(0);
+  });
+
+  // BUILD test 3, M1-corrected (reviewer gate, residency-debt cut 1b): `pendingViewportChange` gates
+  // the settled-complete reading, even with `trackedTileCount === 0`. `manager.frame` is never reset by
+  // `reissueUnrestricted` (its own interface doc, `candidateArmSession.ts:187-189`: "The tile grid
+  // FRAME itself is never re-derived") or by `clearAll` (a plain code fact -- `clearAll`'s own doc
+  // comment never mentions the frame at all; it simply never touches `this.frame`), so a SECOND generation's real
+  // camera-change plan can run against the already-established frame BEFORE that generation's own
+  // untiled first-look stream reaches its terminal -- the one production-reachable window where a batch
+  // (on that still-open untiled stream, exempt from `manager.trackedTileCount` -- see
+  // `ingestAndMaybeEstablishFrame`'s own budget-cancel doc comment and `issueUntiledQuery`'s own
+  // `onBatch` doc comment) can trigger `emitResidencyStatus` while `trackedTileCount === 0` AND a
+  // debounced re-plan is scheduled but has not yet run.
+  //
+  // **M1 (reviewer gate, residency-debt cut 1b): this test originally PINNED the false behavior it now
+  // proves impossible.** Before M1, gen2's own real plan (below) asserted `settled: "complete"` while
+  // `sh_2` (gen2's own untiled first-look/reissue stream) was still open, its own terminal deliberately
+  // never fired -- exactly the false-claim class ("filling has stopped"/"Showing all N" while a stream
+  // keeps delivering) Item A's own M1 finding convicted. Reworked here: every plan run while `sh_2` is
+  // still open now asserts NOT-settled (no `settled` field, no `candidate-within-budget` dispatch at
+  // all); only once `sh_2` reaches its own terminal (`completeUntiledLook()`, below) does a subsequent
+  // plan honestly read settled again.
+  it("a debounced-but-not-yet-run viewport change is never settled, even with trackedTileCount === 0; and NEITHER is a plan run while the untiled stream is still open (M1) -- settled again only once BOTH the debounce fires and the untiled stream reaches its own terminal", async () => {
+    vi.useFakeTimers();
+    try {
+      // Every covering tile always reads resident/complete -- so any real plan's own covering set
+      // lands entirely in `alreadyResident`, and `manager.trackedTileCount` is `0` the instant any
+      // plan runs, regardless of the bbox.
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        isTileResidentInCandidateSet: vi.fn(() => true),
+        isTileCompleteInCandidateSet: vi.fn(() => true),
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 9 })),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      const bbox = { xmin: -10, ymin: -10, xmax: 10, ymax: 10 };
+
+      // Generation 1: bootstrap, then a real plan -- settled-complete, the ordinary case (gen1's own
+      // untiled stream is completed via `completeUntiledLook()` below, so M1's own gate never applies
+      // here).
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(onResidencyStatusChange).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "candidate-within-budget", settled: "complete" })
+      );
+
+      // Generation 2 (Apply/Clear): a NEW untiled first-look stream starts (`sh_2`), deliberately left
+      // OPEN (its own terminal is never fired here) -- `manager.frame` is untouched by `clearAll`, so a
+      // real camera-change plan can still run against it before this generation's own untiled stream
+      // ever reaches its own terminal.
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_2" });
+      await session.reissueUnrestricted(null, null);
+
+      // Gen2's own real plan runs (against the already-established frame) -- M1: NOT settled here.
+      // `sh_2` is still open, so the ordinary "Showing all N" claim would be false while it keeps
+      // delivering batches into this same view (this event's own within-budget gate,
+      // `settled !== "settled-complete"`, returns without dispatching anything at all -- "absence is
+      // honest," this function's own pre-existing doc comment).
+      onResidencyStatusChange.mockClear();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      // Nit (reviewer gate, residency-debt cut 1b): `not.toHaveBeenCalled()` alone already subsumes the
+      // narrower `not.toHaveBeenCalledWith(objectContaining({kind:"candidate-within-budget"}))` this
+      // used to also assert -- if the mock was never called AT ALL, it was trivially never called with
+      // that shape either.
+      expect(onResidencyStatusChange).not.toHaveBeenCalled();
+
+      // A NEW viewport change is accepted for debouncing -- `pendingViewportChange` is now `true` --
+      // but its debounce has NOT yet fired. DOUBLY not-settled now (`pendingViewportChange` AND M1's
+      // own `untiledStreamRunning`, independently).
+      session.onViewportChanged({ xmin: -20, ymin: -20, xmax: 20, ymax: 20 });
+
+      // Gen2's own untiled first-look stream, still open, delivers another batch -- WITHOUT the
+      // ORIGINAL (pre-M1) fix, `isFillComplete()` alone (never considering `pendingViewportChange`)
+      // would let this reach `candidate-within-budget` again, a claim the still-pending re-plan is
+      // about to revise. With the fix, `settledState` reads `"not-settled"` here regardless (both
+      // `pendingViewportChange` AND `untiledStreamRunning` force it), so this emits NOTHING.
+      lastSink().onBatch(new Uint8Array([2]), true);
+      expect(onResidencyStatusChange).not.toHaveBeenCalled(); // subsumes the narrower kind-shaped check too
+
+      // M1: complete the untiled look now -- `sh_2` reaches its own terminal, clearing
+      // `untiledStreamRunning`. This alone does not itself emit (no `emitResidencyStatus()` call at the
+      // untiled stream's own terminal -- S2's own surfacing obligation is scoped to the TILE manager's
+      // `onTileSuperseded`/`onTerminal`, not this session-owned stream); `pendingViewportChange` is
+      // ALSO still `true` at this exact instant (the debounce has not fired yet either), so even if it
+      // did emit, it would still read not-settled. The already-scheduled debounce firing next is the
+      // first genuinely honest opportunity to settle.
+      completeUntiledLook();
+      expect(onResidencyStatusChange).not.toHaveBeenCalled();
+
+      // The debounce fires, the plan completes -- NOW genuinely settled: no re-plan pending, nothing
+      // tracked, AND (M1) the untiled stream has also reached its own terminal.
+      onResidencyStatusChange.mockClear();
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(onResidencyStatusChange).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "candidate-within-budget", settled: "complete" })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // BUILD test 4: a relinquished fill is never settled -- `relinquishFill` resets `hasPlanned` to
+  // `false` (Item A's own M2 latch), so the settled predicate's own `isSettled` check reads `false`
+  // unconditionally the instant `candidate-relinquished` fires, and stays that way until a NEW
+  // camera-change plan runs.
+  it("relinquished is never settled: the status stays candidate-relinquished, never settled-partial, until a fresh plan re-earns completeness", async () => {
+    vi.useFakeTimers();
+    try {
+      const completeTileKeys = new Set<string>();
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 20, totalResidentFeatures: 2 })),
+        isTileResidentInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        isTileCompleteInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        markTileComplete: vi.fn((tileKey: string) => completeTileKeys.add(tileKey)),
+        markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+
+      // A single-tile bbox -- exactly one tile is ever in play.
+      const bbox = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 };
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_tile_1" });
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.inFlightCount).toBe(1);
+
+      onResidencyStatusChange.mockClear();
+      const summary = session.relinquishFill();
+      expect(summary.cancelledInFlight).toHaveLength(1);
+      expect(session.manager.trackedTileCount).toBe(0); // the ONLY tracked tile was just relinquished
+
+      // The status stays candidate-relinquished -- never settled-partial, even though
+      // `trackedTileCount === 0` right now (`relinquishFill`'s own `hasPlanned = false` latch is what
+      // keeps this predicate honest here, not `trackedTileCount`).
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({ kind: "candidate-relinquished", residentFeatureCount: 2 });
+      expect(onResidencyStatusChange).not.toHaveBeenCalledWith(expect.objectContaining({ kind: "candidate-within-budget" }));
+      expect(onResidencyStatusChange).not.toHaveBeenCalledWith(expect.objectContaining({ kind: "candidate-over-budget" }));
+
+      // No NEW plan has run yet -- a further pan/zoom is what would be needed for completeness to be
+      // earned again (verified below); nothing further to assert until then.
+
+      // A fresh plan re-requests the relinquished tile (untracked, durably partial -- a genuinely new
+      // candidate) and completes it untrimmed -- never settled-partial, and never emitted while
+      // relinquished.
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_tile_2" });
+      onResidencyStatusChange.mockClear();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.inFlightCount).toBe(1); // the relinquished tile, genuinely re-tracked
+      const [tileKey] = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
+      sinkForHandle("sh_tile_2").onBatch(new Uint8Array([2]), true);
+
+      // S2 (reviewer gate, residency-debt cut 1b): rework -- this used to require a FOLLOWING plan over
+      // the same covering set to observe the settled-complete reading (the signal waited for the next
+      // batch/camera-change to become visible). It no longer does: this tile's own terminal is the LAST
+      // in-flight one (nothing else queued, no untiled stream running), so its own `onTerminal` callback
+      // (this module's own manager construction, S2's "the settling moment itself" now-emits addition) fires
+      // the settled-complete transition directly, with NO following plan anywhere in this test.
+      onResidencyStatusChange.mockClear();
+      sinkForHandle("sh_tile_2").onTerminal({ kind: "Completed", detail: "" });
+      expect(completeTileKeys.has(tileKey)).toBe(true);
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 2,
+        settled: "complete",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // BUILD test 5: stalled and settled are mutually exclusive, at the session level -- reusing this
+  // file's own pre-existing "stalled" scenario (Item A) unmodified in shape, adding only the `settled`
+  // assertion Item B introduces. `stalled` requires `queuedCount > 0`, which requires
+  // `manager.trackedTileCount > 0`, which the settled predicate excludes by construction.
+  it("stalled and settled never co-occur on the same event: the over-budget-with-a-frozen-queue scenario never carries a settled field", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi
+          .fn()
+          .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }) // untiled bootstrap
+          .mockReturnValue({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }),
+        getResidentCounts: vi.fn(() => ({
+          totalResidentVertices: Math.ceil(MAX_RESIDENT_VERTICES * 0.9), // at the declared margin -- no headroom
+          totalResidentFeatures: 5,
+        })),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+
+      viewportQueryMock.mockReset();
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_tile_1" })
+        .mockResolvedValueOnce({ stream: "sh_tile_2" })
+        .mockResolvedValueOnce({ stream: "sh_tile_3" });
+      viewportQueryMock.mockImplementation(() => new Promise(() => {})); // the rest stay genuinely queued
+      session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.inFlightCount).toBe(3);
+      expect(session.manager.queuedCount).toBeGreaterThan(0);
+
+      onResidencyStatusChange.mockClear();
+      const tileSink = lastSink();
+      tileSink.onBatch(new Uint8Array([2]), true);
+      await Promise.resolve();
+
+      expect(session.manager.overBudget).toBe(true);
+      expect(session.manager.queuedCount).toBeGreaterThan(0); // stalled precondition: a frozen, non-empty queue
+      const [event] = onResidencyStatusChange.mock.calls.at(-1)! as [{ stalled?: unknown; settled?: unknown }];
+      expect(event.stalled).toBe(true);
+      expect(event.settled).toBeUndefined(); // never both -- queuedCount > 0 forces trackedTileCount > 0
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // M1 (reviewer gate, residency-debt cut 1b, "Item B input-list amendment"): the dedicated reachability
+  // regression -- a gen-2 reissue leaves `manager.frame` established (`reissueUnrestricted`'s own
+  // interface doc, `candidateArmSession.ts:187-189`: "The tile grid FRAME itself is never re-derived"
+  // ... "only residency and the fit anchor reset" -- not `clearAll`'s own doc comment, which never
+  // mentions the frame at all), so a real plan can run against it while the SAME generation's own
+  // untiled first-look/reissue stream still delivers. Drives the OTHER admission path the M1-corrected
+  // "debounced-but-not-yet-run" test above does not: over-budget with NO headroom skips a genuinely
+  // new candidate ENTIRELY
+  // (`TileViewportStreamManager.onCameraChange`'s own `continue`, never issued/queued), so
+  // `trackedTileCount` reaches (stays) 0 without that tile ever being tracked in the first place --
+  // `pendingViewportChange` plays no part here at all, isolating `untiledStreamRunning` as the ONLY
+  // thing keeping this reading honest.
+  it("M1: over-budget + no-headroom skip reaches trackedTileCount 0 while the untiled stream still delivers -- not settled, the suffix absent; settles honestly once the untiled stream reaches its own terminal", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        applyTileViewportContext: vi.fn(() => false), // stays over budget after every re-check
+        getResidentCounts: vi.fn(() => ({
+          totalResidentVertices: Math.ceil(MAX_RESIDENT_VERTICES * 0.95), // above the declared 0.9 margin -- no headroom, ever
+          totalResidentFeatures: 7,
+        })),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+
+      // Gen1: an ordinary bootstrap, its own untiled stream completed -- establishes the frame.
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      // Gen2 (Apply/Clear): a NEW untiled stream starts (`sh_2`), deliberately left OPEN throughout --
+      // `manager.clearAll()` resets `manager.overBudget` to `false` (`clearAll`'s own doc comment:
+      // "Also clears `overBudget`") and never touches `manager.frame`; `reissueUnrestricted` itself
+      // (this session's own code, not `clearAll`) separately resets its own `hasPlanned` to `false`
+      // right alongside that call.
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_2" });
+      await session.reissueUnrestricted(null, null);
+
+      // `sh_2` (the untiled stream) delivers a batch that reports `overBudget` -- `manager.overBudget`
+      // becomes `true` even though this is the UNTILED stream's own batch (never self-cancelled --
+      // `ingestAndMaybeEstablishFrame`'s own `tileKey !== INITIAL_TILE_KEY` guard on the self-cancel
+      // branch, `candidateArmSession.ts`), so `sh_2` itself stays open.
+      const pushTileBatch = canvas.pushTileBatch as ReturnType<typeof vi.fn>;
+      pushTileBatch.mockReturnValueOnce({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } });
+      lastSink().onBatch(new Uint8Array([2]), true);
+      expect(session.manager.overBudget).toBe(true);
+
+      // Plan against the established frame (a genuinely new, never-before-resident tile) WHILE `sh_2`
+      // still delivers -- over-budget + no headroom skips this candidate ENTIRELY (never issued, never
+      // queued): `trackedTileCount` reaches (stays) 0 without this tile ever being tracked at all.
+      const oneTileBbox = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 };
+      onResidencyStatusChange.mockClear();
+      viewportQueryMock.mockClear();
+      session.onViewportChanged(oneTileBbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.trackedTileCount).toBe(0);
+      expect(viewportQueryMock).not.toHaveBeenCalled(); // skipped, never even issued a ticket
+
+      // M1's own reachability finding: WITHOUT `untiledStreamRunning`, `settledState`'s own
+      // `isSettled = hasPlanned && !pendingViewportChange && trackedTileCount === 0` reads `true` here
+      // (all three hold), classifying `settled-partial` even though `sh_2` keeps delivering into this
+      // SAME view -- the exact false-claim class Item A's own M1 finding convicted. WITH the fix, the
+      // emitted event carries NO `settled` field at all, and (by construction, `residencyStatusText`'s
+      // own mapping) never appends the settled-partial suffix either.
+      expect(onResidencyStatusChange).toHaveBeenCalledTimes(1);
+      const [event] = onResidencyStatusChange.mock.calls[0] as [ResidencyStatus];
+      expect(event.kind).toBe("candidate-over-budget");
+      expect((event as { settled?: unknown }).settled).toBeUndefined();
+      expect(residencyStatusText(event)).not.toContain("Filling has stopped for this view");
+
+      // M1: complete the untiled look now -- `sh_2` reaches its own terminal, clearing
+      // `untiledStreamRunning`. This alone does not itself emit (S2's own surfacing obligation is
+      // scoped to the TILE manager's `onTileSuperseded`/`onTerminal`, never this session-owned untiled
+      // stream) -- no NEW call beyond the one already asserted above.
+      completeUntiledLook();
+      expect(onResidencyStatusChange).toHaveBeenCalledTimes(1);
+
+      // The next emission (another plan; the SAME candidate is still skipped, still over budget) now
+      // settles honestly, classified settled-partial -- never a completeness/total claim over this
+      // partial set (BS6: `viewportTotal` stays `null`).
+      onResidencyStatusChange.mockClear();
+      session.onViewportChanged(oneTileBbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-over-budget",
+        residentFeatureCount: 7,
+        viewportTotal: null,
+        settled: "partial",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // S4 (reviewer gate, residency-debt cut 1b): `cancelPendingViewportChange` must genuinely clear
+  // `pendingViewportChange`, not merely cancel the debounce timer -- dropping that clear from the
+  // wrapper (`cancelViewportDebounce`, `candidateArmSession.ts`) would leave the flag stuck `true`
+  // forever (nothing else ever clears it once the debounce that would have is cancelled), so every
+  // later settled reading would silently, permanently read not-settled. The probe below deliberately
+  // does NOT use a second `onViewportChanged`/debounce firing to observe the result -- `handleViewportChange`
+  // clears `pendingViewportChange` itself, unconditionally, as its own first line, so a second debounced
+  // plan would pass even if `cancelPendingViewportChange` were a complete no-op, never distinguishing a
+  // working wrapper from a broken one. Instead it uses a TILE batch/terminal -- `ingestAndMaybeEstablishFrame`'s
+  // own trailing `emitResidencyStatus()` call and `onTerminal`'s own new one (S2) -- an ingest path that
+  // never touches `pendingViewportChange` at all, so ONLY `cancelPendingViewportChange`'s own clear can
+  // make the settled reading return here.
+  it("cancelPendingViewportChange genuinely clears pendingViewportChange -- a subsequent ingest event (never handleViewportChange, which would clear it regardless) sees the settled reading return", async () => {
+    vi.useFakeTimers();
+    try {
+      const completeTileKeys = new Set<string>();
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+        getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 2 })),
+        isTileResidentInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        isTileCompleteInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
+        markTileComplete: vi.fn((tileKey: string) => completeTileKeys.add(tileKey)),
+        markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
+      });
+      const onResidencyStatusChange = vi.fn();
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      // The untiled stream reaches its OWN terminal here, and never again in this test --
+      // `untiledStreamRunning` (M1) stays `false` throughout what follows, so the ONLY variable this
+      // test exercises is `pendingViewportChange`, never conflated with M1's own independent gate.
+      completeUntiledLook();
+
+      // A single-tile bbox, deliberately left UNRESOLVED past its own first plan -- still genuinely
+      // "in flight" when this test needs a second, independent ingest event later.
+      const bbox = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 };
+      viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_tile_1" });
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(session.manager.inFlightCount).toBe(1);
+
+      // A SECOND pan is accepted for debouncing (`pendingViewportChange` -> `true`) but cancelled
+      // immediately instead of ever firing -- exactly the Apply/Clear `cancelPendingDebounce` seam this
+      // method exists for (`CandidateArmSession.cancelPendingViewportChange`'s own doc comment).
+      session.onViewportChanged({ xmin: -20, ymin: -20, xmax: 20, ymax: 20 });
+      session.cancelPendingViewportChange();
+
+      // The probe: the still-in-flight tile's own batch arrives and completes it --
+      // `ingestAndMaybeEstablishFrame`'s own trailing call, then `onTerminal`'s own new one (S2) --
+      // NEVER `handleViewportChange`. If `cancelPendingViewportChange` had dropped its own clear, this
+      // assertion would fail: `settledState` would still read `"not-settled"` (`pendingViewportChange`
+      // stuck `true`), and `emitResidencyStatus`'s within-budget branch would emit nothing at all.
+      onResidencyStatusChange.mockClear();
+      sinkForHandle("sh_tile_1").onBatch(new Uint8Array([2]), true);
+      sinkForHandle("sh_tile_1").onTerminal({ kind: "Completed", detail: "" });
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 2,
+        settled: "complete",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -16,7 +16,7 @@ import {
   recordResidencyTileRequested,
 } from "../instrument/residencyInstrument";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
-import { fillActivity } from "./residencyStatus";
+import { fillActivity, settledState } from "./residencyStatus";
 import type { ResidencyStatusEvent } from "./residencyStatus";
 import { encodeDecU64 } from "../skp/codec";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
@@ -26,6 +26,7 @@ import { dataPlaneAttach } from "../streaming/dataPlaneClient";
 import { debounce } from "../streaming/debounce";
 import type { StreamSink } from "../streaming/transport";
 import { TileViewportStreamManager } from "../streaming/tileViewportStreamManager";
+import type { TilePlanOutcome } from "../streaming/tileViewportStreamManager";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "../streaming/viewportStreamManager";
 import type { RequestOutcome } from "../streaming/viewportStreamManager";
 
@@ -238,8 +239,11 @@ export interface CandidateArmSession {
   /** M2 (reviewer gate, residency-debt cut 1b): a pure, read-only view of whether this session's own
    * fill currently reads complete -- exposed for direct assertion (this module's own tests included),
    * the same read-only-getter-for-assertion shape `manager.overBudget`/
-   * `manager.trackedTileCount`/`manager.gridFrame` already take. Never a second copy of the
-   * predicate -- `emitResidencyStatus`'s own within-budget claim gates on this SAME function. */
+   * `manager.trackedTileCount`/`manager.gridFrame` already take. Never a second copy of the predicate --
+   * `emitResidencyStatus`'s own within-budget claim reads this SAME function as one of `settledState`'s
+   * own inputs (`currentSettledState`, `fillComplete: isFillComplete()`), not merely `isFillComplete()`
+   * alone any more since Item B narrowed that gate (residency-debt cut 1b) -- there is still no second
+   * copy of this function's own covering-tile loop anywhere else in this module. */
   isFillComplete: () => boolean;
 }
 
@@ -291,8 +295,42 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * it is `false` before the first plan ever ran: no plan has run yet SINCE the relief fired, so
    * nothing has had the chance to disagree with whatever `lastCoveringTileKeys` happens to hold. The
    * next real `handleViewportChange` plan sets it `true` again -- a LATCH, not a permanent flip:
-   * completeness can be earned again once a fresh plan has actually run. */
+   * completeness can be earned again once a fresh plan has actually run.
+   *
+   * **B1 (re-reviewer gate, residency-debt cut 1b): also reset by `manager`'s own `onTerminal`
+   * callback, for ANY non-`Completed` terminal.** The same carried-in-flight-across-two-plans tile
+   * `relinquishFill`'s own paragraph above names can also terminate on its own -- genuinely, never
+   * self-cancelled -- while it is still in that invisible state (absent from `lastCoveringTileKeys`,
+   * still counted by `manager.trackedTileCount` until this terminal fires). A `ProducerFailed`/
+   * `TransportFailed`/`DecodeFailed` (or an externally-sourced `Cancelled`) terminal for it drops
+   * `manager.trackedTileCount` to 0 exactly the way `relinquishFill`'s own cancel does, with
+   * `lastCoveringTileKeys` never having named the tile either way -- the identical gap, a different
+   * trigger. Chosen deliberately UNCONDITIONAL (any non-`Completed` terminal resets this flag,
+   * regardless of whether the terminating tile happens to still be named in `lastCoveringTileKeys`),
+   * not narrowed to only the invisible-carried-over case: every producer of a GENUINE (non-self-
+   * cancelled) terminal reaching `manager`'s own `onTerminal` callback at all already proves the tile
+   * was one this session's own fill still cared about -- `cancelTileStream`'s own `selfCancelledHandles`
+   * suppression (`tileViewportStreamManager.ts`) means every manager-INITIATED cancellation (out-of-
+   * view supersede, budget self-cancel, `relinquishFill`'s own in-flight cancel) never reaches this
+   * callback at all, so there is no "ordinary, still-named covering tile" case here that this flag
+   * would be wrong to also latch on -- a failed tile stream means the fill did not complete as
+   * planned, full stop, whether or not `lastCoveringTileKeys` happened to still name it. The
+   * unconditional form is therefore not merely simpler than re-deriving set membership a second time;
+   * it never disagrees with the narrower conditional where that conditional would already have been
+   * correct (a NAMED covering tile that fails is already excluded by `isFillComplete`'s own loop,
+   * below, reading it not-complete), and it closes the one case the loop alone cannot see. See
+   * `manager`'s own `onTerminal` callback (this module's manager construction) for where this fires. */
   let hasPlanned = false;
+  /** Item B (residency-debt cut 1b): `true` from the moment a viewport change is accepted for
+   * debouncing (`onViewportChanged` below, at the `debounced.call` call site) until its debounced
+   * handler actually runs (`handleViewportChange`'s own first line clears it, before any early return
+   * -- "the handler ran" is true the instant its body starts, regardless of what the resulting plan
+   * turns out to be) or is cancelled (`cancelViewportDebounce` below, this session's own wrapper around
+   * `debounced.cancel()`, used by `cancelPendingViewportChange`/`reissueUnrestricted`/`stop`). Read by
+   * `settledState` (`residencyStatus.ts`) via `emitResidencyStatus` below -- BS5's own text: "never
+   * declared while `trackedTileCount > 0` or a re-plan is pending." A scheduled-but-not-yet-run
+   * re-plan is exactly that pending re-plan; this flag is this session's own honest record of it. */
+  let pendingViewportChange = false;
   /** P5f complex-gate should-fix 4: the running union of every batch the CURRENT untiled first-look/
    * reissue stream has delivered so far (`ingestAndMaybeEstablishFrame`'s own `outcome.unionedExtent`,
    * which already accumulates across calls) -- read once, at that stream's own natural terminal
@@ -320,6 +358,33 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * another -- `reissueUnrestricted` is only ever called after a full clear, which does not itself
    * need to race a still-in-flight untiled stream in practice). */
   let untiledStreamHandle: string | null = null;
+  /** S2 (reviewer gate, residency-debt cut 1b): `true` only for the duration of a manager call that can
+   * SYNCHRONOUSLY cancel a tracked tile and trigger `onTileSuperseded` (this module's own manager
+   * construction, S2's own "the settling moment itself" now-emits addition below) from WITHIN a call site
+   * that is ITSELF about to call `emitResidencyStatus()` again right after -- three such sites, each set
+   * this flag around the ONE manager call that can recurse into `onTileSuperseded` this way:
+   * `ingestAndMaybeEstablishFrame`'s own budget self-cancel (`manager.cancelTile`),
+   * `handleViewportChange`'s own re-plan (`manager.onCameraChange`, whose out-of-view loop can cancel
+   * tiles before this function's own trailing call runs), and `reissueUnrestricted`'s own full clear
+   * (`manager.clearAll`). WITHOUT this guard, a cancellation that happens to leave `trackedTileCount ===
+   * 0` would fire `onTileSuperseded`'s own new call FIRST, then the enclosing function's own
+   * pre-existing, unconditional trailing `emitResidencyStatus()` call fires a SECOND time right after --
+   * both computing the identical content in the same synchronous tick, an avoidable double dispatch to
+   * `deps.onResidencyStatusChange` (paraphrasing S2's own finding, not quoting it: verify there is no
+   * emission storm here).
+   * `onTerminal` (below) never needs this guard: unlike `onTileSuperseded`, it is never invoked
+   * SYNCHRONOUSLY from within any of this module's own manager calls -- every real terminal arrives as
+   * its own, independent, later event, so its new `emitResidencyStatus()` call is never nested inside
+   * another one already about to fire. (Investigated per S2's own instruction: neither `nextResidencyStatus`
+   * nor `App.tsx`'s own consumption of it, `setResidencyStatus(nextResidencyStatus(event))` -- a plain
+   * `useState` setter -- dedupes on content anywhere in that pipeline; this codebase's own existing
+   * precedent for this SHAPE of problem is `syncScanLiveness`'s own `scanActive` last-value compare, a
+   * TRANSITION guard, not a content-hash cache -- a persistent content-hash cache was tried first here
+   * and reverted: it also suppressed later, GENUINELY new dispatches whose content happened to
+   * byte-match an EARLIER, unrelated one, which broke several pre-existing tests that assert a fresh
+   * dispatch at a specific call site. This narrower, call-stack-scoped guard targets exactly the three
+   * known synchronous-recursion sites instead, never a wider time-based comparison.) */
+  let suppressNestedSupersededEmit = false;
   /** Tile keys this session has already counted as an "issued stream" against
    * `residencyInstrument.ts`'s own `streamsIssued` counter -- deduped by key so a tile counted once
    * at PLANNING time (`onCameraChange`'s own `issued` array, the common case) is never counted a
@@ -454,6 +519,29 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     return true;
   }
 
+  /** Item B (residency-debt cut 1b): `settledState`'s own five inputs, read once per call so every
+   * branch below shares the SAME reading rather than risking two calls disagreeing mid-function
+   * (`manager.trackedTileCount`/`isFillComplete()`/`untiledStreamHandle` are all live reads of mutable
+   * state, not frozen values). `isFillComplete()` is the SAME boolean the pre-existing within-budget gate
+   * already computed -- never a second copy of its own covering-tile loop; see `settledState`'s own doc
+   * comment (`residencyStatus.ts`) for the classification this derives.
+   *
+   * M1 (reviewer gate, residency-debt cut 1b, the "Item B input-list amendment"): `untiledStreamRunning:
+   * untiledStreamHandle !== null` reads this session's own untiled-stream flag AT THIS CALL, read here so
+   * it always reflects THIS instant's own truth -- the identical read `emitResidencyRelinquished` already
+   * performs, "never a stale snapshot" (that function's own doc comment, which has the fuller account of
+   * why the untiled stream needs a separate honest read at all: it is exempt from
+   * `manager.trackedTileCount`). */
+  function currentSettledState(): ReturnType<typeof settledState> {
+    return settledState({
+      hasPlanned,
+      pendingViewportChange,
+      trackedTileCount: manager.trackedTileCount,
+      untiledStreamRunning: untiledStreamHandle !== null,
+      fillComplete: isFillComplete(),
+    });
+  }
+
   function emitResidencyStatus(): void {
     if (!canvas) return;
     const { totalResidentFeatures } = canvas.getResidentCounts();
@@ -465,6 +553,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // is safe with respect to the dual-arm identity guard's own `FIELD_SEQUENCE_EVENTS`.
       traceCandidateResidencyStatus(dataset, overBudget, totalResidentFeatures, evictedTileCountSession);
     }
+    const settled = currentSettledState();
     if (overBudget) {
       // Item A (residency-debt cut 1b), BS3: `stalled` names the held-queue-is-provably-frozen case
       // ("filling" is everything else about an over-budget state -- the ordinary wording already
@@ -477,16 +566,43 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
           hasHeadroom: hasHeadroom(),
           inFlightCount: manager.inFlightCount,
         }) === "stalled";
+      // Item B: `settled === "settled-partial"` here is exactly `isSettled && !isFillComplete()`
+      // (`isFillComplete()` reads `false` unconditionally while `overBudget` is `true`, so this branch
+      // can never read `"settled-complete"`) -- structurally mutually exclusive with `stalled` above:
+      // `stalled` requires `queuedCount > 0`, which requires `manager.trackedTileCount > 0`, which the
+      // settled predicate excludes by construction (BS5, ADR-028 Amendment 1).
       deps.onResidencyStatusChange?.({
         kind: "candidate-over-budget",
         residentFeatureCount: totalResidentFeatures,
         viewportTotal: null,
         stalled: stalled || undefined,
+        settled: settled === "settled-partial" ? "partial" : undefined,
       });
       return;
     }
-    if (!isFillComplete()) return; // mid-fill -- see this function's own doc comment above
-    deps.onResidencyStatusChange?.({ kind: "candidate-within-budget", residentFeatureCount: totalResidentFeatures });
+    // Item B: the pre-existing within-budget gate (`isFillComplete()` alone) is narrowed to
+    // `settled === "settled-complete"` -- strictly stronger, never weaker: `settled-complete` requires
+    // `isFillComplete()` to be `true` PLUS `!pendingViewportChange` PLUS (M1) `!untiledStreamRunning`
+    // (BS5's own text: "never declared while `trackedTileCount > 0` or a re-plan is pending"). Before
+    // this fix, `isFillComplete()` alone never considered a scheduled-but-not-yet-run viewport-change
+    // debounce -- a batch arriving on the untiled first-look/reissue stream (exempt from
+    // `manager.trackedTileCount` -- see `ingestAndMaybeEstablishFrame`'s own budget-cancel doc comment
+    // ("the untiled first-look stream has its own separate lifecycle" ... "never tracked by `manager`
+    // at all", two fragments of that comment) and `issueUntiledQuery`'s own `onBatch` doc comment (this session IS the manager for that
+    // stream -- no separate `TileViewportStreamManager` object owns it), below -- NOT this module's own
+    // top doc comment, which never states this directly) while such a re-plan is
+    // pending could reach this point with `isFillComplete()` genuinely `true` and declare "Showing all N
+    // features in view" a re-plan was about to revise.
+    // `settled === "settled-partial"` here (not over budget, but a truncated covering set or a covering
+    // tile that never completed) is deliberately left silent, same as `isFillComplete() === false`
+    // always has been -- see this function's own "absence is honest" doc comment above; this piece adds
+    // no new status kind for that combination.
+    if (settled !== "settled-complete") return; // mid-fill or a re-plan is pending -- absence is honest
+    deps.onResidencyStatusChange?.({
+      kind: "candidate-within-budget",
+      residentFeatureCount: totalResidentFeatures,
+      settled: "complete",
+    });
   }
 
   /** Item A (decisions 32a/33b): the scoped-relief lever's own dedicated status emission -- NEVER
@@ -600,6 +716,26 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // entry left behind for a LATER generation's own tracking to be confused by.
       tileGenerationUntrimmed.delete(tileKey);
       syncScanLiveness(); // P5f should-fix 3: a tile just left this manager's tracked set
+      // S2 (reviewer gate, residency-debt cut 1b, "Item B's own surfacing obligation"): the settling
+      // moment itself now emits, rather than the signal waiting for the next batch/camera-change to
+      // become visible -- see `suppressNestedSupersededEmit`'s own doc comment (above) for why this call
+      // is guarded (an enclosing call site may be about to call `emitResidencyStatus()` again itself).
+      //
+      // S-b (re-reviewer gate, residency-debt cut 1b): DEFENSIVE, and UNREACHABLE in production today
+      // -- stated plainly, not implied otherwise. This module's own manager construction has exactly
+      // three call sites that can synchronously recurse into `onTileSuperseded`
+      // (`ingestAndMaybeEstablishFrame`'s self-cancel, `handleViewportChange`'s re-plan,
+      // `reissueUnrestricted`'s full clear), and every one of them now wraps the one manager call that
+      // can do so in `suppressNestedSupersededEmit = true` for its entire duration (S-a, above) --
+      // `onTileSuperseded` is never invoked from anywhere else in this module (`manager`'s own
+      // `relinquishOutstanding`, `tileViewportStreamManager.ts`, states plainly it "never calls
+      // `onTileSuperseded`" at all). So `!suppressNestedSupersededEmit` reads `false` at every call
+      // site this callback can actually fire from today, and the emission below never runs. Kept
+      // rather than deleted as the honest fallback for a producer this module does not yet have: if a
+      // future change ever called `onTileSuperseded` from OUTSIDE those three guarded sites, this line
+      // is what keeps the S2 settling-moment obligation from silently going missing for it. TODAY, that
+      // obligation is carried entirely by `onTerminal`'s own identical emit, below.
+      if (!suppressNestedSupersededEmit && manager.trackedTileCount === 0) emitResidencyStatus();
     },
     onTerminal: (tileKey, streamHandle, terminal) => {
       countTileStreamIssuedOnce(tileKey); // a stream that terminated without ever delivering a batch
@@ -624,7 +760,17 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         canvas?.markTileComplete(tileKey);
       }
       tileGenerationUntrimmed.delete(tileKey);
+      // B1 (re-reviewer gate, residency-debt cut 1b): the structural latch, dropped here BEFORE the S2
+      // emission check just below -- order matters, so the emission sees the dropped latch, never a
+      // stale `true`. See `hasPlanned`'s own doc comment (above, the "B1" paragraph) for the full
+      // account of the gap this closes and why the predicate is deliberately UNCONDITIONAL (any
+      // non-`Completed` terminal, not only one for a tile absent from `lastCoveringTileKeys`).
+      if (terminal.kind !== "Completed") hasPlanned = false;
       syncScanLiveness(); // P5f should-fix 3: this tile's own stream just reached a terminal state
+      // S2 (reviewer gate, residency-debt cut 1b): see `onTileSuperseded`'s own identical addition just
+      // above for the full account -- the same "the settling moment itself" now-emits obligation applies
+      // to a genuine terminal exactly as it does to a supersede.
+      if (manager.trackedTileCount === 0) emitResidencyStatus();
     },
   });
 
@@ -687,7 +833,24 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // never blanked.
       if (tileKey !== INITIAL_TILE_KEY) {
         budgetCancelledTileKeys.add(tileKey);
-        void manager.cancelTile(tileKey);
+        // S2: see `suppressNestedSupersededEmit`'s own doc comment above -- `manager.cancelTile`'s
+        // in-flight case resolves SYNCHRONOUSLY (no `await` before `onTileSuperseded` fires), so a
+        // self-cancel that leaves `trackedTileCount === 0` would otherwise double-dispatch alongside
+        // this function's own trailing `emitResidencyStatus()` call, below.
+        //
+        // S-a (re-reviewer gate, residency-debt cut 1b): `try`/`finally`, not a bare set/reset pair --
+        // if `manager.cancelTile` (or anything it synchronously calls, including a nested
+        // `emitResidencyStatus()` this guard itself exists to suppress) ever threw, a bare
+        // `suppressNestedSupersededEmit = false;` below it would never run, leaving the guard stuck
+        // `true` forever: every LATER, genuinely-unnested `onTileSuperseded` emission would then be
+        // silently swallowed for the rest of this session's own lifetime -- a silent, permanent loss of
+        // the S2 settling-moment obligation, never surfaced anywhere. `finally` runs regardless.
+        suppressNestedSupersededEmit = true;
+        try {
+          void manager.cancelTile(tileKey);
+        } finally {
+          suppressNestedSupersededEmit = false;
+        }
       }
     }
     evictedTileCountSession += outcome.evictedTileKeys.length;
@@ -819,9 +982,37 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   // uses, not a value or mechanism of this module's own.
   const debounced = debounce((bbox: AuthoritativeBbox) => handleViewportChange(bbox), VIEWPORT_QUERY_MIN_INTERVAL_MS);
 
+  /** Item B: the one place that cancels the viewport-change debounce -- wraps `debounced.cancel()`
+   * with clearing `pendingViewportChange` back to `false` (cancelled means no re-plan is pending any
+   * more), so every call site that used to call `debounced.cancel()` directly stays honest about this
+   * flag without repeating the pairing at each site. */
+  function cancelViewportDebounce(): void {
+    debounced.cancel();
+    pendingViewportChange = false;
+  }
+
   function handleViewportChange(bbox: AuthoritativeBbox): void {
+    // Item B: cleared here, first, before any early return below -- "its debounced handler actually
+    // runs" (`pendingViewportChange`'s own doc comment, above) is true the instant this
+    // body starts, regardless of whether `stopped` short-circuits it or `manager.onCameraChange` comes
+    // back `"no-frame"`/`"stopped"` rather than `"planned"`.
+    pendingViewportChange = false;
     if (stopped) return;
-    const outcome = manager.onCameraChange(bbox, currentFilter);
+    // S2: see `suppressNestedSupersededEmit`'s own doc comment above -- `onCameraChange`'s own
+    // out-of-view cancellation loop can synchronously cancel a tracked tile (`onTileSuperseded`) before
+    // this function's own trailing `emitResidencyStatus()` call (below) runs.
+    //
+    // S-a (re-reviewer gate, residency-debt cut 1b): `try`/`finally` around the one call that can
+    // recurse into `onTileSuperseded` -- see the identical rationale at
+    // `ingestAndMaybeEstablishFrame`'s own self-cancel site (above): a bare set/reset pair leaves the
+    // guard stuck `true` forever if the wrapped call ever throws.
+    suppressNestedSupersededEmit = true;
+    let outcome: TilePlanOutcome;
+    try {
+      outcome = manager.onCameraChange(bbox, currentFilter);
+    } finally {
+      suppressNestedSupersededEmit = false;
+    }
     if (outcome.kind !== "planned") return;
     // Architect re-verification, viewport-residency cut P6b, items 1-2: `isFillComplete`'s own
     // sentinel -- a plan has now genuinely run this generation, whatever its own covering set turns
@@ -868,7 +1059,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
 
   return {
     manager,
-    onViewportChanged: (bbox) => debounced.call(bbox),
+    onViewportChanged: (bbox) => {
+      // Item B: accepted for debouncing -- see `pendingViewportChange`'s own doc comment above for the
+      // full lifecycle this flag tracks (paraphrased, not quoted: true from the moment it is accepted
+      // here until the handler runs or is cancelled).
+      pendingViewportChange = true;
+      debounced.call(bbox);
+    },
     /** P5f complex-gate must-fix 4 (the double-debounce fix): exposes this session's OWN internal
      * debounce's `cancel()` -- `App.tsx` no longer wraps `onViewportChanged` in a SECOND debounce of
      * its own (that was the bug: two stacked 120 ms trailing-edge debounces = +120 ms systematic
@@ -876,11 +1073,22 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
      * ?.cancel()` (the `cancelPendingDebounce` seam `applyFilter`'s Apply/Clear flow and the E2E
      * `queryWithFilter` hook both already call) needs somewhere to reach THIS debounce directly --
      * see `App.tsx`'s own `makeCandidateViewportDispatcher`. */
-    cancelPendingViewportChange: () => debounced.cancel(),
+    cancelPendingViewportChange: () => cancelViewportDebounce(),
     reissueUnrestricted: async (bbox, filter) => {
       currentFilter = filter;
-      debounced.cancel();
-      manager.clearAll();
+      cancelViewportDebounce();
+      // S2: see `suppressNestedSupersededEmit`'s own doc comment above -- this guard exists solely so
+      // `manager.clearAll()`'s own in-flight cancellations never emit a stale, prior-generation status
+      // one line before this function's own `query-issued` clear (below) supersedes it anyway.
+      //
+      // S-a (re-reviewer gate, residency-debt cut 1b): `try`/`finally` -- see the identical rationale
+      // at `ingestAndMaybeEstablishFrame`'s own self-cancel site (above).
+      suppressNestedSupersededEmit = true;
+      try {
+        manager.clearAll();
+      } finally {
+        suppressNestedSupersededEmit = false;
+      }
       canvas?.clearAllTiles();
       canvas?.resetFitForNewGeneration();
       frameEstablished = false;
@@ -917,7 +1125,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     },
     stop: async () => {
       stopped = true;
-      debounced.cancel();
+      cancelViewportDebounce();
       await manager.stop();
       if (untiledStreamHandle) {
         await skpCancel(untiledStreamHandle).catch(() => {});
@@ -976,11 +1184,16 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // `handleViewportChange` plan sets it `true` again -- the same sentinel P6b's own fix already
       // uses for "no plan has run yet," reused here for "no plan has run yet SINCE the relief fired."
       // Covers BOTH readers named in the finding: `isFillComplete()` itself, and
-      // `emitResidencyStatus`'s own within-budget claim, which gates EXCLUSIVELY on `isFillComplete()`
-      // (`if (!isFillComplete()) return;`, above) -- there is no second copy of this arithmetic to
-      // separately patch.
+      // `emitResidencyStatus`'s own within-budget claim, which reads `isFillComplete()` as one of
+      // `settledState`'s own inputs (`currentSettledState`'s own doc comment above --
+      // `if (settled !== "settled-complete") return;`, this file's own `emitResidencyStatus`) -- there
+      // is no second copy of this arithmetic to separately patch.
       hasPlanned = false;
       syncScanLiveness(); // see this method's own interface-level doc comment for why THIS call site
+      // S2: no `suppressNestedSupersededEmit` guard needed here -- `manager.relinquishOutstanding()`
+      // (above) never calls `onTileSuperseded` at all (that method's own doc comment,
+      // `tileViewportStreamManager.ts`: "Never calls `onTileSuperseded`"), so there is no nested
+      // `emitResidencyStatus()` call from within it to guard against in the first place.
       emitResidencyRelinquished();
       return summary;
     },

@@ -51,9 +51,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     rendered when a pan makes the new covering set truncated/incomplete, because the status only
     clears on query-issued/dataset-changed/delivery-complete. The twice-convicted "Showing all N"
     class surviving by inertia. Fixing needs a new status kind + wording — the human's per 24(b).
-    Recommendation: rule it with the 24(b) string sight for this cut (a fourth status wording),
+    *(Widened 2026-09-05, Item B's third review pass — two more named silent states, same
+    operator-gets-no-reading family, one ruling can cover all three: (ii) after a genuine tile
+    failure with no further camera change, the fill is quiescent but never says so — the B1 latch
+    correctly blocks the false "Showing all N", leaving honest silence over an updated reading;
+    (iii) a failed UNTILED first-look/reissue terminal is fully silent — its sink discards the
+    terminal kind, unlogged, indistinguishable from success at that site.)* Recommendation: rule
+    it with the 24(b) string sight for this cut (a fourth status wording),
     or defer it explicitly to the next status-touching cut with the inertia risk named. Touches,
-    once ruled: `residencyStatus.ts`'s union/clear rules + a draft string on sight.
+    once ruled: `residencyStatus.ts`'s union/clear rules + a draft string on sight; (iii) also
+    the untiled sink's `onTerminal` (a log line at minimum).
 
 35. **[Rule-7 item, surfaced 2026-09-05 by Item A's reviewer gate (M1) — NOT decided inline.]**
     Entry 32 ruled Cancel repoints to the scoped relief of THE TILE FILL; it never named the
