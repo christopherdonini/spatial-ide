@@ -50,6 +50,27 @@ how obvious they seem:
 
 ## Custodian mechanics (the accumulated hard lessons — do not relearn them)
 
+- **Single-custodian lease (added 2026-09-05, after a two-session concurrency scare).** There is
+  exactly ONE custodian at a time. On boot, the custodian writes a **session lease** to the
+  untracked file `CUSTODIAN-LEASE` at the repo root (gitignored outright — unlike the working-tree
+  state files such as `CUT-STATE.md`, which stay untracked merely by never being staged, the lease
+  is `.gitignore`d so a stray `git add` can never commit a session id): a line
+  carrying a unique session id and an ISO-8601 UTC timestamp, e.g.
+  `lease: <session-id> refreshed: 2026-09-05T20:14:03Z`. It refreshes that timestamp at the start
+  of every turn that will act (any write, commit, push, or dispatch). **Before acting, the
+  custodian reads `CUSTODIAN-LEASE`: if it holds a lease that is NOT this session's own and whose
+  timestamp is fresh (refreshed within the last 30 minutes), this session does NOT act — it HOLDS,
+  and appends whatever it would have done to `DECISIONS-PENDING.md` as a queued item for the lease
+  holder, then reports the hold to the human.** A lease older than 30 minutes is stale and may be
+  taken over (rewrite it with this session's own id). The lease is advisory, not a hard mutex —
+  its job is to make a second session NOTICE and stand down, not to make concurrency impossible;
+  the reachability proof below still runs before any merge regardless. **Rider on queued rulings:
+  a ruling a HOLDING session records to the queue must quote the human's own message VERBATIM —
+  never a paraphrase, and never adopted from the custodian's own recommendation. (This closes the
+  exact defect that opened the scare: a ruling was once committed off an `AskUserQuestion` that
+  returned "[No preference]", the recommendation applied as if it were the human's word, and had
+  to be reverted 16 seconds later — b21111d/3e653f0. A queued ruling with no verbatim human
+  sentence behind it is not a ruling.)**
 - **Every custodian commit uses `git commit -s`** with the identity flags. DCO gates PRs.
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in

@@ -552,10 +552,15 @@ at all (the CLI `--assert-crs` route, `definition_provenance(None)`) now records
 **`none-supplied`** instead of `pasted` — the old value asserted an action that never happened;
 the new one records only the observed non-supply (no hash, no catalog comparison ever ran).
 `pasted` is retained, unchanged, for the supplied-but-not-catalog-identical case (entry 25's own
-ruling). **Versioning disposition, put to the human at this change's own PR — not decided here:**
-`skp/0.2` froze at merge with its §8 entries as its full FIELD set; this changes no field, only
-one documented VALUE of a display-only string that nothing branches on (the F-5 form's own
-"exact-byte bookkeeping" blessing above). Whether a frozen version's value-set change of that
-class rides without a bump, or requires `skp/0.3`, is a versioning judgment the human rules at
-the PR that carries this addendum; no released reader exists either way (pre-ADR-009, repo
-private).
+ruling). **Versioning disposition, RULED 2026-09-04 — `skp/0.2` stands, no bump.** The human's
+rule, applied: a new value in an EXISTING key's domain rides the current version as a value-domain
+widening (a new KEY would force `skp/0.3`). `none-supplied` is exactly the former — the
+`definition_provenance` field (key) already exists in `skp/0.2`'s `CrsInfo`; only the set of
+strings it can return widens, from {`catalog:…`, `pasted`} to add `none-supplied`. No field is
+added or removed, and nothing branches on the value (the F-5 form's own "exact-byte bookkeeping"
+blessing above). This is the **same shape as DECISIONS-PENDING entry 6** (the
+`ApprovalRoute::ShellDialog` value-domain widening of the `spatial-audit/1` audit format,
+APPROVED 2026-09-02), and it carries **entry 6's own expiry clause, restated not weakened**: the
+widening-rides-the-version license holds only while no external reader of `skp/0.2` exists (a
+dated fact — pre-ADR-009, repo private); the moment such a reader exists, a value-set change of
+this class is a compatibility event that a version bump must carry. Until then, `skp/0.2` stands.

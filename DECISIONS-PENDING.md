@@ -5,6 +5,164 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+37. **[APPLIED 2026-09-05 — the conditional approval's cure executed. The flag was delivered
+    (draft lacked reopen conditions; #36 was about to change the described behavior); the
+    #35/#36 piece then landed (@ 1824c8f) and ADR-028 Amendment 2 was appended in its cured
+    form: every clause verified against the shipped code, the three drafted reopeners carried
+    (their exact wording, like all strings, remains the human's at PR sight), the entry-35/36
+    resolutions reflected. The append executes the human's own "append; approved provided..."
+    ruling with both provisos now satisfied — flagged first, appended after the cure, exactly as
+    the proviso required. Original entry below, kept for the record.]**
+    **[ADR-028 Amendment 2 — the scoped-relief + quiescence contract, DRAFTED for your approval
+    (ADR amendments are a red line; nothing is appended until you rule). Also your choice:
+    append as ADR-028 Amendment 2, or file as a small child ADR cross-referencing ADR-028.]**
+    The draft, from the architect's consult skeleton updated to the as-built, ruled shape:
+    ---
+    **Amendment 2 — Scoped residency relief and the quiescence signal (2026-09-0X, appended —
+    Accepted; discharges the 1b principle-7/8 debt).**
+    *Context.* ADR-028 delivered viewport-bounded residency and the over-budget partial-view
+    contract but left the held-queue disposition (docs/01 principle 7) and an affirmative
+    settled-partial declaration (principle 8) as named 1b debt. The only cancel lever was a
+    permanent kill switch; no client signal distinguished actively-filling from
+    queued-and-stalled or settled-partial.
+    *Decision.* (a) Per decisions 32a/33b: the operator Cancel repoints to a scoped-relief lever
+    (`TileViewportStreamManager.relinquishOutstanding`) that cancels every in-flight tile stream
+    (the existing `cancel` SKP command, ADR-018 — no new wire) AND drops the queued backlog,
+    reporting each affected tile distinctly (relinquish-cancelled vs relinquish-dropped, distinct
+    from supersede and budget self-cancel); it never sets `stopped`, never clears residency,
+    never resets the grid frame — future planning is unaffected; the permanent kill is
+    teardown-only. Cancellation is asserted as a property (ADR-018 instants), never timed.
+    (b) A residency-quiescence signal, pure functions of client-observable session state
+    (`fillActivity`: stalled iff queuedCount>0 && overBudget && !hasHeadroom; `settledState`:
+    settled iff hasPlanned && no pending re-plan && trackedTileCount===0 && the untiled
+    first-look/reissue stream is not running — classified settled-complete/settled-partial
+    against the fill-completeness predicate), surfaced through the existing status union — no
+    new SKP field (ADR-004 Amendment 4), no producer scan-progress dependency.
+    (c) A user-stopped fill can never read complete until a new plan runs (the relinquish latch),
+    and no completeness claim is emitted while any covering-tile stream or the untiled stream is
+    outstanding, or a re-plan is pending, or a covering tile's stream failed without a fresh plan
+    (the 1b reviewer-gate strengthenings).
+    *Consequences.* Discharges ADR-028's 1b principle-7/8 debt; ADR-006 class-1/derived-state
+    only; no wire change (ADR-010 rule 1 untouched); status wording is the human's per 24(b);
+    the untiled-stream Cancel scope (entry 35) and the within-budget-truncated staleness (entry
+    36) remain open, named, not silently absorbed.
+    ---
+    Recommendation: **append as ADR-028 Amendment 2** (the contract is ADR-028's own debt coming
+    home; a child ADR would split one contract across two files). Touches, once approved:
+    ADR-028 (append the text above, with your date and any edits), nothing else.
+
+36. **[RESOLVED 2026-09-05 — human, verbatim: "one rule for all three — silence and staleness
+    never represent state: the stale all-N clears on the invalidating gesture (entry-1's
+    query-issued transition), failed terminals feed the typed partiality accounting; draft to
+    that, wording at PR sight." Consequences, implemented in the #35/#36 piece: (i) a plan whose
+    covering set invalidates a standing within-budget claim clears/updates it through the
+    entry-1 transition class, never leaving "Showing all N" by inertia; (ii) a non-Completed
+    tile terminal records typed failure-partiality the settled classification consults — the
+    fill reads settled-partial-with-failure honestly instead of B1's silence; (iii) the untiled
+    sink's failed terminal is logged and feeds the same accounting. All wording drafts to the
+    human at PR sight. Original entry below.]**
+    **[Wording/status-kind gap, surfaced 2026-09-05 by Item B's reviewer gate (off-scope note b)
+    — 24(b) territory, NOT decided inline.]** The settled-partial signal extends only the two
+    existing status kinds (over-budget, within-budget), so a **within-budget-but-truncated/
+    partial** settled state stays silent — and the real risk the reviewer named is not the
+    silence but the STALE PRIOR STATUS: a previous "Showing all N features in view" stays
+    rendered when a pan makes the new covering set truncated/incomplete, because the status only
+    clears on query-issued/dataset-changed/delivery-complete. The twice-convicted "Showing all N"
+    class surviving by inertia. Fixing needs a new status kind + wording — the human's per 24(b).
+    *(Widened 2026-09-05, Item B's third review pass — two more named silent states, same
+    operator-gets-no-reading family, one ruling can cover all three: (ii) after a genuine tile
+    failure with no further camera change, the fill is quiescent but never says so — the B1 latch
+    correctly blocks the false "Showing all N", leaving honest silence over an updated reading;
+    (iii) a failed UNTILED first-look/reissue terminal is fully silent — its sink discards the
+    terminal kind, unlogged, indistinguishable from success at that site.)* Recommendation: rule
+    it with the 24(b) string sight for this cut (a fourth status wording),
+    or defer it explicitly to the next status-touching cut with the inertia risk named. Touches,
+    once ruled: `residencyStatus.ts`'s union/clear rules + a draft string on sight; (iii) also
+    the untiled sink's `onTerminal` (a log line at minimum).
+
+35. **[RESOLVED 2026-09-05 — human: "accept as recommended — yes with grid frame, no at
+    bootstrap; then re-check whether string 3's state is still reachable." Consequence:
+    `relinquishFill` also cancels the untiled first-look/reissue stream WHEN `manager.frame`
+    exists (the anchor hazard only lives in the frameless bootstrap window, which stays
+    uncancellable and documented); the string-3 reachability re-check rides the implementing
+    piece — expected residual: only the frameless window (bootstrap, or an Apply/Clear reissue
+    racing the first look's own terminal), with the string reworded accordingly and STICKY per
+    entry-1 (persists until a query-issued-class transition clears it, never replaced by a later
+    batch emission). Original entry below.]**
+    **[Rule-7 item, surfaced 2026-09-05 by Item A's reviewer gate (M1) — NOT decided inline.]**
+    Entry 32 ruled Cancel repoints to the scoped relief of THE TILE FILL; it never named the
+    **untiled first-look/reissue stream** (`candidateArmSession.ts`'s `untiledStreamHandle` — the
+    dataset-open bootstrap and every Apply/Clear reissue), which the old Cancel path also never
+    cancelled (a deliberate, documented boundary the old comment named and the new code initially
+    dropped). The reviewer's reachable repro: during an Apply/Clear reissue, Cancel relinquished
+    nothing visible and the status claimed "filling stopped" while batches kept landing — fixed
+    now to be honest within the ruled scope (see the M1 fix), but the SCOPE question remains
+    genuinely open: **should Cancel also cancel the untiled stream?** The hazard: the untiled
+    terminal is where the tile grid frame is anchored (`establishFrameFromExtent` on the unioned
+    extent), so cancelling the bootstrap-time first look would freeze the grid on a truncated
+    union. Recommendation: **(b-shaped)** — cancel the untiled stream too WHEN a grid frame
+    already exists (the Apply/Clear reissue case, where your "Cancel meaning cancel" rationale
+    applies with full force and no anchor hazard), keep the bootstrap-time first look
+    uncancellable with the boundary documented and the status honest about it. Touches, if
+    ruled: `candidateArmSession.ts`'s `relinquishFill` + the untiled-stream lifecycle + the
+    relinquished status wording (24(b) sight).
+
+34. **[DEFERRED BY RULING 2026-09-05 — human: "34c — decide at the sitting's scheduling, leaning
+    (a): 1b makes no perf claim, and entry 25's heap debt rides the next intrinsically-scored
+    campaign instead." Stays open until the sitting is scheduled; the lean toward
+    correctness-only is recorded, not yet binding. Original entry below.]**
+    **[1b headed-sitting scope, surfaced 2026-09-04 by the architect consult (Q6.4) — not
+    decided here, lower urgency than 32/33.]** Whether the headed sitting that closes 1b also runs
+    a **scored campaign** (which would adopt the queued 5 GB clean-instrument attribution trial,
+    the heap-footprint fold-in per entry 25, and the DECISIONS-PENDING #31 instrument defects) or
+    stays a correctness-verification sitting only (felt re-verdict + K6's E2E + the 5 GB trial as
+    a demonstration, not a scored gate). The architect: a scored campaign is **not compelled** by
+    1b's correctness fixes — none touches the hot admission/paint path. Measurement on this
+    machine is 24(g) headed-only either way. Recommendation: **decide at the sitting's own
+    scheduling, not now** — it does not gate any 1b code. Touches: the sitting's own agenda only.
+
+33. **[RESOLVED 2026-09-05 — human, verbatim: "33b — cancel in-flight too, via the existing SKP
+    cancel: at 5 GB single streams run tens of seconds, so (a)'s 'settles within seconds' premise
+    fails exactly where the button matters most, and my own Part K verdict was about buttons that
+    don't visibly obey; ≤3 tiles of class-1 replayable work is the acceptable price for Cancel
+    meaning cancel. Rider: asserted as a property with ADR-018 instants, never timed." The
+    custodian's drop-queue-only recommendation was thereby overruled on the attribution pass's
+    own 6-17s per-tile service evidence. Consequence: `relinquishOutstanding()` cancels in-flight
+    streams (existing `cancel` SKP command, ADR-018 — no new wire) AND drops the queued backlog;
+    its tests assert cancellation as a PROPERTY (cancel issued, terminal observed, no post-cancel
+    batches; ADR-018 interval labels where an interval is even mentioned) — never a timed claim.
+    Original entry below, kept for the record.]**
+    **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.2) — GATES Item A/B
+    code, not decided here.]** The scoped-relief lever's depth: does it cancel in-flight tile
+    streams too (via the existing `cancel` SKP command, ADR-018 — no new wire), or only drop the
+    queued backlog and let in-flight streams finish productively? Both are honest and both
+    client-side. The choice changes the settled/relinquished status wording and what "stop
+    filling" means to the operator. Recommendation: **your call, no default assumed** — lean
+    toward drop-queue-only (in-flight work already paid its query cost; letting it finish wastes
+    less), but the felt meaning of the Cancel affordance (entry 32) is coupled to this, so rule
+    them together. Touches, once ruled: `tileViewportStreamManager.ts`'s new `relinquishOutstanding`
+    method + `candidateArmSession.ts`'s session seam + the status wording.
+
+32. **[RESOLVED 2026-09-05 — human, verbatim: "32a — Cancel becomes the scoped relief, permanent
+    kill leaves the UI (close/reopen stays the hard reset); rider: post-relief status states the
+    partiality per the 24(b) discipline, a user-stopped fill never reads as complete."
+    Consequence: `App.tsx`'s candidate Cancel repoints from `manager.stop()` to the new scoped
+    seam; the relinquished status carries the partial-view statement (never "complete", never
+    silence); exact strings on sight at the implementing PR (24(b)). `stop()` itself remains for
+    teardown paths only, no longer operator-reachable. Original entry below, kept for the
+    record.]**
+    **[1b Item A red line, surfaced 2026-09-04 by the architect consult (Q6.1) — GATES Item A/B
+    code, not decided here.]** Cancel semantics, an operator-facing behavior change: today the
+    Cancel button kills tiling for the dataset permanently (`TileViewportStreamManager.stop()`
+    sets `stopped=true` with no reset; App.tsx:1233-1236). Item A needs a scoped lever that stops
+    filling but keeps the current view and allows future tiling. Does the existing Cancel button
+    get **repointed** to that scoped meaning, or does a **second affordance** get added (Cancel
+    stays a hard stop; a new control does the scoped relief)? The architect: "a felt/UX judgment,
+    not an architecture call." Recommendation: **your call, no default assumed** — repointing is
+    simpler and the hard-stop-per-dataset meaning has no evidenced operator need, but this is
+    exactly the felt call 24(b)-class decisions reserve to you. Rule with entry 33 (coupled).
+    Touches, once ruled: `App.tsx`'s candidate Cancel wiring + any new control's own affordance.
+
 31. **[RESOLVED 2026-09-03 — human's placement ruling: "the #28 attribution pass IS the next
     instrument-touching work, and its conclusion is exactly what cross-step paint mislabels
     corrupt; fix the three instrument defects first, then run the attribution on the clean
@@ -49,11 +207,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     discipline; show me the final string at the PR if you drafted fresh." Drafted fresh and
     applied: **`none-supplied`** (the recommendation below, confirmed against the ruled
     discipline — it asserts only the observed non-supply; no hash, no catalog comparison ever
-    ran). Shown at the carrying PR per the instruction. One sub-question put to the human at
-    that same PR, not decided here: `skp/0.2` froze at merge, so this value-set change's
-    versioning disposition (rides without a bump as a display-only value nothing branches on, vs.
-    requires `skp/0.3`) is theirs — `SKP-V0.md`'s entry-30 addendum carries both readings.
-    Original entry below, kept for the record.]**
+    ran). Shown at the carrying PR per the instruction. **The versioning sub-question RULED
+    2026-09-04 — human's rule: new value in an existing key's domain → stay `skp/0.2` as a
+    value-domain widening on the dated no-external-readers fact with the entry-6 expiry clause;
+    new key → `skp/0.3`.** Custodian classified: `none-supplied` is a new value in the existing
+    `definition_provenance` key's domain (no new field), so it STAYS `skp/0.2` — the entry-6
+    shape (`ApprovalRoute::ShellDialog`'s `spatial-audit/1` widening) applied, carrying entry 6's
+    own expiry clause (the widening rides only while no external reader of `skp/0.2` exists).
+    Recorded in `SKP-V0.md`'s entry-30 addendum, ADR-026's append, and `commands.rs`. Original
+    entry below, kept for the record.]**
     **[Corollary of entry 25's own ruling, surfaced 2026-09-03 while applying it — NOT decided
     by that ruling.]** `definition_provenance(None)` returns `pasted` for `--assert-crs`'s
     no-definition case (`engine/src/crs_catalog.rs:128-137`, verified in code 2026-09-03) —
@@ -316,6 +478,62 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-05 — the 24(b) string sight, ruled.** The human's rulings on the four 1b draft
+  strings, verbatim: *"Strings: 1 approved; 2 with 'not fetched'→'not loaded'; 3 held pending
+  #35's reachability check, reworded per my note if it survives, sticky per entry-1; 4
+  reworded — 'Filling has finished for this view — the render budget is full; pan or zoom to
+  see other areas.'"* Applied: string 1 (`STALLED_SUFFIX`) ships as drafted; string 2
+  (`relinquishedText`) ships with "not loaded"; string 4 (`SETTLED_PARTIAL_SUFFIX`) replaced
+  with the human's wording verbatim — and NOTE: that wording claims the render budget is full,
+  which is true for budget-partiality only, so the #36-ruled failure-partiality state gets its
+  own distinct draft wording (at PR sight), never this string; string 3 held for the #35
+  reachability re-check (sticky per entry-1 regardless of wording). All landing in the #35/#36
+  implementing piece.
+
+- **2026-09-04 — decision 24(g) AMENDED: reported-only measured cells may run unattended with
+  RustDesk stopped, under a proven-safe restore protocol. Scored cells and felt verdicts remain
+  human-present (the original 24(g) rule, unchanged, for those).** The human's amendment, recorded
+  verbatim in substance. This refines — does not erase — the 2026-09-03 "24(g) closed as superseded
+  by rule-11 batching" note: rule-11 batching stays the rhythm for scored/felt work; this carves
+  out reported-only *measured* cells (e.g. the queued 5 GB clean-instrument attribution trial,
+  which is a demonstration, not a scored gate) to run unattended IF AND ONLY IF the protocol below
+  holds. **The protocol (all conditions binding, per the human):**
+  1. **Restore armed BEFORE the kill, via TWO independent mechanisms that survive harness death:**
+     (a) an independent watchdog process (restores when the harness stops heart-beating), and
+     (b) a scheduled task at a hard wall-clock time bound (restores unconditionally, surviving even
+     the watchdog dying). Both armed before RustDesk is stopped; the restore is idempotent
+     ("ensure the RustDesk service is Running").
+  2. **Screen lock and display sleep disabled for the measurement window**, and the harness
+     **verifies display-awake AND session-unlocked before each trial** — a cell whose trial cannot
+     verify both is **invalidated** (`unmeasured — display/session unverified`), never kept.
+  3. **New honest attest string**, recorded here as the amendment's own artifact:
+     **"unattended, RustDesk stopped and verified absent, display-awake verified"** — used only in
+     a cell that actually met conditions 1–2; it replaces the human-present attestations (e.g.
+     P12's "headed, foreground, human present, RustDesk stopped") for these unattended cells, and
+     never appears on a scored cell or a felt verdict (those stay human-present, so keep their own
+     human-present attestations).
+  4. **Mandatory precondition before ANY real cell uses this:** a **no-measurement dry-run** of the
+     kill-and-restore cycle, run once, proving RustDesk comes back on BOTH the happy path (harness
+     completes and restores) AND a simulated harness hang (harness dies; the watchdog and/or the
+     hard-time-bound scheduled task restore). Until the dry-run passes, no unattended cell runs.
+  **Custodian execution:** the restore mechanism + dry-run are the custodian's to build and run
+  (operational tooling, not a red-line decision); the amendment itself (what is permitted, the
+  attest string, the conditions) is the human's ruling, applied here. The dry-run kills RustDesk —
+  a hard-to-reverse outward action — so the custodian proves the hard-time-bound scheduled-task
+  backstop actually FIRES (test-fired against a marker) BEFORE the first kill, bounding the worst
+  case to short auto-restored downtime. Touches: a committed restore/watchdog/arm tooling set
+  (near the residency harness) + forward-pointer appends to `RESIDENCY-PREREGISTRATION.md`'s own
+  "No RustDesk in any measured cell" rule and `RESIDENCY-DEBT-1B.md`'s headed-sitting section.
+  **DRY-RUN PASSED 2026-09-04** (`frontends/shell/e2e/rustdesk-guard/`, README + runtime log): all
+  three restore triggers proven with NO measurement. The SYSTEM scheduled-task backstop was proven
+  to fire and run the restore BEFORE any kill (bounding worst-case downtime); happy path (kill →
+  disarm restored → Running); simulated harness hang (kill → heartbeat abandoned → the watchdog
+  restored unaided in ~28s, `service=Running`, clean exit). Final state clean (RustDesk Running, no
+  stray task/process). The unattended reported-only cell path is now UNBLOCKED — the 5 GB
+  attribution trial may run under it. (Side effect flagged: `arm` sets monitor/standby timeouts to
+  0 for the window; monitor was already 0 on this machine, standby restored to 30 min after the
+  dry-run; the harness's happy-path `disarm` restores both automatically in normal operation.)
 
 - **2026-09-03 — the post-1a rulings batch: entries 27, 28, 25, 24(g) resolved; the LOD brief's
   Q4 ruled; K6 promoted.** The human's rulings, applied same day: **(27)** finding 3 → option
