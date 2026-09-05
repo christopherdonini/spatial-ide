@@ -171,3 +171,18 @@ and the property holds: cancel issued, terminal observed, **no post-cancel batch
 that stream's tile beyond the terminal**; asserted as a property, never a duration. Case 2's
 "reported, distinguishable" now covers BOTH drop classes: queued-dropped and in-flight-cancelled,
 each distinct from an out-of-view supersede and from a budget self-cancel.
+
+## Item B input-list amendment (2026-09-05, appended — before the corrected code lands)
+
+Item B's reviewer gate found the predicate as preregistered ("Inputs are exactly
+`isFillComplete`'s current surface plus `pendingViewportChange`") **insufficient to satisfy this
+file's own BS5/BS6**: the untiled first-look/reissue stream is exempt from `trackedTileCount`, so
+in a filter-reissue window the predicate could read settled — and the status claim "filling has
+stopped" / "Showing all N" — while that stream keeps delivering batches into the same view (the
+exact false-claim class Item A's M1 convicted). **The input list therefore widens by one
+client-observable session fact: `untiledStreamRunning: boolean`, forcing `not-settled` while
+true.** Recorded here, dated, before the corrected code lands — a block-on-sight-driven
+strengthening of the preregistered design, not a post-hoc loosening; no gate, scoring, or test
+case weakens. The same gate's S2 is also taken as part of Item B's own surfacing obligation: the
+settling moment itself (the last outstanding tile's terminal/supersede) now emits the status,
+rather than the signal waiting for the next batch or camera change to become visible.

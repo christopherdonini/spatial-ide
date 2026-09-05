@@ -5,6 +5,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+36. **[Wording/status-kind gap, surfaced 2026-09-05 by Item B's reviewer gate (off-scope note b)
+    — 24(b) territory, NOT decided inline.]** The settled-partial signal extends only the two
+    existing status kinds (over-budget, within-budget), so a **within-budget-but-truncated/
+    partial** settled state stays silent — and the real risk the reviewer named is not the
+    silence but the STALE PRIOR STATUS: a previous "Showing all N features in view" stays
+    rendered when a pan makes the new covering set truncated/incomplete, because the status only
+    clears on query-issued/dataset-changed/delivery-complete. The twice-convicted "Showing all N"
+    class surviving by inertia. Fixing needs a new status kind + wording — the human's per 24(b).
+    Recommendation: rule it with the 24(b) string sight for this cut (a fourth status wording),
+    or defer it explicitly to the next status-touching cut with the inertia risk named. Touches,
+    once ruled: `residencyStatus.ts`'s union/clear rules + a draft string on sight.
+
 35. **[Rule-7 item, surfaced 2026-09-05 by Item A's reviewer gate (M1) — NOT decided inline.]**
     Entry 32 ruled Cancel repoints to the scoped relief of THE TILE FILL; it never named the
     **untiled first-look/reissue stream** (`candidateArmSession.ts`'s `untiledStreamHandle` — the
