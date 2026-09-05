@@ -5,6 +5,24 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+35. **[Rule-7 item, surfaced 2026-09-05 by Item A's reviewer gate (M1) — NOT decided inline.]**
+    Entry 32 ruled Cancel repoints to the scoped relief of THE TILE FILL; it never named the
+    **untiled first-look/reissue stream** (`candidateArmSession.ts`'s `untiledStreamHandle` — the
+    dataset-open bootstrap and every Apply/Clear reissue), which the old Cancel path also never
+    cancelled (a deliberate, documented boundary the old comment named and the new code initially
+    dropped). The reviewer's reachable repro: during an Apply/Clear reissue, Cancel relinquished
+    nothing visible and the status claimed "filling stopped" while batches kept landing — fixed
+    now to be honest within the ruled scope (see the M1 fix), but the SCOPE question remains
+    genuinely open: **should Cancel also cancel the untiled stream?** The hazard: the untiled
+    terminal is where the tile grid frame is anchored (`establishFrameFromExtent` on the unioned
+    extent), so cancelling the bootstrap-time first look would freeze the grid on a truncated
+    union. Recommendation: **(b-shaped)** — cancel the untiled stream too WHEN a grid frame
+    already exists (the Apply/Clear reissue case, where your "Cancel meaning cancel" rationale
+    applies with full force and no anchor hazard), keep the bootstrap-time first look
+    uncancellable with the boundary documented and the status honest about it. Touches, if
+    ruled: `candidateArmSession.ts`'s `relinquishFill` + the untiled-stream lifecycle + the
+    relinquished status wording (24(b) sight).
+
 34. **[DEFERRED BY RULING 2026-09-05 — human: "34c — decide at the sitting's scheduling, leaning
     (a): 1b makes no perf claim, and entry 25's heap debt rides the next intrinsically-scored
     campaign instead." Stays open until the sitting is scheduled; the lean toward
