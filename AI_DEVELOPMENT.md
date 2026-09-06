@@ -70,7 +70,16 @@ how obvious they seem:
   exact defect that opened the scare: a ruling was once committed off an `AskUserQuestion` that
   returned "[No preference]", the recommendation applied as if it were the human's word, and had
   to be reverted 16 seconds later — b21111d/3e653f0. A queued ruling with no verbatim human
-  sentence behind it is not a ruling.)**
+  sentence behind it is not a ruling.)** **Human-directed handover (added 2026-09-06, after the
+  first live use):** on the human's explicit word — and only then — custodianship transfers
+  without waiting out the 30-minute staleness window, as relinquish-then-takeover. The OUTGOING
+  session: flush all session-only state to files, verify the branch pushed (origin tip = the
+  flushed tip), record the handover and relinquish in `CUT-STATE.md`'s final line, and delete its
+  `CUSTODIAN-LEASE` (or rewrite it to a single `relinquished:` line). The INCOMING session, before
+  writing its own lease, VERIFIES the relinquish rather than trusting it: the lease is absent,
+  stale, or marked relinquished, AND the origin tip matches the flush `CUT-STATE.md` records. The
+  human's word replaces the staleness wait, never the verification — if either check fails, the
+  incoming session holds and reports instead of taking the lease.
 - **Every custodian commit uses `git commit -s`** with the identity flags. DCO gates PRs.
   **Two ways this still leaks, both seen for real:** (a) `git revert`, `git merge`, and other
   git-generated commits do NOT inherit `-s` — `git revert --no-edit` produced an UNSIGNED commit
