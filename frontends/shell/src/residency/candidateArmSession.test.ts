@@ -1252,9 +1252,11 @@ describe("M2: isFillComplete never reads true over a tile skipped-as-tracked acr
 });
 
 // B1 (re-reviewer gate, residency-debt cut 1b): the settling-moment sibling of M2's own repro just
-// above -- the SAME "tile carried in-flight across two plans, silently absent from
-// `lastCoveringTileKeys`" gap (`tileViewportStreamManager.ts`'s own
-// `if (this.tileState.has(tileKey)) continue;`), reached here by a GENUINE terminal
+// above -- the SAME "tile carried in-flight across two plans" shape (`tileViewportStreamManager.ts`'s
+// own `if (this.tileState.has(tileKey)) continue;` keeps it out of that round's issued/queued/
+// alreadyResident arrays; BEFORE the close-out fix piece's F1 that also kept it out of
+// `lastCoveringTileKeys` -- post-F1 the geometric covering set names it, see this block's own
+// corrected assertions below), reached here by a GENUINE terminal
 // (`ProducerFailed`) rather than by `relinquishFill`'s own cancel. The re-reviewer's own trace:
 // nothing marks anything partial, `trackedTileCount` hits 0, and S2's own
 // `if (manager.trackedTileCount === 0) emitResidencyStatus();` (`onTerminal`, this module's manager
