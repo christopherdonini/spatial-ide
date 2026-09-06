@@ -50,7 +50,10 @@ Run these once, in order.
    (Alternative: download the LTS installer from nodejs.org directly, if you'd rather not use
    Homebrew for this.)
 
-5. **Git access to the private repo.** This repository is private — either:
+5. **Git access to the repo.** *(Dated correction 2026-09-07: this repository has been public since
+   2026-08-03 — GitHub `PublicEvent`, verified — so a plain `git clone` of the public URL suffices
+   for read access; the alternatives below are retained as history and still apply to push access.)*
+   This repository is private — either:
    - `gh auth login` (install with `brew install gh` first) — see GitHub's own CLI docs for the
      interactive flow: https://cli.github.com/manual/gh_auth_login, or
    - an SSH key added to your GitHub account — see

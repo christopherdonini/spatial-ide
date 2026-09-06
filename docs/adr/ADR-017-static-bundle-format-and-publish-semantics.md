@@ -1140,3 +1140,16 @@ exposure review above, **the acceptance condition is discharged for the shell's 
 `publish-bundle` remains developer/test tooling as a CLI, and SKP, MCP, plugin, notebook, and AI
 exposure each still require their own review. Recorded by the custodian executing the human's
 standing instruction ("once the conditions land, merge the PRs...").
+
+## Corrigendum — "the repository is not public" was already false when written (2026-09-07, appended)
+
+**A correction of record; nothing above is edited.** The corresponding-source note in the section
+above states, verbatim: *"The repository is not public — ADR-009's pre-public checklist gates that,
+and this"* [sentence continues in place]. The repository has been public since 2026-08-03T18:06:23Z
+(GitHub's own `PublicEvent`, verified 2026-09-07) — before this ADR's text was written. ADR-009
+carries the same dated corrigendum. Consequence for this ADR's own subject: the corresponding-source
+route for published bundles now has a durable public target, and the shell's publisher still writes a
+"not yet public" written-offer notice into every bundle it produces (`frontends/shell/src-tauri/src/
+publish.rs`, found by the 2026-09-07 public-audience audit, `PUBLIC-AUDIENCE-AUDIT.md` F-3) — that
+notice's wording and route are ADR-009-adjacent and are the human's to rule (DECISIONS-PENDING entry
+49), not corrected here.
