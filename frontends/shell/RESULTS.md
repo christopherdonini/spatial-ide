@@ -1269,3 +1269,26 @@ completing run on a machine with adequate free disk. This blocks nothing in the 
 was always a demonstration, never a gate. The unattended-cell PATH is now validated; a clean
 5 GB measurement awaits disk headroom (the human's environment call — the main checkout's own
 `src-tauri/target` is ~60 GB and an obvious reclaim candidate).
+
+**Refinement, 2026-09-06 — re-run on a healthy disk (42.3 GB free): the disk hypothesis is
+confirmed for data DELIVERY, but a second, distinct wall remains.** After freeing 31 GB
+surgically (root `target/debug`+`release`, data untouched, warm target kept) the trial was
+re-run under the identical protocol. This time **data flowed** — `fit` received 22 batches,
+`pan-east` **222 batches** (against ZERO everywhere in the disk-starved run) — so disk starvation
+was indeed why the first attempt delivered nothing. But the trial still **invalidated, now at
+`pan-east` (step 2)**: after 222 batches it ran 204,850 ms with the settle watchdog reporting
+*"console quiescence not reached (in-flight=1, 0 console line(s) in the last 5000 s)"* — counters
+`streamsIssued: 43, streamsEnded: 42`, i.e. **one tile stream issued that never terminated** while
+the console went silent. The watchdog reads the manager's OWN in-flight count (the same E2E hook
+the queue-depth sampler polls, `queueDepthSampleErrors: 0`), so this is a **genuine
+non-terminating tile stream, not an instrument-accounting leak**. It is **not a 1b regression**:
+this trial never pressed Cancel, so Items A/B/C's Cancel/relinquish/settled machinery was dormant;
+the normal admission/streaming path 1b did not touch. It is **producer/transport-side** — the same
+5 GB time-to-data wall this cut characterized (ATTRIBUTION-PASS.md §3-4), here in its sharpest
+form: an individual tile stream that hangs rather than merely running slow (222 batches, then 5 s+
+of total silence with one stream still counted in-flight). No watchdog length fixes a
+non-terminating stream, so further re-runs do not advance the demonstration. The empirical
+per-stream-join / nulls demonstration therefore remains **incomplete on the current 5 GB producer
+regardless of disk**; the structural answer (§7) is unchanged. The hung-stream behaviour is
+recorded as its own open finding (DECISIONS-PENDING entry 40) — a candidate for the producer-side
+/ LOD line, not this cut.

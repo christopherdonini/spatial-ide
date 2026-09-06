@@ -5,6 +5,25 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+40. **[Open finding, surfaced 2026-09-06 by the healthy-disk 5 GB trial — producer-side, NOT this
+    cut's code; recorded so it is not lost, not decided here.]** On the disk-freed re-run, data
+    flowed (fit 22 batches, pan-east 222) but the trial invalidated at `pan-east`: after 222
+    batches, **one tile stream (43 issued, 42 ended) never terminated** and the console went
+    silent 5 s+, running 204 s before the settle watchdog refused it. The watchdog reads the
+    manager's own in-flight count (E2E hook, `queueDepthSampleErrors: 0`), so it is a **genuine
+    non-terminating tile stream, not an instrument leak**. Cancel was never pressed, so 1b's
+    Items A/B/C are dormant — this is **producer/transport-side**, the 5 GB time-to-data wall in
+    its sharpest form (a tile stream that HANGS rather than merely running slow). Full write-up:
+    `frontends/shell/RESULTS.md`'s trial-refinement section. Recommendation: **route to the
+    producer-side / LOD line** (the cut's own #28 attribution already sited the 5 GB wall
+    producer-side) as its own investigation — is the hang a producer bug (a query that never
+    returns for one tile) or a transport drop (a WS stream that stalls)? Needs an instrumented
+    producer-side pass, not a client re-run. **Consequence for the 5 GB trial:** the empirical
+    per-stream-join / nulls demonstration cannot complete on the current 5 GB producer regardless
+    of disk; the structural answer (ATTRIBUTION-PASS.md §7) stands. Not a blocker for 1b (the
+    trial was always a demonstration). Touches, if pursued: producer/engine + transport
+    instrumentation — a scoped diagnosis, its own piece.
+
 39. **[DCO gap on PR #22, surfaced 2026-09-06 by the ordered sign-off audit — fixing it is a red
     line (history rewrite / force-push), so NOT decided or done by the custodian.]** 18 of 19
     commits on `cut/residency-debt` carry `Signed-off-by`; ONE does not — `3e653f0`, the revert of
