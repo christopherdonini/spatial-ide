@@ -5,7 +5,39 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-40. **[Open finding, surfaced 2026-09-06 by the healthy-disk 5 GB trial — producer-side, NOT this
+41. **[The remediation identity gap, surfaced 2026-09-06 implementing the entry-39 (a) ruling —
+    gates PR #22 going green; needs one word from the human.]** Executing "teach dco.yml the
+    remediation convention": the workflow is implemented and proven in both directions exactly as
+    ruled (fence-still-fences negative, same-author-remediation positive, third-party/unsigned/
+    short-sha all rejected — test matrix in the harness at the job tmp, results in the entry-39
+    record). But the ruled positive case "3e653f0 turns green via 536ceb9" is FALSE on the facts:
+    `3e653f0` was authored **`Christopher Donini <donini.christopher@gmail.com>`** (the revert ran
+    without the identity flags — the same slip that dropped its `-s`), while `536ceb9` is authored
+    `chris <chrys92d@gmail.com>`. Under the human's own condition (iii) — same author identity,
+    no third-party remediation — `536ceb9` cannot remediate it, and the real-range run proves it
+    (26 checked, exactly `3e653f0` failed). The custodian will not author a DCO affirmation in the
+    human's name under an identity the human has not dictated it for, and will not weaken (iii) to
+    an alias list (the workflow's own header argues against allowlists). **Recommendation (a): the
+    human authorizes ONE remediation commit authored `Christopher Donini
+    <donini.christopher@gmail.com>` (3e653f0's own author identity), standard format —**
+    subject `DCO Remediation Commit for Christopher Donini <donini.christopher@gmail.com>`, body
+    `I, Christopher Donini <donini.christopher@gmail.com>, hereby add my Signed-off-by to commit:
+    3e653f08eafbeca08c2483b68da5eafaeda9eeb4` **— on the human's word, the custodian commits it
+    (a one-off exception to the standing chris-identity rule, this commit only); the standing rule
+    stays for everything else.** Alternatives: (b) widen (iii) with an identity-alias mapping —
+    rejected-shaped (a list to maintain, the exact hole the workflow refuses); (c) fall back to
+    unticking the required check. The workflow change itself is reviewer-gated and held locally,
+    UNPUSHED, until this resolves — pushed alone it re-runs red and changes nothing.
+    **Two disclosures from the reviewer gate (FAILED 3-must-fix → fixes → re-review), for the
+    same sight:** (1) the reviewer proved an `--author`-spoof hole (a remediation authored-as the
+    victim but signed only by somebody else went green); the fix tightens (iii) so the
+    remediation's OWN `Signed-off-by` must also name the remediated author's identity. This is
+    one string-check beyond the ruling's literal (i)+(iii), taken as the mechanization of the
+    ruling's own "individual remediation only — no third-party remediation" words; say so if you
+    want it looser. (2) The dcoapp convention's sentence reads "…to THIS commit:"; ours (your
+    dictated wording, already in-history at 536ceb9) reads "…to commit:". The check accepts ONLY
+    the ruled wording; a wrong-wording attempt now gets a named near-miss diagnostic instead of
+    silence. Recommendation: keep exact-as-ruled; widen to accept both only on your word.
     cut's code; recorded so it is not lost, not decided here.]** On the disk-freed re-run, data
     flowed (fit 22 batches, pan-east 222) but the trial invalidated at `pan-east`: after 222
     batches, **one tile stream (43 issued, 42 ended) never terminated** and the console went

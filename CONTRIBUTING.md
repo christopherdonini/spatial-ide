@@ -34,6 +34,14 @@ git rebase --signoff <base>                # every commit since <base>
 `.github/workflows/dco.yml` checks every commit in a pull request and reports which ones are missing
 the trailer.
 
+A commit you cannot rewrite (already pushed, its hash load-bearing) can be **remediated** instead:
+a later commit in the same PR (a descendant of the one it fixes), authored under the **same
+identity** and carrying its own `Signed-off-by` in that identity, with subject
+`DCO Remediation Commit for Your Name <you@example.com>` and body line
+`I, Your Name <you@example.com>, hereby add my Signed-off-by to commit: <full sha>` — the check
+accepts the pair (individual remediation only; an affirmation standing in someone else's name
+remediates nothing).
+
 ### Catch it at commit time, not at the PR
 
 A committed hook (`.githooks/commit-msg`) refuses a commit with no `Signed-off-by` trailer locally,
