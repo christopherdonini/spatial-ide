@@ -53,6 +53,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     comment under the human's own identity (issuecomment-5558365949, entry-26 wording, on the
     human's explicit direction), and the checklist note added beside the entry-26 one
     (`PRE-PUBLIC-CHECKLIST.md` §6, item 5). DCO is the only red check; build/typecheck/tests green.
+    **Remediation-commit route EXECUTED 2026-09-06 (human-directed), check still red — one
+    decision open:** the standard-format DCO remediation commit for `3e653f0` landed @ `536ceb9`
+    (signed, empty, the human's dictated wording, full sha named). But the check is OUR OWN
+    workflow (`.github/workflows/dco.yml`), not the DCO app: it judges each non-merge commit in
+    the PR range IN ISOLATION (trailer present on that commit, name/email = its author or
+    committer) and has NO remediation-commit logic — re-check on head `536ceb9` read
+    "Checked 25 non-merge commit(s); 1 failed", the one being `3e653f0`; the remediation commit
+    itself passed. Workflow NOT patched (per the human's own instruction). **The human decides:**
+    (a) teach `dco.yml` the remediation convention (a scoped workflow change — accept a commit as
+    remediated when a later in-range commit is a standard-format remediation commit for its sha,
+    signed by the same identity), or (b) untick the required check in repo settings for this
+    merge (the human's hands — repo settings are not the custodian's).
 
 38. **[Fixture relocation scope, surfaced 2026-09-06 executing the disk directive — the mechanical
     move the instruction implied is a 40+-file refactor; the goal is already met more cheaply, so
