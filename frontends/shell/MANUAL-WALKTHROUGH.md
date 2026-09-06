@@ -726,6 +726,61 @@ exact) or G2 (zero error-shaped refusals) at the scale ADR-028's own Context sec
 about — those stay the deferred 5 GB G1/G2 cells' own job, not this Part's and not this harness's,
 at the scale that matters most.
 
+## Part L — the residency-debt close: scoped Cancel, honest quiescence, live hover (residency-debt cut 1b)
+
+The 1b cut's close bundles this sitting (CUT-STATE's own dispatch): Items A (scoped
+cancellation + honest progress for the held queue), B (the settled-partial signal), and C (the K6
+hover fix) all landed through reviewer gates to affirmative passes, with their properties
+unit-pinned and C carrying its own E2E step (`stepK6`). What none of that can answer — the same
+division of labor every Part here draws — is whether Cancel *feels* obeyed, whether "paused" and
+"finished" read as honest accounts of a frozen queue and a settled fill, and whether the live
+hover re-evaluation reads as protective. Those are docs/01 principle 7's own terms ("cancellable,
+streaming, progress-reporting" as felt qualities), and they are this Part's ground. **Felt
+verdicts are human-present by decision 24(g) — run this at the machine, not over RustDesk** (Part
+K's result log shows the degraded-channel caveat remote judging forces). **No duration appears
+anywhere in this Part** (ADR-018): every step asks what a wait or a stop *reads as*, never how
+long it took.
+
+**Scheduling notes, both decided at the sitting's own start:** (1) decision 34c — whether a scored
+campaign cell rides this sitting — was deferred to scheduling time, leaning correctness-only; a
+scored cell would need the full preregistration protocol, so the lean is to keep this sitting
+purely felt. (2) **The 5 GB fixture is deliberately NOT in this Part** — entry 40's
+producer-side tile-stream hang makes a 5 GB fill unable to complete regardless of the client, and
+the felt verdicts this Part exists for need only the Polygons-scale fill below (its zoom-to-layer
+window runs tens of seconds — ample to click Cancel mid-fill). The 5 GB Cancel-felt case rides a
+later sitting, after entry 40's producer diagnosis.
+
+**Pre-checks (before the app opens):** working tree on merged `main` (PR #22, `4549c35` or later),
+suite green (`npx vitest run`, `npx tsc --noEmit`, `node e2e/citationIntegrity.test.mjs`); no
+stale `spatial-ide-shell.exe` / `msedgewebview2` processes from earlier sessions (Task Manager or
+`Get-Process`); `target/fixtures/slice-budgets/polygons-100k.parquet` present (regeneration
+fallback in Part K); C: comfortably free (the fill writes no evidence, but a fresh src-tauri
+compile in a disk-starved tree is the known trap — the main checkout's warm target avoids it).
+
+Fixture and arm: `polygons-100k.parquet`, candidate arm at `fine` — the same fixture, hook, and
+honest DevTools note as Part K (K2's exact console incantations; the absence of a shipped arm
+control is unchanged and still worth noticing).
+
+| # | Step | Expected outcome |
+|---|---|---|
+| L1 | **Block A reference, not itself judged.** Arm candidate/fine per K2, open `polygons-100k.parquet`, let it settle, then click **Zoom to layer** and let the whole fill run to quiescence WITHOUT touching Cancel. | The K4 fill rhythm, ending in the settled state: the over-budget status sentence gains (verbatim, at the settling moment) *" Filling has finished for this view — the render budget is full; pan or zoom to see other areas."* **Judge (string 4, ruled 2026-09-05, first felt in situ):** does the settling moment read as honest quiescence — the app declaring it is DONE and why — or does the sentence arrive so quietly you cannot tell settled from still-working? |
+| L2 | Ctrl+R, re-arm per K2, reopen the fixture, click **Zoom to layer** again — and this time, while tiles are visibly still arriving, click **Cancel**. | Filling stops; **everything already rendered stays on canvas** (the view is retained, not cleared); the status reads (verbatim) *"Filling stopped — showing `<N>` features already loaded; the rest of this view was not loaded."* **Judge (the repointed Cancel, rulings 32a/33b):** does the stop read as *obeyed the click* — visibly prompt, in-flight work actually dying rather than draining out — and does the wording read honest (it must never say or imply "complete")? |
+| L3 | From L2's cancelled state, pan the canvas one ordinary drag in any direction. | Filling resumes for the newly exposed area — Cancel relieved the backlog without disabling tiling (the defect Item A existed to fix: the old lever was permanent). **Judge:** does the resume feel ordinary — indistinguishable from any fresh pan — with no sense the earlier Cancel left the canvas wounded? |
+| L4 | **Lightly scoped — a timing-tight window, and a miss is not a deviation (Part I's I6 precedent).** Ctrl+R, re-arm, reopen — and click **Cancel** as early as you can after the open, while the very first (untiled) data load is still delivering. | If the frame is already established, Cancel now reaches the untiled stream too (entry 35's ruling) — the stop obeys just as in L2. If you catch the pre-frame window instead, the status reads (verbatim, ruled 2026-09-06) *"Tile filling stopped — showing `<N>` features already loaded; this view's first data load is still running and Cancel does not stop it."* — sticky until the state resolves. **Judge whichever you catch:** honest, or evasive? |
+| L5 | **Block B.** Reproduce L1's fill (Ctrl+R, re-arm, reopen, Zoom to layer) and watch the status line DURING the fill, once the render budget visibly fills while tiles are still queued. | The over-budget sentence gains (verbatim) *" Filling is paused until the next pan or zoom."* — the `stalled` predicate: the held queue is provably frozen, not slow. **Judge (string 1, the Item-A honesty obligation):** does "paused until the next pan or zoom" read as a truthful account of a frozen queue — clearly distinct from "still working on it" — or could you mistake it for ongoing progress? |
+| L6 | Zoom in several notches until the view is within budget, and let it settle. | The status switches to *"Showing all `<N>` features in view"* — now structurally gated on settled-complete (Item B: it can no longer appear while any covering stream is in flight or queued, the falsehood class two review gates convicted). **Judge:** does the claim arrive at a moment that feels *earned* — the fill visibly done — rather than optimistic? *(String 5, the failure-partial wording — "Filling has finished for this view, but part of this view failed to load; pan or zoom to retry." — is NOT reachable on demand without fault injection and is deliberately not staged here; it is ruled and unit-pinned. If it appears naturally at any point, record the step and judge it then.)* |
+| L7 | **Block C — the K6 fix, forward direction.** Zoom in until individual polygons are clearly larger than a pixel, hover one until its `id <number>` readout shows, then — **pointer stationary** — zoom OUT past sub-pixel scale (mouse wheel, no pointer movement). | The readout does NOT stay a stale id: it re-evaluates on the camera change to the named refusal (verbatim) *"Features here are below pick resolution — zoom in to inspect them."* — the exact staleness Part K's K6 run surfaced (entry 29), now fixed with no GPU re-pick (the pure threshold re-check only). **Judge:** does the readout keeping pace with the zoom read as the app staying honest under your hands? |
+| L8 | With the refusal standing from L7 and the pointer still stationary, zoom back IN above the threshold. | The readout **clears** — no stale refusal, and no guessed id either (re-asserting an id would need a re-pick, declared out of scope by the piece's own preregistration; clearing is the honest minimum). Move the mouse: the ordinary id readout returns. **Judge:** does clear-then-fresh-hover read as correct restraint, or as the readout flickering unhelpfully? |
+| L9 | **Block D — the felt re-verdict, this sitting's deliverable.** Consider Blocks A-C together over the whole session. | Record, verbatim in the result log, your overall verdict on the residency behavior as it now stands: with a scoped Cancel, honest stall/settle wording, and a live hover readout — does the canvas at this scale now read as "never blocked: cancellable, streaming, progress-reporting" in docs/01 principle 7's own felt sense? This verdict is what closes the cut (rule 10 archive follows it) and what the LOD scheduling call (34c) builds on. |
+
+**If anything deviates** (Cancel clearing the canvas or reading ignored; a status text matching
+none of the verbatim strings above; "Showing all N" appearing while tiles are visibly still
+arriving; a stale id surviving L7's zoom-out; the ceiling-refusal banner appearing under the
+candidate arm): stop, record the exact step and what you saw, and report — do not continue
+assuming it was unrelated. L4's missed window, L5's stall not occurring on a machine fast enough
+to drain the queue before the budget fills, and string 5 never appearing are all named expected
+outcomes, not deviations.
+
 ---
 
 ## Result log
