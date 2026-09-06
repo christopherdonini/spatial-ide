@@ -2389,6 +2389,118 @@ describe("F1 close-out (entry 44's second finding) + F2 close-out (entry 43): a 
   });
 });
 
+// Residency-debt cut 1b sub-amendment (entry 48 (a), 2026-09-07, "the untiled first look is
+// eviction-protected while its extent intersects the viewport"). Two channels, deliberately pinned
+// separately: channel 1 (protection) is `handleViewportChange`'s own `extraProtectedKeys` computation
+// (`FIRST_LOOK_PROTECTED_KEYS` iff `latestUnionedExtent` intersects the plan's bbox); channel 2 (never
+// completeness, never fits) is `covering`/`lastCoveringTileKeys` staying geometric-only regardless.
+describe("entry 48 (a): the untiled first look is eviction-protected while in view", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  /** The first look's own union extent every session in this describe block bootstraps to --
+   * `fitAnchor` is what `ingestAndMaybeEstablishFrame` reads into `latestUnionedExtent`
+   * (`candidateArmSession.ts`'s own doc comment on that field), and what `establishFrameFromExtent`
+   * anchors the grid frame on at the untiled stream's own terminal. */
+  const FIRST_LOOK_EXTENT = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
+
+  // Pre-committed unit test 2 -- THE ENTRY-48 PIN.
+  it("test 2: the protected keys handed to the canvas contain INITIAL_TILE_KEY only when the bbox intersects the first look's own extent; the covering array never contains it either way", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT })),
+      });
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_1" });
+      // Round 1: a single-tile bbox that overlaps the first look's own extent (interior overlap:
+      // [6,6.1] x [6,6.1] sits inside [0,10] x [0,10]).
+      session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      const call1 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      const covering1 = call1[0] as string[];
+      const protectedKeys1 = call1[2] as ReadonlySet<string> | undefined;
+      expect(covering1).not.toContain(INITIAL_TILE_KEY); // channel 2: never in the covering array
+      expect(protectedKeys1?.has(INITIAL_TILE_KEY)).toBe(true); // channel 1: protected while in view
+
+      // Round 2: a single-tile bbox nowhere near the first look's own extent -- no longer protected.
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_2" });
+      session.onViewportChanged({ xmin: 1000, ymin: 1000, xmax: 1000.1, ymax: 1000.1 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      const call2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      const covering2 = call2[0] as string[];
+      const protectedKeys2 = call2[2] as ReadonlySet<string> | undefined;
+      expect(covering2).not.toContain(INITIAL_TILE_KEY); // channel 2, again
+      expect(protectedKeys2?.has(INITIAL_TILE_KEY) ?? false).toBe(false); // channel 1: no longer protected
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Pre-committed unit test 3 -- the fit-view non-regression, pinning channel 2's `fits` exclusion.
+  it("test 3: a truncated (partial) first look in view with a within-budget covering set still plans and drains tiles -- no over-budget latch from the first look's own partiality", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi
+          .fn()
+          .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT, rowsAdmitted: UNTILED_FIRST_LOOK_ROW_LIMIT })
+          .mockReturnValue({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT }),
+        // Structurally mirrors `WorkingCanvas.tsx`'s own real `anyPartialAmongCovering` channel:
+        // `fits` would read `false` here ONLY if `INITIAL_TILE_KEY` were ever folded into the
+        // covering array (the FIRST argument) -- exactly what channel 2 forbids. `extraProtectedKeys`
+        // (the THIRD argument, channel 1) never reaches this check.
+        applyTileViewportContext: vi.fn((covering: readonly string[]) => !covering.includes(INITIAL_TILE_KEY)),
+      });
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+      await session.reissueUnrestricted(null, null);
+      // The untiled first look's own row limit is hit this batch -- truncated, durably partial.
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(canvas.markTilePartial).toHaveBeenCalledWith(INITIAL_TILE_KEY);
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      viewportQueryMock.mockReset();
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_tile_1" })
+        .mockResolvedValueOnce({ stream: "sh_tile_2" })
+        .mockResolvedValueOnce({ stream: "sh_tile_3" });
+      viewportQueryMock.mockImplementation(() => new Promise(() => {})); // the rest stay genuinely queued
+
+      // A bbox that both intersects the first look's own extent (protected, channel 1) and covers
+      // enough tiles to exceed MAX_IN_FLIGHT_TILE_STREAMS (3) -- a real queued backlog, the same
+      // "covers the WHOLE small established frame" shape this file's own sibling tests already use.
+      session.onViewportChanged({ xmin: -10, ymin: -10, xmax: 10, ymax: 10 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      expect(session.manager.inFlightCount).toBe(3);
+      expect(session.manager.queuedCount).toBeGreaterThan(0);
+      expect(session.manager.overBudget).toBe(false); // no over-budget latch from the first look's own partiality
+
+      // Drains: completing one in-flight stream's own terminal lets a queued tile issue next --
+      // `drainQueueIfRoom` (`tileViewportStreamManager.ts`) refuses entirely while `overBudgetFlag` is
+      // `true`, so this call count only rises if the plan above genuinely left it `false`.
+      const callsBeforeDrain = viewportQueryMock.mock.calls.length;
+      const tileSink = lastSink();
+      tileSink.onTerminal({ kind: "Completed", detail: "" });
+      await Promise.resolve();
+      expect(viewportQueryMock.mock.calls.length).toBeGreaterThan(callsBeforeDrain);
+      expect(session.manager.overBudget).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 /** Reduces a raw event sequence through `nextResidencyStatus` exactly the way `App.tsx`'s own
  * `onResidencyStatusChange: (event) => setResidencyStatus((current) => nextResidencyStatus(event,
  * current))` wiring does (Piece 1, entry 35) -- this session's own tests assert the RAW events it

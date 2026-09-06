@@ -165,6 +165,22 @@ const CANDIDATE_SCAN_HANDLE = "candidate-session-scan";
  * thrash the architect's item 7 names). */
 const HEADROOM_REFETCH_FRACTION = 0.9;
 
+/** Residency-debt cut 1b sub-amendment (entry 48 (a)): the ONE key this session ever names as
+ * `extraProtectedKeys` (`WorkingCanvasHandle.applyTileViewportContext`'s own third parameter) -- a
+ * module-level singleton (never mutated), mirroring `tileIngest.ts`/`WorkingCanvas.tsx`'s own
+ * `RESERVED_TILE_KEYS` singleton for the identical reason: it names exactly one key today and never
+ * varies. */
+const FIRST_LOOK_PROTECTED_KEYS: ReadonlySet<string> = new Set([INITIAL_TILE_KEY]);
+
+/** Residency-debt cut 1b sub-amendment (entry 48 (a)): plain AABB overlap between two authoritative
+ * bboxes -- a touching edge counts as intersecting (`<=`/`>=`, not a strict `<`/`>`), matching the
+ * sub-amendment's own declared predicate. Local to this module: the one caller
+ * (`handleViewportChange`, below) is the only place in this codebase that needs to test the untiled
+ * first look's own union extent (`latestUnionedExtent`) against the current viewport bbox. */
+function bboxesIntersect(a: AuthoritativeBbox, b: AuthoritativeBbox): boolean {
+  return a.xmin <= b.xmax && a.xmax >= b.xmin && a.ymin <= b.ymax && a.ymax >= b.ymin;
+}
+
 export interface CandidateArmSession {
   manager: TileViewportStreamManager;
   /** Wired directly into the SAME `debounce(fn, VIEWPORT_QUERY_MIN_INTERVAL_MS)` call baseline's own
@@ -1317,7 +1333,17 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4
     const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
-    const fits = canvas?.applyTileViewportContext(covering, viewCentre) ?? true;
+    // Residency-debt cut 1b sub-amendment (entry 48 (a)): channel 1, eviction protection ONLY --
+    // `INITIAL_TILE_KEY` is passed as `extraProtectedKeys` (never folded into `covering` itself, which
+    // stays the geometric set exactly as F1 left it) whenever the untiled first look's own running
+    // union extent still intersects THIS plan's bbox. `latestUnionedExtent` is the same value
+    // `establishFrameFromExtent` consumed to anchor the grid -- it keeps accumulating afterward
+    // (`ingestAndMaybeEstablishFrame`'s own doc comment), so this reads the CURRENT extent, not the
+    // one the frame originally froze on. `null` (nothing ever admitted any geometry yet) never
+    // protects -- there is no extent to intersect.
+    const extraProtectedKeys =
+      latestUnionedExtent && bboxesIntersect(latestUnionedExtent, bbox) ? FIRST_LOOK_PROTECTED_KEYS : undefined;
+    const fits = canvas?.applyTileViewportContext(covering, viewCentre, extraProtectedKeys) ?? true;
     // Viewport-residency cut P6a, Defect A: unconditional now, in BOTH directions -- before this
     // piece, only `if (fits) manager.setOverBudget(false)` ran here, so a camera change that left the
     // flag `true` relied entirely on some earlier ingest call to have set it, and a camera change

@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
 
 function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPerFeature = 1): ResidentBatch {
@@ -554,6 +555,51 @@ describe("planTileEviction (item D)", () => {
         maxResidentVertices: 1000,
         distanceToViewCentre: distanceOrThrowForReserved,
         reservedTileKeys: new Set(["reserved"]),
+      });
+      expect(plan.evict).toEqual([]);
+      expect(plan.overBudget).toBe(true);
+    });
+  });
+
+  // Residency-debt cut 1b sub-amendment (entry 48 (a), pre-committed unit test 1): the untiled first
+  // look is eviction-protected exactly while its own union extent intersects the viewport --
+  // `candidateArmSession.ts`'s own `handleViewportChange` is what decides THAT (channel 1), by adding
+  // `INITIAL_TILE_KEY` to the `viewportTileKeys` set this pure function receives; this function
+  // itself needs no change (F1's own `viewportTileKeys`/`reservedTileKeys` seam already suffices) --
+  // these two tests pin exactly that reuse, using the real constant rather than a synthetic key.
+  describe("entry 48 (a): the untiled first look (INITIAL_TILE_KEY) protected while in view", () => {
+    it("INITIAL_TILE_KEY resident (high vertices) and protected, plus one evictable grid tile: evicts the grid tile, never INITIAL_TILE_KEY", () => {
+      const plan = planTileEviction({
+        residentTileKeys: [INITIAL_TILE_KEY, "0:0"],
+        tileVertices: (k) => (k === INITIAL_TILE_KEY ? 1000 : 50),
+        // Protected: the first look's extent intersects the current viewport (channel 1's own input).
+        viewportTileKeys: new Set([INITIAL_TILE_KEY]),
+        incomingVertices: 40,
+        currentTotalVertices: 1050, // 1000 (first look) + 50 (grid tile)
+        maxResidentVertices: 1060,
+        distanceToViewCentre: (k) => {
+          if (k === INITIAL_TILE_KEY) throw new Error("distanceToViewCentre must never be called for a protected/reserved key");
+          return 10;
+        },
+        reservedTileKeys: new Set([INITIAL_TILE_KEY]),
+      });
+      expect(plan.evict).toEqual(["0:0"]);
+      expect(plan.evict).not.toContain(INITIAL_TILE_KEY);
+      expect(plan.overBudget).toBe(false);
+    });
+
+    it("only the first look resident and protected: evict: [], overBudget: true", () => {
+      const plan = planTileEviction({
+        residentTileKeys: [INITIAL_TILE_KEY],
+        tileVertices: () => 5000,
+        viewportTileKeys: new Set([INITIAL_TILE_KEY]),
+        incomingVertices: 500,
+        currentTotalVertices: 5000,
+        maxResidentVertices: 1000,
+        distanceToViewCentre: () => {
+          throw new Error("distanceToViewCentre must never be called for a protected/reserved key");
+        },
+        reservedTileKeys: new Set([INITIAL_TILE_KEY]),
       });
       expect(plan.evict).toEqual([]);
       expect(plan.overBudget).toBe(true);
