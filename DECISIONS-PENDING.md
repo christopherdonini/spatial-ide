@@ -5,6 +5,74 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+44. **[ADR-028 Amendment 1's REOPEN CONDITION MET — observed felt by the human at the Part L
+    sitting, 2026-09-06. The reopen was the human's own 2026-09-03 ruling (entry 27 (i)); the
+    trigger has fired, so this entry records it and puts the reopening to the human — a red line
+    (an Accepted ADR's declared behavior), not the custodian's call.]** The human, verbatim: *"If
+    i zoom out at a certain point it stop, so you get what it did render till that point, and then
+    you see that he's rendering tiles for half a second, then they disappear, and a new one appear
+    and then disappear, constantly and then the last one rendered in the north, left corner and
+    stayed there."* Candidate arm, `fine`, polygons-100k, zoomed out past budget. Entry 27's
+    reopen condition (NEXT-CUT.md's own restatement): *"visible in-viewport holes attributable to
+    partial-covering eviction reopen it as a defect."* Mechanism, code-grounded by 1a Q2 and this
+    sitting's trace: over budget, each admission evicts to make room; a just-admitted, budget-trimmed
+    tile is durably `partial`, and a partial in-viewport tile is absent from the protected set
+    (`tileResidentSet.ts:461` filters only `viewportTileKeys`; partial/skipped candidates fall out
+    of that set — 1a Q2), so the NEXT admission evicts it: admit → evict → admit → evict, exactly
+    the "appear for half a second, disappear, a new one appears" cycle the human saw, ending with
+    the last-admitted tile standing. 1a's own "thrash half — bounded, not measured" is now
+    measured by a human eye: it reads as constant flicker, not incremental fill. Recommendation:
+    **REOPEN finding 3 as a defect** (per the ruling's own condition) and scope the fix on the
+    ADR-011 tiling/LOD line the next cut opens — the protected-set gap is the code seam (1a's Q2
+    signposts: `tileViewportStreamManager.ts` `onCameraChange`'s protected-set construction,
+    `candidateArmSession.ts` `applyTileViewportContext`, `tileResidentSet.ts` `planTileEviction`),
+    and the structural cure for overview zoom is LOD (P1/P2), which the same call decides. Touches:
+    ADR-028 (Amendment 3, the reopen record, on the human's word), the next cut's scope.
+
+43. **[Within-budget fills that settle TRUNCATED or with a never-completed covering tile are
+    SILENT by design — surfaced 2026-09-06 at the Part L sitting; contradicts entry 36's own rule,
+    so recorded for the human, not patched.]** The human's observation, verbatim: *"when i just
+    press zoom to layer it blocks rendering after few seconds (eventhough there's still space in
+    the canvas), no status appear."* The code's own words (`candidateArmSession.ts:693-696`,
+    verbatim): *"`settled === "settled-partial"` here (not over budget, but a truncated covering
+    set or a covering tile that never completed, and no failure recorded) is deliberately left
+    silent, same as `isFillComplete() === false` always has been -- see this function's own
+    "absence is honest" doc comment above; this piece adds no new status kind for that specific
+    combination."* Entry 36's ruling, verbatim from the human: *"silence and staleness never
+    represent state."* The combination is reachable on an ordinary zoom-to-layer at `fine`
+    (covering sets beyond `MAX_QUEUED_TILES` = 512 truncate farthest-first, `tileGridConstants.ts:54`;
+    the truncation is logged only via `logSessionEvent("candidate-covering-truncated", …)` — which
+    in the human's plain-launched instance reaches a session log that is DEAD, see the CUT-STATE
+    finding — so "never silently" is silent in practice). Recommendation: a sixth status string for
+    the 24(b) sight — within budget, settled, incomplete-by-truncation — in the settled-partial
+    register ("Filling has finished for this view — areas farthest from centre were not requested
+    this round; pan or zoom to load them."), drafted for the human's wording, plus the truncation
+    count surfaced to the console/session log sink that actually works. Touches:
+    `residencyStatus.ts` (a `settled: "partial"` variant on `candidate-within-budget`),
+    `candidateArmSession.ts:693` (emit instead of return), one unit test per BS6.
+
+42. **["Zoom to layer" under the candidate arm fits what has RENDERED, not the layer — surfaced
+    2026-09-06 at the Part L sitting; the human's stated expectation is a design position that
+    touches SKP-V0 C1, so it is recorded, not decided here.]** The human, verbatim: *"The zoom to
+    layer should take into account the whole extent of the features, max, min coordinates. Not
+    what just rendered."* Also verbatim, the observation: *"when you press zoom to layer it doesn't
+    zoom all the way up to show all the features."* Mechanism (code-verified): `fitToBounds` fits
+    the dataset-lifetime fit anchor (`WorkingCanvas.tsx` `fitAnchorRef`, `chooseFitTarget`), the
+    union of every extent this instance has rendered — baseline's unbounded first stream grows it to
+    the full dataset, but the candidate arm's first look is truncated at
+    `UNTILED_FIRST_LOOK_ROW_LIMIT` (10,000 rows), so on a spatially-ordered file the anchor is a
+    fraction of the layer and the button under-delivers its own name. The reason the anchor exists
+    at all: `describe` never claims a dataset extent (`SKP-V0.md` C1, cited at
+    `WorkingCanvas.tsx:859-860`), so the client has nothing else to fit. Honoring the expectation
+    needs the extent from somewhere: (a) the producer supplies min/max in `describe` — an SKP field
+    addition (ADR-025/026-class protocol change, its own ADR or amendment; GeoParquet's own
+    `bbox` metadata makes this cheap and honest when present); (b) a client-side full-extent scan
+    before the first fit (against principle 7 at 5 GB); (c) keep the anchor and rename the button
+    to what it does. Recommendation: **(a)**, scoped to the LOD/producer line the next cut opens
+    — the same producer-side work already owes overview-scale answers, and a declared extent is the
+    smallest honest version of one. Touches: SKP-V0 `describe`, engine describe path, `fitToBounds`.
+    Sibling of Part K's 5 GB "dead button" addendum.
+
 41. **[The remediation identity gap, surfaced 2026-09-06 implementing the entry-39 (a) ruling —
     gates PR #22 going green; needs one word from the human.]** Executing "teach dco.yml the
     remediation convention": the workflow is implemented and proven in both directions exactly as
