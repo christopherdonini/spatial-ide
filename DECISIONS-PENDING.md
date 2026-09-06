@@ -5,6 +5,41 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+47. **[K6's escape hatch, re-asked by the human's own L8 verdict — and a pick-accuracy
+    observation beside it; surfaced 2026-09-06 at the Part L sitting, candidate arm verified.]**
+    The human, verbatim: *"L8 seems a bit cluncky, like i zoom out and shows the ids of nearby
+    features but not the one I'm hovering even though is not subpixel and to get back to the id i
+    have to go to another feature and come back."* Two things. (1) The clear-then-fresh-hover
+    behavior on a camera change is Item C's own shipped design (`pickResolution.ts`
+    `reevaluateStandingHoverOnCameraChange`: a standing id can no longer be confirmed under the
+    pointer without a GPU re-pick, so it clears — the "honest minimum"; a re-pick was the escape
+    hatch the piece's preregistration named and held). The human's felt answer is "clunky".
+    Options: (a) keep clear-then-hover (as shipped); (b) re-pick on camera settle when a readout
+    was standing (one GPU pick per camera-change settle, not per frame — ADR-010 rule 6's
+    "declared, not discovered" still holds if the re-pick is declared as such); (c) re-pick only
+    when the pointer is over the canvas and the zoom crossed the threshold in the sub-pixel→
+    resolvable direction. Recommendation: **(b)**, as a small named piece on the next cut, not
+    this close-out (it is not a 1b deviation; it is the human's verdict on a design the cut shipped
+    as intended). (2) "shows the ids of nearby features but not the one I'm hovering even though
+    is not subpixel" — a pick-accuracy observation at zoom-out, possibly the pick radius or the
+    offset-frame hit-test near the threshold; NOT investigated, recorded verbatim for a future
+    piece's own repro. Touches: `WorkingCanvas.tsx` hover/pick, `pickResolution.ts`.
+
+46. **[The E2E harness now relies on `vite-node` — present only as vitest's transitive dependency
+    — to import the shell's own TypeScript (`e2e/tsModuleLoader.mjs`, close-out fix piece).
+    Declaring it explicitly is a dependency-tree addition, a red line, so it is the human's
+    call.]** Context: the pre-committed E2E assertion must recompute the covering set with the
+    shell's own `tilesCoveringBbox` (a hand-copied reimplementation would test the test), and that
+    module's extensionless `moduleResolution: "bundler"` imports plus type-only named imports
+    defeat plain Node ESM and `--experimental-strip-types`, so the worker loaded it via vite-node
+    (verified by the reviewer: `package.json`/`package-lock.json` unchanged; `vite-node@2.1.9`
+    hoisted under `vitest@2.1.9`). The coupling is real but undeclared: a future vitest major bump
+    could remove or move it and break the harness silently. Options: (a) add `vite-node` as an
+    explicit devDependency pinned to vitest's own version (one line, no new code, no runtime
+    reach — dev/E2E only, docs/09's gate discipline untouched); (b) leave it transitive and note
+    the coupling in `e2e/README.md`. Recommendation: **(a)**, on your word. Touches:
+    `frontends/shell/package.json` + lockfile only.
+
 45. **[The close-out fix piece's SIGHT BUNDLE — three items the human rules at PR sight, none the
     custodian's; opened 2026-09-06 with the piece (branch `cut/residency-debt-fix`, preregistered
     in `RESIDENCY-DEBT-1B.md`'s final section per the architect consult, pass with notes).]**
