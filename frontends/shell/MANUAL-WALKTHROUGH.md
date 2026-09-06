@@ -1069,13 +1069,16 @@ this Part's own honest note above.)
 - **Build/commit:** merged `main` @ `4f1f38e` (PR #22 + #23), suite green pre-sitting (758/758
   vitest, tsc clean, citation 27/0).
 - **Blocks A (L1-L4), the human's verdicts verbatim:** *"L1 perfect, L2 perfect, L3 feels good,
-  L4 honest."* **Caveat added same day: the arm was not verified per step** (it resets on every
-  Ctrl+R; the human later saw baseline-only ceiling texts and asked *"The L1 was on the baseline,
-  not the candidate, right?"* — unknowable from the record). L1's own expectation was also wrong
-  for this fixture (see the corrected row); the human's later account: *"L1 showed all the
-  features cause when you press zoom to layer it doesn't zoom al the way up to show all the
-  features, so it was still inside the budget."* **L2/L3 (the Cancel felt) are re-run under a
-  verified arm before they stand.**
+  L4 honest."* **VOID for the candidate arm — the app's own session log proves all four ran on
+  BASELINE:** the instance's first `candidate-grid-frame-established` line is at 13:51:37 (the
+  first L5 attempt); before it, baseline's ceiling refusal (*"accepting this batch would carry
+  2047013 resident vertices, above the declared ceiling of 2000000"*) at 13:01:48 and 13:04:46 and
+  nine page loads with no candidate open. The arm resets on every Ctrl+R and was never verified;
+  the human asked *"The L1 was on the baseline, not the candidate, right?"* — yes. What was judged
+  was baseline's own Cancel and fill, not Items A/B. The human's later account of L1 (*"L1 showed
+  all the features cause when you press zoom to layer it doesn't zoom al the way up to show all
+  the features, so it was still inside the budget"*) describes the baseline fit view. **L2-L4 are
+  re-run under a verified candidate arm on the fixed build.**
 - **L5, first report:** *"in L5 it wasn't giving me any verbatim when zooming to layer."* A
   same-day code-read correction (the "eviction sawtooth" account) was itself superseded by the
   sitting's verbose trace: the fit view is WITHIN budget on this fixture under 1b, a within-budget

@@ -21,7 +21,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     of that set — 1a Q2), so the NEXT admission evicts it: admit → evict → admit → evict, exactly
     the "appear for half a second, disappear, a new one appears" cycle the human saw, ending with
     the last-admitted tile standing. 1a's own "thrash half — bounded, not measured" is now
-    measured by a human eye: it reads as constant flicker, not incremental fill. Recommendation:
+    measured by a human eye: it reads as constant flicker, not incremental fill. The session log
+    of that window (15:07-15:13) shows the other half of the mechanism: every zoom-out re-plan
+    truncated the covering set by 865 to 5,758 tiles beyond the 512 cap while 1,999 tile terminals
+    landed — the fill was re-requesting, admitting, and evicting in a loop that could never
+    converge at that zoom. Recommendation:
     **REOPEN finding 3 as a defect** (per the ruling's own condition) and scope the fix on the
     ADR-011 tiling/LOD line the next cut opens — the protected-set gap is the code seam (1a's Q2
     signposts: `tileViewportStreamManager.ts` `onCameraChange`'s protected-set construction,
@@ -51,9 +55,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     combination."* Entry 36's ruling, verbatim from the human: *"silence and staleness never
     represent state."* The combination is reachable on an ordinary zoom-to-layer at `fine`
     (covering sets beyond `MAX_QUEUED_TILES` = 512 truncate farthest-first, `tileGridConstants.ts:54`;
-    the truncation is logged only via `logSessionEvent("candidate-covering-truncated", …)` — which
-    in the human's plain-launched instance reaches a session log that is DEAD, see the CUT-STATE
-    finding — so "never silently" is silent in practice). Recommendation: a sixth status string for
+    the truncation is logged via `logSessionEvent("candidate-covering-truncated", …)` — the
+    sitting's own session log records it: *"covering set truncated by 129 tile(s) beyond
+    MAX_QUEUED_TILES"* at 13:52:05 on the very first candidate zoom-to-layer, and 865-5,758 per
+    re-plan at zoom-out — but a session-log line is not operator-facing during a sitting, so the
+    operator sees silence). Recommendation: a sixth status string for
     the 24(b) sight — within budget, settled, incomplete-by-truncation — in the settled-partial
     register ("Filling has finished for this view — areas farthest from centre were not requested
     this round; pan or zoom to load them."), drafted for the human's wording, plus the truncation
