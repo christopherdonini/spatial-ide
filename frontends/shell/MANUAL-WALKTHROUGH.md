@@ -1100,3 +1100,30 @@ this Part's own honest note above.)
   under the candidate arm" — a truncated grep), both retracted on evidence; the L5 row corrected
   twice.
 - **L7-L9:** pending the human's words; this entry completes then.
+
+### Part L — second half, run by the human on the UNFIXED build (2026-09-06, after the pause ruling; arm per the session log, see below)
+
+The human ran L5-L9 on main @ bef8bda before the fix piece landed. Their words, verbatim, as
+the pre-fix record — the post-fix re-run per entry 44 is what stands:
+
+- **L5:** *"L5 is ok now, it fills till the end of the canvas, no status text."* (A text-less
+  within-budget fill, as the corrected row expects; no truncation this time.)
+- **L6:** *"L6 zoom is fine, zoom out, it renders and then it starts to render tile for 0.5 s and
+  then it disappear till it sets, and no status text is there."* (The entry-44 thrash again — and
+  a second consequence recorded here: while the eviction valve keeps freeing headroom, over-budget
+  never latches durably, so the zoomed-out view reads as a silent within-budget fill that never
+  settles. F1 is expected to change both: the flicker stops and the over-budget sentence appears.)
+- **L7:** *"L7 the readout does not show a stale ID"* — pass (the K6 fix's forward direction).
+- **L8:** *"L8 seems a bit cluncky, like i zoom out and shows the ids of nearby features but not
+  the one I'm hovering even though is not subpixel and to get back to the id i have to go to
+  another feature and come back."* Two things in one: (i) the clear-then-fresh-hover behavior the
+  row asks about is judged CLUNKY — the human's answer to L8's own question, for the K6 escape
+  hatch's ruling (re-pick on camera change vs. clear); (ii) a pick-accuracy observation at
+  zoom-out — a nearby feature's id shown for a hovered feature that is not sub-pixel — recorded
+  as an observation for the human's queue, not this cut's.
+- **L9 (provisional, pre-fix):** *"L9 overall better, is just the random rendering and
+  disappearing of tiles that leaves me skeptic."*
+- **Arm, verified from the app's own session log (`session-1788700976.log`):** one
+  `candidate-grid-frame-established` at 15:23:42, no `canvas-refusal` — this run WAS the candidate
+  arm. Its L6 zoom-out truncated the covering set by 924 and 2,406 tiles (15:26:15) — the same
+  thrash window shape as the first instance's.

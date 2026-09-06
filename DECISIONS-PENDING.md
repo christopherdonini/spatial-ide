@@ -5,6 +5,30 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+45. **[The close-out fix piece's SIGHT BUNDLE — three items the human rules at PR sight, none the
+    custodian's; opened 2026-09-06 with the piece (branch `cut/residency-debt-fix`, preregistered
+    in `RESIDENCY-DEBT-1B.md`'s final section per the architect consult, pass with notes).]**
+    (1) **String 6, the settled-partial-within-budget voice** (entry 43's remedy), shipped as a
+    DRAFT: *"Filling has finished for this view — some areas were not loaded; pan or zoom to load
+    them."* — deliberately direction-free, because the state has two causes and only one of them
+    (truncation, farthest-first) could honestly say "farthest from centre"; the never-completed-tile
+    cause was requested in row-major order and cannot. Option B if you want the distinction said
+    when true: two strings gated on `lastCoveringTruncated`. Recommendation: A, as shipped.
+    (2) **ADR-028 Amendment 3** — the reopen record: drafted as a PROPOSED file beside the ADR
+    (rides the PR), withdrawing Amendment 1's exception 2 (partial covering tiles during
+    over-budget) only, keeping exception 1 (the dedupe-owner cascade), replacing it with geometric
+    protection, and carrying a clause 5 you must rule because Amendment 1 said its own
+    consequences did not attach "because the resolution is declaration, not fix" — this IS a fix:
+    proposed stance, the gate-8 ruling stands on its own commits, no re-measure is owed now, any
+    future cross-commit arm comparison must declare the eviction-policy change. Appended only on
+    your word. (3) **The declared absorbing state**, acknowledged as intended: with in-view partials
+    unevictable, an over-budget view has no pressure valve — the declared partial view plus its
+    persistent status (stalled or settled-partial, alternatives) IS the answer, and the exit is
+    the pan/zoom string 4 already names; the L2-L9 re-run watches it (Amendment 2 reopen
+    conditions (1)/(3)). Also for the record: the piece attaches NO perf claim in either direction
+    (F1 keeps the resident set nearer the ceiling at over-budget zoom-out, G4's own axis) — the
+    re-run is felt, never a G4 re-measure.
+
 44. **[ADR-028 Amendment 1's REOPEN CONDITION MET — observed felt by the human at the Part L
     sitting, 2026-09-06. The reopen was the human's own 2026-09-03 ruling (entry 27 (i)); the
     trigger has fired, so this entry records it and puts the reopening to the human — a red line
