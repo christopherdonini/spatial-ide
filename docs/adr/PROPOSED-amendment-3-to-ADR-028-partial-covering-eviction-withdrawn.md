@@ -1,9 +1,10 @@
 # PROPOSED — Amendment 3 to ADR-028: the partial-covering eviction exception is WITHDRAWN on its own reopen condition
 
-**Status: DRAFT for the human's sight (DECISIONS-PENDING entry 45, item 2). Drafted 2026-09-06
-by the custodian per the architect consult of the same day. Never appended to ADR-028 by the
-custodian — accepted ADRs are append-only and the append is the human's word. Clause 5 below is
-a ruling the human must make, not a description.**
+**Status: RULED 2026-09-06 — APPEND, on the human's word (DECISIONS-PENDING entry 45, item 2;
+clause 5 ruled by the human, quoted verbatim inside it). Sequencing, the human verbatim:
+"Amendment 3 appends only after my L9." Drafted by the custodian per the architect consult of the
+same day; appended to ADR-028 by the custodian on the L9 re-verdict, this file deleted in the
+same commit. Accepted ADRs are append-only — nothing above the new section changes.**
 
 The text below is the proposed section, verbatim as it would be appended.
 
@@ -60,16 +61,19 @@ requested can never be absent from the set a "Showing all N" claim is checked ag
    cross a module or protocol boundary.
 4. Finding 3, carried as a named open item "due at 1b" by this ADR's Acceptance-discharged
    section, is discharged here BY FIX rather than by declaration.
-5. **[THE HUMAN RULES THIS CLAUSE.]** Amendment 1 stated, verbatim: *"Because the resolution is
-   declaration, not fix, option (ii)'s consequences do not attach: the gate-8 evidence above
-   remains comparable as-is for future arms, and no re-measure obligation is created."* This
-   amendment IS a fix, so that sentence's premise no longer holds. Proposed position: the gate-8
-   ruling stands on the evidence at its own recorded commits; no re-measure is owed now; the fix
-   keeps the resident set nearer `MAX_RESIDENT_VERTICES` for longer at over-budget zoom-out (the
-   same axis G4 measured, where G4 already fails on its strict letter), so any FUTURE arm
-   comparison across this change must declare the eviction-policy change, and a fresh
-   preregistered gate is owed only if a future cut wants to compare across it. The Part L re-run
-   is a felt re-verdict and is never presented as a G4 re-measure.
+5. **Ruled by the human, 2026-09-06 (DECISIONS-PENDING entry 45), verbatim:** *"Amendment 3 =
+   APPEND, clause 5 ruled — this is a fix, recorded as such: proposed stance, gate-8 ruling
+   stands on its existing commits, no re-measure owed now, but any future cross-commit arm
+   comparison must declare the eviction-policy change."* Amendment 1 stated, verbatim: *"Because
+   the resolution is declaration, not fix, option (ii)'s consequences do not attach: the gate-8
+   evidence above remains comparable as-is for future arms, and no re-measure obligation is
+   created."* This amendment IS a fix, so that sentence's premise no longer holds, and the ruled
+   stance replaces it: the gate-8 ruling stands on the evidence at its own recorded commits; no
+   re-measure is owed now; the fix keeps the resident set nearer `MAX_RESIDENT_VERTICES` for
+   longer at over-budget zoom-out (the same axis G4 measured, where G4 already fails on its strict
+   letter), so any FUTURE arm comparison across this change must declare the eviction-policy
+   change, and a fresh preregistered gate is owed only if a future cut wants to compare across it.
+   The Part L re-run is a felt re-verdict and is never presented as a G4 re-measure.
 
 **Reopen conditions** (Amendment 2's own pattern).
 1. Evidence of a stuck-partial state that a real pan or zoom cannot exit reopens this as a defect.
