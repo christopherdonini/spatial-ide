@@ -5,6 +5,48 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+48. **[The untiled first look is evicted wholesale on the first admission that needs room — the
+    "already rendered content disappears ~10 s after zooming out" the human named in the post-fix
+    L9; surfaced 2026-09-06; a design question, so recorded with options, not fixed.]** The
+    human, verbatim (L6, post-fix): *"zoom out what was already rendered after 10 s disappear and
+    some more tiles gets rendered"*; and in L9: *"we need to fix … the rendering when zooming out
+    completely with tiles rendered that disappear etc"*. Mechanism, evidence-grounded: the live
+    probe (`spikes/residency-debt-fix-live-probe/probe-thrash.json`) recorded exactly ONE eviction
+    in its whole run — at t=43.5 s, right after the zoom-outs, admitting **8 rows** into tile
+    `18:12` evicted `["initial-untiled-look"]`, resident features 19,090 → 9,090. `INITIAL_TILE_KEY`
+    is not a grid key, so the geometric protected set (`viewportTileKeys`, grid keys only) never
+    contains it and `planTileEviction` may evict it first; its content — the 10k-row first look,
+    the very thing the operator was looking at — vanishes to admit a batch two orders of magnitude
+    smaller, and at over-budget the tiles that would re-serve that area are then truncated. NOT the
+    entry-44 cycling (that is gone — the probe shows 0 admitted-then-evicted, and the human reports
+    the text arriving and no flicker), and NOT Amendment 1's withdrawn exception (grid tiles):
+    Amendment 3's subject is unaffected. Options: (a) protect `INITIAL_TILE_KEY` while its union
+    extent intersects the viewport — then at over-budget nothing can be evicted and the honest
+    stable-partial state is "the first look plus whatever tiles fit", never a vanishing; (b)
+    hand-off: evict the first look only once complete tiles cover its extent (its rows are then
+    re-served, not lost) — correct but a new mechanism; (c) evict the first look progressively by
+    tile region — it is one batch set, so this is (b) in disguise; (d) accept and document (the
+    human has said fix). Recommendation: **(a)** as a small named piece — it reuses the protected-
+    set seam F1 just made geometric (add the first look's extent as a protected pseudo-region),
+    with one unit test (an over-budget admission at zoom-out never evicts `INITIAL_TILE_KEY`
+    while its extent intersects the bbox) and the re-run's own L6 as the felt check. Whether it
+    lands in 1b before the close or as named binding debt on the next cut is the human's call
+    (below). Also recorded here because it bears on the LOD call: the same re-run's session log
+    shows covering sets truncated by 15,810, 32,559 and **668,545** tiles beyond the 512 cap as
+    the human zoomed out completely — the fine grid is unbounded, and each such plan distance-sorts
+    hundreds of thousands of candidate cells on the client; no perf claim, a structural fact LOD
+    (coarser levels at overview) is the cure for. Touches: `tileResidentSet.ts` `planTileEviction`
+    / the protected-set input, `WorkingCanvas.tsx` `applyTileViewportContext`, one test.
+
+    **The close question, for the human:** 1b's own ruling ("fix it and I re-do L5 to L9") is
+    discharged — L2-L9 re-run, L9 "definitely better". Two items remain named in that L9: entry
+    47 (already ruled: next cut) and this entry. Recommendation: **close 1b now** with 48 as named
+    binding debt on the next cut beside 47 (the ADR-021-condition pattern — neither may be dropped
+    from that cut's scope without comment), so the LOD call proceeds on the table as assembled;
+    alternative: hold 1b open for a 48-(a) piece first (small, but another gate cycle and a third
+    re-run). Also open: the L5 re-check (string 6 not seen — a 30 s wait after the fill stops, on
+    the same build, settles whether it was timing).
+
 47. **[K6's escape hatch, re-asked by the human's own L8 verdict — and a pick-accuracy
     observation beside it; surfaced 2026-09-06 at the Part L sitting, candidate arm verified.]**
     The human, verbatim: *"L8 seems a bit cluncky, like i zoom out and shows the ids of nearby
