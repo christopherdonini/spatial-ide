@@ -23,7 +23,7 @@ Minimal kernel + engine + renderer + one frontend, all speaking SKP. This proves
 
 Both are engine/kernel/protocol-module work, not renderer work, and belong to this slice's build-out, not to a future spike.
 
-**Gate — open:** **ADR-009 license and open-core boundary** (14) — must be resolved before the repository goes public, at the latest by the end of Prototype.
+**Gate — open:** **ADR-009 license and open-core boundary** (14) — must be resolved before the repository goes public, at the latest by the end of Prototype. **[Dated correction, 2026-09-07: the repository has been public since 2026-08-03T18:06Z (GitHub `PublicEvent`, verified) — before ADR-009's 2026-08-07 acceptance; the human flipped it and it never entered the record. ADR-009 is accepted; the "before the repository goes public" ordering did not hold in fact. Retained as history; see ADR-009's corrigendum.]**
 
 ## Alpha
 

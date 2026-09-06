@@ -1,5 +1,17 @@
 # Pre-public checklist — ADR-009
 
+> **Dated correction, 2026-09-07 — this checklist never gated anything: the repository has been
+> public since 2026-08-03T18:06:23Z.** Verified against GitHub's own event stream (a single
+> `PublicEvent`; the human's recollection was "~2026-08-16", the API date stands). The human flipped
+> it themselves, four days before ADR-009's acceptance and before this file existed, and it never
+> entered the record. Every "must NOT be made public", "before going public" and "gates" sentence
+> below is therefore history, retained verbatim; DECISIONS-PENDING entries 12–15 are resolved as
+> overtaken by events; ADR-009 carries a dated corrigendum. The items themselves remain what they
+> were — done or deferred as recorded — and a bounded audit of the 2026-08-03→now window for content
+> that assumed a private audience is recorded in `PUBLIC-AUDIENCE-AUDIT.md` (findings queued, none
+> remediated without the human's word). The red line "making the repository public" stays a red
+> line for any future visibility change; the 2026-08-03 flip was the human's own act.
+
 ADR-009 was accepted on 2026-08-07 and its own Status says: **"The repository does not become public
 until the pre-public checklist below lands — accepting this ADR ends the deliberation, not the
 gate."** This file is that checklist's status.
@@ -19,7 +31,8 @@ gate."** This file is that checklist's status.
 > | 5 | Project-name collision check; trademark policy stub | **Informal check + stub done** (docs/14, 2026-08-07) — no collision found by web search; **full trademark-register search is explicitly deferred to pre-1.0/counsel** by that same note, not held as a pre-public blocker. Whether that deferral is the right read of ADR-009 item 5 is queued for the human (not re-decided by this pass) |
 > | 6 | History review | **DONE for 92 commits/632 blobs (2026-08-07); targeted delta re-swept this pass for the 147 commits since** (pickaxe search for credential patterns, machine name, username-bearing paths, and new dataset/fixture files — none found). Not a full blob-by-blob re-read; see `CUT-STATE-adr009-checklist.md` for method and a new, non-blocking finding (pre-2026-08-10 commits generally lack `Signed-off-by` — historical, not a leak) |
 
-**As of 2026-08-07 the repository must NOT be made public.** Two of the six items are open, and both
+**As of 2026-08-07 the repository must NOT be made public.** *(Dated correction 2026-09-07: it already
+was — since 2026-08-03; see the note at the top.)* Two of the six items are open, and both
 need a human. What is open is stated per item below. *(2026-08-07 snapshot, superseded by the table
 above — kept verbatim.)*
 
@@ -92,7 +105,8 @@ non-merge commit in a pull request.
 paths were exercised against throwaway repositories: a properly signed commit passes; an unsigned
 one fails; one signed by neither its author nor its committer fails; a merge commit is skipped.
 
-> **Verify the `DCO` text before going public.** It was transcribed from memory — short, fixed and
+> **Verify the `DCO` text before going public.** *(Dated correction 2026-09-07: the repository was
+> already public when this was written; the verification itself was done 2026-08-18, below.)* It was transcribed from memory — short, fixed and
 > universally copied, unlike the two license texts, but *transcribed* nonetheless. Diff it against
 > <https://developercertificate.org/>. This is the one place in this checklist where text was
 > written from memory rather than deferred, and the reason is that `CONTRIBUTING.md` cannot say

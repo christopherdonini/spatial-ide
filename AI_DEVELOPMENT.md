@@ -45,8 +45,10 @@ how obvious they seem:
 - Gate approvals: the ADR-017 exposure-surface review, preregistration overrides, budget-wording
   changes, anything docs/08-normative.
 - Accepting operator-verification evidence (walkthroughs) as passed.
-- Making the repository public; anything ADR-009-adjacent; dependency-tree additions not named in
-  a brief; history rewrites and force-pushes.
+- Making the repository public (or any other visibility change — the line stands; note, dated
+  2026-09-07: the repository has in fact been public since 2026-08-03, the human's own act, which
+  never entered the record until then); anything ADR-009-adjacent; dependency-tree additions not
+  named in a brief; history rewrites and force-pushes.
 
 ## Custodian mechanics (the accumulated hard lessons — do not relearn them)
 

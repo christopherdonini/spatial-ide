@@ -757,7 +757,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     its preregistration piece, now aimed by Part H's evidence and PR #15's hover-at-scale
     question — starts on your word or when those clear.
 
-12. **ADR-009 pre-public checklist: mechanically COMPLETE — ready for your go/no-go, three
+12. **[RESOLVED 2026-09-07 — OVERTAKEN BY EVENTS: the repository has been public since
+    2026-08-03T18:06Z (GitHub `PublicEvent`, verified), before ADR-009's acceptance and before this
+    checklist existed — the human's own act, never recorded until now. The go/no-go was moot; the
+    checklist's items stand as recorded. Original entry follows.]**
+    **ADR-009 pre-public checklist: mechanically COMPLETE — ready for your go/no-go, three
     residual judgments (13–15).** The 2026-08-18 verification pass confirmed the 2026-08-07 work
     and closed its drift: SPDX headers extended to `frontends/shell` (84 files — the module
     postdated the original sweep), dependency audit re-run byte-identical (721 audited / 9
@@ -768,7 +772,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     the repository public itself, which stays yours regardless**. Full record:
     `PRE-PUBLIC-CHECKLIST.md` (durable) + `.cut-archive/CUT-STATE-adr009-checklist.md`.
 
-13. **ADR-009 item 5's pre-public bar — does the 2026-08-07 informal collision check + docs/14
+13. **[RESOLVED 2026-09-07 — OVERTAKEN BY EVENTS (public since 2026-08-03): the "pre-public bar"
+    no longer exists; the trademark-register search stays a pre-1.0/counsel item exactly as docs/14
+    records it. Original entry follows.]**
+    **ADR-009 item 5's pre-public bar — does the 2026-08-07 informal collision check + docs/14
     trademark stub suffice, with the full register search deferred to pre-1.0?** That deferral is
     already written into docs/14 as a prior custodian's judgment call, made before the red-line
     rule reserved ADR-009-adjacent calls for you; this pass did not re-decide it.
@@ -776,13 +783,19 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     weak mark" for a pre-launch repo; register search stays a pre-1.0/counsel item per ADR-009's
     own Caveat). Touches nothing if accepted; a docs/14 edit if you read the bar differently.
 
-14. **Two personal git identities are permanently in history**
+14. **[RESOLVED 2026-09-07 — OVERTAKEN BY EVENTS (public since 2026-08-03): both identities have
+    been public commit authors for over a month; acknowledged, no action — the human confirmed
+    2026-09-06 that both are theirs (entry 41's ruling). Original entry follows.]**
+    **Two personal git identities are permanently in history**
     (`donini.christopher@gmail.com` 172+, `chrys92d@gmail.com` 12+) — named non-blocking by the
     2026-08-07 history review, never explicitly resolved. Normal for an open project; a history
     rewrite is a named red line and not on the table. Recommendation: **acknowledge, no action**;
     optionally standardize one identity for future commits, your call.
 
-15. **102 of 239 commits (all on/before 2026-08-10) carry no `Signed-off-by`** — the pattern
+15. **[RESOLVED 2026-09-07 — OVERTAKEN BY EVENTS (public since 2026-08-03): historical fact,
+    no rewrite (a red line); the `PRE-PUBLIC-CHECKLIST.md` §6 note exists (entry 26 added it) and
+    the DCO check has gated every PR since. Original entry follows.]**
+    **102 of 239 commits (all on/before 2026-08-10) carry no `Signed-off-by`** — the pattern
     cleanly tracks DCO adoption settling in after ADR-009's acceptance; every unsigned commit is
     from your own one-or-two identities, so no external-contribution provenance question exists,
     and backfilling would be a history rewrite (red line). Recommendation: **accept as historical

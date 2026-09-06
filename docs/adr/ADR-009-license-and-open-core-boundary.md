@@ -86,3 +86,20 @@ operations, and brand — the license protects the commons, not the business.
 The trademark policy's content; the commercial services' own licenses (they are separate works);
 whether specific enterprise integrations warrant additional permissive carve-outs (decided
 case-by-case against item 4's layer, never by relicensing core).
+
+## Corrigendum — the repository was already public when this ADR was accepted (2026-09-07, appended)
+
+**This is a correction of record, not a change of decision; nothing above is edited.** The Status
+paragraph states, verbatim: *"The repository does not become public until the pre-public checklist
+below lands — accepting this ADR ends the deliberation, not the gate."* In fact the repository has
+been public on GitHub since **2026-08-03T18:06:23Z** — GitHub's own event stream records a single
+`PublicEvent` at that instant, verified 2026-09-07 — four days before this ADR's acceptance and
+before `PRE-PUBLIC-CHECKLIST.md` existed. The human flipped it themselves (their recollection when
+reporting it was "~2026-08-16"; the API date stands) and the fact never entered the record. The
+checklist therefore gated a flip that had already happened; its items remain what they were — done
+or deferred as recorded there — and DECISIONS-PENDING entries 12–15 (the go/no-go and its three
+residual judgments) are resolved as overtaken by events. The decision this ADR records — the
+license, the DCO, the open-core boundary — stands unchanged; only the "not until" ordering did not
+hold in fact. A bounded audit of the 2026-08-03→now window for content that assumed a private
+audience is recorded in `PUBLIC-AUDIENCE-AUDIT.md`; its findings are queued for the human, none
+remediated without their word.

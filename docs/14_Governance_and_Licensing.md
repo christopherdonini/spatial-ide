@@ -2,7 +2,7 @@
 
 Constitution-level because three things depend on it: a plugin ecosystem needs legal certainty, contributors need to know what they're giving, and ADR-008 explicitly leaves room for a future commercial sharing service — which makes the open-core boundary a product decision, not an afterthought.
 
-> RESOLVED — **ADR-009, accepted 2026-08-07:** `AGPL-3.0-or-later` core + DCO 1.1; Apache-2.0 for SDKs/bindings; CC-BY-4.0 for the SKP spec and docs; commercial products as separate services, never a relicensed core; the ADR's pre-public checklist gates the repository going public. The decision space below is retained as the record of what was considered:
+> RESOLVED — **ADR-009, accepted 2026-08-07:** `AGPL-3.0-or-later` core + DCO 1.1; Apache-2.0 for SDKs/bindings; CC-BY-4.0 for the SKP spec and docs; commercial products as separate services, never a relicensed core; the ADR's pre-public checklist gates the repository going public. **[Dated correction, 2026-09-07: the repository has been public since 2026-08-03T18:06Z — GitHub's own `PublicEvent`, verified — four days BEFORE this acceptance; the human flipped it and it never entered the record, so the checklist gated a flip that had already happened. The sentence before this note is retained as history; see ADR-009's 2026-09-07 corrigendum and `PRE-PUBLIC-CHECKLIST.md`'s 2026-09-07 note.]** The decision space below is retained as the record of what was considered:
 >
 > - **Permissive (MIT / Apache-2.0)** — maximizes adoption and commercial reuse; permits proprietary forks, including by competitors. Apache-2.0 adds a patent grant.
 > - **Weak copyleft (MPL-2.0 / LGPL)** — file/library-level protection; friendly to proprietary plugins and embedding.
