@@ -72,13 +72,15 @@ import {
   CAMERA_TRACE_STEPS,
   dismissThenClickRetry,
   IDENTITY_VIEW_STATE_STEPS,
+  parsePerStepWatchdogMsArg,
   parseTileSizeArg,
   percentileNearestRank,
+  resolvedPerStepSettleTimeoutMs,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
   TRACE_VERSION,
+  trialWatchdogMsForStepBound,
   TRIAL_WATCHDOG_MS,
-  settleTimeoutForFixture,
 } from "./residencyTrace.mjs";
 import { loadShellModule } from "./tsModuleLoader.mjs";
 
@@ -99,6 +101,22 @@ function resolveFixturePath(argv) {
 const FIXTURE_PATH = resolveFixturePath(process.argv.slice(2));
 const REGEN_FILTER_ZONED =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_zoned_fixture -- --ignored --nocapture";
+
+// Entry-40 pass (PASS-PREREGISTRATION.md §2): `--per-step-watchdog-ms <n>`'s resolved value for
+// THIS run, `null` unless the flag was given (`parseCellArgs`, below, parses and validates it via
+// `parsePerStepWatchdogMsArg`; `main()` assigns it here, once, before any step ever runs). A plain
+// module-level `let` rather than threading a parameter through every `applyStep`/`measureOneStep`
+// call site (four of the latter, one of the former): every per-step settle-watchdog computation in
+// this file already reads the SAME module-level `FIXTURE_PATH` the same way, so this follows that
+// existing pattern rather than introducing a second one.
+let perStepWatchdogOverrideMs = null;
+
+/** The per-step settle bound this run's `applyStep`/`measureOneStep` call sites actually use --
+ * `resolvedPerStepSettleTimeoutMs`'s own pure arithmetic (residencyTrace.mjs, directly unit-tested
+ * there), applied to this module's own `FIXTURE_PATH` and the override set above. */
+function effectiveSettleTimeoutMs(stepTimeoutMs) {
+  return resolvedPerStepSettleTimeoutMs(FIXTURE_PATH, stepTimeoutMs, perStepWatchdogOverrideMs);
+}
 
 // Disclosed approximations -- see this file's own top comment.
 const ZOOM_WHEEL_DELTA = -1200; // negative deltaY == "scroll up" == zoom in, in deck.gl's default wheel handling
@@ -207,7 +225,10 @@ function gitRevParseHead() {
  * P7 (the tile-size sweep selector): `tileSize` is `null` unless `--tile-size coarse|medium|fine` was
  * given -- parsing/validation itself is `parseTileSizeArg` (`residencyTrace.mjs`, pure and unit-tested
  * there), reused rather than reimplemented here; an invalid value throws loudly straight out of this
- * function (`main()`'s own call site catches it and exits non-zero, never a silent default). */
+ * function (`main()`'s own call site catches it and exits non-zero, never a silent default).
+ *
+ * Entry-40 pass: `perStepWatchdogMs` is `null` unless `--per-step-watchdog-ms <n>` was given -- same
+ * discipline, via `parsePerStepWatchdogMsArg` (`residencyTrace.mjs`, pure and unit-tested there). */
 function parseCellArgs(argv) {
   let arm = "baseline";
   let coldOrWarm = "warm"; // declared default -- see this function's own doc comment on why
@@ -226,7 +247,8 @@ function parseCellArgs(argv) {
     }
   }
   const tileSize = parseTileSizeArg(argv); // P7: throws loudly on a malformed value, never silent
-  return { arm, coldOrWarm, machineAttestation, tileSize };
+  const perStepWatchdogMs = parsePerStepWatchdogMsArg(argv); // entry-40 pass: same discipline
+  return { arm, coldOrWarm, machineAttestation, tileSize, perStepWatchdogMs };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -802,7 +824,7 @@ async function applyStep(page, step) {
     // gesture, as its own named field (not only nested inside `calmWait`) so a reader scanning one
     // row can see exactly how much of that row's own `wallMs` this pre-gesture wait, not the fit
     // gesture itself, accounts for.
-    const calmWait = await waitForCalmBeforeClick(page, { timeoutMs: settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs) });
+    const calmWait = await waitForCalmBeforeClick(page, { timeoutMs: effectiveSettleTimeoutMs(step.settle.timeoutMs) });
     await page.evaluate(() => window.__SPATIAL_E2E__.residencyMarkInput?.());
     const retry = await dismissThenClickRetry(
       () => dismissCeilingBannerIfPresent(page),
@@ -1067,7 +1089,7 @@ async function measureOneStep(
   }
   // Amendment 9: the step's own timeoutMs is the small-fixture value; the driver scales it for
   // the declared large fixtures (Polygons class, 5 GB). The arm watchdog (P1d B5) scales with it.
-  const effectiveTimeoutMs = settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs);
+  const effectiveTimeoutMs = effectiveSettleTimeoutMs(step.settle.timeoutMs);
   const effectiveSettle = { quietMs: step.settle.quietMs, timeoutMs: effectiveTimeoutMs };
   const armPromise = callHooks
     ? page.evaluate((watchdogMs) => window.__SPATIAL_E2E__.residencyArmFirstPixel?.(watchdogMs), effectiveTimeoutMs) // P1d B5
@@ -2057,6 +2079,10 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  // Entry-40 pass: set the module-level override BEFORE any step function
+  // (`applyStep`/`measureOneStep`, both read it via `effectiveSettleTimeoutMs`) or the outer
+  // watchdog computation below can run.
+  perStepWatchdogOverrideMs = cellArgs.perStepWatchdogMs;
   // M9: `arm` (baseline/candidate/control) -- P3r's own handoff note (P3i-b): this comment used to
   // say the harness had no `--arm=candidate` PRODUCER at all; false since P3w landed the candidate
   // arm's own end-to-end tile-keyed data path (`candidateArmSession.ts`) -- `main()`'s own arm-switch
@@ -2086,7 +2112,7 @@ async function main() {
   // `CAMERA_TRACE_STEPS.length` (the full committed trace), not `stepLimit` -- this bound is a
   // generous outer ceiling, not itself a per-step or per-trial scored quantity, so it stays
   // correct (if generous) even for a `--smoke` run's own shorter `stepLimit`.
-  const resolvedPerStepBoundMs = settleTimeoutForFixture(FIXTURE_PATH, SETTLE_PER_STEP_TIMEOUT_MS);
+  const resolvedPerStepBoundMs = effectiveSettleTimeoutMs(SETTLE_PER_STEP_TIMEOUT_MS);
   // P3i-c follow-up (live-found): the single-trial formula below is too small for
   // `--wire-identity`'s OWN structure -- an OFF-ON-ON-OFF cycle is 4 subruns of
   // (open + IDENTITY_VIEW_STATE_STEPS) each, which exceeded one trial's bound the moment the
@@ -2098,7 +2124,7 @@ async function main() {
   // bound is the honest shape for a hang-catch.
   const trialWatchdogMs = wireIdentity
     ? 600_000
-    : (CAMERA_TRACE_STEPS.length + 1) * resolvedPerStepBoundMs;
+    : trialWatchdogMsForStepBound(CAMERA_TRACE_STEPS.length, resolvedPerStepBoundMs);
   const watchdog = setTimeout(() => {
     // Live-found (2026-08-30): process.exit inside this callback was observed racing the exit
     // path to a final code of 0 -- a watchdog that fires must never read as success.
@@ -2258,6 +2284,12 @@ async function main() {
         stepCountUsed: CAMERA_TRACE_STEPS.length,
         trialWatchdogMs,
         legacyTrialWatchdogMs: TRIAL_WATCHDOG_MS,
+        // Entry-40 pass: the raw `--per-step-watchdog-ms` request, recorded the same way the other
+        // declared cell flags are (`--arm`/`--tile-size`/`--attest`, above) -- `null` unless given;
+        // `resolvedPerStepBoundMs` above already equals this value when it is not null
+        // (`effectiveSettleTimeoutMs`'s own contract), so a reader can see both the request and its
+        // effect on the SAME object.
+        perStepWatchdogOverrideMs: cellArgs.perStepWatchdogMs,
       },
     },
   };

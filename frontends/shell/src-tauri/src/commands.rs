@@ -27,6 +27,11 @@ use spatial_skp::v0::{
     ViewportQueryResponse,
 };
 use tauri::{Emitter, State};
+// Entry-40 pass: `AppHandle::try_state` (used by `open_dataset`/`close_dataset` below) is a
+// `Manager` trait method — gated with the same `pool_poll` usages so a plain release build, which
+// never calls it, does not warn on an unused import.
+#[cfg(any(debug_assertions, feature = "measure-build"))]
+use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 
 use crate::publish::{
@@ -38,15 +43,28 @@ use crate::state::{DataPlaneHandle, SessionLog};
 /// **Runs on `spawn_blocking`.** Opens a DuckDB connection and runs ADR-016's whole-column
 /// uniqueness scan — real IO, and exactly the work `docs/01` principle 7 requires stay
 /// interruptible without stalling every other command on the same async runtime.
+///
+/// **Entry-40 pass:** on success, starts the dev/measure-build-gated pool-lease poll
+/// (`pool_poll.rs`) for the newly-opened dataset. `app` is unused (and would warn as such) in a
+/// plain release build, where `pool_poll` is not compiled in at all — see the `cfg_attr` below.
+#[cfg_attr(not(any(debug_assertions, feature = "measure-build")), allow(unused_variables))]
 #[tauri::command]
 pub async fn open_dataset(
+    app: tauri::AppHandle,
     state: State<'_, Arc<SkpHost>>,
     request: OpenDatasetRequest,
 ) -> Result<OpenDatasetResponse, SkpError> {
     let host = state.inner().clone();
-    tokio::task::spawn_blocking(move || host.open_dataset(request))
+    let result = tokio::task::spawn_blocking(move || host.open_dataset(request))
         .await
-        .unwrap_or_else(|e| Err(SkpError::protocol("open_dataset_panicked", e.to_string())))
+        .unwrap_or_else(|e| Err(SkpError::protocol("open_dataset_panicked", e.to_string())));
+    #[cfg(any(debug_assertions, feature = "measure-build"))]
+    if let Ok(response) = &result {
+        if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
+            tasks.start(app.clone(), response.dataset.as_str().to_string());
+        }
+    }
+    result
 }
 
 /// Pure, in-memory, no IO (SKP-V0.md §1) — runs directly on the calling task.
@@ -79,11 +97,20 @@ pub fn cancel(
     state.cancel(request)
 }
 
+/// **Entry-40 pass:** stops the dataset's pool-lease poll (if one is running) before closing —
+/// `app` is unused (and would warn as such) in a plain release build; see `open_dataset`'s own
+/// `cfg_attr`.
+#[cfg_attr(not(any(debug_assertions, feature = "measure-build")), allow(unused_variables))]
 #[tauri::command]
 pub fn close_dataset(
+    app: tauri::AppHandle,
     state: State<'_, Arc<SkpHost>>,
     request: CloseDatasetRequest,
 ) -> Result<CloseDatasetResponse, SkpError> {
+    #[cfg(any(debug_assertions, feature = "measure-build"))]
+    if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
+        tasks.stop(request.dataset.as_str());
+    }
     state.close_dataset(request)
 }
 

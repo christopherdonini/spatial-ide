@@ -79,6 +79,31 @@ export function parseTileSizeArg(argv) {
 }
 
 /**
+ * Entry-40 empirical producer pass (spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md
+ * section 2 asks for a harness flag to let a stalled step run far past the watchdog -- paraphrased
+ * here, not quoted, since that document is outside this file's own citation-integrity scan, which
+ * only knows RESIDENCY-PREREGISTRATION.md/CLAUDE.md/AI_DEVELOPMENT.md/SKP-V0.md/docs/ADR targets):
+ * parses `--per-step-watchdog-ms <n>` from a raw `argv`-shaped array -- pure, following the exact
+ * same parse/validate shape as `parseTileSizeArg` above. Returns `null` when the flag was not given
+ * at all (the default: no override, every existing fixture-scaled behavior is unchanged). Never
+ * silently accepts a malformed value: a missing following argument, or one that is not a positive
+ * finite number, throws a descriptive `Error` -- the same discipline `parseTileSizeArg` already
+ * follows (docs/01 principle 8: absence/refusal is honest, a wrong silent guess is not).
+ */
+export function parsePerStepWatchdogMsArg(argv) {
+  const idx = argv.indexOf("--per-step-watchdog-ms");
+  if (idx === -1) return null;
+  const value = argv[idx + 1];
+  const n = Number(value);
+  if (!value || !Number.isFinite(n) || n <= 0) {
+    throw new Error(
+      `--per-step-watchdog-ms requires a positive number of milliseconds, got ${JSON.stringify(value ?? null)}`
+    );
+  }
+  return n;
+}
+
+/**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4e) -- the shell's own declared fan-out ceiling for
  * concurrent `viewport_query` streams a single pan/zoom step may issue, once tiling exists (P3).
  * Named here for the same reason as the two constants above; unused by this piece's own driver,
@@ -137,6 +162,19 @@ export function settleTimeoutForFixture(fixturePath, stepTimeoutMs) {
   return SETTLE_TIMEOUT_BY_BASENAME_MS[base] ?? stepTimeoutMs;
 }
 
+/**
+ * Entry-40 pass: the per-step settle bound a run actually uses -- `overrideMs` (from
+ * `--per-step-watchdog-ms`, `parsePerStepWatchdogMsArg` above) if given (truthy, i.e. a positive
+ * number -- `parsePerStepWatchdogMsArg` never returns `0` or a negative value), else
+ * `settleTimeoutForFixture`'s existing fixture-scaled default, unchanged. Pure, so both branches
+ * are directly unit-testable without a harness, a page, or a fixture on disk. `residency-harness.mjs`
+ * routes every one of its per-step settle-watchdog call sites through this one function, so a given
+ * override can never be silently outrun by a bound computed some other way.
+ */
+export function resolvedPerStepSettleTimeoutMs(fixturePath, stepTimeoutMs, overrideMs) {
+  return overrideMs ?? settleTimeoutForFixture(fixturePath, stepTimeoutMs);
+}
+
 /** §7's own declared ceiling of 180 s for "one full camera-trace trial (all 11 steps, one
  * arm/fixture/tile-size cell)" -- that quoted fragment is verbatim (§7's own table cell); "180 s" is
  * carried as this constant's own value, not re-quoted, since joining table cells with a colon (as an
@@ -153,6 +191,22 @@ export function settleTimeoutForFixture(fixturePath, stepTimeoutMs) {
  * bound is `SETTLE_PER_STEP_TIMEOUT_MS` (5 s) and `(11 + 1) * 5_000 = 60_000`, comfortably under
  * this constant's own 180 s -- but it is no longer read by the live watchdog computation itself. */
 export const TRIAL_WATCHDOG_MS = 180_000;
+
+/**
+ * Amendment 12's own `(step count + 1) * per-step bound` outer-watchdog formula, extracted as a
+ * pure function so it is directly testable (previously inline in `residency-harness.mjs`'s `main()`
+ * only). Entry-40 pass: when `perStepBoundMs` is a `--per-step-watchdog-ms` override, this is the
+ * arithmetic spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md section 2 needs -- its
+ * own run preconditions say the overall watchdog and the rustdesk-guard backstop windows are set at
+ * least as long as the per-step override, paraphrased here rather than quoted (see
+ * `parsePerStepWatchdogMsArg`'s own doc comment above for why that document is out of this file's
+ * citation-integrity scan) -- `(stepCount + 1) * perStepBoundMs` is always `>= stepCount *
+ * perStepBoundMs` for any non-negative `stepCount`, so the outer bound can never be smaller than
+ * every step running the full override duration back to back.
+ */
+export function trialWatchdogMsForStepBound(stepCount, perStepBoundMs) {
+  return (stepCount + 1) * perStepBoundMs;
+}
 
 // ---------------------------------------------------------------------------------------
 // §12 Amendment 13: the pre-click banner dismissal, as a bounded dismiss-then-click retry.
