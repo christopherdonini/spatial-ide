@@ -112,3 +112,17 @@ Binding for the run; §4's readings are unchanged except where stated.
    acquisitions per tick on the pool's mutex (the same one the lease path takes), one formatted line,
    one blocking append+flush per tick moved off the async worker — and makes no claim (docs/08).
    The three reads are not an atomic snapshot; §4 reads per field, so this is harmless and noted.
+
+## Amendment 2 — an empty citation in §2 corrected (2026-09-07, appended; a citation correction, no change to the instrument or the run)
+
+§2's parenthetical *"docs/09's dev/debug-gate discipline"* cites nothing: `docs/09_Security_and_
+Privacy.md` (59 lines) contains no debug-, dev-, gate- or instrument-related material — verified by
+reading it on 2026-09-07 after the instrument's reviewer flagged the same phrase in the code. The
+phrase was inherited from `frontends/shell/RESIDENCY-PREREGISTRATION.md` Amendment 16 and copied here
+without opening docs/09 — the custodian's own slip, of exactly the class this project scans for. The
+real home of the gate discipline is **ADR-020** (Accepted 2026-08-13), whose text reads, verbatim:
+*"the E2E harness's dev gate (`import.meta.env.DEV`, Vite) and this one (`cfg!(debug_assertions)`,
+Rust) are independent mechanisms, and `tauri build --debug` is precisely where they disagree."*
+§2's sentence should be read as: dev/measure-build-gated by those two mechanisms plus the
+`measure-build` cargo feature (RESIDENCY-PREREGISTRATION Amendment 16), never in a plain production
+build. §2's text is retained unedited above.

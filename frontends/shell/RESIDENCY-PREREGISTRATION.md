@@ -725,3 +725,17 @@ kill-and-restore dry-run). **Every measured cell in THIS (viewport-residency) cu
 present regardless, so nothing here changes**; the pointer exists only so a reader does not carry
 :368's rule forward as still-absolute. Scored cells and felt verdicts remain human-present
 everywhere — the amendment touches only reported-only measured cells.
+
+**Amendment 27 (2026-09-07 — a citation correction to Amendment 16's text; not a change to any
+cell in this closed cut).** Amendment 16 says the measure build's compiled-in port *"stays inside
+docs/09's dev/debug-gate discipline"*. That cites nothing: `docs/09_Security_and_Privacy.md` contains
+no debug-, dev-, gate- or instrument-related material (verified by reading, 2026-09-07). The gate
+discipline's real home is ADR-020 (Accepted 2026-08-13), verbatim: *"the E2E harness's dev gate
+(`import.meta.env.DEV`, Vite) and this one (`cfg!(debug_assertions)`, Rust) are independent
+mechanisms, and `tauri build --debug` is precisely where they disagree."* Amendment 16's sentence
+stands with that citation substituted; the same phrase was propagated into
+`frontends/shell/src/isInstrumentedBuild.ts` and `frontends/shell/src-tauri/Cargo.toml` (corrected in
+place — code comments are not append-only) and into the entry-40 pass preregistration (its own
+Amendment 2). The instrument-surface half of the discipline — that an instrument never becomes SKP —
+is the proposed ADR-004 amendment (`docs/adr/PROPOSED-amendment-to-ADR-004-instrument-surface-never-
+skp.md`), still Proposed.

@@ -15,7 +15,10 @@
  * `true` for a plain dev build (`import.meta.env.DEV`, unchanged) OR a **measure build**
  * (`import.meta.env.VITE_MEASURE_BUILD === "1"`, set only by `.env.measure` /
  * `vite build --mode measure`, this cut's third, release-optimized-but-instrumented build class --
- * never a shipped default, docs/09's dev/debug-gate discipline). `false` for a plain production
+ * never a shipped default — the gate discipline is ADR-020's paired dev gates, its own words:
+ * "the E2E harness's dev gate (`import.meta.env.DEV`, Vite) and this one (`cfg!(debug_assertions)`,
+ * Rust) are independent mechanisms"; an earlier "docs/09" citation here cited nothing and was
+ * corrected 2026-09-07, RESIDENCY-PREREGISTRATION Amendment 27). `false` for a plain production
  * build (`npm run build` / `vite build`), exactly as `import.meta.env.DEV` alone already was --
  * this predicate only WIDENS which builds keep the gated code, never narrows it.
  *
