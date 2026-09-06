@@ -384,25 +384,26 @@ const STALLED_SUFFIX = " Filling is paused until the next pan or zoom.";
  * `trackedTileCount > 0`), so the two never compete for the same sentence. States the fill's own
  * quiescence AND that the reason is the render budget, never a total or a completeness claim (BS6). */
 const SETTLED_PARTIAL_SUFFIX = " Filling has finished for this view — the render budget is full; pan or zoom to see other areas.";
-/** Piece 2(ii) draft (24(b) sight, entry 36): the failure-partial state's OWN distinct wording -- never
+/** Piece 2(ii), RULED 2026-09-06 (24(b) string sight complete -- approved with the human's own
+ * phrase "part of this view failed to load"): the failure-partial state's OWN distinct wording -- never
  * `SETTLED_PARTIAL_SUFFIX` above, whose "the render budget is full" claim is budget-only and would be
  * false here (`settledState`'s own doc comment: `hasCoveringFailure` is only ever consulted when
  * `fillComplete` is otherwise false for a NON-budget reason). Rendered as a complete sentence on the
  * WITHIN-budget event (never appended as a suffix -- nothing here is "the ordinary over-budget
  * sentence" to append to), since the render budget was never the issue. */
-const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but part of it failed to load; pan or zoom to retry.";
+const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but part of this view failed to load; pan or zoom to retry.";
 /** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
  * rest verbatim): 32a's own rider -- never "complete", never silent. */
 function relinquishedText(residentFeatureCount: number): string {
   return `Filling stopped — showing ${residentFeatureCount} features already loaded; the rest of this view was not loaded.`;
 }
-/** M1 draft (24(b) sight), REWORDED 2026-09-05 per entry 35's own string-3 reachability re-check (see
- * this file's own doc comment on `residencyStatusText`, above, for the full account): the honest
- * alternative when the untiled first-look/reissue stream is still running at relinquish time -- now
- * reachable ONLY in the frameless window, so this names the frame's own absence, never "the initial
- * data load" (a frameless Apply/Clear reissue racing the first look's own terminal is not "initial"). */
+/** M1 string, RULED 2026-09-06 (24(b) string sight complete -- the human's own trim, applied
+ * verbatim: the frame clause dropped, "first data load" naming the stream): the honest alternative
+ * when the untiled first-look/reissue stream is still running at relinquish time -- reachable ONLY
+ * in the frameless window (entry 35's reachability re-check, which the sight had before it; see
+ * this file's own doc comment on `residencyStatusText`, above, for the full account). */
 function relinquishedUntiledStillRunningText(residentFeatureCount: number): string {
-  return `Tile filling stopped — showing ${residentFeatureCount} features already loaded; the data load for this view is still running and Cancel does not stop it while the view's frame is not yet established.`;
+  return `Tile filling stopped — showing ${residentFeatureCount} features already loaded; this view's first data load is still running and Cancel does not stop it.`;
 }
 
 export function residencyStatusText(status: ResidencyStatus): string {

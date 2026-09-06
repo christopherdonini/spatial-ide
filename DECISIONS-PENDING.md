@@ -49,6 +49,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     no history rewrite, no force-push. The unsigned revert 3e653f0 stands documented (this entry
     is the record), entry-26-style: the gap is known, fenced going forward (hooksPath armed), and
     the merge disposition of PR #22 under DCO is the human's own click.
+    **Remedy EXECUTED 2026-09-06:** the retroactive DCO 1.1 certification posted as a PR #22
+    comment under the human's own identity (issuecomment-5558365949, entry-26 wording, on the
+    human's explicit direction), and the checklist note added beside the entry-26 one
+    (`PRE-PUBLIC-CHECKLIST.md` §6, item 5). DCO is the only red check; build/typecheck/tests green.
 
 38. **[Fixture relocation scope, surfaced 2026-09-06 executing the disk directive — the mechanical
     move the instruction implied is a 40+-file refactor; the goal is already met more cheaply, so
@@ -551,6 +555,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-06 — the 24(b) string sight COMPLETE (the held string 3 + the entry-36 string 5).**
+  The human's ruling, verbatim: *"String sight complete: 1/2/4 confirmed as shipped; string 3
+  trimmed — drop the frame clause, final: 'Tile filling stopped — showing {N} features already
+  loaded; this view's first data load is still running and Cancel does not stop it.'; string 5
+  approved with 'part of this view failed to load'."* Applied same day in `residencyStatus.ts` +
+  its unit tests, verbatim (string 3 `relinquishedUntiledStillRunningText`, string 5
+  `SETTLED_PARTIAL_FAILURE_TEXT`); strings 1/2/4 untouched (confirmed as shipped). Nothing of the
+  sight remains open.
 
 - **2026-09-05 — the 24(b) string sight, ruled.** The human's rulings on the four 1b draft
   strings, verbatim: *"Strings: 1 approved; 2 with 'not fetched'→'not loaded'; 3 held pending

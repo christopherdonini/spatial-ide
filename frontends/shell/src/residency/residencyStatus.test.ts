@@ -102,7 +102,7 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
     // frameless window (`candidateArmSession.ts`'s own `relinquishFill` doc comment has the trace), so
     // it names the frame's own absence rather than "the initial data load" (a frameless Apply/Clear
     // reissue racing the first look's own terminal is not "initial").
-    it("candidate-relinquished, untiledStreamStillRunning: true: never claims 'Filling stopped' -- states the truth that Cancel does not reach that stream while the frame is not yet established", () => {
+    it("candidate-relinquished, untiledStreamStillRunning: true: never claims 'Filling stopped' -- states the truth that Cancel does not stop the first data load (2026-09-06 ruled wording)", () => {
       const status: ResidencyStatus = {
         kind: "candidate-relinquished",
         residentFeatureCount: 500,
@@ -110,7 +110,7 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
       };
       const text = residencyStatusText(status);
       expect(text).toBe(
-        "Tile filling stopped — showing 500 features already loaded; the data load for this view is still running and Cancel does not stop it while the view's frame is not yet established."
+        "Tile filling stopped — showing 500 features already loaded; this view's first data load is still running and Cancel does not stop it."
       );
       expect(text.toLowerCase()).not.toContain("complete");
       expect(text.toLowerCase()).not.toContain("initial data load");
@@ -179,7 +179,7 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
     it("candidate-within-budget, settled: 'partial-failure': its own complete sentence, never 'Showing all N', never string 4's budget-only claim", () => {
       const status: ResidencyStatus = { kind: "candidate-within-budget", residentFeatureCount: 3, settled: "partial-failure" };
       const text = residencyStatusText(status);
-      expect(text).toBe("Filling has finished for this view, but part of it failed to load; pan or zoom to retry.");
+      expect(text).toBe("Filling has finished for this view, but part of this view failed to load; pan or zoom to retry.");
       expect(text.toLowerCase()).not.toContain("complete");
       expect(text.toLowerCase()).not.toContain("showing all");
       expect(text.toLowerCase()).not.toContain("render budget");
