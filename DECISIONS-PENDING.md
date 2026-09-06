@@ -5,6 +5,35 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+49. **[Public-audience audit of the 2026-08-03→2026-09-07 window (`PUBLIC-AUDIENCE-AUDIT.md`,
+    405 commits, HEAD 914ef9f): 0 leaks, 8 sensitivity-class matches, 7 hygiene — three need your
+    ruling; one fix-forward set waits on your word; nothing remediated unqueued.]** No credential,
+    no third-party personal data, no RustDesk ID/password/relay anywhere in tree or history
+    (confirmed independently). **Rulings needed:** **(1) F-3** —
+    `frontends/shell/src-tauri/src/publish.rs:810-817` writes *"…this repository is not yet
+    public."* and a written-offer corresponding-source route into EVERY shell-published bundle's
+    license notice (introduced `3bd479b`, 2026-08-16, thirteen days after the flip): switch to the
+    `Url` kind naming the public repository, or keep `WrittenOffer` and drop the clause?
+    (ADR-009-adjacent; writer + tests change together; ADR-017 now carries a dated corrigendum
+    pointing here.) **(2) F-11** — the `rustdesk-guard` scripts and twelve notes files name the
+    remote-access product, its service, the SYSTEM task `RustDeskRestoreBackstop`, and the
+    unattended-operation pattern: accept as public-by-design process, or parameterise the names?
+    **(3) F-12(d)** — keep or generalise the single-disk/no-backup sentence (`kernel/FIXTURES.md:74`,
+    `DECISIONS-PENDING.md` entry-24(g)/-38 region) and the "metered connection"/"from a phone"
+    operator notes? **Fix-forward on your word, no rewrite (red line):** **F-1/F-2** — the
+    custodian's own `spikes/residency-debt-fix-live-probe/probe-thrash.mjs:5,9` carries
+    `C:\Users\Christopher\.claude\jobs\…` and a `.claude/worktrees` import path — the first-ever hit
+    in the username-path class both prior sweeps defined, committed 2026-09-06 by the custodian (a
+    slip, named); relative paths + a PRE-PUBLIC-CHECKLIST §6 note for the history copy. **F-7/F-8** —
+    neutral fixture/comment names in `kernel/src/permission/audit/reader.rs:331,334` and
+    `frontends/shell/e2e/admission-remediation.mjs:245`. **F-16** — the EPSG/IOGP "one look" item
+    now covers a shipped artifact (`engine/src/crs-catalog.json`). **Already done under the
+    2026-09-07 sweep directive:** F-4/F-5/F-6 (ADR-017 corrigendum; `MACOS-BRINGUP.md:53`;
+    `docs/README.md:27`'s tail) — `9527e42`. Recommendation: (1) the `Url` route to the public
+    repository — the durable location ADR-017 C3 wanted now exists; (2) accept, optionally
+    parameterise; (3) generalise the three sentences; fix-forward set: yes, one commit. Touches, once
+    ruled: the files named; no ADR text edited; no history rewrite.
+
 48. **[The untiled first look is evicted wholesale on the first admission that needs room — the
     "already rendered content disappears ~10 s after zooming out" the human named in the post-fix
     L9; surfaced 2026-09-06; a design question, so recorded with options, not fixed.]** The
