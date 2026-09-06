@@ -1127,3 +1127,31 @@ the pre-fix record — the post-fix re-run per entry 44 is what stands:
   `candidate-grid-frame-established` at 15:23:42, no `canvas-refusal` — this run WAS the candidate
   arm. Its L6 zoom-out truncated the covering set by 924 and 2,406 tiles (15:26:15) — the same
   thrash window shape as the first instance's.
+
+### Part L — the POST-FIX re-run, 2026-09-06 (PR #24 merged; the human's words verbatim)
+
+- **L2:** *"l2 is fine"* — pass. **L3:** *"l3 is fine"* — pass. **L4:** *"l4 is fine"* — pass.
+- **L5:** *"l5 stops rendering and doesn't say any status text."* Open: the fixed build's own live
+  probe showed string 6 arriving ~25 s after the fit's visible fill stops (the remaining queued
+  tiles are empty cells that terminate fast); whether the human waited past that point, or a
+  covering tile never completed (no settle → no text by design), is not determinable from this
+  report — re-check queued (below).
+- **L6:** *"l6 zoom in is fine, zoom out what was already rendered after 10 s disappear and some
+  more tiles gets rendered and the text says exactly what you said."* The over-budget sentence
+  with its paused/finished suffix now appears at zoom-out (string 1's first operator sighting),
+  and the constant appear/disappear cycling of entry 44 is not reported — but a one-time
+  disappearance of already-rendered content ~10 s after the zoom-out IS: recorded as a new
+  finding (DECISIONS-PENDING entry 48), diagnosed separately from the withdrawn exception.
+- **L7:** *"l7 I cannot get to the point where it says that status text. Though l7 feels
+  clucnky, if i'm super zoomed in on a feature, i hover and i see the id, i scroll back to zoom
+  out just once, then i don't see the id anymore, and the mouse is still completely inside the
+  feature. So the id shouldn't be there if you cannot tell which feature you're hovering, is not
+  just that you zoom out once and you don't show the id anymore. You gotta try and see the size of
+  the feature vs the size of the pointer i guess."* Then: *"Actually i managed to get to l7, it's
+  fine, l8 is fine. Just the zoom out once and not taking into account the size between pointer
+  and feature, that we definitely need to take care of."* — L7/L8 pass as shipped; the human's
+  design position on the clear-on-camera-change is entry 47 (ruled (b), re-pick on camera settle,
+  a named next-cut piece), now with a stated design criterion: whether the pointer can still be
+  told to be inside the feature at the new scale.
+- **L9, verbatim:** *"L9 it's definitely better, though we need to fix the id thing and the
+  rendering when zooming out completely with tiles rendered that disappear etc"*
