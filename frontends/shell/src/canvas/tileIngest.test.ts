@@ -138,6 +138,32 @@ describe("ingestTileBatch: item D eviction at the budget boundary", () => {
     expect(tileSet.isTileResident("0:0")).toBe(true);
   });
 
+  // Close-out fix piece F1, pre-committed unit test 3 (entry 44): mirrors the test above (`:131`'s
+  // own `viewportTileKeys: new Set(["0:0"])`), but the protected tile is durably PARTIAL, not
+  // merely resident -- protection here is geometric only (never conditioned on completeness), so a
+  // partial-but-in-viewport tile is exactly as unevictable as a complete one.
+  it("F1/entry-44 pin: an over-budget admission whose only distance-ordered candidate is an in-viewport PARTIAL tile evicts nothing and stays over budget", () => {
+    const tileSet = new TileResidentSet();
+    // "0:0" is durably partial (a prior trimmed delivery) AND is the current viewport -- the only
+    // resident tile.
+    tileSet.addBatch("0:0", batch("sh_partial", 0, [1, 2, 3, 4, 5], 100), true); // 500 vertices, partial
+
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "5:5",
+        batch: batch("sh_new", 0, [6, 7, 8, 9, 10], 100), // another 500 vertices -- 500+500=1000 > 900
+        maxResidentVertices: 900,
+        viewportTileKeys: new Set(["0:0"]), // the ONLY resident tile is protected, despite being partial
+      })
+    );
+
+    expect(result.evictedTileKeys).toEqual([]);
+    expect(result.overBudget).toBe(true);
+    expect(tileSet.isTileResident("0:0")).toBe(true);
+    expect(tileSet.isTilePartial("0:0")).toBe(true); // still partial -- protection never depends on completeness
+  });
+
   it("when full eviction of everything evictable still cannot make room, truncates the incoming batch at the boundary", () => {
     const tileSet = new TileResidentSet();
     // "0:0" (the viewport, never evicted, 500 vertices) + "1:1" (evictable, 200 vertices) = 700 resident.

@@ -185,6 +185,23 @@ describe("residencyStatusText (decisions 24(a)/(b): the declared partial-view st
       expect(text.toLowerCase()).not.toContain("render budget");
     });
   });
+
+  // Close-out fix piece F2, pre-committed unit test 4 (entry 43): the SIXTH new draft string --
+  // settled, within budget, incomplete, no failure (a truncated covering set, or a covering tile
+  // that never completed). Asserted verbatim, same discipline as every other string in this describe
+  // block; the `/\ball\b/i` guard is this test's own pre-committed regression pin -- entry 43's own
+  // recommended wording is deliberately NOT "Showing all N" (BS6: no completeness/finality claim
+  // over a partial/truncated/mid-fill set).
+  describe("F2's settled-partial-within-budget string (entry 43, DRAFT -- not yet ruled at the human's 24(b) sight)", () => {
+    it("candidate-within-budget, settled: 'partial': its own complete sentence, never 'Showing all N', never the word 'all'", () => {
+      const status: ResidencyStatus = { kind: "candidate-within-budget", residentFeatureCount: 5, settled: "partial" };
+      const text = residencyStatusText(status);
+      expect(text).toBe("Filling has finished for this view — some areas were not loaded; pan or zoom to load them.");
+      expect(text.toLowerCase()).not.toContain("complete");
+      expect(text.toLowerCase()).not.toContain("showing all");
+      expect(text).not.toMatch(/\ball\b/i);
+    });
+  });
 });
 
 // Item A (residency-debt cut 1b), BS3: the pure stall/filling predicate, unit-tested directly against

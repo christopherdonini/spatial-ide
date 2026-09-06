@@ -80,6 +80,7 @@ import {
   TRIAL_WATCHDOG_MS,
   settleTimeoutForFixture,
 } from "./residencyTrace.mjs";
+import { loadShellModule } from "./tsModuleLoader.mjs";
 
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR = join(SHELL_DIR, "e2e", "out");
@@ -628,6 +629,85 @@ async function captureResidencyStatusText(page) {
   } catch (e) {
     return { present: null, text: null, captureError: String(e && e.message ? e.message : e) };
   }
+}
+
+/**
+ * Close-out fix piece, E2E pre-committed test 7 (RESIDENCY-DEBT-1B.md's own "Pre-committed tests"
+ * list, item 7): at an over-budget zoom-out step, read `residencyGridFrame()`, recompute
+ * `tilesCoveringBbox(frame, level, bbox)` with the shell's own export (`tsModuleLoader.mjs`, real
+ * source, never a hand-copied reimplementation), collect `evictedTileKeys` from `[render-trace]
+ * tile-ingest` lines, and assert the intersection with the covering set is EMPTY -- ADR-028 item 3's
+ * own rule ("never evict a tile intersecting the current viewport") made real by F1, pinned
+ * end-to-end. `residencyQueuedTileCount()` corroborates the step was genuinely over budget.
+ *
+ * **Two disclosures this assertion carries (paraphrased from the piece's own preregistration, not
+ * quoted):**
+ *  1. **Instrument-gated.** `[render-trace] tile-ingest` lines are emitted only when
+ *     `isInstrumentedBuild()` is true (`WorkingCanvas.tsx:1027`'s own `if (isInstrumentedBuild())`
+ *     guard around `traceTileIngest`) -- a `--control` (non-instrumented) run returns `{corroborated:
+ *     false}` rather than asserting a vacuous pass over evidence that was never collected.
+ *  2. **Post-settle, after the step's LAST plan (the debounce window).** Between a gesture and its
+ *     own debounced plan, the protected set (`candidateArmSession.ts`'s own `lastCoveringTileKeys`)
+ *     still describes the PREVIOUS bbox -- `candidateArmSession.ts:1285` (the `applyTileViewportContext`
+ *     call site) is the only refresh. This function never waits or re-settles itself; it is the
+ *     CALLER's job to invoke it only after `measureOneStep`'s own settle wait has already returned
+ *     for this step, and to supply `sinceSeq` from a point no later than this step's own gesture, so
+ *     every eviction this function can see was evaluated against the covering set the step's own last
+ *     real plan (not an earlier, superseded one) established.
+ *
+ * Returns `{corroborated: false, reason}` when the step cannot be evaluated at all (not instrumented,
+ * not genuinely over budget, no grid frame yet, no post-step view state) -- never a fabricated pass.
+ * When corroborated, returns `{corroborated: true, passed, violatingTileKeys, ...}`.
+ */
+async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrumentEnabled, sinceSeq, postViewState, box }) {
+  if (!instrumentEnabled) {
+    return { corroborated: false, reason: "not instrumented -- [render-trace] tile-ingest is instrument-gated (WorkingCanvas.tsx:1027)" };
+  }
+  const queuedTileCount = await page.evaluate(() => window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? 0);
+  if (queuedTileCount === 0) {
+    return { corroborated: false, reason: "not over budget (residencyQueuedTileCount() === 0)" };
+  }
+  if (!postViewState) {
+    return { corroborated: false, reason: "no post-step view-state observed (no view-state render-trace line yet)" };
+  }
+
+  const gridFrame = await page.evaluate(() => window.__SPATIAL_E2E__.residencyGridFrame?.() ?? null);
+  if (!gridFrame) {
+    return { corroborated: false, reason: "no grid frame established yet (residencyGridFrame() === null)" };
+  }
+
+  const { tilesCoveringBbox, tileKeyToString } = await loadShellModule("src/canvas/tileGrid.ts");
+  const { computeAuthoritativeViewportBbox } = await loadShellModule("src/canvas/viewportBbox.ts");
+
+  // The SAME shape `WorkingCanvas.tsx`'s own `onViewStateChange` handler feeds
+  // `computeAuthoritativeViewportBbox` with -- `postViewState` is a `traceViewState` render-trace
+  // line's own payload (S1's `lastViewState`), `box` is `.working-canvas`'s own bounding box.
+  const bbox = computeAuthoritativeViewportBbox({
+    targetX: postViewState.targetX,
+    targetY: postViewState.targetY,
+    zoom: postViewState.zoom,
+    widthPx: box.width,
+    heightPx: box.height,
+    originX: postViewState.originX,
+    originY: postViewState.originY,
+  });
+  const coveringKeys = new Set(tilesCoveringBbox(gridFrame, gridFrame.level, bbox).map(tileKeyToString));
+
+  const evictedTileKeys = new Set();
+  for (const entry of tileIngestListener.sorted()) {
+    if (entry.seq < sinceSeq) continue;
+    for (const key of entry.data?.evictedTileKeys ?? []) evictedTileKeys.add(key);
+  }
+
+  const violatingTileKeys = [...evictedTileKeys].filter((k) => coveringKeys.has(k));
+  return {
+    corroborated: true,
+    queuedTileCount,
+    coveringKeyCount: coveringKeys.size,
+    evictedTileKeyCount: evictedTileKeys.size,
+    violatingTileKeys,
+    passed: violatingTileKeys.length === 0,
+  };
 }
 
 async function applyStep(page, step) {
@@ -1249,7 +1329,7 @@ async function candidateHoverEvidenceCheck(page) {
  * a `wholeTrialInvalidatedReason` note) as a final pass after the loop, never during it (so the loop
  * itself still records each row's own honest per-step outcome first).
  */
-async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, instrumentEnabled, smoke, arm }) {
+async function runTrace(page, consoleHandle, viewStateListener, tileIngestListener, { stepLimit, instrumentEnabled, smoke, arm }) {
   const steps = stepLimit ? CAMERA_TRACE_STEPS.slice(0, stepLimit) : CAMERA_TRACE_STEPS;
   const rows = [];
   let invalidatedAtStep = null;
@@ -1290,6 +1370,11 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
     // produces (never a fabricated success) -- `row.settled` reads `false` below either way, so S8's
     // own whole-trial-invalidation rule still fires unchanged; only the EVIDENCE this trial keeps
     // changes; the trial's own honest failure verdict does not.
+    // Close-out fix piece, E2E pre-committed test 7: a marker taken BEFORE this step's own gesture,
+    // so `assertNoInViewportTileEvicted` below (called only for the qualifying step, well after this
+    // point) never attributes an EARLIER step's own eviction (a genuinely different, superseded bbox)
+    // to this one -- see that function's own doc comment, disclosure 2.
+    const tileIngestSeqBeforeStep = tileIngestListener.sorted().length;
     let row;
     try {
       row = await measureOneStep(page, consoleHandle, viewStateListener, step, {
@@ -1307,6 +1392,32 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
       };
     }
     rows.push(row);
+
+    // Close-out fix piece, E2E pre-committed test 7 (entry 44, ADR-028 item 3): candidate arm only
+    // (this pin -- paraphrasing DECISIONS-PENDING.md entry 44's own applied scope, not a verbatim
+    // quote -- is a candidate-arm-only claim; baseline has no tile grid at all), at the trace's own
+    // dedicated over-budget zoom-out step
+    // (`residencyTrace.mjs`'s `CAMERA_TRACE_STEPS`, id `"zoom-out-1"`). Never runs unless the step
+    // itself already settled (`row.settled`) -- an unsettled step's own view-state/eviction evidence
+    // is not trustworthy evidence of anything. `assertNoInViewportTileEvicted` itself corroborates
+    // whether this run was genuinely over budget and is instrumented; when it is not, this records
+    // `corroborated: false` on the row (never a fabricated pass) and leaves `row.status` untouched.
+    if (step.id === "zoom-out-1" && arm === "candidate" && row.settled) {
+      const check = await assertNoInViewportTileEvicted(page, tileIngestListener, {
+        instrumentEnabled,
+        sinceSeq: tileIngestSeqBeforeStep,
+        postViewState: row.viewState?.post ?? null,
+        box: await page.locator(".working-canvas").boundingBox(),
+      });
+      row.entry44InViewportEvictionCheck = check;
+      // Mirrors S1's own realized-displacement discipline (P1d suggestion 12, above): a genuine,
+      // corroborated violation demotes `row.status` -- never a silent pass, never a thrown exception
+      // that would lose every earlier row's own evidence (P5g's own fix, this loop's top comment).
+      if (check.corroborated && !check.passed) {
+        row.status = "unmeasured";
+        row.reason = `entry 44 / ADR-028 item 3 VIOLATED: in-viewport tile(s) evicted -- ${JSON.stringify(check.violatingTileKeys)}`;
+      }
+    }
 
     // Viewport-residency cut P6c (Amendment 20, trace v3): step 6 ("pan-northeast") only -- realized
     // covering-tile delta (see `coveringTileDeltaFromCounters`'s own doc comment) and the no-batch
@@ -2181,6 +2292,12 @@ async function main() {
 
     const instrumentEnabled = !control;
     const viewStateListener = attachRenderTraceValueListener(page, ["view-state"]);
+    // Close-out fix piece, E2E pre-committed test 7: `tile-ingest` lines carry `evictedTileKeys`
+    // (`renderTrace.ts`'s own `traceTileIngest`) -- attached once, for the whole trial, the same
+    // lifecycle `viewStateListener` above already has; `assertNoInViewportTileEvicted`'s own
+    // `sinceSeq` scoping (per-step) is what keeps an EARLIER step's own eviction from being
+    // attributed to a LATER one, not a per-step re-attach.
+    const tileIngestListener = attachRenderTraceValueListener(page, ["tile-ingest"]);
 
     // M7: the drain gate + the `open-drain` pre-step -- measures the dataset OPEN's own natural
     // query + first-batch paint (G7's real "cold first view" subject), strictly BEFORE step 1
@@ -2272,12 +2389,18 @@ async function main() {
 
     evidence.openDrain = openDrainRow;
 
-    const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(page, consoleHandle, viewStateListener, {
-      stepLimit,
-      instrumentEnabled,
-      smoke,
-      arm: cellArgs.arm,
-    });
+    const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(
+      page,
+      consoleHandle,
+      viewStateListener,
+      tileIngestListener,
+      {
+        stepLimit,
+        instrumentEnabled,
+        smoke,
+        arm: cellArgs.arm,
+      }
+    );
     evidence.rows = rows;
     evidence.invalidated = invalidated;
     evidence.invalidatedAtStep = invalidatedAtStep;

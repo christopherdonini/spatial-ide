@@ -88,6 +88,22 @@ export type TilePlanOutcome =
       issued: string[];
       queued: string[];
       alreadyResident: string[];
+      /** Close-out fix piece F1 (entry 44's second finding, ADR-028 item 3): EVERY key
+       * `tilesCoveringBbox` produced this round for `bbox` at `this.level` -- the raw geometric
+       * covering set, before this round's own tracked/resident/headroom bookkeeping decides what to
+       * do with each one. Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
+       * tile already tracked from a PRIOR round, dropped silently by the `this.tileState.has(tileKey)
+       * continue` branch above, and (ii) a genuinely new candidate dropped this round for lack of
+       * headroom while over budget, `:353` below) this field never omits either -- it is exactly
+       * `covering.map(tileKeyToString)`, deduplicated by construction (`tilesCoveringBbox` never
+       * repeats a cell) and in the SAME deterministic row-major order. The caller
+       * (`candidateArmSession.ts`'s `handleViewportChange`) uses this, not the union of the other
+       * three arrays, for BOTH its own `lastCoveringTileKeys` (the `isFillComplete()` per-tile check)
+       * and `WorkingCanvasHandle.applyTileViewportContext`'s own eviction-protection set -- so a tile
+       * this round could not issue/queue/already-resident-count is still protected from eviction and
+       * still counted against completeness, per ADR-028 item 3's own geometric rule ("never evict a
+       * tile intersecting the current viewport"), rather than silently falling out of both. */
+      covering: string[];
       /** P5f complex-gate should-fix 2: `true` only when this round's NEW (neither already tracked
        * nor already resident) covering tiles exceeded this manager's own issuing/queueing capacity
        * (`MAX_IN_FLIGHT_TILE_STREAMS`'s free slots plus `MAX_QUEUED_TILES`'s own remaining room) and
@@ -362,7 +378,12 @@ export class TileViewportStreamManager {
       }
     }
 
-    return { kind: "planned", issued, queued: queuedNow, alreadyResident, coveringTruncated, truncatedCount };
+    // F1: the geometric covering set -- every key `tilesCoveringBbox` produced this round, in the
+    // same deterministic order `coveringKeys` (above) was built from, regardless of what this round's
+    // own tracked/resident/headroom bookkeeping went on to do with each one. See this field's own
+    // doc comment (`TilePlanOutcome`, above) for why this is not `[...issued, ...queued,
+    // ...alreadyResident]`.
+    return { kind: "planned", issued, queued: queuedNow, alreadyResident, covering: [...coveringKeys], coveringTruncated, truncatedCount };
   }
 
   /**

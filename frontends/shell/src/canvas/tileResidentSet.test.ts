@@ -448,6 +448,29 @@ describe("planTileEviction (item D)", () => {
     expect(plan.overBudget).toBe(true);
   });
 
+  // Close-out fix piece F1, pre-committed unit test 1 (entry 44, ADR-028 item 3's own geometric
+  // rule -- "never evict a tile intersecting the current viewport"). This layer already enforces the
+  // absolute rule unconditionally (the test above proves the same shape); this is the entry-44 PIN,
+  // named here for the piece's own record: the ONLY tile whose eviction would actually make room is
+  // itself the current-viewport tile, so nothing evicts and the plan honestly reports over budget --
+  // regardless of that tile's own high vertex count, and regardless of whether it happens to be
+  // durably partial (this function has no notion of partial; F1's own fix is one layer up, in
+  // `TilePlanOutcome.covering`/`candidateArmSession.ts`'s `lastCoveringTileKeys`, which is what feeds
+  // a COMPLETE viewport set into `viewportTileKeys` here in the first place).
+  it("F1/entry-44 pin: the only room-maker is a resident, high-vertex tile in viewportTileKeys -- evict: [], overBudget: true", () => {
+    const plan = planTileEviction({
+      residentTileKeys: ["viewport"],
+      tileVertices: () => 5000, // the only resident tile -- and it alone would make plenty of room
+      viewportTileKeys: new Set(["viewport"]),
+      incomingVertices: 500,
+      currentTotalVertices: 5000,
+      maxResidentVertices: 1000,
+      distanceToViewCentre,
+    });
+    expect(plan.evict).toEqual([]);
+    expect(plan.overBudget).toBe(true);
+  });
+
   it("orders eviction strictly by distance, farthest first, among multiple evictable tiles", () => {
     const plan = planTileEviction({
       residentTileKeys: ["a", "b", "c"], // distances 10, 50, 100

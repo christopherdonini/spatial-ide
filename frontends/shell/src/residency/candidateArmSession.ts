@@ -7,7 +7,7 @@ import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
 import { INITIAL_TILE_KEY, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
-import { traceCandidateResidencyStatus, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
+import { traceCandidateResidencyStatus, traceCoveringTruncated, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatchArrived,
@@ -690,11 +690,26 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       standingWithinBudgetComplete = false;
       return;
     }
-    // `settled === "settled-partial"` here (not over budget, but a truncated covering set or a covering
-    // tile that never completed, and no failure recorded) is deliberately left silent, same as
-    // `isFillComplete() === false` always has been -- see this function's own "absence is honest" doc
-    // comment above; this piece adds no new status kind for that specific combination.
-    //
+    // Close-out fix piece F2 (entry 43, ADR-010 rule 5 -- "staleness is signalled, never silently
+    // served"). `settled === "settled-partial"` here (not over budget, but a truncated covering set
+    // or a covering tile that never completed, and no failure recorded) USED TO be left silent here,
+    // same as `isFillComplete() === false` always has -- see this function's own "absence is honest"
+    // doc comment below, which still governs the genuinely mid-fill (`"not-settled"`) case this
+    // branch does NOT cover. Entry 43 (Part L sitting, 2026-09-06) found that silence contradicts
+    // entry 36's own ruling ("silence and staleness never represent state," quoted verbatim in that
+    // entry): an ordinary zoom-to-layer at `fine` can truncate the covering set past
+    // `MAX_QUEUED_TILES` without ever going over budget, and the operator saw rendering stop with no
+    // status at all. Mirrors the `settled-partial-failure` branch immediately above, placed AFTER it
+    // so a genuine failure keeps its own distinct sentence (never this one).
+    if (settled === "settled-partial") {
+      deps.onResidencyStatusChange?.({
+        kind: "candidate-within-budget",
+        residentFeatureCount: totalResidentFeatures,
+        settled: "partial",
+      });
+      standingWithinBudgetComplete = false;
+      return;
+    }
     // Piece 2(i) (residency-debt cut 1b, entry 36 rule (i)): if a "Showing all N" claim WAS standing
     // (the last thing this function actually emitted was `settled: "complete"`), it is now stale -- the
     // covering set just stopped reading complete -- and must not survive by inertia (BS6, the
@@ -1278,7 +1293,17 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     for (const tileKey of outcome.issued) {
       countTileStreamIssuedOnce(tileKey);
     }
-    const covering = [...outcome.issued, ...outcome.queued, ...outcome.alreadyResident];
+    // Close-out fix piece F1 (entry 44's second finding, ADR-028 item 3 -- "never evict a tile
+    // intersecting the current viewport"). BEFORE this fix, `covering` was rebuilt here as
+    // `[...outcome.issued, ...outcome.queued, ...outcome.alreadyResident]` -- a PSEUDO-covering set
+    // that silently omitted (i) a tile already tracked from a PRIOR round (skipped entirely by the
+    // manager's own new-candidate loop, `tileViewportStreamManager.ts`'s own
+    // `if (this.tileState.has(tileKey)) continue`) and (ii) a genuinely new candidate dropped THIS
+    // round for lack of headroom while over budget (`:353` there) -- 1a Q2's own gap, entry 44's own
+    // thrash mechanism. `outcome.covering` (F1, `TilePlanOutcome`) is the real fix: every key
+    // `tilesCoveringBbox` produced this round, geometric and complete, never derived from what this
+    // round's own tracked/resident/headroom bookkeeping happened to do with each one.
+    const covering = outcome.covering;
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4
     const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
@@ -1308,6 +1333,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         "candidate-covering-truncated",
         `${dataset}: covering set truncated by ${outcome.truncatedCount} tile(s) beyond MAX_QUEUED_TILES`
       );
+      // Close-out fix piece F2 (entry 43): a second, always-on line beside the session-log one above --
+      // test/console OBSERVABILITY only, never the operator disclosure (that is the settled-partial
+      // status line itself, `residencyStatus.ts`'s `SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`, surfaced
+      // below by `emitResidencyStatus`) -- see `traceCoveringTruncated`'s own doc comment
+      // (`diagnostics/renderTrace.ts`) for the full account.
+      traceCoveringTruncated(dataset, outcome.truncatedCount ?? 0);
     }
   }
 

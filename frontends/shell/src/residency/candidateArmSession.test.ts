@@ -1116,11 +1116,20 @@ describe("relinquishFill (Piece 1, entry 35 -- also cancels the untiled stream o
 // own exact repro -- a tile (B) carried in-flight across two plans is skipped entirely by
 // `onCameraChange`'s own new-candidate loop (`tileViewportStreamManager.ts`'s
 // `if (this.tileState.has(tileKey)) continue;`), so it lands in NONE of that plan's
-// `issued`/`queued`/`alreadyResident` and is silently absent from `lastCoveringTileKeys` even though
-// it is genuinely still covering. If `relinquishFill` then cancels exactly that tile,
-// `manager.trackedTileCount` reaches 0 without `lastCoveringTileKeys` ever having named it --
-// `isFillComplete()` would iterate only the tile(s) it DOES know about, find them complete, and read
-// the whole fill complete over a user-stopped one.
+// `issued`/`queued`/`alreadyResident`. Before the close-out fix piece's F1 (entry 44), this ALSO made
+// it silently absent from `lastCoveringTileKeys` even though it is genuinely still covering -- if
+// `relinquishFill` then cancelled exactly that tile, `manager.trackedTileCount` would reach 0 without
+// `lastCoveringTileKeys` ever having named it, and `isFillComplete()` would iterate only the tile(s)
+// it DOES know about, find them complete, and read the whole fill complete over a user-stopped one.
+// **F1 note (entry 44's second finding, applied to this describe block's own repro on review): B is
+// no longer silently absent from `covering2` below -- `TilePlanOutcome.covering` (F1) is the raw
+// geometric set `tilesCoveringBbox` produced, which always names B regardless of what this round's
+// own tracked-candidate bookkeeping did with it. This test's own guard (relinquish must never read
+// complete over B) still holds -- and now holds for TWO independent reasons instead of one:
+// `relinquishFill`'s own `hasPlanned = false` latch (the mechanism this test was originally written
+// to pin), AND (since F1) `isFillComplete()`'s own per-tile loop, which can now see B directly. The
+// test below is updated to assert the corrected `covering2` shape; every other assertion (relinquish
+// non-completeness, re-earning completeness on a fresh plan) is unchanged.
 describe("M2: isFillComplete never reads true over a tile skipped-as-tracked across two plans (structural latch via relinquishFill)", () => {
   beforeEach(() => {
     viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
@@ -1179,15 +1188,17 @@ describe("M2: isFillComplete never reads true over a tile skipped-as-tracked acr
 
       // Plan 2: the SAME covering set. A is genuinely `alreadyResident` (complete); B is still
       // tracked ("in-flight") from plan 1 -- the manager's own new-candidate loop skips it entirely
-      // (neither re-issued, re-queued, nor added to `alreadyResident`), so it is silently absent from
-      // THIS plan's own covering set -- exactly the finding's own repro.
+      // (neither re-issued, re-queued, nor added to `alreadyResident`). F1 (entry 44): despite that,
+      // `outcome.covering` (the raw geometric set) still names B -- see this describe block's own top
+      // comment for the full account.
       viewportQueryMock.mockReset().mockImplementation(() => new Promise(() => {}));
       onResidencyStatusChange.mockClear();
       session.onViewportChanged(bbox);
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
 
       const covering2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
-      expect(covering2).toEqual([tileA]); // B silently missing -- the bug's own footprint
+      expect(covering2).toEqual(expect.arrayContaining([tileA, tileB])); // F1: B is named, never silently missing
+      expect(covering2).toHaveLength(2);
       expect(session.manager.trackedTileCount).toBe(1); // B is still genuinely outstanding right now
       // Not settled yet (B still tracked) -- no premature claim at plan 2's own emission either.
       expect(onResidencyStatusChange).not.toHaveBeenCalledWith(expect.objectContaining({ kind: "candidate-within-budget" }));
@@ -1309,15 +1320,17 @@ describe("B1: a non-Completed terminal for a tile skipped-as-tracked across two 
 
       // Plan 2: the SAME covering set. B is genuinely `alreadyResident` (complete); A is still
       // tracked ("in-flight") from plan 1 -- the manager's own new-candidate loop skips it entirely
-      // (neither re-issued, re-queued, nor added to `alreadyResident`), so it is silently absent from
-      // THIS plan's own covering set.
+      // (neither re-issued, re-queued, nor added to `alreadyResident`). F1 (entry 44, close-out fix
+      // piece): despite that, `outcome.covering` (the raw geometric set) still names A -- see M2's
+      // own describe block above (this file) for the full account of what F1 changed here.
       viewportQueryMock.mockReset().mockImplementation(() => new Promise(() => {}));
       onResidencyStatusChange.mockClear();
       session.onViewportChanged(bbox);
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
 
       const covering2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
-      expect(covering2).toEqual([tileB]); // A silently missing -- the same footprint M2's own repro has
+      expect(covering2).toEqual(expect.arrayContaining([tileA, tileB])); // F1: A is named, never silently missing
+      expect(covering2).toHaveLength(2);
       expect(session.manager.trackedTileCount).toBe(1); // A is still genuinely outstanding right now
 
       // THE TRACE: A terminates for real -- `ProducerFailed`, never a self-cancel (never routed
@@ -2199,6 +2212,168 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         kind: "candidate-within-budget",
         residentFeatureCount: 2,
         settled: "complete",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+// Close-out fix piece F1 + F2 (RESIDENCY-DEBT-1B.md's own "Close-out fix piece" section, entries
+// 43/44, 2026-09-06). Pre-committed unit tests 2, 5, 6. All three share the SAME minimal repro: a
+// single covering tile ("A") is issued, trimmed to the budget boundary (durably partial -- the fake
+// canvas's default `isTileCompleteInCandidateSet` already reads `false` for it, so it never needs to
+// be marked complete for these tests to hold), and self-cancelled for budget reasons -- the manager's
+// own `overBudgetFlag` stays `true` and `hasHeadroom()` reads `false` (residency near
+// `MAX_RESIDENT_VERTICES`). A SECOND plan over the SAME bbox then finds "A" untracked and a
+// genuinely new candidate, but the manager's own drain-stop check drops it entirely (never issued,
+// never queued, never `alreadyResident`) -- mirrors this file's own pre-existing "M1: over-budget +
+// no-headroom skip" test above, but WITHOUT overriding `applyTileViewportContext` (left at the fake
+// canvas's own default, `() => true`): this round's own re-check reads `fits === true`, clearing
+// `manager.overBudgetFlag` for THIS round's own emission -- exactly the state entry 44's second
+// finding names ("`fits` can read true, and 'Showing all N' could render over a never-requested
+// tile").
+describe("F1 close-out (entry 44's second finding) + F2 close-out (entry 43): a headroom-dropped, durably-partial covering tile", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  function sinkForHandle(handle: string): StreamSink {
+    const call = startStreamMock.mock.calls.find((c) => c[0].ticketHandle === handle);
+    if (!call) throw new Error(`no stream started for handle ${handle}`);
+    return call[0].sink as StreamSink;
+  }
+
+  /** Bootstraps the session, then arms `manager.overBudgetFlag = true` with no headroom via a
+   * genuine trimmed-batch report on "A" -- the SAME setup every test below starts from. Returns the
+   * bbox (so each test can re-plan over the identical covering set) and "A"'s own real tile key
+   * (read from round 1's own `applyTileViewportContext` call, never assumed). */
+  async function bootstrapAndArmOverBudget(canvas: WorkingCanvasHandle, onResidencyStatusChange: ReturnType<typeof vi.fn>) {
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+    expect(session.manager.gridFrame).not.toBeNull();
+
+    viewportQueryMock.mockReset().mockResolvedValueOnce({ stream: "sh_tile_1" });
+    const bbox = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 }; // a single-tile bbox -- "A" only
+    session.onViewportChanged(bbox);
+    await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    const round1Covering = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
+    expect(round1Covering).toHaveLength(1);
+    const [tileA] = round1Covering;
+
+    (canvas.pushTileBatch as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      ...OK_INGEST,
+      overBudget: true,
+      fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
+    });
+    sinkForHandle("sh_tile_1").onBatch(new Uint8Array([2]), true);
+    expect(session.manager.overBudget).toBe(true);
+    expect(session.manager.trackedTileCount).toBe(0); // "A" self-cancelled for budget reasons
+
+    return { session, bbox, tileA };
+  }
+
+  function makeCanvasNearCeiling(): WorkingCanvasHandle {
+    return fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({
+        totalResidentVertices: Math.ceil(MAX_RESIDENT_VERTICES * 0.95), // above the 0.9 margin -- no headroom
+        totalResidentFeatures: 7,
+      })),
+      // `applyTileViewportContext` deliberately left at `fakeCanvas`'s own default (`() => true`) --
+      // see this describe block's own top comment for why that is the point of this repro.
+    });
+  }
+
+  // Pre-committed unit test 2 -- THE ENTRY-44 PIN.
+  it("test 2: the array passed to applyTileViewportContext CONTAINS a covering tile that is durably partial and untracked", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = makeCanvasNearCeiling();
+      const onResidencyStatusChange = vi.fn();
+      const { session, bbox, tileA } = await bootstrapAndArmOverBudget(canvas, onResidencyStatusChange);
+
+      // Round 2, same bbox: "A" is untracked (self-cancelled above) and durably partial
+      // (`isTileCompleteInCandidateSet` reads `false` by default) -- a genuinely new candidate, but
+      // dropped entirely by the manager's own over-budget/no-headroom drain-stop check (never issued,
+      // never queued, never alreadyResident).
+      viewportQueryMock.mockClear();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(viewportQueryMock).not.toHaveBeenCalled(); // "A" skipped, never even issued a ticket
+      expect(session.manager.trackedTileCount).toBe(0);
+
+      // THE PIN: F1's widened covering set -- "A" (`tileA`, the SAME real tile key round 1 issued) is
+      // still named, even though it is in none of issued/queued/alreadyResident this round (cf.
+      // `:1169`'s own idiom).
+      const coveringPassed = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0] as string[];
+      expect(coveringPassed).toContain(tileA);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Pre-committed unit test 5.
+  it("test 5: within budget, settled, incomplete (headroom-dropped), no failure -- EXACTLY ONE candidate-within-budget event, settled: \"partial\", never \"complete\", never silence", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = makeCanvasNearCeiling();
+      const onResidencyStatusChange = vi.fn();
+      const { session, bbox } = await bootstrapAndArmOverBudget(canvas, onResidencyStatusChange);
+
+      onResidencyStatusChange.mockClear();
+      viewportQueryMock.mockClear();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect(viewportQueryMock).not.toHaveBeenCalled();
+      expect(session.manager.trackedTileCount).toBe(0);
+      // This round's own re-check (the fake canvas's default `applyTileViewportContext`) reads
+      // fits === true -- the manager's own overBudget flag clears for THIS emission.
+      expect(session.manager.overBudget).toBe(false);
+
+      // THE FIX (F2): exactly one event, the within-budget kind, settled: "partial" -- never silent,
+      // never "complete".
+      expect(onResidencyStatusChange).toHaveBeenCalledTimes(1);
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 7,
+        settled: "partial",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Pre-committed unit test 6 -- the second finding's own pin.
+  it("test 6: a headroom-dropped in-viewport partial never yields settled: \"complete\" (the second finding's pin)", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = makeCanvasNearCeiling();
+      const onResidencyStatusChange = vi.fn();
+      const { session, bbox } = await bootstrapAndArmOverBudget(canvas, onResidencyStatusChange);
+
+      onResidencyStatusChange.mockClear();
+      session.onViewportChanged(bbox);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+
+      // WITHOUT F1 (the pre-fix pseudo-covering derivation, `[...issued, ...queued,
+      // ...alreadyResident]`): "A" falls out of ALL THREE arrays this round (dropped, never tracked),
+      // so `lastCoveringTileKeys` would have been EMPTY -- `isFillComplete()`'s own per-tile loop
+      // iterates zero times and trivially returns `true`, `settledState` reads `"settled-complete"`,
+      // and `emitResidencyStatus` would have dispatched `settled: "complete"` over a tile that was
+      // never even requested this round (entry 44's own second finding, ADR-028 Amendment 2 reopen
+      // condition (2)). WITH F1, `outcome.covering` still names "A", so `isFillComplete()` correctly
+      // reads `false` and this can never happen.
+      expect(onResidencyStatusChange).not.toHaveBeenCalledWith(expect.objectContaining({ settled: "complete" }));
+      expect(onResidencyStatusChange).toHaveBeenCalledWith({
+        kind: "candidate-within-budget",
+        residentFeatureCount: 7,
+        settled: "partial",
       });
     } finally {
       vi.useRealTimers();

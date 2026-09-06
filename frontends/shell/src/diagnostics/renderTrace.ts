@@ -118,6 +118,23 @@ export function traceCandidateResidencyStatus(
   console.debug(PREFIX, "candidate-residency-status", { dataset, overBudget, residentFeatureCount, evictedTileCountSession });
 }
 
+/** Close-out fix piece F2 (entry 43): ONE always-on line per truncating plan -- a covering set
+ * beyond `MAX_QUEUED_TILES`'s own issuing/queueing capacity, farthest-from-view-centre-first
+ * (`TileViewportStreamManager.onCameraChange`'s own `coveringTruncated`/`truncatedCount`,
+ * `tileViewportStreamManager.ts`). Unconditional, never gated behind `isInstrumentedBuild()` --
+ * mirrors this file's own always-on precedent (`traceViewportQuery`'s own call site,
+ * `tileViewportStreamManager.ts:574`, "always-on render-trace (never instrument-gated)" per that
+ * call site's own comment), unlike `traceTileIngest`/`traceCandidateResidencyStatus` above, which
+ * the CALL SITE gates. **This is test/console OBSERVABILITY only, never the operator disclosure** --
+ * entry 43's own operator-facing fix is the settled-partial status line itself
+ * (`residencyStatus.ts`'s `SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`), surfaced through
+ * `candidateArmSession.ts`'s own `emitResidencyStatus`; this line exists so a session log / live
+ * console can also see a truncating plan happened, alongside the pre-existing
+ * `logSessionEvent("candidate-covering-truncated", ...)` call this sits beside. */
+export function traceCoveringTruncated(dataset: string, truncatedCount: number): void {
+  console.debug(PREFIX, "covering-truncated", { dataset, truncatedCount });
+}
+
 /** One line per `WorkingCanvas` mount/unmount, naming the dataset handle it was keyed on (D4's
  * remount fix, `App.tsx`) -- lets a session's ledger show exactly how many canvas instances
  * existed and which dataset each owned, without inferring it from `"push"`/`"clear"` lines alone. */
