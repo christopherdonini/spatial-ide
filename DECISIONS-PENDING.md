@@ -23,6 +23,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     of disk; the structural answer (ATTRIBUTION-PASS.md §7) stands. Not a blocker for 1b (the
     trial was always a demonstration). Touches, if pursued: producer/engine + transport
     instrumentation — a scoped diagnosis, its own piece.
+    **RULED 2026-09-06 (the human's takeover message, verbatim: "entries 38/39/40 ruled
+    (defer-with-trigger / no-rewrite entry-26-style / routed to producer diagnosis)"):**
+    this entry's ruling is "routed to producer diagnosis" — the recommendation adopted: the hang
+    goes to a producer-side instrumented diagnosis as its own piece on the producer/LOD line,
+    not a client re-run. Not scheduled by this ruling; scoping rides the LOD/next-cut call.
 
 39. **[DCO gap on PR #22, surfaced 2026-09-06 by the ordered sign-off audit — fixing it is a red
     line (history rewrite / force-push), so NOT decided or done by the custodian.]** 18 of 19
@@ -38,6 +43,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     noise in one move; alternatives are a `rebase --exec 'git commit --amend --no-edit -s'` to
     sign just 3e653f0, or a DCO-app override. **Your hands or your explicit authorization** — the
     custodian will not force-push. Touches: PR #22's history only.
+    **RULED 2026-09-06 (the human's takeover message, verbatim: "entries 38/39/40 ruled
+    (defer-with-trigger / no-rewrite entry-26-style / routed to producer diagnosis)"):**
+    this entry's ruling is "no-rewrite entry-26-style" — the squash recommendation is REJECTED;
+    no history rewrite, no force-push. The unsigned revert 3e653f0 stands documented (this entry
+    is the record), entry-26-style: the gap is known, fenced going forward (hooksPath armed), and
+    the merge disposition of PR #22 under DCO is the human's own click.
 
 38. **[Fixture relocation scope, surfaced 2026-09-06 executing the disk directive — the mechanical
     move the instruction implied is a 40+-file refactor; the goal is already met more cheaply, so
@@ -61,6 +72,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     (Also recorded: the 5 GB fixture's SECOND-PHYSICAL-LOCATION copy remains impossible — the
     2026-09-06 diskmgmt check found ONE physical disk, only C:, no external/removable; the SPOF's
     DR story stays its deterministic regenerability until a drive is attached.)
+    **RULED 2026-09-06 (the human's takeover message, verbatim: "entries 38/39/40 ruled
+    (defer-with-trigger / no-rewrite entry-26-style / routed to producer diagnosis)"):**
+    this entry's ruling is "defer-with-trigger" — the clean-discipline mechanic is accepted as
+    sufficient; the FIXTURES_ROOT refactor is deferred, its trigger standing: it opens as its own
+    scoped piece only if the human later wants fixtures physically out of `target/`.
 
 37. **[APPLIED 2026-09-05 — the conditional approval's cure executed. The flag was delivered
     (draft lacked reopen conditions; #36 was about to change the described behavior); the
