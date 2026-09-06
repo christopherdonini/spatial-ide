@@ -46,6 +46,20 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     alternative: hold 1b open for a 48-(a) piece first (small, but another gate cycle and a third
     re-run). Also open: the L5 re-check (string 6 not seen — a 30 s wait after the fill stops, on
     the same build, settles whether it was timing).
+    **RULED 2026-09-07, the human, verbatim:** *"close ruling: hold 1b — do the entry-48 (a) piece
+    first (protect the untiled first look while its extent intersects the viewport; reuses F1's
+    geometric protection, one unit test), reviewer-gated, then I re-run only the zoom-out steps to
+    confirm the wholesale eviction is gone before L9 closes the cut. Reason on the record: entry 48
+    is the evidence-grounded mechanism behind my own post-fix L9 residual ("tiles rendered that
+    disappear"), and 1b's deliverable is a felt verdict that content is declared-partial, not
+    vanishing — closing with it outstanding contradicts the cut's own purpose. Entry 47 stays
+    next-cut."* Applied: 1b HELD; the piece is preregistered (`RESIDENCY-DEBT-1B.md`, sub-amendment
+    of 2026-09-07, branch `cut/residency-debt-fix-48` @ d8f5fea) with a two-channel design —
+    eviction-protected while its extent intersects the bbox, but NEVER in completeness or `fits`
+    (a truncated first look would otherwise latch over-budget at the fit view and stall L5's fill);
+    worker + reviewer gate; then the human's zoom-out-only re-run; then L9 closes, rule 10 archives.
+    **Ordering restated by the human 2026-09-07 (verbatim):** *"48-(a) first, then release
+    engineering (which owes the ADR-020 packaged-debug fix), LOD after."*
 
 47. **[K6's escape hatch, re-asked by the human's own L8 verdict — and a pick-accuracy
     observation beside it; surfaced 2026-09-06 at the Part L sitting, candidate arm verified.]**
@@ -275,6 +289,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     this entry's ruling is "routed to producer diagnosis" — the recommendation adopted: the hang
     goes to a producer-side instrumented diagnosis as its own piece on the producer/LOD line,
     not a client re-run. Not scheduled by this ruling; scoping rides the LOD/next-cut call.
+    **Diagnosis RETURNED 2026-09-06** (`spikes/entry40-producer-hang-diagnosis/README.md`: rank-1
+    producer-query-hang; the instrumented pass designed, not run). **RULED 2026-09-07, the human,
+    verbatim:** *"dispatch entry 40's empirical producer pass now, independently under the 24(g)
+    guard — it gates nothing and informs P1's later risk."* Applied: its own track — the pass is
+    preregistered (`spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md`), its one
+    load-bearing instrument (a periodic lease-count poll into the session log) and the
+    let-it-run-past-the-watchdog harness flag are a small reviewer-gated piece, then ONE unattended
+    reported-only 5 GB run under the rustdesk-guard protocol when the machine is free of the human's
+    sitting; results to a new dated section of the spike README, never a docs/08 row.
 
 39. **[DCO gap on PR #22, surfaced 2026-09-06 by the ordered sign-off audit — fixing it is a red
     line (history rewrite / force-push), so NOT decided or done by the custodian.]** 18 of 19
@@ -819,6 +842,18 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
    every-stream as the recommended default.)*
 
 ## Resolved
+
+- **2026-09-07 — LOD scheduling RULED: flip-first; P2 first when LOD runs.** The human, verbatim:
+  *"LOD scheduling: flip-first — the post-fix stable-partial state is an honest, declared v0.1
+  limitation, so LOD is the first post-flip quality cut, not a flip-blocker (my felt-bar override
+  reserved); when LOD runs, P2 (import-time overview tiers) first on the code-grounded grounds in
+  §2; dispatch entry 40's empirical producer pass now, independently under the 24(g) guard — it
+  gates nothing and informs P1's later risk. After the 48 re-run and L9: rule-10 archive, then the
+  flip track (ADR-025 reading, the exposure review, the 12–15 go/no-go) becomes the live queue."*
+  Applied: NEXT-CUT.md's LOD section carries the ruling (its §5 questions answered: (1) the
+  stable-partial overview is a declared v0.1 limitation, (2) P2, (3) entry 40's pass runs now,
+  independently); after 1b closes, the flip track is the live queue. Resolves the 34c-deferred
+  LOD-vs-flip ordering.
 
 - **2026-09-06 — the 24(b) string sight COMPLETE (the held string 3 + the entry-36 string 5).**
   The human's ruling, verbatim: *"String sight complete: 1/2/4 confirmed as shipped; string 3
