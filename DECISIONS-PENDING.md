@@ -24,6 +24,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     is not subpixel" — a pick-accuracy observation at zoom-out, possibly the pick radius or the
     offset-frame hit-test near the threshold; NOT investigated, recorded verbatim for a future
     piece's own repro. Touches: `WorkingCanvas.tsx` hover/pick, `pickResolution.ts`.
+    **RULED 2026-09-06, the human, verbatim:** *"Entry 47 = (b), re-pick on camera settle, as its
+    own named piece on the NEXT cut — not this close-out; the pick-accuracy half stays recorded
+    verbatim for that piece's repro, undiagnosed."* Applied: queued in NEXT-CUT.md as a named
+    piece for the next cut; nothing touched now.
 
 46. **[The E2E harness now relies on `vite-node` — present only as vitest's transitive dependency
     — to import the shell's own TypeScript (`e2e/tsModuleLoader.mjs`, close-out fix piece).
@@ -39,6 +43,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     reach — dev/E2E only, docs/09's gate discipline untouched); (b) leave it transitive and note
     the coupling in `e2e/README.md`. Recommendation: **(a)**, on your word. Touches:
     `frontends/shell/package.json` + lockfile only.
+    **RULED 2026-09-06, the human, verbatim:** *"Entry 46 = (a), add vite-node as an explicit
+    devDependency pinned to vitest's version (dev/E2E only, docs/09 untouched)."* Applied as a
+    one-commit follow-up after PR #24 merges (never racing the click): `vite-node` enters
+    `frontends/shell/package.json` devDependencies with vitest's own specifier form (`^2.1.8`,
+    resolving to the already-installed 2.1.9) plus the lockfile — nothing else.
 
 45. **[The close-out fix piece's SIGHT BUNDLE — three items the human rules at PR sight, none the
     custodian's; opened 2026-09-06 with the piece (branch `cut/residency-debt-fix`, preregistered
@@ -63,6 +72,14 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     conditions (1)/(3)). Also for the record: the piece attaches NO perf claim in either direction
     (F1 keeps the resident set nearer the ceiling at over-budget zoom-out, G4's own axis) — the
     re-run is felt, never a G4 re-measure.
+    **RULED 2026-09-06, the human, verbatim:** *"Entry 45: (1) String 6 = A, direction-free as
+    shipped; (2) Amendment 3 = APPEND, clause 5 ruled — this is a fix, recorded as such: proposed
+    stance, gate-8 ruling stands on its existing commits, no re-measure owed now, but any future
+    cross-commit arm comparison must declare the eviction-policy change; (3) absorbing state
+    accepted as intended designed behavior."* Sequencing, verbatim: *"Amendment 3 appends only
+    after my L9."* Applied: string 6 stands as shipped; on the L9 re-verdict the custodian appends
+    the PROPOSED Amendment 3 to ADR-028 with clause 5 in its ruled form and deletes the PROPOSED
+    file in the same commit; the absorbing state is declared behavior (never a reopen by itself).
 
 44. **[ADR-028 Amendment 1's REOPEN CONDITION MET — observed felt by the human at the Part L
     sitting, 2026-09-06. The reopen was the human's own 2026-09-03 ruling (entry 27 (i)); the
