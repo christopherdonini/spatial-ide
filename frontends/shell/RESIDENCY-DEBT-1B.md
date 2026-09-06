@@ -291,3 +291,68 @@ centre" said when it is true); ADR-028 Amendment 3's text (the reopen record, wh
 its clause 5, the gate-8 re-measure stance: the ruling stands on its own commits, no re-measure
 owed now, a future cross-commit arm comparison must declare the eviction-policy change);
 the declared absorbing state, acknowledged; then the L2-L9 re-run under a verified arm.
+
+### Sub-amendment — the untiled first look is eviction-protected while in view (entry 48 (a), 2026-09-07, appended BEFORE any code)
+
+**What fires this.** DECISIONS-PENDING entry 48, ruled by the human 2026-09-07 (verbatim there):
+hold 1b; *"protect the untiled first look while its extent intersects the viewport; reuses F1's
+geometric protection, one unit test"*; reviewer-gated; then the human re-runs only the zoom-out
+steps; then L9 closes the cut. Evidence: the live probe's single eviction (t = 43.5 s) — an 8-row
+admission into `18:12` evicted `["initial-untiled-look"]`, resident 19,090 → 9,090 — is the
+"already rendered content disappears" of the post-fix L9.
+
+**Design — two channels, deliberately NOT one.** `INITIAL_TILE_KEY` (`tileGridConstants.ts`) is
+the key `TileResidentSet` holds the first look under; it is not a grid key, so F1's geometric
+covering set never contains it and `planTileEviction` may evict it. The piece:
+1. **Eviction protection (the fix).** While the first look's union extent
+   (`candidateArmSession.ts`'s `latestUnionedExtent`, the same value `establishFrameFromExtent`
+   consumed) intersects the current viewport bbox (plain AABB overlap; a touching edge counts),
+   `INITIAL_TILE_KEY` is added to the protected set `planTileEviction` receives — via
+   `applyTileViewportContext`'s protected-keys input, alongside the geometric covering keys — so
+   the cascade backstop (`tileResidentSet.ts` ~:335-341) and the admission-path plan
+   (`tileIngest.ts` ~:120-126) both honor it. When the extent no longer intersects the bbox
+   (the operator has panned/zoomed away from it), the first look is evictable exactly as today.
+2. **NOT in completeness, NOT in `fits`.** `INITIAL_TILE_KEY` must NOT enter `lastCoveringTileKeys`
+   (`isFillComplete`'s per-tile loop) and must NOT be read by `anyPartialAmongCovering`
+   (`WorkingCanvas.tsx` `applyTileViewportContext`'s `fits` recomputation). Reason, code-grounded:
+   the first look is durably partial whenever it was truncated by `UNTILED_FIRST_LOOK_ROW_LIMIT`
+   (P6b item 2b), so if it counted toward `fits`, every fit view containing it would latch
+   over-budget at plan time, `drainQueueIfRoom` would refuse, and L5's own fill would stop after
+   three tiles — a regression of the very step the human just passed. The completeness claim's
+   honesty is already carried by `lastCoveringTruncated` and the grid tiles' own completeness.
+   Implementation shape: `applyTileViewportContext(covering, viewCentre, extraProtectedKeys)` (or
+   an equivalent named field) that unions `extraProtectedKeys` into `currentViewportTileKeysRef`'s
+   PROTECTION read only — `anyPartialAmongCovering` iterates `covering` alone. If the canvas API
+   cannot separate the two reads without a second ref, add the second ref; never fold the pseudo-key
+   into `covering`.
+3. **Lifecycle.** `reissueUnrestricted` (a filter generation) already clears the first look with
+   `clearAllTiles`; the protection needs no separate reset. A first look that was self-cancelled
+   (entry 35's frame-exists cancel) keeps whatever it admitted and is protected the same way —
+   protection is about what is resident and in view, not about how the stream ended.
+
+**Declared consequence (named, not discovered).** At an over-budget overview with the first look
+protected and in view, `planTileEviction` may find nothing evictable: the batch is trimmed to the
+remaining budget (possibly to zero rows), the tile is marked partial, over-budget latches — the
+same declared absorbing state the close-out piece named, now with the first look STANDING instead
+of vanishing. The overview therefore reads as "the first look plus whatever tiles fit", declared by
+the over-budget sentence and its paused/finished suffix. This is the honest v0.1 limitation the
+human's LOD ruling accepts (flip-first; LOD is the first post-flip quality cut); no perf claim
+attaches in either direction.
+
+**Pre-committed tests.**
+1. `tileResidentSet.test.ts` — `planTileEviction` with `INITIAL_TILE_KEY` resident (high vertex
+   count) and present in the protected set, plus one evictable grid tile: the plan evicts the grid
+   tile, never `INITIAL_TILE_KEY`; with ONLY the first look resident and protected: `evict: []`,
+   `overBudget: true`.
+2. `candidateArmSession.test.ts` — THE ENTRY-48 PIN: after a plan whose bbox intersects the first
+   look's union extent, the protected keys handed to the canvas CONTAIN `INITIAL_TILE_KEY`; after
+   a plan whose bbox does not intersect it, they do NOT; and in both cases `lastCoveringTileKeys`
+   does NOT contain it (channel 2).
+3. `candidateArmSession.test.ts` — the fit-view non-regression: a truncated (partial) first look in
+   view with a within-budget covering set still plans and drains tiles (no over-budget latch from
+   the first look's partiality) — pins channel 2's `fits` exclusion.
+4. Felt: the human's zoom-out-only re-run — already-rendered content does not disappear on zoom-out;
+   the over-budget sentence appears; then L9.
+
+**Scope fence.** Client-side only, ADR-006 class 1; no wire change; ADR-010 rule 5 untouched
+(nothing becomes silent); no perf claim; entry 47 stays next-cut; LOD untouched (ruled flip-first).
