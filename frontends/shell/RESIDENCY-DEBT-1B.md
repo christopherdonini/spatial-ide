@@ -186,3 +186,108 @@ strengthening of the preregistered design, not a post-hoc loosening; no gate, sc
 case weakens. The same gate's S2 is also taken as part of Item B's own surfacing obligation: the
 settling moment itself (the last outstanding tile's terminal/supersede) now emits the status,
 rather than the signal waiting for the next batch or camera change to become visible.
+
+## Close-out fix piece — F1 geometric protection + F2 the settled-partial voice (2026-09-06, appended BEFORE any code)
+
+**What fires this.** DECISIONS-PENDING entry 44: ADR-028 Amendment 1's own reopen condition
+met, felt by the human at the Part L sitting (their words, verbatim in the entry), and their
+ruling, verbatim: *"we either fix it and I re-do L5 to L9, otherwise is pointless."* Entry 43
+(the silent truncated settle) rides with it — the architect consult (2026-09-06, pass with notes)
+establishes the two must ship together: widening the covering set makes `isFillComplete()`
+correctly stricter, which routes MORE states into the branch F2 exists to give a voice to;
+F1 without F2 would increase silence.
+
+**F1 — the protected set becomes geometric.** `TileViewportStreamManager.onCameraChange` already
+computes the true covering set (`covering`/`coveringKeys`, `tileViewportStreamManager.ts:277-278`)
+and discards it — `TilePlanOutcome` (`:365`) returns only `issued`/`queued`/`alreadyResident`, and
+`candidateArmSession.ts:1281` rebuilds a PSEUDO-covering set from those three arrays, which omits
+(i) tiles tracked from a prior round (`:316`) and (ii) candidates dropped for lack of headroom
+(`:353`) — 1a Q2's gap, the thrash's seam. The fix: `TilePlanOutcome` gains `covering: string[]`
+(every key `tilesCoveringBbox` returned this round), and `candidateArmSession.ts` uses it for BOTH
+`lastCoveringTileKeys` (`:1281-1282`) and `applyTileViewportContext` (`:1285`). One seam, three
+effects: eviction protection (`WorkingCanvas.tsx:1131` -> `tileIngest.ts:123` and the cascade
+backstop `tileResidentSet.ts:335-341`), the `fits` recomputation (`WorkingCanvas.tsx:1161-1167`,
+today blind to the very partials that caused over-budget), and the completeness claim
+(`isFillComplete`, `candidateArmSession.ts:590`). ADR-028 item 3's rule is geometric — *"never
+evict a tile intersecting the current viewport"* — and this makes the code say what the rule says.
+
+**Declared absorbing state (named here so the PR and the re-run watch for it, not discover it).**
+With in-view partials unevictable, an over-budget view with an all-in-view resident set has no
+pressure valve: `fits` stays false while any in-view partial exists, over-budget stays latched,
+`drainQueueIfRoom` refuses (`tileViewportStreamManager.ts:534-535`), and the exits are a real
+pan/zoom — exactly string 4's own remedy — or a re-fetch that `hasHeadroom()` denies. A STABLE
+declared partial view replaces a flickering one. Status in that state is one of two ALTERNATIVES
+(not a sequence — they are mutually exclusive by construction, `residencyStatus.ts:75-76`): the
+over-budget sentence + `STALLED_SUFFIX` iff tiles were queued before the flag latched
+(`queuedCount > 0`), else at quiescence the over-budget sentence + `SETTLED_PARTIAL_SUFFIX`.
+Non-regression, argued from code: P6b item 7's re-scan/trim/cancel thrash needs `hasHeadroom()`
+true, and protection only ever ADDS resident vertices, so exposure is monotone-decreasing; the
+Defect-A resume lever (`setOverBudget(false)` -> `drainQueueIfRoom()`, `:256`, called on every
+camera change from `candidateArmSession.ts:1294`) is untouched. Amendment 2 reopen conditions
+(1)/(3) are the watch at the re-run.
+
+**F2 — the settled-partial voice.** `candidate-within-budget.settled` widens to
+`"complete" | "partial" | "partial-failure"` (`residencyStatus.ts:52`, `:129`). At
+`candidateArmSession.ts:693` the silent fall-through becomes an emission mirroring the
+`partial-failure` branch (`:684-691`) and placed AFTER it, so failure keeps its own sentence:
+`{kind:"candidate-within-budget", residentFeatureCount, settled:"partial"}`,
+`standingWithinBudgetComplete = false`, return. Safer than the clearing dispatch by construction:
+the sticky-relinquished refusal (`residencyStatus.ts:164-169`) covers this kind, whereas
+`candidate-fill-progress` reduces to `null` unconditionally (`:192-193`). **String 6, a DRAFT for
+the human's 24(b) sight, direction-free because the state has two causes** (truncation IS
+farthest-first, `tileViewportStreamManager.ts:336-339`; a covering tile that never completed was
+requested in row-major order, `:324`, so "farthest from centre" would be false for it):
+*"Filling has finished for this view — some areas were not loaded; pan or zoom to load them."*
+Never the word "all" (BS6). Truncation additionally gets ONE always-on `renderTrace` line per
+truncating plan (pattern `renderTrace.ts:95`; always-on precedent `tileViewportStreamManager.ts:
+550-553`) — justified as test/console observability, never as the operator disclosure, which is
+the status line itself.
+
+**The second finding this piece pins (structural, unobserved, NOT yet a defect until the test
+says so).** A resident-but-partial covering tile is not `alreadyResident` (`:317` is wired to
+`isTileCompleteInCandidateSet`, `candidateArmSession.ts:820`), becomes a fresh candidate (`:321`),
+is dropped at `:353` while over budget without headroom, and so falls out of all three outcome
+arrays — `isFillComplete()` cannot see it, `fits` can read true, and "Showing all N" could render
+over a never-requested tile: ADR-028 Amendment 2 reopen condition (2), verbatim in the ADR. F1's
+widened `lastCoveringTileKeys` closes it by construction; unit test 6 below is its pin.
+
+**Pre-committed tests (all in existing files, existing idioms).**
+1. `tileResidentSet.test.ts` — `planTileEviction` where the only room-maker is a resident,
+   high-vertex tile in `viewportTileKeys`: `evict: []`, `overBudget: true`.
+2. `candidateArmSession.test.ts` — THE ENTRY-44 PIN: after a plan round in which a covering tile
+   is durably partial and untracked, the array passed to `applyTileViewportContext` CONTAINS that
+   key (idiom: `(canvas.applyTileViewportContext as ...).mock.calls.at(-1)![0]`, cf. `:1169`).
+3. `tileIngest.test.ts` — over-budget admission whose only distance-ordered candidate is an
+   in-viewport partial: `evictedTileKeys` is `[]`, `overBudget` true (mirrors `:131`).
+4. `residencyStatus.test.ts` — the exact string-6 draft for `settled: "partial"`, plus the guard
+   `expect(text).not.toMatch(/\ball\b/i)`.
+5. `candidateArmSession.test.ts` — within budget, settled, incomplete, no failure: exactly one
+   `candidate-within-budget` event with `settled: "partial"`; never `"complete"`; never silence.
+6. `candidateArmSession.test.ts` — a headroom-dropped in-viewport partial never yields
+   `settled: "complete"` (the second finding's pin).
+7. E2E (`residency-harness.mjs` or a sibling step, instrumented build only): at an over-budget
+   zoom-out step, read `residencyGridFrame()`, recompute `tilesCoveringBbox(frame, level, bbox)`
+   with the shell's own export, collect `evictedTileKeys` from `[render-trace] tile-ingest` lines,
+   assert the intersection with the covering set is EMPTY; corroborate the step was genuinely
+   over budget via `residencyQueuedTileCount()`. Two disclosures the assertion carries: it is
+   instrument-gated (`WorkingCanvas.tsx:1027`), and the debounce window — between a gesture and
+   its debounced plan the protected set describes the PREVIOUS bbox (`candidateArmSession.ts:1285`
+   is the only refresh) — so evictions are evaluated post-settle, after the step's last plan.
+
+**Scope fence.** ADR-006 class 1 / derived state only; NO wire change (ADR-010 rule 1 untouched;
+tile keys never cross a boundary); ADR-010 rule 5 ("staleness is signalled, never silently
+served") is architect-blockable and applies to the silent branch F2 removes; ADR-011 is not
+cited either way, no per-tile origins, no LOD (the structural cure for overview zoom is the next
+cut's, entry 44); entry 42 stays OUT (a `describe` extent is a wire change); the two named
+binding-debt mechanisms (pan-west keying, zoom-to-layer admission window) stay untouched.
+**No perf claim attaches in either direction** — F1 moves the resident set nearer
+`MAX_RESIDENT_VERTICES` for longer at over-budget zoom-out, the same axis G4 measured; the L5-L9
+re-run is a FELT re-verdict and is never presented as a G4 re-measure.
+
+**Human-side, at PR sight (not the custodian's):** string 6's final wording (draft above, option
+A; option B = two strings gated on `lastCoveringTruncated` if the human wants "farthest from
+centre" said when it is true); ADR-028 Amendment 3's text (the reopen record, what it withdraws
+— Amendment 1's exception 2 only — what it keeps — exception 1, the dedupe-owner cascade — and
+its clause 5, the gate-8 re-measure stance: the ruling stands on its own commits, no re-measure
+owed now, a future cross-commit arm comparison must declare the eviction-policy change);
+the declared absorbing state, acknowledged; then the L2-L9 re-run under a verified arm.
