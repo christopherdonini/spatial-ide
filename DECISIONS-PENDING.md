@@ -38,6 +38,19 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     dictated wording, already in-history at 536ceb9) reads "…to commit:". The check accepts ONLY
     the ruled wording; a wrong-wording attempt now gets a named near-miss diagnostic instead of
     silence. Recommendation: keep exact-as-ruled; widen to accept both only on your word.
+    **RULED 2026-09-06, the human, verbatim:** *"Entry 41 authorized. Author the remediation
+    commit as Christopher Donini donini.christopher@gmail.com — both identities are mine per
+    entry 14, and I dictate this affirmation under that one."* — exact form dictated (subject,
+    body line with the full sha, Signed-off-by trailer, committed with
+    `-c user.name="Christopher Donini" -c user.email=donini.christopher@gmail.com` and `-s`).
+    With it, two ratifications, verbatim: (1) *"the reviewer's spoof-fix strengthening — the
+    remediation's own Signed-off-by must name the remediated author — is RATIFIED as the correct
+    mechanization of my 'no third-party remediation'"*; (2) *"on wording: WIDEN to accept both
+    'to commit:' and the dcoapp-standard 'to this commit:' — future external contributors will
+    follow the published convention verbatim, and a gate that rejects the ecosystem's own
+    standard wording over a missing 'this' would be pedantry, not protection; 536ceb9's
+    in-history form stays valid."* Applied same day: wording widened in dco.yml + CONTRIBUTING
+    (matrix case T11 proves it), the remediation commit authored as dictated, everything pushed.
     cut's code; recorded so it is not lost, not decided here.]** On the disk-freed re-run, data
     flowed (fit 22 batches, pan-east 222) but the trial invalidated at `pan-east`: after 222
     batches, **one tile stream (43 issued, 42 ended) never terminated** and the console went

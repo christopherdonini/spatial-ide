@@ -45,7 +45,10 @@ name: DCO sign-off
 #         remediation remediates nothing;
 #   (ii)  matches the standard remediation format, naming the failing commit's FULL sha:
 #         subject `DCO Remediation Commit for <author>`, body line
-#         `I, <author>, hereby add my Signed-off-by to commit: <full sha>`;
+#         `I, <author>, hereby add my Signed-off-by to commit: <full sha>` — or the
+#         dcoapp-standard wording `... to this commit: <full sha>`, accepted equally (ruled
+#         2026-09-06: external contributors will follow the published convention verbatim,
+#         and rejecting it over a missing "this" would be pedantry, not protection);
 #   (iii) carries the SAME author identity (`Name <email>`) as the commit it remediates, AND its
 #         own `Signed-off-by` trailer names that identity — the affirmation itself, not merely
 #         the self-asserted author field, must stand in the remediated author's name. Individual
@@ -227,7 +230,9 @@ jobs:
               # `pipefail` the producer's SIGPIPE (141) would read as "no match" — a valid
               # remediation inside a large-enough message would be silently refused.
               [ "$(git log -1 --format='%s' "$r")" = "DCO Remediation Commit for ${author}" ] || continue
-              if grep -qxF -- "I, ${author}, hereby add my Signed-off-by to commit: ${sha}" <<< "$(git log -1 --format='%B' "$r")"; then
+              body="$(git log -1 --format='%B' "$r")"
+              if grep -qxF -- "I, ${author}, hereby add my Signed-off-by to commit: ${sha}" <<< "$body" \
+                || grep -qxF -- "I, ${author}, hereby add my Signed-off-by to this commit: ${sha}" <<< "$body"; then
                 remedy="$r"
                 break
               fi

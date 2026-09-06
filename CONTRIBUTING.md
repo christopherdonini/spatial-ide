@@ -38,7 +38,8 @@ A commit you cannot rewrite (already pushed, its hash load-bearing) can be **rem
 a later commit in the same PR (a descendant of the one it fixes), authored under the **same
 identity** and carrying its own `Signed-off-by` in that identity, with subject
 `DCO Remediation Commit for Your Name <you@example.com>` and body line
-`I, Your Name <you@example.com>, hereby add my Signed-off-by to commit: <full sha>` — the check
+`I, Your Name <you@example.com>, hereby add my Signed-off-by to commit: <full sha>` (the
+dcoapp-standard `… to this commit: <full sha>` wording is accepted equally) — the check
 accepts the pair (individual remediation only; an affirmation standing in someone else's name
 remediates nothing).
 
