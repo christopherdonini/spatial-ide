@@ -241,7 +241,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     ruled: `candidateArmSession.ts`'s `relinquishFill` + the untiled-stream lifecycle + the
     relinquished status wording (24(b) sight).
 
-34. **[DEFERRED BY RULING 2026-09-05 — human: "34c — decide at the sitting's scheduling, leaning
+34. **[RULED 2026-09-06 at sitting scheduling — the human, verbatim: "34c: correctness-only,
+    confirmed at the sitting's start per the recorded lean." The sitting (Part L) is
+    correctness/felt only: no scored cell, no heap fold-in (entry 25 rides the next
+    intrinsically-scored campaign, unchanged), the 5 GB trial not adopted (deferred behind
+    entry 40 regardless). Prior deferral record kept below.]**
+    **[DEFERRED BY RULING 2026-09-05 — human: "34c — decide at the sitting's scheduling, leaning
     (a): 1b makes no perf claim, and entry 25's heap debt rides the next intrinsically-scored
     campaign instead." Stays open until the sitting is scheduled; the lean toward
     correctness-only is recorded, not yet binding. Original entry below.]**
