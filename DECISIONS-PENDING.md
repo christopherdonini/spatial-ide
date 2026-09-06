@@ -89,6 +89,29 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     worker + reviewer gate; then the human's zoom-out-only re-run; then L9 closes, rule 10 archives.
     **Ordering restated by the human 2026-09-07 (verbatim):** *"48-(a) first, then release
     engineering (which owes the ADR-020 packaged-debug fix), LOD after."*
+    **RULE-7 STOP, 2026-09-07 — two failed reviewer gates on the 48-(a) piece; a THIRD attempt needs
+    the human's word.** Attempt 1 (543a5f2) FAILED: the predicate read `latestUnionedExtent`, which
+    grid batches also feed, so release-on-pan-away was never implemented. Attempt 2 (48c19ea) fixed
+    that (verified) but its own new code FAILED: the snapshot is taken at the untiled terminal under
+    a "current" check that `cancelUntiledStream()` makes structurally false (it clears the handle
+    before issuing the cancel), so a first look the operator's Cancel self-cancels is NEVER
+    snapshotted and NEVER protected for that generation — proven by the reviewer's probe; violates
+    the sub-amendment's clause 3 verbatim. The reviewer also classified the generation-2+ window
+    (gridFrame survives `clearAll()`, so a plan can land a grid batch before the new first look
+    terminates): real; and a THIRD consequence of the same design — such a batch taints the snapshot
+    (M1 one generation later). **One design change closes all three, the reviewer's
+    recommendation and the custodian's:** stop snapshotting at the terminal; keep a first-look-ONLY
+    running extent unioned from each first-look batch's own extent (`ingestTileBatch` already
+    computes `extentOfBatch(batch)`, `tileIngest.ts:158` — expose it on the ingest outcome and union
+    it session-side inside the existing `if (tileKey === INITIAL_TILE_KEY)` branch). Protection is
+    then live from the first first-look batch (no window), never sees a grid extent (no taint), and
+    is independent of how the stream ended (no M2). Cost: one outcome field, two doc comments, one
+    `tileIngest` test, plus the reviewer's probe as the M2 regression test. This is a DEPARTURE from
+    the preregistered design (the sub-amendment named `latestUnionedExtent` as the extent) and so
+    gets a dated preregistration amendment before code — on the human's authorization of the third
+    attempt. Alternative (weaker): snapshot inside `cancelUntiledStream()` + protect unconditionally
+    while the untiled stream is running; leaves the taint, declarable. **Recommendation: authorize
+    the third attempt with the running-extent design.** Nothing dispatched until then.
 
 47. **[K6's escape hatch, re-asked by the human's own L8 verdict — and a pick-accuracy
     observation beside it; surfaced 2026-09-06 at the Part L sitting, candidate arm verified.]**
