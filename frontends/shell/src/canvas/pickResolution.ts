@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { ResidentBatch } from "./decodeBatch";
+import { isPickBelowResolution, type HoverReadout } from "./pick";
 
 /**
  * Viewport-residency cut P6a, decision 24(c): sub-pixel pick refusal by name (ADR-028 item 4, ADR-010
@@ -85,4 +86,46 @@ export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "ring
  */
 export function isBelowPickResolution(averageFeatureExtentWorldUnits: number, pixelsPerWorldUnit: number): boolean {
   return averageFeatureExtentWorldUnits * pixelsPerWorldUnit < SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX;
+}
+
+/**
+ * Residency-debt cut 1b, Item C (DECISIONS-PENDING entry 29, "K6"; `RESIDENCY-DEBT-1B.md`): the
+ * standing hover readout re-evaluated at a NEW camera zoom, with no GPU re-pick. K6's repro: hover a
+ * feature fully zoomed in (its id shows), keep the pointer stationary, zoom OUT past this module's
+ * declared threshold -- `WorkingCanvas.tsx`'s `onHover` only fires on pointer MOVE, so without this
+ * function the stale id readout would persist past the zoom where a fresh hover would refuse by
+ * name. This is deliberately NOT a re-pick (ADR-010 rule 6, "declared, not discovered" -- and the
+ * escape hatch this cut's own preregistration names, BS7): it re-runs the same pure threshold
+ * comparison `isBelowPickResolution` already makes on a fresh pointer move, against the SAME
+ * `averageFeatureExtentWorldUnits` (unaffected by a camera move -- it is the resident set's own
+ * geometric average, `WorkingCanvas.tsx`'s `averageFeatureExtentRef`) but the NEW zoom's
+ * `pixelsPerWorldUnit`.
+ *
+ * Returns the readout the caller should now emit, or `undefined` when nothing should be emitted at
+ * all (the caller's own `lastHoverReadoutRef` -- mirroring the last EMITTED readout, not merely the
+ * last-computed one -- is left exactly as it was):
+ *
+ * - `standing === null` (nothing shown): `undefined` -- a later real `onHover` evaluates normally
+ *   once the pointer actually moves; there is nothing standing to go stale.
+ * - Below the new threshold: the named refusal (`PickBelowResolution`) -- UNLESS `standing` is
+ *   already that same refusal, in which case `undefined` (no redundant re-emit, test case (d)).
+ * - Not below the new threshold: `null` -- reached whether `standing` was a resolved feature id
+ *   (test case (b): a previously-shown id can no longer be confirmed to sit under the pointer
+ *   without a fresh GPU pick, so clearing is the honest minimum) or the refusal itself (test case
+ *   (c): a previously-shown refusal is no longer known true either). Never re-asserts or
+ *   keep-corrects a feature id across the camera change -- that would need a re-pick, out of this
+ *   cut's scope by its own preregistration.
+ */
+export function reevaluateStandingHoverOnCameraChange(
+  standing: HoverReadout,
+  averageFeatureExtentWorldUnits: number,
+  pixelsPerWorldUnit: number
+): HoverReadout | undefined {
+  if (standing === null) return undefined;
+  const below = isBelowPickResolution(averageFeatureExtentWorldUnits, pixelsPerWorldUnit);
+  if (below) {
+    if (isPickBelowResolution(standing)) return undefined;
+    return { kind: "below-pick-resolution" };
+  }
+  return null;
 }

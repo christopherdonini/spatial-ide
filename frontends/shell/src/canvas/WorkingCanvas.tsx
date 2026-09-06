@@ -42,7 +42,7 @@ import {
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import type { HoverReadout } from "./pick";
 import { resolvePick } from "./pick";
-import { averageFeatureExtent, isBelowPickResolution } from "./pickResolution";
+import { averageFeatureExtent, isBelowPickResolution, reevaluateStandingHoverOnCameraChange } from "./pickResolution";
 import { ResidentSet } from "./residentSet";
 import { getResidencyArm } from "../residency/residencyArm";
 import { ingestTileBatch } from "./tileIngest";
@@ -578,6 +578,27 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   // being silently ignored for the canvas's whole lifetime.
   const onHoverRef = useRef(onHover);
   onHoverRef.current = onHover;
+
+  /** Residency-debt cut 1b, Item C (DECISIONS-PENDING entry 29, "K6"): mirrors the last readout
+   * actually EMITTED through `onHoverRef` (never merely computed) -- `emitHoverReadout` below is the
+   * ONLY place either this ref or `onHoverRef.current(...)` is written, so the two never drift apart.
+   * Read by `reevaluateHoverForZoom` (below `averageFeatureExtentRef`) on every camera-change zoom
+   * update, standing in for "what the operator currently sees" so a camera move -- with the pointer
+   * stationary, no fresh `onHover` fires -- can still re-run the declared pick-resolution threshold
+   * at the NEW zoom (K6's repro: hover fully zoomed in, keep the pointer still, zoom OUT past the
+   * threshold; a fresh hover would refuse by name, but nothing re-evaluates the standing readout
+   * without this). */
+  const lastHoverReadoutRef = useRef<HoverReadout>(null);
+
+  /** The one place `onHoverRef.current(...)` is called and `lastHoverReadoutRef` is written --
+   * routes every hover emission (the real `onHover` callback's own four call sites, and the
+   * camera-change re-evaluation below) through a single choke point so the ref always mirrors
+   * exactly what was last shown. */
+  function emitHoverReadout(readout: HoverReadout): void {
+    lastHoverReadoutRef.current = readout;
+    onHoverRef.current(readout);
+  }
+
   const onCanvasRefusalRef = useRef(onCanvasRefusal);
   onCanvasRefusalRef.current = onCanvasRefusal;
   const onResidentCeilingExceededRef = useRef(onResidentCeilingExceeded);
@@ -617,6 +638,33 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * set: the real interactive `onViewStateChange` handler, `fitToExtent`, and the E2E-only
    * deterministic view-state seam. */
   const currentZoomRef = useRef(INITIAL_ZOOM);
+
+  /** Residency-debt cut 1b, Item C (DECISIONS-PENDING entry 29, "K6"; `RESIDENCY-DEBT-1B.md`): called
+   * at every site that just updated `currentZoomRef.current` (immediately after, with the NEW zoom),
+   * so the standing hover's own declared-resolution refusal is re-evaluated on a camera change even
+   * though the pointer never moved and `onHover` therefore never re-fires. K6's own repro is a
+   * stationary-pointer zoom-OUT, but the trigger is any camera change: `onViewStateChange` fires on
+   * pure PANS too (zoom unchanged), so a stationary-pointer pan also re-evaluates here and clears a
+   * standing above-threshold id to `null` -- which is even more clearly right than the zoom case,
+   * since after a pan the still pointer sits over a different world location and the old id is stale
+   * (the pure helper's not-below branch returns `null`, never re-asserting it -- that would need a
+   * re-pick). Pure decision lives in
+   * `pickResolution.ts`'s `reevaluateStandingHoverOnCameraChange` (unit-tested there); this is only
+   * the ref-plumbing around it -- `averageFeatureExtentRef` (unaffected by a camera move) and
+   * `lastHoverReadoutRef` (what is currently shown) in, `emitHoverReadout` out when the pure function
+   * says something should change. Deliberately NOT a GPU re-pick (the escape hatch this cut's own
+   * preregistration names, BS7) -- see that function's own doc comment for the full case-by-case
+   * reasoning. */
+  function reevaluateHoverForZoom(newZoom: number): void {
+    const next = reevaluateStandingHoverOnCameraChange(
+      lastHoverReadoutRef.current,
+      averageFeatureExtentRef.current,
+      pixelsPerWorldUnitAtZoom(newZoom)
+    );
+    if (next !== undefined) {
+      emitHoverReadout(next);
+    }
+  }
 
   function render(): void {
     const deck = deckRef.current;
@@ -682,6 +730,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     const heightPx = canvas?.clientHeight || 1;
     const fit = fitViewStateForBbox(bbox, widthPx, heightPx);
     currentZoomRef.current = fit.zoom; // decision 24(c): the hover site's own current-zoom read
+    reevaluateHoverForZoom(fit.zoom); // residency-debt cut 1b, Item C (K6): re-run the standing hover's own refusal at the new zoom
     const frame = frameRef.current;
     frame.forceRecenter(fit.centerX, fit.centerY);
     frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX));
@@ -1184,6 +1233,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       onViewStateChange: ({ viewState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
         currentZoomRef.current = vs.zoom; // decision 24(c): the hover site's own current-zoom read
+        reevaluateHoverForZoom(vs.zoom); // residency-debt cut 1b, Item C (K6): the interactive wheel-zoom repro site
         const frame = frameRef.current;
         frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(vs.zoom), RECENTER_BUDGET_PX));
         traceViewState(vs.target[0], vs.target[1], vs.zoom, frame.originX, frame.originY);
@@ -1221,7 +1271,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       onHover: (info: PickingInfo) => {
         // rule 1: deck.gl's own unprojected pick coordinate is never read, here or anywhere else.
         if (info.index === undefined || info.index < 0 || !info.layer) {
-          onHoverRef.current(null);
+          emitHoverReadout(null);
           return;
         }
         // Viewport-residency cut P6a, Defect B (architect gate, blocking): `activeBatches()`, the
@@ -1230,7 +1280,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // set regardless of what was actually resident and drawn.
         const batch = batchForLayerId(activeBatches(), info.layer.id);
         if (!batch) {
-          onHoverRef.current(null);
+          emitHoverReadout(null);
           return;
         }
         // Decision 24(c): a real GPU pick landed on SOMETHING, but if the resident data's own average
@@ -1238,10 +1288,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // among many equally-plausible candidates at this pixel would be arbitrary -- refuse by name
         // instead (`PickBelowResolution`), a distinct hover-readout state, never null-silence.
         if (isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current))) {
-          onHoverRef.current({ kind: "below-pick-resolution" });
+          emitHoverReadout({ kind: "below-pick-resolution" });
           return;
         }
-        onHoverRef.current(resolvePick(batch, info.index));
+        emitHoverReadout(resolvePick(batch, info.index));
       },
       onError: (error: Error) => {
         // ADR-010 rule 7: deck.gl's own render-loop failures must not vanish into the console --
@@ -1393,6 +1443,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       const widthPx = canvas.clientWidth || 1;
       const heightPx = canvas.clientHeight || 1;
       currentZoomRef.current = zoom; // decision 24(c): the hover site's own current-zoom read
+      reevaluateHoverForZoom(zoom); // residency-debt cut 1b, Item C (K6): the E2E-only deterministic camera seam
       const frame = frameRef.current;
       frame.forceRecenter(targetX, targetY);
       frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX));

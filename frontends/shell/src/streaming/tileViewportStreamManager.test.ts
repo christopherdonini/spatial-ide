@@ -592,6 +592,176 @@ describe("TileViewportStreamManager", () => {
     });
   });
 
+  // Item A (residency-debt cut 1b, decisions 32a/33b): the scoped relief lever, modeled on `clearAll`,
+  // NOT on `stop` -- these tests are the manager-level half of Item A's four pre-committed test cases
+  // (case 3, the pure stall predicate, lives in `residencyStatus.test.ts`; case 4, the property test,
+  // is the last one below).
+  describe("relinquishOutstanding (item A, decisions 32a/33b: the scoped relief lever)", () => {
+    it("cancels every in-flight tile and drops every queued tile, WITHOUT ever setting stopped -- a subsequent onCameraChange still plans (BS1)", async () => {
+      const { manager, onTileSuperseded } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = {
+        xmin: frame.originX,
+        ymin: frame.originY,
+        xmax: frame.originX + 4 * cellSize, // 4 covering tiles: 3 issued (the in-flight cap), 1 queued
+        ymax: frame.originY + cellSize,
+      };
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_3", expires_in_ms: 30_000 });
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      await flushMicrotasks();
+      expect(manager.inFlightCount).toBe(3);
+      expect(manager.queuedCount).toBe(1);
+
+      const summary = manager.relinquishOutstanding();
+
+      expect([...summary.cancelledInFlight].sort()).toEqual([...outcome.issued].sort());
+      expect([...summary.droppedQueued].sort()).toEqual([...outcome.queued].sort());
+      expect(cancelMock).toHaveBeenCalledWith("sh_1");
+      expect(cancelMock).toHaveBeenCalledWith("sh_2");
+      expect(cancelMock).toHaveBeenCalledWith("sh_3");
+      expect(manager.inFlightCount).toBe(0);
+      expect(manager.queuedCount).toBe(0);
+      expect(manager.trackedTileCount).toBe(0);
+      // The lever's own design guarantee (not a rider's text): the resident view is retained, never
+      // superseded -- so this lever must never
+      // reach the SAME callback an out-of-view supersede or a budget self-cancel reports through.
+      expect(onTileSuperseded).not.toHaveBeenCalled();
+
+      // BS1: `stopped` was never set -- a subsequent onCameraChange over the SAME (now-dropped)
+      // covering set plans exactly as before, never `{kind:"stopped"}`.
+      //
+      // S4 (reviewer gate, residency-debt cut 1b): asserts actual RE-ISSUANCE, not merely
+      // `kind === "planned"` -- a plan that issued/queued NOTHING would also satisfy that alone,
+      // which would not distinguish "planned something" from "planned nothing but wasn't stopped".
+      // Every one of the 4 dropped tiles is a genuinely NEW candidate again (nothing tracked for any
+      // of them), so this round re-issues up to the in-flight cap and queues the remainder, the exact
+      // same shape the original plan had.
+      viewportQueryMock.mockClear();
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_1b", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_2b", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_3b", expires_in_ms: 30_000 });
+      const outcome2 = manager.onCameraChange(bbox);
+      if (outcome2.kind !== "planned") throw new Error("unreachable");
+      expect(outcome2.issued).toHaveLength(3); // re-issued up to MAX_IN_FLIGHT_TILE_STREAMS
+      expect(outcome2.queued).toHaveLength(1); // the 4th tile queued again, exactly as plan 1 had it
+    });
+
+    it("reports every affected tile through two distinguishable classes, distinct from onTileSuperseded (BS2)", async () => {
+      const { manager, onTileSuperseded } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = {
+        xmin: frame.originX,
+        ymin: frame.originY,
+        xmax: frame.originX + 4 * cellSize,
+        ymax: frame.originY + cellSize,
+      };
+      viewportQueryMock
+        .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 })
+        .mockResolvedValueOnce({ stream: "sh_3", expires_in_ms: 30_000 });
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      await flushMicrotasks();
+
+      logSessionEventMock.mockClear();
+      const summary = manager.relinquishOutstanding();
+
+      for (const tileKey of summary.cancelledInFlight) {
+        expect(logSessionEventMock).toHaveBeenCalledWith("tile-stream-relinquish-cancelled", expect.stringContaining(tileKey));
+      }
+      for (const tileKey of summary.droppedQueued) {
+        expect(logSessionEventMock).toHaveBeenCalledWith("tile-stream-relinquish-dropped", expect.stringContaining(tileKey));
+      }
+      // The two classes are genuinely distinct log levels, never reused for the other's own tiles.
+      expect(logSessionEventMock).not.toHaveBeenCalledWith("tile-stream-relinquish-dropped", expect.stringContaining(summary.cancelledInFlight[0]));
+      // Distinct from an ordinary out-of-view supersede AND a budget self-cancel: BOTH of those report
+      // exclusively through `onTileSuperseded`, which this lever never calls at all (also asserted in
+      // the sibling test above -- restated here since this test is BS2's own dedicated one).
+      expect(onTileSuperseded).not.toHaveBeenCalled();
+    });
+
+    it("also drops a tile mid-ticket-mint (\"issuing\") -- reported as dropped, never left tracked", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockImplementationOnce(() => new Promise(() => {})); // never resolves -- stays "issuing"
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      const outcome = manager.onCameraChange(bbox);
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.issued).toEqual(["0:0"]); // began minting ("issuing") -- no stream yet
+      expect(manager.inFlightCount).toBe(0);
+
+      logSessionEventMock.mockClear();
+      const summary = manager.relinquishOutstanding();
+
+      expect(summary.cancelledInFlight).toEqual([]);
+      expect(summary.droppedQueued).toEqual(["0:0"]);
+      expect(manager.trackedTileCount).toBe(0);
+      expect(logSessionEventMock).toHaveBeenCalledWith("tile-stream-relinquish-dropped", expect.stringContaining("0:0"));
+    });
+
+    it("never touches overBudget -- relinquishing outstanding work is not itself a budget verdict", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      manager.setOverBudget(true, ["9:9"]);
+
+      manager.relinquishOutstanding();
+
+      expect(manager.overBudget).toBe(true);
+      expect(manager.unrequestedTilesOverBudget).toEqual(["9:9"]);
+    });
+
+    // Item A's fork-append test case 4 (decisions 32/33, resolved 2026-09-05): in-flight cancel
+    // asserted as a PROPERTY with ADR-018 instants -- cancel issued, terminal observed (suppressed,
+    // exactly like `stop()`/`cancelTileStream`'s own self-cancel machinery), and no batch is EVER
+    // admitted again for that tile's own stream, before OR after its eventual terminal. Never a timed
+    // assertion (no "within X ms" claim) -- only that the property holds.
+    it("in-flight cancel as a property: cancel issued, the eventual terminal is suppressed, and no batch is ever admitted again for that stream's tile", async () => {
+      const { manager, onBatch, onTerminal } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      manager.onCameraChange(bbox);
+      await flushMicrotasks();
+      expect(manager.inFlightCount).toBe(1);
+      const sink = startStreamMock.mock.calls[0][0].sink as StreamSink;
+
+      manager.relinquishOutstanding();
+
+      // The property itself: a real cancel was issued for the in-flight stream (an ADR-018 instant --
+      // asserted as having happened, never how fast).
+      expect(cancelMock).toHaveBeenCalledWith("sh_1");
+
+      // No batch is admitted for this tile's own stream after the cancel, before its terminal ever
+      // arrives.
+      sink.onBatch(new Uint8Array([9]), true);
+      expect(onBatch).not.toHaveBeenCalled();
+
+      // The eventual terminal (however the cancelled stream's own producer resolves it) is suppressed
+      // -- never reaches onTerminal, the same self-cancelled-handle machinery `stop()`/
+      // `cancelTileStream` already rely on.
+      sink.onTerminal({ kind: "ProducerFailed", detail: "cancelled" });
+      expect(onTerminal).not.toHaveBeenCalled();
+
+      // ...and no batch is admitted "beyond the terminal" either -- the property holds on both sides
+      // of it, never merely up to it.
+      sink.onBatch(new Uint8Array([10]), true);
+      expect(onBatch).not.toHaveBeenCalled();
+    });
+  });
+
   // Architect re-verification, viewport-residency cut P6b, item 4: every `skpCancel(...).catch(...)`
   // site in this module used to swallow a rejection silently (`.catch(() => {})`) -- rule 7's own
   // "reported, not dropped" now applies: a genuinely rejected cancel is logged via the always-on

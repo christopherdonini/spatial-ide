@@ -26,3 +26,6 @@ Thumbs.db
 # Stray scaffold remnants (root app/ was an accident; delete freely)
 /app/
 .cut-archive/
+
+# Single-custodian session lease (AI_DEVELOPMENT.md mechanics) — carries a session id, never committed.
+CUSTODIAN-LEASE

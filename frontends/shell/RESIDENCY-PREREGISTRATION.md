@@ -714,3 +714,14 @@ late-issue→paint, nowhere near arrival→paint); **(d)** the flag is emitted o
 `firstPixelMs` exists to suspect. A genuine `queryToFirstByteMs` of 0 remains unreachable:
 clean recorded values sit at millisecond scale (corpus minimum 3.4ms across 343 positive
 samples, `e2e/out` sweep 2026-09-03, independently re-derived by the review's own sweep).
+
+**Amendment 26 (2026-09-04 — forward-pointer, not a change to any cell in this closed cut).**
+This file's §standing-rule "No RustDesk in any measured cell ... decision 24(g)" (above) was
+phrased as a standing rule; decision 24(g) was AMENDED 2026-09-04 (DECISIONS-PENDING) to permit
+**reported-only** measured cells to run unattended with RustDesk stopped under a proven-safe
+restore protocol (two independent restore triggers armed before the kill, display-awake/
+session-unlocked verified per trial, a dedicated attest string, gated on a one-time
+kill-and-restore dry-run). **Every measured cell in THIS (viewport-residency) cut was human-
+present regardless, so nothing here changes**; the pointer exists only so a reader does not carry
+:368's rule forward as still-absolute. Scored cells and felt verdicts remain human-present
+everywhere — the amendment touches only reported-only measured cells.

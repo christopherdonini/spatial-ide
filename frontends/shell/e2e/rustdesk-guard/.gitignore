@@ -1,0 +1,3 @@
+# Runtime artifact of the restore guard (per-run RESTORE/WATCHDOG/ARM/DISARM log). Not committed —
+# it is machine- and run-specific, like the e2e/out evidence files.
+rustdesk-guard.log

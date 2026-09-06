@@ -7,7 +7,9 @@ name: DCO sign-off
 # ## What this checks, stated narrowly
 #
 # That a `Signed-off-by:` trailer is **present** on each non-merge commit in the pull request, and
-# that its `Name <email>` matches the commit's own author or committer identity.
+# that its `Name <email>` matches the commit's own author or committer identity — or, failing
+# that, that a remediation commit for it exists in the same range (see the remediation section
+# below, added 2026-09-06).
 #
 # It does **not** establish that the signer had the right to submit the code — nothing mechanical
 # can. The DCO is an affirmation by a person; this workflow checks that the affirmation was made,
@@ -32,6 +34,32 @@ name: DCO sign-off
 # GitHub generates merge commits with no trailer and no author who could have signed one. Skipping
 # them is what every DCO implementation does; the commits that carry contributed code are the
 # non-merge ones, and those are all checked.
+#
+# ## Remediation commits (added 2026-09-06 — DECISIONS-PENDING entry 39, the human's ruling)
+#
+# A commit that cannot be rewritten (already pushed, its hash load-bearing as provenance) may be
+# remediated in-history instead of rebased. A failing commit counts as remediated iff a LATER
+# commit — a descendant of the failing one, in the same PR range — meets all three of:
+#
+#   (i)   itself passes the ordinary check above (signed, identity-matching) — an unsigned
+#         remediation remediates nothing;
+#   (ii)  matches the standard remediation format, naming the failing commit's FULL sha:
+#         subject `DCO Remediation Commit for <author>`, body line
+#         `I, <author>, hereby add my Signed-off-by to commit: <full sha>` — or the
+#         dcoapp-standard wording `... to this commit: <full sha>`, accepted equally (ruled
+#         2026-09-06: external contributors will follow the published convention verbatim,
+#         and rejecting it over a missing "this" would be pedantry, not protection);
+#   (iii) carries the SAME author identity (`Name <email>`) as the commit it remediates, AND its
+#         own `Signed-off-by` trailer names that identity — the affirmation itself, not merely
+#         the self-asserted author field, must stand in the remediated author's name. Individual
+#         remediation only: a remediation whose only affirmation is somebody else's is refused
+#         (an author field alone proves nothing — `--author` is a flag anyone can pass). What
+#         none of this can do is authenticate: author field and trailer are both strings anybody
+#         can type, the same boundary the "stated narrowly" section above draws for the ordinary
+#         check; string equality is all a CI job can compare.
+#
+# A remediated commit is reported as a `::notice::`, never silently passed, and the summary
+# line counts remediations separately, so a green run says what it accepted and why.
 #
 # ## Green as of 2026-08-07 — the not-a-gate caveat is lifted, its history kept
 #
@@ -114,11 +142,13 @@ jobs:
             exit 0
           fi
 
-          failed=0
-          checked=0
-          while read -r sha; do
-            checked=$((checked + 1))
-            subject=$(git log -1 --format='%s' "$sha")
+          # The ordinary per-commit check, as a function, so pass 1 and the remediation rule's
+          # condition (i) share one definition rather than two copies that drift. Returns 1 when
+          # no trailer is present, 2 when a trailer is present but matches nobody who wrote or
+          # committed the commit. `local` throughout — the caller's loop variables stay its own.
+          ordinary_check() {
+            local sha author committer trailers
+            sha="$1"
             author="$(git log -1 --format='%an <%ae>' "$sha")"
             committer="$(git log -1 --format='%cn <%ce>' "$sha")"
 
@@ -129,30 +159,121 @@ jobs:
             trailers=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly,unfold)' "$sha")
 
             if [ -z "$(printf '%s' "$trailers" | tr -d '[:space:]')" ]; then
-              echo "::error::${sha} is not signed off — ${subject}"
-              failed=$((failed + 1))
-              continue
+              return 1
             fi
 
             # The trailer must match the author or the committer. Requiring a match is what stops a
             # sign-off standing in somebody else's name; accepting *either* is what lets a
             # maintainer rebase or cherry-pick a contributor's signed commit without invalidating
             # the contributor's own affirmation.
-            if printf '%s\n' "$trailers" | grep -qxF "$author"; then
-              :
-            elif printf '%s\n' "$trailers" | grep -qxF "$committer"; then
-              :
+            # `--` so an identity beginning with `-` is a pattern, not a grep option; a
+            # here-string rather than a pipe so `grep -q`'s early exit cannot SIGPIPE the
+            # producer under `pipefail` (rc 141 would read as "no match" — fail-closed but
+            # wrong, and dependent on message size).
+            if grep -qxF -- "$author" <<< "$trailers"; then
+              return 0
+            elif grep -qxF -- "$committer" <<< "$trailers"; then
+              return 0
+            fi
+            return 2
+          }
+
+          # Pass 1: the ordinary check on every commit. A failing commit is HELD (with its
+          # failure code, so pass 2 diagnoses without re-running the check) rather than failed —
+          # pass 2 looks for its remediation. Passing commits are recorded too, because only an
+          # ordinarily-passing commit may remediate (condition i of the header).
+          ordinary_pass=""
+          held=""
+          checked=0
+          while read -r sha; do
+            [ -n "$sha" ] || continue
+            checked=$((checked + 1))
+            rc=0
+            ordinary_check "$sha" || rc=$?
+            if [ "$rc" -eq 0 ]; then
+              ordinary_pass="${ordinary_pass}${sha}"$'\n'
             else
+              held="${held}${sha} ${rc}"$'\n'
+            fi
+          done <<< "$commits"
+
+          # Pass 2: each held commit either has a remediation commit — conditions (i)-(iii) of the
+          # header — or fails with the same diagnostics the single-pass version printed.
+          failed=0
+          remediated=0
+          while read -r sha rc; do
+            [ -n "$sha" ] || continue
+            subject=$(git log -1 --format='%s' "$sha")
+            # GitHub decodes %-escapes inside annotation payloads, so a crafted subject could
+            # render fake result lines inside the annotation. Neutralize `%`; the plain log
+            # below the annotations is unaffected either way.
+            subject="${subject//%/%25}"
+            author="$(git log -1 --format='%an <%ae>' "$sha")"
+
+            remedy=""
+            near_miss=""
+            while read -r r; do
+              [ -n "$r" ] || continue
+              # (i) is by construction: $r comes from ordinary_pass. LATER means ancestry, not
+              # rev-list position — a linear scan order would misread a branchy range. (A
+              # remediation on a sibling branch inside the range is therefore refused:
+              # fail-closed, and the descendant reading is the honest meaning of "later".)
+              git merge-base --is-ancestor "$sha" "$r" || continue
+              # (iii) same author identity — string equality, the only comparison a CI job can
+              # make — AND the remediation's own affirmation in that identity's name. Without
+              # the second half, `--author` spoofing lets a commit signed only by somebody else
+              # remediate: authored-as the victim, affirmed by nobody who is the victim.
+              [ "$(git log -1 --format='%an <%ae>' "$r")" = "$author" ] || continue
+              grep -qxF -- "$author" <<< "$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly,unfold)' "$r")" || continue
+              # (ii) the standard format, full sha. Subject and body sentence both, exactly.
+              # Here-strings, not pipes: `grep -q` exits at the first match, and under
+              # `pipefail` the producer's SIGPIPE (141) would read as "no match" — a valid
+              # remediation inside a large-enough message would be silently refused.
+              [ "$(git log -1 --format='%s' "$r")" = "DCO Remediation Commit for ${author}" ] || continue
+              body="$(git log -1 --format='%B' "$r")"
+              if grep -qxF -- "I, ${author}, hereby add my Signed-off-by to commit: ${sha}" <<< "$body" \
+                || grep -qxF -- "I, ${author}, hereby add my Signed-off-by to this commit: ${sha}" <<< "$body"; then
+                remedy="$r"
+                break
+              fi
+              # Subject matched, body line did not: remember it so the error below can say so —
+              # the exact-match rule otherwise leaves a near-miss author debugging blind.
+              near_miss="$r"
+            done <<< "$ordinary_pass"
+
+            if [ -n "$remedy" ]; then
+              remediated=$((remediated + 1))
+              if [ "$rc" -eq 1 ]; then
+                echo "::notice::${sha} carries no sign-off of its own, but ${remedy} remediates it — ${subject}"
+              else
+                echo "::notice::${sha} is signed off by nobody who wrote or committed it, but ${remedy} remediates it — ${subject}"
+              fi
+              continue
+            fi
+
+            if [ "$rc" -eq 1 ]; then
+              echo "::error::${sha} is not signed off — ${subject}"
+            else # rc=2: a trailer is present but matches nobody who wrote or committed it
+              committer="$(git log -1 --format='%cn <%ce>' "$sha")"
+              trailers=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly,unfold)' "$sha")
               echo "::error::${sha} is signed off, but by nobody who wrote or committed it — ${subject}"
               echo "  author:      ${author}"
               echo "  committer:   ${committer}"
               echo "  signed off:  $(printf '%s' "$trailers" | tr '\n' ';')"
-              failed=$((failed + 1))
             fi
-          done <<< "$commits"
+            if [ -n "$near_miss" ]; then
+              echo "  note: ${near_miss} carries the remediation subject for this author but its body"
+              echo "  line did not match exactly — the sentence must name the FULL sha, wording per"
+              echo "  CONTRIBUTING.md's DCO section."
+            fi
+            failed=$((failed + 1))
+          done <<< "$held"
 
           echo
           echo "Checked ${checked} non-merge commit(s); ${failed} failed."
+          if [ "$remediated" -ne 0 ]; then
+            echo "Remediated: ${remediated} commit(s), each named in a ::notice:: above — accepted via a same-identity remediation commit, signed in that identity."
+          fi
           if [ "$failed" -ne 0 ]; then
             cat <<'MSG'
 
@@ -161,6 +282,11 @@ jobs:
             git commit -s                  # when making a commit
             git commit --amend -s          # fix the most recent one
             git rebase --signoff <base>    # fix every commit since <base>
+
+          A commit that cannot be rewritten (already pushed, its hash load-bearing) can be
+          remediated instead: a later commit by the same author, signed by that same author,
+          in the standard remediation format — see CONTRIBUTING.md's DCO section for the
+          exact wording.
 
           The DCO is an affirmation that you have the right to submit the contribution.
           It is not a copyright assignment: you keep the copyright in what you write.

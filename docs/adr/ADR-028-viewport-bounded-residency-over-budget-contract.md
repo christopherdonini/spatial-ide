@@ -371,3 +371,59 @@ time-to-data upstream of paint dominates on direct records. The principle-7 obli
 cancellation, honest progress reporting) is unchanged and sharpened: continuous work was
 indistinguishable from a stall in every operator-facing signal. The "not futile traffic" half,
 and everything else in that section, stands as written.
+
+## Amendment 2 — Scoped residency relief and the quiescence signal (2026-09-05, appended — Accepted per the human's entry-37 conditional approval; discharges the 1b principle-7/8 debt)
+
+**Approval provenance.** The human's ruling (DECISIONS-PENDING entry 37): *"append; approved
+provided the text declares only Item B's shipped behavior and carries reopen conditions — flag me
+if either fails."* The original draft failed the second condition (no reopen conditions) and was
+flagged rather than appended; this text is the cured form — every clause below verified against
+the shipped code at the residency-debt cut's own tip, with the mandated reopen conditions carried.
+The reopeners' exact wording, like all operator-facing strings, remains the human's to amend at PR
+sight (24(b)).
+
+**Context.** ADR-028 delivered viewport-bounded residency and the over-budget partial-view
+contract but left the held-queue disposition (docs/01 principle 7) and an affirmative
+settled-partial declaration (principle 8) as named 1b debt. The only cancel lever was a permanent
+kill switch; no client signal distinguished actively-filling from queued-and-stalled or from
+settled-partial.
+
+**Decision, as shipped.**
+(a) *Scoped relief (decisions 32a/33b/35).* The operator Cancel repoints to
+`TileViewportStreamManager.relinquishOutstanding` plus the session's `relinquishFill`: every
+in-flight tile stream is cancelled (the existing `cancel` SKP command, ADR-018 — no new wire),
+the queued/mid-mint backlog is dropped, and — per entry 35 — the untiled first-look/reissue
+stream is cancelled too whenever the manager's grid frame is already established (never in the
+frameless bootstrap window, where the frame anchor lives; that boundary is documented and its
+status variant states it). Every affected stream is reported distinctly (relinquish-cancelled,
+relinquish-dropped, untiled-relinquish-cancelled — each distinguishable from an out-of-view
+supersede and from a budget self-cancel). The lever never sets `stopped`, never clears residency,
+never resets the grid frame — future planning is unaffected; the permanent kill is teardown-only.
+Cancellation is asserted as a property (ADR-018 instants), never timed.
+(b) *The quiescence signal.* Pure functions of client-observable session state: `fillActivity`
+(stalled iff queued work exists while over budget without headroom) and `settledState` (settled
+iff a plan has run, no re-plan is pending, no tile work is tracked, and the untiled stream is not
+running; classified settled-complete / settled-partial / settled-partial-failure against the
+fill-completeness predicate and the typed failure accounting). Surfaced through the existing
+status union — no new SKP field (ADR-004 Amendment 4), no producer scan-progress dependency. The
+settling moment itself emits; the signal never waits for a next batch or camera change to become
+visible.
+(c) *Honesty guarantees (the 1b reviewer-gate strengthenings, entry 36's rule "silence and
+staleness never represent state").* A user-stopped fill can never read complete until a fresh
+plan runs. No completeness claim is emitted while any covering-tile stream or the untiled stream
+is outstanding, a re-plan is pending, or a covering failure stands unreplanned — failures feed
+typed, generation-gated accounting rather than silence, with their own distinct partial-failure
+reading. A stale completeness claim is cleared on the invalidating gesture. The relinquished
+status is sticky until a genuine clearing transition, and its live-tense untiled variant retires
+itself at that stream's own terminal — a claim never outlives its premise.
+
+**Consequences.** Discharges ADR-028's 1b principle-7/8 debt; ADR-006 class-1/derived-state only;
+no wire change (ADR-010 rule 1 untouched); all operator-facing wording is the human's per 24(b).
+Nothing is silently absorbed: entry 36's implementation shipped with this amendment's own cut.
+
+**Reopen conditions.** (1) Evidence that the scoped relief fails to visibly obey — a Cancel click
+leaving filling running with the status unchanged — reopens the 32a/33b application as a defect.
+(2) Evidence of a completeness claim rendered over a partial, failed, or mid-fill view — any
+"Showing all N" while a covering tile is absent, partial, or failed, or any stream outstanding —
+reopens the quiescence signal as a defect. (3) A contradicting felt re-verdict at the cut's
+closing sitting reopens rather than stands (this ADR's own gate-8 rider pattern).

@@ -128,6 +128,29 @@ function logRejectedCancel(context: string, streamHandle: string, err: unknown):
   );
 }
 
+/** Item A (residency-debt cut 1b, entries 32/33): `relinquishOutstanding`'s own BS2 report for a
+ * tile that WAS in flight -- distinguishable from `onTileSuperseded` (out-of-view supersede, budget
+ * self-cancel) by construction: this function is the ONLY caller of this log level, and
+ * `relinquishOutstanding` never calls `onTileSuperseded` at all (the resident view is retained, not
+ * superseded -- that method's own doc comment has the full account). */
+function logRelinquishCancelled(tileKey: string, streamHandle: string): void {
+  logSessionEvent(
+    "tile-stream-relinquish-cancelled",
+    `${tileKey} ${streamHandle}: cancelled by the scoped relief lever -- in-flight stream cancel issued, already-admitted residency retained`
+  );
+}
+
+/** Item A: the sibling report for a tile that was only ever `"queued"` or mid-ticket-mint
+ * (`"issuing"`) -- never started a real stream, so there is nothing to cancel, only to drop. A
+ * distinct log level from `logRelinquishCancelled` above -- BS2's own text (RESIDENCY-DEBT-1B.md):
+ * "Every lever-dropped tile is reported, distinguishable from supersede and from self-cancel." */
+function logRelinquishDropped(tileKey: string): void {
+  logSessionEvent(
+    "tile-stream-relinquish-dropped",
+    `${tileKey}: dropped by the scoped relief lever -- queued/mid-mint tile never started a stream`
+  );
+}
+
 /** `"queued"`: waiting in `queue` for a concurrency slot. `"issuing"`: a slot was claimed and
  * `viewportQuery`/`dataPlaneAttach` are in flight (no stream handle yet -- ticket minting itself
  * crosses real awaits, see `issueEpoch`'s own doc comment). `"in-flight"`: a real stream is
@@ -405,6 +428,70 @@ export class TileViewportStreamManager {
       this.tileState.delete(tileKey);
       this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
     }
+  }
+
+  /**
+   * Item A (residency-debt cut 1b, decisions 32a/33b): the scoped relief lever the operator's Cancel
+   * button repoints to -- stop filling, keep the current partial view, tiling resumes on the next
+   * camera change (this file's own summary of the 32a ruling, not a quotation of it), as opposed to
+   * `stop()`'s permanent kill. Modeled on `clearAll` above (drop every
+   * queued/mid-mint tile, cancel every in-flight one via the SAME real `skpCancel` + self-cancelled-
+   * handle suppression `clearAll`/`stop` already use, so a stream's eventual terminal is suppressed
+   * rather than misreported), **NOT** on `stop`: `stopped` is never set (BS1 -- a subsequent
+   * `onCameraChange` plans exactly as before, unaffected), `this.frame` is never touched, and
+   * `overBudgetFlag`/`unrequestedTileKeysOverBudget` are left exactly as they were (relinquishing
+   * outstanding work is not itself a verdict on whether the viewport still fits its budget -- the
+   * next real camera change re-derives that honestly, the same way it always has).
+   *
+   * **Never calls `onTileSuperseded`** -- the resident view this session already holds is retained
+   * untouched; superseding it is precisely what this lever is not. The already-admitted content of an
+   * in-flight tile stays; only the REQUEST for the rest of it stops.
+   * `drainQueueIfRoom` is never called either: every queued/issuing tile is being dropped in the same
+   * pass a slot might free from cancelling an in-flight one, and re-minting anything here would defeat
+   * the whole point of a full relinquish.
+   *
+   * BS2: every affected tile is reported through the SAME always-on session-log sink
+   * (`logSessionEvent`) `logRejectedCancel` above already uses, in one of two distinguishable classes
+   * -- `logRelinquishCancelled` (was in flight, a real cancel was issued) or `logRelinquishDropped`
+   * (was queued or mid-mint, never started a stream) -- structurally distinct from an out-of-view
+   * supersede or a budget self-cancel, both of which report EXCLUSIVELY through `onTileSuperseded`,
+   * never through either of these two log levels.
+   */
+  relinquishOutstanding(): { cancelledInFlight: string[]; droppedQueued: string[] } {
+    const cancelledInFlight: string[] = [];
+    for (const [tileKey, entry] of [...this.inFlightStreams.entries()]) {
+      this.inFlightStreams.delete(tileKey);
+      this.tileState.delete(tileKey);
+      this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
+      this.selfCancelledHandles.add(entry.streamHandle);
+      void skpCancel(entry.streamHandle).catch((err) => logRejectedCancel("relinquishOutstanding", entry.streamHandle, err));
+      logRelinquishCancelled(tileKey, entry.streamHandle);
+      cancelledInFlight.push(tileKey);
+    }
+
+    const droppedQueued: string[] = [];
+    for (const key of this.queue) {
+      const tileKey = tileKeyToString(key);
+      this.tileState.delete(tileKey);
+      this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
+      logRelinquishDropped(tileKey);
+      droppedQueued.push(tileKey);
+    }
+    this.queue = [];
+
+    // A tile mid-ticket-mint ("issuing" -- a slot claimed, viewportQuery/dataPlaneAttach in flight, no
+    // stream handle yet) has no stream to cancel and was never in `queue` either (`beginIssue` already
+    // dequeued it) -- swept exactly like `clearAll`'s own third loop, same "dropped, never started"
+    // class as an ordinary queued tile.
+    for (const [tileKey, state] of [...this.tileState.entries()]) {
+      if (state !== "issuing") continue;
+      this.tileState.delete(tileKey);
+      this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
+      logRelinquishDropped(tileKey);
+      droppedQueued.push(tileKey);
+    }
+
+    return { cancelledInFlight, droppedQueued };
   }
 
   /** Cancels every in-flight tile stream and refuses every future `onCameraChange` call -- dataset

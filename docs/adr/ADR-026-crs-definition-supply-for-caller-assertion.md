@@ -121,6 +121,9 @@ The human ruled the item above in two parts (DECISIONS-PENDING entries 25 and 30
   system did/verified, never implying an unrun action"): `pasted` for `None` asserted an action
   that never happened; `none-supplied` records only the observed non-supply — no hash, no
   catalog comparison ever ran. Implemented at `engine/src/crs_catalog.rs::definition_provenance`
-  with its pinned test; the versioning disposition for this value-set change within the frozen
-  `skp/0.2` is put to the human at the carrying PR, recorded in `SKP-V0.md`'s own entry-30
-  addendum — not decided by this append.
+  with its pinned test. **Versioning disposition RULED 2026-09-04: `skp/0.2` stands, no bump** —
+  `none-supplied` is a new value in the EXISTING `definition_provenance` key's domain (not a new
+  key), so it rides the current version as a value-domain widening, the same shape as
+  DECISIONS-PENDING entry 6's `ApprovalRoute::ShellDialog` widening, carrying entry 6's own expiry
+  clause (holds only while no external reader of `skp/0.2` exists). Full record in `SKP-V0.md`'s
+  own entry-30 addendum.

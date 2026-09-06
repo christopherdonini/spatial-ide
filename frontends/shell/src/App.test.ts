@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it, vi } from "vitest";
 
 import type { Admitted } from "./admission/admitDataset";
@@ -1005,5 +1009,33 @@ describe("makeCandidateViewportDispatcher (P5f complex-gate must-fix 4: the doub
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+// S-2 (re-reviewer gate, residency-debt cut 1b): entry 35's sticky guarantee (`residencyStatus.ts`'s
+// own doc comment on `nextResidencyStatus`: a standing `candidate-relinquished` status is "NEVER
+// silently replaced" by a later within/over-budget reading) depends entirely on ONE call site --
+// `App.tsx`'s own `onResidencyStatusChange: (event) => setResidencyStatus((current) =>
+// nextResidencyStatus(event, current))` -- threading the CURRENT status through the `useState`
+// functional-updater form. A revert to the non-functional form (`setResidencyStatus(nextResidencyStatus
+// (event))`, closing over a stale render-scope `residencyStatus` instead) would silently break
+// stickiness in the running app while leaving every existing test green: every test in THIS file and
+// in `residencyStatus.test.ts` calls `nextResidencyStatus` directly, never through this call site, and
+// this package carries no DOM/WebGL harness to render `<App>` and drive its internal
+// `onResidencyStatusChange` prop (`nextResidencyStatus`'s own doc comment in `residencyStatus.ts`: "App.test.ts asserts
+// every transition here directly, without a DOM/WebGL harness this package does not carry") -- so
+// there is no way to pick the "drive the setter chain through a rendered App" option S-2 also offers.
+// This is therefore the other option: a source-shape assertion, reading `App.tsx`'s own source text
+// and pinning the call site's exact shape -- the same house pattern `e2e/checkDistClean.mjs` already
+// uses to pin a fact about compiled/source text no runtime test surface in this package can observe.
+// Genuinely fails on the revert described above (either dropping the functional form, or dropping the
+// `current` argument), which is the property this guard exists for.
+describe("S-2: App.tsx's own functional-updater call site for onResidencyStatusChange, pinned", () => {
+  it("candidateArmSession's onResidencyStatusChange call site passes the useState functional updater, threading `current` into nextResidencyStatus", () => {
+    const appSourcePath = join(dirname(fileURLToPath(import.meta.url)), "App.tsx");
+    const appSource = readFileSync(appSourcePath, "utf8");
+    const callSitePattern =
+      /onResidencyStatusChange:\s*\(event\)\s*=>\s*setResidencyStatus\(\s*\(current\)\s*=>\s*nextResidencyStatus\(event,\s*current\)\s*\)/;
+    expect(appSource).toMatch(callSitePattern);
   });
 });
