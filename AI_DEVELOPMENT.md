@@ -72,6 +72,22 @@ how obvious they seem:
   to be reverted 16 seconds later — b21111d/3e653f0. A queued ruling with no verbatim human
   sentence behind it is not a ruling.)**
 - **Every custodian commit uses `git commit -s`** with the identity flags. DCO gates PRs.
+  **Two ways this still leaks, both seen for real:** (a) `git revert`, `git merge`, and other
+  git-generated commits do NOT inherit `-s` — `git revert --no-edit` produced an UNSIGNED commit
+  (3e653f0) that failed the DCO gate; pass `-s` (or `git revert -s`) explicitly, always. (b) The
+  committed `.githooks/commit-msg` fence (entry 26) is INERT until `core.hooksPath` is set — a
+  per-clone/per-environment local config git cannot enforce from the repo. **On boot, arm it:
+  `git config core.hooksPath .githooks`, then confirm it rejects an unsigned message** (pipe a
+  no-trailer message file to `sh .githooks/commit-msg <file>` → must exit 1). The fence sat
+  unarmed through its first two tests; arming is now a boot step, like the lease above.
+- **Never wholesale-clean `target/` (no `cargo clean`, no `rm -rf target/`).** The repo's `target/`
+  holds NON-artifact data alongside build output — `target/slice-evidence/` (incl. the 5 GB hero
+  fixture, `kernel/FIXTURES.md`) and `target/fixtures/` (the walkthrough set) — so a wholesale
+  clean eats fixtures and campaign evidence. Reclaim disk SURGICALLY: remove only the build-output
+  dirs (`target/debug`, `target/release`, and `frontends/shell/src-tauri/target`), never the data
+  subdirs. (A proper fix — relocating fixtures out of `target/` entirely — is a scoped refactor:
+  paths are hardcoded across 40+ live test/harness files plus append-only preregistration records,
+  so it is not a mechanical move; see `DECISIONS-PENDING.md`.)
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's

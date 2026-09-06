@@ -5,6 +5,44 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+39. **[DCO gap on PR #22, surfaced 2026-09-06 by the ordered sign-off audit — fixing it is a red
+    line (history rewrite / force-push), so NOT decided or done by the custodian.]** 18 of 19
+    commits on `cut/residency-debt` carry `Signed-off-by`; ONE does not — `3e653f0`, the revert of
+    the b21111d "entries 32/33/34" mistake, because `git revert --no-edit` does not add a sign-off
+    and `-s` was not passed. It will fail the DCO gate on merge. The fence that should have caught
+    it (entry-26's `.githooks/commit-msg`) was INERT — `core.hooksPath` was unset in this
+    environment; now ARMED and verified (rejects unsigned, passes signed), so no FUTURE commit
+    leaks, but the historical `3e653f0` is already pushed. Every fix rewrites history and needs a
+    force-push, which the standing rule forbids the custodian. Recommendation: **squash the
+    b21111d/3e653f0 no-op pair out** via interactive rebase (they cancel exactly — a
+    mistake-and-revert that never needed to exist), which removes both the unsigned commit AND the
+    noise in one move; alternatives are a `rebase --exec 'git commit --amend --no-edit -s'` to
+    sign just 3e653f0, or a DCO-app override. **Your hands or your explicit authorization** — the
+    custodian will not force-push. Touches: PR #22's history only.
+
+38. **[Fixture relocation scope, surfaced 2026-09-06 executing the disk directive — the mechanical
+    move the instruction implied is a 40+-file refactor; the goal is already met more cheaply, so
+    put to the human.]** The directive was "relocate fixtures out of `target/` to a stable
+    gitignored path... so no future clean can eat them." Executing it, the ref surface proved to
+    be **hardcoded paths across 40+ files** — every kernel/engine test that generates or reads a
+    fixture, the e2e harness, AND append-only preregistration records that document where a fixture
+    WAS at campaign time (rewriting those would falsify provenance). There is no shared
+    base-path helper (`scale_pass.rs` joins `target/slice-evidence/scale-pass`,
+    `manual_walkthrough_fixtures.rs` joins `../target/fixtures/manual-walkthrough`, e2e hardcodes
+    absolute paths), and the 5 GB fixture shares its directory with ~13 k campaign-evidence files
+    written by the SAME generator, so the fixture and evidence outputs are entangled. **The stated
+    GOAL — "no future clean can eat them" — is now achieved WITHOUT the refactor**: the
+    clean-discipline mechanic added to AI_DEVELOPMENT.md (never wholesale-clean `target/`; reclaim
+    surgically) protects ALL the data, and the disk was freed that way today (data untouched).
+    Recommendation: **treat the full relocation as optional** given the mechanic; if you still want
+    fixtures physically out of `target/`, the clean way is a scoped refactor introducing a single
+    `FIXTURES_ROOT` env/const (default outside `target/`) that live code reads and generators write
+    to — a bounded change, done deliberately, leaving append-only records as historical. Your call:
+    accept the mechanic as sufficient, or authorize the `FIXTURES_ROOT` refactor as its own piece.
+    (Also recorded: the 5 GB fixture's SECOND-PHYSICAL-LOCATION copy remains impossible — the
+    2026-09-06 diskmgmt check found ONE physical disk, only C:, no external/removable; the SPOF's
+    DR story stays its deterministic regenerability until a drive is attached.)
+
 37. **[APPLIED 2026-09-05 — the conditional approval's cure executed. The flag was delivered
     (draft lacked reopen conditions; #36 was about to change the described behavior); the
     #35/#36 piece then landed (@ 1824c8f) and ADR-028 Amendment 2 was appended in its cured
