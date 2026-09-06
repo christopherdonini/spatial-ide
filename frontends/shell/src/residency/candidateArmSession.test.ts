@@ -1203,8 +1203,12 @@ describe("M2: isFillComplete never reads true over a tile skipped-as-tracked acr
       // Not settled yet (B still tracked) -- no premature claim at plan 2's own emission either.
       expect(onResidencyStatusChange).not.toHaveBeenCalledWith(expect.objectContaining({ kind: "candidate-within-budget" }));
 
-      // Relinquish: cancels B (the ONE tile the manager still tracks) -- trackedTileCount reaches 0
-      // with `lastCoveringTileKeys` never having named B at all.
+      // Relinquish: cancels B (the ONE tile the manager still tracks) -- trackedTileCount reaches 0.
+      // M2 (reviewer gate, close-out fix piece): post-F1 (see this describe block's own top comment),
+      // `lastCoveringTileKeys` DOES still name B -- `covering2` above already asserts that. The guard
+      // below (`isFillComplete()` staying `false`) now holds for two independent reasons: F1's own
+      // geometric covering fix (`isFillComplete()`'s per-tile loop can see B directly), AND
+      // `relinquishFill`'s own `hasPlanned = false` latch, belt-and-braces beside it.
       const summary = session.relinquishFill();
       expect(summary.cancelledInFlight).toEqual([tileB]);
       expect(session.manager.trackedTileCount).toBe(0);
@@ -1335,8 +1339,10 @@ describe("B1: a non-Completed terminal for a tile skipped-as-tracked across two 
 
       // THE TRACE: A terminates for real -- `ProducerFailed`, never a self-cancel (never routed
       // through `selfCancelledHandles`, `tileViewportStreamManager.ts`) -- reaching `manager.onTerminal`
-      // genuinely, dropping `trackedTileCount` to 0 with plan 2's own `lastCoveringTileKeys` never
-      // having named A at all.
+      // genuinely, dropping `trackedTileCount` to 0. M2 (reviewer gate, close-out fix piece): post-F1
+      // (see the covering2 comment just above), plan 2's own `lastCoveringTileKeys` DOES still name A
+      // -- it is the typed partiality accounting below (`failedCoveringTerminals`, entry 36) that
+      // keeps this from reading complete, not an absence from `lastCoveringTileKeys`.
       onResidencyStatusChange.mockClear();
       sinkForHandle("sh_a").onTerminal({ kind: "ProducerFailed", detail: "engine.stream_failed" });
       expect(session.manager.trackedTileCount).toBe(0);

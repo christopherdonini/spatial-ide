@@ -88,7 +88,9 @@ export type TilePlanOutcome =
       issued: string[];
       queued: string[];
       alreadyResident: string[];
-      /** Close-out fix piece F1 (entry 44's second finding, ADR-028 item 3): EVERY key
+      /** Close-out fix piece F1 (entry 44's second finding, ADR-028's architect-gate clarification 3
+       * / Amendment 1 -- NOT the accepted Decision's own item 3, which is cross-tile de-duplication):
+       * EVERY key
        * `tilesCoveringBbox` produced this round for `bbox` at `this.level` -- the raw geometric
        * covering set, before this round's own tracked/resident/headroom bookkeeping decides what to
        * do with each one. Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
@@ -101,8 +103,9 @@ export type TilePlanOutcome =
        * three arrays, for BOTH its own `lastCoveringTileKeys` (the `isFillComplete()` per-tile check)
        * and `WorkingCanvasHandle.applyTileViewportContext`'s own eviction-protection set -- so a tile
        * this round could not issue/queue/already-resident-count is still protected from eviction and
-       * still counted against completeness, per ADR-028 item 3's own geometric rule ("never evict a
-       * tile intersecting the current viewport"), rather than silently falling out of both. */
+       * still counted against completeness, per ADR-028's architect-gate clarification 3 / Amendment
+       * 1's own geometric rule ("never evict a tile intersecting the current viewport"), rather than
+       * silently falling out of both. */
       covering: string[];
       /** P5f complex-gate should-fix 2: `true` only when this round's NEW (neither already tracked
        * nor already resident) covering tiles exceeded this manager's own issuing/queueing capacity
@@ -180,7 +183,10 @@ export class TileViewportStreamManager {
   private readonly level: TileGridLevel;
   private stopped = false;
   private overBudgetFlag = false;
-  private unrequestedTileKeysOverBudget: string[] = [];
+  // S2 (reviewer gate, close-out fix piece): a THUNK, not an eagerly-computed array -- see
+  // `setOverBudget`'s own doc comment for why. Defaults to a constant empty-array thunk so this
+  // field is never literally `undefined`.
+  private unrequestedTileKeysOverBudgetThunk: () => string[] = () => [];
 
   private tileState = new Map<string, TileRequestState>();
   private inFlightStreams = new Map<string, { streamHandle: string }>();
@@ -211,7 +217,9 @@ export class TileViewportStreamManager {
   }
 
   get unrequestedTilesOverBudget(): readonly string[] {
-    return this.unrequestedTileKeysOverBudget;
+    // S2 (reviewer gate, close-out fix piece): computed HERE, on read, not at `setOverBudget` call
+    // time -- see that method's own doc comment.
+    return this.unrequestedTileKeysOverBudgetThunk();
   }
 
   get inFlightCount(): number {
@@ -260,10 +268,23 @@ export class TileViewportStreamManager {
    * shrinks the covering set). This manager never decides WHEN to call this itself -- that decision
    * needs decoded vertex counts (`planTileEviction`), which only the canvas-side residency owner
    * has; this is the "callback/state field only" seam NEXT-CUT.md P3 hands to P4.
+   *
+   * **S2 (reviewer gate, close-out fix piece): `unrequestedTileKeys` accepts a plain array OR a
+   * thunk (`() => string[]`).** The array's own sole reader anywhere in `src/` is the
+   * `unrequestedTilesOverBudget` getter's own unit test (`tileViewportStreamManager.test.ts`) --
+   * nothing in product code ever consumes it. F1 made the caller's own input the full geometric
+   * covering set (`TilePlanOutcome.covering`, unbounded by `coveringIndexRange`, `tileGrid.ts:153-
+   * 162`), so computing the `!isTileResidentInCandidateSet` filter EAGERLY, on every over-budget
+   * batch ingest and every camera change, did that filtering work for a value this codebase never
+   * reads back. A thunk lets the caller (`candidateArmSession.ts`) defer that filter to this getter's
+   * own read instead -- the getter's own tested contract (a `readonly string[]`) is unchanged; only
+   * WHEN the underlying computation runs moves, from call time to read time. No perf claim: this is
+   * about not doing unconsumed work, not a measured cost.
    */
-  setOverBudget(overBudget: boolean, unrequestedTileKeys: string[] = []): void {
+  setOverBudget(overBudget: boolean, unrequestedTileKeys: string[] | (() => string[]) = []): void {
     this.overBudgetFlag = overBudget;
-    this.unrequestedTileKeysOverBudget = unrequestedTileKeys;
+    this.unrequestedTileKeysOverBudgetThunk =
+      typeof unrequestedTileKeys === "function" ? unrequestedTileKeys : () => unrequestedTileKeys;
     // P5f complex-gate should-fix 2 ("drain ignores over-budget", the resume half): a tile already
     // sitting in `queue` from BEFORE this flag was set stays there until a slot frees AND this flag
     // clears -- `drainQueueIfRoom` itself now refuses to mint while `overBudgetFlag` is set (see its
@@ -432,7 +453,7 @@ export class TileViewportStreamManager {
       this.opts.onTileSuperseded(tileKey, null);
     }
     this.overBudgetFlag = false;
-    this.unrequestedTileKeysOverBudget = [];
+    this.unrequestedTileKeysOverBudgetThunk = () => [];
   }
 
   /** Cancels the active stream (if any) for a specific tile, wherever it is in this manager's own
@@ -460,7 +481,7 @@ export class TileViewportStreamManager {
    * handle suppression `clearAll`/`stop` already use, so a stream's eventual terminal is suppressed
    * rather than misreported), **NOT** on `stop`: `stopped` is never set (BS1 -- a subsequent
    * `onCameraChange` plans exactly as before, unaffected), `this.frame` is never touched, and
-   * `overBudgetFlag`/`unrequestedTileKeysOverBudget` are left exactly as they were (relinquishing
+   * `overBudgetFlag`/`unrequestedTileKeysOverBudgetThunk` are left exactly as they were (relinquishing
    * outstanding work is not itself a verdict on whether the viewport still fits its budget -- the
    * next real camera change re-derives that honestly, the same way it always has).
    *
