@@ -97,6 +97,30 @@ how obvious they seem:
   subdirs. (A proper fix — relocating fixtures out of `target/` entirely — is a scoped refactor:
   paths are hardcoded across 40+ live test/harness files plus append-only preregistration records,
   so it is not a mechanical move; see `DECISIONS-PENDING.md`.)
+- **A file another process holds open for append shows a STALE size in directory listings
+  (added 2026-09-06, after a false "session log is dead" finding).** NTFS updates the directory
+  entry lazily; `Get-ChildItem`/`ls -l` reported the running app's session log as 0 bytes for an
+  hour while it was 36 KB of real content. Never infer "nothing was written" from a size — read
+  the content (`Get-Content`/`cat`). The same trap made `e2e/out/app.log` look empty mid-launch.
+  Corollary: the app's session logs (`%LOCALAPPDATA%\dev.spatialide.shell\logs\session-*.log`)
+  are a complete, timestamped record of every open, candidate frame, truncation, and refusal —
+  read them before asking the human what happened.
+- **E2E from a worktree (added 2026-09-06, the recipe that works).** Set
+  `CARGO_TARGET_DIR=<main checkout>\frontends\shell\src-tauri\target` (it propagates through
+  `npm` → `tauri dev` → `cargo`; the worktree then creates no `target/` of its own and the cold
+  13.6 GB build never happens), BUT the first launch still rebuilds the workspace crates under
+  `--no-default-features` (a worktree path is a new package id) — several minutes, longer than the
+  harness's 300 s attach window. So launch `tauri dev` once and let it come up, THEN run the harness,
+  which attaches to the running instance (`attachOrLaunch` attaches first). A harness "overall
+  watchdog exceeded" exit does NOT kill the detached launch it started: check
+  `cargo`/`rustc`/`spatial-ide-shell` processes after any watchdog exit before launching again.
+  And the walkthrough operator's own plain `npm run tauri dev` from the main checkout holds Vite's
+  5180 — the two cannot run at once; the human closes theirs, or the harness waits.
+- **Verify the residency arm per reload, never per sitting (added 2026-09-06).** `currentArm`
+  is in-memory JS state that resets to `"baseline"` on every Ctrl+R; a whole half-sitting's verdicts
+  were later proven baseline by the session log. Every operator step under the candidate arm
+  starts with `await window.__SPATIAL_E2E__.getResidencyArm()` printing `"candidate"`, and a
+  session log `candidate-grid-frame-established` line is the after-the-fact proof.
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
