@@ -79,3 +79,36 @@ For the stalled tile stream, if one recurs:
 
 No perf claim. No G1/G2 reading (those cells stay their own). No felt judgment. No change to the
 producer's behavior. No re-run past the one cell without a dated amendment here first.
+
+## Amendment 1 — run-protocol additions from the instrument's own reviewer gate (2026-09-07, appended before any run; the instrument's gate had FAILED on b3a25b6 and its fix batch was in progress when this was written)
+
+Binding for the run; §4's readings are unchanged except where stated.
+
+1. **Emit pre-flight (must-fix M2 of the gate).** The run passes `--require-pool-poll`. At cell start,
+   ≥ 3 s after the dataset opens and BEFORE any trace step, the harness reads the session log —
+   whose path it records top-level on the cell as `sessionLogPath`, taken from the app's own stderr
+   line `[spatial-ide-shell] session log: <path>` (`frontends/shell/src-tauri/src/lib.rs`), `null`
+   with a reason if absent — and requires at least one `producer-pool-poll` line. If none, the cell
+   is INVALIDATED with reason `pool-poll instrument emitted nothing` before a single step runs; the
+   pass's one cell is never burned silently. The pre-flight's result is recorded on the cell.
+2. **Item 3 (`StreamConnectionRecord` wiring) was NOT taken** — the piece's reviewer confirmed the
+   reason true: `SkpHost::viewport_query` hardcodes `reports: None` (`kernel/src/skp.rs`, the
+   `wrap_for_data_plane` call), so wiring needs a kernel change outside the piece's fence. The pool
+   poll alone is the load-bearing instrument, as §2 already said; the README §2 "stronger fact" (a
+   record proving the stream reached `Drop`) is therefore unavailable in this run, and a reading
+   that would have needed it is reported as not determinable, never inferred.
+3. **`--per-step-watchdog-ms` is refused with `--wire-identity`** (that branch's outer watchdog is
+   fixed at 600 s and would fire first). The run is a measured camera-trace cell, unaffected.
+4. **Tick semantics: `MissedTickBehavior::Delay`.** A starved runtime shows as a GAP in the poll
+   timeline, never a same-millisecond catch-up burst. Reading rule added to §4(A): a gap is
+   "unobserved", not "counts held" — (A) is convicted only across ticks that actually landed.
+5. **Exit lines.** The poll writes `producer-pool-poll stopped reason=<host-missing|catalog-miss|
+   closed|panic>` on every exit path, so an ended poll is distinguishable in the log from a normally
+   closed dataset; §4's readings consult the `stopped` line's presence and reason.
+6. **The override is recorded top-level on the cell** (`perStepWatchdogOverrideMs`), beside the
+   other declared measurement-condition flags; a cell carrying it is never scored (the harness
+   README's own rule), matching §5.
+7. **Cost statement.** The instrument's own comment states its structure — three short lock
+   acquisitions per tick on the pool's mutex (the same one the lease path takes), one formatted line,
+   one blocking append+flush per tick moved off the async worker — and makes no claim (docs/08).
+   The three reads are not an atomic snapshot; §4 reads per field, so this is harmless and noted.
