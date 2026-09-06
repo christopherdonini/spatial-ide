@@ -48,8 +48,17 @@ export type ResidencyStatus =
    * failed (`settledState`'s own `hasCoveringFailure` input, `candidateArmSession.ts`'s
    * `failedCoveringTerminals`) -- REPLACES B1's silent "nothing emitted" reading for exactly that
    * case: never `"complete"` (BS6: no completeness claim over a set a stream failed for), and never
-   * silent either (entry 36's own ruling: "silence and staleness never represent state"). */
-  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" | "partial-failure" }
+   * silent either (entry 36's own ruling: "silence and staleness never represent state").
+   *
+   * Close-out fix piece F2 (entry 43, ADR-010 rule 5): `settled` widens again, to also carry
+   * `"partial"` -- the settled-but-not-complete, no-failure reading (a truncated covering set, or a
+   * covering tile that never completed) that used to be a SILENT fall-through in
+   * `candidateArmSession.ts`'s own `emitResidencyStatus` ("deliberately left silent, same as
+   * `isFillComplete() === false` always has been" -- that function's own prior doc comment, before
+   * this piece). Entry 43's own finding: that silence contradicts entry 36's own ruling above
+   * ("silence and staleness never represent state") -- reachable on an ordinary zoom-to-layer whose
+   * covering set truncates beyond `MAX_QUEUED_TILES`, with no operator-visible status at all. */
+  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" | "partial" | "partial-failure" }
   /** Candidate arm, over budget: `residentFeatureCount` is what IS resident and drawn.
    * `viewportTotal` is an HONEST total feature count for the current viewport if one is EVER known --
    * today, never: the candidate arm has no wire mechanism that reports an undelivered tile's own
@@ -126,7 +135,10 @@ export type ResidencyStatusEvent =
    * (`nextResidencyStatus` below), the same shared clearing mechanism the three events above already
    * are -- a fourth member of that family, not a second parallel signal. */
   | { kind: "candidate-fill-progress" }
-  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" | "partial-failure" }
+  // Close-out fix piece F2 (entry 43): `settled` widens to also carry `"partial"` -- see the
+  // identical widening on `ResidencyStatus`'s own `"candidate-within-budget"` variant (above) for
+  // the full account; this event shape mirrors it exactly.
+  | { kind: "candidate-within-budget"; residentFeatureCount: number; settled?: "complete" | "partial" | "partial-failure" }
   | { kind: "candidate-over-budget"; residentFeatureCount: number; viewportTotal: number | null; stalled?: true; settled?: "partial" }
   /** Item A (decisions 32a/33b): fired once, synchronously, from `candidateArmSession.ts`'s own
    * `relinquishFill()` -- never derived from `nextResidencyStatus`'s other transitions, so it can
@@ -373,6 +385,18 @@ export function settledState(input: SettledStateInputs): SettledState {
  * on the WITHIN-budget event -- distinct from string 4 above, whose "the render budget is full" claim
  * is budget-only and would be false here (nothing was evicted for space; a covering-tile stream
  * genuinely failed instead). Draft-marked, for the human's 24(b) sight at this piece's own PR.
+ *
+ * The close-out fix piece (entry 43, 2026-09-06) adds a SIXTH string, for `settled: "partial"` on the
+ * WITHIN-budget event -- the settled-but-not-complete, no-failure reading (a truncated covering set,
+ * or a covering tile that never completed) that used to reach this function's own within-budget
+ * branch and fall silent (see `candidateArmSession.ts`'s own `emitResidencyStatus` doc comment for
+ * the prior "deliberately left silent" text this piece replaces). Direction-free by construction
+ * (entry 43's own text): the state has two distinct causes -- truncation is farthest-first
+ * (`tileViewportStreamManager.ts`'s own `onCameraChange`), but a covering tile that never completed
+ * was simply requested in row-major order, so "farthest from centre" would be a false claim for that
+ * case -- so the string names neither. **A DRAFT for the human's own 24(b) sight, not yet ruled** --
+ * unlike strings 1-5 above, this one has not been through the wording sight this piece's own report
+ * asks for.
  */
 /** Item A draft (24(b) sight): appended to the ordinary over-budget sentence only when `fillActivity`
  * reads `"stalled"` -- never a duration, only the freeze and its remedy. */
@@ -392,6 +416,18 @@ const SETTLED_PARTIAL_SUFFIX = " Filling has finished for this view — the rend
  * WITHIN-budget event (never appended as a suffix -- nothing here is "the ordinary over-budget
  * sentence" to append to), since the render budget was never the issue. */
 const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but part of this view failed to load; pan or zoom to retry.";
+/** Close-out fix piece F2 (entry 43, ADR-010 rule 5): the sixth draft string -- settled, within
+ * budget, incomplete, no failure recorded (a truncated covering set, or a covering tile that never
+ * completed). **DRAFT, for the human's own 24(b) sight** -- unlike `SETTLED_PARTIAL_SUFFIX`/
+ * `SETTLED_PARTIAL_FAILURE_TEXT` above (both RULED 2026-09-05/06), this exact wording has not yet
+ * been shown to the human; it is entry 43's own recommended text, carried here verbatim so this
+ * piece ships no silent behavior while the wording itself awaits sight. Never the word "all" (BS6:
+ * no completeness/finality claim over a partial/truncated/mid-fill set). Rendered as its own complete
+ * sentence on the WITHIN-budget event (never appended as a suffix -- there is no "ordinary sentence"
+ * to append to on this branch, matching `SETTLED_PARTIAL_FAILURE_TEXT`'s own shape, not
+ * `SETTLED_PARTIAL_SUFFIX`'s). */
+const SETTLED_PARTIAL_WITHIN_BUDGET_TEXT =
+  "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
 /** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
  * rest verbatim): 32a's own rider -- never "complete", never silent. */
 function relinquishedText(residentFeatureCount: number): string {
@@ -415,6 +451,10 @@ export function residencyStatusText(status: ResidencyStatus): string {
       // complete sentence -- never the "Showing all N" claim, which would be false over a set a
       // covering-tile (or the untiled) stream genuinely failed for (BS6).
       if (status.settled === "partial-failure") return SETTLED_PARTIAL_FAILURE_TEXT;
+      // Close-out fix piece F2 (entry 43): the settled-but-not-complete, no-failure reading -- its
+      // own complete sentence, never the "Showing all N" claim below (which would be false over a
+      // truncated or never-completed covering set).
+      if (status.settled === "partial") return SETTLED_PARTIAL_WITHIN_BUDGET_TEXT;
       return `Showing all ${status.residentFeatureCount} features in view`;
     case "candidate-over-budget": {
       const base =

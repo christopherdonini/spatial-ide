@@ -1,0 +1,5497 @@
+{
+ "summary": {
+  "fixBranch": "cut/residency-debt-fix @ 453a667",
+  "zoomOutSettleStart": 43226,
+  "windowStart": 51226,
+  "windowEnd": 96236,
+  "eventsInWindow": 42,
+  "tilesAdmittedInWindow": 7,
+  "evictionsInWindow": 0,
+  "thrashEvictions_admittedThenEvictedSameView": 0,
+  "thrashSample": [],
+  "overBudgetSeenInWindow": true,
+  "finalStatus": {
+   "text": "Showing 19078 features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail. Filling is paused until the next pan or zoom.",
+   "queued": 460,
+   "arm": "candidate"
+  },
+  "truncations": [
+   {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "truncatedCount": 556
+   },
+   {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "truncatedCount": 3596
+   },
+   {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "truncatedCount": 15336
+   }
+  ]
+ },
+ "events": [
+  {
+   "t": 780,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 29,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 781,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 29,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 1097,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 130,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 1098,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 159,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 1269,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 501,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 1269,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 660,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 1420,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 489,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 1421,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 1149,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 1555,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 507,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 1555,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 1656,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 1716,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 495,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 1716,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 2151,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 1851,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 498,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 1851,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 2649,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2011,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 500,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2011,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 3149,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2175,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 496,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2175,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 3645,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2317,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 498,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2317,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 4143,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2449,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 489,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2449,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 4632,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2603,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 501,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2603,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 5133,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2753,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 486,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2753,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 5619,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 2895,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 492,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 2895,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 6111,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3033,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 493,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3034,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 6604,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3187,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 506,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3187,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 7110,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3322,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 508,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3323,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 7618,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3470,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 505,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3471,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 8123,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3632,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 502,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3632,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 8625,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3809,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 496,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3809,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9121,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3928,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 492,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3928,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9613,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 3930,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "initial-untiled-look",
+    "rowsAdmitted": 387,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 3930,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 13149,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 13880,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:9",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 13880,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 13880,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:8",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 13880,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 13996,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:9",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 120,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 13997,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 13997,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:8",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 126,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 13998,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 13999,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:10",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 13999,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14104,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:9",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 183,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14104,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14106,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:10",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 122,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14106,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14107,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:8",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 163,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14107,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14121,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:10",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 184,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14121,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14260,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:11",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 34,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14260,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14311,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:11",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 128,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14318,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14451,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:11",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 174,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14452,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14452,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:12",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14453,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14453,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:12",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 121,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14454,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14454,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:13",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14454,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14455,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:13",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 125,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14455,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14536,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:12",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 173,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14537,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14555,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:13",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 165,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14556,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14632,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:14",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 33,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14633,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14717,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:14",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 126,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14718,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14793,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:14",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 176,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14793,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14793,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:15",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14793,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14875,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:15",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 125,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14875,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14974,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:15",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 181,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14974,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14975,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:16",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 29,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14975,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 14976,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:16",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 123,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 14976,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15023,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:16",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 184,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15023,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15086,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:17",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15087,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15092,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:17",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 124,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15137,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15137,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:17",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 174,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15137,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15217,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:18",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15218,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15218,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:18",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 123,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15218,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15271,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:18",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 167,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15271,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15333,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:19",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15333,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15334,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:19",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 124,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15334,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15397,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:19",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 169,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15397,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15398,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:20",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 33,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15398,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15467,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:20",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 120,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15471,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15560,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:20",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 183,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15560,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15561,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:21",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15561,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15636,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:21",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 121,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15637,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15734,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:21",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 184,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15735,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15735,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:22",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15735,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15792,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:22",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 126,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15793,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15794,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:22",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 174,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15796,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15873,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:23",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15874,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15874,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:23",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 124,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15874,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 15880,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "15:23",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 165,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 15880,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16175,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:8",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 29,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16175,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16209,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:8",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 123,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16209,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16300,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:9",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 33,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16300,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16301,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:9",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 122,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16301,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10000,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16458,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:8",
+    "rowsAdmitted": 80,
+    "duplicatesDropped": 168,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16459,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10080,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16459,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:10",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 29,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16459,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10080,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16463,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:9",
+    "rowsAdmitted": 80,
+    "duplicatesDropped": 182,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16464,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10160,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16600,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:10",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 125,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16601,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10160,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16658,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:10",
+    "rowsAdmitted": 80,
+    "duplicatesDropped": 186,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16658,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10240,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16658,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:11",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 33,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16658,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10240,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16769,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:11",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 126,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16769,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10240,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16832,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:11",
+    "rowsAdmitted": 80,
+    "duplicatesDropped": 181,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16832,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10320,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16833,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:12",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 29,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16833,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10320,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 16945,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:12",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 121,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 16946,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10320,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17012,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:12",
+    "rowsAdmitted": 78,
+    "duplicatesDropped": 178,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17013,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10398,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17013,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:13",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17013,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10398,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17131,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:13",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 125,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17131,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10398,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17183,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:13",
+    "rowsAdmitted": 78,
+    "duplicatesDropped": 167,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17183,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10476,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17183,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:14",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 32,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17183,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10476,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17311,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:14",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 121,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17311,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10476,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17383,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:14",
+    "rowsAdmitted": 80,
+    "duplicatesDropped": 181,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17383,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10556,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17383,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:15",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17383,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10556,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17494,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:15",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 130,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17494,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10556,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17550,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:15",
+    "rowsAdmitted": 80,
+    "duplicatesDropped": 179,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17550,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10636,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17550,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:16",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 33,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17550,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10636,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17666,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:16",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 127,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17666,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10636,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17670,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:16",
+    "rowsAdmitted": 86,
+    "duplicatesDropped": 174,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17670,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10722,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17796,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:17",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17796,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10722,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 17925,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:17",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 124,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 17925,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10722,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18002,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:17",
+    "rowsAdmitted": 98,
+    "duplicatesDropped": 159,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18002,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10820,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18002,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:18",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18003,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10820,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18133,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:18",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 121,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18133,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10820,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18215,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:18",
+    "rowsAdmitted": 97,
+    "duplicatesDropped": 152,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18215,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10917,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18215,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:19",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 30,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18216,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10917,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18351,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:19",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 119,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18352,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10917,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18447,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:19",
+    "rowsAdmitted": 100,
+    "duplicatesDropped": 158,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18447,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11017,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18448,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:20",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 29,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18448,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11017,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18539,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:20",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 125,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18539,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11017,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18596,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:20",
+    "rowsAdmitted": 100,
+    "duplicatesDropped": 166,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18596,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11117,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18596,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:21",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 29,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18597,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11117,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18727,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:21",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 123,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18728,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11117,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18793,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:21",
+    "rowsAdmitted": 100,
+    "duplicatesDropped": 168,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18793,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11217,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18793,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:22",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 32,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18794,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11217,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18908,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:22",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 124,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18909,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11217,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18971,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:22",
+    "rowsAdmitted": 100,
+    "duplicatesDropped": 161,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18971,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11317,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 18972,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:23",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 31,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 18972,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11317,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19061,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:23",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 129,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19062,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11317,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19083,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:23",
+    "rowsAdmitted": 95,
+    "duplicatesDropped": 145,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19084,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11412,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19092,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "16:24",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19095,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11412,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19629,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:9",
+    "rowsAdmitted": 11,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19629,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11423,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19662,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:9",
+    "rowsAdmitted": 121,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19662,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11544,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19684,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:10",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19684,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11552,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19773,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:8",
+    "rowsAdmitted": 12,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19773,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11564,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19891,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:10",
+    "rowsAdmitted": 118,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19891,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11682,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19891,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:8",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 4,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19892,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11804,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 19904,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:9",
+    "rowsAdmitted": 282,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 19905,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12086,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20126,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:10",
+    "rowsAdmitted": 275,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20126,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12361,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20127,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:8",
+    "rowsAdmitted": 251,
+    "duplicatesDropped": 11,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20127,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12612,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20310,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:11",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20310,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12621,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20311,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:11",
+    "rowsAdmitted": 124,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20311,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12745,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20522,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:11",
+    "rowsAdmitted": 267,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20523,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13012,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20597,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:12",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20597,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13021,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20681,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:12",
+    "rowsAdmitted": 119,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20681,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13140,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20681,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:13",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20682,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13150,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 20712,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:13",
+    "rowsAdmitted": 119,
+    "duplicatesDropped": 2,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 20712,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13269,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21029,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:12",
+    "rowsAdmitted": 259,
+    "duplicatesDropped": 14,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21030,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13528,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21030,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:13",
+    "rowsAdmitted": 264,
+    "duplicatesDropped": 4,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21030,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13792,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21200,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:14",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21200,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13800,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21215,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:14",
+    "rowsAdmitted": 125,
+    "duplicatesDropped": 3,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21215,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13925,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21418,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:14",
+    "rowsAdmitted": 267,
+    "duplicatesDropped": 9,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21418,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14192,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21510,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:15",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21510,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14201,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21547,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:15",
+    "rowsAdmitted": 119,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21547,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14320,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21660,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:16",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21661,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14329,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 21689,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:16",
+    "rowsAdmitted": 126,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 21689,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14455,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22060,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:15",
+    "rowsAdmitted": 271,
+    "duplicatesDropped": 14,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22060,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14726,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22061,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:17",
+    "rowsAdmitted": 7,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22061,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14733,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22063,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:16",
+    "rowsAdmitted": 266,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22063,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14999,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22064,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:17",
+    "rowsAdmitted": 123,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22108,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15122,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22279,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:17",
+    "rowsAdmitted": 262,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22279,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15384,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22405,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:18",
+    "rowsAdmitted": 12,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22405,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15396,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22431,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:18",
+    "rowsAdmitted": 124,
+    "duplicatesDropped": 3,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22431,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15520,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22510,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:19",
+    "rowsAdmitted": 11,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22510,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15531,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22731,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:18",
+    "rowsAdmitted": 252,
+    "duplicatesDropped": 9,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22732,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15783,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22732,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:19",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 2,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22732,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15905,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22825,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:20",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22825,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15913,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22984,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:20",
+    "rowsAdmitted": 121,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22984,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16034,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 22993,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:19",
+    "rowsAdmitted": 266,
+    "duplicatesDropped": 7,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 22994,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16300,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23302,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:20",
+    "rowsAdmitted": 272,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23302,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16572,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23302,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:21",
+    "rowsAdmitted": 7,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23302,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16579,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23333,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:21",
+    "rowsAdmitted": 119,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23333,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16698,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23536,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:22",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23536,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16708,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23601,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:21",
+    "rowsAdmitted": 274,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23601,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16982,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23601,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:22",
+    "rowsAdmitted": 113,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23602,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17095,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23734,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:23",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23735,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17103,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23901,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:23",
+    "rowsAdmitted": 113,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23902,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17216,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 23904,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:22",
+    "rowsAdmitted": 272,
+    "duplicatesDropped": 14,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 23939,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17488,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 24095,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "17:23",
+    "rowsAdmitted": 264,
+    "duplicatesDropped": 9,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 24095,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17752,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 24100,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17752,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 38467,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17752,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 39684,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17752,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 39685,
+   "kind": "covering-truncated",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "truncatedCount": 556
+   }
+  },
+  {
+   "t": 40914,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17752,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 40925,
+   "kind": "covering-truncated",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "truncatedCount": 3596
+   }
+  },
+  {
+   "t": 42194,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17752,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42194,
+   "kind": "covering-truncated",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "truncatedCount": 15336
+   }
+  },
+  {
+   "t": 42263,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:8",
+    "rowsAdmitted": 7,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42263,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17759,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42453,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:8",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42454,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17881,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42454,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:9",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42455,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17889,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42455,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:10",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42455,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17898,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42495,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:9",
+    "rowsAdmitted": 120,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42495,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18018,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42495,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:10",
+    "rowsAdmitted": 115,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42495,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18133,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42887,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:8",
+    "rowsAdmitted": 270,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42888,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18403,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42889,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:9",
+    "rowsAdmitted": 271,
+    "duplicatesDropped": 9,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42890,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18674,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 42890,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:10",
+    "rowsAdmitted": 278,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 42890,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18952,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 43262,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:11",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43263,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18962,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 43375,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:11",
+    "rowsAdmitted": 120,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43375,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 19082,
+    "evictedTileCountSession": 0
+   }
+  },
+  {
+   "t": 43506,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:12",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [
+     "initial-untiled-look"
+    ],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43506,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9090,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 43649,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:12",
+    "rowsAdmitted": 116,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43649,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9206,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 43783,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:11",
+    "rowsAdmitted": 269,
+    "duplicatesDropped": 14,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43783,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9475,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 43783,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:13",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43783,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9483,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 43937,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:13",
+    "rowsAdmitted": 117,
+    "duplicatesDropped": 2,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43937,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9600,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 43956,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:12",
+    "rowsAdmitted": 265,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 43956,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 9865,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44108,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:13",
+    "rowsAdmitted": 267,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44108,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10132,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44335,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:14",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44335,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10141,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44364,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:14",
+    "rowsAdmitted": 124,
+    "duplicatesDropped": 3,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44364,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10265,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44560,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:14",
+    "rowsAdmitted": 267,
+    "duplicatesDropped": 9,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44623,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10532,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44623,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:15",
+    "rowsAdmitted": 12,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44623,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10544,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44640,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:15",
+    "rowsAdmitted": 114,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44640,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10658,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44945,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:15",
+    "rowsAdmitted": 274,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44945,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10932,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44946,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:16",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44946,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 10941,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 44981,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:16",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 44982,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11063,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45220,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:16",
+    "rowsAdmitted": 269,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45220,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11332,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45298,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:17",
+    "rowsAdmitted": 13,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45299,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11345,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45326,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:17",
+    "rowsAdmitted": 120,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45326,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11465,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45530,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:17",
+    "rowsAdmitted": 257,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45531,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11722,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45618,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:18",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45618,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11731,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45664,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:18",
+    "rowsAdmitted": 119,
+    "duplicatesDropped": 2,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45664,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 11850,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 45897,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:18",
+    "rowsAdmitted": 262,
+    "duplicatesDropped": 7,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 45897,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12112,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46007,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:19",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46007,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12122,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46049,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:19",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 3,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46050,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12244,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46273,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:20",
+    "rowsAdmitted": 7,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46274,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12251,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46328,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:19",
+    "rowsAdmitted": 268,
+    "duplicatesDropped": 4,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46329,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12519,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46329,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:20",
+    "rowsAdmitted": 118,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46330,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12637,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46590,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:20",
+    "rowsAdmitted": 275,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46590,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12912,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46655,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:21",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46655,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 12920,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46677,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:21",
+    "rowsAdmitted": 115,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46677,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13035,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46905,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:21",
+    "rowsAdmitted": 277,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46954,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13312,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46955,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:22",
+    "rowsAdmitted": 12,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46955,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13324,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 46980,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:22",
+    "rowsAdmitted": 117,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 46980,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13441,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 47128,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:23",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 47128,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13451,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 47150,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:22",
+    "rowsAdmitted": 267,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 47150,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13718,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 47151,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:23",
+    "rowsAdmitted": 118,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 47151,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 13836,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 47273,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "18:23",
+    "rowsAdmitted": 256,
+    "duplicatesDropped": 10,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 47274,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14092,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48292,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:8",
+    "rowsAdmitted": 12,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48293,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14104,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48293,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:9",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48293,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14112,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48293,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:8",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48332,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14234,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48351,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:9",
+    "rowsAdmitted": 125,
+    "duplicatesDropped": 4,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48351,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14359,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48463,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:10",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48463,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14369,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48618,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:10",
+    "rowsAdmitted": 121,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48619,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14490,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48767,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:8",
+    "rowsAdmitted": 264,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48768,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 14754,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 48783,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:9",
+    "rowsAdmitted": 268,
+    "duplicatesDropped": 11,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 48783,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15022,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 49033,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:10",
+    "rowsAdmitted": 270,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 49034,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15292,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 49512,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:12",
+    "rowsAdmitted": 8,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 49513,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15300,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 49658,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:11",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 49658,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15310,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 49693,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:12",
+    "rowsAdmitted": 127,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 49694,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15437,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 49694,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:11",
+    "rowsAdmitted": 107,
+    "duplicatesDropped": 12,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 49694,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15544,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 49841,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:13",
+    "rowsAdmitted": 14,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 49841,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15558,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 50058,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:13",
+    "rowsAdmitted": 123,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 50058,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15681,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 50081,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:12",
+    "rowsAdmitted": 272,
+    "duplicatesDropped": 0,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 50081,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 15953,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 50081,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:11",
+    "rowsAdmitted": 263,
+    "duplicatesDropped": 27,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 50082,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16216,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 50356,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:13",
+    "rowsAdmitted": 256,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 50357,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16472,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 50905,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:14",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 50905,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16481,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 51065,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:14",
+    "rowsAdmitted": 122,
+    "duplicatesDropped": 4,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 51066,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16603,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 51227,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:15",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 51228,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16612,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 51292,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:15",
+    "rowsAdmitted": 117,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 51292,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16729,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 51540,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:16",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 51540,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 16739,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 51570,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:14",
+    "rowsAdmitted": 268,
+    "duplicatesDropped": 10,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 51570,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17007,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 51571,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:16",
+    "rowsAdmitted": 111,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 51571,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17118,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 52102,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:15",
+    "rowsAdmitted": 274,
+    "duplicatesDropped": 14,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 52103,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17392,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 52170,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:16",
+    "rowsAdmitted": 280,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 52170,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17672,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 52455,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:17",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 52456,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17681,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 52456,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:17",
+    "rowsAdmitted": 117,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 52456,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 17798,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 52811,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:17",
+    "rowsAdmitted": 262,
+    "duplicatesDropped": 13,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 52811,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18060,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 53042,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:18",
+    "rowsAdmitted": 9,
+    "duplicatesDropped": 20,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 53043,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18069,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 53141,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:18",
+    "rowsAdmitted": 125,
+    "duplicatesDropped": 3,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 53141,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18194,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 53380,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:19",
+    "rowsAdmitted": 10,
+    "duplicatesDropped": 21,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 53380,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18204,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 53662,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:19",
+    "rowsAdmitted": 120,
+    "duplicatesDropped": 1,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 53663,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18324,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 53692,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:18",
+    "rowsAdmitted": 257,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 53693,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18581,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 54115,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:20",
+    "rowsAdmitted": 7,
+    "duplicatesDropped": 22,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 54115,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18588,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 54119,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:19",
+    "rowsAdmitted": 271,
+    "duplicatesDropped": 3,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 54119,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18859,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 54120,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:20",
+    "rowsAdmitted": 120,
+    "duplicatesDropped": 6,
+    "evictedTileKeys": [],
+    "overBudget": false
+   }
+  },
+  {
+   "t": 54120,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": false,
+    "residentFeatureCount": 18979,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 54449,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:20",
+    "rowsAdmitted": 99,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": true
+   }
+  },
+  {
+   "t": 54449,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": true,
+    "residentFeatureCount": 19078,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 54592,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:21",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 5,
+    "evictedTileKeys": [],
+    "overBudget": true
+   }
+  },
+  {
+   "t": 54593,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": true,
+    "residentFeatureCount": 19078,
+    "evictedTileCountSession": 1
+   }
+  },
+  {
+   "t": 54892,
+   "kind": "tile-ingest",
+   "payload": {
+    "tileKey": "19:22",
+    "rowsAdmitted": 0,
+    "duplicatesDropped": 4,
+    "evictedTileKeys": [],
+    "overBudget": true
+   }
+  },
+  {
+   "t": 54893,
+   "kind": "candidate-residency-status",
+   "payload": {
+    "dataset": "ds_f1ee4c906114c7f1dbfe234ebff73d6e",
+    "overBudget": true,
+    "residentFeatureCount": 19078,
+    "evictedTileCountSession": 1
+   }
+  }
+ ]
+}

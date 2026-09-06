@@ -7,7 +7,7 @@ import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
 import { INITIAL_TILE_KEY, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
-import { traceCandidateResidencyStatus, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
+import { traceCandidateResidencyStatus, traceCoveringTruncated, traceStreamIssued, traceViewportQuery } from "../diagnostics/renderTrace";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatchArrived,
@@ -690,11 +690,30 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       standingWithinBudgetComplete = false;
       return;
     }
-    // `settled === "settled-partial"` here (not over budget, but a truncated covering set or a covering
-    // tile that never completed, and no failure recorded) is deliberately left silent, same as
-    // `isFillComplete() === false` always has been -- see this function's own "absence is honest" doc
-    // comment above; this piece adds no new status kind for that specific combination.
-    //
+    // Close-out fix piece F2 (entry 43, ADR-010 rule 5 -- "staleness is signalled, never silently
+    // served"). `settled === "settled-partial"` here (not over budget, but a truncated covering set
+    // or a covering tile that never completed, and no failure recorded) USED TO be left silent here,
+    // same as `isFillComplete() === false` always has -- see `isFillComplete`'s own doc comment
+    // above (~:546, "absence is honest"; NIT (ii), reviewer gate: that phrase lives in
+    // `isFillComplete`'s own doc comment, not an "own doc comment below" of this function -- this
+    // function has no doc comment of its own, and the phrase sits ABOVE this line, not below; the
+    // inline comment at this file's own `:745` merely restates it), which still governs the
+    // genuinely mid-fill (`"not-settled"`) case this branch does NOT cover. Entry 43 (Part L sitting,
+    // 2026-09-06) found that silence contradicts
+    // entry 36's own ruling ("silence and staleness never represent state," quoted verbatim in that
+    // entry): an ordinary zoom-to-layer at `fine` can truncate the covering set past
+    // `MAX_QUEUED_TILES` without ever going over budget, and the operator saw rendering stop with no
+    // status at all. Mirrors the `settled-partial-failure` branch immediately above, placed AFTER it
+    // so a genuine failure keeps its own distinct sentence (never this one).
+    if (settled === "settled-partial") {
+      deps.onResidencyStatusChange?.({
+        kind: "candidate-within-budget",
+        residentFeatureCount: totalResidentFeatures,
+        settled: "partial",
+      });
+      standingWithinBudgetComplete = false;
+      return;
+    }
     // Piece 2(i) (residency-debt cut 1b, entry 36 rule (i)): if a "Showing all N" claim WAS standing
     // (the last thing this function actually emitted was `settled: "complete"`), it is now stale -- the
     // covering set just stopped reading complete -- and must not survive by inertia (BS6, the
@@ -958,8 +977,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       tileGenerationUntrimmed.set(tileKey, { streamHandle, allUntrimmed: carriedOver && !outcome.overBudget });
     }
     if (outcome.overBudget) {
-      const unrequested = [...lastCoveringTileKeys].filter((k) => !canvas.isTileResidentInCandidateSet(k));
-      manager.setOverBudget(true, unrequested);
+      // S2 (reviewer gate, close-out fix piece): a THUNK, not an eagerly-computed array -- see
+      // `TileViewportStreamManager.setOverBudget`'s own doc comment. This filter's own result feeds
+      // ONLY `unrequestedTilesOverBudget`, whose sole reader anywhere in this codebase is that
+      // getter's own unit test (`tileViewportStreamManager.test.ts`) -- computing it eagerly on
+      // every over-budget batch ingest did this filtering work for a value nothing in `src/` ever
+      // reads back.
+      manager.setOverBudget(true, () => [...lastCoveringTileKeys].filter((k) => !canvas.isTileResidentInCandidateSet(k)));
       // Viewport-residency cut P6a, Defect A (principle 7 -- stop decoding-to-discard): this tile's
       // own batch was just trimmed to the budget boundary -- evicting everything evictable already
       // could not make room for it (`ingestTileBatch`'s own `overBudget` contract) -- so the manager
@@ -1278,7 +1302,18 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     for (const tileKey of outcome.issued) {
       countTileStreamIssuedOnce(tileKey);
     }
-    const covering = [...outcome.issued, ...outcome.queued, ...outcome.alreadyResident];
+    // Close-out fix piece F1 (entry 44's second finding, ADR-028's architect-gate clarification 3 /
+    // Amendment 1 -- "never evict a tile intersecting the current viewport"; NOT the accepted
+    // Decision's own item 3, which is cross-tile de-duplication). BEFORE this fix, `covering` was rebuilt here as
+    // `[...outcome.issued, ...outcome.queued, ...outcome.alreadyResident]` -- a PSEUDO-covering set
+    // that silently omitted (i) a tile already tracked from a PRIOR round (skipped entirely by the
+    // manager's own new-candidate loop, `tileViewportStreamManager.ts`'s own
+    // `if (this.tileState.has(tileKey)) continue`) and (ii) a genuinely new candidate dropped THIS
+    // round for lack of headroom while over budget (`:353` there) -- 1a Q2's own gap, entry 44's own
+    // thrash mechanism. `outcome.covering` (F1, `TilePlanOutcome`) is the real fix: every key
+    // `tilesCoveringBbox` produced this round, geometric and complete, never derived from what this
+    // round's own tracked/resident/headroom bookkeeping happened to do with each one.
+    const covering = outcome.covering;
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4
     const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
@@ -1291,10 +1326,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // covering set still held a durably partial tile. `fits` is now DERIVED (partial-aware, not a bare
     // vertex-sum check), so recomputing it unconditionally on every camera change is what "kills the
     // one-camera-change transience": the flag is never stale, in either direction, past this call.
-    manager.setOverBudget(
-      !fits,
-      fits ? [] : [...lastCoveringTileKeys].filter((k) => !canvas?.isTileResidentInCandidateSet(k))
-    );
+    // S2 (reviewer gate, close-out fix piece): a THUNK, not an eagerly-computed array -- see this
+    // block's own sibling comment at `ingestAndMaybeEstablishFrame`'s over-budget branch (above) and
+    // `TileViewportStreamManager.setOverBudget`'s own doc comment. Deferring the ternary/filter into
+    // the thunk means a `fits === true` camera change (the common case) does no filtering work for a
+    // value nothing in `src/` ever reads back either.
+    manager.setOverBudget(!fits, () => (fits ? [] : [...lastCoveringTileKeys].filter((k) => !canvas?.isTileResidentInCandidateSet(k))));
     // Viewport-residency cut P4: a pan/zoom re-plan may have changed `manager.overBudget` (recomputed
     // above) or the resident feature count (eviction inside `applyTileViewportContext`) even with no
     // new batch arriving -- recompute and forward the status here too, so it stays current across a
@@ -1308,6 +1345,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         "candidate-covering-truncated",
         `${dataset}: covering set truncated by ${outcome.truncatedCount} tile(s) beyond MAX_QUEUED_TILES`
       );
+      // Close-out fix piece F2 (entry 43): a second, always-on line beside the session-log one above --
+      // test/console OBSERVABILITY only, never the operator disclosure (that is the settled-partial
+      // status line itself, `residencyStatus.ts`'s `SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`, surfaced
+      // above by `emitResidencyStatus` -- NIT (i), reviewer gate: the call is above this comment, at
+      // this file's own `:1327`, not below) -- see `traceCoveringTruncated`'s own doc comment
+      // (`diagnostics/renderTrace.ts`) for the full account.
+      traceCoveringTruncated(dataset, outcome.truncatedCount ?? 0);
     }
   }
 
@@ -1435,16 +1479,23 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         tileGenerationUntrimmed.delete(tileKey);
         budgetCancelledTileKeys.delete(tileKey);
       }
-      // M2 (reviewer gate, residency-debt cut 1b): the structural latch. A tile carried in-flight
-      // across two plans is skipped entirely by `onCameraChange`'s own new-candidate loop
-      // (`tileViewportStreamManager.ts`'s own `if (this.tileState.has(tileKey)) continue;`) -- it
-      // lands in NONE of that plan's `issued`/`queued`/`alreadyResident`, so it is silently absent
-      // from `lastCoveringTileKeys` even though it is genuinely still part of the viewport's covering
-      // set. If THAT tile is then the one this lever cancels, `manager.trackedTileCount` drops to 0
-      // with `lastCoveringTileKeys` never having named it -- `isFillComplete()` below would iterate
-      // only the tiles it DOES know about, find them all complete, and read the fill as complete over
-      // a user-stopped one (BS6, 32a's rider: never true). Resetting `hasPlanned` here latches
-      // `isFillComplete()` to `false` unconditionally (its own first check, above) until the NEXT real
+      // M2 (reviewer gate, residency-debt cut 1b; corrected post-F1 -- close-out fix piece reviewer
+      // must-fix M2): the structural latch, belt-and-braces beside the covering check, NOT the only
+      // guard. A tile carried in-flight across two plans is skipped entirely by `onCameraChange`'s own
+      // new-candidate loop (`tileViewportStreamManager.ts`'s own `if (this.tileState.has(tileKey))
+      // continue;`) -- it lands in NONE of that plan's own `issued`/`queued`/`alreadyResident` lists.
+      // BEFORE F1 (`lastCoveringTileKeys = new Set(covering)`, `handleViewportChange` above),
+      // `lastCoveringTileKeys` was itself built from those same three lists, so the tile really was
+      // silently absent from it too. **Post-F1, `covering` is `outcome.covering` -- the full geometric
+      // set `tilesCoveringBbox` produced this round -- so a tile carried in-flight across two plans IS
+      // geometrically still in the viewport and IS named in `lastCoveringTileKeys`; only the three
+      // narrower lists still omit it.** If THAT tile is then the one this lever cancels,
+      // `manager.trackedTileCount` drops to 0 while `lastCoveringTileKeys` DOES still name it --
+      // `isFillComplete()` below iterates `lastCoveringTileKeys` itself (not the narrower lists), so
+      // the geometric fix alone already keeps a user-stopped tile from reading as complete via that
+      // path (BS6, 32a's rider: never true). Resetting `hasPlanned` here is kept anyway as a second,
+      // independent guard: it latches `isFillComplete()` to `false` unconditionally (its own first
+      // check, above) regardless of what `lastCoveringTileKeys` names, until the NEXT real
       // `handleViewportChange` plan sets it `true` again -- the same sentinel P6b's own fix already
       // uses for "no plan has run yet," reused here for "no plan has run yet SINCE the relief fired."
       // Covers BOTH readers named in the finding: `isFillComplete()` itself, and

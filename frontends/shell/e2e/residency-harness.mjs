@@ -80,6 +80,7 @@ import {
   TRIAL_WATCHDOG_MS,
   settleTimeoutForFixture,
 } from "./residencyTrace.mjs";
+import { loadShellModule } from "./tsModuleLoader.mjs";
 
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR = join(SHELL_DIR, "e2e", "out");
@@ -378,6 +379,24 @@ function attachRenderTraceValueListener(page, eventNames) {
   page.on("console", onConsole);
   return {
     sorted: () => [...entries].sort((a, b) => a.seq - b.seq),
+    // M1 (reviewer gate, close-out fix piece): the listener's OWN monotonic counter, read at the
+    // moment of the call -- `nextSeq` increments once per >=2-arg console message this listener
+    // OBSERVES, before the `[render-trace]`/`wanted` filter above, so it is a count across every
+    // console message this page has emitted since this listener attached, never the count of
+    // entries this listener has actually COLLECTED (`sorted().length`, which only counts entries
+    // that passed the filter and whose `jsonValue()` round trip -- inside the `.then()` above --
+    // has already resolved). A caller that used `sorted().length` as a step-start mark and compared
+    // it against a later `entry.seq` was comparing two different scales (a small collected-count
+    // against a large global message-count), which made a `sinceSeq` filter downstream a no-op --
+    // every entry's `seq` was always >= a `sorted().length`-sized mark, so nothing was ever
+    // filtered out. `markSeq()` returns the SAME scale `entry.seq` is drawn from, so a mark taken
+    // here and a later `entry.seq >= mark` comparison are apples to apples.
+    // Best-effort at console-delivery granularity: `entries.push` (above) happens inside the
+    // `.then()`, AFTER a message's own async `jsonValue()` resolves -- a mark taken via `markSeq()`
+    // can race a message whose `onConsole` already fired (and was assigned a lower `seq`) but whose
+    // `jsonValue()` has not yet resolved, so it will not yet appear in `sorted()`. This is the same
+    // disclosed granularity `sorted()` itself already carries, not a new approximation.
+    markSeq: () => nextSeq,
     dispose: () => page.off("console", onConsole),
   };
 }
@@ -628,6 +647,132 @@ async function captureResidencyStatusText(page) {
   } catch (e) {
     return { present: null, text: null, captureError: String(e && e.message ? e.message : e) };
   }
+}
+
+/**
+ * Close-out fix piece, E2E pre-committed test 7 (RESIDENCY-DEBT-1B.md's own "Pre-committed tests"
+ * list, item 7): at an over-budget zoom-out step, read `residencyGridFrame()`, recompute
+ * `tilesCoveringBbox(frame, level, bbox)` with the shell's own export (`tsModuleLoader.mjs`, real
+ * source, never a hand-copied reimplementation), collect `evictedTileKeys` from `[render-trace]
+ * tile-ingest` lines, and assert the intersection with the covering set is EMPTY -- ADR-028's
+ * architect-gate clarification 3 (Proposed, ~:88) / Amendment 1 (Accepted, ~:334) own rule ("never
+ * evict a tile intersecting the current viewport" -- NOT the accepted Decision's own item 3, which is
+ * cross-tile de-duplication, an unrelated rule) made real by F1, pinned end-to-end.
+ * `residencyQueuedTileCount()` corroborates the step was genuinely over budget.
+ *
+ * **Two disclosures this assertion carries (paraphrased from the piece's own preregistration, not
+ * quoted):**
+ *  1. **Instrument-gated.** `[render-trace] tile-ingest` lines are emitted only when
+ *     `isInstrumentedBuild()` is true (`WorkingCanvas.tsx:1027`'s own `if (isInstrumentedBuild())`
+ *     guard around `traceTileIngest`) -- a `--control` (non-instrumented) run returns `{corroborated:
+ *     false}` rather than asserting a vacuous pass over evidence that was never collected.
+ *  2. **Post-settle, after the step's LAST plan (the debounce window).** Between a gesture and its
+ *     own debounced plan, the protected set (`candidateArmSession.ts`'s own `lastCoveringTileKeys`)
+ *     still describes the PREVIOUS bbox -- `candidateArmSession.ts:1285` (the `applyTileViewportContext`
+ *     call site) is the only refresh. This function never waits or re-settles itself; it is the
+ *     CALLER's job to invoke it only after `measureOneStep`'s own settle wait has already returned
+ *     for this step, and to supply `sinceSeq` from a point no later than this step's own gesture, so
+ *     every eviction this function can see was evaluated against the covering set the step's own last
+ *     real plan (not an earlier, superseded one) established.
+ *
+ * Returns `{corroborated: false, reason}` when the step cannot be evaluated at all (not instrumented,
+ * not genuinely over budget, no grid frame yet, no post-step view state, no `.working-canvas`
+ * element found) -- never a fabricated pass. When corroborated but zero tile evictions were observed
+ * since `sinceSeq` (S3, reviewer gate: the protection was never actually exercised this step),
+ * returns `{corroborated: true, exercised: false, passed: null, reason, ...}` -- never `passed:
+ * true` over evidence this check never gathered. Otherwise returns `{corroborated: true, exercised:
+ * true, passed, violatingTileKeys, ...}`.
+ */
+async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrumentEnabled, sinceSeq, postViewState }) {
+  if (!instrumentEnabled) {
+    return { corroborated: false, reason: "not instrumented -- [render-trace] tile-ingest is instrument-gated (WorkingCanvas.tsx:1027)" };
+  }
+  const queuedTileCount = await page.evaluate(() => window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? 0);
+  if (queuedTileCount === 0) {
+    return { corroborated: false, reason: "not over budget (residencyQueuedTileCount() === 0)" };
+  }
+  if (!postViewState) {
+    return { corroborated: false, reason: "no post-step view-state observed (no view-state render-trace line yet)" };
+  }
+
+  const gridFrame = await page.evaluate(() => window.__SPATIAL_E2E__.residencyGridFrame?.() ?? null);
+  if (!gridFrame) {
+    return { corroborated: false, reason: "no grid frame established yet (residencyGridFrame() === null)" };
+  }
+
+  // S4 (reviewer gate, close-out fix piece): dimensions are read HERE -- only once every earlier
+  // guard above has already established this check is actually going to run -- never eagerly at the
+  // call site (which, before this fix, awaited a bounding box even for a `--control` run that
+  // returns above without ever using it) and never assumed non-null: a null read is handled as an
+  // ordinary `{corroborated: false}` outcome, not a TypeError thrown outside this loop's own
+  // try/catch (which would lose every earlier row, the same P5g discipline this file's own F4/`
+  // step-threw` handling already follows elsewhere).
+  // S1 (reviewer gate, close-out fix piece): reads the SAME `canvas.clientWidth`/`clientHeight` the
+  // app itself feeds `computeAuthoritativeViewportBbox` with (`WorkingCanvas.tsx:1264-1265`), not
+  // `.working-canvas`'s own fractional Playwright bounding box -- an integer-vs-fractional mismatch
+  // could otherwise let this check's own covering set gain a column the app's real bbox never had.
+  const dimensions = await page.evaluate(() => {
+    const c = document.querySelector(".working-canvas");
+    return c ? { width: c.clientWidth, height: c.clientHeight } : null;
+  });
+  if (!dimensions) {
+    return { corroborated: false, reason: "no .working-canvas element found (unmounted?) -- cannot read clientWidth/clientHeight" };
+  }
+
+  const { tilesCoveringBbox, tileKeyToString } = await loadShellModule("src/canvas/tileGrid.ts");
+  const { computeAuthoritativeViewportBbox } = await loadShellModule("src/canvas/viewportBbox.ts");
+
+  // The SAME shape `WorkingCanvas.tsx`'s own `onViewStateChange` handler feeds
+  // `computeAuthoritativeViewportBbox` with -- `postViewState` is a `traceViewState` render-trace
+  // line's own payload (S1's `lastViewState`), `dimensions` is `.working-canvas`'s own
+  // `clientWidth`/`clientHeight` (S1 above).
+  const bbox = computeAuthoritativeViewportBbox({
+    targetX: postViewState.targetX,
+    targetY: postViewState.targetY,
+    zoom: postViewState.zoom,
+    widthPx: dimensions.width,
+    heightPx: dimensions.height,
+    originX: postViewState.originX,
+    originY: postViewState.originY,
+  });
+  const coveringKeys = new Set(tilesCoveringBbox(gridFrame, gridFrame.level, bbox).map(tileKeyToString));
+
+  const evictedTileKeys = new Set();
+  for (const entry of tileIngestListener.sorted()) {
+    if (entry.seq < sinceSeq) continue;
+    for (const key of entry.data?.evictedTileKeys ?? []) evictedTileKeys.add(key);
+  }
+
+  const violatingTileKeys = [...evictedTileKeys].filter((k) => coveringKeys.has(k));
+  // S3 (reviewer gate, close-out fix piece): zero evictions observed since `sinceSeq`, over budget
+  // or not, means this protection was never actually EXERCISED this step -- `passed: true` over zero
+  // evictions would let the row be read as evidence the eviction rule held, when nothing was ever
+  // evicted for it to hold against. Reported as a distinct, honest `exercised: false` / `passed:
+  // null` outcome instead, never `passed: true` -- the caller's own demotion check
+  // (`check.corroborated && check.passed === false`, below) treats this the same as any other
+  // non-violating outcome (never demotes the row), while this stays structurally distinguishable in
+  // the evidence file from a genuinely exercised, genuinely-passing check.
+  if (evictedTileKeys.size === 0) {
+    return {
+      corroborated: true,
+      exercised: false,
+      queuedTileCount,
+      coveringKeyCount: coveringKeys.size,
+      evictedTileKeyCount: 0,
+      violatingTileKeys: [],
+      passed: null,
+      reason: "over budget but zero tile evictions observed since sinceSeq -- protection not exercised this step, not evidence either way",
+    };
+  }
+  return {
+    corroborated: true,
+    exercised: true,
+    queuedTileCount,
+    coveringKeyCount: coveringKeys.size,
+    evictedTileKeyCount: evictedTileKeys.size,
+    violatingTileKeys,
+    passed: violatingTileKeys.length === 0,
+  };
 }
 
 async function applyStep(page, step) {
@@ -1249,7 +1394,7 @@ async function candidateHoverEvidenceCheck(page) {
  * a `wholeTrialInvalidatedReason` note) as a final pass after the loop, never during it (so the loop
  * itself still records each row's own honest per-step outcome first).
  */
-async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, instrumentEnabled, smoke, arm }) {
+async function runTrace(page, consoleHandle, viewStateListener, tileIngestListener, { stepLimit, instrumentEnabled, smoke, arm }) {
   const steps = stepLimit ? CAMERA_TRACE_STEPS.slice(0, stepLimit) : CAMERA_TRACE_STEPS;
   const rows = [];
   let invalidatedAtStep = null;
@@ -1290,6 +1435,17 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
     // produces (never a fabricated success) -- `row.settled` reads `false` below either way, so S8's
     // own whole-trial-invalidation rule still fires unchanged; only the EVIDENCE this trial keeps
     // changes; the trial's own honest failure verdict does not.
+    // Close-out fix piece, E2E pre-committed test 7: a marker taken BEFORE this step's own gesture,
+    // so `assertNoInViewportTileEvicted` below (called only for the qualifying step, well after this
+    // point) never attributes an EARLIER step's own eviction (a genuinely different, superseded bbox)
+    // to this one -- see that function's own doc comment, disclosure 2.
+    // M1 (reviewer gate, close-out fix piece): `tileIngestListener.markSeq()`, NOT
+    // `.sorted().length` -- the latter counts only entries this listener has actually COLLECTED
+    // (small), while `entry.seq` (read inside `assertNoInViewportTileEvicted`) is drawn from the
+    // listener's GLOBAL console-message counter (large) -- see `attachRenderTraceValueListener`'s
+    // own `markSeq` doc comment for the full account of why comparing those two scales made the
+    // `sinceSeq` filter downstream a no-op.
+    const tileIngestSeqBeforeStep = tileIngestListener.markSeq();
     let row;
     try {
       row = await measureOneStep(page, consoleHandle, viewStateListener, step, {
@@ -1307,6 +1463,44 @@ async function runTrace(page, consoleHandle, viewStateListener, { stepLimit, ins
       };
     }
     rows.push(row);
+
+    // Close-out fix piece, E2E pre-committed test 7 (entry 44, ADR-028's architect-gate
+    // clarification 3 / Amendment 1 -- NOT the accepted Decision's own item 3, which is cross-tile
+    // de-duplication): candidate arm only
+    // (this pin -- paraphrasing DECISIONS-PENDING.md entry 44's own applied scope, not a verbatim
+    // quote -- is a candidate-arm-only claim; baseline has no tile grid at all), at the trace's own
+    // dedicated over-budget zoom-out step
+    // (`residencyTrace.mjs`'s `CAMERA_TRACE_STEPS`, id `"zoom-out-1"`). Never runs unless the step
+    // itself already settled (`row.settled`) -- an unsettled step's own view-state/eviction evidence
+    // is not trustworthy evidence of anything. `assertNoInViewportTileEvicted` itself corroborates
+    // whether this run was genuinely over budget and is instrumented; when it is not, this records
+    // `corroborated: false` on the row (never a fabricated pass) and leaves `row.status` untouched.
+    if (step.id === "zoom-out-1" && arm === "candidate" && row.settled) {
+      // S4 (reviewer gate, close-out fix piece): no `box`/dimensions read here any more -- before
+      // this fix, a bounding-box was awaited eagerly at every qualifying call site, including a
+      // `--control` run where `assertNoInViewportTileEvicted` returns early (`!instrumentEnabled`)
+      // without ever using it, and a `null` result would have thrown a TypeError OUTSIDE this loop's
+      // own try/catch, losing every earlier row. Dimensions are now read INSIDE the function, only
+      // once every earlier guard has already established the check will actually run (see that
+      // function's own doc comment).
+      const check = await assertNoInViewportTileEvicted(page, tileIngestListener, {
+        instrumentEnabled,
+        sinceSeq: tileIngestSeqBeforeStep,
+        postViewState: row.viewState?.post ?? null,
+      });
+      row.entry44InViewportEvictionCheck = check;
+      // Mirrors S1's own realized-displacement discipline (P1d suggestion 12, above): a genuine,
+      // corroborated violation demotes `row.status` -- never a silent pass, never a thrown exception
+      // that would lose every earlier row's own evidence (P5g's own fix, this loop's top comment).
+      // S3 (reviewer gate, close-out fix piece): `check.passed === false` specifically, never bare
+      // `!check.passed` -- a not-exercised outcome (zero evictions observed) reports `passed: null`,
+      // which `!check.passed` would also treat as a violation; `=== false` demotes only a genuine,
+      // corroborated violation, leaving the not-exercised case unread as a false positive.
+      if (check.corroborated && check.passed === false) {
+        row.status = "unmeasured";
+        row.reason = `entry 44 / ADR-028 architect-gate clarification 3 / Amendment 1 VIOLATED: in-viewport tile(s) evicted -- ${JSON.stringify(check.violatingTileKeys)}`;
+      }
+    }
 
     // Viewport-residency cut P6c (Amendment 20, trace v3): step 6 ("pan-northeast") only -- realized
     // covering-tile delta (see `coveringTileDeltaFromCounters`'s own doc comment) and the no-batch
@@ -2181,6 +2375,12 @@ async function main() {
 
     const instrumentEnabled = !control;
     const viewStateListener = attachRenderTraceValueListener(page, ["view-state"]);
+    // Close-out fix piece, E2E pre-committed test 7: `tile-ingest` lines carry `evictedTileKeys`
+    // (`renderTrace.ts`'s own `traceTileIngest`) -- attached once, for the whole trial, the same
+    // lifecycle `viewStateListener` above already has; `assertNoInViewportTileEvicted`'s own
+    // `sinceSeq` scoping (per-step) is what keeps an EARLIER step's own eviction from being
+    // attributed to a LATER one, not a per-step re-attach.
+    const tileIngestListener = attachRenderTraceValueListener(page, ["tile-ingest"]);
 
     // M7: the drain gate + the `open-drain` pre-step -- measures the dataset OPEN's own natural
     // query + first-batch paint (G7's real "cold first view" subject), strictly BEFORE step 1
@@ -2272,12 +2472,18 @@ async function main() {
 
     evidence.openDrain = openDrainRow;
 
-    const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(page, consoleHandle, viewStateListener, {
-      stepLimit,
-      instrumentEnabled,
-      smoke,
-      arm: cellArgs.arm,
-    });
+    const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(
+      page,
+      consoleHandle,
+      viewStateListener,
+      tileIngestListener,
+      {
+        stepLimit,
+        instrumentEnabled,
+        smoke,
+        arm: cellArgs.arm,
+      }
+    );
     evidence.rows = rows;
     evidence.invalidated = invalidated;
     evidence.invalidatedAtStep = invalidatedAtStep;

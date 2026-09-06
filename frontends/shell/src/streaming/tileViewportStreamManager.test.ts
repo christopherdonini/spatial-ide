@@ -428,7 +428,9 @@ describe("TileViewportStreamManager", () => {
       const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
       const outcome = manager.onCameraChange(bbox);
 
-      expect(outcome).toEqual({ kind: "planned", issued: [], queued: [], alreadyResident: [] });
+      // F1 (close-out fix piece, entry 44): `covering` (the geometric covering set) is now present
+      // regardless of the over-budget drop -- this bbox covers exactly one cell, "0:0".
+      expect(outcome).toEqual({ kind: "planned", issued: [], queued: [], alreadyResident: [], covering: ["0:0"] });
       expect(viewportQueryMock).not.toHaveBeenCalled();
       expect(manager.overBudget).toBe(true);
       expect(manager.unrequestedTilesOverBudget).toEqual(["0:0"]);
