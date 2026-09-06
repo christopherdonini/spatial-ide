@@ -28,6 +28,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     `candidateArmSession.ts` `applyTileViewportContext`, `tileResidentSet.ts` `planTileEviction`),
     and the structural cure for overview zoom is LOD (P1/P2), which the same call decides. Touches:
     ADR-028 (Amendment 3, the reopen record, on the human's word), the next cut's scope.
+    **RULED 2026-09-06, the human, verbatim:** *"I'd love to give you a L9 when the candidate arm
+    actually works properly, but since it started deviating in L5, we either fix it and I re-do L5
+    to L9, otherwise is pointless."* Applied: finding 3 is REOPENED as a defect and the fix is
+    scoped as a 1b close-out piece (not deferred to the LOD cut): the thrash (this entry) and the
+    silent truncated settle (entry 43) are fixed and reviewer-gated, an E2E step pins "no
+    in-viewport tile is evicted while it is in view", and Part L's L5-L9 are re-run by the human on
+    the fixed build under a verified arm before any L9 verdict. Entry 42 (the extent-fitting Zoom
+    to layer) is a protocol change and stays on the LOD/producer line unless the human pulls it in.
+    The ADR-028 Amendment 3 text (the reopen + the withdrawn exception) is drafted for the human's
+    sight with the piece — never appended by the custodian.
 
 43. **[Within-budget fills that settle TRUNCATED or with a never-completed covering tile are
     SILENT by design — surfaced 2026-09-06 at the Part L sitting; contradicts entry 36's own rule,
