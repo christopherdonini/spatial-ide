@@ -44,7 +44,7 @@ import { encodeDecU64 } from "../skp/codec";
 import { TileViewportStreamManager } from "../streaming/tileViewportStreamManager";
 import type { StreamSink } from "../streaming/transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "../streaming/viewportStreamManager";
-import { INITIAL_TILE_KEY, startCandidateArmSession } from "./candidateArmSession";
+import { INITIAL_TILE_KEY, bboxesIntersect, startCandidateArmSession } from "./candidateArmSession";
 import { nextResidencyStatus, residencyStatusText } from "./residencyStatus";
 import type { ResidencyStatus, ResidencyStatusEvent } from "./residencyStatus";
 
@@ -2389,11 +2389,16 @@ describe("F1 close-out (entry 44's second finding) + F2 close-out (entry 43): a 
   });
 });
 
-// Residency-debt cut 1b sub-amendment (entry 48 (a), 2026-09-07, "the untiled first look is
-// eviction-protected while its extent intersects the viewport"). Two channels, deliberately pinned
-// separately: channel 1 (protection) is `handleViewportChange`'s own `extraProtectedKeys` computation
-// (`FIRST_LOOK_PROTECTED_KEYS` iff `latestUnionedExtent` intersects the plan's bbox); channel 2 (never
-// completeness, never fits) is `covering`/`lastCoveringTileKeys` staying geometric-only regardless.
+// Residency-debt cut 1b sub-amendment (entry 48 (a), 2026-09-07). S3 (reviewer gate, fix batch): the
+// human's own RULED words, verbatim (DECISIONS-PENDING.md, main checkout, entry 48's RULED
+// paragraph): *"protect the untiled first look while its extent intersects the viewport"* -- quoted
+// from that ONE source exactly (the prior version of this comment spliced it with the preregistration
+// doc's own differently-worded heading, "...eviction-protected while in view"). Two channels,
+// deliberately pinned separately: channel 1 (protection) is `handleViewportChange`'s own
+// `extraProtectedKeys` computation (`FIRST_LOOK_PROTECTED_KEYS` iff `firstLookExtent` -- the first
+// look's own extent, snapshotted at frame establishment, M1's fix -- intersects the plan's bbox);
+// channel 2 (never completeness, never fits) is `covering`/`lastCoveringTileKeys` staying
+// geometric-only regardless.
 describe("entry 48 (a): the untiled first look is eviction-protected while in view", () => {
   beforeEach(() => {
     viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
@@ -2408,12 +2413,30 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
    * anchors the grid frame on at the untiled stream's own terminal. */
   const FIRST_LOOK_EXTENT = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
 
+  /** M1 (reviewer gate, fix batch): a GRID tile batch's own extent, deliberately far from
+   * `FIRST_LOOK_EXTENT` and placed to match test 2's own round-2 (far-away) bbox below -- the
+   * sensitizing ingredient the pre-fix test lacked. `latestUnionedExtent` (`candidateArmSession.ts`)
+   * folds this in permanently once any such batch lands, which is exactly the bug: an intersection
+   * test against THAT field (instead of the snapshotted `firstLookExtent`) would then read round 2's
+   * own bbox as intersecting the union, since the union itself now sits at this far location too. */
+  const FAR_TILE_EXTENT = { xmin: 1000, ymin: 1000, xmax: 1000.1, ymax: 1000.1 };
+
   // Pre-committed unit test 2 -- THE ENTRY-48 PIN.
   it("test 2: the protected keys handed to the canvas contain INITIAL_TILE_KEY only when the bbox intersects the first look's own extent; the covering array never contains it either way", async () => {
     vi.useFakeTimers();
     try {
+      // M1 (reviewer gate, fix batch): `pushTileBatch` is keyed on `tileKey` rather than a constant
+      // return -- the untiled first look's own batches carry `FIRST_LOOK_EXTENT`, but a REAL tile's
+      // own batch carries `FAR_TILE_EXTENT` (deliberately far from the first look, and placed to match
+      // round 2's own bbox below). The pre-fix test mocked a constant `fitAnchor` and delivered no
+      // tile batch between rounds at all, so it could never observe `latestUnionedExtent` drifting
+      // away from the first look's own extent -- the exact gap this rewrite closes.
       const canvas = fakeCanvas({
-        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT })),
+        pushTileBatch: vi.fn((tileKey: string) =>
+          tileKey === INITIAL_TILE_KEY
+            ? { ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT }
+            : { ...OK_INGEST, fitAnchor: FAR_TILE_EXTENT }
+        ),
       });
       const session = startCandidateArmSession({ dataset: "ds_x", canvas });
       await session.reissueUnrestricted(null, null);
@@ -2427,19 +2450,40 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
       const call1 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      // NIT (iii) (reviewer gate, fix batch): `call1[0]`/`call2[0]` below are the exact `covering`
+      // array `handleViewportChange` also assigns into `lastCoveringTileKeys` one statement earlier
+      // (`lastCoveringTileKeys = new Set(covering)`, immediately before the `applyTileViewportContext`
+      // call) -- there is no exported seam onto `lastCoveringTileKeys` itself, so asserting on this
+      // argument IS asserting on it faithfully, not a mere proxy of convenience.
       const covering1 = call1[0] as string[];
       const protectedKeys1 = call1[2] as ReadonlySet<string> | undefined;
       expect(covering1).not.toContain(INITIAL_TILE_KEY); // channel 2: never in the covering array
       expect(protectedKeys1?.has(INITIAL_TILE_KEY)).toBe(true); // channel 1: protected while in view
 
+      // M1 (reviewer gate, fix batch): round 1's own tile stream delivers a GRID batch (still
+      // `lastSink()`'s own current target -- round 2 has not minted `sh_tile_2` yet) whose extent is
+      // `FAR_TILE_EXTENT`, matching round 2's own bbox below. Pre-fix, this taints
+      // `latestUnionedExtent` -- the value the OLD predicate tested -- to sit at round 2's own
+      // location, so round 2 would (wrongly) still read as protected.
+      lastSink().onBatch(new Uint8Array([9]), true);
+
       // Round 2: a single-tile bbox nowhere near the first look's own extent -- no longer protected.
       viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_2" });
+      // NIT (i) (reviewer gate, fix batch): the call count is asserted to have GROWN before reading
+      // `.at(-1)` below -- proves this round genuinely re-planned, never a stale round-1 call reread.
+      const callsBeforeRound2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.length;
       session.onViewportChanged({ xmin: 1000, ymin: 1000, xmax: 1000.1, ymax: 1000.1 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      expect((canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(
+        callsBeforeRound2
+      );
       const call2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
       const covering2 = call2[0] as string[];
       const protectedKeys2 = call2[2] as ReadonlySet<string> | undefined;
       expect(covering2).not.toContain(INITIAL_TILE_KEY); // channel 2, again
+      // THE PIN (M1): round 2 must NOT protect INITIAL_TILE_KEY -- the first look's own extent
+      // (`firstLookExtent`, snapshotted once at frame establishment) never intersects round 2's own
+      // far-away bbox, regardless of what round 1's own tile batch just did to `latestUnionedExtent`.
       expect(protectedKeys2?.has(INITIAL_TILE_KEY) ?? false).toBe(false); // channel 1: no longer protected
     } finally {
       vi.useRealTimers();
@@ -2498,6 +2542,29 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+// NIT (ii) (reviewer gate, fix batch, entry 48 (a)): `bboxesIntersect` exported and pinned directly --
+// its own declared predicate is `<=`/`>=`, not a strict `<`/`>`, so a touching edge counts as
+// intersecting.
+describe("bboxesIntersect (entry 48 (a))", () => {
+  it("touching edges count as intersecting (xmax === other.xmin)", () => {
+    const a = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
+    const b = { xmin: 10, ymin: 0, xmax: 20, ymax: 10 };
+    expect(bboxesIntersect(a, b)).toBe(true);
+  });
+
+  it("interior overlap intersects", () => {
+    expect(bboxesIntersect({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 }, { xmin: 5, ymin: 5, xmax: 15, ymax: 15 })).toBe(
+      true
+    );
+  });
+
+  it("disjoint bboxes do not intersect", () => {
+    expect(
+      bboxesIntersect({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 }, { xmin: 11, ymin: 11, xmax: 20, ymax: 20 })
+    ).toBe(false);
   });
 });
 

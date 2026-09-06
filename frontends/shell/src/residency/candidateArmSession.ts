@@ -174,10 +174,13 @@ const FIRST_LOOK_PROTECTED_KEYS: ReadonlySet<string> = new Set([INITIAL_TILE_KEY
 
 /** Residency-debt cut 1b sub-amendment (entry 48 (a)): plain AABB overlap between two authoritative
  * bboxes -- a touching edge counts as intersecting (`<=`/`>=`, not a strict `<`/`>`), matching the
- * sub-amendment's own declared predicate. Local to this module: the one caller
- * (`handleViewportChange`, below) is the only place in this codebase that needs to test the untiled
- * first look's own union extent (`latestUnionedExtent`) against the current viewport bbox. */
-function bboxesIntersect(a: AuthoritativeBbox, b: AuthoritativeBbox): boolean {
+ * sub-amendment's own declared predicate. The one product caller (`handleViewportChange`, below)
+ * tests the untiled first look's own extent, snapshotted at frame establishment (`firstLookExtent`),
+ * against the current viewport bbox -- M1 (reviewer gate, fix batch, entry 48 (a)) corrected this
+ * from the dataset-lifetime-tainted `latestUnionedExtent`, which grid tile batches also feed (see
+ * that field's own doc comment above). Exported (NIT (ii), reviewer gate, fix batch) so
+ * `candidateArmSession.test.ts` can pin the touching-edge case directly. */
+export function bboxesIntersect(a: AuthoritativeBbox, b: AuthoritativeBbox): boolean {
   return a.xmin <= b.xmax && a.xmax >= b.xmin && a.ymin <= b.ymax && a.ymax >= b.ymin;
 }
 
@@ -366,14 +369,37 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * declared while `trackedTileCount > 0` or a re-plan is pending." A scheduled-but-not-yet-run
    * re-plan is exactly that pending re-plan; this flag is this session's own honest record of it. */
   let pendingViewportChange = false;
-  /** P5f complex-gate should-fix 4: the running union of every batch the CURRENT untiled first-look/
-   * reissue stream has delivered so far (`ingestAndMaybeEstablishFrame`'s own `outcome.unionedExtent`,
-   * which already accumulates across calls) -- read once, at that stream's own natural terminal
-   * (`issueUntiledQuery`'s `onTerminal`), to derive the grid frame's anchor from ALL of that stream's
-   * batches, not its first alone (`tileGrid.ts`'s own doc comment has the full account). Reset
-   * implicitly by `reissueUnrestricted`'s own full clear (a fresh generation's untiled query starts
-   * this accumulation over, the same way `evictedTileCountSession`/`lastCoveringTileKeys` reset). */
+  /** P5f complex-gate should-fix 4: the running union of every batch `ingestAndMaybeEstablishFrame`
+   * has admitted since the last reset (`outcome.fitAnchor`, fed from EVERY tile key that function is
+   * called for -- `INITIAL_TILE_KEY` batches AND real GRID tile batches alike, `manager`'s own
+   * `onBatch` wiring above) -- despite this field's own name, it is NOT untiled-stream-only past the
+   * point a real tile plan starts landing batches too.
+   *
+   * **M1 (reviewer gate, fix batch, entry 48 (a)): this was the WRONG extent for
+   * `handleViewportChange`'s own eviction-protection predicate to read.** Once any grid tile batch
+   * lands, this field folds that tile's own extent in permanently (it never shrinks), so an
+   * intersection test against it can never honestly release the untiled first look again once tiling
+   * has started anywhere. `firstLookExtent` (below) is the corrected, first-look-only reading that
+   * predicate now uses instead. THIS field's own remaining job is unchanged: read once, at the
+   * untiled stream's own natural terminal (`issueUntiledQuery`'s `onTerminal`), to derive the grid
+   * frame's anchor from ALL of that stream's own batches up to that point (`tileGrid.ts`'s own doc
+   * comment has the full account) -- in practice, no tile plan can land a batch before that terminal
+   * in the SAME generation the frame is first established in (`manager.onCameraChange` returns
+   * `"no-frame"` until `establishFrameFromExtent` has run). Reset implicitly by
+   * `reissueUnrestricted`'s own full clear (a fresh generation's untiled query starts this
+   * accumulation over, the same way `evictedTileCountSession`/`lastCoveringTileKeys` reset). */
   let latestUnionedExtent: AuthoritativeBbox | null = null;
+  /** Residency-debt cut 1b sub-amendment (entry 48 (a)), M1 fix (reviewer gate, fix batch): the
+   * untiled first look's OWN extent, snapshotted once this generation -- at the untiled stream's own
+   * terminal (`issueUntiledQuery`'s `onTerminal`, the moment the frame is anchored, whether or not
+   * THIS particular call actually establishes a fresh one) and, separately, wherever that same
+   * terminal callback skips the establish step because the stream was self-cancelled with a frame
+   * already existing (`relinquishFill`'s own frame-exists cancel) -- so a LATER grid tile batch's own
+   * contribution to `latestUnionedExtent` (above) can never taint it. `handleViewportChange`'s own
+   * eviction-protection predicate reads THIS field, never `latestUnionedExtent`. `null` until the
+   * untiled stream for this generation reaches its first such moment (nothing to protect against
+   * yet). Reset alongside `latestUnionedExtent`, for the identical reason, by `reissueUnrestricted`. */
+  let firstLookExtent: AuthoritativeBbox | null = null;
   /** Architect re-verification, viewport-residency cut P6b, item 2b: the running count of rows the
    * CURRENT untiled first-look/reissue stream has delivered so far under `INITIAL_TILE_KEY`
    * (`outcome.rowsAdmitted + outcome.duplicatesDropped` -- every row the server actually sent this
@@ -1200,6 +1226,19 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
             failedCoveringTerminals.set(INITIAL_TILE_KEY, terminal.kind);
           }
         }
+        // M1 (reviewer gate, fix batch, entry 48 (a)): the first look's OWN extent snapshot -- written
+        // here regardless of which branch immediately below actually runs, so BOTH a genuine terminal
+        // (the untiled stream ran to its own end, or genuinely failed) AND a self-cancelled one
+        // (`relinquishFill`'s own frame-exists cancel, the guarded-skip case right below) record it.
+        // `wasCurrent`-gated: an orphaned, already-superseded generation's own late terminal must never
+        // overwrite the CURRENT generation's snapshot. At this instant `latestUnionedExtent` has been
+        // fed only by THIS stream's own untiled batches for a true bootstrap establishment (no tile
+        // plan can land a batch before a frame exists -- `manager.onCameraChange`'s own `"no-frame"`
+        // case); for a self-cancel once a frame already exists (`relinquishFill`'s own scope), this
+        // still records whatever the cancelled stream delivered before its own cancel, honestly.
+        if (wasCurrent) {
+          firstLookExtent = latestUnionedExtent;
+        }
         // Nit 1 (re-reviewer gate, residency-debt cut 1b): skipped for a SELF-cancelled stream once the
         // manager's own grid frame already exists -- `establishFrameFromExtent`'s own "no-op past the
         // first call" contract means the underlying frame itself never moves either way, but calling it
@@ -1335,14 +1374,19 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
     // Residency-debt cut 1b sub-amendment (entry 48 (a)): channel 1, eviction protection ONLY --
     // `INITIAL_TILE_KEY` is passed as `extraProtectedKeys` (never folded into `covering` itself, which
-    // stays the geometric set exactly as F1 left it) whenever the untiled first look's own running
-    // union extent still intersects THIS plan's bbox. `latestUnionedExtent` is the same value
-    // `establishFrameFromExtent` consumed to anchor the grid -- it keeps accumulating afterward
-    // (`ingestAndMaybeEstablishFrame`'s own doc comment), so this reads the CURRENT extent, not the
-    // one the frame originally froze on. `null` (nothing ever admitted any geometry yet) never
-    // protects -- there is no extent to intersect.
+    // stays the geometric set exactly as F1 left it) whenever the untiled first look's OWN extent
+    // still intersects THIS plan's bbox.
+    //
+    // M1 (reviewer gate, fix batch): tests `firstLookExtent`, snapshotted once at the untiled stream's
+    // own frame-establishing terminal (or self-cancel) -- NEVER `latestUnionedExtent`.
+    // `latestUnionedExtent` keeps accumulating from every batch `ingestAndMaybeEstablishFrame` admits,
+    // GRID tile batches included (that field's own doc comment above has the full account), so testing
+    // it here meant this predicate could never honestly release the first look again once any tile
+    // batch had landed anywhere the operator panned to. `firstLookExtent` is fixed at snapshot time --
+    // exactly "the first look's own extent," never re-tainted by what tiling admits afterward. `null`
+    // (no snapshot taken yet this generation) never protects -- there is no extent to intersect.
     const extraProtectedKeys =
-      latestUnionedExtent && bboxesIntersect(latestUnionedExtent, bbox) ? FIRST_LOOK_PROTECTED_KEYS : undefined;
+      firstLookExtent && bboxesIntersect(firstLookExtent, bbox) ? FIRST_LOOK_PROTECTED_KEYS : undefined;
     const fits = canvas?.applyTileViewportContext(covering, viewCentre, extraProtectedKeys) ?? true;
     // Viewport-residency cut P6a, Defect A: unconditional now, in BOTH directions -- before this
     // piece, only `if (fits) manager.setOverBudget(false)` ran here, so a camera change that left the
@@ -1428,6 +1472,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // doc comment has the full account of why a stale `true` here would otherwise be misread later).
       lastEmittedRelinquishedUntiled = false;
       latestUnionedExtent = null; // a fresh generation's own untiled query starts its own union over
+      firstLookExtent = null; // M1 (reviewer gate, fix batch): reset alongside, for the identical reason
       untiledRowsSeen = 0; // P6b item 2b: a fresh generation's own untiled query starts this count over
       evictedTileCountSession = 0; // a fresh generation starts a fresh eviction history
       // P5f complex-gate should-fix 5: before this fix, `countedIssuedTileKeys` survived a full clear

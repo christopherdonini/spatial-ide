@@ -239,7 +239,9 @@ export interface WorkingCanvasHandle {
    * **`extraProtectedKeys` (residency-debt cut 1b sub-amendment, entry 48 (a)): the untiled first
    * look's own eviction protection, a channel DELIBERATELY SEPARATE from `coveringTileKeys`.**
    * `candidateArmSession.ts` passes `INITIAL_TILE_KEY` (`tileGridConstants.ts`) here whenever its own
-   * union extent (`latestUnionedExtent`) intersects the bbox this plan was run for -- never as part of
+   * first-look extent, snapshotted at frame establishment (`firstLookExtent` -- M1, reviewer gate, fix
+   * batch, corrected from the dataset-lifetime-tainted `latestUnionedExtent`; see that module's own
+   * doc comments), intersects the bbox this plan was run for -- never as part of
    * `coveringTileKeys` itself, since `INITIAL_TILE_KEY` is not a grid key and folding it into the
    * covering array would also feed `candidateArmSession.ts`'s own `lastCoveringTileKeys`
    * (`isFillComplete`'s per-tile loop) and this method's own `anyPartialAmongCovering` fits check --
@@ -291,6 +293,21 @@ export interface TileBatchIngestOutcome {
  */
 export function shouldScheduleTileRender(outcome: Pick<TileBatchIngestOutcome, "rowsAdmitted" | "evictedTileKeys">): boolean {
   return outcome.rowsAdmitted > 0 || outcome.evictedTileKeys.length > 0;
+}
+
+/** Residency-debt cut 1b sub-amendment (entry 48 (a)), S2 (reviewer gate, fix batch): the pure "which
+ * tile keys must an eviction cascade leave alone this call" computation, extracted out of
+ * `applyTileViewportContext` below (previously inlined at its own `currentViewportTileKeysRef.current
+ * =` assignment) -- the same testability reason `shouldScheduleTileRender` just above is its own
+ * pure, exported seam (a real `Deck`/WebGL context is out of a jsdom unit test's reach; this
+ * computation needs neither). `covering` unioned with `extra` when `extra` is non-empty, `covering`
+ * alone otherwise. This function's own result feeds `currentViewportTileKeysRef` (the PROTECTION set)
+ * alone -- `coveringTileKeysRef` (this file's own covering-ONLY consumer, read by
+ * `anyPartialAmongCovering` below) must never see `extra`. See `WorkingCanvas.test.ts`'s own direct
+ * unit tests for this function's three cases: (a) `extra` undefined -> equals `covering`; (b) `extra`
+ * present -> the union; (c) the covering-only consumer (`coveringTileKeysRef`) never sees `extra`. */
+export function protectionSetFor(covering: readonly string[], extra: ReadonlySet<string> | undefined): Set<string> {
+  return extra && extra.size > 0 ? new Set([...covering, ...extra]) : new Set(covering);
 }
 
 /** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
@@ -1168,13 +1185,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // entry 48 (a): the PROTECTION set is the geometric covering set unioned with whatever this
         // call's own `extraProtectedKeys` names (typically `INITIAL_TILE_KEY`, while the untiled first
         // look's extent intersects the viewport) -- never folded into `coveringTileKeysRef` itself,
-        // which `anyPartialAmongCovering` (below) reads alone. Skips the union entirely (reuses the
-        // SAME Set instance as `coveringTileKeysRef.current`) when nothing extra was passed, so the
-        // pre-existing no-extra-protection call shape allocates no more than it always did.
-        currentViewportTileKeysRef.current =
-          extraProtectedKeys && extraProtectedKeys.size > 0
-            ? new Set([...coveringTileKeys, ...extraProtectedKeys])
-            : coveringTileKeysRef.current;
+        // which `anyPartialAmongCovering` (below) reads alone as the covering-only consumer.
+        // `protectionSetFor` (S2, reviewer gate, fix batch: this file's own pure seam, exported beside
+        // `shouldScheduleTileRender`) computes the union; see its own doc comment/tests.
+        currentViewportTileKeysRef.current = protectionSetFor(coveringTileKeys, extraProtectedKeys);
         viewCentreRef.current = viewCentre;
         const grid = tileGridContextRef.current;
         const tileSet = tileResidentRef.current;
@@ -1190,11 +1204,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           reservedTileKeys: RESERVED_TILE_KEYS,
         });
         if (plan.evict.length > 0) {
-          // B1: the protected set (this method's own `coveringTileKeys`) is threaded into `evictTile`
-          // itself -- a cascade can divert around one of these tiles (mark partial, keep it resident)
-          // but never blank it. `anyEvicted` (not `plan.evict.length > 0` blindly) is what decides
-          // whether a render is actually owed -- a call whose ENTIRE plan diverted to partial-marking
-          // (every candidate protected) changed no drawn geometry.
+          // B1: the protected set threaded into `evictTile` itself is `currentViewportTileKeysRef
+          // .current` -- covering unioned with `extraProtectedKeys` (entry 48 (a)'s own protection
+          // channel), NOT merely this method's own `coveringTileKeys` parameter (S1, reviewer gate,
+          // fix batch: this comment used to say the latter; `coveringTileKeysRef` is the covering-ONLY
+          // consumer `anyPartialAmongCovering` below reads alone). A cascade can divert around one of
+          // these tiles (mark partial, keep it resident) but never blank it. `anyEvicted` (not
+          // `plan.evict.length > 0` blindly) is what decides whether a render is actually owed -- a
+          // call whose ENTIRE plan diverted to partial-marking (every candidate protected) changed no
+          // drawn geometry.
           let anyEvicted = false;
           for (const key of plan.evict) {
             if (tileSet.evictTile(key, currentViewportTileKeysRef.current).length > 0) anyEvicted = true;
