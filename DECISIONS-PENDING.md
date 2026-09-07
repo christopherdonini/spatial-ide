@@ -74,8 +74,9 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     one commit, no rewrite — and F-16's EPSG look must leave a written record of the terms check
     (attribution/no-alteration conditions) beside DEPENDENCY-LICENSES or docs/14, not just a fixed
     comment, since crs-catalog.json is now a shipped, public, EPSG-derived artifact." Applied: F-3
-    as a reviewer-gated piece (writer + tests) → PR; F-11 no change; F-12(d) generalised in place,
-    dated; fix-forward set one commit with the EPSG terms record. Original entry follows.]**
+    as a reviewer-gated piece (writer + tests) → **PR #27** (gate FAIL → fix → PASS; CI green);
+    F-11 no change; F-12(d) generalised in place, dated; fix-forward set one commit (78f480b) with
+    the EPSG terms record → entry 51. Original entry follows.]**
     **[Public-audience audit of the 2026-08-03→2026-09-07 window (`PUBLIC-AUDIENCE-AUDIT.md`,
     405 commits, HEAD 914ef9f): 0 leaks, 8 sensitivity-class matches, 7 hygiene — three need your
     ruling; one fix-forward set waits on your word; nothing remediated unqueued.]** No credential,
@@ -118,6 +119,11 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     the cut hostage to it would repeat the sunk-cost shape I capped on entry 40." Applied:
     RESIDENCY-DEBT-1B.md dated sub-amendment (running-extent design, the two required test classes,
     the cap and its conversion consequence) BEFORE the worker; gate instructed on the two tests.
+    **Outcome, 2026-09-07: the third attempt PASSED its gate** (7bb89d7 → one fix batch f2ae174 →
+    affirmative re-review; T-A/T-B/T-C each proven to fail against the design it attacks, the
+    reviewer reproducing every observation) — **PR #28** for your click. The rule-7 conversion is
+    NOT triggered; your close ruling ("hold 1b — do the entry-48 (a) piece first") stands as ruled.
+    Next: your zoom-out-only re-run on the merged build (arm verified per reload) → L9 → archive.
     Original entry follows.]**
     **[The untiled first look is evicted wholesale on the first admission that needs room — the
     "already rendered content disappears ~10 s after zooming out" the human named in the post-fix
