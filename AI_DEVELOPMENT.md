@@ -123,6 +123,18 @@ how obvious they seem:
   were later proven baseline by the session log. Every operator step under the candidate arm
   starts with `await window.__SPATIAL_E2E__.getResidencyArm()` printing `"candidate"`, and a
   session log `candidate-grid-frame-established` line is the after-the-fact proof.
+- **`.ps1` files we write are ASCII-only, or they carry a BOM (added 2026-09-07, after a silently
+  skipped display check).** The Write tool saves BOM-less UTF-8; `powershell.exe` 5.1 `-File`
+  reads a BOM-less file as ANSI (cp1252). A UTF-8 em dash (`E2 80 94`) then decodes to `â€”`, and
+  `0x94` is U+201D `”` — which PowerShell 5.1 accepts as a double-quote delimiter. One em dash
+  inside a `"…"` string shifted the quote parity of an unattended runner so that eight lines
+  (the whole wake-and-verify-display block) parsed as the body of a never-taken `if` and simply did
+  not run; no error, no log line. The same file with the dash on a different line fails to parse
+  instead. Rules: no non-ASCII characters in `.ps1` files (comments included — `–` is `“`);
+  scan before launching anything unattended: `Select-String -Path <file> -Pattern '[^\x00-\x7F]'`
+  must print nothing; put safety-critical steps in their own child script whose lines are logged
+  verbatim and whose exit code gates, so a skip shows up as a missing line rather than silence;
+  prove a new runner with a dry-run switch under the identical `-File` launch before the real run.
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
