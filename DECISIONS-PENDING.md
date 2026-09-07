@@ -5,7 +5,23 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-51. **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
+51. **[RULED 2026-09-07, the human verbatim: "adopt as recommended, with the order binding and the
+    branch named. (3) runs FIRST because its outcome decides what (1)/(2) may honestly say: if the
+    shipped PROJJSON is numerically equivalent to the registry's 2056 entry, the attribution calls it
+    EPSG data with the IOGP acknowledgement and terms URL; if it is NOT equivalent — hand-authored,
+    PROJ-derived, or rounded — the terms' own modified-data clause forbids the plain attribution,
+    and (1)/(2) instead state derivation/compatibility without EPSG's name on the values. This is
+    "declared, never inferred" applied to licensing. For the comparison itself: I'll do the
+    epsg.org lookup for 2056 myself and paste the parameter values [or: authorized — use projinfo
+    EPSG:2056 -o PROJJSON with the PROJ version pinned and recorded in the check's own note; PROJ as
+    a dev-machine verification tool is not a runtime dependency and doesn't touch ADR-026's no-PROJ
+    posture]. Then (1)+(2) as one reviewer-gated piece, conscious hash update riding with it.
+    Counsel per ADR-009's Caveat stays the bar for anything stronger than attribution. Not a blocker
+    for anything else — the 1b close, the release work, and entry 40's window all proceed
+    independently." Applied: (3) run by the custodian under the bracketed authorization (PROJ
+    tooling, version pinned in the note, `DEPENDENCY-LICENSES.md`); then (1)+(2) as one gated piece
+    whose wording follows (3)'s outcome. Original entry follows.]**
+    **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
     section, 2026-09-07): two obligations are open and one verification is owed before the shipped
     EPSG:2056 definition is attributed to EPSG — all three need code or a registry comparison, so
     none is done unqueued.]** The terms ("EPSG Dataset Terms of Use", revised 8 April 2016, read

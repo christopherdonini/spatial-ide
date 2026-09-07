@@ -165,6 +165,32 @@ is a code change this record makes — all three are queued (entry 51), per the 
 unqueued remediation" discipline. Counsel per ADR-009's Caveat before any statement stronger than
 this one.
 
+**Verification (3) — performed 2026-09-07 under the entry-51 ruling's bracketed authorization
+(PROJ as a dev-machine verification tool; version pinned here).** Reference: `projinfo EPSG:2056
+-o PROJJSON` from the PROJ shipped with QGIS 3.44.2 on the reference machine — **PROJ 9.6.2**
+(`proj.exe` banner "Rel. 9.6.2, June 4th, 2025"; `proj.db` metadata `PROJ.VERSION = 9.6.2`,
+**`EPSG.VERSION = v12.013`, `EPSG.DATE = 2025-05-26`**, `DATABASE.LAYOUT.VERSION 1.5`; `proj.db`
+sha256 `bed20383…a2b2`). Compared leaf-by-leaf against the shipped `engine/tests/data/epsg2056.projjson`
+(sha256 `254016888ff494a4099d72869206eaf4a8c1ef5a52fb94104540557c2f46d024` — the same value
+`crs_catalog::tests::EPSG_2056_HASH` pins), parameters keyed by EPSG code; script, reference export
+and verbatim output in `spikes/entry51-epsg2056-equivalence/`. **Result: numerically equivalent —
+19 numeric leaves compared, 0 differences (tolerance 1e-9 relative), 0 parameter/ellipsoid values
+missing on either side**: ellipsoid `a = 6377397.155`, `1/f = 299.1528128` (Bessel 1841);
+projection centre 46.9524055555556° N / 7.43958333333333° E (8811/8812); azimuth 90° (8813); angle
+from rectified to skew grid 90° (8814); scale 1 (8815); Ec 2 600 000 m / Nc 1 200 000 m
+(8816/8817); axes E/N east/north metre; CRS `EPSG:2056`, base `EPSG:4150`, method `EPSG:9815`.
+Textual differences, all non-numeric: the `$schema` version (v0.5 shipped vs v0.7 emitted); the
+**names** of parameters 8813 and 8815 ("Azimuth of initial line" / "Scale factor on initial line"
+shipped vs "Azimuth at projection centre" / "Scale factor at projection centre" in v12.013 — the
+registry's own later names for the same codes and values); and seven metadata leaves only the
+reference carries (`base_crs.type`, `scope`, `area`, `bbox`). Caveat, stated not inferred: the
+reference is PROJ's import of the EPSG dataset (v12.013), not the registry read directly; a
+registry-direct spot-check of the seven values on epsg.org remains available to the human as a
+stronger confirmation. **Branch taken, per the ruling:** the shipped definition IS numerically
+equivalent → (1)/(2) attribute it as EPSG data, with the IOGP ownership acknowledgement and the
+terms' URL; the two older parameter names are reported to that piece as a conscious choice (align
+to v12.013's names, or keep and state the dataset version they came from).
+
 ## Full inventory
 
 ### workspace (kernel, engine, renderer, protocol/data-plane)
