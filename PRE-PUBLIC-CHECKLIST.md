@@ -10,7 +10,12 @@
 > were — done or deferred as recorded — and a bounded audit of the 2026-08-03→now window for content
 > that assumed a private audience is recorded in `PUBLIC-AUDIENCE-AUDIT.md` (findings queued, none
 > remediated without the human's word). The red line "making the repository public" stays a red
-> line for any future visibility change; the 2026-08-03 flip was the human's own act.
+> line for any future visibility change; the 2026-08-03 flip was the human's own act. **One further
+> fact, verified 2026-09-07 and stated rather than left discoverable: from the flip until `LICENSE`
+> landed in `65dde47` (2026-08-07T08:18Z) — 77 commits, ~3.6 days — the public repository carried no
+> license at all (owner's all rights reserved by default). No consequence: all 77 commits were the
+> owner's own, and GitHub records zero forks, stars or watchers from the flip to that date and since.
+> ADR-009's corrigendum carries the full record.**
 
 ADR-009 was accepted on 2026-08-07 and its own Status says: **"The repository does not become public
 until the pre-public checklist below lands — accepting this ADR ends the deliberation, not the

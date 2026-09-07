@@ -12,6 +12,16 @@ on 2026-09-07 and recorded in ADR-009's appended corrigendum (`docs/adr/ADR-009-
 (all in commit `914ef9f`, 2026-09-07 01:09:27 +0200). This audit did not re-query the API; it takes
 the date as given and audits the consequence.
 
+> **Scope clarification (2026-09-07, custodian, per the human's direction):** the window is the WHOLE
+> public period, 2026-08-03T18:06Z → the audit date — which is what `git log --since=2026-08-03`
+> below already covers (405 commits). The 2026-08-07 and 2026-08-18 pre-public checklist sweeps
+> remain valid evidence for the credential / personal-data / third-party classes (they ran against
+> this same history and found nothing), so the class this audit HAD to add is the
+> assumed-private-audience content class (§1's F-3, F-12 and kin); its re-sweep of the earlier
+> classes is corroboration, not a requirement. One further fact of the same period is recorded in
+> ADR-009's corrigendum addendum: the repository carried NO license file from the flip until
+> `65dde47` (2026-08-07T08:18Z) — 77 commits, ~3.6 days, public under default all-rights-reserved.
+
 **Window and tree audited:** `git log --since=2026-08-03 HEAD` at HEAD **`914ef9f`** =
 **405 commits** (401 of them after the flip instant; the four earlier same-day commits `3f6e94a`,
 `3b730a8`, `56df8e8`, `73e9935` were swept too), plus the full tracked tree at `914ef9f`. The brief

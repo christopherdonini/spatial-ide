@@ -103,3 +103,20 @@ license, the DCO, the open-core boundary — stands unchanged; only the "not unt
 hold in fact. A bounded audit of the 2026-08-03→now window for content that assumed a private
 audience is recorded in `PUBLIC-AUDIENCE-AUDIT.md`; its findings are queued for the human, none
 remediated without their word.
+
+### Addendum to the corrigendum — the repository was public with NO license for ~3.6 days (2026-09-07, appended the same day; a fact of record the human directed be stated rather than left discoverable)
+
+Verified from git history and GitHub's API on 2026-09-07. The commit at the `PublicEvent` instant
+(2026-08-03T18:06:23Z) is `73e9935` ("spike: conclude ADR-003 — outcome, CI, doc updates",
+2026-08-03T12:31Z); its tree contains no `LICENSE`, no `LICENSES/`, no `DCO`, and no license field in
+`Cargo.toml` or `frontends/shell/package.json`. The first `LICENSE` (AGPL-3.0-or-later) landed in
+`65dde47` at 2026-08-07T08:18Z — **77 commits and ~86 hours after the flip**, and after this ADR's
+own acceptance commit (`de6ad08`, 2026-08-06T23:45Z), which therefore also fell inside the window.
+During those 77 commits the repository was public under the default of the owner's all rights
+reserved. **Consequence: none.** All 77 commits were authored by the owner's own two identities (72
+by `Christopher Donini <donini.christopher@gmail.com>`, 5 by `chris <chrys92d@gmail.com>` — the two
+identities DECISIONS-PENDING entries 14 and 41 record as the same person), no external contribution
+existed, and GitHub records zero forks, zero stars and zero watchers for the repository from the flip
+to the date of this addendum — so no third party received, used or contributed code under the
+unlicensed state. The license that applies to every commit today is the one this ADR chose; this
+addendum records only that, for four days, the repository's public state preceded it.
