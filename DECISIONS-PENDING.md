@@ -168,6 +168,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     So: no new package at any edge class, no lockfile delta, no new runtime reach — the dependency
     TREE is unchanged; what is new is one manifest line. If the red line reads "tree addition", this
     is not one; if it reads "manifest change", it is in scope. Recorded either way; your word.
+    **Accepted by the #25 merge (2026-09-07, inferred from the click, not a stated word):** PR #25's
+    body put this line to the human under the heading "One manifest line, for the human's word",
+    and the human merged it (`356234b`). Recorded as accepted on that basis; say so if the click was
+    not meant to carry it.
 
 45. **[The close-out fix piece's SIGHT BUNDLE — three items the human rules at PR sight, none the
     custodian's; opened 2026-09-06 with the piece (branch `cut/residency-debt-fix`, preregistered
