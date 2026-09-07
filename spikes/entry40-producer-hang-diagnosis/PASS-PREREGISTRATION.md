@@ -166,3 +166,15 @@ independently at 05:10:26Z — `{"ok":true,"sessionUnlocked":true,"displayAwake"
    reviewer-gated; a second invalidation of any kind ends the pass with a null result recorded
    (§4 (D)-class), not a third attempt.
 Everything else in §2–§5 and Amendment 1 stands.
+
+**Amendment 2, correction (2026-09-07, same day, before the re-run).** Change 2 above says the
+display is verified "BEFORE arming"; that ordering is wrong on the mechanism and is corrected here,
+not edited in place: `check-display-session.ps1` reads `monitor-timeout-ac == 0` as its
+display-awake signal, and that value is what `arm-rustdesk-guard.ps1` SETS (its line
+`powercfg /change monitor-timeout-ac 0`), so a check before arming reports `displayAwake:false` by
+construction (observed 05:18:58Z with the guard disarmed: `"ok":false,"displayAwake":false,
+"monitorTimeoutAc":600`). Binding order, as the guard README already states ("Before each trial,
+run `check-display-session.ps1` and invalidate the cell … unless it reports `ok:true`"): arm →
+stop RustDesk → wake + check (JSON logged verbatim) → trial. The runner's check step is now a
+separate child script whose JSON line must appear in the runner log, or the runner disarms and
+exits without launching the harness. Everything else in Amendment 2 stands.
