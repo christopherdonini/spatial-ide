@@ -23,6 +23,7 @@ import {
   G7_COLD_FIRST_VIEW_MARGIN_PROPOSED,
   IDENTITY_VIEW_STATE_STEPS,
   isWellFormedSettleCriterion,
+  lastSessionLogPathFromAppLog,
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
   parsePerStepWatchdogMsArg,
   parseTileSizeArg,
@@ -492,6 +493,38 @@ test("an entry-40 --per-step-watchdog-ms override always leaves the outer watchd
   const outer = trialWatchdogMsForStepBound(CAMERA_TRACE_STEPS.length, n);
   assert.ok(outer >= CAMERA_TRACE_STEPS.length * n);
   assert.equal(outer, (CAMERA_TRACE_STEPS.length + 1) * n);
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- lastSessionLogPathFromAppLog (reviewer M2(a): reading lib.rs's own startup line back out of app.log)"
+);
+
+test("returns null when the app-log text carries no session-log line at all", () => {
+  assert.equal(lastSessionLogPathFromAppLog(""), null);
+  assert.equal(lastSessionLogPathFromAppLog("some other startup noise\nmore noise\n"), null);
+});
+
+test("extracts the path from a single matching line", () => {
+  assert.equal(
+    lastSessionLogPathFromAppLog("[spatial-ide-shell] session log: C:\\Users\\x\\AppData\\Local\\spatial-ide-shell\\logs\\session-123.log\n"),
+    "C:\\Users\\x\\AppData\\Local\\spatial-ide-shell\\logs\\session-123.log"
+  );
+});
+
+test("returns the LAST occurrence when the app-log file has more than one (e.g. a reused process from a prior run)", () => {
+  const text =
+    "[spatial-ide-shell] session log: /tmp/session-1.log\n" +
+    "some interleaved startup noise\n" +
+    "[spatial-ide-shell] session log: /tmp/session-2.log\n";
+  assert.equal(lastSessionLogPathFromAppLog(text), "/tmp/session-2.log");
+});
+
+test("tolerates surrounding whitespace/CRLF line endings", () => {
+  assert.equal(
+    lastSessionLogPathFromAppLog("[spatial-ide-shell] session log: /tmp/session-3.log \r\n"),
+    "/tmp/session-3.log"
+  );
 });
 
 console.log("");

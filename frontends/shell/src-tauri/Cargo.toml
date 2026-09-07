@@ -25,12 +25,18 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): the "measure build" --
 # a release-profile (`cargo build --release`/`tauri build`) artifact that ALSO opens the debug-gated
 # CDP remote-debugging port the harness needs, so the residency harness can drive a release-optimized
-# binary the same way it drives `tauri dev`. Empty by default (inert): this feature only ever changes
-# behavior in `lib.rs`'s own `#[cfg(feature = "measure-build")]` block, always paired at build time
+# binary the same way it drives `tauri dev`. Empty by default (inert), always paired at build time
 # with the config overlay `npm run build:measure` generates (`create: false` on the declarative
-# window -- see that block's own doc comment for why the two must always travel together). Never a
-# shipped default (docs/09's dev/debug-gate discipline) -- no default feature enables it, and nothing
-# in this crate's own `default` feature set (there is none) references it.
+# window -- see `lib.rs`'s own `#[cfg(feature = "measure-build")]` block's own doc comment for why
+# the two must always travel together). Never a shipped default (docs/09's dev/debug-gate
+# discipline) -- no default feature enables it, and nothing in this crate's own `default` feature
+# set (there is none) references it.
+#
+# Reviewer nit iii (entry-40 pass): this comment used to say the feature "only ever changes behavior
+# in `lib.rs`'s own... block" -- stale as of `pool_poll.rs` (its own module doc has the full
+# account), whose `#[cfg(any(debug_assertions, feature = "measure-build"))]` gate is now a SECOND
+# site this feature's own presence changes behavior at, alongside `lib.rs`'s CDP-port block and the
+# `#[cfg(any(...))]`-gated calls into it from `commands.rs`.
 [features]
 measure-build = []
 
@@ -64,3 +70,9 @@ spatial-renderer = { path = "../../../renderer" }
 # this with the plain `spatial-engine` dependency above for test builds; the shipped binary does not
 # gain the fixture-generation code.
 spatial-engine = { path = "../../../engine", features = ["fixture"] }
+# Reviewer S5 (entry-40 pass): `#[tokio::test]` for `pool_poll.rs`'s lifecycle tests
+# (`record`/`stop`'s map bookkeeping, tested against a real `AbortHandle` from a trivial spawned
+# task). The SAME unification precedent as `spatial-engine`/`fixture` above: this adds only the
+# `macros` feature (the attribute itself) on top of the plain dependency's own `rt-multi-thread`/
+# `time`/`sync`, for test builds only -- the shipped binary gains no proc-macro dependency.
+tokio = { version = "1", features = ["macros"] }

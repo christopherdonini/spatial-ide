@@ -63,7 +63,7 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
-import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -72,6 +72,7 @@ import {
   CAMERA_TRACE_STEPS,
   dismissThenClickRetry,
   IDENTITY_VIEW_STATE_STEPS,
+  lastSessionLogPathFromAppLog,
   parsePerStepWatchdogMsArg,
   parseTileSizeArg,
   percentileNearestRank,
@@ -228,7 +229,15 @@ function gitRevParseHead() {
  * function (`main()`'s own call site catches it and exits non-zero, never a silent default).
  *
  * Entry-40 pass: `perStepWatchdogMs` is `null` unless `--per-step-watchdog-ms <n>` was given -- same
- * discipline, via `parsePerStepWatchdogMsArg` (`residencyTrace.mjs`, pure and unit-tested there). */
+ * discipline, via `parsePerStepWatchdogMsArg` (`residencyTrace.mjs`, pure and unit-tested there).
+ *
+ * Reviewer S1: `--per-step-watchdog-ms` combined with `--wire-identity` is refused loudly, here,
+ * the same way a malformed `--tile-size`/missing `--measure-build` path already is -- the
+ * `--wire-identity` branch (`main()`, below) keeps its own hard-coded `600_000` outer watchdog
+ * regardless of any per-step override, so a large override (the entry-40 run's own one-hour value)
+ * could silently outrun it, the exact unsoundness this refusal exists to make impossible rather
+ * than merely undocumented. `--control` has no such problem (it goes through the SAME
+ * `trialWatchdogMsForStepBound` formula every other run does) and is not refused. */
 function parseCellArgs(argv) {
   let arm = "baseline";
   let coldOrWarm = "warm"; // declared default -- see this function's own doc comment on why
@@ -248,6 +257,13 @@ function parseCellArgs(argv) {
   }
   const tileSize = parseTileSizeArg(argv); // P7: throws loudly on a malformed value, never silent
   const perStepWatchdogMs = parsePerStepWatchdogMsArg(argv); // entry-40 pass: same discipline
+  if (perStepWatchdogMs !== null && argv.includes("--wire-identity")) {
+    throw new Error(
+      "--per-step-watchdog-ms is not sound combined with --wire-identity: the identity-guard's own " +
+        "outer watchdog is a hard-coded 600_000ms regardless of the per-step override, so a large " +
+        "override could silently outrun it (reviewer S1). Run these separately."
+    );
+  }
   return { arm, coldOrWarm, machineAttestation, tileSize, perStepWatchdogMs };
 }
 
@@ -2056,6 +2072,11 @@ async function main() {
   // `wireTraceLines` persistence below is always-on: it only copies console entries the harness
   // already captured, at write time, with zero effect on the run itself.
   const perStreamTrace = argSet.has("--per-stream-trace");
+  // Reviewer M2(b) (entry-40 pass): opt-in pre-flight that proves the pool-poll instrument actually
+  // emitted before any trace step runs -- `null`/ordinary-run behavior is entirely unaffected unless
+  // this flag is given (the entry-40 run itself passes it). See the pre-flight block below, right
+  // after the `open-drain` step, for what it does and how it invalidates the cell on failure.
+  const requirePoolPoll = argSet.has("--require-pool-poll");
   const stepLimit = smoke ? 3 : undefined;
   // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): `--measure-build
   // <exePath>` selects the third build class -- everything else about this run (mode, steps,
@@ -2178,6 +2199,26 @@ async function main() {
   }
   const consoleHandle = attachConsole(page);
 
+  // Reviewer M2(a) (entry-40 pass): `lib.rs`'s own startup line (`[spatial-ide-shell] session log:
+  // <path>`) is written to stderr, captured into `e2e/out/app.log` (`tauri dev`) or
+  // `e2e/out/measure-app.log` (`--measure-build`) by `attachOrLaunch`/`attachOrLaunchExe`'s own
+  // raw-fd `stdio` redirect (`lib.mjs`) -- by the time `attachOrLaunch(Exe)` resolves above (CDP is
+  // up, a page was found), the Rust `setup()` closure that prints this line has already run.
+  // `lastSessionLogPathFromAppLog` (`residencyTrace.mjs`, pure, unit-tested there) does the actual
+  // parsing; this is only the IO + null-reason bookkeeping. Never fabricated: a missing app-log file
+  // or a missing line both record `null` plus a stated reason, never a guessed path.
+  const appLogPath = join(OUT_DIR, measureBuildExePath ? "measure-app.log" : "app.log");
+  let sessionLogPath = null;
+  let sessionLogPathReason = null;
+  try {
+    sessionLogPath = lastSessionLogPathFromAppLog(readFileSync(appLogPath, "utf8"));
+    if (!sessionLogPath) {
+      sessionLogPathReason = `no "[spatial-ide-shell] session log: <path>" line found in ${appLogPath}`;
+    }
+  } catch (e) {
+    sessionLogPathReason = `could not read ${appLogPath}: ${e.message}`;
+  }
+
   // Entry 31 / attribution-pass §6: the opt-in queue-depth sampler. One page.evaluate per tick
   // reading the two EXISTING E2E hooks (`residencyInFlightStreamCount`, `residencyQueuedTileCount`
   // -- App.tsx's DEV-gated block; no product change), pushed with an epoch-ms stamp so samples
@@ -2275,6 +2316,23 @@ async function main() {
       perStreamTraceRequested: perStreamTrace,
       launchedFresh: launched, // F2: always true -- the fresh-launch invariant above already returned if not
       sweptPids, // F2: PIDs killed on CDP_PORT before this run's own launch, possibly empty
+      // Reviewer S2 (entry-40 pass): moved to the cell's OWN top level -- the same level
+      // `perStreamTraceEnabled`/`perStreamTraceRequested` above already record their flag at, not
+      // nested under `watchdog` (an earlier version of this comment wrongly said this was recorded
+      // "the same way as --arm/--tile-size/--attest", which are top-level `cell` fields; this was
+      // not, until this fix). `null` unless `--per-step-watchdog-ms` was given;
+      // `watchdog.resolvedPerStepBoundMs` below already equals this value when it is not null
+      // (`effectiveSettleTimeoutMs`'s own contract), so a reader can see both the request and its
+      // effect without leaving the cell object.
+      perStepWatchdogOverrideMs: cellArgs.perStepWatchdogMs,
+      // Reviewer M2(a) (entry-40 pass): the running process's own session-log path, read back from
+      // `app.log`/`measure-app.log` (see the block right after `attachConsole` above) -- `null` plus
+      // `sessionLogPathReason` if the line was absent or the file unreadable, never a guessed path.
+      sessionLogPath,
+      sessionLogPathReason,
+      // Reviewer M2(b) (entry-40 pass): `null` unless `--require-pool-poll` was given; filled in
+      // below, right after the `open-drain` step, before any trace step runs.
+      poolPollPreflight: null,
       // Amendment 12: the outer trial watchdog's own resolved inputs, recorded honestly rather than
       // only living in a `setTimeout` argument -- `legacyTrialWatchdogMs` is §7's own originally-
       // declared, now-historical figure (`TRIAL_WATCHDOG_MS`), kept beside the live value so a
@@ -2284,12 +2342,6 @@ async function main() {
         stepCountUsed: CAMERA_TRACE_STEPS.length,
         trialWatchdogMs,
         legacyTrialWatchdogMs: TRIAL_WATCHDOG_MS,
-        // Entry-40 pass: the raw `--per-step-watchdog-ms` request, recorded the same way the other
-        // declared cell flags are (`--arm`/`--tile-size`/`--attest`, above) -- `null` unless given;
-        // `resolvedPerStepBoundMs` above already equals this value when it is not null
-        // (`effectiveSettleTimeoutMs`'s own contract), so a reader can see both the request and its
-        // effect on the SAME object.
-        perStepWatchdogOverrideMs: cellArgs.perStepWatchdogMs,
       },
     },
   };
@@ -2503,6 +2555,56 @@ async function main() {
     }
 
     evidence.openDrain = openDrainRow;
+
+    // Reviewer M2(b) (entry-40 pass): the pre-flight, gated on --require-pool-poll so an ordinary
+    // run's behavior is entirely unchanged without it. Runs strictly BEFORE any trace step
+    // (`runTrace`, below) -- a cell whose own pool-poll instrument never emitted must be invalidated
+    // here, not after burning a full trace on it. `open-drain` (above) has already opened the
+    // dataset and settled; this sleep is IN ADDITION to whatever that already took, so the wait is
+    // always at least 3000ms past the dataset's own open, never less.
+    if (requirePoolPoll) {
+      console.log(
+        "residency-harness: --require-pool-poll pre-flight -- waiting 3000ms past dataset open, then checking the session log"
+      );
+      await sleep(3000);
+      let preflightOk = false;
+      let preflightReason = null;
+      if (!sessionLogPath) {
+        preflightReason = `no session log path recorded (${sessionLogPathReason ?? "unknown reason"})`;
+      } else {
+        try {
+          preflightOk = readFileSync(sessionLogPath, "utf8").includes("producer-pool-poll");
+          if (!preflightOk) {
+            preflightReason = `session log at ${sessionLogPath} contains no "producer-pool-poll" line`;
+          }
+        } catch (e) {
+          preflightReason = `could not read session log at ${sessionLogPath}: ${e.message}`;
+        }
+      }
+      evidence.cell.poolPollPreflight = {
+        required: true,
+        ok: preflightOk,
+        reason: preflightReason,
+        checkedAt: new Date().toISOString(),
+      };
+      if (!preflightOk) {
+        console.error(
+          `residency-harness: --require-pool-poll PRE-FLIGHT FAILED (${preflightReason}) -- invalidating the cell before any trace step runs`
+        );
+        evidence.rows = [];
+        evidence.invalidated = true;
+        // Before any trace step ever ran -- not a real CAMERA_TRACE_STEPS index (the existing
+        // per-step invalidation path uses a real index; this pre-flight runs earlier than that).
+        evidence.invalidatedAtStep = null;
+        evidence.invalidationReason = "pool-poll instrument emitted nothing";
+        openDrainRow.status = "unmeasured";
+        openDrainRow.wholeTrialInvalidatedReason = `pool-poll instrument emitted nothing (${preflightReason})`;
+        evidence.anyRowUnmeasured = true;
+        process.exitCode = 1;
+        return;
+      }
+      console.log("residency-harness: --require-pool-poll pre-flight PASSED");
+    }
 
     const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(
       page,

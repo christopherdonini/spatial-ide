@@ -402,7 +402,7 @@ question is closed.
 ## Residency measurement harness (viewport-residency cut, P1/P1b)
 
 ```
-npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate] [--tile-size coarse|medium|fine] [--fixture <path>] [--per-stream-trace] [--per-step-watchdog-ms <n>]
+npm run e2e:residency-harness -- [--smoke] [--control] [--wire-identity] [--attest "<text>"] [--cold|--warm] [--arm baseline|candidate] [--tile-size coarse|medium|fine] [--fixture <path>] [--per-stream-trace] [--per-step-watchdog-ms <n>] [--require-pool-poll]
 ```
 
 `e2e/residency-harness.mjs` -- `RESIDENCY-PREREGISTRATION.md` is this suite's ENTIRE spec (§4b the
@@ -436,18 +436,41 @@ ACTUAL level the run established (`evidence.gridFrame.level`, `TileViewportStrea
 -- not merely what was requested -- `null` for the baseline arm or a run whose grid frame never
 established.
 
-**`--per-step-watchdog-ms <n>`** (entry-40 empirical producer pass,
-`spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md` §2, "a harness flag to let a
-stalled step run far past the watchdog"): replaces `settleTimeoutForFixture`'s fixture-scaled default
-everywhere the per-step settle watchdog is computed (`applyStep`'s pre-gesture calm wait,
-`measureOneStep`'s own `effectiveTimeoutMs`, and the outer trial watchdog's own `resolvedPerStepBoundMs`
-input -- all three now route through `residency-harness.mjs`'s own `effectiveSettleTimeoutMs`, which
-wraps `residencyTrace.mjs`'s pure, unit-tested `resolvedPerStepSettleTimeoutMs`), for this run only.
-The overall trial watchdog scales with it (`trialWatchdogMsForStepBound`, `residencyTrace.mjs`), so it
-is always at least `(step count + 1) * n` and cannot fire before a step given the full `n` allowance
-does. `evidence.cell.watchdog.perStepWatchdogOverrideMs` records the raw request (`null` unless
-given), the same way `--arm`/`--tile-size`/`--attest` are recorded on the cell. Diagnosis-only, not
-part of the preregistered protocol -- never use a cell run with this flag for a scored measurement.
+**`--per-step-watchdog-ms <n>`** (entry-40 empirical producer pass -- paraphrase of
+`spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md` §2's own "a harness flag to let a
+stalled step run far past the watchdog," not a verbatim quote of it): replaces
+`settleTimeoutForFixture`'s fixture-scaled default everywhere the per-step settle watchdog is computed
+on the **measured camera-trace path only** (`applyStep`'s pre-gesture calm wait, `measureOneStep`'s
+own `effectiveTimeoutMs`, and the outer trial watchdog's own `resolvedPerStepBoundMs` input -- all
+three now route through `residency-harness.mjs`'s own `effectiveSettleTimeoutMs`, which wraps
+`residencyTrace.mjs`'s pure, unit-tested `resolvedPerStepSettleTimeoutMs`), for this run only. The
+overall trial watchdog scales with it (`trialWatchdogMsForStepBound`, `residencyTrace.mjs`), so it is
+always at least `(step count + 1) * n` and cannot fire before a step given the full `n` allowance does.
+**Refused combined with `--wire-identity`** (reviewer S1): that mode's own outer watchdog is a
+hard-coded `600_000`ms regardless of any per-step override, so a large override (e.g. this pass's own
+one-hour value) could silently outrun it -- `parseCellArgs` throws loudly rather than accept the
+combination; `--control` has no such problem and is unaffected. `evidence.cell.perStepWatchdogOverrideMs`
+records the raw request (`null` unless given) at the cell's own top level, the same way
+`--arm`/`--tile-size`/`--attest` are. Diagnosis-only, not part of the preregistered protocol -- never
+use a cell run with this flag for a scored measurement.
+
+**`--require-pool-poll`** (entry-40 empirical producer pass, reviewer M2(b)): adds a pre-flight,
+run once at cell start right after the `open-drain` step and strictly before any trace step --
+waits at least 3000ms past the dataset's own open, then reads the running process's own session log
+(`evidence.cell.sessionLogPath`, below) and asserts it contains at least one `producer-pool-poll`
+line. If not, the cell is INVALIDATED (`evidence.invalidated = true`,
+`evidence.invalidationReason = "pool-poll instrument emitted nothing"`) before any trace step ever
+runs, rather than burning a full trial on a cell whose instrument never emitted. The pre-flight's own
+result (`{ required, ok, reason, checkedAt }`) is recorded at `evidence.cell.poolPollPreflight`
+(`null` when the flag was not given). Ordinary harness runs are entirely unaffected without this
+flag; the entry-40 run itself passes it.
+
+**`evidence.cell.sessionLogPath`/`sessionLogPathReason`** (reviewer M2(a)): the running shell
+process's own session-log path, read back from `lib.rs`'s own startup line (`[spatial-ide-shell]
+session log: <path>`, stderr, captured by `attachOrLaunch`/`attachOrLaunchExe` into
+`e2e/out/app.log`/`measure-app.log`) via `residencyTrace.mjs`'s pure `lastSessionLogPathFromAppLog`.
+`sessionLogPath` is `null`, with `sessionLogPathReason` stating why, if the app-log file could not be
+read or carried no such line -- never a guessed or fabricated path.
 
 **Entry 31 (2026-09-03, post-campaign) -- three additions with three different protocol
 standings, split deliberately (this change's own reviewer gate, should-fix 7):**

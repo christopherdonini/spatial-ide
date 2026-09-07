@@ -104,6 +104,24 @@ export function parsePerStepWatchdogMsArg(argv) {
 }
 
 /**
+ * Entry-40 pass (reviewer M2(a)): `lib.rs`'s own startup line -- `[spatial-ide-shell] session log:
+ * <path>` -- is written to stderr, which `attachOrLaunch`/`attachOrLaunchExe` (`lib.mjs`) capture
+ * into `e2e/out/app.log`/`measure-app.log` via a raw-fd `stdio` redirect. Pure: takes that file's
+ * already-read text and returns the LAST matching path (a later launch's own line wins over an
+ * earlier one still sitting in the same append-mode log file, e.g. a reused/attached process from a
+ * prior run), or `null` if no such line exists at all.
+ */
+export function lastSessionLogPathFromAppLog(appLogText) {
+  const re = /\[spatial-ide-shell\] session log: (.+)$/gm;
+  let match;
+  let last = null;
+  while ((match = re.exec(appLogText))) {
+    last = match[1].trim();
+  }
+  return last;
+}
+
+/**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4e) -- the shell's own declared fan-out ceiling for
  * concurrent `viewport_query` streams a single pan/zoom step may issue, once tiling exists (P3).
  * Named here for the same reason as the two constants above; unused by this piece's own driver,

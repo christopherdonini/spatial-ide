@@ -97,9 +97,13 @@ pub fn cancel(
     state.cancel(request)
 }
 
-/// **Entry-40 pass:** stops the dataset's pool-lease poll (if one is running) before closing —
-/// `app` is unused (and would warn as such) in a plain release build; see `open_dataset`'s own
-/// `cfg_attr`.
+/// **Entry-40 pass:** stops the dataset's pool-lease poll (if one is running) — `app` is unused
+/// (and would warn as such) in a plain release build; see `open_dataset`'s own `cfg_attr`.
+///
+/// **Reviewer nit (vi):** `stop()` runs AFTER `state.close_dataset(request)`, not before, and
+/// unconditionally (regardless of whether the close itself succeeded), so the poll's last tick(s)
+/// can still observe the dataset's own teardown (e.g. leases dropping as its tickets are cancelled)
+/// rather than being cut off the moment `close_dataset` is called.
 #[cfg_attr(not(any(debug_assertions, feature = "measure-build")), allow(unused_variables))]
 #[tauri::command]
 pub fn close_dataset(
@@ -108,10 +112,13 @@ pub fn close_dataset(
     request: CloseDatasetRequest,
 ) -> Result<CloseDatasetResponse, SkpError> {
     #[cfg(any(debug_assertions, feature = "measure-build"))]
+    let dataset_for_stop = request.dataset.as_str().to_string();
+    let result = state.close_dataset(request);
+    #[cfg(any(debug_assertions, feature = "measure-build"))]
     if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
-        tasks.stop(request.dataset.as_str());
+        tasks.stop(&dataset_for_stop);
     }
-    state.close_dataset(request)
+    result
 }
 
 // -------------------------------------------------------------------------------------------

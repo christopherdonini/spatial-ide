@@ -17,10 +17,11 @@
 
 mod commands;
 mod publish;
-// Entry-40 empirical producer pass instrument (`pool_poll.rs`'s own module doc): compiled in only
-// under the same dev/measure-build gate the crate's other diagnostic-only code already uses
-// (docs/09) -- never in a plain release build. Every reference to this module elsewhere in the
-// crate (`lib.rs`'s `setup`, `commands.rs`'s `open_dataset`/`close_dataset`) is gated identically.
+// Entry-40 empirical producer pass instrument (`pool_poll.rs`'s own module doc has the full
+// account): compiled in under EITHER a plain dev/test build OR the measure-build feature -- the
+// union of both, not an existing single-condition precedent (`pool_poll.rs`'s module doc explains
+// why) -- never in a plain release build. Every reference to this module elsewhere in the crate
+// (`lib.rs`'s `setup`, `commands.rs`'s `open_dataset`/`close_dataset`) is gated identically.
 #[cfg(any(debug_assertions, feature = "measure-build"))]
 mod pool_poll;
 mod state;
