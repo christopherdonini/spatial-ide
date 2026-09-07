@@ -1153,3 +1153,7 @@ route for published bundles now has a durable public target, and the shell's pub
 publish.rs`, found by the 2026-09-07 public-audience audit, `PUBLIC-AUDIENCE-AUDIT.md` F-3) — that
 notice's wording and route are ADR-009-adjacent and are the human's to rule (DECISIONS-PENDING entry
 49), not corrected here.
+
+- **2026-09-07 (appended):** DECISIONS-PENDING entry 49 ruled the Url route: the shell's writer
+  (`frontends/shell/src-tauri/src/publish.rs`) now names the public repository; the written-offer
+  "not yet public" clause is gone.
