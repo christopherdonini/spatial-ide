@@ -158,7 +158,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     affirmative re-review; T-A/T-B/T-C each proven to fail against the design it attacks, the
     reviewer reproducing every observation) — **PR #28** for your click. The rule-7 conversion is
     NOT triggered; your close ruling ("hold 1b — do the entry-48 (a) piece first") stands as ruled.
-    Next: your zoom-out-only re-run on the merged build (arm verified per reload) → L9 → archive.
+    **1b CLOSED 2026-09-07 on the zoom-out-only re-run** (L6 verbatim: *"L6 works properly now,
+    nothing disappearing"*; session log: arm proven, zero first-look evictions) **and the human's
+    L9, verbatim:** *"L9 overall it's better and feels better and less clunky now, reactive, non
+    stuck, it feels actually way better"*. Rule-10 archive: `.cut-archive/CUT-STATE-residency-debt.md`.
     Original entry follows.]**
     **[The untiled first look is evicted wholesale on the first admission that needs room — the
     "already rendered content disappears ~10 s after zooming out" the human named in the post-fix

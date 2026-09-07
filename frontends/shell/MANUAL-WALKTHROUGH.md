@@ -1176,4 +1176,9 @@ human at the machine over RustDesk. Session log `session-1788806962.log`: **arm 
   — entry 47, ruled (b) to the next cut on 2026-09-06 (not a 1b deviation: Item C's shipped
   clear-on-camera-change design); the human's words are now that piece's binding acceptance
   criterion (entry 47, 2026-09-07 addendum).
-- **L9:** pending the human's words; this entry completes then.
+- **L9, verbatim (the felt re-verdict that closes the cut):** *"L9 overall it's better and feels
+  better and less clunky now, reactive, non stuck, it feels actually way better"* — recorded
+  2026-09-07; rule-10 archive follows it (`.cut-archive/CUT-STATE-residency-debt.md`). Carried
+  out of the cut, not closed by it: entry 47 (hover re-pick on camera settle, next cut, criterion
+  in the human's words above); entry 40's final capped attempt (on the human's "window open");
+  entry 51's PR #29 (the human's click); LOD ruled flip-first, release engineering next.
