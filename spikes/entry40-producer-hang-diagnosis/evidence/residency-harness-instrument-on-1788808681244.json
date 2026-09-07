@@ -1,0 +1,4565 @@
+{
+  "startedAt": "2026-09-07T19:16:52.628Z",
+  "mode": "instrument-on",
+  "smoke": false,
+  "fixture": "C:\\dev\\spatial-ide\\target\\slice-evidence\\scale-pass\\parcels-5gb.parquet",
+  "stepLimit": 11,
+  "rows": [
+    {
+      "stepId": "fit",
+      "kind": "fit",
+      "status": "measured",
+      "wallMs": 651,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 2,
+      "gesture": {
+        "kind": "fit",
+        "bannerDismissed": 0,
+        "bannerDismissalAttempts": [
+          {
+            "dismissed": false,
+            "intercepted": false
+          }
+        ],
+        "calmWait": {
+          "calmed": true,
+          "waitedMs": 2,
+          "inFlight": 0,
+          "queued": 0
+        },
+        "calmWaitMs": 2
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 3,
+        "streamsEnded": 0,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 3,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-batch",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-batch",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-batch",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-batch",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": null,
+        "p95": null,
+        "max": null,
+        "sampleCount": 0,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        573.9000000953674
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1047433,
+        "totalResidentFeatures": 10000
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -0.22065808283892,
+          "originX": 2600600.0212930413,
+          "originY": 1200019.9547003591
+        },
+        "post": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "realizedDisplacement": {
+          "dx": 35739.941823371686,
+          "dy": 100.04988324223086,
+          "distance": 35740.0818622052
+        },
+        "assertion": "not-applicable"
+      }
+    },
+    {
+      "stepId": "pan-north",
+      "kind": "pan",
+      "status": "measured",
+      "wallMs": 1902,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 99,
+      "gesture": {
+        "kind": "pan",
+        "declaredDistance": 200,
+        "dxScreen": 0,
+        "dyScreen": 200,
+        "legs": 2,
+        "dxLeg": 0,
+        "dyLeg": 100
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 12,
+        "streamsEnded": 15,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 12,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-batch",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-batch",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-batch",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-batch",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": 29.09999990463257,
+        "p95": 48.80000019073486,
+        "max": 217.40000009536743,
+        "sampleCount": 21,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        137.2000002861023
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1047433,
+        "totalResidentFeatures": 10000
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "post": {
+          "targetX": 0,
+          "targetY": 13484.26938580102,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "realizedDisplacement": {
+          "dx": 0,
+          "dy": 13484.26938580093,
+          "distance": 13484.26938580093
+        },
+        "assertion": "ok"
+      }
+    },
+    {
+      "stepId": "pan-east",
+      "kind": "pan",
+      "status": "measured",
+      "wallMs": 16304,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 461,
+      "gesture": {
+        "kind": "pan",
+        "declaredDistance": 1280,
+        "dxScreen": -1280,
+        "dyScreen": 0,
+        "legs": 8,
+        "dxLeg": -160,
+        "dyLeg": 0
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 65,
+        "streamsEnded": 65,
+        "batchesReceived": 46,
+        "featuresDecoded": 20301,
+        "bytesDecoded": 35418864,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 65,
+        "duplicatesDropped": 53,
+        "evictionsApplied": 1
+      },
+      "firstPixelMs": 87.09999990463257,
+      "firstPixelCrossStepSuspect": true,
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "issue-arrival-same-quantum",
+        "firstByteToDecodedMs": 14.200000286102295,
+        "decodedToPaintedMs": 72.89999961853027,
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": 67.69999980926514,
+        "p95": 237.7000002861023,
+        "max": 2340.5999999046326,
+        "sampleCount": 123,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        377.30000019073486
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999902,
+        "totalResidentFeatures": 19054
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 0,
+          "targetY": 13484.26938580102,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "post": {
+          "targetX": 89705.87633501312,
+          "targetY": 13484.26938580102,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "realizedDisplacement": {
+          "dx": 89705.87633501319,
+          "dy": 0,
+          "distance": 89705.87633501319
+        },
+        "assertion": "ok"
+      }
+    },
+    {
+      "stepId": "pan-south",
+      "kind": "pan",
+      "status": "measured",
+      "wallMs": 5053,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 191,
+      "gesture": {
+        "kind": "pan",
+        "declaredDistance": 200,
+        "dxScreen": 0,
+        "dyScreen": -200,
+        "legs": 2,
+        "dxLeg": 0,
+        "dyLeg": -100
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 84,
+        "streamsEnded": 84,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 84,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-batch",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-batch",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-batch",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-batch",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": 20.100000381469727,
+        "p95": 36.59999990463257,
+        "max": 36.59999990463257,
+        "sampleCount": 20,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        99.69999980926514
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999902,
+        "totalResidentFeatures": 19054
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 89705.87633501312,
+          "targetY": 13484.26938580102,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "post": {
+          "targetX": 89705.87633501312,
+          "targetY": 0,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "realizedDisplacement": {
+          "dx": 0,
+          "dy": -13484.26938580093,
+          "distance": 13484.26938580093
+        },
+        "assertion": "ok"
+      }
+    },
+    {
+      "stepId": "pan-west",
+      "kind": "pan",
+      "status": "measured",
+      "wallMs": 3187,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 88,
+      "gesture": {
+        "kind": "pan",
+        "declaredDistance": 1280,
+        "dxScreen": 1280,
+        "dyScreen": 0,
+        "legs": 8,
+        "dxLeg": 160,
+        "dyLeg": 0
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 3,
+        "streamsEnded": 3,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 3,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-batch",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-batch",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-batch",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-batch",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": 32.09999990463257,
+        "p95": 35,
+        "max": 43.60000038146973,
+        "sampleCount": 80,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        91.90000009536743
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999902,
+        "totalResidentFeatures": 19054
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 89705.87633501312,
+          "targetY": 0,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "post": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "realizedDisplacement": {
+          "dx": -89705.87633501319,
+          "dy": 0,
+          "distance": 89705.87633501319
+        },
+        "assertion": "ok"
+      }
+    },
+    {
+      "stepId": "pan-northeast",
+      "kind": "pan",
+      "status": "measured",
+      "wallMs": 2103,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 62,
+      "gesture": {
+        "kind": "pan",
+        "declaredDistance": 905.0966799187809,
+        "dxScreen": -640,
+        "dyScreen": 640,
+        "legs": 6,
+        "dxLeg": -106.66666666666667,
+        "dyLeg": 106.66666666666667
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 0,
+        "streamsEnded": 0,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 0,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-query",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-query",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-query",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-query",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": 30.09999990463257,
+        "p95": 36.200000286102295,
+        "max": 38,
+        "sampleCount": 60,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        112
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999902,
+        "totalResidentFeatures": 19054
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "post": {
+          "targetX": 44640.02865088865,
+          "targetY": 44640.02865088865,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "realizedDisplacement": {
+          "dx": 44640.02865088871,
+          "dy": 44640.02865088871,
+          "distance": 63130.533942810354
+        },
+        "assertion": "ok"
+      },
+      "coveringTileDelta": 0,
+      "traceDefect": false
+    },
+    {
+      "stepId": "zoom-to-layer",
+      "kind": "zoom-to-layer",
+      "status": "measured",
+      "wallMs": 1386,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 2,
+      "gesture": {
+        "kind": "zoom-to-layer",
+        "bannerDismissed": 0,
+        "bannerDismissalAttempts": [
+          {
+            "dismissed": false,
+            "intercepted": false
+          }
+        ],
+        "calmWait": {
+          "calmed": true,
+          "waitedMs": 2,
+          "inFlight": 0,
+          "queued": 0
+        },
+        "calmWaitMs": 2
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 3,
+        "streamsEnded": 0,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 3,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-batch",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-batch",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-batch",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-batch",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": null,
+        "p95": null,
+        "max": null,
+        "sampleCount": 0,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        1367.6000003814697
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999902,
+        "totalResidentFeatures": 19054
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 44640.02865088865,
+          "targetY": 44640.02865088865,
+          "zoom": -6.149134125788912,
+          "originX": 2636339.963116413,
+          "originY": 1200120.0045836014
+        },
+        "post": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -6.174097653770025,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "realizedDisplacement": {
+          "dx": -44640.02865088871,
+          "dy": -38980.13909455901,
+          "distance": 59263.67691751274
+        },
+        "assertion": "not-applicable"
+      }
+    },
+    {
+      "stepId": "zoom-in-1",
+      "kind": "zoom",
+      "status": "measured",
+      "wallMs": 712,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 6,
+      "gesture": {
+        "kind": "zoom",
+        "delta": -1200
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 0,
+        "streamsEnded": 3,
+        "batchesReceived": 1,
+        "featuresDecoded": 1,
+        "bytesDecoded": 5128,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 0,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-query",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-query",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-query",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-query",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": 97.2000002861023,
+        "p95": 97.2000002861023,
+        "max": 97.2000002861023,
+        "sampleCount": 1,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        115.7999997138977
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999980,
+        "totalResidentFeatures": 19055
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 0,
+          "targetY": 0,
+          "zoom": -6.174097653770025,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "post": {
+          "targetX": 0,
+          "targetY": 6.205383649656892,
+          "zoom": -5.174106517967486,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "realizedDisplacement": {
+          "dx": 0,
+          "dy": 6.205383649561554,
+          "distance": 6.205383649561554
+        },
+        "assertion": "not-applicable"
+      }
+    },
+    {
+      "stepId": "zoom-in-2",
+      "kind": "zoom",
+      "status": "measured",
+      "wallMs": 496,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 2,
+      "gesture": {
+        "kind": "zoom",
+        "delta": -1200
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 0,
+        "streamsEnded": 0,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 0,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-query",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-query",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-query",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-query",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": null,
+        "p95": null,
+        "max": null,
+        "sampleCount": 0,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        78
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999980,
+        "totalResidentFeatures": 19055
+      },
+      "viewState": {
+        "pre": {
+          "targetX": 0,
+          "targetY": 6.205383649656892,
+          "zoom": -5.174106517967486,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "post": {
+          "targetX": -1.8189782272886934e-12,
+          "targetY": 9.308094538082447,
+          "zoom": -4.174115382164946,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "realizedDisplacement": {
+          "dx": 0,
+          "dy": 3.102710888488218,
+          "distance": 3.102710888488218
+        },
+        "assertion": "not-applicable"
+      }
+    },
+    {
+      "stepId": "zoom-in-3",
+      "kind": "zoom",
+      "status": "measured",
+      "wallMs": 491,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 2,
+      "gesture": {
+        "kind": "zoom",
+        "delta": -1200
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 0,
+        "streamsEnded": 0,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 0,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-query",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-query",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-query",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-query",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": null,
+        "p95": null,
+        "max": null,
+        "sampleCount": 0,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        79.19999980926514
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999980,
+        "totalResidentFeatures": 19055
+      },
+      "viewState": {
+        "pre": {
+          "targetX": -1.8189782272886934e-12,
+          "targetY": 9.308094538082447,
+          "zoom": -4.174115382164946,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "post": {
+          "targetX": -1.8189670510315298e-12,
+          "targetY": 10.859459514152617,
+          "zoom": -3.174124246362407,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "realizedDisplacement": {
+          "dx": 0,
+          "dy": 1.551364976214245,
+          "distance": 1.551364976214245
+        },
+        "assertion": "not-applicable"
+      }
+    },
+    {
+      "stepId": "zoom-out-1",
+      "kind": "zoom",
+      "status": "measured",
+      "wallMs": 496,
+      "settled": true,
+      "inFlightAtSettle": 0,
+      "renderTraceLinesDuringStep": 2,
+      "gesture": {
+        "kind": "zoom",
+        "delta": 1200
+      },
+      "armDisarmedCleanly": true,
+      "counters": {
+        "streamsIssued": 0,
+        "streamsEnded": 0,
+        "batchesReceived": 0,
+        "featuresDecoded": 0,
+        "bytesDecoded": 0,
+        "batchesRefused": 0,
+        "featuresRefused": 0,
+        "bytesRefused": 0,
+        "tilesRequested": 0,
+        "duplicatesDropped": 0,
+        "evictionsApplied": 0
+      },
+      "firstPixelMs": null,
+      "firstPixelReason": "no-query",
+      "segments": {
+        "queryToFirstByteMs": null,
+        "queryToFirstByteReason": "no-query",
+        "firstByteToDecodedMs": null,
+        "firstByteToDecodedReason": "no-query",
+        "decodedToPaintedMs": null,
+        "decodedToPaintedReason": "no-query",
+        "segmentsSpanSingleBatch": true
+      },
+      "frameTimeMs": {
+        "p50": null,
+        "p95": null,
+        "max": null,
+        "sampleCount": 0,
+        "truncated": false
+      },
+      "inputToPresentProxiesMs": [
+        93.89999961853027
+      ],
+      "inputToPresentProxiesTruncated": false,
+      "residentAtEndStep": {
+        "totalResidentVertices": 1999980,
+        "totalResidentFeatures": 19055
+      },
+      "viewState": {
+        "pre": {
+          "targetX": -1.8189670510315298e-12,
+          "targetY": 10.859459514152617,
+          "zoom": -3.174124246362407,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "post": {
+          "targetX": 1.3733678530318031e-22,
+          "targetY": 9.308094538081995,
+          "zoom": -4.174115382164946,
+          "originX": 2636339.963116413,
+          "originY": 1205779.894139931
+        },
+        "realizedDisplacement": {
+          "dx": 0,
+          "dy": -1.551364976214245,
+          "distance": 1.551364976214245
+        },
+        "assertion": "not-applicable"
+      },
+      "entry44InViewportEvictionCheck": {
+        "corroborated": true,
+        "exercised": false,
+        "queuedTileCount": 4,
+        "coveringKeyCount": 12,
+        "evictedTileKeyCount": 0,
+        "violatingTileKeys": [],
+        "passed": null,
+        "reason": "over budget but zero tile evictions observed since sinceSeq -- protection not exercised this step, not evidence either way"
+      }
+    }
+  ],
+  "invalidated": false,
+  "inputToPresentProxyDivergence": {
+    "real_section_6_definition": "client clock, pointer/keyboard event → next composited frame carrying its effect",
+    "real_section_6_class_and_notes": "reported, never gated (class); proxy only -- not a docs/08 row, no budget attaches (notes)",
+    "this_code_proxy": "pointer/keyboard event timestamp (residencyMarkInput, called by this driver immediately before dispatching a synthetic gesture) -> the NEXT deck.gl onAfterRender fire observed while WorkingCanvas.tsx's per-step hook is armed (residencyArmFirstPixel/residencyDisarmFirstPixel window only, not the app's whole lifetime)",
+    "divergence": "deck.gl's onAfterRender fires once its WebGL draw call issues; the browser's own compositor may actually PRESENT the resulting pixels on a later frame boundary than this timestamp reflects. This proxy is therefore closer to 'issue the GPU draw call' than to a true browser compositor-present event, and is only observed inside the driver-controlled arm/disarm window, not continuously."
+  },
+  "segmentsProxyDivergence": {
+    "first_byte_hook": "sink.onBatch (viewportStreamManager.ts / tileViewportStreamManager.ts / candidateArmSession.ts's own untiled-look sink) -- the earliest client-observable moment for a batch's own data-plane bytes, BEFORE decode. This is a FULLY-RECEIVED message handed up by this codebase's transport layer in one call, not a true first-TCP-byte timestamp -- RESIDENCY-PREREGISTRATION.md §12 Amendment 15 says 'first data-plane bytes'; this is the defined proxy for that, per residencyInstrument.ts's own recordBatchArrived doc comment (no lower-level hook this shell can observe).",
+    "mixed_batch_caveat": "queryToFirstByteMs/firstByteToDecodedMs key on the step's FIRST batch to arrive, any accept/refuse fate; decodedToPaintedMs/firstPixelMs key on the step's FIRST ACCEPTED batch (residencyInstrument.ts's own P3i top doc comment). When those are different physical batches -- the step's first batch was refused, a LATER batch is the first accepted one -- the three spans still telescope to exactly firstPixelMs (same clock, shared endpoints; structural, not merely common-case, per that file's own B1 fix), but decodedToPaintedMs silently absorbs the accepted batch's own transport+decode time, mislabeled as pure paint time. `segments.segmentsSpanSingleBatch` is `false` exactly in this case -- see formatSegmentsSummary's own 'segments(mixed)' marker, printed beside the row this happened on."
+  },
+  "gatedQuantityAvailability": "gated client-clock quantities (first pixels, frame time p50/p95, cancellation) exist only in instrument-on cells; the --control cell's own readback-hard-throw (suggestion 7) guards that the wire is unperturbed when the instrument is off, it does not and cannot supply a control-arm value for any gated quantity -- there is no control-arm p95 to compare against",
+  "cell": {
+    "arm": "candidate",
+    "tileSize": "fine",
+    "buildCommit": "4f133dfc5340bd4686b865792c435488aeea0f00",
+    "fixturePath": "C:\\dev\\spatial-ide\\target\\slice-evidence\\scale-pass\\parcels-5gb.parquet",
+    "fixtureSha256": "5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788",
+    "coldOrWarm": "cold",
+    "traceVersion": "3",
+    "machineAttestation": "unattended, RustDesk stopped and verified absent, display-awake verified",
+    "instrumentEnabledReadback": true,
+    "buildClass": "vite-dev (tauri dev; DEV-gated hooks; unminified client)",
+    "measureBuildExePath": null,
+    "perStreamTraceEnabled": true,
+    "perStreamTraceRequested": true,
+    "launchedFresh": true,
+    "sweptPids": [],
+    "perStepWatchdogOverrideMs": 3600000,
+    "sessionLogPath": "<LOCALAPPDATA>\\dev.spatialide.shell\\logs\\session-1788808612.log",
+    "sessionLogPathSource": "app-log-dir",
+    "sessionLogPathReason": null,
+    "sessionLogPathAtAttach": "<LOCALAPPDATA>\\dev.spatialide.shell\\logs\\session-1788808612.log",
+    "sessionLogPathAtAttachSource": "app-log-dir",
+    "sessionLogPathAtAttachReason": null,
+    "sessionLogPathAppLogCrossCheck": {
+      "path": "<LOCALAPPDATA>\\dev.spatialide.shell\\logs\\session-1786461520.log",
+      "reason": null
+    },
+    "poolPollPreflight": {
+      "required": true,
+      "ok": true,
+      "reason": null,
+      "invalidationReason": null,
+      "sessionLogPathAtPreflight": "<LOCALAPPDATA>\\dev.spatialide.shell\\logs\\session-1788808612.log",
+      "thresholdSeconds": 1788808559,
+      "candidates": [
+        {
+          "name": "session-1786444038.log",
+          "mtimeMs": 1786451174269.9978
+        },
+        {
+          "name": "session-1786451198.log",
+          "mtimeMs": 1786457885473.1526
+        },
+        {
+          "name": "session-1786459457.log",
+          "mtimeMs": 1786459485755.6758
+        },
+        {
+          "name": "session-1786460675.log",
+          "mtimeMs": 1786460676285.454
+        },
+        {
+          "name": "session-1786461064.log",
+          "mtimeMs": 1786461064807.807
+        },
+        {
+          "name": "session-1786461520.log",
+          "mtimeMs": 1786461535980.4956
+        },
+        {
+          "name": "session-1786561314.log",
+          "mtimeMs": 1786562416306.268
+        },
+        {
+          "name": "session-1786562689.log",
+          "mtimeMs": 1786562689997.772
+        },
+        {
+          "name": "session-1786563102.log",
+          "mtimeMs": 1786563145034.7058
+        },
+        {
+          "name": "session-1786563870.log",
+          "mtimeMs": 1786564587590.369
+        },
+        {
+          "name": "session-1786564704.log",
+          "mtimeMs": 1786564718130.2192
+        },
+        {
+          "name": "session-1786565103.log",
+          "mtimeMs": 1786565157134.9443
+        },
+        {
+          "name": "session-1786565401.log",
+          "mtimeMs": 1786565945149.0032
+        },
+        {
+          "name": "session-1786566105.log",
+          "mtimeMs": 1786577932774.2473
+        },
+        {
+          "name": "session-1786578042.log",
+          "mtimeMs": 1786580792624.8745
+        },
+        {
+          "name": "session-1786581296.log",
+          "mtimeMs": 1786581354404.025
+        },
+        {
+          "name": "session-1786582052.log",
+          "mtimeMs": 1786583240300.0986
+        },
+        {
+          "name": "session-1786583458.log",
+          "mtimeMs": 1786583511772.9812
+        },
+        {
+          "name": "session-1786640299.log",
+          "mtimeMs": 1786640305124.2314
+        },
+        {
+          "name": "session-1786658855.log",
+          "mtimeMs": 1786725747279.9097
+        },
+        {
+          "name": "session-1786726669.log",
+          "mtimeMs": 1786727126921.5266
+        },
+        {
+          "name": "session-1786727273.log",
+          "mtimeMs": 1786727972593.6594
+        },
+        {
+          "name": "session-1786728092.log",
+          "mtimeMs": 1786731602404.656
+        },
+        {
+          "name": "session-1786731858.log",
+          "mtimeMs": 1786733625875.3037
+        },
+        {
+          "name": "session-1786733770.log",
+          "mtimeMs": 1786734263558.5781
+        },
+        {
+          "name": "session-1786734340.log",
+          "mtimeMs": 1786734814799.4824
+        },
+        {
+          "name": "session-1786734882.log",
+          "mtimeMs": 1786734952257.6062
+        },
+        {
+          "name": "session-1786736698.log",
+          "mtimeMs": 1786738105434.6648
+        },
+        {
+          "name": "session-1786738336.log",
+          "mtimeMs": 1786738492018.86
+        },
+        {
+          "name": "session-1786739157.log",
+          "mtimeMs": 1786806122948.2036
+        },
+        {
+          "name": "session-1786807357.log",
+          "mtimeMs": 1786807791380.0183
+        },
+        {
+          "name": "session-1786807893.log",
+          "mtimeMs": 1786808089378.514
+        },
+        {
+          "name": "session-1786810921.log",
+          "mtimeMs": 1786811006858.4888
+        },
+        {
+          "name": "session-1786811148.log",
+          "mtimeMs": 1786812152118.339
+        },
+        {
+          "name": "session-1786812416.log",
+          "mtimeMs": 1786812416590.9812
+        },
+        {
+          "name": "session-1786813094.log",
+          "mtimeMs": 1786813217097.7366
+        },
+        {
+          "name": "session-1786813299.log",
+          "mtimeMs": 1786813542348.2625
+        },
+        {
+          "name": "session-1786813629.log",
+          "mtimeMs": 1786813692084.5627
+        },
+        {
+          "name": "session-1786813743.log",
+          "mtimeMs": 1786814035683.1235
+        },
+        {
+          "name": "session-1786814610.log",
+          "mtimeMs": 1786814611214.9446
+        },
+        {
+          "name": "session-1786814954.log",
+          "mtimeMs": 1786814955396.5466
+        },
+        {
+          "name": "session-1786814999.log",
+          "mtimeMs": 1786814999484.3086
+        },
+        {
+          "name": "session-1786815250.log",
+          "mtimeMs": 1786815334426.7737
+        },
+        {
+          "name": "session-1786815402.log",
+          "mtimeMs": 1786815483411.8145
+        },
+        {
+          "name": "session-1786815513.log",
+          "mtimeMs": 1786817232553.4187
+        },
+        {
+          "name": "session-1786817536.log",
+          "mtimeMs": 1786817536848.9822
+        },
+        {
+          "name": "session-1786817880.log",
+          "mtimeMs": 1786817957309.9666
+        },
+        {
+          "name": "session-1786818038.log",
+          "mtimeMs": 1786818146453.432
+        },
+        {
+          "name": "session-1786818219.log",
+          "mtimeMs": 1786818219726.3535
+        },
+        {
+          "name": "session-1786818519.log",
+          "mtimeMs": 1786818685984.0154
+        },
+        {
+          "name": "session-1786818789.log",
+          "mtimeMs": 1786818914728.4756
+        },
+        {
+          "name": "session-1786818962.log",
+          "mtimeMs": 1786819174160.6643
+        },
+        {
+          "name": "session-1786819230.log",
+          "mtimeMs": 1786819231369.6792
+        },
+        {
+          "name": "session-1786819313.log",
+          "mtimeMs": 1786819383559.6052
+        },
+        {
+          "name": "session-1786819455.log",
+          "mtimeMs": 1786819506695.109
+        },
+        {
+          "name": "session-1786820502.log",
+          "mtimeMs": 1786820503313.454
+        },
+        {
+          "name": "session-1786886888.log",
+          "mtimeMs": 1786886888171.9314
+        },
+        {
+          "name": "session-1786887117.log",
+          "mtimeMs": 1786887117080.4856
+        },
+        {
+          "name": "session-1786887126.log",
+          "mtimeMs": 1786887126322.5347
+        },
+        {
+          "name": "session-1786887133.log",
+          "mtimeMs": 1786887133285.8147
+        },
+        {
+          "name": "session-1786887199.log",
+          "mtimeMs": 1786887199424.1855
+        },
+        {
+          "name": "session-1786887252.log",
+          "mtimeMs": 1786887252583.5881
+        },
+        {
+          "name": "session-1786889695.log",
+          "mtimeMs": 1786889695523.455
+        },
+        {
+          "name": "session-1786889740.log",
+          "mtimeMs": 1786889740556.3076
+        },
+        {
+          "name": "session-1786893132.log",
+          "mtimeMs": 1786893264620.1853
+        },
+        {
+          "name": "session-1786893379.log",
+          "mtimeMs": 1786894161458.584
+        },
+        {
+          "name": "session-1786895527.log",
+          "mtimeMs": 1786895896068.7817
+        },
+        {
+          "name": "session-1786896903.log",
+          "mtimeMs": 1786897015300.0798
+        },
+        {
+          "name": "session-1786897081.log",
+          "mtimeMs": 1786897156516.3945
+        },
+        {
+          "name": "session-1786897223.log",
+          "mtimeMs": 1786897224348.265
+        },
+        {
+          "name": "session-1786897416.log",
+          "mtimeMs": 1786897417001.3965
+        },
+        {
+          "name": "session-1786897483.log",
+          "mtimeMs": 1786897483167.1475
+        },
+        {
+          "name": "session-1786897644.log",
+          "mtimeMs": 1786897909367.0188
+        },
+        {
+          "name": "session-1786897975.log",
+          "mtimeMs": 1786897976438.2734
+        },
+        {
+          "name": "session-1786898150.log",
+          "mtimeMs": 1786898184292.5693
+        },
+        {
+          "name": "session-1786899484.log",
+          "mtimeMs": 1786899521354.064
+        },
+        {
+          "name": "session-1786900079.log",
+          "mtimeMs": 1786900079936.681
+        },
+        {
+          "name": "session-1786900427.log",
+          "mtimeMs": 1786900427742.7622
+        },
+        {
+          "name": "session-1786900495.log",
+          "mtimeMs": 1786900817907.6128
+        },
+        {
+          "name": "session-1786901160.log",
+          "mtimeMs": 1786901160762.663
+        },
+        {
+          "name": "session-1786902038.log",
+          "mtimeMs": 1786902039386.684
+        },
+        {
+          "name": "session-1786959256.log",
+          "mtimeMs": 1786959263078.438
+        },
+        {
+          "name": "session-1786959358.log",
+          "mtimeMs": 1786959358906.8652
+        },
+        {
+          "name": "session-1786959503.log",
+          "mtimeMs": 1786959504436.218
+        },
+        {
+          "name": "session-1786959940.log",
+          "mtimeMs": 1786961304734.88
+        },
+        {
+          "name": "session-1786963051.log",
+          "mtimeMs": 1787049918043.5562
+        },
+        {
+          "name": "session-1787059901.log",
+          "mtimeMs": 1787063507762.922
+        },
+        {
+          "name": "session-1787070105.log",
+          "mtimeMs": 1787070129246.0173
+        },
+        {
+          "name": "session-1787071067.log",
+          "mtimeMs": 1787071205533.3005
+        },
+        {
+          "name": "session-1787071268.log",
+          "mtimeMs": 1787076238278.5967
+        },
+        {
+          "name": "session-1787076284.log",
+          "mtimeMs": 1787083844762.975
+        },
+        {
+          "name": "session-1787085409.log",
+          "mtimeMs": 1787085958218.5576
+        },
+        {
+          "name": "session-1787086077.log",
+          "mtimeMs": 1787086188183.8228
+        },
+        {
+          "name": "session-1787086293.log",
+          "mtimeMs": 1787086530625.849
+        },
+        {
+          "name": "session-1787086790.log",
+          "mtimeMs": 1787086894136.544
+        },
+        {
+          "name": "session-1787087359.log",
+          "mtimeMs": 1787087487738.6277
+        },
+        {
+          "name": "session-1787087640.log",
+          "mtimeMs": 1787088754237.7234
+        },
+        {
+          "name": "session-1787088860.log",
+          "mtimeMs": 1787092822946.1194
+        },
+        {
+          "name": "session-1787120537.log",
+          "mtimeMs": 1787120621893.192
+        },
+        {
+          "name": "session-1787126008.log",
+          "mtimeMs": 1787126008965.5796
+        },
+        {
+          "name": "session-1787126706.log",
+          "mtimeMs": 1787126815206.5715
+        },
+        {
+          "name": "session-1787126920.log",
+          "mtimeMs": 1787127027713.1477
+        },
+        {
+          "name": "session-1787127107.log",
+          "mtimeMs": 1787127223970.0862
+        },
+        {
+          "name": "session-1787127295.log",
+          "mtimeMs": 1787128927757.1665
+        },
+        {
+          "name": "session-1787131196.log",
+          "mtimeMs": 1787134802973.2903
+        },
+        {
+          "name": "session-1787221610.log",
+          "mtimeMs": 1788094369012.4827
+        },
+        {
+          "name": "session-1788094795.log",
+          "mtimeMs": 1788094802470.2217
+        },
+        {
+          "name": "session-1788101740.log",
+          "mtimeMs": 1788106280039.9326
+        },
+        {
+          "name": "session-1788107714.log",
+          "mtimeMs": 1788108306130.6055
+        },
+        {
+          "name": "session-1788108532.log",
+          "mtimeMs": 1788108539991.1929
+        },
+        {
+          "name": "session-1788108718.log",
+          "mtimeMs": 1788108719237.3967
+        },
+        {
+          "name": "session-1788109082.log",
+          "mtimeMs": 1788109082688.9568
+        },
+        {
+          "name": "session-1788109316.log",
+          "mtimeMs": 1788109317115.4177
+        },
+        {
+          "name": "session-1788109491.log",
+          "mtimeMs": 1788109491746.932
+        },
+        {
+          "name": "session-1788109797.log",
+          "mtimeMs": 1788110795339.8574
+        },
+        {
+          "name": "session-1788111174.log",
+          "mtimeMs": 1788114107547.897
+        },
+        {
+          "name": "session-1788114436.log",
+          "mtimeMs": 1788123277529.0881
+        },
+        {
+          "name": "session-1788124311.log",
+          "mtimeMs": 1788124311030.9507
+        },
+        {
+          "name": "session-1788124570.log",
+          "mtimeMs": 1788124593973.434
+        },
+        {
+          "name": "session-1788125223.log",
+          "mtimeMs": 1788125223864.2056
+        },
+        {
+          "name": "session-1788125806.log",
+          "mtimeMs": 1788125906964.0862
+        },
+        {
+          "name": "session-1788126444.log",
+          "mtimeMs": 1788126497561.8884
+        },
+        {
+          "name": "session-1788126554.log",
+          "mtimeMs": 1788132386606.9424
+        },
+        {
+          "name": "session-1788132696.log",
+          "mtimeMs": 1788132771106.3845
+        },
+        {
+          "name": "session-1788132815.log",
+          "mtimeMs": 1788132941862.9575
+        },
+        {
+          "name": "session-1788133073.log",
+          "mtimeMs": 1788133226911.924
+        },
+        {
+          "name": "session-1788133296.log",
+          "mtimeMs": 1788133371294.895
+        },
+        {
+          "name": "session-1788133838.log",
+          "mtimeMs": 1788133913073.5386
+        },
+        {
+          "name": "session-1788134205.log",
+          "mtimeMs": 1788134370245.6287
+        },
+        {
+          "name": "session-1788134439.log",
+          "mtimeMs": 1788134613873.5166
+        },
+        {
+          "name": "session-1788134643.log",
+          "mtimeMs": 1788134801103.812
+        },
+        {
+          "name": "session-1788134830.log",
+          "mtimeMs": 1788134990689.4827
+        },
+        {
+          "name": "session-1788135031.log",
+          "mtimeMs": 1788135188549.2998
+        },
+        {
+          "name": "session-1788135227.log",
+          "mtimeMs": 1788135426604.8528
+        },
+        {
+          "name": "session-1788135471.log",
+          "mtimeMs": 1788135646193.6145
+        },
+        {
+          "name": "session-1788135681.log",
+          "mtimeMs": 1788135865057.8438
+        },
+        {
+          "name": "session-1788135902.log",
+          "mtimeMs": 1788136073978.1223
+        },
+        {
+          "name": "session-1788136159.log",
+          "mtimeMs": 1788136384838.8086
+        },
+        {
+          "name": "session-1788136544.log",
+          "mtimeMs": 1788136663809.8235
+        },
+        {
+          "name": "session-1788149837.log",
+          "mtimeMs": 1788149914193.895
+        },
+        {
+          "name": "session-1788150064.log",
+          "mtimeMs": 1788151565486.8904
+        },
+        {
+          "name": "session-1788151636.log",
+          "mtimeMs": 1788151637581.146
+        },
+        {
+          "name": "session-1788151658.log",
+          "mtimeMs": 1788151822401.4326
+        },
+        {
+          "name": "session-1788151915.log",
+          "mtimeMs": 1788152126553.6484
+        },
+        {
+          "name": "session-1788152146.log",
+          "mtimeMs": 1788152229562.6055
+        },
+        {
+          "name": "session-1788152291.log",
+          "mtimeMs": 1788152439034.3293
+        },
+        {
+          "name": "session-1788152453.log",
+          "mtimeMs": 1788152566683.9248
+        },
+        {
+          "name": "session-1788152660.log",
+          "mtimeMs": 1788152768600.1416
+        },
+        {
+          "name": "session-1788152832.log",
+          "mtimeMs": 1788153007577.5962
+        },
+        {
+          "name": "session-1788153040.log",
+          "mtimeMs": 1788153155383.4285
+        },
+        {
+          "name": "session-1788153271.log",
+          "mtimeMs": 1788155827325.817
+        },
+        {
+          "name": "session-1788155932.log",
+          "mtimeMs": 1788156049215.9016
+        },
+        {
+          "name": "session-1788156122.log",
+          "mtimeMs": 1788156256154.0757
+        },
+        {
+          "name": "session-1788156340.log",
+          "mtimeMs": 1788156517795.515
+        },
+        {
+          "name": "session-1788156539.log",
+          "mtimeMs": 1788156722578.9382
+        },
+        {
+          "name": "session-1788156746.log",
+          "mtimeMs": 1788156746735.3523
+        },
+        {
+          "name": "session-1788156783.log",
+          "mtimeMs": 1788157118052.0574
+        },
+        {
+          "name": "session-1788157212.log",
+          "mtimeMs": 1788157423068.1243
+        },
+        {
+          "name": "session-1788157561.log",
+          "mtimeMs": 1788157571257.8428
+        },
+        {
+          "name": "session-1788157818.log",
+          "mtimeMs": 1788157823531.58
+        },
+        {
+          "name": "session-1788157861.log",
+          "mtimeMs": 1788157871314.708
+        },
+        {
+          "name": "session-1788157896.log",
+          "mtimeMs": 1788157897399.0327
+        },
+        {
+          "name": "session-1788157925.log",
+          "mtimeMs": 1788158817982.6045
+        },
+        {
+          "name": "session-1788159164.log",
+          "mtimeMs": 1788159165239.5342
+        },
+        {
+          "name": "session-1788159192.log",
+          "mtimeMs": 1788159202492.823
+        },
+        {
+          "name": "session-1788159230.log",
+          "mtimeMs": 1788159231013.159
+        },
+        {
+          "name": "session-1788160301.log",
+          "mtimeMs": 1788160422686.8145
+        },
+        {
+          "name": "session-1788160867.log",
+          "mtimeMs": 1788161764101.984
+        },
+        {
+          "name": "session-1788162197.log",
+          "mtimeMs": 1788162270170.2615
+        },
+        {
+          "name": "session-1788162295.log",
+          "mtimeMs": 1788162305884.258
+        },
+        {
+          "name": "session-1788162332.log",
+          "mtimeMs": 1788162332876.7104
+        },
+        {
+          "name": "session-1788162377.log",
+          "mtimeMs": 1788162424013.5974
+        },
+        {
+          "name": "session-1788162525.log",
+          "mtimeMs": 1788162526382.1108
+        },
+        {
+          "name": "session-1788162572.log",
+          "mtimeMs": 1788162619139.615
+        },
+        {
+          "name": "session-1788162813.log",
+          "mtimeMs": 1788162814067.2078
+        },
+        {
+          "name": "session-1788163459.log",
+          "mtimeMs": 1788163460228.449
+        },
+        {
+          "name": "session-1788163478.log",
+          "mtimeMs": 1788163479111.7222
+        },
+        {
+          "name": "session-1788163497.log",
+          "mtimeMs": 1788163505094.8655
+        },
+        {
+          "name": "session-1788163517.log",
+          "mtimeMs": 1788163518183.158
+        },
+        {
+          "name": "session-1788163559.log",
+          "mtimeMs": 1788163617552.093
+        },
+        {
+          "name": "session-1788163763.log",
+          "mtimeMs": 1788163821339.5945
+        },
+        {
+          "name": "session-1788164176.log",
+          "mtimeMs": 1788164177033.687
+        },
+        {
+          "name": "session-1788164304.log",
+          "mtimeMs": 1788164397512.3564
+        },
+        {
+          "name": "session-1788164439.log",
+          "mtimeMs": 1788164592934.5642
+        },
+        {
+          "name": "session-1788164734.log",
+          "mtimeMs": 1788164887542.4712
+        },
+        {
+          "name": "session-1788164898.log",
+          "mtimeMs": 1788165595339.3662
+        },
+        {
+          "name": "session-1788166166.log",
+          "mtimeMs": 1788166291574.014
+        },
+        {
+          "name": "session-1788166402.log",
+          "mtimeMs": 1788166413861.571
+        },
+        {
+          "name": "session-1788166452.log",
+          "mtimeMs": 1788166463452.0466
+        },
+        {
+          "name": "session-1788166548.log",
+          "mtimeMs": 1788166729000.779
+        },
+        {
+          "name": "session-1788170499.log",
+          "mtimeMs": 1788170622915.7158
+        },
+        {
+          "name": "session-1788170851.log",
+          "mtimeMs": 1788170965642.096
+        },
+        {
+          "name": "session-1788171013.log",
+          "mtimeMs": 1788171014512.6401
+        },
+        {
+          "name": "session-1788171051.log",
+          "mtimeMs": 1788171171939.8242
+        },
+        {
+          "name": "session-1788171183.log",
+          "mtimeMs": 1788171183619.6938
+        },
+        {
+          "name": "session-1788171316.log",
+          "mtimeMs": 1788171402656.713
+        },
+        {
+          "name": "session-1788171945.log",
+          "mtimeMs": 1788172172859.878
+        },
+        {
+          "name": "session-1788172321.log",
+          "mtimeMs": 1788172558149.4216
+        },
+        {
+          "name": "session-1788172671.log",
+          "mtimeMs": 1788172672051.5012
+        },
+        {
+          "name": "session-1788172692.log",
+          "mtimeMs": 1788173193326.2463
+        },
+        {
+          "name": "session-1788173408.log",
+          "mtimeMs": 1788173616144.212
+        },
+        {
+          "name": "session-1788173647.log",
+          "mtimeMs": 1788173891295.0613
+        },
+        {
+          "name": "session-1788174016.log",
+          "mtimeMs": 1788174075962.809
+        },
+        {
+          "name": "session-1788174092.log",
+          "mtimeMs": 1788176701709.9717
+        },
+        {
+          "name": "session-1788177409.log",
+          "mtimeMs": 1788177534984.9517
+        },
+        {
+          "name": "session-1788177572.log",
+          "mtimeMs": 1788177628069.4746
+        },
+        {
+          "name": "session-1788177659.log",
+          "mtimeMs": 1788177796481.5974
+        },
+        {
+          "name": "session-1788177914.log",
+          "mtimeMs": 1788177915038.2039
+        },
+        {
+          "name": "session-1788177959.log",
+          "mtimeMs": 1788178076197.5552
+        },
+        {
+          "name": "session-1788178101.log",
+          "mtimeMs": 1788179162652.2917
+        },
+        {
+          "name": "session-1788179173.log",
+          "mtimeMs": 1788179177870.7297
+        },
+        {
+          "name": "session-1788179256.log",
+          "mtimeMs": 1788179505315.9993
+        },
+        {
+          "name": "session-1788179733.log",
+          "mtimeMs": 1788179734241.8672
+        },
+        {
+          "name": "session-1788179754.log",
+          "mtimeMs": 1788179755002.9143
+        },
+        {
+          "name": "session-1788179774.log",
+          "mtimeMs": 1788179898228.8047
+        },
+        {
+          "name": "session-1788179916.log",
+          "mtimeMs": 1788180002979.295
+        },
+        {
+          "name": "session-1788180030.log",
+          "mtimeMs": 1788181062838.5967
+        },
+        {
+          "name": "session-1788181982.log",
+          "mtimeMs": 1788181983004.065
+        },
+        {
+          "name": "session-1788182004.log",
+          "mtimeMs": 1788182015204.6672
+        },
+        {
+          "name": "session-1788182106.log",
+          "mtimeMs": 1788182117410.6707
+        },
+        {
+          "name": "session-1788182197.log",
+          "mtimeMs": 1788182208427.8235
+        },
+        {
+          "name": "session-1788182295.log",
+          "mtimeMs": 1788182305716.7395
+        },
+        {
+          "name": "session-1788182331.log",
+          "mtimeMs": 1788182332357.4675
+        },
+        {
+          "name": "session-1788182378.log",
+          "mtimeMs": 1788182489966.2358
+        },
+        {
+          "name": "session-1788182533.log",
+          "mtimeMs": 1788182649386.4783
+        },
+        {
+          "name": "session-1788182674.log",
+          "mtimeMs": 1788183007251.4944
+        },
+        {
+          "name": "session-1788183022.log",
+          "mtimeMs": 1788183142512.9856
+        },
+        {
+          "name": "session-1788183150.log",
+          "mtimeMs": 1788183733048.2014
+        },
+        {
+          "name": "session-1788183975.log",
+          "mtimeMs": 1788184067175.7666
+        },
+        {
+          "name": "session-1788184512.log",
+          "mtimeMs": 1788184630509.5908
+        },
+        {
+          "name": "session-1788184667.log",
+          "mtimeMs": 1788184725698.6392
+        },
+        {
+          "name": "session-1788208190.log",
+          "mtimeMs": 1788208273676.871
+        },
+        {
+          "name": "session-1788208312.log",
+          "mtimeMs": 1788208400178.85
+        },
+        {
+          "name": "session-1788208431.log",
+          "mtimeMs": 1788208660594.0684
+        },
+        {
+          "name": "session-1788208670.log",
+          "mtimeMs": 1788208889144.1445
+        },
+        {
+          "name": "session-1788208896.log",
+          "mtimeMs": 1788208966063.9348
+        },
+        {
+          "name": "session-1788208992.log",
+          "mtimeMs": 1788209083967.427
+        },
+        {
+          "name": "session-1788209095.log",
+          "mtimeMs": 1788209374901.7236
+        },
+        {
+          "name": "session-1788209431.log",
+          "mtimeMs": 1788209707278.1165
+        },
+        {
+          "name": "session-1788209715.log",
+          "mtimeMs": 1788209990267.575
+        },
+        {
+          "name": "session-1788209999.log",
+          "mtimeMs": 1788210279267.4841
+        },
+        {
+          "name": "session-1788210287.log",
+          "mtimeMs": 1788210453681.0908
+        },
+        {
+          "name": "session-1788210472.log",
+          "mtimeMs": 1788210738447.1277
+        },
+        {
+          "name": "session-1788210746.log",
+          "mtimeMs": 1788211134378.5776
+        },
+        {
+          "name": "session-1788211142.log",
+          "mtimeMs": 1788211365241.7358
+        },
+        {
+          "name": "session-1788211373.log",
+          "mtimeMs": 1788211668279.2856
+        },
+        {
+          "name": "session-1788211675.log",
+          "mtimeMs": 1788211839387.7224
+        },
+        {
+          "name": "session-1788211849.log",
+          "mtimeMs": 1788212260995.3452
+        },
+        {
+          "name": "session-1788212269.log",
+          "mtimeMs": 1788212660307.4128
+        },
+        {
+          "name": "session-1788212670.log",
+          "mtimeMs": 1788212908171.8
+        },
+        {
+          "name": "session-1788212920.log",
+          "mtimeMs": 1788213205993.275
+        },
+        {
+          "name": "session-1788213215.log",
+          "mtimeMs": 1788213514923.197
+        },
+        {
+          "name": "session-1788213523.log",
+          "mtimeMs": 1788213674878.3594
+        },
+        {
+          "name": "session-1788213714.log",
+          "mtimeMs": 1788213913629.831
+        },
+        {
+          "name": "session-1788213935.log",
+          "mtimeMs": 1788214102366.458
+        },
+        {
+          "name": "session-1788214127.log",
+          "mtimeMs": 1788214296494.1155
+        },
+        {
+          "name": "session-1788214324.log",
+          "mtimeMs": 1788214525405.5347
+        },
+        {
+          "name": "session-1788214546.log",
+          "mtimeMs": 1788214777446.3337
+        },
+        {
+          "name": "session-1788214799.log",
+          "mtimeMs": 1788215001672.4072
+        },
+        {
+          "name": "session-1788215021.log",
+          "mtimeMs": 1788215225230.5854
+        },
+        {
+          "name": "session-1788215243.log",
+          "mtimeMs": 1788215474062.568
+        },
+        {
+          "name": "session-1788215496.log",
+          "mtimeMs": 1788215723661.3726
+        },
+        {
+          "name": "session-1788215740.log",
+          "mtimeMs": 1788215910437.1165
+        },
+        {
+          "name": "session-1788235885.log",
+          "mtimeMs": 1788235946180.535
+        },
+        {
+          "name": "session-1788235963.log",
+          "mtimeMs": 1788236155227.6558
+        },
+        {
+          "name": "session-1788236169.log",
+          "mtimeMs": 1788236196662.816
+        },
+        {
+          "name": "session-1788236359.log",
+          "mtimeMs": 1788236384660.4624
+        },
+        {
+          "name": "session-1788236577.log",
+          "mtimeMs": 1788236597202.6326
+        },
+        {
+          "name": "session-1788236618.log",
+          "mtimeMs": 1788236709256.7378
+        },
+        {
+          "name": "session-1788236740.log",
+          "mtimeMs": 1788237029765.8022
+        },
+        {
+          "name": "session-1788237116.log",
+          "mtimeMs": 1788237279791.305
+        },
+        {
+          "name": "session-1788290568.log",
+          "mtimeMs": 1788290574765.2466
+        },
+        {
+          "name": "session-1788290616.log",
+          "mtimeMs": 1788290733332.0625
+        },
+        {
+          "name": "session-1788290846.log",
+          "mtimeMs": 1788290925565.1887
+        },
+        {
+          "name": "session-1788290948.log",
+          "mtimeMs": 1788291096012.1128
+        },
+        {
+          "name": "session-1788291110.log",
+          "mtimeMs": 1788291210600.5342
+        },
+        {
+          "name": "session-1788291219.log",
+          "mtimeMs": 1788291294489.092
+        },
+        {
+          "name": "session-1788291311.log",
+          "mtimeMs": 1788291375207.386
+        },
+        {
+          "name": "session-1788291393.log",
+          "mtimeMs": 1788291495053.2078
+        },
+        {
+          "name": "session-1788291506.log",
+          "mtimeMs": 1788291618832.7236
+        },
+        {
+          "name": "session-1788291630.log",
+          "mtimeMs": 1788291695169.5945
+        },
+        {
+          "name": "session-1788291712.log",
+          "mtimeMs": 1788291775901.509
+        },
+        {
+          "name": "session-1788291792.log",
+          "mtimeMs": 1788291879494.0552
+        },
+        {
+          "name": "session-1788291898.log",
+          "mtimeMs": 1788292005888.5684
+        },
+        {
+          "name": "session-1788292023.log",
+          "mtimeMs": 1788292089087.363
+        },
+        {
+          "name": "session-1788292106.log",
+          "mtimeMs": 1788292181474.1306
+        },
+        {
+          "name": "session-1788292198.log",
+          "mtimeMs": 1788292267048.5134
+        },
+        {
+          "name": "session-1788292274.log",
+          "mtimeMs": 1788292371325.223
+        },
+        {
+          "name": "session-1788292404.log",
+          "mtimeMs": 1788292450387.8623
+        },
+        {
+          "name": "session-1788292472.log",
+          "mtimeMs": 1788292520892.9832
+        },
+        {
+          "name": "session-1788377373.log",
+          "mtimeMs": 1788377379525.9126
+        },
+        {
+          "name": "session-1788377543.log",
+          "mtimeMs": 1788379131358.83
+        },
+        {
+          "name": "session-1788379618.log",
+          "mtimeMs": 1788381915964.7246
+        },
+        {
+          "name": "session-1788644433.log",
+          "mtimeMs": 1788644474159.3813
+        },
+        {
+          "name": "session-1788684882.log",
+          "mtimeMs": 1788684949732.4248
+        },
+        {
+          "name": "session-1788692169.log",
+          "mtimeMs": 1788696212453.9382
+        },
+        {
+          "name": "session-1788697999.log",
+          "mtimeMs": 1788700530725.4827
+        },
+        {
+          "name": "session-1788700976.log",
+          "mtimeMs": 1788701447370.629
+        },
+        {
+          "name": "session-1788703638.log",
+          "mtimeMs": 1788704824522.2427
+        },
+        {
+          "name": "session-1788705065.log",
+          "mtimeMs": 1788726189520.7102
+        },
+        {
+          "name": "session-1788757855.log",
+          "mtimeMs": 1788758070818.544
+        },
+        {
+          "name": "session-1788806962.log",
+          "mtimeMs": 1788807787649.1477
+        },
+        {
+          "name": "session-1788807866.log",
+          "mtimeMs": 1788807866674.3528
+        },
+        {
+          "name": "session-1788808612.log",
+          "mtimeMs": 1788808612412.0283
+        }
+      ],
+      "checkedAt": "2026-09-07T19:17:02.961Z"
+    },
+    "watchdog": {
+      "resolvedPerStepBoundMs": 3600000,
+      "stepCountUsed": 11,
+      "trialWatchdogMs": 43200000,
+      "legacyTrialWatchdogMs": 180000
+    },
+    "fixtureSha256AtEnd": "5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788",
+    "fixtureHashMatchedAcrossRun": true
+  },
+  "openDrain": {
+    "stepId": "open-drain",
+    "kind": "open",
+    "status": "measured",
+    "wallMs": 5419,
+    "settled": true,
+    "inFlightAtSettle": 0,
+    "renderTraceLinesDuringStep": 97,
+    "armDisarmedCleanly": true,
+    "counters": {
+      "streamsIssued": 1,
+      "streamsEnded": 1,
+      "batchesReceived": 22,
+      "featuresDecoded": 10000,
+      "bytesDecoded": 17400176,
+      "batchesRefused": 0,
+      "featuresRefused": 0,
+      "bytesRefused": 0,
+      "tilesRequested": 0,
+      "duplicatesDropped": 0,
+      "evictionsApplied": 0
+    },
+    "firstPixelMs": 283.90000009536743,
+    "segments": {
+      "queryToFirstByteMs": 198,
+      "firstByteToDecodedMs": 24.40000009536743,
+      "decodedToPaintedMs": 61.5,
+      "segmentsSpanSingleBatch": true
+    },
+    "frameTimeMs": {
+      "p50": 156.7000002861023,
+      "p95": 283.80000019073486,
+      "max": 285.69999980926514,
+      "sampleCount": 23,
+      "truncated": false
+    },
+    "inputToPresentProxiesMs": [],
+    "inputToPresentProxiesTruncated": false,
+    "residentAtEndStep": {
+      "totalResidentVertices": 1047433,
+      "totalResidentFeatures": 10000
+    },
+    "viewState": {
+      "pre": null,
+      "post": {
+        "targetX": 0,
+        "targetY": 0,
+        "zoom": -0.22065808283892,
+        "originX": 2600600.0212930413,
+        "originY": 1200019.9547003591
+      },
+      "realizedDisplacement": null,
+      "assertion": "not-applicable"
+    }
+  },
+  "invalidatedAtStep": null,
+  "invalidationReason": null,
+  "measuredModeViewStateSeamAssertion": {
+    "expected": 0,
+    "observed": 0,
+    "ok": true
+  },
+  "supersededBytesDropped": 0,
+  "gridFrame": {
+    "originX": 2563666.8481108327,
+    "originY": 1127446.8895780211,
+    "baseSpan": 145346.23001116049,
+    "level": "fine"
+  },
+  "anyRowUnmeasured": false,
+  "wireTraceLines": [
+    {
+      "at": 1788808615426,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: null, bboxCrs: null}"
+    },
+    {
+      "at": 1788808615528,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_3da4949b9932c8169592a9b9ac26233d}"
+    },
+    {
+      "at": 1788808615763,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 0, rows: 30, vertices: 3201, cumulativeRows: 30}"
+    },
+    {
+      "at": 1788808615924,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 1, rows: 131, vertices: 12932, cumulativeRows: 161}"
+    },
+    {
+      "at": 1788808616278,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 2, rows: 490, vertices: 52120, cumulativeRows: 651}"
+    },
+    {
+      "at": 1788808616490,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 3, rows: 492, vertices: 52094, cumulativeRows: 1143}"
+    },
+    {
+      "at": 1788808616661,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 4, rows: 493, vertices: 52087, cumulativeRows: 1636}"
+    },
+    {
+      "at": 1788808616815,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 5, rows: 508, vertices: 52092, cumulativeRows: 2144}"
+    },
+    {
+      "at": 1788808616991,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 6, rows: 511, vertices: 52073, cumulativeRows: 2655}"
+    },
+    {
+      "at": 1788808617184,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 7, rows: 499, vertices: 52099, cumulativeRows: 3154}"
+    },
+    {
+      "at": 1788808617338,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 8, rows: 495, vertices: 52120, cumulativeRows: 3649}"
+    },
+    {
+      "at": 1788808617472,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 9, rows: 488, vertices: 52043, cumulativeRows: 4137}"
+    },
+    {
+      "at": 1788808617610,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 10, rows: 497, vertices: 52084, cumulativeRows: 4634}"
+    },
+    {
+      "at": 1788808617746,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 11, rows: 492, vertices: 52116, cumulativeRows: 5126}"
+    },
+    {
+      "at": 1788808617895,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 12, rows: 493, vertices: 52030, cumulativeRows: 5619}"
+    },
+    {
+      "at": 1788808618064,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 13, rows: 493, vertices: 52023, cumulativeRows: 6112}"
+    },
+    {
+      "at": 1788808618212,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 14, rows: 505, vertices: 52111, cumulativeRows: 6617}"
+    },
+    {
+      "at": 1788808618348,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 15, rows: 497, vertices: 52120, cumulativeRows: 7114}"
+    },
+    {
+      "at": 1788808618519,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 16, rows: 486, vertices: 52121, cumulativeRows: 7600}"
+    },
+    {
+      "at": 1788808618751,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 17, rows: 509, vertices: 52037, cumulativeRows: 8109}"
+    },
+    {
+      "at": 1788808618950,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 18, rows: 493, vertices: 52105, cumulativeRows: 8602}"
+    },
+    {
+      "at": 1788808619120,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 19, rows: 498, vertices: 52018, cumulativeRows: 9100}"
+    },
+    {
+      "at": 1788808619282,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 20, rows: 500, vertices: 52077, cumulativeRows: 9600}"
+    },
+    {
+      "at": 1788808619399,
+      "text": "[render-trace] batch {streamHandle: sh_3da4949b9932c8169592a9b9ac26233d, batchSeq: 21, rows: 400, vertices: 41730, cumulativeRows: 10000}"
+    },
+    {
+      "at": 1788808623615,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623619,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623626,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623639,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b0218baf8e336a8efed1e2eb213d726d}"
+    },
+    {
+      "at": 1788808623764,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_48e6cf4af14bf160bb8f9be719b8cedd}"
+    },
+    {
+      "at": 1788808623767,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_dca73e9da41d7f0886f00caeaab6b226}"
+    },
+    {
+      "at": 1788808623785,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623806,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b6230fe3e384a7cece8b071a7cfa32e1}"
+    },
+    {
+      "at": 1788808623885,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623892,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623898,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_7f16b238561ff28c745545ac8c6f92b1}"
+    },
+    {
+      "at": 1788808623900,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_1d2016f372d4105aab8145aa226cede8}"
+    },
+    {
+      "at": 1788808623932,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808623941,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_33783df8c76f888cfc6f526ac2dde6a4}"
+    },
+    {
+      "at": 1788808624031,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624037,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624045,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_9b45f65f4580a61ab9e8386ae12a9c13}"
+    },
+    {
+      "at": 1788808624048,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ef393a44fc4bdd1796042338a0f46cb3}"
+    },
+    {
+      "at": 1788808624080,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624089,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_e1fa83a6b03b0767ad8c2cda7172d7fd}"
+    },
+    {
+      "at": 1788808624169,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624183,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624193,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_538149995ab8bb9fa123a9727e7047e6}"
+    },
+    {
+      "at": 1788808624197,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_d54dca8b8c4b8394dcbd288ec7e83cbc}"
+    },
+    {
+      "at": 1788808624230,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624236,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_35dbded0dbe914d524ff4ad3573f246f}"
+    },
+    {
+      "at": 1788808624318,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624324,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624342,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_13ee001aa85f4c3171a91c73b98540b0}"
+    },
+    {
+      "at": 1788808624346,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f62fe7d3182dc2a5502672e91e6078bf}"
+    },
+    {
+      "at": 1788808624378,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624384,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_91ea34112af819764eaa3ed692804af6}"
+    },
+    {
+      "at": 1788808624456,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624462,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_0faa3196c697e7fcff5c534b58104a52}"
+    },
+    {
+      "at": 1788808624496,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624524,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624560,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624565,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624569,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624573,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624598,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624603,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624609,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624614,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624619,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624624,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624630,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624635,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624641,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624647,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624653,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624660,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624664,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624673,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624680,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624686,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624692,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624700,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624707,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624713,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624719,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624726,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624735,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624741,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624746,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624750,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624755,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_11245cf2a3f8d09a7fa2485dfee3f2ba}"
+    },
+    {
+      "at": 1788808624759,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624765,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624770,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624775,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624778,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624781,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624786,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624795,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ed2e97d01cd99c859208befed4bb0892}"
+    },
+    {
+      "at": 1788808624865,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808624872,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_58b52409fc6189fb78430c7f40de047d}"
+    },
+    {
+      "at": 1788808624881,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_bc0165aa00b55069547a82d036eb2e46}"
+    },
+    {
+      "at": 1788808626727,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 0, rows: 30, vertices: 3233, cumulativeRows: 30}"
+    },
+    {
+      "at": 1788808626877,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 1, rows: 125, vertices: 12915, cumulativeRows: 155}"
+    },
+    {
+      "at": 1788808626931,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 0, rows: 30, vertices: 3240, cumulativeRows: 30}"
+    },
+    {
+      "at": 1788808627023,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 1, rows: 124, vertices: 12991, cumulativeRows: 154}"
+    },
+    {
+      "at": 1788808627038,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 0, rows: 30, vertices: 3210, cumulativeRows: 30}"
+    },
+    {
+      "at": 1788808627135,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 1, rows: 125, vertices: 12917, cumulativeRows: 155}"
+    },
+    {
+      "at": 1788808627359,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 2, rows: 499, vertices: 52090, cumulativeRows: 654}"
+    },
+    {
+      "at": 1788808627508,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 2, rows: 491, vertices: 52112, cumulativeRows: 645}"
+    },
+    {
+      "at": 1788808627660,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 2, rows: 492, vertices: 52129, cumulativeRows: 647}"
+    },
+    {
+      "at": 1788808627825,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 3, rows: 481, vertices: 52059, cumulativeRows: 1135}"
+    },
+    {
+      "at": 1788808627981,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 3, rows: 495, vertices: 52044, cumulativeRows: 1140}"
+    },
+    {
+      "at": 1788808628152,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 3, rows: 487, vertices: 52074, cumulativeRows: 1134}"
+    },
+    {
+      "at": 1788808628247,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 4, rows: 496, vertices: 52083, cumulativeRows: 1631}"
+    },
+    {
+      "at": 1788808628446,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 4, rows: 499, vertices: 52116, cumulativeRows: 1639}"
+    },
+    {
+      "at": 1788808628586,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 4, rows: 499, vertices: 52103, cumulativeRows: 1633}"
+    },
+    {
+      "at": 1788808628663,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 5, rows: 495, vertices: 52057, cumulativeRows: 2126}"
+    },
+    {
+      "at": 1788808628827,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 5, rows: 502, vertices: 52115, cumulativeRows: 2141}"
+    },
+    {
+      "at": 1788808628971,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 5, rows: 501, vertices: 52067, cumulativeRows: 2134}"
+    },
+    {
+      "at": 1788808629086,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 6, rows: 495, vertices: 52114, cumulativeRows: 2621}"
+    },
+    {
+      "at": 1788808629249,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 6, rows: 489, vertices: 52101, cumulativeRows: 2630}"
+    },
+    {
+      "at": 1788808629396,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 6, rows: 496, vertices: 52128, cumulativeRows: 2630}"
+    },
+    {
+      "at": 1788808629526,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 7, rows: 493, vertices: 52086, cumulativeRows: 3114}"
+    },
+    {
+      "at": 1788808629733,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 7, rows: 505, vertices: 52067, cumulativeRows: 3135}"
+    },
+    {
+      "at": 1788808629907,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 7, rows: 482, vertices: 52075, cumulativeRows: 3112}"
+    },
+    {
+      "at": 1788808630040,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 8, rows: 494, vertices: 52107, cumulativeRows: 3608}"
+    },
+    {
+      "at": 1788808630213,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 8, rows: 504, vertices: 52124, cumulativeRows: 3639}"
+    },
+    {
+      "at": 1788808630380,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 8, rows: 496, vertices: 52104, cumulativeRows: 3608}"
+    },
+    {
+      "at": 1788808630457,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 9, rows: 492, vertices: 52033, cumulativeRows: 4100}"
+    },
+    {
+      "at": 1788808630639,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 9, rows: 490, vertices: 52120, cumulativeRows: 4129}"
+    },
+    {
+      "at": 1788808630799,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 9, rows: 500, vertices: 52026, cumulativeRows: 4108}"
+    },
+    {
+      "at": 1788808630922,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 10, rows: 499, vertices: 52096, cumulativeRows: 4599}"
+    },
+    {
+      "at": 1788808631098,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 10, rows: 502, vertices: 52107, cumulativeRows: 4631}"
+    },
+    {
+      "at": 1788808631245,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 10, rows: 494, vertices: 52128, cumulativeRows: 4602}"
+    },
+    {
+      "at": 1788808631374,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 11, rows: 490, vertices: 52038, cumulativeRows: 5089}"
+    },
+    {
+      "at": 1788808631605,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 11, rows: 489, vertices: 52044, cumulativeRows: 5120}"
+    },
+    {
+      "at": 1788808631821,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 11, rows: 508, vertices: 52111, cumulativeRows: 5110}"
+    },
+    {
+      "at": 1788808631998,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 12, rows: 496, vertices: 52090, cumulativeRows: 5585}"
+    },
+    {
+      "at": 1788808632148,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 12, rows: 492, vertices: 52034, cumulativeRows: 5612}"
+    },
+    {
+      "at": 1788808632334,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 12, rows: 493, vertices: 52042, cumulativeRows: 5603}"
+    },
+    {
+      "at": 1788808632474,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 13, rows: 505, vertices: 52114, cumulativeRows: 6090}"
+    },
+    {
+      "at": 1788808632680,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 13, rows: 506, vertices: 52092, cumulativeRows: 6118}"
+    },
+    {
+      "at": 1788808632846,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 13, rows: 498, vertices: 52100, cumulativeRows: 6101}"
+    },
+    {
+      "at": 1788808633022,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 14, rows: 502, vertices: 51972, cumulativeRows: 6592}"
+    },
+    {
+      "at": 1788808633188,
+      "text": "[render-trace] batch {streamHandle: sh_58b52409fc6189fb78430c7f40de047d, batchSeq: 14, rows: 497, vertices: 52115, cumulativeRows: 6615}"
+    },
+    {
+      "at": 1788808633354,
+      "text": "[render-trace] batch {streamHandle: sh_bc0165aa00b55069547a82d036eb2e46, batchSeq: 14, rows: 498, vertices: 52104, cumulativeRows: 6599}"
+    },
+    {
+      "at": 1788808633519,
+      "text": "[render-trace] batch {streamHandle: sh_ed2e97d01cd99c859208befed4bb0892, batchSeq: 15, rows: 495, vertices: 52071, cumulativeRows: 7087}"
+    },
+    {
+      "at": 1788808636474,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808636478,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808636482,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808636610,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f35f1aae0d026b3b8dacc9a081ec6f10}"
+    },
+    {
+      "at": 1788808636615,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c3e7326a76a8ed48ec23765ace9d4ce9}"
+    },
+    {
+      "at": 1788808636635,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2da410ed6622cfd18bec4534675c62d8}"
+    },
+    {
+      "at": 1788808636987,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637055,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637103,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637134,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637139,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637144,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637358,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_801da874b0fc07ced684d87b19a3617e}"
+    },
+    {
+      "at": 1788808637426,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_202e524599d2f3e194819665fcf6dc72}"
+    },
+    {
+      "at": 1788808637582,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808637958,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_11787fee269f532a0a3f4f5ce67a8157}"
+    },
+    {
+      "at": 1788808638077,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638150,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638183,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638312,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6d47cd251ad57cc2f046b9bd2a79b289}"
+    },
+    {
+      "at": 1788808638361,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_482f83efac98bf29c4853a7f3394254c}"
+    },
+    {
+      "at": 1788808638492,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638499,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_695bf8388678674e7956de717a504908}"
+    },
+    {
+      "at": 1788808638638,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638722,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638728,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638755,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638768,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638775,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_535fbdeba998367d322e42117d8e1481}"
+    },
+    {
+      "at": 1788808638785,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638793,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638799,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638805,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638812,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638818,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638825,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638830,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638838,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638844,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638850,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638857,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638863,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638869,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638875,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f58a59a44dc86f9a0852d560671d5647}"
+    },
+    {
+      "at": 1788808638881,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638888,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638893,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638897,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638902,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638908,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638913,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638919,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638965,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808638971,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_54f529398ae3f3393dc279a94f044dd7}"
+    },
+    {
+      "at": 1788808639007,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639012,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_68773a0f4a47c513c6f25a7316f7c31b}"
+    },
+    {
+      "at": 1788808639017,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2c41becf27f848e0a0ad8c3bea8a1971}"
+    },
+    {
+      "at": 1788808639087,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639093,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_5a5b4d51659a528a08053155712d8193}"
+    },
+    {
+      "at": 1788808639133,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639140,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_98025f392bfad3fd2077bb0cfe2b87a0}"
+    },
+    {
+      "at": 1788808639146,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639151,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_3631a8d05226c971944469b4670456f2}"
+    },
+    {
+      "at": 1788808639210,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639217,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ea791fca3ae582d67b144b65c8d18899}"
+    },
+    {
+      "at": 1788808639254,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639259,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_edb6a2e44fb2e66b5ed83d1bb598cde1}"
+    },
+    {
+      "at": 1788808639263,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639269,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_114fed3f208c2407de6b93804690e900}"
+    },
+    {
+      "at": 1788808639353,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639360,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_67d0ec461cf5e4e6592e52c2dbe809c8}"
+    },
+    {
+      "at": 1788808639390,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639396,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_381c90ec5e6bec107eb7597973aeecd1}"
+    },
+    {
+      "at": 1788808639401,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639407,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b459954af75e80010dcba5e3402a1417}"
+    },
+    {
+      "at": 1788808639471,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639477,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_e9f4b448c9d4fd73d0add97416cef71a}"
+    },
+    {
+      "at": 1788808639523,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639530,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_9f8225e5c56d651a7daf4678b1589ace}"
+    },
+    {
+      "at": 1788808639538,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639542,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_652436acba710e6ae76b5982ae0abe08}"
+    },
+    {
+      "at": 1788808639608,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639613,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_fd0f10f20d309a99e2ca30bcfd02a1ab}"
+    },
+    {
+      "at": 1788808639644,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639650,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_990c0367820d3a34c3b08dcaf479e4b4}"
+    },
+    {
+      "at": 1788808639657,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639664,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c648434e6df81d986d9e3c2c7a0d8958}"
+    },
+    {
+      "at": 1788808639733,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639739,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_fbc6cfe22f95f02142b3db5cdd45f114}"
+    },
+    {
+      "at": 1788808639763,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639770,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_df5cab8e83c19266a1f93acf22acd243}"
+    },
+    {
+      "at": 1788808639784,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639789,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ff159428f47e4ad4a5f031a4a06f9baf}"
+    },
+    {
+      "at": 1788808639857,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639862,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_28c5bc8c0637f91a4164b03b6651ec28}"
+    },
+    {
+      "at": 1788808639886,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639892,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b587b5a28efec0874eecb3fdd3b12beb}"
+    },
+    {
+      "at": 1788808639906,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639912,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_de1728fa0fc7633e8325776aa90463a3}"
+    },
+    {
+      "at": 1788808639977,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808639984,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2727603a8eadae4808fc96fac027d614}"
+    },
+    {
+      "at": 1788808640016,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640021,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b79dc8119e51e0924f948deaa26a054c}"
+    },
+    {
+      "at": 1788808640026,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640033,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2ec2a2681ff1ec1a74e56f09538b8b3a}"
+    },
+    {
+      "at": 1788808640099,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640104,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_21a5f5473ccd84a3012e6860bf4e9f09}"
+    },
+    {
+      "at": 1788808640135,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640141,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b303467f2be3c10c9e36f5823b474109}"
+    },
+    {
+      "at": 1788808640153,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640159,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_255f7e1572534f352272eceb01ccee13}"
+    },
+    {
+      "at": 1788808640216,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640222,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_1b1ebc9683a6f48cfa8a8cdb4cdd3abe}"
+    },
+    {
+      "at": 1788808640254,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640260,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2e4e3f47eae20dc2b16b5f9b5f1ac65b}"
+    },
+    {
+      "at": 1788808640281,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640288,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_9352adfdb59f8a92b1a06c711e083670}"
+    },
+    {
+      "at": 1788808640361,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640367,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_91c899f1114561fd0e9710b96980add3}"
+    },
+    {
+      "at": 1788808640389,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640395,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_28c794254bc49d80744cef4b2282b8f7}"
+    },
+    {
+      "at": 1788808640415,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640423,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ccdf17871de7cd7b15ae344208b8f5bd}"
+    },
+    {
+      "at": 1788808640510,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640517,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_8fd428c4c21d9db6a32d6b499e7c0776}"
+    },
+    {
+      "at": 1788808640531,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640539,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_de266ddbb9937c96dc07daafa4c2f7f7}"
+    },
+    {
+      "at": 1788808640557,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640562,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_194a3105982573466233b1c9aa3de4eb}"
+    },
+    {
+      "at": 1788808640659,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640664,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_1495aa4c76e0de7ab13b096434f058e3}"
+    },
+    {
+      "at": 1788808640682,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640690,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_51c546e76cda38c09193c5cac5d3cbdf}"
+    },
+    {
+      "at": 1788808640698,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640706,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2e59c7b3c31447715d3ad768e640cfd8}"
+    },
+    {
+      "at": 1788808640799,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640805,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_671d1014737fa253a0da0016e8ef5816}"
+    },
+    {
+      "at": 1788808640813,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640819,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6c3971a36e25a59fa976851e66a1f4a3}"
+    },
+    {
+      "at": 1788808640827,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640832,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_068f0bd28fe14cfe3f955c6212be7660}"
+    },
+    {
+      "at": 1788808640933,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640937,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640943,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_abfb0f740a7f4bd38e8df72b8e79eef2}"
+    },
+    {
+      "at": 1788808640946,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_e40684f92f761d123112bcf267bd764f}"
+    },
+    {
+      "at": 1788808640955,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808640960,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_3c3dfd0d0fb4e21bbb452309962d8c06}"
+    },
+    {
+      "at": 1788808641072,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641079,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641085,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ea1d039905a52643908694ae3d4f0ca6}"
+    },
+    {
+      "at": 1788808641090,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_cc6a73302cc8e614949e6e05ab5429a8}"
+    },
+    {
+      "at": 1788808641112,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641118,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_516f33da954e547c4c4226ba69e6d9b8}"
+    },
+    {
+      "at": 1788808641207,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641211,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641219,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_63294eeb7381d40b8c3f51cc85dda215}"
+    },
+    {
+      "at": 1788808641223,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c7554415690000189b27a8f4be6779c4}"
+    },
+    {
+      "at": 1788808641240,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641245,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a01b7bcba7ec684a4b13c7c81918c3c9}"
+    },
+    {
+      "at": 1788808641332,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641336,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_98cbbd4102f94269b21b7100dbc3934c}"
+    },
+    {
+      "at": 1788808641341,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641346,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_4f223424310bd108da307d3c4c70fbbb}"
+    },
+    {
+      "at": 1788808641362,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641369,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_89cc79bb01fc2438cac16dc16260f33c}"
+    },
+    {
+      "at": 1788808641456,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808641463,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c06bb6715d505651becc6095c9c487f1}"
+    },
+    {
+      "at": 1788808642613,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642617,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642624,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642636,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_5448a4f8dca09275f98717bb28cc604d}"
+    },
+    {
+      "at": 1788808642641,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ded4eead70cba4e1cd2c548331a8444d}"
+    },
+    {
+      "at": 1788808642644,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_5569b7343a7cc59f6571a4bd77e313a4}"
+    },
+    {
+      "at": 1788808642740,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642748,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_07389bd3505d6321d0841a68976f5c2e}"
+    },
+    {
+      "at": 1788808642753,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642759,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642767,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_42aa5f3a01636b82819ca246bd87d726}"
+    },
+    {
+      "at": 1788808642772,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_274edec699e911fd88a307b4bbb50042}"
+    },
+    {
+      "at": 1788808642878,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642885,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_37e687e6bd12eb9ce3754cd312297c6c}"
+    },
+    {
+      "at": 1788808642892,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642896,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808642904,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_9d1683253b10c168253f3a9f426f2999}"
+    },
+    {
+      "at": 1788808642907,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f067a530f87025b36d0385e1dfe2d30a}"
+    },
+    {
+      "at": 1788808643002,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643008,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2c5afb4fba9657094b5187887e631ea2}"
+    },
+    {
+      "at": 1788808643014,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643019,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643025,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_97e9e64e612197574763c951f2bd001f}"
+    },
+    {
+      "at": 1788808643029,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_547b408982be9be6ec82beb340b1f375}"
+    },
+    {
+      "at": 1788808643126,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643133,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f0b4f156d5569e8029cbd1d949a346a3}"
+    },
+    {
+      "at": 1788808643141,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643144,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643151,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_0dd85ad6805a99ce71539e4999b77978}"
+    },
+    {
+      "at": 1788808643154,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_4654ce830ba6a1f0411d1a8ef58b68dc}"
+    },
+    {
+      "at": 1788808643244,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643250,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_eee25b4a57db728a4456c3bfd00c6b1d}"
+    },
+    {
+      "at": 1788808643255,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643262,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643268,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_1e02a0253577f82308321a1fc9262f74}"
+    },
+    {
+      "at": 1788808643272,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_0af1104330117fec7a69b5fd049f26ad}"
+    },
+    {
+      "at": 1788808643359,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643365,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f20f4929f60a0bf648eb731cf51b170c}"
+    },
+    {
+      "at": 1788808643380,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643385,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643392,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a83ca0499bb848c4b8665dc2f7e90517}"
+    },
+    {
+      "at": 1788808643398,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_cb4e63d24bbce35a722b080acb7b60ef}"
+    },
+    {
+      "at": 1788808643479,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643486,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_98385a38c6dd7751f5b15333bd44bcb6}"
+    },
+    {
+      "at": 1788808643502,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643508,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643516,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_3a8fc8e900f91053234b0aeb1fee8fe6}"
+    },
+    {
+      "at": 1788808643520,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6941a431e65ab03ca362ee459512a00f}"
+    },
+    {
+      "at": 1788808643596,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643603,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b5584362e2084b274f4c37519969c70b}"
+    },
+    {
+      "at": 1788808643617,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643623,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643632,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_918ff0b6110acbf9585ce8339a4d684c}"
+    },
+    {
+      "at": 1788808643636,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b9afd22ea0c72b9609672333fbcbdaea}"
+    },
+    {
+      "at": 1788808643719,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643726,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_5f4cfada3e39cc85589f01fcc9e4c869}"
+    },
+    {
+      "at": 1788808643740,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643744,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643751,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_3c1e88a1c738d091299477181e045e9d}"
+    },
+    {
+      "at": 1788808643755,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_7b1a481a9623a2d11b6d9506e848678e}"
+    },
+    {
+      "at": 1788808643848,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643855,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_d898f4b2ec7d88070025abb653b510c6}"
+    },
+    {
+      "at": 1788808643867,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643872,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643883,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_0b6fbb2a937d55b8a2c1f9bfcd0db6d4}"
+    },
+    {
+      "at": 1788808643888,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_d3a379a8f336f71d0cc9f859fea74fca}"
+    },
+    {
+      "at": 1788808643985,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808643993,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_36cf3ecc4bab33b1fd03537166bb4fd3}"
+    },
+    {
+      "at": 1788808643998,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644007,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ee61bbe64abd1ff07939b0405aa82e0d}"
+    },
+    {
+      "at": 1788808644011,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644019,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_aa3f6c7a645daaf5006249180d4fecff}"
+    },
+    {
+      "at": 1788808644133,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644140,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644148,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_54744fce9b8f49fb38a93cb87393bde2}"
+    },
+    {
+      "at": 1788808644153,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6d2c5f0ddb9c7d102173c91e48d9bb2f}"
+    },
+    {
+      "at": 1788808644160,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644168,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_ecd84a99bdd279fa7bc596002f8a86c5}"
+    },
+    {
+      "at": 1788808644273,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644279,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644287,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_296bf593fc74574cae3e9de65ed9a07e}"
+    },
+    {
+      "at": 1788808644292,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_82fcf73fae63688135b592de1721ffb4}"
+    },
+    {
+      "at": 1788808644303,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644309,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b29010698ec133add665ec2b66a74f05}"
+    },
+    {
+      "at": 1788808644417,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644423,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644431,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_7d275e7412874c005aa9f38a6e8e25bb}"
+    },
+    {
+      "at": 1788808644435,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_abca33c187c90abe847a758b2334cb6d}"
+    },
+    {
+      "at": 1788808644443,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644451,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_7b27681556b86e7a1f5d030602c0cd45}"
+    },
+    {
+      "at": 1788808644552,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644558,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644564,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6b6fda7b740b6d3cf131f6abd89d9de9}"
+    },
+    {
+      "at": 1788808644570,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_48abc4bc30878e0127b5840fc445f22a}"
+    },
+    {
+      "at": 1788808644579,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644588,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_d7510070bafd59ff19080bbdcc227e0a}"
+    },
+    {
+      "at": 1788808644698,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644704,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644712,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_003e6c12dc6c964a44b7fc3107785fb2}"
+    },
+    {
+      "at": 1788808644720,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2420d1867913e07460fbf4b031d382dc}"
+    },
+    {
+      "at": 1788808644726,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644731,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_688b967d51945725db51562f9bfd863d}"
+    },
+    {
+      "at": 1788808644839,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644847,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_e2914d5d33c01480ac99fd910a8d7975}"
+    },
+    {
+      "at": 1788808644854,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644861,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_02d2e5b2e83030d889b286fcaa63b05f}"
+    },
+    {
+      "at": 1788808644878,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644884,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a16de80bf57a65a541eb0c4d0449116d}"
+    },
+    {
+      "at": 1788808644987,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808644993,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a68e475a41b41cc097529f15895dddb3}"
+    },
+    {
+      "at": 1788808645005,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645011,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_25514b3b684dd35347ed8554f8928c0f}"
+    },
+    {
+      "at": 1788808645035,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645043,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_cb93da89508d836abee9209ccdcf3465}"
+    },
+    {
+      "at": 1788808645130,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645136,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a5b16aa5960e665ef3cba3e8e582b897}"
+    },
+    {
+      "at": 1788808645154,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645160,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_e1866ee057c5b4c86cdc5d1f3be1357f}"
+    },
+    {
+      "at": 1788808645189,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645197,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_84c5d982cd6b509bb0ff2d72337add7d}"
+    },
+    {
+      "at": 1788808645276,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645284,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2d00ef42f741dd2e1c337511d78700a6}"
+    },
+    {
+      "at": 1788808645309,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645316,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c5326fa258668bf0837e810c48b6c841}"
+    },
+    {
+      "at": 1788808645336,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645344,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_5662487a501ca98cbc5c552b826307ed}"
+    },
+    {
+      "at": 1788808645426,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645435,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_01aed43bdf4ba2ae95ae42cf9c054638}"
+    },
+    {
+      "at": 1788808645458,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645470,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_084dd9b3885a2fa6076dfbaf8a6c80ee}"
+    },
+    {
+      "at": 1788808645487,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645494,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6061aa94c2f34bd275ba05a113dcd1c2}"
+    },
+    {
+      "at": 1788808645582,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645589,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_9ffb1fe6968f47ac4830c390550edce9}"
+    },
+    {
+      "at": 1788808645619,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645626,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_09b8a95be28bd4de2ef6e300a9eec609}"
+    },
+    {
+      "at": 1788808645634,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645641,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_42158b316b248e0d458bee3771d5537c}"
+    },
+    {
+      "at": 1788808645720,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645727,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_f598c84ac8a00ab061c7b4955ad9b75c}"
+    },
+    {
+      "at": 1788808645767,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645773,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645780,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_8e643715f8554779964641c537798f49}"
+    },
+    {
+      "at": 1788808645785,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_467462135f2320bcd915399724f644fa}"
+    },
+    {
+      "at": 1788808645869,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645878,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c5c34fa3b56d79606644ba0da6f37704}"
+    },
+    {
+      "at": 1788808645916,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645922,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808645932,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_9578590537ea57c84ed7d3f0427e18cb}"
+    },
+    {
+      "at": 1788808645937,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_c93bd4d5bd8f56dd3914ba688983a287}"
+    },
+    {
+      "at": 1788808646027,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646034,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_39241a9cfa5ae8828bd15b56c7ed507c}"
+    },
+    {
+      "at": 1788808646067,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646073,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646080,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_2bbd4bced36a8dceb289c9321bf40af5}"
+    },
+    {
+      "at": 1788808646084,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_b2cec5e86fcd2acc3045824ad3a3bb74}"
+    },
+    {
+      "at": 1788808646162,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646169,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_7f021f6c2bc1b1d00c051934b876e150}"
+    },
+    {
+      "at": 1788808646201,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646209,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_0c23aeeb3666aeb4779f5f23a6fca8d9}"
+    },
+    {
+      "at": 1788808646217,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646224,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a3f37b9502cdacefed8c8f248819336c}"
+    },
+    {
+      "at": 1788808646317,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646324,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a2433ab8fa3664d3842d869aa778295b}"
+    },
+    {
+      "at": 1788808646355,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646361,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_70fe42fce568b2c78f4abfd17d0d0494}"
+    },
+    {
+      "at": 1788808646368,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808646376,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_bdf8893695acb46d2d9a9d80057520e3}"
+    },
+    {
+      "at": 1788808649460,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808649468,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808649480,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808649517,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_e778a83aab5260186ee4f66129064c12}"
+    },
+    {
+      "at": 1788808649524,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_6cf713a7652da6b8d113c8345a67443e}"
+    },
+    {
+      "at": 1788808649543,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_85147630cccf74ccc74ea8908d294cff}"
+    },
+    {
+      "at": 1788808653650,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808653656,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808653661,
+      "text": "[render-trace] viewport_query {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, bbox: Object, bboxCrs: null}"
+    },
+    {
+      "at": 1788808653676,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_013ae35eaa6a5a9045d7c9faad17279e}"
+    },
+    {
+      "at": 1788808653680,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_d511ee84353b5ce571f96c8f7fbc8a6b}"
+    },
+    {
+      "at": 1788808653685,
+      "text": "[render-trace] stream-issued {dataset: ds_b6eb5f7c95fd9cac53f61a13e4952ef1, streamHandle: sh_a4b9fbe4e938a6f9fa05ee4b8420cd69}"
+    },
+    {
+      "at": 1788808653870,
+      "text": "[render-trace] batch {streamHandle: sh_a4b9fbe4e938a6f9fa05ee4b8420cd69, batchSeq: 0, rows: 1, vertices: 78, cumulativeRows: 1}"
+    }
+  ],
+  "wireTraceTimestampBasis": "driver receipt time (Date.now() at Playwright console-event delivery), not page emit time -- a defined proxy; fine at seconds scale, never a wire timing",
+  "queueDepthSamples": [
+    {
+      "at": 1788808613632,
+      "inFlight": null,
+      "queued": null
+    },
+    {
+      "at": 1788808614631,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808615638,
+      "inFlight": 1,
+      "queued": 0
+    },
+    {
+      "at": 1788808616825,
+      "inFlight": 1,
+      "queued": 0
+    },
+    {
+      "at": 1788808617907,
+      "inFlight": 1,
+      "queued": 0
+    },
+    {
+      "at": 1788808618959,
+      "inFlight": 1,
+      "queued": 0
+    },
+    {
+      "at": 1788808619661,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808620675,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808621690,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808622695,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808623762,
+      "inFlight": 3,
+      "queued": 85
+    },
+    {
+      "at": 1788808624731,
+      "inFlight": 0,
+      "queued": 63
+    },
+    {
+      "at": 1788808625768,
+      "inFlight": 0,
+      "queued": 51
+    },
+    {
+      "at": 1788808626778,
+      "inFlight": 1,
+      "queued": 81
+    },
+    {
+      "at": 1788808627833,
+      "inFlight": 3,
+      "queued": 81
+    },
+    {
+      "at": 1788808628836,
+      "inFlight": 3,
+      "queued": 81
+    },
+    {
+      "at": 1788808629915,
+      "inFlight": 3,
+      "queued": 81
+    },
+    {
+      "at": 1788808630928,
+      "inFlight": 3,
+      "queued": 85
+    },
+    {
+      "at": 1788808632004,
+      "inFlight": 3,
+      "queued": 81
+    },
+    {
+      "at": 1788808633027,
+      "inFlight": 3,
+      "queued": 81
+    },
+    {
+      "at": 1788808635629,
+      "inFlight": 0,
+      "queued": 81
+    },
+    {
+      "at": 1788808635763,
+      "inFlight": 0,
+      "queued": 81
+    },
+    {
+      "at": 1788808636786,
+      "inFlight": 0,
+      "queued": 41
+    },
+    {
+      "at": 1788808637814,
+      "inFlight": 0,
+      "queued": 81
+    },
+    {
+      "at": 1788808638791,
+      "inFlight": 0,
+      "queued": 78
+    },
+    {
+      "at": 1788808639775,
+      "inFlight": 0,
+      "queued": 38
+    },
+    {
+      "at": 1788808640782,
+      "inFlight": 0,
+      "queued": 16
+    },
+    {
+      "at": 1788808641797,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808642802,
+      "inFlight": 0,
+      "queued": 78
+    },
+    {
+      "at": 1788808643816,
+      "inFlight": 0,
+      "queued": 54
+    },
+    {
+      "at": 1788808644830,
+      "inFlight": 0,
+      "queued": 33
+    },
+    {
+      "at": 1788808645842,
+      "inFlight": 0,
+      "queued": 12
+    },
+    {
+      "at": 1788808646856,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808647864,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808648870,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808649880,
+      "inFlight": 0,
+      "queued": 85
+    },
+    {
+      "at": 1788808650880,
+      "inFlight": 0,
+      "queued": 85
+    },
+    {
+      "at": 1788808651894,
+      "inFlight": 0,
+      "queued": 85
+    },
+    {
+      "at": 1788808653647,
+      "inFlight": 0,
+      "queued": 0
+    },
+    {
+      "at": 1788808653937,
+      "inFlight": 1,
+      "queued": 85
+    },
+    {
+      "at": 1788808654904,
+      "inFlight": 0,
+      "queued": 12
+    },
+    {
+      "at": 1788808655919,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808657370,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808658088,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808659091,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808660096,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808661093,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808662091,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808663093,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808664092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808665091,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808666092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808667093,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808668092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808669090,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808670091,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808671091,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808672092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808673098,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808674092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808675090,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808676091,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808677093,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808678090,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808679092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808680092,
+      "inFlight": 0,
+      "queued": 4
+    },
+    {
+      "at": 1788808681092,
+      "inFlight": 0,
+      "queued": 4
+    }
+  ],
+  "queueDepthSampleErrors": 0
+}

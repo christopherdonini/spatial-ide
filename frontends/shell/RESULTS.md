@@ -1292,3 +1292,16 @@ per-stream-join / nulls demonstration therefore remains **incomplete on the curr
 regardless of disk**; the structural answer (§7) is unchanged. The hung-stream behaviour is
 recorded as its own open finding (DECISIONS-PENDING entry 40) — a candidate for the producer-side
 / LOD line, not this cut.
+
+**Follow-up, 2026-09-07 — the entry-40 instrumented pass ran (one cell, unattended under 24(g),
+final attempt under its preregistration's Amendment 4): the hang did NOT recur.** On the post-#24/#28
+build with the producer-pool poll compiled in (PR #25) and the harness pre-flight (PR #26), the same
+trace completed: 11/11 steps measured and settled, `pan-east` 65 streams issued / 65 ended in
+16.3 s (this run's observed wall time, unscored — the cell carries a per-step watchdog override),
+167/167 tile streams `Completed`, the pool never leaking a lease (first tick `active=0 live=1
+idle=1`, last `active=0 live=3 idle=3`, 171 ticks, no gap). The preregistration's reading is **(D):
+a null result** — one non-recurrence neither refutes nor explains the hang recorded above; the
+declared differences between the two runs (the eviction fixes removed the re-request storm the hung
+run ran under; per-stream trace on; a 60-min per-step bound) are listed, labelled conjecture, in
+`spikes/entry40-producer-hang-diagnosis/README.md` §5. The instrument stays in place for any later
+5 GB run; the pass is closed.

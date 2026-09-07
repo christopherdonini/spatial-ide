@@ -1067,6 +1067,20 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Resolved
 
+- **2026-09-07 — Entry 40 (the producer-side hang) — the empirical pass CLOSED, reading (D): a
+  null result.** The one preregistered cell (PASS-PREREGISTRATION.md §3 + Amendments 1–4) ran to
+  completion on the human's "window open" under the 24(g) guard (every gate held; RustDesk restored
+  at 19:18:04Z): 11/11 steps measured and settled, 167/167 tile streams `Completed`, `pan-east`
+  65/65 in 16.3 s (unscored), the producer pool never leaking a lease across 171 gapless ticks
+  (first `active=0 live=1 idle=1`, last `active=0 live=3 idle=3`). **The 2026-09-06 hang did not
+  recur** — per the preregistration's own §4, "one non-recurrence does not refute the 2026-09-06
+  observation; the instrument stays in place for the next 5 GB run." The two runs' declared
+  differences (the eviction fixes removed the re-request storm the hung run ran under; per-stream
+  trace on; 60-min per-step bound) are recorded as conjecture, not cause. Ranks 1–5 stand
+  unconvicted and unrefuted; the structural answer (ATTRIBUTION-PASS.md §7) is unchanged; the LOD
+  cut's P1 risk keeps its status. No further attempt is authorized (Amendment 4's cap). Full record:
+  `spikes/entry40-producer-hang-diagnosis/README.md` §5 + `evidence/`; RESULTS.md follow-up.
+
 - **2026-09-07 — LOD scheduling RULED: flip-first; P2 first when LOD runs.** The human, verbatim:
   *"LOD scheduling: flip-first — the post-fix stable-partial state is an honest, declared v0.1
   limitation, so LOD is the first post-flip quality cut, not a flip-blocker (my felt-bar override

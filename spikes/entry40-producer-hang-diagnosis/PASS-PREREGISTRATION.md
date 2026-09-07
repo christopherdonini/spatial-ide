@@ -237,3 +237,16 @@ environmental failure — is recorded here as the null result (§4 (D)-class) an
 further amendment can authorize another attempt. The lock mechanism is resolved as RustDesk
 lock-on-disconnect (the human's own account), which the guard README's 2026-09-07 note carries as
 one of its two hypotheses — now the confirmed one.
+
+## Outcome — the final attempt ran to completion; reading (D); the pass is CLOSED (2026-09-07)
+
+Launched 19:14:52Z on the human's "window open" (Amendment 4). Every gate held (pre-arm lock check,
+arm, RustDesk stopped and verified absent, display `ok:true`, heartbeat, disarm; RustDesk `Running`
+at 19:18:04Z, backstop unregistered). Pre-flight PASSED (session log from the app's log directory).
+The cell completed: 11/11 steps measured and settled, 167/167 tile streams `Completed`, 171
+pool-poll ticks with no gap, first tick `active=0 live=1 idle=1`, last tick `active=0 live=3
+idle=3`, no `stopped reason` line. **No stall recurred → §4 (D), a null result for the hang
+question; the 2026-09-06 observation is neither refuted nor explained.** Full account and the
+declared differences between the two runs: `README.md` §5; evidence copies in `evidence/`
+(the harness JSON redacted of the machine's user-profile path only). Per Amendment 4 this pass
+ends here; no further attempt is authorized by this file.

@@ -310,3 +310,67 @@ design.
   "let it run past the watchdog" discriminator is taken, an unbounded additional wait with no
   guaranteed upper bound — the one instrument in this design that is free of code but not free of
   time.
+
+## 5. The pass, run — 2026-09-07, one cell (PASS-PREREGISTRATION.md §3 + Amendments 1–4): reading **(D)**, a null result for the hang; the instrument itself healthy
+
+**Run facts (runner log `entry40-cell.log`, evidence
+`evidence/residency-harness-instrument-on-1788808681244.json`, session log
+`evidence/session-1788808612.log`; times UTC).** Launched 19:14:52Z on the human's "window open"
+(Amendment 4). Fixture sha256 `5ae955c5…1788` verified before and after the run
+(`fixtureHashMatchedAcrossRun: true`). Session unlocked before arming; guard armed 19:15:27Z
+(backstop 23:45:25+02:00, watchdog pid 7660); RustDesk `Stopped`, 0 processes, 19:15:32Z; display
+check `{"ok":true,"sessionUnlocked":true,"displayAwake":true,"monitorTimeoutAc":0}` 19:15:37Z;
+heartbeat every 10 s; harness start 19:15:38Z (launch instant 1788808538, captured pre-spawn —
+PR #26). Attest string recorded on the cell verbatim: `unattended, RustDesk stopped and verified
+absent, display-awake verified`. Cell: candidate arm, `fine`, cold, `vite-dev` build @ `4f133df`
+(main: PRs #24, #26, #28 in), `--per-stream-trace`, `--per-step-watchdog-ms 3600000` (recorded
+top-level; the cell is therefore never scored, Amendment 1 §6), `launchedFresh: true`. Pre-flight
+`--require-pool-poll` **PASSED** (session log resolved from the app's log directory, threshold
+1788808559, 349 candidates listed). Harness exit 0 at 19:18:01Z after 2.4 min; disarm 19:18:04Z
+(`{"disarmed":true,"rustdeskService":"Running"}`); backstop unregistered, watchdog gone, monitor
+timeout restored (0x258). `invalidated: false`; **11 steps, all `status: measured`, all
+`settled: true`, `inFlightAtSettle: 0` on every step.**
+
+**What the instrument logged.** 171 `producer-pool-poll` lines over 171 s, **zero gaps > 1.5 s**
+between ticks (Amendment 1 §4: nothing unobserved). Histogram: `active=0` ×150, `active=1` ×2,
+`active=2` ×2, `active=3` ×17; `live` reached 3 (the pool grew from 1 to 3 connections during the
+first pan and stayed at 3); **first tick** `active=0 live=1 idle=1`, **last tick** `active=0 live=3
+idle=3` — every lease returned; no `producer-pool-poll stopped reason=` line (the poll ran to the
+dataset's close). 167 `candidate-tile-terminal` lines, **all `Completed`**, spanning 30 s
+(19:17:03Z–19:17:33Z); 1 `candidate-grid-frame-established`; 1 `candidate-untiled-terminal`
+(`Completed`); 0 truncations, 0 evictions of the first look, 0 refusals.
+
+**Per-step, as the harness recorded it (durations are observed wall times, never scored):**
+`fit` 651 ms (3 streams issued); `pan-north` 1,902 ms (12 issued / 15 ended); **`pan-east`
+16,304 ms, 65 issued / 65 ended, resident 1,999,902 vertices / 19,054 features at end, first pixel
+87 ms** — the step that hung on 2026-09-06; `pan-south` 5,053 ms (84/84); `pan-west` 3,187 ms
+(3/3); `pan-northeast` 2,103 ms; `zoom-to-layer` 1,386 ms (3 issued); `zoom-in-1/2/3` 712 / 496 /
+491 ms; `zoom-out-1` 496 ms. The per-stream join (`segments`) carries one segment per step, and its
+three timings are `null` with reason `no-batch` or `no-query` on every step except where the
+step's own first batch fell inside the arm window — the join the README §2 hoped for was **not
+populated** in this run beyond that; reported as logged, not interpreted.
+
+**Reading, per §4 — (D).** *"no stall recurs in this run → the pass is a null result, reported as
+such: one non-recurrence does not refute the 2026-09-06 observation; the instrument stays in place
+for the next 5 GB run."* Neither (A) nor (B) nor (C) can be read: there was no stalled stream to
+read them against. Ranks 1–5 stand exactly as §1 ranked them, unconvicted and unrefuted. The
+structural answer (`ATTRIBUTION-PASS.md` §7) is unchanged.
+
+**What differs from the 2026-09-06 run, declared so nobody infers a cause.** That run (RESULTS.md
+"Refinement, 2026-09-06") hung at `pan-east` after 222 batches — 43 streams issued / 42 ended,
+in-flight stuck at 1, 204,850 ms until the settle watchdog refused — on the 1b build before the
+close-out fixes, under the admit→evict→re-request thrash the human later saw at L6 (entry 44), with
+no per-stream trace and the default per-step watchdog. This run: the post-#24/#28 build (F1
+geometric protection; the first look protected while in view — **0 evictions**), per-stream trace
+on, 60-min per-step bound, and `pan-east` completing 65/65 in 16.3 s. Whether the client-side
+eviction fixes removed the *conditions* of the hang (far less stream churn: the 2026-09-06 run's
+re-request storm no longer exists) or the hang is simply intermittent is **not determinable from
+one cell** — a conjecture, labelled. The pool instrument's own verdict is narrow and positive: over
+this run the producer pool never leaked a lease and never sat at capacity longer than 17 s
+(`active=3` ×17 ticks, during `pan-east`/`pan-south`).
+
+**Consequences.** Per Amendment 4 the pass ENDS with this run: no further cell is authorized by this
+file. The instrument stays compiled into dev/measure builds (PR #25) and the harness pre-flight
+stays (PR #26), so any later 5 GB run reads the pool for free. The LOD cut's P1 risk (README §3)
+keeps its status: a structural argument with one unreproduced observation behind it, not a
+measured hang. No perf claim is made in either direction (§5).
