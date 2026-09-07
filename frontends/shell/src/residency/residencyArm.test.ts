@@ -80,19 +80,25 @@ describe("residencyArm", () => {
   // context jsdom does not provide, and no React DOM harness exists in this package), so this is the
   // closest honest equivalent.
   //
-  // SHOULD-FIX S3 (2026-09-07, reviewer gate): calls `shouldConstructCandidateSession()`
-  // (`residencyArm.ts`) DIRECTLY -- the actual exported function `App.tsx`'s `[admitted]` effect
-  // calls at its own construction branch -- rather than re-typing its condition inline. **What this
-  // test actually proves, stated honestly, not overclaimed:** that `shouldConstructCandidateSession()`
-  // itself returns `true` when `isInstrumentedBuild()` is `false` (production mode) -- i.e. the
-  // PREDICATE's own behavior is not gated on instrumentation. It does NOT and cannot prove `App.tsx`
-  // still calls this exact function, un-gated, at its own call site -- no React-render harness exists
-  // in this package (above) to observe that. That half remains a structural fact verified by reading
-  // `App.tsx` itself (its own comment at the call site cites this function by name), same limitation
-  // this suite already had before the extraction. What the extraction changes is narrower but real: a
-  // regression that stopped calling THIS function (replacing it with a re-typed inline condition)
-  // would no longer be covered by this test at all, making the coupling visible in the import list
-  // rather than silent.
+  // SHOULD-FIX S3 (2026-09-07, reviewer gate; corrected 2026-09-08, post-PASS sweep S-e): calls
+  // `shouldConstructCandidateSession()` (`residencyArm.ts`) DIRECTLY -- the actual exported function
+  // `App.tsx`'s `[admitted]` effect calls at its own construction branch -- rather than re-typing its
+  // condition inline. **What THIS test proves, stated honestly:** that
+  // `shouldConstructCandidateSession()` itself returns `true` when `isInstrumentedBuild()` is `false`
+  // (production mode) -- the PREDICATE's own behavior, not gated on instrumentation. It does NOT
+  // prove `App.tsx` still calls this exact function un-gated at its own call site -- no React-render
+  // harness exists in this package (above) to observe that directly. **That other half is NOT
+  // uncovered, though -- a DIFFERENT, existing check covers it:** `e2e/checkDistClean.mjs`'s own
+  // `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` pass (SHOULD-FIX S1) asserts the candidate branch's own
+  // downstream calls (`pushTileBatch`/`clearTile`/etc.) survive as real call sites in a production
+  // build -- a regression that re-gates `App.tsx`'s call site behind `isInstrumentedBuild() &&` makes
+  // that whole branch dead code again, stripping those calls from the bundle, which `check:dist-clean`
+  // FAILs on. Confirmed live (2026-09-08): mutating `App.tsx`'s call site to
+  // `if (isInstrumentedBuild() && shouldConstructCandidateSession())`, building, and running
+  // `check:dist-clean` FAILs with all seven of those identifiers at zero surviving call sites --
+  // reverted immediately after, not shipped. So: THIS unit test covers the predicate;
+  // `check:dist-clean`'s S1 pass covers the call site; together, not either alone, they cover the
+  // exact regression this comment used to say nothing covered.
   //
   // `vi.stubEnv("DEV", false)` simulates a plain production build's `import.meta.env.DEV` (Vitest's
   // own documented `import.meta.env` stubbing, not a mock of this module's own logic) with

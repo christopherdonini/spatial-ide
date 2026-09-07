@@ -990,17 +990,20 @@ export default function App() {
     // effect) stays dev-only; this predicate is not itself gated, because the branch it selects must
     // run in production for the default arm to mean anything there.
     //
-    // SHOULD-FIX S3 (2026-09-07, reviewer gate): reads `shouldConstructCandidateSession()`
-    // (`residencyArm.ts`), not a re-typed `getResidencyArm() === "candidate"` inline -- that function
-    // IS the seam `residencyArm.test.ts`'s own production-mode unit test exercises directly, so what
-    // that test actually proves is the PREDICATE's own behavior (it reads `"candidate"` regardless of
-    // `isInstrumentedBuild()`) -- honestly stated, it does NOT and cannot prove this exact call site
-    // keeps calling it un-gated (no React-render harness exists in this package, `App.test.ts`'s own
-    // top comment); that half stays a structural fact verified by reading this file, same as before
-    // this piece. What the extraction DOES change: a future `if (isInstrumentedBuild() &&
-    // shouldConstructCandidateSession())` HERE would still compile and would still be a real
-    // regression, but the unit test's own pass/fail is silent on it either way -- disclosed rather
-    // than overclaimed.
+    // SHOULD-FIX S3 (2026-09-07, reviewer gate; corrected 2026-09-08, post-PASS sweep S-e): reads
+    // `shouldConstructCandidateSession()` (`residencyArm.ts`), not a re-typed
+    // `getResidencyArm() === "candidate"` inline -- that function IS the seam
+    // `residencyArm.test.ts`'s own production-mode unit test exercises directly, proving the
+    // PREDICATE's own behavior (it reads `true` regardless of `isInstrumentedBuild()`). TWO checks
+    // together cover a regression that re-adds `isInstrumentedBuild() &&` HERE, at this call site --
+    // not neither, as an earlier version of this comment said: the unit test covers the PREDICATE;
+    // `e2e/checkDistClean.mjs`'s own `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` pass (SHOULD-FIX S1)
+    // covers THIS CALL SITE -- re-adding `isInstrumentedBuild() &&` here makes the candidate branch
+    // dead code again in a plain production build, which strips `pushTileBatch`/`clearTile`/etc. from
+    // the bundle entirely; confirmed live (2026-09-08): mutating this exact line to
+    // `if (isInstrumentedBuild() && shouldConstructCandidateSession())`, building, and running
+    // `check:dist-clean` FAILs with all seven `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` at zero
+    // surviving call sites -- the mutation reverted immediately after, not shipped.
     // `viewportDebounceRef` is REUSED (not a new ref): the candidate session's own
     // `onViewportChanged` conforms to the identical `Debounced<[Bbox, string | null]>` shape
     // baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX below

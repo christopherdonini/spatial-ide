@@ -72,24 +72,31 @@ const INSTRUMENT_IDENTIFIERS = [
   // gated behind `import.meta.env.DEV`, the same DCE claim the instrument identifiers above depend
   // on -- see `residency/residencyArm.ts`'s own top doc comment.
   //
-  // SHOULD-FIX S2 (2026-09-07, reviewer gate): `getResidencyArm` REMOVED from this list.
-  // `App.tsx`'s construction branch (`if (getResidencyArm() === "candidate")`) calls it UNGATED, in
-  // every build -- a live production call, not dead code, so a MISS here was never real signal for
-  // it: the function's own literal source-level name does not need to survive minification for the
-  // call to work (a plain, non-property function reference is exactly what esbuild is free to
-  // rename), so this list's "0 hits" pass was true only because the MINIFIER renamed a binding that
-  // was never going away in the first place -- meaningless, per the reviewer's own words. `setResidencyArm`
-  // stays forbidden below: its own hook REGISTRATION (the switch itself) remains `isInstrumentedBuild()`-gated.
+  // SHOULD-FIX S2 (2026-09-07, reviewer gate; citation corrected 2026-09-08, post-PASS sweep S-a):
+  // `getResidencyArm` REMOVED from this list. It is called UNGATED, in every build, at TWO real
+  // production sites -- `WorkingCanvas.tsx:539` (`const armRef = useRef(getResidencyArm())`) and
+  // inside `residencyArm.ts`'s own `shouldConstructCandidateSession()` (the predicate `App.tsx:1009`'s
+  // construction branch calls, `if (shouldConstructCandidateSession())` -- SHOULD-FIX S3's own
+  // extraction; `App.tsx`'s branch no longer reads `getResidencyArm()` inline itself). Not dead code
+  // at either site, so a MISS here was never real signal for it: the function's own literal
+  // source-level name does not need to survive minification for the call to work (a plain,
+  // non-property function reference is exactly what esbuild is free to rename), so this list's
+  // "0 hits" pass was true only because the MINIFIER renamed a binding that was never going away in
+  // the first place -- meaningless, per the reviewer's own words. `setResidencyArm` stays forbidden
+  // below: its own hook REGISTRATION (the switch itself) remains `isInstrumentedBuild()`-gated.
   "setResidencyArm",
   "notifyResidencyArmDatasetOpened",
   "notifyResidencyArmDatasetClosed",
   // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): `startCandidateArmSession`
   // REMOVED from this list here (was present through Viewport-residency cut P3w). It used to sit
   // behind the SAME `import.meta.env.DEV`-class guard as the identifiers immediately above (`App.tsx`'s
-  // `[admitted]` effect: `if (isInstrumentedBuild() && getResidencyArm() === "candidate")`) -- that
-  // guard is now `if (getResidencyArm() === "candidate")`, with no `isInstrumentedBuild()` operand,
-  // and `getResidencyArm()` defaults to `"candidate"` (`residencyArm.ts`). A plain production build
-  // therefore calls `startCandidateArmSession` BY DEFAULT now -- checking for its absence would fail
+  // `[admitted]` effect: `if (isInstrumentedBuild() && getResidencyArm() === "candidate")`) -- item 7
+  // dropped the `isInstrumentedBuild()` operand, and SHOULD-FIX S3 later extracted the remaining
+  // comparison into `residencyArm.ts`'s own `shouldConstructCandidateSession()`, so the guard reads
+  // (citation corrected 2026-09-08, post-PASS sweep S-a) `if (shouldConstructCandidateSession())`
+  // today (`App.tsx:1009`), which defaults to `true` (`DEFAULT_RESIDENCY_ARM` is `"candidate"`). A
+  // plain production build therefore calls `startCandidateArmSession` BY DEFAULT now -- checking for
+  // its absence would fail
   // every green build, testing the wrong thing. See `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS`'s own
   // doc comment (S1) for why it is not asserted PRESENT here either (a plain function call, not a
   // property access -- its literal name does not survive minification, present or absent).
@@ -172,9 +179,18 @@ const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = ["armFirstPixelRenderHook", 
 // BUILD, testing the wrong thing (the same one-directional-MISS caveat this file's own top doc
 // comment, P1d B6b, already names for the negative list). Its own reachability is corroborated
 // INDIRECTLY instead: every one of the seven identifiers below is called only from CODE
-// `startCandidateArmSession` itself constructs (`candidateArmSession.ts`) -- their survival is
-// already proof that branch was reachable, without needing `startCandidateArmSession`'s own literal
-// name to survive too.
+// `startCandidateArmSession` itself constructs (`candidateArmSession.ts`) -- their survival proves
+// that code was NOT dead-code-eliminated from this build (post-PASS sweep nit, 2026-09-08:
+// corrected from the stronger, imprecise "proof that branch was reachable" -- surviving in the
+// BUNDLE is not the same claim as being TAKEN at runtime, this script's own top doc comment's
+// MISS-is-one-directional caveat cuts the other way too). No single check here establishes "the
+// default arm is candidate, and a plain production build actually takes that branch" alone; three
+// things together do: `residencyArm.test.ts`'s own unit test (the PREDICATE, `shouldConstructCandidateSession()`,
+// returns `true` in production mode); this check (the branch's own downstream code is present, not
+// eliminated, in the built artifact); and the E2E ledgers (`regression.mjs`/`filter-panel.mjs`'s own
+// render-trace output, RELEASE-0.1 item 7's report -- direct runtime evidence the branch is TAKEN
+// and behaves correctly when it is), without needing `startCandidateArmSession`'s own literal name
+// to survive too.
 const EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS = [
   "pushTileBatch",
   "clearTile",
@@ -225,8 +241,9 @@ function main() {
     }
   }
 
-  // P1d B6c: a SEPARATE pass for the three expected-present, caller-checked identifiers -- see
-  // `EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS`'s own doc comment. A bare occurrence is NOT a hit
+  // P1d B6c: a SEPARATE pass for the two expected-present, caller-checked identifiers (RELEASE-0.1
+  // item 7 removed the other five; see `EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS`'s own doc
+  // comment above for the full account). A bare occurrence is NOT a hit
   // (expected: the method-shorthand definition); only an occurrence immediately preceded by `.` or
   // `?.` (a real call site surviving) counts.
   const callerHits = [];

@@ -1187,6 +1187,22 @@ async function main() {
     // contract", not the suites containing one) and left the shipped default with zero regression
     // coverage from this file. `OVERCEIL'`/`REOPEN'` (the two steps that DID need baseline) moved to
     // `e2e/refusal-contract-baseline.mjs`'s own process; see that file's own top comment.
+    //
+    // Post-PASS sweep S-c (2026-09-08, reviewer gate): "no pin" is not "no assumption" -- on the
+    // ATTACH path (a previous script's own instance, still running), this run inherits whatever arm
+    // that prior script left the app pinned to. `e2e/refusal-contract-baseline.mjs` deliberately
+    // leaves a BASELINE-pinned app running when it finishes, exactly the class MUST-FIX 2 fixed for
+    // `residency-harness.mjs` (a harness inferring its arm instead of asserting it). A non-pinning
+    // READBACK, asserted, closes the same gap here: fails loudly, naming the actual value, rather
+    // than silently exercising the wrong arm under the "shipped default" label.
+    const armReadback = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyArm?.());
+    if (armReadback !== "candidate") {
+      throw new Error(
+        `regression: expected the shipped default residency arm ("candidate") but readback was ${JSON.stringify(armReadback)} -- ` +
+          `this run attached to an app a prior script left pinned to a different arm (no pin is applied here by design; ` +
+          `see this file's own comment above)`
+      );
+    }
 
     // Harness hygiene, not a walkthrough step: a previous run (or prior interactive use)
     // may have left a dismissable refusal banner up from before this run started. Clearing

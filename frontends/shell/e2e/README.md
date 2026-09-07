@@ -78,11 +78,15 @@ unreachable under the shipped candidate default. Launched as its OWN process, se
 `regression.mjs` and `filter-panel.mjs` -- the same choice `residency-harness.mjs`'s own S4 doc comment
 records elsewhere in this suite (a `page.reload()` mid-script to force a close-without-reopen has "no
 precedent anywhere in this harness suite" and was judged riskier than a fresh launch). The residency arm
-is pinned to `"baseline"` ONCE, before the first `openPath` this process ever issues (no dataset has ever
-opened in this process at that point, the only point `setResidencyArm` is guaranteed not to be refused --
-`residencyArm.ts`'s own "refused while a dataset is open" contract), with a `getResidencyArm()` readback
-asserted afterward, never trusting `setResidencyArm`'s own `{ok:true}` alone. Same **E2E-verified**
-evidence class; same watchdog/deadline discipline; leaves the app running afterward.
+is pinned to `"baseline"` ONCE, before the first `openPath` this process ever issues -- on a fresh
+launch no dataset has ever opened yet, so the pin cannot be refused there; on an ATTACH to an app a
+prior run left with a dataset open it CAN be refused (the arm/`datasetOpen` state lives in the app
+process, not this script's own -- `residencyArm.ts`'s own "refused while a dataset is open"
+contract), and that refusal fails the run loudly (a thrown error, non-zero exit) rather than silently
+proceeding under the wrong arm (post-PASS sweep, 2026-09-08: "guaranteed" corrected to this truthful,
+fail-loud statement). A `getResidencyArm()` readback is asserted afterward too, never trusting
+`setResidencyArm`'s own `{ok:true}` alone. Same **E2E-verified** evidence class; same
+watchdog/deadline discipline; leaves the app running afterward.
 
 ## Filter spec (sql-filter cut, P5)
 

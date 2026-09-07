@@ -1954,8 +1954,11 @@ async function runShortTraceForFieldSequence(page, consoleHandle, enabled) {
  * `main()` (the only caller) is invoked twice, as two SEPARATE processes/launches
  * (`node residency-harness.mjs --wire-identity` for baseline, `node residency-harness.mjs
  * --wire-identity --arm candidate` for candidate), reusing the SAME F2 fresh-launch discipline and
- * the SAME `if (cellArgs.arm === "candidate") { setResidencyArm("candidate") ... }` block `main()`
- * already runs for the plain measured-cell path, BEFORE this function or `runShortTraceForFieldSequence`
+ * the SAME unconditional `setResidencyArm(cellArgs.arm)` block `main()` already runs for the plain
+ * measured-cell path (`:2628-2639`, MUST-FIX 2, reviewer gate: made unconditional -- quote corrected
+ * 2026-09-08, post-PASS sweep S-b, from the pre-fix `if (cellArgs.arm === "candidate") {
+ * setResidencyArm("candidate") ... }` shape this comment used to name), BEFORE this function or
+ * `runShortTraceForFieldSequence`
  * ever calls `openFixture`. This was deliberately NOT implemented as a single in-process run
  * (`page.reload()` mid-check to close the first arm's dataset before switching) -- `setResidencyArm`
  * is refused while a dataset stays open and the arm would change, and this piece found no
@@ -2653,7 +2656,11 @@ async function main() {
     if (cellArgs.tileSize !== null) {
       if (cellArgs.arm !== "candidate") {
         console.warn(
-          `residency-harness: --tile-size ${cellArgs.tileSize} given but --arm is "${cellArgs.arm}", not ` +
+          // Post-PASS sweep nit (2026-09-08): "the effective arm", not "--arm is" -- `cellArgs.arm`
+          // is `"baseline"` by declared default (`parseCellArgs`'s own doc comment) whether or not a
+          // `--arm` flag was actually given on this invocation; the old wording implied the flag
+          // itself always names it, which is false for the common no-flag case.
+          `residency-harness: --tile-size ${cellArgs.tileSize} given but the effective arm is "${cellArgs.arm}", not ` +
             `"candidate" -- the tile grid selector has no effect on a baseline session (it never constructs ` +
             `a TileViewportStreamManager); NOT applied for this run.`
         );

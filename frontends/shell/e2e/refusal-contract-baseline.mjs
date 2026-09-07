@@ -26,8 +26,19 @@
 // comment records that a `page.reload()` mid-script to force a close-without-reopen has "no precedent
 // anywhere in this harness suite" and was judged riskier than a fresh launch-per-process -- the SAME
 // choice this file makes: baseline is pinned once, here, before the FIRST `openPath` this process ever
-// issues (no dataset has ever opened in THIS process at that point, so the pin cannot be refused), with
-// a `getResidencyArm()` READBACK asserted afterward -- never trusting `setResidencyArm`'s own `{ok:true}`
+// issues.
+//
+// **Post-PASS sweep S-d (2026-09-08, reviewer gate): the pin is NOT guaranteed to succeed --
+// truthfully, it fails LOUDLY instead.** The arm/`datasetOpen` state this pin depends on lives in the
+// APP PROCESS (`residencyArm.ts`'s module state), not in this script's own process -- on the LAUNCH
+// path (this script spawns a fresh app, `attachOrLaunch`'s own "no existing CDP listener" case) no
+// dataset has ever opened in that fresh app, so the pin cannot be refused there. But on the ATTACH
+// path (a previous script, or a previous run of this same script, left an app running with a dataset
+// still open -- `stepReopen`/`stepSlowCancel` below both leave one open when they return, by design),
+// the pin CAN be refused (`{ok:false, code:"dataset-open"}`). That refusal is not swallowed: `main()`
+// throws with the literal `setResidencyArm` result, exiting non-zero, rather than silently proceeding
+// under whatever arm the attached app happened to already be on. A `getResidencyArm()` READBACK is
+// asserted separately, after a successful `{ok:true}` -- never trusting the setter's own return value
 // alone (a caller-side bug could return `{ok:true}` while `currentArm` itself never actually moved;
 // the readback is the independent check that it did).
 //
@@ -583,12 +594,15 @@ async function main() {
     );
 
     // MUST-FIX 1 (reviewer gate, 2026-09-07): pinned ONCE, here, before the first `openPath` this
-    // process ever issues -- no dataset has ever opened in THIS process yet, the only point
-    // `setResidencyArm` is guaranteed not to be refused (`residencyArm.ts`'s own "refused while a
-    // dataset is open" contract). The readback (`getResidencyArm()`) is asserted SEPARATELY from the
-    // setter's own `{ok:true}` -- the reviewer's own instruction: "not `{ok:true}` trusted" -- so a
-    // caller-side bug that returns `{ok:true}` without `currentArm` actually having moved would still
-    // be caught here, not silently believed.
+    // process ever issues -- on a fresh LAUNCH, no dataset has ever opened, so the pin cannot be
+    // refused there. **Post-PASS sweep S-d (2026-09-08): NOT "guaranteed" on the ATTACH path** -- the
+    // arm/`datasetOpen` state lives in the APP process, not this script's own, so attaching to an
+    // app a prior run left with a dataset open CAN refuse this call; that refusal is not swallowed,
+    // it throws below, failing this run loudly rather than silently proceeding under the wrong arm
+    // (this file's own top comment has the full account). The readback (`getResidencyArm()`) is
+    // asserted SEPARATELY from the setter's own `{ok:true}` -- the reviewer's own instruction: "not
+    // `{ok:true}` trusted" -- so a caller-side bug that returns `{ok:true}` without `currentArm`
+    // actually having moved would still be caught here, not silently believed.
     const setResult = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
     if (!setResult || setResult.ok !== true) {
       throw new Error(`refusal-contract-baseline: setResidencyArm("baseline") failed: ${JSON.stringify(setResult)}`);
