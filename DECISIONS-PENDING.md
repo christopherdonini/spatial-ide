@@ -5,6 +5,30 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+56. **[The regression suite's K6 step is RED on unmodified main — a pre-existing failure the arm-flip
+    piece surfaced by running the suite on both arms; it is entry 47's mechanism seen by a machine.]**
+    Facts (item 7's fix batch, quiet machine, all apps closed after): K6 fails identically —
+    `last seen: {"text":null,"belowResolution":false}` — on (i) the unmodified main checkout
+    (baseline, the only arm it has), (ii) the flip branch on candidate, (iii) the flip branch pinned
+    to baseline. A9′ is flaky across all three (arm-independent). The reviewer's code-level cause,
+    from `src/canvas/pickResolution.ts` `reevaluateStandingHoverOnCameraChange`: when a camera change
+    leaves the feature above the pick threshold, the standing readout is CLEARED (returns `null`);
+    every later change sees `standing === null` and emits nothing — so `stepK6`'s ≥8 DISCRETE wheel
+    events clear the id on notch 1 and the below-resolution refusal is never reached. A human's single
+    continuous wheel gesture (your L7 "fine", 2026-09-06/07) is coalesced by deck.gl into one change
+    that crosses the threshold, which is why the walkthrough passes and the E2E does not. This is the
+    behaviour you described at L8 and again on 2026-09-07 ("as long as I can tell on which feature I'm
+    hovering, there's no reason to remove the id") — entry 47, ruled (b) re-pick on camera settle for
+    the NEXT cut. **Options:** (a) pull entry 47 forward into this cut (re-pick on settle would make
+    K6 pass by design and honours your criterion; it is Item C's escape hatch, small but product code,
+    reviewer-gated); (b) re-aim `stepK6` to the CURRENT contract (one continuous zoom crossing the
+    threshold → refusal text; discrete notches → clear) and keep 47 next cut, with KNOWN-LIMITATIONS
+    entry 13 already naming it; (c) leave K6 red and declared — not recommended (a red step in the
+    suite the release cites). The flip piece does not depend on this: it merges with K6 pre-existing
+    and named. Recommendation: **(b) now, (a) as the next cut's first piece** — the E2E must test the
+    shipped contract, and the contract you want is 47's. Touches: `e2e/regression.mjs` `stepK6`
+    (b), or `pickResolution.ts` + a K6 re-aim (a).
+
 55. **[Release cut item 1 (ADR-020) — RULE 7 REACHED after two failed gates; the origin-selector DESIGN
     is your decision, and a dependency edge needs your word regardless.]** Full account:
     `RELEASE-0.1.md` Amendment 4. The short form: the piece as shipped (`5d22d7a`) derives the origin
