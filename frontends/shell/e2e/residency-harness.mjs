@@ -119,6 +119,28 @@ function effectiveSettleTimeoutMs(stepTimeoutMs) {
   return resolvedPerStepSettleTimeoutMs(FIXTURE_PATH, stepTimeoutMs, perStepWatchdogOverrideMs);
 }
 
+/**
+ * Reviewer M2(a)/S-a (entry-40 pass): reads `appLogPath` and extracts `lib.rs`'s own
+ * `[spatial-ide-shell] session log: <path>` startup line via `lastSessionLogPathFromAppLog`
+ * (`residencyTrace.mjs`, pure, unit-tested there) -- shared between the attach-time read (right
+ * after `attachConsole`, `main()` below) and the pre-flight's own re-attempt at pre-flight time
+ * (the app-log file is only ever MORE complete by then, several seconds and a full `open-drain`
+ * step later -- never less complete). Returns `{ path, reason }`; `reason` is `null` iff `path` is
+ * non-null -- never a guessed path, a missing file and a missing line are both named honestly.
+ */
+function resolveSessionLogPath(appLogPath) {
+  try {
+    const path = lastSessionLogPathFromAppLog(readFileSync(appLogPath, "utf8"));
+    if (path) return { path, reason: null };
+    return {
+      path: null,
+      reason: `no "[spatial-ide-shell] session log: <path>" line found in ${appLogPath}`,
+    };
+  } catch (e) {
+    return { path: null, reason: `could not read ${appLogPath}: ${e.message}` };
+  }
+}
+
 // Disclosed approximations -- see this file's own top comment.
 const ZOOM_WHEEL_DELTA = -1200; // negative deltaY == "scroll up" == zoom in, in deck.gl's default wheel handling
 const ZOOM_OUT_WHEEL_DELTA = 1200;
@@ -237,7 +259,14 @@ function gitRevParseHead() {
  * regardless of any per-step override, so a large override (the entry-40 run's own one-hour value)
  * could silently outrun it, the exact unsoundness this refusal exists to make impossible rather
  * than merely undocumented. `--control` has no such problem (it goes through the SAME
- * `trialWatchdogMsForStepBound` formula every other run does) and is not refused. */
+ * `trialWatchdogMsForStepBound` formula every other run does) and is not refused.
+ *
+ * Reviewer nit iii (entry-40 pass, post-gate sweep): `--require-pool-poll` combined with
+ * `--wire-identity` is refused the same way -- `--wire-identity`'s own branch (`main()`) returns
+ * before `open-drain` ever runs (`runFieldSequenceIdentityCheck` is its own separate camera script,
+ * never the measured trace this pre-flight sits inside), so the pre-flight block that reads
+ * `--require-pool-poll` would simply never execute -- a silent no-op an operator asking for the
+ * pre-flight would not expect, refused loudly here instead. */
 function parseCellArgs(argv) {
   let arm = "baseline";
   let coldOrWarm = "warm"; // declared default -- see this function's own doc comment on why
@@ -262,6 +291,13 @@ function parseCellArgs(argv) {
       "--per-step-watchdog-ms is not sound combined with --wire-identity: the identity-guard's own " +
         "outer watchdog is a hard-coded 600_000ms regardless of the per-step override, so a large " +
         "override could silently outrun it (reviewer S1). Run these separately."
+    );
+  }
+  if (argv.includes("--require-pool-poll") && argv.includes("--wire-identity")) {
+    throw new Error(
+      "--require-pool-poll is not sound combined with --wire-identity: that mode returns before " +
+        "open-drain ever runs, so the pre-flight would silently never execute (reviewer nit iii). " +
+        "Run these separately."
     );
   }
   return { arm, coldOrWarm, machineAttestation, tileSize, perStepWatchdogMs };
@@ -2202,22 +2238,24 @@ async function main() {
   // Reviewer M2(a) (entry-40 pass): `lib.rs`'s own startup line (`[spatial-ide-shell] session log:
   // <path>`) is written to stderr, captured into `e2e/out/app.log` (`tauri dev`) or
   // `e2e/out/measure-app.log` (`--measure-build`) by `attachOrLaunch`/`attachOrLaunchExe`'s own
-  // raw-fd `stdio` redirect (`lib.mjs`) -- by the time `attachOrLaunch(Exe)` resolves above (CDP is
-  // up, a page was found), the Rust `setup()` closure that prints this line has already run.
-  // `lastSessionLogPathFromAppLog` (`residencyTrace.mjs`, pure, unit-tested there) does the actual
-  // parsing; this is only the IO + null-reason bookkeeping. Never fabricated: a missing app-log file
-  // or a missing line both record `null` plus a stated reason, never a guessed path.
+  // raw-fd `stdio` redirect (`lib.mjs`).
+  //
+  // Reviewer S-a (post-gate sweep): an earlier version of this comment claimed the Rust `setup()`
+  // closure that prints this line "has already run" by the time `attachOrLaunch(Exe)` resolves
+  // above -- true for the measure build ONLY (`lib.rs`'s own `#[cfg(feature = "measure-build")]`
+  // block explicitly builds that build's webview INSIDE `setup()`, strictly AFTER this line already
+  // printed earlier in the same closure -- verified there, not assumed), NOT proven for plain
+  // `tauri dev`: `lib.rs`'s own measure-build doc comment states, for the declarative
+  // `create: true` window `tauri dev` uses, that Tauri's internal `setup()` "creates every
+  // `app.config().app.windows` entry whose `create` is `true` BEFORE this closure ever runs" --
+  // i.e. for `tauri dev` the window (and whatever CDP attachability follows from it) may already
+  // exist before, or mid-way through, `setup()`, so this read can genuinely race the line being
+  // printed. This is exactly why the value read here is only a FIRST attempt, re-resolved instead
+  // of trusted at the pre-flight's own later checkpoint (`resolveSessionLogPath`'s second call
+  // site, below) -- never fabricated either way: a missing app-log file or a missing line both
+  // record `null` plus a stated reason, never a guessed path.
   const appLogPath = join(OUT_DIR, measureBuildExePath ? "measure-app.log" : "app.log");
-  let sessionLogPath = null;
-  let sessionLogPathReason = null;
-  try {
-    sessionLogPath = lastSessionLogPathFromAppLog(readFileSync(appLogPath, "utf8"));
-    if (!sessionLogPath) {
-      sessionLogPathReason = `no "[spatial-ide-shell] session log: <path>" line found in ${appLogPath}`;
-    }
-  } catch (e) {
-    sessionLogPathReason = `could not read ${appLogPath}: ${e.message}`;
-  }
+  const { path: sessionLogPath, reason: sessionLogPathReason } = resolveSessionLogPath(appLogPath);
 
   // Entry 31 / attribution-pass §6: the opt-in queue-depth sampler. One page.evaluate per tick
   // reading the two EXISTING E2E hooks (`residencyInFlightStreamCount`, `residencyQueuedTileCount`
@@ -2567,38 +2605,64 @@ async function main() {
         "residency-harness: --require-pool-poll pre-flight -- waiting 3000ms past dataset open, then checking the session log"
       );
       await sleep(3000);
+      // Reviewer S-a: `sessionLogPath` (captured right after attach, above) may still be `null` --
+      // the app-log file may not have carried the startup line yet at that early point (see this
+      // file's own doc comment on `resolveSessionLogPath`'s attach-time call site for why that is
+      // not proven to have happened yet under plain `tauri dev`). By pre-flight time -- after
+      // `open-drain` has opened and settled the dataset, plus this 3000ms sleep -- the app-log file
+      // is only ever MORE complete, never less, so it is worth one more attempt here rather than
+      // trusting only the earlier value.
+      let resolvedPath = sessionLogPath;
+      let resolvedPathReason = sessionLogPathReason;
+      if (!resolvedPath) {
+        const retry = resolveSessionLogPath(appLogPath);
+        resolvedPath = retry.path;
+        resolvedPathReason = retry.reason;
+      }
       let preflightOk = false;
       let preflightReason = null;
-      if (!sessionLogPath) {
-        preflightReason = `no session log path recorded (${sessionLogPathReason ?? "unknown reason"})`;
+      if (!resolvedPath) {
+        preflightReason = `session log path could not be resolved even at pre-flight time (${resolvedPathReason ?? "unknown reason"})`;
       } else {
         try {
-          preflightOk = readFileSync(sessionLogPath, "utf8").includes("producer-pool-poll");
+          preflightOk = readFileSync(resolvedPath, "utf8").includes("producer-pool-poll");
           if (!preflightOk) {
-            preflightReason = `session log at ${sessionLogPath} contains no "producer-pool-poll" line`;
+            preflightReason = `session log at ${resolvedPath} contains no "producer-pool-poll" line`;
           }
         } catch (e) {
-          preflightReason = `could not read session log at ${sessionLogPath}: ${e.message}`;
+          preflightReason = `could not read session log at ${resolvedPath}: ${e.message}`;
         }
       }
       evidence.cell.poolPollPreflight = {
         required: true,
         ok: preflightOk,
         reason: preflightReason,
+        // Reviewer S-a: both the attach-time and the pre-flight-time resolution kept, so a reader
+        // can see the full history rather than only the value this pre-flight ended up using.
+        sessionLogPathAtAttach: sessionLogPath,
+        sessionLogPathAtAttachReason: sessionLogPathReason,
+        sessionLogPathAtPreflight: resolvedPath,
         checkedAt: new Date().toISOString(),
       };
       if (!preflightOk) {
+        // Reviewer S-a: two DISTINCT reasons, never conflated. `resolvedPath` present (the log was
+        // read, and genuinely lacks the line) is the only case that has actually ESTABLISHED the
+        // instrument emitted nothing; `resolvedPath` absent means the check itself could not run at
+        // all -- a claim of absence would not be true, so it gets its own, honest reason instead.
+        const invalidationReason = resolvedPath
+          ? "pool-poll instrument emitted nothing"
+          : "pool-poll pre-flight could not be evaluated";
         console.error(
-          `residency-harness: --require-pool-poll PRE-FLIGHT FAILED (${preflightReason}) -- invalidating the cell before any trace step runs`
+          `residency-harness: --require-pool-poll PRE-FLIGHT FAILED (${invalidationReason}: ${preflightReason}) -- invalidating the cell before any trace step runs`
         );
         evidence.rows = [];
         evidence.invalidated = true;
         // Before any trace step ever ran -- not a real CAMERA_TRACE_STEPS index (the existing
         // per-step invalidation path uses a real index; this pre-flight runs earlier than that).
         evidence.invalidatedAtStep = null;
-        evidence.invalidationReason = "pool-poll instrument emitted nothing";
+        evidence.invalidationReason = invalidationReason;
         openDrainRow.status = "unmeasured";
-        openDrainRow.wholeTrialInvalidatedReason = `pool-poll instrument emitted nothing (${preflightReason})`;
+        openDrainRow.wholeTrialInvalidatedReason = `${invalidationReason} (${preflightReason})`;
         evidence.anyRowUnmeasured = true;
         process.exitCode = 1;
         return;

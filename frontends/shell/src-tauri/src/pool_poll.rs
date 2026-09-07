@@ -27,20 +27,30 @@
 //! true there).
 //!
 //! **Structural cost, per tick** (no evaluative claim -- docs/08: no numbers, no perf claim without
-//! a measurement): three short, independent lock acquisitions on the pool's own state mutex
-//! (`active_leases()`/`live_connections()`/`idle_connections()` each call `self.state.lock()`
-//! separately -- `engine/src/pool.rs:383`, `:379`, `:375` -- not one shared acquisition across the
-//! three), one formatted `String`, and one blocking `SessionLog::append` (a `write_all` + `flush`
-//! under a `Mutex<File>`, `state.rs:43-55`) that `poll_loop` below moves onto
-//! `tokio::task::spawn_blocking` rather than running inline on the async worker thread (`docs/01`
-//! principle 7: a tokio worker must not block on synchronous file IO -- this IS the dominant
-//! per-tick cost, reviewer M1). That state mutex is the SAME lock the lease acquire/release path
-//! takes (`engine/src/pool.rs`), so this poll does contend for it, however briefly -- not "no effect
-//! on the data path" in the strict sense. The three reads are also not an atomic snapshot: each is
-//! its own lock acquisition, so `live_connections()` can disagree with `active_leases() +
-//! idle_connections()` if a lease is acquired or released between them -- harmless for
-//! PASS-PREREGISTRATION.md §4's own pre-committed readings, each of which reads one field for what
-//! it reports on its own, never asserts the three as a consistent triple.
+//! a measurement; reviewer S-c/nits ii/iv, post-gate sweep: counts corrected to match the code
+//! exactly, since an earlier version of this comment undercounted them): three short, independent
+//! lock acquisitions on the pool's own state mutex (`active_leases()`/`live_connections()`/
+//! `idle_connections()` each call `self.state.lock()` separately -- `engine/src/pool.rs:383`,
+//! `:379`, `:375` -- not one shared acquisition across the three); four `String` allocations, not
+//! one -- two here (`format_pool_poll_line`'s own return value, and the `to_string()` copy captured
+//! into the blocking closure below, `poll_loop`) and two more inside `SessionLog::append` itself
+//! (`state.rs:43-55`: `message.replace('\n', "\\n")`, then the `format!` that wraps it); one
+//! `AppHandle` clone; and one spawned task (`tokio::task::spawn_blocking`). That spawn exists
+//! because `SessionLog::append`'s `write_all` + `flush` under a `Mutex<File>` is THE ONLY BLOCKING
+//! SYSCALL IN THE TICK (not "the dominant per-tick cost" -- an unmeasured comparison against the
+//! lock acquisitions/allocations above, which this piece does not make) -- `poll_loop` moves it onto
+//! the blocking pool rather than running it inline on the async worker thread (`docs/01` principle
+//! 7: a tokio worker must not block on synchronous file IO). That state mutex is the SAME lock the
+//! lease acquire/release path takes (`engine/src/pool.rs`), so this poll does contend for it,
+//! however briefly -- not "no effect on the data path" in the strict sense. The three reads are also
+//! not an atomic snapshot: each is its own lock acquisition, so `live_connections()` can disagree
+//! with `active_leases() + idle_connections()` if a lease is acquired or released between them --
+//! harmless for PASS-PREREGISTRATION.md §4's own pre-committed readings, each of which reads one
+//! field for what it reports on its own, never asserts the three as a consistent triple. One more
+//! disclosed gap: the persisted line's own `<unix-ms>` prefix is `SessionLog::append`'s own
+//! `SystemTime::now()` call, taken ON THE BLOCKING THREAD at APPEND time -- after the tick's three
+//! counts were already sampled and `spawn_blocking` scheduled -- never the instant those counts were
+//! actually read.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -105,6 +115,16 @@ impl PoolPollTasks {
     /// Replacing an existing entry under the same key ABORTS the replaced task: `start` called twice
     /// for the same `dataset` without an intervening `stop()` must not leave the first poll running,
     /// silently orphaned, forever.
+    ///
+    /// **Reviewer S-b (post-gate sweep): this replace path is reachable, not merely theoretical**
+    /// (an earlier version of this comment left the question open rather than picking an answer).
+    /// `open_dataset`/`close_dataset` (`commands.rs`) always pair one `start` with one `stop` per
+    /// dataset, but nothing in THIS module enforces that a second `start` for the same key never
+    /// happens without an intervening `stop` -- so the replace-and-abort path here is real, and
+    /// `supervise`'s own `forget_if_current` (below) exists specifically so the FIRST task's own
+    /// supervisor, observing its abort, can never remove (or have removed) the SECOND, live task's
+    /// map entry under the same key -- it checks the entry is still its own `AbortHandle` (by
+    /// `tokio::task::Id`) before touching the map at all.
     fn record(&self, dataset: String, handle: tokio::task::AbortHandle) {
         let previous = self.0.lock().unwrap_or_else(|e| e.into_inner()).insert(dataset, handle);
         if let Some(previous) = previous {
@@ -114,10 +134,27 @@ impl PoolPollTasks {
 
     /// Aborts and forgets the poll task for `dataset`. A no-op if none is running (e.g. `dataset`
     /// was never opened through the gated `open_dataset` path, was already stopped, or `poll_loop`
-    /// already exited on its own and `supervise` already removed it -- reviewer nit vii).
+    /// already exited on its own and `supervise` already removed it -- reviewer nit vii). Used by
+    /// `commands::close_dataset` to actively cancel a running poll -- always aborts whatever is
+    /// currently mapped, unconditionally, unlike `forget_if_current` below.
     pub fn stop(&self, dataset: &str) {
         if let Some(handle) = self.0.lock().unwrap_or_else(|e| e.into_inner()).remove(dataset) {
             handle.abort();
+        }
+    }
+
+    /// Reviewer S-b: removes the map entry for `dataset` ONLY IF it is still the entry named by
+    /// `expected_id` -- called by `supervise` (below) once ITS OWN task has already exited, to clean
+    /// up a now-stale map entry (reviewer nit vii) WITHOUT racing a newer `start()` call for the same
+    /// key: if `record` already replaced this entry with a second, live task's own `AbortHandle`
+    /// (`record`'s own doc comment on when that happens), this refuses to touch it -- only an entry
+    /// that STILL matches `expected_id` is ever removed. No `.abort()` call is needed here (unlike
+    /// `stop()`): by the time `supervise` reaches this, its own task has already exited on its own --
+    /// there is nothing left to cancel, only a stale reference to clean up.
+    fn forget_if_current(&self, dataset: &str, expected_id: tokio::task::Id) {
+        let mut tasks = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        if tasks.get(dataset).is_some_and(|current| current.id() == expected_id) {
+            tasks.remove(dataset);
         }
     }
 }
@@ -154,10 +191,13 @@ async fn poll_loop(app: AppHandle, dataset: String) -> &'static str {
         );
         let Some(fields) = line.strip_prefix(POOL_POLL_LOG_CLASS) else { continue };
         let fields = fields.trim_start().to_string();
-        // Reviewer M1: the dominant per-tick cost -- `write_all` + `flush` under `SessionLog`'s own
-        // `Mutex<File>` (`state.rs:43-55`) -- moved off this async worker thread onto the blocking
-        // pool (`docs/01` principle 7: a tokio worker must not block on synchronous file IO). A
-        // fresh `AppHandle` clone is captured (rather than moving a borrowed `State`) because
+        // Reviewer M1 (this comment corrected by reviewer S-c, post-gate sweep): `write_all` +
+        // `flush` under `SessionLog`'s own `Mutex<File>` (`state.rs:43-55`) is the only blocking
+        // syscall in this tick -- moved off this async worker thread onto the blocking pool
+        // (`docs/01` principle 7: a tokio worker must not block on synchronous file IO), not because
+        // it is claimed to be the "dominant" cost against the lock acquisitions/allocations above
+        // (this module's own top doc comment states the fuller, corrected count). A fresh
+        // `AppHandle` clone is captured (rather than moving a borrowed `State`) because
         // `State<'_, T>` is tied to the borrow that produced it and cannot cross into a `'static`
         // `spawn_blocking` closure -- `AppHandle` itself is `Send + Sync + 'static` and re-resolves
         // the same state inside the blocking closure.
@@ -175,11 +215,22 @@ async fn poll_loop(app: AppHandle, dataset: String) -> &'static str {
 /// `poll_loop`'s own `JoinHandle` and logs exactly one `producer-pool-poll stopped reason=<...>`
 /// line covering all four cases -- `poll_loop`'s own graceful returns (`host-missing`/
 /// `catalog-miss`), an external `stop()` call (`closed`, via `JoinError::is_cancelled`), or a
-/// genuine panic inside the tick body (`panic`, via `JoinError::is_panic`) -- then removes any
+/// genuine panic inside the tick body (`panic`, via `JoinError::is_panic`) -- then cleans up any
 /// still-present map entry for `dataset` (reviewer nit vii: a graceful `host-missing`/
 /// `catalog-miss`/`panic` exit is not caused by `stop()`, so nothing else would otherwise clear the
-/// map; a `stop()`-caused `closed` exit finds nothing left to remove, since `stop()` already did).
+/// map).
+///
+/// **Reviewer S-b (post-gate sweep): uses `forget_if_current`, never `stop`, for that cleanup.**
+/// `stop` unconditionally aborts+removes whatever is CURRENTLY mapped under `dataset` -- correct
+/// for `commands::close_dataset`'s own use (an operator-directed close, always meant to hit whatever
+/// is live right now), but wrong here: if `record` already replaced this task's own map entry with a
+/// SECOND, live task's `AbortHandle` under the same key (`record`'s own doc comment on when that
+/// happens), THIS supervisor calling `stop` would abort that second, live task -- a bug an earlier
+/// version of this function had. `forget_if_current` only ever touches the entry if it is still
+/// this task's own (compared by `tokio::task::Id`), so a superseded supervisor can never affect a
+/// newer poll under the same key.
 async fn supervise(join: tokio::task::JoinHandle<&'static str>, app: AppHandle, dataset: String) {
+    let task_id = join.id();
     let reason = match join.await {
         Ok(reason) => reason,
         Err(e) if e.is_cancelled() => "closed",
@@ -195,7 +246,7 @@ async fn supervise(join: tokio::task::JoinHandle<&'static str>, app: AppHandle, 
     })
     .await;
     if let Some(tasks) = app.try_state::<PoolPollTasks>() {
-        tasks.stop(&dataset);
+        tasks.forget_if_current(&dataset, task_id);
     }
 }
 
@@ -260,5 +311,31 @@ mod tests {
         tasks.stop("ds-a");
         let second_result = second.await;
         assert!(second_result.unwrap_err().is_cancelled());
+    }
+
+    /// Reviewer S-b: `forget_if_current` must NOT remove a second, live task's map entry just
+    /// because a superseded first task's own id is passed in -- exactly the race a `supervise`
+    /// calling plain `stop()` used to cause (an earlier version of this function did).
+    #[tokio::test]
+    async fn forget_if_current_never_touches_a_map_entry_it_no_longer_owns() {
+        let tasks = PoolPollTasks::new();
+        let first = tokio::spawn(std::future::pending::<()>());
+        let first_id = first.abort_handle().id();
+        tasks.record("ds-a".to_string(), first.abort_handle());
+        // A second `record` under the same key -- `record`'s own replace-and-abort path.
+        let second = tokio::spawn(std::future::pending::<()>());
+        tasks.record("ds-a".to_string(), second.abort_handle());
+        assert_eq!(tasks.0.lock().unwrap().len(), 1); // the second's entry
+        // The FIRST task's own (superseded) id must not evict the second's still-current entry.
+        tasks.forget_if_current("ds-a", first_id);
+        assert_eq!(tasks.0.lock().unwrap().len(), 1, "a superseded id must never remove a live entry");
+        // The SECOND task's own id, correctly, does remove its own still-current entry.
+        let second_id = second.abort_handle().id();
+        tasks.forget_if_current("ds-a", second_id);
+        assert_eq!(tasks.0.lock().unwrap().len(), 0);
+        first.abort();
+        let _ = first.await;
+        second.abort();
+        let _ = second.await;
     }
 }

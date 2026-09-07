@@ -211,12 +211,19 @@ export function resolvedPerStepSettleTimeoutMs(fixturePath, stepTimeoutMs, overr
 export const TRIAL_WATCHDOG_MS = 180_000;
 
 /**
- * Amendment 12's own `(step count + 1) * per-step bound` outer-watchdog formula, extracted as a
- * pure function so it is directly testable (previously inline in `residency-harness.mjs`'s `main()`
- * only). Entry-40 pass: when `perStepBoundMs` is a `--per-step-watchdog-ms` override, this is the
- * arithmetic spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md section 2 needs -- its
- * own run preconditions say the overall watchdog and the rustdesk-guard backstop windows are set at
- * least as long as the per-step override, paraphrased here rather than quoted (see
+ * Amendment 12's own outer-watchdog scaling, quoted verbatim (RESIDENCY-PREREGISTRATION.md:542):
+ * "the outer trial watchdog scales to (step count + 1) × the fixture's per-step bound" -- this
+ * function is this file's OWN restatement of that sentence over its own parameter names
+ * (`stepCount`, `perStepBoundMs`), not a second quotation of it (reviewer nit v: an earlier version
+ * of this comment rendered the formula as `(step count + 1) * per-step bound` -- a plain `*` for the
+ * source's `×`, and dropping "the fixture's" -- while still implying it was Amendment 12's own
+ * words; fixed here to quote the real sentence exactly, once, and call everything after it this
+ * file's own restatement). Extracted as a pure function so the formula is directly testable
+ * (previously inline in `residency-harness.mjs`'s `main()` only). Entry-40 pass: when
+ * `perStepBoundMs` is a `--per-step-watchdog-ms` override, this is the arithmetic
+ * spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md section 2 needs -- its own run
+ * preconditions say the overall watchdog and the rustdesk-guard backstop windows are set at least as
+ * long as the per-step override, paraphrased here rather than quoted (see
  * `parsePerStepWatchdogMsArg`'s own doc comment above for why that document is out of this file's
  * citation-integrity scan) -- `(stepCount + 1) * perStepBoundMs` is always `>= stepCount *
  * perStepBoundMs` for any non-negative `stepCount`, so the outer bound can never be smaller than

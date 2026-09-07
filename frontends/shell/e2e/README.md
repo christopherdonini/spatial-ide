@@ -457,20 +457,36 @@ use a cell run with this flag for a scored measurement.
 **`--require-pool-poll`** (entry-40 empirical producer pass, reviewer M2(b)): adds a pre-flight,
 run once at cell start right after the `open-drain` step and strictly before any trace step --
 waits at least 3000ms past the dataset's own open, then reads the running process's own session log
-(`evidence.cell.sessionLogPath`, below) and asserts it contains at least one `producer-pool-poll`
-line. If not, the cell is INVALIDATED (`evidence.invalidated = true`,
-`evidence.invalidationReason = "pool-poll instrument emitted nothing"`) before any trace step ever
-runs, rather than burning a full trial on a cell whose instrument never emitted. The pre-flight's own
-result (`{ required, ok, reason, checkedAt }`) is recorded at `evidence.cell.poolPollPreflight`
-(`null` when the flag was not given). Ordinary harness runs are entirely unaffected without this
-flag; the entry-40 run itself passes it.
+and asserts it contains at least one `producer-pool-poll` line. **Refused combined with
+`--wire-identity`** (reviewer nit iii): that mode returns before `open-drain` ever runs, so the
+pre-flight would silently never execute -- `parseCellArgs` throws loudly rather than accept the
+combination, the same way `--per-step-watchdog-ms` + `--wire-identity` is refused above.
+
+If the log genuinely lacks the line, the cell is INVALIDATED with
+`evidence.invalidationReason = "pool-poll instrument emitted nothing"`. **Reviewer S-a:** if the
+session log's own path could not be resolved at all (even after a fresh re-read of the app-log file
+at pre-flight time -- the file is only ever more complete by then, an earlier attach-time attempt is
+never trusted alone), the cell is instead invalidated with the DISTINCT reason
+`"pool-poll pre-flight could not be evaluated"` -- never the "emitted nothing" reason, which would
+assert something never actually established. Either way this happens before any trace step ever
+runs, rather than burning a full trial on a cell this pre-flight could not vouch for. The pre-flight's
+own result -- `{ required, ok, reason, sessionLogPathAtAttach, sessionLogPathAtAttachReason,
+sessionLogPathAtPreflight, checkedAt }` -- is recorded at `evidence.cell.poolPollPreflight` (`null`
+when the flag was not given), keeping both the attach-time and the pre-flight-time resolution
+attempts visible. Ordinary harness runs are entirely unaffected without this flag; the entry-40 run
+itself passes it.
 
 **`evidence.cell.sessionLogPath`/`sessionLogPathReason`** (reviewer M2(a)): the running shell
 process's own session-log path, read back from `lib.rs`'s own startup line (`[spatial-ide-shell]
 session log: <path>`, stderr, captured by `attachOrLaunch`/`attachOrLaunchExe` into
 `e2e/out/app.log`/`measure-app.log`) via `residencyTrace.mjs`'s pure `lastSessionLogPathFromAppLog`.
 `sessionLogPath` is `null`, with `sessionLogPathReason` stating why, if the app-log file could not be
-read or carried no such line -- never a guessed or fabricated path.
+read or carried no such line -- never a guessed or fabricated path. **Reviewer S-a:** this is read
+once, right after attach -- proven to postdate the Rust `setup()` closure that prints the line for
+the measure build only, NOT proven for plain `tauri dev` (`residency-harness.mjs`'s own doc comment
+at this read site has the full account of why), so a `null` here is expected in some `tauri dev`
+runs and does not by itself mean anything failed -- `--require-pool-poll`'s own pre-flight (above)
+re-attempts this same read at its own, later checkpoint before treating it as unresolved.
 
 **Entry 31 (2026-09-03, post-campaign) -- three additions with three different protocol
 standings, split deliberately (this change's own reviewer gate, should-fix 7):**
