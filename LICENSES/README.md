@@ -109,3 +109,25 @@ declared `AGPL-3.0-or-later` here**, on the conservative reading, because:
 
 If the intent is that either directory *is* the Apache-2.0 layer, that is a one-line change to its
 package manifest and its SPDX headers — and it is the human's call, not this file's.
+
+## Third-party *data*: the EPSG Geodetic Parameter Dataset, © IOGP
+
+*Repository-level acknowledgement, entry 51 (2026-09-07). Grepped first for an existing shell/app
+notice or about surface (`frontends/shell/src` — nothing under "About" or "third-party" naming
+one); none exists, so this file is the repository-level place per the piece's own instruction.
+Full record, the verbatim terms quotes, and the numeric-equivalence verification:
+`DEPENDENCY-LICENSES.md`, "Third-party data terms (not a package): the EPSG Geodetic Parameter
+Dataset (IOGP)".*
+
+One CRS definition in this repository (`engine/src/crs-catalog.json`'s `epsg-2056` entry,
+compiled into the engine binary and carried in every published bundle's manifest that has a
+source definition — `kernel/src/bundle/mod.rs`'s `crs_source_definition`) is derived from the
+**EPSG Geodetic Parameter Dataset, © IOGP** (International Association of Oil & Gas Producers),
+used under the EPSG Terms of Use: <https://epsg.org/terms-of-use.html>.
+
+This acknowledges IOGP's ownership of that dataset, and informs anyone reading this file — as a
+repository reader or as the recipient of a published bundle whose `viewer/NOTICE.txt` repeats
+this same acknowledgement (`renderer/bundle-viewer/notice.mjs`'s `notice()`) — of those Terms of
+Use, per the terms' own "Ownership… must be acknowledged in any publication or transmission…" and
+"You are obliged to inform anyone… of these Terms of Use" clauses (quoted verbatim in
+`DEPENDENCY-LICENSES.md`).

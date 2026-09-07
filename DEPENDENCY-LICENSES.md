@@ -191,6 +191,58 @@ equivalent → (1)/(2) attribute it as EPSG data, with the IOGP ownership acknow
 terms' URL; the two older parameter names are reported to that piece as a conscious choice (align
 to v12.013's names, or keep and state the dataset version they came from).
 
+**Obligations (1) and (2) satisfied for the two live channels, 2026-09-07 (entry 51 (1)+(2), the
+gated piece the branch above named).** "Live channel" means a route this repository actually
+transmits the definition through *today*. There are two, and both now carry the acknowledgement
+and the terms URL:
+
+- **Acknowledgement of IOGP ownership + terms URL beside the catalog entry** —
+  `engine/src/crs-catalog.json:8-12` (a sibling `attribution` field on `epsg-2056`, not inside
+  `definition`); parsed and typed at `engine/src/crs_catalog.rs:42` (`pub struct Attribution`) and
+  `engine/src/crs_catalog.rs:77` (`CatalogEntry.attribution: Option<Attribution>`); asserted for
+  every EPSG-authority entry by `engine/src/crs_catalog.rs:248`
+  (`every_epsg_authority_entry_carries_attribution_with_the_terms_url`). Read via manual
+  `field_str` calls (`crs_catalog.rs::parse_catalog`), the same style every other field in this
+  module already uses — no `serde::Deserialize` derive, no new crate dependency.
+- **Live channel 1 — published bundles.** `renderer/bundle-viewer/notice.mjs:132-145` (the
+  `notice()` function's "COORDINATE REFERENCE SYSTEM DATA" section, extracted out of `build.mjs`
+  so `scripts/notice.test.mjs` can guard it directly), which becomes every published bundle's
+  `viewer/NOTICE.txt`, ahead of the third-party-code section.
+- **Live channel 2 — repository readers.** `LICENSES/README.md:113-133` ("Third-party *data*: the
+  EPSG Geodetic Parameter Dataset, © IOGP"), added because `frontends/shell/src` carries no
+  existing about/notice surface (grepped for "About"/"third-party", nothing found).
+- **A third channel is OWED, not yet live: the packaged shell app.** A packaged Tauri build of
+  `frontends/shell` ships the `spatial-engine` binary with `crs-catalog.json` compiled in
+  (`include_str!`, `crs_catalog.rs`) — the definition travels with it — but the app has no notice
+  surface today, and the viewer is not wired into a packaged build: `publish.rs:786-794` records
+  that nothing wires the bundle viewer into `tauri.conf.json`'s `bundle.resources` and that the
+  packaging decision is out of that piece's scope. When packaging lands, this channel needs the same acknowledgement the
+  other two already carry; recorded here so it is not forgotten rather than assumed covered by the
+  other two.
+- **Verification (3) reference** — the "Verification (3)" paragraph above and
+  `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
+  `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not
+  re-quoted.
+- **The 8813/8815 parameter-name choice, recorded as a choice.** The shipped definition keeps its
+  original parameter names ("Azimuth of initial line" / "Scale factor on initial line") rather than
+  aligning to v12.013's later names ("Azimuth at projection centre" / "Scale factor at projection
+  centre") — see the "Verification (3)" paragraph above and its `README.md` counterpart
+  (`spikes/entry51-epsg2056-equivalence/README.md`). **Kept as shipped, not realigned**, because
+  aligning would edit `definition`'s bytes, which would also edit `engine/tests/data/epsg2056.projjson`
+  (the two are pinned byte-identical, `crs_catalog::tests::epsg_2056_catalog_entry_is_byte_identical_…`)
+  and move the pinned `EPSG_2056_HASH` literal — exactly the gated, conscious-hash-update change
+  this piece's brief said not to make unqueued. **Which EPSG dataset version the shipped names
+  themselves came from is unknowable**: the production command that generated
+  `engine/tests/data/epsg2056.projjson` is unrecorded (no generator command or PROJ version cited
+  anywhere in the repository, per the "What the repository holds and ships" paragraph above), so
+  there is no version to *state* the shipped names came from — only that they predate v12.013's
+  renaming.
+- **Hash-coverage decision:** `EPSG_2056_HASH` (`engine/src/crs_catalog.rs`, the
+  `epsg_2056_entry_hash_is_pinned` test) is unchanged. `CatalogEntry.hash` is computed as
+  `sha256_hex(&definition)` only (`parse_catalog`, `engine/src/crs_catalog.rs`) — `attribution` is
+  a sibling JSON field, never part of that hash's input — so adding it does not move the pinned
+  literal; no conscious hash update was needed or made.
+
 ## Full inventory
 
 ### workspace (kernel, engine, renderer, protocol/data-plane)
