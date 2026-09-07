@@ -670,3 +670,42 @@ of the ADR-023 pattern) for the human to accept, reject, or fold into ADR-020 Am
 item 1 moves until the word. Text corrections owed under EITHER design before merge (the amendment is
 append-only after): the reviewer's M-1 cite; §(f) "byte-identical" → "identical body"; §(e) line span;
 §(d) `commands.rs:400-402`; the two false `lib.rs` sentences; the `blocking_show` reliance stated.
+
+---
+
+## Amendment 5 — facts from the packaged-build gates that bind later items (2026-09-08, appended; the piece's own fix batch is in progress under rule 7's first gate)
+
+1. **Correction to Amendment 1, correction 2, and to §2 item 2's derivative text:** the installer's
+   corresponding-source obligation under AGPL-3.0 is **§6 (conveying non-source forms)** — §4 is
+   verbatim source copies, §5 modified source — with a bare repository URL relying on **§6(d)**
+   (access from a network server). The "§4/§5" wording originated in the consult and was inherited by
+   the notice text; the architect corrected it at the packaged-build re-check. Every release text
+   (notice, README, QUICKSTART, KNOWN-LIMITATIONS) cites §6.
+2. **KNOWN-LIMITATIONS entry 2/6 must say:** the ADR-025 preflight refusal predicts only the feature
+   count (when identity was verified) and — in practice never reached, because the engine's
+   `MAX_PUBLISHED_ATTRIBUTES = 32` refuses first without naming the alternative — the attribute-column
+   count; **`MAX_RESIDENT_BYTES` is checked at no stage**, so a bundle under 2,000,000 features but
+   over 512 MiB resident still publishes unwarned and the viewer refuses it (Part H8b's shape);
+   `MAX_PARTITIONS` is refused only at write time. ADR-025's decision is scoped to "when preflight can
+   predict", so the code is faithful; the declaration carries the residual.
+3. **The installed program's notice set is incomplete by name:** the beside-the-executable
+   `NOTICE.txt` and the Notices view carry the viewer's third-party notices (once the fix batch resolves
+   them from the viewer's own tree), the EPSG/IOGP acknowledgement, and the installer's AGPL §6 route —
+   but NOT the Rust crate notices that travel with the binary (`DEPENDENCY-LICENSES.md`'s crate
+   tables; MIT/Apache-2.0 §4(d) notices). Named as OWED in the notice text itself and here; a later
+   piece generates them from the lockfile. Entry 51's "packaged-app channel" is discharged for the
+   EPSG/IOGP obligation, not for the whole notice set.
+4. **ADR-025's parenthetical path** (`renderer/bundle-viewer/src/render.ts`) is superseded by
+   `renderer/bundle-viewer/ceilings.json` (the single authored statement; `render.ts` re-exports it) —
+   an **appended note on ADR-025 is owed on the human's word**; nothing in the ADR is edited.
+5. **Recorded, not inferred:** a per-user NSIS install places the bundle viewer — whose hash enters
+   every published bundle — in a user-writable directory (docs/09 already disclaims local-process
+   boundaries; no claim is falsified); the shipped binary's viewer-lookup refusal string named the
+   build machine's `CARGO_MANIFEST_DIR` path (suppressed by the fix batch when a resource dir exists);
+   `renderer/bundle-viewer/ceilings.json` is the tree's first cross-module compile-time file
+   dependency (kernel `include_str!`), so both CI workflows must watch it.
+6. **Machine fact:** during the gates the reference machine's C: fell to 3.3 GB free (`os error 112`
+   on a cargo test); the reviewer deleted `target/debug/incremental` in the main tree and the worktree
+   (~12 GB, pure cache) and the 2,000,001-row temporary fixture the `#[ignore]`d ADR-025 test leaves
+   under `%TEMP%`. Release builds plus stacked worktrees are disk-heavy; every build step checks free
+   space first.
