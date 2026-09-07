@@ -156,6 +156,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     one-commit follow-up after PR #24 merges (never racing the click): `vite-node` enters
     `frontends/shell/package.json` devDependencies with vitest's own specifier form (`^2.1.8`,
     resolving to the already-installed 2.1.9) plus the lockfile — nothing else.
+    **Sibling, same class, 2026-09-07 — for the human's word:** the entry-40 instrument piece
+    (`cut/entry40-producer-pass` @ 0a6ddee) enabled the `macros` feature of the already-present
+    `tokio` crate in `[dev-dependencies]` of `frontends/shell/src-tauri/Cargo.toml`, for two
+    `#[tokio::test]` lifecycle tests the reviewer required. No new crate, dev-only, no runtime reach —
+    but a dependency-tree change not named in the brief, so it is recorded here rather than assumed.
+    Recommendation: accept (a test-only feature of an existing dependency); the PR body names it.
 
 45. **[The close-out fix piece's SIGHT BUNDLE — three items the human rules at PR sight, none the
     custodian's; opened 2026-09-06 with the piece (branch `cut/residency-debt-fix`, preregistered
