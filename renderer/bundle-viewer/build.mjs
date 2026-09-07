@@ -55,6 +55,17 @@ console.log('dist/index.html + dist/app.js + dist/NOTICE.txt');
  * The publish operation lists a content hash for every viewer asset and ADR-017 §12 promises
  * byte-identical rebuilds, so this file must not depend on directory order or on the clock.
  * Packages are sorted by name and each package's files by filename. **No timestamp is written.**
+ *
+ * ## Third-party *data*, not just third-party code (entry 51)
+ *
+ * A fixed section (unconditional — the viewer build doesn't know which specific bundle it will
+ * ship in, or whether that bundle's manifest carries a source CRS definition) acknowledges the
+ * EPSG Geodetic Parameter Dataset's ownership by IOGP and names the EPSG Terms of Use URL, per
+ * the terms' own acknowledgement and inform-recipients obligations (verbatim quotes in
+ * `DEPENDENCY-LICENSES.md`'s "Third-party data terms" section). Placed ahead of the third-party
+ * *code* section below because it is a different kind of thing — data compiled into the engine
+ * and carried in bundle manifests (`kernel/src/bundle/mod.rs`'s `crs_source_definition`), not
+ * code compiled into this viewer.
  */
 function notice(metafile) {
   // `name -> directory`. **The directory comes from the input path, not from `node_modules/<name>`.**
@@ -143,6 +154,21 @@ function notice(metafile) {
       '',
     );
   }
+
+  out.push(
+    '',
+    'COORDINATE REFERENCE SYSTEM DATA',
+    '---------------------------------',
+    '',
+    'This bundle may carry a coordinate reference system definition derived from the EPSG',
+    'Geodetic Parameter Dataset, © IOGP (International Association of Oil & Gas Producers),',
+    'used under the EPSG Terms of Use: https://epsg.org/terms-of-use.html',
+    '',
+    'This notice informs you, the recipient, of those Terms of Use, as their own text requires',
+    '("You are obliged to inform anyone to whom you provide the EPSG Facilities of these Terms',
+    'of Use").',
+    '',
+  );
 
   out.push('', 'THIRD-PARTY WORKS COMPILED INTO THIS VIEWER', '------------------------------------------', '');
 

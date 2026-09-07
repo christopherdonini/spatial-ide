@@ -191,6 +191,31 @@ equivalent → (1)/(2) attribute it as EPSG data, with the IOGP ownership acknow
 terms' URL; the two older parameter names are reported to that piece as a conscious choice (align
 to v12.013's names, or keep and state the dataset version they came from).
 
+**Obligations (1) and (2) satisfied, 2026-09-07 (entry 51 (1)+(2), the gated piece the branch
+above named).** The two open obligations from the check above are now met:
+
+- **Acknowledgement of IOGP ownership + terms URL beside the catalog entry** —
+  `engine/src/crs-catalog.json:8-12` (a sibling `attribution` field on `epsg-2056`, not inside
+  `definition`); parsed and typed at `engine/src/crs_catalog.rs:44` (`pub struct Attribution`) and
+  `engine/src/crs_catalog.rs:79` (`CatalogEntry.attribution: Option<Attribution>`); asserted for
+  every EPSG-authority entry by `engine/src/crs_catalog.rs:253`
+  (`every_epsg_authority_entry_carries_attribution_with_the_terms_url`).
+- **Shipped bundle notice** — `renderer/bundle-viewer/build.mjs:160-171` (the `notice()`
+  function's new "COORDINATE REFERENCE SYSTEM DATA" section, which becomes every published
+  bundle's `viewer/NOTICE.txt`, ahead of the third-party-code section).
+- **Repository-level acknowledgement** — `LICENSES/README.md:113-130` ("Third-party *data*: the
+  EPSG Geodetic Parameter Dataset, © IOGP"), added because `frontends/shell/src` carries no
+  existing about/notice surface (grepped for "About"/"third-party", nothing found).
+- **Verification (3) reference** — the "Verification (3)" paragraph above and
+  `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
+  `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not
+  re-quoted.
+- **Hash-coverage decision:** `EPSG_2056_HASH` (`engine/src/crs_catalog.rs`, the
+  `epsg_2056_entry_hash_is_pinned` test) is unchanged. `CatalogEntry.hash` is computed as
+  `sha256_hex(&definition)` only (`parse_catalog`, `engine/src/crs_catalog.rs`) — `attribution` is
+  a sibling JSON field, never part of that hash's input — so adding it does not move the pinned
+  literal; no conscious hash update was needed or made.
+
 ## Full inventory
 
 ### workspace (kernel, engine, renderer, protocol/data-plane)
