@@ -354,3 +354,133 @@ open"); `docs/09:43` (ADR-021 "Proposed" — Accepted 2026-08-13); `frontends/sh
 security-posture red line (entry 54) — it is independent of B1/B2. Items 3/4/6 wait on entry 52 (the
 arm); publish's presence in any v0.1 text waits on entry 53. Items 2 and 5 can be drafted, with
 publish and the arm left as bracketed slots until ruled.
+
+---
+
+## Amendment 2 — the human's rulings on entries 52/53/54 and B3; the ruled item list; preregistration of items 1 and 7 (2026-09-07, appended BEFORE any code)
+
+**The human, verbatim:** *"52 = (a): flip the default to candidate; arm switch stays dev-gated for the
+harness; the piece audits and re-aims/arm-pins every test encoding the refusal contract (Part D
+banner, OVERCEIL′); Part M on the flipped build. 53 = run the ADR-017 exposure review inside this cut,
+bundled with Part M on the packaged artifact; pre-declared fallback: if F-10 fails, publish descopes
+by name and the hero slice ends at style. B3: include ADR-025 and the review by name; ADR-025 reading
+= refuse-at-preflight, typed, naming the viewport-bbox alternative, reopen when a second reader
+exists. Installer = NSIS only, per-user, no elevation. 54 = authorized with five conditions [as
+above]; ADR-020 Amendment 1 pre-approved in that shape. Recommended addition, rule at brief sight:
+extend the CRS catalog with EPSG:4326 and 3857 under the entry-51 verification protocol. The
+consult's eight KNOWN-LIMITATIONS additions and twelve prohibitions adopted as written."*
+
+**"[as above]" read as the consult's five conditions on design (a)** (Amendment 1, Q1): (1) read the
+webview URL once inside `setup()` before any page script can run; (2) normalise to scheme+host+port;
+(3) pin the value for the process; (4) refuse to start on an empty/unparseable origin — fail closed;
+(5) name the Tauri 2 API and crate version verified, in the piece, not from memory. Correctable at
+the human's word.
+
+### The ruled item list (supersedes §2's numbering where it differs)
+
+- **Item 7 (NEW, runs first with item 1) — flip the default residency arm to candidate.** Ruling
+  52 (a). Preregistration below.
+- **Item 1 — ADR-020 fix**, design (a)+(b), five conditions, ADR-020 Amendment 1 pre-approved in the
+  Amendment-1 (Q1) shape. Preregistration below.
+- **Item 2 — packaged notice channel**, per Q2: `NOTICE.txt` as a bundled resource rendered from the
+  frontend with NO new Tauri command (ADR-027 tax avoided); generated at build time from
+  `renderer/bundle-viewer/notice.mjs`'s `notice()` and asserted byte-identical in the artifact; the
+  AGPL notice + `Url` corresponding-source route for the installer (ADR-009 item 1 + AGPL §4/§5, not
+  item 7); `notice.mjs` added to the shell workflow's path filters.
+- **Item 3 — the packaged build**: **NSIS only, per-user, no elevation** (`tauri.conf.json` targets
+  pinned from `"all"`); the bundle viewer shipped as a resource and resolved via the resource dir
+  (`PathResolver::resource_dir`, tauri 2.11.5 `src/path/desktop.rs:230`) with the dev-tree lookup
+  kept for `tauri dev`; a CI `tauri build` job (build-only; carries `product-ci-shell.yml:58-62`'s
+  never-cite-until-green rule and its run record); **Part M** on the FLIPPED build on a clean profile,
+  **bundled with the ADR-017 exposure review** (the human reviews the publish surface against
+  ADR-017 §15/§18 with an evidence pack the custodian prepares: the approval dialog, the grant
+  scope, the audit record, the redaction, the ADR-025 preflight refusal); **pre-declared fallback:
+  if F-10 fails, publish descopes by name and the hero slice ends at "style"**, stated in
+  KNOWN-LIMITATIONS, README, QUICKSTART and the release notes alike.
+- **Item 3e (NEW, part of the publish surface) — ADR-025 decided: refuse at preflight, typed.** The
+  publish preflight predicts the artifact against the bundled viewer's declared ceilings (read from
+  the viewer's own constants, never a second copy — ADR-025's own constraint) and refuses with a
+  typed error naming the viewport-bbox publish as the alternative; **reopen condition: when a second
+  reader exists.** ADR-025's decision section carries the human's words; status Accepted 2026-09-07
+  on that word.
+- **Item 4 — KNOWN-LIMITATIONS + tag**, with the consult's **eight additions adopted as written**
+  (the shipped arm = candidate, stated; ADR-023 style-by-literal/hover-id-only; ADR-026 single-entry
+  CRS catalog — or the extended one if item 8 is ruled in; ADR-016 identity limits; ADR-017 /
+  publish class-3 approval-gated (or descoped, per the fallback); ADR-027 principle 4 partial; the
+  loopback socket + `csp: null`; ADR-011 gates 1–7 open, gate 8 alone met, the citation rule) and the
+  **twelve prohibitions adopted as written** (Amendment 1, Q7). Entry 42 added, cited to the open
+  entry, arm-conditional wording now resolved by ruling 52. The human tags.
+- **Item 5 — root README + description/topics** (Q5 binding: docs/00:9-11 never :35; docs/14
+  trademark note; ADR-009 layer table; docs/09 posture; no "not public until" framing).
+- **Item 6 — QUICKSTART**, style-by-literal stated; CRS requirement stated (EPSG:2056 only, or the
+  extended catalog); publish per the ruling/fallback.
+- **Item 8 (PROPOSED by the human, to be ruled at the brief's sight; not started) — extend the CRS
+  catalog with EPSG:4326 and EPSG:3857** under the entry-51 verification protocol: each definition's
+  PROJJSON compared leaf-by-leaf, keyed by EPSG code, against PROJ 9.6.2's rendering (EPSG v12.013),
+  recorded in `spikes/entry51-epsg2056-equivalence/`'s successor; attribution beside each entry; the
+  pinned-hash test extended consciously; ADR-026's "pinned in-tree, never fetched, no matching, no
+  defaults" unchanged. Its consequence for a stranger: a WGS84 or Web-Mercator GeoParquet opens.
+
+### Sequencing (ruled form)
+
+Items 1 and 7 in parallel first (disjoint files: `src-tauri` vs the frontend). Then items 2 + 3 (+3e)
+as the packaged-build piece; Part M + the exposure review on that artifact (human, batched). Items
+5 + 6 drafted once the install path and the publish ruling are known. Item 4 last; the human tags.
+Item 8 only if ruled in at sight, before item 4's text is final.
+
+### Preregistration — item 1 (ADR-020 fix)
+
+Design (a)+(b). Code: `frontends/shell/src-tauri/src/lib.rs` — the `cfg!(debug_assertions)` origin
+selector (`:71`) is replaced by an origin read from the webview window's actual URL inside `setup()`
+before any page script runs (`Webview::url()`, tauri 2.11.5, `src/webview/mod.rs:1679-1680`,
+`pub fn url(&self) -> crate::Result<Url>`), normalised to scheme+host+port, pinned for the process,
+and refused at startup — a named, logged, fail-closed error — if absent or unparseable; the dev
+origin's single declared source replaces the three-place `5180` (`vite.config.ts`, `tauri.conf.json`
+`devUrl`, `lib.rs`) — the piece names which one is the source and how the others read it.
+`DataPlaneConfig::expected_origin` / `Session::with_origin` (the accepted mechanism) unchanged: host-
+supplied, exact-match, never page script, never a wildcard; `Origin: null` still rejected; the
+`sec-fetch-site: same-origin` fallback unchanged. **Tests (pre-committed):** the claim-carrying kernel
+tests survive unmodified (`kernel/tests/skp_admission.rs`: the port-derived default is not admitted;
+admitted origin + wrong token is refused — cite ADR-020:118-122); a unit test that the normalisation
+yields exactly `http://localhost:5180` for the dev URL and `http://tauri.localhost` for the packaged
+URL and refuses `""`/garbage; the packaged-`--debug` admission check is DECLARED here and executed on
+item 3's artifact (Part M step). **Record, in the same commit:** ADR-020 Amendment 1 appended in the
+pre-approved shape (Status sentence discharged quoted verbatim; the new selector with API + version;
+*"the accepted mechanism is unchanged; this replaces a selector the acceptance never covered"*; the
+E2E `import.meta.env.DEV` gate's status under `--debug`; a reopen condition: any build mode whose
+webview origin is not readable at startup reopens this amendment rather than reintroducing a
+compile-time selector); `docs/02:83` and `docs/README.md:27` updated (they say the defect is owed).
+Gate: reviewer, plus an architect re-check of the origin code against the five conditions before the
+reviewer's affirmative PASS. Human-directed security red line honoured by ruling 54.
+
+### Preregistration — item 7 (flip the default arm to candidate)
+
+Facts (read): `residencyArm.ts:26` `DEFAULT_RESIDENCY_ARM = "baseline"`; the candidate SESSION is
+itself DEV-gated — `App.tsx:988` `if (isInstrumentedBuild() && getResidencyArm() === "candidate")` —
+so today no production build can run candidate code at all; `check:dist-clean`
+(`e2e/checkDistClean.mjs`) asserts an extended identifier list is absent from the production dist;
+`residencyArm.test.ts:20-22` pins "defaults to baseline"; the refusal contract is encoded in
+`e2e/regression.mjs`'s OVERCEIL′ step (over-ceiling fixture → *"N of M features rendered — declared
+ceiling reached (MAX_RESIDENT_VERTICES)"*), `e2e/filter-panel.mjs`'s SLOW′/CANCEL′ steps (the same
+pattern on the slow fixture), `e2e/admission-remediation.mjs:80`'s literal, and MANUAL-WALKTHROUGH
+**Part D** ("deliberate ceiling refusal"). **The piece:** (1) `DEFAULT_RESIDENCY_ARM = "candidate"`;
+(2) the candidate session runs in production — the `isInstrumentedBuild()` half of `App.tsx:988` is
+removed for the session, while the SWITCH (`setResidencyArm`/`getResidencyArm` E2E hook registration
+and the arm/tile-size bookkeeping) stays dev-gated exactly as now; (3) `check:dist-clean`'s list
+updated so the candidate session's identifiers are expected in dist and only the switch/hook
+identifiers stay forbidden — with the list change explained line by line; (4) `residencyArm.test.ts`
+re-pinned to "defaults to candidate", plus a test that `setResidencyArm("baseline")` still works in
+dev; (5) **every refusal-contract test audited**: OVERCEIL′, SLOW′/CANCEL′, admission-remediation's
+literal, Part D — each either **re-aimed** to the candidate contract (the declared partial-view
+strings 1–6 per `residencyStatus.ts`, verbatim) or **arm-pinned** to baseline via the dev switch
+before the step, with the choice stated per test; baseline keeps its tests (the baseline arm remains
+selectable in dev and its refusal contract remains ADR-011 gate 8's recorded interim); (6) `limits.ts`
+doc and `residencyArm.ts` doc updated to the new default; (7) MANUAL-WALKTHROUGH Part D rewritten
+as an arm-pinned dev step or re-aimed, dated; Part M runs on the flipped build. **Tests
+(pre-committed):** the whole vitest suite green with the flipped default; `check:dist-clean` green
+with candidate identifiers present and hook identifiers absent; the E2E regression + filter-panel +
+admission-remediation runs green on the re-aimed/pinned steps (executed, not just written — the
+harness recipe in AI_DEVELOPMENT.md); a new unit test that a production-mode render (no instrumented
+build) constructs the candidate session. **No ADR change:** this applies ADR-028 as accepted; ADR-028
+Amendment 3's contract becomes the shipped one. Gate: reviewer (ADR-010 rule 5 — nothing becomes
+silent — re-checked on the re-aimed steps).

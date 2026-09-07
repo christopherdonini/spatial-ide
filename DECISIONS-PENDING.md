@@ -5,6 +5,26 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-07 — entries 52, 53, 54 together, the human verbatim:** *"52 = (a): flip the default to
+candidate; arm switch stays dev-gated for the harness; the piece audits and re-aims/arm-pins every
+test encoding the refusal contract (Part D banner, OVERCEIL′); Part M on the flipped build. 53 = run
+the ADR-017 exposure review inside this cut, bundled with Part M on the packaged artifact;
+pre-declared fallback: if F-10 fails, publish descopes by name and the hero slice ends at style. B3:
+include ADR-025 and the review by name; ADR-025 reading = refuse-at-preflight, typed, naming the
+viewport-bbox alternative, reopen when a second reader exists. Installer = NSIS only, per-user, no
+elevation. 54 = authorized with five conditions [as above]; ADR-020 Amendment 1 pre-approved in that
+shape. Recommended addition, rule at brief sight: extend the CRS catalog with EPSG:4326 and 3857 under
+the entry-51 verification protocol. The consult's eight KNOWN-LIMITATIONS additions and twelve
+prohibitions adopted as written."* **Custodian's reading of "[as above]"** (the five conditions the
+consult attached to design (a), `RELEASE-0.1.md` Amendment 1 Q1 — correct me if you meant others):
+(1) read the webview URL once inside `setup()` before any page script can run; (2) normalise to
+scheme+host+port; (3) pin the value for the process; (4) refuse to start on an empty/unparseable
+origin (fail closed); (5) name the Tauri 2 API and crate version verified, in the piece, not from
+memory. Applied: RELEASE-0.1.md Amendment 2 (the ruled item list + preregistration); item 1 and the
+arm flip dispatched in parallel; ADR-025's decision appended on this word (status Accepted
+2026-09-07, the human's words verbatim); the CRS-catalog extension recorded as a proposed item for
+ruling at the brief's sight, not started.
+
 54. **[Release cut, item 1 — the ADR-020 owed defect: authorize the piece under your
     security-posture red line, and pre-approve the shape of the ADR-020 record it will append.]**
     The architect consult ranked the fix (`RELEASE-0.1.md` Amendment 1, Q1): **(a) derive the

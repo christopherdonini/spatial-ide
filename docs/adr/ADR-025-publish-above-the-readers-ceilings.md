@@ -1,8 +1,10 @@
 # ADR-025 — Publishing above the reader's ceilings (the dead-artifact question)
 
-**Status:** Proposed, decision **deliberately open** (the ADR-023 pattern) — filed 2026-08-30 on
-Part H8b's confirmation of the gap at the UI. Binds nothing; no option below is licensed until
-the human decides at acceptance.
+**Status:** **Accepted — 2026-09-07, by the human's ruling: option (a), refuse typed at preflight,
+naming the viewport-bbox alternative; reopens when a second reader exists** (see the appended
+Decision section). *Original status line, retained:* Proposed, decision **deliberately open** (the
+ADR-023 pattern) — filed 2026-08-30 on Part H8b's confirmation of the gap at the UI. Binds nothing;
+no option below is licensed until the human decides at acceptance.
 
 **Related:** ADR-017 (the bundle format and its acceptance condition); ADR-008 (static
 publishing first); ADR-006 (publish is a class-3 external side effect); ADR-018 (no duration on
@@ -58,3 +60,23 @@ constants, read at preflight — never a second copy that can drift).
   human's, now carrying Part H's observation).
 - Any perf figure: the durations above are bucket observations from an operator session,
   audit-corroborated, not measurements (docs/08).
+
+## Decision — ruled by the human, 2026-09-07 (appended; the sections above are retained as filed)
+
+**The human, verbatim (DECISIONS-PENDING.md, the entry-53 / B3 ruling of 2026-09-07):** *"ADR-025
+reading = refuse-at-preflight, typed, naming the viewport-bbox alternative, reopen when a second
+reader exists."*
+
+**Decision.** Option **(a)**: when the publish preflight can predict that the artifact will exceed the
+bundled viewer's declared ceilings, the publish surface **refuses, typed, at preflight**, and the
+refusal names the current-viewport-bbox publish as the alternative. Per this ADR's own constraint
+above, the ceilings' figures live in the viewer's own declared constants
+(`renderer/bundle-viewer/src/render.ts`), read at preflight — never a second copy that can drift.
+
+**Reopen condition (binding).** This decision reopens **when a second reader exists** — a reader
+whose ceilings differ from the bundled viewer's; until then the writer is deliberately welded to the
+one shipped reader's ceilings, the cost option (a) names above, accepted knowingly.
+
+**Applied by:** the release-engineering cut (`RELEASE-0.1.md`, item 3e) — the preflight refusal is
+implemented, reviewer-gated, and shown at the ADR-017 exposure review on the packaged artifact.
+Status line updated on this ruling; nothing else above is edited.
