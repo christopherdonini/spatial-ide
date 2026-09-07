@@ -23,9 +23,12 @@ import {
   G7_COLD_FIRST_VIEW_MARGIN_PROPOSED,
   IDENTITY_VIEW_STATE_STEPS,
   isWellFormedSettleCriterion,
+  lastSessionLogPathFromAppLog,
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
+  parsePerStepWatchdogMsArg,
   parseTileSizeArg,
   percentileNearestRank,
+  resolvedPerStepSettleTimeoutMs,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
   SETTLE_PER_STEP_TIMEOUT_5GB_MS,
@@ -34,6 +37,7 @@ import {
   SETTLE_QUIET_MS,
   TILE_SIZE_LEVELS_PROPOSED,
   TRACE_VERSION,
+  trialWatchdogMsForStepBound,
   TRIAL_WATCHDOG_MS,
   validateCameraTrace,
 } from "./residencyTrace.mjs";
@@ -414,6 +418,113 @@ test("throws loudly on a missing value (--tile-size as the last argv token)", ()
 test("throws loudly on an unrecognized value", () => {
   assert.throws(() => parseTileSizeArg(["--tile-size", "extra-fine"]), /--tile-size requires one of/);
   assert.throws(() => parseTileSizeArg(["--tile-size", "8"]), /--tile-size requires one of/);
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- parsePerStepWatchdogMsArg (entry-40 pass: --per-step-watchdog-ms parsing)"
+);
+
+test("returns null when --per-step-watchdog-ms was not given at all", () => {
+  assert.equal(parsePerStepWatchdogMsArg([]), null);
+  assert.equal(parsePerStepWatchdogMsArg(["--smoke", "--arm", "candidate"]), null);
+});
+
+test("parses a positive integer value", () => {
+  assert.equal(parsePerStepWatchdogMsArg(["--per-step-watchdog-ms", "3600000"]), 3_600_000);
+  // Order-independent -- a real argv can carry other flags before/after it.
+  assert.equal(
+    parsePerStepWatchdogMsArg(["--arm", "candidate", "--per-step-watchdog-ms", "1000", "--smoke"]),
+    1000
+  );
+});
+
+test("throws loudly on a missing value (flag as the last argv token)", () => {
+  assert.throws(
+    () => parsePerStepWatchdogMsArg(["--smoke", "--per-step-watchdog-ms"]),
+    /--per-step-watchdog-ms requires a positive number/
+  );
+});
+
+test("throws loudly on a non-numeric, zero, or negative value", () => {
+  assert.throws(
+    () => parsePerStepWatchdogMsArg(["--per-step-watchdog-ms", "soon"]),
+    /--per-step-watchdog-ms requires a positive number/
+  );
+  assert.throws(
+    () => parsePerStepWatchdogMsArg(["--per-step-watchdog-ms", "0"]),
+    /--per-step-watchdog-ms requires a positive number/
+  );
+  assert.throws(
+    () => parsePerStepWatchdogMsArg(["--per-step-watchdog-ms", "-5"]),
+    /--per-step-watchdog-ms requires a positive number/
+  );
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- resolvedPerStepSettleTimeoutMs / trialWatchdogMsForStepBound (entry-40 pass: the watchdog arithmetic)"
+);
+
+test("resolvedPerStepSettleTimeoutMs falls back to settleTimeoutForFixture when no override is given", () => {
+  assert.equal(
+    resolvedPerStepSettleTimeoutMs("/a/b/parcels-5gb.parquet", 5_000, null),
+    settleTimeoutForFixture("/a/b/parcels-5gb.parquet", 5_000)
+  );
+  assert.equal(resolvedPerStepSettleTimeoutMs("/a/b/parcels-5gb.parquet", 5_000, null), 150_000);
+  assert.equal(
+    resolvedPerStepSettleTimeoutMs("C:\\x\\filter-zoned.parquet", 5_000, null),
+    5_000
+  );
+});
+
+test("resolvedPerStepSettleTimeoutMs uses the override when given, regardless of fixture", () => {
+  assert.equal(resolvedPerStepSettleTimeoutMs("/a/b/parcels-5gb.parquet", 5_000, 3_600_000), 3_600_000);
+  assert.equal(resolvedPerStepSettleTimeoutMs("C:\\x\\filter-zoned.parquet", 5_000, 3_600_000), 3_600_000);
+});
+
+test("trialWatchdogMsForStepBound is (stepCount + 1) * perStepBoundMs, Amendment 12's own formula", () => {
+  assert.equal(trialWatchdogMsForStepBound(CAMERA_TRACE_STEPS.length, SETTLE_PER_STEP_TIMEOUT_MS), 60_000);
+  assert.equal(trialWatchdogMsForStepBound(CAMERA_TRACE_STEPS.length, 150_000), 1_800_000);
+});
+
+test("an entry-40 --per-step-watchdog-ms override always leaves the outer watchdog >= stepCount * n, so it cannot fire first (PASS-PREREGISTRATION.md §2)", () => {
+  const n = 3_600_000; // the run's own declared one-hour override
+  const outer = trialWatchdogMsForStepBound(CAMERA_TRACE_STEPS.length, n);
+  assert.ok(outer >= CAMERA_TRACE_STEPS.length * n);
+  assert.equal(outer, (CAMERA_TRACE_STEPS.length + 1) * n);
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- lastSessionLogPathFromAppLog (reviewer M2(a): reading lib.rs's own startup line back out of app.log)"
+);
+
+test("returns null when the app-log text carries no session-log line at all", () => {
+  assert.equal(lastSessionLogPathFromAppLog(""), null);
+  assert.equal(lastSessionLogPathFromAppLog("some other startup noise\nmore noise\n"), null);
+});
+
+test("extracts the path from a single matching line", () => {
+  assert.equal(
+    lastSessionLogPathFromAppLog("[spatial-ide-shell] session log: C:\\Users\\x\\AppData\\Local\\spatial-ide-shell\\logs\\session-123.log\n"),
+    "C:\\Users\\x\\AppData\\Local\\spatial-ide-shell\\logs\\session-123.log"
+  );
+});
+
+test("returns the LAST occurrence when the app-log file has more than one (e.g. a reused process from a prior run)", () => {
+  const text =
+    "[spatial-ide-shell] session log: /tmp/session-1.log\n" +
+    "some interleaved startup noise\n" +
+    "[spatial-ide-shell] session log: /tmp/session-2.log\n";
+  assert.equal(lastSessionLogPathFromAppLog(text), "/tmp/session-2.log");
+});
+
+test("tolerates surrounding whitespace/CRLF line endings", () => {
+  assert.equal(
+    lastSessionLogPathFromAppLog("[spatial-ide-shell] session log: /tmp/session-3.log \r\n"),
+    "/tmp/session-3.log"
+  );
 });
 
 console.log("");

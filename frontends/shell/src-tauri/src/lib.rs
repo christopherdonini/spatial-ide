@@ -17,6 +17,13 @@
 
 mod commands;
 mod publish;
+// Entry-40 empirical producer pass instrument (`pool_poll.rs`'s own module doc has the full
+// account): compiled in under EITHER a plain dev/test build OR the measure-build feature -- the
+// union of both, not an existing single-condition precedent (`pool_poll.rs`'s module doc explains
+// why) -- never in a plain release build. Every reference to this module elsewhere in the crate
+// (`lib.rs`'s `setup`, `commands.rs`'s `open_dataset`/`close_dataset`) is gated identically.
+#[cfg(any(debug_assertions, feature = "measure-build"))]
+mod pool_poll;
 mod state;
 
 use std::sync::{Arc, Mutex};
@@ -98,6 +105,11 @@ pub fn run() {
             app.manage(host);
             app.manage(data_plane_handle);
             app.manage(session_log);
+            // Entry-40 pass: one abort handle per currently-open dataset's pool-poll task
+            // (`pool_poll.rs`'s own doc comment) -- managed here so `commands::open_dataset`/
+            // `close_dataset` can start/stop it via `AppHandle::try_state`.
+            #[cfg(any(debug_assertions, feature = "measure-build"))]
+            app.manage(pool_poll::PoolPollTasks::new());
             // The publish seam's own state (NEXT-CUT.md P1): a shared, in-process grant set and a
             // single-use pending-attempt store. Both are `Arc`-wrapped so a `spawn_blocking` closure
             // in `commands.rs` can hold an owned clone across the `'static` boundary that requires;

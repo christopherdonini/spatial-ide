@@ -63,7 +63,7 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
-import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -72,13 +72,16 @@ import {
   CAMERA_TRACE_STEPS,
   dismissThenClickRetry,
   IDENTITY_VIEW_STATE_STEPS,
+  lastSessionLogPathFromAppLog,
+  parsePerStepWatchdogMsArg,
   parseTileSizeArg,
   percentileNearestRank,
+  resolvedPerStepSettleTimeoutMs,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
   TRACE_VERSION,
+  trialWatchdogMsForStepBound,
   TRIAL_WATCHDOG_MS,
-  settleTimeoutForFixture,
 } from "./residencyTrace.mjs";
 import { loadShellModule } from "./tsModuleLoader.mjs";
 
@@ -99,6 +102,44 @@ function resolveFixturePath(argv) {
 const FIXTURE_PATH = resolveFixturePath(process.argv.slice(2));
 const REGEN_FILTER_ZONED =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_zoned_fixture -- --ignored --nocapture";
+
+// Entry-40 pass (PASS-PREREGISTRATION.md §2): `--per-step-watchdog-ms <n>`'s resolved value for
+// THIS run, `null` unless the flag was given (`parseCellArgs`, below, parses and validates it via
+// `parsePerStepWatchdogMsArg`; `main()` assigns it here, once, before any step ever runs). A plain
+// module-level `let` rather than threading a parameter through every `applyStep`/`measureOneStep`
+// call site (four of the latter, one of the former): every per-step settle-watchdog computation in
+// this file already reads the SAME module-level `FIXTURE_PATH` the same way, so this follows that
+// existing pattern rather than introducing a second one.
+let perStepWatchdogOverrideMs = null;
+
+/** The per-step settle bound this run's `applyStep`/`measureOneStep` call sites actually use --
+ * `resolvedPerStepSettleTimeoutMs`'s own pure arithmetic (residencyTrace.mjs, directly unit-tested
+ * there), applied to this module's own `FIXTURE_PATH` and the override set above. */
+function effectiveSettleTimeoutMs(stepTimeoutMs) {
+  return resolvedPerStepSettleTimeoutMs(FIXTURE_PATH, stepTimeoutMs, perStepWatchdogOverrideMs);
+}
+
+/**
+ * Reviewer M2(a)/S-a (entry-40 pass): reads `appLogPath` and extracts `lib.rs`'s own
+ * `[spatial-ide-shell] session log: <path>` startup line via `lastSessionLogPathFromAppLog`
+ * (`residencyTrace.mjs`, pure, unit-tested there) -- shared between the attach-time read (right
+ * after `attachConsole`, `main()` below) and the pre-flight's own re-attempt at pre-flight time
+ * (the app-log file is only ever MORE complete by then, several seconds and a full `open-drain`
+ * step later -- never less complete). Returns `{ path, reason }`; `reason` is `null` iff `path` is
+ * non-null -- never a guessed path, a missing file and a missing line are both named honestly.
+ */
+function resolveSessionLogPath(appLogPath) {
+  try {
+    const path = lastSessionLogPathFromAppLog(readFileSync(appLogPath, "utf8"));
+    if (path) return { path, reason: null };
+    return {
+      path: null,
+      reason: `no "[spatial-ide-shell] session log: <path>" line found in ${appLogPath}`,
+    };
+  } catch (e) {
+    return { path: null, reason: `could not read ${appLogPath}: ${e.message}` };
+  }
+}
 
 // Disclosed approximations -- see this file's own top comment.
 const ZOOM_WHEEL_DELTA = -1200; // negative deltaY == "scroll up" == zoom in, in deck.gl's default wheel handling
@@ -207,7 +248,25 @@ function gitRevParseHead() {
  * P7 (the tile-size sweep selector): `tileSize` is `null` unless `--tile-size coarse|medium|fine` was
  * given -- parsing/validation itself is `parseTileSizeArg` (`residencyTrace.mjs`, pure and unit-tested
  * there), reused rather than reimplemented here; an invalid value throws loudly straight out of this
- * function (`main()`'s own call site catches it and exits non-zero, never a silent default). */
+ * function (`main()`'s own call site catches it and exits non-zero, never a silent default).
+ *
+ * Entry-40 pass: `perStepWatchdogMs` is `null` unless `--per-step-watchdog-ms <n>` was given -- same
+ * discipline, via `parsePerStepWatchdogMsArg` (`residencyTrace.mjs`, pure and unit-tested there).
+ *
+ * Reviewer S1: `--per-step-watchdog-ms` combined with `--wire-identity` is refused loudly, here,
+ * the same way a malformed `--tile-size`/missing `--measure-build` path already is -- the
+ * `--wire-identity` branch (`main()`, below) keeps its own hard-coded `600_000` outer watchdog
+ * regardless of any per-step override, so a large override (the entry-40 run's own one-hour value)
+ * could silently outrun it, the exact unsoundness this refusal exists to make impossible rather
+ * than merely undocumented. `--control` has no such problem (it goes through the SAME
+ * `trialWatchdogMsForStepBound` formula every other run does) and is not refused.
+ *
+ * Reviewer nit iii (entry-40 pass, post-gate sweep): `--require-pool-poll` combined with
+ * `--wire-identity` is refused the same way -- `--wire-identity`'s own branch (`main()`) returns
+ * before `open-drain` ever runs (`runFieldSequenceIdentityCheck` is its own separate camera script,
+ * never the measured trace this pre-flight sits inside), so the pre-flight block that reads
+ * `--require-pool-poll` would simply never execute -- a silent no-op an operator asking for the
+ * pre-flight would not expect, refused loudly here instead. */
 function parseCellArgs(argv) {
   let arm = "baseline";
   let coldOrWarm = "warm"; // declared default -- see this function's own doc comment on why
@@ -226,7 +285,22 @@ function parseCellArgs(argv) {
     }
   }
   const tileSize = parseTileSizeArg(argv); // P7: throws loudly on a malformed value, never silent
-  return { arm, coldOrWarm, machineAttestation, tileSize };
+  const perStepWatchdogMs = parsePerStepWatchdogMsArg(argv); // entry-40 pass: same discipline
+  if (perStepWatchdogMs !== null && argv.includes("--wire-identity")) {
+    throw new Error(
+      "--per-step-watchdog-ms is not sound combined with --wire-identity: the identity-guard's own " +
+        "outer watchdog is a hard-coded 600_000ms regardless of the per-step override, so a large " +
+        "override could silently outrun it (reviewer S1). Run these separately."
+    );
+  }
+  if (argv.includes("--require-pool-poll") && argv.includes("--wire-identity")) {
+    throw new Error(
+      "--require-pool-poll is not sound combined with --wire-identity: that mode returns before " +
+        "open-drain ever runs, so the pre-flight would silently never execute (reviewer nit iii). " +
+        "Run these separately."
+    );
+  }
+  return { arm, coldOrWarm, machineAttestation, tileSize, perStepWatchdogMs };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -802,7 +876,7 @@ async function applyStep(page, step) {
     // gesture, as its own named field (not only nested inside `calmWait`) so a reader scanning one
     // row can see exactly how much of that row's own `wallMs` this pre-gesture wait, not the fit
     // gesture itself, accounts for.
-    const calmWait = await waitForCalmBeforeClick(page, { timeoutMs: settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs) });
+    const calmWait = await waitForCalmBeforeClick(page, { timeoutMs: effectiveSettleTimeoutMs(step.settle.timeoutMs) });
     await page.evaluate(() => window.__SPATIAL_E2E__.residencyMarkInput?.());
     const retry = await dismissThenClickRetry(
       () => dismissCeilingBannerIfPresent(page),
@@ -1067,7 +1141,7 @@ async function measureOneStep(
   }
   // Amendment 9: the step's own timeoutMs is the small-fixture value; the driver scales it for
   // the declared large fixtures (Polygons class, 5 GB). The arm watchdog (P1d B5) scales with it.
-  const effectiveTimeoutMs = settleTimeoutForFixture(FIXTURE_PATH, step.settle.timeoutMs);
+  const effectiveTimeoutMs = effectiveSettleTimeoutMs(step.settle.timeoutMs);
   const effectiveSettle = { quietMs: step.settle.quietMs, timeoutMs: effectiveTimeoutMs };
   const armPromise = callHooks
     ? page.evaluate((watchdogMs) => window.__SPATIAL_E2E__.residencyArmFirstPixel?.(watchdogMs), effectiveTimeoutMs) // P1d B5
@@ -2034,6 +2108,11 @@ async function main() {
   // `wireTraceLines` persistence below is always-on: it only copies console entries the harness
   // already captured, at write time, with zero effect on the run itself.
   const perStreamTrace = argSet.has("--per-stream-trace");
+  // Reviewer M2(b) (entry-40 pass): opt-in pre-flight that proves the pool-poll instrument actually
+  // emitted before any trace step runs -- `null`/ordinary-run behavior is entirely unaffected unless
+  // this flag is given (the entry-40 run itself passes it). See the pre-flight block below, right
+  // after the `open-drain` step, for what it does and how it invalidates the cell on failure.
+  const requirePoolPoll = argSet.has("--require-pool-poll");
   const stepLimit = smoke ? 3 : undefined;
   // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): `--measure-build
   // <exePath>` selects the third build class -- everything else about this run (mode, steps,
@@ -2057,6 +2136,10 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  // Entry-40 pass: set the module-level override BEFORE any step function
+  // (`applyStep`/`measureOneStep`, both read it via `effectiveSettleTimeoutMs`) or the outer
+  // watchdog computation below can run.
+  perStepWatchdogOverrideMs = cellArgs.perStepWatchdogMs;
   // M9: `arm` (baseline/candidate/control) -- P3r's own handoff note (P3i-b): this comment used to
   // say the harness had no `--arm=candidate` PRODUCER at all; false since P3w landed the candidate
   // arm's own end-to-end tile-keyed data path (`candidateArmSession.ts`) -- `main()`'s own arm-switch
@@ -2086,7 +2169,7 @@ async function main() {
   // `CAMERA_TRACE_STEPS.length` (the full committed trace), not `stepLimit` -- this bound is a
   // generous outer ceiling, not itself a per-step or per-trial scored quantity, so it stays
   // correct (if generous) even for a `--smoke` run's own shorter `stepLimit`.
-  const resolvedPerStepBoundMs = settleTimeoutForFixture(FIXTURE_PATH, SETTLE_PER_STEP_TIMEOUT_MS);
+  const resolvedPerStepBoundMs = effectiveSettleTimeoutMs(SETTLE_PER_STEP_TIMEOUT_MS);
   // P3i-c follow-up (live-found): the single-trial formula below is too small for
   // `--wire-identity`'s OWN structure -- an OFF-ON-ON-OFF cycle is 4 subruns of
   // (open + IDENTITY_VIEW_STATE_STEPS) each, which exceeded one trial's bound the moment the
@@ -2098,7 +2181,7 @@ async function main() {
   // bound is the honest shape for a hang-catch.
   const trialWatchdogMs = wireIdentity
     ? 600_000
-    : (CAMERA_TRACE_STEPS.length + 1) * resolvedPerStepBoundMs;
+    : trialWatchdogMsForStepBound(CAMERA_TRACE_STEPS.length, resolvedPerStepBoundMs);
   const watchdog = setTimeout(() => {
     // Live-found (2026-08-30): process.exit inside this callback was observed racing the exit
     // path to a final code of 0 -- a watchdog that fires must never read as success.
@@ -2151,6 +2234,28 @@ async function main() {
     return;
   }
   const consoleHandle = attachConsole(page);
+
+  // Reviewer M2(a) (entry-40 pass): `lib.rs`'s own startup line (`[spatial-ide-shell] session log:
+  // <path>`) is written to stderr, captured into `e2e/out/app.log` (`tauri dev`) or
+  // `e2e/out/measure-app.log` (`--measure-build`) by `attachOrLaunch`/`attachOrLaunchExe`'s own
+  // raw-fd `stdio` redirect (`lib.mjs`).
+  //
+  // Reviewer S-a (post-gate sweep): an earlier version of this comment claimed the Rust `setup()`
+  // closure that prints this line "has already run" by the time `attachOrLaunch(Exe)` resolves
+  // above -- true for the measure build ONLY (`lib.rs`'s own `#[cfg(feature = "measure-build")]`
+  // block explicitly builds that build's webview INSIDE `setup()`, strictly AFTER this line already
+  // printed earlier in the same closure -- verified there, not assumed), NOT proven for plain
+  // `tauri dev`: `lib.rs`'s own measure-build doc comment states, for the declarative
+  // `create: true` window `tauri dev` uses, that Tauri's internal `setup()` "creates every
+  // `app.config().app.windows` entry whose `create` is `true` BEFORE this closure ever runs" --
+  // i.e. for `tauri dev` the window (and whatever CDP attachability follows from it) may already
+  // exist before, or mid-way through, `setup()`, so this read can genuinely race the line being
+  // printed. This is exactly why the value read here is only a FIRST attempt, re-resolved instead
+  // of trusted at the pre-flight's own later checkpoint (`resolveSessionLogPath`'s second call
+  // site, below) -- never fabricated either way: a missing app-log file or a missing line both
+  // record `null` plus a stated reason, never a guessed path.
+  const appLogPath = join(OUT_DIR, measureBuildExePath ? "measure-app.log" : "app.log");
+  const { path: sessionLogPath, reason: sessionLogPathReason } = resolveSessionLogPath(appLogPath);
 
   // Entry 31 / attribution-pass §6: the opt-in queue-depth sampler. One page.evaluate per tick
   // reading the two EXISTING E2E hooks (`residencyInFlightStreamCount`, `residencyQueuedTileCount`
@@ -2249,6 +2354,23 @@ async function main() {
       perStreamTraceRequested: perStreamTrace,
       launchedFresh: launched, // F2: always true -- the fresh-launch invariant above already returned if not
       sweptPids, // F2: PIDs killed on CDP_PORT before this run's own launch, possibly empty
+      // Reviewer S2 (entry-40 pass): moved to the cell's OWN top level -- the same level
+      // `perStreamTraceEnabled`/`perStreamTraceRequested` above already record their flag at, not
+      // nested under `watchdog` (an earlier version of this comment wrongly said this was recorded
+      // "the same way as --arm/--tile-size/--attest", which are top-level `cell` fields; this was
+      // not, until this fix). `null` unless `--per-step-watchdog-ms` was given;
+      // `watchdog.resolvedPerStepBoundMs` below already equals this value when it is not null
+      // (`effectiveSettleTimeoutMs`'s own contract), so a reader can see both the request and its
+      // effect without leaving the cell object.
+      perStepWatchdogOverrideMs: cellArgs.perStepWatchdogMs,
+      // Reviewer M2(a) (entry-40 pass): the running process's own session-log path, read back from
+      // `app.log`/`measure-app.log` (see the block right after `attachConsole` above) -- `null` plus
+      // `sessionLogPathReason` if the line was absent or the file unreadable, never a guessed path.
+      sessionLogPath,
+      sessionLogPathReason,
+      // Reviewer M2(b) (entry-40 pass): `null` unless `--require-pool-poll` was given; filled in
+      // below, right after the `open-drain` step, before any trace step runs.
+      poolPollPreflight: null,
       // Amendment 12: the outer trial watchdog's own resolved inputs, recorded honestly rather than
       // only living in a `setTimeout` argument -- `legacyTrialWatchdogMs` is §7's own originally-
       // declared, now-historical figure (`TRIAL_WATCHDOG_MS`), kept beside the live value so a
@@ -2471,6 +2593,82 @@ async function main() {
     }
 
     evidence.openDrain = openDrainRow;
+
+    // Reviewer M2(b) (entry-40 pass): the pre-flight, gated on --require-pool-poll so an ordinary
+    // run's behavior is entirely unchanged without it. Runs strictly BEFORE any trace step
+    // (`runTrace`, below) -- a cell whose own pool-poll instrument never emitted must be invalidated
+    // here, not after burning a full trace on it. `open-drain` (above) has already opened the
+    // dataset and settled; this sleep is IN ADDITION to whatever that already took, so the wait is
+    // always at least 3000ms past the dataset's own open, never less.
+    if (requirePoolPoll) {
+      console.log(
+        "residency-harness: --require-pool-poll pre-flight -- waiting 3000ms past dataset open, then checking the session log"
+      );
+      await sleep(3000);
+      // Reviewer S-a: `sessionLogPath` (captured right after attach, above) may still be `null` --
+      // the app-log file may not have carried the startup line yet at that early point (see this
+      // file's own doc comment on `resolveSessionLogPath`'s attach-time call site for why that is
+      // not proven to have happened yet under plain `tauri dev`). By pre-flight time -- after
+      // `open-drain` has opened and settled the dataset, plus this 3000ms sleep -- the app-log file
+      // is only ever MORE complete, never less, so it is worth one more attempt here rather than
+      // trusting only the earlier value.
+      let resolvedPath = sessionLogPath;
+      let resolvedPathReason = sessionLogPathReason;
+      if (!resolvedPath) {
+        const retry = resolveSessionLogPath(appLogPath);
+        resolvedPath = retry.path;
+        resolvedPathReason = retry.reason;
+      }
+      let preflightOk = false;
+      let preflightReason = null;
+      if (!resolvedPath) {
+        preflightReason = `session log path could not be resolved even at pre-flight time (${resolvedPathReason ?? "unknown reason"})`;
+      } else {
+        try {
+          preflightOk = readFileSync(resolvedPath, "utf8").includes("producer-pool-poll");
+          if (!preflightOk) {
+            preflightReason = `session log at ${resolvedPath} contains no "producer-pool-poll" line`;
+          }
+        } catch (e) {
+          preflightReason = `could not read session log at ${resolvedPath}: ${e.message}`;
+        }
+      }
+      evidence.cell.poolPollPreflight = {
+        required: true,
+        ok: preflightOk,
+        reason: preflightReason,
+        // Reviewer S-a: both the attach-time and the pre-flight-time resolution kept, so a reader
+        // can see the full history rather than only the value this pre-flight ended up using.
+        sessionLogPathAtAttach: sessionLogPath,
+        sessionLogPathAtAttachReason: sessionLogPathReason,
+        sessionLogPathAtPreflight: resolvedPath,
+        checkedAt: new Date().toISOString(),
+      };
+      if (!preflightOk) {
+        // Reviewer S-a: two DISTINCT reasons, never conflated. `resolvedPath` present (the log was
+        // read, and genuinely lacks the line) is the only case that has actually ESTABLISHED the
+        // instrument emitted nothing; `resolvedPath` absent means the check itself could not run at
+        // all -- a claim of absence would not be true, so it gets its own, honest reason instead.
+        const invalidationReason = resolvedPath
+          ? "pool-poll instrument emitted nothing"
+          : "pool-poll pre-flight could not be evaluated";
+        console.error(
+          `residency-harness: --require-pool-poll PRE-FLIGHT FAILED (${invalidationReason}: ${preflightReason}) -- invalidating the cell before any trace step runs`
+        );
+        evidence.rows = [];
+        evidence.invalidated = true;
+        // Before any trace step ever ran -- not a real CAMERA_TRACE_STEPS index (the existing
+        // per-step invalidation path uses a real index; this pre-flight runs earlier than that).
+        evidence.invalidatedAtStep = null;
+        evidence.invalidationReason = invalidationReason;
+        openDrainRow.status = "unmeasured";
+        openDrainRow.wholeTrialInvalidatedReason = `${invalidationReason} (${preflightReason})`;
+        evidence.anyRowUnmeasured = true;
+        process.exitCode = 1;
+        return;
+      }
+      console.log("residency-harness: --require-pool-poll pre-flight PASSED");
+    }
 
     const { rows, invalidated, invalidatedAtStep, invalidationReason, hoverEvidence } = await runTrace(
       page,

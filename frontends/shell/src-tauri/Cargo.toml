@@ -25,12 +25,29 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16): the "measure build" --
 # a release-profile (`cargo build --release`/`tauri build`) artifact that ALSO opens the debug-gated
 # CDP remote-debugging port the harness needs, so the residency harness can drive a release-optimized
-# binary the same way it drives `tauri dev`. Empty by default (inert): this feature only ever changes
-# behavior in `lib.rs`'s own `#[cfg(feature = "measure-build")]` block, always paired at build time
+# binary the same way it drives `tauri dev`. Empty by default (inert), always paired at build time
 # with the config overlay `npm run build:measure` generates (`create: false` on the declarative
-# window -- see that block's own doc comment for why the two must always travel together). Never a
-# shipped default (docs/09's dev/debug-gate discipline) -- no default feature enables it, and nothing
-# in this crate's own `default` feature set (there is none) references it.
+# window -- see `lib.rs`'s own `#[cfg(feature = "measure-build")]` block's own doc comment for why
+# the two must always travel together). Never a shipped default -- no default feature enables it,
+# and nothing in this crate's own `default` feature set (there is none) references it.
+#
+# Reviewer nit i (entry-40 pass, post-gate sweep): this sentence used to cite "docs/09's
+# dev/debug-gate discipline" -- docs/09 (`docs/09_Security_and_Privacy.md`) contains no such
+# material, a fabricated citation that survived one earlier review pass. Read before quoting this
+# time: the real, verified in-repo statement about a dev/debug gate as its own distinct mechanism is
+# ADR-020's own words (`docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md`
+# lines 92-94, quoted verbatim): "the E2E harness's dev gate (`import.meta.env.DEV`, Vite) and this
+# one (`cfg!(debug_assertions)`, Rust) are independent mechanisms". That ADR is about a different
+# gate pair (Vite's dev flag vs. this crate's `debug_assertions`), not about `measure-build`
+# specifically or about "never shipped by default" -- cited here only for the general point it
+# actually establishes (a dev/debug gate in this codebase is its own independent mechanism, not
+# implied by anything else), not stretched to claim it says more than that.
+#
+# Reviewer nit iii (entry-40 pass): this comment used to say the feature "only ever changes behavior
+# in `lib.rs`'s own... block" -- stale as of `pool_poll.rs` (its own module doc has the full
+# account), whose `#[cfg(any(debug_assertions, feature = "measure-build"))]` gate is now a SECOND
+# site this feature's own presence changes behavior at, alongside `lib.rs`'s CDP-port block and the
+# `#[cfg(any(...))]`-gated calls into it from `commands.rs`.
 [features]
 measure-build = []
 
@@ -64,3 +81,17 @@ spatial-renderer = { path = "../../../renderer" }
 # this with the plain `spatial-engine` dependency above for test builds; the shipped binary does not
 # gain the fixture-generation code.
 spatial-engine = { path = "../../../engine", features = ["fixture"] }
+# Reviewer S5 (entry-40 pass): `#[tokio::test]` for `pool_poll.rs`'s lifecycle tests
+# (`record`/`stop`'s map bookkeeping, tested against a real `AbortHandle` from a trivial spawned
+# task). The SAME unification precedent as `spatial-engine`/`fixture` above: adds the `macros`
+# feature on top of the plain dependency's own `rt-multi-thread`/`time`/`sync`, for test builds only.
+#
+# Reviewer nit vi (entry-40 pass, post-gate sweep): corrected -- `tokio-macros` is not a new crate
+# this line introduces into the graph. `Cargo.lock`'s own `tokio` entry already lists `tokio-macros`
+# as a dependency (verified there directly), almost certainly via `tauri`'s/`spatial-data-plane`'s
+# own transitive use of `tokio`'s `macros` feature -- and adding this line left `Cargo.lock`
+# byte-for-byte unchanged (`git diff` on it is empty), confirming `tokio-macros` was already resolved
+# before this line existed. What this line actually does is enable the `#[tokio::test]` ATTRIBUTE
+# for THIS crate's own test build (Cargo's per-crate feature unification, the same
+# `spatial-engine`/`fixture` precedent above) -- it activates no crate that was not already compiled.
+tokio = { version = "1", features = ["macros"] }

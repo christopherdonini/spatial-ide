@@ -125,3 +125,16 @@ jobs:
       # (root Cargo.toml explains why) and carries its own lockfile.
       - name: Build and test the Tauri backend
         run: cargo test --manifest-path frontends/shell/src-tauri/Cargo.toml --locked
+
+      # Reviewer nit viii (entry-40 pass): the debug-profile `cargo test` step above compiles this
+      # crate with `debug_assertions` true, so it alone can never catch a `cfg(any(debug_assertions,
+      # feature = "measure-build"))`-gated regression that only breaks a plain RELEASE build (neither
+      # condition true) -- e.g. an unused-variable warning `pool_poll.rs`'s own `cfg_attr` (via
+      # `commands.rs`'s `open_dataset`/`close_dataset`) exists specifically to suppress there. These
+      # two checks were run by hand for this piece's own review; wiring them into CI keeps that gate
+      # honest going forward rather than relying on a human to remember to run them locally.
+      - name: Check the plain release profile compiles (dev-gated instruments must compile OUT)
+        run: cargo check --manifest-path frontends/shell/src-tauri/Cargo.toml --release --locked
+
+      - name: Check the measure-build release profile compiles
+        run: cargo check --manifest-path frontends/shell/src-tauri/Cargo.toml --release --locked --features measure-build
