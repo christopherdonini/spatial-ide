@@ -8,22 +8,29 @@
  * only value the full vitest/E2E regression suites ever observe is `"baseline"`, so this module's
  * own state never diverges from that default in any run that never calls `setResidencyArm`.
  *
- * **DEV-only by convention, not by a check inside this module itself.** This module has no
- * `import.meta.env.DEV` guard of its own -- every call site (the `__SPATIAL_E2E__` hook
- * registrations in `App.tsx`) is what is DEV-gated, the same pattern `instrument/
- * residencyInstrument.ts`'s own top doc comment documents for its own singleton wiring. Kept this
- * way (rather than gating inside `setResidencyArm`/`getResidencyArm` themselves) so this module
- * stays plain, synchronous, and trivially unit-testable with no `import.meta.env` mocking at all.
+ * **The SWITCH stays dev-gated at the one registration site -- the DEFAULT does not.** This module
+ * has no `import.meta.env.DEV` guard of its own -- `setResidencyArm`/`getResidencyArm`'s own
+ * `__SPATIAL_E2E__` hook registrations in `App.tsx` are what is DEV-gated (`isInstrumentedBuild()`),
+ * the same pattern `instrument/residencyInstrument.ts`'s own top doc comment documents for its own
+ * singleton wiring. Kept this way (rather than gating inside `setResidencyArm`/`getResidencyArm`
+ * themselves) so this module stays plain, synchronous, and trivially unit-testable with no
+ * `import.meta.env` mocking at all -- unchanged by the flip below, which touches only the constant's
+ * own value, never this module's gating shape.
  *
- * **The candidate default flips only if the human accepts ADR-028 -- never in this module, never in
- * this piece.** `DEFAULT_RESIDENCY_ARM` is `"baseline"` and nothing in this file or its own tests
- * ever changes that default's value; only a caller's own explicit `setResidencyArm("candidate")`
- * call (itself dev-gated at the one registration site) can move a given session off it.
+ * **The default flipped to `"candidate"` on the human's ruling, RELEASE-0.1 item 7 (2026-09-07,
+ * DECISIONS-PENDING entry 52 = (a)).** ADR-028 (Accepted 2026-09-02) is the decision this applies,
+ * not a new one -- this module makes no design choice of its own, it only carries the value the
+ * ruling named. `App.tsx`'s own candidate-session construction site (`[admitted]` effect) no longer
+ * gates on `isInstrumentedBuild()` at all -- a production build now constructs a candidate-arm
+ * session by default, same as any other build. `DEFAULT_RESIDENCY_ARM` is `"candidate"`; a caller's
+ * own explicit `setResidencyArm("baseline")` call (dev-gated at the one registration site above)
+ * remains the only way to select ADR-011 gate 8's recorded baseline interim for a session -- baseline
+ * is not retired, only no longer the default a plain `tauri build` ships.
  */
 
 export type ResidencyArm = "baseline" | "candidate";
 
-export const DEFAULT_RESIDENCY_ARM: ResidencyArm = "baseline";
+export const DEFAULT_RESIDENCY_ARM: ResidencyArm = "candidate";
 
 export type SetResidencyArmResult =
   | { ok: true }

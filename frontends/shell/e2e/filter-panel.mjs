@@ -302,8 +302,33 @@ async function stepClear(page, consoleHandle, ctx) {
  * `.scan-incomplete` appears with no further batch lines for that handle over a settle window.
  * NO timing assertion anywhere below -- every wait is a bounded robustness poll, never a claim about
  * how fast anything happened (ADR-018).
+ *
+ * **RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)) -- ARM-PINNED to baseline.**
+ * The declared precondition this step asserts openly (lines below: `.canvas-refusal` present, the
+ * literal "declared ceiling reached (MAX_RESIDENT_VERTICES)" status text) is the SAME baseline-only
+ * mechanic `regression.mjs`'s `stepOverCeiling` pins for -- under the shipped candidate default, an
+ * over-ceiling view never produces `.canvas-refusal` at all (`WorkingCanvas.tsx`'s own doc comment,
+ * `pushTileBatch`: "the candidate arm never refuses a batch (item B)"), so this precondition -- and
+ * everything the rest of this step is actually FOR (Cancel during a zero-batch scan,
+ * `.scan-liveness`, `.scan-incomplete`) -- stays exercised against the arm ADR-021's own acceptance
+ * condition was measured against, not re-aimed.
+ *
+ * **The pin itself lives in `main()`, not here.** A per-step pin immediately before this function's
+ * own `openPath` was the original design and was found refused live (`OPEN`/`PANEL'` already have
+ * `filter-zoned.parquet` open by the time this step runs, and `CLEAR'` never closes it --
+ * `residencyArm.ts`'s own "refused while a dataset is open" contract) -- `main()`'s own doc comment
+ * has the fix (the pin runs once, before `OPEN`, pinning this whole file). This step's own call below
+ * is a defensive re-confirmation (already baseline; a same-value `setResidencyArm` call succeeds as a
+ * no-op even while a dataset is open), kept so this step states, at its own call site, the arm it
+ * depends on. `FIND'` immediately below opens its own dataset under the SAME file-wide `"baseline"`
+ * pin, which is the exact arm `FIND'` was already (implicitly) verified against before this piece --
+ * nothing about `FIND'`'s own pass/fail status changes.
  */
 async function stepSlowCancel(page, consoleHandle) {
+  const pinned = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
+  if (!pinned || pinned.ok !== true) {
+    throw new Error(`SLOW'/CANCEL': setResidencyArm("baseline") re-confirmation failed: ${JSON.stringify(pinned)}`);
+  }
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_SLOW);
   if (outcome.kind !== "admitted") {
     throw new Error(
@@ -631,6 +656,23 @@ async function main() {
     console.log(`filter-panel: waiting for the app to mount (up to ${MOUNT_READY_TIMEOUT_MS}ms)...`);
     const mountReady = await waitForMountReady(page);
     console.log(`filter-panel: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms`);
+
+    // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): this WHOLE FILE is pinned
+    // to the baseline residency arm, here, before `OPEN` -- the earliest point no dataset has EVER
+    // opened this run, the ONLY point `setResidencyArm` is guaranteed not to be refused
+    // (`residencyArm.ts`'s own "refused while a dataset is open" contract). A per-step pin
+    // immediately before `SLOW'/CANCEL'`'s own `openPath` was tried first and found refused live
+    // (`OPEN`/`PANEL'` already have `filter-zoned.parquet` open by then, and `CLEAR'` never closes
+    // it) -- `regression.mjs`'s own `main()` doc comment has the matching finding and the
+    // `page.reload()` alternative's own rejection precedent (`residency-harness.mjs`'s S4 doc
+    // comment), not reinvented here. This file predates the candidate arm entirely and none of its
+    // OTHER steps (`OPEN`/`PANEL'`/`PANELREFUSE'`/`CLEAR'`/`FIND'`) assert anything arm-conditional,
+    // so pinning the whole run reproduces this file's own pre-existing, already-verified behavior.
+    const armPinned = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
+    if (!armPinned || armPinned.ok !== true) {
+      throw new Error(`filter-panel: setResidencyArm("baseline") failed before OPEN: ${JSON.stringify(armPinned)}`);
+    }
+    console.log(`filter-panel: residency arm pinned to "baseline" for this whole run (RELEASE-0.1 item 7)`);
 
     await runStep("OPEN", 40_000, () => stepOpen(page));
     await runStep("PANEL'", 60_000, () => stepPanel(page, consoleHandle, ctx));

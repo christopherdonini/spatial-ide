@@ -22,15 +22,16 @@ export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
 /**
  * Bounds the cost of rule 2's own requirement: keeping the authoritative f64 lookup table resident
  * doubles coordinate memory against f32-only rendering. This is the resident-vertex ceiling across
- * every batch of every live stream in the shell, not per-batch. **Baseline arm** (the default):
- * past it the shell stops accepting further batches for that stream, cancels it, and shows a
- * visible typed refusal naming this constant -- no silent eviction, no partial view presented as
- * complete. **Candidate arm** (behind the residency-arm switch; ADR-028, Accepted 2026-09-02 -- the
- * default has NOT been flipped: `DEFAULT_RESIDENCY_ARM` is still `"baseline"` and the switch is
- * dev-gated, see `residency/residencyArm.ts`; DECISIONS-PENDING entry 52 holds the flip decision):
- * past it, distance-ordered eviction keeps the resident set under this same ceiling and the shell
- * shows a declared partial-view status instead of a refusal (`residencyStatus.ts`) -- the ceiling
- * value itself is unchanged, only what happens at it differs by arm.
+ * every batch of every live stream in the shell, not per-batch. **Candidate arm** (the default, as
+ * of RELEASE-0.1 item 7, 2026-09-07, DECISIONS-PENDING entry 52 = (a) applying ADR-028, Accepted
+ * 2026-09-02 -- `DEFAULT_RESIDENCY_ARM` is `"candidate"`; only a dev-gated `setResidencyArm`
+ * call can select baseline instead, see `residency/residencyArm.ts`): past it, distance-ordered
+ * eviction keeps the resident set under this same ceiling and the shell shows a declared
+ * partial-view status instead of a refusal (`residencyStatus.ts`). **Baseline arm** (selectable in
+ * dev only; ADR-011 gate 8's recorded interim): past it the shell stops accepting further batches
+ * for that stream, cancels it, and shows a visible typed refusal naming this constant -- no silent
+ * eviction, no partial view presented as complete. The ceiling value itself is unchanged, only what
+ * happens at it differs by arm.
  *
  * **Open, unmeasured cost (2026-09-02 reviewer finding, viewport-residency P9):** the candidate
  * arm's per-tile render-layer cache (`buildLayers.ts`'s `geometryCache`) retains a THIRD `[x, y]`

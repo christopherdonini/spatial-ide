@@ -75,22 +75,21 @@ const INSTRUMENT_IDENTIFIERS = [
   "getResidencyArm",
   "notifyResidencyArmDatasetOpened",
   "notifyResidencyArmDatasetClosed",
-  // Viewport-residency cut P3w: the candidate arm's own SOLE construction entry point -- its only
-  // call site (`App.tsx`'s `[admitted]` effect) is `if (import.meta.env.DEV && getResidencyArm()
-  // === "candidate")`, the identical guard the arm-switch identifiers above already prove dead in a
-  // production build -- checked here too as the SAME kind of corroborating evidence P3's own pair
-  // above already established (not a new, independent gate; `startCandidateArmSession` lives inside
-  // that exact same branch). Everything `candidateArmSession.ts` itself imports unconditionally
-  // (`TileViewportStreamManager`, etc.) is expected to be tree-shaken away WITH it once this one
-  // import has no live reference left -- not independently re-checked here, per this script's own
-  // disclosed scope (P1d B6b): a hit against one of the identifiers below is the load-bearing proof,
-  // not an exhaustive enumeration of every identifier in the whole candidate-arm module graph
-  // (`canvas/tileGrid.ts`/`tileResidentSet.ts`/`tileIngest.ts` are NOT purely DEV-only artifacts the
-  // way `residencyInstrument.ts`/`residencyArm.ts` are -- `WorkingCanvas.tsx`'s own `tileResidentRef
-  // = useRef(new TileResidentSet())` constructs one UNCONDITIONALLY, arm-agnostic, so that class's
-  // own code is expected, correctly, to survive into a production bundle -- inert, never reachable at
-  // runtime there, but genuinely live code, not a leak).
-  "startCandidateArmSession",
+  // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): `startCandidateArmSession`
+  // REMOVED from this list here (was present through Viewport-residency cut P3w). It used to sit
+  // behind the SAME `import.meta.env.DEV`-class guard as the four identifiers immediately above
+  // (`App.tsx`'s `[admitted]` effect: `if (isInstrumentedBuild() && getResidencyArm() === "candidate")`)
+  // -- that guard is now `if (getResidencyArm() === "candidate")`, with no `isInstrumentedBuild()`
+  // operand, and `getResidencyArm()` defaults to `"candidate"` (`residencyArm.ts`). A plain
+  // production build therefore calls `startCandidateArmSession` BY DEFAULT now -- checking for its
+  // absence would fail every green build, testing the wrong thing. The four identifiers immediately
+  // above stay forbidden: only the SWITCH (`setResidencyArm`/`getResidencyArm`'s own E2E hook
+  // registrations) and the bookkeeping calls (`notifyResidencyArmDataset{Opened,Closed}`) remain
+  // `isInstrumentedBuild()`-gated, per item 7's own preregistration -- `getResidencyArm` the FUNCTION
+  // is genuinely called (unguarded) at the construction branch, but its literal source-level name
+  // does not itself need to survive minification for that call to work, so this list's claim ("this
+  // literal string is not lexically present") is unaffected for those four; see this script's own
+  // top doc comment (P1d B6b) for what a MISS here does and does not prove.
   // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the segment
   // decomposition's own new exports -- same DEV-gated call-site discipline every identifier above
   // already relies on (`residencyInstrument.ts`'s own top doc comment, P3i paragraph).
@@ -123,22 +122,26 @@ const INSTRUMENT_IDENTIFIERS = [
 // checked below as "the identifier immediately preceded by `.` or `?.`" (a member-expression
 // invocation), never as "the bare identifier is absent" (which IS expected to be present, as a
 // method-shorthand definition, preceded by `,`/`{`/whitespace, never `.`).
-// Viewport-residency cut P3w item B: the candidate arm's own `WorkingCanvasHandle` methods --
-// unconditionally-constructed object-literal methods (exactly like the three above), whose SOLE real
-// callers all live inside `residency/candidateArmSession.ts`, itself only ever constructed from the
-// SAME DEV-gated branch `startCandidateArmSession` above already covers. Bare method-shorthand
-// definitions surviving is expected (same reasoning as the three above); a surviving CALL SITE is not.
-const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = [
-  "getResidentCounts",
-  "armFirstPixelRenderHook",
-  "disarmFirstPixelRenderHook",
-  "pushTileBatch",
-  "clearTile",
-  "clearAllTiles",
-  "isTileResidentInCandidateSet",
-  "establishTileGridContext",
-  "applyTileViewportContext",
-];
+// RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): seven identifiers REMOVED from
+// this list (were present through Viewport-residency cut P3w item B: `pushTileBatch`, `clearTile`,
+// `clearAllTiles`, `isTileResidentInCandidateSet`, `establishTileGridContext`,
+// `applyTileViewportContext`, plus `getResidentCounts` -- that one shared with the baseline arm's own
+// dev-only readback). All seven's real callers used to live ONLY inside `residency/
+// candidateArmSession.ts`, itself only ever constructed from the DEV-gated branch this file's own
+// `INSTRUMENT_IDENTIFIERS` comment (`startCandidateArmSession`) used to name -- so a surviving CALL
+// SITE for any of them was a real regression (that branch was supposed to be dead in production).
+// That branch is no longer DEV-gated (item 7): `candidateArmSession.ts` now calls
+// `canvas.pushTileBatch`/`.clearTile`/`.clearAllTiles`/`.isTileResidentInCandidateSet`/
+// `.establishTileGridContext`/`.applyTileViewportContext` unconditionally whenever the candidate arm
+// is active (the default), and `getResidentCounts` gained the SAME unconditional callers inside that
+// same file (`emitResidencyStatus`, `hasHeadroom`) alongside its pre-existing dev-only one in
+// `App.tsx`. A surviving call site for any of these seven is now the EXPECTED, correct shape for a
+// production build shipping the default arm -- checking for its absence would fail every green
+// build. `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` below are UNCHANGED: their only real
+// callers stay inside `App.tsx`'s own `isInstrumentedBuild()`-gated E2E-hook effect (verified by grep
+// against `src/`, item 7's own audit), so a surviving call site for either of those two remains real
+// signal, unaffected by this piece.
+const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = ["armFirstPixelRenderHook", "disarmFirstPixelRenderHook"];
 
 function collectFiles(dir) {
   const out = [];

@@ -190,12 +190,30 @@ Entry 0's rider 1 (`DECISIONS-PENDING.md`, the human's 2026-08-13 option-(a) dec
 tile), and deserves its own deliberate acceptance step — this fixture's true vertex total is kept
 over the ceiling on purpose, unlike the happy-path fixture above.
 
+**[CORRECTED 2026-09-07 — RELEASE-0.1 item 7, DECISIONS-PENDING entry 52 = (a): the default
+residency arm flipped to `"candidate"`.** Under candidate, an over-ceiling view is never an
+error-shaped refusal at all — no red banner, no Dismiss button; `WorkingCanvas.tsx`'s own doc comment
+(`pushTileBatch`) states "the candidate arm never refuses a batch (item B)". This Part's own subject —
+the ceiling-refusal banner and rider 1's "Dismiss hides the banner, never the status indicator"
+acceptance point — is now a **baseline-arm-only** mechanic, reachable only through the dev-only arm
+switch, the same DevTools `window.__SPATIAL_E2E__.setResidencyArm(...)` pattern Part K's own "Honest
+note — reaching the candidate arm has no shipped UI control" already documents in the OTHER direction
+(Part K sets `"candidate"`; the step below sets `"baseline"` instead — that note now
+reads backwards: reaching the ORDINARY, shipped experience needs no console action any more; reaching
+THIS Part's baseline banner does). The steps below are corrected in place, each prerequisite of a
+console action stated before its own row's original text, kept unchanged beneath it. An ordinary
+operator, with no DevTools, no longer sees any of this Part on this fixture at all — see Part K
+(K1–K3) for what the shipped default now shows on an over-budget view, and this piece's own
+`RELEASE-0.1.md` for the KNOWN-LIMITATIONS text naming the declared partial view as the v0.1
+limitation.]**
+
 | # | Step | Expected outcome |
 |---|---|---|
+| D0 (new) | **[CORRECTED 2026-09-07.] Before D1: open DevTools (WebView2) and run `await window.__SPATIAL_E2E__.setResidencyArm("baseline")`; confirm it resolves `{ok:true}`.** | This is the only step this Part adds; D1–D4 below are otherwise the original script, unedited, now describing the baseline arm's own reachable-only-in-dev behavior. |
 | D1 | Click **Open GeoParquet…** and select `over-ceiling-refused.parquet`. | The button briefly reads "Opening…", then a summary appears exactly as A3 does — this file is valid and admits normally, including row count `100000 (...)`. No refusal panel appears at this stage: the refusal below is render-side, not admission-side. |
 | D2 | Observe the canvas area. | Most parcels render (delivery streams in and renders for a while before the ceiling trips partway through). A red-bordered refusal banner appears, naming the stream that carried the ceiling-breaching batch, cancelled — **and** a persistent status line also appears reading `<N> of 100000 features rendered — declared ceiling reached (MAX_RESIDENT_VERTICES)`, where `<N>` is however many features were actually resident at the moment of refusal. |
 | D3 | Click **Dismiss** on the red banner. | The banner disappears. **The status line remains, unchanged.** This is the acceptance point rider 1 exists for: an incomplete-render state must stay visible for as long as it actually holds, independent of whether the operator has acknowledged the one-time banner event — dismissing the banner is not the same act as the render becoming complete. |
-| D4 | Click **Open GeoParquet…** again and select `100k-happy-path.parquet`. | The canvas re-renders fully (this fixture is under the ceiling by construction, entry 0 option (a)) and the status line disappears — a dataset change clears it unconditionally (`nextResidencyStatus`'s `"dataset-changed"` transition), the same as any other reopen. |
+| D4 | Click **Open GeoParquet…** again and select `100k-happy-path.parquet`. | The canvas re-renders fully (this fixture is under the ceiling by construction, entry 0 option (a)) and the status line disappears — a dataset change clears it unconditionally (`nextResidencyStatus`'s `"dataset-changed"` transition), the same as any other reopen. **[CORRECTED 2026-09-07 — a fresh reload (Ctrl+R) before continuing to a later Part is recommended, not required: the baseline pin from D0 otherwise carries forward into whatever dataset is opened next, the same "refused while a dataset is open" constraint named in `residencyArm.ts`'s own doc comment (a plain reopen, as this step does, does not by itself clear the pin — only a full window reload re-initializes it to the shipped `"candidate"` default). Part K's own K2 already instructs a reload before its own arm work for the same reason.]** |
 
 **If anything deviates:** stop, record the exact step, and report it, same as Parts A–C.
 

@@ -1105,8 +1105,38 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
  * comment: "dismiss hides the banner, never the status indicator" -- `.canvas-refusal`'s Dismiss
  * button only ever calls `setCanvasRefusal(null)`; `.residency-status` clears only on a later full
  * delivery or a dataset change (asserted separately, by `REOPEN'` immediately after this step).
+ *
+ * **RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)) -- ARM-PINNED to baseline.**
+ * The default residency arm flipped to `"candidate"`; under candidate, an over-ceiling view is never
+ * an error-shaped refusal at all (`WorkingCanvas.tsx`'s own doc comment, `pushTileBatch`: "the
+ * candidate arm never refuses a batch (item B)"; `residencyStatus.ts`'s own doc comment: the
+ * `.canvas-refusal` banner is "structurally unreachable from candidate-arm ingest"), so this whole
+ * assertion -- the `.canvas-refusal` banner existing, its Dismiss button clearing the banner but not
+ * `.residency-status` -- is a baseline-arm-only mechanic, not something re-aimable to the candidate
+ * contract without becoming a different test.
+ *
+ * **The pin itself lives in `main()`, not here -- a live-run finding, not the original design.**
+ * `setResidencyArm` is refused while a dataset is open (`residencyArm.ts`'s own contract), and
+ * NOTHING in this file's own step sequence before `OVERCEIL'` ever fully closes a dataset (A1'
+ * admits the 100k fixture; B2'/C2' are ADMISSION-side refusals that never touch `admitted` at all,
+ * per `App.tsx`'s own effect -- confirmed live: a first attempt to pin here, immediately before this
+ * function's own `openPath`, was refused with `{"code":"dataset-open","message":"...cannot change
+ * from \"candidate\" to \"baseline\" while a dataset is open -- close it first"}`). A `page.reload()`
+ * mid-script would clear that, but `residency-harness.mjs`'s own S4 doc comment records that choice
+ * as deliberately rejected elsewhere in this suite ("no precedent anywhere in this harness suite...
+ * judged riskier... than reusing the launch-per-process pattern") -- not reinvented here. So the pin
+ * runs ONCE, in `main()`, before `A1'` (before any dataset has EVER opened this run) -- pinning this
+ * WHOLE FILE to baseline, exactly the only arm this suite ever exercised before this piece. This
+ * step's own call below is therefore a defensive RE-CONFIRMATION (already baseline; a same-value
+ * `setResidencyArm` call succeeds as a no-op even while a dataset is open, `residencyArm.ts`'s own
+ * contract), kept so a reader at this call site sees the arm this step depends on stated in place,
+ * not only at the top of `main()`.
  */
 async function stepOverCeiling(page, consoleHandle) {
+  const pinned = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
+  if (!pinned || pinned.ok !== true) {
+    throw new Error(`OVERCEIL': setResidencyArm("baseline") re-confirmation failed: ${JSON.stringify(pinned)}`);
+  }
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_OVER_CEILING);
   if (outcome.kind !== "admitted") {
     throw new Error(
@@ -1321,6 +1351,29 @@ async function main() {
     console.log(
       `regression: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms (.app-header and window.__SPATIAL_E2E__.openPath both present)`
     );
+
+    // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): this WHOLE FILE is pinned
+    // to the baseline residency arm, here, before `A1'` -- the earliest point no dataset has EVER
+    // opened this run, which is the ONLY point `setResidencyArm` is guaranteed not to be refused
+    // (`residencyArm.ts`'s own "refused while a dataset is open" contract; `stepOverCeiling`'s own
+    // doc comment records the live refusal this finding is based on). This file predates the
+    // candidate arm entirely -- every one of its own steps (A1'-A9', K6, B2'/C2', OVERCEIL',
+    // REOPEN', NET') was written and last verified green against baseline, and none of them assert
+    // anything arm-conditional except `OVERCEIL'` itself -- so pinning the whole run to baseline
+    // reproduces exactly this file's own pre-existing, already-verified behavior, unchanged by the
+    // default flip, rather than exercising the shipped candidate default through steps this suite
+    // was never calibrated against (a live run surfaced exactly that risk: under candidate, `K6`'s
+    // own zoom-search loop churns far more `viewport_query`/tile-stream traffic per notch than
+    // baseline's single-settle model and did not reliably reach its own refusal-readout assertion
+    // within budget -- a real, separate finding, reported and left untouched, not silently worked
+    // around by this pin). An attach to a stale, already-open leftover session is the one case this
+    // pin could still be refused for; that refusal is not swallowed -- it fails this run loudly here,
+    // before `A1'`, rather than resurfacing confusingly at `OVERCEIL'` far downstream.
+    const armPinned = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
+    if (!armPinned || armPinned.ok !== true) {
+      throw new Error(`regression: setResidencyArm("baseline") failed before A1': ${JSON.stringify(armPinned)}`);
+    }
+    console.log(`regression: residency arm pinned to "baseline" for this whole run (RELEASE-0.1 item 7)`);
 
     // Harness hygiene, not a walkthrough step: a previous run (or prior interactive use)
     // may have left a dismissable refusal banner up from before this run started. Clearing

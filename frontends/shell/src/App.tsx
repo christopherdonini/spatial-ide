@@ -944,8 +944,11 @@ export default function App() {
 
     // Viewport-residency cut P3: bookkeeping only, for `setResidencyArm`'s own "refused while a
     // dataset is open" contract -- DEV-gated (the arm switch is a dev/E2E-only concern) and purely
-    // additive, so `residency/residencyArm.ts` never runs, or is even referenced, in a production
-    // build (`check:dist-clean`'s own extended identifier list covers this).
+    // additive. RELEASE-0.1 item 7 correction: `residency/residencyArm.ts` itself (the module, its
+    // `currentArm` state, `getResidencyArm`) is now referenced unconditionally by the construction
+    // branch below (the default-arm read), so it is NOT tree-shaken out of a production build any
+    // more -- only THIS bookkeeping call (and the switch itself) stays dev-only, never the module as
+    // a whole. `check:dist-clean`'s own identifier list is updated accordingly (item 7(3)).
     if (isInstrumentedBuild()) notifyResidencyArmDatasetOpened();
     // P7: same bookkeeping, same reason -- `setResidencyTileSizeLevel`'s own "refused while a
     // dataset is open" contract (`residencyTileSizeLevel.ts`'s own top doc comment).
@@ -976,16 +979,21 @@ export default function App() {
 
     // Viewport-residency cut P3w: SELECT BETWEEN two constructions -- candidate arm returns here,
     // before a single line of the baseline `ViewportStreamManager` construction below ever runs, so
-    // that construction's own code path is untouched in shape (no conditional added inside it) and
-    // stays bit-identical for the default/only arm the full vitest/E2E regression suites ever
-    // observe. `getResidencyArm()` itself defaults to `"baseline"` and only a dev-gated
-    // `setResidencyArm("candidate")` call (the dev/E2E surface) can ever move a session off it --
-    // `residencyArm.ts`'s own top doc comment. `viewportDebounceRef` is REUSED (not a new ref): the
-    // candidate session's own `onViewportChanged` conforms to the identical `Debounced<[Bbox, string
-    // | null]>` shape baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX
-    // below (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is
-    // active without an arm check of its own.
-    if (isInstrumentedBuild() && getResidencyArm() === "candidate") {
+    // that construction's own code path is untouched in shape (no conditional added inside it).
+    //
+    // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): this construction choice is
+    // no longer `isInstrumentedBuild()`-gated -- `getResidencyArm()` itself now defaults to
+    // `"candidate"` (`residencyArm.ts`'s own top doc comment), so a PLAIN PRODUCTION BUILD reaches
+    // this branch by default too. Only the SWITCH that could move a session to `"baseline"` instead
+    // (`setResidencyArm`, registered a few lines above inside its own `isInstrumentedBuild()`-gated
+    // effect) stays dev-only; this read of `getResidencyArm()` is not itself gated, because the
+    // branch it selects must run in production for the default arm to mean anything there.
+    // `viewportDebounceRef` is REUSED (not a new ref): the candidate session's own
+    // `onViewportChanged` conforms to the identical `Debounced<[Bbox, string | null]>` shape
+    // baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX below
+    // (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is active
+    // without an arm check of its own.
+    if (getResidencyArm() === "candidate") {
       const session = startCandidateArmSession({
         dataset: admitted.dataset,
         canvas,
