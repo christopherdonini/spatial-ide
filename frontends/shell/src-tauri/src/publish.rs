@@ -802,15 +802,23 @@ pub fn bundled_viewer() -> Result<(ViewerAssets, ViewerLicenseInput), String> {
             dir.display()
         )
     })?;
-    let license = ViewerLicenseInput {
+    Ok((viewer, bundled_viewer_license()))
+}
+
+/// The reference bundle viewer's license declaration, split out from [`bundled_viewer`] so it can be
+/// asserted on directly without a built `renderer/bundle-viewer/dist` (F-3, entry 49's own test —
+/// `bundled_viewer` alone cannot be exercised without Node).
+pub fn bundled_viewer_license() -> ViewerLicenseInput {
+    ViewerLicenseInput {
         program: "Spatial IDE bundle viewer".into(),
         copyright: "Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors".into(),
         license: "AGPL-3.0-or-later".into(),
         notice_path: "NOTICE.txt".into(),
-        // Url, not WrittenOffer: the repository has been public since 2026-08-03 (ADR-009's
-        // corrigendum — "before any public code" did not hold in fact), and ADR-017 Corrigendum 3's
-        // durable route now has somewhere real to point. DECISIONS-PENDING entry 49 (2026-09-07)
-        // ruled this route for F-3; ADR-017's own corrigendum records the same ruling.
+        // Url, not WrittenOffer: the repository has been public since 2026-08-03 (CLAUDE.md's
+        // "before any public code" did not hold in fact — ADR-009's corrigendum records the flip on
+        // 2026-08-03), and ADR-017 Corrigendum 3's durable route now has somewhere real to point.
+        // DECISIONS-PENDING entry 49 (2026-09-07) ruled this route for F-3; ADR-017's own corrigendum
+        // records the same ruling.
         // `admit_viewer_license`'s `Url` arm (`kernel/src/publish/mod.rs:972-975`) requires `at` to
         // start with `http://` or `https://`, refusing with `PublishError::CorrespondingSourceNotDurable`
         // (`kernel/src/publish/error.rs:91`) otherwise — an `https://` URL satisfies it.
@@ -818,8 +826,7 @@ pub fn bundled_viewer() -> Result<(ViewerAssets, ViewerLicenseInput), String> {
             kind: CorrespondingSourceKind::Url,
             at: "https://github.com/christopherdonini/spatial-ide".into(),
         },
-    };
-    Ok((viewer, license))
+    }
 }
 
 #[cfg(test)]
@@ -893,36 +900,34 @@ mod tests {
             copyright: "Copyright (C) 2026 the Spatial IDE contributors".into(),
             license: "AGPL-3.0-or-later".into(),
             notice_path: "NOTICE.txt".into(),
-            // Mirrors `bundled_viewer()`'s own construction (entry 49, F-3): `Url`, naming the real
-            // public repository, not `WrittenOffer`.
-            corresponding_source: CorrespondingSource {
-                kind: CorrespondingSourceKind::Url,
-                at: "https://github.com/christopherdonini/spatial-ide".into(),
-            },
+            // The `corresponding_source` half is taken from `bundled_viewer_license()` itself (not a
+            // hand-copied duplicate), so this fixture cannot drift from the production writer.
+            corresponding_source: bundled_viewer_license().corresponding_source,
         }
     }
 
     /// F-3 (DECISIONS-PENDING entry 49): the shell's bundle license notice names the public
-    /// repository. Guards both `bundled_viewer()`'s own construction and the test fixture that
-    /// mirrors it against a regression back to the old written-offer text.
+    /// repository. Asserts against `bundled_viewer_license()` directly — the production writer, not
+    /// a copy of it — so a revert of the writer to `WrittenOffer` fails this test without needing a
+    /// built `renderer/bundle-viewer/dist`.
+    ///
+    /// **Guard proven by observation**: reverting `bundled_viewer_license()`'s `corresponding_source`
+    /// to `CorrespondingSourceKind::WrittenOffer` / "Corresponding source is available from
+    /// Christopher Donini on written request; this repository is not yet public." and re-running this
+    /// test produced, verbatim, on the `kind` `assert_eq!` below (this function's first assertion):
+    /// `assertion `left == right` failed` / `  left: WrittenOffer` / ` right: Url` — the revert was
+    /// then restored.
     #[test]
     fn the_bundle_license_notice_names_the_public_repository_not_a_written_offer() {
-        let license = viewer_license();
+        let license = bundled_viewer_license();
         assert_eq!(license.corresponding_source.kind, CorrespondingSourceKind::Url);
         assert_eq!(
             license.corresponding_source.at,
             "https://github.com/christopherdonini/spatial-ide"
         );
-        assert!(
-            !license.corresponding_source.at.contains("not yet public"),
-            "the notice must not claim the repository is not yet public: {}",
-            license.corresponding_source.at
-        );
-        assert!(
-            !license.corresponding_source.at.contains("written request"),
-            "the notice must not route through a written request: {}",
-            license.corresponding_source.at
-        );
+        // Reviewer nit: the substring negative checks ("not yet public", "written request") the
+        // exact `assert_eq!` above already makes redundant were dropped — an exact match to the real
+        // repository URL cannot also contain either phrase.
     }
 
     /// Runs `prepare` end to end and unwraps the prompt, panicking with the outcome otherwise — most
