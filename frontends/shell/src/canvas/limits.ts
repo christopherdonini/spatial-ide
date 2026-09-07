@@ -25,7 +25,9 @@ export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
  * every batch of every live stream in the shell, not per-batch. **Baseline arm** (the default):
  * past it the shell stops accepting further batches for that stream, cancels it, and shows a
  * visible typed refusal naming this constant -- no silent eviction, no partial view presented as
- * complete. **Candidate arm** (behind the residency-arm switch; ADR-028, Proposed, not accepted):
+ * complete. **Candidate arm** (behind the residency-arm switch; ADR-028, Accepted 2026-09-02 -- the
+ * default has NOT been flipped: `DEFAULT_RESIDENCY_ARM` is still `"baseline"` and the switch is
+ * dev-gated, see `residency/residencyArm.ts`; DECISIONS-PENDING entry 52 holds the flip decision):
  * past it, distance-ordered eviction keeps the resident set under this same ceiling and the shell
  * shows a declared partial-view status instead of a refusal (`residencyStatus.ts`) -- the ceiling
  * value itself is unchanged, only what happens at it differs by arm.

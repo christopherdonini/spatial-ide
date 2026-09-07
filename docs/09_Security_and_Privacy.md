@@ -40,7 +40,7 @@ authentication on loopback, token scoping and expiry are open (ADR-012 open risk
 
 ## Predicate admission (control-plane filter parsing)
 
-`viewport_query`'s row-filter predicate (ADR-021, Proposed) is caller-authored SQL text reaching a
+`viewport_query`'s row-filter predicate (ADR-021, Proposed *[dated correction, 2026-09-07: Accepted 2026-08-13; the word is retained and corrected here, not rewritten]*) is caller-authored SQL text reaching a
 control-plane command; its admission parser (`json_serialize_sql`) is **statically linked and
 build-time-resident** — admission performs no runtime extension fetch of any kind. DuckDB's own
 extension-autoload mechanism would otherwise make the first admitted predicate a filesystem write to

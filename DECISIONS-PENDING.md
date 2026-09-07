@@ -5,6 +5,72 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+54. **[Release cut, item 1 — the ADR-020 owed defect: authorize the piece under your
+    security-posture red line, and pre-approve the shape of the ADR-020 record it will append.]**
+    The architect consult ranked the fix (`RELEASE-0.1.md` Amendment 1, Q1): **(a) derive the
+    expected origin from the webview window's actual URL** — read once in `setup()` before any page
+    script can run, normalised to scheme+host+port, pinned for the process, refused at startup if
+    absent/unparseable — with **(b)** folded in (one declared source for the dev origin, closing the
+    three-place `5180` drift ADR-020 records); **(c)** (refuse to start under `tauri build --debug`)
+    only as fallback. (a) keeps ADR-020's accepted mechanism intact: host-supplied, exact-match,
+    never page script, never a wildcard; `Origin: null` still rejected; the `sec-fetch-site` fallback
+    unchanged; docs/09 and ADR-012 H4 untouched. The API exists in the pinned crate (tauri 2.11.5,
+    `Webview::url()`, `src/webview/mod.rs:1679-1680`). Tests that carry the claim stay
+    (`kernel/tests/skp_admission.rs`: port-derived default not admitted; admitted origin + wrong
+    token refused) plus a packaged-`--debug` admission check on item 3's artifact. **Why your word
+    and not just a gate:** ADR-020:21-24 records origin admission as *"human-directed
+    (security-posture red line)"*, and the ADR is not architect-blockable. **The record: an appended,
+    dated ADR-020 Amendment 1, not a corrigendum** (the text is not wrong; acceptance excluded the
+    selector) — the Status sentence discharged quoted verbatim; the new selector with API + version;
+    *"the accepted mechanism is unchanged; this replaces a selector the acceptance never covered"*;
+    the E2E `import.meta.env.DEV` gate's status under `--debug`; a reopen condition; and same-commit
+    updates to `docs/02:83` and `docs/README.md:27`. Recommendation: authorize (a)+(b) as one
+    reviewer-gated piece (architect re-check on the origin code before the gate), and pre-approve
+    the amendment shape so it appends when the piece lands, with your final word at the PR. Touches:
+    `frontends/shell/src-tauri/src/lib.rs`, kernel admission tests, the E2E check, ADR-020 (append),
+    docs/02, docs/README.
+
+53. **[Release cut, items 3–6 — publish in v0.1 (ADR-017's undischarged acceptance condition), the
+    two dropped flip-track items, and the installer target.]** (1) **ADR-017:4-7:** publish stays
+    *"developer/test tooling only"* until the kernel enforces a scoped grant, explicit approval and a
+    redacted audit record AND — your F-10 ruling — *"the exposure surface itself pass[es] review"*;
+    ADR-024's filing does not discharge it. A distributed installer whose Part M, quickstart and
+    release notes say "publish" is a shipped UI. **Your call:** run the exposure review inside this
+    cut (you review the shell's publish surface against §15/§18 — the custodian prepares the
+    evidence pack: the approval dialog, the grant scope, the audit record, the redaction), or v0.1
+    ships WITHOUT publish in Part M / QUICKSTART / README / release notes (the hero slice then ends
+    at "style", declared). (2) **B3:** my brief silently dropped the ADR-025 reading and the exposure
+    review — both on your 2026-09-07 "flip track" list. Include (the exposure review is (1); the
+    ADR-025 reading = your decision on refuse/warn/silent above the viewer's ceilings, needed for
+    KNOWN-LIMITATIONS entry 2 to say what the shell does) or descope by name. (3) **Installer
+    target:** `tauri.conf.json` has `"targets": "all"` (NSIS and MSI both produced). Pin one:
+    recommendation **NSIS** — per-user install, no elevation, so the clean-profile test needs no
+    admin. Recommendation overall: exposure review inside the cut (it is a review you already framed
+    as the flip track's own item), ADR-025 read and decided before entry 2 is written, NSIS. Touches:
+    `tauri.conf.json` targets; Part M / QUICKSTART / README text; ADR-025 status (your word).
+
+52. **[Release cut — BLOCKING: which residency arm ships in v0.1.0? The packaged build today runs
+    BASELINE, and my draft KNOWN-LIMITATIONS described the candidate arm.]** Architect finding B1,
+    verified on the lines: `residencyArm.ts:26` `DEFAULT_RESIDENCY_ARM = "baseline"`; its doc: *"The
+    candidate default flips only if the human accepts ADR-028 -- never in this module, never in this
+    piece"*; the only switch site is DEV-gated (`App.tsx:945-949`: the module *"never runs, or is even
+    referenced, in a production build"*). ADR-028 IS Accepted (2026-09-02) — the flip is licensed and
+    was never built. A plain `tauri build` therefore ships the ceiling-refusal interim
+    (`MAX_RESIDENT_VERTICES = 2,000,000`, `limits.ts:25-28`), under which *"docs/07's 5 GB hero
+    dataset never fits client-side at all"* (ADR-011:63) — not the "declared partial view at overview
+    zoom" your dispatch names, and not the candidate-arm behaviour your L9 judged. **Options:**
+    **(a)** flip `DEFAULT_RESIDENCY_ARM` to `"candidate"` for v0.1 — a scoped piece (the DEV gating
+    and `check:dist-clean` reworked so candidate code ships; the dev-only arm switch stays dev-only),
+    reviewer-gated, Part M run on the flipped packaged build; Part K/L verdicts and the G1/G2 cells
+    were taken on the candidate arm and transfer, but no packaged-build evidence exists on any arm
+    yet; **(b)** ship baseline and rewrite KNOWN-LIMITATIONS entries 3 and 42 to the ceiling-refusal
+    contract — honest, but it contradicts your own "honest, declared v0.1 limitation" framing and
+    makes the 5 GB sentence unavailable without the refusal beside it; needs an ADR-028 amendment
+    recording that the shipped artifact does not carry the accepted contract; **(c)** defer v0.1
+    until the flip has its own cut. Not an ADR change for (a): it applies ADR-028 as accepted.
+    Recommendation: **(a)**. Blocks items 3, 4 and 6 until ruled. Touches: `residencyArm.ts`,
+    `App.tsx`'s gating, `check:dist-clean`, the E2E arm hook (stays dev-only), Part M.
+
 51. **[RULED 2026-09-07, the human verbatim: "adopt as recommended, with the order binding and the
     branch named. (3) runs FIRST because its outcome decides what (1)/(2) may honestly say: if the
     shipped PROJJSON is numerically equivalent to the registry's 2056 entry, the attribution calls it

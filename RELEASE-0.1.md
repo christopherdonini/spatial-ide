@@ -197,3 +197,160 @@ Code signing and notarization; auto-update; macOS/Linux artifacts; any performan
 change to the residency/LOD behaviour (LOD is the cut after this one, flip-first); ADR status changes
 other than the ADR-020 record of the fix (the human's word); the entry-40 producer question (closed
 as a null result 2026-09-07).
+
+---
+
+## Amendment 1 — the architect consult's verdict: **FAIL — block** (2026-09-07, appended; §§0–5 above are retained unedited as the reviewed draft)
+
+**Three blocking findings, each verified by the custodian on the cited lines before recording:**
+
+- **B1 — KNOWN-LIMITATIONS entry 3 (and the proposed entry-42 addition) describe an arm the packaged
+  build does not ship.** `frontends/shell/src/residency/residencyArm.ts:26`: `DEFAULT_RESIDENCY_ARM =
+  "baseline"`; its doc (`:18-21`): *"The candidate default flips only if the human accepts ADR-028 --
+  never in this module, never in this piece."* The only site that moves a session off baseline is
+  DEV-gated (`App.tsx:945-949`: *"`residency/residencyArm.ts` never runs, or is even referenced, in a
+  production build"*). ADR-028 IS Accepted (2026-09-02); the flip was never built. A plain `tauri
+  build` therefore ships the **baseline** arm: past `MAX_RESIDENT_VERTICES = 2_000_000` the stream is
+  cancelled with a typed refusal (`limits.ts:25-28`) — ADR-011 gate 8's interim, under which *"docs/07's
+  5 GB hero dataset never fits client-side at all"* (ADR-011:63). Entry 3 as drafted is false for
+  the artifact; §5's "no change to residency behaviour" forbids the only change that would make it
+  true. **The human decides** (DECISIONS-PENDING entry 52): flip the default (a scoped piece + Part M
+  on the flipped build), ship baseline and rewrite entries 3/42 to the ceiling-refusal contract, or
+  defer v0.1 until the flip has its own cut. Items 3, 4 and 6 are blocked on that ruling.
+- **B2 — publish shipped to strangers while ADR-017's acceptance condition stands undischarged.**
+  ADR-017:4-7 (Status): *"before publish is exposed through SKP, any shipped CLI/UI, MCP, plugin,
+  notebook or AI surface — and no later than Prototype exit — the kernel must enforce a scoped
+  publish grant, explicit approval, and a redacted audit record … Until then `publish-bundle` remains
+  developer/test tooling only."* The human's F-10 ruling in the same file: the condition *"does not
+  lapse"*; exposure through a shipped UI *"additionally requires that the exposure surface itself pass
+  review"*; ADR-024 and docs/02:89 say filing ADR-024 does not discharge it. A distributed installer
+  whose walkthrough, quickstart and release notes say "publish" IS a shipped UI. **Either the human's
+  exposure review runs inside this cut, or publish is removed from Part M, QUICKSTART, README and the
+  release notes for v0.1** (entry 53).
+- **B3 — §2 drops two items the human's own 2026-09-07 ruling placed in this track.**
+  DECISIONS-PENDING (LOD scheduling ruling, verbatim): *"the flip track (ADR-025 reading, the exposure
+  review, the 12–15 go/no-go) becomes the live queue."* The 12–15 go/no-go is overtaken (public since
+  2026-08-03). The ADR-025 reading and the exposure review are not — surfaced as a proposed
+  descoping for the human's word, not absorbed (entry 53).
+
+**Corrections to §§1–2, each against the file cited (the custodian's slips, named):**
+1. §1 attributes *"perf claims require measurements against docs/08; no numbers, no claim"* to
+   docs/01. docs/01 contains neither sentence; the rule's homes are `CLAUDE.md`'s non-negotiables
+   digest and `docs/08_Testing.md:62` (*"no numbers, no claim"*); docs/01 supplies principle 3
+   (*"Nothing claims a grade it cannot honor"*) and derived rule 1 (budgets enforced in CI, 08).
+2. §2 item 2 cites ADR-009 item 7 for the packaged app's AGPL notice; item 7 is bundle-scoped
+   (*"Published bundles distribute the AGPL viewer"*). An installer distributes the core — ADR-009
+   item 1's set — and the obligation is AGPL §4/§5's. The `Url` corresponding-source route (entry 49
+   F-3) is the vehicle.
+3. §2 item 1 calls the ADR-020 piece "architect-blockable". It is not (ADR-020 is not in the
+   architect-blockable set named by docs/README:27 / docs/02:83). It IS gated: ADR-020:21-24 records
+   the 2026-08-12 review as *"human-directed (security-posture red line)"* — the human's word is
+   needed for the piece (entry 54), not the architect's block.
+4. §2 item 3(b) says "NSIS vs MSI; both are Tauri defaults" as a choice; `tauri.conf.json:27` is
+   `"targets": "all"` — as configured BOTH are produced; pinning one is a config change to scope and
+   the human's word (recommendation NSIS: per-user, no elevation, so the clean-profile test needs no
+   admin).
+5. §2 item 4 entry 3 cites "ADR-028 Amendment 3" — its heading still reads "Proposed until the
+   human's word" with clause 5 recording the ruling that appended it; cite clause 5 with it.
+6. §1's "house voice": **the constitution states no writing register** (docs/00 and docs/01 read in
+   full by the architect; a grep of docs/ for voice/register/tone/marketing returns nothing
+   normative). What binds: principle 3, principle 8 (*"No black boxes"*), the derived rule *"Users are
+   never told something is undoable when it isn't"*, docs/08:62. "Declared, never inferred" and
+   "limits named with their home ADR" are corpus practice (ADR-010 rule 6; ADR-028's contract), not
+   constitutional text; "no marketing register" has no source and is a house preference, labelled so;
+   "a stranger can verify every sentence against a file in the tree" is adopted as **this release's
+   own declared standard**.
+7. "flip-first" in §1/§2 conflates two flips: the ruling's "flip track" is the public-release track
+   (ADR-025 reading, exposure review, 12–15), NOT the residency arm. Disambiguated here; B1 is the
+   arm question.
+8. Sequencing (§3): item 4 last is right, but the ARM decision precedes item 3 (Part M runs on an
+   artifact whose arm must be decided), not item 4.
+
+**Q1 — ADR-020 fix, ranked: (a) primary with (b) folded in; (c) fallback only.** (a) read the
+webview window's actual URL once inside `setup()` before any page script can run, normalise to
+scheme+host+port, pin for the process, refuse to start if absent/unparseable (fail closed); keeps
+host-supplied, exact-match, no wildcard; `Origin: null` still rejected; the `sec-fetch-site`
+fallback unchanged; docs/09 and ADR-012 H4 untouched (removing the `5180` drift strengthens
+exact-match). Verified available in the pinned crate: `tauri 2.11.5`, `Webview::url()` at
+`src/webview/mod.rs:1679-1680` (*"Returns the current url of the webview."* /
+`pub fn url(&self) -> crate::Result<Url>`). (b) alone does not fix the defect (the selector is still
+"which mode am I"); adopt it WITH (a) as the dev-origin single source. (c) discharges the sentence by
+ceasing to claim `--debug` support; it would strike this brief's own packaged-`--debug` admission
+test. **Tests that carry the claim** (must survive): the port-derived default is not admitted;
+admitted origin + wrong token is refused (`kernel/tests/skp_admission.rs`, ADR-020:118-122); plus the
+new packaged-`--debug` E2E admission check (item 3's artifact). **Record: an appended, dated ADR-020
+Amendment 1, not a corrigendum** (the ADR's text is not wrong; acceptance excluded the selector) —
+contents: the Status sentence discharged quoted verbatim; the new selector with API + version; the
+one-sentence *"the accepted mechanism is unchanged; this replaces a selector the acceptance never
+covered"*; the E2E `import.meta.env.DEV` gate's status under `--debug`; a reopen condition; and
+same-commit updates to `docs/02:83` and `docs/README.md:27`, which still say the defect is owed.
+Appended only on the human's word (entry 54).
+
+**Q2 — the notice surface: new UI; no docs/03 design exists** (docs/03 read in full by the
+architect). Binding: ADR-027 decision 4 taxes any new Tauri command (unclassified → build fails) —
+cheapest constitutional route: ship `NOTICE.txt` as a bundled resource, render it from the frontend
+with NO new command; one-source must be a TEST (packaged `NOTICE.txt` generated from
+`renderer/bundle-viewer/notice.mjs`'s `notice()` at build time and asserted byte-identical in the
+artifact), not a convention; add `renderer/bundle-viewer/notice.mjs` to the shell workflow's path
+filters (`product-ci-shell.yml:66-84`, the same gap its lines 50-56 record for `renderer/style-ts/**`);
+ADR-009's Caveat (counsel) is not triggered by a release — say so.
+
+**Q3 — packaging vs docs/09:** no corrigendum owed (docs/09 is *Evolves*; its Local-listening-sockets
+section already names `http://tauri.localhost` packaged); packaging changes no mechanism. What
+packaging newly makes real: `"csp": null` (`tauri.conf.json:21-23`) ships to end users — ADR-020:111-113's
+*"with no CSP, any script that reaches the shell's page inherits the admitted origin"* changes
+audience, not mechanism → one sentence owed in docs/09 + a KNOWN-LIMITATIONS line; it also makes
+ADR-024's DOM-approval limitation live for end users. Installer target: pin one (NSIS recommended).
+CI `tauri build` job: in scope, build-only, and it inherits `product-ci-shell.yml:58-62`'s rule —
+until a run has gone green end to end and its run id/commit/trigger/duration are recorded, nothing
+may cite it as a gate; no release text cites CI as evidence.
+
+**Q4 — KNOWN-LIMITATIONS is NOT complete; eight additions required** (operator-visibility order):
+(1) the residency arm actually shipped (B1); (2) **ADR-023 — mandatory**: *"the working canvas
+styles by literal only; the hover panel shows `id` only; and the hero slice's 'colour by attribute'
+moment lives in the published bundle rather than in the shell. Each of those is a named limit, never
+presented as a product choice"* (ADR-023:35-37) — the quickstart's "style" must say style-by-literal;
+(3) ADR-026/ADR-015 — the CRS surface: `engine/src/crs-catalog.json` holds ONE entry (EPSG:2056);
+pinned, never fetched, no matching, no defaults — for a stranger with any other CRS this is the
+largest first-five-minutes limit; (4) ADR-016 — what identity does not establish (dataset-wide
+uniqueness, stability across reopen; composite/non-integer keys open); (5) ADR-017's condition /
+publish as class-3 approval-gated (B2); (6) ADR-027 — principle 4 *"partially discharged … made
+legible but not satisfied for style and publish"* — no "everything is scriptable"; (7) the local
+listening socket + `csp: null`; (8) ADR-011 gates 1–7 open, gate 8 alone met, and the citation rule
+(*"Nobody may cite this ADR … as a settled design"*) — the debts ride the ADR-011 line without a tiling
+plan existing. Lower priority, one line each: ADR-019 Proposed / ADR-014 reserved; docs/08:20-21
+(budgets "owed, not operating") if any text mentions budgets or CI. Check, don't assume: entry 43's
+status against shipped code. **Entry-42 addition: warranted in principle, wrong as drafted** — it is
+arm-conditional (inherits B1) and must cite DECISIONS-PENDING entry 42 as open and unruled, never an
+ADR.
+
+**Q5 — what binds the outsider-facing text:** docs/14:19 trademark stub ("Spatial IDE" is a working
+title, *"weak as a defensible mark"*: no ™/®, one-line trademark note; ADR-009 item 8); docs/14:14-16
+(SKP spec and formats open permanently; proprietary plugins permitted) — safe; ADR-009:22-26 layer
+table for the licence section, ADR-009:48-53 ("what AGPL does not provide") not softened; NEVER
+repeat the "not public until the checklist lands" framing — and **docs/02:81 was stale** (*"ADR-009 is
+open … before any public code"*), corrected dated in this cut; docs/09:3-5 Posture ("Local-first. No
+network access without an explicit grant.") is fully backed — state it; docs/14:27 attribution rides
+only if sample data ships — keep "the stranger brings their own file"; **hard prohibition: quote
+docs/00:9-11 ("What we are building"), never docs/00:35 (the North Star names 10 GB, natural
+language, notebooks, six-months reproduction — none of which v0.1 delivers).**
+
+**Q7 — twelve prohibitions on release text:** no performance statement (docs/08:62; docs/08:20-21;
+ADR-012:232 *"No throughput-based claim may cite this ADR"*); "5 GB" nameable only as the slice's
+target dataset class, never as a capability, and never without the ceiling beside it (ADR-011:63);
+no macOS/Linux support claim; never "zero-copy" (ADR-004); no principle-4 "everything is scriptable"
+(ADR-027:61-63); no "reproducible" without a declared grade (principle 3, ADR-005); no "undo"/
+"undoable" (derived rule; ADR-022 style is ephemeral; publish is class-3); no AI/MCP/notebook language
+(docs/07 Alpha); no presentation of ADR-011/012/023/024/025/029 as settled; no "publish" as a user
+feature until B2 clears; no CI-as-evidence (`product-ci-shell.yml:58-62`); no spatial-indexing or
+import-layout claim (docs/07:22 — the preregistered import-layout gate FAILED).
+
+**Stale statements found on the way (fix-forward, dated, this cut):** `docs/02:81` (ADR-009 "is
+open"); `docs/09:43` (ADR-021 "Proposed" — Accepted 2026-08-13); `frontends/shell/src/canvas/limits.ts:28`
+(ADR-028 "Proposed, not accepted" — Accepted 2026-09-02); `docs/02:83` + `docs/README.md:27`
+(ADR-020's defect "owed" — updated by the Amendment 1 commit, not before).
+
+**Consequences for sequencing.** Item 1 (ADR-020) may proceed on the human's word under the
+security-posture red line (entry 54) — it is independent of B1/B2. Items 3/4/6 wait on entry 52 (the
+arm); publish's presence in any v0.1 text waits on entry 53. Items 2 and 5 can be drafted, with
+publish and the arm left as bracketed slots until ruled.
