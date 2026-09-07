@@ -1,0 +1,341 @@
+1788808613509 policy recovery policy: none -- fail visibly and terminate the canvas with a surfaced error
+1788808615416 producer-pool-poll active=0 live=1 idle=1
+1788808616424 producer-pool-poll active=1 live=1 idle=0
+1788808617437 producer-pool-poll active=1 live=1 idle=0
+1788808618442 producer-pool-poll active=0 live=1 idle=1
+1788808619328 candidate-untiled-terminal initial-untiled-look sh_3da4949b9932c8169592a9b9ac26233d: Completed — 
+1788808619328 candidate-grid-frame-established dataset=ds_b6eb5f7c95fd9cac53f61a13e4952ef1 baseSpan=145346.23001116049 originX=2563666.8481108327 originY=1127446.8895780211 level=fine observedUnion={xmin:2600003.4056136226,ymin:1200003.2105947162,xmax:2672676.520619203,ymax:1200236.7985724863}
+1788808619439 producer-pool-poll active=0 live=1 idle=1
+1788808620439 producer-pool-poll active=0 live=1 idle=1
+1788808621453 producer-pool-poll active=0 live=1 idle=1
+1788808622458 producer-pool-poll active=0 live=1 idle=1
+1788808623461 producer-pool-poll active=0 live=1 idle=1
+1788808623783 candidate-tile-terminal 14:5 sh_b0218baf8e336a8efed1e2eb213d726d: Completed — 
+1788808623884 candidate-tile-terminal 14:7 sh_48e6cf4af14bf160bb8f9be719b8cedd: Completed — 
+1788808623886 candidate-tile-terminal 14:6 sh_dca73e9da41d7f0886f00caeaab6b226: Completed — 
+1788808623932 candidate-tile-terminal 14:8 sh_b6230fe3e384a7cece8b071a7cfa32e1: Completed — 
+1788808624030 candidate-tile-terminal 14:10 sh_1d2016f372d4105aab8145aa226cede8: Completed — 
+1788808624033 candidate-tile-terminal 14:9 sh_7f16b238561ff28c745545ac8c6f92b1: Completed — 
+1788808624079 candidate-tile-terminal 14:11 sh_33783df8c76f888cfc6f526ac2dde6a4: Completed — 
+1788808624169 candidate-tile-terminal 14:12 sh_9b45f65f4580a61ab9e8386ae12a9c13: Completed — 
+1788808624183 candidate-tile-terminal 14:13 sh_ef393a44fc4bdd1796042338a0f46cb3: Completed — 
+1788808624229 candidate-tile-terminal 14:14 sh_e1fa83a6b03b0767ad8c2cda7172d7fd: Completed — 
+1788808624317 candidate-tile-terminal 14:16 sh_d54dca8b8c4b8394dcbd288ec7e83cbc: Completed — 
+1788808624320 candidate-tile-terminal 14:15 sh_538149995ab8bb9fa123a9727e7047e6: Completed — 
+1788808624379 candidate-tile-terminal 14:17 sh_35dbded0dbe914d524ff4ad3573f246f: Completed — 
+1788808624455 candidate-tile-terminal 14:19 sh_f62fe7d3182dc2a5502672e91e6078bf: Completed — 
+1788808624461 producer-pool-poll active=3 live=3 idle=0
+1788808624864 candidate-tile-terminal 17:5 sh_11245cf2a3f8d09a7fa2485dfee3f2ba: Completed — 
+1788808625476 producer-pool-poll active=3 live=3 idle=0
+1788808626476 producer-pool-poll active=3 live=3 idle=0
+1788808627483 producer-pool-poll active=3 live=3 idle=0
+1788808628497 producer-pool-poll active=3 live=3 idle=0
+1788808629501 producer-pool-poll active=3 live=3 idle=0
+1788808630500 producer-pool-poll active=3 live=3 idle=0
+1788808631502 producer-pool-poll active=3 live=3 idle=0
+1788808632517 producer-pool-poll active=3 live=3 idle=0
+1788808633533 producer-pool-poll active=0 live=0 idle=0
+1788808634538 producer-pool-poll active=0 live=0 idle=0
+1788808635551 producer-pool-poll active=0 live=0 idle=0
+1788808636567 producer-pool-poll active=3 live=3 idle=0
+1788808637570 producer-pool-poll active=3 live=3 idle=0
+1788808638493 candidate-tile-terminal 19:25 sh_6d47cd251ad57cc2f046b9bd2a79b289: Completed — 
+1788808638587 producer-pool-poll active=2 live=2 idle=0
+1788808638753 candidate-tile-terminal 20:25 sh_695bf8388678674e7956de717a504908: Completed — 
+1788808638965 candidate-tile-terminal 17:26 sh_535fbdeba998367d322e42117d8e1481: Completed — 
+1788808639006 candidate-tile-terminal 20:26 sh_f58a59a44dc86f9a0852d560671d5647: Completed — 
+1788808639087 candidate-tile-terminal 17:38 sh_54f529398ae3f3393dc279a94f044dd7: Completed — 
+1788808639133 candidate-tile-terminal 17:37 sh_68773a0f4a47c513c6f25a7316f7c31b: Completed — 
+1788808639142 candidate-tile-terminal 17:39 sh_2c41becf27f848e0a0ad8c3bea8a1971: Completed — 
+1788808639210 candidate-tile-terminal 17:40 sh_5a5b4d51659a528a08053155712d8193: Completed — 
+1788808639253 candidate-tile-terminal 17:41 sh_98025f392bfad3fd2077bb0cfe2b87a0: Completed — 
+1788808639262 candidate-tile-terminal 17:42 sh_3631a8d05226c971944469b4670456f2: Completed — 
+1788808639353 candidate-tile-terminal 18:31 sh_ea791fca3ae582d67b144b65c8d18899: Completed — 
+1788808639390 candidate-tile-terminal 18:32 sh_edb6a2e44fb2e66b5ed83d1bb598cde1: Completed — 
+1788808639396 candidate-tile-terminal 18:33 sh_114fed3f208c2407de6b93804690e900: Completed — 
+1788808639471 candidate-tile-terminal 18:34 sh_67d0ec461cf5e4e6592e52c2dbe809c8: Completed — 
+1788808639522 candidate-tile-terminal 18:36 sh_b459954af75e80010dcba5e3402a1417: Completed — 
+1788808639532 candidate-tile-terminal 18:35 sh_381c90ec5e6bec107eb7597973aeecd1: Completed — 
+1788808639590 producer-pool-poll active=3 live=3 idle=0
+1788808639608 candidate-tile-terminal 18:37 sh_e9f4b448c9d4fd73d0add97416cef71a: Completed — 
+1788808639643 candidate-tile-terminal 18:38 sh_9f8225e5c56d651a7daf4678b1589ace: Completed — 
+1788808639656 candidate-tile-terminal 18:39 sh_652436acba710e6ae76b5982ae0abe08: Completed — 
+1788808639733 candidate-tile-terminal 18:40 sh_fd0f10f20d309a99e2ca30bcfd02a1ab: Completed — 
+1788808639763 candidate-tile-terminal 18:41 sh_990c0367820d3a34c3b08dcaf479e4b4: Completed — 
+1788808639783 candidate-tile-terminal 18:42 sh_c648434e6df81d986d9e3c2c7a0d8958: Completed — 
+1788808639855 candidate-tile-terminal 19:31 sh_fbc6cfe22f95f02142b3db5cdd45f114: Completed — 
+1788808639886 candidate-tile-terminal 19:32 sh_df5cab8e83c19266a1f93acf22acd243: Completed — 
+1788808639906 candidate-tile-terminal 19:33 sh_ff159428f47e4ad4a5f031a4a06f9baf: Completed — 
+1788808639977 candidate-tile-terminal 19:34 sh_28c5bc8c0637f91a4164b03b6651ec28: Completed — 
+1788808640016 candidate-tile-terminal 19:35 sh_b587b5a28efec0874eecb3fdd3b12beb: Completed — 
+1788808640024 candidate-tile-terminal 19:36 sh_de1728fa0fc7633e8325776aa90463a3: Completed — 
+1788808640098 candidate-tile-terminal 19:37 sh_2727603a8eadae4808fc96fac027d614: Completed — 
+1788808640135 candidate-tile-terminal 19:38 sh_b79dc8119e51e0924f948deaa26a054c: Completed — 
+1788808640153 candidate-tile-terminal 19:39 sh_2ec2a2681ff1ec1a74e56f09538b8b3a: Completed — 
+1788808640216 candidate-tile-terminal 19:40 sh_21a5f5473ccd84a3012e6860bf4e9f09: Completed — 
+1788808640253 candidate-tile-terminal 19:41 sh_b303467f2be3c10c9e36f5823b474109: Completed — 
+1788808640281 candidate-tile-terminal 19:42 sh_255f7e1572534f352272eceb01ccee13: Completed — 
+1788808640361 candidate-tile-terminal 20:31 sh_1b1ebc9683a6f48cfa8a8cdb4cdd3abe: Completed — 
+1788808640389 candidate-tile-terminal 20:32 sh_2e4e3f47eae20dc2b16b5f9b5f1ac65b: Completed — 
+1788808640415 candidate-tile-terminal 20:33 sh_9352adfdb59f8a92b1a06c711e083670: Completed — 
+1788808640509 candidate-tile-terminal 20:34 sh_91c899f1114561fd0e9710b96980add3: Completed — 
+1788808640531 candidate-tile-terminal 20:35 sh_28c794254bc49d80744cef4b2282b8f7: Completed — 
+1788808640553 candidate-tile-terminal 20:36 sh_ccdf17871de7cd7b15ae344208b8f5bd: Completed — 
+1788808640594 producer-pool-poll active=3 live=3 idle=0
+1788808640658 candidate-tile-terminal 20:37 sh_8fd428c4c21d9db6a32d6b499e7c0776: Completed — 
+1788808640681 candidate-tile-terminal 20:38 sh_de266ddbb9937c96dc07daafa4c2f7f7: Completed — 
+1788808640698 candidate-tile-terminal 20:39 sh_194a3105982573466233b1c9aa3de4eb: Completed — 
+1788808640798 candidate-tile-terminal 20:40 sh_1495aa4c76e0de7ab13b096434f058e3: Completed — 
+1788808640812 candidate-tile-terminal 20:41 sh_51c546e76cda38c09193c5cac5d3cbdf: Completed — 
+1788808640826 candidate-tile-terminal 20:42 sh_2e59c7b3c31447715d3ad768e640cfd8: Completed — 
+1788808640933 candidate-tile-terminal 18:25 sh_671d1014737fa253a0da0016e8ef5816: Completed — 
+1788808640935 candidate-tile-terminal 18:26 sh_6c3971a36e25a59fa976851e66a1f4a3: Completed — 
+1788808640954 candidate-tile-terminal 17:43 sh_068f0bd28fe14cfe3f955c6212be7660: Completed — 
+1788808641072 candidate-tile-terminal 19:43 sh_e40684f92f761d123112bcf267bd764f: Completed — 
+1788808641077 candidate-tile-terminal 18:43 sh_abfb0f740a7f4bd38e8df72b8e79eef2: Completed — 
+1788808641112 candidate-tile-terminal 20:43 sh_3c3dfd0d0fb4e21bbb452309962d8c06: Completed — 
+1788808641206 candidate-tile-terminal 17:44 sh_ea1d039905a52643908694ae3d4f0ca6: Completed — 
+1788808641210 candidate-tile-terminal 18:44 sh_cc6a73302cc8e614949e6e05ab5429a8: Completed — 
+1788808641240 candidate-tile-terminal 19:44 sh_516f33da954e547c4c4226ba69e6d9b8: Completed — 
+1788808641332 candidate-tile-terminal 20:44 sh_63294eeb7381d40b8c3f51cc85dda215: Completed — 
+1788808641340 candidate-tile-terminal 17:45 sh_c7554415690000189b27a8f4be6779c4: Completed — 
+1788808641362 candidate-tile-terminal 18:45 sh_a01b7bcba7ec684a4b13c7c81918c3c9: Completed — 
+1788808641456 candidate-tile-terminal 19:25 sh_98cbbd4102f94269b21b7100dbc3934c: Completed — 
+1788808641461 candidate-tile-terminal 19:26 sh_4f223424310bd108da307d3c4c70fbbb: Completed — 
+1788808641482 candidate-tile-terminal 19:45 sh_89cc79bb01fc2438cac16dc16260f33c: Completed — 
+1788808641557 candidate-tile-terminal 20:45 sh_c06bb6715d505651becc6095c9c487f1: Completed — 
+1788808641608 producer-pool-poll active=0 live=3 idle=3
+1788808642612 producer-pool-poll active=0 live=3 idle=3
+1788808642739 candidate-tile-terminal 14:27 sh_ded4eead70cba4e1cd2c548331a8444d: Completed — 
+1788808642752 candidate-tile-terminal 14:26 sh_5569b7343a7cc59f6571a4bd77e313a4: Completed — 
+1788808642756 candidate-tile-terminal 14:25 sh_5448a4f8dca09275f98717bb28cc604d: Completed — 
+1788808642877 candidate-tile-terminal 14:28 sh_07389bd3505d6321d0841a68976f5c2e: Completed — 
+1788808642891 candidate-tile-terminal 14:30 sh_274edec699e911fd88a307b4bbb50042: Completed — 
+1788808642893 candidate-tile-terminal 14:29 sh_42aa5f3a01636b82819ca246bd87d726: Completed — 
+1788808643001 candidate-tile-terminal 14:31 sh_37e687e6bd12eb9ce3754cd312297c6c: Completed — 
+1788808643013 candidate-tile-terminal 14:32 sh_9d1683253b10c168253f3a9f426f2999: Completed — 
+1788808643015 candidate-tile-terminal 14:33 sh_f067a530f87025b36d0385e1dfe2d30a: Completed — 
+1788808643126 candidate-tile-terminal 14:34 sh_2c5afb4fba9657094b5187887e631ea2: Completed — 
+1788808643141 candidate-tile-terminal 14:35 sh_97e9e64e612197574763c951f2bd001f: Completed — 
+1788808643142 candidate-tile-terminal 14:36 sh_547b408982be9be6ec82beb340b1f375: Completed — 
+1788808643244 candidate-tile-terminal 14:37 sh_f0b4f156d5569e8029cbd1d949a346a3: Completed — 
+1788808643254 candidate-tile-terminal 14:39 sh_4654ce830ba6a1f0411d1a8ef58b68dc: Completed — 
+1788808643258 candidate-tile-terminal 14:38 sh_0dd85ad6805a99ce71539e4999b77978: Completed — 
+1788808643358 candidate-tile-terminal 14:40 sh_eee25b4a57db728a4456c3bfd00c6b1d: Completed — 
+1788808643379 candidate-tile-terminal 14:41 sh_1e02a0253577f82308321a1fc9262f74: Completed — 
+1788808643383 candidate-tile-terminal 14:42 sh_0af1104330117fec7a69b5fd049f26ad: Completed — 
+1788808643479 candidate-tile-terminal 14:43 sh_f20f4929f60a0bf648eb731cf51b170c: Completed — 
+1788808643503 candidate-tile-terminal 14:45 sh_cb4e63d24bbce35a722b080acb7b60ef: Completed — 
+1788808643504 candidate-tile-terminal 14:44 sh_a83ca0499bb848c4b8665dc2f7e90517: Completed — 
+1788808643595 candidate-tile-terminal 15:25 sh_98385a38c6dd7751f5b15333bd44bcb6: Completed — 
+1788808643611 producer-pool-poll active=3 live=3 idle=0
+1788808643617 candidate-tile-terminal 15:26 sh_3a8fc8e900f91053234b0aeb1fee8fe6: Completed — 
+1788808643619 candidate-tile-terminal 15:27 sh_6941a431e65ab03ca362ee459512a00f: Completed — 
+1788808643718 candidate-tile-terminal 15:28 sh_b5584362e2084b274f4c37519969c70b: Completed — 
+1788808643740 candidate-tile-terminal 15:29 sh_918ff0b6110acbf9585ce8339a4d684c: Completed — 
+1788808643741 candidate-tile-terminal 15:30 sh_b9afd22ea0c72b9609672333fbcbdaea: Completed — 
+1788808643847 candidate-tile-terminal 15:31 sh_5f4cfada3e39cc85589f01fcc9e4c869: Completed — 
+1788808643866 candidate-tile-terminal 15:32 sh_3c1e88a1c738d091299477181e045e9d: Completed — 
+1788808643869 candidate-tile-terminal 15:33 sh_7b1a481a9623a2d11b6d9506e848678e: Completed — 
+1788808643984 candidate-tile-terminal 15:34 sh_d898f4b2ec7d88070025abb653b510c6: Completed — 
+1788808643998 candidate-tile-terminal 15:36 sh_d3a379a8f336f71d0cc9f859fea74fca: Completed — 
+1788808644007 candidate-tile-terminal 15:35 sh_0b6fbb2a937d55b8a2c1f9bfcd0db6d4: Completed — 
+1788808644133 candidate-tile-terminal 15:37 sh_36cf3ecc4bab33b1fd03537166bb4fd3: Completed — 
+1788808644138 candidate-tile-terminal 15:38 sh_ee61bbe64abd1ff07939b0405aa82e0d: Completed — 
+1788808644153 candidate-tile-terminal 15:39 sh_aa3f6c7a645daaf5006249180d4fecff: Completed — 
+1788808644273 candidate-tile-terminal 15:40 sh_54744fce9b8f49fb38a93cb87393bde2: Completed — 
+1788808644274 candidate-tile-terminal 15:41 sh_6d2c5f0ddb9c7d102173c91e48d9bb2f: Completed — 
+1788808644293 candidate-tile-terminal 15:42 sh_ecd84a99bdd279fa7bc596002f8a86c5: Completed — 
+1788808644416 candidate-tile-terminal 15:44 sh_82fcf73fae63688135b592de1721ffb4: Completed — 
+1788808644418 candidate-tile-terminal 15:43 sh_296bf593fc74574cae3e9de65ed9a07e: Completed — 
+1788808644441 candidate-tile-terminal 15:45 sh_b29010698ec133add665ec2b66a74f05: Completed — 
+1788808644551 candidate-tile-terminal 16:25 sh_7d275e7412874c005aa9f38a6e8e25bb: Completed — 
+1788808644557 candidate-tile-terminal 16:26 sh_abca33c187c90abe847a758b2334cb6d: Completed — 
+1788808644579 candidate-tile-terminal 16:27 sh_7b27681556b86e7a1f5d030602c0cd45: Completed — 
+1788808644609 producer-pool-poll active=3 live=3 idle=0
+1788808644698 candidate-tile-terminal 16:28 sh_6b6fda7b740b6d3cf131f6abd89d9de9: Completed — 
+1788808644703 candidate-tile-terminal 16:29 sh_48abc4bc30878e0127b5840fc445f22a: Completed — 
+1788808644720 candidate-tile-terminal 16:30 sh_d7510070bafd59ff19080bbdcc227e0a: Completed — 
+1788808644839 candidate-tile-terminal 16:32 sh_2420d1867913e07460fbf4b031d382dc: Completed — 
+1788808644848 candidate-tile-terminal 16:31 sh_003e6c12dc6c964a44b7fc3107785fb2: Completed — 
+1788808644877 candidate-tile-terminal 16:33 sh_688b967d51945725db51562f9bfd863d: Completed — 
+1788808644986 candidate-tile-terminal 16:34 sh_e2914d5d33c01480ac99fd910a8d7975: Completed — 
+1788808645005 candidate-tile-terminal 16:35 sh_02d2e5b2e83030d889b286fcaa63b05f: Completed — 
+1788808645034 candidate-tile-terminal 16:36 sh_a16de80bf57a65a541eb0c4d0449116d: Completed — 
+1788808645130 candidate-tile-terminal 16:37 sh_a68e475a41b41cc097529f15895dddb3: Completed — 
+1788808645153 candidate-tile-terminal 16:38 sh_25514b3b684dd35347ed8554f8928c0f: Completed — 
+1788808645188 candidate-tile-terminal 16:39 sh_cb93da89508d836abee9209ccdcf3465: Completed — 
+1788808645275 candidate-tile-terminal 16:40 sh_a5b16aa5960e665ef3cba3e8e582b897: Completed — 
+1788808645309 candidate-tile-terminal 16:41 sh_e1866ee057c5b4c86cdc5d1f3be1357f: Completed — 
+1788808645335 candidate-tile-terminal 16:42 sh_84c5d982cd6b509bb0ff2d72337add7d: Completed — 
+1788808645426 candidate-tile-terminal 16:43 sh_2d00ef42f741dd2e1c337511d78700a6: Completed — 
+1788808645457 candidate-tile-terminal 16:44 sh_c5326fa258668bf0837e810c48b6c841: Completed — 
+1788808645486 candidate-tile-terminal 16:45 sh_5662487a501ca98cbc5c552b826307ed: Completed — 
+1788808645581 candidate-tile-terminal 17:25 sh_01aed43bdf4ba2ae95ae42cf9c054638: Completed — 
+1788808645615 producer-pool-poll active=2 live=3 idle=1
+1788808645618 candidate-tile-terminal 17:26 sh_084dd9b3885a2fa6076dfbaf8a6c80ee: Completed — 
+1788808645626 candidate-tile-terminal 17:27 sh_6061aa94c2f34bd275ba05a113dcd1c2: Completed — 
+1788808645719 candidate-tile-terminal 17:28 sh_9ffb1fe6968f47ac4830c390550edce9: Completed — 
+1788808645766 candidate-tile-terminal 17:29 sh_09b8a95be28bd4de2ef6e300a9eec609: Completed — 
+1788808645771 candidate-tile-terminal 17:30 sh_42158b316b248e0d458bee3771d5537c: Completed — 
+1788808645868 candidate-tile-terminal 17:31 sh_f598c84ac8a00ab061c7b4955ad9b75c: Completed — 
+1788808645916 candidate-tile-terminal 17:33 sh_467462135f2320bcd915399724f644fa: Completed — 
+1788808645918 candidate-tile-terminal 17:32 sh_8e643715f8554779964641c537798f49: Completed — 
+1788808646026 candidate-tile-terminal 17:34 sh_c5c34fa3b56d79606644ba0da6f37704: Completed — 
+1788808646066 candidate-tile-terminal 17:35 sh_9578590537ea57c84ed7d3f0427e18cb: Completed — 
+1788808646069 candidate-tile-terminal 17:36 sh_c93bd4d5bd8f56dd3914ba688983a287: Completed — 
+1788808646162 candidate-tile-terminal 17:37 sh_39241a9cfa5ae8828bd15b56c7ed507c: Completed — 
+1788808646200 candidate-tile-terminal 17:38 sh_2bbd4bced36a8dceb289c9321bf40af5: Completed — 
+1788808646212 candidate-tile-terminal 17:39 sh_b2cec5e86fcd2acc3045824ad3a3bb74: Completed — 
+1788808646317 candidate-tile-terminal 17:40 sh_7f021f6c2bc1b1d00c051934b876e150: Completed — 
+1788808646354 candidate-tile-terminal 17:41 sh_0c23aeeb3666aeb4779f5f23a6fca8d9: Completed — 
+1788808646366 candidate-tile-terminal 17:42 sh_a3f37b9502cdacefed8c8f248819336c: Completed — 
+1788808646459 candidate-tile-terminal 17:43 sh_a2433ab8fa3664d3842d869aa778295b: Completed — 
+1788808646489 candidate-tile-terminal 17:44 sh_70fe42fce568b2c78f4abfd17d0d0494: Completed — 
+1788808646501 candidate-tile-terminal 17:45 sh_bdf8893695acb46d2d9a9d80057520e3: Completed — 
+1788808646621 producer-pool-poll active=0 live=3 idle=3
+1788808647636 producer-pool-poll active=0 live=3 idle=3
+1788808648650 producer-pool-poll active=0 live=3 idle=3
+1788808649660 producer-pool-poll active=3 live=3 idle=0
+1788808649719 candidate-tile-terminal 14:7 sh_e778a83aab5260186ee4f66129064c12: Completed — 
+1788808649720 candidate-tile-terminal 14:6 sh_85147630cccf74ccc74ea8908d294cff: Completed — 
+1788808649725 candidate-tile-terminal 14:5 sh_6cf713a7652da6b8d113c8345a67443e: Completed — 
+1788808650672 producer-pool-poll active=0 live=3 idle=3
+1788808651673 producer-pool-poll active=0 live=3 idle=3
+1788808652677 producer-pool-poll active=0 live=3 idle=3
+1788808653680 producer-pool-poll active=3 live=3 idle=0
+1788808653800 candidate-tile-terminal 15:6 sh_d511ee84353b5ce571f96c8f7fbc8a6b: Completed — 
+1788808653836 candidate-tile-terminal 15:5 sh_013ae35eaa6a5a9045d7c9faad17279e: Completed — 
+1788808653937 candidate-tile-terminal 15:7 sh_a4b9fbe4e938a6f9fa05ee4b8420cd69: Completed — 
+1788808654682 producer-pool-poll active=0 live=3 idle=3
+1788808655680 producer-pool-poll active=0 live=3 idle=3
+1788808656685 producer-pool-poll active=0 live=3 idle=3
+1788808657700 producer-pool-poll active=0 live=3 idle=3
+1788808658705 producer-pool-poll active=0 live=3 idle=3
+1788808659707 producer-pool-poll active=0 live=3 idle=3
+1788808660709 producer-pool-poll active=0 live=3 idle=3
+1788808661708 producer-pool-poll active=0 live=3 idle=3
+1788808662713 producer-pool-poll active=0 live=3 idle=3
+1788808663729 producer-pool-poll active=0 live=3 idle=3
+1788808664745 producer-pool-poll active=0 live=3 idle=3
+1788808665751 producer-pool-poll active=0 live=3 idle=3
+1788808666760 producer-pool-poll active=0 live=3 idle=3
+1788808667761 producer-pool-poll active=0 live=3 idle=3
+1788808668768 producer-pool-poll active=0 live=3 idle=3
+1788808669775 producer-pool-poll active=0 live=3 idle=3
+1788808670778 producer-pool-poll active=0 live=3 idle=3
+1788808671780 producer-pool-poll active=0 live=3 idle=3
+1788808672796 producer-pool-poll active=0 live=3 idle=3
+1788808673799 producer-pool-poll active=0 live=3 idle=3
+1788808674805 producer-pool-poll active=0 live=3 idle=3
+1788808675812 producer-pool-poll active=0 live=3 idle=3
+1788808676826 producer-pool-poll active=0 live=3 idle=3
+1788808677833 producer-pool-poll active=0 live=3 idle=3
+1788808678833 producer-pool-poll active=0 live=3 idle=3
+1788808679837 producer-pool-poll active=0 live=3 idle=3
+1788808680840 producer-pool-poll active=0 live=3 idle=3
+1788808681847 producer-pool-poll active=0 live=3 idle=3
+1788808682849 producer-pool-poll active=0 live=3 idle=3
+1788808683849 producer-pool-poll active=0 live=3 idle=3
+1788808684848 producer-pool-poll active=0 live=3 idle=3
+1788808685862 producer-pool-poll active=0 live=3 idle=3
+1788808686878 producer-pool-poll active=0 live=3 idle=3
+1788808687894 producer-pool-poll active=0 live=3 idle=3
+1788808688897 producer-pool-poll active=0 live=3 idle=3
+1788808689902 producer-pool-poll active=0 live=3 idle=3
+1788808690904 producer-pool-poll active=0 live=3 idle=3
+1788808691914 producer-pool-poll active=0 live=3 idle=3
+1788808692929 producer-pool-poll active=0 live=3 idle=3
+1788808693929 producer-pool-poll active=0 live=3 idle=3
+1788808694942 producer-pool-poll active=0 live=3 idle=3
+1788808695959 producer-pool-poll active=0 live=3 idle=3
+1788808696960 producer-pool-poll active=0 live=3 idle=3
+1788808697962 producer-pool-poll active=0 live=3 idle=3
+1788808698964 producer-pool-poll active=0 live=3 idle=3
+1788808699971 producer-pool-poll active=0 live=3 idle=3
+1788808700977 producer-pool-poll active=0 live=3 idle=3
+1788808701982 producer-pool-poll active=0 live=3 idle=3
+1788808702986 producer-pool-poll active=0 live=3 idle=3
+1788808704000 producer-pool-poll active=0 live=3 idle=3
+1788808705004 producer-pool-poll active=0 live=3 idle=3
+1788808706003 producer-pool-poll active=0 live=3 idle=3
+1788808707003 producer-pool-poll active=0 live=3 idle=3
+1788808708009 producer-pool-poll active=0 live=3 idle=3
+1788808709026 producer-pool-poll active=0 live=3 idle=3
+1788808710042 producer-pool-poll active=0 live=3 idle=3
+1788808711049 producer-pool-poll active=0 live=3 idle=3
+1788808712053 producer-pool-poll active=0 live=3 idle=3
+1788808713057 producer-pool-poll active=0 live=3 idle=3
+1788808714060 producer-pool-poll active=0 live=3 idle=3
+1788808715064 producer-pool-poll active=0 live=3 idle=3
+1788808716077 producer-pool-poll active=0 live=3 idle=3
+1788808717094 producer-pool-poll active=0 live=3 idle=3
+1788808718098 producer-pool-poll active=0 live=3 idle=3
+1788808719096 producer-pool-poll active=0 live=3 idle=3
+1788808720101 producer-pool-poll active=0 live=3 idle=3
+1788808721104 producer-pool-poll active=0 live=3 idle=3
+1788808722110 producer-pool-poll active=0 live=3 idle=3
+1788808723116 producer-pool-poll active=0 live=3 idle=3
+1788808724121 producer-pool-poll active=0 live=3 idle=3
+1788808725128 producer-pool-poll active=0 live=3 idle=3
+1788808726143 producer-pool-poll active=0 live=3 idle=3
+1788808727145 producer-pool-poll active=0 live=3 idle=3
+1788808728144 producer-pool-poll active=0 live=3 idle=3
+1788808729150 producer-pool-poll active=0 live=3 idle=3
+1788808730167 producer-pool-poll active=0 live=3 idle=3
+1788808731182 producer-pool-poll active=0 live=3 idle=3
+1788808732195 producer-pool-poll active=0 live=3 idle=3
+1788808733209 producer-pool-poll active=0 live=3 idle=3
+1788808734222 producer-pool-poll active=0 live=3 idle=3
+1788808735237 producer-pool-poll active=0 live=3 idle=3
+1788808736252 producer-pool-poll active=0 live=3 idle=3
+1788808737267 producer-pool-poll active=0 live=3 idle=3
+1788808738270 producer-pool-poll active=0 live=3 idle=3
+1788808739268 producer-pool-poll active=0 live=3 idle=3
+1788808740271 producer-pool-poll active=0 live=3 idle=3
+1788808741268 producer-pool-poll active=0 live=3 idle=3
+1788808742283 producer-pool-poll active=0 live=3 idle=3
+1788808743285 producer-pool-poll active=0 live=3 idle=3
+1788808744288 producer-pool-poll active=0 live=3 idle=3
+1788808745289 producer-pool-poll active=0 live=3 idle=3
+1788808746289 producer-pool-poll active=0 live=3 idle=3
+1788808747299 producer-pool-poll active=0 live=3 idle=3
+1788808748314 producer-pool-poll active=0 live=3 idle=3
+1788808749328 producer-pool-poll active=0 live=3 idle=3
+1788808750344 producer-pool-poll active=0 live=3 idle=3
+1788808751357 producer-pool-poll active=0 live=3 idle=3
+1788808752373 producer-pool-poll active=0 live=3 idle=3
+1788808753388 producer-pool-poll active=0 live=3 idle=3
+1788808754392 producer-pool-poll active=0 live=3 idle=3
+1788808755393 producer-pool-poll active=0 live=3 idle=3
+1788808756408 producer-pool-poll active=0 live=3 idle=3
+1788808757424 producer-pool-poll active=0 live=3 idle=3
+1788808758434 producer-pool-poll active=0 live=3 idle=3
+1788808759450 producer-pool-poll active=0 live=3 idle=3
+1788808760458 producer-pool-poll active=0 live=3 idle=3
+1788808761474 producer-pool-poll active=0 live=3 idle=3
+1788808762487 producer-pool-poll active=0 live=3 idle=3
+1788808763489 producer-pool-poll active=0 live=3 idle=3
+1788808764490 producer-pool-poll active=0 live=3 idle=3
+1788808765490 producer-pool-poll active=0 live=3 idle=3
+1788808766492 producer-pool-poll active=0 live=3 idle=3
+1788808767497 producer-pool-poll active=0 live=3 idle=3
+1788808768512 producer-pool-poll active=0 live=3 idle=3
+1788808769527 producer-pool-poll active=0 live=3 idle=3
+1788808770530 producer-pool-poll active=0 live=3 idle=3
+1788808771532 producer-pool-poll active=0 live=3 idle=3
+1788808772536 producer-pool-poll active=0 live=3 idle=3
+1788808773541 producer-pool-poll active=0 live=3 idle=3
+1788808774556 producer-pool-poll active=0 live=3 idle=3
+1788808775571 producer-pool-poll active=0 live=3 idle=3
+1788808776575 producer-pool-poll active=0 live=3 idle=3
+1788808777578 producer-pool-poll active=0 live=3 idle=3
+1788808778580 producer-pool-poll active=0 live=3 idle=3
+1788808779592 producer-pool-poll active=0 live=3 idle=3
+1788808780607 producer-pool-poll active=0 live=3 idle=3
+1788808781612 producer-pool-poll active=0 live=3 idle=3
+1788808782611 producer-pool-poll active=0 live=3 idle=3
+1788808783611 producer-pool-poll active=0 live=3 idle=3
+1788808784610 producer-pool-poll active=0 live=3 idle=3
+1788808785622 producer-pool-poll active=0 live=3 idle=3
+1788808786636 producer-pool-poll active=0 live=3 idle=3

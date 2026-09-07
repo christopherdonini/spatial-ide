@@ -1,0 +1,20 @@
+19:14:53Z == entry-40 cell runner start; dryRun=False; shellDir=C:\dev\spatial-ide\frontends\shell; branch @ 4f133df (main); main @ 4f133df
+19:15:25Z fixture sha OK
+19:15:25Z shell instances running before launch: 0
+19:15:25Z session unlocked (no LogonUI) before arming
+19:15:27Z arm: {"armed":true,"taskArmed":true,"taskName":"RustDeskRestoreBackstop","taskFireAt":"2026-09-07T23:45:25.4946338+02:00","watchdogArmed":true,"watchdogPid":7660,"heartbeatFile":"<USERPROFILE>\\AppData\\Local\\Temp\\rustdesk-guard\\heartbeat","releaseFile":"<USERPROFILE>\\AppData\\Local\\Temp\\rustdesk-guard\\release","restoreScript":"C:\\dev\\spatial-ide\\frontends\\shell\\e2e\\rustdesk-guard\\restore-rustdesk.ps1"}
+19:15:32Z rustdesk service=Stopped processes=0
+19:15:32Z step 3 (wake + display check) start
+19:15:37Z   wake: type-present=True
+19:15:37Z   wake: SendMessage ok
+19:15:37Z   wake: SendInput ok
+19:15:37Z   display: {"ok":true,"sessionUnlocked":true,"displayAwake":true,"monitorTimeoutAc":0}
+19:15:37Z step 3 exit=0
+19:15:37Z display verified ok
+19:15:38Z heartbeat job 1 started
+19:15:38Z harness start (launch instant 1788808538)
+19:18:01Z harness exit=0 after 2.4 min
+19:18:01Z disarming: run complete
+19:18:04Z disarm: {"disarmed":true,"rustdeskService":"Running"}
+19:18:04Z rustdesk after disarm: Running
+19:18:04Z == runner end rc=0
