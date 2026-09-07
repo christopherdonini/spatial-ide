@@ -484,3 +484,104 @@ harness recipe in AI_DEVELOPMENT.md); a new unit test that a production-mode ren
 build) constructs the candidate session. **No ADR change:** this applies ADR-028 as accepted; ADR-028
 Amendment 3's contract becomes the shipped one. Gate: reviewer (ADR-010 rule 5 — nothing becomes
 silent — re-checked on the re-aimed steps).
+
+---
+
+## Amendment 3 — B2's premise corrected on the record; preregistration of items 2, 3 and 3e (2026-09-07, appended BEFORE any code on those items)
+
+**B2 correction (custodian, on reading ADR-017 in full).** ADR-017 §"Exposure review — 2026-08-17,
+human decision — the UI surface passes, with two binding conditions" and §"Exposure review completion
+— 2026-08-17": *"the acceptance condition is discharged for the shell's UI surface"* (conditions 1 and
+2 landed in `cd3cf1c`, `29005d4`; `publish-bundle` remains dev/test tooling as a CLI; SKP, MCP,
+plugin, notebook and AI exposure each still require their own review). Amendment 1's B2 statement
+that the review "has not happened" is therefore wrong for the UI surface — the consult read the Status
+block and the F-10 clarification, not the two later sections. **What stays open, exactly:** (i) the
+discharged UI surface has never run from a packaged artifact — Part M re-confirms it there; (ii) the
+ADR-025 preflight refusal (item 3e) is new behaviour on that surface, sighted at Part M. The human's
+entry-53 ruling was made on the consult's premise; its reduced form is put back to the human in
+DECISIONS-PENDING (the pre-declared fallback stands either way). No v0.1 text about publish is
+written until that word.
+
+### Preregistration — item 2 (packaged notice channel) + item 3 (the packaged build) as ONE piece
+
+Facts read for this preregistration: `tauri.conf.json` `bundle.targets: "all"`, `bundle.active: true`,
+no `resources`, `app.security.csp: null`; tauri-utils 2.9.3 `config.rs`: `NSISInstallerMode::CurrentUser`
+(*"Install the app by default in a directory that doesn't require Administrator access … metadata under
+HKCU"*, the default), `NsisConfig.install_mode` (`installMode`), `BundleResources` = list of paths or a
+source→target map, bundle target name `"nsis"`; `publish.rs:795-804` locates the viewer dev-tree-
+relative (`CARGO_MANIFEST_DIR/../../../renderer/bundle-viewer/dist`) and its doc (`:786-794`) records
+that this does not hold packaged; tauri 2.11.5 `PathResolver::resource_dir` (`src/path/desktop.rs:230`).
+
+**The piece:**
+1. **Installer:** `bundle.targets: ["nsis"]`, `bundle.windows.nsis.installMode: "currentUser"` (per-
+   user, no elevation — the human's ruling); MSI not produced. Signing OUT (declared).
+2. **Viewer as a resource:** `bundle.resources` maps `../../renderer/bundle-viewer/dist` → a named
+   resource directory; `publish.rs`'s viewer lookup resolves the resource dir first
+   (`app.path().resource_dir()` joined with that name) and falls back to the dev-tree path under
+   `tauri dev`; both paths are named in the error string when neither holds. The CI shell workflow
+   builds the viewer before the shell (its lines ~119 already say `dist/` is consumed as
+   `frontendDist`) — the bundle-viewer build must also precede `tauri build`.
+3. **Notice channel (Q2 shape):** a prebuild step in `frontends/shell` writes `NOTICE.txt` from
+   `renderer/bundle-viewer/notice.mjs`'s `notice()` (the ONE source) into a generated location the
+   frontend imports (`?raw`) and renders in a "Notices" view reachable from the shell (no new Tauri
+   command — ADR-027's tax avoided; state where in the UI, quoting docs/03 only for what exists);
+   the same text is ALSO placed in `bundle.resources` as `NOTICE.txt` beside the executable, so the
+   install directory carries it as a file. The AGPL notice + the `Url` corresponding-source route for
+   the INSTALLER (ADR-009 item 1 + AGPL §4/§5; entry 49's route) are part of that text. **Test:** the
+   generated `NOTICE.txt` is byte-identical to `notice()`'s output (a unit test), and the built
+   frontend `dist/` contains the IOGP acknowledgement, the terms URL and the corresponding-source URL
+   (a dist check beside `check:dist-clean`). `renderer/bundle-viewer/notice.mjs` added to
+   `product-ci-shell.yml`'s path filters.
+4. **CI:** a `tauri build` job on `windows-latest` in `product-ci-shell.yml` (build only; uploads the
+   NSIS artifact; no signing, no release publishing); the job carries the workflow's standing rule
+   (`:58-62`) — nothing cites it as a gate until a run has gone green end to end and its run id,
+   commit, trigger and duration are recorded in the file.
+5. **docs/09:** one sentence in "Local listening sockets" stating that the packaged app ships with
+   `csp: null` and what ADR-020:111-113 says follows (audience change, not mechanism); KNOWN-
+   LIMITATIONS line 7 cites it.
+6. **The first `tauri build` on the reference machine** downloads NSIS into the Tauri CLI's cache
+   (`%LOCALAPPDATA%\tauri`, absent today) — a dev-machine download, named here before it happens.
+7. **Part M (new walkthrough part):** install the NSIS artifact on a clean Windows user profile
+   (the human's pick — a fresh local account is cleanest); first launch; the Notices view and the
+   `NOTICE.txt` beside the executable (item 2's strings, verbatim); open a GeoParquet (the CRS
+   catalog's admitted CRS only — EPSG:2056, or the extended set if item 8 is ruled in); filter;
+   style (by literal — ADR-023); the residency behaviour on the flipped arm at an over-budget zoom
+   (the declared partial view, strings verbatim); **publish per the reduced entry-53 form** — the
+   approval dialog's plain-outcome sentence and the audit record's `--audit-show` legibility
+   (the 2026-08-17 conditions, re-confirmed on the artifact), the ADR-025 refusal on an artifact
+   predicted above the reader's ceilings (item 3e), and the bundle opened in a browser; the
+   `tauri build --debug` artifact's data-plane admission (item 1's declared check). Run by the human,
+   batched. No perf steps; every expected outcome quoted from shipped strings.
+8. **Tests, pre-committed:** the config asserts (`targets` = `["nsis"]`, `installMode` =
+   `currentUser`, resources include the viewer and `NOTICE.txt`) as a unit test over
+   `tauri.conf.json`; the viewer-lookup fallback order unit-tested; the notice byte-identity and
+   dist-content checks; the CI job green once (recorded); Part M by the human.
+
+### Preregistration — item 3e (ADR-025: refuse, typed, at preflight)
+
+Facts: `kernel/src/publish/mod.rs:388` `pub fn preflight(req) -> Result<PublishPreflight, PublishError>`
+already refuses typed (`RowFilterNotRecordable`, license, projection) before any work; the write path
+refuses `MAX_PUBLISH_PARTITIONS` at `:614-619` with `PublishError::CeilingExceeded { ceiling, limit,
+saw }`; the READER's ceilings live only in `renderer/bundle-viewer/src/render.ts:50-55` (`MAX_FEATURES
+2_000_000`, `MAX_PARTITIONS 100_000`, `MAX_RESIDENT_BYTES 512 MiB`, `MAX_ATTRIBUTE_COLUMNS 32`,
+`MAX_ATTRIBUTE_DISPLAY_CHARS 512`) — the kernel knows none of them.
+
+**The piece:** (1) ONE source for the reader's ceilings: a `renderer/bundle-viewer/ceilings.json`
+that `render.ts` imports (the TS constants become re-exports of it) and the kernel `include_str!`s
+(parsed once, pinned-hash tested like the CRS catalog) — never a second copy, per ADR-025's own
+constraint. (2) `preflight` predicts what is predictable before any write — feature count (the
+dataset's row count) against `MAX_FEATURES`, projected attribute columns against
+`MAX_ATTRIBUTE_COLUMNS` — and refuses with a typed error (`PublishError::ReaderCeilingExceeded {
+ceiling, limit, predicted }` or the existing variant with a reader tag, the piece decides and says
+why) whose message **names the current-viewport-bbox publish as the alternative** (the human's
+ruling); partitions and resident bytes are refused at write time as today if not predictable at
+preflight — the piece states which ceilings preflight can and cannot predict, and the shell surfaces
+the refusal through the existing typed-refusal path (the approval dialog never opens for a refused
+preflight). (3) Tests: a preflight over a source whose row count exceeds `MAX_FEATURES` refuses
+before any write with the alternative named; a within-ceiling preflight is unchanged; the
+ceilings.json hash pinned; the viewer's own tests still read the same values. (4) Record: ADR-025's
+appended Decision already carries the ruling; the piece cites it; `docs/02`'s ADR-025 line gets a
+dated status correction. Reopen condition (ADR-025): when a second reader exists.
+
+Gates: items 2/3/3e as one reviewer-gated piece (architect re-check on the docs/09 sentence and the
+ADR-027 command-tax claim), then PR; Part M after merge on the built artifact.

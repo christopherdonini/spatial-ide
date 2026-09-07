@@ -24,6 +24,23 @@ memory. Applied: RELEASE-0.1.md Amendment 2 (the ruled item list + preregistrati
 arm flip dispatched in parallel; ADR-025's decision appended on this word (status Accepted
 2026-09-07, the human's words verbatim); the CRS-catalog extension recorded as a proposed item for
 ruling at the brief's sight, not started.
+**PREMISE CORRECTION to entry 53 / B2 (custodian, 2026-09-07, on reading ADR-017 in full):** the
+architect's B2 said the ADR-017 exposure review "has not happened". **It has, for the shell's UI
+surface:** ADR-017 "Exposure review — 2026-08-17, human decision — the UI surface passes, with two
+binding conditions" (Part G run end to end by the human, ruling verbatim there) and "Exposure review
+completion — 2026-08-17 — both binding conditions landed; discharge effective for the UI surface"
+(*"the acceptance condition is discharged for the shell's UI surface"*; `publish-bundle` stays
+dev/test tooling as a CLI; SKP/MCP/plugin/notebook/AI each still need their own review). The
+consult read the Status block and the F-10 clarification (:1031-1043) but not :1110-1143 — a
+partial-read miss, named. **What is genuinely open for v0.1:** (i) that same UI surface has never
+run from a packaged artifact — Part M re-confirms it there (a re-verification of a discharged
+surface, not a new review); (ii) the ADR-025 preflight refusal is NEW behaviour on that surface and
+is shown at Part M. **Your ruling "run the ADR-017 exposure review inside this cut" was made on the
+consult's premise — your word on the reduced form:** (a) Part M on the artifact re-confirms the
+discharged UI surface and sights the new ADR-025 refusal; the pre-declared fallback (publish
+descopes, hero ends at style) stays as the safety net if Part M finds the packaged surface deviates
+— recommended; or (b) a full second exposure review regardless. Nothing about publish in v0.1 text
+is written until you answer; items 2/3/3e proceed either way.
 
 54. **[Release cut, item 1 — the ADR-020 owed defect: authorize the piece under your
     security-posture red line, and pre-approve the shape of the ADR-020 record it will append.]**
