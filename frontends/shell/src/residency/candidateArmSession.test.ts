@@ -2562,6 +2562,13 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       // exists -- `relinquishFill` reaches `cancelUntiledStream`, which clears `untiledStreamHandle`
       // BEFORE `skpCancel` (M2's own finding, unchanged by this attempt).
       session.relinquishFill();
+      // SHOULD-FIX 3 (re-review): pin that the self-cancel actually fired -- without this, a
+      // regression of `relinquishFill`'s own frame-exists cancel to a no-op (e.g. the
+      // `manager.gridFrame !== null && untiledStreamHandle !== null` guard silently failing to match)
+      // would leave the rest of this test passing VACUOUSLY: the terminal below would then arrive
+      // genuinely (`wasCurrent === true`), which this attempt's own live-union design also protects
+      // against, for an entirely different reason than the one this test claims to attack.
+      expect(cancelMock).toHaveBeenCalledWith("sh_2");
 
       // The generation-2 untiled stream's own terminal now arrives, self-cancelled -- `wasCurrent`
       // (`untiledStreamHandle === stream`) is already `false`, cleared synchronously above.
@@ -2627,8 +2634,31 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       // (ii) A GRID tile batch lands while the new untiled stream ("sh_2") is STILL running -- the
       // grid frame persists across the reissue, so (i)'s own plan already minted a real tile stream
       // (`sh_tile_a`). This must never touch `firstLookRunningExtent` (tile-keyed, not
-      // `INITIAL_TILE_KEY`) -- re-planning the SAME bbox proves it stays unprotected.
+      // `INITIAL_TILE_KEY`).
+      //
+      // Re-review SHOULD-FIX 2: a plan re-run at E1's OWN bbox (`{6,6,6.1,6.1}`) alone is VACUOUS
+      // here -- the grid batch's own extent is `FAR_TILE_EXTENT` (~1000), so even a TAINTED field
+      // (the union running outside the `INITIAL_TILE_KEY` branch) would sit at ~1000 and would not
+      // intersect a bbox back at E1 either way; that plan would read "not protected" whether or not
+      // the bug exists. The real test is a plan whose bbox intersects `FAR_TILE_EXTENT` itself --
+      // if the grid batch ever tainted `firstLookRunningExtent`, THIS is where it would show.
+      //
+      // Observed failure under the bug (verified by temporarily moving `firstLookRunningExtent =
+      // unionBbox(firstLookRunningExtent, outcome.batchExtent)` out of the `tileKey ===
+      // INITIAL_TILE_KEY` branch in `ingestAndMaybeEstablishFrame` -- so EVERY batch, tile-keyed or
+      // not, unions into it -- running ONLY this test, then restoring): FAILED with
+      // `AssertionError: expected true to be false` at the far-bbox assertion below, because
+      // `firstLookRunningExtent` had been tainted to `FAR_TILE_EXTENT` by the grid batch just
+      // delivered, and the far bbox intersects it.
       lastSink().onBatch(new Uint8Array([9]), true); // `sh_tile_a`, minted by (i)'s own plan
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_far" });
+      session.onViewportChanged({ xmin: 1000, ymin: 1000, xmax: 1000.1, ymax: 1000.1 }); // inside FAR_TILE_EXTENT
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      call = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      expect((call[2] as ReadonlySet<string> | undefined)?.has(INITIAL_TILE_KEY) ?? false).toBe(false);
+
+      // Re-planning back at E1's own bbox stays unprotected too (nothing resident under
+      // INITIAL_TILE_KEY this generation yet, same as (i)).
       viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_b" });
       session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);

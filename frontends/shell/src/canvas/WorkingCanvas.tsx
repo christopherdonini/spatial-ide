@@ -236,12 +236,13 @@ export interface WorkingCanvasHandle {
    * .ts`) is what actually lets a partial tile back into a fresh request despite this staying `false` --
    * see that module's own doc comment for the drain-stop exception.
    *
-   * **`extraProtectedKeys` (residency-debt cut 1b sub-amendment, entry 48 (a)): the untiled first
-   * look's own eviction protection, a channel DELIBERATELY SEPARATE from `coveringTileKeys`.**
-   * `candidateArmSession.ts` passes `INITIAL_TILE_KEY` (`tileGridConstants.ts`) here whenever its own
-   * first-look extent, snapshotted at frame establishment (`firstLookExtent` -- M1, reviewer gate, fix
-   * batch, corrected from the dataset-lifetime-tainted `latestUnionedExtent`; see that module's own
-   * doc comments), intersects the bbox this plan was run for -- never as part of
+   * **`extraProtectedKeys` (residency-debt cut 1b sub-amendment, entry 48 (a), THIRD attempt): the
+   * untiled first look's own eviction protection, a channel DELIBERATELY SEPARATE from
+   * `coveringTileKeys`.** `candidateArmSession.ts` passes `INITIAL_TILE_KEY` (`tileGridConstants.ts`)
+   * here whenever `firstLookRunningExtent` -- the LIVE running union of every batch actually admitted
+   * under `INITIAL_TILE_KEY`, read fresh at plan time and never snapshotted (see that module's own
+   * doc comment on that field for why a terminal-time snapshot was tried twice and died both times) --
+   * intersects the bbox this plan was run for -- never as part of
    * `coveringTileKeys` itself, since `INITIAL_TILE_KEY` is not a grid key and folding it into the
    * covering array would also feed `candidateArmSession.ts`'s own `lastCoveringTileKeys`
    * (`isFillComplete`'s per-tile loop) and this method's own `anyPartialAmongCovering` fits check --

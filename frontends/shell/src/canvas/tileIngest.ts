@@ -79,7 +79,10 @@ export interface TileBatchIngestResult {
    * parameter) AND post-dedupe (`result.accepted`, which excludes any row `addBatch` dropped as a
    * cross-tile duplicate) -- `null` when nothing was admitted (every row was either trimmed away by
    * the budget boundary or deduped against an already-resident id). Computed from `result.accepted`
-   * via the SAME injected `extentOfBatch` (no second decode) rather than the pre-trim `batch` --
+   * via the SAME injected `extentOfBatch` -- no second DECODE (the wire bytes are parsed into
+   * `ResidentBatch` exactly once, above); this IS a second extent PASS, over the admitted rows only
+   * (a second, smaller `min`/`max` scan of ring coordinates already held in memory, not a re-parse of
+   * anything -- no perf claim attaches either way) -- rather than over the pre-trim `batch` --
    * `unionedExtent`/`fitAnchor` above stay unchanged (still computed from the pre-trim `batch`, the
    * dataset-lifetime anchor's own existing contract). The corrected reading `candidateArmSession.ts`
    * unions per batch to build `firstLookRunningExtent` -- protection derived from the batches

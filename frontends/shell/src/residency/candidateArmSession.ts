@@ -398,6 +398,16 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * batch (nothing to protect against yet). Reset alongside `latestUnionedExtent`, for the identical
    * reason, by `reissueUnrestricted`.
    *
+   * **What this field tracks (fix-batch nit 4, re-review): what this GENERATION has ADMITTED under
+   * `INITIAL_TILE_KEY`, never "what is resident now."** It is only ever unioned, never shrunk or
+   * cleared by an eviction -- a genuine eviction of `INITIAL_TILE_KEY` (the operator has panned/
+   * zoomed fully away, per the sub-amendment's own lifecycle clause) does not clear this field, so a
+   * later plan whose bbox happens to intersect it again would still name `INITIAL_TILE_KEY` in
+   * `extraProtectedKeys` even though nothing is resident under that key any more. Harmless by
+   * construction: `TileResidentSet.evictTile`'s own protected-tile guard (`tileResidentSet.ts`) and
+   * the cascade backstop are both no-ops for a key that is not currently resident (nothing to
+   * protect), so naming an already-evicted key here costs nothing beyond the set membership check.
+   *
    * **Why this is state, not an event, and why the first two attempts died reading an event
    * instead.** Attempt 1 (`543a5f2`, M1) read `latestUnionedExtent`, tainted forever by the first
    * grid tile batch. Attempt 2 (`48c19ea`, M2) read a snapshot (`firstLookExtent`, now REMOVED)
