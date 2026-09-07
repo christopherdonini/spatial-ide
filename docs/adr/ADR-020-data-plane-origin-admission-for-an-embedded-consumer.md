@@ -146,3 +146,106 @@ are independent mechanisms, and `tauri build --debug` is precisely where they di
   (`static_dir`), which ADR-019's Context section already gives reasons to have avoided. Whatever
   replaces this decision, the shell cannot render anything until *some* fix lands: this is not
   optional cut-1 polish.
+
+## Amendment 1 — the tauri build --debug origin selector replaced (2026-09-07, appended on the human's pre-approval)
+
+**Authorization.** RELEASE-0.1.md Amendment 2's "Preregistration — item 1" records the human's
+five conditions on design (a)+(b) and states *"ADR-020 Amendment 1 pre-approved in that shape"*
+(DECISIONS-PENDING entry 54). This amendment is appended in that pre-approved shape, in the same
+commit as the code it records.
+
+**(a) The Status-paragraph sentence this amendment discharges, quoted verbatim:**
+
+> The `tauri build --debug` origin mismatch recorded under Decision stays explicitly recorded as a
+> **fail-closed implementation defect, owed before any packaged-debug support is claimed**.
+
+**(b) The new selector.** `frontends/shell/src-tauri/src/lib.rs`'s `setup()` closure no longer
+selects `webview_origin` from `cfg!(debug_assertions)`. It now reads the shell's own main webview
+window's *actual* URL, once, before any page script can run (`setup()` itself is synchronous and
+blocking; Tauri does not pump the event loop, and therefore cannot run page script, until this
+closure returns), via:
+
+- **API:** `tauri::Webview::url(&self) -> tauri::Result<Url>` — **tauri 2.11.5** (pinned in
+  `frontends/shell/src-tauri/Cargo.lock`), doc comment `"Returns the current url of the webview."`,
+  defined at `src/webview/mod.rs:1679-1680`. `lib.rs` reaches it through
+  `tauri::WebviewWindow::url()` (`src/webview/webview_window.rs:2378-2381`, itself a one-line
+  forward to `Webview::url()`), obtained from `app.get_webview_window(label)`
+  (`Manager::get_webview_window`, `src/lib.rs:576`) using the label `tauri.conf.json`'s
+  `app.windows[0]` declares.
+- **Normalisation:** a new pure function, `expected_origin_from_url(&Url) -> Result<String,
+  OriginError>` in its own module (`frontends/shell/src-tauri/src/origin.rs`), reduces the URL to
+  exactly `scheme://host` or `scheme://host:port` — dropping path, query, fragment, and userinfo,
+  and never appending a scheme's implicit default port.
+- **Pinning:** the resulting `String` is used exactly once, as `DataPlaneConfig::expected_origin`,
+  for the process's whole lifetime — the same field and the same `Session::with_origin`
+  constructor this ADR's Decision already defined; neither changed.
+- **Fail-closed:** if the configured window does not exist at setup time, if its URL cannot be
+  read, or if that URL has no host component (e.g. `about:blank`), `setup()` panics with a named,
+  descriptive message identifying which of the three happened — never a default value. An empty or
+  otherwise unparseable URL string is refused one step upstream of this code, inside
+  `Webview::url()` itself (`url.parse().map_err(crate::Error::InvalidUrl)`,
+  `src/webview/mod.rs:1685`), which surfaces as the same `Err` path and the same fail-closed panic.
+
+Design (b) — the dev origin's single declared source: `vite.config.ts`'s `server.port` remains the
+declared source (it always was: `vite.config.ts`'s own top comment already states the port choice
+and why); `tauri.conf.json`'s `build.devUrl` is the one remaining hand-written copy of it.
+`lib.rs` no longer carries a third copy at all — `5180` does not appear anywhere in that file. The
+mechanical link the preregistration requires is a new `npm run check:dev-origin`
+(`frontends/shell/e2e/checkDevOriginConsistency.mjs`), wired into `npm run verify` ahead of
+`build`: it reads both files as text/JSON (no code execution) and fails if `devUrl` does not equal
+`http://localhost:<server.port>`. A unit test was considered and rejected in favor of this
+`check:*` script, following `check:dist-clean`'s own existing precedent (`e2e/checkDistClean.mjs`):
+the relationship being asserted is between two config files, neither of which is application
+source under test, and `npm run verify`'s pipeline already has a `check:*` stage for exactly this
+shape of drift check.
+
+**(c)** Verbatim, as required:
+
+> the accepted mechanism is unchanged; this replaces a selector the acceptance never covered.
+
+`DataPlaneConfig::expected_origin` / `Session::with_origin` remain: host-supplied, never
+page script, exact-match comparison, never a wildcard; `Origin: null` still rejected; the
+`sec-fetch-site: same-origin` fallback for an absent header unchanged. The claim-carrying tests in
+`kernel/tests/skp_admission.rs` — the port-derived default is not admitted, and admitted origin
+plus a wrong token is refused (this ADR's Consequences, ADR-020:118-122) — were re-run unmodified
+against this change and remain green.
+
+**(d) The E2E harness's independent `import.meta.env.DEV` gate, under `--debug`, stated
+truthfully.** The specific disagreement this ADR's Decision named — the origin-selection mismatch
+between `cfg!(debug_assertions)` (Rust) and `import.meta.env.DEV` (Vite) under `tauri build
+--debug` — is **closed** by this amendment: origin is no longer selected by `debug_assertions` at
+all, so there is nothing left for it to disagree with; under `--debug`, the webview's own URL is
+read directly and normalises to `http://tauri.localhost` regardless of either gate's value.
+
+That said, the two gates remain independent mechanisms in this codebase for **other** purposes
+untouched by this amendment, and they still disagree under `--debug` exactly as this ADR's Decision
+section describes in general (`cfg!(debug_assertions)`, Rust, vs. `import.meta.env.DEV`, Vite, "are
+independent mechanisms"): `lib.rs`'s `pool_poll` module and the E2E test seam command
+`commands::binding_publish_prepare_e2e_destination` are both still gated by
+`#[cfg(debug_assertions)]` (true under `--debug`, a packaged-but-debug build), while their
+frontend-side counterparts are gated by `import.meta.env.DEV` (false under `--debug`'s production
+`vite build`, so their frontend callers are dead-code-eliminated from the bundle). A `tauri build
+--debug` artifact therefore still ships Rust-side debug-only surface with no frontend caller
+reaching it — dormant, not reachable at runtime, but present in the binary. This is the same
+general shape ADR-020 already named; it is unrelated to origin admission and this amendment does
+not fix it. The packaged-`--debug` admission check named just below exercises the origin fix
+specifically, not this separate, still-open gate disagreement.
+
+**Declared, not executed here:** a packaged-`--debug` admission check — that a real `tauri build
+--debug` artifact's webview is admitted by the data plane end to end — is preregistered
+(RELEASE-0.1.md's item 1 preregistration) and runs as a Part M step on the artifact
+RELEASE-0.1.md's item 3 (the packaged build) produces; it is not exercised by this piece, which
+has no packaged artifact to test against.
+
+**(e) Reopen condition, verbatim:**
+
+> any future build mode whose webview origin is not readable at startup reopens this amendment
+> rather than reintroducing a compile-time selector.
+
+(E.g.: no `App`/`AppHandle` available at the point the origin must be known, or a consumer shape
+with no webview to read a URL from at all.)
+
+**Same-commit record updates:** `docs/02_Architecture.md`'s ADR-020 bullet and
+`docs/README.md`'s conventions-paragraph ADR-020 entry — both of which stated the `--debug` defect
+as owed — each gain a dated bracketed correction in place, in the style `docs/02`'s own ADR-009
+bullet already uses, rather than being rewritten.
