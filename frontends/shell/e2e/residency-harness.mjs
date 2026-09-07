@@ -196,6 +196,13 @@ function resolveSessionLogPath(appLogPath) {
  * (distinct from an empty array, which means it WAS listed and genuinely held no such file).
  * Threading both through to `cell.poolPollPreflight` lets a false invalidation be diagnosed
  * straight from the evidence file, without another run.
+ *
+ * Known residual (re-review nit, accepted as a doc note): on the `tauri dev` route the window
+ * between the pre-spawn instant and the app's actual start can be ~90 s (cargo's rebuild check),
+ * and a log created by some OTHER instance inside that window would qualify; it matters only if
+ * this launch's own log is never created, since "highest epoch wins" and the pre-launch sweep of
+ * stale CDP instances otherwise select this launch's file -- and `candidates`/`thresholdSeconds`
+ * make even that case diagnosable after the fact.
  */
 function resolveSessionLogPathFromAppLogDir(launchEpochMs) {
   // Computed first, unconditionally: every return path below carries the SAME threshold this call
