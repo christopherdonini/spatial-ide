@@ -162,6 +162,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     `#[tokio::test]` lifecycle tests the reviewer required. No new crate, dev-only, no runtime reach —
     but a dependency-tree change not named in the brief, so it is recorded here rather than assumed.
     Recommendation: accept (a test-only feature of an existing dependency); the PR body names it.
+    **Reviewer's factual characterisation (2026-09-07, verified):** `Cargo.lock` is byte-identical to
+    the base commit; `tokio` was already a direct `[dependencies]` entry of this crate; `tokio-macros`
+    was ALREADY in the shipped dependency graph through `tauri`/`axum`/`hyper` before this commit.
+    So: no new package at any edge class, no lockfile delta, no new runtime reach — the dependency
+    TREE is unchanged; what is new is one manifest line. If the red line reads "tree addition", this
+    is not one; if it reads "manifest change", it is in scope. Recorded either way; your word.
 
 45. **[The close-out fix piece's SIGHT BUNDLE — three items the human rules at PR sight, none the
     custodian's; opened 2026-09-06 with the piece (branch `cut/residency-debt-fix`, preregistered
