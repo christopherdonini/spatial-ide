@@ -5,6 +5,28 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+51. **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
+    section, 2026-09-07): two obligations are open and one verification is owed before the shipped
+    EPSG:2056 definition is attributed to EPSG — all three need code or a registry comparison, so
+    none is done unqueued.]** The terms ("EPSG Dataset Terms of Use", revised 8 April 2016, read
+    verbatim from epsg.org) require that *"Ownership of the EPSG Dataset by IOGP must be
+    acknowledged in any publication or transmission (by whatever means) thereof"* and that *"You are
+    obliged to inform anyone to whom you provide the EPSG Facilities of these Terms of Use"*; and
+    they forbid attributing modified data beyond their Table 1. The definition ships compiled into
+    the engine (`engine/src/crs-catalog.json`, hash-pinned) and is transmitted in every bundle
+    manifest that carries a source definition (`kernel/src/bundle/mod.rs` `crs_source_definition`).
+    Nothing in the tree acknowledges IOGP/EPSG today. **Rulings needed:** (1) add an EPSG/IOGP
+    acknowledgement + the terms' URL to the shipped notice text (`publish.rs`'s `ViewerLicenseInput`
+    / `NOTICE.txt` route, and the engine's own notice if one exists) — product code, reviewer-gated;
+    (2) add an `attribution` field beside the catalog entry — changes `crs_catalog::tests`' pinned
+    hash, so a conscious test update rides with it; (3) verify the PROJJSON's parameter values are
+    numerically equivalent to the EPSG registry entry for 2056 (the production command is
+    unrecorded; registry export needs a login — you hold one, or PROJ's `projinfo EPSG:2056 -o
+    PROJJSON` on a known PROJ version is the reproducible check) BEFORE the attribution in (1)/(2)
+    calls it EPSG data. Recommendation: (3) first (a five-minute comparison you can do), then (1)+(2)
+    as one gated piece; counsel per ADR-009's Caveat before any stronger statement. Touches:
+    `publish.rs` + tests, `crs-catalog.json` + `crs_catalog.rs` test literal, this record.
+
 50. **[RULED 2026-09-07, the human verbatim: "(1) Ruled no — a guard precondition refusal with no
     harness process launched is the guard working, not a trial invalidation; §8's protection is
     about results seen, and none was. The one authorized launch stands. (2) Confirmed: the 07:34
@@ -41,7 +63,20 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     structural answer only. Nothing launches without your word. Touches: one launch of the existing
     runner; results to the spike README; no code.
 
-49. **[Public-audience audit of the 2026-08-03→2026-09-07 window (`PUBLIC-AUDIENCE-AUDIT.md`,
+49. **[RULED 2026-09-07, the human verbatim: "F-3 = Url — the durable public location ADR-017 C3
+    always wanted now exists; every future bundle names the real repo, and the false "not yet
+    public" clause dies. F-11 = accept as public-by-design, no parameterisation — the names buy an
+    attacker nothing without machine access (no credentials, no addresses are present), and
+    obscuring tool names is indirection cosplaying as security; the real mitigations are RustDesk's
+    own auth and the network posture. F-12(d) = generalise — the technical facts (fixture SPOF,
+    regenerability) survive generalisation; my personal circumstances (no backup, on a phone,
+    metered) were never load-bearing and don't need a public audience. Fix-forward set: approved as
+    one commit, no rewrite — and F-16's EPSG look must leave a written record of the terms check
+    (attribution/no-alteration conditions) beside DEPENDENCY-LICENSES or docs/14, not just a fixed
+    comment, since crs-catalog.json is now a shipped, public, EPSG-derived artifact." Applied: F-3
+    as a reviewer-gated piece (writer + tests) → PR; F-11 no change; F-12(d) generalised in place,
+    dated; fix-forward set one commit with the EPSG terms record. Original entry follows.]**
+    **[Public-audience audit of the 2026-08-03→2026-09-07 window (`PUBLIC-AUDIENCE-AUDIT.md`,
     405 commits, HEAD 914ef9f): 0 leaks, 8 sensitivity-class matches, 7 hygiene — three need your
     ruling; one fix-forward set waits on your word; nothing remediated unqueued.]** No credential,
     no third-party personal data, no RustDesk ID/password/relay anywhere in tree or history
@@ -70,7 +105,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     parameterise; (3) generalise the three sentences; fix-forward set: yes, one commit. Touches, once
     ruled: the files named; no ADR text edited; no history rewrite.
 
-48. **[The untiled first look is evicted wholesale on the first admission that needs room — the
+48. **[THIRD ATTEMPT AUTHORIZED 2026-09-07, the human verbatim: "third attempt AUTHORIZED, with
+    three conditions. (1) The dated prereg amendment first, as you say it needs. (2) The gate must
+    include the two tests the prior gates lacked: a tile batch landing between rounds with the
+    pan-away release asserted (M1's blind spot), and the operator-Cancel self-cancel repro plus the
+    generation-2/reissue window (M2's). The design is right because it derives protection from the
+    batches actually admitted under INITIAL_TILE_KEY rather than from any terminal-time snapshot —
+    so the tests must attack exactly the paths where snapshots died. (3) Rule 7, pre-declared: this
+    is the final attempt. If it fails its gate, 48 converts to named binding debt on the ADR-011
+    line, 1b closes without it, and my original close-ruling reason is recorded as overtaken by
+    rule 7 — three failed attempts is the evidence that "small fix" was a misdiagnosis, and holding
+    the cut hostage to it would repeat the sunk-cost shape I capped on entry 40." Applied:
+    RESIDENCY-DEBT-1B.md dated sub-amendment (running-extent design, the two required test classes,
+    the cap and its conversion consequence) BEFORE the worker; gate instructed on the two tests.
+    Original entry follows.]**
+    **[The untiled first look is evicted wholesale on the first admission that needs room — the
     "already rendered content disappears ~10 s after zooming out" the human named in the post-fix
     L9; surfaced 2026-09-06; a design question, so recorded with options, not fixed.]** The
     human, verbatim (L6, post-fix): *"zoom out what was already rendered after 10 s disappear and
@@ -459,9 +508,9 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     `FIXTURES_ROOT` env/const (default outside `target/`) that live code reads and generators write
     to — a bounded change, done deliberately, leaving append-only records as historical. Your call:
     accept the mechanic as sufficient, or authorize the `FIXTURES_ROOT` refactor as its own piece.
-    (Also recorded: the 5 GB fixture's SECOND-PHYSICAL-LOCATION copy remains impossible — the
-    2026-09-06 diskmgmt check found ONE physical disk, only C:, no external/removable; the SPOF's
-    DR story stays its deterministic regenerability until a drive is attached.)
+    (Also recorded: the 5 GB fixture's SECOND-PHYSICAL-LOCATION copy remains blocked — no second
+    physical location is available on this machine *(wording generalised 2026-09-07 per entry 49
+    F-12(d))*; the SPOF's DR story stays its deterministic regenerability until one is.)
     **RULED 2026-09-06 (the human's takeover message, verbatim: "entries 38/39/40 ruled
     (defer-with-trigger / no-rewrite entry-26-style / routed to producer diagnosis)"):**
     this entry's ruling is "defer-with-trigger" — the clean-discipline mechanic is accepted as

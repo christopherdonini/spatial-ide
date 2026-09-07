@@ -242,7 +242,7 @@ async function stepAssert(page, consoleHandle, ctx) {
   const summaryText = await page.evaluate(() => document.querySelector(".describe-summary")?.textContent ?? null);
   if (summaryText === null) throw new Error("ASSERT': .describe-summary missing after admission");
   // `by` is `Principal::OsUser`'s own format ("os-user <name>") -- a space-containing value, found
-  // live (2026-08-18): "os-user Christopher" broke a `(\S+)` capture that assumed no spaces. `.+?`
+  // live (2026-08-18): "os-user <name>" broke a `(\S+)` capture that assumed no spaces. `.+?`
   // (non-greedy, stops at the first " at " literal) is what actually matches host-minted attribution
   // shapes. `at` (RFC-3339) and the provenance token both stay `\S+`/`[^,]+` -- neither contains a
   // space.

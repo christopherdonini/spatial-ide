@@ -71,7 +71,7 @@ in this table, as a new row, once one exists:
 
 | Location | Copied | Verified hash matches |
 |---|---|---|
-| *(none yet — blocked)* | 2026-09-06: a diskmgmt check found ONE physical disk (512 GB NVMe), only C:, no external/removable volume — so no second PHYSICAL location exists to copy to. Held until a drive is attached; the fixture's DR story remains its deterministic regenerability (above) meanwhile. | — |
+| *(none yet — blocked)* | 2026-09-06: no second physical location is available on this machine to copy to *(wording generalised 2026-09-07 per DECISIONS-PENDING entry 49 F-12(d); the technical fact — one copy, regenerable — is unchanged)*. Held until one is available; the fixture's DR story remains its deterministic regenerability (above) meanwhile. | — |
 
 **Location note (2026-09-06):** this file's `Path` field still reads `target/slice-evidence/…`
 because the fixture has NOT been relocated — relocating fixtures out of `target/` is a scoped

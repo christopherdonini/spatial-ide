@@ -2,11 +2,15 @@
 // zoom-out, no tile admitted in this view may be evicted in this same view (the human-visible
 // thrash: "renders for half a second, then disappears"). Diagnosis-class, attaches to the running
 // instance; NOT the preregistered harness assertion (which stays wired at zoom-out-1).
-import { attachOrLaunch } from "file:///C:/dev/spatial-ide/.claude/worktrees/residency-debt-fix/frontends/shell/e2e/lib.mjs";
+import { attachOrLaunch } from "../../frontends/shell/e2e/lib.mjs";
 import { writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const FIXTURE = "C:\\dev\\spatial-ide\\target\\fixtures\\slice-budgets\\polygons-100k.parquet";
-const OUT = "C:\\Users\\Christopher\\.claude\\jobs\\53e23d1b\\tmp\\probe-thrash.json";
+// Paths are relative to this script (entry 49 fix-forward, 2026-09-07: the original carried an
+// absolute worktree import and a tool-internal output path; the recorded run's evidence is the
+// `probe-thrash.json` beside this file).
+const FIXTURE = fileURLToPath(new URL("../../target/fixtures/slice-budgets/polygons-100k.parquet", import.meta.url));
+const OUT = fileURLToPath(new URL("./probe-thrash.json", import.meta.url));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const { page, launched, stop } = await attachOrLaunch({ timeoutMs: 120_000 });

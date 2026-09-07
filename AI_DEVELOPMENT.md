@@ -20,7 +20,7 @@ Development-time practice, deliberately **outside** the product constitution (00
 
 # The Custodian role — remote-operation protocol (2026-08-09)
 
-The human operates remotely (phone → RustDesk → this machine) for extended periods. The **main
+The human operates remotely (a mobile device → RustDesk → this machine) for extended periods. The **main
 Claude Code session in the custodian terminal assumes the role previously held by the external
 architect-advisor ("Fable")**: it converts the human's intent into cut briefs, verifies session
 outputs against the repository rather than trusting reports, manages the decision queue, applies
@@ -158,7 +158,7 @@ GUI-heavy cuts (shell cuts 2–3 visuals) are sequenced for when the human is ba
 ## `DECISIONS-PENDING.md` (repo root, tracked)
 
 The custodian maintains it: one entry per pending decision — context in ≤ 3 sentences, the
-recommendation, what applying it will touch. The human reads it from a phone; brevity is a feature.
+recommendation, what applying it will touch. The human often reads it on a mobile device; brevity is a feature.
 Applied decisions move to a dated "resolved" section in the same file.
 
 ## Machine and environment facts

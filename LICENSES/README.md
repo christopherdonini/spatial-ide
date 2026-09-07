@@ -33,7 +33,7 @@ written. Both are present now (see the 2026-08-18 update note above); the record
 absent and how they were later verified is kept below for provenance.
 
 The session that set up this directory was working under a binding **no-downloads** constraint (the
-operator was on a metered connection: no installs, no fetches, no toolchain or browser downloads).
+operator was on a bandwidth-constrained connection: no installs, no fetches, no toolchain or browser downloads).
 Both texts were searched for on the machine and **neither exists on it**. They were therefore
 recorded as *deferred with reason* — the constraint's stated fallback — rather than fetched.
 

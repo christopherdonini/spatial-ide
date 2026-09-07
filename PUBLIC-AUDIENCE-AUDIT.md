@@ -249,3 +249,25 @@ ADR text edited (ADR-017 gets an appended note only); no history rewrite.
 *Audit performed read-only against HEAD `914ef9f` on 2026-09-07. The two prior sweeps this one
 models itself on: `PRE-PUBLIC-CHECKLIST.md` §6 (2026-08-07, 632 blobs / 92 commits) and
 `.cut-archive/CUT-STATE-adr009-checklist.md` (2026-08-18, delta re-sweep to 239 commits).*
+
+---
+
+## Rulings applied (2026-09-07, appended after the human's entry-49 rulings — verbatim in `DECISIONS-PENDING.md`)
+
+- **F-3 → `Url`.** The shell's writer now names the public repository; the "not yet public"
+  written-offer clause is gone (branch `cut/audit-f3-url-route`, reviewer-gated, PR for the human's
+  click); ADR-017 carries one appended dated bullet.
+- **F-11 → accepted as public-by-design**, no parameterisation (the human: the names buy an
+  attacker nothing without machine access; obscuring tool names is "indirection cosplaying as
+  security"; the real mitigations are RustDesk's own auth and the network posture).
+- **F-12(d) → generalised in place**, dated where the record allows it: the single-disk/no-backup
+  sentences (`kernel/FIXTURES.md`, `DECISIONS-PENDING.md` entry-38 region), "from a phone" ×2
+  (`AI_DEVELOPMENT.md`), "metered connection" ×5 (`PRE-PUBLIC-CHECKLIST.md`, `LICENSES/README.md`).
+  The technical facts (one copy, regenerable; a no-downloads constraint) are unchanged.
+- **Fix-forward set → one commit, no rewrite:** F-1/F-2 (`probe-thrash.mjs` relative import,
+  script-relative paths; `PRE-PUBLIC-CHECKLIST.md` §6 note 6 records that the string stays in public
+  history), F-7 (`reader.rs` fixture names → `someone`, `principal_name` included — same class),
+  F-8 (`admission-remediation.mjs` comment → `"os-user <name>"`), F-16 (the EPSG terms read
+  verbatim and recorded in `DEPENDENCY-LICENSES.md`, "Third-party data terms"; the two open
+  obligations and one owed verification it found are queued as entry 51 — nothing remediated
+  unqueued).

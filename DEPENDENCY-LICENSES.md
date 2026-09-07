@@ -90,6 +90,81 @@ decisions listed above** — each accepted by a named human, on a date, with its
 **This is not a statement that the dependency tree is legally clear**, and it must not be cited
 as one. It says the mechanical check found nothing to ask about, over the coverage stated above.
 
+## Third-party data terms (not a package): the EPSG Geodetic Parameter Dataset (IOGP)
+
+*Written record of the "one look" `PRE-PUBLIC-CHECKLIST.md` §6 note 3 queued and
+`PUBLIC-AUDIENCE-AUDIT.md` F-16 widened to a shipped artifact; ruled by the human 2026-09-07
+(`DECISIONS-PENDING.md` entry 49: "F-16's EPSG look must leave a written record of the terms check
+(attribution/no-alteration conditions) beside DEPENDENCY-LICENSES or docs/14, not just a fixed
+comment"). Performed by the custodian, 2026-09-07; not legal advice — ADR-009's Caveat (counsel)
+applies to every conclusion below.*
+
+**What the repository holds and ships.** One CRS definition, EPSG:2056 (CH1903+ / LV95), as a
+PROJJSON document (`"$schema": "https://proj.org/schemas/v0.5/projjson.schema.json"`, 2,165 bytes)
+in three places: (1) `engine/tests/data/epsg2056.projjson` — the test fixture, `include_str!`-ed
+by `engine/src/{fixture,envelope,geoarrow,geoparquet}.rs`; (2) `engine/src/crs-catalog.json` —
+the pinned catalog entry `epsg-2056`, the same bytes ("reuses `engine/tests/data/epsg2056.projjson`",
+ADR-026 line 76; hash-pinned by `crs_catalog::tests`), **compiled into the engine binary**; (3)
+every published bundle's manifest carries the source CRS definition when the source had one
+(`kernel/src/bundle/mod.rs` `crs_source_definition`, written as `crs.source_definition`) — a
+**transmission** of the definition to whoever receives a bundle. The document carries EPSG
+identifiers throughout (`"id": { "authority": "EPSG", "code": … }` on the CRS, datum, method and
+parameters). How the PROJJSON was produced is **not recorded in the repository** (no generator
+command or PROJ version is cited anywhere; grep 2026-09-07).
+
+**The terms, read 2026-09-07 from `https://epsg.org/terms-of-use.html`** ("EPSG Dataset Terms of
+Use", "Revised 8 April 2016"; the page is a GeoRepository v2.44.2 render over EPSG Dataset
+v13.102). Quoted verbatim, the conditions that bear on this repository:
+- "The EPSG Facilities are published by IOGP at no charge. Distribution for profit is forbidden."
+- "The data may be used, copied and distributed subject to the following conditions:"
+- "You are obliged to inform anyone to whom you provide the EPSG Facilities of these Terms of Use."
+- "The data may be included in any commercial package provided that any commerciality is based on
+  value added by the provider and not on a value ascribed to the EPSG Dataset which is made
+  available at no charge."
+- "Ownership of the EPSG Dataset by IOGP must be acknowledged in any publication or transmission
+  (by whatever means) thereof (including permitted modifications)."
+- "Subsets of information may be extracted from the dataset. Users are advised that coordinate
+  reference system and coordinate transformation descriptions are incomplete unless all elements
+  detailed as essential in IOGP Surveying and Positioning Guidance Note 7-1 Annex A are included."
+- "Essential elements should preferably be reproduced as described in the dataset. Modification of
+  parameter values is permitted as described in the table below to allow change to the content of
+  the information provided that numeric equivalence is achieved."
+- "No data that has been modified other than as permitted in these Terms of Use shall be attributed
+  to the EPSG Dataset."
+- Warranty: "DATA AND INFORMATION PROVIDED IN THE EPSG FACILITIES ARE PROVIDED "AS IS" WITHOUT
+  WARRANTY OF ANY KIND …".
+
+**The check, condition by condition (custodian's reading, labelled as such).**
+1. *Use, copy, distribute* — permitted; the repository does all three (test fixture, compiled
+   catalog, bundle manifest). *For-profit distribution of the data* — not done; the product is
+   AGPL-3.0-or-later and the definition is one entry, not a redistributed dataset.
+2. *Acknowledgement of IOGP ownership "in any publication or transmission"* — **NOT YET
+   SATISFIED.** Nothing in the tree acknowledges IOGP/EPSG ownership: not `NOTICE.txt`/the bundle
+   viewer's license notice (`frontends/shell/src-tauri/src/publish.rs`, `ViewerLicenseInput`), not
+   `engine/src/crs-catalog.json`, not this file before this section. The catalog ships in the
+   binary and the definition is transmitted in bundle manifests, so an acknowledgement belongs in
+   the shipped notice text and, ideally, beside the catalog entry. **Queued for the human as
+   `DECISIONS-PENDING.md` entry 51** — adding a field to `crs-catalog.json` changes the pinned
+   entry hash (`crs_catalog::tests::EPSG_2056_HASH`) and the notice writer is product code, so
+   neither is done unqueued.
+3. *Inform recipients of the Terms of Use* — **NOT YET SATISFIED** for bundle recipients; the same
+   entry-51 notice text should name the terms' URL. Satisfied for repository readers by this
+   section from its commit onward.
+4. *No modification beyond Table 1; incomplete-subset advisory* — the document is a
+   format re-expression (PROJJSON) carrying EPSG codes on every element, not a parameter-value
+   change in the Table-1 sense as far as its structure shows; **numeric equivalence against the
+   EPSG registry entry for 2056 was NOT verified here** (registry export requires a login; the
+   production command is unrecorded). This is the one condition that needs a real comparison
+   before the definition is *attributed* to EPSG in a shipped notice — entry 51 names it.
+5. *No warranty* — noted; nothing in the product claims EPSG accuracy.
+
+**Conclusion.** Holding and shipping the definition is within the terms' permitted use; two
+obligations are open (acknowledgement in shipped/transmitted notices; informing recipients of the
+terms) and one verification is owed (parameter equivalence, before attribution). None of the three
+is a code change this record makes — all three are queued (entry 51), per the ruling's own "no
+unqueued remediation" discipline. Counsel per ADR-009's Caveat before any statement stronger than
+this one.
+
 ## Full inventory
 
 ### workspace (kernel, engine, renderer, protocol/data-plane)
