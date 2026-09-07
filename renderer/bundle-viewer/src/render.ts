@@ -46,13 +46,24 @@
 import type { DrawParameters, Style } from '../../style-ts/src/style.js';
 import type { Partition } from './partition.js';
 
-/** Declared ceilings (ADR-010 rule 6). Behaviour at each is declared with it, not discovered. */
-export const MAX_FEATURES = 2_000_000;
-export const MAX_PARTITIONS = 100_000;
-export const MAX_RESIDENT_BYTES = 512 * 1024 * 1024;
-export const MAX_ATTRIBUTE_COLUMNS = 32;
+import ceilings from '../ceilings.json';
+
+/**
+ * Declared ceilings (ADR-010 rule 6). Behaviour at each is declared with it, not discovered.
+ *
+ * **Re-exports of the ONE source, `renderer/bundle-viewer/ceilings.json`** (RELEASE-0.1 item 3e;
+ * ADR-025's own constraint: "the ceilings' figures live in the viewer's own declared constants …
+ * read at preflight — never a second copy that can drift"). The kernel's publish preflight
+ * (`kernel/src/publish/ceilings.rs`) `include_str!`s this same JSON file rather than a second,
+ * hand-kept copy of these five numbers — these five `const`s are the values this module has
+ * always exported, unchanged, now sourced from one file instead of five literals.
+ */
+export const MAX_FEATURES: number = ceilings.MAX_FEATURES;
+export const MAX_PARTITIONS: number = ceilings.MAX_PARTITIONS;
+export const MAX_RESIDENT_BYTES: number = ceilings.MAX_RESIDENT_BYTES;
+export const MAX_ATTRIBUTE_COLUMNS: number = ceilings.MAX_ATTRIBUTE_COLUMNS;
 /** Attribute text is truncated for display at this length. Untrusted input, bounded on the way in. */
-export const MAX_ATTRIBUTE_DISPLAY_CHARS = 512;
+export const MAX_ATTRIBUTE_DISPLAY_CHARS: number = ceilings.MAX_ATTRIBUTE_DISPLAY_CHARS;
 
 /**
  * The view. `centerX`/`centerY` are the **render origin**: every drawn value is `coord − centre`,

@@ -494,6 +494,69 @@ fn the_refusal_is_in_preflight_itself_not_only_reachable_through_publish_unguard
     }
 }
 
+/// **ADR-025 (RELEASE-0.1 item 3e): within the bundled viewer's declared `MAX_FEATURES` ceiling,
+/// preflight is unchanged.** Every other test in this file already proves this implicitly (none
+/// of them refuse under the new check), but this one states the property explicitly and proves
+/// the new plumbing is actually reached: `ds.identity().verified_rows()` is `Some` here (a real
+/// scan ran at `Dataset::open`), well under the ceiling, and `preflight` still succeeds.
+#[test]
+fn a_preflight_within_the_readers_feature_ceiling_is_unchanged() {
+    let d = workspace("reader-ceiling-within-budget");
+    let ds = pinned(&fixture(&d, 300));
+    assert_eq!(ds.identity().verified_rows(), Some(300), "the scan this check reads for free");
+    let v = viewer();
+    let req = request(&ds, &v, d.join("bundle"));
+    spatial_kernel::publish::preflight(&req).expect("300 features is nowhere near MAX_FEATURES");
+}
+
+/// **ADR-025 (RELEASE-0.1 item 3e), the refusal itself.** `#[ignore]`d for the same reason
+/// `kernel/tests/scale_pass.rs` is (its own module doc): proving this property needs a source
+/// whose *real, scanned* row count exceeds `MAX_FEATURES` (2,000,000) — `verified_rows()` is a
+/// counted fact, not something this test can fake without bypassing the identity scan the
+/// property depends on — so the fixture alone is multiple millions of rows. Minimal geometry
+/// (3 vertices, no holes, no attributes) keeps the write itself as cheap as that scale allows.
+#[test]
+#[ignore]
+fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_at_preflight_before_any_write() {
+    let ceilings = spatial_kernel::publish::ceilings::reader_ceilings();
+    let d = workspace("reader-ceiling-exceeded");
+    let path = d.join("huge.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: ceilings.max_features as usize + 1,
+            avg_vertices: 3,
+            hole_every: 0,
+            crs_mode: CrsMode::DeclaredLv95,
+            with_covering_bbox: false,
+            identity: IdentityMode::NativeUnique,
+            // `CategoricalZone`, matching `request()`'s own hardcoded `attributes: vec!["zone"]`
+            // below — `AttributeMode::None` would also fail `STYLE`'s own `"column": "zone"`
+            // match, before this test ever reaches the check under test.
+            attributes: AttributeMode::CategoricalZone,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let ds = pinned(&path);
+    assert_eq!(ds.identity().verified_rows(), Some(ceilings.max_features + 1));
+
+    let v = viewer();
+    let dest = d.join("bundle");
+    let req = request(&ds, &v, dest.clone());
+    match spatial_kernel::publish::preflight(&req) {
+        Err(PublishError::ReaderCeilingExceeded { ceiling, limit, predicted, alternative }) => {
+            assert_eq!(ceiling, "MAX_FEATURES");
+            assert_eq!(limit, ceilings.max_features);
+            assert_eq!(predicted, ceilings.max_features + 1);
+            assert!(alternative.contains("viewport"), "must name the viewport-bbox alternative");
+        }
+        Err(other) => panic!("expected ReaderCeilingExceeded, got a different refusal: {other}"),
+        Ok(_) => panic!("expected ReaderCeilingExceeded, preflight admitted the request"),
+    }
+    assert!(!dest.exists(), "preflight must refuse before a staging directory is ever created");
+}
+
 #[test]
 fn an_unpinned_source_is_refused_before_anything_is_written() {
     let d = workspace("unpinned");

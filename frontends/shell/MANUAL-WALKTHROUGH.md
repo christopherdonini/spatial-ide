@@ -823,6 +823,50 @@ VERIFIED candidate arm remains a stop-and-report deviation.
 
 ---
 
+## Part M — the packaged build on a clean profile (release cut)
+
+**RELEASE-0.1.md, Amendment 3, item 3, point 7 (the preregistration this Part discharges).** Every
+Part above ran the app under `tauri dev`. This one runs the **installed NSIS artifact** (item G's
+`npm run tauri build` output), on a **clean Windows user profile** — a fresh local account on the
+reference machine, or a clean VM, the human's own choice — for the first time. **No perf steps
+anywhere in this Part** (docs/08:62, CLAUDE.md's own non-negotiable); every expected outcome below
+is quoted verbatim from a shipped string, never a duration.
+
+**Publish rows (M8–M11) are marked "[pending the human's entry-53 word]"**: `RELEASE-0.1.md`
+Amendment 3's own premise correction records that the ADR-017 exposure review's reduced form — Part
+M re-confirms the already-discharged shell UI surface and sights the new ADR-025 refusal, with the
+pre-declared fallback (publish descopes, hero ends at "style") standing if this Part finds the
+packaged surface deviates — was put back to the human, unanswered as of this piece. Items 2/3/3e
+proceed either way (per Amendment 3's own closing line); only what this Part's publish rows may be
+cited to conclude waits on that word.
+
+**Pre-checks.** The NSIS artifact from item G, on removable media or a path the clean profile can
+read; the four `manual_walkthrough_fixtures.rs` fixtures (Part A/B/C/D's own table, above) present
+somewhere the clean profile can read them — regenerate with `cargo test -p spatial-kernel --test
+manual_walkthrough_fixtures -- --ignored --nocapture` from a checkout first if they need copying
+over, since nothing about the fixture *files* is committed. No admin rights needed anywhere in this
+Part — `installMode: "currentUser"` is exactly the point.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| M1 | Install | Run the NSIS installer (`Spatial IDE_0.1.0_x64-setup.exe`, or item G's actual artifact name) as the clean profile's own ordinary (non-elevated) user. No UAC/admin prompt appears — `installMode: "currentUser"` (tauri-utils 2.9.3 `NSISInstallerMode::CurrentUser`: "doesn't require Administrator access") installs per-user, under this account only. |
+| M2 | First launch | The app window opens: title/header **"Spatial IDE"** (the same string A1' asserts under `tauri dev`), no console attached, no crash dialog. |
+| M3 | The Notices view, and `NOTICE.txt` beside the executable | Click the collapsed **▸ Notices** disclosure (bottom of the window, beside **▸ Console**). It expands (**▾ Notices**) and renders the shipped notice text. Separately, in the install directory (found via the Start Menu shortcut's own "Open file location", or `%LOCALAPPDATA%\spatial-ide-shell\` — the per-user NSIS install root), open `NOTICE.txt` in a text viewer. **Both** carry, verbatim: *"Geodetic Parameter Dataset, © IOGP (International Association of Oil & Gas Producers), used under the EPSG Terms of Use: https://epsg.org/terms-of-use.html"*; and, further down, under **"THE SPATIAL IDE APPLICATION, WHEN DISTRIBUTED AS AN INSTALLED PROGRAM"**, *"Its corresponding source, as AGPL-3.0 sections 4 and 5 require, is available at: https://github.com/christopherdonini/spatial-ide"*. **Byte-identical is the claim under test** — the two texts should read as the same document (`scripts/generateNotice.mjs`'s own unit test asserts this mechanically; this step is the felt/visual confirmation on the real artifact). |
+| M4 | Open a GeoParquet in the admitted CRS | Click **Open GeoParquet…**, select the `100k-happy-path.parquet` fixture (EPSG:2056/CH1903+ LV95 — the CRS catalog's one admitted entry, ADR-026). A summary appears exactly as Part A's A3 describes; the canvas renders. |
+| M5 | Filter | In the filter panel, type `zone = 'residential'` (or any predicate the fixture's schema admits) and click **Apply** — Part E's E2. The filtered view renders; `.filter-active` shows the applied predicate verbatim. |
+| M6 | Style — by literal (ADR-023) | Expand **▾ Style** and set a fill colour/opacity/outline **by literal value** (Part F's F2/F4) — there is no "colour by attribute" control anywhere on this canvas, by design: ADR-023 states, as a limitation and never a product choice, that *"the working canvas styles by literal only; the hover panel shows `id` only; and the hero slice's 'colour by attribute' moment lives in the published bundle rather than in the shell."* The edit re-renders the resident set with no re-query (Part F's own claim). |
+| M7 | Residency on the flipped arm, at an over-budget zoom | Reopen with **`polygons-100k.parquet`** (Part K's own fixture, `target/fixtures/slice-budgets/`, regeneration command in Part K above), let it settle at its initial fit-to-extent view, then click **Zoom to layer**. Unlike Part K2, this Part sets nothing via DevTools first — a packaged build's own shipped default (`DEFAULT_TILE_GRID_LEVEL = "medium"`, `tileGridConstants.ts`; the tile-size *switch* stays dev-only, item 7's own design, so a packaged build cannot reach K2's scored `"fine"` level at all). Record whichever of the two shapes appears: **within budget**, *"Showing all `<N>` features in view"* (`residencyStatusText`, `"candidate-within-budget"`), or **over budget** (verbatim, `"candidate-over-budget"` branch), one of *"Showing `<N>` of ~`<M>` features — areas farthest from view are not drawn, to stay within the render budget. Pan or zoom in to see them."* or *"Showing `<N>` features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail."*. **Either is a pass for this step** — what matters is that **no red-bordered ceiling-refusal banner appears at all** (that shape, Part D's own, is reachable only via the dev-only arm switch, absent from a packaged build's UI): the shipped default is the declared-partial-view contract, never the baseline refusal. If the within-budget case appears, zoom out further, in ordinary mouse-wheel steps, until the over-budget sentence appears, and record it then. |
+| M8 [pending the human's entry-53 word] | Publish — the plain-outcome sentence | Reopen `100k-happy-path.parquet` (M4's own dataset — a fresh open, since M7 moved on to `polygons-100k.parquet`) and reapply M5's filter and M6's style if you want the published bundle to carry them. Click **Publish…**, pick a destination, and read the approval dialog in full (Part G's G3). The shaded plain-language sentence names the concrete outcome exactly as G3 describes (e.g. *"This will create a folder named … containing the selected rows as one or more data partitions, the interactive viewer page, and a manifest."*). Type the destination's own final path component and confirm; the dialog closes to a quiet **"Published."** summary (G5), no duration anywhere. |
+| M9 [pending the human's entry-53 word] | `--audit-show`, re-confirmed on the packaged artifact | The packaged installer ships no `publish-bundle` CLI (only the shell's own Tauri executable and its resources, `tauri.conf.json`'s `bundle.resources`) — `--audit-show` still needs a **dev checkout** on the same machine, same as Part G's G6/Part H's H9: from `C:\dev\spatial-ide`, run `cargo run -p spatial-kernel --bin publish-bundle -- --audit-show` (or the prebuilt `target\debug\publish-bundle.exe`). It reads `%LOCALAPPDATA%\spatial-ide\audit\publish.jsonl` — a fixed, machine-wide path the kernel's own audit writer uses regardless of which binary (dev `tauri dev` or this packaged install) produced the entries — so M8's own attempt, made from the installed app, appears in the SAME log a dev checkout's own `--audit-show` already reads. One plain sentence per intent/outcome pair, G6's own format: **the legibility claim under re-confirmation is that a packaged-app attempt reads exactly as legibly as a dev-tree one already does**, not a new property. |
+| M10 [pending the human's entry-53 word] | The ADR-025 refusal, on a source above the reader's ceilings | With `parcels-5gb.parquet` admitted (Part H's fixture, 3,300,000 rows — above `MAX_FEATURES` = 2,000,000), click **Publish…**, choose **Whole dataset**, and pick a destination. **The approval dialog never opens** — `preflight` refuses before the native destination result is even acted on, and the typed refusal renders in the Publish panel (verbatim, `kernel/src/publish/error.rs`'s `PublishError::ReaderCeilingExceeded` Display): *"refused: this publish is predicted to exceed the bundled viewer's declared ceiling MAX_FEATURES — limit 2000000, predicted 3300000 — before any bytes were written (ADR-025: refuse, typed, at preflight; reopens when a second reader exists). Instead, publish the current-viewport bbox instead of the whole file (the viewer's ceilings apply to what a bundle carries, not to what the source dataset holds)."* No destination is created — confirm the folder is absent or empty. |
+| M11 [pending the human's entry-53 word] | The bundle opened in a browser | Serve M8's own bundle (`node scripts/serve-bundle.mjs "<M8's destination>" <a fresh port>`, Part F/G's own command, run from a checkout of `renderer/bundle-viewer` — this step alone needs the dev tree, since the packaged app does not ship that server script). The bundle viewer loads and renders M6's own style, exactly as Part G's G7 describes. |
+| M12 | `tauri build --debug`'s data-plane admission | **[Depends on item 1 (the ADR-020 origin-selector fix), which is a separate, not-yet-landed piece — `DECISIONS-PENDING.md` entry 55, rule 7, design undecided as of this piece.] Not run here.** When item 1 lands, this row becomes: install/run a `tauri build --debug` artifact and confirm the webview admits against the data plane (no 403), per item 1's own declared check. |
+
+**If anything deviates:** stop, record the exact step, and report it, same as every earlier Part.
+M10's refusal and M9's audit-log format are the expected outcomes of THIS Part, not deviations.
+
+---
+
 ## Result log
 
 Fill in after running the script above.
@@ -1209,3 +1253,11 @@ human at the machine over RustDesk. Session log `session-1788806962.log`: **arm 
   out of the cut, not closed by it: entry 47 (hover re-pick on camera settle, next cut, criterion
   in the human's words above); entry 40's final capped attempt (on the human's "window open");
   entry 51's PR #29 (the human's click); LOD ruled flip-first, release engineering next.
+
+### Part M run (release cut — the packaged build on a clean profile)
+
+Fill in after running the script above: date, clean-profile description (fresh local account or
+VM), artifact filename/hash, pass/fail per numbered step, M7's exact sentence sighted, M10's
+refusal text as actually rendered, and the human's own word on the M8–M11 publish rows (entry
+53's reduced form — Amendment 3's premise correction — answered here or by pointer to
+`DECISIONS-PENDING.md`).
