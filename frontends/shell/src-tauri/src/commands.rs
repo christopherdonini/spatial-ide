@@ -26,12 +26,14 @@ use spatial_skp::v0::{
     DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, SkpError, ViewportQueryRequest,
     ViewportQueryResponse,
 };
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 // Entry-40 pass: `AppHandle::try_state` (used by `open_dataset`/`close_dataset` below) is a
-// `Manager` trait method — gated with the same `pool_poll` usages so a plain release build, which
-// never calls it, does not warn on an unused import.
-#[cfg(any(debug_assertions, feature = "measure-build"))]
-use tauri::Manager;
+// `Manager` trait method, and used to be reached only under `#[cfg(any(debug_assertions, feature
+// = "measure-build"))]` (this import was gated the same way, so a plain release build — which
+// never called it — did not warn on an unused import). RELEASE-0.1 item 3: `Manager::path()` (used
+// by `binding_publish_prepare`'s own resource-directory resolution, below) is now called
+// UNCONDITIONALLY, in every profile, so the import is unconditional too — removing the gate does
+// not reintroduce an unused-import warning anywhere, because `Manager` is always used now.
 use tauri_plugin_dialog::DialogExt;
 
 use crate::publish::{
@@ -260,7 +262,12 @@ pub async fn binding_publish_prepare(
         return Ok(PrepareOutcome::PickerCancelled);
     };
 
-    let (viewer, viewer_license) = match publish::bundled_viewer() {
+    // RELEASE-0.1 item 3: the packaged resource directory first, the dev-tree checkout path as a
+    // fallback — `resolve_viewer_dir`'s own doc comment has the order and why an `AppHandle`
+    // itself never crosses into `publish.rs`. `.ok()` rather than `?`: a `resource_dir()` failure
+    // (e.g. under `tauri dev`, where nothing is packaged) is not this command's own error — it
+    // just means `bundled_viewer` falls through to the dev-tree path, same as `None` would.
+    let (viewer, viewer_license) = match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
         Ok(v) => v,
         Err(message) => return Ok(PrepareOutcome::Refused { message }),
     };
@@ -394,6 +401,7 @@ pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt
 #[cfg(debug_assertions)]
 #[tauri::command]
 pub async fn binding_publish_prepare_e2e_destination(
+    app: tauri::AppHandle,
     host: State<'_, Arc<SkpHost>>,
     grants: State<'_, Arc<Mutex<GrantSet>>>,
     attempts: State<'_, Arc<PendingAttempts>>,
@@ -409,7 +417,8 @@ pub async fn binding_publish_prepare_e2e_destination(
         .ok_or_else(|| format!("unknown dataset `{dataset_handle}`"))?;
     let dataset_name = publish::dataset_name_for(&dataset);
 
-    let (viewer, viewer_license) = match publish::bundled_viewer() {
+    // Same resolution order as the real `binding_publish_prepare`, above.
+    let (viewer, viewer_license) = match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
         Ok(v) => v,
         Err(message) => return Ok(PrepareOutcome::Refused { message }),
     };

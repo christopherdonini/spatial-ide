@@ -144,6 +144,38 @@ export function notice(metafile) {
     '',
   );
 
+  // The installer's own AGPL notice + corresponding-source route (RELEASE-0.1 Amendment 3, item
+  // 2; ADR-009 item 1 -- core code, not item 7's bundle-scoped viewer clause -- + AGPL-3.0
+  // sections 4/5). Unconditional, worded as a conditional statement ("if this file was
+  // installed…"), because `notice()` has exactly one shape shared by every caller: it becomes
+  // both the viewer's own `dist/NOTICE.txt` (carried inside every published bundle, where no
+  // installer is present) and the packaged shell's own beside-the-executable `NOTICE.txt`
+  // (`tauri.conf.json`'s `bundle.resources`) -- one source, never a second copy that could drift,
+  // so the sentence must read true in both places rather than only in one of them.
+  out.push(
+    '',
+    'THE SPATIAL IDE APPLICATION, WHEN DISTRIBUTED AS AN INSTALLED PROGRAM',
+    '----------------------------------------------------------------------',
+    '',
+    'If this file was installed as part of the Spatial IDE desktop application — the packaged',
+    'shell, together with the kernel, data engine, renderer and protocol implementation it',
+    'embeds — that program is free software: you can redistribute it and/or modify it under the',
+    'terms of the GNU Affero General Public License as published by the Free Software Foundation,',
+    'either version 3 of the License, or (at your option) any later version, the same terms as',
+    'the viewer above.',
+    '',
+    'This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;',
+    'without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.',
+    'See the GNU Affero General Public License for more details.',
+    '',
+    'Its corresponding source, as AGPL-3.0 sections 4 and 5 require, is available at:',
+    '',
+    '  https://github.com/christopherdonini/spatial-ide',
+    '',
+    'SPDX-License-Identifier: AGPL-3.0-or-later',
+    '',
+  );
+
   out.push('', 'THIRD-PARTY WORKS COMPILED INTO THIS VIEWER', '------------------------------------------', '');
 
   for (const pkg of [...packages.keys()].sort()) {

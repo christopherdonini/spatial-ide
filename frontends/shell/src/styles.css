@@ -708,6 +708,42 @@ body,
   color: inherit;
 }
 
+/* RELEASE-0.1 Amendment 3, item 2 ("Notice channel"). Same collapsed-row shape as
+ * `.console-disclosure` above (byte-for-byte: same padding/font-size/line-height), reusing that
+ * panel's own layout-budget reasoning rather than restating it -- a standing, always-mounted
+ * bottom row, the same class of addition to `.app-rail-bottom`'s total content height. */
+.notices-panel {
+  padding: 0.15rem 1rem;
+  max-width: 40rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.notices-disclosure {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+
+.notices-body {
+  margin-top: 0.75rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.notices-text {
+  margin: 0;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .console-entries {
   margin-top: 0.75rem;
   display: flex;

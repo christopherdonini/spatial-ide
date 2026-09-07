@@ -27,6 +27,7 @@ import {
 import { predicateTextToFilter } from "./filter/predicateInput";
 import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { isInstrumentedBuild } from "./isInstrumentedBuild";
+import NoticesPanel from "./notices/NoticesPanel";
 import PublishPanel from "./publish/PublishPanel";
 import {
   getResidencyArm,
@@ -1554,6 +1555,12 @@ export default function App() {
           * panel here already follows (S1/S4) -- `styles.css`'s own `.console-panel` comment has
           * the measured layout-budget note this piece appended. */}
         <ConsolePanel />
+        {/* RELEASE-0.1 Amendment 3, item 2: mounted UNCONDITIONALLY, same reasoning as
+          * `ConsolePanel` immediately above -- reading the shipped notice text needs no dataset
+          * admitted and no Tauri command (it is fed by a build-time file, `NoticesPanel.tsx`'s own
+          * doc comment). Placed last so it reads as a standing, always-available surface, not a
+          * per-dataset panel. */}
+        <NoticesPanel />
         </div>
       </main>
     </div>

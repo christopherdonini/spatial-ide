@@ -37,6 +37,10 @@ packaged — a constant shared by every Tauri app on the machine — `http://loc
 Origin validation is defence-in-depth against browser-origin confusion; it is not a boundary
 against local processes, which set the header freely — for those, the token is the barrier. Peer
 authentication on loopback, token scoping and expiry are open (ADR-012 open risk 8; ADR-020).
+**The packaged app ships with `"csp": null`** (`frontends/shell/src-tauri/tauri.conf.json`), and
+ADR-020's own consequence follows for every end user, not only a developer running `tauri dev`:
+*"with no CSP, any script that reaches the shell's page inherits the admitted origin"*
+(ADR-020:111-113) — packaging changes who this reaches, not the mechanism.
 
 ## Predicate admission (control-plane filter parsing)
 
