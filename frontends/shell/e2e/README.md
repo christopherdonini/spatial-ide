@@ -454,39 +454,71 @@ records the raw request (`null` unless given) at the cell's own top level, the s
 `--arm`/`--tile-size`/`--attest` are. Diagnosis-only, not part of the preregistered protocol -- never
 use a cell run with this flag for a scored measurement.
 
-**`--require-pool-poll`** (entry-40 empirical producer pass, reviewer M2(b)): adds a pre-flight,
-run once at cell start right after the `open-drain` step and strictly before any trace step --
-waits at least 3000ms past the dataset's own open, then reads the running process's own session log
-and asserts it contains at least one `producer-pool-poll` line. **Refused combined with
+**`--require-pool-poll`** (entry-40 empirical producer pass, reviewer M2(b); path source updated by
+Amendment 2, below): adds a pre-flight, run once at cell start right after the `open-drain` step and
+strictly before any trace step -- waits at least 3000ms past the dataset's own open, then reads the
+running process's own session log (via `evidence.cell.sessionLogPath`'s own app-log-dir resolution,
+below) and asserts it contains at least one `producer-pool-poll` line. **Refused combined with
 `--wire-identity`** (reviewer nit iii): that mode returns before `open-drain` ever runs, so the
 pre-flight would silently never execute -- `parseCellArgs` throws loudly rather than accept the
 combination, the same way `--per-step-watchdog-ms` + `--wire-identity` is refused above.
 
 If the log genuinely lacks the line, the cell is INVALIDATED with
 `evidence.invalidationReason = "pool-poll instrument emitted nothing"`. **Reviewer S-a:** if the
-session log's own path could not be resolved at all (even after a fresh re-read of the app-log file
-at pre-flight time -- the file is only ever more complete by then, an earlier attach-time attempt is
-never trusted alone), the cell is instead invalidated with the DISTINCT reason
-`"pool-poll pre-flight could not be evaluated"` -- never the "emitted nothing" reason, which would
-assert something never actually established. Either way this happens before any trace step ever
-runs, rather than burning a full trial on a cell this pre-flight could not vouch for. The pre-flight's
-own result -- `{ required, ok, reason, sessionLogPathAtAttach, sessionLogPathAtAttachReason,
+session log's own path could not be resolved at all (even after a fresh re-read of the app's log
+directory at pre-flight time -- a fresh directory listing is only ever more complete by then, an
+earlier attach-time attempt is never trusted alone), the cell is instead invalidated with the
+DISTINCT reason `"pool-poll pre-flight could not be evaluated"` -- never the "emitted nothing"
+reason, which would assert something never actually established. Either way this happens before any
+trace step ever runs, rather than burning a full trial on a cell this pre-flight could not vouch
+for. Both reasons are selected by one pure, unit-tested function,
+`poolPollPreflightInvalidationReason` (`residencyTrace.mjs`), so the selection logic itself is
+directly testable outside a harness or a page. The pre-flight's own result -- `{ required, ok,
+reason, invalidationReason, sessionLogPathAtAttach, sessionLogPathAtAttachReason,
 sessionLogPathAtPreflight, checkedAt }` -- is recorded at `evidence.cell.poolPollPreflight` (`null`
 when the flag was not given), keeping both the attach-time and the pre-flight-time resolution
 attempts visible. Ordinary harness runs are entirely unaffected without this flag; the entry-40 run
 itself passes it.
 
-**`evidence.cell.sessionLogPath`/`sessionLogPathReason`** (reviewer M2(a)): the running shell
-process's own session-log path, read back from `lib.rs`'s own startup line (`[spatial-ide-shell]
-session log: <path>`, stderr, captured by `attachOrLaunch`/`attachOrLaunchExe` into
-`e2e/out/app.log`/`measure-app.log`) via `residencyTrace.mjs`'s pure `lastSessionLogPathFromAppLog`.
-`sessionLogPath` is `null`, with `sessionLogPathReason` stating why, if the app-log file could not be
-read or carried no such line -- never a guessed or fabricated path. **Reviewer S-a:** this is read
-once, right after attach -- proven to postdate the Rust `setup()` closure that prints the line for
+**`evidence.cell.sessionLogPath`/`sessionLogPathSource`/`sessionLogPathReason`** (reviewer M2(a);
+PRIMARY source changed by **entry-40 pass, PASS-PREREGISTRATION.md Amendment 2**, paraphrased here,
+not quoted -- `spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md` is outside this
+suite's own citation-integrity scan): the running shell process's own session-log path is now
+resolved PRIMARILY from **the app's own log directory** --
+`%LOCALAPPDATA%\dev.spatialide.shell\logs` (Tauri's own `app_log_dir()`, `lib.rs:96-98`; the
+identifier is `src-tauri/tauri.conf.json`'s own `"identifier"` field, verified there as
+`"dev.spatialide.shell"`) -- listed with `fs.readdirSync`/`fs.statSync` and narrowed, by
+`residencyTrace.mjs`'s pure `newestSessionLogSinceLaunch`, to the newest `session-<epoch>.log`
+whose embedded epoch is at or after the harness's own launch instant (5s tolerance). `sessionLogPath`
+is `null`, with `sessionLogPathReason` stating why, if that resolution failed (`LOCALAPPDATA` unset,
+the directory unlistable, or no qualifying file present); `sessionLogPathSource` is `"app-log-dir"`
+when resolved, `null` otherwise. The field's own declared type is
+`"app-log-dir" | "app.log" | null`, but this driver never assigns `"app.log"` -- the app-log parse
+is kept strictly as the cross-check below, never promoted to the source even when the primary
+resolution fails.
+
+**Why not the app-log file (`e2e/out/app.log`/`measure-app.log`) as the primary source.** A real
+2026-09-07 run's own pre-flight invalidated a cell whose instrument had genuinely emitted 71
+`producer-pool-poll` lines: the app-log-file resolution (`lastSessionLogPathFromAppLog`, reading
+`lib.rs`'s own `[spatial-ide-shell] session log: <path>` stderr line back out of that file) returned
+a session-log path from a month-old prior launch, because the current launch's own stderr was never
+appended to `app.log` at all. `lib.mjs`'s own doc comment on `attachOrLaunch`'s spawn states the
+design intent for that raw-fd redirect in these words (quoted verbatim): *"app.log keeps receiving
+output for as long as the app runs, and the parent can exit (natural or forced) without any risk of
+severing the app's own stdout/stderr"* -- but the detached, `shell: true` spawn this repository uses
+did not honor that intent for this launch's own stderr on this platform, empirically. The
+app-log-file parse is kept as a secondary **cross-check only**,
+`evidence.cell.sessionLogPathAppLogCrossCheck` (the unchanged `resolveSessionLogPath` result) -- it
+may be `null` or stale, and is never consulted to produce `sessionLogPath` itself, nor re-attempted
+at the pre-flight's own later checkpoint (which now re-attempts the app-log-dir resolution instead).
+
+**Reviewer S-a** (still applies to both resolutions): the app-log-dir resolution above is read once,
+right after attach -- proven to postdate the Rust `setup()` closure that creates the session log for
 the measure build only, NOT proven for plain `tauri dev` (`residency-harness.mjs`'s own doc comment
 at this read site has the full account of why), so a `null` here is expected in some `tauri dev`
 runs and does not by itself mean anything failed -- `--require-pool-poll`'s own pre-flight (above)
-re-attempts this same read at its own, later checkpoint before treating it as unresolved.
+re-attempts this same app-log-dir resolution at its own, later checkpoint before treating it as
+unresolved.
 
 **Entry 31 (2026-09-03, post-campaign) -- three additions with three different protocol
 standings, split deliberately (this change's own reviewer gate, should-fix 7):**

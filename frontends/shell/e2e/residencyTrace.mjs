@@ -122,6 +122,73 @@ export function lastSessionLogPathFromAppLog(appLogText) {
 }
 
 /**
+ * Entry-40 pass (spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md Amendment 2,
+ * paraphrased here, not quoted, per this file's own established discipline above -- that document
+ * is outside this file's own citation-integrity scan): Amendment 2's own finding was that
+ * resolving the session-log path from the app-log file's captured stderr (`lastSessionLogPathFromAppLog`
+ * above) picked up a stale, month-old session log on this platform, because the detached launch
+ * this repository's own `lib.mjs` uses does not reliably deliver the app's stderr into that file.
+ * The fix moves the primary path source to the app's own log directory instead
+ * (`residency-harness.mjs`'s own `resolveSessionLogPathFromAppLogDir`, the caller of this
+ * function); this is the pure selection logic underneath it -- given a directory listing and the
+ * harness's own launch instant, which file in that directory is the one THIS launch created.
+ *
+ * `dirListing` is shaped like `fs.readdirSync` + `fs.statSync` results, `{name, mtimeMs}` per
+ * entry -- `mtimeMs` is accepted for shape compatibility with a real listing but not itself
+ * consulted: `state.rs`'s own `SessionLog::open` names every file `session-<unix-seconds>.log`,
+ * the epoch embedded in the NAME itself, so selection is fully deterministic from the name alone
+ * (no filesystem clock-granularity dependency an `mtimeMs`-based ordering would carry). Among the
+ * files that qualify, the newest is the one with the highest embedded epoch.
+ *
+ * A file qualifies iff its name matches `session-<digits>.log` exactly (any other name is
+ * silently ignored -- never a thrown error, since an unrelated file sitting in the same directory
+ * is an ordinary, expected case, not a harness defect) AND its embedded epoch (seconds) is
+ * `>= floor(launchEpochMs / 1000) - 5`, a 5-second tolerance for clock granularity between this
+ * harness's own `Date.now()` millisecond clock and `SystemTime::now()`'s own second-truncated
+ * stamp. Returns the path-less `name` of the newest qualifying file, or `null` if none qualifies
+ * (an empty or entirely non-matching listing, or every candidate's epoch below the threshold) --
+ * never a guessed name.
+ */
+export function newestSessionLogSinceLaunch(dirListing, launchEpochMs) {
+  if (!Array.isArray(dirListing)) {
+    throw new Error("newestSessionLogSinceLaunch: dirListing must be an array");
+  }
+  if (!Number.isFinite(launchEpochMs)) {
+    throw new Error("newestSessionLogSinceLaunch: launchEpochMs must be a finite number");
+  }
+  const thresholdSeconds = Math.floor(launchEpochMs / 1000) - 5;
+  let newestName = null;
+  let newestEpoch = -Infinity;
+  for (const entry of dirListing) {
+    if (!entry || typeof entry.name !== "string") continue;
+    const match = /^session-(\d+)\.log$/.exec(entry.name);
+    if (!match) continue;
+    const epoch = Number(match[1]);
+    if (epoch < thresholdSeconds) continue;
+    if (epoch > newestEpoch) {
+      newestEpoch = epoch;
+      newestName = entry.name;
+    }
+  }
+  return newestName;
+}
+
+/**
+ * Entry-40 pass (spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md Amendment 2, item
+ * 3 of the fix piece that added this function, paraphrased, not quoted, per this file's own
+ * established discipline above): the `--require-pool-poll` pre-flight's own reason selection,
+ * extracted as a pure function so it is directly testable without a harness or a page.
+ * `resolvedPath` truthy (the session log path resolved, at least by pre-flight time) means the log
+ * WAS read and genuinely lacks a `producer-pool-poll` line -- `"pool-poll instrument emitted
+ * nothing"`. `resolvedPath` falsy means the check itself never got to run at all -- a DISTINCT
+ * reason, `"pool-poll pre-flight could not be evaluated"`, never conflated with the first (a claim
+ * the instrument "emitted nothing" would not be true if the log was never even found).
+ */
+export function poolPollPreflightInvalidationReason(resolvedPath) {
+  return resolvedPath ? "pool-poll instrument emitted nothing" : "pool-poll pre-flight could not be evaluated";
+}
+
+/**
  * PROPOSED, PENDING THE HUMAN'S SIGHT (§4e) -- the shell's own declared fan-out ceiling for
  * concurrent `viewport_query` streams a single pan/zoom step may issue, once tiling exists (P3).
  * Named here for the same reason as the two constants above; unused by this piece's own driver,

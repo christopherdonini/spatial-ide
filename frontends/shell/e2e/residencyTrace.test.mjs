@@ -25,9 +25,11 @@ import {
   isWellFormedSettleCriterion,
   lastSessionLogPathFromAppLog,
   MAX_IN_FLIGHT_TILE_STREAMS_PROPOSED,
+  newestSessionLogSinceLaunch,
   parsePerStepWatchdogMsArg,
   parseTileSizeArg,
   percentileNearestRank,
+  poolPollPreflightInvalidationReason,
   resolvedPerStepSettleTimeoutMs,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
@@ -525,6 +527,97 @@ test("tolerates surrounding whitespace/CRLF line endings", () => {
     lastSessionLogPathFromAppLog("[spatial-ide-shell] session log: /tmp/session-3.log \r\n"),
     "/tmp/session-3.log"
   );
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- newestSessionLogSinceLaunch (entry-40 pass, Amendment 2: the app-log-dir primary session-log-path source)"
+);
+
+test("none: an empty listing returns null", () => {
+  assert.equal(newestSessionLogSinceLaunch([], 1_788_757_855_000), null);
+});
+
+test("none: a listing with only non-matching names returns null", () => {
+  assert.equal(
+    newestSessionLogSinceLaunch(
+      [
+        { name: "app.log", mtimeMs: 1_788_757_000_000 },
+        { name: "session-abc.log", mtimeMs: 1_788_757_000_000 }, // non-numeric epoch -- ignored, not thrown
+        { name: "not-a-session-log.txt", mtimeMs: 1_788_757_000_000 },
+      ],
+      1_788_757_855_000
+    ),
+    null
+  );
+});
+
+test("one: a single qualifying file is returned by its path-less name", () => {
+  const launchEpochMs = 1_788_757_855_000; // seconds: 1788757855
+  assert.equal(
+    newestSessionLogSinceLaunch([{ name: "session-1788757860.log", mtimeMs: 1_788_757_861_000 }], launchEpochMs),
+    "session-1788757860.log"
+  );
+});
+
+test("several: the file with the HIGHEST embedded epoch wins, regardless of array order or mtimeMs", () => {
+  const launchEpochMs = 1_788_757_855_000;
+  const dirListing = [
+    { name: "session-1788757900.log", mtimeMs: 1 }, // lowest mtimeMs, highest epoch -- must still win
+    { name: "session-1788757860.log", mtimeMs: 9_999_999_999_999 }, // highest mtimeMs, not highest epoch
+    { name: "session-1788757861.log", mtimeMs: 2 },
+  ];
+  assert.equal(newestSessionLogSinceLaunch(dirListing, launchEpochMs), "session-1788757900.log");
+});
+
+test("tolerance edge: exactly floor(launchEpochMs/1000) - 5 qualifies; one second earlier does not", () => {
+  const launchEpochMs = 1_788_757_855_000; // floor/1000 = 1788757855; threshold = 1788757850
+  assert.equal(
+    newestSessionLogSinceLaunch([{ name: "session-1788757850.log", mtimeMs: null }], launchEpochMs),
+    "session-1788757850.log"
+  );
+  assert.equal(
+    newestSessionLogSinceLaunch([{ name: "session-1788757849.log", mtimeMs: null }], launchEpochMs),
+    null
+  );
+});
+
+test("a non-matching name sitting alongside qualifying ones is ignored, not selected and not fatal", () => {
+  const launchEpochMs = 1_788_757_855_000;
+  const dirListing = [
+    { name: "measure-app.log", mtimeMs: 9_999_999_999_999 },
+    { name: "session-1788757900.log", mtimeMs: 1 },
+    { name: "session-1788757900.log.bak", mtimeMs: 9_999_999_999_999 }, // suffix after .log -- must not match
+  ];
+  assert.equal(newestSessionLogSinceLaunch(dirListing, launchEpochMs), "session-1788757900.log");
+});
+
+test("rejects a non-array dirListing or a non-finite launchEpochMs rather than silently producing garbage", () => {
+  assert.throws(() => newestSessionLogSinceLaunch(null, 1_788_757_855_000));
+  assert.throws(() => newestSessionLogSinceLaunch([], NaN));
+  assert.throws(() => newestSessionLogSinceLaunch([], undefined));
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- poolPollPreflightInvalidationReason (entry-40 pass, Amendment 2 item 3: the pre-flight's DISTINCT reason selection)"
+);
+
+test('a null/falsy resolvedPath -- the check itself could not run -- selects "pool-poll pre-flight could not be evaluated"', () => {
+  assert.equal(poolPollPreflightInvalidationReason(null), "pool-poll pre-flight could not be evaluated");
+  assert.equal(poolPollPreflightInvalidationReason(undefined), "pool-poll pre-flight could not be evaluated");
+  assert.equal(poolPollPreflightInvalidationReason(""), "pool-poll pre-flight could not be evaluated");
+});
+
+test('a resolved (truthy) path -- the log was read and genuinely lacks the line -- selects "pool-poll instrument emitted nothing"', () => {
+  assert.equal(
+    poolPollPreflightInvalidationReason("C:\\Users\\x\\AppData\\Local\\dev.spatialide.shell\\logs\\session-1788757855.log"),
+    "pool-poll instrument emitted nothing"
+  );
+});
+
+test("the two reasons are never conflated -- distinct strings for the two distinct cases", () => {
+  assert.notEqual(poolPollPreflightInvalidationReason(null), poolPollPreflightInvalidationReason("/some/path"));
 });
 
 console.log("");

@@ -63,7 +63,7 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
-import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -73,9 +73,11 @@ import {
   dismissThenClickRetry,
   IDENTITY_VIEW_STATE_STEPS,
   lastSessionLogPathFromAppLog,
+  newestSessionLogSinceLaunch,
   parsePerStepWatchdogMsArg,
   parseTileSizeArg,
   percentileNearestRank,
+  poolPollPreflightInvalidationReason,
   resolvedPerStepSettleTimeoutMs,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
@@ -88,6 +90,18 @@ import { loadShellModule } from "./tsModuleLoader.mjs";
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR = join(SHELL_DIR, "e2e", "out");
 const MOUNT_READY_TIMEOUT_MS = 90_000;
+
+// Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2 (spikes/entry40-producer-hang-diagnosis/
+// PASS-PREREGISTRATION.md, paraphrased here, not quoted -- that document is outside this file's
+// own citation-integrity scan): the app's own log directory -- Tauri's `app_log_dir()` under this
+// app's identifier (`src-tauri/tauri.conf.json`'s own "identifier" field, verified there as
+// "dev.spatialide.shell"), which on Windows resolves under `LOCALAPPDATA`
+// (`resolveSessionLogPathFromAppLogDir`'s own doc comment, and this file's README section, have
+// the full account of why this became the PRIMARY session-log-path source). `null` if
+// `LOCALAPPDATA` is unset in this environment -- `resolveSessionLogPathFromAppLogDir`'s own null
+// handling covers that case honestly rather than throwing at module load.
+const APP_LOG_DIR =
+  process.env.LOCALAPPDATA != null ? join(process.env.LOCALAPPDATA, "dev.spatialide.shell", "logs") : null;
 
 const FIXTURE_FILTER_ZONED = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet";
 
@@ -120,13 +134,18 @@ function effectiveSettleTimeoutMs(stepTimeoutMs) {
 }
 
 /**
- * Reviewer M2(a)/S-a (entry-40 pass): reads `appLogPath` and extracts `lib.rs`'s own
+ * Reviewer M2(a)/S-a (entry-40 pass); DEMOTED to a cross-check only by PASS-PREREGISTRATION.md
+ * Amendment 2 (spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md, paraphrased, not
+ * quoted -- see `resolveSessionLogPathFromAppLogDir`'s own doc comment below, and this file's
+ * README section, for the full account of why): reads `appLogPath` and extracts `lib.rs`'s own
  * `[spatial-ide-shell] session log: <path>` startup line via `lastSessionLogPathFromAppLog`
- * (`residencyTrace.mjs`, pure, unit-tested there) -- shared between the attach-time read (right
- * after `attachConsole`, `main()` below) and the pre-flight's own re-attempt at pre-flight time
- * (the app-log file is only ever MORE complete by then, several seconds and a full `open-drain`
- * step later -- never less complete). Returns `{ path, reason }`; `reason` is `null` iff `path` is
- * non-null -- never a guessed path, a missing file and a missing line are both named honestly.
+ * (`residencyTrace.mjs`, pure, unit-tested there). Called exactly once now, right after
+ * `attachConsole` in `main()`, and its result recorded only as
+ * `evidence.cell.sessionLogPathAppLogCrossCheck` -- never used to produce `sessionLogPath` itself,
+ * and never re-attempted at pre-flight time (the pre-flight's own re-attempt now targets
+ * `resolveSessionLogPathFromAppLogDir` instead, below). Returns `{ path, reason }`; `reason` is
+ * `null` iff `path` is non-null -- never a guessed path, a missing file and a missing line are
+ * both named honestly.
  */
 function resolveSessionLogPath(appLogPath) {
   try {
@@ -139,6 +158,62 @@ function resolveSessionLogPath(appLogPath) {
   } catch (e) {
     return { path: null, reason: `could not read ${appLogPath}: ${e.message}` };
   }
+}
+
+/**
+ * Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2 (spikes/entry40-producer-hang-diagnosis/
+ * PASS-PREREGISTRATION.md, paraphrased, not quoted -- that document is outside this file's own
+ * citation-integrity scan, which this file matches too via its own `residency*.mjs` glob): a real
+ * 2026-09-07 attempt's own pre-flight invalidated a cell whose instrument HAD genuinely emitted --
+ * the app-log file's captured stderr (`resolveSessionLogPath`, above) held a month-old
+ * session-log path, because the detached, `shell: true` spawn `lib.mjs` uses for
+ * `attachOrLaunch`/`attachOrLaunchExe` does not reliably deliver the app's stderr into that file
+ * on this platform (see this file's own README, "Residency measurement harness" section, and
+ * `lib.mjs`'s own doc comment on the raw-fd/detached spawn, for the full account). This function
+ * is the PRIMARY source Amendment 2 moved to instead: the app's own log directory --
+ * `APP_LOG_DIR` above (Tauri's own `app_log_dir()`, `lib.rs:96-98`) -- listed with
+ * `fs.readdirSync` + `fs.statSync` and narrowed to the file THIS launch created via
+ * `newestSessionLogSinceLaunch` (`residencyTrace.mjs`, pure, unit-tested there).
+ *
+ * Returns `{ path, reason, source }`: `path` is `null` with a stated `reason` if `LOCALAPPDATA` is
+ * unset, the directory cannot be listed, or no `session-<epoch>.log` in it qualifies -- never a
+ * guessed path. `source` is `"app-log-dir"` when `path` is non-null; `null` alongside a null
+ * `path`. (`resolveSessionLogPath`'s own app-log-file parse, the secondary cross-check, is a
+ * `sessionLogPathSource` value this piece's own instructions declare as part of the field's type
+ * even though this function itself never returns it -- see the cell-recording call site's own
+ * comment for why.)
+ */
+function resolveSessionLogPathFromAppLogDir(launchEpochMs) {
+  if (!APP_LOG_DIR) {
+    return {
+      path: null,
+      source: null,
+      reason: "LOCALAPPDATA is not set in this environment -- cannot locate the app's log directory",
+    };
+  }
+  let entries;
+  try {
+    entries = readdirSync(APP_LOG_DIR).map((name) => {
+      let mtimeMs = null;
+      try {
+        mtimeMs = statSync(join(APP_LOG_DIR, name)).mtimeMs;
+      } catch {
+        mtimeMs = null; // best-effort -- selection itself never consults mtimeMs, see newestSessionLogSinceLaunch
+      }
+      return { name, mtimeMs };
+    });
+  } catch (e) {
+    return { path: null, source: null, reason: `could not list ${APP_LOG_DIR}: ${e.message}` };
+  }
+  const newestName = newestSessionLogSinceLaunch(entries, launchEpochMs);
+  if (!newestName) {
+    return {
+      path: null,
+      source: null,
+      reason: `no session-<epoch>.log in ${APP_LOG_DIR} with an epoch at or after this run's own launch (5s tolerance)`,
+    };
+  }
+  return { path: join(APP_LOG_DIR, newestName), source: "app-log-dir", reason: null };
 }
 
 // Disclosed approximations -- see this file's own top comment.
@@ -2216,6 +2291,12 @@ async function main() {
     return;
   }
   const { page, browser, launched } = session;
+  // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2: this run's own launch instant, captured the
+  // moment `attachOrLaunch`/`attachOrLaunchExe` resolved -- before any other `await` runs -- so
+  // `resolveSessionLogPathFromAppLogDir` (below) has an instant genuinely anchored to THIS launch.
+  // Unused if `launched` is `false` (the invariant check right below returns before it is ever
+  // read).
+  const launchEpochMs = Date.now();
   // F2: no attach path remains in this harness -- the sweep above must have left CDP_PORT empty,
   // so `attachOrLaunch`/`attachOrLaunchExe` should always take its own launch path here. Asserted,
   // not merely assumed: `launched === false` means either the sweep missed a PID (already logged
@@ -2235,27 +2316,39 @@ async function main() {
   }
   const consoleHandle = attachConsole(page);
 
-  // Reviewer M2(a) (entry-40 pass): `lib.rs`'s own startup line (`[spatial-ide-shell] session log:
-  // <path>`) is written to stderr, captured into `e2e/out/app.log` (`tauri dev`) or
-  // `e2e/out/measure-app.log` (`--measure-build`) by `attachOrLaunch`/`attachOrLaunchExe`'s own
-  // raw-fd `stdio` redirect (`lib.mjs`).
+  // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2 (paraphrased, not quoted; that document is
+  // outside this file's own citation-integrity scan): `sessionLogPath`'s PRIMARY source is now the
+  // app's own log directory (`resolveSessionLogPathFromAppLogDir`, above), not the app-log file's
+  // captured stderr -- see that function's own doc comment, and this file's README section, for
+  // the full account of why (the detached spawn `lib.mjs` uses does not reliably deliver the app's
+  // stderr into `app.log`/`measure-app.log` on this platform, so a value resolved from it could be
+  // stale by a wide margin, as a real attempt at this pass observed live). The OLD app-log-file
+  // parse (`resolveSessionLogPath`, unchanged in its own logic) is kept as a CROSS-CHECK only,
+  // recorded separately on the cell as `sessionLogPathAppLogCrossCheck` and never consulted to
+  // produce `sessionLogPath` itself, nor re-attempted at the pre-flight's own later checkpoint
+  // (which now re-attempts `resolveSessionLogPathFromAppLogDir` instead, below).
   //
-  // Reviewer S-a (post-gate sweep): an earlier version of this comment claimed the Rust `setup()`
-  // closure that prints this line "has already run" by the time `attachOrLaunch(Exe)` resolves
-  // above -- true for the measure build ONLY (`lib.rs`'s own `#[cfg(feature = "measure-build")]`
-  // block explicitly builds that build's webview INSIDE `setup()`, strictly AFTER this line already
-  // printed earlier in the same closure -- verified there, not assumed), NOT proven for plain
-  // `tauri dev`: `lib.rs`'s own measure-build doc comment states, for the declarative
-  // `create: true` window `tauri dev` uses, that Tauri's internal `setup()` "creates every
-  // `app.config().app.windows` entry whose `create` is `true` BEFORE this closure ever runs" --
-  // i.e. for `tauri dev` the window (and whatever CDP attachability follows from it) may already
-  // exist before, or mid-way through, `setup()`, so this read can genuinely race the line being
-  // printed. This is exactly why the value read here is only a FIRST attempt, re-resolved instead
-  // of trusted at the pre-flight's own later checkpoint (`resolveSessionLogPath`'s second call
-  // site, below) -- never fabricated either way: a missing app-log file or a missing line both
-  // record `null` plus a stated reason, never a guessed path.
+  // Reviewer S-a (post-gate sweep; still true of both resolutions below, since neither depends on
+  // the mechanism this note describes): the Rust `setup()` closure that creates the session log has
+  // "already run" by the time `attachOrLaunch(Exe)` resolves above -- true for the measure build
+  // ONLY (`lib.rs`'s own `#[cfg(feature = "measure-build")]` block explicitly builds that build's
+  // webview INSIDE `setup()`, strictly AFTER the session log is opened earlier in the same closure
+  // -- verified there, not assumed), NOT proven for plain `tauri dev`: `lib.rs`'s own measure-build
+  // doc comment states that, for the declarative `create: true` window `tauri dev` uses, Tauri's
+  // internal `setup()` creates every configured window before this closure ever runs -- i.e. for
+  // `tauri dev` the window (and whatever CDP attachability follows from it) may already exist
+  // before, or mid-way through, `setup()`, so a read taken here can genuinely race the session log
+  // being created. This is exactly why the value read here is only a FIRST attempt, re-resolved
+  // instead of trusted at the pre-flight's own later checkpoint (below) -- never fabricated either
+  // way: a missing directory entry or a missing file both record `null` plus a stated reason, never
+  // a guessed path.
   const appLogPath = join(OUT_DIR, measureBuildExePath ? "measure-app.log" : "app.log");
-  const { path: sessionLogPath, reason: sessionLogPathReason } = resolveSessionLogPath(appLogPath);
+  const {
+    path: sessionLogPath,
+    reason: sessionLogPathReason,
+    source: sessionLogPathSource,
+  } = resolveSessionLogPathFromAppLogDir(launchEpochMs);
+  const sessionLogPathAppLogCrossCheck = resolveSessionLogPath(appLogPath);
 
   // Entry 31 / attribution-pass §6: the opt-in queue-depth sampler. One page.evaluate per tick
   // reading the two EXISTING E2E hooks (`residencyInFlightStreamCount`, `residencyQueuedTileCount`
@@ -2363,11 +2456,24 @@ async function main() {
       // (`effectiveSettleTimeoutMs`'s own contract), so a reader can see both the request and its
       // effect without leaving the cell object.
       perStepWatchdogOverrideMs: cellArgs.perStepWatchdogMs,
-      // Reviewer M2(a) (entry-40 pass): the running process's own session-log path, read back from
-      // `app.log`/`measure-app.log` (see the block right after `attachConsole` above) -- `null` plus
-      // `sessionLogPathReason` if the line was absent or the file unreadable, never a guessed path.
+      // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2: the running process's own session-log
+      // path, resolved PRIMARILY from the app's own log directory
+      // (`resolveSessionLogPathFromAppLogDir`, see the block right after `attachConsole` above) --
+      // `null` plus `sessionLogPathReason` if that resolution failed, never a guessed path.
+      // `sessionLogPathSource` names which resolution actually produced `sessionLogPath` --
+      // `"app-log-dir"` here (the only value this driver's own primary resolution ever assigns) or
+      // `null` alongside a null `sessionLogPath`; `"app.log"` is part of this field's own declared
+      // type (this piece's own instructions) but this driver never assigns it, since the app-log
+      // parse is kept strictly as a cross-check below, never promoted to the source even when the
+      // primary resolution fails.
       sessionLogPath,
+      sessionLogPathSource,
       sessionLogPathReason,
+      // Entry-40 pass, Amendment 2: the OLD (now-secondary) app-log-file parse
+      // (`resolveSessionLogPath`), recorded beside the real source for comparison only -- may be
+      // `null` or stale (this is the exact resolution Amendment 2's own attempt 1 found returning a
+      // month-old path), and never consulted by any pre-flight or invalidation decision below.
+      sessionLogPathAppLogCrossCheck,
       // Reviewer M2(b) (entry-40 pass): `null` unless `--require-pool-poll` was given; filled in
       // below, right after the `open-drain` step, before any trace step runs.
       poolPollPreflight: null,
@@ -2605,17 +2711,18 @@ async function main() {
         "residency-harness: --require-pool-poll pre-flight -- waiting 3000ms past dataset open, then checking the session log"
       );
       await sleep(3000);
-      // Reviewer S-a: `sessionLogPath` (captured right after attach, above) may still be `null` --
-      // the app-log file may not have carried the startup line yet at that early point (see this
-      // file's own doc comment on `resolveSessionLogPath`'s attach-time call site for why that is
-      // not proven to have happened yet under plain `tauri dev`). By pre-flight time -- after
-      // `open-drain` has opened and settled the dataset, plus this 3000ms sleep -- the app-log file
-      // is only ever MORE complete, never less, so it is worth one more attempt here rather than
-      // trusting only the earlier value.
+      // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2 (item 3 of the fix piece that made this
+      // change; paraphrased, not quoted -- that document is outside this file's own
+      // citation-integrity scan): `sessionLogPath` (the app-log-dir primary resolution, captured
+      // right after attach, above) may still be `null` -- the session log file may not have been
+      // created yet at that early point. By pre-flight time -- after `open-drain` has opened and
+      // settled the dataset, plus this 3000ms sleep -- a fresh directory listing is only ever MORE
+      // complete, never less, so it is worth one more attempt here (against the SAME app-log-dir
+      // source, never the app-log-file cross-check) rather than trusting only the earlier value.
       let resolvedPath = sessionLogPath;
       let resolvedPathReason = sessionLogPathReason;
       if (!resolvedPath) {
-        const retry = resolveSessionLogPath(appLogPath);
+        const retry = resolveSessionLogPathFromAppLogDir(launchEpochMs);
         resolvedPath = retry.path;
         resolvedPathReason = retry.reason;
       }
@@ -2637,21 +2744,28 @@ async function main() {
         required: true,
         ok: preflightOk,
         reason: preflightReason,
-        // Reviewer S-a: both the attach-time and the pre-flight-time resolution kept, so a reader
-        // can see the full history rather than only the value this pre-flight ended up using.
+        // Entry-40 pass, Amendment 2 (item 3): the DISTINCT reason class that fired, from the
+        // single, pure `poolPollPreflightInvalidationReason` (`residencyTrace.mjs`, unit-tested
+        // there) -- `null` when `preflightOk` (no invalidation fired at all).
+        invalidationReason: preflightOk ? null : poolPollPreflightInvalidationReason(resolvedPath),
+        // Reviewer S-a (unchanged shape): both the attach-time and the pre-flight-time resolution
+        // kept, so a reader can see the full history and the exact path checked, not only the value
+        // this pre-flight ended up using. Entry-40 pass, Amendment 2: both are now app-log-dir
+        // resolutions, not the old app-log-file parse -- see `sessionLogPathAppLogCrossCheck` on
+        // the cell for that.
         sessionLogPathAtAttach: sessionLogPath,
         sessionLogPathAtAttachReason: sessionLogPathReason,
         sessionLogPathAtPreflight: resolvedPath,
         checkedAt: new Date().toISOString(),
       };
       if (!preflightOk) {
-        // Reviewer S-a: two DISTINCT reasons, never conflated. `resolvedPath` present (the log was
-        // read, and genuinely lacks the line) is the only case that has actually ESTABLISHED the
-        // instrument emitted nothing; `resolvedPath` absent means the check itself could not run at
-        // all -- a claim of absence would not be true, so it gets its own, honest reason instead.
-        const invalidationReason = resolvedPath
-          ? "pool-poll instrument emitted nothing"
-          : "pool-poll pre-flight could not be evaluated";
+        // Entry-40 pass, Amendment 2 (item 3): two DISTINCT reasons, never conflated. `resolvedPath`
+        // present (the log was read, and genuinely lacks the line) is the only case that has
+        // actually ESTABLISHED the instrument emitted nothing; `resolvedPath` absent means the
+        // check itself could not run at all -- a claim of absence would not be true, so it gets its
+        // own, honest reason instead. (Reviewer S-a's original two-reason discipline, now sourced
+        // from the cell's own recorded `invalidationReason` above rather than recomputed here.)
+        const invalidationReason = evidence.cell.poolPollPreflight.invalidationReason;
         console.error(
           `residency-harness: --require-pool-poll PRE-FLIGHT FAILED (${invalidationReason}: ${preflightReason}) -- invalidating the cell before any trace step runs`
         );
