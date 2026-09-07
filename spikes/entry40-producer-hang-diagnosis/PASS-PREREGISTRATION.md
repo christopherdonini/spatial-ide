@@ -214,3 +214,26 @@ on a session that the full check would refuse anyway; the full `check-display-se
 runs after arming, before the trial, exactly as the correction binds. The lock's mechanism
 (display-off-driven lock vs. a RustDesk lock-after-session-end at 07:34 local) is not determined
 from the machine's policies and is put to the human with the classification.
+
+## Amendment 4 — the human's ruling on Amendment 3's refusal; the pass's FINAL attempt, pre-declared and capped (2026-09-07, appended before any further launch; the human's words verbatim, `DECISIONS-PENDING.md` entry 50)
+
+> (1) Ruled no — a guard precondition refusal with no harness process launched is the guard
+> working, not a trial invalidation; §8's protection is about results seen, and none was. The one
+> authorized launch stands. (2) Confirmed: the 07:34 lock was me connecting via RustDesk from work
+> — lock-on-disconnect, not a display-timeout policy. Launch rule: one declared window, coordinated
+> — I will either disable lock-on-disconnect on the machine's RustDesk settings for the window, or
+> unlock at home and stay off RustDesk; either way I message you "window open," you launch
+> immediately, and the runner's new pre-arm lock check remains the final gate. I'll tell you which
+> and when. (3) Pre-declared cap, binding: this is the pass's final attempt. Whatever happens —
+> completion, refusal, any environmental failure — the pass ends with it; a failure records the
+> null result and we move on. The structural answer already stands, this is demonstration-class
+> evidence, and it has consumed enough gate cycles for one lifetime.
+
+**Binding consequences.** Amendment 3's refusal is NOT an invalidation under Amendment 2 change 3;
+the one launch stands. The launch happens only on the human's "window open" message, immediately,
+with the runner's pre-arm `LogonUI` check and the guard's full post-arm check as the gates. This
+launch is the pass's LAST: any outcome other than a completed cell — refusal, invalidation,
+environmental failure — is recorded here as the null result (§4 (D)-class) and the pass ends; no
+further amendment can authorize another attempt. The lock mechanism is resolved as RustDesk
+lock-on-disconnect (the human's own account), which the guard README's 2026-09-07 note carries as
+one of its two hypotheses — now the confirmed one.

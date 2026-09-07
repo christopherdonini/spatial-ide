@@ -5,7 +5,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-50. **[Entry-40 empirical pass: the authorized re-run was REFUSED by the guard's pre-trial check —
+50. **[RULED 2026-09-07, the human verbatim: "(1) Ruled no — a guard precondition refusal with no
+    harness process launched is the guard working, not a trial invalidation; §8's protection is
+    about results seen, and none was. The one authorized launch stands. (2) Confirmed: the 07:34
+    lock was me connecting via RustDesk from work — lock-on-disconnect, not a display-timeout
+    policy. Launch rule: one declared window, coordinated — I will either disable
+    lock-on-disconnect on the machine's RustDesk settings for the window, or unlock at home and
+    stay off RustDesk; either way I message you "window open," you launch immediately, and the
+    runner's new pre-arm lock check remains the final gate. I'll tell you which and when. (3)
+    Pre-declared cap, binding: this is the pass's final attempt. Whatever happens — completion,
+    refusal, any environmental failure — the pass ends with it; a failure records the null result
+    and we move on. The structural answer already stands, this is demonstration-class evidence,
+    and it has consumed enough gate cycles for one lifetime." Applied: PASS-PREREGISTRATION.md
+    Amendment 4 (the cap + launch rule, binding); the custodian launches only on the human's
+    "window open" message. Original entry follows.]**
+    **[Entry-40 empirical pass: the authorized re-run was REFUSED by the guard's pre-trial check —
     session locked — before the harness launched; two failed launch attempts → rule-7 stop. Your
     classification and your word are needed before anything launches again.]** Attempt 1
     (05:09Z) was invalidated at the harness's own pre-flight by a harness path defect, not the
