@@ -126,3 +126,43 @@ Rust) are independent mechanisms, and `tauri build --debug` is precisely where t
 §2's sentence should be read as: dev/measure-build-gated by those two mechanisms plus the
 `measure-build` cargo feature (RESIDENCY-PREREGISTRATION Amendment 16), never in a plain production
 build. §2's text is retained unedited above.
+
+## Amendment 2 — attempt 1 invalidated at pre-flight by a harness defect; the pre-flight's path source changes; one re-run authorized (2026-09-07, appended BEFORE the re-run; a pre-result amendment — no trace step ran)
+
+**What happened (verbatim from the runner and harness logs, job tmp `entry40-cell.log` / `entry40-harness.log`).**
+05:09:15Z fixture sha OK; 05:09:18Z guard armed (`"armed":true`, backstop task fire 09:39:16+02:00,
+watchdog pid 54656); 05:09:22Z RustDesk `Stopped`, 0 processes (verified absent); 05:09:23Z harness
+start; mount gate PASSED after 8755 ms; candidate arm and `fine` read back before any open; then:
+*"--require-pool-poll PRE-FLIGHT FAILED (pool-poll instrument emitted nothing: session log at
+C:\Users\Christopher\AppData\Local\dev.spatialide.shell\logs\session-1786461520.log contains no
+"producer-pool-poll" line) -- invalidating the cell before any trace step runs"*; harness rc=1 at
+05:11:41Z; 05:11:44Z disarm `"disarmed":true`, RustDesk `Running`. **No trace step ran.**
+
+**The cause is the harness, not the instrument.** `session-1786461520.log` is dated 2026-08-11: the
+harness resolved `sessionLogPath` from the last `[spatial-ide-shell] session log:` line in
+`frontends/shell/e2e/out/app.log`, and that file was NOT appended by this launch (its mtime is
+2026-08-11; on this platform the detached, `shell: true` spawn adopted 2026-08-12 does not deliver
+the app's stderr into that raw fd). The instrument's OWN log for this launch,
+`session-1788757855.log` (created 05:10:55Z), contains **71 `producer-pool-poll` lines** (first:
+`1788757865403 producer-pool-poll active=0 live=1 idle=1`), i.e. the poll emitted from the first
+second the dataset was open. Amendment 1 §1's fail-closed rule worked exactly as written — and it
+caught a defect in its own path source rather than in the instrument.
+
+**Display verification, disclosed exactly.** The runner's wake-and-check step did not execute (a
+defect in the custodian's runner script, diagnosed separately); the display was verified
+independently at 05:10:26Z — `{"ok":true,"sessionUnlocked":true,"displayAwake":true,
+"monitorTimeoutAc":0}` — 63 s after harness start, during launch, and before the pre-flight's own
+3 s window past the open; no trace step ran, so nothing was measured under an unverified display.
+
+**Changes, binding for the re-run.**
+1. `sessionLogPath` is resolved from the app's own log directory
+   (`%LOCALAPPDATA%\dev.spatialide.shell\logs`, the shell's `app_log_dir()`): the newest
+   `session-<epoch>.log` whose epoch is ≥ the harness's own launch instant; the `app.log` parse
+   becomes a cross-check only, never the source. If no such file exists 3 s past the open, the cell
+   is invalidated with the reason `pool-poll pre-flight could not be evaluated`.
+2. The runner verifies the display BEFORE arming and logs the check's JSON, or does not proceed.
+3. **The invalidated attempt ran no trace step and is not "the one cell" of §3.** Exactly ONE
+   re-run of the single cell is authorized by this amendment, on the harness fix once
+   reviewer-gated; a second invalidation of any kind ends the pass with a null result recorded
+   (§4 (D)-class), not a third attempt.
+Everything else in §2–§5 and Amendment 1 stands.
