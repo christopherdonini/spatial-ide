@@ -262,6 +262,20 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     own named piece on the NEXT cut — not this close-out; the pick-accuracy half stays recorded
     verbatim for that piece's repro, undiagnosed."* Applied: queued in NEXT-CUT.md as a named
     piece for the next cut; nothing touched now.
+    **Criterion sharpened by the human at the 2026-09-07 zoom-out re-run (48-(a) build), verbatim:**
+    *"One thing have not been fixed though. Once i zoom in to a feature and hover over one, even if
+    the feature is as big as the screen whole itself, if i zoom out by just one step, so the feature
+    is still big AF, the id status text disappear. Now this is wrong, as long as I can tell on which
+    feature I'm hovering, there's no reasono to remove the id."* Not a regression and not a 1b
+    deviation: it is the same shipped design this entry records (`pickResolution.ts`
+    `reevaluateStandingHoverOnCameraChange` clears a standing id on ANY camera change because it
+    cannot be confirmed without a GPU re-pick), ruled (b) to the next cut. Binding design input for
+    (b), from these words: the acceptance criterion is "the id stays for as long as the operator can
+    tell which feature is under the pointer" — a feature still resolvable under the stationary pointer
+    after a zoom step keeps its id (re-picked on settle, or kept when the same feature is confirmed
+    under the pointer); only a genuine below-pick-resolution state may replace it with the refusal
+    text; a screen-sized feature losing its id on a one-step zoom-out is the failing case the piece
+    must pin with a test.
 
 46. **[The E2E harness now relies on `vite-node` — present only as vitest's transitive dependency
     — to import the shell's own TypeScript (`e2e/tsModuleLoader.mjs`, close-out fix piece).
