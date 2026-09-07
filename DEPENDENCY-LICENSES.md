@@ -198,9 +198,9 @@ and the terms URL:
 
 - **Acknowledgement of IOGP ownership + terms URL beside the catalog entry** —
   `engine/src/crs-catalog.json:8-12` (a sibling `attribution` field on `epsg-2056`, not inside
-  `definition`); parsed and typed at `engine/src/crs_catalog.rs:44` (`pub struct Attribution`) and
-  `engine/src/crs_catalog.rs:79` (`CatalogEntry.attribution: Option<Attribution>`); asserted for
-  every EPSG-authority entry by `engine/src/crs_catalog.rs:253`
+  `definition`); parsed and typed at `engine/src/crs_catalog.rs:42` (`pub struct Attribution`) and
+  `engine/src/crs_catalog.rs:77` (`CatalogEntry.attribution: Option<Attribution>`); asserted for
+  every EPSG-authority entry by `engine/src/crs_catalog.rs:248`
   (`every_epsg_authority_entry_carries_attribution_with_the_terms_url`). Read via manual
   `field_str` calls (`crs_catalog.rs::parse_catalog`), the same style every other field in this
   module already uses — no `serde::Deserialize` derive, no new crate dependency.
@@ -214,9 +214,9 @@ and the terms URL:
 - **A third channel is OWED, not yet live: the packaged shell app.** A packaged Tauri build of
   `frontends/shell` ships the `spatial-engine` binary with `crs-catalog.json` compiled in
   (`include_str!`, `crs_catalog.rs`) — the definition travels with it — but the app has no notice
-  surface today, and packaging itself is unwired: `publish.rs:786-794` records that nothing wires
-  the bundle viewer into `tauri.conf.json`'s `bundle.resources`, i.e. packaging is out of scope for
-  what has shipped so far. When packaging lands, this channel needs the same acknowledgement the
+  surface today, and the viewer is not wired into a packaged build: `publish.rs:786-794` records
+  that nothing wires the bundle viewer into `tauri.conf.json`'s `bundle.resources` and that the
+  packaging decision is out of that piece's scope. When packaging lands, this channel needs the same acknowledgement the
   other two already carry; recorded here so it is not forgotten rather than assumed covered by the
   other two.
 - **Verification (3) reference** — the "Verification (3)" paragraph above and
