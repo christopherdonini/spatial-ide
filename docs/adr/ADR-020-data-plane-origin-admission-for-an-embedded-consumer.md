@@ -161,9 +161,7 @@ commit as the code it records.
 
 **(b) The new selector.** `frontends/shell/src-tauri/src/lib.rs`'s `setup()` closure no longer
 selects `webview_origin` from `cfg!(debug_assertions)`. It now reads the shell's own main webview
-window's *actual* URL, once, before any page script can run (`setup()` itself is synchronous and
-blocking; Tauri does not pump the event loop, and therefore cannot run page script, until this
-closure returns), via:
+window's *actual* URL, before `serve()` starts the data plane, via:
 
 - **API:** `tauri::Webview::url(&self) -> tauri::Result<Url>` — **tauri 2.11.5** (pinned in
   `frontends/shell/src-tauri/Cargo.lock`), doc comment `"Returns the current url of the webview."`,
@@ -172,19 +170,38 @@ closure returns), via:
   forward to `Webview::url()`), obtained from `app.get_webview_window(label)`
   (`Manager::get_webview_window`, `src/lib.rs:576`) using the label `tauri.conf.json`'s
   `app.windows[0]` declares.
-- **Normalisation:** a new pure function, `expected_origin_from_url(&Url) -> Result<String,
+- **Why this precedes page script (condition 1), precisely, not by "the event loop never pumps
+  here"** (an earlier draft of this piece made that broader claim; it is false for WebView2 — wry
+  DOES pump the Win32 message loop internally during webview creation,
+  `wry-0.55.1/src/webview2/mod.rs:414`'s `webview2_com::wait_with_pump(rx)?`). The narrower,
+  verified argument: the only navigation ever issued to this webview before the read is the single,
+  host-configured one Tauri/wry issues at webview-creation time
+  (`WebViewAttributes::url` → `webview.Navigate(&url)`, `wry-0.55.1/src/webview2/mod.rs:518-531`),
+  and the resulting origin is pinned into `DataPlaneConfig::expected_origin` before `setup()`
+  returns, so no later navigation — page-initiated or not — can ever change what gets pinned. The
+  read itself cannot deadlock even while the loop is active: `Webview::url()`'s dispatcher call is
+  serviced inline, synchronously, when invoked from the main thread (which `setup()` runs on)
+  rather than routed through the async event-loop proxy — `tauri-runtime-wry-2.11.4/src/lib.rs:239-
+  248`'s `send_user_message`.
+- **Normalisation:** a pure function, `expected_origin_from_url(&Url) -> Result<String,
   OriginError>` in its own module (`frontends/shell/src-tauri/src/origin.rs`), reduces the URL to
   exactly `scheme://host` or `scheme://host:port` — dropping path, query, fragment, and userinfo,
-  and never appending a scheme's implicit default port.
+  and never appending a scheme's implicit default port. `url` **2.5.8** (pinned) already normalises
+  host casing and IPv6 bracketing before this function ever sees the value (`origin.rs`'s own doc
+  comment cites `url`'s `host_str` doc directly).
 - **Pinning:** the resulting `String` is used exactly once, as `DataPlaneConfig::expected_origin`,
   for the process's whole lifetime — the same field and the same `Session::with_origin`
   constructor this ADR's Decision already defined; neither changed.
-- **Fail-closed:** if the configured window does not exist at setup time, if its URL cannot be
-  read, or if that URL has no host component (e.g. `about:blank`), `setup()` panics with a named,
-  descriptive message identifying which of the three happened — never a default value. An empty or
-  otherwise unparseable URL string is refused one step upstream of this code, inside
+- **Fail-closed and visible, not a bare panic:** if the configured window does not exist at setup
+  time, if its URL cannot be read, or if that URL has no host component after the retry described
+  in §(f) below, `lib.rs`'s own `refuse_to_start` function logs the named condition to the session
+  log, shows a blocking native error dialog through the already-registered `tauri_plugin_dialog`
+  plugin (a direct host-side call, not a `#[tauri::command]`, so ADR-027 decision 4's unclassified-
+  command scan does not apply), and exits the process with status 1 — never a default value, and
+  never silent (a plain release build has no console: `main.rs`'s `windows_subsystem = "windows"`).
+  An empty or otherwise unparseable URL string is refused one step upstream of this code, inside
   `Webview::url()` itself (`url.parse().map_err(crate::Error::InvalidUrl)`,
-  `src/webview/mod.rs:1685`), which surfaces as the same `Err` path and the same fail-closed panic.
+  `src/webview/mod.rs:1685`), which surfaces as the same `Err` path and the same fail-closed exit.
 
 Design (b) — the dev origin's single declared source: `vite.config.ts`'s `server.port` remains the
 declared source (it always was: `vite.config.ts`'s own top comment already states the port choice
@@ -192,12 +209,17 @@ and why); `tauri.conf.json`'s `build.devUrl` is the one remaining hand-written c
 `lib.rs` no longer carries a third copy at all — `5180` does not appear anywhere in that file. The
 mechanical link the preregistration requires is a new `npm run check:dev-origin`
 (`frontends/shell/e2e/checkDevOriginConsistency.mjs`), wired into `npm run verify` ahead of
-`build`: it reads both files as text/JSON (no code execution) and fails if `devUrl` does not equal
-`http://localhost:<server.port>`. A unit test was considered and rejected in favor of this
-`check:*` script, following `check:dist-clean`'s own existing precedent (`e2e/checkDistClean.mjs`):
-the relationship being asserted is between two config files, neither of which is application
-source under test, and `npm run verify`'s pipeline already has a `check:*` stage for exactly this
-shape of drift check.
+`build`: it parses `tauri.conf.json`'s `build.devUrl` as a URL (real JSON, no code execution) and
+compares its own port against `vite.config.ts`'s `server.port` (read via a text scan for the
+literal `server: { port: <number> }` shape — also no code execution), failing if they disagree OR
+if the text scan finds anything other than exactly one match (an earlier version of this script
+used `String.match`, which silently returns only the first hit and could be fooled by a stray
+comment shaped like the real config; `matchAll` plus an exactly-one-match requirement, added on
+reviewer gate, closes that). A unit test was considered and rejected in favor of this `check:*`
+script, following `check:dist-clean`'s own existing precedent (`e2e/checkDistClean.mjs`): the
+relationship being asserted is between two config files, neither of which is application source
+under test, and `npm run verify`'s pipeline already has a `check:*` stage for exactly this shape of
+drift check.
 
 **(c)** Verbatim, as required:
 
@@ -208,7 +230,13 @@ page script, exact-match comparison, never a wildcard; `Origin: null` still reje
 `sec-fetch-site: same-origin` fallback for an absent header unchanged. The claim-carrying tests in
 `kernel/tests/skp_admission.rs` — the port-derived default is not admitted, and admitted origin
 plus a wrong token is refused (this ADR's Consequences, ADR-020:118-122) — were re-run unmodified
-against this change and remain green.
+against this change and remain green (9/9). `kernel/` sits inside the root Cargo workspace;
+`frontends/shell/src-tauri` is deliberately `exclude`d from it (root `Cargo.toml`) and carries its
+own lockfile — so these tests exercise `Session::with_origin`/`DataPlaneConfig::expected_origin`
+directly, over a real socket, with no dependency on `frontends/shell` at all. What they carry is the
+**accepted mechanism**, proven unaffected by this amendment; they say nothing about, and cannot
+regress on, how `frontends/shell` computes the `String` it now passes into that mechanism — that is
+what `origin.rs`'s own unit tests and this amendment's §(f) runtime evidence cover instead.
 
 **(d) The E2E harness's independent `import.meta.env.DEV` gate, under `--debug`, stated
 truthfully.** The specific disagreement this ADR's Decision named — the origin-selection mismatch
@@ -218,18 +246,31 @@ all, so there is nothing left for it to disagree with; under `--debug`, the webv
 read directly and normalises to `http://tauri.localhost` regardless of either gate's value.
 
 That said, the two gates remain independent mechanisms in this codebase for **other** purposes
-untouched by this amendment, and they still disagree under `--debug` exactly as this ADR's Decision
-section describes in general (`cfg!(debug_assertions)`, Rust, vs. `import.meta.env.DEV`, Vite, "are
-independent mechanisms"): `lib.rs`'s `pool_poll` module and the E2E test seam command
-`commands::binding_publish_prepare_e2e_destination` are both still gated by
-`#[cfg(debug_assertions)]` (true under `--debug`, a packaged-but-debug build), while their
-frontend-side counterparts are gated by `import.meta.env.DEV` (false under `--debug`'s production
-`vite build`, so their frontend callers are dead-code-eliminated from the bundle). A `tauri build
---debug` artifact therefore still ships Rust-side debug-only surface with no frontend caller
-reaching it — dormant, not reachable at runtime, but present in the binary. This is the same
-general shape ADR-020 already named; it is unrelated to origin admission and this amendment does
-not fix it. The packaged-`--debug` admission check named just below exercises the origin fix
-specifically, not this separate, still-open gate disagreement.
+untouched by this amendment, and under `--debug` those other purposes are **two different shapes**,
+not one — corrected here after a re-check found the first draft of this paragraph stated one of them
+falsely:
+
+- **`lib.rs`'s `pool_poll` module (`#[cfg(any(debug_assertions, feature = "measure-build"))]`,
+  `lib.rs:26`) is NOT dormant under `--debug` — it runs.** It has no frontend counterpart to be dead-
+  code-eliminated at all; it is started from `commands::open_dataset`, a command with no `cfg` gate
+  of its own (`commands.rs:61-66`: the command is always registered, and the poll-start call inside
+  it is gated only on the same `any(debug_assertions, feature = "measure-build")` condition, which is
+  true under `--debug`) and stopped from `commands::close_dataset` the same way (`commands.rs:114-
+  120`). A `tauri build --debug` artifact therefore actually runs a 1,000 ms poll of the engine
+  pool's lease counts into the session log for as long as a dataset stays open — real, observable
+  behaviour, not inert code sitting unreached in the binary.
+- **`commands::binding_publish_prepare_e2e_destination` IS the dormant-but-present shape** the first
+  draft of this paragraph described for both: `#[cfg(debug_assertions)]`-gated at both its own
+  definition (`commands.rs:402`) and its `lib.rs` handler-list entry (`lib.rs:314` — absent from a
+  release build's handler list entirely, not merely runtime-disabled), while its sole frontend caller
+  is gated by `import.meta.env.DEV` (`PublishPanel.tsx:294`: `if (!import.meta.env.DEV) return;`,
+  false under `--debug`'s production `vite build`, so the calling code is dead-code-eliminated from
+  the bundle). A `tauri build --debug` artifact ships this command with no frontend caller able to
+  reach it.
+
+Both are unrelated to origin admission and this amendment does not fix either. The packaged-
+`--debug` admission check named just below exercises the origin fix specifically, not these
+separate, still-open gate disagreements.
 
 **Declared, not executed here:** a packaged-`--debug` admission check — that a real `tauri build
 --debug` artifact's webview is admitted by the data plane end to end — is preregistered
@@ -237,13 +278,74 @@ specifically, not this separate, still-open gate disagreement.
 RELEASE-0.1.md's item 3 (the packaged build) produces; it is not exercised by this piece, which
 has no packaged artifact to test against.
 
-**(e) Reopen condition, verbatim:**
+**(e) Reopen condition, verbatim** (RELEASE-0.1.md's own preregistration text, `:449-451` —
+corrected here from an earlier draft that quoted "any **future** build mode", a word the
+preregistration does not contain):
 
-> any future build mode whose webview origin is not readable at startup reopens this amendment
-> rather than reintroducing a compile-time selector.
+> any build mode whose webview origin is not readable at startup reopens this amendment rather than
+> reintroducing a compile-time selector.
 
 (E.g.: no `App`/`AppHandle` available at the point the origin must be known, or a consumer shape
 with no webview to read a URL from at all.)
+
+**(f) Runtime evidence, executed once on 2026-09-07, and a defect this exact evidence-gathering
+pass found and fixed before the amendment could be recorded as working.**
+
+The very first real `npm run tauri dev` launch of this piece's code — an ordinary launch, no
+special conditions — **refused to start**, logging (verbatim):
+
+> `[spatial-ide-shell] REFUSING TO START: ADR-020 Amendment 1: the webview's URL (about:blank)
+> cannot be turned into an expected origin (webview URL "about:blank" has no host component;
+> refusing to pin an expected origin from it) -- refusing to start rather than guess the data
+> plane's expected origin`
+
+`origin.rs`'s own doc comment had named `about:blank` as a hazard condition 4 must fail closed on;
+this proved it is not merely a theoretical edge case but the **ordinary** startup sequence's own
+transient state — `webview.Navigate(&url)` (cited in §(b)) only *starts* navigation, and
+`setup()`'s single synchronous read can land before it lands.
+
+A first fix — retry `Webview::url()` up to 50 times, `std::thread::sleep(100ms)` between attempts,
+no message pumping — was tried and **empirically disproved**: it still failed after all 50 attempts
+(5 seconds), because WebView2 delivers its navigation-completion notification entirely via posted
+Win32 window messages (`webview2-com` 0.38.2's own doc comment on `wait_with_pump`, already a
+transitive dependency of `tauri`/`wry` at this exact version: *"The WebView2 threading model runs
+everything on the UI thread, including callbacks which it triggers with `PostMessage`"*), and
+nothing pumps this thread's message queue between `Navigate()` returning and `setup()` returning —
+sleeping without pumping cannot observe the navigation land, proven empirically, not assumed.
+
+The fix that worked: `lib.rs`'s own `pump_pending_windows_messages` (`#[cfg(windows)]`, using
+`windows` **0.61.3** — pinned, already resolved via `tauri`/`wry`, declared as a direct
+`target.'cfg(windows)'` dependency — `PeekMessageW`/`TranslateMessage`/`DispatchMessageW` with
+`PM_REMOVE`, non-blocking so an empty queue never hangs the retry loop) called once per retry
+attempt, 250 attempts, 20 ms apart. After this fix, rebuilt and rerun, the same `tauri dev` launch
+produced instead (verbatim, stderr and the session log, byte-identical):
+
+> `[spatial-ide-shell] data-plane expected origin (from webview URL http://localhost:5180/):
+> http://localhost:5180`
+
+— and the session log file itself (`C:\Users\Christopher\AppData\Local\dev.spatialide.shell\logs\
+session-1788814921.log`) carries the same line: `1788814921617 info data-plane expected origin
+(from webview URL http://localhost:5180/): http://localhost:5180`.
+
+One admitted data-plane upgrade, observed via `frontends/shell/e2e/debug-session.mjs` (the
+existing E2E instrument, not new automation) against `target/fixtures/manual-walkthrough/
+100k-happy-path.parquet`, on a second, independent fresh launch (its own session log,
+`session-1788815065.log`, opens with the identical pinned-origin line): admission outcome
+`{"kind":"admitted"}`; render-trace settled at 204 entries with **39 `batch` frames** received (and
+39 matching `pre-offset`/`post-offset` pairs, 41 `layers` events); the rendered canvas's non-
+background pixel fraction grew from 0% (top rows) to 46.5% (bottom-right) across a 3x3 grid,
+consistent with real geometry having arrived and drawn, not an empty stream. The same session log
+also independently corroborates §(d)'s `pool_poll` finding on this identical run:
+`producer-pool-poll active=1 live=1 idle=0` lines appear once the dataset is open, on a plain
+`tauri dev` (debug) build.
+
+**Consequence for condition 1 ("read once").** The retry loop is still a single logical read
+inside one synchronous `setup()` call, before it returns — condition 1's actual guarantee (nothing
+page-initiated can be observed, and the pinned value cannot change once set) is unaffected; what
+changed is only that a transient pre-navigation state is no longer mistaken for a permanent one.
+This is disclosed rather than quietly folded into §(b) because it is a genuine, reproducing defect
+this piece's own first version shipped, caught by exactly the evidence-gathering step this batch's
+MUST-FIX 4 required — not a refinement volunteered without cause.
 
 **Same-commit record updates:** `docs/02_Architecture.md`'s ADR-020 bullet and
 `docs/README.md`'s conventions-paragraph ADR-020 entry — both of which stated the `--debug` defect

@@ -63,7 +63,19 @@ impl std::error::Error for OriginError {}
 /// `scheme://host` or `scheme://host:port`, dropping path, query, fragment, and any userinfo. Does
 /// **not** append a scheme's default port when the URL carries none (`Url::port()`, not
 /// `Url::port_or_known_default()`) — `http://tauri.localhost` (no explicit port) must normalise to
-/// `http://tauri.localhost`, not `http://tauri.localhost:80`.
+/// `http://tauri.localhost`, not `http://tauri.localhost:80`; and an *explicit* default port
+/// (`http://localhost:80/`) is dropped too, because `Url::parse` itself drops it at parse time —
+/// `url.port()` is already `None` for that input (verified against the pinned `url` **2.5.8**;
+/// `Url::port_or_known_default()` would reintroduce the default, which is why this function does
+/// not use it).
+///
+/// **Host casing and IPv6 are already normalised by `url::Url` itself, not by this function** —
+/// verified empirically against the pinned `url` **2.5.8**, not assumed: `host_str()` lower-cases a
+/// domain host (`https://LOCALHOST:5180/` → `"localhost"`) and returns an IPv6 host **already
+/// bracketed** (`http://[::1]:5180/` → `Some("[::1]")` — `url`'s own doc comment for `host_str`,
+/// `src/lib.rs:1130`, states this: *"IPv6 addresses are given between `[` and `]` brackets"*), so
+/// `format!("{scheme}://{host}:{port}")` below produces `http://[::1]:5180` directly with no
+/// separate bracketing step needed.
 pub fn expected_origin_from_url(url: &Url) -> Result<String, OriginError> {
     let host = url
         .host_str()
@@ -117,13 +129,57 @@ mod tests {
     }
 
     #[test]
-    fn empty_string_never_becomes_a_url_at_all() {
-        // `expected_origin_from_url` takes an already-parsed `Url` (condition 2's signature) --
-        // there is no `Url` value an empty string can produce, so the "empty" case in condition
-        // 4's list is caught one step upstream of this function, at exactly the same boundary
-        // `tauri::Webview::url()` itself uses internally (`url.parse().map_err(InvalidUrl)`,
-        // `src/webview/mod.rs:1685`, quoted in this module's own doc comment). This test documents
-        // that boundary directly rather than asserting something this function cannot see.
-        assert!(Url::parse("").is_err());
+    fn a_file_url_has_no_host_and_is_refused() {
+        // `file:///...` (triple slash, empty authority) is a WHATWG "special" scheme but its own
+        // host is empty -- verified empirically this is `host_str() == None` (not `Some("")`) for
+        // the pinned `url` 2.5.8, so this hits the same `NoHost` path, not a silently-accepted
+        // empty-string host.
+        let url = Url::parse("file:///C:/app/index.html").unwrap();
+        assert!(matches!(expected_origin_from_url(&url), Err(OriginError::NoHost { .. })));
+    }
+
+    #[test]
+    fn an_explicit_default_port_is_dropped_same_as_no_port() {
+        // `http://localhost:80/` names the scheme's own default port explicitly -- `Url::parse`
+        // itself drops it (`url.port()` is already `None`, verified empirically against the pinned
+        // `url` 2.5.8), so this function's own `Url::port()` (not `port_or_known_default()`) choice
+        // never even sees it; asserted here as the behaviour this function's contract depends on.
+        let url = Url::parse("http://localhost:80/").unwrap();
+        assert_eq!(expected_origin_from_url(&url).unwrap(), "http://localhost");
+    }
+
+    #[test]
+    fn userinfo_and_fragment_are_dropped() {
+        let url = Url::parse("http://user:pa55@localhost:5180/x#f").unwrap();
+        assert_eq!(expected_origin_from_url(&url).unwrap(), "http://localhost:5180");
+    }
+
+    #[test]
+    fn an_ipv6_host_keeps_its_brackets() {
+        // `url::Url::host_str()` already returns an IPv6 host bracketed (verified empirically
+        // against the pinned `url` 2.5.8: `Some("[::1]")`, not `Some("::1")`) -- this function does
+        // no bracketing of its own; see its own doc comment for the citation.
+        let url = Url::parse("http://[::1]:5180/index.html").unwrap();
+        assert_eq!(expected_origin_from_url(&url).unwrap(), "http://[::1]:5180");
+    }
+
+    #[test]
+    fn a_domain_host_is_lower_cased() {
+        // `url::Url` itself lower-cases a domain host at parse time (verified empirically against
+        // the pinned `url` 2.5.8) -- this function relies on that rather than lower-casing again.
+        let url = Url::parse("https://LOCALHOST:5180/").unwrap();
+        assert_eq!(expected_origin_from_url(&url).unwrap(), "https://localhost:5180");
+    }
+
+    #[test]
+    fn tauri_scheme_localhost_the_macos_linux_packaged_shape_normalises_too() {
+        // Named because `docs/adr/ADR-020...`'s own Windows/WebView2 packaged origin is
+        // `http://tauri.localhost`, but Tauri's other platforms use a `tauri://localhost` custom
+        // scheme instead -- this function is platform-agnostic (it operates on whatever URL the
+        // webview actually reports), so it is exercised here even though only Windows/WebView2 is
+        // validated today (docs/07's macOS/Linux hardware-validation gate, still open).
+        let url = Url::parse("tauri://localhost/index.html").unwrap();
+        assert_eq!(expected_origin_from_url(&url).unwrap(), "tauri://localhost");
     }
 }
+

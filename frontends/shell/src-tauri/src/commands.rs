@@ -392,12 +392,18 @@ pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt
 /// the JS-side `openPath` hook (verified against `tauri-macros-2.6.3/src/command/handler.rs`
 /// directly while writing this, not assumed).
 ///
-/// **Known limitation, the same one ADR-020 already named for this exact idiom in this crate**
-/// (`lib.rs`'s `webview_origin` selector): `cfg!(debug_assertions)`/`#[cfg(debug_assertions)]` is
-/// true for `tauri build --debug` as well as `cargo tauri dev` — a *packaged* debug build would
-/// still carry this seam, letting any page script on that build supply an arbitrary destination
-/// with no native picker in the way. Not exercised or closed by this piece; named so it cannot be
-/// missed.
+/// **Known limitation, the same shape ADR-020 named for `cfg!(debug_assertions)`/
+/// `#[cfg(debug_assertions)]` idioms in this crate**: this attribute is true for `tauri build
+/// --debug` as well as `cargo tauri dev` — a *packaged* debug build would still carry this seam,
+/// letting any page script on that build supply an arbitrary destination with no native picker in
+/// the way. Not exercised or closed by this piece; named so it cannot be missed.
+///
+/// *[dated correction, 2026-09-07: this comment used to cross-reference "`lib.rs`'s
+/// `webview_origin` selector" as the same idiom's other instance — that selector no longer exists;
+/// ADR-020 Amendment 1 replaced it with a webview-URL-derived origin, so it is no longer an example
+/// of a `cfg!(debug_assertions)`-under-`--debug` mismatch. This command's own
+/// `#[cfg(debug_assertions)]` gate is unaffected by that amendment and remains exactly the
+/// limitation described above.]*
 #[cfg(debug_assertions)]
 #[tauri::command]
 pub async fn binding_publish_prepare_e2e_destination(

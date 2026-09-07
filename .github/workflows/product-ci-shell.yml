@@ -174,10 +174,12 @@ jobs:
         working-directory: frontends/shell
         run: npm ci
 
-      # `verify` is the package's own script (typecheck -> build -> test), so CI and a developer
-      # cannot drift into two different definitions of "verified" — the viewer workflow's own
-      # convention. Runs before cargo below because the Tauri crate's own build reads the frontend's
-      # `dist/` output as `frontendDist`, even though this step does not invoke `tauri build` itself.
+      # `verify` is the package's own script (typecheck -> check:dev-origin -> build -> check:dist-clean
+      # -> test -> test:residency-trace -> test:citation-integrity, `package.json`'s own definition —
+      # ADR-020 Amendment 1 added `check:dev-origin`), so CI and a developer cannot drift into two
+      # different definitions of "verified" — the viewer workflow's own convention. Runs before cargo
+      # below because the Tauri crate's own build reads the frontend's `dist/` output as
+      # `frontendDist`, even though this step does not invoke `tauri build` itself.
       - name: Type-check, build, and test the frontend
         working-directory: frontends/shell
         run: npm run verify
