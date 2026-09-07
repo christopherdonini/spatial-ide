@@ -178,3 +178,39 @@ run `check-display-session.ps1` and invalidate the cell … unless it reports `o
 stop RustDesk → wake + check (JSON logged verbatim) → trial. The runner's check step is now a
 separate child script whose JSON line must appear in the runner log, or the runner disarms and
 exits without launching the harness. Everything else in Amendment 2 stands.
+
+## Amendment 3 — the authorized re-run was REFUSED by the guard's pre-trial check; the harness never launched (2026-09-07, appended the same hour; a pre-result amendment — no trace step ran)
+
+**Facts (runner log, job tmp `entry40-cell.log`; times UTC).** Harness fix reviewer-gated (PR #26,
+`6e3c024`; gate FAIL → fix batch → affirmative PASS). Worktree Rust pre-warmed into the main
+checkout's target (1 m 12 s). Runner launched 05:52:34Z from the gated branch's checkout with all
+pre-launch preconditions logged clean. 05:53:06Z fixture sha OK, 0 app instances; 05:53:09Z guard
+armed (`"armed":true`, backstop 10:23:07+02:00, watchdog pid 74040); 05:53:13Z RustDesk `Stopped`,
+0 processes; 05:53:18Z wake step ok (type present, `SendMessage` ok, `SendInput` ok), then the
+guard's own check: `{"ok":false,"sessionUnlocked":false,"displayAwake":true,"monitorTimeoutAc":0}`
+— the Windows session is **locked** (`LogonUI.exe` present); the display half passed. The runner
+took its refusal path: no heartbeat, **no harness**, disarm at 05:53:21Z (`"disarmed":true`,
+RustDesk `Running`), backstop unregistered, watchdog gone, monitor timeout restored (0x258 = 600 s).
+Verified after the fact: `LogonUI.exe` started 05:34:23Z, i.e. ~10 min after the last input on the
+machine (a synthetic 1 px move at 05:24:28Z, from the runner's dry run) with `monitor-timeout-ac`
+= 600 s at the time and NO screen-saver timeout / `InactivityTimeoutSecs` policy set. The session
+was unlocked at 05:10:26Z (attempt 1) and 05:24:28Z (dry run). The custodian cannot and did not
+attempt to unlock a session.
+
+**What this is and is not.** The check that attempt 1's runner silently skipped (Amendment 2's
+"runner defect", root-caused to a BOM-less-UTF-8/ANSI quoting collapse — `AI_DEVELOPMENT.md`
+mechanics, 2026-09-07) is exactly the check that fired here, in the binding order of Amendment 2's
+correction. No trace step ran; the harness process never existed; the single cell was not
+attempted. Whether this counts as "a second invalidation of any kind" under Amendment 2 change 3
+(which would end the pass with a null result) is **the human's classification, queued in
+`DECISIONS-PENDING.md`** — the custodian's reading, stated as a recommendation only: it is a
+protocol precondition refusal, not a cell attempt, so ONE launch remains authorized, to be made
+only while the session is verifiably unlocked. Rule 7 applies either way: two failed attempts to
+run the cell → stop; nothing launches without the human's word.
+
+**Runner hardening, binding for any further launch.** Step 0 now checks session-unlocked
+(`LogonUI.exe` absent — a pure read) BEFORE arming, so an arm/stop-RustDesk cycle is never spent
+on a session that the full check would refuse anyway; the full `check-display-session.ps1` still
+runs after arming, before the trial, exactly as the correction binds. The lock's mechanism
+(display-off-driven lock vs. a RustDesk lock-after-session-end at 07:34 local) is not determined
+from the machine's policies and is put to the human with the classification.
