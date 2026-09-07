@@ -5,6 +5,28 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+50. **[Entry-40 empirical pass: the authorized re-run was REFUSED by the guard's pre-trial check —
+    session locked — before the harness launched; two failed launch attempts → rule-7 stop. Your
+    classification and your word are needed before anything launches again.]** Attempt 1
+    (05:09Z) was invalidated at the harness's own pre-flight by a harness path defect, not the
+    instrument (`PASS-PREREGISTRATION.md` Amendment 2; the instrument had emitted 71 lines); the
+    fix is reviewer-gated and open as **PR #26**. The authorized re-run (05:52Z, from that branch)
+    armed the guard, stopped RustDesk, and was then refused by `check-display-session.ps1`:
+    `sessionUnlocked:false, displayAwake:true` — `LogonUI.exe` had started at **05:34:23Z
+    (07:34 local)**, ~10 min after the machine's last input, with the monitor timeout at 600 s and
+    no screen-saver / inactivity-lock policy set; the runner disarmed cleanly (RustDesk restored,
+    backstop gone), the harness never ran (Amendment 3 records it). **(1) Classification under
+    Amendment 2 change 3** ("a second invalidation of any kind ends the pass with a null result"):
+    does a guard precondition refusal with no harness process count? Recommendation: **no** — it is
+    the protocol working, not a cell attempt; ONE launch stays authorized. **(2) The lock:** did you
+    connect via RustDesk at ~07:34 local and lock on disconnect, or is this a display-off-driven lock
+    (the timing matches the 600 s monitor timeout within seconds)? The answer sets the launch rule:
+    (a) leave the session unlocked and tell me — I launch within the auto-lock window (the arm step
+    then holds the display on for the run); or (b) if RustDesk locks on disconnect, disable that for
+    the window. **(3) Or** end the pass with a null result (Amendment 2 §4 (D)-class) and take the
+    structural answer only. Nothing launches without your word. Touches: one launch of the existing
+    runner; results to the spike README; no code.
+
 49. **[Public-audience audit of the 2026-08-03→2026-09-07 window (`PUBLIC-AUDIENCE-AUDIT.md`,
     405 commits, HEAD 914ef9f): 0 leaks, 8 sensitivity-class matches, 7 hygiene — three need your
     ruling; one fix-forward set waits on your word; nothing remediated unqueued.]** No credential,

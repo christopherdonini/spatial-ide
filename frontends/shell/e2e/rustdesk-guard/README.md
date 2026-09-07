@@ -64,3 +64,16 @@ cell. All three triggers proven (see `rustdesk-guard.log`, runtime-only, gitigno
   registration). `check-display-session.ps1` uses LogonUI presence for session-lock (the standard
   Windows heuristic; no first-class PowerShell API) and monitor-timeout-0 for display-awake — both
   fail closed; a native display-power probe is future work if the coarse check over-invalidates.
+- **The guard holds the display awake; it cannot hold the session unlocked (added 2026-09-07).**
+  An unattended launch was refused by `check-display-session.ps1` with `sessionUnlocked:false`,
+  `displayAwake:true`: `LogonUI.exe` had started ~10 min after the machine's last input, with
+  `monitor-timeout-ac` at its restored 600 s and no screen-saver timeout or `InactivityTimeoutSecs`
+  policy set (mechanism not determined — a display-off-driven lock, or a remote-session
+  lock-on-disconnect). Nothing in the protocol may unlock a session. Consequences: (1) a runner
+  checks session-unlocked (`LogonUI.exe` absent, a pure read) BEFORE arming, so an arm / stop-RustDesk
+  cycle is never spent on a session the full check would refuse; the full check still runs after
+  arming (its display-awake signal is the timeout `arm` sets). (2) An unattended run has to be
+  launched while the session is unlocked — in practice within the auto-lock window of the operator's
+  last input, after which `arm`'s monitor-timeout-0 keeps the display from turning off for the
+  window. Whether that also prevents the lock depends on the lock's mechanism, which the operator
+  knows and the machine's policies do not reveal.
