@@ -33,7 +33,13 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     everything else affirmative (verbatim extraction, byte-identical NOTICE, tests bite, claims
     record-exact, suites green). The custodian swept the three numbers and the one nit (docs only,
     mechanically re-verified) and opened the PR; **a third reviewer pass is not dispatched without
-    your word** — authorize it, or accept the sweep at the click. Original entry follows.]**
+    your word** — authorize it, or accept the sweep at the click. **RULED 2026-09-07, the human
+    verbatim: "#29: sweep accepted, no third pass — I verified the three re-anchored cites against
+    the branch and the empty lockfile diff myself. Clicking. Record the packaged-app notice channel
+    as a named release-engineering item beside the ADR-020 fix."** Applied: the packaged shell
+    app's EPSG/IOGP notice channel is now a named release-engineering item beside the ADR-020
+    packaged-debug fail-closed fix (`NEXT-CUT.md`, "Ordering restated" — the release-engineering
+    list; `DEPENDENCY-LICENSES.md`'s block already names it OWED). Original entry follows.]**
     **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
     section, 2026-09-07): two obligations are open and one verification is owed before the shipped
     EPSG:2056 definition is attributed to EPSG — all three need code or a registry comparison, so
