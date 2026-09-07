@@ -33,6 +33,7 @@ import {
   notifyResidencyArmDatasetClosed,
   notifyResidencyArmDatasetOpened,
   setResidencyArm,
+  shouldConstructCandidateSession,
 } from "./residency/residencyArm";
 import {
   getResidencyTileSizeLevel,
@@ -982,18 +983,30 @@ export default function App() {
     // that construction's own code path is untouched in shape (no conditional added inside it).
     //
     // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): this construction choice is
-    // no longer `isInstrumentedBuild()`-gated -- `getResidencyArm()` itself now defaults to
-    // `"candidate"` (`residencyArm.ts`'s own top doc comment), so a PLAIN PRODUCTION BUILD reaches
+    // no longer `isInstrumentedBuild()`-gated -- `shouldConstructCandidateSession()` itself defaults
+    // to `true` (`residencyArm.ts`'s own `DEFAULT_RESIDENCY_ARM`), so a PLAIN PRODUCTION BUILD reaches
     // this branch by default too. Only the SWITCH that could move a session to `"baseline"` instead
     // (`setResidencyArm`, registered a few lines above inside its own `isInstrumentedBuild()`-gated
-    // effect) stays dev-only; this read of `getResidencyArm()` is not itself gated, because the
-    // branch it selects must run in production for the default arm to mean anything there.
+    // effect) stays dev-only; this predicate is not itself gated, because the branch it selects must
+    // run in production for the default arm to mean anything there.
+    //
+    // SHOULD-FIX S3 (2026-09-07, reviewer gate): reads `shouldConstructCandidateSession()`
+    // (`residencyArm.ts`), not a re-typed `getResidencyArm() === "candidate"` inline -- that function
+    // IS the seam `residencyArm.test.ts`'s own production-mode unit test exercises directly, so what
+    // that test actually proves is the PREDICATE's own behavior (it reads `"candidate"` regardless of
+    // `isInstrumentedBuild()`) -- honestly stated, it does NOT and cannot prove this exact call site
+    // keeps calling it un-gated (no React-render harness exists in this package, `App.test.ts`'s own
+    // top comment); that half stays a structural fact verified by reading this file, same as before
+    // this piece. What the extraction DOES change: a future `if (isInstrumentedBuild() &&
+    // shouldConstructCandidateSession())` HERE would still compile and would still be a real
+    // regression, but the unit test's own pass/fail is silent on it either way -- disclosed rather
+    // than overclaimed.
     // `viewportDebounceRef` is REUSED (not a new ref): the candidate session's own
     // `onViewportChanged` conforms to the identical `Debounced<[Bbox, string | null]>` shape
     // baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX below
     // (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is active
     // without an arm check of its own.
-    if (getResidencyArm() === "candidate") {
+    if (shouldConstructCandidateSession()) {
       const session = startCandidateArmSession({
         dataset: admitted.dataset,
         canvas,

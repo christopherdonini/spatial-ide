@@ -66,30 +66,33 @@ const INSTRUMENT_IDENTIFIERS = [
   "ResidencyInstrumentCore",
   "applyDeterministicE2eViewState",
   "e2eSetViewStateCallCount",
-  // Viewport-residency cut P3: the arm-switch's own DEV-only identifiers -- every real call site
-  // (`App.tsx`'s `setResidencyArm`/`getResidencyArm` hook registrations, and the
+  // Viewport-residency cut P3: the arm-SWITCH's own DEV-only identifiers -- every real call site
+  // (`App.tsx`'s `setResidencyArm` hook registration, and the
   // `notifyResidencyArmDataset{Opened,Closed}` bookkeeping calls in the `[admitted]` effect) is
   // gated behind `import.meta.env.DEV`, the same DCE claim the instrument identifiers above depend
   // on -- see `residency/residencyArm.ts`'s own top doc comment.
+  //
+  // SHOULD-FIX S2 (2026-09-07, reviewer gate): `getResidencyArm` REMOVED from this list.
+  // `App.tsx`'s construction branch (`if (getResidencyArm() === "candidate")`) calls it UNGATED, in
+  // every build -- a live production call, not dead code, so a MISS here was never real signal for
+  // it: the function's own literal source-level name does not need to survive minification for the
+  // call to work (a plain, non-property function reference is exactly what esbuild is free to
+  // rename), so this list's "0 hits" pass was true only because the MINIFIER renamed a binding that
+  // was never going away in the first place -- meaningless, per the reviewer's own words. `setResidencyArm`
+  // stays forbidden below: its own hook REGISTRATION (the switch itself) remains `isInstrumentedBuild()`-gated.
   "setResidencyArm",
-  "getResidencyArm",
   "notifyResidencyArmDatasetOpened",
   "notifyResidencyArmDatasetClosed",
   // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): `startCandidateArmSession`
   // REMOVED from this list here (was present through Viewport-residency cut P3w). It used to sit
-  // behind the SAME `import.meta.env.DEV`-class guard as the four identifiers immediately above
-  // (`App.tsx`'s `[admitted]` effect: `if (isInstrumentedBuild() && getResidencyArm() === "candidate")`)
-  // -- that guard is now `if (getResidencyArm() === "candidate")`, with no `isInstrumentedBuild()`
-  // operand, and `getResidencyArm()` defaults to `"candidate"` (`residencyArm.ts`). A plain
-  // production build therefore calls `startCandidateArmSession` BY DEFAULT now -- checking for its
-  // absence would fail every green build, testing the wrong thing. The four identifiers immediately
-  // above stay forbidden: only the SWITCH (`setResidencyArm`/`getResidencyArm`'s own E2E hook
-  // registrations) and the bookkeeping calls (`notifyResidencyArmDataset{Opened,Closed}`) remain
-  // `isInstrumentedBuild()`-gated, per item 7's own preregistration -- `getResidencyArm` the FUNCTION
-  // is genuinely called (unguarded) at the construction branch, but its literal source-level name
-  // does not itself need to survive minification for that call to work, so this list's claim ("this
-  // literal string is not lexically present") is unaffected for those four; see this script's own
-  // top doc comment (P1d B6b) for what a MISS here does and does not prove.
+  // behind the SAME `import.meta.env.DEV`-class guard as the identifiers immediately above (`App.tsx`'s
+  // `[admitted]` effect: `if (isInstrumentedBuild() && getResidencyArm() === "candidate")`) -- that
+  // guard is now `if (getResidencyArm() === "candidate")`, with no `isInstrumentedBuild()` operand,
+  // and `getResidencyArm()` defaults to `"candidate"` (`residencyArm.ts`). A plain production build
+  // therefore calls `startCandidateArmSession` BY DEFAULT now -- checking for its absence would fail
+  // every green build, testing the wrong thing. See `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS`'s own
+  // doc comment (S1) for why it is not asserted PRESENT here either (a plain function call, not a
+  // property access -- its literal name does not survive minification, present or absent).
   // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the segment
   // decomposition's own new exports -- same DEV-gated call-site discipline every identifier above
   // already relies on (`residencyInstrument.ts`'s own top doc comment, P3i paragraph).
@@ -100,12 +103,16 @@ const INSTRUMENT_IDENTIFIERS = [
   "recordResidencyEvictionsApplied",
   // Viewport-residency cut P7 (the tile-size sweep selector): the DEV-only identifiers unique to
   // `residency/residencyTileSizeLevel.ts` -- every real call site (`App.tsx`'s
-  // `setResidencyTileSizeLevel`/`getResidencyTileSizeLevel` hook registrations, and the
+  // `setResidencyTileSizeLevel` hook registration, and the
   // `notifyResidencyTileSizeLevelDataset{Opened,Closed}` bookkeeping calls) is gated behind
   // `import.meta.env.DEV`, the same DCE claim the arm-switch identifiers above already rely on --
   // see `residencyTileSizeLevel.ts`'s own top doc comment (it mirrors `residencyArm.ts` exactly).
+  //
+  // SHOULD-FIX S2's own parallel case: `getResidencyTileSizeLevel` REMOVED too -- `App.tsx`
+  // (`tileGridLevel: getResidencyTileSizeLevel()`) sits INSIDE the same now-unconditional candidate
+  // construction branch as `getResidencyArm()`, a live production call for the identical reason.
+  // `setResidencyTileSizeLevel` stays forbidden: only its own hook registration is dev-gated.
   "setResidencyTileSizeLevel",
-  "getResidencyTileSizeLevel",
   "notifyResidencyTileSizeLevelDatasetOpened",
   "notifyResidencyTileSizeLevelDatasetClosed",
 ];
@@ -134,14 +141,49 @@ const INSTRUMENT_IDENTIFIERS = [
 // `canvas.pushTileBatch`/`.clearTile`/`.clearAllTiles`/`.isTileResidentInCandidateSet`/
 // `.establishTileGridContext`/`.applyTileViewportContext` unconditionally whenever the candidate arm
 // is active (the default), and `getResidentCounts` gained the SAME unconditional callers inside that
-// same file (`emitResidencyStatus`, `hasHeadroom`) alongside its pre-existing dev-only one in
-// `App.tsx`. A surviving call site for any of these seven is now the EXPECTED, correct shape for a
+// same file -- THREE, re-counted (2026-09-07, reviewer gate nit): `emitResidencyStatus` (:685),
+// `emitResidencyRelinquished` (:837), `hasHeadroom` (:885) -- alongside its pre-existing dev-only one
+// in `App.tsx`. A surviving call site for any of these seven is now the EXPECTED, correct shape for a
 // production build shipping the default arm -- checking for its absence would fail every green
 // build. `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` below are UNCHANGED: their only real
 // callers stay inside `App.tsx`'s own `isInstrumentedBuild()`-gated E2E-hook effect (verified by grep
 // against `src/`, item 7's own audit), so a surviving call site for either of those two remains real
 // signal, unaffected by this piece.
 const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = ["armFirstPixelRenderHook", "disarmFirstPixelRenderHook"];
+
+// SHOULD-FIX S1 (2026-09-07, reviewer gate, re-review after RELEASE-0.1 item 7's first pass): the
+// preregistration asked for the candidate-arm identifiers to be EXPECTED PRESENT, not merely removed
+// from the forbidden list above -- a MISS here (an identifier this list expects to survive, but
+// doesn't) is now a FAIL too, the positive mirror of `INSTRUMENT_IDENTIFIERS`'s own negative check.
+// Re-verified empirically against a real `npm run build` output (`vite.config.ts:29`:
+// `minify: "esbuild"` for a plain build, the same config a shipped artifact uses) before writing this
+// list, not assumed: `pushTileBatch`/`clearTile`/`clearAllTiles`/`isTileResidentInCandidateSet`/
+// `establishTileGridContext`/`applyTileViewportContext`/`getResidentCounts` -- object-literal
+// method-shorthand names `WorkingCanvas.tsx` defines on `WorkingCanvasHandle` -- each DID survive as
+// a real call-shaped (`.name(`) occurrence, confirmed by a direct grep of the built `dist/` before
+// this list was written.
+//
+// **`startCandidateArmSession` is NOT included here, a correction to the piece's own preregistration
+// note ("the reviewer counted them in the clean bundle")** -- re-checked directly against a real
+// build and found NOT present as literal text, in either bare or call-shaped form: unlike the seven
+// above, it is a PLAIN function call (`App.tsx`: `const session = startCandidateArmSession({...})`,
+// no `.`/`?.` prefix), never a property access, so esbuild's minifier is free to rename its local
+// binding -- and does. Asserting its literal presence here would be a check that FAILS ON EVERY GREEN
+// BUILD, testing the wrong thing (the same one-directional-MISS caveat this file's own top doc
+// comment, P1d B6b, already names for the negative list). Its own reachability is corroborated
+// INDIRECTLY instead: every one of the seven identifiers below is called only from CODE
+// `startCandidateArmSession` itself constructs (`candidateArmSession.ts`) -- their survival is
+// already proof that branch was reachable, without needing `startCandidateArmSession`'s own literal
+// name to survive too.
+const EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS = [
+  "pushTileBatch",
+  "clearTile",
+  "clearAllTiles",
+  "isTileResidentInCandidateSet",
+  "establishTileGridContext",
+  "applyTileViewportContext",
+  "getResidentCounts",
+];
 
 function collectFiles(dir) {
   const out = [];
@@ -199,7 +241,26 @@ function main() {
     }
   }
 
-  if (hits.length > 0 || callerHits.length > 0) {
+  // SHOULD-FIX S1: the POSITIVE mirror -- each of `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` must have
+  // AT LEAST ONE call-shaped (`.name(`) occurrence SOMEWHERE across the whole dist/ (not per-file --
+  // esbuild's own chunking is not this script's concern, only whether the call site reached the
+  // shipped output at all). A ZERO-hit identifier here is a FAIL: the preregistration's own claim
+  // ("expected present" as of RELEASE-0.1 item 7) does not hold for it.
+  const missingExpectedCallSites = [];
+  for (const id of EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS) {
+    const callPattern = new RegExp(`[.?]\\s*${id}\\s*\\(`, "g");
+    let totalCount = 0;
+    for (const file of files) {
+      const text = readFileSync(file, "utf8");
+      const matches = text.match(callPattern);
+      if (matches) totalCount += matches.length;
+    }
+    if (totalCount === 0) {
+      missingExpectedCallSites.push(id);
+    }
+  }
+
+  if (hits.length > 0 || callerHits.length > 0 || missingExpectedCallSites.length > 0) {
     if (hits.length > 0) {
       console.error(`check:dist-clean: FAIL -- ${hits.length} instrument-identifier hit(s) survived into dist/:`);
       for (const h of hits) {
@@ -218,12 +279,23 @@ function main() {
         "The bare identifier surviving is expected (a real WorkingCanvasHandle method name, B6c); a CALL to it surviving means its DEV-gated caller (App.tsx's E2E hook registrations) was not dead-code-eliminated -- a real regression, not the expected shape."
       );
     }
+    if (missingExpectedCallSites.length > 0) {
+      console.error(
+        `check:dist-clean: FAIL -- ${missingExpectedCallSites.length} identifier(s) expected to have a surviving call site (S1) had ZERO:`
+      );
+      for (const id of missingExpectedCallSites) {
+        console.error(`  ${id}`);
+      }
+      console.error(
+        "These are the candidate arm's own WorkingCanvasHandle methods -- RELEASE-0.1 item 7 flipped the default arm to candidate, so a plain production build is now expected to construct and call a candidate-arm session; zero call sites means that branch did not reach the bundle, or reached it and was stripped -- a real regression from what item 7 shipped, not the expected shape."
+      );
+    }
     process.exitCode = 1;
     return;
   }
 
   console.log(
-    `check:dist-clean: PASS -- 0 hits for ${INSTRUMENT_IDENTIFIERS.length} instrument identifiers, and 0 surviving call sites for ${EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS.length} expected-present identifiers, across ${files.length} dist file(s).`
+    `check:dist-clean: PASS -- 0 hits for ${INSTRUMENT_IDENTIFIERS.length} instrument identifiers, 0 surviving call sites for ${EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS.length} expected-absent-caller identifiers, and >=1 surviving call site each for ${EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS.length} expected-present identifiers, across ${files.length} dist file(s).`
   );
 }
 

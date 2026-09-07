@@ -11,6 +11,7 @@ import {
   notifyResidencyArmDatasetClosed,
   notifyResidencyArmDatasetOpened,
   setResidencyArm,
+  shouldConstructCandidateSession,
 } from "./residencyArm";
 
 describe("residencyArm", () => {
@@ -32,7 +33,8 @@ describe("residencyArm", () => {
   });
 
   // RELEASE-0.1 item 7: the switch stays dev-gated, but baseline remains selectable through it --
-  // ADR-011 gate 8's recorded interim is not retired, only no longer the default.
+  // the discharged interim (ADR-011 gate 8, met 2026-09-02, discharged by ADR-028) is not retired,
+  // only no longer the default.
   it("can be set back to candidate from baseline", () => {
     setResidencyArm("baseline");
     const result = setResidencyArm("candidate");
@@ -76,23 +78,39 @@ describe("residencyArm", () => {
   // constructs the candidate session." `App.tsx` cannot be rendered in this suite at all
   // (`App.test.ts`'s own top comment: `WorkingCanvas`'s real `Deck` construction needs a WebGL
   // context jsdom does not provide, and no React DOM harness exists in this package), so this is the
-  // closest honest equivalent: it reproduces, directly, the exact boolean expression `App.tsx`'s
-  // `[admitted]` effect now evaluates to choose between the candidate and baseline construction
-  // branches -- `if (getResidencyArm() === "candidate")`, no `isInstrumentedBuild()` operand any
-  // more (RELEASE-0.1 item 7, `App.tsx`'s own comment at that call site). `vi.stubEnv("DEV", false)`
-  // simulates a plain production build's `import.meta.env.DEV` (Vitest's own documented import.meta
-  // .env stubbing, not a mock of this module's own logic) with `VITE_MEASURE_BUILD` left unset, so
-  // `isInstrumentedBuild()` reads `false` here exactly as it would in a real `npm run build` output --
-  // and the arm-selection expression still reads `true`, proving construction is not gated on it.
-  it("the candidate-session construction test (getResidencyArm() === \"candidate\") holds even when isInstrumentedBuild() is false (production mode)", () => {
+  // closest honest equivalent.
+  //
+  // SHOULD-FIX S3 (2026-09-07, reviewer gate): calls `shouldConstructCandidateSession()`
+  // (`residencyArm.ts`) DIRECTLY -- the actual exported function `App.tsx`'s `[admitted]` effect
+  // calls at its own construction branch -- rather than re-typing its condition inline. **What this
+  // test actually proves, stated honestly, not overclaimed:** that `shouldConstructCandidateSession()`
+  // itself returns `true` when `isInstrumentedBuild()` is `false` (production mode) -- i.e. the
+  // PREDICATE's own behavior is not gated on instrumentation. It does NOT and cannot prove `App.tsx`
+  // still calls this exact function, un-gated, at its own call site -- no React-render harness exists
+  // in this package (above) to observe that. That half remains a structural fact verified by reading
+  // `App.tsx` itself (its own comment at the call site cites this function by name), same limitation
+  // this suite already had before the extraction. What the extraction changes is narrower but real: a
+  // regression that stopped calling THIS function (replacing it with a re-typed inline condition)
+  // would no longer be covered by this test at all, making the coupling visible in the import list
+  // rather than silent.
+  //
+  // `vi.stubEnv("DEV", false)` simulates a plain production build's `import.meta.env.DEV` (Vitest's
+  // own documented `import.meta.env` stubbing, not a mock of this module's own logic) with
+  // `VITE_MEASURE_BUILD` left unset, so `isInstrumentedBuild()` reads `false` here exactly as it
+  // would in a real `npm run build` output.
+  it("shouldConstructCandidateSession() holds even when isInstrumentedBuild() is false (production mode)", () => {
     vi.stubEnv("DEV", false);
     try {
       expect(isInstrumentedBuild()).toBe(false);
-      // The exact expression App.tsx's [admitted] effect uses to select the candidate construction
-      // branch -- true by default, with no isInstrumentedBuild() operand any more.
-      expect(getResidencyArm() === "candidate").toBe(true);
+      expect(shouldConstructCandidateSession()).toBe(true);
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+
+  it("shouldConstructCandidateSession() reads false once the arm is switched to baseline", () => {
+    setResidencyArm("baseline");
+    expect(shouldConstructCandidateSession()).toBe(false);
+    expect(getResidencyArm()).toBe("baseline");
   });
 });

@@ -2598,36 +2598,58 @@ async function main() {
 
     // Viewport-residency cut P3w item C: the arm switch, driven AFTER mount, BEFORE any
     // `openFixture` call (`setResidencyArm` is refused once a dataset is open, `residencyArm.ts`'s
-    // own contract) -- `cellArgs.arm` (M9) already carries `"candidate"` when `--arm candidate` was
-    // given. **P3i-b B4:** `--control` still never selects candidate (control measures wire behavior
-    // under baseline), but `--wire-identity --arm candidate` NOW does reach this branch -- `arm`
-    // (the `evidence.cell.arm` label) is overridden to `identity-guard(candidate)` above, but
-    // `cellArgs.arm` itself is untouched, so this check (and `runFieldSequenceIdentityCheck`'s own
-    // `activeArm` label below) both see the real requested arm. This is how B4's dual-arm identity
-    // guard is satisfied: two separate process launches, `--wire-identity` (baseline, unchanged) and
-    // `--wire-identity --arm candidate`, each selecting its own arm here, before either run's first
-    // `openFixture` call -- see `runFieldSequenceIdentityCheck`'s own doc comment for why this was
-    // chosen over an in-process reload.
-    if (cellArgs.arm === "candidate") {
-      const setResult = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("candidate"));
+    // own contract) -- `cellArgs.arm` (M9) carries `"baseline"` (`parseCellArgs`'s own declared
+    // default) unless `--arm candidate` was given.
+    //
+    // RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 2, reviewer gate): the set is now UNCONDITIONAL, for
+    // BOTH values -- a live-run finding this piece fixes, not a design choice reaffirmed. Before this
+    // fix, the call only ever fired `if (cellArgs.arm === "candidate")`; a `"baseline"` cell (the
+    // default, `--control`, `--wire-identity` with no `--arm`, or an explicit `--arm baseline`) never
+    // called `setResidencyArm` at all, so the LIVE session simply kept whatever `residencyArm.ts`'s
+    // own `DEFAULT_RESIDENCY_ARM` happened to be -- `"baseline"` before RELEASE-0.1 item 7's own flip,
+    // now `"candidate"`. Every one of those cells therefore recorded `arm:"baseline"` in its own
+    // evidence while the app underneath it silently ran candidate: a measurement harness inferring its
+    // arm from a build-time default rather than asserting it. A measurement harness must never infer
+    // its arm -- so both branches now call `setResidencyArm(cellArgs.arm)` explicitly and assert the
+    // `getResidencyArm()` readback equals `cellArgs.arm`, whichever value that is.
+    //
+    // **P3i-b B4:** `--control` still never REQUESTS candidate (control measures wire behavior under
+    // baseline, `cellArgs.arm` stays `"baseline"` for it by construction -- nothing about `--control`
+    // itself sets `--arm`), but `--wire-identity --arm candidate` NOW does reach this branch with
+    // `cellArgs.arm === "candidate"` -- `arm` (the `evidence.cell.arm` label) is overridden to
+    // `identity-guard(candidate)` above, but `cellArgs.arm` itself is untouched, so this check (and
+    // `runFieldSequenceIdentityCheck`'s own `activeArm` label below) both see the real requested arm.
+    // This is how B4's dual-arm identity guard is satisfied: two separate process launches,
+    // `--wire-identity` (baseline, unchanged) and `--wire-identity --arm candidate`, each selecting
+    // its own arm here -- explicitly, for both -- before either run's first `openFixture` call -- see
+    // `runFieldSequenceIdentityCheck`'s own doc comment for why this was chosen over an in-process
+    // reload.
+    {
+      const setResult = await page.evaluate((arm) => window.__SPATIAL_E2E__.setResidencyArm?.(arm), cellArgs.arm);
       if (!setResult || setResult.ok !== true) {
-        throw new Error(`residency-harness: setResidencyArm("candidate") failed: ${JSON.stringify(setResult)}`);
+        throw new Error(`residency-harness: setResidencyArm(${JSON.stringify(cellArgs.arm)}) failed: ${JSON.stringify(setResult)}`);
       }
       const armReadback = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyArm?.());
-      if (armReadback !== "candidate") {
-        throw new Error(`residency-harness: getResidencyArm() readback was ${JSON.stringify(armReadback)}, expected "candidate"`);
+      if (armReadback !== cellArgs.arm) {
+        throw new Error(
+          `residency-harness: getResidencyArm() readback was ${JSON.stringify(armReadback)}, expected ${JSON.stringify(cellArgs.arm)} -- ` +
+            `setResidencyArm returned {ok:true} but the arm did not actually move`
+        );
       }
-      console.log("residency-harness: candidate arm selected and read back before any dataset open");
+      console.log(`residency-harness: "${cellArgs.arm}" arm selected and read back before any dataset open`);
     }
 
     // P7 (the tile-size sweep selector -- the campaign's last missing wire): driven at the exact same
-    // point, for the exact same reason, as the arm switch immediately above -- `setResidencyTileSizeLevel`
-    // is refused once a dataset is open (`residencyTileSizeLevel.ts`'s own contract, mirroring
-    // `residencyArm.ts`'s). Candidate-arm-only BY THE SAME CONDITION the arm switch itself just used
-    // (`cellArgs.arm === "candidate"`, not the display-only `arm`/`evidence.cell.arm` label) -- a
-    // baseline session never constructs a `TileViewportStreamManager`, so applying this ahead of one
-    // would silently have no observable effect; WARNED loudly and skipped rather than applied, so a
-    // sweep run's own evidence can never be mistaken for having actually exercised the requested level.
+    // point as the arm switch immediately above -- `setResidencyTileSizeLevel` is refused once a
+    // dataset is open (`residencyTileSizeLevel.ts`'s own contract, mirroring `residencyArm.ts`'s).
+    // Candidate-arm-only, gated on `cellArgs.arm === "candidate"` (the real requested arm, not the
+    // display-only `arm`/`evidence.cell.arm` label -- unchanged by MUST-FIX 2's own fix immediately
+    // above, which made the ARM switch unconditional but left THIS gate as-is: a baseline session
+    // never constructs a `TileViewportStreamManager`, so applying a tile-size level ahead of one would
+    // silently have no observable effect regardless of whether baseline got there by default or by an
+    // explicit `--arm baseline` now that both are asserted the same way). WARNED loudly and skipped
+    // rather than applied, so a sweep run's own evidence can never be mistaken for having actually
+    // exercised the requested level.
     if (cellArgs.tileSize !== null) {
       if (cellArgs.arm !== "candidate") {
         console.warn(

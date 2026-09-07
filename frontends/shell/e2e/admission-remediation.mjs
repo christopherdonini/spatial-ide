@@ -698,6 +698,17 @@ async function stepOverbound(page) {
 
 // ---------------------------------------------------------------------------------------
 
+// SHOULD-FIX S6 (2026-09-07, reviewer gate, RELEASE-0.1 item 7): arm audit 2026-09-07 --
+// admission-side refusals are arm-independent (`ASSERT'`/`PASTED'`/`AXISTRAP'`/`NODEF'`/`MAP'`/
+// `DUPKEY'`/`BOTHNEEDED'`/`CONFLICT'`/`CANCELOPEN'`/`NOPERSIST'`/`OVERBOUND'` all resolve before any
+// dataset is ever admitted, or (`CANCELOPEN'`) during `open_dataset`'s own identity-scan liveness --
+// neither reaches viewport residency at all); `.canvas-refusal` appears only in this file's own
+// harness-hygiene cleanup (grep `.canvas-refusal button` -- a defensive click on whatever might be
+// left over from a prior run, never an assertion this suite makes about the ceiling-refusal
+// contract). No step here needs a pin; this
+// suite runs on the shipped default (candidate), unpinned, same as before this audit -- confirmed
+// unaffected by the arm flip, not merely assumed.
+
 async function main() {
   const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 900_000);
   const watchdog = setTimeout(() => {

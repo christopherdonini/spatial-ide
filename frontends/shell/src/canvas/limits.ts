@@ -28,7 +28,8 @@ export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
  * call can select baseline instead, see `residency/residencyArm.ts`): past it, distance-ordered
  * eviction keeps the resident set under this same ceiling and the shell shows a declared
  * partial-view status instead of a refusal (`residencyStatus.ts`). **Baseline arm** (selectable in
- * dev only; ADR-011 gate 8's recorded interim): past it the shell stops accepting further batches
+ * dev only; the discharged interim, ADR-011 gate 8, met 2026-09-02, discharged by ADR-028): past
+ * it the shell stops accepting further batches
  * for that stream, cancels it, and shows a visible typed refusal naming this constant -- no silent
  * eviction, no partial view presented as complete. The ceiling value itself is unchanged, only what
  * happens at it differs by arm.

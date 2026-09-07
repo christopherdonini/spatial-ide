@@ -58,6 +58,32 @@ own Resolved section) and `A5'`-`A8'` have been green in every run since -- only
 later, for an unrelated reason (candidate-selection during hover-pick, its own saga below, entries
 20/21 and P8-P11). Read a fresh run's own output, not this file, for current status.
 
+**RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 1, reviewer gate):** this suite now runs on the SHIPPED
+DEFAULT residency arm (candidate), unpinned -- `OVERCEIL'`/`REOPEN'` (rider 1's baseline-arm-only
+ceiling-refusal acceptance test) moved to their own script, `e2e/refusal-contract-baseline.mjs`
+(below), because `.canvas-refusal` is structurally unreachable from candidate-arm ingest and the
+whole-suite baseline pin an earlier version of this piece added here over-applied the human's
+ruling. See that section's own text for why a separate PROCESS, not an in-suite pin.
+
+## Refusal-contract baseline spec (RELEASE-0.1 item 7, 2026-09-07)
+
+```
+npm run e2e:refusal-contract-baseline
+```
+
+`e2e/refusal-contract-baseline.mjs` -- carries `OVERCEIL'`/`REOPEN'` (moved from `regression.mjs`) and
+`SLOW'`/`CANCEL'` (moved from `filter-panel.mjs`): every step whose own assertion is a baseline-arm-only
+mechanic (the `.canvas-refusal` ceiling-refusal banner, or a declared precondition asserting it),
+unreachable under the shipped candidate default. Launched as its OWN process, separate from
+`regression.mjs` and `filter-panel.mjs` -- the same choice `residency-harness.mjs`'s own S4 doc comment
+records elsewhere in this suite (a `page.reload()` mid-script to force a close-without-reopen has "no
+precedent anywhere in this harness suite" and was judged riskier than a fresh launch). The residency arm
+is pinned to `"baseline"` ONCE, before the first `openPath` this process ever issues (no dataset has ever
+opened in this process at that point, the only point `setResidencyArm` is guaranteed not to be refused --
+`residencyArm.ts`'s own "refused while a dataset is open" contract), with a `getResidencyArm()` readback
+asserted afterward, never trusting `setResidencyArm`'s own `{ok:true}` alone. Same **E2E-verified**
+evidence class; same watchdog/deadline discipline; leaves the app running afterward.
+
 ## Filter spec (sql-filter cut, P5)
 
 ```
@@ -89,26 +115,30 @@ npm run e2e:filter-panel
 types `zone = 'residential'` into the input and clicks Apply, reusing `filter.mjs`'s own 60%-margin
 pixel-fraction check. `PANELREFUSE'` types an unknown column, asserts `.filter-refusal` shows
 `skp.filter_unknown_column` verbatim, and that the canvas still shows the PREVIOUS filtered view (the
-typo-blanks-canvas recovery re-issue). `CLEAR'` asserts the unfiltered fraction is restored.
-`SLOW'`/`CANCEL'` is ADR-021's own acceptance condition, asserted literally: opens a new
-~4,000,000-feature fixture (regenerate: `cargo test -p spatial-kernel --test
+typo-blanks-canvas recovery re-issue). `CLEAR'` asserts the unfiltered fraction is restored. `FIND'`
+(the operator's exact Part E, E5 scenario) applies the same late-matching predicate via the real
+panel DOM, lets the scan run to completion (unlike the cancelled step below), and asserts the camera
+lands on the matching features. Same **E2E-verified** evidence class; same watchdog/deadline
+discipline; leaves the app running afterward. This file now runs on the SHIPPED DEFAULT residency
+arm (candidate), unpinned (RELEASE-0.1 item 7, MUST-FIX 1) -- none of its own steps assert anything
+arm-conditional.
+
+**`SLOW'`/`CANCEL'` moved out (RELEASE-0.1 item 7, MUST-FIX 1, 2026-09-07)**, to
+`e2e/refusal-contract-baseline.mjs` (above): ADR-021's own acceptance condition, asserted literally --
+opens a new ~4,000,000-feature fixture (regenerate: `cargo test -p spatial-kernel --test
 manual_walkthrough_fixtures generate_the_slow_filter_fixture -- --ignored --nocapture` -- see that
-generator's own doc comment for why it is sized the way it is, and why a single Parquet row group is
-what makes the late-matching scan genuinely slow rather than collapsing to a near-instant, prunable
-tail read), asserts the OVERCEIL' pattern openly first (this fixture's declared precondition: it
-overflows `MAX_RESIDENT_VERTICES` on its own unfiltered first look), then applies a late-matching
-predicate (`id > <features - 100>`) and asserts `button.filter-cancel` + `.scan-liveness` are BOTH
-present while GENUINELY ZERO `[render-trace] batch` lines exist yet for the issued stream handle,
-then clicks Cancel and asserts `.scan-incomplete` appears with no further batch lines for that handle
-over a settle window. That one step applies its predicate via `window.__SPATIAL_E2E__.queryWithFilter`
-rather than the DOM input/Apply pair -- disclosed in the script's own top comment -- because obtaining
-the issued stream handle needs a return value a DOM click cannot give, and NEXT-CUT.md's own evidence
-plan names the hook as a sanctioned handle source; `queryWithFilter` reaches the identical `applyFilter`
-seam the real Apply button calls (the filter-panel cut's own "deviation-3 retrofit"), so the resulting
-DOM state is exactly what a real Apply click would produce. No timing assertion anywhere in this
-step (ADR-018) -- every wait is a bounded robustness poll, never a claim about how fast anything
-happened. Same **E2E-verified** evidence class; same watchdog/deadline discipline (longer default,
-600s, for the larger fixture's own admission/settle time); leaves the app running afterward.
+generator's own doc comment for why it is sized the way it is), asserts the OVERCEIL' pattern openly
+first (this fixture's declared precondition: it overflows `MAX_RESIDENT_VERTICES` on its own
+unfiltered first look -- a baseline-arm-only mechanic, the reason this step moved), then applies a
+late-matching predicate (`id > <features - 100>`) and asserts `button.filter-cancel` +
+`.scan-liveness` are BOTH present while GENUINELY ZERO `[render-trace] batch` lines exist yet for the
+issued stream handle, then clicks Cancel and asserts `.scan-incomplete` appears with no further batch
+lines for that handle over a settle window. That step applies its predicate via
+`window.__SPATIAL_E2E__.queryWithFilter` rather than the DOM input/Apply pair -- disclosed in its own
+doc comment now -- because obtaining the issued stream handle needs a return value a DOM click cannot
+give; `queryWithFilter` reaches the identical `applyFilter` seam the real Apply button calls, so the
+resulting DOM state is exactly what a real Apply click would produce. No timing assertion anywhere in
+this step (ADR-018).
 
 ## Style spec (style-panel cut, P6)
 

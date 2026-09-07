@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// E2E TEST SURFACE (e2e/README.md) -- PANEL'/PANELREFUSE'/CLEAR'/SLOW'/CANCEL'/FIND' steps for
-// NEXT-CUT.md's filter-panel cut, phase P5 (+ FIND', added post-P7a per the operator's own Part E
-// E5 finding and the human-approved "Apply behaves exactly like opening a dataset" design revision
-// -- see `stepFind`'s own doc comment). Sibling to `filter.mjs` (which drives
+// E2E TEST SURFACE (e2e/README.md) -- PANEL'/PANELREFUSE'/CLEAR'/FIND' steps for NEXT-CUT.md's
+// filter-panel cut, phase P5 (+ FIND', added post-P7a per the operator's own Part E E5 finding and
+// the human-approved "Apply behaves exactly like opening a dataset" design revision -- see
+// `stepFind`'s own doc comment). Sibling to `filter.mjs` (which drives
 // `window.__SPATIAL_E2E__.queryWithFilter` directly, bypassing the actual `FilterPanel` DOM --
 // "not through the (nonexistent) shell filter panel", its own header's words, written before P3
 // built one) and to `regression.mjs` -- this suite is what actually drives the real rendered
@@ -16,21 +16,11 @@
 // below -- `CUT-STATE.md`'s P3 section: the droppable `.filter-columns*` extra was built then
 // dropped, so no assertion here targets it).
 //
-// **SLOW'/CANCEL' is the one step that does NOT drive Apply via the DOM, disclosed here rather than
-// silently varying**: obtaining the issued stream handle to assert "zero [render-trace] batch lines
-// exist for that handle" has no DOM surface at all (a button click returns nothing to the harness),
-// so that one step applies its predicate via `window.__SPATIAL_E2E__.queryWithFilter` --
-// NEXT-CUT.md's own evidence plan names this explicitly as a sanctioned handle source ("the handle
-// comes from the applied outcome via the queryWithFilter hook OR parse the trace"), and there is no
-// `[render-trace]` line anywhere that carries a stream handle before its first batch/residency event
-// (checked: `diagnostics/renderTrace.ts`'s only handle-carrying calls are `traceStreamBatch` and
-// `traceResidency`, both fired from inside `WorkingCanvas.pushBatch`, i.e. only once output exists --
-// "parse the trace" has nothing to parse yet at the moment this step needs the handle). `P3`'s own
-// deviation-3 retrofit (`CUT-STATE.md`) is what makes this substitution sound rather than a
-// parallel, second path: `queryWithFilter` reaches the IDENTICAL `applyFilter` seam `FilterPanel`'s
-// own Apply button calls, so the resulting `scanState`/DOM (`.scan-liveness`, `button.filter-cancel`,
-// `.scan-incomplete`) is exactly what a real Apply click would produce -- only the mechanism that
-// fired it differs, and every assertion in this step is still against the real rendered DOM.
+// RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 1, reviewer gate): `SLOW'/CANCEL'` moved OUT of this
+// file, to `e2e/refusal-contract-baseline.mjs`'s own process -- its declared precondition
+// (`.canvas-refusal`, the literal ceiling-refusal text) is a baseline-arm-only mechanic, and this
+// file now runs on the SHIPPED DEFAULT (candidate), unpinned. See that file's own top comment for
+// the "does NOT drive Apply via the DOM" disclosure `SLOW'/CANCEL'` itself carries (moved with it).
 //
 // `waitForMountReady`/`withTimeout`/`waitForCondition`/`fractionOf` duplicated from
 // `regression.mjs`/`filter.mjs` rather than imported -- this workspace's own established convention
@@ -292,219 +282,6 @@ async function stepClear(page, consoleHandle, ctx) {
 }
 
 /**
- * `SLOW'`/`CANCEL'` -- the acceptance condition ADR-021 exists for, asserted literally (this file's
- * top comment explains why this one step applies its predicate via `queryWithFilter` rather than the
- * DOM input/Apply pair): open the slow fixture, assert the OVERCEIL' pattern FIRST and openly (the
- * fixture's own declared precondition -- `manual_walkthrough_fixtures.rs`'s doc comment on
- * `generate_the_slow_filter_fixture`), THEN apply the late-matching predicate and assert
- * `button.filter-cancel` + `.scan-liveness` are both present WHILE genuinely zero
- * `[render-trace] batch` lines exist for the issued handle, THEN click Cancel and assert
- * `.scan-incomplete` appears with no further batch lines for that handle over a settle window.
- * NO timing assertion anywhere below -- every wait is a bounded robustness poll, never a claim about
- * how fast anything happened (ADR-018).
- *
- * **RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)) -- ARM-PINNED to baseline.**
- * The declared precondition this step asserts openly (lines below: `.canvas-refusal` present, the
- * literal "declared ceiling reached (MAX_RESIDENT_VERTICES)" status text) is the SAME baseline-only
- * mechanic `regression.mjs`'s `stepOverCeiling` pins for -- under the shipped candidate default, an
- * over-ceiling view never produces `.canvas-refusal` at all (`WorkingCanvas.tsx`'s own doc comment,
- * `pushTileBatch`: "the candidate arm never refuses a batch (item B)"), so this precondition -- and
- * everything the rest of this step is actually FOR (Cancel during a zero-batch scan,
- * `.scan-liveness`, `.scan-incomplete`) -- stays exercised against the arm ADR-021's own acceptance
- * condition was measured against, not re-aimed.
- *
- * **The pin itself lives in `main()`, not here.** A per-step pin immediately before this function's
- * own `openPath` was the original design and was found refused live (`OPEN`/`PANEL'` already have
- * `filter-zoned.parquet` open by the time this step runs, and `CLEAR'` never closes it --
- * `residencyArm.ts`'s own "refused while a dataset is open" contract) -- `main()`'s own doc comment
- * has the fix (the pin runs once, before `OPEN`, pinning this whole file). This step's own call below
- * is a defensive re-confirmation (already baseline; a same-value `setResidencyArm` call succeeds as a
- * no-op even while a dataset is open), kept so this step states, at its own call site, the arm it
- * depends on. `FIND'` immediately below opens its own dataset under the SAME file-wide `"baseline"`
- * pin, which is the exact arm `FIND'` was already (implicitly) verified against before this piece --
- * nothing about `FIND'`'s own pass/fail status changes.
- */
-async function stepSlowCancel(page, consoleHandle) {
-  const pinned = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
-  if (!pinned || pinned.ok !== true) {
-    throw new Error(`SLOW'/CANCEL': setResidencyArm("baseline") re-confirmation failed: ${JSON.stringify(pinned)}`);
-  }
-  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_SLOW);
-  if (outcome.kind !== "admitted") {
-    throw new Error(
-      `SLOW'/CANCEL': openPath(slow fixture) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"} -- ` +
-        `this fixture is a VALID file; the ceiling refusal is render-side, not admission-side`
-    );
-  }
-
-  // The unfiltered first look is a ~4,000,000-feature stream that itself refuses part-way through --
-  // generous settle/timeout budgets, matching regression.mjs's own OVERCEIL' step but wider (this
-  // fixture is ~40x that one's feature count).
-  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 120_000 });
-
-  // The declared precondition, asserted OPENLY, first: this fixture overflows MAX_RESIDENT_VERTICES
-  // on the unfiltered first look -- the same OVERCEIL' pattern regression.mjs's own stepOverCeiling
-  // exercises against a different fixture.
-  const overceil = await page.evaluate(() => ({
-    canvasRefusalText: document.querySelector(".canvas-refusal")?.textContent ?? null,
-    residencyStatusText: document.querySelector(".residency-status")?.textContent ?? null,
-  }));
-  if (overceil.canvasRefusalText === null) {
-    throw new Error(
-      `SLOW'/CANCEL': .canvas-refusal not present after admitting the slow fixture -- declared precondition ` +
-        `(this fixture overflows MAX_RESIDENT_VERTICES on the unfiltered first look) not observed (settled=${settle.settled})`
-    );
-  }
-  if (overceil.residencyStatusText === null) {
-    throw new Error(`SLOW'/CANCEL': .residency-status not present after admitting the slow fixture (settled=${settle.settled})`);
-  }
-  const statusPattern = new RegExp(
-    `^(\\d+) of ${SLOW_FIXTURE_FEATURES} features rendered — declared ceiling reached \\(MAX_RESIDENT_VERTICES\\)$`
-  );
-  const match = statusPattern.exec(overceil.residencyStatusText);
-  if (!match) {
-    throw new Error(
-      `SLOW'/CANCEL': .residency-status text did not match the OVERCEIL' pattern. Actual: ${JSON.stringify(overceil.residencyStatusText)}`
-    );
-  }
-
-  // Now the acceptance condition itself. `queryWithFilter` -- see this file's top comment -- both
-  // applies the predicate (the same `applyFilter` seam a real Apply click uses) and hands back the
-  // issued stream handle directly, with no need to race a console line that does not exist yet.
-  const consoleIndexBeforeApply = consoleHandle.entries.length;
-  const applyOutcome = await page.evaluate(
-    (p) => window.__SPATIAL_E2E__.queryWithFilter(p),
-    SLOW_FIXTURE_PREDICATE
-  );
-  if (applyOutcome.kind !== "applied") {
-    throw new Error(
-      `SLOW'/CANCEL': queryWithFilter("${SLOW_FIXTURE_PREDICATE}") returned ${JSON.stringify(applyOutcome)}, expected {kind:"applied"}`
-    );
-  }
-  const handle = applyOutcome.streamHandle;
-
-  // P6 review, should-fix 3: a real pre-batch reference for `handle` before the zero-batch-lines
-  // check below even runs -- retires that check's prior "true by construction" weakness (trusting
-  // only the handle `queryWithFilter`'s own return value carried, with nothing in the trace itself
-  // confirming a stream was ever actually issued for it). `traceStreamIssued`
-  // (`diagnostics/renderTrace.ts`) fires synchronously, inside `ViewportStreamManager.requestViewport`,
-  // right before that same promise resolves with the handle -- so this line should already be in the
-  // console buffer by the time `applyOutcome` above resolved; polled anyway (bounded, not timed) as
-  // the same robustness margin every other DOM/console check in this suite already uses.
-  const issuedLine = await waitForCondition(
-    () =>
-      Promise.resolve(
-        consoleHandle.entries
-          .slice(consoleIndexBeforeApply)
-          .some((e) => e.text.includes("[render-trace] stream-issued") && e.text.includes(handle))
-      ),
-    (found) => found === true,
-    10_000
-  );
-  if (!issuedLine.ok) {
-    throw new Error(
-      `SLOW'/CANCEL': no [render-trace] stream-issued line found for ${handle} within 10s of queryWithFilter ` +
-        `resolving -- the zero-batch-lines check below would be true by construction without this`
-    );
-  }
-
-  // Poll (bounded, not timed) for BOTH the Cancel affordance and the liveness indicator.
-  const shown = await waitForCondition(
-    () =>
-      page.evaluate(() => ({
-        cancelPresent: document.querySelector("button.filter-cancel") !== null,
-        cancelDisabled: document.querySelector("button.filter-cancel")?.disabled ?? null,
-        livenessText: document.querySelector(".scan-liveness")?.textContent ?? null,
-      })),
-    (state) => state.cancelPresent && state.livenessText !== null,
-    15_000
-  );
-  if (!shown.ok) {
-    throw new Error(
-      `SLOW'/CANCEL': button.filter-cancel + .scan-liveness never both appeared within 15s of Apply ` +
-        `(last observed: ${JSON.stringify(shown.last)}) -- if this is because a batch already arrived and cleared ` +
-        `liveness, the fixture scanned too fast; per NEXT-CUT.md P5 item 3 the fix is a larger fixture or a ` +
-        `later-matching predicate, never a weakened assertion`
-    );
-  }
-  if (shown.last.cancelDisabled !== false) {
-    throw new Error(`SLOW'/CANCEL': button.filter-cancel present but disabled=${JSON.stringify(shown.last.cancelDisabled)}`);
-  }
-  const expectedLivenessText = "Filtering — scanning, no matching rows yet";
-  if (shown.last.livenessText !== expectedLivenessText) {
-    throw new Error(
-      `SLOW'/CANCEL': .scan-liveness text mismatch.\nExpected: ${expectedLivenessText}\nActual:   ${shown.last.livenessText}`
-    );
-  }
-
-  // THE acceptance condition, asserted literally, over the SAME window the two checks above just
-  // held in: zero [render-trace] batch lines for `handle` since the predicate was applied.
-  const batchLinesBeforeCancel = consoleHandle.entries
-    .slice(consoleIndexBeforeApply)
-    .filter((e) => e.text.includes("[render-trace] batch") && e.text.includes(handle));
-  if (batchLinesBeforeCancel.length > 0) {
-    throw new Error(
-      `SLOW'/CANCEL': expected ZERO [render-trace] batch lines for ${handle} while Cancel/liveness were shown -- ` +
-        `found ${batchLinesBeforeCancel.length} (the fixture's scan completed too fast; per NEXT-CUT.md P5 item 3 ` +
-        `the fix is a larger fixture or a later-matching predicate, never a weakened assertion). First: ${batchLinesBeforeCancel[0]?.text}`
-    );
-  }
-
-  const clicked = await page.evaluate(() => {
-    const btn = document.querySelector("button.filter-cancel");
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (!clicked) {
-    throw new Error("SLOW'/CANCEL': button.filter-cancel disappeared before it could be clicked");
-  }
-
-  const incomplete = await waitForCondition(
-    () => page.evaluate(() => document.querySelector(".scan-incomplete")?.textContent ?? null),
-    (text) => text !== null,
-    15_000
-  );
-  if (!incomplete.ok) {
-    throw new Error("SLOW'/CANCEL': .scan-incomplete never appeared within 15s of clicking Cancel");
-  }
-  const incompletePattern = /^Filtered view incomplete — scan cancelled at (\d+) rows$/;
-  const incompleteMatch = incompletePattern.exec(incomplete.last);
-  if (!incompleteMatch) {
-    throw new Error(`SLOW'/CANCEL': .scan-incomplete text did not match the expected pattern. Actual: ${JSON.stringify(incomplete.last)}`);
-  }
-  const rowsAtCancel = Number(incompleteMatch[1]);
-  if (rowsAtCancel !== 0) {
-    throw new Error(
-      `SLOW'/CANCEL': .scan-incomplete reports ${rowsAtCancel} rows at cancel -- the acceptance condition is that ` +
-        `Cancel landed with ZERO rows delivered yet (consistent with the zero-batch-lines check above)`
-    );
-  }
-
-  // Settle window: a bounded wait, not a timing claim -- see this function's own doc comment. Long
-  // enough that if the (already-cancelled) producer were somehow still going to emit a batch for this
-  // handle, it would have by now; ADR-018 forbids asserting HOW fast cancellation reached the
-  // producer, not waiting out a fixed window before checking a state that must not change further.
-  await sleep(3000);
-  const batchLinesAfterCancel = consoleHandle.entries.filter(
-    (e) => e.text.includes("[render-trace] batch") && e.text.includes(handle)
-  );
-  if (batchLinesAfterCancel.length > 0) {
-    throw new Error(
-      `SLOW'/CANCEL': expected ZERO [render-trace] batch lines for ${handle} even after Cancel + a 3s settle window -- ` +
-        `found ${batchLinesAfterCancel.length}`
-    );
-  }
-
-  return (
-    `OVERCEIL' pattern observed openly (${match[1]} of ${SLOW_FIXTURE_FEATURES}); applied "${SLOW_FIXTURE_PREDICATE}" ` +
-    `(handle ${handle}, [render-trace] stream-issued line confirmed); Cancel enabled + liveness "${expectedLivenessText}" ` +
-    `shown WHILE zero batch lines existed for that handle; Cancel clicked; .scan-incomplete "${incomplete.last}"; ` +
-    `zero batch lines for that handle ever, including a 3s settle window after Cancel`
-  );
-}
-
-/**
  * `FIND'` -- the operator's exact 2026-08-15 walkthrough Part E, E5 scenario, permanently encoded.
  * A fresh open of the slow fixture (not chained off `SLOW'/CANCEL''s` own leftover state: that step
  * ends with a CANCELLED, zero-row scan and a camera that never moved for this filter generation --
@@ -514,6 +291,14 @@ async function stepSlowCancel(page, consoleHandle) {
  * for the scan to finish on its own (liveness/Cancel both gone, `isScanInFlight` false), and asserts
  * the human-approved design revision's whole point: the camera actually shows the matching features,
  * not a blank canvas -- non-background pixels clearly above a small floor.
+ *
+ * RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 1, reviewer gate): `SLOW'/CANCEL'` moved to its own
+ * process, `e2e/refusal-contract-baseline.mjs` (its declared ceiling-refusal precondition is a
+ * baseline-arm-only mechanic; see that file's own top comment) -- `FIND'` stays here and runs on
+ * the shipped default (candidate), unpinned: it was already documented as NOT chained off
+ * `SLOW'/CANCEL''s` own state (a deliberately fresh, independent open), and none of its own
+ * assertions (scan completes, camera lands on the matches) are residency-ceiling-specific, so
+ * moving is unneeded and this step's own pass/fail status is unaffected by which arm is active.
  */
 async function stepFind(page, consoleHandle) {
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_SLOW);
@@ -657,28 +442,17 @@ async function main() {
     const mountReady = await waitForMountReady(page);
     console.log(`filter-panel: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms`);
 
-    // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): this WHOLE FILE is pinned
-    // to the baseline residency arm, here, before `OPEN` -- the earliest point no dataset has EVER
-    // opened this run, the ONLY point `setResidencyArm` is guaranteed not to be refused
-    // (`residencyArm.ts`'s own "refused while a dataset is open" contract). A per-step pin
-    // immediately before `SLOW'/CANCEL'`'s own `openPath` was tried first and found refused live
-    // (`OPEN`/`PANEL'` already have `filter-zoned.parquet` open by then, and `CLEAR'` never closes
-    // it) -- `regression.mjs`'s own `main()` doc comment has the matching finding and the
-    // `page.reload()` alternative's own rejection precedent (`residency-harness.mjs`'s S4 doc
-    // comment), not reinvented here. This file predates the candidate arm entirely and none of its
-    // OTHER steps (`OPEN`/`PANEL'`/`PANELREFUSE'`/`CLEAR'`/`FIND'`) assert anything arm-conditional,
-    // so pinning the whole run reproduces this file's own pre-existing, already-verified behavior.
-    const armPinned = await page.evaluate(() => window.__SPATIAL_E2E__.setResidencyArm?.("baseline"));
-    if (!armPinned || armPinned.ok !== true) {
-      throw new Error(`filter-panel: setResidencyArm("baseline") failed before OPEN: ${JSON.stringify(armPinned)}`);
-    }
-    console.log(`filter-panel: residency arm pinned to "baseline" for this whole run (RELEASE-0.1 item 7)`);
+    // RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 1, reviewer gate): NO arm pin here any more -- this
+    // run exercises the SHIPPED DEFAULT residency arm (candidate), unpinned, the same as an ordinary
+    // operator would get. An earlier version of this piece pinned the whole file to baseline; the
+    // reviewer found that over-applied the human's ruling and left the shipped default with zero
+    // regression coverage from this file. `SLOW'/CANCEL'` (the one step that DID need baseline)
+    // moved to `e2e/refusal-contract-baseline.mjs`'s own process; see that file's own top comment.
 
     await runStep("OPEN", 40_000, () => stepOpen(page));
     await runStep("PANEL'", 60_000, () => stepPanel(page, consoleHandle, ctx));
     await runStep("PANELREFUSE'", 60_000, () => stepPanelRefuse(page, consoleHandle, ctx));
     await runStep("CLEAR'", 60_000, () => stepClear(page, consoleHandle, ctx));
-    await runStep("SLOW'/CANCEL'", 240_000, () => stepSlowCancel(page, consoleHandle));
     await runStep("FIND'", 300_000, () => stepFind(page, consoleHandle));
 
     console.log("");
