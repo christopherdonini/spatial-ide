@@ -79,6 +79,9 @@ import {
   percentileNearestRank,
   poolPollPreflightInvalidationReason,
   resolvedPerStepSettleTimeoutMs,
+  SESSION_LOG_LAUNCH_TOLERANCE_SECONDS,
+  sessionLogCandidates,
+  sessionLogThresholdSeconds,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_QUIET_MS,
   TRACE_VERSION,
@@ -173,22 +176,38 @@ function resolveSessionLogPath(appLogPath) {
  * is the PRIMARY source Amendment 2 moved to instead: the app's own log directory --
  * `APP_LOG_DIR` above (Tauri's own `app_log_dir()`, `lib.rs:96-98`) -- listed with
  * `fs.readdirSync` + `fs.statSync` and narrowed to the file THIS launch created via
- * `newestSessionLogSinceLaunch` (`residencyTrace.mjs`, pure, unit-tested there).
+ * `newestSessionLogSinceLaunch` (`residencyTrace.mjs`, pure, unit-tested there). `launchEpochMs`
+ * is the caller's own launch instant -- see `launchEpochMs`'s own doc comment at its call site in
+ * `main()` for why that instant must be captured PRE-spawn (reviewer fix batch MUST-FIX 1), a
+ * contract this function itself relies on but cannot enforce.
  *
- * Returns `{ path, reason, source }`: `path` is `null` with a stated `reason` if `LOCALAPPDATA` is
- * unset, the directory cannot be listed, or no `session-<epoch>.log` in it qualifies -- never a
- * guessed path. `source` is `"app-log-dir"` when `path` is non-null; `null` alongside a null
- * `path`. (`resolveSessionLogPath`'s own app-log-file parse, the secondary cross-check, is a
+ * Returns `{ path, reason, source, thresholdSeconds, candidates }` (reviewer fix batch SHOULD-FIX
+ * 3/7 added the last two): `path` is `null` with a stated `reason` if `LOCALAPPDATA` is unset, the
+ * directory cannot be listed, or no `session-<epoch>.log` in it qualifies -- never a guessed path.
+ * `source` is `"app-log-dir"` when `path` is non-null; `null` alongside a null `path`.
+ * (`resolveSessionLogPath`'s own app-log-file parse, the secondary cross-check, is a
  * `sessionLogPathSource` value this piece's own instructions declare as part of the field's type
  * even though this function itself never returns it -- see the cell-recording call site's own
- * comment for why.)
+ * comment for why.) `thresholdSeconds` is `sessionLogThresholdSeconds(launchEpochMs)`
+ * (`residencyTrace.mjs`), always present (computed before any directory I/O, so even a
+ * `LOCALAPPDATA`-unset or listing-failure return still reports it). `candidates` is
+ * `sessionLogCandidates(entries)` -- every `session-<digits>.log`-shaped file actually present,
+ * name + mtime, diagnostic only -- `null` when the directory itself was never successfully listed
+ * (distinct from an empty array, which means it WAS listed and genuinely held no such file).
+ * Threading both through to `cell.poolPollPreflight` lets a false invalidation be diagnosed
+ * straight from the evidence file, without another run.
  */
 function resolveSessionLogPathFromAppLogDir(launchEpochMs) {
+  // Computed first, unconditionally: every return path below carries the SAME threshold this call
+  // actually used, even the two that never reach a directory listing at all.
+  const thresholdSeconds = sessionLogThresholdSeconds(launchEpochMs);
   if (!APP_LOG_DIR) {
     return {
       path: null,
       source: null,
       reason: "LOCALAPPDATA is not set in this environment -- cannot locate the app's log directory",
+      thresholdSeconds,
+      candidates: null,
     };
   }
   let entries;
@@ -198,22 +217,47 @@ function resolveSessionLogPathFromAppLogDir(launchEpochMs) {
       try {
         mtimeMs = statSync(join(APP_LOG_DIR, name)).mtimeMs;
       } catch {
-        mtimeMs = null; // best-effort -- selection itself never consults mtimeMs, see newestSessionLogSinceLaunch
+        // best-effort -- reviewer fix batch SHOULD-FIX 7's own resolved choice: RECORDED as
+        // evidence (`sessionLogCandidates`, below), never itself consulted by selection
+        // (`newestSessionLogSinceLaunch`, unchanged) -- a failed stat here just means this one
+        // entry's own diagnostic mtime is unavailable, not that the entry itself is dropped.
+        mtimeMs = null;
       }
       return { name, mtimeMs };
     });
   } catch (e) {
-    return { path: null, source: null, reason: `could not list ${APP_LOG_DIR}: ${e.message}` };
+    return {
+      path: null,
+      source: null,
+      reason: `could not list ${APP_LOG_DIR}: ${e.message}`,
+      thresholdSeconds,
+      candidates: null,
+    };
   }
+  const candidates = sessionLogCandidates(entries);
+  // Reviewer fix batch item 8: `newestSessionLogSinceLaunch` (residencyTrace.mjs) throws only on a
+  // non-array `dirListing` or a non-finite `launchEpochMs`. Neither is reachable here over
+  // ordinary directory contents: `entries` is always a real array (built by the `.map()` above,
+  // regardless of its contents), and `launchEpochMs` was already validated finite by
+  // `sessionLogThresholdSeconds` at the very top of this function, which would have thrown first
+  // had it not been. This call is therefore never wrapped in its own try/catch.
   const newestName = newestSessionLogSinceLaunch(entries, launchEpochMs);
   if (!newestName) {
     return {
       path: null,
       source: null,
-      reason: `no session-<epoch>.log in ${APP_LOG_DIR} with an epoch at or after this run's own launch (5s tolerance)`,
+      reason: `no session-<epoch>.log in ${APP_LOG_DIR} with an epoch at or after this run's own launch (${SESSION_LOG_LAUNCH_TOLERANCE_SECONDS}s tolerance)`,
+      thresholdSeconds,
+      candidates,
     };
   }
-  return { path: join(APP_LOG_DIR, newestName), source: "app-log-dir", reason: null };
+  return {
+    path: join(APP_LOG_DIR, newestName),
+    source: "app-log-dir",
+    reason: null,
+    thresholdSeconds,
+    candidates,
+  };
 }
 
 // Disclosed approximations -- see this file's own top comment.
@@ -2279,6 +2323,38 @@ async function main() {
   // F2: sweep BEFORE attaching/launching -- see `sweepStaleCdpProcess`'s own doc comment.
   const sweptPids = await sweepStaleCdpProcess();
 
+  // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2 (reviewer fix batch MUST-FIX 1 on ffb688f;
+  // paraphrased, not quoted -- that document is outside this file's own citation-integrity scan):
+  // this run's own launch instant, captured PRE-SPAWN -- immediately before
+  // `attachOrLaunch`/`attachOrLaunchExe` is even called, NOT after it resolves.
+  //
+  // **Why pre-spawn, not post-resolve (the earlier version of this fix, which MUST-FIX 1 found
+  // unsound).** `SessionLog::open` (`src-tauri/src/lib.rs:100`) runs INSIDE the Rust `setup()`
+  // closure, strictly BEFORE the measure-build route's own webview-window build that opens the CDP
+  // port (`lib.rs:148-172`, gated `#[cfg(feature = "measure-build")]`) -- and
+  // `attachOrLaunch`/`attachOrLaunchExe` only resolve with `launched: true` AFTER that CDP port is
+  // up (`waitForCdpUp`, `lib.mjs:57-64`, polling every 500ms) AND a matching page has been found on
+  // it (`findAppPage`, `lib.mjs:74-87`, polling every 300ms) -- both open-ended waits stacked on top
+  // of the session log's own creation. A post-resolve instant is therefore ALWAYS later than the
+  // real session-log creation instant on the measure-build route -- unbounded relative to the 5s
+  // tolerance `sessionLogThresholdSeconds` applies, not merely a race -- and a RACE (unproven either
+  // way) on the plain `tauri dev` route (see the Reviewer S-a note below `attachConsole`, which is
+  // about a DIFFERENT question -- whether the session log already exists by the time this read
+  // happens -- not this timing hazard). A too-late instant rejects the correct, just-created file
+  // TWICE (the attach-time read below, then the pre-flight's own retry reusing the same instant),
+  // ending the whole pass on a false `pool-poll pre-flight could not be evaluated` (Amendment 2
+  // §3) -- exactly the failure class this fix batch exists to close, not a safe case the old
+  // post-resolve placement merely documented imperfectly.
+  //
+  // Captured pre-spawn instead: the real session log's own epoch is then always AT OR AFTER this
+  // instant (the process has not even started yet when it is taken), so the 5s tolerance is
+  // generous margin, never a rejection hazard, on EITHER launch route.
+  //
+  // **The attach (`launched: false`) branch never reaches a point where this value matters.** The
+  // fresh-launch invariant check right below hard-fails before any `sessionLogPath` resolution
+  // ever runs, so this instant's own correctness is moot on that branch by construction.
+  const launchEpochMs = Date.now();
+
   let session;
   try {
     // P3r: the ONLY branch on `measureBuildExePath` in this whole file -- everything downstream
@@ -2291,12 +2367,6 @@ async function main() {
     return;
   }
   const { page, browser, launched } = session;
-  // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2: this run's own launch instant, captured the
-  // moment `attachOrLaunch`/`attachOrLaunchExe` resolved -- before any other `await` runs -- so
-  // `resolveSessionLogPathFromAppLogDir` (below) has an instant genuinely anchored to THIS launch.
-  // Unused if `launched` is `false` (the invariant check right below returns before it is ever
-  // read).
-  const launchEpochMs = Date.now();
   // F2: no attach path remains in this harness -- the sweep above must have left CDP_PORT empty,
   // so `attachOrLaunch`/`attachOrLaunchExe` should always take its own launch path here. Asserted,
   // not merely assumed: `launched === false` means either the sweep missed a PID (already logged
@@ -2328,26 +2398,39 @@ async function main() {
   // produce `sessionLogPath` itself, nor re-attempted at the pre-flight's own later checkpoint
   // (which now re-attempts `resolveSessionLogPathFromAppLogDir` instead, below).
   //
-  // Reviewer S-a (post-gate sweep; still true of both resolutions below, since neither depends on
-  // the mechanism this note describes): the Rust `setup()` closure that creates the session log has
-  // "already run" by the time `attachOrLaunch(Exe)` resolves above -- true for the measure build
-  // ONLY (`lib.rs`'s own `#[cfg(feature = "measure-build")]` block explicitly builds that build's
-  // webview INSIDE `setup()`, strictly AFTER the session log is opened earlier in the same closure
-  // -- verified there, not assumed), NOT proven for plain `tauri dev`: `lib.rs`'s own measure-build
-  // doc comment states that, for the declarative `create: true` window `tauri dev` uses, Tauri's
-  // internal `setup()` creates every configured window before this closure ever runs -- i.e. for
-  // `tauri dev` the window (and whatever CDP attachability follows from it) may already exist
-  // before, or mid-way through, `setup()`, so a read taken here can genuinely race the session log
-  // being created. This is exactly why the value read here is only a FIRST attempt, re-resolved
-  // instead of trusted at the pre-flight's own later checkpoint (below) -- never fabricated either
-  // way: a missing directory entry or a missing file both record `null` plus a stated reason, never
-  // a guessed path.
+  // Reviewer S-a (post-gate sweep; reviewer fix batch MUST-FIX 1 clarifies this note is about a
+  // DIFFERENT question from `launchEpochMs`'s own pre-spawn-capture safety, established above --
+  // NOT a claim that this ordering makes a post-resolve `Date.now()` safe; it does not, which is
+  // exactly why `launchEpochMs` is captured pre-spawn instead). This note is about whether the
+  // FIRST read here (right after attach, before the pre-flight's own later re-attempt) already
+  // finds a session log that EXISTS at all -- a question about the READ, not about the THRESHOLD
+  // `launchEpochMs` feeds into. The Rust `setup()` closure that creates the session log genuinely
+  // has "already run" by the time `attachOrLaunch(Exe)` resolves above -- true for the measure
+  // build ONLY (`lib.rs`'s own `#[cfg(feature = "measure-build")]` block explicitly builds that
+  // build's webview -- the very step that opens the CDP port `attachOrLaunchExe` waits on --
+  // STRICTLY AFTER the session log is opened earlier in the same closure, `lib.rs:100`, verified
+  // there, not assumed), NOT proven for plain `tauri dev`: `lib.rs`'s own measure-build doc comment
+  // states that, for the declarative `create: true` window `tauri dev` uses, Tauri's internal
+  // `setup()` creates every configured window before this closure ever runs -- i.e. for `tauri dev`
+  // the window (and whatever CDP attachability follows from it) may already exist before, or
+  // mid-way through, `setup()`, so a read taken here can genuinely race the session log being
+  // created. This is exactly why the value read here is only a FIRST attempt, re-resolved instead
+  // of trusted at the pre-flight's own later checkpoint (below) -- never fabricated either way: a
+  // missing directory entry or a missing file both record `null` plus a stated reason, never a
+  // guessed path.
   const appLogPath = join(OUT_DIR, measureBuildExePath ? "measure-app.log" : "app.log");
+  // Reviewer fix batch SHOULD-FIX 3/4: kept as the FULL result object (not destructured away) so
+  // its `thresholdSeconds`/`candidates` diagnostic fields stay available for `cell.poolPollPreflight`
+  // (below) even when the pre-flight never needs to retry, and so `cell.sessionLogPathAtAttach`
+  // (below) can preserve the ORIGINAL attach-time snapshot after a later retry promotes a fresher
+  // resolution to `cell.sessionLogPath` itself (Amendment 1 §1 binds that field to the resolved
+  // path, not merely the attach-time read).
+  const sessionLogResolutionAtAttach = resolveSessionLogPathFromAppLogDir(launchEpochMs);
   const {
     path: sessionLogPath,
     reason: sessionLogPathReason,
     source: sessionLogPathSource,
-  } = resolveSessionLogPathFromAppLogDir(launchEpochMs);
+  } = sessionLogResolutionAtAttach;
   const sessionLogPathAppLogCrossCheck = resolveSessionLogPath(appLogPath);
 
   // Entry 31 / attribution-pass §6: the opt-in queue-depth sampler. One page.evaluate per tick
@@ -2456,19 +2539,30 @@ async function main() {
       // (`effectiveSettleTimeoutMs`'s own contract), so a reader can see both the request and its
       // effect without leaving the cell object.
       perStepWatchdogOverrideMs: cellArgs.perStepWatchdogMs,
-      // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2: the running process's own session-log
-      // path, resolved PRIMARILY from the app's own log directory
+      // Entry-40 pass, PASS-PREREGISTRATION.md Amendment 2 (reviewer fix batch SHOULD-FIX 4 on
+      // ffb688f: Amendment 1 §1 binds this field to the RESOLVED path): the running process's own
+      // session-log path, resolved PRIMARILY from the app's own log directory
       // (`resolveSessionLogPathFromAppLogDir`, see the block right after `attachConsole` above) --
-      // `null` plus `sessionLogPathReason` if that resolution failed, never a guessed path.
-      // `sessionLogPathSource` names which resolution actually produced `sessionLogPath` --
-      // `"app-log-dir"` here (the only value this driver's own primary resolution ever assigns) or
-      // `null` alongside a null `sessionLogPath`; `"app.log"` is part of this field's own declared
-      // type (this piece's own instructions) but this driver never assigns it, since the app-log
-      // parse is kept strictly as a cross-check below, never promoted to the source even when the
-      // primary resolution fails.
+      // `null` plus `sessionLogPathReason` if that resolution failed, never a guessed path. This
+      // field starts at the attach-time value but is PROMOTED, below, to a fresher path if
+      // `--require-pool-poll`'s own pre-flight retry resolves one the attach-time read missed --
+      // never left frozen at a stale snapshot when a later resolution actually succeeded.
+      // `sessionLogPathSource` names which resolution actually produced the CURRENT
+      // `sessionLogPath` -- `"app-log-dir"` (the only value this driver's own primary resolution
+      // ever assigns) or `null` alongside a null `sessionLogPath`; `"app.log"` is part of this
+      // field's own declared type (this piece's own instructions) but this driver never assigns
+      // it, since the app-log parse is kept strictly as a cross-check below, never promoted to the
+      // source even when the primary resolution fails.
       sessionLogPath,
       sessionLogPathSource,
       sessionLogPathReason,
+      // Reviewer fix batch SHOULD-FIX 4: the ORIGINAL attach-time snapshot, preserved unchanged
+      // even after a later pre-flight retry promotes a fresher resolution to `sessionLogPath`
+      // above -- so a reader can always see both "what this run knew right after attach" and "the
+      // best-known value" without losing either.
+      sessionLogPathAtAttach: sessionLogResolutionAtAttach.path,
+      sessionLogPathAtAttachSource: sessionLogResolutionAtAttach.source,
+      sessionLogPathAtAttachReason: sessionLogResolutionAtAttach.reason,
       // Entry-40 pass, Amendment 2: the OLD (now-secondary) app-log-file parse
       // (`resolveSessionLogPath`), recorded beside the real source for comparison only -- may be
       // `null` or stale (this is the exact resolution Amendment 2's own attempt 1 found returning a
@@ -2721,22 +2815,53 @@ async function main() {
       // source, never the app-log-file cross-check) rather than trusting only the earlier value.
       let resolvedPath = sessionLogPath;
       let resolvedPathReason = sessionLogPathReason;
+      // Reviewer fix batch SHOULD-FIX 3: defaults to the attach-time resolution's own diagnostics;
+      // overwritten below only if a retry actually runs, so this always reflects whichever
+      // resolution the FINAL `resolvedPath` above came from.
+      let preflightThresholdSeconds = sessionLogResolutionAtAttach.thresholdSeconds;
+      let preflightCandidates = sessionLogResolutionAtAttach.candidates;
       if (!resolvedPath) {
         const retry = resolveSessionLogPathFromAppLogDir(launchEpochMs);
         resolvedPath = retry.path;
         resolvedPathReason = retry.reason;
+        preflightThresholdSeconds = retry.thresholdSeconds;
+        preflightCandidates = retry.candidates;
+        // Reviewer fix batch SHOULD-FIX 4: Amendment 1 §1 binds `cell.sessionLogPath` to the
+        // RESOLVED path -- promote a successful retry to the cell's own top-level fields here,
+        // rather than leaving them frozen at the (null) attach-time snapshot, which stays
+        // available, unchanged, at `cell.sessionLogPathAtAttach` (set once, above, from
+        // `sessionLogResolutionAtAttach`). A retry that ALSO fails leaves the cell's top-level
+        // fields exactly as they were -- never overwritten with a "fresher" failure that adds no
+        // real information.
+        if (resolvedPath) {
+          evidence.cell.sessionLogPath = resolvedPath;
+          evidence.cell.sessionLogPathSource = retry.source;
+          evidence.cell.sessionLogPathReason = retry.reason;
+        }
       }
       let preflightOk = false;
       let preflightReason = null;
+      // Reviewer fix batch MUST-FIX 2: `readSucceeded` is set ONLY once `readFileSync` below has
+      // actually returned -- keying the invalidation-reason selection on this, not on
+      // `resolvedPath`'s own truthiness, is the fix itself (see `poolPollPreflightInvalidationReason`'s
+      // own doc comment in `residencyTrace.mjs` for the full account of the bug this closes: a
+      // resolved-but-UNREADABLE path was previously misreported as "emitted nothing", a fact the
+      // caught exception below proves was never actually established).
+      let readSucceeded = false;
       if (!resolvedPath) {
         preflightReason = `session log path could not be resolved even at pre-flight time (${resolvedPathReason ?? "unknown reason"})`;
       } else {
         try {
-          preflightOk = readFileSync(resolvedPath, "utf8").includes("producer-pool-poll");
+          const sessionLogContents = readFileSync(resolvedPath, "utf8");
+          readSucceeded = true;
+          preflightOk = sessionLogContents.includes("producer-pool-poll");
           if (!preflightOk) {
             preflightReason = `session log at ${resolvedPath} contains no "producer-pool-poll" line`;
           }
         } catch (e) {
+          // `readSucceeded` stays `false` -- the file resolved but could not actually be read
+          // (permission denied, deleted between resolution and this read, ...), so its content was
+          // never inspected at all.
           preflightReason = `could not read session log at ${resolvedPath}: ${e.message}`;
         }
       }
@@ -2744,27 +2869,29 @@ async function main() {
         required: true,
         ok: preflightOk,
         reason: preflightReason,
-        // Entry-40 pass, Amendment 2 (item 3): the DISTINCT reason class that fired, from the
-        // single, pure `poolPollPreflightInvalidationReason` (`residencyTrace.mjs`, unit-tested
-        // there) -- `null` when `preflightOk` (no invalidation fired at all).
-        invalidationReason: preflightOk ? null : poolPollPreflightInvalidationReason(resolvedPath),
-        // Reviewer S-a (unchanged shape): both the attach-time and the pre-flight-time resolution
-        // kept, so a reader can see the full history and the exact path checked, not only the value
-        // this pre-flight ended up using. Entry-40 pass, Amendment 2: both are now app-log-dir
-        // resolutions, not the old app-log-file parse -- see `sessionLogPathAppLogCrossCheck` on
-        // the cell for that.
-        sessionLogPathAtAttach: sessionLogPath,
-        sessionLogPathAtAttachReason: sessionLogPathReason,
+        // Reviewer fix batch MUST-FIX 2: keyed on `readSucceeded` (whether `readFileSync` above
+        // actually returned), NEVER on `resolvedPath`'s own truthiness -- `null` when `preflightOk`
+        // (no invalidation fired at all).
+        invalidationReason: preflightOk ? null : poolPollPreflightInvalidationReason(readSucceeded),
         sessionLogPathAtPreflight: resolvedPath,
+        // Reviewer fix batch SHOULD-FIX 3: the exact threshold this run computed, and every
+        // `session-<digits>.log`-shaped file actually seen in the directory (name + mtime,
+        // diagnostic only -- SHOULD-FIX 7's own resolved choice: recorded as evidence, never
+        // consulted by selection) -- so a false invalidation is diagnosable from the evidence file
+        // alone, without another run. `candidates` is `null` iff the directory itself was never
+        // successfully listed (`resolveSessionLogPathFromAppLogDir`'s own doc comment has the full
+        // account).
+        thresholdSeconds: preflightThresholdSeconds,
+        candidates: preflightCandidates,
         checkedAt: new Date().toISOString(),
       };
       if (!preflightOk) {
-        // Entry-40 pass, Amendment 2 (item 3): two DISTINCT reasons, never conflated. `resolvedPath`
-        // present (the log was read, and genuinely lacks the line) is the only case that has
-        // actually ESTABLISHED the instrument emitted nothing; `resolvedPath` absent means the
-        // check itself could not run at all -- a claim of absence would not be true, so it gets its
-        // own, honest reason instead. (Reviewer S-a's original two-reason discipline, now sourced
-        // from the cell's own recorded `invalidationReason` above rather than recomputed here.)
+        // Reviewer fix batch MUST-FIX 2 / SHOULD-FIX 3: two DISTINCT reasons, never conflated.
+        // `readSucceeded` (the log was actually read, and genuinely lacks the line) is the only
+        // case that has actually ESTABLISHED the instrument emitted nothing; anything else --
+        // an unresolved path OR a resolved-but-unreadable one -- means the check itself could not
+        // run at all, so it gets its own, honest reason instead (sourced from the cell's own
+        // recorded `invalidationReason` above, never recomputed here).
         const invalidationReason = evidence.cell.poolPollPreflight.invalidationReason;
         console.error(
           `residency-harness: --require-pool-poll PRE-FLIGHT FAILED (${invalidationReason}: ${preflightReason}) -- invalidating the cell before any trace step runs`

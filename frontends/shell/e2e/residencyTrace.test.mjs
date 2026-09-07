@@ -31,6 +31,9 @@ import {
   percentileNearestRank,
   poolPollPreflightInvalidationReason,
   resolvedPerStepSettleTimeoutMs,
+  SESSION_LOG_LAUNCH_TOLERANCE_SECONDS,
+  sessionLogCandidates,
+  sessionLogThresholdSeconds,
   SETTLE_PER_STEP_TIMEOUT_MS,
   SETTLE_PER_STEP_TIMEOUT_LARGE_FIXTURE_MS,
   SETTLE_PER_STEP_TIMEOUT_5GB_MS,
@@ -598,26 +601,117 @@ test("rejects a non-array dirListing or a non-finite launchEpochMs rather than s
   assert.throws(() => newestSessionLogSinceLaunch([], undefined));
 });
 
-console.log("");
-console.log(
-  "residencyTrace.mjs -- poolPollPreflightInvalidationReason (entry-40 pass, Amendment 2 item 3: the pre-flight's DISTINCT reason selection)"
-);
-
-test('a null/falsy resolvedPath -- the check itself could not run -- selects "pool-poll pre-flight could not be evaluated"', () => {
-  assert.equal(poolPollPreflightInvalidationReason(null), "pool-poll pre-flight could not be evaluated");
-  assert.equal(poolPollPreflightInvalidationReason(undefined), "pool-poll pre-flight could not be evaluated");
-  assert.equal(poolPollPreflightInvalidationReason(""), "pool-poll pre-flight could not be evaluated");
+// Reviewer fix batch SHOULD-FIX 5 (on ffb688f): numeric epoch comparison, never lexicographic --
+// a string comparison of "999" vs "1000" ranks "999" as greater (first character '9' > '1'), which
+// would wrongly select the OLDER file. Both epochs (999, 1000) are chosen to clear the threshold
+// with room to spare so this test isolates the ordering comparison itself, not the threshold.
+test("selects by NUMERIC epoch, not lexicographic string order -- session-1000.log (numerically newer) beats session-999.log", () => {
+  const launchEpochMs = 1_000_000; // seconds: 1000; threshold = 1000 - 5 = 995 -- both 999 and 1000 clear it
+  const dirListing = [
+    { name: "session-999.log", mtimeMs: null },
+    { name: "session-1000.log", mtimeMs: null },
+  ];
+  assert.equal(newestSessionLogSinceLaunch(dirListing, launchEpochMs), "session-1000.log");
+  // Order-independence: the same result regardless of which entry appears first in the listing.
+  assert.equal(newestSessionLogSinceLaunch([...dirListing].reverse(), launchEpochMs), "session-1000.log");
 });
 
-test('a resolved (truthy) path -- the log was read and genuinely lacks the line -- selects "pool-poll instrument emitted nothing"', () => {
-  assert.equal(
-    poolPollPreflightInvalidationReason("C:\\Users\\x\\AppData\\Local\\dev.spatialide.shell\\logs\\session-1788757855.log"),
-    "pool-poll instrument emitted nothing"
-  );
+// Reviewer fix batch SHOULD-FIX 6 (on ffb688f): the real regression shape PASS-PREREGISTRATION.md
+// Amendment 2's own attempt 1 hit, reproduced structurally -- a STALE, old-epoch file (a prior
+// launch's own session log) sitting beside the CORRECT, newer-epoch file this launch created, with
+// the stale file carrying the NEWEST filesystem mtime of the two (exactly the kind of mtime this
+// module's own `mtimeMs` field could tempt a caller to sort by, and exactly why selection never
+// does). Epoch alone must win.
+test("regression shape (Amendment 2's own real bug): a stale OLD-epoch file with the NEWEST mtime, beside the correct NEWER-epoch file with an OLDER mtime -- selection follows epoch, never mtime", () => {
+  const launchEpochMs = 1_788_757_855_000; // this run's own launch instant
+  const dirListing = [
+    { name: "session-1754857478.log", mtimeMs: 9_999_999_999_999 }, // a month-old prior launch, newest mtime
+    { name: "session-1788757900.log", mtimeMs: 1 }, // this launch's own file, oldest mtime
+  ];
+  assert.equal(newestSessionLogSinceLaunch(dirListing, launchEpochMs), "session-1788757900.log");
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- sessionLogThresholdSeconds (reviewer fix batch SHOULD-FIX 3, on ffb688f: the extracted threshold arithmetic)"
+);
+
+test("SESSION_LOG_LAUNCH_TOLERANCE_SECONDS is 5, and sessionLogThresholdSeconds matches newestSessionLogSinceLaunch's own tolerance edge", () => {
+  assert.equal(SESSION_LOG_LAUNCH_TOLERANCE_SECONDS, 5);
+  assert.equal(sessionLogThresholdSeconds(1_788_757_855_000), 1_788_757_850);
+});
+
+test("floors sub-second launchEpochMs before subtracting the tolerance", () => {
+  assert.equal(sessionLogThresholdSeconds(1_788_757_855_999), 1_788_757_850);
+});
+
+test("throws on a non-finite launchEpochMs rather than silently producing garbage", () => {
+  assert.throws(() => sessionLogThresholdSeconds(NaN));
+  assert.throws(() => sessionLogThresholdSeconds(undefined));
+  assert.throws(() => sessionLogThresholdSeconds(Infinity));
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- sessionLogCandidates (reviewer fix batch SHOULD-FIX 3/7, on ffb688f: diagnostic candidate list, mtime recorded as evidence)"
+);
+
+test("returns every session-<digits>.log-shaped entry with its own mtimeMs, regardless of the launch threshold", () => {
+  const dirListing = [
+    { name: "session-1754857478.log", mtimeMs: 9_999_999_999_999 },
+    { name: "session-1788757900.log", mtimeMs: 1 },
+    { name: "app.log", mtimeMs: 123 },
+    { name: "session-1788757900.log.bak", mtimeMs: 456 },
+  ];
+  assert.deepEqual(sessionLogCandidates(dirListing), [
+    { name: "session-1754857478.log", mtimeMs: 9_999_999_999_999 },
+    { name: "session-1788757900.log", mtimeMs: 1 },
+  ]);
+});
+
+test("an empty or entirely non-matching listing returns an empty array, never null or a throw", () => {
+  assert.deepEqual(sessionLogCandidates([]), []);
+  assert.deepEqual(sessionLogCandidates([{ name: "app.log", mtimeMs: 1 }]), []);
+});
+
+test("a missing mtimeMs on an entry is normalized to null, never undefined", () => {
+  assert.deepEqual(sessionLogCandidates([{ name: "session-1.log" }]), [{ name: "session-1.log", mtimeMs: null }]);
+});
+
+test("throws on a non-array dirListing rather than silently producing garbage", () => {
+  assert.throws(() => sessionLogCandidates(null));
+  assert.throws(() => sessionLogCandidates(undefined));
+});
+
+console.log("");
+console.log(
+  "residencyTrace.mjs -- poolPollPreflightInvalidationReason (entry-40 pass, Amendment 2 item 3; reviewer fix batch MUST-FIX 2 on ffb688f corrected the contract to key on readSucceeded, not resolvedPath)"
+);
+
+test('a falsy readSucceeded -- the check itself never ran -- selects "pool-poll pre-flight could not be evaluated"', () => {
+  assert.equal(poolPollPreflightInvalidationReason(null), "pool-poll pre-flight could not be evaluated");
+  assert.equal(poolPollPreflightInvalidationReason(undefined), "pool-poll pre-flight could not be evaluated");
+  assert.equal(poolPollPreflightInvalidationReason(false), "pool-poll pre-flight could not be evaluated");
+});
+
+// MUST-FIX 2's own regression case: a path that DID resolve but whose read FAILED (permission
+// denied, deleted between resolution and read, ...) must select the same "could not be evaluated"
+// reason as an unresolved path -- never "emitted nothing", which the log's content was never
+// actually inspected to establish. Modeled here as `readSucceeded: false` regardless of any path
+// string existing elsewhere on the caller's side -- this function itself never sees the path at
+// all, only whether the read succeeded, which is exactly the fix (it used to be handed the path's
+// own truthiness instead).
+test('a resolved path whose readFileSync FAILED (readSucceeded: false) also selects "pool-poll pre-flight could not be evaluated", never "emitted nothing" (MUST-FIX 2)', () => {
+  const readSucceeded = false; // the caller's own try/catch never reached the success assignment
+  assert.equal(poolPollPreflightInvalidationReason(readSucceeded), "pool-poll pre-flight could not be evaluated");
+});
+
+test('a truthy readSucceeded -- the log was actually read and genuinely lacks the line -- selects "pool-poll instrument emitted nothing"', () => {
+  assert.equal(poolPollPreflightInvalidationReason(true), "pool-poll instrument emitted nothing");
 });
 
 test("the two reasons are never conflated -- distinct strings for the two distinct cases", () => {
-  assert.notEqual(poolPollPreflightInvalidationReason(null), poolPollPreflightInvalidationReason("/some/path"));
+  assert.notEqual(poolPollPreflightInvalidationReason(false), poolPollPreflightInvalidationReason(true));
 });
 
 console.log("");

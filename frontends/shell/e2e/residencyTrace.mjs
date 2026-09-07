@@ -122,6 +122,57 @@ export function lastSessionLogPathFromAppLog(appLogText) {
 }
 
 /**
+ * Entry-40 pass, reviewer fix batch SHOULD-FIX 3/7 (on ffb688f): the launch-tolerance window
+ * `newestSessionLogSinceLaunch`/`sessionLogThresholdSeconds` below apply, in seconds -- named here
+ * as its own constant (previously an inline literal `5`) so this file's own doc comments and
+ * `sessionLogThresholdSeconds` share one source rather than risking drift between them.
+ */
+export const SESSION_LOG_LAUNCH_TOLERANCE_SECONDS = 5;
+
+/**
+ * Entry-40 pass, reviewer fix batch SHOULD-FIX 3 (on ffb688f): `newestSessionLogSinceLaunch`'s own
+ * threshold arithmetic, extracted as its own pure function -- called both from inside that
+ * function (single source of truth) and directly by `residency-harness.mjs`'s own
+ * `resolveSessionLogPathFromAppLogDir`, so a pre-flight failure's own evidence can record the
+ * EXACT threshold a run computed (`cell.poolPollPreflight.thresholdSeconds`) without re-deriving
+ * it by hand from a raw `launchEpochMs` timestamp -- diagnosable from the evidence file alone,
+ * without another run.
+ */
+export function sessionLogThresholdSeconds(launchEpochMs) {
+  if (!Number.isFinite(launchEpochMs)) {
+    throw new Error("sessionLogThresholdSeconds: launchEpochMs must be a finite number");
+  }
+  return Math.floor(launchEpochMs / 1000) - SESSION_LOG_LAUNCH_TOLERANCE_SECONDS;
+}
+
+/**
+ * Entry-40 pass, reviewer fix batch SHOULD-FIX 3/7 (on ffb688f): every `session-<digits>.log`-
+ * shaped entry present in a directory listing (the SAME `{name, mtimeMs}` shape
+ * `newestSessionLogSinceLaunch` accepts), matched regardless of whether it clears the launch
+ * threshold -- diagnostic only, never itself a selection. `mtimeMs` is carried through unchanged
+ * (`null` if the entry did not carry one) -- SHOULD-FIX 7's own resolved choice: RECORD mtime as
+ * evidence rather than dropping the `statSync` call that produces it, since a stale file's own
+ * mtime (e.g. surprisingly recent, or surprisingly old relative to its embedded epoch) is exactly
+ * the kind of fact that makes a false invalidation diagnosable without a second run; selection
+ * itself (`newestSessionLogSinceLaunch` above) still never reads it. Used by
+ * `residency-harness.mjs`'s own `resolveSessionLogPathFromAppLogDir` to populate
+ * `cell.poolPollPreflight`'s own candidate list.
+ */
+export function sessionLogCandidates(dirListing) {
+  if (!Array.isArray(dirListing)) {
+    throw new Error("sessionLogCandidates: dirListing must be an array");
+  }
+  const out = [];
+  for (const entry of dirListing) {
+    if (!entry || typeof entry.name !== "string") continue;
+    if (/^session-\d+\.log$/.test(entry.name)) {
+      out.push({ name: entry.name, mtimeMs: entry.mtimeMs ?? null });
+    }
+  }
+  return out;
+}
+
+/**
  * Entry-40 pass (spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md Amendment 2,
  * paraphrased here, not quoted, per this file's own established discipline above -- that document
  * is outside this file's own citation-integrity scan): Amendment 2's own finding was that
@@ -135,28 +186,29 @@ export function lastSessionLogPathFromAppLog(appLogText) {
  *
  * `dirListing` is shaped like `fs.readdirSync` + `fs.statSync` results, `{name, mtimeMs}` per
  * entry -- `mtimeMs` is accepted for shape compatibility with a real listing but not itself
- * consulted: `state.rs`'s own `SessionLog::open` names every file `session-<unix-seconds>.log`,
- * the epoch embedded in the NAME itself, so selection is fully deterministic from the name alone
- * (no filesystem clock-granularity dependency an `mtimeMs`-based ordering would carry). Among the
- * files that qualify, the newest is the one with the highest embedded epoch.
+ * consulted here (see `sessionLogCandidates` above for where a caller's own `mtimeMs` DOES get
+ * surfaced, as diagnostic evidence rather than a selection input): `state.rs`'s own
+ * `SessionLog::open` names every file `session-<unix-seconds>.log`, the epoch embedded in the NAME
+ * itself, so selection is fully deterministic from the name alone (no filesystem
+ * clock-granularity dependency an `mtimeMs`-based ordering would carry -- a real regression shape
+ * this file's own test suite pins: a stale file can carry the NEWEST `mtimeMs` in a directory
+ * while still being the WRONG file by epoch). Among the files that qualify, the newest is the one
+ * with the highest embedded epoch, compared NUMERICALLY (`Number(match[1])`), never as strings --
+ * a lexicographic comparison would rank `"999"` above `"1000"`, this file's own test suite also
+ * pins.
  *
  * A file qualifies iff its name matches `session-<digits>.log` exactly (any other name is
  * silently ignored -- never a thrown error, since an unrelated file sitting in the same directory
  * is an ordinary, expected case, not a harness defect) AND its embedded epoch (seconds) is
- * `>= floor(launchEpochMs / 1000) - 5`, a 5-second tolerance for clock granularity between this
- * harness's own `Date.now()` millisecond clock and `SystemTime::now()`'s own second-truncated
- * stamp. Returns the path-less `name` of the newest qualifying file, or `null` if none qualifies
- * (an empty or entirely non-matching listing, or every candidate's epoch below the threshold) --
- * never a guessed name.
+ * `>= sessionLogThresholdSeconds(launchEpochMs)` (above). Returns the path-less `name` of the
+ * newest qualifying file, or `null` if none qualifies (an empty or entirely non-matching listing,
+ * or every candidate's epoch below the threshold) -- never a guessed name.
  */
 export function newestSessionLogSinceLaunch(dirListing, launchEpochMs) {
   if (!Array.isArray(dirListing)) {
     throw new Error("newestSessionLogSinceLaunch: dirListing must be an array");
   }
-  if (!Number.isFinite(launchEpochMs)) {
-    throw new Error("newestSessionLogSinceLaunch: launchEpochMs must be a finite number");
-  }
-  const thresholdSeconds = Math.floor(launchEpochMs / 1000) - 5;
+  const thresholdSeconds = sessionLogThresholdSeconds(launchEpochMs); // also validates launchEpochMs
   let newestName = null;
   let newestEpoch = -Infinity;
   for (const entry of dirListing) {
@@ -178,14 +230,25 @@ export function newestSessionLogSinceLaunch(dirListing, launchEpochMs) {
  * 3 of the fix piece that added this function, paraphrased, not quoted, per this file's own
  * established discipline above): the `--require-pool-poll` pre-flight's own reason selection,
  * extracted as a pure function so it is directly testable without a harness or a page.
- * `resolvedPath` truthy (the session log path resolved, at least by pre-flight time) means the log
- * WAS read and genuinely lacks a `producer-pool-poll` line -- `"pool-poll instrument emitted
- * nothing"`. `resolvedPath` falsy means the check itself never got to run at all -- a DISTINCT
- * reason, `"pool-poll pre-flight could not be evaluated"`, never conflated with the first (a claim
- * the instrument "emitted nothing" would not be true if the log was never even found).
+ *
+ * **Reviewer fix batch MUST-FIX 2 (on ffb688f) corrected this function's own contract.** The
+ * caller must pass `readSucceeded`, truthy iff the session log at the resolved path was ACTUALLY
+ * READ (the caller's own `readFileSync` call returned, however its content later scored) -- NOT
+ * merely whether a path resolved. A resolved-but-UNREADABLE path (permission denied, deleted
+ * between resolution and read, ...) must pass `false` here: the log's content was never actually
+ * inspected, so a claim that the instrument "emitted nothing" would not be true. (The prior
+ * version of this function keyed this selection on path-resolvedness alone, via a caller that
+ * passed `resolvedPath` straight through -- an unreadable-but-resolved path was therefore
+ * misreported as "emitted nothing", a fact never established; ffb688f's own review caught this.)
+ *
+ * `readSucceeded` truthy selects `"pool-poll instrument emitted nothing"` (the log WAS read and
+ * genuinely lacks a `producer-pool-poll` line). `readSucceeded` falsy selects the DISTINCT
+ * `"pool-poll pre-flight could not be evaluated"` (the check itself never got to run at all, for
+ * ANY reason -- an unresolved path or a resolved-but-unreadable file alike) -- never conflated
+ * with the first.
  */
-export function poolPollPreflightInvalidationReason(resolvedPath) {
-  return resolvedPath ? "pool-poll instrument emitted nothing" : "pool-poll pre-flight could not be evaluated";
+export function poolPollPreflightInvalidationReason(readSucceeded) {
+  return readSucceeded ? "pool-poll instrument emitted nothing" : "pool-poll pre-flight could not be evaluated";
 }
 
 /**
