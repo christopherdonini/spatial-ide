@@ -1581,7 +1581,6 @@ dependencies = [
  "arrow",
  "duckdb",
  "parquet",
- "serde",
  "serde_json",
  "sha2",
  "spatial-engine",

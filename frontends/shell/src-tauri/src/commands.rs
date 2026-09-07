@@ -158,7 +158,9 @@ pub fn binding_log_session_event(state: State<'_, SessionLog>, level: String, me
 }
 
 /// One entry of the pinned, in-tree CRS definition catalog (ADR-026 decision 1(a)), as handed to
-/// the shell for display. Mirrors `spatial_engine::crs_catalog::CatalogEntry` field-for-field.
+/// the shell for display. Mirrors the operator-facing fields of
+/// `spatial_engine::crs_catalog::CatalogEntry`; `attribution` (entry 51) is deliberately not
+/// surfaced here yet — a follow-up piece, not this one.
 #[derive(serde::Serialize)]
 pub struct CrsCatalogEntry {
     pub id: String,

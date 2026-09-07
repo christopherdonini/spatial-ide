@@ -127,7 +127,7 @@ used under the EPSG Terms of Use: <https://epsg.org/terms-of-use.html>.
 
 This acknowledges IOGP's ownership of that dataset, and informs anyone reading this file — as a
 repository reader or as the recipient of a published bundle whose `viewer/NOTICE.txt` repeats
-this same acknowledgement (`renderer/bundle-viewer/build.mjs`'s `notice()`) — of those Terms of
+this same acknowledgement (`renderer/bundle-viewer/notice.mjs`'s `notice()`) — of those Terms of
 Use, per the terms' own "Ownership… must be acknowledged in any publication or transmission…" and
 "You are obliged to inform anyone… of these Terms of Use" clauses (quoted verbatim in
 `DEPENDENCY-LICENSES.md`).

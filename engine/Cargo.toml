@@ -30,12 +30,6 @@ arrow = { workspace = true }
 # the property, not the red build. `json = ["bundled"]`: no new crate in the tree, only more of
 # DuckDB's own vendored sources.
 duckdb = { version = "1.10505.0", features = ["bundled", "parquet", "json"] }
-# Only for the catalog's `attribution` sub-object (entry 51) -- already a vetted, workspace-wide
-# dependency (`protocol/skp`, `protocol/transport-bakeoff` both use `derive`; DEPENDENCY-LICENSES.md
-# lists `serde`/`serde_derive`/`serde_core` as recognised, MIT OR Apache-2.0). The rest of this
-# crate's catalog parsing stays manual `serde_json::Value` field reads (see `field_str` in
-# `crs_catalog.rs`), unchanged.
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # Content-addressed identity for derived artifacts (docs/02, docs/05): a spatial index is keyed by
 # the content hash of what it was built from, never by a filename.

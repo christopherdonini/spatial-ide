@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! The pinned CRS definition catalog (**ADR-026**, Proposed, decision 1(a)): a small, in-tree,
+//! The pinned CRS definition catalog (**ADR-026**, Accepted, decision 1(a)): a small, in-tree,
 //! plain-text, content-hashed set of full PROJJSON definitions an operator may choose from when
 //! asserting a CRS for a file that declares none (see [`crate::crs::CrsAssertion`]).
 //!
@@ -22,7 +22,6 @@
 
 use std::sync::OnceLock;
 
-use serde::Deserialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
@@ -36,11 +35,10 @@ const CATALOG_JSON: &str = include_str!("crs-catalog.json");
 /// `engine/tests/data/epsg2056.projjson` and must not change; the acknowledgement a source's terms
 /// require is data about the entry, not part of what the parser reads as a CRS definition).
 ///
-/// Deserialized from the catalog JSON's `attribution` object via `serde` (the crate's only use of
-/// `serde::Deserialize` derive — every other field here stays the file's existing manual
-/// `serde_json::Value` reads, unchanged, since a compiled-in constant's parse failure is a
-/// build-time defect either way; see `field_str`'s own doc comment).
-#[derive(Debug, Clone, Deserialize)]
+/// Read from the catalog JSON's `attribution` object with the same manual `field_str` reads
+/// every other field here uses (a compiled-in constant's parse failure is a build-time defect,
+/// not a runtime refusal; see `field_str`'s own doc comment) — no `serde::Deserialize` derive.
+#[derive(Debug, Clone)]
 pub struct Attribution {
     /// Acknowledgement of the source dataset's ownership, e.g.
     /// `"EPSG Geodetic Parameter Dataset, © IOGP"` — the EPSG Dataset Terms of Use's
@@ -127,16 +125,13 @@ fn parse_catalog() -> Vec<CatalogEntry> {
             let name = field_str(entry, "name", i).to_string();
             let definition = field_str(entry, "definition", i).to_string();
             let hash = sha256_hex(&definition);
-            // `#[serde(default)]`-equivalent: an entry with no `attribution` key parses to `None`
-            // rather than failing — `CatalogEntry` itself stays manually field-read (not a whole
-            // -struct `Deserialize`), so the "default when absent" behavior is this `Option::map`
-            // over the optional JSON key rather than a literal `#[serde(default)]` attribute.
-            let attribution = entry.get("attribution").map(|v| {
-                serde_json::from_value::<Attribution>(v.clone()).unwrap_or_else(|e| {
-                    panic!(
-                        "engine/src/crs-catalog.json: entry {i} has an invalid `attribution`: {e}"
-                    )
-                })
+            // An entry with no `attribution` key parses to `None` rather than failing; when the
+            // key is present, every one of its three fields is required (`field_str` panics on a
+            // missing/non-string field, same build-time-defect posture as every field above).
+            let attribution = entry.get("attribution").map(|v| Attribution {
+                source: field_str(v, "source", i).to_string(),
+                terms_url: field_str(v, "terms_url", i).to_string(),
+                verified: field_str(v, "verified", i).to_string(),
             });
             CatalogEntry { id, authority, code, name, definition, hash, attribution }
         })

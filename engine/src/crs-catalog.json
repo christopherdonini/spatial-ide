@@ -8,7 +8,7 @@
     "attribution": {
       "source": "EPSG Geodetic Parameter Dataset, © IOGP",
       "terms_url": "https://epsg.org/terms-of-use.html",
-      "verified": "parameter values numerically equivalent to EPSG dataset v12.013 (PROJ 9.6.2 rendering), 2026-09-07; parameter names for codes 8813/8815 are EPSG's earlier names for the same codes"
+      "verified": "parameter values numerically equivalent to EPSG dataset v12.013 (PROJ 9.6.2 rendering), 2026-09-07; v12.013 carries later names for 8813/8815, the shipped definition carries the earlier ones"
     }
   }
 ]
