@@ -26,7 +26,14 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     `attribution` field cannot move it; the (1)+(2) piece adds the field beside the definition,
     leaves the definition bytes and the fixture untouched, and the pinned test proves the hash is
     unchanged. The "conscious hash update" the ruling rode on (2) is therefore not needed — reported
-    here rather than left implied. Original entry follows.]**
+    here rather than left implied. **Rule 7 reached on the (1)+(2) piece (2026-09-07):** gate 1
+    FAIL (an unnecessary `serde` edge — removed, lockfile back to parent; four should-fixes) → fix
+    batch `d23f968` → gate 2 FAIL on ONE mechanical item: three line cites in the licensing record
+    went stale when the serde removal shortened `crs_catalog.rs` (:44→:42, :79→:77, :253→:248);
+    everything else affirmative (verbatim extraction, byte-identical NOTICE, tests bite, claims
+    record-exact, suites green). The custodian swept the three numbers and the one nit (docs only,
+    mechanically re-verified) and opened the PR; **a third reviewer pass is not dispatched without
+    your word** — authorize it, or accept the sweep at the click. Original entry follows.]**
     **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
     section, 2026-09-07): two obligations are open and one verification is owed before the shipped
     EPSG:2056 definition is attributed to EPSG — all three need code or a registry comparison, so
