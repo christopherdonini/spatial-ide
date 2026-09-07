@@ -585,3 +585,88 @@ dated status correction. Reopen condition (ADR-025): when a second reader exists
 
 Gates: items 2/3/3e as one reviewer-gated piece (architect re-check on the docs/09 sentence and the
 ADR-027 command-tax claim), then PR; Part M after merge on the built artifact.
+
+---
+
+## Amendment 4 — item 1 reaches rule 7 (two failed gates); the origin-selector DESIGN goes to the human (2026-09-07, appended)
+
+**Where item 1 stands.** `cut/release-adr020-origin` @ `5d22d7a`. Gate 1 (architect re-check + reviewer, on
+`df0650f`): FAIL — the amendment's `pool_poll` sentence false; the refusal an unlogged panic; the drift
+check foolable by a comment; no runtime execution. Fix batch `5d22d7a`: the runtime step **found that
+`df0650f` refused to start in every mode** (`WebviewWindow::url()` is `about:blank` at the `setup()`
+read; a sleep-only retry cannot fix it — WebView2 delivers navigation completion only via posted Win32
+messages, `webview2-com` 0.38.2's own doc) and remedied it with a **Win32 message pump** inside `setup()`
+(retry 250×20 ms), adding `windows` 0.61.3 as a direct target dependency and the crate's only `unsafe`.
+Re-reviews: the reviewer FAILS on one mechanical cite (`lib.rs:314` → `:421-422`) with everything
+substantive verified against persisted session logs (§(f)'s three observations, the drift mutation, the
+refusal path, 33/33, 9/9); the architect FAILS on design and text. Two failed gates → **rule 7: stop;
+no third pass without the human's word.**
+
+**The architect's findings on the pump, verified on tao 0.35.3 / tauri-runtime-wry 2.11.4 / wry 0.55.1
+/ webview2-com 0.38.2 (Amendment-4 record, not paraphrase of a belief):**
+- tao is built to tolerate a nested Win32 loop inside its own handler: `runner.rs:208-228` `send_event`
+  buffers when the handler is taken (re-entrant — `setup()` runs inside it, `app.rs:1422-1426`); the two
+  `WM_PAINT` bypasses carry their own guards (`event_loop.rs:1087-1091`, `:2331-2341`). **No tao/tauri
+  window event reaches the handler during the pump.**
+- **WebView2 COM callbacks are NOT behind that guard**: wry's IPC (`add_WebMessageReceived`,
+  `wry/src/webview2/mod.rs:877-891`) → `tauri-runtime-wry` `create_ipc_handler` (`:5385-5395`) → tauri
+  `ipc::protocol::message_handler` — delivered by `PostMessage`, i.e. the queue the pump drains. **Page
+  script CAN dispatch a command before `setup()` returns and before `app.manage(...)`.** Bound: every
+  `State<'_, T>` command fails cleanly (`state.rs:60-69`, `InvokeError`, no bypass); two commands take no
+  managed state and WOULD run — `binding_crs_catalog()` (pure) and **`binding_pick_file(app)`
+  (`commands.rs:206`): a native OS file picker before the app has finished starting** — an ADR-006
+  external-effect-class action reachable in the window. Not new capability (`serve()` has not run; no
+  token/endpoint exists), and the page able to do it is the host-configured page, which ADR-020's
+  Consequences already class as whole-shell compromise — but the amendment's condition-1 argument
+  (*"the ONLY navigation ever issued to this webview before this read is the single, host-configured
+  one"*) was airtight BECAUSE nothing pumped; with a 5 s pump it is a **timing** property written as a
+  **structural** one. `lib.rs:206-214` ("regardless of what the message loop pumps during webview
+  construction") is false as written (the pump is after construction, in a loop); `lib.rs:141-145`
+  contradicts itself in one paragraph.
+- Condition 4: `refuse_to_start` calls `blocking_show()` on the MAIN thread — `tauri-plugin-dialog`
+  2.7.2 says it *"should NOT be used when running on the main thread context"* / *"will freeze your
+  application"*; it works only because `tauri-runtime-wry` services a main-thread call inline
+  (`:239-248`) — an undocumented reliance; **no packaged refusal has been observed** (the observed one
+  was under `tauri dev`). Log-first ordering is correct and survives regardless.
+- Reviewer's own additions: the pump **swallows `WM_QUIT`** (PeekMessage PM_REMOVE + unconditional
+  Dispatch — closing the window during the ≤5 s startup is ignored); the non-Windows fallback is
+  sleep-only, which §(f) proved cannot work (fail-closed refusal, correct direction, unstated); the
+  `SessionLog::open` failure still panics invisibly in release; the retry loop is untested.
+
+**The alternative, (B), verified on the sources:** `frontends/shell/src-tauri/build.rs:5` calls
+`tauri_build::build()`; `tauri-build 2.6.3` `is_dev()` = `DEP_TAURI_DEV == "true"` (`:425-429`),
+`cfg_alias("dev", …)` (`:519`) → the shell crate gets `cfg(dev)`; `tauri 2.11.5/build.rs:255-261`: `let
+dev = !has_feature("custom-protocol"); alias("dev", dev); println!("cargo:dev={dev}")` — **one
+emission, two consumers**: tauri's own `#[cfg(dev)]` in `manager::get_app_url` (`manager/mod.rs:353-367`:
+dev → `config.build.dev_url`; production → `frontend_dist` if a URL, else `tauri_protocol_url` — `http(s)://
+tauri.localhost` on Windows/Android, `tauri://localhost` elsewhere, `https` per the window's
+`useHttpsScheme`) and the shell's `cfg(dev)`/`tauri::is_dev()` (`lib.rs:308-310`, public) are the same bit
+by construction. This repo's own build outputs show the bit: `target/release/build/tauri-*/output` has
+`rustc-cfg=custom_protocol` and the shell's release build has NO `rustc-cfg=dev`; the debug builds have
+`rustc-cfg=dev`. The CLI changelog (PR #8937): *"To check if running on production, use
+`#[cfg(not(dev))]`."* **Consequence: the mirror cannot disagree with Tauri's choice however `tauri build
+--debug` falls** — exactly what `cfg!(debug_assertions)` lacked (a profile fact standing in for Tauri's
+fact). Costs: it re-implements `pub(crate)` upstream logic (four branches + `use_https_scheme` +
+`PROXY_DEV_SERVER`) with no compile-time link — silent drift on a tauri minor, failing by 403ing every
+upgrade; and it **reintroduces the compile-time-selector class Amendment 1 §(e)'s reopen condition
+names** (so §(e) must be amended by appended note if (B) is chosen). Correction to a fact the custodian
+sent the architect: `manager/mod.rs:787`/`:795` are tauri's own test assertions, not the resolution path
+(`:353-367` is) — not to be cited.
+
+**The architect's ranking (verbatim in substance):** adopt (B) **if and only if** paired with a Part M
+assertion on the item-3 artifact that the pinned origin equals the webview's actual `url()` origin
+under each of `tauri dev`, `tauri build --debug`, `tauri build` — with that check (B) strictly dominates
+(deletes the IPC window, the dependency, the `unsafe`, the platform fork, up to 5 s of startup); without
+it, (B) trades a disclosed runtime hazard for an undisclosed compile-time modelling risk. Third option,
+ranked below (B)+test and above the pump as shipped: keep the runtime read with the config-derived value
+as the loop's termination predicate (fixes the stopping condition; keeps the pump and its hazards).
+
+**Red line regardless of design:** `windows` 0.61.3 is a new direct edge that CHANGES `Cargo.lock` (one
+line; `Cargo.lock:3965`) — unlike the tokio/macros precedent, whose justification was a byte-identical
+lock. Not named in item 1's preregistration → the human's word. Design (B) removes the need.
+
+**Queued as DECISIONS-PENDING entry 55** with the architect's ADR skeleton (a deliberately-open decision
+of the ADR-023 pattern) for the human to accept, reject, or fold into ADR-020 Amendment 1. Nothing on
+item 1 moves until the word. Text corrections owed under EITHER design before merge (the amendment is
+append-only after): the reviewer's M-1 cite; §(f) "byte-identical" → "identical body"; §(e) line span;
+§(d) `commands.rs:400-402`; the two false `lib.rs` sentences; the `blocking_show` reliance stated.

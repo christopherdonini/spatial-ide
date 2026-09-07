@@ -5,6 +5,39 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+55. **[Release cut item 1 (ADR-020) — RULE 7 REACHED after two failed gates; the origin-selector DESIGN
+    is your decision, and a dependency edge needs your word regardless.]** Full account:
+    `RELEASE-0.1.md` Amendment 4. The short form: the piece as shipped (`5d22d7a`) derives the origin
+    from the webview's actual URL at startup, but the URL is `about:blank` at that instant, so it
+    **pumps Win32 messages in `setup()` for up to 5 s** until a host appears — adding `windows` 0.61.3
+    as a direct dependency (changes `Cargo.lock`) and the crate's only `unsafe`. The architect verified
+    on the sources that tao buffers its own events under that re-entry, but **WebView2's IPC callbacks
+    are not behind the guard: page script can dispatch a command before `setup()` returns** — every
+    state-taking command fails cleanly, but `binding_pick_file` (a native file picker) is reachable
+    with no managed state. Not new capability; but the amendment's "only the host-configured navigation
+    precedes the read" is now a timing claim, not a structural one. The pump also swallows `WM_QUIT`,
+    the non-Windows fallback is a sleep-only path already proven not to work, and the refusal dialog
+    relies on an undocumented main-thread inline dispatch — no packaged refusal has been observed.
+    **The alternative (B), verified:** Tauri's own origin choice is `#[cfg(dev)]` from ONE `cargo:dev=`
+    emission that the shell crate also receives (`tauri::is_dev()` is public), so `if tauri::is_dev()
+    { origin_of(config.build.dev_url) } else { tauri_protocol_origin }` mirrors Tauri exactly and
+    cannot disagree however `tauri build --debug` falls — no runtime read, no pump, no dependency, no
+    `unsafe`, platform-uniform, zero startup cost; its cost is re-implementing `pub(crate)` upstream
+    logic (silent drift on a tauri minor, failing loudly by 403) and reintroducing the compile-time-
+    selector class Amendment 1 §(e) names. **Architect's ranking:** (B) **if and only if** paired with a
+    Part M assertion on the packaged artifact that the pinned origin equals the webview's actual
+    `url()` origin under `tauri dev`, `tauri build --debug` and `tauri build` — then it strictly
+    dominates; a third option (config-derived value as the pump's termination predicate) ranks
+    between. **Options:** (a) keep the pump: accept the `windows` edge + `unsafe`, fix the six text
+    items and the `WM_QUIT` swallow, record the IPC window with `binding_pick_file` named, owe a
+    non-Windows equivalent before the macOS/Linux gates; (b) switch to the config mirror + the Part M
+    equivalence assertion, amend §(e) by appended note, drop the dependency — a design change, a fresh
+    preregistration amendment, one more worker pass and gate on your authorization; (c) the hybrid.
+    **Recommendation: (b).** Also yours: whether the decision is recorded as ADR-020 Amendment 1's
+    content or as a new deliberately-open ADR (the architect drafted a skeleton, in Amendment 4).
+    Touches: `lib.rs`, `origin.rs`, `Cargo.toml`/`Cargo.lock` (removal), ADR-020 Amendment 1 text,
+    Part M step list.
+
 **RULED 2026-09-07 — entries 52, 53, 54 together, the human verbatim:** *"52 = (a): flip the default to
 candidate; arm switch stays dev-gated for the harness; the piece audits and re-aims/arm-pins every
 test encoding the refusal contract (Part D banner, OVERCEIL′); Part M on the flipped build. 53 = run
