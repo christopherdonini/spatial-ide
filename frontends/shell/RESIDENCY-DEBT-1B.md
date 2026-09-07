@@ -291,3 +291,146 @@ centre" said when it is true); ADR-028 Amendment 3's text (the reopen record, wh
 its clause 5, the gate-8 re-measure stance: the ruling stands on its own commits, no re-measure
 owed now, a future cross-commit arm comparison must declare the eviction-policy change);
 the declared absorbing state, acknowledged; then the L2-L9 re-run under a verified arm.
+
+### Sub-amendment — the untiled first look is eviction-protected while in view (entry 48 (a), 2026-09-07, appended BEFORE any code)
+
+**What fires this.** DECISIONS-PENDING entry 48, ruled by the human 2026-09-07 (verbatim there):
+hold 1b; *"protect the untiled first look while its extent intersects the viewport; reuses F1's
+geometric protection, one unit test"*; reviewer-gated; then the human re-runs only the zoom-out
+steps; then L9 closes the cut. Evidence: the live probe's single eviction (t = 43.5 s) — an 8-row
+admission into `18:12` evicted `["initial-untiled-look"]`, resident 19,090 → 9,090 — is the
+"already rendered content disappears" of the post-fix L9.
+
+**Design — two channels, deliberately NOT one.** `INITIAL_TILE_KEY` (`tileGridConstants.ts`) is
+the key `TileResidentSet` holds the first look under; it is not a grid key, so F1's geometric
+covering set never contains it and `planTileEviction` may evict it. The piece:
+1. **Eviction protection (the fix).** While the first look's union extent
+   (`candidateArmSession.ts`'s `latestUnionedExtent`, the same value `establishFrameFromExtent`
+   consumed) intersects the current viewport bbox (plain AABB overlap; a touching edge counts),
+   `INITIAL_TILE_KEY` is added to the protected set `planTileEviction` receives — via
+   `applyTileViewportContext`'s protected-keys input, alongside the geometric covering keys — so
+   the cascade backstop (`tileResidentSet.ts` ~:335-341) and the admission-path plan
+   (`tileIngest.ts` ~:120-126) both honor it. When the extent no longer intersects the bbox
+   (the operator has panned/zoomed away from it), the first look is evictable exactly as today.
+2. **NOT in completeness, NOT in `fits`.** `INITIAL_TILE_KEY` must NOT enter `lastCoveringTileKeys`
+   (`isFillComplete`'s per-tile loop) and must NOT be read by `anyPartialAmongCovering`
+   (`WorkingCanvas.tsx` `applyTileViewportContext`'s `fits` recomputation). Reason, code-grounded:
+   the first look is durably partial whenever it was truncated by `UNTILED_FIRST_LOOK_ROW_LIMIT`
+   (P6b item 2b), so if it counted toward `fits`, every fit view containing it would latch
+   over-budget at plan time, `drainQueueIfRoom` would refuse, and L5's own fill would stop after
+   three tiles — a regression of the very step the human just passed. The completeness claim's
+   honesty is already carried by `lastCoveringTruncated` and the grid tiles' own completeness.
+   Implementation shape: `applyTileViewportContext(covering, viewCentre, extraProtectedKeys)` (or
+   an equivalent named field) that unions `extraProtectedKeys` into `currentViewportTileKeysRef`'s
+   PROTECTION read only — `anyPartialAmongCovering` iterates `covering` alone. If the canvas API
+   cannot separate the two reads without a second ref, add the second ref; never fold the pseudo-key
+   into `covering`.
+3. **Lifecycle.** `reissueUnrestricted` (a filter generation) already clears the first look with
+   `clearAllTiles`; the protection needs no separate reset. A first look that was self-cancelled
+   (entry 35's frame-exists cancel) keeps whatever it admitted and is protected the same way —
+   protection is about what is resident and in view, not about how the stream ended.
+
+**Declared consequence (named, not discovered).** At an over-budget overview with the first look
+protected and in view, `planTileEviction` may find nothing evictable: the batch is trimmed to the
+remaining budget (possibly to zero rows), the tile is marked partial, over-budget latches — the
+same declared absorbing state the close-out piece named, now with the first look STANDING instead
+of vanishing. The overview therefore reads as "the first look plus whatever tiles fit", declared by
+the over-budget sentence and its paused/finished suffix. This is the honest v0.1 limitation the
+human's LOD ruling accepts (flip-first; LOD is the first post-flip quality cut); no perf claim
+attaches in either direction.
+
+**Pre-committed tests.**
+1. `tileResidentSet.test.ts` — `planTileEviction` with `INITIAL_TILE_KEY` resident (high vertex
+   count) and present in the protected set, plus one evictable grid tile: the plan evicts the grid
+   tile, never `INITIAL_TILE_KEY`; with ONLY the first look resident and protected: `evict: []`,
+   `overBudget: true`.
+2. `candidateArmSession.test.ts` — THE ENTRY-48 PIN: after a plan whose bbox intersects the first
+   look's union extent, the protected keys handed to the canvas CONTAIN `INITIAL_TILE_KEY`; after
+   a plan whose bbox does not intersect it, they do NOT; and in both cases `lastCoveringTileKeys`
+   does NOT contain it (channel 2).
+3. `candidateArmSession.test.ts` — the fit-view non-regression: a truncated (partial) first look in
+   view with a within-budget covering set still plans and drains tiles (no over-budget latch from
+   the first look's partiality) — pins channel 2's `fits` exclusion.
+4. Felt: the human's zoom-out-only re-run — already-rendered content does not disappear on zoom-out;
+   the over-budget sentence appears; then L9.
+
+**Scope fence.** Client-side only, ADR-006 class 1; no wire change; ADR-010 rule 5 untouched
+(nothing becomes silent); no perf claim; entry 47 stays next-cut; LOD untouched (ruled flip-first).
+
+### Sub-amendment, third attempt — protection derived from the batches admitted under `INITIAL_TILE_KEY`, never from a terminal-time snapshot (entry 48 (a), 2026-09-07, appended BEFORE any code; the FINAL attempt, pre-declared)
+
+**Authorization, the human verbatim (DECISIONS-PENDING entry 48, 2026-09-07):** *"third attempt
+AUTHORIZED, with three conditions. (1) The dated prereg amendment first, as you say it needs. (2) The
+gate must include the two tests the prior gates lacked: a tile batch landing between rounds with the
+pan-away release asserted (M1's blind spot), and the operator-Cancel self-cancel repro plus the
+generation-2/reissue window (M2's). The design is right because it derives protection from the
+batches actually admitted under INITIAL_TILE_KEY rather than from any terminal-time snapshot — so
+the tests must attack exactly the paths where snapshots died. (3) Rule 7, pre-declared: this is the
+final attempt. If it fails its gate, 48 converts to named binding debt on the ADR-011 line, 1b
+closes without it, and my original close-ruling reason is recorded as overtaken by rule 7 — three
+failed attempts is the evidence that "small fix" was a misdiagnosis, and holding the cut hostage to
+it would repeat the sunk-cost shape I capped on entry 40."*
+
+**Why the two prior attempts died (the gates' own words, condensed).** Attempt 1 (`543a5f2`, M1):
+the predicate read `latestUnionedExtent`, the dataset-lifetime union every batch feeds
+(`candidateArmSession.ts` ~:1003; `tileIngest.ts` ~:158 unions unconditionally), so once any grid
+batch landed the first look was protected for the rest of the generation — release-on-pan-away
+never existed, and test 2 could not see it. Attempt 2 (`48c19ea`, M2): a snapshot written at the
+untiled stream's terminal, `wasCurrent`-gated — but `cancelUntiledStream` (~:1130-1137) clears
+`untiledStreamHandle` BEFORE `skpCancel`, so an operator-Cancel self-cancel arrives with
+`wasCurrent === false` and is never snapshotted (probe-proven); and in generation 2+ the grid frame
+survives `reissueUnrestricted`'s clear, so a tile batch can land before the new first look's
+terminal — a window with nothing snapshotted. Both deaths share one cause: protection was derived
+from an EVENT (a terminal) instead of from the STATE (what is resident under `INITIAL_TILE_KEY`).
+
+**Design (binding).**
+1. `TileBatchIngestOutcome` (`tileIngest.ts`) gains `batchExtent: AuthoritativeBbox | null` — the
+   extent of THIS batch's rows as actually admitted (post-trim; `null` when nothing was admitted),
+   computed where `:158` already calls `extentOfBatch` — no second decode. `fitAnchor` is unchanged.
+2. `candidateArmSession.ts` keeps ONE first-look extent field, `firstLookRunningExtent`
+   (`AuthoritativeBbox | null`), unioned per batch INSIDE the existing `tileKey === INITIAL_TILE_KEY`
+   branch of `ingestAndMaybeEstablishFrame` (~:1008) from `outcome.batchExtent` — grid batches
+   cannot reach it by construction. Reset to `null` at `reissueUnrestricted` beside
+   `latestUnionedExtent` (~:1475). The terminal-time snapshot `firstLookExtent` (~:402, the
+   `onTerminal` write ~:1229-1240) is REMOVED, not kept alongside.
+3. The eviction-protection predicate (~:1388-1389) reads `firstLookRunningExtent` only:
+   `INITIAL_TILE_KEY` is in `extraProtectedKeys` iff that extent is non-null AND intersects the
+   plan's bbox (`bboxesIntersect`, touching edge counts). Channel 2 (never in `covering`, never in
+   `fits`/`anyPartialAmongCovering`) is unchanged from the sub-amendment above.
+4. Consequences the design buys for free, to be asserted, not assumed: a self-cancelled first look is
+   protected by the batches it admitted before the cancel (no terminal involved); generation 2's
+   first look is protected from its FIRST admitted batch, before its terminal, with the old
+   generation's extent gone at the reset; a grid batch landing anywhere never widens it.
+
+**Pre-committed tests — the gate MUST see all of these green, and the first two are the human's
+named conditions:**
+- **T-A (M1's blind spot, pan-away release with a tile batch between rounds).** Round 1: first-look
+  batches admitted (extent E1); plan bbox ∩ E1 ≠ ∅ → `extraProtectedKeys` contains
+  `INITIAL_TILE_KEY`. Then a GRID tile batch lands with extent E2 disjoint from E1 (through the same
+  `ingestAndMaybeEstablishFrame` path, tile-keyed). Round 2: plan bbox ∩ E2 ≠ ∅, bbox ∩ E1 = ∅ →
+  `extraProtectedKeys` does NOT contain it. The test must FAIL against a predicate that reads
+  `latestUnionedExtent` (state that in its comment; verify by temporarily pointing the predicate
+  there — the worker reports the observed failure).
+- **T-B (M2's self-cancel repro).** First-look batches admitted (E1); the session's own
+  `cancelUntiledStream` path fires (via `relinquishFill`'s frame-exists cancel or `stop()`-free
+  equivalent the test can drive) BEFORE the untiled terminal; the terminal then arrives
+  self-cancelled (`wasCurrent === false` by the existing ordering, which this attempt does NOT
+  change); a plan with bbox ∩ E1 ≠ ∅ → protected. Must FAIL against `48c19ea`'s snapshot design
+  (worker verifies by observation, as above).
+- **T-C (M2's generation-2/reissue window).** After `reissueUnrestricted`: (i) a plan before any
+  new first-look batch → not protected (nothing resident under the key); (ii) a grid batch lands
+  while the new untiled stream is still running (frame persists); (iii) the new first look's FIRST
+  batch lands (extent E3) → a plan with bbox ∩ E3 ≠ ∅ is protected before any terminal; (iv) a plan
+  with bbox ∩ E1 ≠ ∅ but ∩ E3 = ∅ (the OLD generation's extent) → not protected.
+- **T-D (`tileIngest.test.ts`).** `batchExtent` equals the admitted rows' extent; `null` for a
+  batch admitting nothing (all duplicates, or trimmed to zero); `fitAnchor` unchanged.
+- The sub-amendment's tests 1–3 above stay green (test 2's `firstLookExtent` wording updated to the
+  running extent; its sensitisation — a tile batch between rounds — is now T-A's job and may be
+  merged into it rather than duplicated).
+
+**The cap (binding).** One worker pass, one reviewer gate, one fix batch at most, one affirmative
+re-review. If the gate's final verdict is not an affirmative PASS: no further attempt; entry 48
+converts to named binding debt on the ADR-011 line; 1b closes without it; the human's close ruling
+of 2026-09-07 ("hold 1b — do the entry-48 (a) piece first") is recorded as overtaken by rule 7, in
+the human's own words above. Scope fence unchanged from the sub-amendment above (client-side only,
+no wire change, no perf claim, entry 47 next-cut, LOD flip-first).

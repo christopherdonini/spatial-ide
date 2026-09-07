@@ -7,7 +7,7 @@ import type { PixelRegion } from "../e2e-test-surface";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
-import { applyStyleChange, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
+import { applyStyleChange, protectionSetFor, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
 import type { ApplyStyleChangeDeps, TileBatchIngestOutcome } from "./WorkingCanvas";
 
 // Reviewer gate, style-panel cut P7 fixes, S2: the previous "issues no viewport query" test built a
@@ -172,7 +172,15 @@ function fakeFrame() {
 }
 
 function ingestOutcome(overrides: Partial<TileBatchIngestOutcome> = {}): TileBatchIngestOutcome {
-  return { rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, ...overrides };
+  return {
+    rowsAdmitted: 0,
+    duplicatesDropped: 0,
+    evictedTileKeys: [],
+    overBudget: false,
+    fitAnchor: null,
+    batchExtent: null,
+    ...overrides,
+  };
 }
 
 describe("shouldScheduleTileRender (P5h, F1)", () => {
@@ -190,6 +198,38 @@ describe("shouldScheduleTileRender (P5h, F1)", () => {
 
   it("false for a genuinely empty batch (no rows, no dupes, no eviction)", () => {
     expect(shouldScheduleTileRender(ingestOutcome())).toBe(false);
+  });
+});
+
+// Residency-debt cut 1b sub-amendment (entry 48 (a)), S2 (reviewer gate, fix batch): `protectionSetFor`
+// extracted out of `applyTileViewportContext`'s own `currentViewportTileKeysRef.current =` assignment
+// -- pinned directly here, the same pure-seam-in-a-jsdom-test reason `shouldScheduleTileRender` just
+// above already is. `coveringTileKeysRef` (`WorkingCanvas.tsx`'s own field) is the covering-ONLY
+// consumer -- `anyPartialAmongCovering` reads it alone, never the union this function returns.
+describe("protectionSetFor (entry 48 (a), S2)", () => {
+  it("(a) extra undefined -> equals covering", () => {
+    expect(protectionSetFor(["1:1", "1:2"], undefined)).toEqual(new Set(["1:1", "1:2"]));
+  });
+
+  it("(b) extra present -> the union of covering and extra", () => {
+    expect(protectionSetFor(["1:1"], new Set(["initial-untiled-look"]))).toEqual(
+      new Set(["1:1", "initial-untiled-look"])
+    );
+  });
+
+  it("(c) the covering-only consumer (coveringTileKeysRef) must never include extra", () => {
+    // `coveringTileKeysRef.current` (`WorkingCanvas.tsx`) is built from `coveringTileKeys` ALONE,
+    // never through this function -- `new Set(covering)` stands in for that covering-only read here.
+    const covering = ["1:1"];
+    const extra = new Set(["initial-untiled-look"]);
+    const protection = protectionSetFor(covering, extra);
+    const coveringOnly = new Set(covering); // the covering-only consumer's own value
+    expect(coveringOnly.has("initial-untiled-look")).toBe(false);
+    expect(protection).not.toEqual(coveringOnly);
+  });
+
+  it("an empty (but present) extra set behaves exactly like undefined", () => {
+    expect(protectionSetFor(["1:1"], new Set())).toEqual(new Set(["1:1"]));
   });
 });
 
