@@ -273,6 +273,11 @@ export interface TileBatchIngestOutcome {
    * candidate session's own fit-anchor read, used to `establishGridFrame` exactly once, ever, per
    * dataset session (`tileGrid.ts`'s own top doc comment). */
   fitAnchor: AuthoritativeBbox | null;
+  /** Entry 48 (a) third attempt, design item 1: mirrors `tileIngest.ts`'s own `TileBatchIngestResult
+   * .batchExtent` -- THIS batch's own admitted-rows extent (post-trim, post-dedupe), `null` when
+   * nothing was admitted. `candidateArmSession.ts`'s `ingestAndMaybeEstablishFrame` unions this, per
+   * batch, into `firstLookRunningExtent` for `INITIAL_TILE_KEY` batches only. */
+  batchExtent: AuthoritativeBbox | null;
 }
 
 /**
@@ -1145,6 +1150,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           evictedTileKeys: outcome.evictedTileKeys,
           overBudget: outcome.overBudget,
           fitAnchor: outcome.unionedExtent,
+          batchExtent: outcome.batchExtent,
         };
       },
 

@@ -172,7 +172,15 @@ function fakeFrame() {
 }
 
 function ingestOutcome(overrides: Partial<TileBatchIngestOutcome> = {}): TileBatchIngestOutcome {
-  return { rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, ...overrides };
+  return {
+    rowsAdmitted: 0,
+    duplicatesDropped: 0,
+    evictedTileKeys: [],
+    overBudget: false,
+    fitAnchor: null,
+    batchExtent: null,
+    ...overrides,
+  };
 }
 
 describe("shouldScheduleTileRender (P5h, F1)", () => {

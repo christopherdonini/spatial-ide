@@ -65,6 +65,7 @@ const OK_INGEST: TileBatchIngestOutcome = {
   evictedTileKeys: [],
   overBudget: false,
   fitAnchor: null,
+  batchExtent: null,
 };
 
 function fakeCanvas(overrides: Partial<WorkingCanvasHandle> = {}): WorkingCanvasHandle {
@@ -2389,16 +2390,20 @@ describe("F1 close-out (entry 44's second finding) + F2 close-out (entry 43): a 
   });
 });
 
-// Residency-debt cut 1b sub-amendment (entry 48 (a), 2026-09-07). S3 (reviewer gate, fix batch): the
-// human's own RULED words, verbatim (DECISIONS-PENDING.md, main checkout, entry 48's RULED
-// paragraph): *"protect the untiled first look while its extent intersects the viewport"* -- quoted
-// from that ONE source exactly (the prior version of this comment spliced it with the preregistration
-// doc's own differently-worded heading, "...eviction-protected while in view"). Two channels,
-// deliberately pinned separately: channel 1 (protection) is `handleViewportChange`'s own
-// `extraProtectedKeys` computation (`FIRST_LOOK_PROTECTED_KEYS` iff `firstLookExtent` -- the first
-// look's own extent, snapshotted at frame establishment, M1's fix -- intersects the plan's bbox);
-// channel 2 (never completeness, never fits) is `covering`/`lastCoveringTileKeys` staying
-// geometric-only regardless.
+// Residency-debt cut 1b sub-amendment (entry 48 (a), 2026-09-07), THIRD (and final) attempt. S3
+// (reviewer gate, fix batch): the human's own RULED words, verbatim (DECISIONS-PENDING.md, main
+// checkout, entry 48's RULED paragraph): *"protect the untiled first look while its extent
+// intersects the viewport"*. Two channels, deliberately pinned separately: channel 1 (protection) is
+// `handleViewportChange`'s own `extraProtectedKeys` computation (`FIRST_LOOK_PROTECTED_KEYS` iff
+// `firstLookRunningExtent` -- the LIVE running union of every batch actually ADMITTED under
+// `INITIAL_TILE_KEY`, third-attempt design -- intersects the plan's bbox); channel 2 (never
+// completeness, never fits) is `covering`/`lastCoveringTileKeys` staying geometric-only regardless.
+//
+// THIRD attempt's own authorization (DECISIONS-PENDING entry 48, 2026-09-07, the human verbatim,
+// condition (2)): "The gate must include the two tests the prior gates lacked: a tile batch landing
+// between rounds with the pan-away release asserted (M1's blind spot), and the operator-Cancel
+// self-cancel repro plus the generation-2/reissue window (M2's)." T-A and T-B/T-C below are exactly
+// those two.
 describe("entry 48 (a): the untiled first look is eviction-protected while in view", () => {
   beforeEach(() => {
     viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
@@ -2407,35 +2412,56 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
     startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
   });
 
-  /** The first look's own union extent every session in this describe block bootstraps to --
-   * `fitAnchor` is what `ingestAndMaybeEstablishFrame` reads into `latestUnionedExtent`
-   * (`candidateArmSession.ts`'s own doc comment on that field), and what `establishFrameFromExtent`
-   * anchors the grid frame on at the untiled stream's own terminal. */
+  /** Finds the `StreamSink` `startStream` was called with for a SPECIFIC stream handle -- T-B/T-C
+   * need to drive the untiled stream's own sink independently of whatever real tile stream a plan
+   * most recently minted (`lastSink()` only ever returns the MOST RECENT call). Mirrors this file's
+   * own identical helper at several other describe blocks. */
+  function sinkForHandle(handle: string): StreamSink {
+    const call = startStreamMock.mock.calls.find((c) => c[0].ticketHandle === handle);
+    if (!call) throw new Error(`no stream started for handle ${handle}`);
+    return call[0].sink as StreamSink;
+  }
+
+  /** The first look's own admitted extent every session in this describe block bootstraps to --
+   * `batchExtent` is what `ingestAndMaybeEstablishFrame`'s own `tileKey === INITIAL_TILE_KEY` branch
+   * unions into `firstLookRunningExtent` (third-attempt design); `fitAnchor` is set alongside purely
+   * so `latestUnionedExtent`/`establishFrameFromExtent` still anchor the grid frame, exactly as
+   * before this piece -- the two fields are deliberately independent from here on. */
   const FIRST_LOOK_EXTENT = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
 
-  /** M1 (reviewer gate, fix batch): a GRID tile batch's own extent, deliberately far from
-   * `FIRST_LOOK_EXTENT` and placed to match test 2's own round-2 (far-away) bbox below -- the
-   * sensitizing ingredient the pre-fix test lacked. `latestUnionedExtent` (`candidateArmSession.ts`)
-   * folds this in permanently once any such batch lands, which is exactly the bug: an intersection
-   * test against THAT field (instead of the snapshotted `firstLookExtent`) would then read round 2's
-   * own bbox as intersecting the union, since the union itself now sits at this far location too. */
+  /** A GRID tile batch's own extent, deliberately far from `FIRST_LOOK_EXTENT` and placed to match
+   * a later round's own far-away bbox in the tests below -- the sensitizing ingredient that attacks
+   * exactly M1's own blind spot (a real tile batch landing between two plans must never widen
+   * protection). By construction (design item 2) a real tile batch can never reach
+   * `firstLookRunningExtent` at all -- it is only ever unioned inside the `INITIAL_TILE_KEY` branch --
+   * so this extent exists purely to prove that absence, not to probe a live risk of tainting. */
   const FAR_TILE_EXTENT = { xmin: 1000, ymin: 1000, xmax: 1000.1, ymax: 1000.1 };
 
-  // Pre-committed unit test 2 -- THE ENTRY-48 PIN.
-  it("test 2: the protected keys handed to the canvas contain INITIAL_TILE_KEY only when the bbox intersects the first look's own extent; the covering array never contains it either way", async () => {
+  // T-A -- the human's FIRST named test condition (M1's blind spot): pan-away release survives a
+  // GRID tile batch landing between rounds. Round 1's bbox intersects the first look's own admitted
+  // extent (E1) -> protected; covering never contains it (channel 2). A REAL tile stream then
+  // delivers its own batch (tile-keyed, never `INITIAL_TILE_KEY`) with an extent (E2) disjoint from
+  // E1. Round 2's bbox sits at E2, away from E1 -> must NOT be protected: `firstLookRunningExtent`
+  // only ever unions batches admitted under `INITIAL_TILE_KEY` (E2 can never reach it by
+  // construction), so it still equals E1 alone, and E1 does not intersect round 2's own bbox.
+  //
+  // Observed failure against a predicate reading `latestUnionedExtent` instead (verified by
+  // temporarily editing `handleViewportChange`'s own `extraProtectedKeys` line to read
+  // `latestUnionedExtent` in place of `firstLookRunningExtent`, running this ONE test, then
+  // reverting): round 2's own assertion --
+  // `expect(protectedKeys2?.has(INITIAL_TILE_KEY) ?? false).toBe(false)` -- FAILED with
+  // `expected true to be false`, because `latestUnionedExtent` had already been folded to include
+  // E2 (the round-1 tile batch's own far-away extent) by the time round 2 planned, so the
+  // intersection test against round 2's own bbox (which sits AT E2) read `true` and never released
+  // the first look.
+  it("T-A: pan-away release survives a GRID tile batch landing between rounds (M1's blind spot)", async () => {
     vi.useFakeTimers();
     try {
-      // M1 (reviewer gate, fix batch): `pushTileBatch` is keyed on `tileKey` rather than a constant
-      // return -- the untiled first look's own batches carry `FIRST_LOOK_EXTENT`, but a REAL tile's
-      // own batch carries `FAR_TILE_EXTENT` (deliberately far from the first look, and placed to match
-      // round 2's own bbox below). The pre-fix test mocked a constant `fitAnchor` and delivered no
-      // tile batch between rounds at all, so it could never observe `latestUnionedExtent` drifting
-      // away from the first look's own extent -- the exact gap this rewrite closes.
       const canvas = fakeCanvas({
         pushTileBatch: vi.fn((tileKey: string) =>
           tileKey === INITIAL_TILE_KEY
-            ? { ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT }
-            : { ...OK_INGEST, fitAnchor: FAR_TILE_EXTENT }
+            ? { ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT, batchExtent: FIRST_LOOK_EXTENT }
+            : { ...OK_INGEST, fitAnchor: FAR_TILE_EXTENT, batchExtent: FAR_TILE_EXTENT }
         ),
       });
       const session = startCandidateArmSession({ dataset: "ds_x", canvas });
@@ -2450,27 +2476,22 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
       const call1 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
-      // NIT (iii) (reviewer gate, fix batch): `call1[0]`/`call2[0]` below are the exact `covering`
-      // array `handleViewportChange` also assigns into `lastCoveringTileKeys` one statement earlier
-      // (`lastCoveringTileKeys = new Set(covering)`, immediately before the `applyTileViewportContext`
-      // call) -- there is no exported seam onto `lastCoveringTileKeys` itself, so asserting on this
-      // argument IS asserting on it faithfully, not a mere proxy of convenience.
+      // `call1[0]`/`call2[0]` below are the exact `covering` array `handleViewportChange` also
+      // assigns into `lastCoveringTileKeys` one statement earlier -- there is no exported seam onto
+      // `lastCoveringTileKeys` itself, so asserting on this argument IS asserting on it faithfully.
       const covering1 = call1[0] as string[];
       const protectedKeys1 = call1[2] as ReadonlySet<string> | undefined;
       expect(covering1).not.toContain(INITIAL_TILE_KEY); // channel 2: never in the covering array
       expect(protectedKeys1?.has(INITIAL_TILE_KEY)).toBe(true); // channel 1: protected while in view
 
-      // M1 (reviewer gate, fix batch): round 1's own tile stream delivers a GRID batch (still
-      // `lastSink()`'s own current target -- round 2 has not minted `sh_tile_2` yet) whose extent is
-      // `FAR_TILE_EXTENT`, matching round 2's own bbox below. Pre-fix, this taints
-      // `latestUnionedExtent` -- the value the OLD predicate tested -- to sit at round 2's own
-      // location, so round 2 would (wrongly) still read as protected.
+      // A GRID tile batch lands (round 1's own tile stream, still `lastSink()`'s current target --
+      // round 2 has not minted `sh_tile_2` yet) with extent `FAR_TILE_EXTENT`, matching round 2's own
+      // bbox below -- through the SAME `ingestAndMaybeEstablishFrame` path, tile-keyed, never
+      // `INITIAL_TILE_KEY`.
       lastSink().onBatch(new Uint8Array([9]), true);
 
       // Round 2: a single-tile bbox nowhere near the first look's own extent -- no longer protected.
       viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_2" });
-      // NIT (i) (reviewer gate, fix batch): the call count is asserted to have GROWN before reading
-      // `.at(-1)` below -- proves this round genuinely re-planned, never a stale round-1 call reread.
       const callsBeforeRound2 = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.length;
       session.onViewportChanged({ xmin: 1000, ymin: 1000, xmax: 1000.1, ymax: 1000.1 });
       await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
@@ -2481,10 +2502,157 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       const covering2 = call2[0] as string[];
       const protectedKeys2 = call2[2] as ReadonlySet<string> | undefined;
       expect(covering2).not.toContain(INITIAL_TILE_KEY); // channel 2, again
-      // THE PIN (M1): round 2 must NOT protect INITIAL_TILE_KEY -- the first look's own extent
-      // (`firstLookExtent`, snapshotted once at frame establishment) never intersects round 2's own
-      // far-away bbox, regardless of what round 1's own tile batch just did to `latestUnionedExtent`.
+      // THE PIN: round 2 must NOT protect INITIAL_TILE_KEY -- `firstLookRunningExtent` never included
+      // the grid batch's own extent (it is tile-keyed, not `INITIAL_TILE_KEY`), so it still equals
+      // E1 alone, which does not intersect round 2's own far-away bbox.
       expect(protectedKeys2?.has(INITIAL_TILE_KEY) ?? false).toBe(false); // channel 1: no longer protected
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // T-B -- the human's SECOND named test condition, part 1 (M2's self-cancel repro). An
+  // operator-Cancel self-cancel: `cancelUntiledStream` (via `relinquishFill`'s frame-exists cancel)
+  // fires BEFORE the untiled terminal; the terminal then arrives self-cancelled (`wasCurrent ===
+  // false`, the EXISTING ordering -- `cancelUntiledStream` clears `untiledStreamHandle` before
+  // `skpCancel`, unchanged by this attempt); a plan with bbox ∩ E1 ≠ ∅ -> still protected.
+  // `relinquishFill`'s own frame-exists cancel only reaches `cancelUntiledStream` once
+  // `manager.gridFrame !== null` (its own doc comment) -- so this scenario needs a generation 1 to
+  // establish the frame first; the self-cancel-before-terminal window is generation 2's own reissue
+  // (M2's own finding: "in generation 2+ the grid frame survives `reissueUnrestricted`'s clear").
+  //
+  // Observed failure against attempt 2's own removed snapshot design (`48c19ea`): EXECUTED, not
+  // merely reasoned -- attempt 2's own field and write were reinstated VERBATIM IN SHAPE (a
+  // renamed, temporary `firstLookExtentTEMP` field so it could not collide with anything real: the
+  // same `let ... = null` declaration, the same `if (wasCurrent) { firstLookExtentTEMP =
+  // latestUnionedExtent; }` write at the untiled sink's own `onTerminal`, the same reset alongside
+  // `reissueUnrestricted`, and the predicate temporarily pointed at it in place of
+  // `firstLookRunningExtent`), this ONE test run against that reinstated design, then every
+  // temporary line reverted (`git diff` confirmed clean before continuing). Observed:
+  // `AssertionError: expected undefined to be true` at this test's own final assertion --
+  // `extraProtectedKeys` was `undefined` (so `protectedKeys?.has(...)` read `undefined`, not
+  // `true`), because the snapshot write is gated on `wasCurrent`, which is `false` for this
+  // self-cancelled terminal (`cancelUntiledStream` clears `untiledStreamHandle` before `skpCancel`,
+  // unchanged by this attempt) -- the snapshot line never ran, and generation 2's own
+  // `reissueUnrestricted` had already reset the field to `null`.
+  it("T-B: an operator-Cancel self-cancel still protects the batches it already admitted (M2's self-cancel repro)", async () => {
+    vi.useFakeTimers();
+    try {
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT, batchExtent: FIRST_LOOK_EXTENT })),
+      });
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+
+      // Generation 1: establishes the grid frame.
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      // Generation 2: a fresh reissue -- the grid frame survives (`reissueUnrestricted` never clears
+      // `manager.gridFrame`), but `firstLookRunningExtent` DOES reset (this session's own doc
+      // comment on that field).
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_2" });
+      await session.reissueUnrestricted(null, null);
+      // The new generation's own FIRST admitted batch (extent E1 = `FIRST_LOOK_EXTENT`) -- BEFORE its
+      // own terminal.
+      sinkForHandle("sh_2").onBatch(new Uint8Array([1]), true);
+
+      // The operator cancels while the untiled stream is still running and the grid frame already
+      // exists -- `relinquishFill` reaches `cancelUntiledStream`, which clears `untiledStreamHandle`
+      // BEFORE `skpCancel` (M2's own finding, unchanged by this attempt).
+      session.relinquishFill();
+
+      // The generation-2 untiled stream's own terminal now arrives, self-cancelled -- `wasCurrent`
+      // (`untiledStreamHandle === stream`) is already `false`, cleared synchronously above.
+      sinkForHandle("sh_2").onTerminal({ kind: "Cancelled", detail: "operator" });
+
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_1" });
+      session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 }); // intersects E1
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      const call = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      const covering = call[0] as string[];
+      const protectedKeys = call[2] as ReadonlySet<string> | undefined;
+      expect(covering).not.toContain(INITIAL_TILE_KEY); // channel 2
+      // THE PIN: protected despite the self-cancel -- `firstLookRunningExtent` was unioned the
+      // instant the batch was admitted, never waiting for (or gated on) the terminal that never
+      // honestly fired `wasCurrent === true` for this stream.
+      expect(protectedKeys?.has(INITIAL_TILE_KEY)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // T-C -- the human's SECOND named test condition, part 2 (M2's generation-2/reissue window), all
+  // four sub-assertions (i)-(iv).
+  it("T-C: the generation-2/reissue window -- (i) not protected before any new batch, (ii) a grid batch mid-reissue leaves it unprotected, (iii) the new first look's own first batch protects immediately before any terminal, (iv) the OLD generation's extent never protects again", async () => {
+    vi.useFakeTimers();
+    try {
+      const OLD_GEN_EXTENT = FIRST_LOOK_EXTENT; // generation 1's own admitted extent (E1)
+      const NEW_GEN_EXTENT = { xmin: 20, ymin: 20, xmax: 30, ymax: 30 }; // generation 2's own admitted extent (E3)
+      // Keyed on `streamHandle`, not merely `tileKey === INITIAL_TILE_KEY` -- BOTH generations'
+      // untiled streams share that same reserved tile key, so the stream handle ("sh_1", generation
+      // 1's default mock; "sh_2", generation 2's) is what actually distinguishes E1's own batch from
+      // E3's.
+      const canvas = fakeCanvas({
+        pushTileBatch: vi.fn((tileKey: string, streamHandle: string) => {
+          if (tileKey !== INITIAL_TILE_KEY) return { ...OK_INGEST, fitAnchor: FAR_TILE_EXTENT, batchExtent: FAR_TILE_EXTENT };
+          return streamHandle === "sh_2"
+            ? { ...OK_INGEST, fitAnchor: NEW_GEN_EXTENT, batchExtent: NEW_GEN_EXTENT }
+            : { ...OK_INGEST, fitAnchor: OLD_GEN_EXTENT, batchExtent: OLD_GEN_EXTENT };
+        }),
+      });
+      const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+
+      // Generation 1: establishes the grid frame, admits E1 under INITIAL_TILE_KEY.
+      await session.reissueUnrestricted(null, null);
+      lastSink().onBatch(new Uint8Array([1]), true);
+      completeUntiledLook();
+      expect(session.manager.gridFrame).not.toBeNull();
+
+      // Generation 2: a fresh reissue -- `firstLookRunningExtent` resets to `null` even though the
+      // grid frame itself survives.
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_2" });
+      await session.reissueUnrestricted(null, null);
+
+      // (i) A plan BEFORE any new first-look batch -- nothing resident under INITIAL_TILE_KEY this
+      // generation yet, so not protected, even though the bbox intersects the OLD generation's own
+      // extent (E1).
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_a" });
+      session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 }); // inside E1
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      let call = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      expect((call[2] as ReadonlySet<string> | undefined)?.has(INITIAL_TILE_KEY) ?? false).toBe(false);
+
+      // (ii) A GRID tile batch lands while the new untiled stream ("sh_2") is STILL running -- the
+      // grid frame persists across the reissue, so (i)'s own plan already minted a real tile stream
+      // (`sh_tile_a`). This must never touch `firstLookRunningExtent` (tile-keyed, not
+      // `INITIAL_TILE_KEY`) -- re-planning the SAME bbox proves it stays unprotected.
+      lastSink().onBatch(new Uint8Array([9]), true); // `sh_tile_a`, minted by (i)'s own plan
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_b" });
+      session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 });
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      call = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      expect((call[2] as ReadonlySet<string> | undefined)?.has(INITIAL_TILE_KEY) ?? false).toBe(false);
+
+      // (iii) The new first look's own FIRST batch lands (extent E3 = `NEW_GEN_EXTENT`) -- BEFORE any
+      // terminal for "sh_2". A plan intersecting E3 is protected immediately, no terminal needed.
+      sinkForHandle("sh_2").onBatch(new Uint8Array([1]), true);
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_c" });
+      session.onViewportChanged({ xmin: 25, ymin: 25, xmax: 25.1, ymax: 25.1 }); // inside E3
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      call = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      expect(call[0] as string[]).not.toContain(INITIAL_TILE_KEY); // channel 2, still
+      expect((call[2] as ReadonlySet<string> | undefined)?.has(INITIAL_TILE_KEY)).toBe(true);
+
+      // (iv) A plan intersecting the OLD generation's own extent (E1) but NOT E3 -- never protected:
+      // E1 is gone (reset at generation 2's own `reissueUnrestricted`), only E3 (this generation's
+      // own admitted batches) can protect now.
+      viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_tile_d" });
+      session.onViewportChanged({ xmin: 6, ymin: 6, xmax: 6.1, ymax: 6.1 }); // inside E1, outside E3
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      call = (canvas.applyTileViewportContext as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+      expect((call[2] as ReadonlySet<string> | undefined)?.has(INITIAL_TILE_KEY) ?? false).toBe(false);
     } finally {
       vi.useRealTimers();
     }
@@ -2497,8 +2665,13 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       const canvas = fakeCanvas({
         pushTileBatch: vi
           .fn()
-          .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT, rowsAdmitted: UNTILED_FIRST_LOOK_ROW_LIMIT })
-          .mockReturnValue({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT }),
+          .mockReturnValueOnce({
+            ...OK_INGEST,
+            fitAnchor: FIRST_LOOK_EXTENT,
+            batchExtent: FIRST_LOOK_EXTENT,
+            rowsAdmitted: UNTILED_FIRST_LOOK_ROW_LIMIT,
+          })
+          .mockReturnValue({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT, batchExtent: FIRST_LOOK_EXTENT }),
         // Structurally mirrors `WorkingCanvas.tsx`'s own real `anyPartialAmongCovering` channel:
         // `fits` would read `false` here ONLY if `INITIAL_TILE_KEY` were ever folded into the
         // covering array (the FIRST argument) -- exactly what channel 2 forbids. `extraProtectedKeys`

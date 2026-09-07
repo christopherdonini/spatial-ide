@@ -404,3 +404,80 @@ describe("ingestTileBatch: unionedExtent mirrors fitAnchorRef's own accumulation
     expect(r2.unionedExtent).toEqual({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 });
   });
 });
+
+// T-D (entry 48 (a) third attempt, design item 1): `batchExtent`'s own contract -- "the extent of
+// THIS batch's rows as actually admitted (post-trim; `null` when nothing was admitted)", computed
+// from `result.accepted` (post-trim AND post-dedupe) via the SAME injected `extentOfBatch`, never a
+// second decode. `unionedExtent`/`fitAnchor` stay unchanged throughout -- still computed from the
+// pre-trim `batch` parameter, exactly as before this piece.
+describe("ingestTileBatch: T-D, batchExtent's own admitted-rows-only contract", () => {
+  /** A batch whose features sit at DISTINCT positions (unlike this file's own `batch()` helper,
+   * whose every feature shares one ring shape) -- needed so a partially-admitted (trimmed) prefix's
+   * own bbox is a strict, observable subset of the whole batch's bbox. */
+  function positionedBatch(
+    streamHandle: string,
+    batchSeq: number,
+    features: Array<{ id: number; x: number; y: number; vertices: number }>
+  ): ResidentBatch {
+    return {
+      streamHandle,
+      batchSeq,
+      ids: new BigUint64Array(features.map((f) => BigInt(f.id))),
+      rings: features.map((f) => [Array.from({ length: f.vertices }, () => [f.x, f.y] as [number, number])]),
+      totalVertices: features.reduce((sum, f) => sum + f.vertices, 0),
+    };
+  }
+
+  it("equals the admitted rows' own extent when nothing is trimmed or deduped", () => {
+    const tileSet = new TileResidentSet();
+    const b = positionedBatch("sh_t", 0, [
+      { id: 1, x: 0, y: 0, vertices: 1 },
+      { id: 2, x: 10, y: 10, vertices: 1 },
+    ]);
+    const result = ingestTileBatch(baseParams({ tileSet, tileKey: "0:0", batch: b }));
+    expect(result.rowsAdmitted).toBe(2);
+    expect(result.batchExtent).toEqual({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 });
+  });
+
+  it("is null when every row is a cross-tile duplicate -- nothing admitted, even though the pre-trim batch carried real geometry", () => {
+    const tileSet = new TileResidentSet();
+    ingestTileBatch(baseParams({ tileSet, tileKey: "0:0", batch: batch("sh_a", 0, [100, 101]) }));
+    const second = ingestTileBatch(baseParams({ tileSet, tileKey: "0:1", batch: batch("sh_b", 0, [100, 101]) }));
+    expect(second.rowsAdmitted).toBe(0);
+    expect(second.duplicatesDropped).toBe(2);
+    expect(second.batchExtent).toBeNull();
+    // fitAnchor unchanged: `unionedExtent` is computed from the pre-trim `batch` regardless of what
+    // `addBatch` actually admitted, so it is NOT null here even though `batchExtent` is.
+    expect(second.unionedExtent).not.toBeNull();
+  });
+
+  it("is null when trimmed to zero admitted rows at the budget boundary", () => {
+    const tileSet = new TileResidentSet();
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "0:0",
+        batch: batch("sh_a", 0, [1, 2, 3], 100),
+        maxResidentVertices: 0,
+        viewportTileKeys: new Set(["0:0"]),
+      })
+    );
+    expect(result.rowsAdmitted).toBe(0);
+    expect(result.overBudget).toBe(true);
+    expect(result.batchExtent).toBeNull();
+  });
+
+  it("fitAnchor (unionedExtent) is unchanged by this fix -- it still reflects the FULL pre-trim batch, while batchExtent reflects only the admitted prefix", () => {
+    const tileSet = new TileResidentSet();
+    const b = positionedBatch("sh_t", 0, [
+      { id: 1, x: 0, y: 0, vertices: 100 },
+      { id: 2, x: 50, y: 50, vertices: 100 },
+    ]);
+    // Only the first feature (100 vertices) fits; the second is cut by `trimBatchToVertexBudget`.
+    const result = ingestTileBatch(baseParams({ tileSet, tileKey: "0:0", batch: b, maxResidentVertices: 100 }));
+    expect(result.overBudget).toBe(true);
+    expect(result.rowsAdmitted).toBe(1);
+    expect(result.batchExtent).toEqual({ xmin: 0, ymin: 0, xmax: 0, ymax: 0 });
+    expect(result.unionedExtent).toEqual({ xmin: 0, ymin: 0, xmax: 50, ymax: 50 });
+  });
+});

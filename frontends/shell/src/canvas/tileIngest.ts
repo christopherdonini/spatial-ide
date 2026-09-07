@@ -74,6 +74,18 @@ export interface TileBatchIngestResult {
    * same ref rather than this function reaching into React state itself. `null` only when this
    * batch AND every prior one carried no geometry at all. */
   unionedExtent: AuthoritativeBbox | null;
+  /** Residency-debt cut 1b, entry 48 (a) third attempt, design item 1: the extent of THIS batch's
+   * rows as actually admitted into `tileSet` -- post-trim (`toAdmit`, not the pre-trim `batch`
+   * parameter) AND post-dedupe (`result.accepted`, which excludes any row `addBatch` dropped as a
+   * cross-tile duplicate) -- `null` when nothing was admitted (every row was either trimmed away by
+   * the budget boundary or deduped against an already-resident id). Computed from `result.accepted`
+   * via the SAME injected `extentOfBatch` (no second decode) rather than the pre-trim `batch` --
+   * `unionedExtent`/`fitAnchor` above stay unchanged (still computed from the pre-trim `batch`, the
+   * dataset-lifetime anchor's own existing contract). The corrected reading `candidateArmSession.ts`
+   * unions per batch to build `firstLookRunningExtent` -- protection derived from the batches
+   * actually admitted under `INITIAL_TILE_KEY`, never from a terminal-time snapshot (the attempt
+   * that finally holds up: see that module's own doc comments). */
+  batchExtent: AuthoritativeBbox | null;
 }
 
 /**
@@ -156,6 +168,9 @@ export function ingestTileBatch(params: {
   const trimmed = overBudget && toAdmit.ids.length < batch.ids.length;
   const result = tileSet.addBatch(tileKey, toAdmit, trimmed);
   const unionedExtent = params.unionBbox(params.priorExtent, params.extentOfBatch(batch));
+  // Entry 48 (a) third attempt, design item 1: `result.accepted` is exactly the rows this call
+  // actually admitted (post-trim, post-dedupe) -- `null` when `addBatch` accepted nothing.
+  const batchExtent = result.accepted ? params.extentOfBatch(result.accepted) : null;
 
   return {
     rowsAdmitted: result.accepted?.ids.length ?? 0,
@@ -163,6 +178,7 @@ export function ingestTileBatch(params: {
     evictedTileKeys,
     overBudget,
     unionedExtent,
+    batchExtent,
   };
 }
 
