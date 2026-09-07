@@ -20,7 +20,13 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     for anything else — the 1b close, the release work, and entry 40's window all proceed
     independently." Applied: (3) run by the custodian under the bracketed authorization (PROJ
     tooling, version pinned in the note, `DEPENDENCY-LICENSES.md`); then (1)+(2) as one gated piece
-    whose wording follows (3)'s outcome. Original entry follows.]**
+    whose wording follows (3)'s outcome. **Premise correction (2026-09-07, custodian):** the
+    original entry's "(2) … changes `crs_catalog::tests`' pinned hash" was WRONG — the pinned
+    `EPSG_2056_HASH` is `sha256_hex(&definition)` alone (`engine/src/crs_catalog.rs`), so a sibling
+    `attribution` field cannot move it; the (1)+(2) piece adds the field beside the definition,
+    leaves the definition bytes and the fixture untouched, and the pinned test proves the hash is
+    unchanged. The "conscious hash update" the ruling rode on (2) is therefore not needed — reported
+    here rather than left implied. Original entry follows.]**
     **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
     section, 2026-09-07): two obligations are open and one verification is owed before the shipped
     EPSG:2056 definition is attributed to EPSG — all three need code or a registry comparison, so
