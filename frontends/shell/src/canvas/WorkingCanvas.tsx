@@ -529,9 +529,13 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * never reads from this at all. */
   const tileResidentRef = useRef(new TileResidentSet());
   /** Read ONCE, at construction -- never re-read from `getResidencyArm()` on every render, since the
-   * arm cannot change mid-session (`residencyArm.ts`'s own contract). For the baseline arm (the
-   * default, and the only value the full vitest/E2E regression suites ever observe), every branch
-   * this ref gates reduces to exactly the pre-P3w code path -- see `render()`'s own comment. */
+   * arm cannot change mid-session (`residencyArm.ts`'s own contract). [CORRECTED 2026-09-07,
+   * RELEASE-0.1 item 7, SHOULD-FIX S5 (reviewer gate): baseline is no longer the default or the only
+   * value the vitest/E2E suites observe -- `residencyArm.ts`'s own `DEFAULT_RESIDENCY_ARM` is
+   * `"candidate"`, and `regression.mjs`/`filter-panel.mjs` run on that shipped default, unpinned
+   * (`e2e/README.md`). For the BASELINE arm specifically (selectable in dev, and the arm
+   * `e2e/refusal-contract-baseline.mjs` and `residency-harness.mjs` exercise), every branch this ref
+   * gates still reduces to exactly the pre-P3w code path -- see `render()`'s own comment.] */
   const armRef = useRef(getResidencyArm());
   /** Frame/level for the candidate arm's own eviction ordering (`tileIngest.ts`'s `ingestTileBatch`)
    * -- `null` until `establishTileGridContext` is called (once, by `App.tsx`'s candidate session,
@@ -672,9 +676,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * `render()`'s copy correct and the hover site's copy simply never written (it read `residentRef`
    * unconditionally), so candidate-arm hover resolved picks against baseline's own EMPTY resident set
    * regardless of what was actually on screen. One function, one place the arm check lives, used by
-   * both -- a structural fix, not a second copy kept in sync by convention. For the baseline arm (the
-   * only value the full vitest/E2E regression suites ever observe) this is byte-identical to what
-   * `render()`'s own inline ternary already computed.
+   * both -- a structural fix, not a second copy kept in sync by convention. For the baseline arm
+   * [CORRECTED 2026-09-07, RELEASE-0.1 item 7, SHOULD-FIX S5: no longer the default or the only value
+   * the vitest/E2E suites observe -- see `armRef`'s own doc comment above for the current state] this
+   * is byte-identical to what `render()`'s own inline ternary already computed.
    */
   function activeBatches(): readonly ResidentBatch[] {
     return armRef.current === "candidate" ? tileResidentRef.current.getBatches() : residentRef.current.getBatches();
@@ -733,9 +738,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // Viewport-residency cut P3w item B: the candidate arm's `TileResidentSet` feeds the SAME
       // `buildLayers` path, unioning its own tile-keyed batches into the render layer set exactly as
       // `ResidentSet.getBatches()` already does for baseline -- no other change to this function, and
-      // for the baseline arm (`armRef.current === "baseline"`, the only value the full vitest/E2E
-      // regression suites ever observe) this ternary always takes the SAME branch it already did,
-      // byte-identical. Defect B: now the SAME `activeBatches()` accessor the hover site also calls.
+      // for the baseline arm (`armRef.current === "baseline"`) [CORRECTED 2026-09-07, RELEASE-0.1
+      // item 7, SHOULD-FIX S5: no longer the default or the only value the vitest/E2E suites observe
+      // -- `armRef`'s own doc comment above has the current state] this ternary always takes the SAME
+      // branch it already did, byte-identical. Defect B: now the SAME `activeBatches()` accessor the
+      // hover site also calls.
       const batches = activeBatches();
       const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
       deck.setProps({ layers });

@@ -33,6 +33,7 @@ import {
   notifyResidencyArmDatasetClosed,
   notifyResidencyArmDatasetOpened,
   setResidencyArm,
+  shouldConstructCandidateSession,
 } from "./residency/residencyArm";
 import {
   getResidencyTileSizeLevel,
@@ -944,8 +945,11 @@ export default function App() {
 
     // Viewport-residency cut P3: bookkeeping only, for `setResidencyArm`'s own "refused while a
     // dataset is open" contract -- DEV-gated (the arm switch is a dev/E2E-only concern) and purely
-    // additive, so `residency/residencyArm.ts` never runs, or is even referenced, in a production
-    // build (`check:dist-clean`'s own extended identifier list covers this).
+    // additive. RELEASE-0.1 item 7 correction: `residency/residencyArm.ts` itself (the module, its
+    // `currentArm` state, `getResidencyArm`) is now referenced unconditionally by the construction
+    // branch below (the default-arm read), so it is NOT tree-shaken out of a production build any
+    // more -- only THIS bookkeeping call (and the switch itself) stays dev-only, never the module as
+    // a whole. `check:dist-clean`'s own identifier list is updated accordingly (item 7(3)).
     if (isInstrumentedBuild()) notifyResidencyArmDatasetOpened();
     // P7: same bookkeeping, same reason -- `setResidencyTileSizeLevel`'s own "refused while a
     // dataset is open" contract (`residencyTileSizeLevel.ts`'s own top doc comment).
@@ -976,16 +980,36 @@ export default function App() {
 
     // Viewport-residency cut P3w: SELECT BETWEEN two constructions -- candidate arm returns here,
     // before a single line of the baseline `ViewportStreamManager` construction below ever runs, so
-    // that construction's own code path is untouched in shape (no conditional added inside it) and
-    // stays bit-identical for the default/only arm the full vitest/E2E regression suites ever
-    // observe. `getResidencyArm()` itself defaults to `"baseline"` and only a dev-gated
-    // `setResidencyArm("candidate")` call (the dev/E2E surface) can ever move a session off it --
-    // `residencyArm.ts`'s own top doc comment. `viewportDebounceRef` is REUSED (not a new ref): the
-    // candidate session's own `onViewportChanged` conforms to the identical `Debounced<[Bbox, string
-    // | null]>` shape baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX
-    // below (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is
-    // active without an arm check of its own.
-    if (isInstrumentedBuild() && getResidencyArm() === "candidate") {
+    // that construction's own code path is untouched in shape (no conditional added inside it).
+    //
+    // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): this construction choice is
+    // no longer `isInstrumentedBuild()`-gated -- `shouldConstructCandidateSession()` itself defaults
+    // to `true` (`residencyArm.ts`'s own `DEFAULT_RESIDENCY_ARM`), so a PLAIN PRODUCTION BUILD reaches
+    // this branch by default too. Only the SWITCH that could move a session to `"baseline"` instead
+    // (`setResidencyArm`, registered a few lines above inside its own `isInstrumentedBuild()`-gated
+    // effect) stays dev-only; this predicate is not itself gated, because the branch it selects must
+    // run in production for the default arm to mean anything there.
+    //
+    // SHOULD-FIX S3 (2026-09-07, reviewer gate; corrected 2026-09-08, post-PASS sweep S-e): reads
+    // `shouldConstructCandidateSession()` (`residencyArm.ts`), not a re-typed
+    // `getResidencyArm() === "candidate"` inline -- that function IS the seam
+    // `residencyArm.test.ts`'s own production-mode unit test exercises directly, proving the
+    // PREDICATE's own behavior (it reads `true` regardless of `isInstrumentedBuild()`). TWO checks
+    // together cover a regression that re-adds `isInstrumentedBuild() &&` HERE, at this call site --
+    // not neither, as an earlier version of this comment said: the unit test covers the PREDICATE;
+    // `e2e/checkDistClean.mjs`'s own `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` pass (SHOULD-FIX S1)
+    // covers THIS CALL SITE -- re-adding `isInstrumentedBuild() &&` here makes the candidate branch
+    // dead code again in a plain production build, which strips `pushTileBatch`/`clearTile`/etc. from
+    // the bundle entirely; confirmed live (2026-09-08): mutating this exact line to
+    // `if (isInstrumentedBuild() && shouldConstructCandidateSession())`, building, and running
+    // `check:dist-clean` FAILs with all seven `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` at zero
+    // surviving call sites -- the mutation reverted immediately after, not shipped.
+    // `viewportDebounceRef` is REUSED (not a new ref): the candidate session's own
+    // `onViewportChanged` conforms to the identical `Debounced<[Bbox, string | null]>` shape
+    // baseline's `makeDebouncedViewportQuery` already produces, so the shared JSX below
+    // (`onViewportChanged` prop, unmodified by this piece) keeps driving whichever arm is active
+    // without an arm check of its own.
+    if (shouldConstructCandidateSession()) {
       const session = startCandidateArmSession({
         dataset: admitted.dataset,
         canvas,

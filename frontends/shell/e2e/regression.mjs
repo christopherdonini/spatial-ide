@@ -19,6 +19,14 @@
 // `waitForMountReady` gates every run, launch path and attach path alike, before A1' or
 // anything else touches the page -- see its own doc comment for the fresh-launch race it
 // closes (a WebView2 page target existing is not the same fact as React having mounted).
+//
+// RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 1, reviewer gate): this file runs on the SHIPPED DEFAULT
+// residency arm (candidate) with NO pin of its own -- the whole-suite baseline pin an earlier version
+// of this piece added here was over-broad (it left the shipped default with zero regression coverage
+// from this suite) and has been REMOVED. `OVERCEIL'`/`REOPEN'` (rider 1's baseline-arm-only
+// ceiling-refusal acceptance test) moved to their own process, `e2e/refusal-contract-baseline.mjs` --
+// see that file's own top comment for the full account, including why a `page.reload()` mid-script
+// was rejected in favor of a separate launch (the `residency-harness.mjs` S4 precedent).
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -32,8 +40,6 @@ const FIXTURE_100K = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough
 const FIXTURE_NO_CRS = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\no-crs-refused.parquet";
 const FIXTURE_MISSING_IDENTITY =
   "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\missing-identity-refused.parquet";
-const FIXTURE_OVER_CEILING =
-  "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\over-ceiling-refused.parquet";
 const REGEN_COMMAND = "cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture";
 
 // Verbatim from `engine/src/error.rs`'s `Display` impl (traced through `kernel/src/skp.rs`'s
@@ -1093,153 +1099,6 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
   }; no dismiss button on the panel; no describe-summary`;
 }
 
-/**
- * Rider 1 of the human's 2026-08-13 entry-0 decision (`DECISIONS-PENDING.md`, option (a)): the
- * declared `MAX_RESIDENT_VERTICES` ceiling is a designed refusal, not a bug (`limits.ts`: refuse,
- * never silently evict), and it deserves its own deliberate acceptance step rather than the happy
- * path accidentally tripping it. `over-ceiling-refused.parquet` is a VALID GeoParquet file -- the
- * refusal is render-side (mid-stream, once resident vertices would cross the ceiling), never
- * admission-side, so `openPath` must return `{kind:"admitted"}` here, not `{kind:"refused"}`.
- *
- * The core assertion is rider 1's own words, quoted in `App.tsx`'s `nextResidencyStatus` doc
- * comment: "dismiss hides the banner, never the status indicator" -- `.canvas-refusal`'s Dismiss
- * button only ever calls `setCanvasRefusal(null)`; `.residency-status` clears only on a later full
- * delivery or a dataset change (asserted separately, by `REOPEN'` immediately after this step).
- */
-async function stepOverCeiling(page, consoleHandle) {
-  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_OVER_CEILING);
-  if (outcome.kind !== "admitted") {
-    throw new Error(
-      `OVERCEIL': openPath(over-ceiling fixture) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"} -- ` +
-        `this fixture is a VALID file; the refusal is render-side, not admission-side`
-    );
-  }
-  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
-
-  const before = await page.evaluate(() => ({
-    canvasRefusalText: document.querySelector(".canvas-refusal")?.textContent ?? null,
-    residencyStatusText: document.querySelector(".residency-status")?.textContent ?? null,
-  }));
-  if (before.canvasRefusalText === null) {
-    throw new Error(`OVERCEIL': .canvas-refusal not present after admitting the over-ceiling fixture (settled=${settle.settled})`);
-  }
-  if (before.residencyStatusText === null) {
-    throw new Error(`OVERCEIL': .residency-status not present after admitting the over-ceiling fixture (settled=${settle.settled})`);
-  }
-  // Plain digits, no thousands separators -- `App.tsx`'s own `ResidencyStatus` doc comment:
-  // `datasetRowCount` is a wire `DecU64` string, never narrowed to `Number`. `100000` here is a
-  // literal, not a variable, because this fixture shares the happy path's exact `features:
-  // 100_000` spec (`manual_walkthrough_fixtures.rs`'s own doc comment on the generator).
-  const statusPattern = /^(\d+) of 100000 features rendered — declared ceiling reached \(MAX_RESIDENT_VERTICES\)$/;
-  const match = statusPattern.exec(before.residencyStatusText);
-  if (!match) {
-    throw new Error(
-      `OVERCEIL': .residency-status text did not match the expected pattern. Actual: ${JSON.stringify(before.residencyStatusText)}`
-    );
-  }
-  const renderedCount = Number(match[1]);
-
-  const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
-  const frac = fractionOf(pixels);
-  if (frac <= 0.02) {
-    throw new Error(
-      `OVERCEIL': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% -- expected most features to have rendered before the ceiling refusal (rendered count per the status line: ${renderedCount})`
-    );
-  }
-
-  const clicked = await page.evaluate(() => {
-    const btn = document.querySelector(".canvas-refusal button");
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (!clicked) throw new Error("OVERCEIL': no Dismiss button found inside .canvas-refusal to click");
-
-  const after = await page.evaluate(() => ({
-    canvasRefusalPresent: document.querySelector(".canvas-refusal") !== null,
-    residencyStatusText: document.querySelector(".residency-status")?.textContent ?? null,
-  }));
-  if (after.canvasRefusalPresent) {
-    throw new Error("OVERCEIL': .canvas-refusal still present after clicking its Dismiss button");
-  }
-  if (after.residencyStatusText === null) {
-    throw new Error(
-      'OVERCEIL\': .residency-status disappeared after dismissing the banner -- rider 1\'s core claim ' +
-        '("dismiss hides the banner, never the status indicator") violated'
-    );
-  }
-  if (after.residencyStatusText !== before.residencyStatusText) {
-    throw new Error(
-      `OVERCEIL': .residency-status text changed across the Dismiss click. Before: ${JSON.stringify(before.residencyStatusText)}, after: ${JSON.stringify(after.residencyStatusText)}`
-    );
-  }
-
-  return (
-    `admitted (render-side refusal, not admission-side); .canvas-refusal and .residency-status both present after settle; ` +
-    `${renderedCount} of 100000 features rendered (${(frac * 100).toFixed(1)}% pixels non-bg); ` +
-    `Dismiss removed the banner but .residency-status remained: "${after.residencyStatusText}"`
-  );
-}
-
-async function stepReopen(page, consoleHandle) {
-  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_100K);
-  if (outcome.kind !== "admitted") {
-    throw new Error(`REOPEN': expected {kind:"admitted"} reopening the 100k fixture, got ${JSON.stringify(outcome)}`);
-  }
-  // Rider 1 (DECISIONS-PENDING.md entry 0): `admitAndResetStaleUiState`'s "dataset-changed"
-  // transition unconditionally nulls `residencyStatus` on every admission -- this reopen runs
-  // immediately after `OVERCEIL'` left `.residency-status` present (deliberately, post-Dismiss),
-  // so it is that transition's own assertion: a dataset change, not a banner dismiss, is what
-  // must clear it. Checked before `waitForSettle` below, with no separate wait -- but not because
-  // the reset itself is synchronous end-to-end: `setResidencyStatus(null)` is a synchronous JS
-  // *call*, but React's own commit (re-rendering and actually updating the DOM) is not synchronous
-  // with it -- React 18 flushes a batch of updates at the next microtask checkpoint, even outside
-  // an event handler. What makes checking immediately safe is the `await page.evaluate(...)` this
-  // line already crossed: a CDP round trip (browser IPC, not an in-page call) cannot resolve
-  // before at least one full microtask checkpoint on the page has passed, so by the time this
-  // step's own next `page.evaluate` below runs, React's commit is certainly already done -- the
-  // ordering guarantee comes from the round trip already paid for above, not from the setter call
-  // being synchronous. A still-present status at this point would be the state surviving the wrong
-  // event, not a timing gap this script failed to wait out.
-  const residencyStatusAfterReopen = await page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null);
-  if (residencyStatusAfterReopen !== null) {
-    throw new Error(
-      `REOPEN': .residency-status still present after reopening the happy-path fixture (a dataset change must clear it, not just a banner dismiss). Text: ${JSON.stringify(residencyStatusAfterReopen)}`
-    );
-  }
-  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
-  // `WorkingCanvas` is keyed on `admitted.dataset` (`App.tsx`'s D4 fix, ADR-010 rule 1: a new
-  // dataset is a new frame/identity space, so every canvas ref built against the old one must
-  // reset, not survive as an untagged carryover -- see `App.tsx`'s own key comment for the
-  // 2026-08-13 correction to what this fix's original evidence sentence claimed, since refuted:
-  // "2,012,436 = the old dataset's still-resident 1,961,249 + the new dataset's first batch" was
-  // never actually true -- both numbers were the *same* stream's own partial sum at its own
-  // refusal moment (a stream then cancelled), not two different datasets' residency. The remount
-  // itself was never resting on that arithmetic and stays correct regardless.
-  //
-  // `open_dataset` mints a fresh dataset handle on every call, this fixture included on a reopen,
-  // so React fully unmounts the previous `WorkingCanvas` instance and mounts a new one -- a fresh
-  // `ResidentSet`, a fresh `hasAutoFitRef` (starting `false` again), a fresh `OffsetFrame`. The
-  // one-shot auto-fit-on-open therefore fires again on *this* reopen, the same as it did for A4',
-  // so clicking "Zoom to layer" below is no longer load-bearing for correctness -- kept anyway
-  // because it is cheap and exercises the same affordance A7' already covers. The assertion right
-  // below this comment, not the click that follows it, is what actually checks the remount fix: a
-  // still-broken reopen (the old, unkeyed canvas reconciling stale residency into the new dataset)
-  // would banner a ceiling refusal here, before any click.
-  await assertNoRefusalOrBanner(page, "REOPEN' (before Zoom to layer)");
-  await page.evaluate(() => {
-    const btn = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Zoom to layer"));
-    btn?.click();
-  });
-  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
-  const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
-  const frac = fractionOf(pixels);
-  if (frac <= 0.02) {
-    throw new Error(`REOPEN': pixels non-background fraction ${(frac * 100).toFixed(2)}% <= 2% after reopening (settled=${settle.settled})`);
-  }
-  return `reopened 100k fixture -> admitted; .residency-status cleared immediately (dataset change, not Dismiss); canvas ${(frac * 100).toFixed(1)}% non-bg after settle`;
-}
-
 async function stepNet(page, badResponses) {
   const linkHrefs = await page.evaluate(() =>
     Array.from(document.querySelectorAll("link[rel]")).map((l) => ({ rel: l.getAttribute("rel"), href: l.getAttribute("href") }))
@@ -1268,7 +1127,6 @@ async function main() {
     ["100k happy path", FIXTURE_100K],
     ["no CRS", FIXTURE_NO_CRS],
     ["missing identity", FIXTURE_MISSING_IDENTITY],
-    ["over-ceiling (deliberate)", FIXTURE_OVER_CEILING],
   ]) {
     if (!existsSync(path)) {
       console.error(`regression: ${label} fixture not found: ${path}`);
@@ -1322,6 +1180,30 @@ async function main() {
       `regression: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms (.app-header and window.__SPATIAL_E2E__.openPath both present)`
     );
 
+    // RELEASE-0.1 item 7 (2026-09-07, MUST-FIX 1, reviewer gate): NO arm pin here any more -- this
+    // run exercises the SHIPPED DEFAULT residency arm (candidate), unpinned, the same as an ordinary
+    // operator would get. An earlier version of this piece pinned the whole file to baseline; the
+    // reviewer found that over-applied the human's ruling ("every test encoding the refusal
+    // contract", not the suites containing one) and left the shipped default with zero regression
+    // coverage from this file. `OVERCEIL'`/`REOPEN'` (the two steps that DID need baseline) moved to
+    // `e2e/refusal-contract-baseline.mjs`'s own process; see that file's own top comment.
+    //
+    // Post-PASS sweep S-c (2026-09-08, reviewer gate): "no pin" is not "no assumption" -- on the
+    // ATTACH path (a previous script's own instance, still running), this run inherits whatever arm
+    // that prior script left the app pinned to. `e2e/refusal-contract-baseline.mjs` deliberately
+    // leaves a BASELINE-pinned app running when it finishes, exactly the class MUST-FIX 2 fixed for
+    // `residency-harness.mjs` (a harness inferring its arm instead of asserting it). A non-pinning
+    // READBACK, asserted, closes the same gap here: fails loudly, naming the actual value, rather
+    // than silently exercising the wrong arm under the "shipped default" label.
+    const armReadback = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyArm?.());
+    if (armReadback !== "candidate") {
+      throw new Error(
+        `regression: expected the shipped default residency arm ("candidate") but readback was ${JSON.stringify(armReadback)} -- ` +
+          `this run attached to an app a prior script left pinned to a different arm (no pin is applied here by design; ` +
+          `see this file's own comment above)`
+      );
+    }
+
     // Harness hygiene, not a walkthrough step: a previous run (or prior interactive use)
     // may have left a dismissable refusal banner up from before this run started. Clearing
     // it here means A5'/A6'-A8' see only what *this* run's own gestures produced, not a
@@ -1365,11 +1247,10 @@ async function main() {
         ["parcel_key"]
       )
     );
-    await runStep("OVERCEIL'", 60_000, () => stepOverCeiling(page, consoleHandle));
-    await runStep("REOPEN'", 60_000, () => stepReopen(page, consoleHandle));
+    // OVERCEIL'/REOPEN' moved to `e2e/refusal-contract-baseline.mjs` (RELEASE-0.1 item 7, MUST-FIX 1).
 
     // Final sweep, not just A8''s own point-in-time check: "anywhere in the run" includes
-    // whatever B'/C'/REOPEN' logged after A8' finished.
+    // whatever B'/C' logged after A8' finished.
     const finalDomText = await page.evaluate(() => document.body.textContent ?? "").catch(() => "");
     const hitConsole = consoleHandle.entries.some((e) => e.text.includes("too_many_pending_streams"));
     const hitDom = finalDomText.includes("too_many_pending_streams");

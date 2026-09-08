@@ -66,31 +66,40 @@ const INSTRUMENT_IDENTIFIERS = [
   "ResidencyInstrumentCore",
   "applyDeterministicE2eViewState",
   "e2eSetViewStateCallCount",
-  // Viewport-residency cut P3: the arm-switch's own DEV-only identifiers -- every real call site
-  // (`App.tsx`'s `setResidencyArm`/`getResidencyArm` hook registrations, and the
+  // Viewport-residency cut P3: the arm-SWITCH's own DEV-only identifiers -- every real call site
+  // (`App.tsx`'s `setResidencyArm` hook registration, and the
   // `notifyResidencyArmDataset{Opened,Closed}` bookkeeping calls in the `[admitted]` effect) is
   // gated behind `import.meta.env.DEV`, the same DCE claim the instrument identifiers above depend
   // on -- see `residency/residencyArm.ts`'s own top doc comment.
+  //
+  // SHOULD-FIX S2 (2026-09-07, reviewer gate; citation corrected 2026-09-08, post-PASS sweep S-a):
+  // `getResidencyArm` REMOVED from this list. It is called UNGATED, in every build, at TWO real
+  // production sites -- `WorkingCanvas.tsx:539` (`const armRef = useRef(getResidencyArm())`) and
+  // inside `residencyArm.ts`'s own `shouldConstructCandidateSession()` (the predicate `App.tsx:1009`'s
+  // construction branch calls, `if (shouldConstructCandidateSession())` -- SHOULD-FIX S3's own
+  // extraction; `App.tsx`'s branch no longer reads `getResidencyArm()` inline itself). Not dead code
+  // at either site, so a MISS here was never real signal for it: the function's own literal
+  // source-level name does not need to survive minification for the call to work (a plain,
+  // non-property function reference is exactly what esbuild is free to rename), so this list's
+  // "0 hits" pass was true only because the MINIFIER renamed a binding that was never going away in
+  // the first place -- meaningless, per the reviewer's own words. `setResidencyArm` stays forbidden
+  // below: its own hook REGISTRATION (the switch itself) remains `isInstrumentedBuild()`-gated.
   "setResidencyArm",
-  "getResidencyArm",
   "notifyResidencyArmDatasetOpened",
   "notifyResidencyArmDatasetClosed",
-  // Viewport-residency cut P3w: the candidate arm's own SOLE construction entry point -- its only
-  // call site (`App.tsx`'s `[admitted]` effect) is `if (import.meta.env.DEV && getResidencyArm()
-  // === "candidate")`, the identical guard the arm-switch identifiers above already prove dead in a
-  // production build -- checked here too as the SAME kind of corroborating evidence P3's own pair
-  // above already established (not a new, independent gate; `startCandidateArmSession` lives inside
-  // that exact same branch). Everything `candidateArmSession.ts` itself imports unconditionally
-  // (`TileViewportStreamManager`, etc.) is expected to be tree-shaken away WITH it once this one
-  // import has no live reference left -- not independently re-checked here, per this script's own
-  // disclosed scope (P1d B6b): a hit against one of the identifiers below is the load-bearing proof,
-  // not an exhaustive enumeration of every identifier in the whole candidate-arm module graph
-  // (`canvas/tileGrid.ts`/`tileResidentSet.ts`/`tileIngest.ts` are NOT purely DEV-only artifacts the
-  // way `residencyInstrument.ts`/`residencyArm.ts` are -- `WorkingCanvas.tsx`'s own `tileResidentRef
-  // = useRef(new TileResidentSet())` constructs one UNCONDITIONALLY, arm-agnostic, so that class's
-  // own code is expected, correctly, to survive into a production bundle -- inert, never reachable at
-  // runtime there, but genuinely live code, not a leak).
-  "startCandidateArmSession",
+  // RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): `startCandidateArmSession`
+  // REMOVED from this list here (was present through Viewport-residency cut P3w). It used to sit
+  // behind the SAME `import.meta.env.DEV`-class guard as the identifiers immediately above (`App.tsx`'s
+  // `[admitted]` effect: `if (isInstrumentedBuild() && getResidencyArm() === "candidate")`) -- item 7
+  // dropped the `isInstrumentedBuild()` operand, and SHOULD-FIX S3 later extracted the remaining
+  // comparison into `residencyArm.ts`'s own `shouldConstructCandidateSession()`, so the guard reads
+  // (citation corrected 2026-09-08, post-PASS sweep S-a) `if (shouldConstructCandidateSession())`
+  // today (`App.tsx:1009`), which defaults to `true` (`DEFAULT_RESIDENCY_ARM` is `"candidate"`). A
+  // plain production build therefore calls `startCandidateArmSession` BY DEFAULT now -- checking for
+  // its absence would fail
+  // every green build, testing the wrong thing. See `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS`'s own
+  // doc comment (S1) for why it is not asserted PRESENT here either (a plain function call, not a
+  // property access -- its literal name does not survive minification, present or absent).
   // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): the segment
   // decomposition's own new exports -- same DEV-gated call-site discipline every identifier above
   // already relies on (`residencyInstrument.ts`'s own top doc comment, P3i paragraph).
@@ -101,12 +110,16 @@ const INSTRUMENT_IDENTIFIERS = [
   "recordResidencyEvictionsApplied",
   // Viewport-residency cut P7 (the tile-size sweep selector): the DEV-only identifiers unique to
   // `residency/residencyTileSizeLevel.ts` -- every real call site (`App.tsx`'s
-  // `setResidencyTileSizeLevel`/`getResidencyTileSizeLevel` hook registrations, and the
+  // `setResidencyTileSizeLevel` hook registration, and the
   // `notifyResidencyTileSizeLevelDataset{Opened,Closed}` bookkeeping calls) is gated behind
   // `import.meta.env.DEV`, the same DCE claim the arm-switch identifiers above already rely on --
   // see `residencyTileSizeLevel.ts`'s own top doc comment (it mirrors `residencyArm.ts` exactly).
+  //
+  // SHOULD-FIX S2's own parallel case: `getResidencyTileSizeLevel` REMOVED too -- `App.tsx`
+  // (`tileGridLevel: getResidencyTileSizeLevel()`) sits INSIDE the same now-unconditional candidate
+  // construction branch as `getResidencyArm()`, a live production call for the identical reason.
+  // `setResidencyTileSizeLevel` stays forbidden: only its own hook registration is dev-gated.
   "setResidencyTileSizeLevel",
-  "getResidencyTileSizeLevel",
   "notifyResidencyTileSizeLevelDatasetOpened",
   "notifyResidencyTileSizeLevelDatasetClosed",
 ];
@@ -123,21 +136,69 @@ const INSTRUMENT_IDENTIFIERS = [
 // checked below as "the identifier immediately preceded by `.` or `?.`" (a member-expression
 // invocation), never as "the bare identifier is absent" (which IS expected to be present, as a
 // method-shorthand definition, preceded by `,`/`{`/whitespace, never `.`).
-// Viewport-residency cut P3w item B: the candidate arm's own `WorkingCanvasHandle` methods --
-// unconditionally-constructed object-literal methods (exactly like the three above), whose SOLE real
-// callers all live inside `residency/candidateArmSession.ts`, itself only ever constructed from the
-// SAME DEV-gated branch `startCandidateArmSession` above already covers. Bare method-shorthand
-// definitions surviving is expected (same reasoning as the three above); a surviving CALL SITE is not.
-const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = [
-  "getResidentCounts",
-  "armFirstPixelRenderHook",
-  "disarmFirstPixelRenderHook",
+// RELEASE-0.1 item 7 (2026-09-07, DECISIONS-PENDING entry 52 = (a)): seven identifiers REMOVED from
+// this list (were present through Viewport-residency cut P3w item B: `pushTileBatch`, `clearTile`,
+// `clearAllTiles`, `isTileResidentInCandidateSet`, `establishTileGridContext`,
+// `applyTileViewportContext`, plus `getResidentCounts` -- that one shared with the baseline arm's own
+// dev-only readback). All seven's real callers used to live ONLY inside `residency/
+// candidateArmSession.ts`, itself only ever constructed from the DEV-gated branch this file's own
+// `INSTRUMENT_IDENTIFIERS` comment (`startCandidateArmSession`) used to name -- so a surviving CALL
+// SITE for any of them was a real regression (that branch was supposed to be dead in production).
+// That branch is no longer DEV-gated (item 7): `candidateArmSession.ts` now calls
+// `canvas.pushTileBatch`/`.clearTile`/`.clearAllTiles`/`.isTileResidentInCandidateSet`/
+// `.establishTileGridContext`/`.applyTileViewportContext` unconditionally whenever the candidate arm
+// is active (the default), and `getResidentCounts` gained the SAME unconditional callers inside that
+// same file -- THREE, re-counted (2026-09-07, reviewer gate nit): `emitResidencyStatus` (:685),
+// `emitResidencyRelinquished` (:837), `hasHeadroom` (:885) -- alongside its pre-existing dev-only one
+// in `App.tsx`. A surviving call site for any of these seven is now the EXPECTED, correct shape for a
+// production build shipping the default arm -- checking for its absence would fail every green
+// build. `armFirstPixelRenderHook`/`disarmFirstPixelRenderHook` below are UNCHANGED: their only real
+// callers stay inside `App.tsx`'s own `isInstrumentedBuild()`-gated E2E-hook effect (verified by grep
+// against `src/`, item 7's own audit), so a surviving call site for either of those two remains real
+// signal, unaffected by this piece.
+const EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS = ["armFirstPixelRenderHook", "disarmFirstPixelRenderHook"];
+
+// SHOULD-FIX S1 (2026-09-07, reviewer gate, re-review after RELEASE-0.1 item 7's first pass): the
+// preregistration asked for the candidate-arm identifiers to be EXPECTED PRESENT, not merely removed
+// from the forbidden list above -- a MISS here (an identifier this list expects to survive, but
+// doesn't) is now a FAIL too, the positive mirror of `INSTRUMENT_IDENTIFIERS`'s own negative check.
+// Re-verified empirically against a real `npm run build` output (`vite.config.ts:29`:
+// `minify: "esbuild"` for a plain build, the same config a shipped artifact uses) before writing this
+// list, not assumed: `pushTileBatch`/`clearTile`/`clearAllTiles`/`isTileResidentInCandidateSet`/
+// `establishTileGridContext`/`applyTileViewportContext`/`getResidentCounts` -- object-literal
+// method-shorthand names `WorkingCanvas.tsx` defines on `WorkingCanvasHandle` -- each DID survive as
+// a real call-shaped (`.name(`) occurrence, confirmed by a direct grep of the built `dist/` before
+// this list was written.
+//
+// **`startCandidateArmSession` is NOT included here, a correction to the piece's own preregistration
+// note ("the reviewer counted them in the clean bundle")** -- re-checked directly against a real
+// build and found NOT present as literal text, in either bare or call-shaped form: unlike the seven
+// above, it is a PLAIN function call (`App.tsx`: `const session = startCandidateArmSession({...})`,
+// no `.`/`?.` prefix), never a property access, so esbuild's minifier is free to rename its local
+// binding -- and does. Asserting its literal presence here would be a check that FAILS ON EVERY GREEN
+// BUILD, testing the wrong thing (the same one-directional-MISS caveat this file's own top doc
+// comment, P1d B6b, already names for the negative list). Its own reachability is corroborated
+// INDIRECTLY instead: every one of the seven identifiers below is called only from CODE
+// `startCandidateArmSession` itself constructs (`candidateArmSession.ts`) -- their survival proves
+// that code was NOT dead-code-eliminated from this build (post-PASS sweep nit, 2026-09-08:
+// corrected from the stronger, imprecise "proof that branch was reachable" -- surviving in the
+// BUNDLE is not the same claim as being TAKEN at runtime, this script's own top doc comment's
+// MISS-is-one-directional caveat cuts the other way too). No single check here establishes "the
+// default arm is candidate, and a plain production build actually takes that branch" alone; three
+// things together do: `residencyArm.test.ts`'s own unit test (the PREDICATE, `shouldConstructCandidateSession()`,
+// returns `true` in production mode); this check (the branch's own downstream code is present, not
+// eliminated, in the built artifact); and the E2E ledgers (`regression.mjs`/`filter-panel.mjs`'s own
+// render-trace output, RELEASE-0.1 item 7's report -- direct runtime evidence the branch is TAKEN
+// and behaves correctly when it is), without needing `startCandidateArmSession`'s own literal name
+// to survive too.
+const EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS = [
   "pushTileBatch",
   "clearTile",
   "clearAllTiles",
   "isTileResidentInCandidateSet",
   "establishTileGridContext",
   "applyTileViewportContext",
+  "getResidentCounts",
 ];
 
 function collectFiles(dir) {
@@ -180,8 +241,9 @@ function main() {
     }
   }
 
-  // P1d B6c: a SEPARATE pass for the three expected-present, caller-checked identifiers -- see
-  // `EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS`'s own doc comment. A bare occurrence is NOT a hit
+  // P1d B6c: a SEPARATE pass for the two expected-present, caller-checked identifiers (RELEASE-0.1
+  // item 7 removed the other five; see `EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS`'s own doc
+  // comment above for the full account). A bare occurrence is NOT a hit
   // (expected: the method-shorthand definition); only an occurrence immediately preceded by `.` or
   // `?.` (a real call site surviving) counts.
   const callerHits = [];
@@ -196,7 +258,26 @@ function main() {
     }
   }
 
-  if (hits.length > 0 || callerHits.length > 0) {
+  // SHOULD-FIX S1: the POSITIVE mirror -- each of `EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS` must have
+  // AT LEAST ONE call-shaped (`.name(`) occurrence SOMEWHERE across the whole dist/ (not per-file --
+  // esbuild's own chunking is not this script's concern, only whether the call site reached the
+  // shipped output at all). A ZERO-hit identifier here is a FAIL: the preregistration's own claim
+  // ("expected present" as of RELEASE-0.1 item 7) does not hold for it.
+  const missingExpectedCallSites = [];
+  for (const id of EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS) {
+    const callPattern = new RegExp(`[.?]\\s*${id}\\s*\\(`, "g");
+    let totalCount = 0;
+    for (const file of files) {
+      const text = readFileSync(file, "utf8");
+      const matches = text.match(callPattern);
+      if (matches) totalCount += matches.length;
+    }
+    if (totalCount === 0) {
+      missingExpectedCallSites.push(id);
+    }
+  }
+
+  if (hits.length > 0 || callerHits.length > 0 || missingExpectedCallSites.length > 0) {
     if (hits.length > 0) {
       console.error(`check:dist-clean: FAIL -- ${hits.length} instrument-identifier hit(s) survived into dist/:`);
       for (const h of hits) {
@@ -215,12 +296,23 @@ function main() {
         "The bare identifier surviving is expected (a real WorkingCanvasHandle method name, B6c); a CALL to it surviving means its DEV-gated caller (App.tsx's E2E hook registrations) was not dead-code-eliminated -- a real regression, not the expected shape."
       );
     }
+    if (missingExpectedCallSites.length > 0) {
+      console.error(
+        `check:dist-clean: FAIL -- ${missingExpectedCallSites.length} identifier(s) expected to have a surviving call site (S1) had ZERO:`
+      );
+      for (const id of missingExpectedCallSites) {
+        console.error(`  ${id}`);
+      }
+      console.error(
+        "These are the candidate arm's own WorkingCanvasHandle methods -- RELEASE-0.1 item 7 flipped the default arm to candidate, so a plain production build is now expected to construct and call a candidate-arm session; zero call sites means that branch did not reach the bundle, or reached it and was stripped -- a real regression from what item 7 shipped, not the expected shape."
+      );
+    }
     process.exitCode = 1;
     return;
   }
 
   console.log(
-    `check:dist-clean: PASS -- 0 hits for ${INSTRUMENT_IDENTIFIERS.length} instrument identifiers, and 0 surviving call sites for ${EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS.length} expected-present identifiers, across ${files.length} dist file(s).`
+    `check:dist-clean: PASS -- 0 hits for ${INSTRUMENT_IDENTIFIERS.length} instrument identifiers, 0 surviving call sites for ${EXPECTED_PRESENT_CALLER_CHECKED_IDENTIFIERS.length} expected-absent-caller identifiers, and >=1 surviving call site each for ${EXPECTED_PRESENT_CALL_SITE_IDENTIFIERS.length} expected-present identifiers, across ${files.length} dist file(s).`
   );
 }
 
