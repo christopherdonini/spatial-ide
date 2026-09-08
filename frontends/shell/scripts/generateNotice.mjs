@@ -13,8 +13,16 @@
 // imported directly and called with the SAME esbuild metafile the bundle viewer's own build just
 // produced (`renderer/bundle-viewer/dist-metafile.json`, written by that package's own
 // `build.mjs`, sibling to `dist/` so it never becomes a published-bundle viewer asset) -- so this
-// script's output is `notice()`'s own output, not a copy of it, and it cannot drift from the text
-// every published bundle's own `viewer/NOTICE.txt` already carries.
+// script's output IS `notice()`'s own output, not a hand-copy of it.
+//
+// **This process's own cwd is `frontends/shell`, not `renderer/bundle-viewer`** -- `notice()`
+// resolves the third-party package directories its own metafile names against ITS OWN file
+// location by default (`notice.mjs`'s own `baseDir` parameter, release-cut fix batch MUST-FIX 1),
+// precisely so a caller running from a different cwd (this script) does not silently read a
+// DIFFERENT `node_modules` tree (this package's own, which declares different dependency versions
+// than the viewer's). Byte-identity with `renderer/bundle-viewer/dist/NOTICE.txt` is not merely
+// asserted in this comment -- it is a real vitest assertion,
+// `src/notices/noticeByteIdentity.test.ts`.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

@@ -48,9 +48,15 @@
 //! - **`AuditError::LogInsideDestination`** and **`AuditError::RotationFailed`** — raised while
 //!   establishing the log, before it is usable.
 //! - **`PermissionError::DestinationUnresolvable`** — there is no resolved destination to record.
-//! - **every refusal `publish::preflight` can make**: `SourceNotPinned`, `LicenseDeclaredTwice`,
-//!   `LicenseNotCarryable`, `OperatorLicenseEmpty`, the three `ViewerLicense*` refusals,
-//!   `CorrespondingSourceNotDurable`, `DatasetNameRejected`, and any `Style` or `Engine` error.
+//! - **every refusal `publish::preflight` can make**: `RowFilterNotRecordable` (pre-existing;
+//!   missing from an earlier draft of this list, added by the release-cut fix batch),
+//!   `SourceNotPinned`, `LicenseDeclaredTwice`, `LicenseNotCarryable`, `OperatorLicenseEmpty`, the
+//!   three `ViewerLicense*` refusals, `CorrespondingSourceNotDurable`, `DatasetNameRejected`, and
+//!   any `Style` or `Engine` error — **including `ReaderCeilingExceeded`** (RELEASE-0.1 item 3e,
+//!   ADR-025: the preflight refuses before the destination is even resolved, so this is the
+//!   INTENDED shape, not a gap — a refused preflight never reached step 2, let alone step 3, and
+//!   `kernel/tests/permission_boundary.rs`'s own
+//!   `an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record` test proves it.
 //!
 //! **The ordering is deliberate and the omission is defensible, but only for a stated reason**:
 //! nothing on that list is an attempt to *do* the operation. Each one is a request that never

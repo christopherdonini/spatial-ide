@@ -3,6 +3,8 @@
 
 import { useState } from "react";
 
+import { recordNamed } from "../console/recorder";
+
 // RELEASE-0.1 Amendment 3, item 2 ("Notice channel", Q2 shape): fed by a BUILD-TIME FILE, never a
 // Tauri command. `src/generated/NOTICE.txt` is written by `scripts/generateNotice.mjs` (a
 // `pretypecheck`/`prebuild` step, `package.json`) from `renderer/bundle-viewer/notice.mjs`'s
@@ -28,7 +30,13 @@ export default function NoticesPanel() {
       <button
         type="button"
         className="notices-disclosure"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => {
+          // ADR-027 class C, `console/surfaceRegistry.ts`'s `notices.togglePanelExpanded` row --
+          // reflexive by design, the same as `ConsolePanel.tsx`'s own toggle (`:78`): pure view
+          // state, recorded the same as every other panel's disclosure.
+          recordNamed("gui-action", "notices.togglePanelExpanded");
+          setExpanded((v) => !v);
+        }}
         aria-expanded={expanded}
       >
         {expanded ? "▾" : "▸"} Notices

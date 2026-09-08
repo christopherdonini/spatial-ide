@@ -52,11 +52,18 @@ import ceilings from '../ceilings.json';
  * Declared ceilings (ADR-010 rule 6). Behaviour at each is declared with it, not discovered.
  *
  * **Re-exports of the ONE source, `renderer/bundle-viewer/ceilings.json`** (RELEASE-0.1 item 3e;
- * ADR-025's own constraint: "the ceilings' figures live in the viewer's own declared constants …
- * read at preflight — never a second copy that can drift"). The kernel's publish preflight
- * (`kernel/src/publish/ceilings.rs`) `include_str!`s this same JSON file rather than a second,
- * hand-kept copy of these five numbers — these five `const`s are the values this module has
- * always exported, unchanged, now sourced from one file instead of five literals.
+ * ADR-025's own Decision, quoted in full: "the ceilings' figures live in the viewer's own declared
+ * constants (`renderer/bundle-viewer/src/render.ts`), read at preflight — never a second copy that
+ * can drift."). The kernel's publish preflight (`kernel/src/publish/ceilings.rs`) `include_str!`s
+ * this same JSON file rather than a second, hand-kept copy of these five numbers — these five
+ * `const`s are the values this module has always exported, unchanged, now sourced from one file
+ * instead of five literals.
+ *
+ * **Reconciliation with the ADR's own path (release-cut fix batch, SHOULD-FIX):** the ADR's
+ * parenthetical names THIS file as where the figures live; this piece moved the authored values
+ * into `ceilings.json` instead, with this file's five `const`s now re-exports of it — see that
+ * file's own module doc comment for the full reconciliation. The ADR's path reference is stale;
+ * correcting it is an appended note owed on the human's word, not made here.
  */
 export const MAX_FEATURES: number = ceilings.MAX_FEATURES;
 export const MAX_PARTITIONS: number = ceilings.MAX_PARTITIONS;

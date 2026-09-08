@@ -794,6 +794,12 @@ pub fn dataset_name_for(ds: &Dataset) -> String {
 /// run still resolves nothing under a resource directory (there isn't one), and falls through to
 /// the dev-tree path exactly as before. Both paths are named in the refusal when neither holds.
 ///
+/// **The `dist/*` resource glob is FLAT, not recursive** (release-cut fix batch nit): it copies
+/// `dist/`'s immediate files (`index.html`, `app.js`, `NOTICE.txt` today) into `bundle-viewer/`,
+/// never a `dist/**` glob. Correct while the viewer's own build emits no subdirectory; if that ever
+/// changes (a future asset folder, say), the resource mapping and this resolution both need
+/// revisiting together, not assumed to still work.
+///
 /// **Takes an already-resolved resource directory, not a `tauri::AppHandle`**, on this module's own
 /// established discipline (`EventProgress`'s doc comment, above: "generic over a plain closure, not
 /// `tauri::AppHandle` directly, so this stays testable without a live Tauri app") — the caller
@@ -823,7 +829,7 @@ fn dev_tree_viewer_dir() -> std::path::PathBuf {
 
 /// The fallback order [`bundled_viewer`] resolves against, as a pure function of an injectable
 /// "does this directory exist" predicate — no `AppHandle`, no real filesystem I/O, so
-/// `resolver_order_tests` below can prove the ORDER (packaged resource directory tried before the
+/// `resolver_tests` below can prove the ORDER (packaged resource directory tried before the
 /// dev-tree path) without building the real viewer or faking a Tauri runtime.
 fn resolve_viewer_dir(
     resource_dir: Option<&std::path::Path>,
@@ -840,9 +846,27 @@ fn resolve_viewer_dir(
             return Ok((*label, dir.clone()));
         }
     }
+
+    // **The dev-tree path VALUE is suppressed from the refusal string when a resource dir was
+    // supplied** (release-cut fix batch, MUST-FIX/SHOULD-FIX combined): `dev_tree_viewer_dir()`
+    // bakes the BUILD MACHINE's own `CARGO_MANIFEST_DIR` (a compile-time constant) into whatever
+    // string this function returns — fine for a `tauri dev` refusal read on that same machine, but
+    // a real path-disclosure once it ships inside a packaged binary's error text, naming a
+    // directory that means nothing on the operator's own machine while leaking one from whoever
+    // built the installer. The CANDIDATE is still named (both labels stay in the string, in
+    // candidate order — `resolver_tests::the_packaged_labels_index_precedes_the_dev_tree_labels_
+    // index_in_the_refusal_string` pins this), only its specific path value is replaced.
+    // `resource_dir` being `Some` is exactly the packaged-build signal — a plain `tauri dev` run
+    // never supplies one (`commands.rs`'s own call sites).
     let tried = candidates
         .iter()
-        .map(|(label, dir)| format!("{label} ({})", dir.display()))
+        .map(|(label, dir)| {
+            if resource_dir.is_some() && *label == "the dev-tree checkout path" {
+                format!("{label} (not applicable to a packaged installation)")
+            } else {
+                format!("{label} ({})", dir.display())
+            }
+        })
         .collect::<Vec<_>>()
         .join(", or ");
     Err(format!(
@@ -884,13 +908,50 @@ mod resolver_tests {
     }
 
     #[test]
-    fn neither_path_existing_names_both_in_the_refusal() {
+    fn neither_path_existing_names_both_labels_in_the_refusal_but_suppresses_the_dev_tree_value() {
         let resource = std::path::Path::new("Z:/pretend/resources");
         let err = resolve_viewer_dir(Some(resource), |_| false).unwrap_err();
         assert!(err.contains("the packaged resource directory"), "{err}");
         assert!(err.contains("the dev-tree checkout path"), "{err}");
         assert!(err.contains(&resource.join("bundle-viewer").display().to_string()), "{err}");
-        assert!(err.contains(&dev_tree_viewer_dir().display().to_string()), "{err}");
+        // SHOULD-FIX (release-cut fix batch): the dev-tree path's own VALUE — the build machine's
+        // `CARGO_MANIFEST_DIR` — must NOT appear in a refusal a packaged binary can emit.
+        assert!(
+            !err.contains(&dev_tree_viewer_dir().display().to_string()),
+            "the build machine's own dev-tree path leaked into a packaged-context refusal: {err}"
+        );
+        assert!(err.contains("not applicable to a packaged installation"), "{err}");
+    }
+
+    /// **MUST-FIX 7 (release-cut fix batch): pins that the packaged resource directory is tried
+    /// FIRST, not merely that it is admissible when the dev-tree path is excluded from the
+    /// predicate.** Swapping the two `candidates.push` calls in `resolve_viewer_dir` would leave
+    /// every OTHER test in this module green (each `exists` closure there matches only one
+    /// specific path), because none of them puts both candidates in a state where either could
+    /// win. This one does: with `exists` unconditionally `true`, both the packaged and the
+    /// dev-tree directories "exist" — the WINNER is entirely a function of push order, and a
+    /// swap would flip this assertion.
+    #[test]
+    fn when_both_paths_exist_the_packaged_resource_directory_wins_not_the_dev_tree_path() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let (label, dir) = resolve_viewer_dir(Some(resource), |_| true).unwrap();
+        assert_eq!(label, "the packaged resource directory");
+        assert_eq!(dir, resource.join("bundle-viewer"));
+    }
+
+    /// **MUST-FIX 7's other half: an index comparison, not a `contains` (which is order-blind).**
+    /// Proves the packaged label is textually FIRST in the refusal string too — `contains` alone
+    /// would pass under either order; this fails if the two candidates were ever emitted swapped.
+    #[test]
+    fn the_packaged_labels_index_precedes_the_dev_tree_labels_index_in_the_refusal_string() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let err = resolve_viewer_dir(Some(resource), |_| false).unwrap_err();
+        let packaged_at = err.find("the packaged resource directory").expect("packaged label present");
+        let dev_tree_at = err.find("the dev-tree checkout path").expect("dev-tree label present");
+        assert!(
+            packaged_at < dev_tree_at,
+            "packaged label must precede the dev-tree label in the refusal string: {err}"
+        );
     }
 }
 

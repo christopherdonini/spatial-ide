@@ -211,14 +211,32 @@ and the terms URL:
 - **Live channel 2 — repository readers.** `LICENSES/README.md:113-133` ("Third-party *data*: the
   EPSG Geodetic Parameter Dataset, © IOGP"), added because `frontends/shell/src` carries no
   existing about/notice surface (grepped for "About"/"third-party", nothing found).
-- **A third channel is OWED, not yet live: the packaged shell app.** A packaged Tauri build of
+- **A third channel — the packaged shell app — dated correction, 2026-09-07/08: substantially
+  discharged, one piece named still owed.** The paragraph below, as originally written, said this
+  channel was "OWED, not yet live"; the release-engineering cut's packaged-build piece (RELEASE-0.1
+  items 2/3) landed it. Retained, struck through in substance rather than deleted, per this
+  repository's own append/correct discipline. **What is now true:** a packaged Tauri build of
   `frontends/shell` ships the `spatial-engine` binary with `crs-catalog.json` compiled in
-  (`include_str!`, `crs_catalog.rs`) — the definition travels with it — but the app has no notice
-  surface today, and the viewer is not wired into a packaged build: `publish.rs:786-794` records
-  that nothing wires the bundle viewer into `tauri.conf.json`'s `bundle.resources` and that the
-  packaging decision is out of that piece's scope. When packaging lands, this channel needs the same acknowledgement the
-  other two already carry; recorded here so it is not forgotten rather than assumed covered by the
-  other two.
+  (`include_str!`, `crs_catalog.rs` — unchanged from the paragraph below), AND now also ships the
+  bundle viewer as a resource (`tauri.conf.json`'s `bundle.resources`) and a Notices view + a
+  beside-the-executable `NOTICE.txt` carrying the IOGP acknowledgement and the terms URL (the same
+  two live channels' own text, byte-identical, `frontends/shell/src/notices/
+  noticeByteIdentity.test.ts`). **What remains genuinely owed, named rather than assumed
+  covered:** the installed `NOTICE.txt` does NOT enumerate the Rust crate notices that travel with
+  the `spatial-engine`/`spatial-ide-shell` binary itself (this file's own tables below — kernel,
+  engine, protocol and their dependencies; MIT/Apache-2.0 §4(d) notices) — a later piece generates
+  those from the lockfile into the installed copy. The original paragraph's own citation,
+  `publish.rs:786-794`, is **superseded**: that doc comment has since been rewritten (dated
+  2026-09-07) to describe the packaged-resource-first resolution the packaging piece built, and no
+  longer records the gap this paragraph originally cited it for.
+  <br><br>
+  *Original paragraph, retained as filed:* A packaged Tauri build of `frontends/shell` ships the
+  `spatial-engine` binary with `crs-catalog.json` compiled in (`include_str!`, `crs_catalog.rs`) —
+  the definition travels with it — but the app has no notice surface today, and the viewer is not
+  wired into a packaged build: `publish.rs:786-794` records that nothing wires the bundle viewer
+  into `tauri.conf.json`'s `bundle.resources` and that the packaging decision is out of that
+  piece's scope. When packaging lands, this channel needs the same acknowledgement the other two
+  already carry; recorded here so it is not forgotten rather than assumed covered by the other two.
 - **Verification (3) reference** — the "Verification (3)" paragraph above and
   `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
   `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not

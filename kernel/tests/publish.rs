@@ -555,6 +555,10 @@ fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_at_preflight_
         Ok(_) => panic!("expected ReaderCeilingExceeded, preflight admitted the request"),
     }
     assert!(!dest.exists(), "preflight must refuse before a staging directory is ever created");
+
+    // Disk hygiene (release-cut fix batch): a multi-million-row parquet fixture must not linger
+    // under `%TEMP%\spatial-kernel-publish-tests\` after this test has finished with it.
+    let _ = std::fs::remove_dir_all(&d);
 }
 
 #[test]
