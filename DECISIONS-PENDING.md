@@ -50,7 +50,12 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     of `DEPENDENCY-LICENSES.md`: a custodian Python script had rewritten seven files on main as CRLF
     (Windows text-mode newline translation — `open(path, "w")` without `newline="\n"`); those seven
     are restored to LF (content byte-identical) and the mechanic recorded. The 21 others predate this
-    cut (`git ls-files --eol | grep i/crlf`, minus the deliberately `-text` licence corpus). The eol
+    cut (`git ls-files --eol | grep i/crlf`, minus the deliberately `-text` licence corpus), and a
+    further **23 files carry MIXED endings** (`i/mixed`: `engine/src/geoarrow.rs`, `engine/src/wkb.rs`,
+    `kernel/src/params.rs`, the data-plane and transport-bakeoff sources, the ADR-003 spike app,
+    `docs/adr/ADR-012-data-plane-transport.md` — an Accepted ADR, whose bytes the custodian touched
+    once by an over-broad filter and reverted the same hour). Both lists are the policy's blast
+    radius. The eol
     class has now bitten four times (the hash pin; the imported-module shebang; a check script's
     multi-line pattern; the whole-file conflict). Options: **(a) RECOMMENDED — `* text=auto eol=lf`
     plus explicit `-text`/`binary` for the pinned corpora and any true binaries (`.svg`? the
