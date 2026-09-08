@@ -24,10 +24,12 @@
 //   gap-not-yet-closed marker that must never reach a BUILT artifact: `*** BOOTSTRAP PASS` (must be
 //   superseded within the same `npm run build` invocation -- `generateNotice.mjs`'s own two-pass
 //   comment) and the `OWED`/`not yet done`/`named gap` family (removed from every header by an
-//   earlier piece of this same batch). One deliberate exception: `notice.mjs`'s own DuckDB
-//   amalgamation gap paragraph names a REAL, currently open gap and is worded so it does not match
-//   this family -- if a future edit makes it match, that is the bug this check exists to catch, not
-//   a false positive to special-case around.
+//   earlier piece of this same batch). **The one deliberate exception this comment used to name --
+//   `notice.mjs`'s DuckDB amalgamation GAP PARAGRAPH, worded so it did not match the family -- is
+//   gone** (architect advisory A1, this fix batch): DECISIONS-PENDING entry 62 = (a) CLOSED that gap,
+//   the paragraph was deleted, and the 26 works now carry their full upstream licence texts in their
+//   own section. There is no exception left; every member of the family is forbidden outright, and a
+//   future edit that reintroduces one is the bug this check exists to catch.
 // - **SHOULD-FIX 5.** A bare substring match (`text.includes(name)`) proves almost nothing here,
 //   and that is measured rather than argued: on this exact tree, deleting a name's OWN entry line
 //   (`^<name> <version> — …`) from the built output left the name still present as a substring for
@@ -67,6 +69,7 @@ import { fileURLToPath } from "node:url";
 import { collectLinkedCrates } from "./rustCrateNotices.mjs";
 import {
   AMALGAMATION_HEADING,
+  assertCrateVersionMatchesManifest,
   assertTarballMatchesManifest,
   findLibduckdbSys,
   readAmalgamationManifest,
@@ -384,19 +387,29 @@ function main() {
   const viewerMetafile = JSON.parse(readFileSync(VIEWER_METAFILE_PATH, "utf8"));
   const expectedViewerCount = packageNamesFromMetafile(viewerMetafile).size;
 
-  // The fourth set's own expected cardinality, and the DRIFT GUARD (entry 62's preregistration,
-  // item 4). Both read the pinned manifest -- never a literal 26 -- and both fail closed:
+  // The fourth set's own expected cardinality, and the THREE guards (entry 62's preregistration,
+  // item 4; the version guard added by this fix batch, architect B1 = reviewer M1). All read the
+  // pinned manifest -- never a literal 26 -- and all fail closed:
   //   - `readAmalgamationManifest()` re-verifies every pinned licence file's sha256 against the
   //     bytes on disk, so a corrupted or edited pinned text throws here rather than being validated
   //     against a hash that no longer describes it;
+  //   - `assertCrateVersionMatchesManifest()` compares the VERSION of the `libduckdb-sys` crate this
+  //     build links against the version the manifest pins. A bump that keeps the same 26 directories
+  //     passes every other check here while the section prints a tag, a commit and a pinned
+  //     directory that describe the old version -- this is the one check that catches it;
   //   - `assertTarballMatchesManifest()` compares the manifest's library list against the
-  //     `third_party/` listing inside the pinned crate's OWN `duckdb.tar.gz`, so a DuckDB upgrade
-  //     that adds or removes a bundled work is caught at check time instead of shipping a section
-  //     that confidently enumerates a tree that has changed underneath it.
-  // Both throw rather than returning a failure, and `main()` is wrapped accordingly below: an
+  //     `third_party/` listing inside the pinned crate's OWN `duckdb.tar.gz`, and verifies the
+  //     recorded `crate_tarball` sha256 and directory count against that archive, so a DuckDB
+  //     upgrade that adds or removes a bundled work is caught at check time instead of shipping a
+  //     section that confidently enumerates a tree that has changed underneath it.
+  // All throw rather than returning a failure, and `main()` is wrapped accordingly below: an
   // unverifiable notice must stop the pipeline, not print a PASS line with a caveat.
   const { manifest: amalgamationManifest } = readAmalgamationManifest();
   const duckdbCrate = findLibduckdbSys(crates);
+  const pinnedCrate = assertCrateVersionMatchesManifest({
+    crate: duckdbCrate,
+    manifest: amalgamationManifest,
+  });
   const tarball = assertTarballMatchesManifest({
     crateSrcDir: duckdbCrate.dir,
     manifest: amalgamationManifest,
@@ -453,8 +466,9 @@ function main() {
       `across ${files.length} dist file(s); no forbidden or degraded strings; anchored entry-line ` +
       `counts match each section's own source (viewer ${actual.viewer}, frontend ` +
       `${actual.frontend}, Rust crates ${actual.rust}, DuckDB amalgamation ${actual.amalgamation}); ` +
-      `every pinned amalgamation licence file's sha256 re-verified and the crate tarball's ` +
-      `third_party/ listing (${tarball.count} dirs) matches the pinned manifest.`
+      `every pinned amalgamation licence file's sha256 re-verified, the linked ${pinnedCrate.name} ` +
+      `${pinnedCrate.version} is the version the manifest pins, and the crate tarball's own sha256 ` +
+      `and third_party/ listing (${tarball.count} dirs) match the pinned manifest.`
   );
 }
 

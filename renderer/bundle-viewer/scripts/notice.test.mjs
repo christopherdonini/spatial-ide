@@ -122,6 +122,16 @@ test('the two-argument (bundle/viewer) header names no unmet obligation', () => 
 // installed copy. "application-wide" still stands rather than becoming "complete", because the wider
 // file states its four sources rather than claiming exhaustiveness, and a pointer should not upgrade
 // that. Both halves are asserted, so neither the wording nor the claim can drift back silently.
+//
+// **The scope sentence names FOUR sets** (architect Q4, release-cut fix batch on the entry-62
+// piece). It named three -- viewer, packaged frontend's npm dependencies, linked Rust crates --
+// which was complete until the fourth section landed and stopped being complete the moment it did.
+// The fourth is asserted BY NAME below, not merely admitted by the window: a bounded `[\s\S]` window
+// proves the two anchors are near each other, and would have gone on passing with the DuckDB clause
+// absent. The window itself is measured, not guessed: the gap between the two anchors is **207
+// characters** on the current wording (was 133 with three sets), so the existing 240 bound still
+// holds it with room, and is deliberately left at 240 rather than widened to fit -- a window that
+// grows to fit whatever the text became stops being a check.
 test('the two-argument header states both of the file\'s two distribution scopes', () => {
   const text = notice(fakeMetafile);
   assert.match(text, /inside a published\nbundle, this is the whole notice set the bundle owes/);
@@ -129,6 +139,10 @@ test('the two-argument header states both of the file\'s two distribution scopes
   assert.match(
     text,
     /The application-wide notice set[\s\S]{0,240}?is the separate NOTICE\.txt installed beside the executable/,
+  );
+  assert.match(
+    text,
+    /the third-party works inside DuckDB's own amalgamated C\/C\+\+ source tree --\nis the separate NOTICE\.txt/,
   );
   assert.doesNotMatch(text, /complete notice set/);
 });

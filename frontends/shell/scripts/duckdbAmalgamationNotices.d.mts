@@ -69,5 +69,15 @@ export function assertTarballMatchesManifest(options: {
 /** The single linked `libduckdb-sys` crate. Throws if it is absent or duplicated. */
 export function findLibduckdbSys(crates: LinkedCrate[]): LinkedCrate;
 
+/**
+ * The version guard: the linked crate's own name/version against the version the manifest pins.
+ * Throws, naming both versions, when they differ -- the tag, commit and pinned directory the notice
+ * prints describe the pinned version only.
+ */
+export function assertCrateVersionMatchesManifest(options: {
+  crate: LinkedCrate;
+  manifest: AmalgamationManifest;
+}): { name: string; version: string };
+
 /** The whole fourth set, both guards run, shaped for `notice()`'s `extra.duckdbAmalgamation`. */
 export function buildAmalgamationSet(crates: LinkedCrate[]): NoticeAmalgamationSet;

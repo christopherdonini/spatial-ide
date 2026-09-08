@@ -16,13 +16,14 @@
 // `npm run build` first, same precondition `noticeByteIdentity.test.ts` already carries.
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { collectLinkedCrates } from "../../scripts/rustCrateNotices.mjs";
 import {
   AMALGAMATION_HEADING,
+  assertCrateVersionMatchesManifest,
   assertTarballMatchesManifest,
   buildAmalgamationSet,
   findLibduckdbSys,
@@ -124,6 +125,24 @@ describe("the DuckDB amalgamation notice set (DECISIONS-PENDING entry 62 = (a))"
     expect(withCrlf).toEqual(["miniz/LICENSE"]);
   });
 
+  // The UTF-8 round trip (architect advisory A4). The manifest hashes BYTES; the notice embeds
+  // `bytes.toString("utf8")`. That decode is lossy for anything that is not valid UTF-8 -- a
+  // Latin-1 copyright line would become U+FFFD, silently, under a sha256 that still matches -- so
+  // the generator refuses a pinned file that does not round-trip, and this asserts all 27 do.
+  it("decodes every pinned file as UTF-8 without loss", () => {
+    const pinnedDir = resolvePinnedDir();
+    const { manifest } = readAmalgamationManifest();
+    for (const work of manifest.works) {
+      for (const f of work.files) {
+        const bytes = readFileSync(join(pinnedDir, work.lib, f.file));
+        expect(
+          Buffer.from(bytes.toString("utf8"), "utf8").equals(bytes),
+          `${work.lib}/${f.file} must round-trip through UTF-8 -- the notice conveys the decoded text`
+        ).toBe(true);
+      }
+    }
+  });
+
   // THE DRIFT GUARD. The pinned manifest is a snapshot taken by hand; nothing about bumping `duckdb`
   // in `engine/Cargo.toml` would otherwise reveal that the amalgamation gained a 27th bundled work
   // this application now conveys with no text and no name.
@@ -134,6 +153,75 @@ describe("the DuckDB amalgamation notice set (DECISIONS-PENDING entry 62 = (a))"
     const result = assertTarballMatchesManifest({ crateSrcDir: crate.dir, manifest });
     expect(result.count).toBe(26);
     expect(result.dirs).toEqual(manifest.works.map((w: { lib: string }) => w.lib).sort());
+  });
+
+  // THE VERSION GUARD (architect must-fix B1 = reviewer must-fix M1). Everything else in this file
+  // resolves the crate BY NAME and compares directory NAMES, which leaves the ordinary shape of a
+  // DuckDB bump invisible: a new crate version whose amalgamation still carries the same 26
+  // directories passes the drift guard, the hashes (of files in THIS repository) still match, and the
+  // section goes on printing tag v1.5.5 and commit d8cdaa33… for a tree the application no longer
+  // compiles. Both directions are asserted: the real linked crate passes, and a falsified one fails
+  // NAMING BOTH VERSIONS, since a guard whose message does not say what it found and what it expected
+  // sends the next reader to the wrong file.
+  it("refuses a linked libduckdb-sys whose version is not the one the manifest pins", () => {
+    const { manifest } = readAmalgamationManifest();
+    const crate = findLibduckdbSys(collectLinkedCrates());
+    expect(assertCrateVersionMatchesManifest({ crate, manifest })).toEqual({
+      name: "libduckdb-sys",
+      version: manifest.crate.version,
+    });
+    expect(() =>
+      assertCrateVersionMatchesManifest({ crate: { ...crate, version: "1.10600.0" }, manifest })
+    ).toThrow(/this build links libduckdb-sys 1\.10600\.0/);
+    expect(() =>
+      assertCrateVersionMatchesManifest({ crate: { ...crate, version: "1.10600.0" }, manifest })
+    ).toThrow(/pins libduckdb-sys 1\.10505\.0/);
+    // And it must say WHY that matters -- the tag and commit the section prints are properties of
+    // the pinned version alone.
+    expect(() =>
+      assertCrateVersionMatchesManifest({ crate: { ...crate, version: "1.10600.0" }, manifest })
+    ).toThrow(/v1\.5\.5/);
+  });
+
+  // The recorded `crate_tarball` block, which nothing read until this fix batch (reviewer S4). Both
+  // fields are checkable offline against the archive cargo resolved, so both are checked on every
+  // run -- a recorded-but-unread hash reads to a reviewer as a verified one.
+  it("verifies the recorded crate_tarball sha256 and directory count against the archive on disk", () => {
+    const { manifest } = readAmalgamationManifest();
+    const crate = findLibduckdbSys(collectLinkedCrates());
+    const tarballBytes = readFileSync(join(crate.dir, manifest.crate_tarball.file));
+    expect(createHash("sha256").update(tarballBytes).digest("hex")).toBe(manifest.crate_tarball.sha256);
+    expect(tarballThirdPartyDirs(crate.dir).length).toBe(manifest.crate_tarball.third_party_dir_count);
+    // A falsified recorded hash must stop the build, not be quietly outvoted by the listing check.
+    expect(() =>
+      assertTarballMatchesManifest({
+        crateSrcDir: crate.dir,
+        manifest: {
+          ...manifest,
+          crate_tarball: { ...manifest.crate_tarball, sha256: "0".repeat(64) },
+        },
+      })
+    ).toThrow(/crate_tarball\.sha256 records 0{64}/);
+  });
+
+  // `upstream_third_party_tree_sha` is the one recorded field that is NOT offline-checkable: it names
+  // a git tree object inside DuckDB's own repository, and re-deriving it needs the network this build
+  // deliberately never touches. It stays as recorded provenance -- derived at pin time as tag v1.5.5
+  // -> commit d8cdaa33… -> that commit's root tree -> its `third_party` subtree, via the GitHub trees
+  // API call the pinned directory's README records in step 4. What can be asserted offline is that it
+  // is present and well-formed, which is what this asserts, and no more than that.
+  it("records the upstream third_party tree sha as well-formed provenance (not re-derived here)", () => {
+    const { manifest } = readAmalgamationManifest();
+    expect(manifest.upstream_third_party_tree_sha).toMatch(/^[0-9a-f]{40}$/);
+    expect(manifest.upstream_repository).toBe("https://github.com/duckdb/duckdb");
+  });
+
+  // The pinned DIRECTORY's name and the manifest's own version are two statements of one fact, and
+  // the notice prints both (the section cites LICENSES/third-party/duckdb-<version>). A rename on
+  // either side must fail rather than send a recipient to a path that does not exist.
+  it("requires the pinned directory to be named for the version its manifest pins", () => {
+    const { manifest } = readAmalgamationManifest();
+    expect(basename(resolvePinnedDir())).toBe(`duckdb-${manifest.duckdb_version}`);
   });
 
   it("names 26 works, and the four upstream-only directories are deliberately absent", () => {

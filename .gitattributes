@@ -42,4 +42,13 @@ LICENSES/*.txt text eol=lf
 # would be wrong, and the licence text conveyed to a recipient would differ from the one verified
 # against DuckDB's tree. `-text` preserves all 27 byte-for-byte on every platform, which is what the
 # eol=lf lines above are reaching for and what a hash-pinned corpus actually needs.
-LICENSES/third-party/** -text
+#
+# **Scoped to the licence files themselves, not to the directory** (reviewer should-fix S3, this fix
+# batch). `LICENSES/third-party/** -text` was wider than the corpus it protects: that directory also
+# holds MANIFEST.json and README.md, which are repo-AUTHORED text, hashed by nothing, and belong on
+# the same default line-ending handling as every other text file here. The two patterns below cover
+# exactly the 27 upstream files (26 `LICENSE`, one `tdigest/NOTICES`) and nothing else -- verified
+# with `git ls-files --eol LICENSES/third-party/`: all 27 report `attr/-text`, the two repo-authored
+# files report the default.
+LICENSES/third-party/*/*/LICENSE* -text
+LICENSES/third-party/*/*/NOTICES* -text

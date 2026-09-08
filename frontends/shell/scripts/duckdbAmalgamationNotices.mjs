@@ -1,6 +1,14 @@
-#!/usr/bin/env node
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+// **No shebang, deliberately, even though this module has a runnable main block below**
+// (`AI_DEVELOPMENT.md`'s eol class, second member, PR #35's first CI run). This file is IMPORTED by
+// `src/notices/duckdbAmalgamation.test.ts` and by `scripts/checkDistNotice.mjs`; on a
+// `core.autocrlf=true` checkout (windows-latest) a `#!/usr/bin/env node` first line ending in CR LF
+// makes Vitest's transform throw `SyntaxError: Invalid or unexpected token` in every importing
+// suite, while `node --check` accepts the same file and an LF checkout passes locally. The
+// standalone invocation this file's own main block serves is `node scripts/duckdbAmalgamationNotices.mjs`,
+// which needs no shebang at all.
 
 // The FOURTH notice set (DECISIONS-PENDING entry 62 = (a), 2026-09-08; preregistered in
 // RELEASE-0.1.md Amendment 10): the third-party works embedded in DuckDB's own AMALGAMATED source
@@ -32,25 +40,49 @@
 // checkable source, but not one any build tool produced. Naming which kind it is, in the artifact a
 // recipient reads, is the point.
 //
-// ## Two fail-closed guards, and what each one catches
+// ## Three fail-closed guards, and what each one catches
 //
 //   1. `readAmalgamationManifest()` re-verifies the `sha256` of EVERY pinned file against the bytes
-//      on disk, every time the notice is generated. A pinned licence text that has been edited,
-//      truncated, or silently re-encoded (a CRLF checkout, say) throws here rather than being
-//      embedded into a conveyed notice under a hash that no longer describes it.
-//   2. `assertTarballMatchesManifest()` compares the manifest's library list against the
-//      `third_party/` directory listing inside the pinned crate's OWN `duckdb.tar.gz`. If a crate
-//      upgrade adds or removes a bundled work, the manifest is stale by exactly that difference and
-//      the check fails, naming the added/removed directories. Without this guard the fourth section
-//      would keep rendering 26 confident entries about a tree that no longer has 26.
+//      on disk, every time the notice is generated, and asserts the pinned DIRECTORY's own name is
+//      `duckdb-<manifest.duckdb_version>`. A pinned licence text that has been edited, truncated, or
+//      silently re-encoded (a CRLF checkout, say) throws here rather than being embedded into a
+//      conveyed notice under a hash that no longer describes it; so does a directory whose name and
+//      whose manifest disagree about which DuckDB version is pinned (the notice prints the directory
+//      path AND the version, and they must be the same claim).
+//   2. `assertCrateVersionMatchesManifest()` compares the VERSION of the `libduckdb-sys` crate this
+//      build actually links against the version the manifest pins. This is the guard the other two
+//      structurally cannot be: guard 3 compares directory NAMES, and a crate upgrade that keeps the
+//      same 26 `third_party/` directories -- the ordinary case for a patch or minor DuckDB bump --
+//      passes it while the section goes on printing tag `v1.5.5` and commit `d8cdaa33fd…`, which
+//      then describe a source tree this application no longer compiles. The tag and the commit are
+//      properties of the PINNED version, so they are only true while the linked version is it.
+//   3. `assertTarballMatchesManifest()` compares the manifest's library list against the
+//      `third_party/` directory listing inside the pinned crate's OWN `duckdb.tar.gz`, and verifies
+//      that tarball's own `sha256` and directory count against the `crate_tarball` block the
+//      manifest records. If a crate upgrade adds or removes a bundled work, the manifest is stale by
+//      exactly that difference and the check fails, naming the added/removed directories. Without
+//      this guard the fourth section would keep rendering 26 confident entries about a tree that no
+//      longer has 26.
 //
-// Guard 2 reads the tarball with a minimal, dependency-free tar walker below -- `gunzipSync` plus
+// Guard 3 reads the tarball with a minimal, dependency-free tar walker below -- `gunzipSync` plus
 // the 512-byte header format. Adding a tar library would be a new dependency, which this piece's
 // own brief forbids.
+//
+// ## Which recorded fields the build VERIFIES, and which are pinned records
+//
+// Verified on every run, because each is checkable offline against bytes on this disk: every
+// `works[].files[].sha256` (guard 1), `crate.version` (guard 2), `crate_tarball.sha256` and
+// `crate_tarball.third_party_dir_count` (guard 3), and the pinned directory's own name.
+// `upstream_third_party_tree_sha` is NOT verifiable offline -- it names a git tree object inside
+// DuckDB's own repository, and re-deriving it needs the network this build deliberately does not
+// touch. It is kept as recorded provenance, with its derivation stated: tag `v1.5.5` -> the commit
+// that tag resolves to -> that commit's root tree -> the `third_party` subtree, listed once at pin
+// time by the GitHub trees API call named in the pinned directory's README (step 4). The tests
+// assert it is present and well-formed (40 hex characters); nothing here claims it was re-checked.
 
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 
@@ -109,6 +141,24 @@ export function readAmalgamationManifest({ pinnedDir = resolvePinnedDir() } = {}
     throw new Error(`duckdbAmalgamationNotices: ${manifestPath} does not exist.`);
   }
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  // The directory's NAME and the manifest's own `duckdb_version` are two statements of the same
+  // fact, and the notice prints both (`pinnedDirName` below is built from the version, while
+  // `resolvePinnedDir()` finds the directory by pattern). If they disagree -- a re-pin that renamed
+  // the directory without editing the manifest, or the reverse -- the notice would print a path that
+  // does not exist beside a version that is not what is pinned. `resolvePinnedDir()` cannot check
+  // this on its own: it does not read the manifest, by design (it is what FINDS the directory the
+  // manifest is then read from).
+  const expectedDirName = `duckdb-${manifest.duckdb_version}`;
+  if (basename(pinnedDir) !== expectedDirName) {
+    throw new Error(
+      `duckdbAmalgamationNotices: the pinned directory is named "${basename(pinnedDir)}" but ` +
+        `${manifestPath} pins duckdb_version "${manifest.duckdb_version}", which requires the ` +
+        `directory name "${expectedDirName}". The generated notice cites the directory by the ` +
+        "version (LICENSES/third-party/duckdb-<version>), so a recipient following that path would " +
+        "find nothing. Rename the directory, or correct the manifest, by the method recorded in " +
+        `${join(pinnedDir, "README.md")}.`
+    );
+  }
   if (!Array.isArray(manifest.works) || manifest.works.length === 0) {
     throw new Error(
       `duckdbAmalgamationNotices: ${manifestPath} lists no works. An empty fourth set would render a ` +
@@ -134,7 +184,23 @@ export function readAmalgamationManifest({ pinnedDir = resolvePinnedDir() } = {}
         );
         continue;
       }
-      files.push({ file: f.file, upstreamPath: f.upstream_path, url: f.url, text: bytes.toString("utf8") });
+      // The UTF-8 ROUND TRIP (architect advisory A4). The hash above pins the BYTES; what the notice
+      // embeds is `bytes.toString("utf8")`, and that decode is lossy for any byte sequence that is
+      // not valid UTF-8 -- each invalid sequence becomes U+FFFD, silently, under a sha256 that still
+      // matches. A pinned licence text in Latin-1 (a copyright line with a 0xA9 in it, say) would
+      // then be conveyed with replacement characters where the upstream text has letters, and every
+      // check in this file would pass. Re-encoding and comparing is the cheap proof that the decode
+      // lost nothing: if it round-trips, the text embedded IS the bytes hashed.
+      const text = bytes.toString("utf8");
+      if (!Buffer.from(text, "utf8").equals(bytes)) {
+        mismatches.push(
+          `${work.lib}/${f.file}: the pinned bytes are not valid UTF-8 -- decoding them for the ` +
+            "notice loses data (U+FFFD replacement), so the conveyed text would differ from the " +
+            "bytes this manifest hashes"
+        );
+        continue;
+      }
+      files.push({ file: f.file, upstreamPath: f.upstream_path, url: f.url, text });
     }
     if (files.length === 0 && mismatches.length === 0) {
       mismatches.push(`${work.lib}: MANIFEST.json lists no files for this work`);
@@ -165,10 +231,19 @@ export function readAmalgamationManifest({ pinnedDir = resolvePinnedDir() } = {}
 // --- the drift guard -------------------------------------------------------------------------
 
 // Minimal, dependency-free listing of a gzipped tar's entry NAMES. Walks the 512-byte USTAR headers,
-// skipping each entry's data (rounded up to a 512-byte boundary), and handles the GNU/POSIX long-name
-// extensions ('L' and 'x'/'g' typeflags) by reading the name from the following record rather than
-// silently truncating it at the 100-byte header field -- a truncated name would drop a library out
-// of the comparison and make the guard read as green when it is not.
+// skipping each entry's data (rounded up to a 512-byte boundary), and handles the GNU long-name
+// extension ('L') and the PAX per-entry extended header ('x') by reading the name from the following
+// record rather than silently truncating it at the 100-byte header field -- a truncated name would
+// drop a library out of the comparison and make the guard read as green when it is not.
+//
+// **'g' is handled distinctly from 'x', not folded into it** (reviewer nit). A PAX GLOBAL header
+// ('g') does not describe the entry that follows it: its keywords are defaults for every subsequent
+// entry in the archive, so treating a `path=` in one as the next entry's own name -- which folding
+// it in with 'x' does -- would rename exactly one entry and leave the rest wrong. Applying global
+// defaults properly is not implemented here (no writer that produces this tarball emits a global
+// `path`, and there is none in the pinned archive), so a global `path` is refused rather than
+// ignored: silently dropping it is how a guard reads green while its input says something it did not
+// read. Global headers without a `path` are skipped, which is the ordinary case.
 function tarEntryNames(gzBytes) {
   const buf = gunzipSync(gzBytes);
   const names = [];
@@ -179,6 +254,19 @@ function tarEntryNames(gzBytes) {
     if (header.every((b) => b === 0)) break; // end-of-archive marker
     const rawName = header.subarray(0, 100).toString("utf8").replace(/\0.*$/, "");
     const prefix = header.subarray(345, 500).toString("utf8").replace(/\0.*$/, "");
+    // The size field is OCTAL in the ustar format this reads. GNU tar switches to a base-256
+    // encoding (high bit of the first byte set) for sizes that do not fit the 11 octal digits --
+    // i.e. entries of 8 GiB or more -- which `parseInt(…, 8)` would misparse into a wrong skip
+    // length and desynchronise the whole walk. No entry in a source tarball comes close, and this
+    // reader is deliberately minimal rather than a tar implementation, so the limitation is refused
+    // outright instead of being silently mis-read.
+    if (header[124] & 0x80) {
+      throw new Error(
+        "duckdbAmalgamationNotices: this archive uses base-256 (GNU large-file) size fields, which " +
+          "this minimal reader does not decode. Entries of 8 GiB or more are outside what a source " +
+          "tarball needs; a real tar reader would be a new dependency, which this piece's brief forbids."
+      );
+    }
     const sizeField = header.subarray(124, 136).toString("utf8").replace(/\0.*$/, "").trim();
     const size = parseInt(sizeField, 8) || 0;
     const typeflag = String.fromCharCode(header[156]);
@@ -187,11 +275,23 @@ function tarEntryNames(gzBytes) {
 
     if (typeflag === "L") {
       pendingLongName = buf.subarray(dataOff, dataOff + size).toString("utf8").replace(/\0.*$/, "");
-    } else if (typeflag === "x" || typeflag === "g") {
-      // PAX extended header: `<len> path=<value>\n`. Only `path` matters here.
+    } else if (typeflag === "x") {
+      // PAX per-entry extended header: `<len> path=<value>\n`, describing the NEXT entry. Only
+      // `path` matters here.
       const pax = buf.subarray(dataOff, dataOff + size).toString("utf8");
       const m = /\d+ path=([^\n]*)\n/.exec(pax);
       if (m) pendingLongName = m[1];
+    } else if (typeflag === "g") {
+      // PAX GLOBAL header: defaults for every subsequent entry, not a name for the next one.
+      const pax = buf.subarray(dataOff, dataOff + size).toString("utf8");
+      if (/\d+ path=/.test(pax)) {
+        throw new Error(
+          "duckdbAmalgamationNotices: this archive carries a PAX GLOBAL header ('g') with a `path` " +
+            "keyword, which sets a default path for every subsequent entry. This reader does not " +
+            "apply global defaults, and ignoring one would make the third_party/ listing below " +
+            "describe names the archive does not actually use."
+        );
+      }
     } else {
       names.push(pendingLongName ?? (prefix ? `${prefix}/${rawName}` : rawName));
       pendingLongName = null;
@@ -210,15 +310,27 @@ function tarEntryNames(gzBytes) {
  * here would break on any machine or CI runner whose cargo home differs.
  */
 export function tarballThirdPartyDirs(crateSrcDir) {
-  const tarballPath = join(crateSrcDir, "duckdb.tar.gz");
+  return thirdPartyDirsFrom(readCrateTarball(crateSrcDir).bytes);
+}
+
+// The tarball's bytes and their sha256, read once. Split out from `tarballThirdPartyDirs` so the
+// drift guard below can verify the recorded `crate_tarball.sha256` against the same bytes it then
+// lists, rather than reading a 40 MB archive twice to check two properties of it.
+function readCrateTarball(crateSrcDir, fileName = "duckdb.tar.gz") {
+  const tarballPath = join(crateSrcDir, fileName);
   if (!existsSync(tarballPath)) {
     throw new Error(
       `duckdbAmalgamationNotices: ${tarballPath} does not exist, so the manifest's library list ` +
         "cannot be compared against what the crate actually bundles."
     );
   }
+  const bytes = readFileSync(tarballPath);
+  return { path: tarballPath, bytes, sha256: createHash("sha256").update(bytes).digest("hex") };
+}
+
+function thirdPartyDirsFrom(tarballBytes) {
   const dirs = new Set();
-  for (const name of tarEntryNames(readFileSync(tarballPath))) {
+  for (const name of tarEntryNames(tarballBytes)) {
     const m = /^duckdb\/third_party\/([^/]+)\//.exec(name);
     if (m) dirs.add(m[1]);
   }
@@ -234,9 +346,42 @@ export function tarballThirdPartyDirs(crateSrcDir) {
  * snapshot taken by hand at pin time; nothing about bumping `duckdb` in `engine/Cargo.toml` would
  * otherwise tell anyone that the amalgamation gained a 27th bundled work whose licence this
  * application now conveys with no text and no name.
+ *
+ * Also verifies the manifest's own `crate_tarball` block against the archive on disk -- its `file`
+ * name, its `sha256`, and its `third_party_dir_count` (reviewer should-fix S4). Those three were
+ * RECORDED at pin time and, until this commit, read by nothing: a recorded-but-unread hash is
+ * provenance a reader may reasonably take as checked, and it was not. All three are checkable
+ * offline, so all three are checked.
  */
 export function assertTarballMatchesManifest({ crateSrcDir, manifest }) {
-  const inTarball = tarballThirdPartyDirs(crateSrcDir);
+  const recorded = manifest.crate_tarball ?? {};
+  if (!recorded.file || !recorded.sha256 || typeof recorded.third_party_dir_count !== "number") {
+    throw new Error(
+      "duckdbAmalgamationNotices: MANIFEST.json's `crate_tarball` block must record `file`, " +
+        "`sha256` and `third_party_dir_count` -- they are what tie the pinned licence texts to the " +
+        "exact archive this build compiles, and each is verified here on every run."
+    );
+  }
+  const tarball = readCrateTarball(crateSrcDir, recorded.file);
+  if (tarball.sha256 !== recorded.sha256) {
+    throw new Error(
+      `duckdbAmalgamationNotices: ${tarball.path} hashes to sha256 ${tarball.sha256}, but ` +
+        `MANIFEST.json's crate_tarball.sha256 records ${recorded.sha256}. That archive is the ` +
+        "amalgamated source tree this application compiles, and the pinned licence texts describe " +
+        "the works inside THAT archive; a different archive means the enumeration below was " +
+        "verified against something else. Re-pin by the method recorded in " +
+        "LICENSES/third-party/<dir>/README.md."
+    );
+  }
+  const inTarball = thirdPartyDirsFrom(tarball.bytes);
+  if (inTarball.length !== recorded.third_party_dir_count) {
+    throw new Error(
+      `duckdbAmalgamationNotices: ${tarball.path} carries ${inTarball.length} third_party/ ` +
+        `directories, but MANIFEST.json's crate_tarball.third_party_dir_count records ` +
+        `${recorded.third_party_dir_count}. The recorded count is what the pin was taken against; ` +
+        "a disagreement means the listing this section is built from is not the listing that was reviewed."
+    );
+  }
   const inManifest = manifest.works.map((w) => w.lib).sort();
   const added = inTarball.filter((d) => !inManifest.includes(d));
   const removed = inManifest.filter((d) => !inTarball.includes(d));
@@ -275,13 +420,46 @@ export function findLibduckdbSys(crates) {
 }
 
 /**
- * The whole fourth set, ready to hand to `notice()` as `extra.duckdbAmalgamation`, with both guards
- * run. `crates` is `collectLinkedCrates()`'s own output, so the tarball this guard reads is the one
- * belonging to the crate cargo actually resolved for this build.
+ * **The version guard** (architect must-fix B1 = reviewer must-fix M1): the version of
+ * `libduckdb-sys` this build actually links, against the version the manifest pins.
+ *
+ * Everything else here resolves that crate BY NAME and compares directory NAMES. That leaves one
+ * whole class of drift invisible: bump the crate to a DuckDB release whose amalgamation still
+ * carries the same 26 `third_party/` directories -- the ordinary shape of a patch or minor bump --
+ * and the pinned-file hashes still match (they are hashes of files in THIS repository), the
+ * directory sets still match, and every check passes, while the rendered section goes on printing
+ * `tag v1.5.5`, commit `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa` and
+ * `LICENSES/third-party/duckdb-1.5.5` for a source tree the application no longer compiles. Those
+ * three strings are properties of the PINNED version and true only while the linked version is that
+ * version, so this is the check that has to exist for them to be printed at all.
+ */
+export function assertCrateVersionMatchesManifest({ crate, manifest }) {
+  const pinned = manifest.crate ?? {};
+  if (crate.name !== pinned.name || crate.version !== pinned.version) {
+    throw new Error(
+      `duckdbAmalgamationNotices: this build links ${crate.name} ${crate.version}, but ` +
+        `LICENSES/third-party/duckdb-${manifest.duckdb_version}/MANIFEST.json pins ` +
+        `${pinned.name} ${pinned.version}. The tag (${manifest.duckdb_tag}), the commit ` +
+        `(${manifest.duckdb_commit}) and the pinned directory the fourth notice section PRINTS all ` +
+        `describe DuckDB ${manifest.duckdb_version}, the version the PINNED crate corresponds to -- ` +
+        "printing them for a different linked version would tell a recipient the application " +
+        "compiles a source tree it does not. Re-pin for the linked version by the method recorded " +
+        `in LICENSES/third-party/duckdb-${manifest.duckdb_version}/README.md, or restore the pinned ` +
+        "crate version in the dependency that resolves it."
+    );
+  }
+  return { name: crate.name, version: crate.version };
+}
+
+/**
+ * The whole fourth set, ready to hand to `notice()` as `extra.duckdbAmalgamation`, with all three
+ * guards run. `crates` is `collectLinkedCrates()`'s own output, so the tarball this guard reads is
+ * the one belonging to the crate cargo actually resolved for this build.
  */
 export function buildAmalgamationSet(crates) {
   const { manifest, works } = readAmalgamationManifest();
   const crate = findLibduckdbSys(crates);
+  assertCrateVersionMatchesManifest({ crate, manifest });
   assertTarballMatchesManifest({ crateSrcDir: crate.dir, manifest });
   return {
     heading: AMALGAMATION_HEADING,
@@ -298,8 +476,9 @@ export function buildAmalgamationSet(crates) {
 }
 
 // Run directly (`node scripts/duckdbAmalgamationNotices.mjs`) it prints one summary line and exits
-// non-zero if either guard fires -- the standalone form the piece's own check list names, useful for
-// verifying the pin without running a full build.
+// non-zero if any of the three guards fires -- the standalone form the piece's own check list names,
+// useful for verifying the pin without running a full build. (No shebang on this file, deliberately;
+// see the top comment. `node <path>` needs none.)
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { collectLinkedCrates } = await import("./rustCrateNotices.mjs");
   const crates = collectLinkedCrates();
@@ -309,7 +488,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   console.log(
     `duckdbAmalgamationNotices: OK -- ${set.works.length} works, ${fileCount} pinned licence file(s), ` +
       `${bytes} bytes of licence text, every sha256 verified against ${set.pinnedDirName}/MANIFEST.json; ` +
-      `tarball third_party/ listing matches (DuckDB ${set.duckdbVersion}, tag ${set.duckdbTag}, ` +
-      `${set.crateName} ${set.crateVersion}).`
+      `linked ${set.crateName} ${set.crateVersion} is the pinned version; tarball sha256, ` +
+      `third_party/ directory count and listing all match (DuckDB ${set.duckdbVersion}, tag ${set.duckdbTag}).`
   );
 }
