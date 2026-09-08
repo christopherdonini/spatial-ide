@@ -509,6 +509,29 @@ fn a_preflight_within_the_readers_feature_ceiling_is_unchanged() {
     spatial_kernel::publish::preflight(&req).expect("300 features is nowhere near MAX_FEATURES");
 }
 
+/// **RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix): `preflight_pinless` never
+/// touches the pin.** Fast and CI-run (unlike the multi-million-row ignored test below, which is
+/// what actually proves the ADR-025 refusal fires without a hash — this one proves the MECHANISM,
+/// that the pin-free function admits a small, in-ceiling, licensed request while the dataset stays
+/// unpinned throughout).
+#[test]
+fn preflight_pinless_succeeds_on_an_unpinned_small_dataset_and_never_touches_the_pin() {
+    let d = workspace("pinless-small");
+    let path = fixture(&d, 50);
+    let ds = Dataset::open(&path).unwrap(); // deliberately NOT pinned
+    assert!(ds.content_pin().is_none());
+
+    let v = viewer();
+    let req = request(&ds, &v, d.join("bundle"));
+    spatial_kernel::publish::preflight_pinless(&req)
+        .expect("a small, licensed, in-ceiling request must be admitted with no pin at all");
+
+    assert!(
+        ds.content_pin().is_none(),
+        "preflight_pinless must never take a pin as a side effect of checking"
+    );
+}
+
 /// **ADR-025 (RELEASE-0.1 item 3e), the refusal itself.** `#[ignore]`d for the same reason
 /// `kernel/tests/scale_pass.rs` is (its own module doc): proving this property needs a source
 /// whose *real, scanned* row count exceeds `MAX_FEATURES` (2,000,000) — `verified_rows()` is a
@@ -558,6 +581,82 @@ fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_at_preflight_
 
     // Disk hygiene (release-cut fix batch): a multi-million-row parquet fixture must not linger
     // under `%TEMP%\spatial-kernel-publish-tests\` after this test has finished with it.
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+/// **RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix), the whole point of the
+/// reordering.** Same fixture shape and `#[ignore]` reasoning as the sibling test immediately
+/// above (a real, *scanned* over-ceiling row count needs a multi-million-row fixture) — the one
+/// difference is the property under test: the dataset here is deliberately NEVER pinned, and
+/// `content_pin()` reads `None` both BEFORE and AFTER the refusal, on both the pin-free function
+/// and the real `preflight()` every caller uses. Before this piece, `preflight()`'s own pin read
+/// sat ahead of the ceiling check, so an over-ceiling AND unpinned source refused `SourceNotPinned`
+/// first — meaning every real caller (which always pins before calling `preflight`) paid for the
+/// whole-file SHA-256 on exactly the sources this ceiling exists to catch cheaply. Run by hand only
+/// (`cargo test -p spatial-kernel --release -- --ignored`), same as its sibling; **not run in CI**.
+#[test]
+#[ignore]
+fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_before_any_hash_is_taken() {
+    let ceilings = spatial_kernel::publish::ceilings::reader_ceilings();
+    let d = workspace("reader-ceiling-exceeded-before-any-hash");
+    let path = d.join("huge.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: ceilings.max_features as usize + 1,
+            avg_vertices: 3,
+            hole_every: 0,
+            crs_mode: CrsMode::DeclaredLv95,
+            with_covering_bbox: false,
+            identity: IdentityMode::NativeUnique,
+            attributes: AttributeMode::CategoricalZone,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    // Deliberately NOT pinned — proving the refusal needs no pin at all.
+    let ds = Dataset::open(&path).unwrap();
+    assert_eq!(ds.identity().verified_rows(), Some(ceilings.max_features + 1));
+    assert!(ds.content_pin().is_none(), "the fixture must start unpinned for this test to prove anything");
+
+    let v = viewer();
+    let dest = d.join("bundle");
+    let req = request(&ds, &v, dest.clone());
+
+    // The pin-free entry point a caller can run first.
+    match spatial_kernel::publish::preflight_pinless(&req) {
+        Err(PublishError::ReaderCeilingExceeded { ceiling, limit, predicted, alternative }) => {
+            assert_eq!(ceiling, "MAX_FEATURES");
+            assert_eq!(limit, ceilings.max_features);
+            assert_eq!(predicted, ceilings.max_features + 1);
+            assert!(alternative.contains("viewport"), "must name the viewport-bbox alternative");
+        }
+        Err(other) => panic!("expected ReaderCeilingExceeded, got a different refusal: {other}"),
+        Ok(()) => panic!("expected ReaderCeilingExceeded, preflight_pinless admitted the request"),
+    }
+    assert!(!dest.exists(), "preflight_pinless must refuse before a staging directory is ever created");
+    assert!(
+        ds.content_pin().is_none(),
+        "the whole point: an over-ceiling source is refused before any byte is hashed"
+    );
+
+    // And the real `preflight()` every caller (the shell, the CLI) actually uses agrees, on the
+    // SAME still-unpinned dataset — proving the reordering, not just the split function in
+    // isolation.
+    match spatial_kernel::publish::preflight(&req) {
+        Err(PublishError::ReaderCeilingExceeded { ceiling, .. }) => assert_eq!(ceiling, "MAX_FEATURES"),
+        Err(other) => panic!("expected ReaderCeilingExceeded from preflight() too, got: {other}"),
+        Ok(_) => panic!("expected ReaderCeilingExceeded, preflight() admitted the request"),
+    }
+    assert!(!dest.exists());
+    assert!(
+        ds.content_pin().is_none(),
+        "preflight() itself must also refuse before ever reading the pin, now that the ceiling \
+         check runs ahead of it"
+    );
+
+    // Disk hygiene (release-cut fix batch precedent, above): a multi-million-row parquet fixture
+    // must not linger under `%TEMP%\spatial-kernel-publish-tests\` after this test has finished.
     let _ = std::fs::remove_dir_all(&d);
 }
 

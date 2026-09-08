@@ -376,17 +376,42 @@ impl PublishPreflight {
     }
 }
 
-/// Resolve, admit and compile everything that can be decided before any byte is written.
+/// Everything [`preflight`] can decide **without the source's pin** — the license, the projection,
+/// the compiled style and, since RELEASE-0.1 item 10, the ADR-025 reader-ceiling check too. Kept
+/// private: the pin-free split exists so [`preflight_pinless`] can refuse an over-ceiling (or
+/// unlicensed, or row-filtered) request before a single byte is hashed, not to hand a second,
+/// half-built preflight type to callers outside this module.
+struct PreflightPinless {
+    logical_uri: String,
+    style: CompiledStyle,
+    projection: spatial_engine::attributes::PublishedProjection,
+    license: License,
+    viewer_license: ViewerLicense,
+}
+
+/// Every refusal [`preflight`] can produce **without reading the source's pin** — RELEASE-0.1 item
+/// 10 (DECISIONS-PENDING entry 7's ruled pre-fix): before this piece, the ADR-025 ceiling check sat
+/// textually after `ds.content_pin().ok_or(SourceNotPinned)?`, and every real caller (the shell,
+/// the CLI) pinned before calling `preflight` at all — so the check that exists specifically to
+/// refuse an over-ceiling source in milliseconds never actually ran before a whole-file SHA-256 had
+/// already been paid for on exactly the sources it was meant to catch. This function is the same
+/// checks, reordered so that is no longer true: a caller may run this BEFORE taking the pin, and an
+/// over-ceiling source is refused before any byte is read.
 ///
-/// Every refusal here happens before a staging directory exists, which is what lets the permission
-/// boundary refuse an unauthorized publish with **no side effect of any kind** — the property
-/// required test 1 asserts.
-///
-/// **This changes the observable order of two refusals**, and that is intended: a request that is
-/// both licensed wrongly *and* aimed at an occupied destination now reports the license first,
-/// because `DestinationExists` is checked after this runs. The module's own stated order already
-/// puts admission before expense; this makes it true of the destination check too.
-pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishError> {
+/// **The one case this ordering cannot help: `DeclaredNotVerified` identity.**
+/// `ds.identity().verified_rows()` is `None` for a dataset admitted via the skip-uniqueness-check
+/// route — its feature count is not knowable without a scan this function does not perform, so the
+/// ADR-025 check below passes it through un-refused, exactly as `ceilings::check_reader_ceilings`'s
+/// own doc comment already states. Such a source's pin still runs (there is nothing here to stop
+/// it), and its own feature count stays unpredictable at preflight either way — caught only by the
+/// bundled viewer's own load-time check, the same residual `ceilings::check_reader_ceilings` names.
+/// Named here again because this is the function whose whole point is "refuse before the pin", and
+/// this is the one case where it structurally cannot.
+pub fn preflight_pinless(req: &PublishRequest<'_>) -> Result<(), PublishError> {
+    preflight_pinless_parts(req).map(|_| ())
+}
+
+fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless, PublishError> {
     // ---- the honesty gate, before anything else is even looked at (NEXT-CUT.md's conditional
     // block, item 1) --------------------------------------------------------------------------
     //
@@ -407,8 +432,6 @@ pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishEr
     // and before the source hash, so a bundle that cannot legally be handed to anyone is refused in
     // milliseconds rather than after a whole-file read.
     let viewer_license = admit_viewer_license(&req.viewer_license, req.viewer)?;
-
-    let pin = ds.content_pin().ok_or(PublishError::SourceNotPinned)?;
 
     let projection = ds.resolve_projection(&req.attributes)?;
     let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
@@ -435,12 +458,40 @@ pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishEr
     //
     // **Attribute column count** is `published_names.len()`, already resolved above — exactly
     // what a reader will receive, not a proxy for it.
+    //
+    // **RELEASE-0.1 item 10: moved here, before the pin is even read** (it used to sit after
+    // `ds.content_pin().ok_or(SourceNotPinned)?`, below `preflight`'s own pin line) — none of this
+    // function's checks touch the pin at all, so there was never a real reason for the ceiling
+    // check to wait on it; only textual position did.
     ceilings::check_reader_ceilings(
         ds.identity().verified_rows(),
         published_names.len() as u64,
         &ceilings::reader_ceilings(),
     )?;
 
+    Ok(PreflightPinless { logical_uri, style, projection, license, viewer_license })
+}
+
+/// Resolve, admit and compile everything that can be decided before any byte is written.
+///
+/// Every refusal here happens before a staging directory exists, which is what lets the permission
+/// boundary refuse an unauthorized publish with **no side effect of any kind** — the property
+/// required test 1 asserts.
+///
+/// **This changes the observable order of two refusals**, and that is intended: a request that is
+/// both licensed wrongly *and* aimed at an occupied destination now reports the license first,
+/// because `DestinationExists` is checked after this runs. The module's own stated order already
+/// puts admission before expense; this makes it true of the destination check too.
+///
+/// **RELEASE-0.1 item 10**: everything above this point that does not need the pin now runs via
+/// [`preflight_pinless`] (see that function's own doc comment for the reordering and its one named
+/// residual); this function's own remaining, pin-specific step is reading it. A caller that wants
+/// to refuse an over-ceiling source before paying for a whole-file hash should call
+/// [`preflight_pinless`] first — this function still requires the pin to already exist, unchanged.
+pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishError> {
+    let PreflightPinless { logical_uri, style, projection, license, viewer_license } =
+        preflight_pinless_parts(req)?;
+    let pin = req.dataset.content_pin().ok_or(PublishError::SourceNotPinned)?;
     Ok(PublishPreflight { logical_uri, pin, style, projection, license, viewer_license })
 }
 

@@ -583,14 +583,40 @@ impl SpatialIndex {
 /// and reported as its own quantity rather than folded into "index build". It is cancellable for
 /// the same reason the other whole-file passes are (principle 7).
 pub fn content_hash(path: &std::path::Path, cancel: &CancelToken) -> Result<(String, f64)> {
+    content_hash_observed(path, cancel, None)
+}
+
+/// As [`content_hash`], calling `on_progress(bytes_done, total)` once per read chunk (the same
+/// `1 << 20`-byte buffer `content_hash` always used) — RELEASE-0.1 item 10 (DECISIONS-PENDING
+/// entry 7's ruled pre-fix): the pin phase's own whole-file hash had no progress report of any
+/// kind, `docs/01` principle 7 unmet for it specifically. `content_hash` is now a thin wrapper over
+/// this function with `on_progress: None`, so every existing caller keeps its exact old signature
+/// and behaviour.
+///
+/// Cancellation semantics are **unchanged**: the `is_cancelled()` check still runs before every
+/// read, so a cancelled token still produces a typed [`EngineError::Cancelled`] rather than a
+/// partial hash — `on_progress` is never called after cancellation is observed, and a token
+/// cancelled before the first read reports zero progress calls at all (nothing was read).
+///
+/// `total` is the file's length at open time, read once via [`std::fs::File::metadata`] — not
+/// re-measured per chunk, so a file that grows or shrinks while being hashed does not change the
+/// reported total mid-hash (the pin's own heuristic, taken separately, is what would notice such a
+/// change; this function's only job is to report what it itself has read).
+pub fn content_hash_observed(
+    path: &std::path::Path,
+    cancel: &CancelToken,
+    mut on_progress: Option<&mut dyn FnMut(u64, u64)>,
+) -> Result<(String, f64)> {
     use sha2::{Digest, Sha256};
     use std::io::Read;
 
     let started = std::time::Instant::now();
     let mut f = std::fs::File::open(path)
         .map_err(|e| EngineError::Source(format!("open for hashing: {e}")))?;
+    let total = f.metadata().map(|m| m.len()).unwrap_or(0);
     let mut hasher = Sha256::new();
     let mut buf = vec![0u8; 1 << 20];
+    let mut done = 0u64;
     loop {
         if cancel.is_cancelled() {
             return Err(EngineError::Cancelled);
@@ -600,6 +626,10 @@ pub fn content_hash(path: &std::path::Path, cancel: &CancelToken) -> Result<(Str
             break;
         }
         hasher.update(&buf[..n]);
+        done += n as u64;
+        if let Some(cb) = &mut on_progress {
+            cb(done, total);
+        }
     }
     Ok((hex(&hasher.finalize()), started.elapsed().as_secs_f64() * 1000.0))
 }
@@ -764,5 +794,54 @@ mod tests {
 
         let bigger = ValidityHeuristic { len: 11, modified_nanos: Some(5) };
         assert!(!ValidityHeuristic::fail_closed_matches(Some(&a), Some(&bigger)));
+    }
+
+    /// RELEASE-0.1 item 10: the pin phase's own progress report. Three-plus chunks of the same
+    /// `1 << 20`-byte read buffer `content_hash_observed` uses, so more than one callback is
+    /// guaranteed to fire — proving `bytes_done` actually accumulates across reads rather than only
+    /// ever reporting the whole file in one call.
+    #[test]
+    fn a_progress_observed_hash_reports_monotone_bytes_ending_at_the_total() {
+        let d = std::env::temp_dir().join("spatial-engine-index-content-hash-tests");
+        std::fs::create_dir_all(&d).unwrap();
+        let p = d.join("progress.bin");
+        std::fs::write(&p, vec![9u8; 3 * (1 << 20) + 12]).unwrap();
+
+        let mut seen: Vec<(u64, u64)> = Vec::new();
+        let (_, _) =
+            content_hash_observed(&p, &CancelToken::new(), Some(&mut |done, total| seen.push((done, total))))
+                .unwrap();
+
+        assert!(seen.len() >= 2, "a >1 MiB file must report more than one chunk: {seen:?}");
+        let total = seen[0].1;
+        assert_eq!(total, 3 * (1 << 20) + 12);
+        assert!(seen.iter().all(|(_, t)| *t == total), "the total must not change mid-hash: {seen:?}");
+        assert!(
+            seen.windows(2).all(|w| w[0].0 <= w[1].0),
+            "bytes_done must be monotone non-decreasing: {seen:?}"
+        );
+        assert_eq!(seen.last().unwrap().0, total, "the last report must end exactly at the total: {seen:?}");
+
+        let _ = std::fs::remove_file(&p);
+    }
+
+    /// Cancellation semantics unchanged (pin.rs's own cancellation test, mirrored here at the
+    /// `content_hash_observed` level): a token cancelled before the first read produces a typed
+    /// cancellation and calls `on_progress` zero times — nothing was read, so nothing to report.
+    #[test]
+    fn a_cancelled_progress_observed_hash_reports_no_progress_at_all() {
+        let d = std::env::temp_dir().join("spatial-engine-index-content-hash-tests");
+        std::fs::create_dir_all(&d).unwrap();
+        let p = d.join("cancelled.bin");
+        std::fs::write(&p, vec![1u8; 4 << 20]).unwrap();
+
+        let c = CancelToken::new();
+        c.cancel();
+        let mut calls = 0u32;
+        let result = content_hash_observed(&p, &c, Some(&mut |_, _| calls += 1));
+        assert!(matches!(result, Err(EngineError::Cancelled)));
+        assert_eq!(calls, 0, "a pre-cancelled token must produce zero progress calls");
+
+        let _ = std::fs::remove_file(&p);
     }
 }

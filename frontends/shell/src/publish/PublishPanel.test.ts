@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { encodeHexF64 } from "../skp/codec";
 import type { Bbox } from "../skp/types";
+import { PREPARE_CANCEL_KEY_PREFIX, prepareCancelKey } from "./client";
 import type { DialogSettleResult } from "./PublishDialog";
 import {
   currentViewOptionDisabled,
@@ -89,6 +90,14 @@ describe("nextStateFromPrepareOutcome", () => {
     if (next.kind === "refused") {
       expect(next.refusal.message).toBe("row filter not recordable");
     }
+  });
+
+  // RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix): the pin phase's own
+  // cancellation outcome, shown rather than silently absorbed -- distinct from `picker-cancelled`
+  // (a native-dialog dismissal with nothing to report).
+  it("cancelled -> a distinct, visible 'cancelled' state, never folded into idle or a refusal", () => {
+    const outcome: PrepareOutcome = { status: "cancelled" };
+    expect(nextStateFromPrepareOutcome(outcome)).toEqual({ kind: "cancelled" });
   });
 });
 
@@ -173,5 +182,18 @@ describe("FILTER_SCOPE_SENTENCE -- pinned against publish.rs's own copy", () => 
     // the two copies are the same text.
     const collapsed = (match as RegExpMatchArray)[1].replace(/\\\r?\n[ \t]*/g, "");
     expect(collapsed).toBe(FILTER_SCOPE_SENTENCE);
+  });
+});
+
+describe("prepareCancelKey -- pinned against publish.rs::prepare_cancel_key's own prefix (RELEASE-0.1 item 10)", () => {
+  it("PREPARE_CANCEL_KEY_PREFIX matches frontends/shell/src-tauri/src/publish.rs::PREPARE_CANCEL_KEY_PREFIX exactly", () => {
+    const rustSource = readFileSync(join(HERE, "../../src-tauri/src/publish.rs"), "utf8");
+    const match = rustSource.match(/PREPARE_CANCEL_KEY_PREFIX: &str = "([^"]*)";/);
+    expect(match).not.toBeNull();
+    expect((match as RegExpMatchArray)[1]).toBe(PREPARE_CANCEL_KEY_PREFIX);
+  });
+
+  it("prepareCancelKey concatenates the prefix and the dataset handle verbatim", () => {
+    expect(prepareCancelKey("ds_abc123")).toBe(`${PREPARE_CANCEL_KEY_PREFIX}ds_abc123`);
   });
 });

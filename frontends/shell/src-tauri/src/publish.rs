@@ -44,7 +44,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
+use spatial_engine::{Bbox, CancelToken, Dataset, EngineError, ViewportQuery};
 use spatial_kernel::permission::audit::{rfc3339_utc_now, ApprovalRoute};
 use spatial_kernel::permission::{
     self, boundary, Approval, ApprovalPrompt, ApprovalSource, AuditLog, BoundaryError,
@@ -304,6 +304,12 @@ pub enum PrepareOutcome {
     /// The operator dismissed the native picker. **Not an error** (`NEXT-CUT.md` P1 item 4) — no
     /// typed refusal, no grant minted, no pending attempt stashed: nothing was attempted.
     PickerCancelled,
+    /// The operator cancelled during the "Preparing…" pin phase — RELEASE-0.1 item 10
+    /// (DECISIONS-PENDING entry 7's ruled pre-fix; `docs/01` principle 7's progress/cancel clause).
+    /// **Not an error**, the same posture [`Self::PickerCancelled`] already takes: nothing was
+    /// written (ADR-006 — the pin is not a side effect), no grant was minted, no pending attempt was
+    /// stashed, and the approval dialog never opens.
+    Cancelled,
     /// A typed refusal's `Display` text — `RowFilterNotRecordable` (P0) reaches JS through here,
     /// among every other `preflight`/grant-issuance refusal. Structure (`RefusalBlock`) is P2's.
     Refused { message: String },
@@ -338,10 +344,94 @@ pub enum ExecuteOutcome {
 // prepare
 // -------------------------------------------------------------------------------------------
 
+/// [`prepare`]'s own real code path, generalized over the cancel token and pin-progress sink the
+/// Tauri command wrapper supplies — RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled
+/// pre-fix), the same `_with_progress` pattern [`execute_with_progress`] already established for
+/// the execute phase (`commands.rs`'s own `binding_publish_prepare` calls this directly; `prepare`
+/// below is a thin wrapper kept byte-for-byte for the existing test suite, which pre-pins every
+/// fixture and so never exercises the pin phase at all).
+///
+/// **Order, and why it is this order — this is the piece that fixes it.** The predictable ADR-025
+/// checks, and every other refusal [`publish::preflight`] can make without the pin, run FIRST, via
+/// [`publish::preflight_pinless`] — so an over-ceiling (or unlicensed, or row-filtered) source is
+/// refused before a single byte is hashed. Only once that passes does the pin itself run,
+/// cancellable and progress-reporting via [`ensure_pinned_with_progress`]. [`prepare_with_query`]
+/// runs last, UNCHANGED — it re-runs the full [`publish::preflight`] internally (the pin-free parts
+/// included), which is real but cheap, pure, already-computed-once-more work (no dataset scan, no
+/// IO) rather than threading this function's own intermediate result through as a second source of
+/// truth that could drift from it.
+///
+/// **The one case this ordering cannot help: `DeclaredNotVerified` identity** — see
+/// [`publish::preflight_pinless`]'s own doc comment; the same residual applies here since this
+/// function calls exactly that.
+#[allow(clippy::too_many_arguments)]
+pub fn prepare_with_progress(
+    grants: &Mutex<GrantSet>,
+    store: &PendingAttempts,
+    dataset: Arc<Dataset>,
+    dataset_name: String,
+    style_source: String,
+    scope: PublishScope,
+    filter_active: bool,
+    viewer: ViewerAssets,
+    viewer_license: ViewerLicenseInput,
+    destination: PathBuf,
+    started_at: String,
+    cancel: &CancelToken,
+    on_pin_progress: Option<&mut dyn FnMut(u64, u64)>,
+) -> PrepareOutcome {
+    let query = scope.to_query();
+    let row_scope = scope.row_scope_sentence();
+    let attributes = style_attributes(&style_source);
+
+    let request = PublishRequest {
+        dataset: &dataset,
+        dataset_name: &dataset_name,
+        query: query.clone(),
+        attributes,
+        style_source: &style_source,
+        viewer: &viewer,
+        viewer_license: viewer_license.clone(),
+        license: None,
+        destination: destination.clone(),
+        started_at: started_at.clone(),
+        finished_at: &rfc3339_utc_now,
+    };
+
+    // The predictable ADR-025 checks (and every other pin-free refusal), BEFORE any byte is
+    // hashed — the reordering this piece exists to build.
+    if let Err(e) = publish::preflight_pinless(&request) {
+        return PrepareOutcome::Refused { message: e.to_string() };
+    }
+
+    // The pin phase: cancellable and progress-reporting (`docs/01` principle 7). A cancel here
+    // leaves nothing behind (ADR-006 — the pin is not a side effect): no grant minted, no pending
+    // attempt stashed, the approval dialog never opens.
+    match ensure_pinned_with_progress(&dataset, cancel, on_pin_progress) {
+        EnsurePinnedOutcome::Cancelled => return PrepareOutcome::Cancelled,
+        EnsurePinnedOutcome::Failed(message) => return PrepareOutcome::Refused { message },
+        EnsurePinnedOutcome::Ok => {}
+    }
+
+    prepare_with_query(
+        grants, store, dataset, dataset_name, style_source, query, row_scope, filter_active, viewer,
+        viewer_license, destination, started_at,
+    )
+}
+
 /// Translate `scope` into a query and delegate to [`prepare_with_query`] — the seam a test can
 /// bypass to construct a query [`prepare`] itself could never produce (see
 /// `tests::a_row_predicate_refuses_through_prepare_with_the_p0_message`), proving the refusal is
 /// `preflight`'s own, reached through this function's real code path, not a second check.
+///
+/// **Kept byte-for-byte** (P1's own original body): every existing test in this module calls this
+/// exact signature, on fixtures the shared `fixture()` helper already pins — so this never reaches
+/// the pin phase [`prepare_with_progress`] adds above. `commands.rs` calls `prepare_with_progress`
+/// directly, supplying the real cancel token and pin-progress sink, the same relationship
+/// [`execute`]'s own doc comment states between it and [`execute_with_progress`] — so this
+/// function's only remaining caller, like `execute`'s, is this module's own test suite
+/// (`#[allow(dead_code)]` below is that, disclosed, not a silenced real defect).
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 pub fn prepare(
     grants: &Mutex<GrantSet>,
@@ -638,8 +728,21 @@ pub const PUBLISH_PROGRESS_EVENT: &str = "publish://progress";
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct PublishProgressEvent {
+    /// The real minted attempt id for every EXECUTE-phase event; during the "Preparing…" pin phase
+    /// (RELEASE-0.1 item 10), no `attempt_id` exists yet (`mint_attempt_id` runs deep inside
+    /// `prepare_with_query`, after the pin and the grant) — this field carries
+    /// [`prepare_cancel_key`]'s own output instead, the SAME lookup string `binding_publish_cancel`
+    /// must be called with to reach that phase's `CancelToken`. Never a bearer credential either
+    /// way — see [`prepare_cancel_key`]'s own doc comment.
     pub attempt_id: String,
     pub phase: &'static str,
+    /// Bytes hashed so far / the source's total length — present ONLY for the pin phase
+    /// ([`PIN_PHASE_LABEL`]); every kernel [`publish::PublishPhase`] event still crosses phase-only,
+    /// `None` on both fields, exactly as before this piece. **A fraction of bytes read, never a
+    /// rate or an ETA** — ADR-018: no timing claim is derived from these two numbers anywhere in
+    /// this tree, here or in the frontend that renders them.
+    pub bytes_done: Option<u64>,
+    pub bytes_total: Option<u64>,
 }
 
 /// A [`publish::PublishProgress`] that emits [`PUBLISH_PROGRESS_EVENT`] through a caller-supplied
@@ -660,9 +763,55 @@ impl<F: Fn(PublishProgressEvent) + Send + Sync> EventProgress<F> {
 
 impl<F: Fn(PublishProgressEvent) + Send + Sync> publish::PublishProgress for EventProgress<F> {
     fn phase(&self, phase: publish::PublishPhase) {
-        (self.emit)(PublishProgressEvent { attempt_id: self.attempt_id.clone(), phase: phase.as_str() });
+        (self.emit)(PublishProgressEvent {
+            attempt_id: self.attempt_id.clone(),
+            phase: phase.as_str(),
+            bytes_done: None,
+            bytes_total: None,
+        });
     }
     fn partition_written(&self, _index: usize, _rows: usize, _bytes: u64) {}
+}
+
+/// The pin phase's own phase label, crossing through the SAME [`PUBLISH_PROGRESS_EVENT`] channel
+/// every kernel [`publish::PublishPhase`] does (RELEASE-0.1 item 10).
+///
+/// **A shell-local string constant, deliberately NOT a new kernel `PublishPhase` variant.** That
+/// enum types phases INSIDE `kernel::publish::run_inner`'s own streaming operation, reachable only
+/// from `execute_with_progress`/`boundary::execute` — the pin phase runs entirely in THIS crate,
+/// before `publish::prepare` (let alone `execute`) is ever called, so a kernel enum variant would
+/// misrepresent where the phase actually happens. Spelled in the same kebab-case style
+/// `PublishPhase::as_str()` uses, so the wire carries one consistent phase vocabulary even though
+/// the two halves are typed in different crates.
+pub const PIN_PHASE_LABEL: &str = "pinning-source";
+
+/// The prefix [`prepare_cancel_key`] builds its output from — pulled out as its own constant so
+/// `PublishPanel.test.ts` can pin the frontend's own copy equal to this one by reading this file's
+/// source text, the same discipline `FILTER_SCOPE_SENTENCE` already established for the filter-scope
+/// sentence.
+pub const PREPARE_CANCEL_KEY_PREFIX: &str = "prepare:";
+
+/// The [`RunningPublishes`] lookup key for the prepare phase's own `CancelToken` — RELEASE-0.1 item
+/// 10 (DECISIONS-PENDING entry 7's ruled pre-fix: "thread the `CancelToken` + a phase label into
+/// `publish-prepare`").
+///
+/// **Not a minted `attempt_id`.** None exists yet during "Preparing…" — `mint_attempt_id` runs deep
+/// inside `prepare_with_query`, after the pin and after the grant is minted — so this is derived
+/// from `dataset_handle` instead, a fact the frontend already holds before it ever calls
+/// `binding_publish_prepare`. That lets the panel compute the SAME key and register its Cancel
+/// listener before the round trip even starts, with **no new Tauri command**:
+/// `binding_publish_cancel` (`commands.rs`) already takes an arbitrary lookup string and reaches
+/// whatever [`RunningPublishes`] holds under it (that struct's own `cancel` method has no notion of
+/// "this must be a real attempt id" — it is a plain `HashMap<String, CancelToken>` keyed however a
+/// caller likes). This is simply a second class of key sharing that one registry, the same way
+/// [`PendingAttempts`] and [`RunningPublishes`] are already two distinct registries keyed by two
+/// distinct id shapes for two distinct lifetimes (that struct's own doc comment, above).
+///
+/// A collision with a real, CSPRNG-minted `attempt_id` (32 lowercase hex characters,
+/// `mint_attempt_id`) is not reachable: every key this function produces carries the
+/// `PREPARE_CANCEL_KEY_PREFIX` prefix, and `mint_attempt_id`'s alphabet never emits a `:`.
+pub fn prepare_cancel_key(dataset_handle: &str) -> String {
+    format!("{PREPARE_CANCEL_KEY_PREFIX}{dataset_handle}")
 }
 
 /// The registry `binding_publish_cancel` reaches into — a running publish's own [`CancelToken`],
@@ -750,20 +899,64 @@ fn style_attributes(style_source: &str) -> Vec<String> {
 /// caller across several publish attempts on the same admitted dataset pays this cost once, not
 /// once per attempt.
 ///
-/// **Disclosed limitation, not fixed here**: this runs on `spawn_blocking` (never the async
-/// runtime's own worker thread — `commands.rs`'s own `open_dataset`/`viewport_query` precedent),
-/// so it does not block the whole app, but it has **no cancel affordance and no progress report**
-/// of its own during `binding_publish_prepare`'s "Preparing…" state — `docs/01` principle 7's
-/// progress/cancel clause is unmet for the pin phase specifically. Fine for this cut's own
-/// evidence fixtures (2 000–100 000 features, pins in well under a second); a real gap for a
-/// `docs/07` hero-slice-scale (5 GB) publish attempt through the shell UI, which this piece does
-/// not build the cancellable/progress-reported pin step to close — that is design work beyond
-/// evidence-and-ADR scope, named here rather than silently absorbed.
+/// **The gap this doc comment used to name as owed is CLOSED, RELEASE-0.1 item 10 (DECISIONS-PENDING
+/// entry 7's ruled pre-fix).** This function is now a thin wrapper over
+/// [`ensure_pinned_with_progress`] with `on_progress: None`, kept for callers (and this module's own
+/// older tests) that do not need the pin-progress sink; `commands.rs`'s real
+/// `binding_publish_prepare` calls [`prepare_with_progress`] directly, which calls
+/// [`ensure_pinned_with_progress`] with a real cancel token — registered in [`RunningPublishes`]
+/// under [`prepare_cancel_key`] BEFORE the blocking call starts, the same `RunningPublishes`
+/// precedent [`commands.rs`]'s own `binding_publish_execute` established — and a real progress sink
+/// that emits [`PUBLISH_PROGRESS_EVENT`] with [`PIN_PHASE_LABEL`] and the bytes-hashed fraction. A
+/// Cancel during "Preparing…" now reaches this phase and aborts it with a typed
+/// [`PrepareOutcome::Cancelled`] rather than running to completion unreachably. `docs/01` principle
+/// 7's progress/cancel clause is met for the pin phase now, including at `docs/07`'s hero-slice
+/// scale (5 GB); see this crate's `frontends/shell/MANUAL-WALKTHROUGH.md` Part M, row M10, for the
+/// operator-facing record of what changed.
+///
+/// No production call site remains in this crate (`commands.rs` now calls
+/// [`ensure_pinned_with_progress`] itself, via [`prepare_with_progress`]) — this function's only
+/// remaining caller is this module's own test suite, the same disclosed situation [`prepare`]'s own
+/// doc comment states for itself, above this one (`#[allow(dead_code)]` below is that).
+#[allow(dead_code)]
 pub fn ensure_pinned(dataset: &Dataset, cancel: &CancelToken) -> Result<(), String> {
-    if dataset.content_pin().is_some() {
-        return Ok(());
+    match ensure_pinned_with_progress(dataset, cancel, None) {
+        EnsurePinnedOutcome::Ok => Ok(()),
+        EnsurePinnedOutcome::Cancelled => Err(EngineError::Cancelled.to_string()),
+        EnsurePinnedOutcome::Failed(message) => Err(message),
     }
-    dataset.pin_content(cancel).map(|_| ()).map_err(|e| e.to_string())
+}
+
+/// The pin phase's own typed outcome — distinguishes "the operator cancelled" from "hashing
+/// failed" so [`prepare_with_progress`] can report the former as [`PrepareOutcome::Cancelled`]
+/// rather than folding it into a plain refusal message (RELEASE-0.1 item 10).
+pub enum EnsurePinnedOutcome {
+    /// Already pinned, or pinned successfully just now.
+    Ok,
+    /// The operator cancelled during "Preparing…". **ADR-006: the pin is not a side effect** —
+    /// hashing reads the source, it writes nothing, so a cancelled pin leaves nothing behind to
+    /// undo or clean up; the dataset's own [`Dataset::content_pin`] stays exactly what it was
+    /// before this call (`None`, for the case this piece's own tests exercise).
+    Cancelled,
+    Failed(String),
+}
+
+/// As [`ensure_pinned`], reporting bytes hashed / total through `on_progress` as the hash proceeds
+/// and returning a typed [`EnsurePinnedOutcome`] instead of folding cancellation into a plain
+/// string error.
+pub fn ensure_pinned_with_progress(
+    dataset: &Dataset,
+    cancel: &CancelToken,
+    on_progress: Option<&mut dyn FnMut(u64, u64)>,
+) -> EnsurePinnedOutcome {
+    if dataset.content_pin().is_some() {
+        return EnsurePinnedOutcome::Ok;
+    }
+    match dataset.pin_content_observed(cancel, on_progress) {
+        Ok(_) => EnsurePinnedOutcome::Ok,
+        Err(EngineError::Cancelled) => EnsurePinnedOutcome::Cancelled,
+        Err(e) => EnsurePinnedOutcome::Failed(e.to_string()),
+    }
 }
 
 /// Derive a manifest-safe dataset name from the dataset's own source file. The shell's
@@ -1544,5 +1737,156 @@ mod tests {
             let exec = execute(&grants, &store, &attempt_id, &phrase);
             assert!(matches!(exec, ExecuteOutcome::Success { .. }), "execute #{i} did not succeed: {exec:?}");
         }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix): the cancellable,
+    // progress-reported pin phase, and the ADR-025 checks reordered ahead of it.
+    // ---------------------------------------------------------------------------------------
+
+    /// **Typed outcome, no side effect (ADR-006: the pin is not a side effect).** A pre-cancelled
+    /// token — deterministic, no timing race, the same style `engine/src/pin.rs`'s own
+    /// `a_cancelled_pin_is_a_typed_cancellation_and_not_a_partial_hash` uses — so the fixture size
+    /// does not matter: `content_hash_observed`'s own cancellation check runs before the first
+    /// read either way.
+    ///
+    /// **No audit-record assertion here, and that absence is itself the point, stated rather than
+    /// silently skipped**: `prepare_with_progress` never opens an `AuditLog` at all — only
+    /// `execute_with_progress` does, deep inside `boundary::execute` (`kernel/src/permission/
+    /// boundary.rs`'s own "what is not audited" enumeration is scoped to refusals `boundary::execute`
+    /// itself can reach; step 1 there is `preflight`, called only from `execute`). This
+    /// cancellation happens earlier still — inside the shell's own `binding_publish_prepare`,
+    /// before `publish::prepare`'s pending-attempt store or any grant is ever touched — so it is
+    /// outside that enumeration's scope by construction, not an omission from it.
+    #[test]
+    fn cancel_during_the_pin_phase_produces_a_typed_cancelled_outcome_with_no_side_effect() {
+        let d = workspace("cancel-during-pin");
+        let ds = Arc::new(unpinned_fixture(&d));
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+
+        let cancel = CancelToken::new();
+        cancel.cancel();
+        let outcome = prepare_with_progress(
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out"),
+            "2026-08-16T10:00:00Z".into(),
+            &cancel,
+            None,
+        );
+        assert!(matches!(outcome, PrepareOutcome::Cancelled), "got {outcome:?}");
+        assert!(
+            ds.content_pin().is_none(),
+            "a cancelled pin must leave content_pin() None -- nothing was written or hashed to completion"
+        );
+        assert_eq!(store.len(), 0, "no pending attempt may be stashed for a cancelled prepare");
+    }
+
+    /// The pin phase's own progress report, wired end to end through `prepare_with_progress` (the
+    /// fixture-level version of `engine/src/index.rs`'s own
+    /// `a_progress_observed_hash_reports_monotone_bytes_ending_at_the_total`, one layer up, through
+    /// the function `commands.rs` actually calls) — and proof that a successful pin still reaches
+    /// the `Prompt` outcome afterward, unaffected by the new pin-free check running first.
+    #[test]
+    fn prepare_with_progress_reports_the_pin_phase_and_still_reaches_a_prompt() {
+        let d = workspace("prepare-with-progress");
+        let ds = Arc::new(unpinned_fixture(&d));
+        assert!(ds.content_pin().is_none());
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+
+        let mut seen: Vec<(u64, u64)> = Vec::new();
+        let outcome = prepare_with_progress(
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out"),
+            "2026-08-16T10:00:00Z".into(),
+            &CancelToken::new(),
+            Some(&mut |done, total| seen.push((done, total))),
+        );
+        assert!(matches!(outcome, PrepareOutcome::Prompt { .. }), "got {outcome:?}");
+        assert!(!seen.is_empty(), "the pin phase must report at least one progress callback");
+        assert_eq!(
+            seen.last().unwrap().0,
+            seen.last().unwrap().1,
+            "the last report must end exactly at the total: {seen:?}"
+        );
+        assert!(
+            seen.windows(2).all(|w| w[0].0 <= w[1].0),
+            "bytes_done must be monotone non-decreasing: {seen:?}"
+        );
+        assert!(ds.content_pin().is_some(), "the pin must actually have run");
+    }
+
+    /// **The reordering itself, at the small-and-fast scale this suite can afford.** A source that
+    /// forbids redistribution is a pin-free refusal (`publish::preflight_pinless`'s own license
+    /// check, which runs before the ceiling check and needs no pin either) — `prepare_with_progress`
+    /// must reach it WITHOUT ever pinning the dataset. `kernel/tests/publish.rs`'s own
+    /// `a_dataset_whose_verified_row_count_exceeds_max_features_refuses_before_any_hash_is_taken`
+    /// (`#[ignore]`d, release-mode only) proves the same property for the ADR-025 feature ceiling
+    /// specifically, at a scale this crate's own suite cannot build cheaply; this one proves the
+    /// general mechanism — the pin-free path — at a scale that runs in every `cargo test`.
+    #[test]
+    fn a_license_refusal_reaches_prepare_with_progress_before_any_pin_is_taken() {
+        let d = workspace("license-refusal-before-pin");
+        let path = d.join("forbidden.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 20,
+                attributes: AttributeMode::CategoricalZone,
+                crs_mode: CrsMode::DeclaredLv95,
+                identity: IdentityMode::NativeUnique,
+                license: spatial_engine::fixture::LicenseMode::ForbidsRedistribution,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let ds = Arc::new(Dataset::open(&path).unwrap()); // deliberately NOT pinned
+        assert!(ds.content_pin().is_none());
+
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let outcome = prepare_with_progress(
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out"),
+            "2026-08-16T10:00:00Z".into(),
+            &CancelToken::new(),
+            None,
+        );
+        match outcome {
+            PrepareOutcome::Refused { message } => {
+                assert!(message.contains("forbid"), "{message}");
+            }
+            other => panic!("expected a license refusal, got {other:?}"),
+        }
+        assert!(
+            ds.content_pin().is_none(),
+            "the whole point: a pin-free refusal must never take a pin as a side effect"
+        );
+        assert_eq!(store.len(), 0, "no pending attempt may be stashed for a refused prepare");
     }
 }
