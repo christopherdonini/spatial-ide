@@ -21,6 +21,42 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+65. **[Release cut item 9 (both notice generators) — RULE 7 REACHED on the architect step (gate FAIL
+    on `1a28fbf`: two blocking; re-review FAIL on `7f2e2fa`: ONE textual clause). The reviewer's
+    re-review is a PASS with no must-fix. Authorize the closing commit — the same question as entries
+    61 and 64; the three can be ruled together.]** State: `cut/release-notice-generators` @ `7f2e2fa`
+    (three signed commits on main 87c3d08): the installed `NOTICE.txt` enumerates every npm package
+    of both trees (viewer 3, frontend 26 — from each build's own manifest) and every Rust crate
+    statically linked (310 pairs / 296 names from the shell's own lockfile, texts byte-exact against
+    the registry; 12 crates with no registry license file now get the repository's own SPDX template
+    texts — `LICENSES/MIT.txt`, `BSD-3-Clause.txt`, `MPL-2.0.txt`, plain variants, hash-pinned, with
+    each crate's own `authors`/`repository` — and the generator refuses to build if a template is
+    missing); the bundle viewer's own header true in both landing places (the "OWED" paragraph gone;
+    guarded); anchored line-shape checks with cardinality 3/26/310; the bootstrap sentinel and
+    degraded lines fail closed; the stale-build pairing invariant; DuckDB's amalgamation's 26
+    directories NAMED as the one remaining gap (entry 62). Twelve mutations all caught; every check
+    line green (viewer 61; verify 796/61 files; fresh clone deterministic; the notice 3,073,324 B as
+    M3 declares). **The one blocking clause (architect):** the shared section says every embedded
+    license text's README entry "records … the URL it was fetched from, the date, and its sha256" —
+    false for `LICENSES/Apache-2.0.txt`, which was COPIED from a crate's registry source (README:83-92,
+    no URL, no date) → "records for each one its sha256 and how it was obtained — the URL and date it
+    was fetched from, or the local file it was copied from and the reason that copy is trustworthy".
+    **Should-fixes (both gates), all mechanical:** a test guarding the nested-`node_modules`
+    attribution fix (reverting it leaves verify green today); a swallowed `readdirSync` failure
+    renders the affirmative "no LICENSE ships" — throw instead and extend the degraded guard to the
+    Rust wording; the duplicated `extractSpdxIds` under a comment claiming it is shared; one moved
+    cite; the viewer header's "complete" → "application-wide"; "no crate ships a copyright notice"
+    narrowed to what is checked; `expectedViewerCount = 3` derived, not hardcoded; the 26-name
+    paragraph states its source (the tarball's own directory listing, not a build manifest); the
+    negative "no plain BSD-3-Clause at that host" → the dated observation; the determinism test
+    passes the target triple; `\b`/`i` on the guard regex; nits. Options: **(a) RECOMMENDED —
+    authorize ONE closing commit (the clause + the should-fixes + nits) verified by the custodian
+    mechanically (grep the clause in the generated notice; the readdir and nested-package mutations;
+    every check line) and by CI — no fourth gate;** (b) one closing commit + a third architect look;
+    (c) stop — the clause ships false. Then: the PR (ADR-030's acceptance note and `docs/README.md:27`'s
+    correction ride the landing commit on main once you rule entry 62 — the architect's exact note
+    text is recorded in CUT-STATE and will be put in the landing amendment). Touches: the branch only.
+
 64. **[Release cut item 10 (the cancellable, progress-reported pin) — RULE 7 REACHED on the reviewer
     step (gate FAIL on `1fb47ec`: four must-fixes; re-review FAIL on `15b41ac`: ONE must-fix, a new
     hole in the property the batch fixed). Everything else reproduced exactly. Authorize the closing
