@@ -280,6 +280,60 @@ and the terms URL:
   into `tauri.conf.json`'s `bundle.resources` and that the packaging decision is out of that
   piece's scope. When packaging lands, this channel needs the same acknowledgement the other two
   already carry; recorded here so it is not forgotten rather than assumed covered by the other two.
+- **Both gaps CLOSED, dated 2026-09-08 (RELEASE-0.1 item 9, "both notice generators"; ADR-030,
+  `docs/adr/ADR-030-conveyed-artifact-notice-set.md`, candidate (a) — filed Proposed, the human
+  queues acceptance on this piece's landing).** The two sets the bullet above named genuinely owed
+  are now both enumerated in the installed `NOTICE.txt`, generated (never hand-copied) from three
+  build manifests read by `renderer/bundle-viewer/notice.mjs`'s `notice()` function, now accepting
+  a third `extra` argument: (i) **the packaged frontend's own npm dependencies** — enumerated from
+  `frontends/shell`'s OWN Vite/Rollup build manifest, written by a tiny inline Rollup plugin
+  (`frontends/shell/vite.config.ts`'s `packageMetafilePlugin`, `generateBundle` hook) to
+  `frontends/shell/dist-metafile.json` (gitignored, sibling of `dist/`, the same esbuild-metafile
+  shape `renderer/bundle-viewer/build.mjs` already produces for the viewer, so `notice.mjs`'s
+  existing package-extraction logic reads either unchanged) — empirically 26 distinct package names
+  today (not the 5 top-level `dependencies` in `package.json`: deck.gl's own transitive tree —
+  `@loaders.gl/*`, `@luma.gl/*`, `@math.gl/*`, `@probe.gl/*`, `mjolnir.js`, `earcut`, `scheduler` —
+  is what a real build manifest catches that a hand-kept list would not; `@tauri-apps/plugin-dialog`
+  and `@tauri-apps/plugin-opener`, both declared `dependencies`, are verified NOT compiled into
+  `dist/` — grepped, no import anywhere under `frontends/shell/src` — so correctly absent from the
+  npm section rather than silently over-included); and (ii) **the Rust crate notices** — enumerated
+  from `frontends/shell/src-tauri`'s own `Cargo.lock` via `cargo metadata`/`cargo tree`
+  (`frontends/shell/scripts/rustCrateNotices.mjs`'s `collectLinkedCrates()`; `-e normal` excludes
+  build/dev-deps, `--filter-platform`/`--target x86_64-pc-windows-msvc`, `source === null` excludes
+  the six first-party `spatial-*`/`spatial-ide-shell` path crates) — 310 linked third-party
+  `(name, version)` pairs (296 distinct names; some crates resolve two major versions
+  transitively), each with its declared SPDX expression and every `LICENSE*`/`NOTICE*`/`COPYING*`
+  file from its own `%USERPROFILE%\.cargo\registry\src\index.crates.io-*\<name>-<version>\`
+  directory; 12 of the 310 ship no such file in their registry source (`flatbuffers`, `duckdb`,
+  `alloc-stdlib`, `selectors`, the four `unic-*` crates, `webview2-com`/`-macros`/`-sys`) and get
+  their SPDX declaration plus a canonical text — sourced from `LICENSES/Apache-2.0.txt` where this
+  repository already carries the id, otherwise borrowed verbatim from the alphabetically-first
+  linked crate that declares that id alone with its own bundled file (never typed from memory) — in
+  a shared "LICENSE TEXTS FOR CRATES WITH NO BUNDLED LICENSE FILE" section, once per id (`MIT`,
+  `Apache-2.0`, `BSD-3-Clause`, `MPL-2.0` today). `libduckdb-sys`'s own registry source DOES carry
+  DuckDB's MIT `LICENSE` file directly (verified: it ships a `LICENSE`, `duckdb.tar.gz`, and the
+  bundled C++ sources — the `duckdb` crate itself, the thin Rust wrapper, does not, and falls back
+  to the shared MIT text). The generator runs in two passes within `frontends/shell`'s own
+  `npm run build` (`tsc --noEmit && vite build && npm run generate:notice && vite build`) because
+  the packaged frontend's own npm manifest does not exist until the FIRST `vite build` has produced
+  it, and `NoticesPanel.tsx`'s `?raw` import of `src/generated/NOTICE.txt` bakes whatever that file
+  holds at build time into the shipped `dist/` output — so the file is regenerated with full scope
+  between the two passes and the SECOND build embeds the final text; a bootstrap (first-ever, no
+  prior `dist-metafile.json`) pass names itself provisional in its own header rather than silently
+  claiming a scope it does not yet carry. Checked, not merely asserted: `frontends/shell`'s own
+  `npm run check:dist-notice` (`scripts/checkDistNotice.mjs`, extended) confirms every one of the 26
+  npm package names and all 296 crate names actually appears in the built `dist/` output, not just
+  in the generator's own intermediate file; `noticeByteIdentity.test.ts` (extended) asserts the
+  viewer-specific portion of the installed `NOTICE.txt` stays byte-identical to
+  `renderer/bundle-viewer/dist/NOTICE.txt`'s own text, and a companion determinism test
+  (`noticeDeterminism.test.ts`) asserts two independent generation runs — including two real
+  `cargo metadata`/`cargo tree` subprocess calls — produce byte-identical output. The bundle
+  viewer's OWN `dist/NOTICE.txt` (the published-bundle artifact) is unaffected: `notice()`'s
+  two-argument call form is unchanged, verified byte-for-byte identical against its pre-this-piece
+  output before and after this change. The two "OWED, not yet done" sentences the header above
+  quotes are REMOVED from the installed copy's own header, replaced with a scope sentence naming
+  what the file actually enumerates; the bundle-only header's own two-argument-call text (quoted in
+  the bullet above) is untouched, since that artifact's scope has not changed.
 - **Verification (3) reference** — the "Verification (3)" paragraph above and
   `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
   `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not
