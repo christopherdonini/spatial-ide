@@ -144,6 +144,15 @@ how obvious they seem:
   pins that file `text eol=lf` — the checkout converts to CRLF; the `*.projjson` line and its
   comment are the precedent. Reviewers running with `core.autocrlf false` cannot see it locally;
   the class belongs on the checklist whenever a test hashes a checked-in text file.
+- **Never block or pump inside Tauri's `setup()` (added 2026-09-08, the human's ruling on
+  entry 55).** A startup value that is not yet observable when `setup()` runs (the webview's URL is
+  `about:blank` there) is derived from configuration the host already holds, never waited for: a
+  retry loop that pumps Win32 messages inside `setup()` let WebView2 IPC callbacks dispatch a
+  command before `app.manage(...)` — tao buffers its own events under that re-entry, but the COM
+  callbacks are not behind its guard — and needed a direct `windows` dependency plus the crate's
+  only `unsafe`. The pattern is: select from config (`tauri::is_dev()` + `config.build.dev_url`,
+  the same bit Tauri itself resolves the window URL from), then assert against reality once the
+  page has loaded — a logged self-check with a typed mismatch state, never a re-selection.
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's

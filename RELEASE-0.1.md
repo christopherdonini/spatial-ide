@@ -715,3 +715,163 @@ sentence, *"Every release text (notice, README, QUICKSTART, KNOWN-LIMITATIONS) c
 in the present tense for three texts that do not yet exist (items 4/5/6). Read it as a requirement —
 "must cite §6" — in the form item 2 of the same amendment already uses; only the notice cites §6 today.
 The custodian's own false-sentence, of the class the packaged-build gates were convened to remove.
+
+---
+
+## Amendment 6 — the human's rulings of 2026-09-08 on entries 53/55/56/57 and item 8; the ruled item list v3; preregistrations for item 1 (b), the K6 re-aim, items 8, 9 and 10 (2026-09-08, appended BEFORE any code on those items)
+
+**The human, verbatim:** *"55 = (b): config mirror via tauri::is_dev(); Part M equivalence assertion
+under dev / build --debug / build; post-load logged self-check of pinned vs actual origin with a typed
+mismatch state (assertion, never selection, no pump); windows edge + unsafe removed; conditions (4)/(5)
+retained, (1)–(3) superseded; recorded as ADR-020 Amendment 1's content; new mechanic: never block or
+pump inside setup(). 56 = (b) now — stepK6 encodes both cases explicitly (continuous→refusal,
+discrete→clear, no stale id); 47 = next cut's first piece; A9′ flakiness gets its own entry. 57 = (b)
+to unblock + item 9 (both generators) BEFORE the tag + ADR-030 filed Proposed with (a) as decision on
+item 9's landing; LOD → ADR-031; the ensure_pinned finding is entry 7's ruled pre-fix, never built —
+add it to this cut as a small piece, KNOWN-LIMITATIONS only if it slips. 53 reduced = (a). Item 8 =
+yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in full."* (#30 merged
+@ `fdb7c87`; PR #31 rebased onto it and retargeted to `main`.)
+
+### The ruled item list, v3
+
+1. **Item 1 (b)** — the config mirror (preregistration below). Re-opens `cut/release-adr020-origin`.
+2. **Item 2/3/3e** — PR #31: the authorized sweep (list below), then the human's click.
+3. **Item 7** — MERGED (#30). **K6 re-aim** — a small piece off main (preregistration below).
+4. **Item 8** — CRS catalog + EPSG:4326 + EPSG:3857 under the entry-51 protocol (preregistration below).
+5. **Item 9** — both notice generators (the shell's Vite npm set; the Rust crates from the lockfile)
+   into the one-source `NOTICE.txt`, BEFORE the tag (preregistration below). **ADR-030** filed
+   Proposed now with candidate (a) as the decision to be accepted on item 9's landing.
+6. **Item 10** — entry 7's ruled pre-fix, never built: the cancellable, progress-reported pin phase
+   before publish (preregistration below). KNOWN-LIMITATIONS carries it only if it slips.
+7. **Item 4/5/6** — KNOWN-LIMITATIONS, README, QUICKSTART: drafted (job tmp), written against what
+   ships once 1/8/9/10 land; item 4 last; the human tags.
+8. **ADR-031** is the LOD slice's home of record (NEXT-CUT.md renumbered); **entry 58** (A9′
+   flakiness) filed; **entry 47** = the next cut's first piece, with entry 58 beside it.
+
+### The authorized sweep on PR #31 (one commit, no gate re-run beyond CI green)
+
+The notice header names BOTH owed gaps (the packaged frontend's own npm set — React, react-dom,
+`@deck.gl/core`+`layers` 9.3.7, the shell's `apache-arrow` 21.2.0 — and the Rust crates); the same in
+`DEPENDENCY-LICENSES.md`'s dated block; Part M M3 re-quoted; `.gitattributes` gains
+`renderer/bundle-viewer/ceilings.json text eol=lf` (the CRLF-checkout hash failure on
+`windows-latest`, run 34190120091); the `tauri-build` job's record slot filled with its first green
+run (run 34190120055, job 101946288669, commit `34a1896`, `pull_request`, 27m19s); the reviewer's two
+should-fixes (the undated "Dated correction" in `product-ci-shell.yml:28`; M3's tense) and nits
+(`docs/02:91`'s stale ADR-025 clause; the boundary "first line" wording; `notice.mjs:140`'s AGPL path
+stated as repo-anchored; M10's trailing period; the shipped refusal's developer-only remedy sentence
+replaced by a packaged-context one; the `#[ignore]`d boundary test stated as not-in-CI). Then CI green
+(all four workflows) → the human's click.
+
+### Preregistration — item 1 (b): the config mirror (supersedes Amendment 2's item-1 conditions (1)–(3))
+
+**Design.** `expected_origin` is derived from configuration the host already holds, mirroring Tauri's
+own `WebviewUrl::App` resolution (`tauri-2.11.5/src/manager/mod.rs:353-367`), which descends from the
+same single `cargo:dev=` emission the shell crate receives (`tauri-2.11.5/build.rs:255-261`;
+`tauri-build-2.6.3/src/lib.rs:425-429,519`; `tauri::is_dev()` public at `src/lib.rs:308-310`):
+`if tauri::is_dev() { origin_of(app.config().build.dev_url) — refuse to start if None }` else
+`{ if let FrontendDist::Url(u) = frontend_dist { origin_of(u) } else { tauri_protocol_origin(https) } }`
+where `tauri_protocol_origin` is `http(s)://tauri.localhost` on Windows/Android and
+`tauri://localhost` elsewhere, `https` from the main window's `useHttpsScheme` (default false);
+`PROXY_DEV_SERVER` (`cfg!(all(dev, mobile))`) noted as inert on desktop. Normalised by the existing
+pure `expected_origin_from_url`. **No runtime read in `setup()`, no retry, no pump, no `windows`
+dependency, no `unsafe`** — the pump, its retry loop and the `windows` target dependency are REMOVED
+(`Cargo.lock` returns to main's edge set). Condition (4) retained: a missing/unparseable configured
+URL refuses to start — logged first (`SessionLog::open` stays before the selection), a blocking
+dialog, `exit(1)`. Condition (5) retained: the API and crate version named in code and record.
+**The post-load self-check (assertion, never selection):** on the main window's page-load event
+(Tauri 2's `on_page_load` / `PageLoadEvent::Finished` — verify the exact API by name and version in
+the piece), read `Webview::url()`, normalise, compare to the pinned origin; log the result to the
+session log (`origin-self-check ok` / `origin-self-check MISMATCH pinned=… actual=…`); on mismatch
+emit a typed event to the frontend (`app.emit`, no new command — ADR-027 decision 4 untouched) which
+renders a typed, non-dismissible state naming the mismatch and that the data plane will refuse; the
+pinned value is NEVER changed by the check. **Tests:** unit tests for the mirror over every branch
+(dev+dev_url; dev without dev_url → refusal; production + `FrontendDist::Url`; production default →
+`http://tauri.localhost`; `useHttpsScheme` → `https://tauri.localhost`; the non-Windows arm →
+`tauri://localhost`); the kernel admission tests unmodified and green; `check:dev-origin` stays (now
+load-bearing for both Tauri and the shell). **Part M equivalence assertion (row M12):** under each of
+`tauri dev`, `tauri build --debug`, `tauri build`, the session log's pinned-origin line and its
+self-check line agree (`ok`), and the data plane admits one upgrade — executed at Part M on the
+artifacts; the `--debug` artifact is built for that row (build only, not installed). **Record:**
+ADR-020 Amendment 1 REWRITTEN on the branch (unmerged text) to this design: the Status sentence
+discharged quoted verbatim; the mirror with API + version; *"the accepted mechanism is unchanged; this
+replaces a selector the acceptance never covered"*; the self-check as assertion-not-selection; §(d)'s
+truthful DEV-gate paragraph kept; §(e) reopen condition amended to: any future build mode whose origin
+Tauri does not resolve from `cfg(dev)` + config reopens this amendment; §(f) replaced by the
+executed-once record of the mirror + self-check on `tauri dev` (the pump's runtime record moves to the
+amendment's history paragraph, dated, as the disproved design). `docs/02:83`, `docs/README.md:27`
+updates kept. Gate: reviewer + architect re-check (the mirror's four branches against `get_app_url`;
+the self-check's page-load hook; the removed dependency; the record). Human-directed security red
+line honoured by ruling 55.
+
+### Preregistration — the K6 re-aim (entry 56 = (b))
+
+`e2e/regression.mjs` `stepK6` encodes both cases of the CURRENT contract explicitly: (i) a single
+continuous zoom-out crossing the pick threshold (one coalesced camera change, as the walkthrough's
+L7 gesture — realised with one wheel event of sufficient delta, or the camera set directly through
+the E2E surface if the harness offers it) → the readout shows the refusal text *"Features here are
+below pick resolution — zoom in to inspect them."* (verbatim, `App.tsx`); (ii) discrete notches
+(≥ 8 wheel events as today) → the readout CLEARS on the first notch and **no stale id survives** (the
+`.hover-readout` never shows the pre-zoom id after any notch). Both assertions are named in the step's
+comment as the contract entry 47 will replace (re-pick on settle, next cut's first piece); no product
+code changes. Tests: the step green on main's default (candidate) on a quiet machine; a unit test in
+`pickResolution.test.ts` pinning the two paths of `reevaluateStandingHoverOnCameraChange` if not
+already present. Gate: reviewer.
+
+### Preregistration — item 8: EPSG:4326 and EPSG:3857 in the catalog (the entry-51 protocol)
+
+Facts binding the design: ADR-026 Accepted — pinned in-tree, content-hashed, never fetched, no
+matching, no defaults; the catalog's one entry embeds a PROJJSON at schema v0.5; `crs_catalog::tests`
+pins the entry count, ids and the EPSG:2056 hash as literals; the engine admits a CRS assertion only if
+the definition establishes axis order (`crs::tests::an_assertion_that_establishes_no_axis_order_is_refused`).
+**The piece:** (1) generate `EPSG:4326` and `EPSG:3857` as PROJJSON with the same pinned tool as
+entry 51's check (`projinfo -o PROJJSON`, PROJ 9.6.2, EPSG v12.013 — versions recorded); (2) verify
+each under the entry-51 protocol — a leaf-by-leaf comparison keyed by EPSG code between the catalog
+entry and a SECOND rendering (`projinfo -o WKT2:2019` parsed, or the human's epsg.org lookup pasted)
+— recorded in `spikes/entry51-epsg2056-equivalence/`'s successor directory with the verbatim output;
+(3) two new catalog entries with `attribution` (source, terms URL, `verified` naming v12.013), the
+pinned literals (count, ids, hashes) updated consciously; (4) the engine's PROJJSON reader verified on
+schema v0.7 and on a GEOGRAPHIC CRS (4326's axes are Lat/Lon, north/east, degrees) — tests: admission
+of a 4326-declared file establishes axis order and renders in degrees as a planar frame with NO
+reprojection (ADR-003/docs/01: no silent conversion — plate carrée is the honest rendering; a
+KNOWN-LIMITATIONS entry says so: geographic CRS render unprojected in v0.1); 3857's metres render as
+today; (5) `DEPENDENCY-LICENSES.md`'s EPSG block gains the two entries' verification lines (the
+custodian appends after the piece lands, to avoid colliding with the #31 sweep). Gate: reviewer +
+architect re-check (ADR-026 fidelity; axis-order handling; the no-reprojection rendering statement).
+
+### Preregistration — item 9: both notice generators (before the tag)
+
+(1) The shell's Vite build: a Rollup/Vite-produced manifest (`build.rollupOptions` / the `manifest`
+option — verify the exact mechanism) enumerating every npm package compiled into
+`frontends/shell/dist`, fed to the SAME `notice()` (extended to accept a second package set with its
+own base dir) so the installed `NOTICE.txt` carries the packaged frontend's third-party notices
+(React, react-dom, deck.gl, apache-arrow 21.2.0 …) with their retained NOTICE files; (2) the Rust
+crates from `frontends/shell/src-tauri/Cargo.lock` (+ the workspace lock for the kernel/engine crates
+statically linked): name, version, declared license, and each crate's `LICENSE*`/`NOTICE*` text from
+the cargo registry, generated at build time into the same `NOTICE.txt` — no new crate dependency (a
+node script reading the lockfile and the registry directory; if an existing tool such as `cargo about`
+would be needed, STOP and report — dependency red line); (3) the installed copy then enumerates every
+third-party work it carries and the "owed" sentences are REMOVED; the bundle's `viewer/NOTICE.txt`
+keeps its viewer-only scope (unchanged bytes for the viewer section); (4) tests: byte-identity of the
+generated file with the generator's output; a dist check that every package in the Vite manifest and
+every crate in the lockfile appears by name; the reviewer diffs a sample of embedded license texts
+against the registry files. **ADR-030** (filed Proposed now) is accepted with candidate (a) — *every
+conveyed artifact enumerates every third-party work it actually carries, generated from that
+artifact's own build manifest; no artifact ships with a named gap* — on this piece's landing, the
+human's word. Gate: reviewer + architect (ADR-009/AGPL notice completeness; ADR-030 (a) satisfied).
+
+### Preregistration — item 10: entry 7's ruled pre-fix (the cancellable, progress-reported pin)
+
+Entry 7 (ruled 2026-09-02, verbatim): *"thread the `CancelToken` + a phase label into
+`publish-prepare`"* — never built. Facts: `publish.rs` `ensure_pinned(dataset, cancel)` runs the
+whole-file SHA-256 under `spawn_blocking` with `CancelToken::new()` (no UI affordance) and no progress
+during `binding_publish_prepare`'s "Preparing…" state; ADR-025's refusal now sits behind it. **The
+piece:** the pin phase reports progress (bytes hashed / total, as a phase label + fraction through the
+existing publish-progress channel — `PublishPhase`/`progress.phase`, verify) and honours a cancel
+from the panel (the same `CancelToken` the publish itself uses — a Cancel during "Preparing…" aborts
+the pin with a typed outcome, nothing written, the dialog never opens); the ADR-025 ceiling check runs
+BEFORE the pin where it can (feature count from the verified identity — no pin needed), so an
+over-ceiling source is refused in milliseconds; Part M M10 rewritten accordingly. Tests: a
+cancel-during-pin unit test (typed outcome, no side effect); a progress-reported pin test on a fixture;
+the reordered preflight refusing before any hash. Gate: reviewer (docs/01 principle 7's
+progress/cancel clause is the criterion; ADR-006: the pin is not a side effect). Slips → a
+KNOWN-LIMITATIONS entry, by the human's ruling.

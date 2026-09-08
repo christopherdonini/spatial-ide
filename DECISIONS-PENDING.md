@@ -5,6 +5,35 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-08 — entries 53 (reduced form), 55, 56, 57, item 8, #30, the sweep — the human
+verbatim:** *"55 = (b): config mirror via tauri::is_dev(); Part M equivalence assertion under dev /
+build --debug / build; post-load logged self-check of pinned vs actual origin with a typed mismatch
+state (assertion, never selection, no pump); windows edge + unsafe removed; conditions (4)/(5)
+retained, (1)–(3) superseded; recorded as ADR-020 Amendment 1's content; new mechanic: never block or
+pump inside setup(). 56 = (b) now — stepK6 encodes both cases explicitly (continuous→refusal,
+discrete→clear, no stale id); 47 = next cut's first piece; A9′ flakiness gets its own entry. 57 = (b)
+to unblock + item 9 (both generators) BEFORE the tag + ADR-030 filed Proposed with (a) as decision on
+item 9's landing; LOD → ADR-031; the ensure_pinned finding is entry 7's ruled pre-fix, never built —
+add it to this cut as a small piece, KNOWN-LIMITATIONS only if it slips. 53 reduced = (a). Item 8 =
+yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in full."* Applied:
+`RELEASE-0.1.md` Amendment 6 (the ruled item list v3 + preregistrations for item 1 (b), the K6
+re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #31; item 1 (b) and the
+K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
+entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
+
+58. **[A9′ (the regression suite's hover → pick → `.hover-readout` shows an id step) is FLAKY,
+    arm-independent — filed on the human's ruling of 2026-09-08, not yet diagnosed.]** Facts from the
+    arm-flip piece's runs (2026-09-07/08, quiet and busy machine): across seven logged regression
+    runs A9′ PASSED 3 / FAILED 4; in the three-run K6 matrix it failed in both baseline runs and
+    passed in the candidate run; the worker and the reviewer both call it arm-independent and note the
+    P5c interior-pixel hardening comment in `e2e/regression.mjs:269-301` (the step picks a
+    non-background pixel to hover; edge pixels that "look non-background but were never a safe hover
+    target" were the diagnosed cause of an earlier flake class). NOT diagnosed here. Candidates: the
+    pixel-selection heuristic under load; the pick-radius / offset-frame hit-test near the threshold
+    (the same undiagnosed half entry 47 carries verbatim). Recommendation: diagnose alongside entry 47
+    as the next cut's first piece (same code, same repro harness); until then the step stays in the
+    suite, its flakiness declared in the run record, never hidden by a retry. Touches: nothing now.
+
 57. **[Packaged build (items 2/3/3e) — RULE 7 REACHED on the architect's side: one sentence in the
     installed `NOTICE.txt` still overclaims, and a decision this project has never made is now
     live: what notice set a conveyed artifact must carry.]** After the fix batch (`34a1896`), the
