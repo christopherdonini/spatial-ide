@@ -65,6 +65,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { collectLinkedCrates } from "./rustCrateNotices.mjs";
+import {
+  AMALGAMATION_HEADING,
+  assertTarballMatchesManifest,
+  findLibduckdbSys,
+  readAmalgamationManifest,
+} from "./duckdbAmalgamationNotices.mjs";
 
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const DIST_DIR = join(SHELL_DIR, "dist");
@@ -162,9 +168,15 @@ function newestMtimeMs(files) {
 // (SHOULD-FIX 5) -- `g`/`m` so every occurrence in a section is counted, not just the first.
 const ENTRY_LINE = /^(\S+) (\S+) — /gm;
 
-function countEntries(section) {
+// The FOURTH section's own entry-line shape (`notice.mjs`'s `duckdbAmalgamationSectionLines`:
+// `${lib} (third_party/${lib}) — ${licenseId}`). A bundled C/C++ source tree has no per-work version
+// to state, so that section cannot use the `<name> <version> — ` shape the other three do; matching
+// its real shape is what makes a deleted entry fail here rather than pass unnoticed.
+const AMALGAMATION_ENTRY_LINE = /^(\S+) \(third_party\/[^)]+\) — /gm;
+
+function countEntries(section, pattern = ENTRY_LINE) {
   if (!section) return 0;
-  return [...section.matchAll(ENTRY_LINE)].length;
+  return [...section.matchAll(pattern)].length;
 }
 
 function sectionSlice(body, startHeading, endHeading) {
@@ -319,12 +331,17 @@ function main() {
     process.exitCode = 1;
     return;
   }
-  const NOTICE_END = "This gap is tracked, not silently shipped: listed under DECISIONS-PENDING entry 62.";
+  // The end sentinel moved with entry 62's landing. It used to be the DuckDB amalgamation GAP
+  // paragraph's closing line ("This gap is tracked, not silently shipped: ..."), which that piece
+  // deletes -- the gap is closed and the works now carry their full licence texts. The fourth
+  // section's own fixed terminal line takes its place: it carries no counts and no version, so it
+  // does not move when the pinned set does.
+  const NOTICE_END = "END OF THE DUCKDB BUNDLED THIRD-PARTY SOURCES SECTION";
   const endAt = normalized.indexOf(NOTICE_END, startAt);
   if (endAt === -1) {
     console.error(
       "check:dist-notice: FAIL -- could not locate the embedded notice text's own end sentinel " +
-        "(the DuckDB amalgamation gap paragraph's closing line) anywhere in dist/."
+        `(${JSON.stringify(NOTICE_END)}, the DuckDB amalgamation section's closing line) anywhere in dist/.`
     );
     process.exitCode = 1;
     return;
@@ -337,7 +354,14 @@ function main() {
 
   const viewerSection = sectionSlice(noticeBody, VIEWER_HEADING, FRONTEND_HEADING);
   const frontendSection = sectionSlice(noticeBody, FRONTEND_HEADING, RUST_HEADING);
-  const rustSection = sectionSlice(noticeBody, RUST_HEADING, null);
+  // **The Rust section is now BOUNDED by the fourth heading, and must be** (entry 62). It used to
+  // run to the end of the notice body, which was harmless while what followed was a bullet list of
+  // bare directory names. The fourth section emits 26 anchored ENTRY_LINE-shaped lines, so an
+  // unbounded Rust slice would count 26 crates that are not crates and the Rust cardinality check
+  // -- the one that proves no linked crate's entry was dropped -- would pass while over by exactly
+  // that many.
+  const rustSection = sectionSlice(noticeBody, RUST_HEADING, AMALGAMATION_HEADING);
+  const amalgamationSection = sectionSlice(noticeBody, AMALGAMATION_HEADING, null);
 
   // FAILS CLOSED when the viewer metafile is absent (closing commit, architect advisory A4). This
   // read used to fall back to a literal `3` -- the count that happened to be true when it was
@@ -360,11 +384,35 @@ function main() {
   const viewerMetafile = JSON.parse(readFileSync(VIEWER_METAFILE_PATH, "utf8"));
   const expectedViewerCount = packageNamesFromMetafile(viewerMetafile).size;
 
-  const expected = { viewer: expectedViewerCount, frontend: npmNames.size, rust: crates.length };
+  // The fourth set's own expected cardinality, and the DRIFT GUARD (entry 62's preregistration,
+  // item 4). Both read the pinned manifest -- never a literal 26 -- and both fail closed:
+  //   - `readAmalgamationManifest()` re-verifies every pinned licence file's sha256 against the
+  //     bytes on disk, so a corrupted or edited pinned text throws here rather than being validated
+  //     against a hash that no longer describes it;
+  //   - `assertTarballMatchesManifest()` compares the manifest's library list against the
+  //     `third_party/` listing inside the pinned crate's OWN `duckdb.tar.gz`, so a DuckDB upgrade
+  //     that adds or removes a bundled work is caught at check time instead of shipping a section
+  //     that confidently enumerates a tree that has changed underneath it.
+  // Both throw rather than returning a failure, and `main()` is wrapped accordingly below: an
+  // unverifiable notice must stop the pipeline, not print a PASS line with a caveat.
+  const { manifest: amalgamationManifest } = readAmalgamationManifest();
+  const duckdbCrate = findLibduckdbSys(crates);
+  const tarball = assertTarballMatchesManifest({
+    crateSrcDir: duckdbCrate.dir,
+    manifest: amalgamationManifest,
+  });
+
+  const expected = {
+    viewer: expectedViewerCount,
+    frontend: npmNames.size,
+    rust: crates.length,
+    amalgamation: amalgamationManifest.works.length,
+  };
   const actual = {
     viewer: countEntries(viewerSection),
     frontend: countEntries(frontendSection),
     rust: countEntries(rustSection),
+    amalgamation: countEntries(amalgamationSection, AMALGAMATION_ENTRY_LINE),
   };
 
   const cardinalityFailures = [];
@@ -381,6 +429,13 @@ function main() {
     cardinalityFailures.push(
       `Rust crate section: expected ${expected.rust} crate entry line(s) (this build's own linked set), found ${actual.rust}`
     );
+  if (amalgamationSection === null)
+    cardinalityFailures.push(`DuckDB amalgamation section heading ${JSON.stringify(AMALGAMATION_HEADING)} not found`);
+  else if (actual.amalgamation !== expected.amalgamation)
+    cardinalityFailures.push(
+      `DuckDB amalgamation section: expected ${expected.amalgamation} work entry line(s) (the pinned ` +
+        `manifest's own work list), found ${actual.amalgamation}`
+    );
 
   if (cardinalityFailures.length > 0) {
     console.error(
@@ -396,9 +451,20 @@ function main() {
     `check:dist-notice: PASS -- all ${REQUIRED_STRINGS.length} required notice strings, all ` +
       `${npmNames.size} Vite package name(s), and all ${crateNames.size} linked crate name(s) found ` +
       `across ${files.length} dist file(s); no forbidden or degraded strings; anchored entry-line ` +
-      `counts match each section's own build manifest (viewer ${actual.viewer}, frontend ` +
-      `${actual.frontend}, Rust crates ${actual.rust}).`
+      `counts match each section's own source (viewer ${actual.viewer}, frontend ` +
+      `${actual.frontend}, Rust crates ${actual.rust}, DuckDB amalgamation ${actual.amalgamation}); ` +
+      `every pinned amalgamation licence file's sha256 re-verified and the crate tarball's ` +
+      `third_party/ listing (${tarball.count} dirs) matches the pinned manifest.`
   );
 }
 
-main();
+// The two entry-62 guards signal by THROWING (a corrupted pinned licence text, or a crate tarball
+// whose third_party/ listing no longer matches the pinned manifest). Catching them here turns an
+// uncaught stack trace into the same named FAIL line every other refusal in this file prints, and
+// keeps the non-zero exit `npm run verify` depends on.
+try {
+  main();
+} catch (err) {
+  console.error(`check:dist-notice: FAIL -- ${err?.message ?? err}`);
+  process.exitCode = 1;
+}

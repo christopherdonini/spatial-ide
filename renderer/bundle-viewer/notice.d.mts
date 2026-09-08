@@ -47,9 +47,44 @@ export interface NoticeRustCrateSet {
   targetTriple?: string | null;
 }
 
+// The FOURTH set (DECISIONS-PENDING entry 62 = (a)): the third-party works inside DuckDB's
+// amalgamated source tree. Unlike the three sets above it carries TEXTS, not paths -- the pinned
+// files are read and hash-verified by `frontends/shell/scripts/duckdbAmalgamationNotices.mjs` before
+// they reach `notice()`, so this module does no I/O for them and gains no dependency on
+// `frontends/shell` (docs/02's module map direction, the same one `extractSpdxIds`'s deliberate
+// duplication preserves).
+export interface NoticeAmalgamationFile {
+  file: string;
+  upstreamPath: string;
+  url: string;
+  text: string;
+}
+
+export interface NoticeAmalgamationWork {
+  lib: string;
+  licenseId: string;
+  licenseIdBasis: string;
+  note: string | null;
+  files: NoticeAmalgamationFile[];
+}
+
+export interface NoticeAmalgamationSet {
+  heading: string;
+  works: NoticeAmalgamationWork[];
+  duckdbVersion: string;
+  duckdbTag: string;
+  duckdbCommit: string;
+  upstreamRepository: string;
+  crateName: string;
+  crateVersion: string;
+  pinnedDirName: string;
+  retrieved: string;
+}
+
 export interface NoticeExtra {
   npmSets?: NoticeNpmPackageSet[];
   rustCrates?: NoticeRustCrateSet;
+  duckdbAmalgamation?: NoticeAmalgamationSet;
   bootstrap?: boolean;
 }
 

@@ -27,3 +27,19 @@ renderer/bundle-viewer/ceilings.json text eol=lf
 # first is embedded in every published bundle's own notice for the same reason, and a rule that
 # covered only the currently-hashed files would need editing the next time one is added.
 LICENSES/*.txt text eol=lf
+
+# Fourth instance of the same class, and the one case where `text eol=lf` is the WRONG remedy
+# (DECISIONS-PENDING entry 62 = (a), 2026-09-08). LICENSES/third-party/duckdb-<version>/ holds the
+# upstream licence texts of the third-party works inside DuckDB's amalgamated source tree, fetched
+# from github.com/duckdb/duckdb at the pinned tag. Each is hash-pinned twice in that directory's
+# MANIFEST.json -- by sha256, and by the git blob SHA-1 the tag's own tree reports for it -- and is
+# embedded VERBATIM into the NOTICE.txt this application conveys.
+#
+# `-text` disables end-of-line conversion in BOTH directions, rather than normalising to LF, and
+# that is a measured choice: miniz/LICENSE's upstream bytes genuinely contain CRLF (26 of the 27
+# files are LF-only; that one is not, checked at pin time). Under `text eol=lf` git would rewrite it
+# on commit, so the committed bytes would no longer be the upstream bytes, both pinned hashes for it
+# would be wrong, and the licence text conveyed to a recipient would differ from the one verified
+# against DuckDB's tree. `-text` preserves all 27 byte-for-byte on every platform, which is what the
+# eol=lf lines above are reaching for and what a hash-pinned corpus actually needs.
+LICENSES/third-party/** -text

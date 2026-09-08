@@ -31,6 +31,14 @@ notice-generation INPUTS — template texts embedded under OTHER projects' crate
 notice — and none of those three ids appears in the table above, because nothing in this tree is
 licensed under any of them. See "`MIT.txt`, `BSD-3-Clause.txt` and `MPL-2.0.txt` — provenance" below.
 
+**Neither is the `third-party/` subdirectory.** `third-party/duckdb-1.5.5/` holds 27 files: the
+upstream licence and notice texts of the 26 third-party works embedded in DuckDB's amalgamated
+source tree, which the data engine compiles into the packaged application. They are
+notice-generation INPUTS in exactly the same sense — other projects' licences, embedded verbatim
+under those projects' own names in a generated notice — and **none of them licenses anything in this
+tree**. The layers table above is unchanged by their presence. See
+"`third-party/duckdb-1.5.5/` — the DuckDB amalgamation's licence texts" below.
+
 ## Two texts were missing at first, and that was deliberate rather than an oversight
 
 `AGPL-3.0-or-later.txt` and `CC-BY-4.0.txt` were **not in this directory** when this file was first
@@ -162,6 +170,42 @@ THROW, naming the id, rather than emitting a placeholder into a shipped notice. 
 also pinned by `sha256` in `frontends/shell/src/notices/noticeByteIdentity.test.ts`, so a silent
 edit to any of them fails a test rather than silently changing the licence text this application
 conveys.
+
+## `third-party/duckdb-1.5.5/` — the DuckDB amalgamation's licence texts
+
+*Added 2026-09-08 on the human's ruling, DECISIONS-PENDING entry 62 = (a). Full method, the tag, the
+retrieval date and every URL: `third-party/duckdb-1.5.5/README.md`. The record of the gap this
+closes, and its dated closure: `DEPENDENCY-LICENSES.md`'s packaged-app block.*
+
+`engine/Cargo.toml` depends on `duckdb` with the `bundled` feature, so `libduckdb-sys 1.10505.0`
+compiles **DuckDB's own amalgamated C/C++ source tree** into the packaged application. That tree
+embeds 26 further third-party works under its `third_party/` directory and carries **no licence,
+notice or copying file at all** — and no Cargo manifest names those works individually, so
+`scripts/rustCrateNotices.mjs`, which reads `Cargo.lock`, structurally cannot reach them. Until this
+directory existed, the packaged application's `NOTICE.txt` named the 26 and stated outright that
+their licence texts were not carried.
+
+**Provenance, so this is verifiable rather than trusted.** The texts were fetched once with `curl`
+on **2026-09-08** from DuckDB's own source tree at tag **`v1.5.5`** (commit
+`d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`, whose short form is the `DUCKDB_SOURCE_ID` the compiled
+tarball itself carries — the two are the same revision as a mechanical identity, not an assumption).
+`MANIFEST.json` records, per file, the URL, the upstream path, the byte count, the `sha256`, and the
+**git blob SHA-1 that the tag's own tree reports for that path** — all 27 recomputed locally and
+matched, which proves the pinned bytes are the exact blobs the tag names. Every one of the 26 ships
+a `LICENSE` upstream, so nothing here was reconstructed from a source header or written by hand.
+
+**Line endings are pinned differently from the four files above, deliberately.** `.gitattributes`
+marks this directory `-text` (no conversion in either direction) rather than `text eol=lf`, because
+**`miniz/LICENSE`'s upstream bytes genuinely contain CRLF**: normalising it would rewrite a licence
+text this application conveys and break both hashes recorded for it. `-text` preserves all 27
+byte-for-byte on every platform, which is what the `eol=lf` pins are reaching for.
+
+**Editing anything here breaks the build on purpose, and so does a DuckDB upgrade that changes the
+set.** `scripts/duckdbAmalgamationNotices.mjs` re-verifies every `sha256` against the bytes on disk
+each time the notice is generated, and compares the manifest's work list against the `third_party/`
+listing inside the pinned crate's own `duckdb.tar.gz`. Both throw rather than degrade; both are
+covered by `frontends/shell/src/notices/duckdbAmalgamation.test.ts`. Re-pinning for a new DuckDB
+version means a new `third-party/duckdb-<version>/` directory produced by the recorded method.
 
 ## The Apache-2.0 layer is empty, and that is a finding rather than a gap
 

@@ -115,10 +115,13 @@ test('the two-argument (bundle/viewer) header names no unmet obligation', () => 
 //
 // **"application-wide", not "complete" (closing commit, architect advisory A2).** This paragraph
 // pointed at the beside-the-executable NOTICE.txt as "the application's complete notice set", which
-// asserts more about that file than that file asserts about itself: its own header names an open gap
-// outright (`duckdbAmalgamationGapLines()` -- third-party sources inside DuckDB's amalgamated build
-// that no build manifest here can see). Both halves are asserted, so neither the wording nor the
-// claim can drift back silently.
+// asserted more about that file than that file asserted about itself: at the time its own header
+// named an open gap outright -- the third-party sources inside DuckDB's amalgamated build that no
+// build manifest here can see. That gap is CLOSED as of DECISIONS-PENDING entry 62 = (a)
+// (2026-09-08): those works now carry their full upstream licence texts in their own section of the
+// installed copy. "application-wide" still stands rather than becoming "complete", because the wider
+// file states its four sources rather than claiming exhaustiveness, and a pointer should not upgrade
+// that. Both halves are asserted, so neither the wording nor the claim can drift back silently.
 test('the two-argument header states both of the file\'s two distribution scopes', () => {
   const text = notice(fakeMetafile);
   assert.match(text, /inside a published\nbundle, this is the whole notice set the bundle owes/);

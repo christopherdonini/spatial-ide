@@ -420,6 +420,56 @@ and the terms URL:
   crate statically linked), and the notice itself carries a paragraph after the Rust section that
   lists these 26 names and states the texts are not carried. Tracked under **DECISIONS-PENDING
   entry 62**; obtaining and carrying the upstream texts is deliberately out of this batch's scope.
+  <br><br>
+  **THAT GAP IS NOW CLOSED — 2026-09-08, DECISIONS-PENDING entry 62 = (a)** (the human, verbatim:
+  *"62 = (a): the amalgamation's 26 works enumerated from the upstream tree at the pinned version,
+  hash-pinned in-tree, own notice section, before the tag; ADR-030 accepted with the appended
+  enumeration-source note"*). The paragraph above is retained as the record of what was true between
+  item 9's landing and this piece; the two sentences it ends on — that the licence texts are not
+  carried, and that obtaining them is out of scope — **no longer describe the artifact**. All 26
+  works now carry their full upstream licence texts, in their own notice section
+  (**"DUCKDB'S BUNDLED THIRD-PARTY SOURCES"**), and the installed header's scope sentence names four
+  sources rather than three build manifests.
+  <br><br>
+  **The fourth set's source and method.** The DuckDB version the crate pins is **1.5.5**, read two
+  independent ways that agree: `libduckdb-sys`'s own `build.rs` encoding
+  (`duckdb_version_from_pkg_version`, *"duckdb-rs uses 1.MAJOR\_MINOR\_PATCH.x, e.g. DuckDB 1.5.0 =>
+  duckdb-rs 1.10500.x"* — crate `1.10505.0` → `10505` → 1.5.5), and the tarball's own baked-in
+  constants (`duckdb/src/function/table/version/pragma_version.cpp`: `#define DUCKDB_VERSION
+  "v1.5.5"`, `#define DUCKDB_SOURCE_ID "d8cdaa33fd"`). Tag **`v1.5.5`** resolves to commit
+  `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`, whose short form **is** that `DUCKDB_SOURCE_ID` — so
+  the tarball compiled here and the upstream tree the texts came from are the same revision as a
+  mechanical identity, not an inference. `third_party/` upstream at that tag holds **30**
+  directories; the amalgamation carries **26** of them (`catch`, `imdb`, `jemalloc`, `snowball` are
+  upstream-only, not conveyed, not pinned). **Every one of the 26 ships a `LICENSE` file upstream**,
+  so the preregistration's fallback — the licence header from a library's main source file where it
+  ships none — was **not needed for any library**, and no text here was reconstructed or written by
+  hand. One work (`tdigest`) ships a second file, `NOTICES`; 27 files in total. Each was fetched once
+  with `curl` from `https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/…` on
+  **2026-09-08** (the entry-51 discipline: URL, retrieval date and `sha256` recorded per file) and
+  pinned under **`LICENSES/third-party/duckdb-1.5.5/`** with a `MANIFEST.json` and a `README.md`
+  recording the method, the tag, the date and every URL. **Verification stronger than the fetch:**
+  each file's **git blob SHA-1** was recomputed locally and compared against the SHA the tag's own
+  tree API reports for that path — **27 of 27 matched**, which proves the pinned bytes are the exact
+  blobs `refs/tags/v1.5.5` names. Both hashes are recorded per file.
+  <br><br>
+  **It is a manifest of a kind, and the notice says which kind.** This set is the only one of the
+  four that no build manifest reports; it is enumerated from the upstream tree's own directory
+  listing at the pinned crate version, intersected with the tarball's listing. The generated section
+  states that in its own intro rather than presenting the set as if cargo had reported it.
+  **DuckDB declares no SPDX id for these works** (there is no per-library licence index upstream at
+  this tag), so `MANIFEST.json`'s `license_id` is never a quotation of an upstream declaration: each
+  entry carries a `license_id_basis` of either `self-declared` (the pinned text names its own licence
+  — `mbedtls` is the only one naming SPDX ids outright, a dual `Apache-2.0 OR GPL-2.0-or-later`) or
+  `read-from-body` (the id read from the text's operative clauses). The pinned text is the authority
+  in every case and is what the notice embeds. **Two fail-closed guards, both mutation-verified:**
+  every pinned file's `sha256` is re-verified at generation and check time (corrupting one byte of
+  `zstd/LICENSE` fails `generate:notice`, `check:dist-notice` and the vitest suite, each exit 1), and
+  the manifest's work list is compared against the crate tarball's own `third_party/` listing
+  (removing `snappy` from the manifest fails the check, naming the difference in both directions).
+  `re2/AUTHORS` exists upstream and is deliberately **not** pinned — it falls outside the
+  preregistration's three filename classes (`LICENSE*`, `COPYING*`, `NOTICE*`); named here rather
+  than omitted silently.
 - **Verification (3) reference** — the "Verification (3)" paragraph above and
   `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
   `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not
