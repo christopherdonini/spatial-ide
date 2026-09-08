@@ -875,3 +875,128 @@ cancel-during-pin unit test (typed outcome, no side effect); a progress-reported
 the reordered preflight refusing before any hash. Gate: reviewer (docs/01 principle 7's
 progress/cancel clause is the criterion; ADR-006: the pin is not a side effect). Slips → a
 KNOWN-LIMITATIONS entry, by the human's ruling.
+
+## Amendment 7 — item 8's architect consult: BLOCK on the EPSG:4326 half, PASS with notes on EPSG:3857; corrections to the item-8 preregistration; the 3857 piece as dispatched (2026-09-08, appended BEFORE any code on item 8)
+
+**Why a consult before dispatch.** Reading the code to write the item-8 brief, the custodian found that
+the engine refuses a latitude-first declaration by design (`engine/src/dataset.rs:303-307`,
+`EngineError::AxisOrderUnsupported`; `engine/src/crs.rs:120-124` "refused rather than reinterpreted";
+`engine/tests/slice.rs:310-324`; docs/05:26 "the EPSG:4326 lat/lon trap"), so the preregistration's
+item (4) — "admission of a 4326-declared file establishes axis order and renders in degrees" — names
+the refused behaviour. Both `projinfo` renderings (PROJ 9.6.2, EPSG v12.013, the same `proj.db` as
+entry 51 by hash) and the GeoParquet 1.1.0 axis-order passages are pinned verbatim in
+`spikes/item8-crs-catalog-extension/README.md` before anything cites them.
+
+**The architect's verdict (2026-09-08), in its own words where quoted:** *"BLOCK — item 8's EPSG:4326
+half, as preregistered … The EPSG:3857 half is pass with notes and can proceed this cut."* Violations
+named (the architect's cites; the custodian re-read the engine, slice-test and `partition.ts` lines):
+(1) ADR-015 §5, Accepted and architect-blockable, refuses a non-x-first source rather than
+reinterpreting it (the architect quotes `ADR-015:56-60`); (2) ADR-026 declines the question
+(`ADR-026:61`, under "What this ADR does not decide"); (3) NEW — the bundle viewer refuses any order
+but `easting,northing` (`renderer/bundle-viewer/src/partition.ts:29`, checked per partition at
+`:115-121` → the ADR-017 §14 state `envelope-axis-order-mismatch`), so a 4326 bundle would be a dead
+artifact of the shape ADR-025 was accepted to refuse at preflight; a second such reader at
+`frontends/canvas-probe/src/geoarrow.ts:90-92`; (4) NEW — `engine/src/geoarrow.rs:97-103` embeds the
+definition verbatim in the GeoArrow field, so under an override an external reader would receive a
+lat-first CRS over an x-first buffer (docs/05:26's trap exported across a boundary, ADR-010 rule 1);
+(5) the spec text was unpinned — now pinned (above). On the merits the architect calls the
+recorded-override admission *"defensible — arguably more honest than today"* (today's refusal reports
+`established: "latitude,longitude"` about a file whose WKB is x-first, and `engine/src/error.rs:72-76`
+calls that "the EPSG:4326 trap `docs/05` names, in its GeoParquet form" when the format's form of the
+trap is the opposite) but *"a substantive re-reading of an accepted architect-blockable ADR, so it is
+not the custodian's to make"*: it may live only in `engine/src/geoparquet.rs` (the format reader),
+never in `crs.rs`'s `is_x_first`; `axis_normalization` must stay `none-performed` (nothing is
+normalized) and the data-order basis is a NEW fact whose envelope/manifest key would hit ADR-017's
+spent schema lever (`ADR-017:855-859`, per the architect) → `bundle_version` 2; a producer violating
+the spec transposes silently, so only a falsification check (|latitude| > 90 → refuse) is possible,
+never a conformance proof. Ranking: **(a) EPSG:3857 only this cut** (no ADR change; works end to end;
+one precommitted test); (b) 3857 + 4326 under the recorded override = a cut of its own (ADR-015
+amendment, ADR-017 §14 reader change, possible `bundle_version` 2, a degrees fixture); (c) 3857 +
+OGC:CRS84 — admitted today with zero code change (its PROJJSON declares Longitude/east first), but
+`crs::admit` admits an assertion only when the file declares nothing (`engine/src/crs.rs:218-240`), so
+it does not open a stranger's 4326-declared file, and its OGC authority escapes the EPSG attribution
+guard (`crs_catalog.rs:247-273`) while its values are EPSG-derived — a conscious, recorded decision if
+taken. The human's calls: the amendment; the scope change to ruled item 8; whether v0.1 tags with the
+4326 refusal declared. Queued as DECISIONS-PENDING entry 59 with the architect's entry text verbatim.
+
+**Corrections to Amendment 6's item-8 preregistration (the architect's §5, verified where the
+custodian read the lines):**
+1. Item (4)'s premise is the refused behaviour (above).
+2. "The engine's PROJJSON reader verified on schema v0.7" is a non-event: the reader touches only `id`
+   and `coordinate_system.axis` (`engine/src/geoparquet.rs:139-189`); nothing in `engine/`, `kernel/`
+   or `protocol/` reads `$schema` or `datum`. What is real: the pinned 2056 entry is `$schema` v0.5
+   with `datum` (`engine/tests/data/epsg2056.projjson:2`); the new renderings are v0.7 with
+   `datum_ensemble` — the catalog mixes schema versions and must say so PER ENTRY, not claim a reader
+   verification. The 64 KiB definition ceiling (`crs.rs:36`) is not near.
+3. The pinned-literal sites are `crs_catalog.rs:275-281` (ids AND count in one assertion) and
+   `:234-240` (the per-entry hash pin); three sites the preregistration missed also encode the count:
+   `frontends/shell/e2e/admission-remediation.mjs:219-224` (`catalog.length !== 1`, id equality),
+   `frontends/shell/MANUAL-WALKTHROUGH.md:599` ("one entry, `epsg-2056`"), `LICENSES/README.md:122`
+   ("One CRS definition in this repository").
+4. Attribution is already enforced for every EPSG-authority entry by
+   `crs_catalog.rs:247-273` (`every_epsg_authority_entry_carries_attribution_with_the_terms_url`) —
+   the guard, not new discipline.
+5. `CrsMode::DeclaredLatLonFirst` (`engine/src/fixture.rs:309-314`) is a metadata trap over LV95-metre
+   coordinates, not a degrees dataset; any real 4326/CRS84 test needs a new degree-domain fixture mode
+   (unscoped).
+6. `EXPECTED_AXIS_ORDER` (violation 3). The shell's own canvas does not gate on axis order, so a
+   non-x-first refusal surfaces only at publish/view — late and loud.
+7. `RELEASE-0.1.md:422` ("a WGS84 or Web-Mercator GeoParquet opens") overstates: admission is WKB-only
+   and polygon-only (`dataset.rs:269-282`), needs an integer identity column or a declared mapping,
+   and viewport queries need `covering.bbox`. The QUICKSTART must not promise "opens".
+8. If any geographic CRS ever renders, metre-named records become false: `offsetFrame.ts:34-37`
+   (`LocalFrameM`, `RECENTER_MAX_DRIFT_M = 131_072`) and `tileGrid.ts:68-73` ("one metre for a
+   projected CRS …"); and the rendering claim must read "no coordinate value is transformed; the
+   display convention is equirectangular" — "NO reprojection … plate carrée" contradicts itself
+   (docs/01:21 permits display reprojection only through an explicit, visible transform); an appended
+   dated note on ADR-003's `crs_transform: "none — rendered in source CRS"` string
+   (`kernel/src/publish/mod.rs:1187`) would be owed, the human's word. No precision or perf claim may
+   attach: ADR-003's and ADR-010 rule 3's evidence is EPSG:2056 magnitudes only (docs/08:62).
+9. `error.rs:74-75`'s "in its GeoParquet form" is a false record if the pinned spec text holds — a
+   docs-only fix-forward candidate, left to entry 59's ruling because it describes the 4326 refusal.
+
+**The ADR-032 skeleton the architect drafted (recorded here; FILED only on the human's word, as
+ADR-030 was; 031 is the LOD slice's):** *"ADR-032 — Axis order for a GeoParquet source whose CRS
+definition declares a non-x-first order. Proposed, decision deliberately open. Context: ADR-015 §5
+establishes axis order from the CRS definition and refuses a non-x-first source rather than
+reinterpreting it, resolving a docs/05 conflict lower-number-wins; its OPEN block reserves the
+normalize-later question; ADR-026:61 restates the refusal. GeoParquet 1.1.0 states that WKB
+coordinates are always (x, y) and that this 'explicitly overrides the coordinate axis order in the
+crs'. If that holds, EPSG:4326-declared GeoParquet — the commonest file a stranger brings — is refused
+with a message that misdescribes the file, and no catalog entry can fix it: the assertion path reads
+axis order through the same function. Three readers pin easting,northing (partition.ts:29,
+canvas-probe/src/geoarrow.ts:90, envelope.rs:87). Decision: OPEN. Candidates: (A) hold the refusal;
+admit only definitions whose declared order is x-first (OGC:CRS84), stating the limitation. (B)
+establish the data's order from the format specification in engine/src/geoparquet.rs, record both
+facts (declared order; data order + the rule and spec version), leave axis_normalization =
+none-performed, widen the x-first reader set, and add a falsification-only |latitude| ≤ 90 guard. (C)
+normalize on ingest per docs/05:64-67 — out of scope for a slice with no transform. Consequences of
+B: ADR-015 amendment; ADR-017 §14 reader contract and digest row 11 restated, bundle_version 2 if any
+key is added; an SKP value-domain statement; a degrees fixture; the GeoArrow field's
+declared-vs-buffer contradiction resolved against the GeoArrow metadata spec, pinned; ADR-026:61
+dated-stale. Of A: the hero slice refuses the commonest CRS in the wild, declared in
+KNOWN-LIMITATIONS. Neither licenses reprojection."*
+
+### Preregistration — the EPSG:3857 piece (the half of ruled item 8 that stands; supersedes Amendment 6's item-8 items (3)–(4) for this entry)
+
+Branch `cut/release-crs-3857` off main. (1) The catalog gains `epsg-3857` with the definition being
+the pinned rendering's bytes verbatim (`spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson`,
+sha256 `e14b8ded…` of the LF bytes), an `attribution` block in the 2056 entry's shape (source, terms URL,
+`verified` naming EPSG v12.013 and the projinfo route), and a per-entry `schema` statement
+(v0.7 here, v0.5 for 2056) if the catalog's shape admits one — else the schema versions are stated in
+`crs_catalog.rs`'s module doc; (2) the entry-51 protocol's leaf-by-leaf comparison, keyed by EPSG code,
+between the catalog entry and the WKT2:2019 rendering parsed (`epsg3857-projinfo-9.6.2.wkt2`) — the
+comparison script and its VERBATIM output recorded in `spikes/item8-crs-catalog-extension/` (the
+human's epsg.org lookup remains the stronger confirmation, available at sight); (3) pinned literals
+updated consciously: `crs_catalog.rs:275-281` (ids + count), a new `EPSG_3857_HASH` pin beside
+`:234-240`, plus the three count sites in correction 3 (E2E, walkthrough, `LICENSES/README.md`);
+(4) the precommitted test: `axis_order_from_projjson(<the 3857 entry>) == AxisOrder::EastingNorthing`
+— the guard against PROJ ever naming those axes "longitude"/"latitude", which would flip the reader
+to `LongitudeLatitude` and the viewer to refusal; (5) `DEPENDENCY-LICENSES.md`'s EPSG block gains the
+3857 verification line (the custodian appends after landing, to avoid colliding with the #31 sweep);
+(6) the shell's CRS assertion form shows two catalog entries (no code change expected —
+`CrsAssertionForm` lists the catalog; verify) and the admission-remediation E2E asserts the new count
+and both ids. No engine admission code changes; `dataset.rs:303`, `slice.rs:310`, the envelope,
+`EXPECTED_AXIS_ORDER`, publish, ADR-015/017/026 untouched. Gate: reviewer + architect re-check
+(ADR-026 fidelity: pinned in-tree, content-hashed, never fetched, no matching, no defaults; the
+attribution guard; the comparison record).

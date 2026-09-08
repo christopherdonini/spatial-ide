@@ -21,6 +21,42 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+59. **[Item 8 (CRS catalog: EPSG:4326 + 3857, ruled "yes … under the entry-51 protocol") — the 4326
+    half CANNOT be built as ruled; the 3857 half can and proceeds under the ruling. Architect consult
+    2026-09-08: BLOCK on 4326, PASS with notes on 3857.]** The custodian's finding before dispatch: a
+    4326 definition (declared OR asserted) is refused at `engine/src/dataset.rs:303-307`
+    (`AxisOrderUnsupported`) — the engine types its Lat/Lon axes as `AxisOrder::LatitudeLongitude`
+    (`engine/src/geoparquet.rs:184`) and the slice test `engine/tests/slice.rs:310-324` pins the
+    refusal ("refused rather than reinterpreted"); a catalog entry would pass the catalog's own tests
+    and be refused at open. The GeoParquet 1.1.0 specification says WKB coordinates are always (x, y)
+    and that this "explicitly overrides the axis order as specified in the CRS" — pinned verbatim, with
+    URL, retrieval date and page hash, in `spikes/item8-crs-catalog-extension/README.md` §2 (the
+    entry-51 discipline), alongside both `projinfo` renderings (PROJ 9.6.2, EPSG v12.013, the same
+    `proj.db` as entry 51 by hash). **The architect's entry text, verbatim:**
+    *"A 4326 definition (declared OR asserted) is refused at engine/src/dataset.rs:303-307. ADR-015 §5
+    (Accepted, architect-blockable) refuses a non-x-first source "rather than reinterpreted"; ADR-026:61
+    restates it. Admitting one is an ADR-015 amendment — your word, not the custodian's. Also found (not
+    in the preregistration): renderer/bundle-viewer/src/partition.ts:29,115-121 refuses any order but
+    easting,northing, so a 4326 bundle is a dead artifact of the exact shape ADR-025 was accepted to
+    prevent; and the GeoParquet override text is nowhere in the tree (pin it verbatim first, entry-51
+    discipline). (a) RECOMMENDED — EPSG:3857 only this cut: no ADR change, works end to end, one new
+    test; file ADR-032 Proposed (decision open) for 4326; KNOWN-LIMITATIONS names the 4326 refusal.
+    (b) 3857 + 4326 under a recorded GeoParquet-1.1.0 override: ADR-015 amendment + ADR-017 §14 reader
+    change + possible bundle_version 2 (the v1 lever is spent, ADR-017:855-859) + a degrees fixture. A
+    cut of its own, not a release item. (c) 3857 + OGC:CRS84 instead of 4326: admitted today, zero code
+    change — but it helps only files that declare NO CRS, not a stranger's 4326 file, and it renames
+    your ruled item. Recommend (a) now, (c) optional on your word. Your calls: the amendment; the scope
+    change to ruled item 8; whether v0.1 tags with the 4326 refusal declared."* (The spec text is now
+    pinned; the architect's ADR-032 skeleton is recorded in `RELEASE-0.1.md` Amendment 7 and is filed
+    only on your word, as ADR-030 was.) **Custodian's recommendation: (a).** Also the architect's
+    correction to the preregistration's rendering sentence, binding on any future geographic entry:
+    "NO reprojection … plate carrée" contradicts itself — the honest form is "no coordinate value is
+    transformed; the display convention is equirectangular", said in the UI and the manifest, and a
+    dated note on ADR-003's `crs_transform` string would be owed (your word). Touches now: nothing —
+    the 3857 piece (already within the ruling) is dispatched; 4326 waits. On (a): ADR-032 filed
+    Proposed; KNOWN-LIMITATIONS entry 2 = two entries + the 4326 refusal named; QUICKSTART must not say
+    a WGS 84 file "opens" (`RELEASE-0.1.md:422` overstated — Amendment 7 corrects it).
+
 58. **[A9′ (the regression suite's hover → pick → `.hover-readout` shows an id step) is FLAKY,
     arm-independent — filed on the human's ruling of 2026-09-08, not yet diagnosed.]** Facts from the
     arm-flip piece's runs (2026-09-07/08, quiet and busy machine): across seven logged regression
