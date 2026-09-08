@@ -5,6 +5,27 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-08 (evening) — entries 59, 60, 61, 62, 63, 64, 65, #32, #33 — the human verbatim:**
+*"59 = (a): 3857 only; ADR-032 filed Proposed (4326 via the GeoParquet x,y override, decision open);
+ADR-026 appended implementation note approved; equirectangular wording binding for future geographic
+entries; QUICKSTART never claims WGS 84 opens; KNOWN-LIMITATIONS states the 4326 refusal prominently
+— most public GeoParquet is WGS 84. 60 = (a): bound-before-allocate fix in this cut, unit test +
+15-notch E2E step; minZoom clamp recorded as optional follow-up. 61 = (a), 64 = (a), 65 = (a): one
+closing commit each, custodian-verified mechanically + CI, no further gate; 61 adds Part M M12 + the
+deliberate-refusal row; 64's probe scenario ships as a mutated test. 62 = (a): the amalgamation's 26
+works enumerated from the upstream tree at the pinned version, hash-pinned in-tree, own notice
+section, before the tag; ADR-030 accepted with the appended enumeration-source note. 63 = yes, as
+drafted. #32 and #33: clicking. Sequencing note for the post-release call, not decided now: ADR-032
+(4326 admission) likely outranks LOD."* Applied: the three closing commits dispatched (items 1 (b),
+10, 9 — the custodian's mechanical check + CI, no further gate); `RELEASE-0.1.md` Amendment 10
+(rulings; preregistrations for the entry-60 bound-before-allocate fix and the entry-62 amalgamation
+enumeration; the closing commits as authorized); ADR-032 filed Proposed (decision open); the ADR-026
+note appended on #32's merge; the ADR-024 note appended on item 10's landing; ADR-030 accepted with
+the enumeration-source note on the amalgamation piece's landing; the drafts updated (the 4326
+refusal prominent; QUICKSTART never says "opens"; the minZoom clamp as an optional follow-up in
+`NEXT-CUT.md`); the post-release sequencing note (ADR-032 likely outranks LOD) recorded in
+`NEXT-CUT.md` beside the LOD companion note — not decided.
+
 **RULED 2026-09-08 — entries 53 (reduced form), 55, 56, 57, item 8, #30, the sweep — the human
 verbatim:** *"55 = (b): config mirror via tauri::is_dev(); Part M equivalence assertion under dev /
 build --debug / build; post-load logged self-check of pinned vs actual origin with a typed mismatch
