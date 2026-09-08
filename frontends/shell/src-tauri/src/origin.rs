@@ -18,7 +18,7 @@
 //! `http(s)://tauri.localhost` on Windows/Android (`https` iff the window's `useHttpsScheme`,
 //! default `false` — `tauri-utils` **2.9.3**, `src/config.rs:2153-2163`), `tauri://localhost`
 //! everywhere else. `PROXY_DEV_SERVER` (`cfg!(all(dev, mobile))`) is inert for this reasoning: no
-//! mobile target is built today (`lib.rs:102` carries the mobile entry-point attribute,
+//! mobile target is built today (`lib.rs:174` carries the mobile entry-point attribute,
 //! `#[cfg_attr(mobile, tauri::mobile_entry_point)]`, but nothing in this crate's `Cargo.toml`
 //! actually builds one) — a mobile build would take that arm and is itself a §(e) reopen
 //! condition, not a case this mirror's reasoning covers today.
@@ -26,9 +26,11 @@
 //! **This mirror also assumes the main window's own configured `url` is
 //! [`WebviewUrl::App`](tauri::WebviewUrl::App).** `get_app_url`'s result becomes the webview's
 //! actual navigation URL only in that arm (`tauri-2.11.5/src/manager/webview.rs:443-461`); the
-//! adjacent `WebviewUrl::External` arm (`:462-471`) calls `get_app_url` too, but only to test
-//! whether the configured external URL happens to coincide with it (`is_app_url`) — the webview
-//! navigates to the configured EXTERNAL URL verbatim whenever it does not — and
+//! adjacent `WebviewUrl::External` arm (`:462-471`) calls `get_app_url` too, but only as one
+//! conjunct of `is_app_url && PROXY_DEV_SERVER && is_local_network_url(&url)` (`:466`) — on
+//! desktop that conjunction is false whatever `get_app_url` returns, because `PROXY_DEV_SERVER`
+//! (`cfg!(all(dev, mobile))`) is false, so the webview navigates to the configured EXTERNAL URL
+//! verbatim **always, on desktop**, coinciding or not — and
 //! `WebviewUrl::CustomProtocol` (`:473`) never calls `get_app_url` at all. [`main_window_url_is_app`]
 //! below is `lib.rs`'s own fail-closed guard against a main window configured with either of those
 //! other two shapes, which would otherwise silently diverge from this mirror.
@@ -336,6 +338,65 @@ mod tests {
         assert_eq!(expected_origin_from_url(&url).unwrap(), "tauri://localhost");
     }
 
+    // -- `main_window_url_is_app`: the fail-closed guard, over all three `WebviewUrl` variants
+    // (architect review A2's BLOCK-1) -------------------------------------------------------------
+
+    #[test]
+    fn the_app_variant_is_the_only_shape_this_mirror_describes() {
+        // `WebviewUrl::App(PathBuf)` -- the only variant whose navigation URL `AppManager::
+        // get_app_url` actually determines (`tauri-2.11.5/src/manager/webview.rs:443-461`), and so
+        // the only one `expected_origin_from_config` above is a mirror OF.
+        let url = tauri::utils::config::WebviewUrl::App(std::path::PathBuf::from("index.html"));
+        assert!(main_window_url_is_app(&url));
+    }
+
+    #[test]
+    fn the_external_variant_is_refused_by_the_guard() {
+        // The divergence this guard exists for: on desktop the webview navigates to the configured
+        // EXTERNAL URL verbatim (`webview.rs:462-471`; `PROXY_DEV_SERVER` is false there, see this
+        // module's own top doc comment), which the mirror never computes -- so `setup()` must
+        // refuse to start rather than pin `get_app_url`'s value for it.
+        let url = tauri::utils::config::WebviewUrl::External(
+            Url::parse("https://example.test/").unwrap(),
+        );
+        assert!(!main_window_url_is_app(&url));
+    }
+
+    #[test]
+    fn the_custom_protocol_variant_is_refused_by_the_guard() {
+        // `WebviewUrl::CustomProtocol` (`webview.rs:473`) never calls `get_app_url` at all.
+        let url = tauri::utils::config::WebviewUrl::CustomProtocol(
+            Url::parse("doom://index.html").unwrap(),
+        );
+        assert!(!main_window_url_is_app(&url));
+    }
+
+    #[test]
+    fn the_guard_fails_closed_on_a_variant_that_does_not_exist_yet() {
+        // `WebviewUrl` is `#[non_exhaustive]` (`tauri-utils` **2.9.3**, `src/config.rs:76`, the
+        // attribute immediately above `pub enum WebviewUrl` at `:77` -- read directly, not
+        // assumed), so a future tauri-utils release may add a fourth variant this crate cannot name
+        // today and cannot construct in a test either. `main_window_url_is_app`'s `matches!(url,
+        // WebviewUrl::App(_))` fails CLOSED on any such variant -- it returns `false`, `setup()`
+        // refuses to start, and the mirror never pins an origin for a window shape whose navigation
+        // URL nothing here has verified. This test asserts the property that makes that true: the
+        // guard's `true` arm is reachable through exactly ONE variant, so anything else -- named or
+        // not-yet-named -- takes the refusing arm. (An `assert!(!...)` over a variant that does not
+        // exist yet is unwriteable by construction; the three tests above cover every variant that
+        // does, and this one records why that is sufficient rather than merely current.)
+        let app = tauri::utils::config::WebviewUrl::App(std::path::PathBuf::from("index.html"));
+        let external =
+            tauri::utils::config::WebviewUrl::External(Url::parse("https://example.test/").unwrap());
+        let custom = tauri::utils::config::WebviewUrl::CustomProtocol(
+            Url::parse("doom://index.html").unwrap(),
+        );
+        let admitted = [&app, &external, &custom]
+            .into_iter()
+            .filter(|u| main_window_url_is_app(u))
+            .count();
+        assert_eq!(admitted, 1, "exactly one variant may take the guard's admitting arm");
+    }
+
     // -- `expected_origin_from_config`: the config mirror's own branches (RELEASE-0.1.md Amendment
     // 6's preregistration for item 1 (b)) --------------------------------------------------------
 
@@ -425,15 +486,28 @@ mod tests {
         // that swap, but through two different, verified shapes: `production_frontend_dist_url_
         // uses_it`, `production_default_is_tauri_localhost_over_http`,
         // `production_default_with_use_https_scheme_is_https`, and `production_default_on_the_
-        // non_windows_arm_is_tauri_scheme_localhost` all set `dev_url: None`, so the swap turns
-        // their `.unwrap()` into a PANIC on `Err(DevUrlNotConfigured)` -- an error, not a value
-        // comparison. THIS test, plus `dev_with_dev_url_uses_it` and `dev_without_dev_url_refuses`,
-        // instead fail via a plain `assert_eq!` value mismatch (two well-formed, differing results,
-        // or an `Ok` compared against an `Err`) -- because `dev_url` and `frontend_dist`'s URL are
-        // deliberately distinct, non-`None` values in all three, a swap returns a WRONG but
-        // well-formed answer rather than panicking. This test is one of three sharing that shape,
-        // not the only one -- kept for its own reason: it is the only one of the three that asserts
-        // in BOTH directions (`is_dev: true` AND `is_dev: false`) in a single test.
+        // non_windows_arm_is_tauri_scheme_localhost` all set `is_dev: false` AND `dev_url: None`, so
+        // the swap sends them down the dev arm with nothing to read and turns their `.unwrap()`
+        // into a PANIC on `Err(DevUrlNotConfigured)` -- an error, not a value comparison. THIS test,
+        // plus `dev_with_dev_url_uses_it` and `dev_without_dev_url_refuses`, instead fail via a
+        // plain `assert_eq!` value mismatch -- but for THREE different reasons, one per test, which
+        // an earlier draft of this comment wrongly gave as a single shared one ("`dev_url` and
+        // `frontend_dist`'s URL are deliberately distinct, non-`None` values in all three" -- true
+        // only of THIS test):
+        //   * `dev_with_dev_url_uses_it` passes `FrontendDistOrigin::Other`, not a URL: the swap
+        //     sends its `is_dev: true` case down the production fallback, which returns a
+        //     well-formed `Ok("http://tauri.localhost")` -- a WRONG value compared against
+        //     "http://localhost:5180", not a panic.
+        //   * `dev_without_dev_url_refuses` passes `dev_url: None` + `Other` and asserts on the
+        //     whole `Result` (never `.unwrap()`s it), so the swap's `Ok("http://tauri.localhost")`
+        //     is simply compared against `Err(DevUrlNotConfigured)` and differs -- again a value
+        //     mismatch, and the one test here that has no `.unwrap()` to panic in the first place.
+        //   * THIS test is the one whose `dev_url` and `frontend_dist` URL are both present and
+        //     deliberately distinct, so BOTH of its directions return well-formed wrong answers.
+        // The 3/4 split (3 value mismatches, 4 panics) is what was empirically observed; only the
+        // reason attached to two of the three has been corrected. This test is kept for its own
+        // reason: it is the only one of the three that asserts in BOTH directions (`is_dev: true`
+        // AND `is_dev: false`) in a single test.
         let dev_url = Url::parse("http://localhost:5180/").unwrap();
         let dist_url = Url::parse("https://example.test/app/").unwrap();
 

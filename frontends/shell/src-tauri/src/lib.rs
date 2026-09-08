@@ -75,7 +75,7 @@ use state::{DataPlaneHandle, SessionLog};
 /// closure (`tauri-plugin-dialog-2.7.2/src/desktop.rs:222-225`) then itself calls
 /// `std::thread::spawn` (`:225`) so the actual dialog display happens off the main thread; `rfd`
 /// **0.16.0**'s own Windows backend does the same one level deeper
-/// (`backend/win_cid/thread_future.rs:26`, `std::thread::spawn` again) to show the native message
+/// (`src/backend/win_cid/thread_future.rs:26`, `std::thread::spawn` again) to show the native message
 /// box. `blocking_show()`'s own blocking `rx.recv()` (the `blocking_fn!` macro, `src/lib.rs:71-80`)
 /// therefore waits on a channel fed from a thread two levels removed from the main thread, not on
 /// anything requiring the main thread's own event loop to be pumping — which is why this has not
@@ -156,10 +156,18 @@ const ORIGIN_SELF_CHECK_MISMATCH_EVENT: &str = "origin-self-check-mismatch";
 /// considered and is deferred, not adopted.** `RELEASE-0.1.md` Amendment 6's "Preregistration —
 /// item 1 (b)" names `Webview::url()` specifically ("read `Webview::url()`, normalise, compare to
 /// the pinned origin"), and this ADR sits behind the human's security red line: preregistration
-/// fidelity is not something this piece may trade away on its own initiative. Both reads observe
-/// the SAME completed navigation in practice (this hook only runs on `PageLoadEvent::Finished`), so
-/// nothing about the check's own correctness turns on which one is used — only which one the
-/// accepted preregistration names.
+/// fidelity is not something this piece may trade away on its own initiative. **The difference
+/// between the two reads is a real TOCTOU window, and a benign one (architect advisory, correcting
+/// an earlier draft of this paragraph which claimed the two "observe the SAME completed
+/// navigation").** `payload.url()` is the URL of the load that fired this event; `Webview::url()`
+/// re-reads the webview's live state at call time, and with `csp: null`
+/// (`frontends/shell/src-tauri/tauri.conf.json:22`) page script may navigate between the two
+/// instants, so they CAN disagree. What that window can do is bounded: this check is an ASSERTION
+/// over an origin `setup()` already pinned and nothing ever rewrites, so a navigation landing
+/// inside the window can only make the check MORE conservative — report a mismatch or an
+/// unverifiable read for a session the data plane still admits exactly as pinned — and can never
+/// change what the data plane admits, because no path from here writes back into that decision.
+/// Which read the preregistration names therefore remains the only thing that selects between them.
 #[derive(serde::Serialize, Clone)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum OriginSelfCheckOutcome {
@@ -412,7 +420,9 @@ pub fn run() {
             // existed before that design's own runtime read of it. This rewrite reads no webview at
             // all, so nothing here still depends on this block running before anything else in this
             // closure -- restored to its pre-pump position (the end, immediately before
-            // `Box::leak`), matching `main`'s own ordering byte-for-byte for this block.
+            // `Box::leak`), matching `main`'s own ordering for this block. Precisely: the block's
+            // CODE is byte-identical to `main`'s and sits in `main`'s own position; THIS comment
+            // paragraph is the one thing this branch adds to it.
             //
             // **Always paired, at build time, with a config overlay that sets this window's own
             // `create: false`** (`npm run build:measure`'s generated `e2e/out/tauri.measure.conf.json`,

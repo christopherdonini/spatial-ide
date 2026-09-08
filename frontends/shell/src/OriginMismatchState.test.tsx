@@ -6,7 +6,7 @@ import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import OriginMismatchState from "./OriginMismatchState";
-import { recordOriginMismatch } from "./diagnostics/originSelfCheck";
+import { OriginSelfCheckPayload, recordOriginMismatch } from "./diagnostics/originSelfCheck";
 
 // React 18.3's own `act` (not `react-dom/test-utils`'s deprecated re-export) requires this flag so
 // it knows synchronous updates in this file are wrapped, rather than warning on every one.
@@ -134,5 +134,53 @@ describe("OriginMismatchState (ADR-020 Amendment 1's typed, non-dismissable mism
     });
     const mismatchText = container.querySelector(".origin-mismatch-state")?.textContent;
     expect(unverifiableText).not.toEqual(mismatchText);
+  });
+
+  // -- The defensive third branch: an unrecognised `kind` (reviewer/architect must-fix 3) ---------
+  //
+  // The `kind` discriminant crosses a serde/TypeScript boundary no compiler checks.
+  // `npm run check:origin-event` pins the two strings mechanically, but this component must still
+  // not TREAT an unrecognised outcome as a mismatch if one ever arrives: before the third branch
+  // existed, the `if (unverifiable) ... else <mismatch>` shape rendered "The data plane will refuse
+  // this session" for any unknown `kind` -- a claim nothing had established. The cast below is the
+  // only way to express a payload the union type deliberately cannot: it stands in for a drifted
+  // host, not for anything the current host emits.
+  const unknownKindPayload = {
+    kind: "renamedByADrift",
+    pinned: "http://localhost:5180",
+    actual: "http://tauri.localhost",
+  } as unknown as OriginSelfCheckPayload;
+
+  it("renders a typed unrecognised state for an unknown kind, claiming neither refusal nor admission", () => {
+    act(() => {
+      root.render(<OriginMismatchState />);
+    });
+    act(() => {
+      recordOriginMismatch(unknownKindPayload);
+    });
+    const el = container.querySelector(".origin-mismatch-state");
+    expect(el).not.toBeNull();
+    expect(el?.classList.contains("origin-mismatch-state--unrecognised")).toBe(true);
+    // Names the outcome as unrecognised, and echoes the kind that actually arrived.
+    expect(el?.textContent).toContain("unrecognised");
+    expect(el?.textContent).toContain("renamedByADrift");
+    // Claims NEITHER refusal NOR admission: the two sentences the other two branches own.
+    expect(el?.textContent).not.toContain("The data plane will refuse this session");
+    expect(el?.textContent).not.toContain("still admits only the pinned origin");
+    // Non-dismissable, same as the other two branches.
+    expect(el?.querySelector("button")).toBeNull();
+  });
+
+  it("does not render the mismatch branch's own heading or class for an unknown kind", () => {
+    act(() => {
+      root.render(<OriginMismatchState />);
+    });
+    act(() => {
+      recordOriginMismatch(unknownKindPayload);
+    });
+    const el = container.querySelector(".origin-mismatch-state");
+    // The pre-fix fall-through would have produced exactly this heading for this payload.
+    expect(el?.textContent).not.toContain("does not match what was pinned at startup");
+    expect(el?.classList.contains("origin-mismatch-state--unverifiable")).toBe(false);
   });
 });
