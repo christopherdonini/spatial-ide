@@ -204,6 +204,11 @@ how obvious they seem:
   the commit/push in one command chained with `;` let a broken file ship (PR #36: a patch tool wrote a
   line break inside a regex; `node --check` printed the error and the push went out anyway). Run the
   check first; commit in a later step, or gate the commit on the check's exit status.
+- **A CI watcher waits for the run set to exist before "no pending" means anything (2026-09-08).**
+  Polled seconds after a push, `gh pr checks` lists only the checks already created (the DCO job),
+  so "nothing pending" is vacuously true and a false all-green follows. Delay the first poll, require a
+  minimum check count (the PR's workflows are known: DCO, viewer, shell, Rust, tauri-build as the path
+  filters admit), and print every line with the head SHA.
 
 ## Away-mode evidence rule
 
