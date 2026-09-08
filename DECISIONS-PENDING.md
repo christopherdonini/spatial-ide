@@ -42,6 +42,37 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+67. **[The entry-60 piece (bound the tile cover before allocation) — RULE 7 REACHED on the reviewer
+    step (gate FAIL on `aed2d90`: three must-fix incl. the ADR-028 question now entry 66; re-review
+    FAIL on `7b658de`: THREE record items, no behaviour defect). Authorize the closing commit — the
+    same shape as 61/64/65; rule with entry 66 (same piece).]** State: `cut/release-tilecover-bound`
+    @ `7b658de` (two signed commits on main 770e3f7): the declared bound (65,536 = 128 ×
+    `MAX_QUEUED_TILES`, its history stated), the pure pre-check with no allocation past the bound,
+    at-bound / one-axis / astronomical unit tests (five mutations caught, incl. the `<=`/`<`
+    boundary and the clamp), the K7 15-notch E2E step (K6 67.9 s, K7 122.9 s in the gate's run; the
+    declared partial-view status byte-identical to `residencyStatus.ts:429-430`; a session log with
+    72,873,667,093 cells reported, not allocated), the ADR-028 disclosure verified true with both
+    quotes checked mechanically; verify 798/60 green. **The three record items (mechanical):** (1)
+    `regression.mjs:1009-1022` — stepK6's comment still describes the pre-fix enumeration as live
+    ("with NO pre-clamp", `tileGrid.ts:170-181`, `tileViewportStreamManager.ts:314`) — made false BY
+    this piece → past tense + the two moved line numbers; (2) `tileViewportStreamManager.ts:320`
+    cites `tileGrid.ts:153-162` for `coveringIndexRange`, now `:158-167` (moved by this piece);
+    (3) the commit message's wrong range and a paraphrase in quotes — noted in the closing commit's
+    message (a message cannot change). **Should-fixes:** `residency-harness.mjs:857-860` claims the
+    protection rule is "pinned end-to-end" by a test that now compares against the windowed set past
+    the bound → qualify; `candidateArmSession.ts:1395` discloses only the completeness half at the
+    site where protection actually narrows → one clause; the new K7 status assertion reads a
+    loop snapshot that may have exited `settled:false` → re-read under a bound; two mis-aimed `:353`
+    cites → `:445`; "allocation-free" → "allocates nothing proportional to the cover"; nits. **Four
+    further sites still state the rule absolutely** (`tileResidentSet.ts:420-421,431,449`,
+    `WorkingCanvas.tsx:544-549`, `candidateArmSession.ts:1391-1395`, the harness claim) — they
+    become true again under entry 66 (b)/(c); under (a)/(d) they ride the ADR-028 note's landing and
+    are named in its Touches. Options: **(a) RECOMMENDED — one closing commit (the three items +
+    the should-fixes + nits; under 66 (a)/(d) also the four sites' one-clause qualifications),
+    custodian-verified mechanically (the comment and cites re-grepped; the K7 assertion form; every
+    check line) + CI, no further gate;** (b) + a third reviewer look; (c) stop — two false comments
+    ship. Then: its PR; the ADR-028 note (entry 66) rides the merge on your word.
+
 66. **[The entry-60 bound punctures ADR-028 Amendment 3's protection rule past 65,536-cell covers
     (~6 wheel notches past "Zoom to layer", from entry 60's own recorded ~3.63×/notch) — declare,
     fix, or both?]** Found by the entry-60 reviewer gate (M1), confirmed and sharpened by the
