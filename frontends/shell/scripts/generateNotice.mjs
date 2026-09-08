@@ -107,11 +107,22 @@ const rustCrates = {
 
 // Set (4), the DuckDB amalgamation (DECISIONS-PENDING entry 62 = (a)): read from the pinned
 // manifest, with every sha256 re-verified and the pinned library list checked against the crate
-// tarball's own third_party/ listing. Both guards throw rather than degrade -- see that module's
-// own doc comment for why this set, unlike the other three, has no honest degraded rendering.
-// Built from the SAME `crates` array set (3) uses, so the tarball it inspects belongs to the
-// `libduckdb-sys` cargo actually resolved for this build rather than to a registry path literal.
-const duckdbAmalgamation = buildAmalgamationSet(crates);
+// tarball's own third_party/ listing. All three guards (the per-file sha256 with the directory-name
+// / manifest-version agreement, the linked crate's version, the tarball's sha256 + listing) throw
+// rather than degrade -- see that module's own doc comment for why this set, unlike the other
+// three, has no honest degraded rendering. Built from the SAME `crates` array set (3) uses, so the
+// tarball it inspects belongs to the `libduckdb-sys` cargo actually resolved for this build rather
+// than to a registry path literal. A guard's throw is turned into the same named FAIL line
+// `checkDistNotice.mjs` prints for the same throws (reviewer nit on the entry-62 re-review) -- one
+// shape for a refusal in a `npm run build` log, not an uncaught stack trace -- and the non-zero
+// exit the build depends on is kept.
+let duckdbAmalgamation;
+try {
+  duckdbAmalgamation = buildAmalgamationSet(crates);
+} catch (err) {
+  console.error(`generateNotice: FAIL -- ${err?.message ?? err}`);
+  process.exit(1);
+}
 
 let extra;
 if (existsSync(shellMetafilePath)) {

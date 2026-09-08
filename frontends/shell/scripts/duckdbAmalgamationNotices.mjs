@@ -73,6 +73,10 @@
 // Verified on every run, because each is checkable offline against bytes on this disk: every
 // `works[].files[].sha256` (guard 1), `crate.version` (guard 2), `crate_tarball.sha256` and
 // `crate_tarball.third_party_dir_count` (guard 3), and the pinned directory's own name.
+// Verified by the test suite (`src/notices/duckdbAmalgamation.test.ts`, on `npm test`) rather than
+// on every build: every `works[].files[].bytes`, and every `works[].files[].git_blob_sha1`,
+// recomputed from the pinned bytes with git's own `blob <length>\0` formula -- the blob id ties the
+// pinned bytes to the tag's own tree, where the sha256 alone ties them to pin time.
 // `upstream_third_party_tree_sha` is NOT verifiable offline -- it names a git tree object inside
 // DuckDB's own repository, and re-deriving it needs the network this build deliberately does not
 // touch. It is kept as recorded provenance, with its derivation stated: tag `v1.5.5` -> the commit

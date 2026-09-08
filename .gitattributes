@@ -28,8 +28,11 @@ renderer/bundle-viewer/ceilings.json text eol=lf
 # covered only the currently-hashed files would need editing the next time one is added.
 LICENSES/*.txt text eol=lf
 
-# Fourth instance of the same class, and the one case where `text eol=lf` is the WRONG remedy
-# (DECISIONS-PENDING entry 62 = (a), 2026-09-08). LICENSES/third-party/duckdb-<version>/ holds the
+# Fourth instance of the same class IN THIS FILE, and the one case where `text eol=lf` is the WRONG
+# remedy (DECISIONS-PENDING entry 62 = (a), 2026-09-08). AI_DEVELOPMENT.md's accumulated mechanics
+# count it differently -- as the eol class's FIFTH member, after the hash pin, the imported-module
+# shebang, the multi-line read and the script that writes CRLF -- because that list counts failure
+# shapes, and this file counts pinned-file rules. LICENSES/third-party/duckdb-<version>/ holds the
 # upstream licence texts of the third-party works inside DuckDB's amalgamated source tree, fetched
 # from github.com/duckdb/duckdb at the pinned tag. Each is hash-pinned twice in that directory's
 # MANIFEST.json -- by sha256, and by the git blob SHA-1 the tag's own tree reports for it -- and is

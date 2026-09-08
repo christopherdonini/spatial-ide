@@ -79,5 +79,5 @@ export function assertCrateVersionMatchesManifest(options: {
   manifest: AmalgamationManifest;
 }): { name: string; version: string };
 
-/** The whole fourth set, both guards run, shaped for `notice()`'s `extra.duckdbAmalgamation`. */
+/** The whole fourth set, all three guards run, shaped for `notice()`'s `extra.duckdbAmalgamation`. */
 export function buildAmalgamationSet(crates: LinkedCrate[]): NoticeAmalgamationSet;

@@ -129,7 +129,8 @@ test('the two-argument (bundle/viewer) header names no unmet obligation', () => 
 // The fourth is asserted BY NAME below, not merely admitted by the window: a bounded `[\s\S]` window
 // proves the two anchors are near each other, and would have gone on passing with the DuckDB clause
 // absent. The window itself is measured, not guessed: the gap between the two anchors is **207
-// characters** on the current wording (was 133 with three sets), so the existing 240 bound still
+// characters** on the current wording (was 134 with three sets -- bisected against 44d61b3's output
+// with this test's own regex: a bound of 133 does not match, 134 does), so the existing 240 bound still
 // holds it with room, and is deliberately left at 240 rather than widened to fit -- a window that
 // grows to fit whatever the text became stops being a check.
 test('the two-argument header states both of the file\'s two distribution scopes', () => {
