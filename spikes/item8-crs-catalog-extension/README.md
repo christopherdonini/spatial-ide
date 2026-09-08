@@ -67,8 +67,55 @@ transposes silently — a falsification check can convict, never confirm conform
 §1), or that the engine may act on it — that is ADR-015 §5's territory and the human's decision
 (entry 59; the ADR-032 skeleton the architect drafted).
 
-## 3. Not done here
+## 3. The entry-51 protocol's leaf-by-leaf comparison, recorded (the 3857 piece, 2026-09-08)
 
-No catalog, engine, kernel, renderer or shell file changed. The leaf-by-leaf comparison of the 3857
-PROJJSON against its WKT2 rendering (the preregistration's step (2)) is the 3857 piece's own step and
-is recorded beside this file by that piece, with its verbatim output.
+*Retitled from "Not done here" — the comparison this section originally deferred to "the 3857
+piece's own step" IS this piece, run before any catalog edit, per the preregistration's own
+ordering ("If anything differs, STOP and report before touching the catalog").*
+
+**Method.** `compare-3857.mjs` (this directory) compares the catalog's `epsg-3857` entry — which
+is `epsg3857-projinfo-9.6.2.projjson`'s bytes verbatim, so the comparison runs directly against that
+file, before the catalog was touched — against the SECOND rendering,
+`epsg3857-projinfo-9.6.2.wkt2` (WKT2:2019, same `projinfo` run, same `proj.db`, §1 above). Unlike
+`entry51-epsg2056-equivalence/compare-projjson.mjs` (two JSON documents, walked to every leaf),
+WKT2 is not JSON: the script extracts, by regex tied to the grammar PROJ's `projinfo` emits for this
+CRS, exactly what the preregistration named as enough — the four conversion parameter values keyed
+by their `ID["EPSG",<code>]`, the ellipsoid's two defining values, the two axis directions, and the
+three EPSG ids (base CRS, method, CRS) — and compares each against the same leaf read out of the
+PROJJSON side. Exit 0 iff no numeric difference and no missing value (the entry-51 protocol's own
+rule).
+
+**Command:**
+```
+node spikes/item8-crs-catalog-extension/compare-3857.mjs spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.wkt2
+```
+
+**Output, verbatim:**
+```
+numeric leaves compared: 9
+numeric differences (> 1e-9 relative): 0
+string/other differences on shared paths: 0
+paths only in the catalog (PROJJSON) extraction: 0
+paths only in the WKT2 extraction: 0
+parameter/ellipsoid/axis/id VALUE paths missing on one side: 0
+RESULT: numerically equivalent on every shared leaf; no parameter/ellipsoid/axis/id value missing
+```
+Exit code: 0.
+
+**Reading (the custodian's; counsel is the bar for anything stronger, ADR-009's Caveat).**
+Numerically equivalent on every leaf the script extracts: both EPSG ids (base CRS 4326, method
+1024, CRS 3857) agree; all four conversion parameter values (8801/8802/8806/8807, all `0`) agree;
+the ellipsoid (WGS 84: semi-major axis 6378137, inverse flattening 298.257223563) agrees; both axis
+directions (east, north — an x-first order) agree. Nothing is missing on either side. No value
+differs. This is a narrower check than entry 51's whole-document walk (deliberately — the WKT2 side
+is extracted, not parsed, per the preregistration's "is enough"), so it does not re-confirm the
+PROJJSON side's own usage metadata (`scope`, `area`, `bbox`) or member-ensemble names — those have
+no WKT2 counterpart worth extracting for this purpose and carry no defining value.
+
+**RESULT: PASS — proceed with the catalog entry** (the preregistration's own gate: "Exit 0 iff no
+numeric difference and no missing value... If anything differs, STOP and report before touching the
+catalog"). The catalog gained `epsg-3857` after this check passed, per this piece's report.
+
+Not done here: no engine, kernel, renderer or shell file changed by this section — the catalog edit
+itself, its pinned-literal tests, and the count-site updates are recorded in this piece's own report
+(`git log`, `crs_catalog.rs`), not duplicated into this spike file.

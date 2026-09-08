@@ -199,8 +199,9 @@ function callOpenPath(page, path, opts) {
 
 /**
  * `ASSERT'`: openPath(no-crs) refuses typed, CRS form present; the pinned catalog is reachable via
- * `crsCatalog()` (one entry, `epsg-2056`, non-empty definition -- ADR-026 decision 1(a)); asserting
- * that catalog definition verbatim admits, canvas renders, and `DescribeSummary` shows the
+ * `crsCatalog()` (two entries in file order, `epsg-2056` then `epsg-3857`, non-empty definitions --
+ * ADR-026 decision 1(a); item-8 3857 piece, 2026-09-08); asserting the first catalog entry's
+ * definition verbatim admits, canvas renders, and `DescribeSummary` shows the
  * asserted-ness distinguishably (I3): `caller-asserted by <by> at <at>, <provenance>, axis order
  * ...` with non-empty by/at and provenance starting `catalog:epsg-2056@sha256:` (prefix only -- the
  * hash's own first-12-hex suffix is host-computed and not re-derived here, ADR-026 decision 2).
@@ -216,9 +217,16 @@ async function stepAssert(page, consoleHandle, ctx) {
   const formPresent = await page.evaluate(() => document.querySelector(".crs-assertion-form") !== null);
   if (!formPresent) throw new Error("ASSERT': .crs-assertion-form not present after the refusal");
 
+  // Item-8 3857 piece (2026-09-08): the catalog now has TWO entries, in file order
+  // (`crs-catalog.json`'s own array order) -- ids and count pinned in one assertion, same
+  // discipline as `crs_catalog.rs`'s `entries_are_in_file_order_not_sorted`.
   const catalog = await page.evaluate(() => window.__SPATIAL_E2E__.crsCatalog());
-  if (!Array.isArray(catalog) || catalog.length !== 1) {
-    throw new Error(`ASSERT': expected exactly one catalog entry, got ${JSON.stringify(catalog)}`);
+  if (!Array.isArray(catalog) || catalog.length !== 2) {
+    throw new Error(`ASSERT': expected exactly two catalog entries, got ${JSON.stringify(catalog)}`);
+  }
+  const catalogIds = catalog.map((e) => e.id);
+  if (catalogIds[0] !== "epsg-2056" || catalogIds[1] !== "epsg-3857") {
+    throw new Error(`ASSERT': catalog entry ids/order were ${JSON.stringify(catalogIds)}, expected ["epsg-2056","epsg-3857"]`);
   }
   const entry = catalog[0];
   if (entry.id !== "epsg-2056") throw new Error(`ASSERT': catalog entry id was "${entry.id}", expected "epsg-2056"`);
@@ -256,7 +264,7 @@ async function stepAssert(page, consoleHandle, ctx) {
   }
 
   return (
-    `refused engine.crs_undeclared, form present; catalog: 1 entry (epsg-2056, non-empty definition); ` +
+    `refused engine.crs_undeclared, form present; catalog: 2 entries (epsg-2056, epsg-3857, non-empty definitions); ` +
     `catalog assertion admitted; canvas ${(frac * 100).toFixed(1)}% non-bg; summary "caller-asserted by ` +
     `${by} at ${at}, ${provenance}, axis order ..." (provenance PREFIX-checked, not the full hash)`
   );

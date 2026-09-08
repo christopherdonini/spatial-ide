@@ -19,6 +19,15 @@
 //! record names the definition's own provenance — a catalog entry id and content hash, or
 //! `pasted` — never just an identifier string. It is exact-equality bookkeeping only: no
 //! similarity, no normalization before hashing, no suggestion.
+//!
+//! **The catalog mixes PROJJSON `$schema` versions.** `epsg-2056`'s definition is `$schema` v0.5
+//! (carries a `datum` object); `epsg-3857`'s is v0.7 (carries a `datum_ensemble` object instead —
+//! the item-8 3857 piece, 2026-09-08). This module's reader touches only `id` and
+//! `coordinate_system.axis` on any entry ([`crate::geoparquet::axis_order_from_projjson`]), so
+//! neither schema difference affects admission — but the mix is real, so each entry now carries
+//! its own `schema` string in `crs-catalog.json` (an informational field this module does not
+//! parse into [`CatalogEntry`]; the fact belongs beside the data it describes, not duplicated into
+//! a Rust field nothing reads) rather than one module-wide claim of a single schema version.
 
 use std::sync::OnceLock;
 
@@ -191,6 +200,15 @@ mod tests {
     const EPSG_2056_HASH: &str =
         "254016888ff494a4099d72869206eaf4a8c1ef5a52fb94104540557c2f46d024";
 
+    /// Pinned literal (item-8 3857 piece, 2026-09-08): sha256 of `epsg-3857`'s `definition` exactly
+    /// as stored, i.e. of `spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson`'s
+    /// own bytes (that spike file's own README pins the identical value, verified there before this
+    /// entry was ever added — the entry-51 protocol's "declared, never inferred" applied to the
+    /// hash itself). A catalog edit to `epsg-3857` must consciously update this test, same as
+    /// `EPSG_2056_HASH` above.
+    const EPSG_3857_HASH: &str =
+        "e14b8ded808e73d3925c3b7a16cc83c2273056a79c00d7ba86c0e5b3b475fd82";
+
     #[test]
     fn catalog_parses_and_is_not_empty() {
         assert!(!entries().is_empty());
@@ -210,6 +228,30 @@ mod tests {
                 axis.is_some(),
                 "{}: definition carries no coordinate_system.axis (ADR-015 §5)",
                 e.id
+            );
+        }
+    }
+
+    /// Item-8 3857 piece (2026-09-08), the precommitted test named in the brief. Both `metre`-unit
+    /// catalog entries must establish `AxisOrder::EastingNorthing`, never `LongitudeLatitude` — if
+    /// a rendering ever named those axes "longitude"/"latitude" instead of "Easting"/"Northing",
+    /// `axis_order_from_projjson`'s `geographic` heuristic (`engine/src/geoparquet.rs:174-184`)
+    /// would type the same east/north direction pair as `LongitudeLatitude`, and the bundle viewer
+    /// (`renderer/bundle-viewer/src/partition.ts:29`) refuses any order but `easting,northing` —
+    /// so a catalog entry that silently drifted this way would admit here and be refused only at
+    /// publish/view, late and loud. Symmetrical for `epsg-2056` (cheap, added alongside).
+    #[test]
+    fn catalog_entries_establish_easting_northing_not_longitude_latitude() {
+        for id in ["epsg-2056", "epsg-3857"] {
+            let e = entries().iter().find(|e| e.id == id).unwrap_or_else(|| panic!("{id} entry present"));
+            let v: serde_json::Value = serde_json::from_str(&e.definition)
+                .unwrap_or_else(|err| panic!("{id}: definition is not valid JSON: {err}"));
+            let axis_order = crate::geoparquet::axis_order_from_projjson(&v)
+                .unwrap_or_else(|err| panic!("{id}: axis_order_from_projjson failed: {err}"));
+            assert_eq!(
+                axis_order,
+                crate::crs::AxisOrder::EastingNorthing,
+                "{id}: expected AxisOrder::EastingNorthing, got {axis_order:?}"
             );
         }
     }
@@ -237,6 +279,17 @@ mod tests {
         assert_eq!(e.authority, "EPSG");
         assert_eq!(e.code, 2056);
         assert_eq!(e.hash, EPSG_2056_HASH, "catalog entry hash drifted from the pinned literal");
+    }
+
+    /// Item-8 3857 piece (2026-09-08): the analogous pin for `epsg-3857`, added consciously beside
+    /// the 2056 pin above rather than folded into a shared assertion — a hash drift on either entry
+    /// must fail its own named test.
+    #[test]
+    fn epsg_3857_entry_hash_is_pinned() {
+        let e = entries().iter().find(|e| e.id == "epsg-3857").expect("epsg-3857 entry present");
+        assert_eq!(e.authority, "EPSG");
+        assert_eq!(e.code, 3857);
+        assert_eq!(e.hash, EPSG_3857_HASH, "catalog entry hash drifted from the pinned literal");
     }
 
     /// Entry 51 (1): every entry whose source is EPSG's own dataset carries the acknowledgement
@@ -274,10 +327,11 @@ mod tests {
 
     #[test]
     fn entries_are_in_file_order_not_sorted() {
-        // Trivial with one entry today; asserts the *shape* of the guarantee (Vec preserving JSON
-        // array order) rather than a fact that only holds by accident once the set grows.
+        // Item-8 3857 piece (2026-09-08): now two entries -- ids AND count pinned in one
+        // assertion, in `crs-catalog.json`'s own array order (epsg-2056 first, epsg-3857 second),
+        // so a silently-added or silently-reordered entry fails here rather than passing quietly.
         let ids: Vec<&str> = entries().iter().map(|e| e.id.as_str()).collect();
-        assert_eq!(ids, vec!["epsg-2056"]);
+        assert_eq!(ids, vec!["epsg-2056", "epsg-3857"]);
     }
 
     #[test]
