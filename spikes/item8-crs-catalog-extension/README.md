@@ -3,7 +3,8 @@
 *Record-class, 2026-09-08, the successor of `spikes/entry51-epsg2056-equivalence/` named by
 `RELEASE-0.1.md` Amendment 6's item-8 preregistration. Written by the custodian BEFORE any code, so
 that the external facts item 8 rests on are in the tree verbatim (the entry-51 discipline, the
-architect's consult of 2026-09-08 §"Unpinned external fact"). Not legal advice — ADR-009's Caveat.*
+architect's consult of 2026-09-08, not in the tree, which named the unpinned spec text as a
+violation). Not legal advice — ADR-009's Caveat.*
 
 ## 1. The renderings (same tool, same database as entry 51)
 
@@ -43,6 +44,14 @@ The catalog's existing entry is `$schema` v0.5 (`engine/tests/data/epsg2056.proj
 and `coordinate_system.axis`, so neither difference touches admission; a catalog that mixes schema
 versions must say so per entry rather than claim a reader verification (the consult's §5.2).
 
+**Engine test fixture (fix batch, 2026-09-08).** `engine/tests/data/epsg3857.projjson` is a
+byte-for-byte copy of `epsg3857-projinfo-9.6.2.projjson` above — same 3,921 LF bytes, same sha256
+`e14b8ded808e73d3925c3b7a16cc83c2273056a79c00d7ba86c0e5b3b475fd82` — checked in beside
+`engine/tests/data/epsg2056.projjson` so `crs_catalog.rs` carries an UNGATED test binding the
+catalog's `epsg-3857` definition to this rendering by byte equality, with no engine→spikes build
+dependency (the engine's own copy is the one the test reads; this directory's copy is the rendering
+record).
+
 ## 2. The GeoParquet specification's axis-order rule, verbatim
 
 Source: <https://geoparquet.org/releases/v1.1.0/>, retrieved 2026-09-08T07:29Z with `curl` (the
@@ -67,8 +76,78 @@ transposes silently — a falsification check can convict, never confirm conform
 §1), or that the engine may act on it — that is ADR-015 §5's territory and the human's decision
 (entry 59; the ADR-032 skeleton the architect drafted).
 
-## 3. Not done here
+## 3. The entry-51 protocol's leaf-by-leaf comparison, recorded (the 3857 piece, 2026-09-08)
 
-No catalog, engine, kernel, renderer or shell file changed. The leaf-by-leaf comparison of the 3857
-PROJJSON against its WKT2 rendering (the preregistration's step (2)) is the 3857 piece's own step and
-is recorded beside this file by that piece, with its verbatim output.
+*Retitled from "Not done here" — the comparison this section originally deferred to "the 3857
+piece's own step" IS this piece, run before any catalog edit. The custodian's dispatch brief, not
+in the tree, asked that if anything differed here, the piece stop and report before touching the
+catalog.*
+
+**Method.** `compare-3857.mjs` (this directory) compares the catalog's `epsg-3857` entry — which
+is `epsg3857-projinfo-9.6.2.projjson`'s bytes verbatim, so the comparison runs directly against that
+file, before the catalog was touched — against the SECOND rendering,
+`epsg3857-projinfo-9.6.2.wkt2` (WKT2:2019, same `projinfo` run, same `proj.db`, §1 above). Unlike
+`entry51-epsg2056-equivalence/compare-projjson.mjs` (two JSON documents, walked to every leaf),
+WKT2 is not JSON: the script extracts, by regex tied to the grammar PROJ's `projinfo` emits for this
+CRS, what the custodian's dispatch brief, not in the tree, named as enough — the four conversion
+parameter values keyed by their `ID["EPSG",<code>]`, the ellipsoid's two defining values, the two
+axis directions, and the three EPSG ids (base CRS, method, CRS) — and compares each against the
+same leaf read out of the PROJJSON side. Exit 0 iff no numeric difference and no missing value (the
+entry-51 protocol's own rule — `spikes/entry51-epsg2056-equivalence/README.md:25`).
+
+**Command:**
+```
+node spikes/item8-crs-catalog-extension/compare-3857.mjs spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.wkt2
+```
+
+**Output, verbatim:**
+```
+numeric leaves compared: 9
+numeric differences (> 1e-9 relative): 0
+string/other differences on shared paths: 0
+paths only in the catalog (PROJJSON) extraction: 0
+paths only in the WKT2 extraction: 0
+parameter/ellipsoid/axis/id VALUE paths missing on one side: 0
+RESULT: numerically equivalent on every shared leaf; no parameter/ellipsoid/axis/id value missing
+```
+Exit code: 0.
+
+**Reading (the custodian's; counsel is the bar for anything stronger, ADR-009's Caveat).**
+Numerically equivalent on every leaf the script extracts: both EPSG ids (base CRS 4326, method
+1024, CRS 3857) agree; all four conversion parameter values (8801/8802/8806/8807, all `0`) agree;
+the ellipsoid (WGS 84: semi-major axis 6378137, inverse flattening 298.257223563) agrees; both axis
+directions (east, north — an x-first order) agree. Nothing is missing on either side. No value
+differs. This is a narrower check than entry 51's whole-document walk (deliberately — the WKT2 side
+is extracted, not parsed, per the custodian's dispatch brief, not in the tree), so it does not
+re-confirm the PROJJSON side's own usage metadata (`scope`, `area`, `bbox`) or member-ensemble
+names — those have WKT2 counterparts (`USAGE[SCOPE/AREA/BBOX]` at
+`epsg3857-projinfo-9.6.2.wkt2:40-43`, `MEMBER[…]` at `:4-11`) but carry no defining value, so this
+script does not extract them.
+
+**What this equivalence does and does not establish (fix batch, review pass 2, architect B1).**
+Numeric equivalence to EPSG v12.013 *as PROJ imports it* holds BY CONSTRUCTION here, not by virtue
+of this check: the catalog's `epsg-3857` definition IS `epsg3857-projinfo-9.6.2.projjson`'s bytes
+verbatim (§1's table), so the two sides being compared can only ever agree with what PROJ rendered
+in the first place — the drift risk entry 51's comparison was written against (a shipped value of
+unrecorded, possibly hand-authored or independently-rounded, origin silently diverging from the
+registry — entry-51's own "the production command for the shipped file is unrecorded",
+`spikes/entry51-epsg2056-equivalence/README.md:71`) does not exist for this entry. What §3's script
+actually checks is that PROJJSON and WKT2 — two different serializations `projinfo` emits from the
+SAME `proj.db` row in the SAME run — are consistent with each other: a cross-format consistency
+check of the same rows, not an independent confirmation that either serialization matches the
+registry. PROJ's import of the EPSG dataset versus the registry itself remains unverified by this
+record, exactly as it was for 2056 (entry-51's own Caveat,
+`spikes/entry51-epsg2056-equivalence/README.md:65-67`): the 3857 piece's own
+preregistration says the same of this entry — "the human's epsg.org lookup remains the stronger
+confirmation, available at sight" (`RELEASE-0.1.md`'s EPSG:3857 piece preregistration item (2),
+`RELEASE-0.1.md:988-990`).
+
+**RESULT: PASS — proceed with the catalog entry** (the entry-51 protocol's own gate, quoted in this
+section's Method above: "Exit 0 iff no numeric difference and no missing value" —
+`spikes/entry51-epsg2056-equivalence/README.md:25`. The custodian's dispatch brief, not in the
+tree, asked that if anything differed, the piece stop and report before touching the catalog.) The
+catalog gained `epsg-3857` after this check passed, per this piece's report.
+
+Not done here: no engine, kernel, renderer or shell file changed by this section — the catalog edit
+itself, its pinned-literal tests, and the count-site updates are recorded in this piece's own report
+(`git log`, `crs_catalog.rs`), not duplicated into this spike file.
