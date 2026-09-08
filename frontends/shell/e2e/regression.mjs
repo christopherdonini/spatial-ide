@@ -1215,9 +1215,10 @@ async function stepK6(page, consoleHandle) {
 // enumerated the WHOLE cover with a plain nested loop on every debounced camera settle, and
 // `MAX_QUEUED_TILES` truncated only afterwards -- so an ordinary wheel gesture far enough out made
 // that loop's iteration count a function of the camera alone. The fix bounds the cover BEFORE it is
-// allocated, against a DECLARED bound (`MAX_COVERING_TILES`, 16,384 = 32 x `MAX_QUEUED_TILES`,
-// `src/canvas/tileGridConstants.ts`, ADR-010 rule 6), and reports the same truncated/partial-view
-// outcome the stream manager already had.
+// allocated, against a DECLARED bound (`MAX_COVERING_TILES`, 65,536 = 128 x `MAX_QUEUED_TILES`,
+// `src/canvas/tileGridConstants.ts`, ADR-010 rule 6 -- that file states how the multiple was arrived
+// at, including the 32x first choice this comment used to name), and reports the same truncated/
+// partial-view outcome the stream manager already had.
 //
 // The gesture is deliberately ordinary: 15 discrete zoom-OUT notches from a real "Zoom to layer"
 // fit, the same notch magnitude every other step here wheels with (`ZOOM_NOTCH_DELTA_Y`) and the
@@ -1236,6 +1237,14 @@ const K7_ZOOM_OUT_NOTCHES = 15; // the ruled figure (entry 60 (a), "15-notch E2E
 // the same count zooming in.
 const K7_MIN_RESTORED_NON_BG_FRACTION = 0.02; // the SAME "something is actually drawn" floor stepA7
 // already uses after its own "Zoom to layer" click -- restated, not re-derived.
+// The preregistration's own "the declared partial-view status shows" half, now ASSERTED rather than
+// merely recorded (reviewer gate should-fix 4). Duplicated verbatim from
+// `src/residency/residencyStatus.ts:429-430` (`SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`) rather than
+// imported: this harness is Node-side and imports nothing from `src/` -- the same convention
+// `K6_REFUSAL_TEXT` above follows ("App.tsx:1416, verbatim"). If that string is ever re-worded (it is
+// a DRAFT awaiting the human's own 24(b) sight, per its doc comment), this copy must move with it,
+// and this step failing loudly is how that gets noticed.
+const K7_SETTLED_PARTIAL_TEXT = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
 
 async function stepK7(page, consoleHandle) {
   // The shipped default arm, asserted per this step rather than inherited (the same non-pinning
@@ -1252,9 +1261,17 @@ async function stepK7(page, consoleHandle) {
 
   let notchesAnswered = 0;
   let lastStatus = null;
+  // Nit (reviewer gate): `waitForSettle` already returns `{settled, count}` and this step used to
+  // throw both away. `settled: false` means the render trace was still changing when the wait's own
+  // BOUND expired -- not a duration, not a timing claim (ADR-018), just which of the two documented
+  // exits each notch took; recorded in the summary as free evidence.
+  let notchesQuiesced = 0;
+  let lastTraceCount = null;
   for (let notch = 1; notch <= K7_ZOOM_OUT_NOTCHES; notch++) {
     await doWheel(page, center, K6_ZOOM_OUT_NOTCH_DELTA_Y); // positive deltaY = wheel-down = zoom OUT
-    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
+    const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
+    if (settle.settled) notchesQuiesced++;
+    lastTraceCount = settle.count;
     // The round trip IS the responsiveness assertion -- a wedged JS thread never answers this.
     const probe = await page.evaluate(() => ({
       status: document.querySelector(".residency-status")?.textContent ?? null,
@@ -1266,10 +1283,26 @@ async function stepK7(page, consoleHandle) {
   }
   await assertNoRefusalOrBanner(page, `K7 (after ${K7_ZOOM_OUT_NOTCHES} zoom-out notches)`);
 
-  // Still interactive, not merely still answering evaluates: a real pointer move re-runs the pick
-  // path. Any of the three states the hover contract admits at this camera is a pass -- nothing
-  // (no feature under the pointer), the named below-pick-resolution refusal, or a real id. A hung
-  // page produces none of them within the bound and fails loudly.
+  // The preregistration's second half, ASSERTED (should-fix 4): "the declared partial-view status
+  // shows". At this camera the cover is far past `MAX_COVERING_TILES`, so the plan is truncated, the
+  // fill settles, and the candidate arm's within-budget partial sentence is what must be on screen --
+  // byte-for-byte, no substring match, so a re-worded or differently-derived status fails here rather
+  // than passing as "some status showed".
+  if (lastStatus !== K7_SETTLED_PARTIAL_TEXT) {
+    throw new Error(
+      `K7: expected .residency-status after the last zoom-out notch to be the declared partial-view status ` +
+        `verbatim (residencyStatus.ts:429-430) but it was ${JSON.stringify(lastStatus)}; expected ` +
+        `${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)}`
+    );
+  }
+
+  // A real pointer move, and the page still ANSWERS a read of the hover state. Any of the three
+  // states the hover contract admits at this camera is a pass -- nothing (an empty readout), the
+  // named below-pick-resolution refusal, or a real id. A hung page produces none of them within the
+  // bound and fails loudly. What the empty branch shows is that the page answered, NOT that picking
+  // resolved anything: `null` is equally consistent with no feature under the pointer and with a
+  // pick that found nothing to say, and this step does not distinguish them (nor need it -- entry
+  // 60's subject is the hang, not the pick contract, which K6 covers).
   await page.mouse.move(center.x + 1, center.y + 1);
   const hover = await waitForCondition(
     () =>
@@ -1304,8 +1337,10 @@ async function stepK7(page, consoleHandle) {
   return (
     `${notchesAnswered}/${K7_ZOOM_OUT_NOTCHES} discrete zoom-OUT notches from a "Zoom to layer" fit on the ` +
     `candidate arm (readback asserted); the page answered a fresh DOM read after every notch (no hang), no ` +
-    `refusal/banner; .residency-status after the last notch: ${JSON.stringify(lastStatus)}; .hover-readout after a ` +
-    `real pointer move: ${JSON.stringify(readout)}; "Zoom to layer" restored ${(frac * 100).toFixed(1)}% non-bg pixels`
+    `refusal/banner; render trace went quiet within its wait bound on ${notchesQuiesced}/${K7_ZOOM_OUT_NOTCHES} ` +
+    `notches (last trace count ${lastTraceCount}); .residency-status after the last notch asserted verbatim = ` +
+    `${JSON.stringify(lastStatus)}; .hover-readout after a real pointer move: ${JSON.stringify(readout)}; ` +
+    `"Zoom to layer" restored ${(frac * 100).toFixed(1)}% non-bg pixels`
   );
 }
 

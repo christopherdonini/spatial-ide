@@ -96,7 +96,40 @@ export type TilePlanOutcome =
        * do with each one. **Entry 60 (2026-09-08): "every key it produced" is now bounded by
        * `MAX_COVERING_TILES`** -- a cover past that bound arrives here as the declared centred window
        * with `coveringTruncated` set (`tileGrid.ts`'s own `TileCover`), never as the full geometric
-       * set and never silently. Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
+       * set and never silently.
+       *
+       * **What that costs, stated plainly (reviewer gate must-fix 1 on entry 60's own fix, with the
+       * architect's own reading of the seams, 2026-09-08).** Past `MAX_COVERING_TILES` this array is
+       * the centred `COVER_WINDOW_CELLS_PER_AXIS` (256 x 256) window, NOT the covering set -- and
+       * this one array is TWO things at once downstream:
+       *  (i) the eviction-PROTECTED set (`candidateArmSession.ts:1414` ->
+       *      `WorkingCanvas.tsx`'s own `protectionSetFor`/`viewportTileKeys` ->
+       *      `tileResidentSet.ts`'s own protected-membership tests), and
+       *  (ii) the supersede KEEP-set (`coveringKeys` in `onCameraChange`'s own loop, `:368-390`
+       *      below, whose not-covered branch ends at `candidateArmSession.ts:931`'s `clearTile`).
+       * So at those zoom levels a RESIDENT tile that does intersect the viewport but lies outside the
+       * window is evictable, and an IN-FLIGHT in-view tile outside the window is superseded and
+       * BLANKED. ADR-028 Amendment 1's rule ("A tile intersecting the viewport is protected whether
+       * it is complete or partial, tracked this round or a prior one, or never requested at all",
+       * ADR-028:459-462, the quoted sentence at :461-462) therefore holds for the window ONLY there.
+       * Reachability, from entry 60's own recorded arithmetic and no new measurement of any kind
+       * (~3.63x tiles per wheel notch; ~2 notches past a "Zoom to layer" fit already passes 512, and
+       * this bound is 128x that): about six notches past the fit.
+       *
+       * **What is NOT affected: the completeness claim.** A windowed cover sets `coveringTruncated`
+       * below, `candidateArmSession.ts:1398` latches it into `lastCoveringTruncated`, and
+       * `isFillComplete` refuses on that flag outright (`:641`, "truncated => never all") -- so no
+       * "Showing all N" claim is ever made over a windowed cover; the operator gets the declared
+       * partial-view status instead. The `fits`/over-budget latch reads the window too (`:1414`) --
+       * disclosed here, not repaired here.
+       *
+       * Declaring the narrowing as an exception to an Accepted ADR, or redesigning the protection so
+       * it needs no enumeration at all, is the human's call (ADR-028's own precedent) -- queued as
+       * DECISIONS-PENDING entry 66 in the custodian's queue, not yet written into this branch's
+       * `DECISIONS-PENDING.md` (highest entry here: 65). This comment is the interim disclosure, not
+       * that decision; this piece changes neither the protection design nor the bound.
+       *
+       * Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
        * tile already tracked from a PRIOR round, dropped silently by the `this.tileState.has(tileKey)
        * continue` branch above, and (ii) a genuinely new candidate dropped this round for lack of
        * headroom while over budget, `:353` below) this field never omits either -- it is exactly
@@ -106,9 +139,12 @@ export type TilePlanOutcome =
        * three arrays, for BOTH its own `lastCoveringTileKeys` (the `isFillComplete()` per-tile check)
        * and `WorkingCanvasHandle.applyTileViewportContext`'s own eviction-protection set -- so a tile
        * this round could not issue/queue/already-resident-count is still protected from eviction and
-       * still counted against completeness, per ADR-028's architect-gate clarification 3 / Amendment
-       * 1's own geometric rule ("never evict a tile intersecting the current viewport"), rather than
-       * silently falling out of both. */
+       * still counted against completeness, rather than silently falling out of both -- for every
+       * cover AT OR UNDER `MAX_COVERING_TILES`. That is ADR-028's architect-gate clarification 3 /
+       * Amendment 1's own geometric rule ("never evict a tile intersecting the current viewport",
+       * ADR-028:452) satisfied on those covers. ABOVE the bound the same sentence would be false as
+       * written, which is what the disclosure paragraph above is for -- read the two together, never
+       * this one alone. */
       covering: string[];
       /** P5f complex-gate should-fix 2: `true` when this round's NEW (neither already tracked
        * nor already resident) covering tiles exceeded this manager's own issuing/queueing capacity

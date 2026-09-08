@@ -70,6 +70,30 @@ export const MAX_QUEUED_TILES = 512;
  * enumerating only 512 cells would strip protection from covers that are merely ~2 wheel notches
  * past a "Zoom to layer" fit (entry 60's own arithmetic) and are handled correctly today.
  *
+ * **...and past 65,536 cells it does NOT keep naming them (reviewer gate must-fix 1, with the
+ * architect's own reading of the seams; the interim disclosure, not the decision).** The sentence
+ * above has to be finished honestly: above this count the enumeration returns the centred
+ * `COVER_WINDOW_CELLS_PER_AXIS` (256 x 256) window and nothing else, so the second consumer sees the
+ * WINDOW, not the cover. Two consequences follow at those zoom levels, both of them real:
+ *   1. a RESIDENT tile that does intersect the viewport but lies outside the window is EVICTABLE
+ *      (the window is what reaches `WorkingCanvas.tsx`'s own `protectionSetFor`/`viewportTileKeys`
+ *      and therefore `tileResidentSet.ts`'s protected-membership tests), and
+ *   2. an IN-FLIGHT in-view tile outside the window is superseded and BLANKED (the window is also
+ *      `TileViewportStreamManager.onCameraChange`'s own supersede keep-set -> `clearTile`).
+ * ADR-028 Amendment 1's rule ("A tile intersecting the viewport is protected whether it is complete
+ * or partial, tracked this round or a prior one, or never requested at all", ADR-028:459-462, the
+ * quoted sentence at :461-462) therefore holds for the window only, there. What is NOT affected: the
+ * completeness claim -- a windowed cover is reported truncated and `candidateArmSession.ts`'s own
+ * `isFillComplete` refuses on that flag outright, so no "Showing all N" is ever claimed over one.
+ * Reachability, from entry 60's own recorded arithmetic and no new measurement (~3.63x tiles per
+ * wheel notch; ~2 notches past a "Zoom to layer" fit already passes 512, and this bound is 128x
+ * that): about six notches past the fit. Raising the multiple moves that zoom level further out; it
+ * does not remove the case, which is why the number is not the answer here. Declaring the narrowing
+ * as an exception to an Accepted ADR, or redesigning the protection so it needs no enumeration at
+ * all, is the human's call (ADR-028's own precedent) -- queued as DECISIONS-PENDING entry 66 in the
+ * custodian's queue, not yet written into this branch's `DECISIONS-PENDING.md` (highest entry here:
+ * 65). This piece changes neither the protection design nor this number.
+ *
  * **Why 128x and not some smaller multiple: this bound must not reclassify anything that is honest
  * today.** A truncated cover is reported truncated, and `candidateArmSession.ts`'s own
  * `isFillComplete` refuses to read a truncated covering set as "all" -- so a bound low enough to
@@ -82,6 +106,28 @@ export const MAX_QUEUED_TILES = 512;
  * the FINEST level's own 32-per-axis frame (`TILE_GRID_DIMENSIONS.fine`), i.e. 64 whole grid frames'
  * worth of cells.
  *
+ * **That 25,600 survey is true only AFTER this piece's own test change, and the reader is owed the
+ * "before" (reviewer gate should-fix 1).** One of those pinned scenarios
+ * (`candidateArmSession.test.ts:1919`, the M1 "doubly not-settled" case) used to widen the same
+ * degenerate 1-unit anchor to a FORTY-unit viewport, i.e. 320 x 320 = 102,400 cells, and the suite
+ * read that plan as complete. This piece SHIFTED that bbox instead of widening it (same 20-unit
+ * span, different place -- the reason is stated at that line), which is why the survey's own maximum
+ * now reads 25,600. Had the case been left as it was, 65,536 would have reclassified it: the test
+ * would have settled `"partial"`, an operator-visible status change. The bbox shift is a test-only
+ * edit and is disclosed as such; no product code path was adjusted to make the number fit.
+ *
+ * **How this number was arrived at (ADR-010 rule 6: declared -- and the history stated, not
+ * hidden).** The first bound written for this piece was 16,384 = 32 x `MAX_QUEUED_TILES`. It was
+ * raised to the 128x above BEFORE the piece shipped, because at 32x the 25,600-cell degenerate-anchor
+ * scenarios above sit OVER the bound: they flipped from settling complete to `settled: "partial"`,
+ * exactly the operator-visible reclassification the previous paragraph rules out. (The 102,400-cell
+ * case is over BOTH candidate bounds -- raising the multiple never addressed that one; the bbox shift
+ * did.) So: not a measurement, not a search for an optimum, and not a number that fell out of a
+ * benchmark -- a declared bound picked to clear the largest cover this suite already treats as
+ * complete, revised once when the first pick did not clear it. Comments written against the abandoned
+ * 16,384 were corrected with this batch (`e2e/regression.mjs`'s own K7 block, `tileGrid.test.ts`'s
+ * at-and-under-bound case).
+ *
  * DECLARED, not discovered (ADR-010 rule 6), exactly like `MIN_ANCHOR_SPAN`/
  * `UNTILED_FIRST_LOOK_ROW_LIMIT`: no measurement supports 65,536 over 32,768 or 131,072, and none is
  * claimed. What the bound buys is stated structurally, not as a perf claim (ADR-018): past this
@@ -93,7 +139,7 @@ export const MAX_COVERING_TILES = MAX_QUEUED_TILES * 128; // 65,536
 /** The per-axis side of the square cell window `tileGrid.ts`'s own `tileCoverForBbox` keeps when a
  * cover exceeds `MAX_COVERING_TILES` -- centred on the query bbox's own centre cell, which is the
  * SAME nearest-first keep / farthest-first drop policy `TileViewportStreamManager.onCameraChange`
- * already applies to its own candidate list (`:386-398` there), just applied before the allocation
+ * already applies to its own candidate list (`:422-434` there), just applied before the allocation
  * rather than after it. 256 * 256 === `MAX_COVERING_TILES` exactly (pinned by a unit test in
  * `tileGrid.test.ts`), so the window is the largest square this bound admits. */
 export const COVER_WINDOW_CELLS_PER_AXIS = 256;

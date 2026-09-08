@@ -235,6 +235,21 @@ function pixelsPerWorldUnitAtZoom(zoom: number): number {
   return 2 ** zoom;
 }
 
+/** A bbox spanning EXACTLY `cols` x `rows` cells at the medium level, anchored at the frame origin
+ * and boundary-aligned on every edge -- `coveringIndexRange`'s own half-open rule puts an edge that
+ * lands exactly on a cell boundary in the cell whose MIN edge it is, so the cover is `cols * rows`
+ * cells, never one row/column more. Every span used below is exact in binary floating point (the
+ * medium cell size here is 12.5), so these counts are equalities, not approximations. */
+function bboxOfCells(frame: ReturnType<typeof deriveTileGridFrame>, cols: number, rows: number): AuthoritativeBbox {
+  const cellSize = cellSizeForLevel(frame, "medium");
+  return {
+    xmin: frame.originX,
+    ymin: frame.originY,
+    xmax: frame.originX + cols * cellSize,
+    ymax: frame.originY + rows * cellSize,
+  };
+}
+
 /** The authoritative-CRS bbox a 1280x800 viewport (`src-tauri/tauri.conf.json`'s own window size)
  * covers at `zoom`, centred on `centre`. */
 function viewportBboxAtZoom(zoom: number, centre: { x: number; y: number }): AuthoritativeBbox {
@@ -273,7 +288,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
 
     // (c) What it kept: the centred window, so the cells nearest the view centre are the ones a
     // caller can still request (the same nearest-first keep the stream manager's own truncation
-    // applies, `tileViewportStreamManager.ts:367-379`).
+    // applies, `tileViewportStreamManager.ts:422-434`).
     expect(cover.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS ** 2);
     const centreCell = tilesCoveringBbox(frame, "medium", { xmin: 0, ymin: 0, xmax: 0, ymax: 0 })[0];
     expect(cover.keys.map(tileKeyToString)).toContain(tileKeyToString(centreCell));
@@ -314,7 +329,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   it("a cover AT or under the bound is complete and identical to what it always was", () => {
     const frame = deriveTileGridFrame(ANCHOR);
     const cellSize = cellSizeForLevel(frame, "medium");
-    const n = 100; // 10,000 cells, under the 16,384 bound
+    const n = 100; // 10,000 cells, under the 65,536 bound (`MAX_COVERING_TILES`)
     const bbox: AuthoritativeBbox = {
       xmin: frame.originX,
       ymin: frame.originY,
@@ -327,6 +342,61 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
     expect(cover.cellCount).toBe(n * n);
     expect(cover.keys[0]).toEqual({ row: 0, col: 0 });
     expect(tilesCoveringBbox(frame, "medium", bbox)).toEqual(cover.keys);
+  });
+
+  it("AT the bound exactly (65,536 cells) the cover is COMPLETE and enumerated in full", () => {
+    // Reviewer gate should-fix 2: the `<=` in `tileCoverForBbox`'s own pre-check, pinned from below.
+    // Nothing else in this file exercises the boundary itself -- the cases either side of it are
+    // 10,000 and 90,000 cells.
+    const frame = deriveTileGridFrame(ANCHOR);
+    const bbox = bboxOfCells(frame, COVER_WINDOW_CELLS_PER_AXIS, COVER_WINDOW_CELLS_PER_AXIS); // 256 x 256
+    expect(coveringCellCount(frame, "medium", bbox)).toBe(MAX_COVERING_TILES);
+
+    const { result: cover, pushes } = countingPushes(() => tileCoverForBbox(frame, "medium", bbox));
+    expect(cover.kind).toBe("complete");
+    expect(cover.cellCount).toBe(MAX_COVERING_TILES);
+    expect(cover.keys.length).toBe(MAX_COVERING_TILES); // every cell, not a window that happens to match
+    expect(pushes).toBe(MAX_COVERING_TILES);
+    expect(cover.keys[0]).toEqual({ row: 0, col: 0 });
+    expect(cover.keys[cover.keys.length - 1]).toEqual({
+      row: COVER_WINDOW_CELLS_PER_AXIS - 1,
+      col: COVER_WINDOW_CELLS_PER_AXIS - 1,
+    });
+  });
+
+  it("ONE cell past the bound (65,537) is truncated -- so the comparison is `<=`, not `<`", () => {
+    // The same boundary from above. 65,537 is prime, so the only cell rectangle with exactly
+    // MAX_COVERING_TILES + 1 cells is 65,537 x 1 -- which is what this builds.
+    const frame = deriveTileGridFrame(ANCHOR);
+    const bbox = bboxOfCells(frame, MAX_COVERING_TILES + 1, 1);
+    expect(coveringCellCount(frame, "medium", bbox)).toBe(MAX_COVERING_TILES + 1);
+
+    const { result: cover, pushes } = countingPushes(() => tileCoverForBbox(frame, "medium", bbox));
+    expect(cover.kind).toBe("truncated");
+    if (cover.kind !== "truncated") throw new Error("unreachable");
+    expect(cover.cellCount).toBe(MAX_COVERING_TILES + 1);
+    expect(cover.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS); // 256 columns of the single row
+    expect(cover.omittedCellCount).toBe(MAX_COVERING_TILES + 1 - COVER_WINDOW_CELLS_PER_AXIS);
+    expect(pushes).toBe(cover.keys.length);
+  });
+
+  it("a cover overrunning the bound on ONE axis keeps the OTHER axis whole", () => {
+    // Reviewer gate should-fix 3: `tileGrid.ts:280-281` claims exactly this ("intersected with the
+    // real cover, so a cover overrunning the bound on one axis only keeps the other axis whole") and
+    // nothing pinned it.
+    const frame = deriveTileGridFrame(ANCHOR);
+    const flat = tileCoverForBbox(frame, "medium", bboxOfCells(frame, 100_000, 1));
+    expect(flat.kind).toBe("truncated");
+    expect(flat.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS); // the column axis alone is windowed
+    expect(new Set(flat.keys.map((k) => k.row)).size).toBe(1);
+
+    // Three rows deep, so "kept whole" is not vacuously true of a single row: all three rows survive
+    // (3 < 256, so the row window never binds), and only the column axis is clipped.
+    const deeper = tileCoverForBbox(frame, "medium", bboxOfCells(frame, 100_000, 3));
+    expect(deeper.kind).toBe("truncated");
+    expect(deeper.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS * 3);
+    expect([...new Set(deeper.keys.map((k) => k.row))].sort((a, b) => a - b)).toEqual([0, 1, 2]);
+    expect(new Set(deeper.keys.map((k) => k.col)).size).toBe(COVER_WINDOW_CELLS_PER_AXIS);
   });
 
   it("a non-finite bbox is truncated with nothing kept -- and, above all, RETURNS", () => {

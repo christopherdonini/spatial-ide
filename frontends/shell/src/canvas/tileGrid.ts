@@ -266,8 +266,9 @@ function materialiseCells(rowStart: number, rowEnd: number, colStart: number, co
  *
  * **What the bound fixes.** `tilesCoveringBbox` (this function, then unbounded) was called on every
  * debounced camera settle (`TileViewportStreamManager.onCameraChange`, then
- * `streaming/tileViewportStreamManager.ts:314`, now `:328` and through `tileCoverForBbox`), and
- * `MAX_QUEUED_TILES` truncated only AFTERWARDS (then `:361-379` there, now `:386-398`) -- so an
+ * `streaming/tileViewportStreamManager.ts:314`, now `:364` and through `tileCoverForBbox`), and
+ * `MAX_QUEUED_TILES` truncated only AFTERWARDS (the same block either side of the fix: then
+ * `:361-379` there, now `:412-434`) -- so an
  * ordinary wheel gesture far enough out made this nested loop's own
  * iteration count a function of the camera alone, with nothing in front of it: the canvas's single
  * JS thread sat in this loop, which is docs/01's "Never block the canvas." (principle 7) broken on
@@ -279,11 +280,18 @@ function materialiseCells(rowStart: number, rowEnd: number, colStart: number, co
  * (intersected with the real cover, so a cover overrunning the bound on one axis only keeps the
  * other axis whole) and reports `"truncated"`. Nearest-to-the-view-centre-kept /
  * farthest-dropped is the policy `onCameraChange` itself already applies to its own candidate list
- * (`tileViewportStreamManager.ts:386-398`); this is that same policy, moved in front of the
+ * (`tileViewportStreamManager.ts:422-434`); this is that same policy, moved in front of the
  * allocation. It does NOT introduce a
  * zoom floor, a `minZoom` clamp, or any new operator-visible state -- entry 60 records the clamp as
- * an optional follow-up (`NEXT-CUT.md`), and the partial-view disclosure stays exactly the settled-
- * partial status line the candidate arm shows today.
+ * an optional follow-up (recorded in the custodian's own next-cut brief, which is untracked and not
+ * in this tree), and the partial-view disclosure stays exactly the settled-partial status line the
+ * candidate arm shows today.
+ *
+ * **What the window costs past the bound is disclosed, not hidden**: at those zoom levels the
+ * covering set this returns is the window, so ADR-028's geometric eviction protection covers the
+ * window only -- `tileGridConstants.ts`'s own `MAX_COVERING_TILES` comment states the consequence in
+ * full, and the declaration-or-redesign call is the human's (queued as DECISIONS-PENDING entry 66 in
+ * the custodian's queue; not in this branch's `DECISIONS-PENDING.md` yet).
  */
 export function tilesCoveringBbox(frame: TileGridFrame, level: TileGridLevel, bbox: AuthoritativeBbox): TileKey[] {
   return tileCoverForBbox(frame, level, bbox).keys;
@@ -304,7 +312,12 @@ export function tileCoverForBbox(frame: TileGridFrame, level: TileGridLevel, bbo
   // The pre-check: the count comes from the span, so this comparison happens with nothing yet
   // allocated. A non-finite count (a non-finite bbox) is over the bound by definition -- tested
   // first, since `NaN <= MAX_COVERING_TILES` is `false` but so is `NaN > MAX_COVERING_TILES`.
-  const cellCount = (colEnd - colStart + 1) * (rowEnd - rowStart + 1);
+  // Reviewer gate should-fix 5: this calls `coveringCellCount` rather than repeating its product
+  // inline, so the exported count and the count the bound is actually applied to are ONE source and
+  // cannot drift. It re-derives the two index ranges (`coveringIndexRanges`, called again inside);
+  // that is the same handful of divides and floors, still allocation-free, and the deterministic
+  // same result for the same inputs.
+  const cellCount = coveringCellCount(frame, level, bbox);
   const enumerable = isEnumerableRange(rowStart, rowEnd) && isEnumerableRange(colStart, colEnd);
   if (enumerable && Number.isFinite(cellCount) && cellCount <= MAX_COVERING_TILES) {
     return { kind: "complete", keys: materialiseCells(rowStart, rowEnd, colStart, colEnd), cellCount };
