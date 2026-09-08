@@ -33,7 +33,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
     first publish and must be a KNOWN-LIMITATIONS entry (principle 7) — not among the eight adopted.
     Fix-forward nits to ride the sweep: `docs/02:91`'s stale "(ADR-025 stays reserved …)" clause;
     M3's tense; M10's trailing period; the shipped refusal's developer-only remedy text; the
-    `#[ignore]`d boundary test stated as not-in-CI.
+    `#[ignore]`d boundary test stated as not-in-CI. **Added 2026-09-08, after PR #31's CI:** the
+    Rust workspace job is RED on `34a1896` — `ceilings_json_bytes_are_pinned_by_content_hash`
+    panics on `windows-latest` (`6406…` vs the pinned `fd74…`) because CI's git checks
+    `ceilings.json` out with CRLF while the blob is LF; locally both are LF. The repo already pins
+    `*.projjson text eol=lf` in `.gitattributes` for exactly this reason ("byte-sensitive test
+    fixtures: checked out verbatim on every platform"); the fix is one line — `renderer/bundle-
+    viewer/ceilings.json text eol=lf` — and the CI record for the `tauri-build` job (first green run
+    34190120055 / 34a1896 / pull_request / 27m19s) goes into the workflow's record slot in the same
+    sweep. Both held under rule 7 for your word; the PR is red until then. The reviewer's local run
+    could not see it (`core.autocrlf false` here) — a class to add to the reviewer checklist.
 
 56. **[The regression suite's K6 step is RED on unmodified main — a pre-existing failure the arm-flip
     piece surfaced by running the suite on both arms; it is entry 47's mechanism seen by a machine.]**
