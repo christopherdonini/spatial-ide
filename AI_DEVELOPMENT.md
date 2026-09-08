@@ -196,7 +196,14 @@ how obvious they seem:
   `node --check` accepts the file and the same commit passes locally under LF. Reproduce by converting
   the module to CRLF; bisect by file. A module that is only imported carries no shebang; a script that
   is only executed may. `node --check` is not the guard; the CRLF checkout is the second member of the
-  eol class (the hash-pin member is above).
+  eol class (the hash-pin member is above). Third member, same day (PR #36): a check script that reads
+  a repo text file and matches a multi-line pattern must normalise `\r\n` to `\n` on read, or it finds
+  nothing on `windows-latest` and fails the job while every LF checkout passes. Reproduce any member by
+  converting the file to CRLF locally before pushing.
+- **The check's exit gates the commit — never chain them (2026-09-08).** An edit, its verification and
+  the commit/push in one command chained with `;` let a broken file ship (PR #36: a patch tool wrote a
+  line break inside a regex; `node --check` printed the error and the push went out anyway). Run the
+  check first; commit in a later step, or gate the commit on the check's exit status.
 
 ## Away-mode evidence rule
 
