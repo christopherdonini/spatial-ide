@@ -508,6 +508,21 @@ async function panUntilOffData(page, consoleHandle, rect, center) {
   return { drags, dragPx, fraction };
 }
 
+/** [Post-PASS sweep nit] Finds and clicks the "Zoom to layer" button via a plain DOM `btn.click()`,
+ * never a real `page.mouse.click()` at its screen position -- the pointer must never move for K6's
+ * own "pointer stationary" premise to hold when this is reused there. One find-and-click, shared by
+ * `stepA7` and `clickZoomToLayer` below -- each call site settles and asserts on its own terms
+ * afterward, unchanged by this extraction. */
+async function clickZoomToLayerButton(page, label) {
+  const clicked = await page.evaluate(() => {
+    const btn = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Zoom to layer"));
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  if (!clicked) throw new Error(`${label}: "Zoom to layer" button not found to click`);
+}
+
 async function stepA7(page, consoleHandle) {
   const rect = await canvasRect(page);
   if (!rect) throw new Error("A7': .working-canvas not found");
@@ -516,13 +531,7 @@ async function stepA7(page, consoleHandle) {
   const offData = await panUntilOffData(page, consoleHandle, rect, center);
   await assertNoRefusalOrBanner(page, "A7' (pan off-data)");
 
-  const clicked = await page.evaluate(() => {
-    const btn = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Zoom to layer"));
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (!clicked) throw new Error('A7\': "Zoom to layer" button not found to click');
+  await clickZoomToLayerButton(page, "A7'");
 
   const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
   const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
@@ -953,14 +962,25 @@ async function stepA9(page, consoleHandle) {
 // `standing === null -> undefined` branch, `pickResolution.test.ts` case (e)), so a run of N
 // discrete camera changes can only ever clear the readout once, on the FIRST change, and can never
 // itself reach the below-resolution refusal. Only a SINGLE camera change that crosses the
-// threshold in that one step reaches the refusal -- which is what a human's one continuous zoom
-// gesture is (the walkthrough's own L7, ruled "fine" 2026-09-06/07), and what N separate discrete
-// wheel notches are not. This step therefore asserts BOTH halves of the CURRENT, shipped contract
-// explicitly, by name, below:
+// threshold in that one step reaches the refusal. Entry 56's own diagnosis calls this what a human's
+// one continuous zoom gesture produces (the walkthrough's own L7, ruled "fine" 2026-09-06/07) -- a
+// HYPOTHESIS about the browser's input pipeline coalescing rapid wheel events into fewer camera-
+// change callbacks, UNVERIFIED in this repo (this codebase's own deck.gl does not coalesce anything:
+// one `updateViewport` per wheel event, `controller.js:363`). [Post-PASS sweep should-fix 3] The
+// measured fact this step actually rests on is independent of that hypothesis: a SINGLE wheel event
+// cannot cross the pick-resolution threshold in this harness at all -- deck.gl's own scale formula
+// (see "Realising (i)" below) hard-caps one event at 1.0 zoom level, and this run's own measured
+// threshold crossings ran 1.3x-3.6x larger than that per-event cap -- which is the real reason
+// assertion (i) below is realised via one camera change from "Zoom to layer" rather than one wheel
+// event, whatever the truth of entry 56's browser-coalescing hypothesis. What N separate discrete
+// wheel notches are not, either way: capable of reaching the refusal in one step. This step therefore
+// asserts BOTH halves of the CURRENT, shipped contract explicitly, by name, below:
 //   (i)  CONTINUOUS -- one coalesced camera change crossing the threshold -> the named refusal,
 //        text verbatim (`pickResolution.test.ts` case (a) pins the pure decision this exercises).
-//   (ii) DISCRETE -- >= 8 separate wheel notches, no single-step crossing -> the readout clears on
-//        the first notch and NEVER shows the pre-zoom id again at any later notch
+//   (ii) DISCRETE -- >= 8 separate wheel notches, no single-step crossing -> on the FIRST notch the
+//        readout either clears to nothing OR (if that one notch itself crosses the threshold) shows
+//        the named refusal directly -- both honour "discrete -> clear, no stale id" -- and it NEVER
+//        shows the pre-zoom id again at any later notch
 //        (`pickResolution.test.ts` case (b) pins the pure decision this exercises).
 // Entry 47 (re-pick on camera settle, ruled as the NEXT cut's first piece) is expected to REPLACE
 // both assertions below with a single "never goes stale, continuous or discrete alike" contract --
@@ -977,8 +997,17 @@ async function stepA9(page, consoleHandle) {
 // asymptotically saturates at 2.0 (a single doubling/halving) as `|delta|` grows -- e.g. deltaY=300
 // (this file's own `ZOOM_NOTCH_DELTA_Y` magnitude) already yields scale~=1.905, and an arbitrarily
 // larger deltaY buys almost nothing further, so one real wheel event is capped at roughly one
-// `ZOOM_NOTCH_DELTA_Y`-notch's worth of zoom change regardless of magnitude; (b) an arbitrary
-// absolute `e2eSetViewState` zoom is actively DANGEROUS, not merely insufficient -- proven live
+// `ZOOM_NOTCH_DELTA_Y`-notch's worth of zoom change regardless of magnitude; (b) [Post-PASS sweep
+// should-fix 2, restating the real reason -- the proof below is about an EXTREME jump specifically,
+// not about the `e2eSetViewState` seam as such: a MODEST, computed jump (e.g. the current zoom
+// already read off this step's own view-state trace, minus ~2) would in fact have been SAFE, and was
+// the preregistration's own OTHER named route (`RELEASE-0.1.md`'s "Preregistration -- the K6
+// re-aim": "the camera set directly through the E2E surface if the harness offers it"). It is
+// not used below regardless of that: a REAL product action -- "Zoom to layer", the SAME
+// `reevaluateHoverForZoom` code path a human's gesture and the interactive wheel path both drive
+// (`WorkingCanvas.tsx:722-731`) -- was preferred over any DEV-only seam, modest or not. What follows
+// is a separate, additional finding, not the reason the seam is unused: an ARBITRARY, EXTREME]
+// `e2eSetViewState` zoom is actively DANGEROUS, not merely insufficient -- proven live
 // (this piece's own first run, K6 hung ~480s and wedged the whole page unresponsive to CDP at
 // zoom=-64): `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom` (`WorkingCanvas.tsx:384-390`) means an
 // extreme low zoom inflates the viewport's own world-space bbox by the same astronomical factor,
@@ -988,7 +1017,10 @@ async function stepA9(page, consoleHandle) {
 // `for (row) for (col)` loop over the FULL bbox/cellSize span BEFORE `MAX_QUEUED_TILES`
 // (`tileGridConstants.ts:54`) ever truncates the result -- an absurd bbox therefore means an
 // attempted allocation/iteration of an absurd tile count, wedging the renderer's single JS thread
-// long before any truncation logic ever runs. Assertion (i) instead reuses "Zoom to layer" -- the
+// long before any truncation logic ever runs. This hang is a separate, recorded finding about the
+// EXTREME value, not about modest seam use (`NEXT-CUT.md`'s "Found during the release cut" section,
+// filed as DECISIONS-PENDING entry 60) -- it is not why this step avoids the seam for modest jumps;
+// the real-product-action preference above is. Assertion (i) instead reuses "Zoom to layer" -- the
 // SAME real button `A7'`/`clickZoomToLayer` below already click -- which calls `fitToExtent` (`Working
 // Canvas.tsx:793-813`), itself exactly ONE atomic `reevaluateHoverForZoom(fit.zoom)` call (the
 // structural property "one coalesced camera change" is actually about) fitting the bbox to the
@@ -1002,7 +1034,14 @@ async function stepA9(page, consoleHandle) {
 // increasing), any camera this step's own search established as ABOVE threshold (a real "id NNN"
 // hover, confirmed by the SAME check `onHover` itself runs) is, by construction, MORE zoomed-in
 // than the whole-dataset fit -- so fitting to the whole dataset from there can only cross the
-// threshold, never stay above it.
+// threshold, never stay above it. [Post-PASS sweep nit: stated precisely rather than glossed --
+// `reevaluateHoverForZoom(fit.zoom)` (`WorkingCanvas.tsx:799`) runs BEFORE `render()` (`:806`)
+// recomputes `averageFeatureExtentRef.current` from the fit's own newly-resident batches (`:756`),
+// so the below-threshold decision AT the fit actually compares against whatever average extent the
+// LAST render before the fit already held, not P9's own post-fit measurement of the resident set AT
+// the fit. Both are same-dataset averages (the same fixture's features, whichever subset happens to
+// be resident when each is measured), which is why the argument holds in practice -- this run's own
+// green result confirms it does -- but it is not literally the identical quantity P9 measured.]
 //
 // Realising (ii): `page.mouse.wheel` is called directly (not through `doWheel`/`zoomInOneNotch`,
 // both of which `page.mouse.move` the pointer first) -- any pointer move here would let a real
@@ -1072,21 +1111,16 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
  * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:793-813`), then settles
- * -- never `page.reload()` (this suite's own established precedent, `residency-harness.mjs`'s own
- * S4 doc comment, treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
+ * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
+ * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1962-1968` (first
+ * paragraph labelled at `:1943`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
  * real `page.mouse.click()` at the button's own screen position -- the pointer is NEVER moved by
  * this call, which is exactly what K6's own "pointer stationary" premise (this section's own top
  * comment) needs whether this is used to CROSS the threshold (assertion (i)) or merely to RESET the
- * camera before the discrete case's own setup (assertion (ii)) -- one function, two call sites,
- * same real product action either way, `label` names which. */
+ * camera before the discrete case's own setup (assertion (ii)) -- the SAME find-and-click as `stepA7`
+ * (`clickZoomToLayerButton` above), same real product action either way, `label` names which. */
 async function clickZoomToLayer(page, consoleHandle, label) {
-  const clicked = await page.evaluate(() => {
-    const btn = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Zoom to layer"));
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (!clicked) throw new Error(`${label}: "Zoom to layer" button not found to click`);
+  await clickZoomToLayerButton(page, label);
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 45_000 });
   await assertNoRefusalOrBanner(page, label);
 }
@@ -1121,12 +1155,19 @@ async function stepK6(page, consoleHandle) {
   await clickZoomToLayer(page, consoleHandle, "K6/reset");
 
   // ASSERTION (ii) -- DISCRETE: >= 8 separate wheel notches, no interceding `page.mouse.move` (this
-  // section's own top comment). The CURRENT contract clears the readout on the FIRST notch (entry
-  // 56's diagnosis, quoted in this section's own top comment) -- polled after EVERY notch, so a
-  // later regression re-showing the PRE-ZOOM id at ANY notch fails loudly, not just "eventually".
+  // section's own top comment). The ruled contract (entry 56, quoted in this section's own top
+  // comment) is "discrete -> clear, no stale id" -- polled after EVERY notch, so a later regression
+  // re-showing the PRE-ZOOM id at ANY notch fails loudly, not just "eventually". [Post-PASS sweep
+  // should-fix 4] On the FIRST notch specifically, the readout may either clear to nothing OR, if
+  // that one notch itself crosses the pick-resolution threshold, show the named refusal directly
+  // (`reevaluateStandingHoverOnCameraChange`'s own below-threshold branch, `pickResolution.ts`) --
+  // no stale id either way, the contract honoured either way. Requiring `=== null` specifically was
+  // STRICTER than the ruled contract and would throw "cleared at notch never" on that legitimate
+  // refusal-at-notch-1 path; both outcomes are accepted below, and the return string below says
+  // which one this run produced.
   const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
   const zoomOutNotches = Math.max(discreteHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
-  let clearedAtNotch = null;
+  let notch1Readout; // undefined until notch 1 actually runs (always does: zoomOutNotches >= K6_ZOOM_OUT_NOTCHES_MIN, 8)
   for (let notch = 1; notch <= zoomOutNotches; notch++) {
     await page.mouse.wheel(0, K6_ZOOM_OUT_NOTCH_DELTA_Y);
     await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
@@ -1137,21 +1178,26 @@ async function stepK6(page, consoleHandle) {
           `${notch}/${zoomOutNotches} -- a stale id survived a camera change`
       );
     }
-    if (clearedAtNotch === null && afterNotch === null) clearedAtNotch = notch;
+    if (notch === 1) notch1Readout = afterNotch;
   }
-  if (clearedAtNotch !== 1) {
+  if (notch1Readout === undefined) {
+    throw new Error(`K6/discrete: notch 1 never ran (zoomOutNotches=${zoomOutNotches}) -- cannot evaluate the FIRST-notch contract`);
+  }
+  if (notch1Readout !== null && notch1Readout !== K6_REFUSAL_TEXT) {
     throw new Error(
-      `K6/discrete: expected .hover-readout to clear to nothing on the FIRST discrete notch (entry 56's diagnosed ` +
-        `contract, this section's own top comment) but it cleared at notch ${clearedAtNotch === null ? "never" : clearedAtNotch} ` +
-        `(hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ${zoomOutNotches} zoom-out notch(es) total)`
+      `K6/discrete: expected .hover-readout to EITHER clear to nothing OR show the named refusal verbatim on the ` +
+        `FIRST discrete notch (the ruled contract, entry 56, this section's own top comment) but it showed ` +
+        `${JSON.stringify(notch1Readout)} (hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ` +
+        `${zoomOutNotches} zoom-out notch(es) total)`
     );
   }
+  const notch1Outcome = notch1Readout === null ? "cleared" : "refusal";
 
   return (
     `(i) continuous: hovered "${continuousHover.text}" at zoom-in notch ${continuousHover.notchesUsed}, one coalesced ` +
-      `camera change -> refusal text verbatim ("${K6_REFUSAL_TEXT}"); ` +
+      `camera change ("Zoom to layer") -> refusal text verbatim ("${K6_REFUSAL_TEXT}"); ` +
     `(ii) discrete: hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ${zoomOutNotches} ` +
-      `discrete zoom-out notch(es) -> cleared at notch 1, no stale id at any later notch. Both are the CURRENT ` +
+      `discrete zoom-out notch(es) -> notch 1 ${notch1Outcome}, no stale id at any later notch. Both are the CURRENT ` +
       `contract entry 47 (DECISIONS-PENDING, re-pick on camera settle) is expected to replace.`
   );
 }
@@ -1358,8 +1404,9 @@ async function main() {
     // plus a bounded per-notch settle loop for the discrete case's own >= 8 notches -- 240s gives
     // generous headroom over that composition without eating so much of the WHOLE run's own 600s
     // `SPATIAL_E2E_DEADLINE_MS` that a single slow step here starves every later one (this piece's
-    // own first run's cascade failure, at the prior 480s bound); not a timing claim (ADR-018), just a
-    // bound.
+    // own first run's cascade failure, at an INTERMEDIATE, never-committed 480s bound this piece
+    // tried mid-session -- main's own last COMMITTED bound before this piece was 90_000 (90s); not a
+    // timing claim (ADR-018), just a bound.
     await runStep("K6", 240_000, () => stepK6(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
