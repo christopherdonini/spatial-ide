@@ -55,7 +55,12 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     dated note on ADR-003's `crs_transform` string would be owed (your word). Touches now: nothing —
     the 3857 piece (already within the ruling) is dispatched; 4326 waits. On (a): ADR-032 filed
     Proposed; KNOWN-LIMITATIONS entry 2 = two entries + the 4326 refusal named; QUICKSTART must not say
-    a WGS 84 file "opens" (`RELEASE-0.1.md:422` overstated — Amendment 7 corrects it).
+    a WGS 84 file "opens" (`RELEASE-0.1.md:422` overstated — Amendment 7 corrects it). **Also your
+    word, found by the architect's re-check of the 3857 piece (2026-09-08):** ADR-026's implementation
+    note line 76 ("The one entry (`epsg-2056`) reuses …") becomes false when 3857 lands — an Accepted
+    ADR, so an APPENDED dated implementation note (the set is two entries; `epsg-3857` added
+    2026-09-08 as the pinned PROJ 9.6.2 rendering, `EPSG_3857_HASH`; a per-entry `schema` field) is
+    requested, never an edit. The custodian writes it only on your word.
 
 58. **[A9′ (the regression suite's hover → pick → `.hover-readout` shows an id step) is FLAKY,
     arm-independent — filed on the human's ruling of 2026-09-08, not yet diagnosed.]** Facts from the
