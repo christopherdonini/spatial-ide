@@ -21,6 +21,37 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+64. **[Release cut item 10 (the cancellable, progress-reported pin) — RULE 7 REACHED on the reviewer
+    step (gate FAIL on `1fb47ec`: four must-fixes; re-review FAIL on `15b41ac`: ONE must-fix, a new
+    hole in the property the batch fixed). Everything else reproduced exactly. Authorize the closing
+    fix, and in what shape — the same question as entry 61.]** State: `cut/release-publish-pin` @
+    `15b41ac` (rebased on main 9d1dfb0; two signed commits): the engine's progress-observed hash, the
+    kernel's pin-free ADR-025 preflight FIRST (proven live: 2,000,001 rows refused before any hash),
+    the prepare-phase cancel token registered before the blocking call and removed unconditionally
+    (tested), host-side emits bounded with the final event guaranteed (tested), the panel showing
+    phase + bytes and a Cancel that renders only once the first progress event proves the token is
+    registered (tested), the cancelled sentence pinned verbatim (ADR-006), `prepare` delegating to
+    the shipped path (tests strengthened, not weakened), ADR-024 disclosed by name (entry 63);
+    engine 225 / kernel 211 / shell 33+2 / vitest 809 all green; five mutations all caught. **The
+    remaining must-fix (mechanical):** `requestPrepareCancel` (`PublishPanel.tsx:170-180`) has no
+    try/catch — `publishCancel` RETHROWS on IPC failure (`client.ts:102-108`), so on a throw
+    `cancelRequested` stays latched and the button reads "Cancelling", disabled, for the rest of
+    the pin (the reviewer's probe test proved it); fix = treat a throw as `reached === false`,
+    three lines plus one test (the file's own `settlePrepareOutcome` pattern). **Two should-fixes,
+    one line each:** the emit bound is not unconditional for a source that GROWS while hashing
+    (`bytes_done >= bytes_total` fires per chunk past the open-time total — add
+    `&& last_emitted < bytes_total`); and no Cancel and no progress appear before the first 64 MiB
+    (`last_emitted` starts at 0) — let the first observation always cross so Cancel is up after the
+    first chunk. Nits: a stated line range in the commit message; four test-suite "fast/cheap"
+    adjectives. Options: **(a) RECOMMENDED — authorize ONE closing commit (the must-fix + the two
+    should-fixes + nits) verified by the custodian mechanically (the probe scenario as a test and
+    mutated; the bound's two new cases tested; every check line) and by CI — no third gate, as the
+    #31 sweep was;** (b) one closing commit + a third reviewer look (your authorization of a third
+    attempt at the step); (c) stop here — the pin is cancellable and progress-reported except on an
+    IPC failure of the cancel call itself, and KNOWN-LIMITATIONS says so. Same shape as entry 61
+    (item 1 (b)); the two could be ruled together. Touches: the branch only; then its PR; Part M
+    M10 (already rewritten on the branch) is the human's on the artifact.
+
 63. **[ADR-024 (Accepted): its Consequences list (`:253-262`) records the publish pin phase as
     "uncancellable and unreported … no cancel affordance and no progress report of its own … Not
     built or closed by this ADR", quoting verbatim a `publish.rs` doc sentence that release cut
