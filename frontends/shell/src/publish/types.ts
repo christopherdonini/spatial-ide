@@ -97,8 +97,10 @@ export type PublishScopeInput =
   | { kind: "viewport-bbox"; bbox: { xmin: number; ymin: number; xmax: number; ymax: number } };
 
 /** The Tauri event `execute_with_progress` (and, since RELEASE-0.1 item 10, the "Preparing…" pin
- * phase too) emits (`publish.rs::PUBLISH_PROGRESS_EVENT`/`PublishProgressEvent`) -- phases only,
- * never a percentage or ETA (NEXT-CUT.md P2 item 3). During the pin phase, `attempt_id` carries
+ * phase too) emits (`publish.rs::PUBLISH_PROGRESS_EVENT`/`PublishProgressEvent`) -- phases plus raw
+ * byte counts; never a percentage, rate or ETA (NEXT-CUT.md P2 item 3; the older "phases only"
+ * wording here predated the two byte fields below and contradicted them). During the pin phase,
+ * `attempt_id` carries
  * `prepareCancelKey(datasetHandle)` (`client.ts`), not a real minted attempt id -- none exists yet
  * at that point (`publish.rs::prepare_cancel_key`'s own doc comment). `bytes_done`/`bytes_total`
  * are present ONLY for the pin phase (`phase === "pinning-source"`); every kernel publish phase

@@ -357,9 +357,10 @@ pub enum ExecuteOutcome {
 /// refused before a single byte is hashed. Only once that passes does the pin itself run,
 /// cancellable and progress-reporting via [`ensure_pinned_with_progress`]. [`prepare_with_query`]
 /// runs last, UNCHANGED — it re-runs the full [`publish::preflight`] internally (the pin-free parts
-/// included), which is real but cheap, pure, already-computed-once-more work (no dataset scan, no
-/// IO) rather than threading this function's own intermediate result through as a second source of
-/// truth that could drift from it.
+/// included), which is pure, already-computed-once-more work over facts already in hand (no dataset
+/// scan, no IO — `Dataset::file_schema()` is cached) rather than threading this function's own
+/// intermediate result through as a second source of truth that could drift from it. No claim is
+/// made here about what that re-check costs: nothing in this tree has measured it.
 ///
 /// **The one case this ordering cannot help: `DeclaredNotVerified` identity** — see
 /// [`publish::preflight_pinless`]'s own doc comment; the same residual applies here since this
@@ -419,18 +420,25 @@ pub fn prepare_with_progress(
     )
 }
 
-/// Translate `scope` into a query and delegate to [`prepare_with_query`] — the seam a test can
-/// bypass to construct a query [`prepare`] itself could never produce (see
-/// `tests::a_row_predicate_refuses_through_prepare_with_the_p0_message`), proving the refusal is
-/// `preflight`'s own, reached through this function's real code path, not a second check.
+/// A thin wrapper over [`prepare_with_progress`] with a throwaway [`CancelToken`] nothing outside
+/// this call can reach and no progress sink — exactly the relationship [`execute`] already has with
+/// [`execute_with_progress`], and for the same reason: this module's own test suite is its only
+/// caller (`#[allow(dead_code)]` below is that, disclosed, not a silenced real defect), while
+/// `commands.rs` calls the `_with_progress` form directly with the real token and sink.
 ///
-/// **Kept byte-for-byte** (P1's own original body): every existing test in this module calls this
-/// exact signature, on fixtures the shared `fixture()` helper already pins — so this never reaches
-/// the pin phase [`prepare_with_progress`] adds above. `commands.rs` calls `prepare_with_progress`
-/// directly, supplying the real cancel token and pin-progress sink, the same relationship
-/// [`execute`]'s own doc comment states between it and [`execute_with_progress`] — so this
-/// function's only remaining caller, like `execute`'s, is this module's own test suite
-/// (`#[allow(dead_code)]` below is that, disclosed, not a silenced real defect).
+/// **SF3, this batch's reviewer gate — it now delegates rather than skipping ahead to
+/// [`prepare_with_query`].** Before this batch it called `prepare_with_query` directly, so the
+/// suite's own ~dozen `prepare(...)` tests exercised a path the shipped command does not take: the
+/// ADR-025 reordering and the pin phase were both invisible to them. Delegating costs those tests
+/// one extra [`publish::preflight_pinless`] over an already-pinned fixture (a re-check over facts
+/// already in hand — no scan; `Dataset::file_schema()` is cached, `engine/src/dataset.rs:660`) and
+/// an [`ensure_pinned_with_progress`] that returns `Ok` immediately on a dataset that already holds
+/// a [`Dataset::content_pin`]. What it buys is that those tests now run the shipped code.
+///
+/// One consequence, stated rather than hidden: `prepare` on an UNPINNED dataset no longer refuses
+/// `SourceNotPinned` — it pins, like the real command does. The refusal itself is unchanged and
+/// still proven, through the pin-free path it belongs to
+/// (`tests::an_unpinned_dataset_still_refuses_through_the_pin_free_path_but_prepare_now_pins_it`).
 #[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 pub fn prepare(
@@ -446,14 +454,19 @@ pub fn prepare(
     destination: PathBuf,
     started_at: String,
 ) -> PrepareOutcome {
-    let query = scope.to_query();
-    let row_scope = scope.row_scope_sentence();
-    prepare_with_query(
-        grants, store, dataset, dataset_name, style_source, query, row_scope, filter_active, viewer,
-        viewer_license, destination, started_at,
+    prepare_with_progress(
+        grants, store, dataset, dataset_name, style_source, scope, filter_active, viewer,
+        viewer_license, destination, started_at, &CancelToken::new(), None,
     )
 }
 
+/// The grant-minting, attempt-stashing tail both [`prepare_with_progress`] and [`prepare`] end in —
+/// and the seam a test can bypass to construct a query neither of them could ever produce (see
+/// `tests::a_row_predicate_refuses_through_prepare_with_the_p0_message_and_stashes_nothing`),
+/// proving that refusal is `publish::preflight`'s own, reached through the real code path, not a
+/// second check written for the test. It takes no pin of its own: an unpinned dataset reaching here
+/// refuses `SourceNotPinned` inside `preflight`, which is exactly why the pin belongs upstream in
+/// [`prepare_with_progress`].
 #[allow(clippy::too_many_arguments)]
 fn prepare_with_query(
     grants: &Mutex<GrantSet>,
@@ -785,6 +798,44 @@ impl<F: Fn(PublishProgressEvent) + Send + Sync> publish::PublishProgress for Eve
 /// the two halves are typed in different crates.
 pub const PIN_PHASE_LABEL: &str = "pinning-source";
 
+/// How much of the source must be read between two pin-phase events that actually cross to the
+/// webview — [`pin_progress_should_emit`]'s own step.
+///
+/// 64 MiB against `spatial_engine::index::content_hash_observed`'s own 1 MiB read buffer: one event
+/// per 64 buffers instead of one per buffer.
+pub const PIN_PROGRESS_EMIT_INTERVAL_BYTES: u64 = 64 << 20;
+
+/// Whether a `(bytes_done, bytes_total)` observation from the pin's own hash loop may be emitted to
+/// the webview — **MF2, this batch's reviewer gate**.
+///
+/// `content_hash_observed` calls its `on_progress` sink once per 1 MiB buffer, so
+/// `binding_publish_prepare`'s emitter previously put one Tauri event on the webview per MiB read —
+/// thousands of them, each a `setState` and a re-render, for a source at `docs/07`'s own hero-slice
+/// scale (the exact count for that fixture is arithmetic, not a measurement, and the test below
+/// carries it). This is the host-side gate that bounds it: **at most one event per
+/// [`PIN_PROGRESS_EMIT_INTERVAL_BYTES`] read, plus the final observation, always.**
+///
+/// It is a BOUND on how many events cross, not a claim about anything — nothing in this tree has
+/// measured what those events cost, and this function's existence asserts nothing about it. The
+/// shape is `frontends/shell/src/canvas/coalesceOncePerFrame.ts`'s (the style-panel cut's own S5
+/// fix, recorded there), moved to the producing side: the events are never generated rather than
+/// generated and then thrown away in JS.
+///
+/// The **final observation always crosses**, whatever the step arithmetic says: it is the one that
+/// makes the readout end at `total / total` rather than stopping short at whatever multiple of the
+/// interval came last, and a UI that never shows a completed count is a worse lie than a coarse one.
+///
+/// `last_emitted` is the `bytes_done` of the most recently emitted observation, `0` before any.
+/// A `bytes_total` of `0` (metadata unreadable — `content_hash_observed` falls back to `0` there)
+/// has no meaningful "final" observation to recognize, so the step rule alone governs it and the
+/// bound still holds.
+pub fn pin_progress_should_emit(bytes_done: u64, bytes_total: u64, last_emitted: u64) -> bool {
+    if bytes_total > 0 && bytes_done >= bytes_total {
+        return true;
+    }
+    bytes_done.saturating_sub(last_emitted) >= PIN_PROGRESS_EMIT_INTERVAL_BYTES
+}
+
 /// The prefix [`prepare_cancel_key`] builds its output from — pulled out as its own constant so
 /// `PublishPanel.test.ts` can pin the frontend's own copy equal to this one by reading this file's
 /// source text, the same discipline `FILTER_SCOPE_SENTENCE` already established for the filter-scope
@@ -860,6 +911,37 @@ impl RunningPublishes {
     }
 }
 
+/// Register a fresh [`CancelToken`] under `key`, run `body` with it, and remove the key
+/// **unconditionally** afterwards, whatever `body` produced.
+///
+/// **M4, this batch's reviewer gate.** `binding_publish_prepare` hand-wrote this
+/// insert/await/remove sequence, and the removal — the thing that keeps a finished publish's token
+/// from lingering in the registry, where a later `binding_publish_cancel` under the same key would
+/// find and "cancel" something already over — was covered by no test at all: that command is not
+/// reachable from a unit test without a live Tauri app. Written once, here, it is
+/// (`tests::a_registered_cancel_key_is_gone_from_running_publishes_after_any_outcome`).
+///
+/// The token stays reachable for exactly as long as `body` runs, which for the prepare phase means
+/// from just before the `spawn_blocking` call until just after it — the same window
+/// `frontends/shell/src/publish/PublishPanel.tsx`'s own `cancelControlVisible` will offer a Cancel
+/// inside, since the first pin-phase progress event is emitted from within `body` itself. A panic
+/// inside the blocking task does not skip the removal: `spawn_blocking`'s `JoinHandle` surfaces it
+/// as an `Err`, so `body` still returns normally here.
+pub async fn with_registered_cancel<T, Fut>(
+    running: &RunningPublishes,
+    key: &str,
+    body: impl FnOnce(CancelToken) -> Fut,
+) -> T
+where
+    Fut: std::future::Future<Output = T>,
+{
+    let cancel = CancelToken::new();
+    running.insert(key.to_string(), cancel.clone());
+    let out = body(cancel).await;
+    running.remove(key);
+    out
+}
+
 // -------------------------------------------------------------------------------------------
 // The viewer, the dataset name and the style's own attributes — small host-side helpers
 // -------------------------------------------------------------------------------------------
@@ -913,6 +995,11 @@ fn style_attributes(style_source: &str) -> Vec<String> {
 /// 7's progress/cancel clause is met for the pin phase now, including at `docs/07`'s hero-slice
 /// scale (5 GB); see this crate's `frontends/shell/MANUAL-WALKTHROUGH.md` Part M, row M10, for the
 /// operator-facing record of what changed.
+///
+/// **The record elsewhere still says otherwise, and that is the human's to correct, not this
+/// crate's**: ADR-024's Consequences list still records this gap as open as of its acceptance —
+/// quoting the sentence this doc comment used to carry — and an accepted ADR is append-only, so an
+/// appended dated note is queued rather than written here (DECISIONS-PENDING entry 63).
 ///
 /// No production call site remains in this crate (`commands.rs` now calls
 /// [`ensure_pinned_with_progress`] itself, via [`prepare_with_progress`]) — this function's only
@@ -1663,27 +1750,171 @@ mod tests {
     }
 
     /// The regression itself, proven the way `a_row_predicate_refuses_through_prepare_with_the_p0_message`
-    /// proves P0's refusal: through `prepare`'s own real code path, on a dataset `ensure_pinned` was
-    /// never called for -- this is what `SourceNotPinned` looked like to every real operator before
-    /// this fix, and what `binding_publish_prepare`/`binding_publish_prepare_e2e_destination` must
-    /// never do again (both now call `ensure_pinned` before `prepare`, on `spawn_blocking` --
-    /// `commands.rs`).
+    /// proves P0's refusal: through the module's own real code path, on a dataset nothing pinned --
+    /// this is what `SourceNotPinned` looked like to every real operator before that fix, and what
+    /// `binding_publish_prepare`/`binding_publish_prepare_e2e_destination` must never do again.
+    ///
+    /// **Retargeted by SF3 (this batch's reviewer gate), not weakened.** `prepare` now delegates to
+    /// `prepare_with_progress` (that function's own doc comment says why), so it PINS an unpinned
+    /// dataset instead of refusing -- exactly what the real command does. The refusal itself is
+    /// unchanged and still reached through the pin-free tail, `prepare_with_query`, which is the
+    /// function that actually carries the property: reach `publish::preflight` without a pin and it
+    /// refuses. Both halves are asserted here, so the pair cannot silently drift apart.
     #[test]
-    fn prepare_on_an_unpinned_dataset_refuses_source_not_pinned_which_is_exactly_why_the_commands_must_pin_first() {
+    fn an_unpinned_dataset_still_refuses_through_the_pin_free_path_but_prepare_now_pins_it() {
         let d = workspace("unpinned-refuses");
         let ds = Arc::new(unpinned_fixture(&d));
         let grants = Mutex::new(GrantSet::new());
         let store = PendingAttempts::new();
 
-        let outcome = prepare(
-            &grants, &store, ds, "parcels".into(), STYLE.into(), PublishScope::WholeFile, false,
-            viewer(), viewer_license(), d.join("out"), "2026-08-16T10:00:00Z".into(),
+        // The pin-free tail, unchanged: no pin, `SourceNotPinned`.
+        let refused = prepare_with_query(
+            &grants, &store, ds.clone(), "parcels".into(), STYLE.into(), PublishScope::WholeFile.to_query(),
+            PublishScope::WholeFile.row_scope_sentence(), false, viewer(), viewer_license(),
+            d.join("out-pinless"), "2026-08-16T10:00:00Z".into(),
         );
-        match outcome {
+        match refused {
             PrepareOutcome::Refused { message } => {
                 assert!(message.contains("pin"), "{message}");
             }
             other => panic!("expected SourceNotPinned refusal on an unpinned dataset, got {other:?}"),
+        }
+        assert!(ds.content_pin().is_none(), "the refusing path must not have pinned anything");
+
+        // `prepare`, since SF3: the same shipped path the command takes -- it pins, then prompts.
+        let prompted = prepare(
+            &grants, &store, ds.clone(), "parcels".into(), STYLE.into(), PublishScope::WholeFile, false,
+            viewer(), viewer_license(), d.join("out"), "2026-08-16T10:00:00Z".into(),
+        );
+        assert!(
+            matches!(prompted, PrepareOutcome::Prompt { .. }),
+            "prepare must pin an unpinned dataset itself now, got {prompted:?}"
+        );
+        assert!(ds.content_pin().is_some(), "...and the pin it took must actually be held");
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // MF2 (this batch's reviewer gate): the pin-progress emission gate.
+    // ---------------------------------------------------------------------------------------
+
+    /// The bound itself, at the shape `content_hash_observed` actually produces: one observation per
+    /// 1 MiB read, over a total that is NOT a multiple of the emit interval (the 5 GB hero fixture's
+    /// own byte count, `kernel/RESULTS.md` fifth section's fixture table: 5,004,376,705 B).
+    ///
+    /// Two properties, both load-bearing: at most one event per `PIN_PROGRESS_EMIT_INTERVAL_BYTES`
+    /// read (so the count is bounded by the file's own size divided by the interval, plus one), and
+    /// the FINAL observation always crosses, so the readout ends at `total / total` rather than at
+    /// whatever multiple of the interval came last. Delete the `bytes_done >= bytes_total` branch in
+    /// `pin_progress_should_emit` and the final-observation assertions below fail.
+    #[test]
+    fn the_pin_progress_gate_bounds_the_event_count_and_always_emits_the_final_observation() {
+        const TOTAL: u64 = 5_004_376_705; // the docs/07 hero fixture's own length
+        const CHUNK: u64 = 1 << 20; // `index::content_hash_observed`'s own read buffer
+
+        let mut emitted: Vec<u64> = Vec::new();
+        let mut last_emitted = 0u64;
+        let mut done = 0u64;
+        while done < TOTAL {
+            done = (done + CHUNK).min(TOTAL);
+            if pin_progress_should_emit(done, TOTAL, last_emitted) {
+                last_emitted = done;
+                emitted.push(done);
+            }
+        }
+
+        // The ungated shape, stated as arithmetic rather than asserted from memory:
+        // 5,004,376,705 B / 1,048,576 B = 4,772 full buffers + a 572,033 B tail = 4,773 callbacks,
+        // each of which used to become a Tauri event, a `setState` and a render.
+        let observations = TOTAL.div_ceil(CHUNK);
+        assert_eq!(observations, 4_773);
+        let bound = TOTAL / PIN_PROGRESS_EMIT_INTERVAL_BYTES + 1;
+        assert!(
+            (emitted.len() as u64) <= bound,
+            "at most one event per {PIN_PROGRESS_EMIT_INTERVAL_BYTES} B read, plus the final one: got {} for a bound of {bound}",
+            emitted.len()
+        );
+        assert_eq!(
+            *emitted.last().unwrap(),
+            TOTAL,
+            "the final observation must always cross, whatever the step arithmetic says"
+        );
+        assert!(emitted.windows(2).all(|w| w[1] - w[0] >= PIN_PROGRESS_EMIT_INTERVAL_BYTES || w[1] == TOTAL));
+    }
+
+    #[test]
+    fn the_pin_progress_gate_holds_back_everything_inside_one_interval() {
+        assert!(!pin_progress_should_emit(1 << 20, 5_000_000_000, 0), "1 MiB into a 5 GB file");
+        assert!(!pin_progress_should_emit(63 << 20, 5_000_000_000, 0), "one MiB short of the interval");
+        assert!(pin_progress_should_emit(64 << 20, 5_000_000_000, 0), "exactly the interval");
+        // A short final read lands nowhere near an interval boundary and must still cross.
+        assert!(pin_progress_should_emit(100, 100, 0), "a whole file smaller than one read buffer");
+        assert!(
+            pin_progress_should_emit(5_004_376_705, 5_004_376_705, 5_003_804_672),
+            "the last MiB of the hero fixture, well inside the interval since the previous event"
+        );
+        // A `bytes_total` of 0 (unreadable metadata) has no final observation to recognize; the step
+        // rule alone governs, and the bound still holds.
+        assert!(!pin_progress_should_emit(1 << 20, 0, 0));
+        assert!(pin_progress_should_emit(64 << 20, 0, 0));
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // M4 (this batch's reviewer gate): the registry entry a finished prepare must not leave behind.
+    // ---------------------------------------------------------------------------------------
+
+    /// The prepare key is reachable WHILE the body runs and absent after it returns -- **whatever
+    /// the outcome**, which is why this runs the same assertion over a prompt, a refusal and a
+    /// cancellation. Delete `running.remove(key)` from `with_registered_cancel` and every case
+    /// fails.
+    #[tokio::test]
+    async fn a_registered_cancel_key_is_gone_from_running_publishes_after_any_outcome() {
+        for outcome in [
+            PrepareOutcome::Prompt { attempt_id: "att_1".into(), prompt: prompt_stub() },
+            PrepareOutcome::Refused { message: "refused".into() },
+            PrepareOutcome::Cancelled,
+        ] {
+            let running = RunningPublishes::new();
+            let key = prepare_cancel_key("ds_abc123");
+            let (registry, lookup) = (&running, key.as_str());
+            let returned = with_registered_cancel(&running, &key, move |cancel| async move {
+                assert!(
+                    registry.cancel(lookup),
+                    "the token must be reachable under its own key while the body runs"
+                );
+                assert!(cancel.is_cancelled(), "...and that lookup must reach THIS token, not a copy");
+                outcome
+            })
+            .await;
+            assert!(
+                matches!(returned, PrepareOutcome::Prompt { .. } | PrepareOutcome::Refused { .. } | PrepareOutcome::Cancelled),
+                "the body's own value is returned unchanged"
+            );
+            assert_eq!(
+                running.len(),
+                0,
+                "a finished prepare must leave no entry behind -- a later cancel under the same key \
+                 would otherwise 'cancel' something already over"
+            );
+            assert!(!running.cancel(&key), "and the key must no longer resolve to anything");
+        }
+    }
+
+    /// A minimal `PublishPromptData` for the registry test above -- it never renders or crosses a
+    /// wire there, it only stands in for "some successful outcome".
+    fn prompt_stub() -> PublishPromptData {
+        PublishPromptData {
+            operation: "publish",
+            class: 3,
+            reversibility: "irreversible",
+            source_name: "parcels".into(),
+            source_content_hash: "sha256:abc".into(),
+            style_hash: "sha256:def".into(),
+            destination_display: "C:\\out\\bundle".into(),
+            grantor: "os-user test".into(),
+            grant_remaining_s: 120,
+            row_scope: "row scope: the whole file".into(),
+            filter_scope: None,
+            outcome_summary: "a stub".into(),
         }
     }
 

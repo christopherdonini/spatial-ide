@@ -451,6 +451,13 @@ needed:
 | H8 | **The honesty step. Say plainly, before clicking anything: there is NO publish-side refusal above the reader's ceilings anywhere in this tree.** `kernel/RESULTS.md` fifth section, finding 2 ("`docs/07`'s hero slice does not complete end-to-end at 5 GB under bundle format v1"): a whole-file 5 GB publish SUCCEEDS — 6,636 partitions = **6.6% of `MAX_PUBLISH_PARTITIONS`** (100,000, `engine/src/stream.rs`) — cite, same fifth-section fixture table — and only the reference viewer then refuses, typed, at load. Two shapes, gated by which the human chooses live. **H8a (default — proceed on this unless overridden before the run)**: click **Publish…**, choose **Whole dataset**, watch the phase line move through `verifying-source` → `querying` → `writing-partitions`, then click **Cancel publish** mid-flight. Judge only: nothing appears at the destination, no staging debris, and a cancellation audit pair (`--audit-show`, H9) records it — a property, never a timing; **no duration attached to any part of this step.** **H8b (ONLY on the human's own explicit go-ahead, IN THE MOMENT — `DECISIONS-PENDING.md` item 8, not this document's to authorize)**: let the SAME whole-dataset publish run to completion instead of cancelling (`kernel/RESULTS.md` fifth section's own full-file publish run of record: A **98,983 ms**, B **106,492 ms** — cite, never attribute, and note the fifth section's own rule that these two runs' wall times may be reported as individual facts and MAY NOT be differenced), serve it (H7's own command), and read the bundle viewer's own typed ceiling-exceeded refusal — RESULTS finding 2, now reached at the UI rather than only argued from the manifest arithmetic; this is the evidence ADR-025 (named as this decision's home in `DECISIONS-PENDING.md` item 8; not yet filed — P4 files it as proposed only if H8 confirms) would cite. | **H8a:** destination absent afterward, audit pair present, no duration reported anywhere. **H8b (only if authorized live):** success summary (no duration, same as H6/G5), then the viewer's own typed refusal on load — read its exact code/message and record it verbatim in the result log, the same discipline Parts B/C's refusal panels used. |
 | H9 | From `C:\dev\spatial-ide`, run exactly: `target\debug\publish-bundle.exe --audit-show` (the built binary directly — `target/debug/publish-bundle.exe` already exists per this cut's own pre-check; no `cargo run` needed). | One plain sentence per intent/outcome pair, Part G's G6 format, now over a log carrying H6's and H8's own attempts too — **judge legibility at THIS volume**: G6's own remediation (`--audit-show`, filed against the human's 2026-08-17 exposure-review condition 2) was built and reviewed at a handful of lines; this is that same reader meeting a log a real 5 GB session has actually grown. Does it stay a plain sentence per line, or does scale make it harder to read than G6's own small-log demonstration suggested? |
 
+**Dated pointer, 2026-09-08 — H6's phase (1) only.** The row above is the record of runs on
+2026-08-20/22 and stays exactly as run, quoted string included. Since then, RELEASE-0.1 item 10 has
+made that pin phase cancellable and progress-reporting (a phase label and a bytes-hashed count, no
+duration), and moved the ADR-025 ceiling check ahead of it; the sentence H6 quotes from `publish.rs`
+no longer exists in that file. Part M's M10 is where the changed shape is exercised — a rerun of H6
+would not see phase (1) as described here.
+
 **If anything deviates:** stop, record the exact step, and report it, same as Parts A–G. (Except
 H3's own no-window outcome, and H8a's cancellation / H8b's refusal — those ARE the expected
 outcome, not a deviation.)
@@ -832,13 +839,15 @@ reference machine, or a clean VM, the human's own choice — for the first time.
 anywhere in this Part** (docs/08:62, CLAUDE.md's own non-negotiable); every expected outcome below
 is quoted verbatim from a shipped string, never a duration.
 
-**Publish rows (M8–M11) are marked "[pending the human's entry-53 word]"**: `RELEASE-0.1.md`
-Amendment 3's own premise correction records that the ADR-017 exposure review's reduced form — Part
-M re-confirms the already-discharged shell UI surface and sights the new ADR-025 refusal, with the
-pre-declared fallback (publish descopes, hero ends at "style") standing if this Part finds the
-packaged surface deviates — was put back to the human, unanswered as of this piece. Items 2/3/3e
-proceed either way (per Amendment 3's own closing line); only what this Part's publish rows may be
-cited to conclude waits on that word.
+**Publish rows (M8–M11) and the human's entry-53 word.** `RELEASE-0.1.md` Amendment 3's own premise
+correction records that the ADR-017 exposure review's reduced form — Part M re-confirms the
+already-discharged shell UI surface and sights the new ADR-025 refusal, with the pre-declared
+fallback (publish descopes, hero ends at "style") standing if this Part finds the packaged surface
+deviates — was put back to the human. **Entry 53 was answered (a) on 2026-09-08: publish ships.**
+M10 and M11 carry that ruling in their own row headers and are no longer bracketed; **M8 and M9 are
+still marked "[pending the human's entry-53 word]"** — a stale bracket the ruling has already
+overtaken, left for the custodian's own sweep rather than edited from this branch, which owns only
+the two rows it rewrote. Items 2/3/3e proceeded either way (per Amendment 3's own closing line).
 
 **Pre-checks.** The NSIS artifact from item G, on removable media or a path the clean profile can
 read; the four `manual_walkthrough_fixtures.rs` fixtures (Part A/B/C/D's own table, above) present
