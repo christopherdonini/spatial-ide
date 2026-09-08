@@ -119,10 +119,14 @@ Full record, the verbatim terms quotes, and the numeric-equivalence verification
 `DEPENDENCY-LICENSES.md`, "Third-party data terms (not a package): the EPSG Geodetic Parameter
 Dataset (IOGP)".*
 
-Two CRS definitions in this repository (`engine/src/crs-catalog.json`'s `epsg-2056` and `epsg-3857`
-entries — the second added by the item-8 3857 piece, 2026-09-08 — both compiled into the engine
-binary and carried in every published bundle's manifest that has a source definition —
-`kernel/src/bundle/mod.rs`'s `crs_source_definition`) are derived from the
+Two CRS definitions in this repository's pinned catalog (`engine/src/crs-catalog.json`'s
+`epsg-2056` and `epsg-3857` entries — the second added by the item-8 3857 piece, 2026-09-08), both
+compiled into the engine binary, and each carried in a published bundle's manifest when it is that
+bundle's source definition (`kernel/src/bundle/mod.rs`'s `crs_source_definition`, a single
+`Option<String>` field written once per manifest). The repository also holds fixture and spike
+renderings of these same definitions (`engine/tests/data/`, `spikes/entry51-epsg2056-equivalence/`,
+`spikes/item8-crs-catalog-extension/`); those are covered by `DEPENDENCY-LICENSES.md`'s EPSG block,
+which the custodian appends after this piece lands. These two are derived from the
 **EPSG Geodetic Parameter Dataset, © IOGP** (International Association of Oil & Gas Producers),
 used under the EPSG Terms of Use: <https://epsg.org/terms-of-use.html>.
 

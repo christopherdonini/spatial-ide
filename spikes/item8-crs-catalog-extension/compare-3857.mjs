@@ -1,6 +1,6 @@
 // Item 8 (3857 piece), the entry-51 protocol's step (2): a leaf-by-leaf comparison, keyed by EPSG
 // code, between the catalog's epsg-3857 PROJJSON entry (the pinned rendering's bytes verbatim --
-// spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson, sha256 e14b8bed...5fd82 --
+// spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson, sha256 e14b8ded...5fd82 --
 // this script compares against the file directly, since the catalog entry IS that file's bytes, so
 // the check can run BEFORE the catalog is touched, per the piece's brief) and the SECOND rendering,
 // WKT2:2019 (epsg3857-projinfo-9.6.2.wkt2, same projinfo run, same proj.db). Unlike

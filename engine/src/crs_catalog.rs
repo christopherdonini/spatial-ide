@@ -76,9 +76,10 @@ pub struct CatalogEntry {
     pub name: String,
     pub definition: String,
     /// Lowercase hex sha256 of `definition` exactly as stored — no normalization performed before
-    /// hashing. **`attribution` below is not part of this hash's input** — only `definition` is
-    /// (see `parse_catalog`) — so adding or editing `attribution` does not move this value or the
-    /// pinned `EPSG_2056_HASH` literal in this module's tests.
+    /// hashing. **`attribution` and `schema` are not part of this hash's input** — only
+    /// `definition` is (see `parse_catalog`) — so adding or editing `attribution`, or the JSON's
+    /// `schema` field, does not move this value or the pinned `EPSG_2056_HASH`/`EPSG_3857_HASH`
+    /// literals in this module's tests.
     pub hash: String,
     /// `None` for an entry whose source data carries no such obligation. `crs-catalog.json`'s
     /// `epsg-2056` entry supplies one (entry 51: the EPSG Dataset Terms of Use's acknowledgement
@@ -273,6 +274,20 @@ mod tests {
         assert_eq!(e.definition, crate::fixture::LV95_PROJJSON);
     }
 
+    /// Item-8 3857 piece, fix batch (2026-09-08, reviewer S-1 / architect advisory 2): mirrors the
+    /// `epsg-2056` byte-identity test above, but UNGATED (no `fixture` feature dependency, and no
+    /// engine→spikes build dependency) — the source of truth is a copy checked into `engine/tests`
+    /// itself. `engine/tests/data/epsg3857.projjson` is a byte-for-byte copy of
+    /// `spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson` (same 3,921 LF bytes,
+    /// same sha256 `EPSG_3857_HASH` below pins) — this test asserts the catalog's `epsg-3857`
+    /// `definition` equals that engine-tree copy exactly, so a drift between the pinned rendering
+    /// and the catalog entry fails here rather than only in the spike's own comparison.
+    #[test]
+    fn epsg_3857_catalog_entry_is_byte_identical_to_the_engine_test_fixture() {
+        let e = entries().iter().find(|e| e.id == "epsg-3857").expect("epsg-3857 entry present");
+        assert_eq!(e.definition, include_str!("../tests/data/epsg3857.projjson"));
+    }
+
     #[test]
     fn epsg_2056_entry_hash_is_pinned() {
         let e = entries().iter().find(|e| e.id == "epsg-2056").expect("epsg-2056 entry present");
@@ -321,6 +336,39 @@ mod tests {
                 !attribution.verified.trim().is_empty(),
                 "{}: attribution.verified is empty",
                 e.id
+            );
+        }
+    }
+
+    /// Item-8 3857 piece, fix batch (2026-09-08, architect advisory 1 / reviewer S-2). The
+    /// catalog's per-entry `schema` field (module doc: "an informational field this module does
+    /// not parse into `CatalogEntry`") must actually match the version segment of that entry's own
+    /// `definition.$schema` URL, or the two could silently drift apart with nothing to catch it.
+    /// `CatalogEntry` does not carry `schema`, so this test re-parses `CATALOG_JSON` directly with
+    /// `serde_json` rather than reading it off a struct field.
+    #[test]
+    fn schema_field_matches_the_definitions_own_schema_url_version() {
+        let root: Value = serde_json::from_str(CATALOG_JSON).expect("catalog parses");
+        let array = root.as_array().expect("catalog top level is an array");
+        for (i, entry) in array.iter().enumerate() {
+            let schema_field = field_str(entry, "schema", i);
+            let definition_str = field_str(entry, "definition", i);
+            let definition: Value = serde_json::from_str(definition_str)
+                .unwrap_or_else(|e| panic!("entry {i}: definition is not valid JSON: {e}"));
+            let schema_url = definition
+                .get("$schema")
+                .and_then(Value::as_str)
+                .unwrap_or_else(|| panic!("entry {i}: definition has no $schema"));
+            // e.g. "https://proj.org/schemas/v0.7/projjson.schema.json" -> "v0.7"
+            let segments: Vec<&str> = schema_url.split('/').collect();
+            let version = segments
+                .len()
+                .checked_sub(2)
+                .and_then(|idx| segments.get(idx))
+                .unwrap_or_else(|| panic!("entry {i}: $schema value has no version segment: {schema_url}"));
+            assert_eq!(
+                &schema_field, version,
+                "entry {i}: `schema` ({schema_field}) does not match `definition.$schema`'s own version segment ({version}) in {schema_url}"
             );
         }
     }

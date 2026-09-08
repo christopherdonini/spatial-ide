@@ -22,7 +22,7 @@
     "attribution": {
       "source": "EPSG Geodetic Parameter Dataset, © IOGP",
       "terms_url": "https://epsg.org/terms-of-use.html",
-      "verified": "leaf-by-leaf comparison (spikes/item8-crs-catalog-extension/compare-3857.mjs) against EPSG v12.013 via the projinfo route (PROJ 9.6.2), 2026-09-08: numerically equivalent on every parameter/ellipsoid/axis/id leaf checked, none missing"
+      "verified": "leaf-by-leaf comparison (spikes/item8-crs-catalog-extension/compare-3857.mjs) against EPSG v12.013 via the projinfo route (PROJ 9.6.2), 2026-09-08: numerically equivalent on every parameter/ellipsoid/axis/id leaf checked, none missing -- PROJJSON vs WKT2, same PROJ 9.6.2 rendering, not a registry-direct read"
     }
   }
 ]
