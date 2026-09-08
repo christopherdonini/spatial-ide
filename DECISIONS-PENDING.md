@@ -42,6 +42,23 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+68. **[Line endings: 21 tracked files carry CRLF in the index (pre-existing — spike app files, two
+    ADR-003 workflows, `product-ci-rust.yml`, `kernel/src/main.rs`, `kernel/RESULTS.md`,
+    `frontends/shell/e2e/residency-harness.mjs`, …), and the repository has no `text=auto` policy —
+    adopt `* text=auto eol=lf` in `.gitattributes` with one normalising commit, or leave the
+    pre-existing files as they are?]** Found 2026-09-09 when PR #35's rebase conflicted on EVERY line
+    of `DEPENDENCY-LICENSES.md`: a custodian Python script had rewritten seven files on main as CRLF
+    (Windows text-mode newline translation — `open(path, "w")` without `newline="\n"`); those seven
+    are restored to LF (content byte-identical) and the mechanic recorded. The 21 others predate this
+    cut (`git ls-files --eol | grep i/crlf`, minus the deliberately `-text` licence corpus). The eol
+    class has now bitten four times (the hash pin; the imported-module shebang; a check script's
+    multi-line pattern; the whole-file conflict). Options: **(a) RECOMMENDED — `* text=auto eol=lf`
+    plus explicit `-text`/`binary` for the pinned corpora and any true binaries (`.svg`? the
+    `.parquet` fixtures are untracked), one commit normalising the 21 files (no content change —
+    `git diff --ignore-space-at-eol` empty), after the open PRs merge (so they do not conflict
+    again);** (b) normalise nothing more; keep per-file pins as needed. Not urgent for the tag; a
+    hygiene decision with a one-commit blast radius across `spikes/`, `kernel/`, workflows.
+
 67. **[The entry-60 piece (bound the tile cover before allocation) — RULE 7 REACHED on the reviewer
     step (gate FAIL on `aed2d90`: three must-fix incl. the ADR-028 question now entry 66; re-review
     FAIL on `7b658de`: THREE record items, no behaviour defect). Authorize the closing commit — the
