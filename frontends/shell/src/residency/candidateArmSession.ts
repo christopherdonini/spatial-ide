@@ -1386,9 +1386,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // manager's own new-candidate loop, `tileViewportStreamManager.ts`'s own
     // `if (this.tileState.has(tileKey)) continue`) and (ii) a genuinely new candidate dropped THIS
     // round for lack of headroom while over budget (`:353` there) -- 1a Q2's own gap, entry 44's own
-    // thrash mechanism. `outcome.covering` (F1, `TilePlanOutcome`) is the real fix: every key
-    // `tilesCoveringBbox` produced this round, geometric and complete, never derived from what this
-    // round's own tracked/resident/headroom bookkeeping happened to do with each one.
+    // thrash mechanism. `outcome.covering` (F1, `TilePlanOutcome`) is the real fix: every key the
+    // cover produced this round, geometric, never derived from what this round's own tracked/
+    // resident/headroom bookkeeping happened to do with each one. Entry 60 (2026-09-08) bounds that
+    // cover at `MAX_COVERING_TILES` before it is allocated (`tileGrid.ts`'s own `tileCoverForBbox`),
+    // so "geometric" no longer implies "complete" at an extreme zoom-out: when the bound fires,
+    // `outcome.coveringTruncated` says so, `lastCoveringTruncated` (below) carries it, and
+    // `isFillComplete` already refuses to read a truncated covering set as "all".
     const covering = outcome.covering;
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4
@@ -1433,7 +1437,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     if (outcome.coveringTruncated) {
       logSessionEvent(
         "candidate-covering-truncated",
-        `${dataset}: covering set truncated by ${outcome.truncatedCount} tile(s) beyond MAX_QUEUED_TILES`
+        // Entry 60 (2026-09-08): the count can now come from EITHER declared bound -- the queue
+        // ceiling (`MAX_QUEUED_TILES`, candidates dropped) or the enumeration ceiling
+        // (`MAX_COVERING_TILES`, cells never materialised), or both summed -- so this line names the
+        // bounds rather than asserting the queue ceiling was the one that fired.
+        `${dataset}: covering set truncated by ${outcome.truncatedCount} tile(s) beyond the declared bounds ` +
+          `(MAX_QUEUED_TILES queue ceiling, MAX_COVERING_TILES enumeration ceiling)`
       );
       // Close-out fix piece F2 (entry 43): a second, always-on line beside the session-log one above --
       // test/console OBSERVABILITY only, never the operator disclosure (that is the settled-partial

@@ -53,6 +53,51 @@ export const MAX_IN_FLIGHT_TILE_STREAMS = 3;
  * `truncatedCount` record it, never silently. */
 export const MAX_QUEUED_TILES = 512;
 
+/**
+ * DECISIONS-PENDING entry 60, ruled (a) by the human on 2026-09-08 ("bound-before-allocate fix in
+ * this cut, unit test + 15-notch E2E step"); RELEASE-0.1.md Amendment 10's own preregistration. The
+ * declared ceiling on how many cells ONE covering enumeration (`tileGrid.ts`'s own
+ * `tileCoverForBbox`, and therefore `tilesCoveringBbox`) will ever MATERIALISE -- checked from the
+ * row x col span BEFORE the first `TileKey` is allocated, so a bbox whose cover is astronomically
+ * large costs the pre-check's own arithmetic and nothing else.
+ *
+ * **Why this is a SEPARATE bound from `MAX_QUEUED_TILES`, not that same number.** The queue ceiling
+ * bounds what this shell REQUESTS (`TileViewportStreamManager`'s own fan-out). This bounds what it
+ * ENUMERATES. The geometric covering set has a second consumer that has nothing to do with
+ * requesting: eviction protection (`TilePlanOutcome.covering` ->
+ * `WorkingCanvasHandle.applyTileViewportContext`, the F1 fix for entry 44's own thrash mechanism),
+ * which must keep naming every tile the viewport actually covers well past the request ceiling --
+ * enumerating only 512 cells would strip protection from covers that are merely ~2 wheel notches
+ * past a "Zoom to layer" fit (entry 60's own arithmetic) and are handled correctly today.
+ *
+ * **Why 128x and not some smaller multiple: this bound must not reclassify anything that is honest
+ * today.** A truncated cover is reported truncated, and `candidateArmSession.ts`'s own
+ * `isFillComplete` refuses to read a truncated covering set as "all" -- so a bound low enough to
+ * fire on a view that currently settles COMPLETE would change an operator-visible status, which this
+ * piece is not licensed to do (RELEASE-0.1.md Amendment 10: "no product behaviour otherwise
+ * changes"). The largest cover this codebase's own pinned scenarios treat as an ordinary, complete
+ * view is 25,600 cells (`candidateArmSession.test.ts`'s degenerate-anchor cases: a 1-unit anchor
+ * span, a 20-unit viewport, every covering tile resident and complete); 65,536 sits above it with
+ * room, while still being a fixed number the camera cannot inflate. Per axis it is 256 cells = 8x
+ * the FINEST level's own 32-per-axis frame (`TILE_GRID_DIMENSIONS.fine`), i.e. 64 whole grid frames'
+ * worth of cells.
+ *
+ * DECLARED, not discovered (ADR-010 rule 6), exactly like `MIN_ANCHOR_SPAN`/
+ * `UNTILED_FIRST_LOOK_ROW_LIMIT`: no measurement supports 65,536 over 32,768 or 131,072, and none is
+ * claimed. What the bound buys is stated structurally, not as a perf claim (ADR-018): past this
+ * count the enumeration returns a bounded window and says so (`TileCover`'s own `"truncated"`
+ * outcome), instead of running a nested loop whose iteration count the camera alone decides.
+ */
+export const MAX_COVERING_TILES = MAX_QUEUED_TILES * 128; // 65,536
+
+/** The per-axis side of the square cell window `tileGrid.ts`'s own `tileCoverForBbox` keeps when a
+ * cover exceeds `MAX_COVERING_TILES` -- centred on the query bbox's own centre cell, which is the
+ * SAME nearest-first keep / farthest-first drop policy `TileViewportStreamManager.onCameraChange`
+ * already applies to its own candidate list (`:386-398` there), just applied before the allocation
+ * rather than after it. 256 * 256 === `MAX_COVERING_TILES` exactly (pinned by a unit test in
+ * `tileGrid.test.ts`), so the window is the largest square this bound admits. */
+export const COVER_WINDOW_CELLS_PER_AXIS = 256;
+
 /** P5f complex-gate should-fix 4: the row limit the candidate arm's own untiled "first look" query
  * (`residency/candidateArmSession.ts`'s `issueUntiledQuery`) passes as `viewport_query`'s own `limit`
  * -- before P5f, that query was UNBOUNDED (`limit: null`, mirroring baseline's initial load) and

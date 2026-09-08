@@ -1910,8 +1910,13 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
 
       // A NEW viewport change is accepted for debouncing -- `pendingViewportChange` is now `true` --
       // but its debounce has NOT yet fired. DOUBLY not-settled now (`pendingViewportChange` AND M1's
-      // own `untiledStreamRunning`, independently).
-      session.onViewportChanged({ xmin: -20, ymin: -20, xmax: 20, ymax: 20 });
+      // own `untiledStreamRunning`, independently). All this line needs of the bbox is that it
+      // DIFFER from `bbox` above; entry 60 (2026-09-08) is why it is now `bbox` SHIFTED rather than
+      // `bbox` doubled to {-20..20}: against this scenario's own degenerate one-unit fit anchor, a
+      // 40-unit viewport covers 320 x 320 = 102,400 cells, past `MAX_COVERING_TILES` -- the plan at
+      // the end of this test would then be legitimately truncated, i.e. `settled: "partial"`, which
+      // is a different fact from the one this test exists to pin. Same 20-unit span, different place.
+      session.onViewportChanged({ xmin: -12, ymin: -12, xmax: 8, ymax: 8 });
 
       // Gen2's own untiled first-look stream, still open, delivers another batch -- WITHOUT the
       // ORIGINAL (pre-M1) fix, `isFillComplete()` alone (never considering `pendingViewportChange`)

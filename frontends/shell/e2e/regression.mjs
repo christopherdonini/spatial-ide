@@ -1202,6 +1202,113 @@ async function stepK6(page, consoleHandle) {
   );
 }
 
+// ---------------------------------------------------------------------------------------
+// K7 "wheel far out" (DECISIONS-PENDING entry 60, ruled (a) by the human on 2026-09-08 -- "60 = (a):
+// bound-before-allocate fix in this cut, unit test + 15-notch E2E step"; RELEASE-0.1.md Amendment
+// 10's own preregistration, which names this step's shape verbatim: "one E2E step in `regression.mjs`
+// zooming 15 notches past "Zoom to layer" on the shipped default: the canvas stays responsive (the
+// readout/hover still answers; the declared partial-view status shows), no hang, bounded by the
+// suite's existing timeouts (a bound, not a timing claim -- ADR-018)".
+//
+// What entry 60 found, in this suite's own words (`stepK6`'s top comment, the block ending "wedging
+// the renderer's single JS thread long before any truncation logic ever runs"): `tilesCoveringBbox`
+// enumerated the WHOLE cover with a plain nested loop on every debounced camera settle, and
+// `MAX_QUEUED_TILES` truncated only afterwards -- so an ordinary wheel gesture far enough out made
+// that loop's iteration count a function of the camera alone. The fix bounds the cover BEFORE it is
+// allocated, against a DECLARED bound (`MAX_COVERING_TILES`, 16,384 = 32 x `MAX_QUEUED_TILES`,
+// `src/canvas/tileGridConstants.ts`, ADR-010 rule 6), and reports the same truncated/partial-view
+// outcome the stream manager already had.
+//
+// The gesture is deliberately ordinary: 15 discrete zoom-OUT notches from a real "Zoom to layer"
+// fit, the same notch magnitude every other step here wheels with (`ZOOM_NOTCH_DELTA_Y`) and the
+// same count `A9'` already drives in the other direction. Entry 60's own arithmetic put ~12 notches
+// past the fit at ~3x10^8 `TileKey` objects before truncation.
+//
+// What this step asserts is that the canvas keeps ANSWERING, never how fast it answers (ADR-018: no
+// timing claim is made anywhere here; every wait below is a BOUND, and the step's own `runStep`
+// timeout is the outer one). The probe is a fresh `page.evaluate` after each notch: it can only
+// resolve when the page's own JS thread is free, so the pre-fix wedge -- the state that hung the
+// K6 worker's page and killed the app -- shows up as this step FAILing on its bound, not as a
+// silent pass. Then: no refusal/banner, a real pointer move still produces one of the three readout
+// states the hover contract admits, and one more "Zoom to layer" restores a drawn view.
+// ---------------------------------------------------------------------------------------
+const K7_ZOOM_OUT_NOTCHES = 15; // the ruled figure (entry 60 (a), "15-notch E2E step"); A9' drives
+// the same count zooming in.
+const K7_MIN_RESTORED_NON_BG_FRACTION = 0.02; // the SAME "something is actually drawn" floor stepA7
+// already uses after its own "Zoom to layer" click -- restated, not re-derived.
+
+async function stepK7(page, consoleHandle) {
+  // The shipped default arm, asserted per this step rather than inherited (the same non-pinning
+  // readback `main` performs once, restated here so this step's own verdict names the arm it ran on).
+  const arm = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyArm?.());
+  if (arm !== "candidate") {
+    throw new Error(`K7: expected the shipped default residency arm ("candidate") but readback was ${JSON.stringify(arm)}`);
+  }
+
+  await clickZoomToLayer(page, consoleHandle, "K7 (zoom to layer: the fit this gesture starts from)");
+  const rect = await canvasRect(page);
+  if (!rect) throw new Error("K7: .working-canvas not found");
+  const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+  let notchesAnswered = 0;
+  let lastStatus = null;
+  for (let notch = 1; notch <= K7_ZOOM_OUT_NOTCHES; notch++) {
+    await doWheel(page, center, K6_ZOOM_OUT_NOTCH_DELTA_Y); // positive deltaY = wheel-down = zoom OUT
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
+    // The round trip IS the responsiveness assertion -- a wedged JS thread never answers this.
+    const probe = await page.evaluate(() => ({
+      status: document.querySelector(".residency-status")?.textContent ?? null,
+      canvasPresent: document.querySelector(".working-canvas") !== null,
+    }));
+    if (!probe.canvasPresent) throw new Error(`K7: .working-canvas disappeared at zoom-out notch ${notch}/${K7_ZOOM_OUT_NOTCHES}`);
+    lastStatus = probe.status;
+    notchesAnswered = notch;
+  }
+  await assertNoRefusalOrBanner(page, `K7 (after ${K7_ZOOM_OUT_NOTCHES} zoom-out notches)`);
+
+  // Still interactive, not merely still answering evaluates: a real pointer move re-runs the pick
+  // path. Any of the three states the hover contract admits at this camera is a pass -- nothing
+  // (no feature under the pointer), the named below-pick-resolution refusal, or a real id. A hung
+  // page produces none of them within the bound and fails loudly.
+  await page.mouse.move(center.x + 1, center.y + 1);
+  const hover = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        readout: document.querySelector(".hover-readout")?.textContent ?? null,
+        status: document.querySelector(".residency-status")?.textContent ?? null,
+        answered: true,
+      })),
+    (v) => v?.answered === true,
+    15_000
+  );
+  if (!hover.ok) {
+    throw new Error(`K7: the page did not answer a hover-state read within 15000ms after ${K7_ZOOM_OUT_NOTCHES} zoom-out notches`);
+  }
+  const readout = hover.last.readout;
+  if (readout !== null && readout !== K6_REFUSAL_TEXT && !/^id \d+/.test(readout)) {
+    throw new Error(`K7: .hover-readout showed an unrecognised state after the zoom-out gesture: ${JSON.stringify(readout)}`);
+  }
+
+  // A subsequent "Zoom to layer" restores the view -- the same real product action and the same
+  // drawn-pixels floor stepA7 asserts after its own click.
+  await clickZoomToLayer(page, consoleHandle, "K7 (zoom to layer: restore)");
+  const pixels = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels());
+  const frac = fractionOf(pixels);
+  if (frac <= K7_MIN_RESTORED_NON_BG_FRACTION) {
+    throw new Error(
+      `K7: "Zoom to layer" after the zoom-out gesture left pixels ${(frac * 100).toFixed(2)}% non-background ` +
+        `<= ${(K7_MIN_RESTORED_NON_BG_FRACTION * 100).toFixed(1)}% -- the view did not come back`
+    );
+  }
+
+  return (
+    `${notchesAnswered}/${K7_ZOOM_OUT_NOTCHES} discrete zoom-OUT notches from a "Zoom to layer" fit on the ` +
+    `candidate arm (readback asserted); the page answered a fresh DOM read after every notch (no hang), no ` +
+    `refusal/banner; .residency-status after the last notch: ${JSON.stringify(lastStatus)}; .hover-readout after a ` +
+    `real pointer move: ${JSON.stringify(readout)}; "Zoom to layer" restored ${(frac * 100).toFixed(1)}% non-bg pixels`
+  );
+}
+
 /**
  * P5 repair (admission-remediation cut): known-broken since P3 removed the blanket cut-2 note
  * (`RefusalBlock.tsx`'s own top comment -- "the blanket cut-2 note this block used to render ... is
@@ -1283,9 +1390,13 @@ async function main() {
   // Same knob/pattern as `debug-session.mjs`'s watchdog: unref'd, fires only if the process
   // is otherwise still alive, backstops the 2026-08-12 ~16h-hang class of bug and anything
   // else in this file that ends up wedged for an unanticipated reason.
-  const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 600_000);
+  // 900s since K7 joined the run (entry 60's own step, bounded at 240s of its own): the whole-run
+  // watchdog has to stay ABOVE the sum this file's steps can legitimately spend, or a slow-but-
+  // working run dies here instead of reporting. 900_000 is the same default `filter-panel.mjs` and
+  // `admission-remediation.mjs` already carry. A bound, not a timing claim (ADR-018).
+  const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 900_000);
   const watchdog = setTimeout(() => {
-    console.error(`regression: SPATIAL_E2E_DEADLINE_MS (default 600000) exceeded -- presumed hung, failing loudly`);
+    console.error(`regression: SPATIAL_E2E_DEADLINE_MS (default 900000) exceeded -- presumed hung, failing loudly`);
     process.exit(2);
   }, DEADLINE_MS);
   watchdog.unref();
@@ -1408,6 +1519,13 @@ async function main() {
     // tried mid-session -- main's own last COMMITTED bound before this piece was 90_000 (90s); not a
     // timing claim (ADR-018), just a bound.
     await runStep("K6", 240_000, () => stepK6(page, consoleHandle));
+    // K7 (DECISIONS-PENDING entry 60, ruled (a) 2026-09-08; RELEASE-0.1.md Amendment 10): 15 discrete
+    // zoom-OUT notches from a "Zoom to layer" fit on the shipped default -- the ordinary gesture that
+    // reached the unbounded covering enumeration this cut's fix bounds (`MAX_COVERING_TILES`). Its
+    // own composition: two "Zoom to layer" clicks (each settling under a 45s bound), 15 notches each
+    // settling under a 10s bound, one 15s hover read -- 240s is generous headroom over that, and, as
+    // everywhere else in this file, a BOUND rather than a timing claim (ADR-018).
+    await runStep("K7", 240_000, () => stepK7(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
     );

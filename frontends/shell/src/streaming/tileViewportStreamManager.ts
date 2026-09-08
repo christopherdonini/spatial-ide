@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { TileGridFrame, TileKey } from "../canvas/tileGrid";
-import { deriveTileGridFrame, tileBbox, tileDistanceToPoint, tileKeyToString, tilesCoveringBbox } from "../canvas/tileGrid";
+import { deriveTileGridFrame, tileBbox, tileCoverForBbox, tileDistanceToPoint, tileKeyToString } from "../canvas/tileGrid";
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
@@ -91,9 +91,12 @@ export type TilePlanOutcome =
       /** Close-out fix piece F1 (entry 44's second finding, ADR-028's architect-gate clarification 3
        * / Amendment 1 -- NOT the accepted Decision's own item 3, which is cross-tile de-duplication):
        * EVERY key
-       * `tilesCoveringBbox` produced this round for `bbox` at `this.level` -- the raw geometric
+       * `tileCoverForBbox` produced this round for `bbox` at `this.level` -- the geometric
        * covering set, before this round's own tracked/resident/headroom bookkeeping decides what to
-       * do with each one. Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
+       * do with each one. **Entry 60 (2026-09-08): "every key it produced" is now bounded by
+       * `MAX_COVERING_TILES`** -- a cover past that bound arrives here as the declared centred window
+       * with `coveringTruncated` set (`tileGrid.ts`'s own `TileCover`), never as the full geometric
+       * set and never silently. Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
        * tile already tracked from a PRIOR round, dropped silently by the `this.tileState.has(tileKey)
        * continue` branch above, and (ii) a genuinely new candidate dropped this round for lack of
        * headroom while over budget, `:353` below) this field never omits either -- it is exactly
@@ -107,16 +110,21 @@ export type TilePlanOutcome =
        * 1's own geometric rule ("never evict a tile intersecting the current viewport"), rather than
        * silently falling out of both. */
       covering: string[];
-      /** P5f complex-gate should-fix 2: `true` only when this round's NEW (neither already tracked
+      /** P5f complex-gate should-fix 2: `true` when this round's NEW (neither already tracked
        * nor already resident) covering tiles exceeded this manager's own issuing/queueing capacity
        * (`MAX_IN_FLIGHT_TILE_STREAMS`'s free slots plus `MAX_QUEUED_TILES`'s own remaining room) and
-       * had to be truncated, farthest-from-view-centre-first, to fit. Omitted entirely (never `false`)
-       * on the ordinary, untruncated path -- so every pre-existing `toEqual({kind:"planned", ...})`
-       * assertion that predates this field keeps matching (`toEqual` treats an absent property and an
-       * explicit `undefined` as equivalent). */
+       * had to be truncated, farthest-from-view-centre-first, to fit. **Entry 60: also `true` when
+       * the cover itself hit `MAX_COVERING_TILES` and was bounded before allocation
+       * (`tileGrid.ts`'s own `tileCoverForBbox`) -- the same field, deliberately, because it is the
+       * same fact for an operator: this view is showing part of what it covers.** Omitted entirely
+       * (never `false`) on the ordinary, untruncated path -- so every pre-existing
+       * `toEqual({kind:"planned", ...})` assertion that predates this field keeps matching (`toEqual`
+       * treats an absent property and an explicit `undefined` as equivalent). */
       coveringTruncated?: true;
-      /** Present iff `coveringTruncated` is -- how many of this round's new candidate tiles were
-       * dropped (never queued, never issued) by the truncation above. */
+      /** Present iff `coveringTruncated` is -- how many tiles this round dropped: new candidate tiles
+       * never queued and never issued by the capacity truncation above, PLUS (entry 60) cells the
+       * enumeration bound never materialised at all (`TileCover.omittedCellCount`), summed when both
+       * happened. Diagnostic only; nothing branches on the number. */
       truncatedCount?: number;
     }
   /** `onCameraChange` called before `establishGridFrame` ever ran -- nothing to plan against yet. */
@@ -297,7 +305,7 @@ export class TileViewportStreamManager {
    * Camera-change entry point (item B) -- called through the SAME debounce/throttle seam
    * `ViewportStreamManager.requestViewport` already is (untouched); this class has no debounce/
    * throttle of its own. Computes `bbox`'s covering tiles at the active level (deterministic
-   * row-major order, `tilesCoveringBbox`) and:
+   * row-major order, `tileCoverForBbox`, bounded by `MAX_COVERING_TILES` per entry 60) and:
    *  - drops any tracked (queued or in-flight) tile no longer covered -- queued: silently, from the
    *    queue; in-flight: cancelled, `onTileSuperseded` fires (per-tile supersede, never wholesale);
    *  - issues one `viewport_query` per covering tile that is NEITHER already tracked NOR already
@@ -311,7 +319,14 @@ export class TileViewportStreamManager {
     if (frame === null) return { kind: "no-frame" };
     this.currentFilter = filter;
 
-    const covering = tilesCoveringBbox(frame, this.level, bbox);
+    // DECISIONS-PENDING entry 60 (ruled (a) 2026-09-08), RELEASE-0.1.md Amendment 10: the cover is
+    // BOUNDED before it is allocated (`tileCoverForBbox`, `canvas/tileGrid.ts`) -- this call used to
+    // be `tilesCoveringBbox`, whose nested loop ran over the whole span before `MAX_QUEUED_TILES`
+    // (below) ever truncated anything. The only new fact reaching this method is `cover.kind`; the
+    // truncation state it feeds (`coveringTruncated`/`truncatedCount`, and the settled-partial status
+    // the candidate arm derives from them) is the one this method already had.
+    const cover = tileCoverForBbox(frame, this.level, bbox);
+    const covering = cover.keys;
     const coveringKeys = new Set(covering.map(tileKeyToString));
 
     for (const [tileKey, state] of [...this.tileState.entries()]) {
@@ -359,8 +374,12 @@ export class TileViewportStreamManager {
     }
 
     let toConsider = newCandidates;
-    let coveringTruncated: true | undefined;
-    let truncatedCount: number | undefined;
+    // Entry 60: the enumeration bound's own truncation is reported through the SAME two fields the
+    // capacity truncation below already uses -- and when both fire, `truncatedCount` is their sum
+    // (cells never enumerated PLUS candidates dropped for lack of capacity), never one silently
+    // replacing the other.
+    let coveringTruncated: true | undefined = cover.kind === "truncated" ? true : undefined;
+    let truncatedCount: number | undefined = cover.kind === "truncated" ? cover.omittedCellCount : undefined;
     const freeSlots = Math.max(0, MAX_IN_FLIGHT_TILE_STREAMS - this.activeSlotCount());
     const availableQueueRoom = Math.max(0, MAX_QUEUED_TILES - this.queue.length);
     const capacity = freeSlots + availableQueueRoom;
@@ -375,7 +394,7 @@ export class TileViewportStreamManager {
       withDistance.sort((a, b) => a.distance - b.distance);
       toConsider = withDistance.slice(0, capacity).map((e) => e.key);
       coveringTruncated = true;
-      truncatedCount = newCandidates.length - capacity;
+      truncatedCount = (truncatedCount ?? 0) + (newCandidates.length - capacity);
     }
 
     // Viewport-residency cut P6a, Defect A: the drain-stop exception -- while `overBudgetFlag` is
