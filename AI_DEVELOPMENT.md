@@ -209,6 +209,13 @@ how obvious they seem:
   so "nothing pending" is vacuously true and a false all-green follows. Delay the first poll, require a
   minimum check count (the PR's workflows are known: DCO, viewer, shell, Rust, tauri-build as the path
   filters admit), and print every line with the head SHA.
+- **A script that rewrites a repo text file writes LF — Python `open(path, "w")` on Windows does not
+  (2026-09-09).** Text-mode writes translate `\n` to `\r\n`; a custodian script turned seven files on
+  main CRLF with no visible diff of its own, and the next rebase of a stacked branch conflicted on
+  EVERY line of `DEPENDENCY-LICENSES.md`. Pass `newline="\n"` (or write bytes), and before committing
+  a script-edited file run `git ls-files --eol <file>` — `i/lf` or it does not go in. The fourth
+  member of the eol class; the whole-file conflict is its symptom. `git rebase -X ignore-space-at-eol`
+  gets past the symptom; it does not fix the blob.
 
 ## Away-mode evidence rule
 
