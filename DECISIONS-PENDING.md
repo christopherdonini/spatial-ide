@@ -21,6 +21,36 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+62. **[Item 9 (both notice generators) — a THIRD set the generators cannot see: DuckDB's
+    amalgamation embeds 26 third-party C/C++ works with no license file in the crate's tarball.
+    ADR-030 (a) cannot be accepted "as is" on item 9's landing without deciding how that set is
+    enumerated.]** Found by item 9's reviewer gate (2026-09-08): `engine/Cargo.toml:32` builds
+    `duckdb 1.10505.0` with `features = ["bundled", …]`, so `libduckdb-sys` compiles DuckDB's
+    amalgamation into the shipped binary; its `duckdb.tar.gz` contains 26 `third_party/` directories
+    (brotli, fmt, re2, lz4, mbedtls, miniz, httplib, libpg_query, utf8proc, concurrentqueue,
+    fastpforlib, hyperloglog, …) and zero license/notice files — a set no cargo manifest names, so
+    the crate-graph generator (correct for every Rust crate: 310 pairs, texts byte-exact against the
+    registry) cannot enumerate it, and the notice's header ("every third-party work actually
+    compiled into …") was false in a new, unnamed way. The interim being built in item 9's fix batch:
+    the header narrowed to what is true (every npm package of both trees; every Rust crate) and the
+    amalgamation's embedded works NAMED as the one remaining gap, in the notice, in
+    `DEPENDENCY-LICENSES.md`, and in the KNOWN-LIMITATIONS draft — i.e. candidate (b) for this set
+    only. Your decision: **(a) RECOMMENDED — a small follow-on piece before the tag: enumerate the
+    amalgamation's third-party set from DuckDB's upstream source tree at the pinned version (its
+    `third_party/<lib>/LICENSE` files, fetched once, pinned in-tree with hashes and the upstream tag
+    — a manifest of a kind, though not a build manifest), rendered as its own section; ADR-030
+    accepted with an appended dated note that the amalgamation's set is enumerated from the
+    upstream tree's own listing, not from a cargo manifest, and that the shell crate's lockfile
+    alone (not the workspace's) is the Rust source (the architect's advisory);** (b) ship v0.1.0 with
+    that one gap named and a due milestone (ADR-030 candidate (b) for the amalgamation only;
+    KNOWN-LIMITATIONS says so) and accept (a) for the rest; (c) drop `bundled` — not a v0.1 option
+    (the engine has no other DuckDB link). Also for your sight from the same gates, taken by the
+    custodian without a decision: the `?raw` notice payload is now ~3 MB parsed at every launch and
+    rendered into one element on expand — declared for v0.1 and observed at Part M M3 (the
+    architect's option (a)); moving it to a fetched dist asset (no new command; removes the two-pass
+    build too) is recorded in `NEXT-CUT.md`. Touches on (a): a pinned record under `spikes/` or
+    `LICENSES/third-party/`, the generator's third section, the tests' cardinality, ADR-030's note.
+
 61. **[Release cut item 1 (b), the ADR-020 config mirror — RULE 7 REACHED on the reviewer side
     (two failed attempts at the reviewer step: `cf44aaa` record-only; `b7e729d` three mechanical
     items). BOTH gates say the DESIGN PASSES ("do not re-open it" — the architect). What remains is
