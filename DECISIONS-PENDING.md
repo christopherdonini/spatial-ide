@@ -63,6 +63,12 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     `git diff --ignore-space-at-eol` empty), after the open PRs merge (so they do not conflict
     again);** (b) normalise nothing more; keep per-file pins as needed. Not urgent for the tag; a
     hygiene decision with a one-commit blast radius across `spikes/`, `kernel/`, workflows.
+    *Custodian note added 2026-09-09 (not a ruling):* under (a) the `* text=auto eol=lf` line must
+    come BEFORE the `-text` lines for the pinned corpora — a later `.gitattributes` line overrides an
+    earlier one — or the DuckDB licence set (`miniz/LICENSE` is CRLF upstream, hash-pinned as such)
+    would be normalised and both its pinned hashes fail. Recorded on main as the eol class's fifth
+    member (`AI_DEVELOPMENT.md`, a058322); the entry-62 piece's `.gitattributes` comment counts the
+    same rule as its fourth pinned-file instance, and says why the two counts differ.
 
 67. **[The entry-60 piece (bound the tile cover before allocation) — RULE 7 REACHED on the reviewer
     step (gate FAIL on `aed2d90`: three must-fix incl. the ADR-028 question now entry 66; re-review
