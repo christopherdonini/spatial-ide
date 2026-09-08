@@ -76,7 +76,9 @@ function fail(message) {
 }
 
 function extractExactlyOne(path, regex, label, groupCount = 1) {
-  const text = readFileSync(path, "utf8");
+  // CRLF-normalised on read: the CI runner checks out with `core.autocrlf=true`, and this script's
+  // multi-line patterns match LF line breaks (PR #36's first CI runs, 2026-09-08 — the eol class).
+  const text = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
   const matches = [...text.matchAll(regex)];
   if (matches.length !== 1) {
     fail(
@@ -167,7 +169,7 @@ function main() {
   }
 
   const tsKindMatches = [
-    ...readFileSync(ORIGIN_SELF_CHECK_TS_PATH, "utf8").matchAll(TS_KIND_RE),
+    ...readFileSync(ORIGIN_SELF_CHECK_TS_PATH, "utf8").replace(/\r\n/g, "\n").matchAll(TS_KIND_RE),
   ].map((m) => m[1]);
   if (tsKindMatches.length === 0) {
     fail(
