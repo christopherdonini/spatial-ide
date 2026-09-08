@@ -50,5 +50,12 @@ LICENSES/*.txt text eol=lf
 # exactly the 27 upstream files (26 `LICENSE`, one `tdigest/NOTICES`) and nothing else -- verified
 # with `git ls-files --eol LICENSES/third-party/`: all 27 report `attr/-text`, the two repo-authored
 # files report the default.
+#
+# The COPYING* pattern MATCHES NOTHING TODAY and is here on purpose (architect advisory A2,
+# 2026-09-09). The preregistration's filename classes are LICENSE*, COPYING* and NOTICE*; all 27
+# files this pin actually caught are LICENSE* or NOTICES*, but a re-pin at a later DuckDB version
+# may well fetch a COPYING file, and a corpus member arriving without an eol rule is exactly the
+# latent form of the four failures above. Listing it now closes that member before it can open.
 LICENSES/third-party/*/*/LICENSE* -text
 LICENSES/third-party/*/*/NOTICES* -text
+LICENSES/third-party/*/*/COPYING* -text

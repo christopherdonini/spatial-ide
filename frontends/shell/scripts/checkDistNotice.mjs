@@ -472,8 +472,9 @@ function main() {
   );
 }
 
-// The two entry-62 guards signal by THROWING (a corrupted pinned licence text, or a crate tarball
-// whose third_party/ listing no longer matches the pinned manifest). Catching them here turns an
+// The three entry-62 guards signal by THROWING (a corrupted pinned licence text, a linked
+// libduckdb-sys version the manifest does not pin, or a crate tarball whose sha256, directory count
+// or third_party/ listing no longer matches the pinned manifest). Catching them here turns an
 // uncaught stack trace into the same named FAIL line every other refusal in this file prints, and
 // keeps the non-zero exit `npm run verify` depends on.
 try {

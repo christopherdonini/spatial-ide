@@ -54,10 +54,13 @@ describe("the DuckDB amalgamation notice set (DECISIONS-PENDING entry 62 = (a))"
     const { manifest } = readAmalgamationManifest();
     expect(manifest.duckdb_version).toBe("1.5.5");
     expect(manifest.duckdb_tag).toBe("v1.5.5");
-    // The tag's own commit, and the SOURCE_ID the amalgamation tarball itself carries
-    // (`duckdb/src/function/table/version/pragma_version.cpp`: `#define DUCKDB_SOURCE_ID
-    // "d8cdaa33fd"`). The tarball this machine compiles and the upstream tree these texts came from
-    // are the same revision BECAUSE these agree -- see the pinned directory's own README, step 2.
+    // The tag's own commit, and its short form -- which is the string the amalgamation tarball
+    // itself carries (`duckdb/src/function/table/version/pragma_version.cpp`: `#define
+    // DUCKDB_SOURCE_ID "d8cdaa33fd"`). BOTH assertions below read the MANIFEST, not the tarball:
+    // they pin the recorded commit and check that its short form is that SOURCE_ID literal, so the
+    // cross-read the pinned directory's own README performs at step 2 stays recorded here. The
+    // tarball itself is read by `assertTarballMatchesManifest()` -- its sha256, its third_party/
+    // directory count and its listing -- not by this test.
     expect(manifest.duckdb_commit).toBe("d8cdaa33fda8df955cc76ef58a280f68f4cd43fa");
     expect(manifest.duckdb_commit.startsWith("d8cdaa33fd")).toBe(true);
     expect(manifest.crate).toEqual({ name: "libduckdb-sys", version: "1.10505.0", feature: "bundled" });

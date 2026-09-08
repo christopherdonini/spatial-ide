@@ -94,8 +94,8 @@ failing closed on any mismatch.
 
 A recorded hash that nothing reads looks, to anyone auditing this directory, exactly like a verified
 one. So the split is stated outright (reviewer should-fix S4, 2026-09-09). **Verified on every
-notice generation and every `npm run check:dist-notice`**, each against bytes on this disk, with no
-network:
+notice generation and every `npm run check:dist-notice`** — and, where the cell says so, by
+`duckdbAmalgamation.test.ts` in CI — each against bytes on this disk, with no network:
 
 | Field | How it is verified |
 |---|---|
@@ -106,6 +106,13 @@ network:
 | `crate_tarball.file`, `.sha256` | the archive is located by the recorded name and hashed; it must equal the recorded `sha256` |
 | `crate_tarball.third_party_dir_count` | recomputed from the archive's own listing |
 | `works[].lib` (the set) | compared against that same listing, in both directions |
+
+**What the tarball's own hash carries forward (architect advisory A4, 2026-09-09).** `crate_tarball.sha256`
+is recomputed on every run, so the one-time cross-read of step 2 — the tarball's own `DUCKDB_SOURCE_ID
+"d8cdaa33fd"` against the commit tag `v1.5.5` resolves to — is carried forward **by hash** to every
+later build: the reading was performed against *these* archive bytes, and any archive whose bytes
+differ fails the check rather than silently inheriting it. A hand-read at pin time thereby keeps
+holding without being re-read, which is the only sense in which it is still true later.
 
 **Recorded provenance, NOT re-verified by the build:** `upstream_third_party_tree_sha`
 (`f42ee908782a676735ecaa2fdb0937ec6f5b5ec0`). It names a git *tree object* inside DuckDB's
@@ -166,8 +173,11 @@ silently rewrite them on commit, changing the license text this application conv
 hashes recorded for it. `-text` preserves all 27 files byte-for-byte on every platform, which is what
 a hash-pinned, verbatim-conveyed corpus needs.
 
-The two patterns are `LICENSES/third-party/*/*/LICENSE*` and `LICENSES/third-party/*/*/NOTICES*`, not
-the whole directory (reviewer should-fix S3, 2026-09-09). `MANIFEST.json` and this `README.md` are
+The patterns are `LICENSES/third-party/*/*/LICENSE*`, `LICENSES/third-party/*/*/NOTICES*` and
+`LICENSES/third-party/*/*/COPYING*`, not the whole directory (reviewer should-fix S3, 2026-09-09).
+The third matches nothing at this pin — no library here ships a `COPYING` file — and is listed
+anyway (architect advisory A2, 2026-09-09) so that a later re-pin which does fetch one cannot land a
+hash-pinned file with no eol rule. `MANIFEST.json` and this `README.md` are
 repo-authored text, hashed by nothing, and take the repository's default handling like any other text
 file here; only the upstream bytes are pinned against conversion. `git ls-files --eol
 LICENSES/third-party/` shows the split directly: 27 files `attr/-text` (one of them `i/crlf w/crlf`,
@@ -187,3 +197,13 @@ this directory's own path that the notice PRINTS are properties of the pinned ve
 bump that happens to keep the same 26 `third_party/` directories passes every other check here.
 Re-pinning for a new DuckDB version therefore means a new `duckdb-<version>/` directory produced by
 the method above, recorded the same way, and the old one removed (`resolvePinnedDir()` refuses two).
+
+**A re-pin must also check its own eol coverage before committing anything** (architect advisory A2,
+2026-09-09). Every newly fetched file has to be matched by one of the `-text` patterns in
+`.gitattributes` — `LICENSE*`, `NOTICES*`, `COPYING*` under `LICENSES/third-party/*/*/` — because a
+hash-pinned upstream text that git is free to convert is the same failure the four eol entries in
+that file record. Verify it directly, not by inspection: `git ls-files --eol
+LICENSES/third-party/duckdb-<new version>/` must report `attr/-text` for every fetched licence file
+and nothing but the default for `MANIFEST.json` and this `README.md`. A filename class outside those
+three patterns (an `AUTHORS`-shaped file, say) needs its own line added there in the same commit that
+pins the file, never afterwards.

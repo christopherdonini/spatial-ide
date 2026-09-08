@@ -437,9 +437,11 @@ and the terms URL:
   duckdb-rs 1.10500.x"* — crate `1.10505.0` → `10505` → 1.5.5), and the tarball's own baked-in
   constants (`duckdb/src/function/table/version/pragma_version.cpp`: `#define DUCKDB_VERSION
   "v1.5.5"`, `#define DUCKDB_SOURCE_ID "d8cdaa33fd"`). Tag **`v1.5.5`** resolves to commit
-  `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`, whose short form **is** that `DUCKDB_SOURCE_ID` — so
-  the tarball compiled here and the upstream tree the texts came from are the same revision as a
-  mechanical identity, not an inference. `third_party/` upstream at that tag holds **30**
+  `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`, whose short form **is** that `DUCKDB_SOURCE_ID` — an
+  identity of the **declared** revision plus a directory-set match, and expressly **not**
+  byte-identity of the amalgamation's sources with the tag's own tree; the pinned directory's
+  `README.md` states the reach exactly, in step 2 of its recorded method, and nothing here claims
+  more than that. `third_party/` upstream at that tag holds **30**
   directories; the amalgamation carries **26** of them (`catch`, `imdb`, `jemalloc`, `snowball` are
   upstream-only, not conveyed, not pinned). **Every one of the 26 ships a `LICENSE` file upstream**,
   so the preregistration's fallback — the licence header from a library's main source file where it
@@ -462,14 +464,24 @@ and the terms URL:
   entry carries a `license_id_basis` of either `self-declared` (the pinned text names its own licence
   — `mbedtls` is the only one naming SPDX ids outright, a dual `Apache-2.0 OR GPL-2.0-or-later`) or
   `read-from-body` (the id read from the text's operative clauses). The pinned text is the authority
-  in every case and is what the notice embeds. **Two fail-closed guards, both mutation-verified:**
-  every pinned file's `sha256` is re-verified at generation and check time (corrupting one byte of
-  `zstd/LICENSE` fails `generate:notice`, `check:dist-notice` and the vitest suite, each exit 1), and
-  the manifest's work list is compared against the crate tarball's own `third_party/` listing
-  (removing `snappy` from the manifest fails the check, naming the difference in both directions).
-  `re2/AUTHORS` exists upstream and is deliberately **not** pinned — it falls outside the
-  preregistration's three filename classes (`LICENSE*`, `COPYING*`, `NOTICE*`); named here rather
-  than omitted silently.
+  in every case and is what the notice embeds. **Three fail-closed guards, all mutation-verified,**
+  each running both at generation and at `check:dist-notice`: every pinned file's `sha256` is
+  re-verified against the bytes on disk, with the UTF-8 round-trip and the pinned directory's own
+  name checked against the manifest's version (corrupting one byte of `zstd/LICENSE` fails
+  `generate:notice`, `check:dist-notice` and the vitest suite, each exit 1; so does renaming the
+  pinned directory); the linked `libduckdb-sys` name and version are compared against the ones the
+  manifest pins (editing `crate.version` to `1.10600.0` fails all three, naming both versions); and
+  the manifest's work list is compared against the crate tarball's own `third_party/` listing,
+  together with that archive's recorded `sha256` and directory count (removing `snappy` from the
+  manifest fails the check, naming the difference in both directions; editing
+  `crate_tarball.sha256` fails all three).
+  `re2/AUTHORS` exists upstream and is deliberately **not** pinned — **the substantive reason
+  first:** `AUTHORS` enumerates the holders and is not part of what BSD-3-Clause requires a
+  redistributor to reproduce, which is "the above copyright notice, this list of conditions and the
+  following disclaimer", and all three of those are inside the pinned `re2/LICENSE`, conveyed
+  verbatim. The filename-class rule agrees — `AUTHORS` falls outside the preregistration's three
+  classes (`LICENSE*`, `COPYING*`, `NOTICE*`) — but it is the mechanical restatement, not the
+  ground. Named here rather than omitted silently.
 - **Verification (3) reference** — the "Verification (3)" paragraph above and
   `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
   `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not
