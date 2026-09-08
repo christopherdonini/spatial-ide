@@ -74,6 +74,7 @@ use crate::bundle::{
     ViewerLicense,
 };
 
+pub mod ceilings;
 pub mod error;
 pub mod viewer_assets;
 
@@ -419,6 +420,26 @@ pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishEr
     let published_names = projection.names();
     let style: CompiledStyle =
         spatial_renderer::compile(req.style_source, &schema_for_style, &published_names)?;
+
+    // ---- ADR-025: refuse, typed, before any write, whatever preflight can predict about the
+    // bundled viewer's own declared ceilings (RELEASE-0.1 item 3e) -----------------------------
+    //
+    // **Feature count** comes from `ds.identity()`, never from a fresh scan here: the uniqueness
+    // check `Dataset::open` already ran (`engine/src/identity.rs`) counted every row exactly once,
+    // under `VerifiedAtOpenFullFile`, and `verified_rows()` is that count — reading it costs
+    // nothing further. Under `DeclaredNotVerified` (a caller took responsibility for uniqueness
+    // and skipped the scan) it is `None`, and this preflight — like `describe`'s own C2 rule,
+    // `kernel/src/skp.rs` — predicts nothing rather than inventing a number; such a dataset's
+    // feature count stays unpredictable here, a named residual documented on
+    // [`ceilings::check_reader_ceilings`], not a silent gap.
+    //
+    // **Attribute column count** is `published_names.len()`, already resolved above — exactly
+    // what a reader will receive, not a proxy for it.
+    ceilings::check_reader_ceilings(
+        ds.identity().verified_rows(),
+        published_names.len() as u64,
+        &ceilings::reader_ceilings(),
+    )?;
 
     Ok(PublishPreflight { logical_uri, pin, style, projection, license, viewer_license })
 }

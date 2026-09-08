@@ -40,7 +40,9 @@ const CONSOLE_RECORDER_ALLOWLIST = new Set(["skp/client.ts"]);
  * (`App.tsx` for the two canvas refusal-banner dismissals, `style/StylePanel.tsx` for every style
  * edit and its own panel disclosure toggle, `ErrorBanner.tsx` for the global error banner's own
  * dismiss, `publish/PublishPanel.tsx` for its own panel disclosure toggle -- S5, reviewer gate,
- * action-console P7 fixes). `console/ConsolePanel.tsx`'s own two toggles
+ * action-console P7 fixes; `notices/NoticesPanel.tsx` for its own panel disclosure toggle --
+ * release-cut fix batch, MUST-FIX 11, same shape as `publish/PublishPanel.tsx`'s own entry).
+ * `console/ConsolePanel.tsx`'s own two toggles
  * (`console.togglePanelExpanded`/`console.toggleGroupExpanded`, same S5 fix) need no entry here --
  * `isInsideConsoleModuleOrTest` below already treats every file under `console/` as an allowed
  * self-reference, the same as `consoleRecorder`'s own choke point does. */
@@ -54,6 +56,7 @@ const RECORD_NAMED_ALLOWLIST = new Set([
   "style/StylePanel.tsx",
   "ErrorBanner.tsx",
   "publish/PublishPanel.tsx",
+  "notices/NoticesPanel.tsx",
 ]);
 
 function walk(dir: string): string[] {

@@ -786,23 +786,198 @@ pub fn dataset_name_for(ds: &Dataset) -> String {
 /// The reference bundle viewer this repository ships (`renderer/bundle-viewer/dist`) and the
 /// distributed-code declaration ADR-009 item 7 requires for it.
 ///
-/// **Dev-tree relative, and that is a known limit, not an oversight.** `CARGO_MANIFEST_DIR` points
-/// at `frontends/shell/src-tauri` at compile time; three `..` reaches the workspace root. This holds
-/// for `cargo tauri dev` and for a manual walkthrough run from a checkout — everything this cut's
-/// evidence (P4/P5) needs. **It does not hold for a packaged build**: nothing here wires the viewer
-/// into `tauri.conf.json`'s `bundle.resources`, and that packaging decision is out of this piece's
-/// scope (`NEXT-CUT.md` P1 names the host seam, not distribution).
-pub fn bundled_viewer() -> Result<(ViewerAssets, ViewerLicenseInput), String> {
-    let dir =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../renderer/bundle-viewer/dist");
+/// **Resolved from the packaged resource directory FIRST, the dev-tree checkout path as a
+/// fallback — RELEASE-0.1 item 3 closes the packaged-build gap this doc comment used to record as
+/// owed, dated 2026-09-07.** `tauri.conf.json`'s `bundle.resources` now maps
+/// `renderer/bundle-viewer/dist` onto a `bundle-viewer/` resource directory the packaged app
+/// carries beside its executable, so a `tauri build` artifact can serve it — a plain `tauri dev`
+/// run still resolves nothing under a resource directory (there isn't one), and falls through to
+/// the dev-tree path exactly as before. Both paths are named in the refusal when neither holds.
+///
+/// **The `dist/*` resource glob is FLAT, not recursive** (release-cut fix batch nit): it copies
+/// `dist/`'s immediate files (`index.html`, `app.js`, `NOTICE.txt` today) into `bundle-viewer/`,
+/// never a `dist/**` glob. Correct while the viewer's own build emits no subdirectory; if that ever
+/// changes (a future asset folder, say), the resource mapping and this resolution both need
+/// revisiting together, not assumed to still work.
+///
+/// **Takes an already-resolved resource directory, not a `tauri::AppHandle`**, on this module's own
+/// established discipline (`EventProgress`'s doc comment, above: "generic over a plain closure, not
+/// `tauri::AppHandle` directly, so this stays testable without a live Tauri app") — the caller
+/// (`commands.rs`) already holds an `AppHandle` and reads `app.path().resource_dir()` once, before
+/// calling in; [`resolve_viewer_dir`] is the pure function the fallback ORDER is unit-tested
+/// against, with no `AppHandle` and no filesystem I/O in the test at all.
+pub fn bundled_viewer(
+    resource_dir: Option<&std::path::Path>,
+) -> Result<(ViewerAssets, ViewerLicenseInput), String> {
+    let (_label, dir) = resolve_viewer_dir(resource_dir, |p| p.is_dir())?;
     let viewer = ViewerAssets::from_dir(&dir).map_err(|e| {
         format!(
-            "the reference bundle viewer is not built at {} ({e}) — run `npm run build` in \
-             renderer/bundle-viewer first",
+            "the reference bundle viewer directory {} exists but could not be read ({e}) — run \
+             `npm run build` in renderer/bundle-viewer again",
             dir.display()
         )
     })?;
     Ok((viewer, bundled_viewer_license()))
+}
+
+/// The dev-tree checkout path: `CARGO_MANIFEST_DIR` points at `frontends/shell/src-tauri` at
+/// compile time; three `..` reaches the workspace root. This holds for `cargo tauri dev` and for a
+/// manual walkthrough run from a checkout, whether or not anything is packaged.
+fn dev_tree_viewer_dir() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../renderer/bundle-viewer/dist")
+}
+
+/// The fallback order [`bundled_viewer`] resolves against, as a pure function of an injectable
+/// "does this directory exist" predicate — no `AppHandle`, no real filesystem I/O, so
+/// `resolver_tests` below can prove the ORDER (packaged resource directory tried before the
+/// dev-tree path) without building the real viewer or faking a Tauri runtime.
+fn resolve_viewer_dir(
+    resource_dir: Option<&std::path::Path>,
+    exists: impl Fn(&std::path::Path) -> bool,
+) -> Result<(&'static str, std::path::PathBuf), String> {
+    let mut candidates: Vec<(&'static str, std::path::PathBuf)> = Vec::new();
+    if let Some(dir) = resource_dir {
+        candidates.push(("the packaged resource directory", dir.join("bundle-viewer")));
+    }
+    candidates.push(("the dev-tree checkout path", dev_tree_viewer_dir()));
+
+    for (label, dir) in &candidates {
+        if exists(dir) {
+            return Ok((*label, dir.clone()));
+        }
+    }
+
+    // **The dev-tree path VALUE is suppressed from the refusal string when a resource dir was
+    // supplied** (release-cut fix batch, MUST-FIX/SHOULD-FIX combined): `dev_tree_viewer_dir()`
+    // bakes the BUILD MACHINE's own `CARGO_MANIFEST_DIR` (a compile-time constant) into whatever
+    // string this function returns — fine for a `tauri dev` refusal read on that same machine, but
+    // a real path-disclosure once it ships inside a packaged binary's error text, naming a
+    // directory that means nothing on the operator's own machine while leaking one from whoever
+    // built the installer. The CANDIDATE is still named (both labels stay in the string, in
+    // candidate order — `resolver_tests::the_packaged_labels_index_precedes_the_dev_tree_labels_
+    // index_in_the_refusal_string` pins this), only its specific path value is replaced.
+    // `resource_dir` being `Some` is exactly the packaged-build signal — a plain `tauri dev` run
+    // never supplies one (`commands.rs`'s own call sites).
+    let tried = candidates
+        .iter()
+        .map(|(label, dir)| {
+            if resource_dir.is_some() && *label == "the dev-tree checkout path" {
+                format!("{label} (not applicable to a packaged installation)")
+            } else {
+                format!("{label} ({})", dir.display())
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", or ");
+    // **The remedy is packaged-context when a resource dir was supplied, developer-context only
+    // when it was not (release-cut fix batch, reviewer nit).** `run \`npm run build\`` tells an
+    // end user to run a build step nothing about their installed app can act on; `resource_dir`
+    // being `Some` is the same packaged-build signal the dev-tree-value suppression above already
+    // keys on. When `resource_dir` is `None` this is a `tauri dev` run from a checkout, where the
+    // developer remedy is exactly the right one.
+    let remedy = if resource_dir.is_some() {
+        "the viewer resources are missing from the installed application — reinstall Spatial IDE, \
+         or the install is incomplete"
+    } else {
+        "run `npm run build` in renderer/bundle-viewer first"
+    };
+    Err(format!("the reference bundle viewer is not built at {tried} — {remedy}"))
+}
+
+#[cfg(test)]
+mod resolver_tests {
+    use super::*;
+
+    #[test]
+    fn the_packaged_resource_directory_is_tried_before_the_dev_tree_path() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let (label, dir) =
+            resolve_viewer_dir(Some(resource), |p| p == resource.join("bundle-viewer")).unwrap();
+        assert_eq!(label, "the packaged resource directory");
+        assert_eq!(dir, resource.join("bundle-viewer"));
+    }
+
+    #[test]
+    fn the_dev_tree_path_is_the_fallback_when_the_resource_directory_does_not_hold_the_viewer() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let dev_tree = dev_tree_viewer_dir();
+        let (label, dir) = resolve_viewer_dir(Some(resource), |p| p == dev_tree).unwrap();
+        assert_eq!(label, "the dev-tree checkout path");
+        assert_eq!(dir, dev_tree);
+    }
+
+    #[test]
+    fn no_resource_directory_at_all_tries_only_the_dev_tree_path() {
+        // `tauri dev`: `app.path().resource_dir()` has nothing packaged-resource-shaped to
+        // resolve, and the caller passes `None` rather than a directory that was never packaged.
+        let dev_tree = dev_tree_viewer_dir();
+        let (label, dir) = resolve_viewer_dir(None, |p| p == dev_tree).unwrap();
+        assert_eq!(label, "the dev-tree checkout path");
+        assert_eq!(dir, dev_tree);
+    }
+
+    #[test]
+    fn neither_path_existing_names_both_labels_in_the_refusal_but_suppresses_the_dev_tree_value() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let err = resolve_viewer_dir(Some(resource), |_| false).unwrap_err();
+        assert!(err.contains("the packaged resource directory"), "{err}");
+        assert!(err.contains("the dev-tree checkout path"), "{err}");
+        assert!(err.contains(&resource.join("bundle-viewer").display().to_string()), "{err}");
+        // SHOULD-FIX (release-cut fix batch): the dev-tree path's own VALUE — the build machine's
+        // `CARGO_MANIFEST_DIR` — must NOT appear in a refusal a packaged binary can emit.
+        assert!(
+            !err.contains(&dev_tree_viewer_dir().display().to_string()),
+            "the build machine's own dev-tree path leaked into a packaged-context refusal: {err}"
+        );
+        assert!(err.contains("not applicable to a packaged installation"), "{err}");
+        // Reviewer nit, release-cut fix batch: a packaged context (resource_dir Some) gets a
+        // packaged-context remedy, never the developer instruction to run an npm build.
+        assert!(err.contains("reinstall Spatial IDE"), "{err}");
+        assert!(!err.contains("npm run build"), "{err}");
+    }
+
+    #[test]
+    fn no_resource_directory_at_all_and_no_dev_tree_path_gets_the_developer_remedy() {
+        // The mirror of the test above: `resource_dir` is `None` (a `tauri dev` run from a
+        // checkout where the dev-tree path itself does not hold either) — the remedy stays
+        // developer-context, since there is no installed app to tell an end user to reinstall.
+        let err = resolve_viewer_dir(None, |_| false).unwrap_err();
+        assert!(err.contains("the dev-tree checkout path"), "{err}");
+        assert!(!err.contains("the packaged resource directory"), "{err}");
+        assert!(err.contains("run `npm run build` in renderer/bundle-viewer first"), "{err}");
+        assert!(!err.contains("reinstall Spatial IDE"), "{err}");
+    }
+
+    /// **MUST-FIX 7 (release-cut fix batch): pins that the packaged resource directory is tried
+    /// FIRST, not merely that it is admissible when the dev-tree path is excluded from the
+    /// predicate.** Swapping the two `candidates.push` calls in `resolve_viewer_dir` would leave
+    /// every OTHER test in this module green (each `exists` closure there matches only one
+    /// specific path), because none of them puts both candidates in a state where either could
+    /// win. This one does: with `exists` unconditionally `true`, both the packaged and the
+    /// dev-tree directories "exist" — the WINNER is entirely a function of push order, and a
+    /// swap would flip this assertion.
+    #[test]
+    fn when_both_paths_exist_the_packaged_resource_directory_wins_not_the_dev_tree_path() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let (label, dir) = resolve_viewer_dir(Some(resource), |_| true).unwrap();
+        assert_eq!(label, "the packaged resource directory");
+        assert_eq!(dir, resource.join("bundle-viewer"));
+    }
+
+    /// **MUST-FIX 7's other half: an index comparison, not a `contains` (which is order-blind).**
+    /// Proves the packaged label is textually FIRST in the refusal string too — `contains` alone
+    /// would pass under either order; this fails if the two candidates were ever emitted swapped.
+    #[test]
+    fn the_packaged_labels_index_precedes_the_dev_tree_labels_index_in_the_refusal_string() {
+        let resource = std::path::Path::new("Z:/pretend/resources");
+        let err = resolve_viewer_dir(Some(resource), |_| false).unwrap_err();
+        let packaged_at = err.find("the packaged resource directory").expect("packaged label present");
+        let dev_tree_at = err.find("the dev-tree checkout path").expect("dev-tree label present");
+        assert!(
+            packaged_at < dev_tree_at,
+            "packaged label must precede the dev-tree label in the refusal string: {err}"
+        );
+    }
 }
 
 /// The reference bundle viewer's license declaration, split out from [`bundled_viewer`] so it can be

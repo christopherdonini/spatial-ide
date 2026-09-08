@@ -113,6 +113,28 @@ pub enum PublishError {
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
 
+    /// A **reader's** declared ceiling — not this operation's own — was predicted to be exceeded,
+    /// at preflight, before any write.
+    ///
+    /// **ADR-025's Decision** (accepted 2026-09-07, the human's ruling): when the publish preflight
+    /// can predict the artifact will exceed the bundled viewer's declared ceilings, the publish
+    /// surface refuses, typed, at preflight, naming the current-viewport-bbox publish as the
+    /// alternative. Distinct from [`Self::CeilingExceeded`], which is *this operation's own*
+    /// declared limit (`MAX_PUBLISH_PARTITIONS`), reached only at write time because it is not
+    /// predictable before the stream runs — this variant is the *reader's* limit
+    /// (`renderer/bundle-viewer/ceilings.json`, read via [`crate::publish::ceilings::reader_ceilings`]),
+    /// checked in `preflight` wherever it is predictable there. **Reopens when a second reader
+    /// exists** (ADR-025's own reopen condition) — until then the writer is deliberately welded to
+    /// this one shipped reader's ceilings.
+    ReaderCeilingExceeded {
+        ceiling: &'static str,
+        limit: u64,
+        predicted: u64,
+        /// The alternative this refusal names, per the human's ruling — a `&'static str` rather
+        /// than composed prose, so the same sentence cannot drift between call sites.
+        alternative: &'static str,
+    },
+
     /// The operation was cancelled. No bundle exists under the final name, and the staging
     /// directory has been removed.
     Cancelled,
@@ -227,6 +249,13 @@ impl std::fmt::Display for PublishError {
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,
                 "refused: declared ceiling {ceiling} exceeded — limit {limit}, saw {saw}"
+            ),
+            Self::ReaderCeilingExceeded { ceiling, limit, predicted, alternative } => write!(
+                f,
+                "refused: this publish is predicted to exceed the bundled viewer's declared \
+                 ceiling {ceiling} — limit {limit}, predicted {predicted} — before any bytes were \
+                 written (ADR-025: refuse, typed, at preflight; reopens when a second reader \
+                 exists). Instead, {alternative}"
             ),
             Self::Cancelled => write!(
                 f,

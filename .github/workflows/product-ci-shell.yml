@@ -24,8 +24,13 @@ name: Product CI — shell
 # It means: `frontends/shell` type-checks, builds, and its vitest suite passes; and
 # `frontends/shell/src-tauri` compiles and its own `cargo test` suite passes. It does **not** mean:
 #
-#   - **`tauri build` was run.** Bundling/installer/signing is not exercised here — green on this
-#     workflow does not mean the installer builds.
+#   - **`tauri build` was run BY THE `shell` JOB above.** That job's own steps stop at `cargo check
+#     --release`; bundling/installer/signing are not exercised by IT. **Dated correction, 2026-09-08,
+#     release-cut fix batch: this sentence used to say "tauri build was run [nowhere in this workflow]", which is
+#     now false — the SEPARATE `tauri-build` job below DOES run it**, build-only, no signing, subject
+#     to its own not-a-gate note (this file's own "Standing not-a-gate note" section) until IT has
+#     gone green end to end and is recorded there. A green `shell` job alone still says nothing about
+#     the installer; a green `tauri-build` job says the installer builds, once one has actually run.
 #   - **Any UI, admission, canvas, or streaming behaviour was exercised interactively.** No browser,
 #     no WebView2, no real GeoParquet fixture opened end to end. That is the tester's own pass.
 #   - **Any performance claim, or anything about macOS/Linux** — same standing caveat as the other
@@ -55,11 +60,44 @@ name: Product CI — shell
 # workflow's path filters — the shell's own second consumption of that shared code went unchecked by
 # CI, the same class of gap `product-ci-viewer.yml` closes for the bundle viewer's own import of it.
 #
+# ## The bundle-viewer notice path, watched here too (RELEASE-0.1 Amendment 3, items 2/3)
+#
+# `frontends/shell`'s own `npm run build` (and therefore `npm run verify`, and `tauri build`) now
+# has a `prebuild`/`pretypecheck` step (`scripts/generateNotice.mjs`) that imports
+# `renderer/bundle-viewer/notice.mjs`'s `notice()` directly — the packaged app's `NOTICE.txt` is
+# generated from it. Byte-identity with the viewer's own `dist/NOTICE.txt` is asserted by a real
+# test (`src/notices/noticeByteIdentity.test.ts`, `npm test`'s own `pretest` builds both first) —
+# not merely claimed here (a release-cut fix batch found this exact sentence FALSE for a caller
+# running from this package's own cwd, before `notice.mjs`'s `baseDir` fix). A change to that ONE
+# file (its text, not its dependents) is watched explicitly, the same gap `product-ci-viewer.yml`'s
+# own lines 50-56 already name for `renderer/style-ts/**` — `renderer/bundle-viewer/**` at large is
+# still not watched by this workflow (only this one file, whose content this workflow's own build
+# now depends on).
+#
 # ## Standing not-a-gate note
 #
 # **Until a run of this workflow has gone green end to end, it is configuration that has never been
 # exercised, and nothing in this repository may cite it as a gate.** When it does, record the run id,
-# commit, trigger and duration here, as the other two product workflows do.
+# commit, trigger and duration here, as the other two product workflows do. The same applies,
+# separately, to the `tauri-build` job below (RELEASE-0.1 Amendment 3, item 4): it is build-only, no
+# signing, no release publishing, and nothing may cite a green run of it as a gate either until one
+# has happened end to end, recorded here with its own run id/commit/trigger/duration.
+#
+# ## `tauri-build` job — first-green record slot (house form, `product-ci-rust.yml:76`/`:93`'s own
+# pattern; release-cut fix batch, SHOULD-FIX 8) — EMPTY, filled only once a run has actually gone
+# green end to end:
+#
+#   **First green run:** run id `34190120055`, job id `101946288669` ("tauri build (NSIS,
+#   build-only, no signing)"), head commit `34a1896`, event `pull_request`, duration 27m19s
+#   (05:18:24Z–05:45:43Z, 2026-09-08). `34a1896` was `cut/release-packaged-build`'s pre-rebase
+#   head at the time this run went green — the branch has since been rebased onto `main`, so this
+#   record is the record of the JOB going green, not of the current tree.
+#
+#   | trigger | first green | duration |
+#   |---|---|---|
+#   | `push` | — | — |
+#   | `workflow_dispatch` | — | — |
+#   | `pull_request` | `34190120055` (`34a1896`) | 27m19s |
 
 on:
   push:
@@ -71,6 +109,12 @@ on:
       - "protocol/skp/src/**"
       - "protocol/skp/tests/data/**"
       - "renderer/style-ts/**"
+      - "renderer/bundle-viewer/notice.mjs"
+      # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): the first cross-module
+      # compile-time file dependency in this repository — `kernel/src/publish/ceilings.rs`
+      # `include_str!`s this exact file, so it changes compiled kernel behaviour this crate's own
+      # `cargo test` step below exercises, not just the two TypeScript workflows.
+      - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
   pull_request:
     paths:
@@ -81,6 +125,12 @@ on:
       - "protocol/skp/src/**"
       - "protocol/skp/tests/data/**"
       - "renderer/style-ts/**"
+      - "renderer/bundle-viewer/notice.mjs"
+      # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): the first cross-module
+      # compile-time file dependency in this repository — `kernel/src/publish/ceilings.rs`
+      # `include_str!`s this exact file, so it changes compiled kernel behaviour this crate's own
+      # `cargo test` step below exercises, not just the two TypeScript workflows.
+      - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
   workflow_dispatch:
 
@@ -108,6 +158,17 @@ jobs:
         with:
           key: windows-latest-shell
           workspaces: "frontends/shell/src-tauri"
+
+      # RELEASE-0.1 items 2/3: the shell's own `npm run build` now has a `prebuild` step
+      # (`scripts/generateNotice.mjs`) that reads `renderer/bundle-viewer/dist-metafile.json` —
+      # written by THIS package's own build, not the shell's — so it must run first here, the same
+      # ordering `frontends/shell/src-tauri`'s `bundle.resources` (the viewer's `dist/` shipped as a
+      # packaged resource) and `tauri build` below both need too.
+      - name: Install and build the bundle viewer (a precondition of the shell's own build)
+        working-directory: renderer/bundle-viewer
+        run: |
+          npm ci
+          npm run build
 
       - name: Install (locked)
         working-directory: frontends/shell
@@ -138,3 +199,50 @@ jobs:
 
       - name: Check the measure-build release profile compiles
         run: cargo check --manifest-path frontends/shell/src-tauri/Cargo.toml --release --locked --features measure-build
+
+  # RELEASE-0.1 Amendment 3, item 4: `tauri build` on the reference platform, build-only. No
+  # signing, no release publishing — the artifact is uploaded so it can be sighted, never
+  # published from CI. This workflow's own standing not-a-gate note (top of file) applies to this
+  # job exactly as it does to `shell` above: nothing may cite a green run here as a gate until one
+  # has actually gone green end to end, recorded with its run id/commit/trigger/duration.
+  tauri-build:
+    name: tauri build (NSIS, build-only, no signing)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontends/shell/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-latest-shell-tauri-build
+          workspaces: "frontends/shell/src-tauri"
+
+      # Same precondition as the `shell` job above: the viewer must be built before the shell's own
+      # `prebuild` step (notice generation) and before `bundle.resources` has anything to map.
+      - name: Install and build the bundle viewer
+        working-directory: renderer/bundle-viewer
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install shell dependencies (locked)
+        working-directory: frontends/shell
+        run: npm ci
+
+      - name: tauri build (NSIS only, per-user install — tauri.conf.json's own targets/installMode)
+        working-directory: frontends/shell
+        run: npm run tauri build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spatial-ide-nsis-installer
+          path: frontends/shell/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

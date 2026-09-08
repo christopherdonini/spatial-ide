@@ -40,4 +40,12 @@ const result = await build({
 
 copyFileSync('index.html', 'dist/index.html');
 writeFileSync('dist/NOTICE.txt', notice(result.metafile), 'utf8');
-console.log('dist/index.html + dist/app.js + dist/NOTICE.txt');
+// **Sibling of `dist/`, never inside it** (RELEASE-0.1 Amendment 3, item 2): `dist/` is what
+// `tauri.conf.json`'s `bundle.resources` ships wholesale and what
+// `kernel/src/publish/viewer_assets.rs`'s `ViewerAssets::from_dir` walks recursively into every
+// published bundle -- a file placed inside `dist/` becomes a shipped artifact. Persisted here
+// instead so `frontends/shell`'s own notice-generation step (`scripts/generateNotice.mjs`) can
+// call `notice()` again with the SAME metafile this build just produced -- its own output, not a
+// copy of it, and not a second esbuild run -- without ever reaching into `dist/`.
+writeFileSync('dist-metafile.json', JSON.stringify(result.metafile), 'utf8');
+console.log('dist/index.html + dist/app.js + dist/NOTICE.txt + dist-metafile.json');

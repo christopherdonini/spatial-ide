@@ -123,6 +123,14 @@ on:
       # split exists to avoid. The Rust side reads `renderer/tests/data/**` — the shared style and
       # key-set artifacts — and that stays covered by `renderer/**` above.
       - "!renderer/bundle-viewer/**"
+      # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): re-included AFTER the exclusion
+      # above (GitHub evaluates path filters in order; the LAST matching pattern wins) because it
+      # is no longer "the viewer's TypeScript, which no Rust target reads" — it is the first
+      # cross-module COMPILE-TIME file dependency this repository has: `kernel/src/publish/
+      # ceilings.rs` `include_str!`s this exact file, so an edit to it changes compiled kernel
+      # behaviour (the publish preflight's own reader-ceiling refusal) and must trigger Rust CI,
+      # not only the two TypeScript workflows that already watch it.
+      - "renderer/bundle-viewer/ceilings.json"
       # …nor the shared TS style semantics ADR-022 extracted alongside it (reviewer gate,
       # style-panel cut P7 fixes, B1 — blocking): `renderer/style-ts/**` is pure TypeScript too, read
       # by `frontends/shell` and `renderer/bundle-viewer` (both covered by their own workflows'
@@ -143,6 +151,14 @@ on:
       # split exists to avoid. The Rust side reads `renderer/tests/data/**` — the shared style and
       # key-set artifacts — and that stays covered by `renderer/**` above.
       - "!renderer/bundle-viewer/**"
+      # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): re-included AFTER the exclusion
+      # above (GitHub evaluates path filters in order; the LAST matching pattern wins) because it
+      # is no longer "the viewer's TypeScript, which no Rust target reads" — it is the first
+      # cross-module COMPILE-TIME file dependency this repository has: `kernel/src/publish/
+      # ceilings.rs` `include_str!`s this exact file, so an edit to it changes compiled kernel
+      # behaviour (the publish preflight's own reader-ceiling refusal) and must trigger Rust CI,
+      # not only the two TypeScript workflows that already watch it.
+      - "renderer/bundle-viewer/ceilings.json"
       # …nor the shared TS style semantics ADR-022 extracted alongside it (reviewer gate,
       # style-panel cut P7 fixes, B1 — blocking): `renderer/style-ts/**` is pure TypeScript too, read
       # by `frontends/shell` and `renderer/bundle-viewer` (both covered by their own workflows'

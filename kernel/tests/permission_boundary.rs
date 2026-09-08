@@ -44,8 +44,8 @@ use spatial_kernel::permission::{
     PublishGrant, RefusalReason, SourceScope, AUDIT_LOG_ENV,
 };
 use spatial_kernel::publish::{
-    CorrespondingSource, CorrespondingSourceKind, PublishPhase, PublishProgress, PublishRequest,
-    ViewerAsset, ViewerAssets, ViewerLicenseInput,
+    ceilings, CorrespondingSource, CorrespondingSourceKind, PublishError, PublishPhase,
+    PublishProgress, PublishRequest, ViewerAsset, ViewerAssets, ViewerLicenseInput,
 };
 
 const STYLE: &str = r##"{
@@ -948,4 +948,78 @@ fn an_intent_without_an_outcome_is_a_readable_state_not_a_missing_record() {
         0,
         "an interrupted attempt must leave the intent alone, not synthesize an outcome"
     );
+}
+
+/// **RELEASE-0.1 item 3e (ADR-025), release-cut fix batch MUST-FIX 10 (phrasing corrected,
+/// RELEASE-0.1 Amendment 6's authorized sweep: "first line" was false — `execute`'s literal first
+/// line only binds `attempt.request`; `preflight` is the first FALLIBLE call, step 1 of this
+/// module's own top-doc numbered order).** `boundary::execute`'s first fallible call is
+/// `publish::preflight(req)?` — before the destination is even resolved, let alone
+/// the audit log opened for real writing (this module's own top-doc "What is not audited" list,
+/// `boundary.rs`). A `ReaderCeilingExceeded` refusal is therefore the INTENDED shape, proven here
+/// rather than only argued in a comment: no side effect, and — because the refusal happens before
+/// step 3's intent write — no audit RECORD either (the test harness's own `run_attempt` still opens
+/// the log file via `AuditLog::open_for` before calling `execute`, so the FILE can exist; what must
+/// not exist is a line in it).
+///
+/// **`#[ignore]`d, same reason `kernel/tests/publish.rs`'s own ADR-025 test is**: proving a REAL
+/// `ReaderCeilingExceeded` refusal needs a source whose actually-scanned row count exceeds
+/// `MAX_FEATURES` (2,000,000) — `verified_rows()` is a counted fact, not something fakeable through
+/// the public API. Minimal geometry keeps the write itself cheap at this row count. The temporary
+/// fixture is removed at the end of the test (this fix batch's own disk-hygiene correction) rather
+/// than left under `%TEMP%\spatial-kernel-permission-tests\` for a human to find later.
+///
+/// **Not run in CI (release-cut fix batch, reviewer nit): `#[ignore]` means neither
+/// `product-ci-rust.yml` nor any other workflow in this repository executes it.** Run it by hand:
+/// `cargo test --release -p spatial-kernel --test permission_boundary -- --ignored --nocapture`
+/// (`--release`, the same reason `kernel/tests/scale_pass.rs` needs it — a multi-million-row write
+/// on a debug build is not the point of this test).
+#[test]
+#[ignore]
+fn an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record() {
+    let c = ceilings::reader_ceilings();
+    let d = workspace("reader-ceiling-no-audit");
+    let path = d.join("huge.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: c.max_features as usize + 1,
+            avg_vertices: 3,
+            hole_every: 0,
+            crs_mode: CrsMode::DeclaredLv95,
+            with_covering_bbox: false,
+            identity: IdentityMode::NativeUnique,
+            attributes: AttributeMode::CategoricalZone,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let ds = pinned(&path);
+
+    let v = viewer();
+    let dest = d.join("out");
+    let log = d.join("audit.jsonl");
+    let req = request(&ds, &v, dest.clone());
+    let grants = grant_for(&ds, &dest, Duration::from_secs(60));
+    let approval = PreNamedApproval("out".into());
+
+    let result = run_attempt(&log, &req, &grants, &approval, &CancelToken::new(), None);
+    match result {
+        Err(BoundaryError::Publish(PublishError::ReaderCeilingExceeded { ceiling, .. })) => {
+            assert_eq!(ceiling, "MAX_FEATURES");
+        }
+        other => panic!("expected BoundaryError::Publish(ReaderCeilingExceeded), got {other:?}"),
+    }
+    no_side_effect(&d, &dest);
+    let l = Log::read(&log);
+    assert_eq!(
+        l.0.len(),
+        0,
+        "a preflight refusal reached before step 3 must leave no record at all: {:#?}",
+        l.0
+    );
+
+    // Disk hygiene (this fix batch's own correction): a multi-million-row parquet fixture must not
+    // linger under `%TEMP%` after the test that needed it has finished with it.
+    let _ = std::fs::remove_dir_all(&d);
 }

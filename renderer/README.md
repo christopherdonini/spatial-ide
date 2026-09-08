@@ -142,9 +142,12 @@ not for erasure.
 ### Declared ceilings (ADR-010 rule 6), and the behaviour at each
 
 `MAX_FEATURES` 2 000 000 · `MAX_PARTITIONS` 100 000 · `MAX_RESIDENT_BYTES` 512 MiB ·
-`MAX_ATTRIBUTE_COLUMNS` 32 · `MAX_ATTRIBUTE_DISPLAY_CHARS` 512. A bundle declaring more than any of
-these produces the `ceiling-exceeded` failure state and is refused — it does not load until the tab
-dies.
+`MAX_ATTRIBUTE_COLUMNS` 32 · `MAX_ATTRIBUTE_DISPLAY_CHARS` 512 — the five values quoted here for a
+reader's convenience; the authored source is `renderer/bundle-viewer/ceilings.json` (RELEASE-0.1
+item 3e: `render.ts`'s `MAX_*` constants re-export it, and the kernel's publish preflight
+`include_str!`s the same file, never a second copy — see `ceilings.json`'s sibling `render.ts` doc
+comment for the full account). A bundle declaring more than any of these produces the
+`ceiling-exceeded` failure state and is refused — it does not load until the tab dies.
 
 **Picking is exact point-in-polygon containment on authoritative f64, in world space, with no pixel
 tolerance.** Two consequences are declared rather than discovered:

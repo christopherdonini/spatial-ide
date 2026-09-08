@@ -5,7 +5,12 @@ target/
 node_modules/
 dist/
 dist-measure/
+dist-metafile.json
 .vite/
+
+# Generated at build time (RELEASE-0.1 Amendment 3, item 2) -- one source, `notice.mjs`'s
+# `notice()`, is what produces this file; never hand-edited, never committed.
+frontends/shell/src/generated/
 
 # Tauri
 src-tauri/gen/

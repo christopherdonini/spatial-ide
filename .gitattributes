@@ -8,3 +8,10 @@
 # bytes than the LF blob git stores, and the assert fails on \r alone. Pin LF at
 # checkout so "byte-identical" means the same bytes everywhere.
 *.projjson text eol=lf
+
+# Same class, same failure shape: kernel::publish::ceilings `include_str!`s this file and
+# publish::ceilings::tests::ceilings_json_bytes_are_pinned_by_content_hash pins its content hash
+# literally. A windows-latest CI checkout materialized it as CRLF (autocrlf=true) while the git
+# blob is LF, hashing to 6406980021ca… instead of the pinned fd746c843f22… (run 34190120091).
+# Pin LF at checkout for the same reason the .projjson line above does.
+renderer/bundle-viewer/ceilings.json text eol=lf

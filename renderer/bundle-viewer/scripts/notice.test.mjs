@@ -56,3 +56,26 @@ test('the CRS-data section sits ahead of the third-party-code section', () => {
   assert.ok(thirdPartyAt !== -1, 'third-party section present');
   assert.ok(crsAt < thirdPartyAt, 'CRS section precedes the third-party-code section');
 });
+
+// RELEASE-0.1 Amendment 3, item 2: the packaged installer's own AGPL notice + corresponding-source
+// route (ADR-009 item 1 + AGPL-3.0 §§4/5) -- added to `notice()` itself, the ONE source both the
+// viewer's own `dist/NOTICE.txt` and the packaged shell's beside-the-exe `NOTICE.txt` read.
+test('the notice carries the installer\'s AGPL notice, distinct from the viewer\'s own', () => {
+  const text = notice(fakeMetafile);
+  assert.match(text, /THE SPATIAL IDE APPLICATION, WHEN DISTRIBUTED AS AN INSTALLED PROGRAM/);
+  assert.match(text, /GNU Affero General Public License/);
+});
+
+test('the notice names the corresponding-source URL for an installed application', () => {
+  const text = notice(fakeMetafile);
+  assert.match(text, /https:\/\/github\.com\/christopherdonini\/spatial-ide/);
+});
+
+test('the installer section sits ahead of the third-party-code section, after the CRS section', () => {
+  const text = notice(fakeMetafile);
+  const crsAt = text.indexOf('COORDINATE REFERENCE SYSTEM DATA');
+  const installerAt = text.indexOf('THE SPATIAL IDE APPLICATION, WHEN DISTRIBUTED AS AN INSTALLED PROGRAM');
+  const thirdPartyAt = text.indexOf('THIRD-PARTY WORKS COMPILED INTO THIS VIEWER');
+  assert.ok(crsAt !== -1 && installerAt !== -1 && thirdPartyAt !== -1);
+  assert.ok(crsAt < installerAt && installerAt < thirdPartyAt);
+});

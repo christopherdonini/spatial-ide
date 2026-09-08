@@ -263,6 +263,15 @@ const CLASS_C_ROWS = [
       "view state, local to that group's row.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
+  {
+    class: "C",
+    action: "notices.togglePanelExpanded",
+    statement:
+      "no API equivalent exists -- NoticesPanel's own collapsed/expanded disclosure is pure view " +
+      "state; the text it shows is fed by a build-time file, never a command (RELEASE-0.1 " +
+      "Amendment 3, item 2 -- no Tauri command exists for this surface at all, ADR-027 decision 4).",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
 ] as const satisfies readonly ClassCRow[];
 
 /** The literal union of every recordable name in the registry -- class-B command names union
