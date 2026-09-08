@@ -21,6 +21,33 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+60. **[A canvas HANG reachable by ordinary wheel zoom-out in the SHIPPED default (candidate arm) —
+    found by the K6 re-aim worker, confirmed user-reachable by its reviewer gate (2026-09-08). Fix in
+    this cut, or declare it in KNOWN-LIMITATIONS at the tag?]** Facts (the gate's, cites verified by
+    it): `frontends/shell/src/canvas/tileGrid.ts:170-181` `tilesCoveringBbox` materialises the whole
+    tile cover with a plain nested loop; `tileViewportStreamManager.ts:314` calls it unclamped on every
+    debounced camera settle; `MAX_QUEUED_TILES` (512, `tileGridConstants.ts:54`) truncates only
+    AFTERWARDS (`tileViewportStreamManager.ts:361-379`). No zoom floor exists: `WorkingCanvas.tsx:1314`
+    is a bare `controller: true` and deck.gl's OrthographicController defaults `minZoom = -Infinity`
+    (`@deck.gl/core/dist/controllers/orthographic-controller.js:21`); "Zoom to layer" is a fit, not a
+    clamp. Arithmetic from the code plus one measured fit zoom (−4.5825, this run): each notch
+    multiplies the tile count by ~3.63; ~2 notches past the fit exceeds 512 (truncation, honest);
+    **~12 notches past the fit allocates ~3×10⁸ `TileKey` objects before truncation** — a dozen
+    notches is an ordinary gesture (A9′ drives 15). Measured repro so far: only the worker's
+    `e2eSetViewState(0,0,−64)` wedge (page hung; app killed). Class: docs/01 principle 7 ("never
+    block the canvas") — an unbounded synchronous enumeration on the camera path, in the arm v0.1.0
+    ships. Options: (a) RECOMMENDED — a small preregistered fix piece in this cut: bound the cover
+    BEFORE allocation (compute rows×cols from the span; when it exceeds the queue ceiling take the
+    truncation/partial-view path without materialising the list — the truncation behaviour already
+    exists, so no design change; a unit test on the pure function with an astronomically large bbox;
+    one E2E step zooming ~15 notches past the fit on the shipped default), reviewer gate; (b) also
+    clamp the controller's `minZoom` to a computed floor (a UX decision — the canvas can no longer
+    scroll into emptiness; would need its own row in the walkthrough); (c) ship it declared:
+    KNOWN-LIMITATIONS names "zooming far out past the data can hang the canvas" — honest but a poor
+    first five minutes for a stranger (item 6's quickstart says zoom out). Touches on (a): the two
+    files above, a unit test, one E2E step, a KNOWN-LIMITATIONS line only if it slips; recorded in
+    `NEXT-CUT.md` today under "Found during the release cut" and in the K6 gate record.
+
 59. **[Item 8 (CRS catalog: EPSG:4326 + 3857, ruled "yes … under the entry-51 protocol") — the 4326
     half CANNOT be built as ruled; the 3857 half can and proceeds under the ruling. Architect consult
     2026-09-08: BLOCK on 4326, PASS with notes on 3857.]** The custodian's finding before dispatch: a
