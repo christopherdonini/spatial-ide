@@ -135,6 +135,15 @@ how obvious they seem:
   must print nothing; put safety-critical steps in their own child script whose lines are logged
   verbatim and whose exit code gates, so a skip shows up as a missing line rather than silence;
   prove a new runner with a dry-run switch under the identical `-File` launch before the real run.
+- **A CI watcher prints every check line, never a `tail` (added 2026-09-08, after a red PR read as
+  green).** `gh pr checks <n> --watch … | tail -5` hid two `fail` rows above the cut and the
+  summary said "all green"; the failing job was found only by listing checks again. Print the whole
+  table, or grep it for `fail`, and read `gh run list --branch <b>` when a workflow is missing from
+  the table (path filters can drop it silently). Corollary, same day: a hash pinned over a
+  text file's bytes (`include_str!` + sha256) fails on `windows-latest` unless `.gitattributes`
+  pins that file `text eol=lf` — the checkout converts to CRLF; the `*.projjson` line and its
+  comment are the precedent. Reviewers running with `core.autocrlf false` cannot see it locally;
+  the class belongs on the checklist whenever a test hashes a checked-in text file.
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
