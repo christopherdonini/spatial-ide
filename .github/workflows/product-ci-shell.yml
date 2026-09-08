@@ -74,6 +74,18 @@ name: Product CI — shell
 # still not watched by this workflow (only this one file, whose content this workflow's own build
 # now depends on).
 #
+# **`notice.d.mts` is watched beside it (release-cut fix batch, SHOULD-FIX 13).** `notice.mjs` is
+# plain JavaScript; its TYPES live in the hand-written sibling `renderer/bundle-viewer/notice.d.mts`,
+# which is what `tsc --noEmit` in this workflow's own `npm run typecheck` step actually reads when
+# `scripts/generateNotice.mjs` and `src/notices/noticeByteIdentity.test.ts` import from that module.
+# A change to the declaration alone — widening `NoticeRustCrate`, say, as this same batch did when it
+# added `authors`/`repository`/`licenseFile` — changes what typechecks here while matching none of
+# the filters above, so this workflow would skip the run that would have caught it. Watching one half
+# of a two-file module and not the other is the same class of gap the paragraph above closes for
+# `notice.mjs` itself. Both halves are listed in BOTH the `push` and `pull_request` filters below;
+# they must stay in step, since a filter that watches a file on only one trigger is a filter that
+# silently depends on how a change happens to arrive.
+#
 # ## Standing not-a-gate note
 #
 # **Until a run of this workflow has gone green end to end, it is configuration that has never been
@@ -110,6 +122,7 @@ on:
       - "protocol/skp/tests/data/**"
       - "renderer/style-ts/**"
       - "renderer/bundle-viewer/notice.mjs"
+      - "renderer/bundle-viewer/notice.d.mts"
       # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): the first cross-module
       # compile-time file dependency in this repository — `kernel/src/publish/ceilings.rs`
       # `include_str!`s this exact file, so it changes compiled kernel behaviour this crate's own
@@ -126,6 +139,7 @@ on:
       - "protocol/skp/tests/data/**"
       - "renderer/style-ts/**"
       - "renderer/bundle-viewer/notice.mjs"
+      - "renderer/bundle-viewer/notice.d.mts"
       # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): the first cross-module
       # compile-time file dependency in this repository — `kernel/src/publish/ceilings.rs`
       # `include_str!`s this exact file, so it changes compiled kernel behaviour this crate's own

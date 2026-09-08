@@ -24,6 +24,9 @@ export interface NoticeRustCrate {
   name: string;
   version: string;
   license: string | null;
+  licenseFile: string | null;
+  authors: string[];
+  repository: string | null;
   dir: string;
   licenseFiles: string[];
 }
@@ -33,6 +36,10 @@ export interface NoticeRustCrateSet {
   crates: NoticeRustCrate[];
   canonicalTexts?: Map<string, { text: string; source: string }>;
   underline?: string;
+  // The target triple this crate set was resolved FOR, named in the rendered section's own intro
+  // (release-cut fix batch, SHOULD-FIX 9). Optional: `rustCrateSectionLines` falls back to saying
+  // the triple was not recorded rather than to naming a triple it was not told.
+  targetTriple?: string | null;
 }
 
 export interface NoticeExtra {

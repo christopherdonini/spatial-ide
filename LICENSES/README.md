@@ -26,6 +26,11 @@ this file records **which layer each part of the tree is in**.
 
 The root `LICENSE` carries the core grant. `docs/LICENSE` carries the documentation grant.
 
+**Not every file in this directory is a layer.** `MIT.txt` and `BSD-3-Clause.txt` are
+notice-generation INPUTS — template texts embedded under OTHER projects' crates in a generated
+notice — and neither id appears in the table above, because nothing in this tree is licensed under
+either. See "`MIT.txt` and `BSD-3-Clause.txt` — provenance" below.
+
 ## Two texts were missing at first, and that was deliberate rather than an oversight
 
 `AGPL-3.0-or-later.txt` and `CC-BY-4.0.txt` were **not in this directory** when this file was first
@@ -85,6 +90,48 @@ published, by unrelated authors — ship a file with **exactly this hash**. It i
 the variants present by a wide margin; the runners-up (33 and 11 copies) are the appendix-less
 excerpt and a `https://`-URL variant. Byte-identity across 95 independent upstreams is a stronger
 provenance argument than a single fetch would have been.
+
+## `MIT.txt` and `BSD-3-Clause.txt` — provenance, and why these are notice-generation INPUTS, not a repository layer
+
+Added release-cut fix batch, MUST-FIX 2 (`frontends/shell/scripts/rustCrateNotices.mjs`'s
+`buildCanonicalLicenseTexts`). Twelve Rust crates statically linked into the packaged shell's own
+binary declare an SPDX license id but ship no `LICENSE`/`NOTICE`/`COPYING` file in their own
+registry source (`DEPENDENCY-LICENSES.md`'s dated block names all twelve). Before this fix, the
+generator borrowed a license text from a DIFFERENT linked crate that happened to declare the same
+id and ship its own file -- wrong for MIT and BSD-3-Clause specifically, because both licenses'
+own canonical body embeds a "Copyright (c) &lt;year&gt; &lt;holder&gt;" line, so the borrowed text
+carried that OTHER crate's real copyright notice into a crate that never wrote it. These two files
+are this repository's own vetted copies, fetched from the SPDX license list — **not** the way
+`Apache-2.0.txt` above was obtained, which was copied from a local crate's own bundled file and
+argued trustworthy by 95-way byte-identity across independent upstreams; that argument does not
+transfer to MIT or BSD-3-Clause, since every crate's own copy of those two differs from every
+other's in exactly the copyright line at issue, so there is no byte-identical majority to appeal to
+and a real fetch of the template is the only honest source. The copyright-holder line is left
+exactly as the SPDX template's own UNFILLED placeholder -- the same shape `Apache-2.0.txt`'s own
+appendix already carries (`Copyright [yyyy] [name of copyright owner]`), never a specific name.
+
+- **`MIT.txt`** — fetched `https://spdx.org/licenses/MIT.txt`, retrieved 2026-09-08, `sha256`
+  `c3b1b78bc8bd3ea13aa4bc9778442d16560270afa235006d816e5e88cef24db4`, 1077 bytes.
+- **`BSD-3-Clause.txt`** — fetched `https://spdx.org/licenses/BSD-3-Clause.txt`, retrieved
+  2026-09-08, `sha256` `0fe4dd6931c4c2fc418940de41074fa3c506cad24bfd891743ea7f2fcfe631ef`, 1693
+  bytes. SPDX's own raw `.txt` endpoint serves this license's underlying LEGAL TEXT TEMPLATE
+  (the `<<var;name=…;original=…;match=…>>` markup SPDX uses to define what text matches this
+  license id), not a pre-rendered plain-text file the way `MIT.txt` above already is -- stored
+  byte-for-byte as fetched rather than hand-rendered into the `<<var…>>` markup's own `original=`
+  defaults, so the stored file is exactly what the recorded URL/hash can reproduce and re-verify,
+  not a paraphrase of it.
+
+**These two files are notice-generation INPUTS, not a layer of this repository.** The layers table
+above (ADR-009) is unchanged by their presence: nothing in this tree is MIT- or BSD-3-Clause-
+licensed, no source file here carries either SPDX header, and neither id appears in the layers
+table. `MIT.txt`/`BSD-3-Clause.txt` exist solely so `buildCanonicalLicenseTexts` has a vetted,
+citable text to embed under OTHER PROJECTS' crates in a GENERATED notice
+(`frontends/shell/src/generated/NOTICE.txt`) -- the same non-layer role `Apache-2.0.txt` above
+already plays for the twelve gap crates that declare `Apache-2.0` (directly, or as one atom of an
+`OR` expression, e.g. `flatbuffers`, and the `unic-*` crates' `MIT/Apache-2.0`). Offering a
+template for more than one atom of a declared `OR` expression (a crate declaring
+`MIT/Apache-2.0`, say) is informational, never an election of one license over the other on that
+crate's behalf -- `notice.mjs`'s own rendered text says so directly, beside the texts themselves.
 
 ## The Apache-2.0 layer is empty, and that is a finding rather than a gap
 

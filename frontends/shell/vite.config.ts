@@ -47,12 +47,41 @@ function packageMetafilePlugin(): Plugin {
           // package's own root (`process.cwd()` when `vite build` runs, always
           // `frontends/shell` under this repository's own npm scripts) so the key matches
           // esbuild's own metafile convention exactly -- forward-slashed, relative to the
-          // build's own working directory, never an absolute path (no filesystem path belongs
-          // in a build artifact, docs/09).
+          // build's own working directory, never an absolute path. This metafile is a SIBLING
+          // of `dist/` and is never shipped (it is not a bundle asset and no packaging step
+          // copies it), but it is read by a generator whose output IS shipped and whose
+          // rebuilds ADR-017 §12 requires to be byte-identical -- so an absolute path here
+          // would make a hashed artifact depend on where the build was invoked from, the same
+          // reasoning `renderer/bundle-viewer/notice.mjs:131-136` states for its own reads.
+          //
+          // **FIRST `node_modules/`, not the last (release-cut fix batch, SHOULD-FIX 6).**
+          // `lastIndexOf` on a NESTED path
+          // (`node_modules/command-line-usage/node_modules/array-back/…`) sliced away the
+          // nesting prefix and emitted the key `node_modules/array-back/…`, so the consumer
+          // (`notice.mjs`'s `extractPackages`) resolved and read the TOP-LEVEL `array-back`
+          // instead -- a different version's notice, or `ENOENT` and a degraded line, for the
+          // copy actually compiled in. Slicing from the FIRST occurrence keeps the whole
+          // nested path, which is exactly what `extractPackages` (itself `lastIndexOf`-based,
+          // correctly, ON that full key) needs to land on the nested copy.
           const rel = relative(process.cwd(), id).replace(/\\/g, "/");
-          const at = rel.lastIndexOf("node_modules/");
+          const withinRoot = rel.replace(/^(?:\.\.\/)+/, "");
+          const at = withinRoot.indexOf("node_modules/");
           if (at === -1) continue;
-          inputs[rel.slice(at)] = {};
+          if (withinRoot !== rel) {
+            // A third-party module resolved from OUTSIDE this package's own root. Its key would
+            // be attributed to `frontends/shell`'s own `node_modules` tree by every consumer of
+            // this metafile (`notice.mjs` resolves each set's packages against that set's own
+            // `baseDir`), which is a wrong-tree read of exactly the class MUST-FIX 1 fixed --
+            // and silently wrong, since a same-named package usually exists there too. Refused.
+            throw new Error(
+              `packageMetafilePlugin: module id ${id} resolves OUTSIDE this package's root ` +
+                `(${process.cwd()}) yet lives under node_modules/. This metafile's keys are ` +
+                "resolved against frontends/shell by every consumer, so attributing it here " +
+                "would read the wrong node_modules tree. Vendor it, or give this set its own " +
+                "metafile entry with its own baseDir."
+            );
+          }
+          inputs[withinRoot.slice(at)] = {};
         }
       }
       writeFileSync(resolve(process.cwd(), "dist-metafile.json"), JSON.stringify({ inputs }), "utf8");

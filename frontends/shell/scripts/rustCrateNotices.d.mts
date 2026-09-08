@@ -12,6 +12,15 @@ export interface LinkedCrate {
   name: string;
   version: string;
   license: string | null;
+  // `cargo metadata`'s own `license_file` field (release-cut fix batch, MUST-FIX 12 nit): set when
+  // a crate declares Cargo's `license-file` key instead of (or alongside) an SPDX `license`
+  // expression.
+  licenseFile: string | null;
+  // `cargo metadata`'s own `authors`/`repository` fields, kept rather than discarded (release-cut
+  // fix batch, MUST-FIX 2): printed under a gap crate's SPDX id so a reader has this crate's OWN
+  // declared attribution to trace.
+  authors: string[];
+  repository: string | null;
   dir: string;
   licenseFiles: string[];
 }

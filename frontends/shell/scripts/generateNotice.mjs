@@ -36,6 +36,25 @@
 // `src/generated/NOTICE.txt` and what actually ships is asserted by a real test
 // (`src/notices/noticeByteIdentity.test.ts`).
 //
+// ## ONLY `npm run build` produces a shippable NOTICE (release-cut fix batch, SHOULD-FIX 8)
+//
+// Running this script by hand (`npm run generate:notice`), or running a lone `vite build`, does NOT
+// produce a shippable artifact, and neither does any other ordering of the two:
+//
+//   - this script alone rewrites `src/generated/NOTICE.txt` but changes NOTHING in `dist/`, because
+//     the `?raw` import that carries it into the bundle is resolved at BUILD time;
+//   - a lone `vite build` embeds whatever `src/generated/NOTICE.txt` happened to hold, which after
+//     any dependency change is the PREVIOUS build's scope, and rewrites `dist-metafile.json` so it
+//     no longer describes the notice that was just embedded.
+//
+// Only `package.json`'s "build" script (`tsc --noEmit && vite build && npm run generate:notice &&
+// vite build`) leaves `src/generated/NOTICE.txt`, `dist/`, and `dist-metafile.json` describing the
+// SAME build. `scripts/checkDistNotice.mjs` enforces the cheap mtime consequence of that ordering
+// (`npm run build` leaves `src/generated/NOTICE.txt` OLDER than both `dist-metafile.json` and
+// `dist/`'s newest entry, because the second `vite build` follows it) -- so a hand-run of this
+// script after a build, which is the common way to end up with a `dist/` whose embedded notice is
+// not the one on disk, is refused rather than silently believed.
+//
 // **This process's own cwd is `frontends/shell`, not `renderer/bundle-viewer`** -- `notice()`
 // resolves each package set's own third-party directories against THAT SET's own `baseDir`
 // (`notice.mjs`'s `baseDir` parameter and `extra.npmSets[].baseDir`, release-cut fix batch MUST-FIX
@@ -47,7 +66,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { notice } from '../../../renderer/bundle-viewer/notice.mjs';
-import { collectLinkedCrates, buildCanonicalLicenseTexts } from './rustCrateNotices.mjs';
+import { collectLinkedCrates, buildCanonicalLicenseTexts, TARGET_TRIPLE } from './rustCrateNotices.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellDir = join(here, '..');
@@ -72,6 +91,10 @@ const rustCrates = {
   heading: 'RUST CRATES STATICALLY LINKED INTO THE PACKAGED APPLICATION',
   crates,
   canonicalTexts,
+  // Passed through so the rendered section's own intro can NAME the triple this set is a fact about
+  // (release-cut fix batch, SHOULD-FIX 9) -- `collectLinkedCrates()`'s own default, not a second
+  // literal that could drift from the one the collector actually filtered on.
+  targetTriple: TARGET_TRIPLE,
 };
 
 let extra;

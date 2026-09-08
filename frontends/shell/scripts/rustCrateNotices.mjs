@@ -151,13 +151,30 @@ export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, targ
     const dir = dirname(pkg.manifest_path);
     let licenseFiles = [];
     try {
+      // Also matches `UNLICENSE` (release-cut fix batch, MUST-FIX 12 nit): it does not start with
+      // "LICENSE"/"LICENCE" so `LICEN[CS]E` alone never matched it, and six linked crates in this
+      // exact set declare `Unlicense OR MIT` and ship exactly that file, not a `LICENSE*` one.
       licenseFiles = readdirSync(dir)
-        .filter((f) => /^(LICEN[CS]E|NOTICE|COPYING)/i.test(f))
+        .filter((f) => /^(LICEN[CS]E|NOTICE|COPYING|UNLICENSE)/i.test(f))
         .sort();
     } catch {
       licenseFiles = [];
     }
-    crates.push({ name: pkg.name, version: pkg.version, license: pkg.license ?? null, dir, licenseFiles });
+    // `authors`/`repository`/`license_file` kept rather than discarded (release-cut fix batch,
+    // MUST-FIX 2 / MUST-FIX 12 nit): `cargo metadata` reports all three for every package; a gap
+    // crate (one with no bundled LICENSE/NOTICE/COPYING file, `notice.mjs`'s `rustCrateSectionLines`)
+    // prints them so a reader has this crate's OWN declared attribution to trace, rather than only
+    // ever seeing either its real text or nothing.
+    crates.push({
+      name: pkg.name,
+      version: pkg.version,
+      license: pkg.license ?? null,
+      licenseFile: pkg.license_file ?? null,
+      authors: Array.isArray(pkg.authors) ? pkg.authors : [],
+      repository: pkg.repository ?? null,
+      dir,
+      licenseFiles,
+    });
   }
 
   crates.sort((a, b) => (a.name === b.name ? a.version.localeCompare(b.version) : a.name.localeCompare(b.name)));
@@ -166,13 +183,20 @@ export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, targ
 
 /**
  * `Map<spdxId, {text, source}>` for every SPDX id a linked crate declares but whose own registry
- * source ships no LICENSE/NOTICE/COPYING file. Never invents license text: prefers this
- * repository's own vetted copy (`LICENSES/<id>.txt`) when one exists, otherwise borrows verbatim
- * from the alphabetically-first crate in THIS EXACT linked set that declares the id alone (not a
- * compound expression) and ships its own license file -- a real file already in this dependency
- * tree, never text typed from memory. An id neither source can supply gets an honest, named-gap
- * placeholder rather than silence (the same discipline `notice.mjs`'s own AGPL-text-absent branch
- * already uses).
+ * source ships no LICENSE/NOTICE/COPYING file. Never invents license text, and -- as of the
+ * release-cut fix batch, MUST-FIX 2 -- never BORROWS one either: an earlier version of this
+ * function, when this repository's own `LICENSES/<id>.txt` did not exist, fell back to the
+ * alphabetically-first OTHER linked crate that declared the id alone and shipped its own license
+ * file. That was wrong for any license whose own body embeds a copyright-holder line (MIT and
+ * BSD-3-Clause both do): it printed a DIFFERENT crate's real copyright notice under a crate that
+ * never wrote it -- `duckdb`/`webview2-com`(`-macros`/`-sys`)/the five `unic-*` crates all
+ * borrowed `atoi`'s blank "Copyright (c) 2017 " line, and `alloc-stdlib` borrowed
+ * `alloc-no-stdlib`'s Dropbox copyright line, neither of which is that crate's own. This function
+ * therefore only ever supplies a canonical text from this repository's OWN vetted copy
+ * (`LICENSES/<id>.txt`); an id this repository carries no template for gets an honest, named-gap
+ * placeholder instead (the same discipline `notice.mjs`'s own AGPL-text-absent branch already
+ * uses) -- fails closed, in the sense that a gap crate whose id has no template ships with that
+ * gap NAMED rather than with someone else's copyright notice standing in for it.
  */
 export function buildCanonicalLicenseTexts(crates, { repoRoot }) {
   const needed = new Set();
@@ -192,28 +216,16 @@ export function buildCanonicalLicenseTexts(crates, { repoRoot }) {
       continue;
     }
 
-    const candidates = crates
-      .filter((c) => c.license === id && c.licenseFiles.length > 0)
-      .sort((a, b) => a.name.localeCompare(b.name));
-    if (candidates.length === 0) {
-      texts.set(id, {
-        text:
-          `*** NO CANONICAL TEXT AVAILABLE for SPDX id "${id}" ***\n\n` +
-          `No crate in this exact linked dependency set declares "${id}" alone with its own bundled ` +
-          `license file, and this repository's LICENSES/ directory carries no ${id}.txt either. ` +
-          `Obtain the ${id} license text and add it to LICENSES/ to close this gap.`,
-        source: 'none -- named as an honest gap, not silently omitted',
-      });
-      continue;
-    }
-    const chosen = candidates[0];
-    const file = chosen.licenseFiles[0];
     texts.set(id, {
-      text: readFileSync(join(chosen.dir, file), 'utf8'),
-      source:
-        `${chosen.name} ${chosen.version}'s own ${file} (this exact dependency tree; ` +
-        `deterministically the alphabetically-first linked crate that declares "${id}" alone and ` +
-        'ships its own license file)',
+      text:
+        `*** NO CANONICAL TEXT AVAILABLE for SPDX id "${id}" ***\n\n` +
+        `This repository's LICENSES/ directory carries no ${id}.txt. This function no longer ` +
+        'borrows a license text from another linked crate\'s own bundled file for an id this ' +
+        'repository carries no template for (release-cut fix batch, MUST-FIX 2): doing so, for a ' +
+        'license whose own body embeds a copyright-holder line (as MIT and BSD-3-Clause do), would ' +
+        `attribute that OTHER crate's copyright notice to this one. Obtain the ${id} license text ` +
+        'and add it to LICENSES/ to close this gap.',
+      source: 'none -- named as an honest gap, not silently omitted',
     });
   }
   return texts;
