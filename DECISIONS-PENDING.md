@@ -42,6 +42,38 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+66. **[The entry-60 bound punctures ADR-028 Amendment 3's protection rule past 65,536-cell covers
+    (~6 wheel notches past "Zoom to layer", from entry 60's own recorded ~3.63×/notch) — declare,
+    fix, or both?]** Found by the entry-60 reviewer gate (M1), confirmed and sharpened by the
+    architect's consult (2026-09-08), whose entry text follows verbatim: *"Past `MAX_COVERING_TILES`
+    the cover is a 256x256 centred window (`tileGrid.ts:313-329`), and that window IS the
+    eviction-protected set (`candidateArmSession.ts:1414` -> `WorkingCanvas.tsx:1205,1213,1232` ->
+    `tileResidentSet.ts:461,466,335`) AND the supersede test (`tileViewportStreamManager.ts:332-354`
+    -> `candidateArmSession.ts:931 clearTile`): a resident tile intersecting the viewport but outside
+    the window is evictable, and an in-flight one is BLANKED. ADR-028:459-462 says the opposite; the
+    diff never says so, and `tileViewportStreamManager.ts:106-111` still asserts the rule holds.
+    Options: (a) RECOMMENDED, minimum — declare + repair in this piece: ADR-028 appended note
+    (Proposed until your word) naming trigger, both paths, reopen condition; comment repairs at
+    `tileViewportStreamManager.ts:96-113` and `tileGridConstants.ts:64-72`; a KNOWN-LIMITATIONS line
+    when that file lands ("tiles already drawn may vanish while still on screen at extreme
+    zoom-out"). (b) Protect by geometry — `colStart<=col<=colEnd && rowStart<=row<=rowEnd` from
+    `coveringIndexRanges`: the identical predicate at every zoom, no enumeration, no bound on the
+    protection side; ~6 src files (widen `viewportTileKeys` to `{has}`, thread the bbox, close the
+    supersede path), 5 tests; NOT inside entry 60 (RELEASE-0.1.md:1049 "no product behaviour
+    otherwise changes") — its own preregistration + gate. (c) Both: (a) lands with this piece,
+    (b) preregistered before the tag. (d) (a) now, (b) to NEXT-CUT beside the minZoom clamp. My
+    rank: (c) if Amendment 3 must be intact at the tag, else (d). Never (b) silently inside
+    entry 60."* The architect also notes: completeness is unaffected (`lastCoveringTruncated` at
+    `candidateArmSession.ts:641` already refuses "all"); the `fits`/over-budget latch reads only the
+    window past the bound (a second, declared deviation under (a)); the faithful predicate must use
+    the cover's half-open index ranges, not a closed-bbox intersection. **Custodian's
+    recommendation: (d)** — v0.1.0 ships the hang fix with the exception declared (the ADR-028 note
+    on your word; the code comments repaired in the running fix batch; the KNOWN-LIMITATIONS
+    sentence), and (b) is preregistered as the first small piece after the tag beside ADR-032/LOD;
+    (c) if you want Amendment 3 intact at the tag (one more preregistered piece + gate before it).
+    Touches on (a)/(d): ADR-028 (append, your word), two comment blocks (in the fix batch now), one
+    KNOWN-LIMITATIONS line, `NEXT-CUT.md`.
+
 65. **[Release cut item 9 (both notice generators) — RULE 7 REACHED on the architect step (gate FAIL
     on `1a28fbf`: two blocking; re-review FAIL on `7f2e2fa`: ONE textual clause). The reviewer's
     re-review is a PASS with no must-fix. Authorize the closing commit — the same question as entries
