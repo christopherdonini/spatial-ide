@@ -193,39 +193,57 @@ export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, targ
  * borrowed `atoi`'s blank "Copyright (c) 2017 " line, and `alloc-stdlib` borrowed
  * `alloc-no-stdlib`'s Dropbox copyright line, neither of which is that crate's own. This function
  * therefore only ever supplies a canonical text from this repository's OWN vetted copy
- * (`LICENSES/<id>.txt`); an id this repository carries no template for gets an honest, named-gap
- * placeholder instead (the same discipline `notice.mjs`'s own AGPL-text-absent branch already
- * uses) -- fails closed, in the sense that a gap crate whose id has no template ships with that
- * gap NAMED rather than with someone else's copyright notice standing in for it.
+ * (`LICENSES/<id>.txt`).
+ *
+ * ## Fails closed by THROWING, not by placing a placeholder (coordinator follow-up, item 1)
+ *
+ * The first version of this fix emitted an explicit "no canonical text available" placeholder for an
+ * id `LICENSES/` carried no copy of. That is honest, but it still SHIPS: `selectors 0.36.1` declares
+ * `MPL-2.0` and bundles no license file, so the generated notice carried a real one-crate
+ * attribution gap in a conveyed artifact -- the opposite of what ADR-030 candidate (a) exists to
+ * guarantee. This function now throws instead, naming the id and the crates that need it, so the
+ * gap surfaces as a failed build (in `generateNotice.mjs`'s own `prebuild` hook, before anything is
+ * embedded) rather than as a paragraph a recipient is left to act on. Closing such a failure is one
+ * file: fetch the licence's own text into `LICENSES/<id>.txt` and record its URL, retrieval date
+ * and `sha256` in `LICENSES/README.md`, as the four texts already there are.
+ *
+ * Today the linked set needs exactly four ids (`Apache-2.0`, `BSD-3-Clause`, `MIT`, `MPL-2.0`) and
+ * `LICENSES/` carries all four, so this throw is unreachable on the current tree -- which is the
+ * point: it becomes reachable the moment a dependency change introduces a fifth.
  */
 export function buildCanonicalLicenseTexts(crates, { repoRoot }) {
-  const needed = new Set();
+  // `Map<spdxId, cratesThatNeedIt>` rather than a bare Set, so a throw below can name WHICH crates
+  // are left unattributed by the missing text -- the actionable half of the message.
+  const needed = new Map();
   for (const crate of crates) {
     if (crate.licenseFiles.length > 0) continue;
-    for (const id of extractSpdxIds(crate.license)) needed.add(id);
+    for (const id of extractSpdxIds(crate.license)) {
+      if (!needed.has(id)) needed.set(id, []);
+      needed.get(id).push(`${crate.name} ${crate.version}`);
+    }
   }
 
   const texts = new Map();
-  for (const id of [...needed].sort()) {
+  for (const id of [...needed.keys()].sort()) {
     const repoPath = join(repoRoot, 'LICENSES', `${id}.txt`);
-    if (existsSync(repoPath)) {
-      texts.set(id, {
-        text: readFileSync(repoPath, 'utf8'),
-        source: `LICENSES/${id}.txt (this repository's own copy)`,
-      });
-      continue;
+    if (!existsSync(repoPath)) {
+      // Fails CLOSED (coordinator follow-up, item 1): a build that cannot attribute a linked crate
+      // must not produce a notice at all, rather than produce one with the gap written into it.
+      throw new Error(
+        `rustCrateNotices: no canonical license text for SPDX id "${id}". ` +
+          `${needed.get(id).length} linked crate(s) declare it and ship no ` +
+          `LICENSE/NOTICE/COPYING file of their own (${needed.get(id).sort().join(', ')}), so the ` +
+          'generated notice would carry no license text for them at all. This function does not ' +
+          "borrow another crate's bundled text (release-cut fix batch, MUST-FIX 2: for a license " +
+          'whose body embeds a copyright-holder line, that attributed one project\'s copyright ' +
+          `notice to another), and does not ship a placeholder. Fetch the ${id} license text to ` +
+          `${repoPath} and record its URL, retrieval date and sha256 in LICENSES/README.md ` +
+          'beside the texts already there.',
+      );
     }
-
     texts.set(id, {
-      text:
-        `*** NO CANONICAL TEXT AVAILABLE for SPDX id "${id}" ***\n\n` +
-        `This repository's LICENSES/ directory carries no ${id}.txt. This function no longer ` +
-        'borrows a license text from another linked crate\'s own bundled file for an id this ' +
-        'repository carries no template for (release-cut fix batch, MUST-FIX 2): doing so, for a ' +
-        'license whose own body embeds a copyright-holder line (as MIT and BSD-3-Clause do), would ' +
-        `attribute that OTHER crate's copyright notice to this one. Obtain the ${id} license text ` +
-        'and add it to LICENSES/ to close this gap.',
-      source: 'none -- named as an honest gap, not silently omitted',
+      text: readFileSync(repoPath, 'utf8'),
+      source: `LICENSES/${id}.txt (this repository's own copy)`,
     });
   }
   return texts;

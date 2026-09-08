@@ -26,10 +26,10 @@ this file records **which layer each part of the tree is in**.
 
 The root `LICENSE` carries the core grant. `docs/LICENSE` carries the documentation grant.
 
-**Not every file in this directory is a layer.** `MIT.txt` and `BSD-3-Clause.txt` are
+**Not every file in this directory is a layer.** `MIT.txt`, `BSD-3-Clause.txt` and `MPL-2.0.txt` are
 notice-generation INPUTS — template texts embedded under OTHER projects' crates in a generated
-notice — and neither id appears in the table above, because nothing in this tree is licensed under
-either. See "`MIT.txt` and `BSD-3-Clause.txt` — provenance" below.
+notice — and none of those three ids appears in the table above, because nothing in this tree is
+licensed under any of them. See "`MIT.txt`, `BSD-3-Clause.txt` and `MPL-2.0.txt` — provenance" below.
 
 ## Two texts were missing at first, and that was deliberate rather than an oversight
 
@@ -91,7 +91,7 @@ the variants present by a wide margin; the runners-up (33 and 11 copies) are the
 excerpt and a `https://`-URL variant. Byte-identity across 95 independent upstreams is a stronger
 provenance argument than a single fetch would have been.
 
-## `MIT.txt` and `BSD-3-Clause.txt` — provenance, and why these are notice-generation INPUTS, not a repository layer
+## `MIT.txt`, `BSD-3-Clause.txt` and `MPL-2.0.txt` — provenance, and why these are notice-generation INPUTS, not a repository layer
 
 Added release-cut fix batch, MUST-FIX 2 (`frontends/shell/scripts/rustCrateNotices.mjs`'s
 `buildCanonicalLicenseTexts`). Twelve Rust crates statically linked into the packaged shell's own
@@ -100,31 +100,52 @@ registry source (`DEPENDENCY-LICENSES.md`'s dated block names all twelve). Befor
 generator borrowed a license text from a DIFFERENT linked crate that happened to declare the same
 id and ship its own file -- wrong for MIT and BSD-3-Clause specifically, because both licenses'
 own canonical body embeds a "Copyright (c) &lt;year&gt; &lt;holder&gt;" line, so the borrowed text
-carried that OTHER crate's real copyright notice into a crate that never wrote it. These two files
+carried that OTHER crate's real copyright notice into a crate that never wrote it. These three files
 are this repository's own vetted copies, fetched from the SPDX license list — **not** the way
 `Apache-2.0.txt` above was obtained, which was copied from a local crate's own bundled file and
 argued trustworthy by 95-way byte-identity across independent upstreams; that argument does not
 transfer to MIT or BSD-3-Clause, since every crate's own copy of those two differs from every
 other's in exactly the copyright line at issue, so there is no byte-identical majority to appeal to
-and a real fetch of the template is the only honest source. The copyright-holder line is left
-exactly as the SPDX template's own UNFILLED placeholder -- the same shape `Apache-2.0.txt`'s own
-appendix already carries (`Copyright [yyyy] [name of copyright owner]`), never a specific name.
+and a real fetch of the template is the only honest source. Where a placeholder exists it is left
+exactly as SPDX's own UNFILLED placeholder -- the same shape `Apache-2.0.txt`'s own appendix already
+carries (`Copyright [yyyy] [name of copyright owner]`), never a specific name.
+
+**All three are the PLAIN-TEXT variant, deliberately** (coordinator follow-up to the fix batch,
+item 2). SPDX publishes two forms of some licenses: a plain text, and a *matching template* carrying
+`<<var;name=…;original=…;match=…>>` markup that defines which substitutions still count as the same
+license. The template form is a specification for tooling, not a licence text for a human reader,
+and embedding it in a shipped NOTICE would put that markup in front of a recipient. Every file below
+is checked to contain no `<<var` sequence.
 
 - **`MIT.txt`** — fetched `https://spdx.org/licenses/MIT.txt`, retrieved 2026-09-08, `sha256`
-  `c3b1b78bc8bd3ea13aa4bc9778442d16560270afa235006d816e5e88cef24db4`, 1077 bytes.
-- **`BSD-3-Clause.txt`** — fetched `https://spdx.org/licenses/BSD-3-Clause.txt`, retrieved
-  2026-09-08, `sha256` `0fe4dd6931c4c2fc418940de41074fa3c506cad24bfd891743ea7f2fcfe631ef`, 1693
-  bytes. SPDX's own raw `.txt` endpoint serves this license's underlying LEGAL TEXT TEMPLATE
-  (the `<<var;name=…;original=…;match=…>>` markup SPDX uses to define what text matches this
-  license id), not a pre-rendered plain-text file the way `MIT.txt` above already is -- stored
-  byte-for-byte as fetched rather than hand-rendered into the `<<var…>>` markup's own `original=`
-  defaults, so the stored file is exactly what the recorded URL/hash can reproduce and re-verify,
-  not a paraphrase of it.
+  `c3b1b78bc8bd3ea13aa4bc9778442d16560270afa235006d816e5e88cef24db4`, 1077 bytes. That endpoint
+  serves MIT's plain text directly (`Copyright (c) <year> <copyright holders>`), so it is used
+  as-is; unchanged by the follow-up.
+- **`BSD-3-Clause.txt`** — fetched
+  `https://raw.githubusercontent.com/spdx/license-list-data/main/text/BSD-3-Clause.txt`, retrieved
+  2026-09-08, `sha256` `5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d`, 1460
+  bytes. Placeholders are plain angle-bracket text (`Copyright (c) <year> <owner>.`, and
+  "Neither the name of the copyright holder"). **A different host from the other two, and that is
+  the honest record rather than a tidier one:** `https://spdx.org/licenses/BSD-3-Clause.txt` — the
+  URL the other two use, and the one this file recorded until 2026-09-08 — serves ONLY the
+  `<<var…>>` matching template for this license (`sha256`
+  `0fe4dd6931c4c2fc418940de41074fa3c506cad24bfd891743ea7f2fcfe631ef`, 1693 bytes, the text this
+  file previously stored). There is no plain-text BSD-3-Clause at that host, so the plain variant is
+  taken from `license-list-data`, SPDX's own published data repository and the source that host
+  itself renders from. The URL recorded above is the one that reproduces the hash above.
+- **`MPL-2.0.txt`** — fetched `https://spdx.org/licenses/MPL-2.0.txt`, retrieved 2026-09-08,
+  `sha256` `66c10535a495f4cd8115607e890f8116d657064b98557f660c51e123b3f3fee6`, 15190 bytes. MPL-2.0
+  carries **no** copyright placeholder at all — the licence's body is the same text for every
+  work that uses it — so here the template and the text are one thing and no placeholder question
+  arises. Added by the coordinator follow-up (item 1): `selectors 0.36.1` declares `MPL-2.0` and
+  ships no license file, and without this template the generated notice carried an explicit
+  "no canonical text available" entry for it — a one-crate attribution gap, which is the opposite
+  of what ADR-030 (a) is for.
 
-**These two files are notice-generation INPUTS, not a layer of this repository.** The layers table
-above (ADR-009) is unchanged by their presence: nothing in this tree is MIT- or BSD-3-Clause-
-licensed, no source file here carries either SPDX header, and neither id appears in the layers
-table. `MIT.txt`/`BSD-3-Clause.txt` exist solely so `buildCanonicalLicenseTexts` has a vetted,
+**These three files are notice-generation INPUTS, not a layer of this repository.** The layers table
+above (ADR-009) is unchanged by their presence: nothing in this tree is MIT-, BSD-3-Clause- or
+MPL-2.0-licensed, no source file here carries any of those SPDX headers, and none of the three ids
+appears in the layers table. They exist solely so `buildCanonicalLicenseTexts` has a vetted,
 citable text to embed under OTHER PROJECTS' crates in a GENERATED notice
 (`frontends/shell/src/generated/NOTICE.txt`) -- the same non-layer role `Apache-2.0.txt` above
 already plays for the twelve gap crates that declare `Apache-2.0` (directly, or as one atom of an
@@ -132,6 +153,13 @@ already plays for the twelve gap crates that declare `Apache-2.0` (directly, or 
 template for more than one atom of a declared `OR` expression (a crate declaring
 `MIT/Apache-2.0`, say) is informational, never an election of one license over the other on that
 crate's behalf -- `notice.mjs`'s own rendered text says so directly, beside the texts themselves.
+
+**Removing one of these files breaks the build on purpose.** `buildCanonicalLicenseTexts` fails
+closed: a gap crate declaring an id this directory carries no `<id>.txt` for makes the generator
+THROW, naming the id, rather than emitting a placeholder into a shipped notice. Their content is
+also pinned by `sha256` in `frontends/shell/src/notices/noticeByteIdentity.test.ts`, so a silent
+edit to any of them fails a test rather than silently changing the licence text this application
+conveys.
 
 ## The Apache-2.0 layer is empty, and that is a finding rather than a gap
 

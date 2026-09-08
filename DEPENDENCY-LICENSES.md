@@ -329,17 +329,29 @@ and the terms URL:
   were all printed under `atoi 2.0.0`'s own `LICENSE` (whose copyright line reads
   `Copyright (c) 2017 `, holder field blank), and `alloc-stdlib` under `alloc-no-stdlib 2.0.4`'s,
   carrying Dropbox's copyright line — none of which those crates wrote. The fallback is removed.
-  `LICENSES/MIT.txt` and `LICENSES/BSD-3-Clause.txt` were added as the SPDX list's own TEMPLATE
-  texts, copyright line left as the template's unfilled placeholder (URL, retrieval date and
-  `sha256` recorded in `LICENSES/README.md`, which also states that these are
+  `LICENSES/MIT.txt`, `LICENSES/BSD-3-Clause.txt` and `LICENSES/MPL-2.0.txt` were added as SPDX's
+  own PLAIN-TEXT licence texts, any copyright line left as that text's unfilled placeholder (URL,
+  retrieval date and `sha256` recorded in `LICENSES/README.md`, which also states that these are
   notice-generation inputs and NOT layers of this repository under ADR-009); each gap crate's
   section additionally prints the `authors` and `repository` its own `Cargo.toml` declares, which is
-  what genuinely remains of its own attribution. **Consequence, named rather than hidden:** `MPL-2.0`
-  is now the one needed id this repository carries no template for (`selectors 0.36.1`), so its
-  entry in that shared section is an explicit "no canonical text available" placeholder where it
-  previously carried `cssparser 0.36.0`'s bundled copy. MPL-2.0's text embeds no copyright line, so
-  the borrow was not a misattribution — dropping it is a completeness cost taken to remove the
-  mechanism, and closing it is one file (`LICENSES/MPL-2.0.txt`), not a redesign.
+  what genuinely remains of its own attribution. **The generator fails closed by throwing.** An id a
+  gap crate declares and `LICENSES/` carries no text for aborts notice generation, naming the id and
+  the crates that needed it, rather than emitting a placeholder into a conveyed artifact — the first
+  version of this fix did emit one, which left `selectors 0.36.1` (`MPL-2.0`) with no licence text
+  in the shipped notice at all, a one-crate attribution gap and the opposite of what ADR-030 (a) is
+  for. `LICENSES/MPL-2.0.txt` closes it; with four texts present (`Apache-2.0`, `BSD-3-Clause`,
+  `MIT`, `MPL-2.0`) every id the current linked set needs is covered, so the throw is unreachable
+  today and becomes reachable the moment a dependency change introduces a fifth. Proven by
+  mutation: removing `LICENSES/MPL-2.0.txt` makes `npm run build` fail in its own `prebuild` hook
+  with `rustCrateNotices: no canonical license text for SPDX id "MPL-2.0". 1 linked crate(s) declare
+  it and ship no LICENSE/NOTICE/COPYING file of their own (selectors 0.36.1) …`.
+  **`BSD-3-Clause.txt` is the plain text, not SPDX's matching template.** It was first stored as the
+  template variant `https://spdx.org/licenses/BSD-3-Clause.txt` serves (`sha256` `0fe4dd69…`),
+  carrying `<<var;name=copyright;original= <year> <owner>;match=.+>>` markup — a licence-detection
+  specification, which was being rendered verbatim into a NOTICE a human reads. Replaced with the
+  plain variant from SPDX's own `license-list-data` repository (`sha256` `5a93d583…`); a test now
+  asserts no `<<var` sequence appears in any `LICENSES/*.txt` used as a canonical text or anywhere
+  in the generated notice.
   `libduckdb-sys`'s own registry source DOES carry
   DuckDB's MIT `LICENSE` file directly (verified: it ships a `LICENSE`, `duckdb.tar.gz`, and the
   bundled C++ sources — the `duckdb` crate itself, the thin Rust wrapper, does not, and falls back

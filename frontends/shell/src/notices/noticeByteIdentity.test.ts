@@ -159,13 +159,23 @@ describe("src/generated/NOTICE.txt (RELEASE-0.1 item 2 MUST-FIX 2; extended by i
   // silently changes the licence text this application conveys, and nothing else in the repository
   // would notice. Pinned by content hash, and asserted to actually reach the generated notice.
   //
-  // Provenance for all three, including the retrieval date and the URL each hash reproduces, is in
+  // Provenance for all four, including the retrieval date and the URL each hash reproduces, is in
   // `LICENSES/README.md`. Updating one of these hashes is a deliberate act; it is not a way to make
   // a failing test pass.
+  //
+  // **Two conscious updates, coordinator follow-up to the fix batch (2026-09-08):**
+  //   - `BSD-3-Clause.txt` `0fe4dd69…` -> `5a93d583…`. The old bytes were SPDX's *matching template*
+  //     for that id, carrying `<<var;name=copyright;original= <year> <owner>;match=.+>>` markup —
+  //     a specification for licence-detection tooling, which was being rendered into a NOTICE a
+  //     human reads. Replaced with the plain-text variant, placeholders as ordinary angle-bracket
+  //     text. The `noVarMarkup` assertion below is what keeps that from coming back.
+  //   - `MPL-2.0.txt` added (`66c10535…`), no previous value. Without it `selectors 0.36.1` — which
+  //     declares MPL-2.0 and ships no licence file — had no text at all in the generated notice.
   const PINNED_LICENSE_TEMPLATES: Record<string, string> = {
     "Apache-2.0.txt": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
     "MIT.txt": "c3b1b78bc8bd3ea13aa4bc9778442d16560270afa235006d816e5e88cef24db4",
-    "BSD-3-Clause.txt": "0fe4dd6931c4c2fc418940de41074fa3c506cad24bfd891743ea7f2fcfe631ef",
+    "BSD-3-Clause.txt": "5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d",
+    "MPL-2.0.txt": "66c10535a495f4cd8115607e890f8116d657064b98557f660c51e123b3f3fee6",
   };
 
   it("embeds the pinned LICENSES/ template texts, unmodified, in the generated notice", () => {
@@ -178,5 +188,19 @@ describe("src/generated/NOTICE.txt (RELEASE-0.1 item 2 MUST-FIX 2; extended by i
         `NOTICE.txt should embed LICENSES/${file} verbatim (it is the canonical text for crates that ship none)`
       ).toBe(true);
     }
+  });
+
+  // SPDX publishes some licences twice: a plain text, and a matching TEMPLATE whose
+  // `<<var;name=…;original=…;match=…>>` markup tells licence-detection tooling which substitutions
+  // still count as the same licence. The template is a machine specification, not a licence text
+  // for a recipient, and one of these files was the template form until this follow-up. Asserted
+  // against the shipped notice as well as the source files, since the notice is what a reader sees.
+  it("carries no SPDX matching-template markup, in the license files or the generated notice", () => {
+    const generated = readFileSync(generatedPath, "utf8");
+    for (const file of Object.keys(PINNED_LICENSE_TEMPLATES)) {
+      const text = readFileSync(join(repoRoot, "LICENSES", file), "utf8");
+      expect(text, `LICENSES/${file} should be SPDX's plain text, not its matching template`).not.toMatch(/<<var/);
+    }
+    expect(generated).not.toMatch(/<<var/);
   });
 });
