@@ -5,6 +5,36 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+57. **[Packaged build (items 2/3/3e) — RULE 7 REACHED on the architect's side: one sentence in the
+    installed `NOTICE.txt` still overclaims, and a decision this project has never made is now
+    live: what notice set a conveyed artifact must carry.]** After the fix batch (`34a1896`), the
+    three `NOTICE.txt` copies are byte-identical (163,771 B, the viewer's real apache-arrow 18.1.0
+    with Arrow's retained NOTICE), the hash is truly pinned, the boundary/class-C/§6/ADR-025/Part M
+    items all pass. **The block:** the header's scope sentence says the file "covers the VIEWER and
+    the packaged frontend only — it does NOT enumerate the Rust crates". The second half is the gap
+    already named as owed (Amendment 5). The first half is **false**: the packaged frontend is a
+    separate Vite build of a separate `node_modules` — React, react-dom, `@deck.gl/core`+`layers`
+    9.3.7 (MIT), `apache-arrow` 21.2.0 (Apache-2.0) — compiled into the installed app and absent
+    from the notice, whose third-party section derives from the *viewer's* esbuild metafile only.
+    Two owed sets, not one. **Unblocking is one sentence** (name both gaps as owed; mirror in
+    `DEPENDENCY-LICENSES.md`; re-quote Part M's M3) — but "whether v0.1 may ship with two named
+    notice gaps rather than one is the human's call" (the architect, verbatim in substance).
+    **Options:** (a) close both gaps before the tag — a notice generator for the shell's Vite build
+    (metafile-equivalent) and one for the Rust crates from the lockfile, into the same one-source
+    `NOTICE.txt`; (b) ship v0.1 with both gaps NAMED — in the notice, in `DEPENDENCY-LICENSES.md`,
+    in KNOWN-LIMITATIONS — with a due milestone; (c) status quo (per-artifact rulings — the architect
+    shows this failing). The architect drafted an **ADR-030 skeleton** ("the notice set a conveyed
+    artifact must carry") with exactly these candidates; filing it is yours. **Recommendation:** (b)
+    to unblock this PR now (the sentence, authorized as a custodian sweep since the piece is under
+    rule 7), AND item 9 on the cut — both generators — scheduled BEFORE the tag so KNOWN-LIMITATIONS
+    need not carry a notice gap at v0.1.0; file ADR-030 Proposed with (a) as the decision once item 9
+    lands. Also from this re-check, for item 4: `ensure_pinned`'s whole-file SHA-256 before publish
+    (uncancellable, progress-less; sighted at Part M M10 at 5 GB) is operator-visible in a packaged
+    first publish and must be a KNOWN-LIMITATIONS entry (principle 7) — not among the eight adopted.
+    Fix-forward nits to ride the sweep: `docs/02:91`'s stale "(ADR-025 stays reserved …)" clause;
+    M3's tense; M10's trailing period; the shipped refusal's developer-only remedy text; the
+    `#[ignore]`d boundary test stated as not-in-CI.
+
 56. **[The regression suite's K6 step is RED on unmodified main — a pre-existing failure the arm-flip
     piece surfaced by running the suite on both arms; it is entry 47's mechanism seen by a machine.]**
     Facts (item 7's fix batch, quiet machine, all apps closed after): K6 fails identically —
