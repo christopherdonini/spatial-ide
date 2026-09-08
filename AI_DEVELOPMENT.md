@@ -190,6 +190,14 @@ how obvious they seem:
   with must-fixes is not a failed attempt; a gate FAIL followed by a re-review FAIL at the same
   step is two → stop, record, queue. A design the human re-authorized starts its own count.
 
+- **No shebang on a module a Vitest suite imports (2026-09-08, PR #35's first CI run).** On
+  `windows-latest` (`core.autocrlf=true`) a `#!/usr/bin/env node` first line ending in CR LF makes
+  Vitest's transform throw `SyntaxError: Invalid or unexpected token` in every importing suite, while
+  `node --check` accepts the file and the same commit passes locally under LF. Reproduce by converting
+  the module to CRLF; bisect by file. A module that is only imported carries no shebang; a script that
+  is only executed may. `node --check` is not the guard; the CRLF checkout is the second member of the
+  eol class (the hash-pin member is above).
+
 ## Away-mode evidence rule
 
 GUI-dependent acceptance items (native pickers, canvas interaction, headed browser cells) are
