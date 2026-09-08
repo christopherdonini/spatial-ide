@@ -183,23 +183,51 @@ mirroring Tauri's own `WebviewUrl::App` resolution, via a pure function,
   method this mirror reproduces — **tauri 2.11.5**, `src/manager/mod.rs:353-367` — reads
   `config.build.dev_url` in dev mode (no fallback) and falls through to
   `AppManager::tauri_protocol_url` (`src/manager/mod.rs:339-346`) in production unless
-  `config.build.frontend_dist` is itself a URL. Both `tauri::is_dev()` here and `get_app_url`'s own
-  `#[cfg(dev)]` branch descend from the identical single build-script emission: **tauri 2.11.5**'s
-  `build.rs:255-261` computes `dev = !has_feature("custom-protocol")` and prints `cargo:dev={dev}`;
-  **tauri-build 2.6.3**'s `is_dev()` (`src/lib.rs:425-429`) reads it back via `DEP_TAURI_DEV`, and
-  `cfg_alias("dev", is_dev())` (`src/lib.rs:519`) is what gives this crate's own build the
-  `#[cfg(dev)]`/`tauri::is_dev()` bit. One bit, two consumers — the mirror cannot disagree with
-  Tauri's own choice of window URL however a build mode falls, which is exactly the property the
-  retired `cfg!(debug_assertions)` selector lacked (`tauri build --debug` sets `debug_assertions`
-  but not `dev`).
+  `config.build.frontend_dist` is itself a URL. **Provenance corrected (architect B3): `tauri::
+  is_dev()` and `get_app_url`'s own `#[cfg(dev)]` branch are BOTH set by the `tauri` crate's OWN
+  `custom-protocol` feature, not by `tauri-build`.** `tauri::is_dev()` (line above) and
+  `get_app_url`'s `#[cfg(dev)]` (`src/manager/mod.rs:354`) descend from the identical single
+  build-script emission — but that build script is `tauri` **2.11.5**'s own `build.rs:255-261`,
+  which computes `dev = !has_feature("custom-protocol")` and emits BOTH `alias("dev", dev)` (tauri's
+  own internal `cfg(dev)` alias, `build.rs:259`, which is what `get_app_url`'s `#[cfg(dev)]` reads)
+  AND a separate `cargo:dev={dev}` metadata line (`build.rs:261`). That second emission is read by
+  **tauri-build 2.6.3**'s `is_dev()` (`src/lib.rs:425-429`, via `DEP_TAURI_DEV`) and its
+  `cfg_alias("dev", is_dev())` call (`src/lib.rs:519`) — but that call runs inside *this crate's
+  own* `build.rs` (`frontends/shell/src-tauri/build.rs`'s `tauri_build::build()`), so it sets
+  `cfg(dev)` for the **shell** crate specifically, a mechanism this crate's own code never uses (no
+  `#[cfg(dev)]` appears anywhere in `origin.rs`/`lib.rs` — only `tauri::is_dev()`, a direct runtime
+  feature check compiled into the `tauri` library itself, with no dependency on `tauri-build` or on
+  this crate's own `cfg(dev)` at all). One underlying feature flag, two independent propagation
+  paths to two different consumers — the mirror (`tauri::is_dev()`) and Tauri's internal
+  window-URL resolution (`get_app_url`'s `#[cfg(dev)]`) read the SAME flag from the SAME crate's
+  build script and can never disagree, which is exactly the property the retired
+  `cfg!(debug_assertions)` selector lacked (`tauri build --debug` sets `debug_assertions` but not
+  `dev`).
 - **Logic, exactly:** `if tauri::is_dev() { origin_of(app.config().build.dev_url) — refuse to start
   if None } else { if let FrontendDist::Url(u) = app.config().build.frontend_dist { origin_of(u) }
   else { tauri_protocol_origin(https) } }`, where `tauri_protocol_origin` is
   `http(s)://tauri.localhost` on Windows/Android (`https` iff the main window's `useHttpsScheme`,
   default `false` — **tauri-utils 2.9.3**, `src/config.rs:2153-2163`) and `tauri://localhost`
   everywhere else — `AppManager::tauri_protocol_url`'s own platform split
-  (`src/manager/mod.rs:340-345`). `PROXY_DEV_SERVER` (`cfg!(all(dev, mobile))`) is noted, inert:
-  this crate is desktop-only, so that condition is always `false`.
+  (`src/manager/mod.rs:340-345`). `PROXY_DEV_SERVER` (`cfg!(all(dev, mobile))`) is noted, inert: no
+  mobile target is built today (`lib.rs:102` carries the mobile entry-point attribute,
+  `#[cfg_attr(mobile, tauri::mobile_entry_point)]`, but nothing in this crate's `Cargo.toml` builds
+  one) — a mobile build would take that arm and is itself a §(e) reopen condition (architect A3).
+- **Assumption stated (architect A2): the main window's own `url` is `WebviewUrl::App`.** This
+  mirror reproduces `AppManager::get_app_url`'s resolution of a `WebviewUrl::App` window's URL only.
+  `get_app_url`'s result becomes the webview's actual navigation URL only in that arm
+  (`tauri-2.11.5/src/manager/webview.rs:443-461`); the adjacent `WebviewUrl::External` arm
+  (`:462-471`) calls `get_app_url` too, but only to test whether the configured external URL happens
+  to coincide with it — the webview navigates to the configured EXTERNAL URL verbatim whenever it
+  does not — and `WebviewUrl::CustomProtocol` (`:473`) never calls `get_app_url` at all. A main
+  window configured as `WebviewUrl::External`/`WebviewUrl::CustomProtocol`
+  (`WindowConfig::url`, **tauri-utils 2.9.3**, `src/config.rs:1939`, of type `WebviewUrl` —
+  `External(Url)` / `App(PathBuf)` / `CustomProtocol(Url)`, `src/config.rs:77-86`) would therefore
+  diverge from this mirror, which always computes a `get_app_url`-equivalent value regardless of
+  which variant is actually configured. `setup()` guards this: `origin::main_window_url_is_app`
+  (a pure decision, unit-tested over all three variants) checks `main_window_config.url`, and
+  `refuse_to_start`s, named, if it is not `WebviewUrl::App` — a fail-closed refusal rather than
+  pinning a value the webview might never actually navigate to.
 - **Purity and inputs:** `expected_origin_from_config` takes plain values — `is_dev: bool`,
   `dev_url: Option<&Url>`, a `FrontendDistOrigin` (`Url(&Url)` or `Other`), `use_https: bool`, a
   `Platform` enum (`WindowsOrAndroid`/`Other`) — no `App`/`AppHandle`, no I/O, callable from a unit
@@ -225,6 +253,30 @@ mirroring Tauri's own `WebviewUrl::App` resolution, via a pure function,
   decision 4's unclassified-command scan does not apply), and exits the process with status 1 —
   never a default value, never silent (a plain release build has no console:
   `main.rs`'s `windows_subsystem = "windows"`).
+  **A stated reliance (architect B2 = reviewer S3): `blocking_show()` on the setup thread, which is
+  also the main thread.** `tauri-plugin-dialog` **2.7.2**'s own doc comment on `blocking_show()`
+  (`src/lib.rs:355-356`), quoted verbatim:
+
+  > This is a blocking operation,
+  > and should *NOT* be used when running on the main thread context.
+
+  `refuse_to_start`'s own doc comment (`lib.rs`) carries the full traced call chain, each link
+  verified against the pinned crate version: `App::run` records `main_thread_id` as the thread that
+  calls it (`tauri-2.11.5/src/app.rs:1367`) and invokes `setup()` from inside that same thread's
+  `RuntimeRunEvent::Ready` handling (`:1422-1426`); `blocking_show()` reaches `tauri-runtime-wry`
+  **2.11.4**'s `send_user_message` (`src/lib.rs:239-248`), which runs the queued closure INLINE when
+  called from the main thread, rather than posting it for a later pump; that closure
+  (`tauri-plugin-dialog-2.7.2/src/desktop.rs:222-225`) spawns a background thread (`:225`) to show
+  the dialog, and `rfd` **0.16.0**'s own Windows backend does the same one level deeper
+  (`backend/win_cid/thread_future.rs:26`) — the blocking `rx.recv()` this function's own call
+  therefore waits on is fed from a thread two levels removed from the main thread, not on the main
+  thread's own event loop being pumped. **The residual, stated honestly:** this refusal path has
+  never been exercised on a PACKAGED (`tauri build`) artifact, where a hang here would be silent —
+  `main.rs`'s `windows_subsystem = "windows"` applies under `not(debug_assertions)`, leaving no
+  console for even the `eprintln!` fallback to reach. The log-first ordering is what survives a
+  silent hang: the session log still carries the refusal even if the dialog itself never becomes
+  visible. A deliberate exercise of this path on a packaged artifact is a Part M candidate, at the
+  human's discretion — not undertaken by this piece.
 - **No runtime read, no retry, no pump, no `windows` dependency, no `unsafe`.** There is nothing in
   `setup()` for a Win32 message pump to unblock: every input this selection needs is already fully
   resolved configuration by the time `setup()` begins. `Cargo.toml`'s `[target.'cfg(windows)'.
@@ -243,19 +295,37 @@ webview. Filtered to `PageLoadEvent::Finished` (`tauri::webview::PageLoadEvent`,
 Reads `Webview::url() -> tauri::Result<Url>` (**tauri 2.11.5**, `src/webview/mod.rs:1679-1680`, doc
 comment `"Returns the current url of the webview."`), normalises it with the SAME
 `origin::expected_origin_from_url` the mirror itself uses, and compares the result against the
-`PinnedOrigin` managed state `setup()` recorded at the moment it pinned `expected_origin`. The
-comparison result is appended to the session log — `origin-self-check ok pinned=<origin>` on a
-match, `origin-self-check MISMATCH pinned=<origin> actual=<origin>` (or `actual=<unreadable: ...>`
-if `Webview::url()`/normalisation itself failed) otherwise — and, on a mismatch only, one typed
-event, `origin-self-check-mismatch`, is emitted via `AppHandle::emit` (`Webview<R>: Emitter<R>`,
-`Manager<R>`, both implemented directly — `tauri-2.11.5/src/webview/mod.rs:2291,2293` — so this
-hook needs nothing `setup()` alone provides), payload `{ pinned: String, actual: String }`. **No new
-Tauri command exists here** — ADR-027 decision 4's unclassified-command build-time scan is
-unaffected. The frontend (`frontends/shell/src/diagnostics/originSelfCheck.ts`) listens with
-`@tauri-apps/api/event`'s `listen` (an existing dependency — `@tauri-apps/api` is already in
-`package.json`; `listen` is the sibling export of the `invoke` this crate's other modules already
-use) and renders a typed, non-dismissable state (`OriginMismatchState.tsx`) naming the mismatch and
-that the data plane will refuse; nothing in the frontend or host ever writes the pinned value back.
+`PinnedOrigin` managed state `setup()` recorded at the moment it pinned `expected_origin`.
+
+**Reviewer S6's alternative — reading `payload.url()` instead of `Webview::url()` — was considered
+and is deferred, not adopted.** `RELEASE-0.1.md` Amendment 6's "Preregistration — item 1 (b)" names
+`Webview::url()` specifically ("read `Webview::url()`, normalise, compare to the pinned origin"),
+and this ADR sits behind the human's security red line: preregistration fidelity is not something
+this piece may trade away on its own initiative. Both reads observe the SAME completed navigation in
+practice (this hook only runs on `PageLoadEvent::Finished`), so nothing about the check's own
+correctness turns on which one is used — only which one the accepted preregistration names.
+
+**Reviewer S5: the `Err` arm (an unreadable/unnormalisable `Webview::url()`) is now typed distinctly
+from a genuine mismatch, not folded into it.** The pre-fix shape treated both as one "mismatch"
+state and told the frontend "the data plane will refuse this session" — false in the `Err` case,
+since an unreadable actual origin does not mean the pinned one is wrong, only that this one check
+could not confirm it; the data plane's own admission still runs against the pinned origin exactly as
+pinned. The comparison result is appended to the session log — `origin-self-check ok pinned=<origin>`
+on a match, `origin-self-check MISMATCH pinned=<origin> actual=<origin>` on a genuine mismatch, or
+`origin-self-check UNVERIFIABLE pinned=<origin> error=<error>` if `Webview::url()`/normalisation
+itself failed — and, on either of the latter two, one typed event, `origin-self-check-mismatch`, is
+emitted via `AppHandle::emit` (`Webview<R>: Emitter<R>`, `Manager<R>`, both implemented directly —
+`tauri-2.11.5/src/webview/mod.rs:2291,2293` — so this hook needs nothing `setup()` alone provides),
+payload `OriginSelfCheckOutcome` (`#[serde(tag = "kind", rename_all = "camelCase")]`) — either
+`{ kind: "mismatch", pinned: String, actual: String }` or `{ kind: "unverifiable", pinned: String,
+error: String }`. **No new Tauri command exists here** — ADR-027 decision 4's unclassified-command
+build-time scan is unaffected. The frontend (`frontends/shell/src/diagnostics/originSelfCheck.ts`)
+listens with `@tauri-apps/api/event`'s `listen` (an existing dependency — `@tauri-apps/api` is
+already in `package.json`; `listen` is the sibling export of the `invoke` this crate's other modules
+already use) and renders a typed, non-dismissable state (`OriginMismatchState.tsx`) discriminated on
+`kind`: a mismatch names the mismatch and that the data plane will refuse; an unverifiable read
+states truthfully that the origin could not be verified and that the pinned origin stands and
+admission behaves as pinned. Nothing in the frontend or host ever writes the pinned value back.
 **This can only ever fire after `setup()` has returned** — page-load events are dispatched by the
 app's own event loop, which does not begin pumping until `setup()`'s synchronous closure completes
 (`tauri-2.11.5/src/app.rs:1422-1426`'s `RuntimeRunEvent::Ready` dispatch) — so every `app.manage(...)`
@@ -282,8 +352,12 @@ things, not one.** Before, a `vite.config.ts`/`tauri.conf.json` drift only misdi
 (the pre-rewrite selector read the webview's own URL back, so it would have pinned whatever origin
 the webview actually landed on, correct or not). Now that the config mirror pins
 `tauri.conf.json`'s own `build.devUrl` origin directly, a drift here means the config mirror pins
-an origin the webview never actually navigates to, and every data-plane upgrade 403s — this script
-is the only thing that would catch that before a human hits it at runtime.
+an origin the webview does not actually land on. **Stated correctly (architect A1, correcting this
+paragraph's own first-draft wording): on a drift, Tauri navigates the webview TO the pinned origin
+(`build.devUrl`) and finds nothing serving it — a broken dev session (the page fails to load) — not
+a `403` from a data-plane upgrade that gets attempted and refused.** No upgrade is ever attempted at
+all in that case, since the page never loads far enough to run the script that would attempt one.
+This script is the only thing that would catch the drift before a human hits it at runtime.
 
 **(c)** Verbatim, as required:
 
@@ -327,9 +401,10 @@ falsely:
   behaviour, not inert code sitting unreached in the binary.
 - **`commands::binding_publish_prepare_e2e_destination` IS the dormant-but-present shape** the first
   draft of this paragraph described for both: `#[cfg(debug_assertions)]`-gated at both its own
-  definition (`commands.rs:409`) and its `lib.rs` handler-list entry (`lib.rs:391` — absent from a
+  definition (`commands.rs:409`) and its `lib.rs` handler-list entry (`lib.rs:479` — absent from a
   release build's handler list entirely, not merely runtime-disabled), while its sole frontend caller
-  is gated by `import.meta.env.DEV` (`PublishPanel.tsx:294`: `if (!import.meta.env.DEV) return;`,
+  is gated by `import.meta.env.DEV` (`frontends/shell/src/publish/PublishPanel.tsx:294`:
+  `if (!import.meta.env.DEV) return;`,
   false under `--debug`'s production `vite build`, so the calling code is dead-code-eliminated from
   the bundle). A `tauri build --debug` artifact ships this command with no frontend caller able to
   reach it.
@@ -349,16 +424,27 @@ asserts — but not the third build mode (`tauri build`, undertaken at Part M on
 packaged artifact) nor a live data-plane WebSocket upgrade against the `--debug` executable, which
 this piece has no admission-mint harness wired to attempt in isolation.
 
-**(e) Reopen condition, verbatim** (RELEASE-0.1.md Amendment 6's "Preregistration — item 1 (b)"):
+**(e) Reopen condition, verbatim** (RELEASE-0.1.md Amendment 6's "Preregistration — item 1 (b)",
+`RELEASE-0.1.md:798-799`; reviewer M1: the quote below previously appended "rather than
+reintroducing a compile-time selector.", which the cited source does not contain — the source
+sentence ends at "reopens this amendment"):
 
 > any future build mode whose origin Tauri does not resolve from `cfg(dev)` + config reopens this
-> amendment rather than reintroducing a compile-time selector.
+> amendment
+
+This amendment's own words, not part of that quote: the reopen is meant as a return to the human,
+not a return to a compile-time selector — the exact defect condition (1)–(3) of this amendment's
+original text already retired.
 
 (E.g.: no `App`/`AppHandle` available at the point the origin must be known, or a consumer shape
 whose window URL Tauri itself does not resolve from `cfg(dev)` + `tauri.conf.json`'s `build` section
-at all. This condition **supersedes** the 2026-09-07 draft's own §(e), which named "webview origin
-not readable at startup" — that condition no longer applies to a design that never reads the
-webview at startup in the first place.)
+at all — named concretely: a main window configured as `WebviewUrl::External`/`WebviewUrl::
+CustomProtocol` rather than `WebviewUrl::App` is exactly this shape (§(b)'s "Assumption stated"
+bullet, architect A2); `setup()`'s guard refuses to start rather than silently pinning a value for
+it today, but a future consumer that legitimately needs that shape reopens this amendment rather
+than working around the guard. This condition **supersedes** the 2026-09-07 draft's own §(e), which
+named "webview origin not readable at startup" — that condition no longer applies to a design that
+never reads the webview at startup in the first place.)
 
 **(f) Runtime evidence, executed once on 2026-09-08, on the config mirror + the post-load
 self-check.**
@@ -366,12 +452,17 @@ self-check.**
 **(i) `npm run tauri dev`** (`frontends/shell`, launched 10:09:40, closed 10:20:33 — both times
 this worker's own; a cargo rebuild for this worktree's package id took the usual ~48s, per
 `AI_DEVELOPMENT.md`'s "E2E from a worktree" mechanic). stderr and the session log
-(`C:\Users\Christopher\AppData\Local\dev.spatialide.shell\logs\session-1788855035.log`) agree,
-byte-identical, verbatim:
+(`C:\Users\Christopher\AppData\Local\dev.spatialide.shell\logs\session-1788855035.log`) agree on
+the MESSAGE BODY only (architect B1 = reviewer M3: not byte-identical lines — each carries its own
+process's own prefix: the session log's `SessionLog::append`-format `<epoch-ms> <level>` prefix,
+`state.rs:41-50`; stderr's `[spatial-ide-shell]` prefix, this file's own `eprintln!` calls). Quoted
+here as each actually reads, verbatim:
 
-> `[spatial-ide-shell] data-plane expected origin (config mirror): http://localhost:5180`
+> session log: `1788855035342 info data-plane expected origin (config mirror): http://localhost:5180`
+> stderr: `[spatial-ide-shell] data-plane expected origin (config mirror): http://localhost:5180`
 
-and the session log's own self-check line, immediately after the page loaded:
+identical message body ("data-plane expected origin (config mirror): http://localhost:5180"). And
+the session log's own self-check line, immediately after the page loaded:
 
 > `1788855040015 info origin-self-check ok pinned=http://localhost:5180`
 
@@ -383,9 +474,13 @@ and run directly without downloading WiX, matching `main`'s `tauri.conf.json:27`
 `C:\dev\spatial-ide\frontends\shell\src-tauri\target\debug\spatial-ide-shell.exe` (`dev` profile,
 `custom-protocol` feature — `Finished` in 1m 53s). Run directly from the target directory, not
 installed: launched 10:24:01, closed 10:24:13. The session log
-(`session-1788855843.log`) carries, verbatim:
+(`session-1788855843.log`) carries, verbatim, all three of its lines in order (reviewer M3: an
+earlier draft of this section quoted lines 1 and 3 as an adjacent pair, eliding line 2 without
+marking the elision — line 2 is an unrelated policy-recovery log entry, included here so the
+adjacency below is not misleading):
 
 > `1788855843233 info data-plane expected origin (config mirror): http://tauri.localhost`
+> `1788855843279 policy recovery policy: none -- fail visibly and terminate the canvas with a surfaced error`
 > `1788855843282 info origin-self-check ok pinned=http://tauri.localhost`
 
 `http://tauri.localhost` (not `http://localhost:5180`) confirms the config mirror correctly took
@@ -426,7 +521,11 @@ of `git blame`/`git log` on this file understands why a webview-URL-read design 
 abandoned, per `AI_DEVELOPMENT.md`'s "accepted ADRs ... a stale provenance field is worse than a
 missing one" discipline applied to a design's own history, not only to acceptance dates.
 
-- **2026-09-07, `df0650f`:** a single, unretried `Webview::url()` read inside `setup()`, before
+- **2026-09-07, `24edb94`** (reviewer M2: this history originally cited `df0650f`, an object
+  reachable from no branch after this branch's rebase — `24edb94` is that same commit's rebased
+  copy, identical commit message, verified by `git branch --all --contains`/`git merge-base
+  --is-ancestor` against this branch's own HEAD before writing this correction): a single,
+  unretried `Webview::url()` read inside `setup()`, before
   `serve()`. **Refused to start on its very first real `tauri dev` launch** — the webview's URL is
   `about:blank` at the instant `setup()` runs (navigation has been *issued*, via
   `webview.Navigate(&url)`, but has not yet *landed*), and `about:blank` has no host component, so
@@ -439,7 +538,9 @@ missing one" discipline applied to a design's own history, not only to acceptanc
   everything on the UI thread, including callbacks which it triggers with `PostMessage`"*) — nothing
   pumps this thread's message queue between `Navigate()` returning and `setup()` returning, so a
   plain sleep genuinely cannot observe the navigation land.
-- **`5d22d7a` added a Win32 message pump** (`PeekMessageW`/`TranslateMessage`/`DispatchMessageW`
+- **`c9b8e23` added a Win32 message pump** (reviewer M2: originally cited `5d22d7a`, likewise
+  reachable from no branch after the rebase — `c9b8e23` is that commit's rebased copy, same
+  verification as above) (`PeekMessageW`/`TranslateMessage`/`DispatchMessageW`
   with `PM_REMOVE`, non-blocking, called once per retry attempt, 250 attempts × 20 ms) — this
   "fixed" the symptom, and did produce a working, evidence-backed runtime record (an admitted
   WebSocket upgrade, real batches rendered). Its costs, found by the architect's re-check
@@ -456,13 +557,16 @@ missing one" discipline applied to a design's own history, not only to acceptanc
   issued before the read is the host-configured one") had been airtight because *nothing pumped*;
   with a pump, it became a timing property dressed as a structural one.
 - **Two gates (architect design review, reviewer text/mechanism review) both FAILED the pump
-  design** on exactly this finding, reaching `AI_DEVELOPMENT.md`'s "two failed attempts → stop,
-  record, queue for the human" rule. `DECISIONS-PENDING.md` entry 55 queued the design choice —
+  design** on exactly this finding, reaching `AI_DEVELOPMENT.md`'s rule 7, `AI_DEVELOPMENT.md:209`,
+  quoted in full (an earlier draft of this sentence elided "at the same step" without marking it):
+  "Two failed attempts at the same step → stop, record, queue for the human." `DECISIONS-PENDING.md`
+  entry 55 queued the design choice —
   keep the pump (accept the `windows`/`unsafe`/IPC-window costs) vs. switch to a pure config mirror
   — to the human, with the architect's own recommendation already for the mirror.
 - **The human's ruling, 2026-09-08 (entry 55 = "(b)"), quoted in full in this amendment's own
   opening "Authorization" paragraph above**, selected the config mirror, named the new mechanic
-  ("never block or pump inside `setup()`", now recorded in `AI_DEVELOPMENT.md`'s custodian
-  mechanics), and this amendment's current (b)/(f) text is that ruling's content. The pump, its
+  ("Never block or pump inside Tauri's `setup()`", `AI_DEVELOPMENT.md:147`, now recorded in
+  `AI_DEVELOPMENT.md`'s custodian mechanics), and this amendment's current (b)/(f) text is that
+  ruling's content. The pump, its
   `pump_pending_windows_messages` function, its `windows` dependency, and its retry loop are removed
   from this codebase entirely — not merely superseded in this file's prose.
