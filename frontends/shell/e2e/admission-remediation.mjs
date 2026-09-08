@@ -228,11 +228,15 @@ async function stepAssert(page, consoleHandle, ctx) {
   if (catalogIds[0] !== "epsg-2056" || catalogIds[1] !== "epsg-3857") {
     throw new Error(`ASSERT': catalog entry ids/order were ${JSON.stringify(catalogIds)}, expected ["epsg-2056","epsg-3857"]`);
   }
+  // SHOULD-FIX (post-PASS sweep, item 1): the printed verdict below claims "non-empty definitions"
+  // for BOTH entries -- so the check runs over both, not just catalog[0].
+  for (const e of catalog) {
+    if (typeof e.definition !== "string" || e.definition.length === 0) {
+      throw new Error(`ASSERT': catalog entry "${e.id}" definition is empty`);
+    }
+  }
   const entry = catalog[0];
   if (entry.id !== "epsg-2056") throw new Error(`ASSERT': catalog entry id was "${entry.id}", expected "epsg-2056"`);
-  if (typeof entry.definition !== "string" || entry.definition.length === 0) {
-    throw new Error("ASSERT': catalog entry definition is empty");
-  }
   ctx.catalogDefinition = entry.definition;
   ctx.catalogIdentifier = `${entry.authority}:${entry.code}`;
 

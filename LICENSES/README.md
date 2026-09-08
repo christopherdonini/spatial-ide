@@ -125,8 +125,9 @@ compiled into the engine binary, and each carried in a published bundle's manife
 bundle's source definition (`kernel/src/bundle/mod.rs`'s `crs_source_definition`, a single
 `Option<String>` field written once per manifest). The repository also holds fixture and spike
 renderings of these same definitions (`engine/tests/data/`, `spikes/entry51-epsg2056-equivalence/`,
-`spikes/item8-crs-catalog-extension/`); those are covered by `DEPENDENCY-LICENSES.md`'s EPSG block,
-which the custodian appends after this piece lands. These two are derived from the
+and the EPSG:4326 renderings pinned for DECISIONS-PENDING entry 59, which are not catalog entries,
+in `spikes/item8-crs-catalog-extension/`); those are covered by `DEPENDENCY-LICENSES.md`'s EPSG
+block, which the custodian appends after this piece lands. These two are derived from the
 **EPSG Geodetic Parameter Dataset, © IOGP** (International Association of Oil & Gas Producers),
 used under the EPSG Terms of Use: <https://epsg.org/terms-of-use.html>.
 

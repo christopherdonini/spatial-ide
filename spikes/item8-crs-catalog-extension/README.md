@@ -3,7 +3,8 @@
 *Record-class, 2026-09-08, the successor of `spikes/entry51-epsg2056-equivalence/` named by
 `RELEASE-0.1.md` Amendment 6's item-8 preregistration. Written by the custodian BEFORE any code, so
 that the external facts item 8 rests on are in the tree verbatim (the entry-51 discipline, the
-architect's consult of 2026-09-08 §"Unpinned external fact"). Not legal advice — ADR-009's Caveat.*
+architect's consult of 2026-09-08, not in the tree, which named the unpinned spec text as a
+violation). Not legal advice — ADR-009's Caveat.*
 
 ## 1. The renderings (same tool, same database as entry 51)
 
@@ -135,7 +136,8 @@ actually checks is that PROJJSON and WKT2 — two different serializations `proj
 SAME `proj.db` row in the SAME run — are consistent with each other: a cross-format consistency
 check of the same rows, not an independent confirmation that either serialization matches the
 registry. PROJ's import of the EPSG dataset versus the registry itself remains unverified by this
-record, exactly as it was for 2056 (entry-51's own Caveat, above): the 3857 piece's own
+record, exactly as it was for 2056 (entry-51's own Caveat,
+`spikes/entry51-epsg2056-equivalence/README.md:65-67`): the 3857 piece's own
 preregistration says the same of this entry — "the human's epsg.org lookup remains the stronger
 confirmation, available at sight" (`RELEASE-0.1.md`'s EPSG:3857 piece preregistration item (2),
 `RELEASE-0.1.md:988-990`).
