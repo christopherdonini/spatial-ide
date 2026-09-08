@@ -21,6 +21,46 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+61. **[Release cut item 1 (b), the ADR-020 config mirror — RULE 7 REACHED on the reviewer side
+    (two failed attempts at the reviewer step: `cf44aaa` record-only; `b7e729d` three mechanical
+    items). BOTH gates say the DESIGN PASSES ("do not re-open it" — the architect). What remains is
+    mechanical. Authorize the closing fix, and in what shape?]** State: branch `cut/release-adr020-origin`
+    @ `b7e729d` (base main 512c73b): the pump, retry, `unsafe` and the `windows` edge removed
+    (Cargo.toml/Cargo.lock/kernel identical to main); `expected_origin_from_config` pure, verified
+    arm-for-arm against `AppManager::get_app_url` (tauri 2.11.5 `manager/mod.rs:353-367`) and the same
+    `custom-protocol` bit (`build.rs:255-261`); one pinned construction, no write path; the post-load
+    self-check as assertion (`Builder::on_page_load`, `app.rs:1781-1789`) with a typed
+    mismatch|unverifiable outcome, one event, no new command; every registry cite exact; runs all
+    green (shell 38 + 2; verify 8 stages; skp_admission 9/9; ADR diff 424/0). **Executed this round
+    (new evidence):** the `WebviewUrl::External` guard's refusal observed live under `tauri dev
+    --config` (session-1788864076.log: one `error` line, the dialog "Spatial IDE could not start",
+    exit 1 — log-first proven, `blocking_show()` on the main thread did not hang the dev build); the
+    session-log-open failure path observed (`refuse_to_start_before_log`, dialog, exit 1, no panic);
+    both `tauri dev` and `--debug --no-bundle` self-checks `ok` (session-1788855035 / -843). **The
+    three remaining must-fixes, all mechanical:** (1) ADR :228 + commit message claim
+    `main_window_url_is_app` is "unit-tested over all three variants" — no such test exists → add the
+    three-variant test (App → true; External/CustomProtocol → false; `WebviewUrl` is
+    `#[non_exhaustive]`) — the architect's BLOCK-1 too; (2) `origin.rs:21` + ADR :213 cite `lib.rs:102`
+    for the mobile entry-point attribute; it is `lib.rs:174` after the batch's own insertions — the
+    architect's BLOCK-2 too; (3) the event payload's `kind` discriminant ("mismatch" | "unverifiable")
+    is pinned by nothing across Rust/TS — a drift falls through to the mismatch branch and renders
+    "The data plane will refuse this session" for an unverifiable read → extend `check:origin-event`
+    to pin the discriminant strings and give the TS a defensive third branch that claims nothing.
+    Plus five should-fixes (the mutation-note reason; the CI comment's `verify` enumeration; §(f)
+    attests to `eb46429` not HEAD — say so or fold in the new observations; "423" → 424; the
+    S2 asymmetry with `serve`/`run` `.expect` documented) and the architect's advisories (the
+    mismatch heading; "admits this session exactly as pinned" → "still admits only the pinned
+    origin"; the S6 sentence → "TOCTOU real but benign"; the rfd path). Options: **(a) RECOMMENDED —
+    authorize ONE closing commit (the three must-fixes + should-fixes + advisories), verified by
+    the custodian mechanically (the new test run and mutated; the check script mutated; every cite
+    re-grepped; verify + cargo test + skp_admission green) and by CI — no third gate, as the #31
+    sweep was authorized;** (b) one closing commit + a third look by both agents (a third attempt at
+    the reviewer step, your authorization); (c) stop item 1 here (the defect the item exists to
+    close — `tauri build --debug` origin mismatch — is closed and observed; the record's three
+    inaccuracies would ship). Then: PR; Part M M12 (the equivalence assertion in all three modes
+    incl. one admitted upgrade — NOT yet observed in any mode) + a new Part M row for a deliberate
+    refusal on the packaged artifact (the `blocking_show` residual). Touches: the branch only.
+
 60. **[A canvas HANG reachable by ordinary wheel zoom-out in the SHIPPED default (candidate arm) —
     found by the K6 re-aim worker, confirmed user-reachable by its reviewer gate (2026-09-08). Fix in
     this cut, or declare it in KNOWN-LIMITATIONS at the tag?]** Facts (the gate's, cites verified by
