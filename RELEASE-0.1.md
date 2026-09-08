@@ -709,3 +709,9 @@ append-only after): the reviewer's M-1 cite; §(f) "byte-identical" → "identic
    (~12 GB, pure cache) and the 2,000,001-row temporary fixture the `#[ignore]`d ADR-025 test leaves
    under `%TEMP%`. Release builds plus stacked worktrees are disk-heavy; every build step checks free
    space first.
+
+**Correction to Amendment 5, item 1 (2026-09-08, appended — the reviewer's re-review nit 7):** its last
+sentence, *"Every release text (notice, README, QUICKSTART, KNOWN-LIMITATIONS) cites §6"*, was written
+in the present tense for three texts that do not yet exist (items 4/5/6). Read it as a requirement —
+"must cite §6" — in the form item 2 of the same amendment already uses; only the notice cites §6 today.
+The custodian's own false-sentence, of the class the packaged-build gates were convened to remove.
