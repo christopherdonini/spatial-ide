@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { notice } from "../../../../renderer/bundle-viewer/notice.mjs";
-import { collectLinkedCrates, buildCanonicalLicenseTexts } from "../../scripts/rustCrateNotices.mjs";
+import { collectLinkedCrates, buildCanonicalLicenseTexts, TARGET_TRIPLE } from "../../scripts/rustCrateNotices.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellDir = join(here, "..", "..");
@@ -44,6 +44,12 @@ function generateOnce(): string {
       heading: "RUST CRATES STATICALLY LINKED INTO THE PACKAGED APPLICATION",
       crates,
       canonicalTexts,
+      // Passed, as `generateNotice.mjs` passes it (closing commit, architect advisory A9). Omitting
+      // it exercised a DIFFERENT render than the one that ships: `rustCrateSectionLines` falls back
+      // to "(not recorded by this generator run)" in the section's own intro, so this determinism
+      // check was comparing two copies of a paragraph the real generator never emits. Same constant
+      // the collector filtered on, never a second literal that could drift from it.
+      targetTriple: TARGET_TRIPLE,
     },
   });
 }

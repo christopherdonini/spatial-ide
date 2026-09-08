@@ -101,7 +101,20 @@ const FORBIDDEN_PATTERNS = [
 // legitimate when the underlying read genuinely fails, but never something a SHIPPED artifact
 // should carry silently: it means some package/crate's real license text is missing from the
 // notice a recipient relies on (SHOULD-FIX 6).
-const DEGRADED_LINE_PATTERNS = [/\(could not be read/, /\(no LICENSE or NOTICE file ships/];
+// The third pattern is the RUST form (closing commit: architect advisory A3, reviewer R2). The first
+// two are `notice.mjs`'s npm-side wordings; the Rust side had no such line at all until this commit,
+// because `rustCrateNotices.mjs` swallowed a failed `readdirSync` into an empty listing and the
+// notice then printed the AFFIRMATIVE "no LICENSE/NOTICE/COPYING file ships in <crate>'s registry
+// source". That affirmative wording is deliberately NOT guarded here: it is true and legitimate for
+// the twelve linked crates that genuinely ship no license file, and this check passes on them today.
+// What is guarded is the honest "could not be read" line that now replaces it for an unreadable
+// directory -- so an anomalous read fails `npm run verify` instead of shipping as a claim about the
+// crate.
+const DEGRADED_LINE_PATTERNS = [
+  /\(could not be read/,
+  /\(no LICENSE or NOTICE file ships/,
+  /\(the registry source directory for \S+ could not be read/,
+];
 
 // Mirrors `notice.mjs`'s own `extractPackages` (same node_modules-boundary logic), applied here to
 // any esbuild/Vite-shaped metafile -- not re-exported from notice.mjs to keep this check script's
@@ -326,11 +339,26 @@ function main() {
   const frontendSection = sectionSlice(noticeBody, FRONTEND_HEADING, RUST_HEADING);
   const rustSection = sectionSlice(noticeBody, RUST_HEADING, null);
 
-  let expectedViewerCount = 3;
-  if (existsSync(VIEWER_METAFILE_PATH)) {
-    const viewerMetafile = JSON.parse(readFileSync(VIEWER_METAFILE_PATH, "utf8"));
-    expectedViewerCount = packageNamesFromMetafile(viewerMetafile).size;
+  // FAILS CLOSED when the viewer metafile is absent (closing commit, architect advisory A4). This
+  // read used to fall back to a literal `3` -- the count that happened to be true when it was
+  // written -- so on any tree without a viewer metafile the check asserted a hardcoded cardinality
+  // against a section generated from a manifest it had not read, and would have gone on passing
+  // after the viewer gained or lost a dependency. There is no honest default here: either the
+  // manifest is read, or this section's expected count is unknown. `generateNotice.mjs` already
+  // refuses to run without this same file, so its absence at check time means the build that
+  // produced `dist/` was not the pipeline `package.json`'s own "build" script defines.
+  if (!existsSync(VIEWER_METAFILE_PATH)) {
+    console.error(
+      `check:dist-notice: FAIL -- ${VIEWER_METAFILE_PATH} does not exist, so the viewer section's ` +
+        "expected package count cannot be derived from its own build manifest. Run `npm run build` " +
+        "in renderer/bundle-viewer first (scripts/generateNotice.mjs refuses without it too); this " +
+        "check does not assume a count."
+    );
+    process.exitCode = 1;
+    return;
   }
+  const viewerMetafile = JSON.parse(readFileSync(VIEWER_METAFILE_PATH, "utf8"));
+  const expectedViewerCount = packageNamesFromMetafile(viewerMetafile).size;
 
   const expected = { viewer: expectedViewerCount, frontend: npmNames.size, rust: crates.length };
   const actual = {

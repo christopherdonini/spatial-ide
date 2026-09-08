@@ -29,6 +29,11 @@ export interface NoticeRustCrate {
   repository: string | null;
   dir: string;
   licenseFiles: string[];
+  // Set when the crate's own registry source directory could not be read at all (closing commit:
+  // architect advisory A3, reviewer R2) -- an empty `licenseFiles` beside it means "unknown", never
+  // "ships none". Optional here because `rustCrateSectionLines` is defensive about a caller that
+  // predates the field.
+  licenseFilesError?: string | null;
 }
 
 export interface NoticeRustCrateSet {
@@ -53,3 +58,8 @@ export function notice(
   baseDir?: string,
   extra?: NoticeExtra | null,
 ): string;
+
+// Exported by `notice.mjs` for `frontends/shell/src/notices/spdxTokenisation.test.ts` only (closing
+// commit, reviewer R3): it is a DELIBERATE second copy of `scripts/rustCrateNotices.mjs`'s own
+// `extractSpdxIds`, and the test that keeps the two identical needs both as values.
+export function extractSpdxIds(license: string | null | undefined): string[];

@@ -23,6 +23,11 @@ export interface LinkedCrate {
   repository: string | null;
   dir: string;
   licenseFiles: string[];
+  // The errno code (`ENOENT`, `EACCES`, …) when the crate's own registry source directory could not
+  // be read at all, `null` otherwise (closing commit: architect advisory A3, reviewer R2). An empty
+  // `licenseFiles` with this set means "unknown", not "ships none"; `notice.mjs` renders the two
+  // differently and `checkDistNotice.mjs` refuses to ship the first.
+  licenseFilesError: string | null;
 }
 
 export interface CanonicalLicenseText {

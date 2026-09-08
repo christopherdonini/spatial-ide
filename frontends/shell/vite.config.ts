@@ -2,9 +2,11 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import { writeFileSync } from "node:fs";
-import { relative, resolve } from "node:path";
+import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+
+import { metafileKeyForModuleId } from "./scripts/metafileKey.mjs";
 
 // Tauri expects a fixed dev-server port (tauri.conf.json's devUrl) and needs to know the app is
 // running inside its own webview so HMR doesn't fight the host's own reload.
@@ -49,39 +51,20 @@ function packageMetafilePlugin(): Plugin {
           // esbuild's own metafile convention exactly -- forward-slashed, relative to the
           // build's own working directory, never an absolute path. This metafile is a SIBLING
           // of `dist/` and is never shipped (it is not a bundle asset and no packaging step
-          // copies it), but it is read by a generator whose output IS shipped and whose
-          // rebuilds ADR-017 §12 requires to be byte-identical -- so an absolute path here
-          // would make a hashed artifact depend on where the build was invoked from, the same
-          // reasoning `renderer/bundle-viewer/notice.mjs:131-136` states for its own reads.
+          // copies it), but it is read by a generator whose output IS shipped: ADR-017 §12
+          // treats viewer asset bytes as an input to a byte-identical publish, and the notice is
+          // one of those assets -- so an absolute path here would make a hashed artifact depend
+          // on where the build was invoked from, the same reasoning
+          // `renderer/bundle-viewer/notice.mjs:139-144` states for its own reads.
           //
-          // **FIRST `node_modules/`, not the last (release-cut fix batch, SHOULD-FIX 6).**
-          // `lastIndexOf` on a NESTED path
-          // (`node_modules/command-line-usage/node_modules/array-back/…`) sliced away the
-          // nesting prefix and emitted the key `node_modules/array-back/…`, so the consumer
-          // (`notice.mjs`'s `extractPackages`) resolved and read the TOP-LEVEL `array-back`
-          // instead -- a different version's notice, or `ENOENT` and a degraded line, for the
-          // copy actually compiled in. Slicing from the FIRST occurrence keeps the whole
-          // nested path, which is exactly what `extractPackages` (itself `lastIndexOf`-based,
-          // correctly, ON that full key) needs to land on the nested copy.
-          const rel = relative(process.cwd(), id).replace(/\\/g, "/");
-          const withinRoot = rel.replace(/^(?:\.\.\/)+/, "");
-          const at = withinRoot.indexOf("node_modules/");
-          if (at === -1) continue;
-          if (withinRoot !== rel) {
-            // A third-party module resolved from OUTSIDE this package's own root. Its key would
-            // be attributed to `frontends/shell`'s own `node_modules` tree by every consumer of
-            // this metafile (`notice.mjs` resolves each set's packages against that set's own
-            // `baseDir`), which is a wrong-tree read of exactly the class MUST-FIX 1 fixed --
-            // and silently wrong, since a same-named package usually exists there too. Refused.
-            throw new Error(
-              `packageMetafilePlugin: module id ${id} resolves OUTSIDE this package's root ` +
-                `(${process.cwd()}) yet lives under node_modules/. This metafile's keys are ` +
-                "resolved against frontends/shell by every consumer, so attributing it here " +
-                "would read the wrong node_modules tree. Vendor it, or give this set its own " +
-                "metafile entry with its own baseDir."
-            );
-          }
-          inputs[withinRoot.slice(at)] = {};
+          // The slicing itself lives in `scripts/metafileKey.mjs` (closing commit, reviewer R1),
+          // so `src/notices/metafileKey.test.ts` can exercise the nested-`node_modules` case
+          // against fixture paths rather than needing a real build. See that module's own comment
+          // for why the first `node_modules/` occurrence, not the last, is the correct one; the
+          // outside-the-root refusal is there too, unchanged.
+          const key = metafileKeyForModuleId(id, process.cwd());
+          if (key === null) continue;
+          inputs[key] = {};
         }
       }
       writeFileSync(resolve(process.cwd(), "dist-metafile.json"), JSON.stringify({ inputs }), "utf8");

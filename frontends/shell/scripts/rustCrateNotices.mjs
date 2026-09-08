@@ -72,8 +72,20 @@ function runCargo(args) {
 
 // Splits a declared Cargo SPDX license expression into candidate atomic ids -- deliberately simple
 // (no full SPDX-expression boolean parser): strips stray parentheses and splits on `/`, `,`, or the
-// keywords `OR`/`AND`. Exported so `notice.mjs`'s per-crate rendering and this module's own
-// canonical-text lookup agree on exactly the same tokenisation.
+// keywords `OR`/`AND`.
+//
+// **The comment here used to say "exported so `notice.mjs`'s per-crate rendering and this module's
+// own canonical-text lookup agree on exactly the same tokenisation" -- and no such import exists**
+// (closing commit, reviewer R3). `renderer/bundle-viewer/notice.mjs` carries its own private copy of
+// this function, and deliberately: importing this one would make the renderer module depend on
+// `frontends/shell`, inverting the direction docs/02's module map states (`frontends` is
+// "Clients only — no logic" there, a client of the renderer, not something it reaches into). The
+// two copies are kept BYTE-IDENTICAL in body on purpose, because this one decides which canonical
+// texts are collected and that one decides which ids are announced under a crate; if they diverged,
+// the notice would announce a text it does not carry, or carry one nothing points at.
+// `src/notices/spdxTokenisation.test.ts` imports both and asserts equal output on a sample of the
+// expression shapes the linked set actually declares -- that test is the mechanism, this comment is
+// only the reason.
 export function extractSpdxIds(license) {
   if (!license) return [];
   return license
@@ -85,10 +97,13 @@ export function extractSpdxIds(license) {
 /**
  * The Rust crates actually linked into `frontends/shell/src-tauri`'s own binary, third-party only
  * (first-party `spatial-*` crates and this crate itself excluded), sorted by name then version.
- * Each entry: `{ name, version, license, dir, licenseFiles }` -- `dir` is the crate's own registry
- * source directory (`%USERPROFILE%\.cargo\registry\src\index.crates.io-*\<name>-<version>\`),
- * `licenseFiles` the sorted list of `LICENSE*`/`NOTICE*`/`COPYING*` filenames found directly in it
- * (empty if none ships -- a real, checked fact, not an assumption).
+ * Each entry: `{ name, version, license, dir, licenseFiles, licenseFilesError }` -- `dir` is the
+ * crate's own registry source directory
+ * (`%USERPROFILE%\.cargo\registry\src\index.crates.io-*\<name>-<version>\`), `licenseFiles` the
+ * sorted list of `LICENSE*`/`NOTICE*`/`COPYING*`/`UNLICENSE*` filenames found directly in it (empty
+ * if none ships -- a real, checked fact, not an assumption), and `licenseFilesError` the errno code
+ * when that directory could not be read at all, `null` otherwise. The two empties are different
+ * facts and are kept distinguishable: see the read itself below.
  */
 export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, target = TARGET_TRIPLE } = {}) {
   const metadataRaw = runCargo([
@@ -150,6 +165,25 @@ export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, targ
     if (pkg.source == null) continue; // first-party (path/workspace) crate
     const dir = dirname(pkg.manifest_path);
     let licenseFiles = [];
+    // **A failed read is carried, never swallowed into "ships none"** (closing commit: architect
+    // advisory A3, reviewer R2). `cargo metadata` reported `manifest_path` for this package, so its
+    // registry source IS extracted on this machine and this read should not fail; a failure is
+    // anomalous. The previous `catch { licenseFiles = [] }` made that anomaly indistinguishable from
+    // a genuinely empty listing, and `notice.mjs` then printed the affirmative "no
+    // LICENSE/NOTICE/COPYING file ships in <crate>'s registry source" -- a claim about the crate,
+    // asserted from a failed read of the disk, in a conveyed legal notice.
+    //
+    // The error CODE only (`ENOENT`, `EACCES`, …), never the message: the message embeds this
+    // machine's own absolute registry path, and this string is rendered into an artifact whose
+    // rebuilds must be byte-identical across runs (ADR-017 §12 treats viewer asset bytes as an input
+    // to a byte-identical publish; the notice is one of those assets).
+    //
+    // It fails CLOSED without throwing here: `notice.mjs` renders it as an explicit
+    // "could not be read" line and `checkDistNotice.mjs`'s `DEGRADED_LINE_PATTERNS` matches that
+    // exact wording, so `npm run verify` refuses the artifact. That is the same shape the npm side
+    // already uses (`notice.mjs`'s `packageSectionLines`), and it keeps `check:dist-notice` -- which
+    // calls this function itself -- reporting a named FAIL rather than an uncaught exception.
+    let licenseFilesError = null;
     try {
       // Also matches `UNLICENSE` (release-cut fix batch, MUST-FIX 12 nit): it does not start with
       // "LICENSE"/"LICENCE" so `LICEN[CS]E` alone never matched it, and six linked crates in this
@@ -157,8 +191,9 @@ export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, targ
       licenseFiles = readdirSync(dir)
         .filter((f) => /^(LICEN[CS]E|NOTICE|COPYING|UNLICENSE)/i.test(f))
         .sort();
-    } catch {
+    } catch (err) {
       licenseFiles = [];
+      licenseFilesError = err?.code ?? 'unknown read error';
     }
     // `authors`/`repository`/`license_file` kept rather than discarded (release-cut fix batch,
     // MUST-FIX 2 / MUST-FIX 12 nit): `cargo metadata` reports all three for every package; a gap
@@ -174,6 +209,7 @@ export function collectLinkedCrates({ manifestPath = DEFAULT_MANIFEST_PATH, targ
       repository: pkg.repository ?? null,
       dir,
       licenseFiles,
+      licenseFilesError,
     });
   }
 
@@ -217,6 +253,12 @@ export function buildCanonicalLicenseTexts(crates, { repoRoot }) {
   const needed = new Map();
   for (const crate of crates) {
     if (crate.licenseFiles.length > 0) continue;
+    // A crate whose registry source directory could not be READ (closing commit, architect advisory
+    // A3) is not known to need a canonical text -- it is not known to ship none either. Demanding
+    // one here would turn a failed read into a licence election on that crate's behalf; skipping it
+    // leaves `notice.mjs`'s explicit "could not be read" line as the only thing said about it, which
+    // `checkDistNotice.mjs`'s degraded-line guard then refuses to ship.
+    if (crate.licenseFilesError) continue;
     for (const id of extractSpdxIds(crate.license)) {
       if (!needed.has(id)) needed.set(id, []);
       needed.get(id).push(`${crate.name} ${crate.version}`);

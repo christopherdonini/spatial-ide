@@ -126,13 +126,15 @@ is checked to contain no `<<var` sequence.
   2026-09-08, `sha256` `5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d`, 1460
   bytes. Placeholders are plain angle-bracket text (`Copyright (c) <year> <owner>.`, and
   "Neither the name of the copyright holder"). **A different host from the other two, and that is
-  the honest record rather than a tidier one:** `https://spdx.org/licenses/BSD-3-Clause.txt` — the
-  URL the other two use, and the one this file recorded until 2026-09-08 — serves ONLY the
-  `<<var…>>` matching template for this license (`sha256`
+  the honest record rather than a tidier one — stated as the dated observation it is, not as a claim
+  about the host:** on **2026-09-08**, `https://spdx.org/licenses/BSD-3-Clause.txt` — the URL the
+  other two use, and the one this file recorded until that date — returned the `<<var…>>` matching
+  template for this license (`sha256`
   `0fe4dd6931c4c2fc418940de41074fa3c506cad24bfd891743ea7f2fcfe631ef`, 1693 bytes, the text this
-  file previously stored). There is no plain-text BSD-3-Clause at that host, so the plain variant is
-  taken from `license-list-data`, SPDX's own published data repository and the source that host
-  itself renders from. The URL recorded above is the one that reproduces the hash above.
+  file previously stored), not a plain text. The plain text was therefore taken that same day from
+  `license-list-data`, SPDX's own published data repository and the source that host renders from.
+  What that URL serves on any other date is not asserted here; what is asserted is the URL recorded
+  above, which is the one that reproduces the hash above.
 - **`MPL-2.0.txt`** — fetched `https://spdx.org/licenses/MPL-2.0.txt`, retrieved 2026-09-08,
   `sha256` `66c10535a495f4cd8115607e890f8116d657064b98557f660c51e123b3f3fee6`, 15190 bytes. MPL-2.0
   carries **no** copyright placeholder at all — the licence's body is the same text for every
