@@ -216,6 +216,17 @@ how obvious they seem:
   a script-edited file run `git ls-files --eol <file>` — `i/lf` or it does not go in. The fourth
   member of the eol class; the whole-file conflict is its symptom. `git rebase -X ignore-space-at-eol`
   gets past the symptom; it does not fix the blob.
+- **A hash-pinned upstream corpus keeps its own bytes: `-text` scoped to the pinned files, never
+  `text eol=lf` (2026-09-09, the entry-62 piece).** DuckDB's bundled `miniz/LICENSE` is CRLF in the
+  upstream tree, and its sha256 is pinned against those bytes. The hash-pin member's own remedy
+  (`text eol=lf`), or a repository-wide `* text=auto eol=lf`, would normalise the blob and rewrite
+  the checkout, and a hash on a file nobody edited would fail. Pinned third-party text is marked
+  `-text` so git leaves its line endings alone, listed by the file-name classes the pin actually
+  holds (`LICENSE*`, `COPYING*`, `NOTICES`, …); the manifest and README beside it stay under the
+  default rules. In `.gitattributes` a later line overrides an earlier one, so any repository-wide
+  text rule must come BEFORE the `-text` lines. The fifth member of the eol class; its symptom is a
+  hash mismatch with an empty `git diff`. `git ls-files --eol` shows such a file as
+  `i/crlf w/crlf attr/-text` (the pinned directory's own README records the case in full).
 
 ## Away-mode evidence rule
 
