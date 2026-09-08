@@ -221,14 +221,24 @@ and the terms URL:
   bundle viewer as a resource (`tauri.conf.json`'s `bundle.resources`) and a Notices view + a
   beside-the-executable `NOTICE.txt` carrying the IOGP acknowledgement and the terms URL (the same
   two live channels' own text, byte-identical, `frontends/shell/src/notices/
-  noticeByteIdentity.test.ts`). **What remains genuinely owed, named rather than assumed
-  covered:** the installed `NOTICE.txt` does NOT enumerate the Rust crate notices that travel with
-  the `spatial-engine`/`spatial-ide-shell` binary itself (this file's own tables below — kernel,
-  engine, protocol and their dependencies; MIT/Apache-2.0 §4(d) notices) — a later piece generates
-  those from the lockfile into the installed copy. The original paragraph's own citation,
-  `publish.rs:786-794`, is **superseded**: that doc comment has since been rewritten (dated
-  2026-09-07) to describe the packaged-resource-first resolution the packaging piece built, and no
-  longer records the gap this paragraph originally cited it for.
+  noticeByteIdentity.test.ts`). **What remains genuinely owed — corrected 2026-09-08 (RELEASE-0.1
+  Amendment 6's authorized sweep) to name BOTH gaps; this paragraph previously named only one of
+  them, matching `notice.mjs`'s own header before that sweep:** the installed `NOTICE.txt`
+  enumerates the bundle viewer's own third-party works only. It does NOT yet enumerate two further
+  sets the installed application also carries: (i) **the packaged frontend's own npm dependencies**
+  compiled into `frontends/shell/dist` and conveyed via `tauri.conf.json`'s `frontendDist` — react,
+  react-dom, `@deck.gl/core`, `@deck.gl/layers`, and the shell's own `apache-arrow`, each a separate
+  install from the copies compiled into the bundle viewer (versions verified against
+  `frontends/shell/package-lock.json`, 2026-09-08: react `18.3.1`, react-dom `18.3.1`,
+  `@deck.gl/core` `9.3.9`, `@deck.gl/layers` `9.3.9`, `apache-arrow` `21.2.0`); and (ii) **the Rust
+  crate notices** that travel with the `spatial-engine`/`spatial-ide-shell` binary itself (this
+  file's own tables below — kernel, engine, protocol and their dependencies; MIT/Apache-2.0 §4(d)
+  notices). Both are owed under RELEASE-0.1's item 9 (both notice generators, before the v0.1.0
+  tag) and ADR-030 (`docs/adr/ADR-030-conveyed-artifact-notice-set.md`, Proposed, candidate (a)) —
+  a later piece generates both from their respective build manifests into the installed copy. The
+  original paragraph's own citation, `publish.rs:786-794`, is **superseded**: that doc comment has
+  since been rewritten (dated 2026-09-07) to describe the packaged-resource-first resolution the
+  packaging piece built, and no longer records the gap this paragraph originally cited it for.
   <br><br>
   *Original paragraph, retained as filed:* A packaged Tauri build of `frontends/shell` ships the
   `spatial-engine` binary with `crs-catalog.json` compiled in (`include_str!`, `crs_catalog.rs`) —

@@ -869,10 +869,19 @@ fn resolve_viewer_dir(
         })
         .collect::<Vec<_>>()
         .join(", or ");
-    Err(format!(
-        "the reference bundle viewer is not built at {tried} — run `npm run build` in \
-         renderer/bundle-viewer first"
-    ))
+    // **The remedy is packaged-context when a resource dir was supplied, developer-context only
+    // when it was not (release-cut fix batch, reviewer nit).** `run \`npm run build\`` tells an
+    // end user to run a build step nothing about their installed app can act on; `resource_dir`
+    // being `Some` is the same packaged-build signal the dev-tree-value suppression above already
+    // keys on. When `resource_dir` is `None` this is a `tauri dev` run from a checkout, where the
+    // developer remedy is exactly the right one.
+    let remedy = if resource_dir.is_some() {
+        "the viewer resources are missing from the installed application — reinstall Spatial IDE, \
+         or the install is incomplete"
+    } else {
+        "run `npm run build` in renderer/bundle-viewer first"
+    };
+    Err(format!("the reference bundle viewer is not built at {tried} — {remedy}"))
 }
 
 #[cfg(test)]
@@ -921,6 +930,22 @@ mod resolver_tests {
             "the build machine's own dev-tree path leaked into a packaged-context refusal: {err}"
         );
         assert!(err.contains("not applicable to a packaged installation"), "{err}");
+        // Reviewer nit, release-cut fix batch: a packaged context (resource_dir Some) gets a
+        // packaged-context remedy, never the developer instruction to run an npm build.
+        assert!(err.contains("reinstall Spatial IDE"), "{err}");
+        assert!(!err.contains("npm run build"), "{err}");
+    }
+
+    #[test]
+    fn no_resource_directory_at_all_and_no_dev_tree_path_gets_the_developer_remedy() {
+        // The mirror of the test above: `resource_dir` is `None` (a `tauri dev` run from a
+        // checkout where the dev-tree path itself does not hold either) — the remedy stays
+        // developer-context, since there is no installed app to tell an end user to reinstall.
+        let err = resolve_viewer_dir(None, |_| false).unwrap_err();
+        assert!(err.contains("the dev-tree checkout path"), "{err}");
+        assert!(!err.contains("the packaged resource directory"), "{err}");
+        assert!(err.contains("run `npm run build` in renderer/bundle-viewer first"), "{err}");
+        assert!(!err.contains("reinstall Spatial IDE"), "{err}");
     }
 
     /// **MUST-FIX 7 (release-cut fix batch): pins that the packaged resource directory is tried

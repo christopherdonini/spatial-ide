@@ -950,8 +950,11 @@ fn an_intent_without_an_outcome_is_a_readable_state_not_a_missing_record() {
     );
 }
 
-/// **RELEASE-0.1 item 3e (ADR-025), release-cut fix batch MUST-FIX 10.** `boundary::execute`'s own
-/// first line is `publish::preflight(req)?` — before the destination is even resolved, let alone
+/// **RELEASE-0.1 item 3e (ADR-025), release-cut fix batch MUST-FIX 10 (phrasing corrected,
+/// RELEASE-0.1 Amendment 6's authorized sweep: "first line" was false — `execute`'s literal first
+/// line only binds `attempt.request`; `preflight` is the first FALLIBLE call, step 1 of this
+/// module's own top-doc numbered order).** `boundary::execute`'s first fallible call is
+/// `publish::preflight(req)?` — before the destination is even resolved, let alone
 /// the audit log opened for real writing (this module's own top-doc "What is not audited" list,
 /// `boundary.rs`). A `ReaderCeilingExceeded` refusal is therefore the INTENDED shape, proven here
 /// rather than only argued in a comment: no side effect, and — because the refusal happens before
@@ -965,6 +968,12 @@ fn an_intent_without_an_outcome_is_a_readable_state_not_a_missing_record() {
 /// the public API. Minimal geometry keeps the write itself cheap at this row count. The temporary
 /// fixture is removed at the end of the test (this fix batch's own disk-hygiene correction) rather
 /// than left under `%TEMP%\spatial-kernel-permission-tests\` for a human to find later.
+///
+/// **Not run in CI (release-cut fix batch, reviewer nit): `#[ignore]` means neither
+/// `product-ci-rust.yml` nor any other workflow in this repository executes it.** Run it by hand:
+/// `cargo test --release -p spatial-kernel --test permission_boundary -- --ignored --nocapture`
+/// (`--release`, the same reason `kernel/tests/scale_pass.rs` needs it — a multi-million-row write
+/// on a debug build is not the point of this test).
 #[test]
 #[ignore]
 fn an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record() {

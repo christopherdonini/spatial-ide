@@ -56,7 +56,8 @@
 //!   ADR-025: the preflight refuses before the destination is even resolved, so this is the
 //!   INTENDED shape, not a gap — a refused preflight never reached step 2, let alone step 3, and
 //!   `kernel/tests/permission_boundary.rs`'s own
-//!   `an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record` test proves it.
+//!   `an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record` test proves it
+//!   (`#[ignore]`d — not run in CI; run by hand, `--release --ignored`).
 //!
 //! **The ordering is deliberate and the omission is defensible, but only for a stated reason**:
 //! nothing on that list is an attempt to *do* the operation. Each one is a request that never

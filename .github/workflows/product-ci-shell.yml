@@ -25,8 +25,8 @@ name: Product CI — shell
 # `frontends/shell/src-tauri` compiles and its own `cargo test` suite passes. It does **not** mean:
 #
 #   - **`tauri build` was run BY THE `shell` JOB above.** That job's own steps stop at `cargo check
-#     --release`; bundling/installer/signing are not exercised by IT. **Dated correction, release-cut
-#     fix batch: this sentence used to say "tauri build was run [nowhere in this workflow]", which is
+#     --release`; bundling/installer/signing are not exercised by IT. **Dated correction, 2026-09-08,
+#     release-cut fix batch: this sentence used to say "tauri build was run [nowhere in this workflow]", which is
 #     now false — the SEPARATE `tauri-build` job below DOES run it**, build-only, no signing, subject
 #     to its own not-a-gate note (this file's own "Standing not-a-gate note" section) until IT has
 #     gone green end to end and is recorded there. A green `shell` job alone still says nothing about
@@ -87,13 +87,17 @@ name: Product CI — shell
 # pattern; release-cut fix batch, SHOULD-FIX 8) — EMPTY, filled only once a run has actually gone
 # green end to end:
 #
-#   **First green run:** (not yet recorded)
+#   **First green run:** run id `34190120055`, job id `101946288669` ("tauri build (NSIS,
+#   build-only, no signing)"), head commit `34a1896`, event `pull_request`, duration 27m19s
+#   (05:18:24Z–05:45:43Z, 2026-09-08). `34a1896` was `cut/release-packaged-build`'s pre-rebase
+#   head at the time this run went green — the branch has since been rebased onto `main`, so this
+#   record is the record of the JOB going green, not of the current tree.
 #
 #   | trigger | first green | duration |
 #   |---|---|---|
 #   | `push` | — | — |
 #   | `workflow_dispatch` | — | — |
-#   | `pull_request` | — | — |
+#   | `pull_request` | `34190120055` (`34a1896`) | 27m19s |
 
 on:
   push:

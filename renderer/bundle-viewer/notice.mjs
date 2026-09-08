@@ -101,14 +101,21 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
     'bundled rather than what someone remembered to write down.',
     '',
     'This SAME file is distributed in two different places, and its scope differs between them',
-    '(release-cut fix batch, MUST-FIX 3): inside a published bundle, this is the whole notice set',
-    'the bundle owes (the bundle carries nothing but this viewer). Installed beside the packaged',
-    'application\'s own executable, this file covers the VIEWER and the packaged frontend only --',
-    'it does NOT enumerate the Rust crates statically linked into the kernel/data-engine/renderer',
-    'binary the application also embeds (kernel, engine, protocol, and their own dependencies,',
-    'listed instead in this repository\'s own DEPENDENCY-LICENSES.md). Generating that second,',
-    'Rust-crate notice set into the installed copy of this file is OWED, not yet done -- named here',
-    'rather than silently assumed covered by the third-party section below.',
+    '(release-cut fix batch, MUST-FIX 3; scope corrected, RELEASE-0.1 Amendment 6\'s authorized',
+    'sweep): inside a published bundle, this is the whole notice set the bundle owes (the bundle',
+    'carries nothing but this viewer). Installed beside the packaged application\'s own executable,',
+    'this file enumerates ONLY the third-party works compiled into the bundle VIEWER -- it does NOT',
+    'enumerate two further sets of third-party works the installed application also carries: (i) the',
+    'packaged frontend\'s OWN npm dependencies, compiled into frontends/shell/dist and conveyed via',
+    'tauri.conf.json\'s `frontendDist` -- react, react-dom, @deck.gl/core, @deck.gl/layers, and the',
+    'shell\'s own apache-arrow, each a separate install from the copies compiled into this viewer;',
+    'and (ii) the Rust crates statically linked into the kernel/data-engine/renderer binary the',
+    'application also embeds (kernel, engine, protocol, and their own dependencies), listed instead',
+    'in this repository\'s own DEPENDENCY-LICENSES.md. Generating BOTH of those into the installed',
+    'copy of this file is OWED, not yet done, under RELEASE-0.1\'s item 9 (both notice generators,',
+    'before the v0.1.0 tag) and ADR-030 (docs/adr/ADR-030-conveyed-artifact-notice-set.md, Proposed,',
+    'candidate (a)) -- named here rather than silently assumed covered by the third-party section',
+    'below.',
     '',
     '',
     'THE VIEWER',
@@ -129,14 +136,16 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
     '',
   ];
 
-  // The AGPL text itself, when the repository has it. AGPL-3.0 section 4 requires a copy of the
-  // License to travel with the Program, and that copy is not something this script can invent —
-  // see LICENSES/README.md for why it may be absent and the one command that fixes it. Emitting a
-  // marked absence is the honest form; emitting nothing would hide an unmet obligation.
-  // Resolved from this file's own location, not from the cwd. The notice is content-hashed into
-  // every manifest, so a cwd-relative read would make a hashed artifact depend on where the build
-  // was invoked from — which is exactly the class of thing ADR-017 §12's determinism guarantee is
-  // about.
+  // The AGPL text itself, when it is present at the path below. AGPL-3.0 section 4 requires a copy
+  // of the License to travel with the Program, and that copy is not something this script can
+  // invent — see LICENSES/README.md for why it may be absent and the one command that fixes it.
+  // Emitting a marked absence is the honest form; emitting nothing would hide an unmet obligation.
+  // Resolved from THIS FILE's own directory (`dirname(fileURLToPath(import.meta.url))`), walking
+  // up two levels to this repository's `LICENSES/` directory -- never from the repository as an
+  // assumed base and never from the caller's cwd, same discipline as `baseDir` above. The notice
+  // is content-hashed into every manifest, so a cwd-relative read would make a hashed artifact
+  // depend on where the build was invoked from — which is exactly the class of thing ADR-017 §12's
+  // determinism guarantee is about.
   const agpl = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'LICENSES', 'AGPL-3.0-or-later.txt');
   if (existsSync(agpl)) {
     out.push('', 'GNU AFFERO GENERAL PUBLIC LICENSE, VERSION 3', '', readFileSync(agpl, 'utf8'), '');
