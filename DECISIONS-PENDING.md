@@ -21,6 +21,22 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+63. **[ADR-024 (Accepted): its Consequences list (`:253-262`) records the publish pin phase as
+    "uncancellable and unreported … no cancel affordance and no progress report of its own … Not
+    built or closed by this ADR", quoting verbatim a `publish.rs` doc sentence that release cut
+    item 10 deletes. An APPENDED dated note is requested — your word, never a rewrite.]** Found by
+    item 10's reviewer gate (2026-09-08). Item 10 (`cut/release-publish-pin`, fix batch in progress)
+    builds entry 7's ruled pre-fix: the pin reports bytes hashed / total and honours Cancel, and the
+    ADR-025 pin-free checks run before the pin. Once its PR lands, ADR-024's sentence is a true
+    statement about the ADR's own acceptance date and a false one about the tree. Proposed note text
+    (appended under a dated heading, on your word): "2026-09-08 — the pin phase named above as
+    uncancellable and unreported was built cancellable and progress-reported by the release cut's
+    item 10 (DECISIONS-PENDING entry 7's ruled pre-fix; `publish.rs` `prepare_with_progress`,
+    `engine::index::content_hash_observed`); the quoted doc sentence no longer exists. The
+    consequence stands as history; the gap is closed." Touches: `docs/adr/ADR-024-*.md` append
+    only; `docs/README.md`'s ADR-024 line if it repeats the gap (verify). Same shape as entry 59's
+    ADR-026 request.
+
 62. **[Item 9 (both notice generators) — a THIRD set the generators cannot see: DuckDB's
     amalgamation embeds 26 third-party C/C++ works with no license file in the crate's tarball.
     ADR-030 (a) cannot be accepted "as is" on item 9's landing without deciding how that set is
