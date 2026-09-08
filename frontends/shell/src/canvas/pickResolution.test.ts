@@ -71,12 +71,20 @@ describe("reevaluateStandingHoverOnCameraChange", () => {
   const standingFeatureId = { streamHandle: "sh_test", batchSeq: 1, id: 42n, anchor: [0, 0] as [number, number] };
   const standingRefusal = { kind: "below-pick-resolution" as const };
 
+  // Mirrors `e2e/regression.mjs`'s `stepK6` assertion (i), the CONTINUOUS case (DECISIONS-PENDING
+  // entries 56/47, the K6 re-aim): a single camera change that itself crosses the threshold ->
+  // the named refusal, not a clear.
   it("(a) standing feature id + zoom-out crosses below the threshold -> refuse by name", () => {
     // extent 1 * 1 px/unit = 1px, below the 2px threshold.
     const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, 1, 1);
     expect(result).toEqual({ kind: "below-pick-resolution" });
   });
 
+  // Mirrors `e2e/regression.mjs`'s `stepK6` assertion (ii), the DISCRETE case's own FIRST notch
+  // (DECISIONS-PENDING entries 56/47): a camera change that itself stays above the threshold clears
+  // the standing id rather than re-asserting it -- entry 56's diagnosed mechanism for why every
+  // LATER discrete notch is then a no-op (test (e) below: `standing === null` -> `undefined`),
+  // never a stale id.
   it("(b) standing feature id + zoom stays above the threshold -> clear to null, never re-assert the id", () => {
     // extent 5 * 1 px/unit = 5px, above the 2px threshold.
     const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, 5, 1);
