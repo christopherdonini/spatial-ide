@@ -15,8 +15,11 @@
 // URL whose own port is a second copy of the same number). Nothing before this script made that
 // agreement anything but a convention a human could silently break. This check is now load-bearing
 // for BOTH Tauri's own webview navigation AND the shell's data-plane origin pin -- a drift here
-// used to only misdirect the webview; now it also means the config mirror pins an origin
-// `tauri dev`'s own webview never actually lands on, and every stream 403s.
+// used to only misdirect the webview (before this rewrite, the origin selector read the webview's
+// own actual URL back, so it pinned whatever origin the webview landed on, correct or not); now the
+// config mirror pins `tauri.conf.json`'s own `build.devUrl` origin directly, so the SAME drift means
+// Tauri navigates the webview to that pinned origin and finds nothing serving it there (architect
+// A1) -- a broken dev session, not a data-plane upgrade that gets attempted and 403s.
 //
 // This IS the "mechanical link" ADR-020 Amendment 1's preregistration (design (b)) requires: read
 // both real config files, fail loudly if they disagree -- and, per the reviewer gate on the first
@@ -110,12 +113,14 @@ function main() {
     console.error(
       `checkDevOriginConsistency: FAIL -- vite.config.ts's server.port (${port}) does not match ` +
         `tauri.conf.json's build.devUrl ("${devUrlRaw}")'s own port (${devUrl.port || "(none)"}). ` +
-        "These two copies of the dev-server port have drifted -- tauri dev's webview would not " +
-        "land on the port Vite is actually listening on, and ADR-020 Amendment 1's config mirror " +
-        "would still pin tauri.conf.json's own build.devUrl origin (unaffected by this drift, " +
-        "since it reads that value directly) -- but that pinned origin would then be one the " +
-        "webview itself never actually navigates to, so every data-plane upgrade 403s, not fail " +
-        "loudly by itself."
+        "These two copies of the dev-server port have drifted -- ADR-020 Amendment 1's config " +
+        "mirror still pins tauri.conf.json's own build.devUrl origin (unaffected by this drift, " +
+        "since it reads that value directly), and Tauri navigates the webview TO that same pinned " +
+        "origin -- but Vite is not actually listening there (it is listening on vite.config.ts's " +
+        "own, different port), so the webview finds nothing serving that origin: a broken dev " +
+        "session (the page fails to load), not a data-plane upgrade that gets attempted and " +
+        "refused. This check catches the drift before a human hits it at runtime, since neither " +
+        "half fails loudly by itself."
     );
     process.exitCode = 1;
     return;

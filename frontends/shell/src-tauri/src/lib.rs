@@ -55,9 +55,59 @@ use state::{DataPlaneHandle, SessionLog};
 /// ADR-027 decision 4's unclassified-command build-time scan (every registered command must be
 /// display-classified, or the build fails) does not apply to it: there is no new command here for
 /// that scan to see.
+///
+/// **This relies on `blocking_show()` on the setup thread, which is also the main thread — a
+/// reliance stated here, not hidden (architect B2 = reviewer S3).** `tauri-plugin-dialog`
+/// **2.7.2**'s own doc comment on `blocking_show()` (`src/lib.rs:355-356`), quoted verbatim:
+///
+/// > This is a blocking operation,
+/// > and should *NOT* be used when running on the main thread context.
+///
+/// `setup()` (this function's only caller) runs on the main thread: `App::run` — the method
+/// `.run(tauri::generate_context!())` at the bottom of this file resolves to — records
+/// `main_thread_id` as the thread that calls it (`tauri-2.11.5/src/app.rs:1367`) and then invokes
+/// `setup()` from inside `RuntimeRunEvent::Ready`'s handler on that same thread
+/// (`tauri-2.11.5/src/app.rs:1422-1426`). The reviewer's own traced call chain from there, each
+/// link verified against the pinned crate version: `blocking_show()` calls `AppHandle::
+/// run_on_main_thread`, which reaches `tauri-runtime-wry` **2.11.4**'s `send_user_message`
+/// (`src/lib.rs:239-248`) — when called FROM the main thread (as here), it runs the queued closure
+/// **inline**, synchronously, rather than posting it to the event loop for a later pump. That
+/// closure (`tauri-plugin-dialog-2.7.2/src/desktop.rs:222-225`) then itself calls
+/// `std::thread::spawn` (`:225`) so the actual dialog display happens off the main thread; `rfd`
+/// **0.16.0**'s own Windows backend does the same one level deeper
+/// (`backend/win_cid/thread_future.rs:26`, `std::thread::spawn` again) to show the native message
+/// box. `blocking_show()`'s own blocking `rx.recv()` (the `blocking_fn!` macro, `src/lib.rs:71-80`)
+/// therefore waits on a channel fed from a thread two levels removed from the main thread, not on
+/// anything requiring the main thread's own event loop to be pumping — which is why this has not
+/// been observed to hang under `tauri dev` (§(f) below). **The residual, stated honestly:**
+/// condition (4)'s refusal path has never been exercised on a PACKAGED (`tauri build`) artifact,
+/// where a hang here would be silent — `main.rs`'s `windows_subsystem = "windows"` applies under
+/// `not(debug_assertions)`, so there is no console for even the `eprintln!` above to reach. The
+/// log-first ordering (this function logs before it dialogs) is what survives a silent hang: the
+/// session log still carries the refusal even if the dialog itself never becomes visible. A
+/// deliberate exercise of this path on a packaged artifact is a Part M candidate, at the human's
+/// discretion — not undertaken by this piece.
 fn refuse_to_start<R: tauri::Runtime>(app: &tauri::App<R>, log: &SessionLog, message: &str) -> ! {
     log.append("error", message);
     eprintln!("[spatial-ide-shell] REFUSING TO START: {message}");
+    app.dialog()
+        .message(message)
+        .title("Spatial IDE could not start")
+        .kind(MessageDialogKind::Error)
+        .blocking_show();
+    std::process::exit(1);
+}
+
+/// The one failure that can happen BEFORE a [`SessionLog`] exists to log to (reviewer S2):
+/// `SessionLog::open` failing was previously a bare `panic!`, invisible in a release build for the
+/// same reason [`refuse_to_start`]'s own doc comment gives (no console: `main.rs`'s
+/// `windows_subsystem = "windows"`). Same shape as [`refuse_to_start`] minus the log line — there
+/// is nothing to log this particular failure into, so the comment says so rather than pretending
+/// otherwise. Kept as a separate function (rather than `refuse_to_start` taking an
+/// `Option<&SessionLog>`) so every OTHER call site, which always has a real, already-opened log,
+/// cannot accidentally take the "nothing to log to" path.
+fn refuse_to_start_before_log<R: tauri::Runtime>(app: &tauri::App<R>, message: &str) -> ! {
+    eprintln!("[spatial-ide-shell] REFUSING TO START (no session log exists yet to log this to): {message}");
     app.dialog()
         .message(message)
         .title("Spatial IDE could not start")
@@ -72,8 +122,8 @@ fn refuse_to_start<R: tauri::Runtime>(app: &tauri::App<R>, log: &SessionLog, mes
 /// (`on_page_load` below) can compare the webview's *actual* URL against it. Read-only after
 /// `setup()` manages it: nothing here, and nothing in the self-check that reads it, ever writes a
 /// new value back into it or into `DataPlaneConfig` — an ASSERTION, never a second selection (the
-/// human's ruling on `DECISIONS-PENDING.md` entry 55; `AI_DEVELOPMENT.md`'s "never block or pump
-/// inside `setup()`" mechanic).
+/// human's ruling on `DECISIONS-PENDING.md` entry 55; `AI_DEVELOPMENT.md`'s "Never block or pump
+/// inside Tauri's `setup()`" mechanic, `AI_DEVELOPMENT.md:147`).
 struct PinnedOrigin {
     origin: String,
     /// The window label the self-check scopes itself to (`tauri.conf.json`'s
@@ -92,11 +142,33 @@ struct PinnedOrigin {
 const ORIGIN_SELF_CHECK_MISMATCH_EVENT: &str = "origin-self-check-mismatch";
 
 /// Payload for [`ORIGIN_SELF_CHECK_MISMATCH_EVENT`] — mirrors
-/// `diagnostics/originSelfCheck.ts`'s `OriginMismatchPayload` field-for-field.
+/// `diagnostics/originSelfCheck.ts`'s discriminated `OriginSelfCheckPayload` union field-for-field,
+/// tagged on `kind`.
+///
+/// **Reviewer S5: a `Webview::url()`/normalisation FAILURE is typed distinctly from a genuine
+/// MISMATCH.** An unreadable actual origin does not mean the pinned origin is wrong — only that
+/// this one check could not confirm it either way; the data plane's own admission still runs
+/// against the pinned origin exactly as pinned, unaffected by this check's own inability to read
+/// the webview back. Collapsing the two into one "mismatch" state (the pre-fix shape) overclaimed:
+/// it told the frontend "the data plane will refuse this session" in a case where it might not.
+///
+/// **Reviewer S6's alternative — reading `payload.url()` instead of `Webview::url()` — was
+/// considered and is deferred, not adopted.** `RELEASE-0.1.md` Amendment 6's "Preregistration —
+/// item 1 (b)" names `Webview::url()` specifically ("read `Webview::url()`, normalise, compare to
+/// the pinned origin"), and this ADR sits behind the human's security red line: preregistration
+/// fidelity is not something this piece may trade away on its own initiative. Both reads observe
+/// the SAME completed navigation in practice (this hook only runs on `PageLoadEvent::Finished`), so
+/// nothing about the check's own correctness turns on which one is used — only which one the
+/// accepted preregistration names.
 #[derive(serde::Serialize, Clone)]
-struct OriginSelfCheckMismatch {
-    pinned: String,
-    actual: String,
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum OriginSelfCheckOutcome {
+    /// The webview's actual origin was read and normalised successfully, and differs from the
+    /// pinned one — the data plane WILL refuse every stream this session opens.
+    Mismatch { pinned: String, actual: String },
+    /// `Webview::url()` or `origin::expected_origin_from_url` itself failed. The pinned origin may
+    /// still be exactly right; this check simply could not confirm it, and admission is unaffected.
+    Unverifiable { pinned: String, error: String },
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -162,23 +234,23 @@ pub fn run() {
                     eprintln!("[spatial-ide-shell] {line}");
                     let _ = webview.app_handle().emit(
                         ORIGIN_SELF_CHECK_MISMATCH_EVENT,
-                        OriginSelfCheckMismatch { pinned: pinned.origin.clone(), actual },
+                        OriginSelfCheckOutcome::Mismatch { pinned: pinned.origin.clone(), actual },
                     );
                 }
                 Err(e) => {
-                    // Same fail-closed spirit as `refuse_to_start`, but the process is already
-                    // running and the page has already loaded -- there is nothing left to refuse to
-                    // START. Logged and treated as a mismatch (an unreadable/hostless actual origin
-                    // can never equal the pinned one) so the frontend still gets the typed state
-                    // rather than silence.
-                    let actual = format!("<unreadable: {e}>");
+                    // Reviewer S5: distinct from a genuine mismatch (`OriginSelfCheckOutcome`'s own
+                    // doc comment) -- the process is already running and the page has already
+                    // loaded, so there is nothing left to refuse to START, and an unreadable actual
+                    // origin does NOT mean the pinned one is wrong: this check simply could not
+                    // confirm it either way, and the data plane's admission still runs against the
+                    // pinned origin exactly as pinned, unaffected.
                     let line =
-                        format!("origin-self-check MISMATCH pinned={} actual={actual}", pinned.origin);
+                        format!("origin-self-check UNVERIFIABLE pinned={} error={e}", pinned.origin);
                     session_log.append("error", &line);
                     eprintln!("[spatial-ide-shell] {line}");
                     let _ = webview.app_handle().emit(
                         ORIGIN_SELF_CHECK_MISMATCH_EVENT,
-                        OriginSelfCheckMismatch { pinned: pinned.origin.clone(), actual },
+                        OriginSelfCheckOutcome::Unverifiable { pinned: pinned.origin.clone(), error: e },
                     );
                 }
             }
@@ -192,51 +264,68 @@ pub fn run() {
 
             // Opened first, before the origin mirror below, so a fail-closed refusal
             // (`OriginError::DevUrlNotConfigured`, condition 4) has somewhere to log to before the
-            // process exits -- `refuse_to_start` needs only `app.path()`, available this early. This
-            // is itself a fatal-setup-failure panic (unchanged from before this rewrite -- if the
-            // log cannot even be opened, there is nowhere to log that failure into either).
+            // process exits -- `refuse_to_start` needs only `app.path()`, available this early.
+            // Reviewer S2: this open itself failing used to be a bare `panic!`, invisible in a
+            // release build with no console -- now visible the same way `refuse_to_start` is
+            // (`refuse_to_start_before_log`: eprintln, a blocking dialog, `exit(1)` -- there being
+            // nothing to log this one failure into is exactly why that function exists separately).
             let log_dir = app
                 .path()
                 .app_log_dir()
                 .unwrap_or_else(|_| std::env::temp_dir().join("spatial-ide-shell-logs"));
             let session_log = SessionLog::open(&log_dir).unwrap_or_else(|e| {
-                panic!("could not open a session log at {}: {e}", log_dir.display())
+                refuse_to_start_before_log(
+                    app,
+                    &format!("could not open a session log at {}: {e}", log_dir.display()),
+                )
             });
             eprintln!("[spatial-ide-shell] session log: {}", session_log.path.display());
 
             // ADR-020 Amendment 1 (rewritten 2026-09-08, entry 55 = "(b)"): the config mirror.
             // `expected_origin` is no longer read off a live webview at all -- there is no `unsafe`,
             // no retry, no Win32 message pump, and nothing here can block `setup()` waiting for a
-            // value that is not yet observable (`AI_DEVELOPMENT.md`'s "never block or pump inside
-            // setup()" mechanic, named for exactly this history). `origin::expected_origin_from_config`
-            // is a pure function over plain inputs gathered from `app.config()` below; see
-            // `origin.rs`'s own module doc for the full API + version citation (condition 5) and why
-            // this mirror cannot disagree with Tauri's own internal `WebviewUrl::App` resolution.
+            // value that is not yet observable (`AI_DEVELOPMENT.md`'s "Never block or pump inside
+            // Tauri's setup()" mechanic, `AI_DEVELOPMENT.md:147`, named for exactly this history).
+            // `origin::expected_origin_from_config` is a pure function over plain inputs gathered
+            // from `app.config()` below; see `origin.rs`'s own module doc for the full API +
+            // version citation (condition 5) and why this mirror cannot disagree with Tauri's own
+            // internal `WebviewUrl::App` resolution.
             let is_dev = tauri::is_dev();
             let dev_url = app.config().build.dev_url.clone();
             let frontend_dist = app.config().build.frontend_dist.clone();
-            let use_https_scheme = app
-                .config()
-                .app
-                .windows
-                .first()
-                .map(|w| w.use_https_scheme)
-                .unwrap_or(false);
-            let window_label = app
-                .config()
-                .app
-                .windows
-                .first()
-                .map(|w| w.label.clone())
-                .unwrap_or_else(|| {
-                    refuse_to_start(
-                        app,
-                        &session_log,
-                        "ADR-020 Amendment 1: tauri.conf.json declares no app.windows[0] -- there \
-                         is no configured window for the origin mirror's useHttpsScheme/label, or \
-                         for the post-load self-check to scope itself to",
-                    )
-                });
+            // Gathered once (rather than a separate `.first()` per field) so the fail-closed guard
+            // just below and `window_label`/`use_https_scheme` all read the SAME configured window.
+            let main_window_config = app.config().app.windows.first().cloned().unwrap_or_else(|| {
+                refuse_to_start(
+                    app,
+                    &session_log,
+                    "ADR-020 Amendment 1: tauri.conf.json declares no app.windows[0] -- there \
+                     is no configured window for the origin mirror's useHttpsScheme/label/url \
+                     guard, or for the post-load self-check to scope itself to",
+                )
+            });
+            // Architect review A2: this mirror reproduces `AppManager::get_app_url`'s resolution of
+            // a `WebviewUrl::App` window only (`origin.rs`'s own module doc has the verified line
+            // citations and the `WebviewUrl::External`/`CustomProtocol` divergence this guards
+            // against). A main window configured any other way would have the webview navigate
+            // somewhere this mirror does not compute -- refuse rather than pin a value the webview
+            // might never actually land on.
+            if !origin::main_window_url_is_app(&main_window_config.url) {
+                refuse_to_start(
+                    app,
+                    &session_log,
+                    &format!(
+                        "ADR-020 Amendment 1: the main window's configured url ({:?}) is not \
+                         WebviewUrl::App -- this mirror reproduces AppManager::get_app_url's \
+                         App-window resolution only (tauri-2.11.5/src/manager/webview.rs:443-461); \
+                         refusing to start rather than pin an origin the webview might not \
+                         actually navigate to",
+                        main_window_config.url
+                    ),
+                );
+            }
+            let use_https_scheme = main_window_config.use_https_scheme;
+            let window_label = main_window_config.label.clone();
 
             let frontend_dist_origin = match &frontend_dist {
                 Some(tauri::utils::config::FrontendDist::Url(u)) => origin::FrontendDistOrigin::Url(u),
@@ -385,7 +474,7 @@ pub fn run() {
             commands::binding_publish_cancel,
             // E2E TEST SEAM (`NEXT-CUT.md` P4) — `#[cfg(debug_assertions)]` on both this entry and
             // the command's own definition (`commands.rs`) removes the match arm from a release
-            // build entirely (`tauri-macros`' own `Handler` codegen applies each item's attributes to
+            // build entirely (`tauri-macros`' `Handler` codegen applies each item's attributes to
             // its generated arm), not merely a runtime-disabled command that still ships.
             #[cfg(debug_assertions)]
             commands::binding_publish_prepare_e2e_destination,

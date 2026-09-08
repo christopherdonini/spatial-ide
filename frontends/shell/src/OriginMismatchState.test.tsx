@@ -48,12 +48,17 @@ describe("OriginMismatchState (ADR-020 Amendment 1's typed, non-dismissable mism
       root.render(<OriginMismatchState />);
     });
     act(() => {
-      recordOriginMismatch({ pinned: "http://localhost:5180", actual: "http://tauri.localhost" });
+      recordOriginMismatch({
+        kind: "mismatch",
+        pinned: "http://localhost:5180",
+        actual: "http://tauri.localhost",
+      });
     });
     const el = container.querySelector(".origin-mismatch-state");
     expect(el).not.toBeNull();
     expect(el?.textContent).toContain("http://localhost:5180");
     expect(el?.textContent).toContain("http://tauri.localhost");
+    expect(el?.textContent).toContain("will refuse");
     // Non-dismissable: no button anywhere in this state (contrast ErrorBanner's Dismiss button).
     expect(el?.querySelector("button")).toBeNull();
   });
@@ -63,10 +68,18 @@ describe("OriginMismatchState (ADR-020 Amendment 1's typed, non-dismissable mism
       root.render(<OriginMismatchState />);
     });
     act(() => {
-      recordOriginMismatch({ pinned: "http://localhost:5180", actual: "http://tauri.localhost" });
+      recordOriginMismatch({
+        kind: "mismatch",
+        pinned: "http://localhost:5180",
+        actual: "http://tauri.localhost",
+      });
     });
     act(() => {
-      recordOriginMismatch({ pinned: "http://localhost:5180", actual: "https://tauri.localhost" });
+      recordOriginMismatch({
+        kind: "mismatch",
+        pinned: "http://localhost:5180",
+        actual: "https://tauri.localhost",
+      });
     });
     const el = container.querySelector(".origin-mismatch-state");
     expect(el?.textContent).toContain("https://tauri.localhost");
@@ -74,5 +87,52 @@ describe("OriginMismatchState (ADR-020 Amendment 1's typed, non-dismissable mism
     // it) -- if the first mismatch's text had survived alongside the second (append rather than
     // replace), this exact string would still be present.
     expect(el?.textContent).not.toContain("http://tauri.localhost");
+  });
+
+  // -- Reviewer S5: the "unverifiable" outcome renders truthfully different text ----------------
+
+  it("renders a distinct, truthful state for an unverifiable read (does not claim the data plane will refuse)", () => {
+    act(() => {
+      root.render(<OriginMismatchState />);
+    });
+    act(() => {
+      recordOriginMismatch({
+        kind: "unverifiable",
+        pinned: "http://localhost:5180",
+        error: "<unreadable: webview url() failed>",
+      });
+    });
+    const el = container.querySelector(".origin-mismatch-state");
+    expect(el).not.toBeNull();
+    expect(el?.classList.contains("origin-mismatch-state--unverifiable")).toBe(true);
+    expect(el?.textContent).toContain("http://localhost:5180");
+    expect(el?.textContent).toContain("could not verify");
+    // The truthful distinction this reviewer finding exists for: an unverifiable read must NEVER
+    // claim the data plane will refuse -- the pinned origin may still be exactly right.
+    expect(el?.textContent).not.toContain("will refuse");
+    expect(el?.querySelector("button")).toBeNull();
+  });
+
+  it("an unverifiable read and a mismatch render visibly different text for the same pinned origin", () => {
+    act(() => {
+      root.render(<OriginMismatchState />);
+    });
+    act(() => {
+      recordOriginMismatch({
+        kind: "unverifiable",
+        pinned: "http://localhost:5180",
+        error: "boom",
+      });
+    });
+    const unverifiableText = container.querySelector(".origin-mismatch-state")?.textContent;
+    act(() => {
+      recordOriginMismatch({
+        kind: "mismatch",
+        pinned: "http://localhost:5180",
+        actual: "http://tauri.localhost",
+      });
+    });
+    const mismatchText = container.querySelector(".origin-mismatch-state")?.textContent;
+    expect(unverifiableText).not.toEqual(mismatchText);
   });
 });
