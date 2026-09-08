@@ -166,6 +166,30 @@ how obvious they seem:
 - Reports end with: verdicts table where applicable, the decision list for the human, and
   `git status --porcelain` output.
 
+- **Inspect before removing, in its own step (2026-09-08).** A worktree's `target/` is not
+  necessarily a cargo cache: a worker's env-less run puts regenerated fixtures and test evidence
+  there. List the directory, decide, then remove — never in the same command. Corollary for briefs:
+  name BOTH target directories on every cargo invocation (root workspace →
+  `C:\dev\spatial-ide	arget`; the shell crate → `frontends\shell\src-tauri	arget`); one missing
+  export grows a 3–18 GB worktree-local target.
+- **One app at a time; only the harness launches it (2026-09-08).** A worker or gate that needs the
+  shell app launches it through the E2E harness's own attach-or-launch (the CDP port), never a bare
+  `npm run tauri dev` "pre-warm" — that instance is un-attachable and holds port 5180 for everyone.
+  A worker must be able to close what it opened (by PID); if its sandbox denies termination it must
+  not open it. Everyone else waits, bounded, and never kills; the custodian closes a stray by PID
+  only after verifying ownership (creation time + the command line's worktree path). Corollary:
+  `attachOrLaunch` attaches to anything already on the port and returns `launched: false` — an E2E
+  that proves a branch must assert `launched: true` and record PID, exe path and session log.
+- **The citation-integrity scanner covers five files (2026-09-08).** `e2e/residency*.mjs` and
+  `src/instrument/*` only. A quote in `spikes/`, any other `e2e/*.mjs`, `LICENSES/`, the walkthrough
+  or an ADR is checked by hand at gate time — the class caught twice today was a quotation
+  attributed to a document that does not contain it (the custodian's brief, quoted as "the
+  preregistration"). Label the brief's words as "the custodian's brief, not in the tree" whenever
+  they are quoted; widening the scanner is a NEXT-CUT tooling item.
+- **Rule 7 is counted per step, per design (2026-09-08, applied to #31 and item 1 (b)).** A PASS
+  with must-fixes is not a failed attempt; a gate FAIL followed by a re-review FAIL at the same
+  step is two → stop, record, queue. A design the human re-authorized starts its own count.
+
 ## Away-mode evidence rule
 
 GUI-dependent acceptance items (native pickers, canvas interaction, headed browser cells) are
