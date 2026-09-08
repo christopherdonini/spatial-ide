@@ -75,18 +75,6 @@ spatial-skp = { path = "../../../protocol/skp" }
 # from the style already in hand (`publish.rs::style_attributes`), never a second style engine.
 spatial-renderer = { path = "../../../renderer" }
 
-# ADR-020 Amendment 1's origin-read retry loop (`lib.rs`'s own doc comment on that block has the
-# full account): WebView2's async navigation-completion delivery runs entirely on window messages
-# (`webview2-com` 0.38.2's own `wait_with_pump` doc comment, already a transitive dependency of
-# `tauri`/`wry` at this exact version -- verified in `Cargo.lock`: "The WebView2 threading model
-# runs everything on the UI thread, including callbacks which it triggers with `PostMessage`"), so a
-# plain `std::thread::sleep` retry never observes navigation land -- proven empirically on a real
-# `tauri dev` run (ADR-020 Amendment 1 §(f)), not assumed. `windows` is already resolved in this
-# exact version (0.61.3, `Cargo.lock`) via `tauri`/`wry` themselves; declared directly here, Windows-
-# only, only for the one feature this file's own message-pump function needs.
-[target.'cfg(windows)'.dependencies]
-windows = { version = "0.61.3", features = ["Win32_UI_WindowsAndMessaging"] }
-
 [dev-dependencies]
 # `fixture` is test-only generated GeoParquet (`kernel/Cargo.toml`'s own precedent for enabling it):
 # `publish.rs`'s unit tests build real, small datasets rather than mocking `Dataset`. Cargo unifies

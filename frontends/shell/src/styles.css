@@ -93,6 +93,24 @@ body,
   margin: 0.5rem 0;
 }
 
+/* ADR-020 Amendment 1 (rewritten): the post-load origin self-check's typed, non-dismissable
+   mismatch state -- deliberately styled ABOVE `.error-banner` (higher z-index) and with no
+   dismiss affordance, since it names a condition the data plane will refuse for the rest of the
+   process's life (`OriginMismatchState.tsx`'s own doc comment). */
+.origin-mismatch-state {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: #4a0f0f;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  border-bottom: 0.25rem solid #ffb400;
+}
+
 .admission-panel {
   padding: 1rem;
   max-width: 40rem;

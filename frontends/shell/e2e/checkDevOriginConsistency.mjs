@@ -2,15 +2,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// ADR-020 Amendment 1, design (b): `frontends/shell/src-tauri/src/lib.rs` no longer carries ANY
-// copy of the dev-server port -- it derives the data plane's expected origin at runtime from the
-// webview's own URL (`origin.rs`'s `expected_origin_from_url`), never from a hardcoded literal. That
-// removes the THIRD of ADR-020's three named copies (`vite.config.ts`, `tauri.conf.json`'s `devUrl`,
-// `lib.rs`); it does not remove the other two, which still have to agree with each other for
-// `tauri dev` to work at all (`vite.config.ts` binds the dev server to `server.port`; `tauri.conf.json`
-// `build.devUrl` is what Tauri points the webview at, hand-written as a URL whose own port is a
-// second copy of the same number). Nothing before this script made that agreement anything but a
-// convention a human could silently break.
+// ADR-020 Amendment 1, design (b), rewritten 2026-09-08 (the human's ruling on
+// `DECISIONS-PENDING.md` entry 55 = "(b)"): `frontends/shell/src-tauri/src/lib.rs` no longer
+// carries ANY copy of the dev-server port -- in dev mode, the data plane's expected origin is
+// derived from `tauri.conf.json`'s own `build.devUrl` directly (`origin::expected_origin_from_config`,
+// the config mirror -- never a runtime read of the webview, and never a hardcoded literal in
+// `lib.rs`). That removes the THIRD of ADR-020's three named copies (`vite.config.ts`,
+// `tauri.conf.json`'s `devUrl`, `lib.rs`); it does not remove the other two, which still have to
+// agree with each other for `tauri dev` to work at all (`vite.config.ts` binds the dev server to
+// `server.port`; `tauri.conf.json` `build.devUrl` is what Tauri points the webview at, AND is now
+// the literal value the config mirror pins as `expected_origin` in dev mode -- hand-written as a
+// URL whose own port is a second copy of the same number). Nothing before this script made that
+// agreement anything but a convention a human could silently break. This check is now load-bearing
+// for BOTH Tauri's own webview navigation AND the shell's data-plane origin pin -- a drift here
+// used to only misdirect the webview; now it also means the config mirror pins an origin
+// `tauri dev`'s own webview never actually lands on, and every stream 403s.
 //
 // This IS the "mechanical link" ADR-020 Amendment 1's preregistration (design (b)) requires: read
 // both real config files, fail loudly if they disagree -- and, per the reviewer gate on the first
@@ -105,8 +111,10 @@ function main() {
       `checkDevOriginConsistency: FAIL -- vite.config.ts's server.port (${port}) does not match ` +
         `tauri.conf.json's build.devUrl ("${devUrlRaw}")'s own port (${devUrl.port || "(none)"}). ` +
         "These two copies of the dev-server port have drifted -- tauri dev's webview would not " +
-        "land on the port Vite is actually listening on, and ADR-020 Amendment 1's runtime-derived " +
-        "expected_origin would then pin whatever wrong origin the webview actually got, not fail " +
+        "land on the port Vite is actually listening on, and ADR-020 Amendment 1's config mirror " +
+        "would still pin tauri.conf.json's own build.devUrl origin (unaffected by this drift, " +
+        "since it reads that value directly) -- but that pinned origin would then be one the " +
+        "webview itself never actually navigates to, so every data-plane upgrade 403s, not fail " +
         "loudly by itself."
     );
     process.exitCode = 1;

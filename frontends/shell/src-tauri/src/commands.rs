@@ -404,6 +404,15 @@ pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt
 /// of a `cfg!(debug_assertions)`-under-`--debug` mismatch. This command's own
 /// `#[cfg(debug_assertions)]` gate is unaffected by that amendment and remains exactly the
 /// limitation described above.]*
+///
+/// *[dated correction, 2026-09-08: the 2026-09-07 correction above described the origin as
+/// "webview-URL-derived" — superseded again the same cut, on the human's ruling on
+/// `DECISIONS-PENDING.md` entry 55 = "(b)": ADR-020 Amendment 1 was rewritten to a pure CONFIG
+/// mirror (`origin::expected_origin_from_config`, called from `lib.rs`'s `setup()`), which never
+/// reads the webview at all before `serve()` starts — a post-load self-check (`lib.rs`'s
+/// `on_page_load` hook) asserts against the webview afterward, but does not select from it. This
+/// command's own `#[cfg(debug_assertions)]` gate is unaffected by that rewrite either, and remains
+/// exactly the limitation described above.]*
 #[cfg(debug_assertions)]
 #[tauri::command]
 pub async fn binding_publish_prepare_e2e_destination(

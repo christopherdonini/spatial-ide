@@ -33,7 +33,7 @@ use spatial_data_plane::{serve, DataPlaneConfig};
 use spatial_kernel::permission::GrantSet;
 use spatial_kernel::skp::SkpHost;
 use spatial_kernel::{Catalog, EngineSourceFactory};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 use state::{DataPlaneHandle, SessionLog};
@@ -66,90 +66,277 @@ fn refuse_to_start<R: tauri::Runtime>(app: &tauri::App<R>, log: &SessionLog, mes
     std::process::exit(1);
 }
 
-/// ADR-020 Amendment 1's origin-read retry loop (`run()`'s `setup()` closure, the block documented
-/// there): drains whatever Win32 messages are already queued on this (main, STA) thread, without
-/// blocking if the queue is empty. Exists because WebView2's async work -- specifically, the
-/// navigation-completion notification that updates what `Webview::url()`/`ICoreWebView2::Source()`
-/// reports -- is delivered entirely via posted window messages
-/// (`webview2-com` 0.38.2's own doc comment on `wait_with_pump`, quoted in `Cargo.toml`'s comment
-/// next to the `windows` dependency this function uses), so a caller that only sleeps between
-/// retries, never pumping, can observe `about:blank` indefinitely even though the navigation was
-/// already issued -- proven empirically on a real `tauri dev` run, not assumed (ADR-020 Amendment 1
-/// §(f)). `PeekMessageW` with `PM_REMOVE` (not `GetMessageW`, which blocks indefinitely if the
-/// queue is empty -- unacceptable inside a bounded retry loop) so an idle queue returns immediately
-/// rather than hanging this thread.
-///
-/// **Residual consideration, disclosed rather than silently assumed away:** this drains and
-/// dispatches WHATEVER is queued, not narrowly the one navigation-completion message this loop is
-/// waiting on -- if Tauri's own webview-to-host IPC delivery also depends on a message this pump
-/// could drain, a command COULD in principle be dispatched before `app.manage(...)` has registered
-/// the state it needs (this closure calls `pump_pending_windows_messages` only before that point).
-/// Not observed: two independent end-to-end runs (ADR-020 Amendment 1 §(f)), one of which invokes a
-/// real command (`open_dataset`, via the E2E hook) immediately once the page loads, both completed
-/// with no such failure -- consistent with the retry loop resolving and moving on to
-/// `app.manage(...)` well before the page has loaded enough JS to invoke anything, but not a proof
-/// that no ordering could ever produce it. Narrowing this pump to filter for specific message types
-/// would need WebView2/wry internals this piece did not verify; flagged here rather than closed.
-#[cfg(windows)]
-fn pump_pending_windows_messages() {
-    use windows::Win32::UI::WindowsAndMessaging::{
-        DispatchMessageW, PeekMessageW, TranslateMessage, MSG, PM_REMOVE,
-    };
-    let mut msg = MSG::default();
-    // SAFETY: `PeekMessageW`/`TranslateMessage`/`DispatchMessageW` are the standard Win32
-    // message-pump triad, called here exactly as `webview2-com`'s own `wait_with_pump` calls the
-    // blocking-`GetMessageW` equivalent (this function's own doc comment cites it) -- `msg` is a
-    // plain, fully-owned `MSG::default()` local the call fills in; `hwnd: None` means "any window
-    // belonging to this thread", the same scope wry/WebView2's own internal message handling for
-    // this window already assumes since it runs on this same (main, STA) thread.
-    unsafe {
-        while PeekMessageW(&mut msg, None, 0, 0, PM_REMOVE).as_bool() {
-            let _ = TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-    }
+/// ADR-020 Amendment 1 (rewritten 2026-09-08): the origin pinned by the config mirror
+/// (`origin::expected_origin_from_config`) at `setup()` time, exactly as passed into
+/// `DataPlaneConfig::expected_origin` — managed so the post-load self-check
+/// (`on_page_load` below) can compare the webview's *actual* URL against it. Read-only after
+/// `setup()` manages it: nothing here, and nothing in the self-check that reads it, ever writes a
+/// new value back into it or into `DataPlaneConfig` — an ASSERTION, never a second selection (the
+/// human's ruling on `DECISIONS-PENDING.md` entry 55; `AI_DEVELOPMENT.md`'s "never block or pump
+/// inside `setup()`" mechanic).
+struct PinnedOrigin {
+    origin: String,
+    /// The window label the self-check scopes itself to (`tauri.conf.json`'s
+    /// `app.windows[0].label`, the same one the config mirror's own `use_https` input is read
+    /// from) — a page-load event for any other webview is not this process's main window and is
+    /// silently skipped. This crate creates exactly one window in every build mode today
+    /// (including `measure-build`'s own block below, which builds the SAME configured window
+    /// rather than a second one), so this scoping is defensive rather than load-bearing in
+    /// practice.
+    window_label: String,
 }
 
-/// Non-Windows fallback: a no-op. ADR-003's Resolution validates only Windows/WebView2 today
-/// (docs/07's macOS/Linux hardware-validation follow-up is still open) -- the retry loop that calls
-/// this still falls back to its own plain `std::thread::sleep` between attempts either way, which is
-/// the best available without an equivalent platform-specific message pump.
-#[cfg(not(windows))]
-fn pump_pending_windows_messages() {}
+/// The event name `on_page_load`'s self-check emits on a mismatch — the single source both this
+/// file's `app.emit` call and the frontend's `listen(...)` call (`diagnostics/originSelfCheck.ts`)
+/// must agree on.
+const ORIGIN_SELF_CHECK_MISMATCH_EVENT: &str = "origin-self-check-mismatch";
+
+/// Payload for [`ORIGIN_SELF_CHECK_MISMATCH_EVENT`] — mirrors
+/// `diagnostics/originSelfCheck.ts`'s `OriginMismatchPayload` field-for-field.
+#[derive(serde::Serialize, Clone)]
+struct OriginSelfCheckMismatch {
+    pinned: String,
+    actual: String,
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        // ADR-020 Amendment 1 (rewritten): the post-load self-check. Registered on the `Builder`
+        // (not inside `setup()`) because `Webview<R>` implements `Manager<R>`/`Emitter<R>`, so this
+        // closure needs nothing `setup()` alone provides -- it reads managed state
+        // (`PinnedOrigin`/`SessionLog`) the SAME way any command does. Tauri calls this once per
+        // page-load event, per webview (`tauri::Builder::on_page_load`,
+        // `tauri-2.11.5/src/app.rs:1781-1789`: `Fn(&Webview<R>, &PageLoadPayload<'_>)`), for every
+        // webview this process ever creates -- filtered below to `PageLoadEvent::Finished` and this
+        // process's one main window.
+        //
+        // **This can only ever fire after `setup()` has returned.** Page-load events are dispatched
+        // by the app's own event loop, which does not begin pumping until `setup()`'s synchronous
+        // closure completes (`tauri-2.11.5/src/app.rs:1422-1426`'s `RuntimeRunEvent::Ready`
+        // dispatch) -- the exact same reasoning `AI_DEVELOPMENT.md`'s new mechanic states for why a
+        // pumped command inside `setup()` was the disproved pump design's own hazard. So every
+        // `app.manage(...)` call `setup()` makes (including `PinnedOrigin` and `SessionLog` below)
+        // has already run by the time this closure can possibly observe a `Finished` event -- the
+        // `try_state` calls below are a defensive `None`-skip, not a real race.
+        //
+        // **Assertion, never selection**: this closure reads `pinned.origin` but never writes it,
+        // never touches `DataPlaneConfig`, and never re-derives an origin to pin -- it only compares
+        // the webview's actual URL (normalised with the SAME `origin::expected_origin_from_url` the
+        // mirror itself uses) against the value `setup()` already pinned, logs the verdict, and, on
+        // a mismatch, emits one typed event so the frontend can render a named state (ADR-027
+        // decision 4 untouched: no new Tauri command exists here for its unclassified-command scan
+        // to see).
+        .on_page_load(|webview, payload| {
+            if payload.event() != tauri::webview::PageLoadEvent::Finished {
+                return;
+            }
+            let Some(pinned) = webview.try_state::<PinnedOrigin>() else {
+                return;
+            };
+            if webview.label() != pinned.window_label {
+                return;
+            }
+            let Some(session_log) = webview.try_state::<SessionLog>() else {
+                return;
+            };
+
+            let actual = webview
+                .url()
+                .map_err(|e| e.to_string())
+                .and_then(|url| origin::expected_origin_from_url(&url).map_err(|e| e.to_string()));
+
+            match actual {
+                Ok(actual) if actual == pinned.origin => {
+                    session_log
+                        .append("info", &format!("origin-self-check ok pinned={}", pinned.origin));
+                }
+                Ok(actual) => {
+                    let line = format!(
+                        "origin-self-check MISMATCH pinned={} actual={}",
+                        pinned.origin, actual
+                    );
+                    session_log.append("error", &line);
+                    eprintln!("[spatial-ide-shell] {line}");
+                    let _ = webview.app_handle().emit(
+                        ORIGIN_SELF_CHECK_MISMATCH_EVENT,
+                        OriginSelfCheckMismatch { pinned: pinned.origin.clone(), actual },
+                    );
+                }
+                Err(e) => {
+                    // Same fail-closed spirit as `refuse_to_start`, but the process is already
+                    // running and the page has already loaded -- there is nothing left to refuse to
+                    // START. Logged and treated as a mismatch (an unreadable/hostless actual origin
+                    // can never equal the pinned one) so the frontend still gets the typed state
+                    // rather than silence.
+                    let actual = format!("<unreadable: {e}>");
+                    let line =
+                        format!("origin-self-check MISMATCH pinned={} actual={actual}", pinned.origin);
+                    session_log.append("error", &line);
+                    eprintln!("[spatial-ide-shell] {line}");
+                    let _ = webview.app_handle().emit(
+                        ORIGIN_SELF_CHECK_MISMATCH_EVENT,
+                        OriginSelfCheckMismatch { pinned: pinned.origin.clone(), actual },
+                    );
+                }
+            }
+        })
         .setup(|app| {
-            // ADR-020 Amendment 1: the measure-build's own main window is deliberately NOT
-            // auto-created by Tauri's internal `setup()` (`create: false` in the measure build's
-            // own generated config overlay, `writeMeasureConfigOverlay.mjs`) so the block further
-            // below can build it itself with extra CDP browser args. It is built FIRST here, before
-            // anything reads the webview's URL below, so that under every build mode -- ordinary
-            // and measure-build alike -- the "main" window this process is about to pin an origin
-            // to already exists at that point. (Every OTHER build mode's window is already built by
-            // the time this closure starts: Tauri's own internal `setup()` builds every
-            // `app.config().app.windows` entry whose `create` is `true` BEFORE calling this crate's
-            // closure -- verified against `tauri-2.11.5/src/app.rs:2521-2526` -- so this block is
-            // the only case where this closure itself must create the window before reading its
-            // URL.) This block used to run near the end of `setup()`, AFTER every `app.manage(...)`
-            // call below; it now runs BEFORE all of them. That ordering is load-bearing and safe for
-            // the same reason `block_on(serve(...))` below was already safe running before those
-            // same `app.manage(...)` calls in the pre-existing code: no Tauri command can be
-            // dispatched to this window until `setup()` itself returns and the app's own event loop
-            // begins actually pumping in its own right (`RuntimeRunEvent::Ready` calls this crate's
-            // `setup()` closure synchronously, from inside `tauri::App::run_return`'s own callback --
-            // verified against `tauri-2.11.5/src/app.rs:1422-1426`), so a window existing earlier
-            // than the state it might eventually read is not itself a race on its own. **Caveat, not
-            // absolute:** the origin-read block below DOES pump Win32 messages itself, deliberately,
-            // between `app.manage(...)` calls' own position and this window's creation -- see
-            // `pump_pending_windows_messages`'s own doc comment for the honestly-disclosed residual
-            // risk that raises (a command dispatched via a pumped message before `app.manage(...)`
-            // runs), and why two independent end-to-end runs argue against it happening in practice
-            // without proving it cannot. See the origin-read block below for the narrower, verified
-            // argument for why no PAGE SCRIPT reaches it early either.
+            // The composition SKP v0 needs (ADR-019): one catalog, one ticket registry, shared
+            // between the command layer and the data-plane server below.
+            let catalog = Arc::new(Catalog::new());
+            let tickets = spatial_kernel::skp::StreamRegistry::new();
+            let host = Arc::new(SkpHost::new(catalog.clone(), tickets.clone()));
+
+            // Opened first, before the origin mirror below, so a fail-closed refusal
+            // (`OriginError::DevUrlNotConfigured`, condition 4) has somewhere to log to before the
+            // process exits -- `refuse_to_start` needs only `app.path()`, available this early. This
+            // is itself a fatal-setup-failure panic (unchanged from before this rewrite -- if the
+            // log cannot even be opened, there is nowhere to log that failure into either).
+            let log_dir = app
+                .path()
+                .app_log_dir()
+                .unwrap_or_else(|_| std::env::temp_dir().join("spatial-ide-shell-logs"));
+            let session_log = SessionLog::open(&log_dir).unwrap_or_else(|e| {
+                panic!("could not open a session log at {}: {e}", log_dir.display())
+            });
+            eprintln!("[spatial-ide-shell] session log: {}", session_log.path.display());
+
+            // ADR-020 Amendment 1 (rewritten 2026-09-08, entry 55 = "(b)"): the config mirror.
+            // `expected_origin` is no longer read off a live webview at all -- there is no `unsafe`,
+            // no retry, no Win32 message pump, and nothing here can block `setup()` waiting for a
+            // value that is not yet observable (`AI_DEVELOPMENT.md`'s "never block or pump inside
+            // setup()" mechanic, named for exactly this history). `origin::expected_origin_from_config`
+            // is a pure function over plain inputs gathered from `app.config()` below; see
+            // `origin.rs`'s own module doc for the full API + version citation (condition 5) and why
+            // this mirror cannot disagree with Tauri's own internal `WebviewUrl::App` resolution.
+            let is_dev = tauri::is_dev();
+            let dev_url = app.config().build.dev_url.clone();
+            let frontend_dist = app.config().build.frontend_dist.clone();
+            let use_https_scheme = app
+                .config()
+                .app
+                .windows
+                .first()
+                .map(|w| w.use_https_scheme)
+                .unwrap_or(false);
+            let window_label = app
+                .config()
+                .app
+                .windows
+                .first()
+                .map(|w| w.label.clone())
+                .unwrap_or_else(|| {
+                    refuse_to_start(
+                        app,
+                        &session_log,
+                        "ADR-020 Amendment 1: tauri.conf.json declares no app.windows[0] -- there \
+                         is no configured window for the origin mirror's useHttpsScheme/label, or \
+                         for the post-load self-check to scope itself to",
+                    )
+                });
+
+            let frontend_dist_origin = match &frontend_dist {
+                Some(tauri::utils::config::FrontendDist::Url(u)) => origin::FrontendDistOrigin::Url(u),
+                _ => origin::FrontendDistOrigin::Other,
+            };
+
+            let webview_origin = origin::expected_origin_from_config(
+                is_dev,
+                dev_url.as_ref(),
+                frontend_dist_origin,
+                use_https_scheme,
+                origin::Platform::current(),
+            )
+            .unwrap_or_else(|e| {
+                refuse_to_start(
+                    app,
+                    &session_log,
+                    &format!(
+                        "ADR-020 Amendment 1: the config mirror could not derive a data-plane \
+                         expected origin ({e}) -- refusing to start rather than guess it"
+                    ),
+                )
+            });
+            let origin_line = format!("data-plane expected origin (config mirror): {webview_origin}");
+            session_log.append("info", &origin_line);
+            eprintln!("[spatial-ide-shell] {origin_line}");
+
+            // Blocking on the setup thread is the standard Tauri pattern for "this must exist
+            // before the app finishes starting" async work — `setup` itself is synchronous, and no
+            // command can run before it returns.
+            let running = tauri::async_runtime::block_on(serve(DataPlaneConfig {
+                factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+                // No static assets: the shell's own webview loads the frontend directly, unlike
+                // `slice-host`'s browser consumer. This endpoint serves the data plane only.
+                static_dir: None,
+                expected_origin: Some(webview_origin.clone()),
+            }))
+            .expect(
+                "the data plane binds an OS-assigned loopback port and startup failure here is \
+                 not a recoverable admission refusal — it means the shell itself cannot run",
+            );
+            let data_plane_handle = DataPlaneHandle {
+                port: running.addr.port(),
+                token: running.session.token_for_delivery().to_string(),
+            };
+
+            app.manage(host);
+            app.manage(data_plane_handle);
+            app.manage(session_log);
+            // ADR-020 Amendment 1 (rewritten): managed so `on_page_load` above can assert the
+            // webview's actual origin against exactly what was pinned into `DataPlaneConfig` a few
+            // lines above -- never read back into anything that could change that pinned value.
+            app.manage(PinnedOrigin { origin: webview_origin, window_label });
+            // Entry-40 pass: one abort handle per currently-open dataset's pool-poll task
+            // (`pool_poll.rs`'s own doc comment) -- managed here so `commands::open_dataset`/
+            // `close_dataset` can start/stop it via `AppHandle::try_state`.
+            #[cfg(any(debug_assertions, feature = "measure-build"))]
+            app.manage(pool_poll::PoolPollTasks::new());
+            // The publish seam's own state (NEXT-CUT.md P1): a shared, in-process grant set and a
+            // single-use pending-attempt store. Both are `Arc`-wrapped so a `spawn_blocking` closure
+            // in `commands.rs` can hold an owned clone across the `'static` boundary that requires;
+            // both die with the process (`kernel/src/permission/grant.rs`'s own non-persistence
+            // rule) -- nothing here is written to disk, and nothing is read back.
+            app.manage(Arc::new(Mutex::new(GrantSet::new())));
+            app.manage(Arc::new(publish::PendingAttempts::new()));
+            // P2's Cancel-publish seam (`NEXT-CUT.md` item 3): a running publish's own `CancelToken`,
+            // keyed by `attempt_id`, live only for the duration of one `binding_publish_execute`
+            // call (`publish::RunningPublishes`'s own doc comment). Dies with the process, same as
+            // every other publish-seam state above.
+            app.manage(Arc::new(publish::RunningPublishes::new()));
+
+            // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16, the "measure
+            // build") -- the debug-gated CDP port, compiled in via this NAMED cargo feature, never a
+            // shipped default. There is no `#[cfg(debug_assertions)]`-gated Rust site that already
+            // opens a CDP port to widen (verified while writing this: `additionalBrowserArgs` is set
+            // ONLY by `e2e/lib.mjs`'s `writeConfigOverlay` for `tauri dev --config <path>`, a Node-side
+            // JSON overlay with no Rust equivalent; `tauri.conf.json` itself carries no
+            // `additionalBrowserArgs` key at all) -- this block is that site, built new, following the
+            // same idiom (`e2e/lib.mjs`'s own `WRY_DEFAULT_BROWSER_ARGS` comment: `additionalBrowserArgs`
+            // REPLACES wry's own defaults rather than appending to them, so they must be repeated here).
+            //
+            // **Restored to this position (ADR-020 Amendment 1's rewrite, 2026-09-08):** the
+            // pre-rewrite pump design hoisted this whole block to the TOP of `setup()`, so a window
+            // existed before that design's own runtime read of it. This rewrite reads no webview at
+            // all, so nothing here still depends on this block running before anything else in this
+            // closure -- restored to its pre-pump position (the end, immediately before
+            // `Box::leak`), matching `main`'s own ordering byte-for-byte for this block.
+            //
+            // **Always paired, at build time, with a config overlay that sets this window's own
+            // `create: false`** (`npm run build:measure`'s generated `e2e/out/tauri.measure.conf.json`,
+            // `e2e/writeMeasureConfigOverlay.mjs`) -- Tauri's own internal `setup()` creates every
+            // `app.config().app.windows` entry whose `create` is `true` BEFORE this closure ever runs
+            // (verified against `tauri-2.11.5/src/app.rs`'s own `setup()` function, not assumed), so
+            // without that overlay this block would race the declarative auto-created window for the
+            // same `"main"` label and `.build()?` below would return `Err` -- a loud `setup` failure
+            // (`.expect(...)` below), never a silent second window or a silently-missing CDP port.
+            //
+            // Reads the CDP port from `SPATIAL_E2E_CDP_PORT` (the SAME env var `e2e/lib.mjs`'s own
+            // `CDP_PORT` reads, so one flag governs both the harness's own attach target and this
+            // process's own open port), defaulting to `9223` -- `CDP_PORT`'s own default.
             #[cfg(feature = "measure-build")]
             {
                 let window_config = app
@@ -176,224 +363,6 @@ pub fn run() {
                 );
             }
 
-            // Moved up from its old position (after `serve()`/`data_plane_handle` below) to before
-            // the origin-read block that follows: `refuse_to_start` needs a working session log to
-            // log a refusal into, and needs only `app.path()`, which is available this early. This
-            // is itself a fatal-setup-failure panic, unchanged from before (not one of the three
-            // MUST-FIX 2 converted below -- if the log cannot even be opened, there is nowhere to
-            // log that failure into either).
-            let log_dir = app
-                .path()
-                .app_log_dir()
-                .unwrap_or_else(|_| std::env::temp_dir().join("spatial-ide-shell-logs"));
-            let session_log = SessionLog::open(&log_dir).unwrap_or_else(|e| {
-                panic!("could not open a session log at {}: {e}", log_dir.display())
-            });
-            eprintln!("[spatial-ide-shell] session log: {}", session_log.path.display());
-
-            // ADR-020 Amendment 1: derive the data plane's `expected_origin` from the shell's own
-            // webview window's *actual* URL, read once, right here -- before `serve()` below.
-            // Replaces the retired `cfg!(debug_assertions)` compile-time selector, which got `tauri
-            // build --debug` wrong (`debug_assertions == true` on that *packaged* build, so it
-            // picked the dev-server origin while the webview actually loaded the packaged
-            // custom-protocol origin -- every upgrade 403'd; ADR-020's Status paragraph, Decision).
-            //
-            // **Why this read happens before any PAGE SCRIPT can run (condition 1), precisely
-            // stated rather than by "the event loop never pumps here"** (that broader claim is
-            // false for WebView2: wry DOES pump the Win32 message loop internally during webview
-            // creation -- `wry-0.55.1/src/webview2/mod.rs:414`'s `webview2_com::wait_with_pump(rx)?`
-            // -- though the webview's own content still runs in a separate renderer process
-            // regardless). The narrower, verified argument: the ONLY navigation ever issued to this
-            // webview before this read runs is the single, host-configured one Tauri/wry issues at
-            // webview-creation time, built from `tauri.conf.json`'s own `devUrl`/`frontendDist`
-            // (`WebViewAttributes::url` → `webview.Navigate(&url)`,
-            // `wry-0.55.1/src/webview2/mod.rs:518-531`) -- so the URL this code reads is exactly
-            // that host-configured navigation's target, not a page-initiated one, regardless of
-            // what the message loop pumps during webview construction; and the resulting value is
-            // pinned into `DataPlaneConfig::expected_origin` before this closure returns, so no
-            // LATER navigation -- page-initiated or not -- can ever change what gets pinned. The
-            // read itself cannot deadlock even if the loop is active: `Webview::url()`'s dispatcher
-            // call is serviced INLINE, synchronously, when invoked from the main thread (which
-            // `setup()` runs on) rather than routed through the async event-loop proxy --
-            // `tauri-runtime-wry-2.11.4/src/lib.rs:239-248`'s `send_user_message`.
-            //
-            // `origin::expected_origin_from_url`'s own module doc names the exact API + crate
-            // version (condition 5). `Session::with_origin`/`DataPlaneConfig::expected_origin` (the
-            // ADR-020-accepted mechanism: host-supplied, exact-match, never page script, never a
-            // wildcard; `Origin: null` still rejected; the `sec-fetch-site: same-origin` fallback
-            // unchanged) are untouched by this change -- only how `webview_origin` below is
-            // computed changes.
-            //
-            // Fails closed (condition 4): if the configured window does not exist, if its URL
-            // cannot be read, or if that URL has no host to pin an origin to, `refuse_to_start`
-            // (this file's own top-level fn) logs, shows a blocking native error dialog, and exits
-            // (1) -- never a default, and never silent (a plain release build has no console).
-            let window_label = app
-                .config()
-                .app
-                .windows
-                .first()
-                .map(|w| w.label.clone())
-                .unwrap_or_else(|| {
-                    refuse_to_start(
-                        app,
-                        &session_log,
-                        "ADR-020 Amendment 1: tauri.conf.json declares no app.windows[0] -- there \
-                         is no configured window to derive the data plane's expected origin from",
-                    )
-                });
-            let webview_window = app.get_webview_window(&window_label).unwrap_or_else(|| {
-                refuse_to_start(
-                    app,
-                    &session_log,
-                    &format!(
-                        "ADR-020 Amendment 1: no webview window labelled {window_label:?} exists \
-                         at setup time -- refusing to start rather than guess the data plane's \
-                         expected origin"
-                    ),
-                )
-            });
-            // **Empirical finding, MUST-FIX 4's runtime evidence pass (2026-09-07): a single read
-            // is not enough, and neither is a plain retry-with-sleep.** `origin.rs`'s own doc
-            // comment already named the hazard -- `Webview::url()` can report `about:blank` before
-            // the first navigation lands -- but a real `tauri dev` run PROVED it, not just as a
-            // theoretical risk: the very first attempt to gather this piece's runtime evidence
-            // refused to start with exactly this message, on an ordinary launch, no special
-            // conditions. A first fix attempt (retry with `std::thread::sleep` between attempts, no
-            // pumping) was tried and DISPROVED the same way: it still failed, every one of 50
-            // attempts over 5 seconds, because sleeping does not make WebView2's navigation-
-            // completion notification arrive -- that notification is delivered entirely via posted
-            // Win32 window messages (`webview2-com` 0.38.2's own `wait_with_pump` doc comment,
-            // quoted in `Cargo.toml`), and nothing pumps this thread's message queue between
-            // `webview.Navigate(&url)` returning (which only STARTS navigation) and this closure
-            // returning (`setup()` is fully synchronous; the surrounding `RuntimeRunEvent::Ready`
-            // dispatch that calls it, `tauri-2.11.5/src/app.rs:1422-1426`, does not advance to its
-            // next event until this closure returns either) -- so a plain sleep genuinely cannot
-            // observe navigation land, proven, not assumed. `pump_pending_windows_messages` (this
-            // file's own top-level fn, `#[cfg(windows)]`) is what actually closes the gap: it drains
-            // whatever Win32 messages are already queued, non-blockingly, between retry attempts.
-            //
-            // This still satisfies condition 1 ("before any page script can run"): every retried
-            // read, and every pumped message, happens inside this same synchronous `setup()` call,
-            // before it returns -- nothing here waits past the point where page script could start
-            // running anyway, since that point is `setup()` returning, which this loop is still
-            // inside. Only a URL that is STILL hostless after every attempt is treated as a genuine
-            // fail-closed refusal, not a startup race.
-            const ORIGIN_READ_RETRY_BUDGET: u32 = 250;
-            const ORIGIN_READ_RETRY_INTERVAL: std::time::Duration =
-                std::time::Duration::from_millis(20);
-            let (webview_url, webview_origin) = {
-                let mut last_attempt: Option<(tauri::Url, origin::OriginError)> = None;
-                let mut resolved = None;
-                for attempt in 0..ORIGIN_READ_RETRY_BUDGET {
-                    pump_pending_windows_messages();
-                    let url = webview_window.url().unwrap_or_else(|e| {
-                        refuse_to_start(
-                            app,
-                            &session_log,
-                            &format!(
-                                "ADR-020 Amendment 1: could not read the URL of the webview \
-                                 window labelled {window_label:?} ({e}) -- refusing to start \
-                                 rather than guess the data plane's expected origin"
-                            ),
-                        )
-                    });
-                    match origin::expected_origin_from_url(&url) {
-                        Ok(computed_origin) => {
-                            resolved = Some((url, computed_origin));
-                            break;
-                        }
-                        Err(e) => {
-                            last_attempt = Some((url, e));
-                            if attempt + 1 < ORIGIN_READ_RETRY_BUDGET {
-                                std::thread::sleep(ORIGIN_READ_RETRY_INTERVAL);
-                            }
-                        }
-                    }
-                }
-                resolved.unwrap_or_else(|| {
-                    let (url, e) = last_attempt
-                        .expect("ORIGIN_READ_RETRY_BUDGET > 0, so at least one attempt ran");
-                    let budget_ms =
-                        u128::from(ORIGIN_READ_RETRY_BUDGET) * ORIGIN_READ_RETRY_INTERVAL.as_millis();
-                    refuse_to_start(
-                        app,
-                        &session_log,
-                        &format!(
-                            "ADR-020 Amendment 1: the webview's URL never resolved to a usable \
-                             origin after {ORIGIN_READ_RETRY_BUDGET} attempts over ~{budget_ms}ms \
-                             of pumped retry (last seen: {url}, {e}) -- refusing to start rather \
-                             than guess the data plane's expected origin"
-                        ),
-                    )
-                })
-            };
-            let origin_line = format!(
-                "data-plane expected origin (from webview URL {webview_url}): {webview_origin}"
-            );
-            session_log.append("info", &origin_line);
-            eprintln!("[spatial-ide-shell] {origin_line}");
-
-            // The composition SKP v0 needs (ADR-019): one catalog, one ticket registry, shared
-            // between the command layer and the data-plane server below.
-            let catalog = Arc::new(Catalog::new());
-            let tickets = spatial_kernel::skp::StreamRegistry::new();
-            let host = Arc::new(SkpHost::new(catalog.clone(), tickets.clone()));
-
-            // Blocking on the setup thread is the standard Tauri pattern for "this must exist
-            // before the app finishes starting" async work — `setup` itself is synchronous, and
-            // `block_on` itself pumps no Win32 messages (unlike the origin-read retry loop above,
-            // already returned from by this point) — this pre-existing property is what the
-            // origin-read block's own caveat (`pump_pending_windows_messages`'s doc comment) is
-            // scoped against, not a claim this line alone reintroduces.
-            let running = tauri::async_runtime::block_on(serve(DataPlaneConfig {
-                factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
-                // No static assets: the shell's own webview loads the frontend directly, unlike
-                // `slice-host`'s browser consumer. This endpoint serves the data plane only.
-                static_dir: None,
-                expected_origin: Some(webview_origin),
-            }))
-            .expect(
-                "the data plane binds an OS-assigned loopback port and startup failure here is \
-                 not a recoverable admission refusal — it means the shell itself cannot run",
-            );
-            let data_plane_handle = DataPlaneHandle {
-                port: running.addr.port(),
-                token: running.session.token_for_delivery().to_string(),
-            };
-
-            // `session_log` itself was opened earlier (before the origin-read block above, MUST-FIX
-            // 2's ordering) -- managed here, at its original position relative to the rest of this
-            // closure's `app.manage(...)` calls.
-            app.manage(host);
-            app.manage(data_plane_handle);
-            app.manage(session_log);
-            // Entry-40 pass: one abort handle per currently-open dataset's pool-poll task
-            // (`pool_poll.rs`'s own doc comment) -- managed here so `commands::open_dataset`/
-            // `close_dataset` can start/stop it via `AppHandle::try_state`.
-            #[cfg(any(debug_assertions, feature = "measure-build"))]
-            app.manage(pool_poll::PoolPollTasks::new());
-            // The publish seam's own state (NEXT-CUT.md P1): a shared, in-process grant set and a
-            // single-use pending-attempt store. Both are `Arc`-wrapped so a `spawn_blocking` closure
-            // in `commands.rs` can hold an owned clone across the `'static` boundary that requires;
-            // both die with the process (`kernel/src/permission/grant.rs`'s own non-persistence
-            // rule) -- nothing here is written to disk, and nothing is read back.
-            app.manage(Arc::new(Mutex::new(GrantSet::new())));
-            app.manage(Arc::new(publish::PendingAttempts::new()));
-            // P2's Cancel-publish seam (`NEXT-CUT.md` item 3): a running publish's own `CancelToken`,
-            // keyed by `attempt_id`, live only for the duration of one `binding_publish_execute`
-            // call (`publish::RunningPublishes`'s own doc comment). Dies with the process, same as
-            // every other publish-seam state above.
-            app.manage(Arc::new(publish::RunningPublishes::new()));
-
-            // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16, the
-            // "measure build") -- the debug-gated CDP port, compiled in via the `measure-build`
-            // cargo feature, never a shipped default. The block that actually opens it now runs at
-            // the TOP of this closure (ADR-020 Amendment 1's origin-read ordering requires the
-            // window to exist before the origin is read) -- see that block's own doc comment for
-            // the full account, including why it is always paired at build time with a config
-            // overlay that sets this window's own `create: false`.
-            //
             // `running` is intentionally leaked into a `Box` rather than dropped: dropping it would
             // shut the data plane down while the app is still starting. It lives for the process's
             // whole lifetime, exactly as `slice-host`'s own `running` does until its Ctrl-C.
@@ -416,7 +385,7 @@ pub fn run() {
             commands::binding_publish_cancel,
             // E2E TEST SEAM (`NEXT-CUT.md` P4) — `#[cfg(debug_assertions)]` on both this entry and
             // the command's own definition (`commands.rs`) removes the match arm from a release
-            // build entirely (`tauri-macros`' `Handler` codegen applies each item's attributes to
+            // build entirely (`tauri-macros`' own `Handler` codegen applies each item's attributes to
             // its generated arm), not merely a runtime-disabled command that still ships.
             #[cfg(debug_assertions)]
             commands::binding_publish_prepare_e2e_destination,
