@@ -510,7 +510,8 @@ fn a_preflight_within_the_readers_feature_ceiling_is_unchanged() {
 }
 
 /// **RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix): `preflight_pinless` never
-/// touches the pin.** Fast and CI-run (unlike the multi-million-row ignored test below, which is
+/// touches the pin.** Run in CI, on a 50-feature fixture (unlike the multi-million-row `#[ignore]`d
+/// test below, which is
 /// what actually proves the ADR-025 refusal fires without a hash — this one proves the MECHANISM,
 /// that the pin-free function admits a small, in-ceiling, licensed request while the dataset stays
 /// unpinned throughout).
@@ -592,7 +593,7 @@ fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_at_preflight_
 /// and the real `preflight()` every caller uses. Before this piece, `preflight()`'s own pin read
 /// sat ahead of the ceiling check, so an over-ceiling AND unpinned source refused `SourceNotPinned`
 /// first — meaning every real caller (which always pins before calling `preflight`) paid for the
-/// whole-file SHA-256 on exactly the sources this ceiling exists to catch cheaply. Run by hand only
+/// whole-file SHA-256 on exactly the sources this ceiling exists to refuse without reading. Run by hand only
 /// (`cargo test -p spatial-kernel --release -- --ignored`), same as its sibling; **not run in CI**.
 #[test]
 #[ignore]

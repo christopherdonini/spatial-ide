@@ -813,7 +813,8 @@ pub const PIN_PROGRESS_EMIT_INTERVAL_BYTES: u64 = 64 << 20;
 /// thousands of them, each a `setState` and a re-render, for a source at `docs/07`'s own hero-slice
 /// scale (the exact count for that fixture is arithmetic, not a measurement, and the test below
 /// carries it). This is the host-side gate that bounds it: **at most one event per
-/// [`PIN_PROGRESS_EMIT_INTERVAL_BYTES`] read, plus the final observation, always.**
+/// [`PIN_PROGRESS_EMIT_INTERVAL_BYTES`] read, plus the first observation and the final one,
+/// always.**
 ///
 /// It is a BOUND on how many events cross, not a claim about anything — nothing in this tree has
 /// measured what those events cost, and this function's existence asserts nothing about it. The
@@ -821,16 +822,35 @@ pub const PIN_PROGRESS_EMIT_INTERVAL_BYTES: u64 = 64 << 20;
 /// fix, recorded there), moved to the producing side: the events are never generated rather than
 /// generated and then thrown away in JS.
 ///
-/// The **final observation always crosses**, whatever the step arithmetic says: it is the one that
-/// makes the readout end at `total / total` rather than stopping short at whatever multiple of the
-/// interval came last, and a UI that never shows a completed count is a worse lie than a coarse one.
+/// `last_emitted` is the `bytes_done` of the most recently emitted observation, `0` before any —
+/// unambiguously "none yet", since `content_hash_observed` adds the chunk length to its running
+/// total BEFORE calling the sink and breaks out on a zero-length read (`engine/src/index.rs`), so
+/// no observation ever carries `bytes_done == 0`.
 ///
-/// `last_emitted` is the `bytes_done` of the most recently emitted observation, `0` before any.
+/// **Two observations always cross, on top of the step rule** (the reviewer's re-review of this
+/// batch, both one-line cases):
+///
+/// 1. **The first**, whatever the step arithmetic says (`last_emitted == 0`). The panel's Cancel
+///    control is rendered only once a pin-phase event has arrived — `PublishPanel.tsx`'s
+///    `cancelControlVisible`, whose criterion is `state.phase !== null` — so without this case the
+///    operator has no Cancel at all until 64 MiB have been read, on a source that may be far larger.
+///    The first chunk puts the control up; every later one is governed by the step.
+/// 2. **The final one** — the observation that makes the readout end at `total / total` rather than
+///    stopping short at whatever multiple of the interval came last; a UI that never shows a
+///    completed count is a worse lie than a coarse one. Guarded by `last_emitted < bytes_total`, so
+///    a source that GREW past the total read at open time (`content_hash_observed` measures the
+///    length once, via `File::metadata`, and never re-measures) crosses this branch exactly once
+///    rather than on every chunk that follows — after the first crossing the step rule alone
+///    governs the tail, and the bound holds for a growing source too.
+///
 /// A `bytes_total` of `0` (metadata unreadable — `content_hash_observed` falls back to `0` there)
-/// has no meaningful "final" observation to recognize, so the step rule alone governs it and the
-/// bound still holds.
+/// has no meaningful "final" observation to recognize, so case 2 never fires for it; case 1 and the
+/// step rule govern, and the bound still holds.
 pub fn pin_progress_should_emit(bytes_done: u64, bytes_total: u64, last_emitted: u64) -> bool {
-    if bytes_total > 0 && bytes_done >= bytes_total {
+    if last_emitted == 0 {
+        return true;
+    }
+    if bytes_total > 0 && bytes_done >= bytes_total && last_emitted < bytes_total {
         return true;
     }
     bytes_done.saturating_sub(last_emitted) >= PIN_PROGRESS_EMIT_INTERVAL_BYTES
@@ -1801,11 +1821,14 @@ mod tests {
     /// 1 MiB read, over a total that is NOT a multiple of the emit interval (the 5 GB hero fixture's
     /// own byte count, `kernel/RESULTS.md` fifth section's fixture table: 5,004,376,705 B).
     ///
-    /// Two properties, both load-bearing: at most one event per `PIN_PROGRESS_EMIT_INTERVAL_BYTES`
-    /// read (so the count is bounded by the file's own size divided by the interval, plus one), and
-    /// the FINAL observation always crosses, so the readout ends at `total / total` rather than at
-    /// whatever multiple of the interval came last. Delete the `bytes_done >= bytes_total` branch in
-    /// `pin_progress_should_emit` and the final-observation assertions below fail.
+    /// Three properties, all load-bearing: at most one event per `PIN_PROGRESS_EMIT_INTERVAL_BYTES`
+    /// read (so the count is bounded by the file's own size divided by the interval, plus the two
+    /// always-crossing observations), the FIRST observation crosses, so the panel's Cancel control
+    /// is up after one chunk rather than after 64 MiB, and the FINAL one crosses, so the readout
+    /// ends at `total / total` rather than at whatever multiple of the interval came last. Delete
+    /// the `bytes_done >= bytes_total` branch in `pin_progress_should_emit` and the final-observation
+    /// assertion below fails; delete the `last_emitted == 0` branch and the first-observation
+    /// assertion below fails.
     #[test]
     fn the_pin_progress_gate_bounds_the_event_count_and_always_emits_the_final_observation() {
         const TOTAL: u64 = 5_004_376_705; // the docs/07 hero fixture's own length
@@ -1827,35 +1850,107 @@ mod tests {
         // each of which used to become a Tauri event, a `setState` and a render.
         let observations = TOTAL.div_ceil(CHUNK);
         assert_eq!(observations, 4_773);
-        let bound = TOTAL / PIN_PROGRESS_EMIT_INTERVAL_BYTES + 1;
+        // `+ 2`, not `+ 1`: the two observations that cross outside the step rule are the first one
+        // and the final one (`pin_progress_should_emit`'s own doc comment, cases 1 and 2).
+        let bound = TOTAL / PIN_PROGRESS_EMIT_INTERVAL_BYTES + 2;
         assert!(
             (emitted.len() as u64) <= bound,
-            "at most one event per {PIN_PROGRESS_EMIT_INTERVAL_BYTES} B read, plus the final one: got {} for a bound of {bound}",
+            "at most one event per {PIN_PROGRESS_EMIT_INTERVAL_BYTES} B read, plus the first and the final one: got {} for a bound of {bound}",
             emitted.len()
+        );
+        assert_eq!(
+            *emitted.first().unwrap(),
+            CHUNK,
+            "the first observation must always cross -- it is what puts the panel's Cancel control up"
         );
         assert_eq!(
             *emitted.last().unwrap(),
             TOTAL,
             "the final observation must always cross, whatever the step arithmetic says"
         );
-        assert!(emitted.windows(2).all(|w| w[1] - w[0] >= PIN_PROGRESS_EMIT_INTERVAL_BYTES || w[1] == TOTAL));
+        assert!(emitted
+            .windows(2)
+            .all(|w| w[1] - w[0] >= PIN_PROGRESS_EMIT_INTERVAL_BYTES || w[1] == TOTAL));
     }
 
     #[test]
     fn the_pin_progress_gate_holds_back_everything_inside_one_interval() {
-        assert!(!pin_progress_should_emit(1 << 20, 5_000_000_000, 0), "1 MiB into a 5 GB file");
-        assert!(!pin_progress_should_emit(63 << 20, 5_000_000_000, 0), "one MiB short of the interval");
-        assert!(pin_progress_should_emit(64 << 20, 5_000_000_000, 0), "exactly the interval");
+        // Every case here is AFTER something has already been emitted (`last_emitted != 0`); the
+        // first observation's own always-crosses rule is the test below this one.
+        assert!(!pin_progress_should_emit(2 << 20, 5_000_000_000, 1 << 20), "1 MiB past the first event");
+        assert!(!pin_progress_should_emit(64 << 20, 5_000_000_000, 1 << 20), "one MiB short of the interval");
+        assert!(pin_progress_should_emit(65 << 20, 5_000_000_000, 1 << 20), "exactly the interval");
         // A short final read lands nowhere near an interval boundary and must still cross.
-        assert!(pin_progress_should_emit(100, 100, 0), "a whole file smaller than one read buffer");
+        assert!(pin_progress_should_emit(100, 100, 50), "the tail of a file smaller than one read buffer");
         assert!(
             pin_progress_should_emit(5_004_376_705, 5_004_376_705, 5_003_804_672),
             "the last MiB of the hero fixture, well inside the interval since the previous event"
         );
         // A `bytes_total` of 0 (unreadable metadata) has no final observation to recognize; the step
         // rule alone governs, and the bound still holds.
-        assert!(!pin_progress_should_emit(1 << 20, 0, 0));
-        assert!(pin_progress_should_emit(64 << 20, 0, 0));
+        assert!(!pin_progress_should_emit(2 << 20, 0, 1 << 20));
+        assert!(pin_progress_should_emit(65 << 20, 0, 1 << 20));
+    }
+
+    /// **The first observation always crosses** — the reviewer's re-review, one-line case 1.
+    ///
+    /// `PublishPanel.tsx`'s `cancelControlVisible` renders the Cancel control only once a pin-phase
+    /// event has arrived (its criterion is `state.phase !== null`), so what this rule buys is
+    /// operator-visible: Cancel is up after the FIRST chunk the hash loop reads, not after the first
+    /// 64 MiB. A statement about which observations cross, not about when anything happens in time —
+    /// nothing here is measured (ADR-018: no rate, no ETA, and this is neither).
+    ///
+    /// Mutation: delete the `last_emitted == 0` branch from `pin_progress_should_emit` and every
+    /// assertion in this test fails.
+    #[test]
+    fn the_first_observation_always_crosses_so_cancel_is_up_after_the_first_chunk() {
+        const CHUNK: u64 = 1 << 20; // `index::content_hash_observed`'s own read buffer
+
+        assert!(
+            pin_progress_should_emit(CHUNK, 5_004_376_705, 0),
+            "one 1 MiB chunk into the 5 GB hero fixture, nothing emitted yet"
+        );
+        // The same, for a source whose length could not be read at all.
+        assert!(pin_progress_should_emit(CHUNK, 0, 0), "unreadable metadata does not suppress the first event");
+        // And it is the FIRST one only: the chunk after it is back under the step rule.
+        assert!(!pin_progress_should_emit(2 * CHUNK, 5_004_376_705, CHUNK));
+    }
+
+    /// **A source that grows past its open-time total emits once** — the reviewer's re-review,
+    /// one-line case 2's guard.
+    ///
+    /// `content_hash_observed` reads the length once at open time via `File::metadata` and never
+    /// re-measures (that function's own doc comment), so a file appended to while it is being hashed
+    /// keeps producing observations after `bytes_done` has passed `bytes_total`. Without
+    /// `last_emitted < bytes_total` on the final-observation branch, EVERY one of those crosses —
+    /// the per-chunk flood MF2 exists to prevent, on exactly the tail where the bound is supposed to
+    /// hold.
+    ///
+    /// Mutation: delete `&& last_emitted < bytes_total` and the over-total count below is 11, not 1.
+    #[test]
+    fn a_source_that_grows_past_its_open_time_total_emits_the_final_observation_once() {
+        const CHUNK: u64 = 1 << 20;
+        const TOTAL: u64 = 100 << 20; // the length at open time
+        const GREW_TO: u64 = 110 << 20; // what the hash loop actually reads
+
+        let mut over_total: Vec<u64> = Vec::new();
+        let mut last_emitted = 0u64;
+        let mut done = 0u64;
+        while done < GREW_TO {
+            done += CHUNK;
+            if pin_progress_should_emit(done, TOTAL, last_emitted) {
+                last_emitted = done;
+                if done >= TOTAL {
+                    over_total.push(done);
+                }
+            }
+        }
+
+        assert_eq!(
+            over_total,
+            vec![TOTAL],
+            "exactly one observation crosses at or past the open-time total, and it is the crossing one"
+        );
     }
 
     // ---------------------------------------------------------------------------------------
@@ -2064,14 +2159,15 @@ mod tests {
         assert!(ds.content_pin().is_some(), "the pin must actually have run");
     }
 
-    /// **The reordering itself, at the small-and-fast scale this suite can afford.** A source that
+    /// **The reordering itself, on this suite's own 20-feature fixture.** A source that
     /// forbids redistribution is a pin-free refusal (`publish::preflight_pinless`'s own license
     /// check, which runs before the ceiling check and needs no pin either) — `prepare_with_progress`
     /// must reach it WITHOUT ever pinning the dataset. `kernel/tests/publish.rs`'s own
     /// `a_dataset_whose_verified_row_count_exceeds_max_features_refuses_before_any_hash_is_taken`
     /// (`#[ignore]`d, release-mode only) proves the same property for the ADR-025 feature ceiling
-    /// specifically, at a scale this crate's own suite cannot build cheaply; this one proves the
-    /// general mechanism — the pin-free path — at a scale that runs in every `cargo test`.
+    /// specifically, on the multi-million-row fixture that ceiling needs and this crate's own suite
+    /// does not build; this one proves the general mechanism — the pin-free path — on a fixture that
+    /// is built in every `cargo test`.
     #[test]
     fn a_license_refusal_reaches_prepare_with_progress_before_any_pin_is_taken() {
         let d = workspace("license-refusal-before-pin");

@@ -301,9 +301,13 @@ pub async fn binding_publish_prepare(
     // MF2 (this batch's reviewer gate): `content_hash_observed` calls its sink once per 1 MiB read,
     // so an ungated emitter put one Tauri event on the webview per MiB — thousands of them, each a
     // `setState` and a render, at `docs/07`'s own 5 GB scale. `pin_progress_should_emit` bounds
-    // that to one event per 64 MiB read plus the final observation; `last_emitted` is this closure's
-    // own state, which is why it is `FnMut` (see that function's own doc comment — a bound, not a
-    // claim about what the events cost).
+    // that to one event per 64 MiB read plus two that always cross: the FIRST observation (so the
+    // panel's Cancel control — gated on a pin-phase event having arrived, `cancelControlVisible` —
+    // is up after the first chunk rather than after 64 MiB) and the final one (so the readout ends
+    // at `total / total`, and exactly once even if the source grew past the total read at open
+    // time). `last_emitted` is this closure's own state, `0` until something has crossed, which is
+    // why it is `FnMut` and why the first-observation rule can read it (see that function's own doc
+    // comment — a bound, not a claim about what the events cost).
     let mut last_emitted = 0u64;
     let mut on_pin_progress = move |bytes_done: u64, bytes_total: u64| {
         if !publish::pin_progress_should_emit(bytes_done, bytes_total, last_emitted) {

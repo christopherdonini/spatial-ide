@@ -19,6 +19,7 @@ import {
   formatBytesHashed,
   nextStateFromDialogSettled,
   nextStateFromPrepareOutcome,
+  PREPARE_CANCEL_FAILED_LOG,
   PublishControls,
   requestPrepareCancel,
   resolvePublishScope,
@@ -285,6 +286,50 @@ describe("requestPrepareCancel -- MF1: what a Cancel click may and may not do", 
     await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
     expect(cancel).toHaveBeenCalledWith(prepareCancelKey("ds_abc123"));
     expect(box.get()).toEqual({ ...running, cancelRequested: false });
+  });
+
+  /**
+   * **The re-review's own PROBE SCENARIO, shipped as a test.** `publishCancel` REJECTS (an IPC
+   * failure -- `client.ts` rethrows whatever `invoke` rejected with) instead of answering `false`.
+   * That is the same fact about the world as `false` -- nothing was cancelled, the pin is still
+   * running -- so it must produce the same state: the latch cleared and a live Cancel back in the
+   * operator's hands. Before the fix the rejection unwound out of `requestPrepareCancel`, leaving
+   * `cancelRequested` latched forever (a disabled "Cancelling" over a running pin, MF1's own defect
+   * through its other exit) and an unhandled rejection out of the `void requestPrepareCancel(...)`
+   * call site.
+   *
+   * MUTATION (run, and its failure quoted in this commit's own message): delete the `try`/`catch`
+   * in `requestPrepareCancel` so the `await cancel(...)` stands bare again, and this test fails --
+   * the `await requestPrepareCancel(...)` below rejects with "IPC channel closed" before any
+   * assertion runs.
+   */
+  it("a cancel call that REJECTS is treated as `false`: the latch clears, Cancel is live again, and the error is recorded", async () => {
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    const box = stateBox(running);
+    const cancel = vi.fn().mockRejectedValue(new Error("IPC channel closed"));
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // No `.rejects` wrapper and no `.catch`: the point is that awaiting this RESOLVES.
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+
+    expect(cancel).toHaveBeenCalledWith(prepareCancelKey("ds_abc123"));
+    expect(box.get()).toEqual({ ...running, cancelRequested: false });
+    expect(cancelControlVisible(box.get())).toBe(true);
+    expect(logged).toHaveBeenCalledWith(PREPARE_CANCEL_FAILED_LOG, "IPC channel closed");
+    logged.mockRestore();
+  });
+
+  it("a rejection that is not an Error is recorded as its string form, the same normalization settlePrepareOutcome uses", async () => {
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    const box = stateBox(running);
+    const cancel = vi.fn().mockRejectedValue("unknown attempt");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+
+    expect(box.get()).toEqual({ ...running, cancelRequested: false });
+    expect(logged).toHaveBeenCalledWith(PREPARE_CANCEL_FAILED_LOG, "unknown attempt");
+    logged.mockRestore();
   });
 });
 

@@ -145,14 +145,22 @@ export function stateAfterCancelRequested(prev: PublishPanelState): PublishPanel
   return { ...prev, cancelRequested: true };
 }
 
-/** The latch cleared again after `binding_publish_cancel` answered `false` -- nothing was found under
- * the key, so nothing was cancelled and the pin is still running. Previously that `false` was
+/** The latch cleared again when the cancel request did not reach a running pin -- either
+ * `binding_publish_cancel` answered `false` (nothing found under the key, so nothing was cancelled)
+ * or the call itself REJECTED (an IPC failure; [`requestPrepareCancel`] treats a throw as the same
+ * `reached === false`, since in both cases the pin is still running). Previously that `false` was
  * discarded and nothing ever cleared the flag (MF1); clearing it puts a live Cancel back in the
  * operator's hands instead of a permanently disabled "Cancelling". */
 export function stateAfterCancelRejected(prev: PublishPanelState): PublishPanelState {
   if (prev.kind !== "preparing") return prev;
   return { ...prev, cancelRequested: false };
 }
+
+/** The prefix of the one diagnostic [`requestPrepareCancel`] writes when the cancel call rejects --
+ * exported so `PublishPanel.test.ts` asserts the exact text rather than a substring of its own
+ * invention. The message it carries is normalized the way [`settlePrepareOutcome`] normalizes a
+ * rejected prepare (`e instanceof Error ? e.message : String(e)`). */
+export const PREPARE_CANCEL_FAILED_LOG = "publish: the prepare-phase cancel request failed; the pin may still be running";
 
 /**
  * The Cancel-during-"Preparing…" request itself: guard, latch, call, un-latch on a miss.
@@ -166,6 +174,19 @@ export function stateAfterCancelRejected(prev: PublishPanelState): PublishPanelS
  * The guard here is defence in depth, not the only guard: the button is not rendered before the first
  * phase event either ([`cancelControlVisible`], used by both) -- this codebase's own recurring
  * discipline of never trusting a UI-level guard alone (see `resolvePublishScope` above).
+ *
+ * **A REJECTION is treated as `reached === false`** (the re-review's own must-fix). `publishCancel`
+ * (`client.ts`) rethrows whatever `invoke` rejected with, and this function's only call site is
+ * `void requestPrepareCancel(...)` -- so before this try/catch an IPC failure escaped as an
+ * unhandled rejection AND left `cancelRequested` latched, wedging the button at a permanently
+ * disabled "Cancelling" while the pin ran on: the exact shape of the defect MF1 already fixed for
+ * the `false` answer, reachable through the other exit. Nothing was cancelled either way, so the
+ * un-latch is the same and Cancel is clickable again. The error is not swallowed: `publishCancel`
+ * has already recorded the attempt as having thrown in the action console (its own
+ * `entry.resolveThrew()`, which deliberately withholds the text -- S4), and the text itself is
+ * normalized here exactly as [`settlePrepareOutcome`] normalizes a rejected prepare. It does NOT
+ * become a `RefusalBlock`: the in-flight `runPrepare` is still what settles this panel, and a
+ * refusal painted here would be both premature and immediately overwritten.
  */
 export async function requestPrepareCancel(
   state: PublishPanelState,
@@ -175,7 +196,13 @@ export async function requestPrepareCancel(
 ): Promise<void> {
   if (!cancelControlVisible(state)) return;
   applyState(stateAfterCancelRequested);
-  const reached = await cancel(prepareCancelKey(datasetHandle));
+  let reached: boolean;
+  try {
+    reached = await cancel(prepareCancelKey(datasetHandle));
+  } catch (e) {
+    reached = false;
+    console.error(PREPARE_CANCEL_FAILED_LOG, e instanceof Error ? e.message : String(e));
+  }
   if (!reached) applyState(stateAfterCancelRejected);
 }
 
@@ -393,7 +420,9 @@ export default function PublishPanel({
    * it resolves to), this only requests that the pin stop early.
    *
    * The whole body is [`requestPrepareCancel`] (module scope, above) -- MF1's own fix and its own
-   * doc comment: the guard, the latch, and the un-latch when the host answers `false`.
+   * doc comment: the guard, the latch, and the un-latch when the host answers `false` OR the call
+   * rejects. That second case is why the `void` below is safe: the function handles its own
+   * rejection and never settles rejected, so nothing here can become an unhandled rejection.
    */
   function handleCancelPreparing(): void {
     void requestPrepareCancel(state, datasetHandle, setState, publishCancel);
