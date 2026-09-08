@@ -127,7 +127,7 @@ bundle's source definition (`kernel/src/bundle/mod.rs`'s `crs_source_definition`
 renderings of these same definitions (`engine/tests/data/`, `spikes/entry51-epsg2056-equivalence/`,
 and the EPSG:4326 renderings pinned for DECISIONS-PENDING entry 59, which are not catalog entries,
 in `spikes/item8-crs-catalog-extension/`); those are covered by `DEPENDENCY-LICENSES.md`'s EPSG
-block, which the custodian appends after this piece lands. These two are derived from the
+block (its dated correction and Verification (3b), appended 2026-09-08 at PR #32's landing). These two are derived from the
 **EPSG Geodetic Parameter Dataset, © IOGP** (International Association of Oil & Gas Producers),
 used under the EPSG Terms of Use: <https://epsg.org/terms-of-use.html>.
 

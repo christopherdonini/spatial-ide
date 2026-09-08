@@ -112,6 +112,21 @@ identifiers throughout (`"id": { "authority": "EPSG", "code": … }` on the CRS,
 parameters). How the PROJJSON was produced is **not recorded in the repository** (no generator
 command or PROJ version is cited anywhere; grep 2026-09-07).
 
+**Dated correction, 2026-09-08 (PR #32 merged @ `ba68256`, release cut item 8 — the EPSG:3857 half;
+entry 59 = (a)).** The repository now holds and ships **two** CRS definitions. EPSG:3857 (WGS 84 /
+Pseudo-Mercator; `"$schema"` v0.7, 3,921 bytes LF, sha256
+`e14b8ded808e73d3925c3b7a16cc83c2273056a79c00d7ba86c0e5b3b475fd82`) lives in a **fourth place**
+beside the three above: `engine/tests/data/epsg3857.projjson` (an ungated byte-equality test,
+`crs_catalog::tests::epsg_3857_catalog_entry_is_byte_identical_to_the_engine_test_fixture`, binds
+it to the catalog entry `epsg-3857`; the hash is pinned as `EPSG_3857_HASH`), and the same bytes are
+the `projinfo` rendering recorded in `spikes/item8-crs-catalog-extension/` (with the EPSG:4326
+renderings pinned there for DECISIONS-PENDING entry 59, which are NOT catalog entries). The sentence
+"How the PROJJSON was produced is not recorded in the repository" holds for **EPSG:2056 only**: for
+EPSG:3857 the command (`projinfo EPSG:3857 -o PROJJSON -q`), PROJ 9.6.2, EPSG v12.013,
+`EPSG.DATE = 2025-05-26` and the `proj.db` sha256 are recorded in that spike README. Each catalog
+entry now carries a `schema` field naming its PROJJSON schema version (v0.5 / v0.7), bound to the
+definition's own `$schema` by test.
+
 **The terms, read 2026-09-07 from `https://epsg.org/terms-of-use.html`** ("EPSG Dataset Terms of
 Use", "Revised 8 April 2016"; the page is a GeoRepository v2.44.2 render over EPSG Dataset
 v13.102). Quoted verbatim, the conditions that bear on this repository:
@@ -191,16 +206,34 @@ equivalent → (1)/(2) attribute it as EPSG data, with the IOGP ownership acknow
 terms' URL; the two older parameter names are reported to that piece as a conscious choice (align
 to v12.013's names, or keep and state the dataset version they came from).
 
+**Verification (3b) — EPSG:3857, performed 2026-09-08 by the item-8 3857 piece under the entry-51
+protocol (PR #32).** Same tool and database as (3): `projinfo` from QGIS 3.44.2, **PROJ 9.6.2**,
+`EPSG.VERSION = v12.013`, `EPSG.DATE = 2025-05-26`, `proj.db` sha256 `bed20383…a2b2` recomputed
+identical. The catalog entry's bytes **are** the PROJJSON rendering (`projinfo EPSG:3857 -o PROJJSON
+-q`, sha256 `e14b8ded…5fd82`, pinned as `EPSG_3857_HASH`), so numeric equivalence to EPSG v12.013 *as
+PROJ imports it* holds **by construction** — the drift risk (3) was written against (hand-authored or
+rounded values) does not exist for this entry. The second rendering compared, `projinfo EPSG:3857 -o
+WKT2:2019`, keyed by EPSG code (`spikes/item8-crs-catalog-extension/compare-3857.mjs`, verbatim
+output in that README §3): **9 numeric leaves compared, 0 differences, 0 parameter/ellipsoid/axis/id
+values missing** — ellipsoid `a = 6378137`, `1/f = 298.257223563` (WGS 84); parameters 8801/8802
+(latitude/longitude of natural origin 0°), 8806/8807 (false easting/northing 0 m); axes Easting/X
+east metre, Northing/Y north metre; CRS `EPSG:3857`, base `EPSG:4326`, method `EPSG:1024` (Popular
+Visualisation Pseudo Mercator). **Caveat, stated:** a PROJJSON-vs-WKT2 comparison from the same
+`proj.db` read is a cross-format consistency check of the same rows, not an independent confirmation;
+PROJ's import versus the registry itself remains unverified for this entry as for 2056, and the
+human's epsg.org lookup remains the stronger confirmation. The entry's own `attribution.verified`
+string says so ("two renderings from the same PROJ 9.6.2 run, not a registry-direct read").
+
 **Obligations (1) and (2) satisfied for the two live channels, 2026-09-07 (entry 51 (1)+(2), the
 gated piece the branch above named).** "Live channel" means a route this repository actually
 transmits the definition through *today*. There are two, and both now carry the acknowledgement
 and the terms URL:
 
 - **Acknowledgement of IOGP ownership + terms URL beside the catalog entry** —
-  `engine/src/crs-catalog.json:8-12` (a sibling `attribution` field on `epsg-2056`, not inside
-  `definition`); parsed and typed at `engine/src/crs_catalog.rs:42` (`pub struct Attribution`) and
-  `engine/src/crs_catalog.rs:77` (`CatalogEntry.attribution: Option<Attribution>`); asserted for
-  every EPSG-authority entry by `engine/src/crs_catalog.rs:248`
+  `engine/src/crs-catalog.json:9-13` (a sibling `attribution` field on `epsg-2056`, not inside
+  `definition`; `epsg-3857`'s begins at `:22`, added 2026-09-08 — cites re-anchored that day); parsed and typed at `engine/src/crs_catalog.rs:51` (`pub struct Attribution`) and
+  `engine/src/crs_catalog.rs:87` (`CatalogEntry.attribution: Option<Attribution>`); asserted for
+  every EPSG-authority entry by `engine/src/crs_catalog.rs:316`
   (`every_epsg_authority_entry_carries_attribution_with_the_terms_url`). Read via manual
   `field_str` calls (`crs_catalog.rs::parse_catalog`), the same style every other field in this
   module already uses — no `serde::Deserialize` derive, no new crate dependency.
@@ -208,7 +241,7 @@ and the terms URL:
   `notice()` function's "COORDINATE REFERENCE SYSTEM DATA" section, extracted out of `build.mjs`
   so `scripts/notice.test.mjs` can guard it directly), which becomes every published bundle's
   `viewer/NOTICE.txt`, ahead of the third-party-code section.
-- **Live channel 2 — repository readers.** `LICENSES/README.md:113-133` ("Third-party *data*: the
+- **Live channel 2 — repository readers.** `LICENSES/README.md:113-139` ("Third-party *data*: the
   EPSG Geodetic Parameter Dataset, © IOGP"), added because `frontends/shell/src` carries no
   existing about/notice surface (grepped for "About"/"third-party", nothing found).
 - **A third channel — the packaged shell app — dated correction, 2026-09-07/08: substantially

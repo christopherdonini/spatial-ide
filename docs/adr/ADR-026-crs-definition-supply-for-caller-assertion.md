@@ -127,3 +127,23 @@ The human ruled the item above in two parts (DECISIONS-PENDING entries 25 and 30
   DECISIONS-PENDING entry 6's `ApprovalRoute::ShellDialog` widening, carrying entry 6's own expiry
   clause (holds only while no external reader of `skp/0.2` exists). Full record in `SKP-V0.md`'s
   own entry-30 addendum.
+
+## Implementation note, appended 2026-09-08 (on the human's word — DECISIONS-PENDING entry 59 = (a): "ADR-026 appended implementation note approved")
+
+The set described by the 2026-08-18 note above is now **two entries**, not one; nothing in the
+Decision changes, and every property it names still holds (pinned in-tree, content-hashed, never
+fetched, no matching, no defaults, growth gated by test). `epsg-3857` (WGS 84 / Pseudo-Mercator) was
+added by the release cut's item 8 (PR #32, merged `ba68256`): its `definition` is the `projinfo`
+rendering of EPSG v12.013 by PROJ 9.6.2 byte for byte (`engine/tests/data/epsg3857.projjson`,
+3,921 bytes, sha256 `e14b8ded808e73d3925c3b7a16cc83c2273056a79c00d7ba86c0e5b3b475fd82`, pinned in
+`crs_catalog::tests::EPSG_3857_HASH` and bound to the fixture by the ungated test
+`epsg_3857_catalog_entry_is_byte_identical_to_the_engine_test_fixture`), verified under the entry-51
+protocol with the caveat recorded in `DEPENDENCY-LICENSES.md`'s Verification (3b). Each entry now
+carries a descriptive `schema` field (v0.5 for `epsg-2056`, v0.7 for `epsg-3857`), bound to the
+definition's own `$schema` by test; the ids-and-count assertion and the two hash pins are the growth
+gate the note above describes. The EPSG:4326 half of that item was **not** built: a latitude-first
+declaration is refused at admission by ADR-015 §5, which this ADR's "What this ADR does not decide"
+section leaves in place — the question is ADR-032 (Proposed, decision open). The sentence "The one
+entry (`epsg-2056`) reuses …" above is superseded in fact by this note; it stands as the record of
+2026-08-18.
+
