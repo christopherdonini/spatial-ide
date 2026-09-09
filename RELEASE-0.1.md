@@ -1132,3 +1132,18 @@ Open for the human's clicks, CI green: **#34** (item 10, `21cc2e2`), **#35** (it
 ### What remains before the tag
 
 The entry-60 closing commit and its PR (the human's click); the entry-68 commit and its PR; the installer build for Part M (the human's walkthrough incl. M12/M13 and M3's three notice files — byte counts only); items 4/5/6 written into the repository from the drafts, item 4 last; then the tag. The NSIS-stub notice check (ADR-030's note, statement 4) stays a cheap pre-tag candidate in `NEXT-CUT.md`, not a condition.
+
+## Amendment 13 — the human's sequence adjustment for the close: entry 68, items 5/6 as drafts, the installer build and Part M, then items 4/5/6 from what M showed, then the tag (2026-09-09)
+
+**The human, verbatim:** *"#38: clicking. Sequence adjustment: the entry-68 line-ending commit proceeds as staged; items 5/6 land as drafts with bracketed slots for anything installer-facing; the installer build and my Part M come next; then items 4/5/6 finalized from what M actually showed — item 4 last — then the tag. A document describing an artifact is written after running it, not before."*
+
+### The ruled item list, v6
+
+1. **PR #38** (the entry-60 piece: the closing commit and ADR-028's declared exception) — the human's click; at its landing the KNOWN-LIMITATIONS draft's 13b bracket resolves (the fix landed; the human's line stands).
+2. **Entry 68 = (a)** — the line-ending commit exactly as preregistered in Amendment 12, run once #38 is in (no other release PR stays open); its PR, CI green, the human's click.
+3. **Items 5 and 6 land as drafts** — `README.md` and `QUICKSTART.md` committed with every installer-facing statement in brackets (what the installer is named, what setup does about WebView2, what the installed app shows — Notices, the Preparing…/Cancel panel, the refusal texts as they render in the packaged build). Repository-facing statements (licences, layout, the local-first posture, the CRS refusal by decision) stand unbracketed.
+4. **The installer build and the human's Part M** — the packaged build from main at that point; the walkthrough incl. M12/M13 and M3's three notice files (byte counts only).
+5. **Items 4/5/6 finalized from what M actually showed** — the brackets in 5/6 resolved against M's record; **item 4 (`KNOWN-LIMITATIONS.md`) written last**, from the draft and M's record.
+6. **The tag.**
+
+The principle the human states governs every remaining record: *a document describing an artifact is written after running it, not before.* Nothing in items 4/5/6 may describe the installed application from the draft alone.

@@ -5,6 +5,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-09 (later) — #38 and the closing sequence — the human verbatim:** *"#38: clicking.
+Sequence adjustment: the entry-68 line-ending commit proceeds as staged; items 5/6 land as drafts with
+bracketed slots for anything installer-facing; the installer build and my Part M come next; then items
+4/5/6 finalized from what M actually showed — item 4 last — then the tag. A document describing an
+artifact is written after running it, not before."* Applied: `RELEASE-0.1.md` Amendment 13 (the ruled
+item list v6); the entry-68 commit run as preregistered once #38 is in; README.md and QUICKSTART.md
+committed as drafts with every installer-facing statement bracketed; the installer built for Part M;
+KNOWN-LIMITATIONS.md written, and the two drafts finalized, only from Part M's record; item 4 last;
+then the tag.
+
 **RULED 2026-09-09 — entries 66, 67, 68, #37 — the human verbatim:** *"66 = (d): ADR-028 appended
 note now (trigger, both paths incl. in-flight blanking, the fits/over-budget-latch second deviation,
 reopen condition); comment repairs in the batch; KNOWN-LIMITATIONS line concrete — "at extreme
