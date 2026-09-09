@@ -1,3 +1,9 @@
+# Repository line-ending policy (DECISIONS-PENDING entry 68 = (a), 2026-09-09): every text file is
+# normalised to LF in the index and checked out LF on every platform. This line MUST stay first:
+# the `-text` lines below it for hash-pinned upstream corpora override it (a later .gitattributes
+# line wins), which is what keeps their bytes -- including upstream CRLF -- untouched.
+* text=auto eol=lf
+
 # Byte-sensitive test fixtures: checked out verbatim on every platform.
 #
 # engine/src/crs_catalog.rs asserts the catalog's embedded EPSG:2056 definition is
