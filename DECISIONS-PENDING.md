@@ -69,6 +69,18 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+71. **[ADR-028's header line reads `Status: **Accepted, 2026-09-02** …` — the only ADR whose
+    Status label is not the `**Status:**` shape the other 29 use. Leave it (an Accepted ADR is
+    immutable; the new index reader accepts both shapes), or append a dated corrigendum line
+    normalising the label?]** Found 2026-09-09 by the ADR-index piece (`frontends/shell/scripts/
+    adrIndex.mjs`, `docs/README.md`'s generated table); the reviewer judged accepting both shapes
+    right and not a silent widening (the reader refuses zero or multiple Status lines), and noted the
+    one thing it permits — a future ADR written with an unbolded label passes silently — as a
+    docs-convention question, not a tool defect. Cosmetic consequence: ADR-028's cell renders bold.
+    **(a) RECOMMENDED — leave the ADR; state the convention** (`**Status:**` on line 3) in
+    `docs/adr/README` or the ADR template if one exists, so the next ADR follows it; (b) a dated
+    corrigendum on ADR-028 changing the label only. Not a tag matter.
+
 70. **[The post-tag ordering, and the drafts' open questions — for the sitting: which of the
     four post-tag candidates goes first, and do "next cut's first piece" (entry 47, ruled
     2026-09-08) and "the first post-tag piece" (entry 66 (b), ruled 2026-09-09) name the same
