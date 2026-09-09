@@ -5,6 +5,23 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-09 — entries 66, 67, 68, #37 — the human verbatim:** *"66 = (d): ADR-028 appended
+note now (trigger, both paths incl. in-flight blanking, the fits/over-budget-latch second deviation,
+reopen condition); comment repairs in the batch; KNOWN-LIMITATIONS line concrete — "at extreme
+zoom-out, more than ~6 wheel notches beyond Zoom to layer, tiles already drawn may vanish while still
+on screen; the status continues to report the view as partial"; (b) preregistered as the first
+post-tag piece beside ADR-032/LOD, half-open index ranges. 67 = (a): one closing commit incl. the
+four sites' one-clause qualifications; custodian-verified + CI, no further gate. 68 = (a), after all
+open PRs merge and before the tag: text=auto line before the -text corpora lines; ignore-eol diff
+empty as proof; all hash pins + CI green; Accepted ADRs included, content-immutability stated in the
+message. #37: clicking."* Applied: `RELEASE-0.1.md` Amendment 12 (the four landings — #37 merged
+`9c2594d`; the rulings; the entry-60 closing commit authorized; preregistrations for the entry-68
+normalising commit and for the post-tag geometric-protection piece, entry 66 (b)); the entry-60
+closing commit dispatched (the four sites' one-clause qualifications folded in); the ADR-028 note
+appended on the branch by the custodian, with the four elements named; the KNOWN-LIMITATIONS draft's
+13b′ made concrete in the human's words, 13b and 13c removed; entry 68's commit queued for after the
+entry-60 PR merges, before the tag.
+
 **RULED 2026-09-08 (evening) — entries 59, 60, 61, 62, 63, 64, 65, #32, #33 — the human verbatim:**
 *"59 = (a): 3857 only; ADR-032 filed Proposed (4326 via the GeoParquet x,y override, decision open);
 ADR-026 appended implementation note approved; equirectangular wording binding for future geographic
