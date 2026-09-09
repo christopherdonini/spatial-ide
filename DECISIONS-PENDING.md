@@ -109,6 +109,12 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     DuckDB's C++ amalgamation linkage (untested); **(c)** bundle the redistributable's installer via
     NSIS hooks — a new conveyed third-party artifact (ADR-030 reopens for it; Microsoft's redist
     licence terms apply). Not a tag blocker under (a).
+    *Custodian note added 2026-09-09 (the day-work spike, not a ruling):* `spikes/entry69-static-crt/README.md`
+    (branch `spike/entry69-static-crt`) — with `-C target-feature=+crt-static` the shell crate LINKS
+    clean (zero LNK warnings) and the executable imports **no** `MSVCP140.dll`, no `VCRUNTIME140`, and
+    none of the `api-ms-win-crt-*` forwarders (16 system DLLs vs 27). Not launched; the installer not
+    rebuilt; Part M would re-run on a (b) build; the licence posture of a statically conveyed Microsoft
+    runtime is an open question for the architect, not assumed. (a) remains the no-build-change option.
 
 68. **[Line endings: 21 tracked files carry CRLF in the index (pre-existing — spike app files, two
     ADR-003 workflows, `product-ci-rust.yml`, `kernel/src/main.rs`, `kernel/RESULTS.md`,
