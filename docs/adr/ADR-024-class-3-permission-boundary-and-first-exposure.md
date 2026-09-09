@@ -292,3 +292,7 @@ the manifest's own claim and by an independent reader's decode).
   never written anywhere.
 - **The exposure review itself.** Discharged only by the human (Consequences, above) — this ADR is
   evidence toward that review, not a substitute for it.
+
+## Appended note, 2026-09-09 (on the human's word of 2026-09-08 — DECISIONS-PENDING entry 63, "yes, as drafted")
+
+The pin phase named in the Consequences list above (`:253-263` at this appending) as *"uncancellable and unreported … no cancel affordance and no progress report of its own … Not built or closed by this ADR"* was built cancellable and progress-reported by the release cut's item 10 (DECISIONS-PENDING entry 7's ruled pre-fix; PR #34, merged `79a9a3b` on 2026-09-09): `frontends/shell/src-tauri/src/publish.rs` `prepare_with_progress` / `ensure_pinned_with_progress`, `engine::index::content_hash_observed`, the prepare-phase `CancelToken` registered in `RunningPublishes` before the blocking call and reachable by the existing `binding_publish_cancel`, the panel's Cancel rendered once the first progress event proves the token is registered; the ADR-025 pin-free preflight (`spatial_kernel::publish::preflight_pinless`) now runs BEFORE the pin. The quoted `publish.rs` doc sentence no longer exists. The consequence stands as the record of this ADR's acceptance date; the gap is closed. `docs/README.md`'s ADR-024 line repeats no gap (checked at this appending; unchanged).
