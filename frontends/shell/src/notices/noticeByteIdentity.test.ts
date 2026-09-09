@@ -53,10 +53,11 @@ function packageNamesFrom(metafilePath: string): Set<string> {
   return names;
 }
 
-// The three section headings `generateNotice.mjs` passes and `notice()` emits, in file order.
+// The four section headings `generateNotice.mjs` passes and `notice()` emits, in file order.
 const VIEWER_HEADING = "THIRD-PARTY WORKS COMPILED INTO THIS VIEWER";
 const FRONTEND_HEADING = "THIRD-PARTY WORKS COMPILED INTO THE PACKAGED FRONTEND";
 const RUST_HEADING = "RUST CRATES STATICALLY LINKED INTO THE PACKAGED APPLICATION";
+const AMALGAMATION_HEADING = "DUCKDB'S BUNDLED THIRD-PARTY SOURCES";
 
 function section(text: string, startHeading: string, endHeading: string | null): string {
   const s = text.indexOf(startHeading);
@@ -139,11 +140,15 @@ describe("src/generated/NOTICE.txt (RELEASE-0.1 item 2 MUST-FIX 2; extended by i
   // Cardinality by (name, version) PAIR, not by name: 310 linked pairs across 296 distinct names
   // today, because some crates resolve two major versions transitively. Counting names would let a
   // deleted `time 0.3.55` entry pass whenever another `time` entry survives.
+  // **Bounded by the fourth heading, not by end-of-file** (entry 62). The DuckDB amalgamation
+  // section that now follows emits 26 lines matching this same anchored shape, so an unbounded slice
+  // would count them as crates and this assertion -- whose whole job is to prove no linked crate's
+  // entry was dropped -- would be over by exactly 26 while reading as green.
   it("carries one anchored entry line per linked Rust crate (name+version pair)", () => {
     const generated = readFileSync(generatedPath, "utf8");
     const crates = collectLinkedCrates();
     expect(crates.length).toBeGreaterThan(0);
-    const entries = new Set(entryLines(section(generated, RUST_HEADING, null)));
+    const entries = new Set(entryLines(section(generated, RUST_HEADING, AMALGAMATION_HEADING)));
     for (const crate of crates) {
       expect(
         entries.has(`${crate.name} ${crate.version}`),

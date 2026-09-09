@@ -1,0 +1,431 @@
+{
+  "$comment": "Pinned upstream license/notice texts for the third-party works embedded in DuckDB's amalgamated source tree, which libduckdb-sys compiles into the packaged Spatial IDE application. Enumerated from DuckDB's own upstream source tree at the pinned version -- NOT from a build manifest; no Cargo manifest names these works individually. Generated once at pin time and committed; the build only READS it. See README.md in this directory for the method, and RELEASE-0.1.md Amendment 10 / DECISIONS-PENDING entry 62 for the ruling that required it.",
+  "duckdb_version": "1.5.5",
+  "duckdb_tag": "v1.5.5",
+  "duckdb_commit": "d8cdaa33fda8df955cc76ef58a280f68f4cd43fa",
+  "crate": {
+    "name": "libduckdb-sys",
+    "version": "1.10505.0",
+    "feature": "bundled"
+  },
+  "crate_tarball": {
+    "file": "duckdb.tar.gz",
+    "sha256": "e11f1209cdbb2a99b2ea2d348de21bdfb01dc494b55d1271df94b09c52bf229c",
+    "third_party_dir_count": 26
+  },
+  "upstream_repository": "https://github.com/duckdb/duckdb",
+  "upstream_third_party_tree_sha": "f42ee908782a676735ecaa2fdb0937ec6f5b5ec0",
+  "retrieved": "2026-09-08",
+  "works": [
+    {
+      "lib": "brotli",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/brotli/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/brotli/LICENSE",
+          "bytes": 1084,
+          "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+          "git_blob_sha1": "33b7cdd2dbaeddce1e35aa1a13f63d71154dc42f"
+        }
+      ]
+    },
+    {
+      "lib": "concurrentqueue",
+      "license_id": "BSD-2-Clause OR BSL-1.0",
+      "license_id_basis": "self-declared",
+      "note": "The text names \"Simplified BSD License\" and then offers the Boost Software License 1.0 as an alternative; it also scopes itself to exclude code in the upstream repository annotated as written by other authors.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/concurrentqueue/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/concurrentqueue/LICENSE",
+          "bytes": 3246,
+          "sha256": "eaf0df40f77e929cd83cd4485de2bdf806c7908db84a52007a700588f6566331",
+          "git_blob_sha1": "47efd4395253583f7c0f9bc44aa2e532dec16262"
+        }
+      ]
+    },
+    {
+      "lib": "fast_float",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/fast_float/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/fast_float/LICENSE",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031"
+        }
+      ]
+    },
+    {
+      "lib": "fastpforlib",
+      "license_id": "Apache-2.0",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/fastpforlib/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/fastpforlib/LICENSE",
+          "bytes": 10272,
+          "sha256": "9ff562631a04b8cb1030c53fdf461bd749c9af0655d86e4f17eb270e935a7fe2",
+          "git_blob_sha1": "8405e89a0b12024529554191c9b7ec20acc116fd"
+        }
+      ]
+    },
+    {
+      "lib": "fmt",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "note": "The text carries an \"Optional exception to the license\" section, reproduced verbatim with it.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/fmt/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/fmt/LICENSE",
+          "bytes": 1408,
+          "sha256": "825c9324e70f8c839c8ba910543dd4a7daee243b86ef960594c11381a19980b8",
+          "git_blob_sha1": "f0ec3db4d2a03368a9f1357b38e79486bdf41076"
+        }
+      ]
+    },
+    {
+      "lib": "fsst",
+      "license_id": "MIT",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/fsst/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/fsst/LICENSE",
+          "bytes": 1087,
+          "sha256": "20e9c14ff437a73a6e2b105f1b5aaf9ef24a84d962741c0ab01d04b4910294ab",
+          "git_blob_sha1": "edb46d2db5fb4567eff02d3d96470b47194f727a"
+        }
+      ]
+    },
+    {
+      "lib": "httplib",
+      "license_id": "MIT",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/httplib/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/httplib/LICENSE",
+          "bytes": 1075,
+          "sha256": "4b45cbe16d7b71b89ae6127e26e0d90a029198ca5e958ad8e3d0b8bbed364d8b",
+          "git_blob_sha1": "3e5ed359a2bb16f52c383745c25f14bb7a81c9e4"
+        }
+      ]
+    },
+    {
+      "lib": "hyperloglog",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/hyperloglog/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/hyperloglog/LICENSE",
+          "bytes": 1055,
+          "sha256": "3a3fcdbaecbeb1e7dea97843961100c637766e59de4674fed809760283b716e1",
+          "git_blob_sha1": "e0fc1c1843dc1b2114825209a3051e97513588a2"
+        }
+      ]
+    },
+    {
+      "lib": "jaro_winkler",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/jaro_winkler/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/jaro_winkler/LICENSE",
+          "bytes": 1055,
+          "sha256": "077815ffd10f0677d060e9d5c0059592d28c41d1e9985c848435e0ea17ea06c3",
+          "git_blob_sha1": "945ce9fa1f4afb944d0f022be6640fb707400b11"
+        }
+      ]
+    },
+    {
+      "lib": "libpg_query",
+      "license_id": "BSD-3-Clause",
+      "license_id_basis": "read-from-body",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/libpg_query/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/libpg_query/LICENSE",
+          "bytes": 1484,
+          "sha256": "2780b6375a5ab1901472b7694958dd0c8c1381a21f0765cbb64e1923d94c6717",
+          "git_blob_sha1": "f1f7eea2c572d9eb20880321308310cdfa2e0b43"
+        }
+      ]
+    },
+    {
+      "lib": "lz4",
+      "license_id": "BSD-2-Clause",
+      "license_id_basis": "read-from-body",
+      "note": "Two redistribution conditions and no \"neither the name ... endorse\" clause.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/lz4/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/lz4/LICENSE",
+          "bytes": 1310,
+          "sha256": "99b8d2d8011d1ce548c5aaf3270c6bee014507fa821c4f9a7e300a9e11015db7",
+          "git_blob_sha1": "ea4b93e95fe1d5d09d2e6f4f80cba7aa66f65cfc"
+        }
+      ]
+    },
+    {
+      "lib": "mbedtls",
+      "license_id": "Apache-2.0 OR GPL-2.0-or-later",
+      "license_id_basis": "self-declared",
+      "note": "The only pinned text that names SPDX ids itself, and links them; both full texts follow in it.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/mbedtls/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/mbedtls/LICENSE",
+          "bytes": 29852,
+          "sha256": "9b405ef4c89342f5eae1dd828882f931747f71001cfba7d114801039b52ad09b",
+          "git_blob_sha1": "776ac77eaf5a0da545f95ad7386b9954378fa8ae"
+        }
+      ]
+    },
+    {
+      "lib": "miniz",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "note": "The only pinned file whose upstream bytes carry CRLF line endings; preserved as fetched.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/miniz/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/miniz/LICENSE",
+          "bytes": 1184,
+          "sha256": "0115478d567121238cf6cc1c0c361926cf07a49d9e4c9e66da97fac6a01646b3",
+          "git_blob_sha1": "1982f4bb8f4afa3dcbe803887fb4af7573430e51"
+        }
+      ]
+    },
+    {
+      "lib": "parquet",
+      "license_id": "Apache-2.0",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/parquet/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/parquet/LICENSE",
+          "bytes": 11625,
+          "sha256": "70b6a7d630fae9f49643f9b16bee42a2feda68301f9c14470e7fb5ad0599bb9f",
+          "git_blob_sha1": "09c6877672451efce3342e682492bac834ce4ac3"
+        }
+      ]
+    },
+    {
+      "lib": "pcg",
+      "license_id": "MIT",
+      "license_id_basis": "read-from-body",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/pcg/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/pcg/LICENSE",
+          "bytes": 1092,
+          "sha256": "3febf788fd814bf1f350db169bdc51b28ff7e7596ff1f09cc0181e4fde42b480",
+          "git_blob_sha1": "48546122acc6a9140260c1e6e3a9b670c32723be"
+        }
+      ]
+    },
+    {
+      "lib": "pdqsort",
+      "license_id": "Zlib",
+      "license_id_basis": "read-from-body",
+      "note": "The three zlib restrictions (origin not misrepresented, altered versions marked, notice not removed).",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/pdqsort/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/pdqsort/LICENSE",
+          "bytes": 874,
+          "sha256": "323fc18e35fcf058d69d684022ef844f206cb8fefb2bac1298fa1767e0b9ae38",
+          "git_blob_sha1": "41d496076f0e134ba66096cf89acee8e124afef5"
+        }
+      ]
+    },
+    {
+      "lib": "re2",
+      "license_id": "BSD-3-Clause",
+      "license_id_basis": "read-from-body",
+      "note": "The text is comment-prefixed (`// `) upstream; preserved as fetched.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/re2/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/re2/LICENSE",
+          "bytes": 1558,
+          "sha256": "6040cda75d90b1738292a631d89934c411ef7ffd543c4d6a1b7edfc8edf29449",
+          "git_blob_sha1": "09e5ec1c74c187adc8fde6c74308c3492ef31f77"
+        }
+      ]
+    },
+    {
+      "lib": "ska_sort",
+      "license_id": "BSL-1.0",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/ska_sort/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/ska_sort/LICENSE",
+          "bytes": 147,
+          "sha256": "3c3a838f6ac2201bb8255b374fad34e3e1de07940c3acdc09e661e118fb75078",
+          "git_blob_sha1": "ab37fee73fd1499ea88aaa77c317944309e038fb"
+        }
+      ]
+    },
+    {
+      "lib": "skiplist",
+      "license_id": "MIT",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/skiplist/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/skiplist/LICENSE",
+          "bytes": 1071,
+          "sha256": "3b9cac57dbb2d7ec76298cb0d33afe12f891e1d0dbb38ff17993a14f3480ee7c",
+          "git_blob_sha1": "cee9bac95d52bf460b1131f301daa55867881853"
+        }
+      ]
+    },
+    {
+      "lib": "snappy",
+      "license_id": "BSD-3-Clause",
+      "license_id_basis": "read-from-body",
+      "note": "The text records that some benchmark data in snappy's own upstream testdata/ directory is licensed differently (CC-BY-3.0, MIT); no testdata/ path exists anywhere under third_party/ in the pinned crate tarball (checked).",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/snappy/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/snappy/LICENSE",
+          "bytes": 2645,
+          "sha256": "55172044f7e241207117448a4d9d6ba1d0925c8ad66b5d4c08c70adfa9cc3de6",
+          "git_blob_sha1": "bd0e5971dbf09bd6b3213ea7248383d10f26dea2"
+        }
+      ]
+    },
+    {
+      "lib": "tdigest",
+      "license_id": "Apache-2.0",
+      "license_id_basis": "self-declared",
+      "note": "Ships a NOTICES file beside its LICENSE; both are pinned.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/tdigest/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/tdigest/LICENSE",
+          "bytes": 11356,
+          "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+          "git_blob_sha1": "f49a4e16e68b128803cc2dcea614603632b04eac"
+        },
+        {
+          "file": "NOTICES",
+          "upstream_path": "third_party/tdigest/NOTICES",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/tdigest/NOTICES",
+          "bytes": 457,
+          "sha256": "5ded9726da6c5360c0b0ba0725455f57b367dc9b4954bed7ca8f235d26cee33b",
+          "git_blob_sha1": "ebeb0fcfb10c1cd613bc96f8965ac2b205e9fb86"
+        }
+      ]
+    },
+    {
+      "lib": "thrift",
+      "license_id": "Apache-2.0",
+      "license_id_basis": "self-declared",
+      "note": "Upstream keeps this one level deeper than the others: third_party/thrift/thrift/LICENSE.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/thrift/thrift/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/thrift/thrift/LICENSE",
+          "bytes": 12610,
+          "sha256": "23df881cec3192d1f4474633c14eb2ec30a45b84f8daeb82b9de5d2bd3ac8218",
+          "git_blob_sha1": "3b6d7d74cc9b18043b2f46b60b6f5379e3f5262b"
+        }
+      ]
+    },
+    {
+      "lib": "utf8proc",
+      "license_id": "MIT",
+      "license_id_basis": "self-declared",
+      "note": "The text names the 'MIT \"expat\" license' and reproduces the original Public Software Group license below it.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/utf8proc/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/utf8proc/LICENSE",
+          "bytes": 5125,
+          "sha256": "fbc720fcc90fb44396985646f67e4d19be03e0c0539f7138ed9dc6efba49dc49",
+          "git_blob_sha1": "80fab6ee6ee8dbd718687aec9cf9847470df09b5"
+        }
+      ]
+    },
+    {
+      "lib": "vergesort",
+      "license_id": "MIT",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/vergesort/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/vergesort/LICENSE",
+          "bytes": 1097,
+          "sha256": "12dd392860ea2a3633bce5f33d7eebd4308a7e3386b4372260e5e72be7a64033",
+          "git_blob_sha1": "12bbbf21973749246bbccd8fb07ea254e7d90321"
+        }
+      ]
+    },
+    {
+      "lib": "yyjson",
+      "license_id": "MIT",
+      "license_id_basis": "self-declared",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/yyjson/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/yyjson/LICENSE",
+          "bytes": 1083,
+          "sha256": "734d7fb3eb56f0a04e6b7ab0c5d3634624a8bfaa2acc87a2c03a029b20868cf8",
+          "git_blob_sha1": "c4904d1f11a0394fd26da8819412db9878972596"
+        }
+      ]
+    },
+    {
+      "lib": "zstd",
+      "license_id": "BSD-3-Clause",
+      "license_id_basis": "read-from-body",
+      "note": "Titled \"BSD License\"; the \"neither the name Facebook ... endorse\" clause makes it the 3-clause form.",
+      "files": [
+        {
+          "file": "LICENSE",
+          "upstream_path": "third_party/zstd/LICENSE",
+          "url": "https://raw.githubusercontent.com/duckdb/duckdb/v1.5.5/third_party/zstd/LICENSE",
+          "bytes": 1529,
+          "sha256": "8b7bc50ec3ecee27224e17d4d316a939fa2ddda9c88e0ddc2f059ce432edbfb9",
+          "git_blob_sha1": "dbdb05eda171e0082dc1d49d866b929418352bdb"
+        }
+      ]
+    }
+  ]
+}

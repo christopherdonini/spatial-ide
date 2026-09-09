@@ -31,6 +31,14 @@ notice-generation INPUTS — template texts embedded under OTHER projects' crate
 notice — and none of those three ids appears in the table above, because nothing in this tree is
 licensed under any of them. See "`MIT.txt`, `BSD-3-Clause.txt` and `MPL-2.0.txt` — provenance" below.
 
+**Neither is the `third-party/` subdirectory.** `third-party/duckdb-1.5.5/` holds 27 files: the
+upstream licence and notice texts of the 26 third-party works embedded in DuckDB's amalgamated
+source tree, which the data engine compiles into the packaged application. They are
+notice-generation INPUTS in exactly the same sense — other projects' licences, embedded verbatim
+under those projects' own names in a generated notice — and **none of them licenses anything in this
+tree**. The layers table above is unchanged by their presence. See
+"`third-party/duckdb-1.5.5/` — the DuckDB amalgamation's licence texts" below.
+
 ## Two texts were missing at first, and that was deliberate rather than an oversight
 
 `AGPL-3.0-or-later.txt` and `CC-BY-4.0.txt` were **not in this directory** when this file was first
@@ -162,6 +170,53 @@ THROW, naming the id, rather than emitting a placeholder into a shipped notice. 
 also pinned by `sha256` in `frontends/shell/src/notices/noticeByteIdentity.test.ts`, so a silent
 edit to any of them fails a test rather than silently changing the licence text this application
 conveys.
+
+## `third-party/duckdb-1.5.5/` — the DuckDB amalgamation's licence texts
+
+*Added 2026-09-08 on the human's ruling, DECISIONS-PENDING entry 62 = (a). Full method, the tag, the
+retrieval date and every URL: `third-party/duckdb-1.5.5/README.md`. The record of the gap this
+closes, and its dated closure: `DEPENDENCY-LICENSES.md`'s packaged-app block.*
+
+`engine/Cargo.toml` depends on `duckdb` with the `bundled` feature, so `libduckdb-sys 1.10505.0`
+compiles **DuckDB's own amalgamated C/C++ source tree** into the packaged application. That tree
+embeds 26 further third-party works under its `third_party/` directory and carries **no licence,
+notice or copying file at all** — and no Cargo manifest names those works individually, so
+`scripts/rustCrateNotices.mjs`, which reads `Cargo.lock`, structurally cannot reach them. Until this
+directory existed, the packaged application's `NOTICE.txt` named the 26 and stated outright that
+their licence texts were not carried.
+
+**Provenance, so this is verifiable rather than trusted.** The texts were fetched once with `curl`
+on **2026-09-08** from DuckDB's own source tree at tag **`v1.5.5`** (commit
+`d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`, whose short form is the `DUCKDB_SOURCE_ID` the compiled
+tarball itself carries — an identity of the **declared** revision plus a directory-set match, and
+expressly not byte-identity of the amalgamation's sources with the tag's tree; the pinned directory's
+own `README.md` states the reach exactly, under "The method, in the order it was performed", step 2).
+`MANIFEST.json` records, per file, the URL, the upstream path, the byte count, the `sha256`, and the
+**git blob SHA-1 that the tag's own tree reports for that path** — all 27 recomputed locally and
+matched, which proves the pinned bytes are the exact blobs the tag names. Every one of the 26 ships
+a `LICENSE` upstream, so nothing here was reconstructed from a source header or written by hand.
+
+**Line endings are pinned differently from the four files above, deliberately.** `.gitattributes`
+marks **the 27 pinned upstream licence files** `-text` (no conversion in either direction) rather
+than `text eol=lf` — two filename patterns, `LICENSES/third-party/*/*/LICENSE*` and
+`LICENSES/third-party/*/*/NOTICES*`, cover exactly those 27 and not the directory as a whole, so
+`MANIFEST.json` and that directory's `README.md` keep the repository's default handling; a third
+pattern, `COPYING*`, matches nothing at this pin and is there for a re-pin that fetches one. The
+reason for `-text` is that
+**`miniz/LICENSE`'s upstream bytes genuinely contain CRLF**: normalising it would rewrite a licence
+text this application conveys and break both hashes recorded for it. `-text` preserves all 27
+byte-for-byte on every platform, which is what the `eol=lf` pins are reaching for.
+
+**Editing anything here breaks the build on purpose, and so does a DuckDB upgrade that changes the
+set.** `scripts/duckdbAmalgamationNotices.mjs` runs **three** guards, at notice generation and again
+at `npm run check:dist-notice`: every pinned file's `sha256` is re-verified against the bytes on disk
+(with the UTF-8 round-trip, and the pinned directory's name checked against the manifest's version);
+the linked `libduckdb-sys` name and version are compared against the ones the manifest pins; and the
+manifest's work list is compared, in both directions, against the `third_party/` listing inside that
+crate's own `duckdb.tar.gz`, together with that archive's recorded `sha256` and directory count. All
+three throw rather than degrade; all three are covered by
+`frontends/shell/src/notices/duckdbAmalgamation.test.ts`. Re-pinning for a new DuckDB
+version means a new `third-party/duckdb-<version>/` directory produced by the recorded method.
 
 ## The Apache-2.0 layer is empty, and that is a finding rather than a gap
 

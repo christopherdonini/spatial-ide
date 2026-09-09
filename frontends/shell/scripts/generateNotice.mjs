@@ -10,8 +10,9 @@
 // `tauri.conf.json`'s `bundle.resources` places beside the installed executable.
 //
 // The text itself is never hand-copied here. `notice()` (`renderer/bundle-viewer/notice.mjs`) is
-// imported directly and called with THREE package sets, each read from its own build manifest
-// (RELEASE-0.1 item 9; ADR-030 candidate (a)):
+// imported directly and called with FOUR sets (RELEASE-0.1 item 9 and DECISIONS-PENDING entry 62;
+// ADR-030 candidate (a)). The first three are each read from a BUILD MANIFEST; the fourth is not,
+// and that difference is stated in the generated notice itself rather than smoothed over:
 //
 //   1. the bundle viewer's own esbuild metafile (`renderer/bundle-viewer/dist-metafile.json`,
 //      written by that package's own `build.mjs`, sibling to `dist/` so it never becomes a
@@ -19,7 +20,13 @@
 //   2. this package's OWN Vite/Rollup build manifest (`frontends/shell/dist-metafile.json`, written
 //      by `vite.config.ts`'s own inline `packageMetafilePlugin`, same sibling-of-`dist/` placement);
 //   3. the Rust crates linked into `frontends/shell/src-tauri`'s own binary, from its own
-//      `Cargo.lock` via `cargo metadata`/`cargo tree` (`./rustCrateNotices.mjs`).
+//      `Cargo.lock` via `cargo metadata`/`cargo tree` (`./rustCrateNotices.mjs`);
+//   4. the third-party works embedded in DuckDB's amalgamated C/C++ source tree, which
+//      `libduckdb-sys` compiles into the application and which NO build manifest here reports --
+//      enumerated from DuckDB's own upstream source tree at the pinned version and hash-pinned
+//      in-tree under `LICENSES/third-party/duckdb-<version>/` (`./duckdbAmalgamationNotices.mjs`).
+//      This set closes the one gap set (3) structurally cannot see; until entry 62 was ruled, the
+//      notice named those works and stated that their licence texts were not carried.
 //
 // ## The two-pass build this script's placement in `package.json`'s "build" script exists for
 //
@@ -67,6 +74,7 @@ import { fileURLToPath } from 'node:url';
 
 import { notice } from '../../../renderer/bundle-viewer/notice.mjs';
 import { collectLinkedCrates, buildCanonicalLicenseTexts, TARGET_TRIPLE } from './rustCrateNotices.mjs';
+import { buildAmalgamationSet } from './duckdbAmalgamationNotices.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellDir = join(here, '..');
@@ -97,6 +105,25 @@ const rustCrates = {
   targetTriple: TARGET_TRIPLE,
 };
 
+// Set (4), the DuckDB amalgamation (DECISIONS-PENDING entry 62 = (a)): read from the pinned
+// manifest, with every sha256 re-verified and the pinned library list checked against the crate
+// tarball's own third_party/ listing. All three guards (the per-file sha256 with the directory-name
+// / manifest-version agreement, the linked crate's version, the tarball's sha256 + listing) throw
+// rather than degrade -- see that module's own doc comment for why this set, unlike the other
+// three, has no honest degraded rendering. Built from the SAME `crates` array set (3) uses, so the
+// tarball it inspects belongs to the `libduckdb-sys` cargo actually resolved for this build rather
+// than to a registry path literal. A guard's throw is turned into the same named FAIL line
+// `checkDistNotice.mjs` prints for the same throws (reviewer nit on the entry-62 re-review) -- one
+// shape for a refusal in a `npm run build` log, not an uncaught stack trace -- and the non-zero
+// exit the build depends on is kept.
+let duckdbAmalgamation;
+try {
+  duckdbAmalgamation = buildAmalgamationSet(crates);
+} catch (err) {
+  console.error(`generateNotice: FAIL -- ${err?.message ?? err}`);
+  process.exit(1);
+}
+
 let extra;
 if (existsSync(shellMetafilePath)) {
   const shellMetafile = JSON.parse(readFileSync(shellMetafilePath, 'utf8'));
@@ -109,6 +136,7 @@ if (existsSync(shellMetafilePath)) {
       },
     ],
     rustCrates,
+    duckdbAmalgamation,
   };
 } else {
   // Bootstrap pass (see this file's own top comment): `frontends/shell/dist-metafile.json` does
@@ -120,7 +148,7 @@ if (existsSync(shellMetafilePath)) {
       '(bootstrap) NOTICE.txt without the packaged frontend\'s own npm section. The "build" script ' +
       'regenerates this file after its first `vite build`, with full scope.'
   );
-  extra = { bootstrap: true, rustCrates };
+  extra = { bootstrap: true, rustCrates, duckdbAmalgamation };
 }
 
 const text = notice(viewerMetafile, undefined, extra);

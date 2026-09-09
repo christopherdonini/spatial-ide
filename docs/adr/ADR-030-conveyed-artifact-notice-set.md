@@ -1,11 +1,6 @@
 # ADR-030 — The notice set a conveyed artifact must carry
 
-**Status:** Proposed — filed 2026-09-08 on the human's ruling (DECISIONS-PENDING entry 57: *"ADR-030
-filed Proposed with (a) as decision on item 9's landing"*). Candidate (a) below is the decision the
-human has named; it becomes Accepted, on the human's word, when the release cut's item 9 (both notice
-generators) lands and its gates confirm the property. Until then this ADR binds nothing beyond
-recording the question. Drafted from the architect's skeleton at the packaged-build re-check
-(`RELEASE-0.1.md` Amendments 4–6).
+**Status:** Accepted 2026-09-09 (on the human's word, DECISIONS-PENDING entries 57/62; filed Proposed 2026-09-08). Candidate (a) is the decision; the appended note below records the enumeration sources, the scope statements and the reopen conditions. Candidate (b), the PR #31 interim, is expired — no conveyed artifact ships with a named gap.
 
 **Related:** ADR-009 (license layers; item 7 is bundle-scoped — the viewer's notice; item 1 the core),
 ADR-017 Corrigendum 3 (`viewer_license` — the distributed code's notice and corresponding-source
@@ -67,3 +62,23 @@ and it expires with item 9.
 A new conveyance channel (a macOS/Linux artifact; an SDK package under ADR-009's Apache-2.0 layer;
 a plugin distribution) reopens this ADR for that channel's manifest source rather than inheriting
 (a) by assumption.
+
+## Appended note — 2026-09-09, on the human's word at the landing of the release cut's item 9 and the entry-62 piece
+
+Candidate (a) is accepted as the rule, with four scope statements, each true of the artifacts as landed.
+
+**1. Rust source: the shell crate's lockfile alone.** The linked-crate set is read from `frontends/shell/src-tauri/Cargo.lock` — not the root workspace lockfile — via `cargo metadata --locked --filter-platform` and `cargo tree -e normal` (`frontends/shell/scripts/rustCrateNotices.mjs`). That lockfile already resolves the first-party `spatial-*` path crates and `duckdb`/`libduckdb-sys`, so it is the whole of what the shell binary links; the workspace lockfile is a smaller, different resolution and is deliberately not read. Proc-macro over-inclusion is stated in the notice rather than silently pruned.
+
+**2. One target triple.** The set is a fact about `x86_64-pc-windows-msvc`, named in the notice's own Rust-section intro. A macOS or Linux artifact resolves a different set and reopens this ADR for that channel under the Reopen condition above.
+
+**3. One set enumerated from a pinned upstream listing, not a build manifest.** `libduckdb-sys 1.10505.0` compiles DuckDB's amalgamation from its own `duckdb.tar.gz`, which embeds 26 further third-party works under `third_party/`; none ships a licence, notice or copying file in that tarball, and no Cargo manifest names any of them individually, so the lockfile-driven generator structurally cannot reach them. They are enumerated — names **and** full licence texts — from DuckDB's own upstream source tree at the version the pinned crate corresponds to: crate `1.10505.0` → DuckDB 1.5.5 by the crate's documented encoding, cross-read against the tarball's own `DUCKDB_SOURCE_ID "d8cdaa33fd"`, which is the short form of tag `v1.5.5`'s commit `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`. `third_party/` upstream at that tag holds 30 directories; the amalgamation carries 26 (`catch`, `imdb`, `jemalloc`, `snowball` are upstream-only, not conveyed, not pinned). Every one of the 26 ships its own upstream `LICENSE`; one (`tdigest`) also ships `NOTICES` — 27 files, fetched once with `curl` on 2026-09-08 under the entry-51 discipline (URL, date, sha256 per file) and hash-pinned in-tree at `LICENSES/third-party/duckdb-1.5.5/` with a `MANIFEST.json` and a README recording the method. Each file's git blob SHA-1 was additionally recomputed and matched against the tag's own tree, 27 of 27.
+
+**How this discharges (a)'s "generated from that artifact's own build manifest".** That clause is read, at this acceptance, as: *generated from a mechanically checkable, hash-pinned enumeration of the artifact's actual contents — a build manifest where one exists, and where none does, the upstream tree's own listing at the pinned version, with a guard that fails the build on drift.* It is not read as licensing a hand-kept list. The notice states which kind of source each section has, in the section a recipient meets before the texts; a set enumerated this way may never be presented as if a build tool had reported it.
+
+**The guards, and their reach, stated rather than assumed.** **Three** checks run at generation and at `check:dist-notice`, all throwing rather than degrading: **(1)** every pinned file's sha256 is re-verified against the bytes on disk — together with the UTF-8 round-trip that proves the text embedded is the bytes hashed, and the agreement between the pinned directory's own name and the manifest's `duckdb_version`; **(2)** the linked `libduckdb-sys` crate's name and version are compared against the manifest's; **(3)** the manifest's work list is compared in **both** directions against the `third_party/` listing inside the pinned crate's own tarball, together with that tarball's recorded sha256 and its recorded directory count. The guard is directory-name- and version-level; it does not prove the tarball's sources are byte-identical to the tag's tree, and nothing here claims that.
+
+**Licence identification, where upstream declares none.** DuckDB declares no SPDX identifier for these works and no per-library licence index exists upstream at this tag. Every `license_id` in the pinned manifest therefore carries a `license_id_basis` of `self-declared` (the pinned text names its own licence) or `read-from-body` (the id read from the text's operative clauses). **The pinned text is the authority in every case and is what the notice embeds; the id is a label beside it.** No SPDX identifier may be attributed to an upstream that did not declare one.
+
+**4. Reopen.** In addition to the Reopen condition above: any further third-party set a conveyed artifact carries that no build manifest reports. The first unchecked candidate is the **NSIS installer executable's own stub code** — the three build manifests describe the installed application, not the setup program that carries it; not checked at this landing.
+
+**What Part M M3 must show for this note to stand:** the three notice files (beside the executable; `bundle-viewer\NOTICE.txt`; the in-app Notices view); the widened four-source scope paragraph; the fourth section's heading, its 26 entry lines and their full licence texts; its closing sentinel; both npm sections and the Rust section; the IOGP acknowledgement with the terms URL and the AGPL §6/§6(d) corresponding-source route; no bootstrap sentinel; and that the Notices disclosure actually paints (byte count only — no timing).

@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 
 import { notice } from "../../../../renderer/bundle-viewer/notice.mjs";
 import { collectLinkedCrates, buildCanonicalLicenseTexts, TARGET_TRIPLE } from "../../scripts/rustCrateNotices.mjs";
+import { buildAmalgamationSet } from "../../scripts/duckdbAmalgamationNotices.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellDir = join(here, "..", "..");
@@ -51,6 +52,13 @@ function generateOnce(): string {
       // the collector filtered on, never a second literal that could drift from it.
       targetTriple: TARGET_TRIPLE,
     },
+    // Passed for exactly the reason advisory A9 gave for `targetTriple` above (entry 62): omitting
+    // it would exercise a render the real generator never emits -- one WITHOUT the fourth section,
+    // and therefore without the ~107 KB of pinned licence text and the section intro that make up
+    // most of what this piece added. `buildAmalgamationSet` also re-reads and re-verifies the pinned
+    // files on each call, so running it twice here additionally proves the verification itself is
+    // stable rather than order- or cache-dependent.
+    duckdbAmalgamation: buildAmalgamationSet(crates),
   });
 }
 

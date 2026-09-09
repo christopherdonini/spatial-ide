@@ -115,10 +115,24 @@ test('the two-argument (bundle/viewer) header names no unmet obligation', () => 
 //
 // **"application-wide", not "complete" (closing commit, architect advisory A2).** This paragraph
 // pointed at the beside-the-executable NOTICE.txt as "the application's complete notice set", which
-// asserts more about that file than that file asserts about itself: its own header names an open gap
-// outright (`duckdbAmalgamationGapLines()` -- third-party sources inside DuckDB's amalgamated build
-// that no build manifest here can see). Both halves are asserted, so neither the wording nor the
-// claim can drift back silently.
+// asserted more about that file than that file asserted about itself: at the time its own header
+// named an open gap outright -- the third-party sources inside DuckDB's amalgamated build that no
+// build manifest here can see. That gap is CLOSED as of DECISIONS-PENDING entry 62 = (a)
+// (2026-09-08): those works now carry their full upstream licence texts in their own section of the
+// installed copy. "application-wide" still stands rather than becoming "complete", because the wider
+// file states its four sources rather than claiming exhaustiveness, and a pointer should not upgrade
+// that. Both halves are asserted, so neither the wording nor the claim can drift back silently.
+//
+// **The scope sentence names FOUR sets** (architect Q4, release-cut fix batch on the entry-62
+// piece). It named three -- viewer, packaged frontend's npm dependencies, linked Rust crates --
+// which was complete until the fourth section landed and stopped being complete the moment it did.
+// The fourth is asserted BY NAME below, not merely admitted by the window: a bounded `[\s\S]` window
+// proves the two anchors are near each other, and would have gone on passing with the DuckDB clause
+// absent. The window itself is measured, not guessed: the gap between the two anchors is **207
+// characters** on the current wording (was 134 with three sets -- bisected against 44d61b3's output
+// with this test's own regex: a bound of 133 does not match, 134 does), so the existing 240 bound still
+// holds it with room, and is deliberately left at 240 rather than widened to fit -- a window that
+// grows to fit whatever the text became stops being a check.
 test('the two-argument header states both of the file\'s two distribution scopes', () => {
   const text = notice(fakeMetafile);
   assert.match(text, /inside a published\nbundle, this is the whole notice set the bundle owes/);
@@ -126,6 +140,10 @@ test('the two-argument header states both of the file\'s two distribution scopes
   assert.match(
     text,
     /The application-wide notice set[\s\S]{0,240}?is the separate NOTICE\.txt installed beside the executable/,
+  );
+  assert.match(
+    text,
+    /the third-party works inside DuckDB's own amalgamated C\/C\+\+ source tree --\nis the separate NOTICE\.txt/,
   );
   assert.doesNotMatch(text, /complete notice set/);
 });
