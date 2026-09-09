@@ -10,42 +10,122 @@
 // `tauri.conf.json`'s `bundle.resources` places beside the installed executable.
 //
 // The text itself is never hand-copied here. `notice()` (`renderer/bundle-viewer/notice.mjs`) is
-// imported directly and called with the SAME esbuild metafile the bundle viewer's own build just
-// produced (`renderer/bundle-viewer/dist-metafile.json`, written by that package's own
-// `build.mjs`, sibling to `dist/` so it never becomes a published-bundle viewer asset) -- so this
-// script's output IS `notice()`'s own output, not a hand-copy of it.
+// imported directly and called with THREE package sets, each read from its own build manifest
+// (RELEASE-0.1 item 9; ADR-030 candidate (a)):
+//
+//   1. the bundle viewer's own esbuild metafile (`renderer/bundle-viewer/dist-metafile.json`,
+//      written by that package's own `build.mjs`, sibling to `dist/` so it never becomes a
+//      published-bundle viewer asset) -- as before this piece;
+//   2. this package's OWN Vite/Rollup build manifest (`frontends/shell/dist-metafile.json`, written
+//      by `vite.config.ts`'s own inline `packageMetafilePlugin`, same sibling-of-`dist/` placement);
+//   3. the Rust crates linked into `frontends/shell/src-tauri`'s own binary, from its own
+//      `Cargo.lock` via `cargo metadata`/`cargo tree` (`./rustCrateNotices.mjs`).
+//
+// ## The two-pass build this script's placement in `package.json`'s "build" script exists for
+//
+// Set (2) above does not exist until THIS package's own `vite build` has produced it -- but
+// `NoticesPanel.tsx`'s `?raw` import bakes whatever `src/generated/NOTICE.txt` held AT THAT BUILD's
+// own module-load time into the built `dist/` output; regenerating the file afterward does not
+// change what a COMPLETED build already embedded. So `package.json`'s "build" script runs
+// `vite build` TWICE: the first pass (after this script's own `prebuild`-hook invocation, which
+// runs before `vite build` has ever produced set (2) and so calls `notice()` in its BOOTSTRAP mode,
+// `extra.bootstrap: true` -- named as provisional in the file itself, never silently claiming a
+// scope it does not yet enumerate) produces a fresh `dist-metafile.json` for set (2); this script
+// then runs AGAIN, this time with set (2) available, producing the FINAL, fully-scoped
+// `src/generated/NOTICE.txt`; the second `vite build` embeds THAT text. Byte-identity between
+// `src/generated/NOTICE.txt` and what actually ships is asserted by a real test
+// (`src/notices/noticeByteIdentity.test.ts`).
+//
+// ## ONLY `npm run build` produces a shippable NOTICE (release-cut fix batch, SHOULD-FIX 8)
+//
+// Running this script by hand (`npm run generate:notice`), or running a lone `vite build`, does NOT
+// produce a shippable artifact, and neither does any other ordering of the two:
+//
+//   - this script alone rewrites `src/generated/NOTICE.txt` but changes NOTHING in `dist/`, because
+//     the `?raw` import that carries it into the bundle is resolved at BUILD time;
+//   - a lone `vite build` embeds whatever `src/generated/NOTICE.txt` happened to hold, which after
+//     any dependency change is the PREVIOUS build's scope, and rewrites `dist-metafile.json` so it
+//     no longer describes the notice that was just embedded.
+//
+// Only `package.json`'s "build" script (`tsc --noEmit && vite build && npm run generate:notice &&
+// vite build`) leaves `src/generated/NOTICE.txt`, `dist/`, and `dist-metafile.json` describing the
+// SAME build. `scripts/checkDistNotice.mjs` enforces the cheap mtime consequence of that ordering
+// (`npm run build` leaves `src/generated/NOTICE.txt` OLDER than both `dist-metafile.json` and
+// `dist/`'s newest entry, because the second `vite build` follows it) -- so a hand-run of this
+// script after a build, which is the common way to end up with a `dist/` whose embedded notice is
+// not the one on disk, is refused rather than silently believed.
 //
 // **This process's own cwd is `frontends/shell`, not `renderer/bundle-viewer`** -- `notice()`
-// resolves the third-party package directories its own metafile names against ITS OWN file
-// location by default (`notice.mjs`'s own `baseDir` parameter, release-cut fix batch MUST-FIX 1),
-// precisely so a caller running from a different cwd (this script) does not silently read a
-// DIFFERENT `node_modules` tree (this package's own, which declares different dependency versions
-// than the viewer's). Byte-identity with `renderer/bundle-viewer/dist/NOTICE.txt` is not merely
-// asserted in this comment -- it is a real vitest assertion,
-// `src/notices/noticeByteIdentity.test.ts`.
+// resolves each package set's own third-party directories against THAT SET's own `baseDir`
+// (`notice.mjs`'s `baseDir` parameter and `extra.npmSets[].baseDir`, release-cut fix batch MUST-FIX
+// 1, generalised by this piece), precisely so a caller running from a different cwd (this script)
+// never silently reads the WRONG `node_modules` tree for a given set.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { notice } from '../../../renderer/bundle-viewer/notice.mjs';
+import { collectLinkedCrates, buildCanonicalLicenseTexts, TARGET_TRIPLE } from './rustCrateNotices.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const viewerDir = join(here, '..', '..', '..', 'renderer', 'bundle-viewer');
-const metafilePath = join(viewerDir, 'dist-metafile.json');
+const shellDir = join(here, '..');
+const repoRoot = join(shellDir, '..', '..');
+const viewerDir = join(shellDir, '..', '..', 'renderer', 'bundle-viewer');
+const viewerMetafilePath = join(viewerDir, 'dist-metafile.json');
+const shellMetafilePath = join(shellDir, 'dist-metafile.json');
 
-if (!existsSync(metafilePath)) {
+if (!existsSync(viewerMetafilePath)) {
   throw new Error(
-    `${metafilePath} does not exist -- run \`npm run build\` in renderer/bundle-viewer first. ` +
+    `${viewerMetafilePath} does not exist -- run \`npm run build\` in renderer/bundle-viewer first. ` +
       'It writes this metafile alongside dist/NOTICE.txt; this script reads it rather than ' +
       "re-running esbuild itself or copying notice.mjs's text by hand."
   );
 }
 
-const metafile = JSON.parse(readFileSync(metafilePath, 'utf8'));
-const text = notice(metafile);
+const viewerMetafile = JSON.parse(readFileSync(viewerMetafilePath, 'utf8'));
 
-const outDir = join(here, '..', 'src', 'generated');
+const crates = collectLinkedCrates();
+const canonicalTexts = buildCanonicalLicenseTexts(crates, { repoRoot });
+const rustCrates = {
+  heading: 'RUST CRATES STATICALLY LINKED INTO THE PACKAGED APPLICATION',
+  crates,
+  canonicalTexts,
+  // Passed through so the rendered section's own intro can NAME the triple this set is a fact about
+  // (release-cut fix batch, SHOULD-FIX 9) -- `collectLinkedCrates()`'s own default, not a second
+  // literal that could drift from the one the collector actually filtered on.
+  targetTriple: TARGET_TRIPLE,
+};
+
+let extra;
+if (existsSync(shellMetafilePath)) {
+  const shellMetafile = JSON.parse(readFileSync(shellMetafilePath, 'utf8'));
+  extra = {
+    npmSets: [
+      {
+        heading: 'THIRD-PARTY WORKS COMPILED INTO THE PACKAGED FRONTEND (frontends/shell/dist)',
+        metafile: shellMetafile,
+        baseDir: shellDir,
+      },
+    ],
+    rustCrates,
+  };
+} else {
+  // Bootstrap pass (see this file's own top comment): `frontends/shell/dist-metafile.json` does
+  // not exist yet on a fresh clone, before this package's own `vite build` has ever run once.
+  // Named provisional in the file itself rather than silently omitting the packaged frontend's own
+  // npm set while still claiming full scope.
+  console.log(
+    'generate:notice: frontends/shell/dist-metafile.json not found yet -- writing a provisional ' +
+      '(bootstrap) NOTICE.txt without the packaged frontend\'s own npm section. The "build" script ' +
+      'regenerates this file after its first `vite build`, with full scope.'
+  );
+  extra = { bootstrap: true, rustCrates };
+}
+
+const text = notice(viewerMetafile, undefined, extra);
+
+const outDir = join(shellDir, 'src', 'generated');
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'NOTICE.txt'), text, 'utf8');
 // `Buffer.byteLength`, not `text.length` -- the text carries non-ASCII characters (©, —), so a

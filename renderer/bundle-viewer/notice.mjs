@@ -25,9 +25,10 @@ import { fileURLToPath } from 'node:url';
  *
  * ## Deterministic, because the manifest hashes it
  *
- * The publish operation lists a content hash for every viewer asset and ADR-017 §12 promises
- * byte-identical rebuilds, so this file must not depend on directory order or on the clock.
- * Packages are sorted by name and each package's files by filename. **No timestamp is written.**
+ * The publish operation lists a content hash for every viewer asset, and ADR-017 §12 treats viewer
+ * asset bytes as an input to a byte-identical publish; the notice is one of those assets. So this
+ * file must not depend on directory order or on the clock. Packages are sorted by name and each
+ * package's files by filename. **No timestamp is written.**
  *
  * ## Third-party *data*, not just third-party code (entry 51)
  *
@@ -56,26 +57,43 @@ import { fileURLToPath } from 'node:url';
  * the same "resolved from this file's own location, not the cwd" fix already applies to the AGPL
  * text below — so every caller, regardless of its own cwd, resolves package paths against the
  * tree esbuild actually read them from.
+ *
+ * ## `extra`, the two further sets a packaged artifact also carries (RELEASE-0.1 item 9; ADR-030
+ * candidate (a))
+ *
+ * `notice(metafile, baseDir)` — the two-argument form `build.mjs` calls — is byte-for-byte
+ * UNCHANGED by this parameter's addition: every published bundle's own `dist/NOTICE.txt` keeps its
+ * viewer-only scope, because `extra` defaults to `null` and nothing below the guard on it runs.
+ * The packaged shell's own generator (`frontends/shell/scripts/generateNotice.mjs`) is the only
+ * caller that passes a third argument, shaped:
+ *
+ * ```
+ * {
+ *   npmSets: [{ heading, metafile, baseDir }, …],   // one more esbuild/Rollup-shaped metafile
+ *                                                     // per additional npm package set, each
+ *                                                     // resolved from ITS OWN baseDir — the same
+ *                                                     // discipline the viewer's own set already
+ *                                                     // uses, generalised rather than re-argued.
+ *   rustCrates: { heading, crates, canonicalTexts, targetTriple },
+ *                                                      // `crates`: collectLinkedCrates()'s own
+ *                                                      // return shape; `canonicalTexts`: a
+ *                                                      // Map<spdxId, {text, source}> for crates
+ *                                                      // whose own registry source ships no
+ *                                                      // license file (buildCanonicalLicenseTexts());
+ *                                                      // `targetTriple`: the triple that set was
+ *                                                      // resolved FOR, named in the rendered
+ *                                                      // section's own intro (release-cut fix
+ *                                                      // batch, SHOULD-FIX 9) rather than left
+ *                                                      // implicit -- the linked set is a fact
+ *                                                      // about one target, not about all of them.
+ * }
+ * ```
+ *
+ * Passing `extra` also swaps the header's scope paragraph for one that states what the file
+ * enumerates rather than naming a gap — see `extraHeaderLines` below.
  */
-export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url))) {
-  // `name -> directory`. **The directory comes from the input path, not from `node_modules/<name>`.**
-  // A nested tree (`node_modules/a/node_modules/b`) resolves to the *nested* `b`, which is the copy
-  // actually compiled in. Reading the top-level `b` instead would put a different version's notice
-  // in the file — or throw `ENOENT` when no top-level `b` exists — and both fail silently in the
-  // sense that matters: the bundle still builds, carrying the wrong notice. Nested trees already
-  // exist here (`command-line-usage/node_modules/array-back`), so this is not hypothetical.
-  const packages = new Map();
-  for (const input of Object.keys(metafile.inputs)) {
-    // `node_modules/name/…` or `node_modules/@scope/name/…`, taking the last occurrence so a
-    // nested `node_modules` attributes to the package that actually supplied the file.
-    const at = input.lastIndexOf('node_modules/');
-    if (at === -1) continue;
-    const prefix = input.slice(0, at + 'node_modules/'.length);
-    const rest = input.slice(at + 'node_modules/'.length).split('/');
-    const name = rest[0].startsWith('@') ? `${rest[0]}/${rest[1]}` : rest[0];
-    // esbuild's metafile keys are always forward-slashed, including on Windows.
-    packages.set(name, prefix + name);
-  }
+export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url)), extra = null) {
+  const packages = extractPackages(metafile);
 
   // **A notice with no third-party section is a legally incomplete notice, and it must not build
   // quietly.** The viewer bundles `apache-arrow`, `flatbuffers` and `tslib` today; if the metafile
@@ -92,32 +110,10 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
   }
 
   const out = [
-    'NOTICES',
-    '=======',
-    '',
-    'This file is the notice set for the viewer program compiled by renderer/bundle-viewer/build.mjs',
-    'from esbuild\'s metafile: the viewer\'s own copyright and license notice, followed by the',
-    'retained notices of every third-party work compiled into it. It lists what was actually',
-    'bundled rather than what someone remembered to write down.',
-    '',
-    'This SAME file is distributed in two different places, and its scope differs between them',
-    '(release-cut fix batch, MUST-FIX 3; scope corrected, RELEASE-0.1 Amendment 6\'s authorized',
-    'sweep): inside a published bundle, this is the whole notice set the bundle owes (the bundle',
-    'carries nothing but this viewer). Installed beside the packaged application\'s own executable,',
-    'this file enumerates ONLY the third-party works compiled into the bundle VIEWER -- it does NOT',
-    'enumerate two further sets of third-party works the installed application also carries: (i) the',
-    'packaged frontend\'s OWN npm dependencies, compiled into frontends/shell/dist and conveyed via',
-    'tauri.conf.json\'s `frontendDist` -- react, react-dom, @deck.gl/core, @deck.gl/layers, and the',
-    'shell\'s own apache-arrow, each a separate install from the copies compiled into this viewer;',
-    'and (ii) the Rust crates statically linked into the kernel/data-engine/renderer binary the',
-    'application also embeds (kernel, engine, protocol, and their own dependencies), listed instead',
-    'in this repository\'s own DEPENDENCY-LICENSES.md. Generating BOTH of those into the installed',
-    'copy of this file is OWED, not yet done, under RELEASE-0.1\'s item 9 (both notice generators,',
-    'before the v0.1.0 tag) and ADR-030 (docs/adr/ADR-030-conveyed-artifact-notice-set.md, Proposed,',
-    'candidate (a)) -- named here rather than silently assumed covered by the third-party section',
-    'below.',
-    '',
-    '',
+    ...(extra?.bootstrap ? bootstrapHeaderLines() : extra ? extraHeaderLines() : viewerOnlyHeaderLines()),
+  ];
+
+  out.push(
     'THE VIEWER',
     '----------',
     '',
@@ -134,7 +130,7 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
     '',
     'SPDX-License-Identifier: AGPL-3.0-or-later',
     '',
-  ];
+  );
 
   // The AGPL text itself, when it is present at the path below. AGPL-3.0 section 4 requires a copy
   // of the License to travel with the Program, and that copy is not something this script can
@@ -220,7 +216,197 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
     '',
   );
 
-  out.push('', 'THIRD-PARTY WORKS COMPILED INTO THIS VIEWER', '------------------------------------------', '');
+  out.push(
+    ...packageSectionLines(
+      'THIRD-PARTY WORKS COMPILED INTO THIS VIEWER',
+      '------------------------------------------',
+      packages,
+      baseDir,
+    ),
+  );
+
+  if (extra) {
+    for (const set of extra.npmSets ?? []) {
+      const setPackages = extractPackages(set.metafile);
+      if (setPackages.size === 0) {
+        throw new Error(
+          `notice generation found no third-party packages in the "${set.heading}" package set's ` +
+            'own metafile -- this is a bug in that set\'s extraction (or an empty/stale metafile), ' +
+            'not evidence that set genuinely carries no third-party code (ADR-030 candidate (a): no ' +
+            'artifact ships with a silently named gap).',
+        );
+      }
+      out.push(
+        ...packageSectionLines(
+          set.heading,
+          set.underline ?? '-'.repeat(set.heading.length),
+          setPackages,
+          set.baseDir,
+        ),
+      );
+    }
+    if (extra.rustCrates) {
+      out.push(
+        ...rustCrateSectionLines(
+          extra.rustCrates.heading,
+          extra.rustCrates.underline ?? '-'.repeat(extra.rustCrates.heading.length),
+          extra.rustCrates.crates,
+          extra.rustCrates.canonicalTexts ?? new Map(),
+          extra.rustCrates.targetTriple ?? null,
+        ),
+      );
+      out.push(...duckdbAmalgamationGapLines());
+    }
+  }
+
+  return out.join('\n');
+}
+
+// `metafile.inputs` -> `Map<packageName, relativeDirectory>`. Shared by the viewer's own metafile
+// and by every additional npm package set in `extra.npmSets` (each an esbuild-metafile-shaped
+// object, whether it actually came from esbuild or -- for `frontends/shell`'s own Vite/Rollup
+// build -- from a small inline plugin that writes the same `{ inputs: {...} }` shape so this one
+// extraction function serves both, per its own base directory).
+function extractPackages(metafile) {
+  // `name -> directory`. **The directory comes from the input path, not from `node_modules/<name>`.**
+  // A nested tree (`node_modules/a/node_modules/b`) resolves to the *nested* `b`, which is the copy
+  // actually compiled in. Reading the top-level `b` instead would put a different version's notice
+  // in the file — or throw `ENOENT` when no top-level `b` exists — and both fail silently in the
+  // sense that matters: the bundle still builds, carrying the wrong notice. Nested trees already
+  // exist here (`command-line-usage/node_modules/array-back`), so this is not hypothetical.
+  const packages = new Map();
+  for (const input of Object.keys(metafile.inputs)) {
+    // `node_modules/name/…` or `node_modules/@scope/name/…`, taking the last occurrence so a
+    // nested `node_modules` attributes to the package that actually supplied the file.
+    const at = input.lastIndexOf('node_modules/');
+    if (at === -1) continue;
+    const prefix = input.slice(0, at + 'node_modules/'.length);
+    const rest = input.slice(at + 'node_modules/'.length).split('/');
+    const name = rest[0].startsWith('@') ? `${rest[0]}/${rest[1]}` : rest[0];
+    // Metafile keys are always forward-slashed here, including on Windows (esbuild's own
+    // convention; the Vite/Rollup plugin that produces the shell's own set matches it deliberately
+    // so this one function reads either without caring which build tool produced its input).
+    packages.set(name, prefix + name);
+  }
+  return packages;
+}
+
+// The header block a published bundle's own `dist/NOTICE.txt` carries -- BYTE-IDENTICAL to what
+// this function returned before `extra` existed (release-cut fix batch MUST-FIX 3's own text,
+// scope-corrected by RELEASE-0.1 Amendment 6's authorized sweep). Every published bundle carries
+// nothing but this viewer, so this paragraph's claim about that artifact was and remains true;
+// nothing about adding `extra` for a DIFFERENT artifact (the packaged shell) changes what this one
+// says about ITSELF.
+//
+// **"application-wide", not "complete" (closing commit, architect advisory A2).** This paragraph
+// pointed at the beside-the-executable NOTICE.txt as "the application's complete notice set". That
+// artifact's own header does not claim completeness and must not: it names one open gap outright
+// (`duckdbAmalgamationGapLines()` below -- third-party sources inside DuckDB's amalgamated build
+// that no build manifest here can see). A pointer must not assert more about the thing it points at
+// than that thing asserts about itself, so this says what the wider file's SCOPE is instead.
+function viewerOnlyHeaderLines() {
+  return [
+    'NOTICES',
+    '=======',
+    '',
+    'This file is the notice set for the viewer program compiled by renderer/bundle-viewer/build.mjs',
+    'from esbuild\'s metafile: the viewer\'s own copyright and license notice, followed by the',
+    'retained notices of every third-party work compiled into it. It lists what was actually',
+    'bundled rather than what someone remembered to write down.',
+    '',
+    'This SAME file is distributed in two different places, and its scope differs between them',
+    '(release-cut fix batch, MUST-FIX 3; scope corrected, RELEASE-0.1 Amendment 6\'s authorized',
+    'sweep; this paragraph rewritten, release-cut fix batch, MUST-FIX 1): inside a published',
+    'bundle, this is the whole notice set the bundle owes (the bundle carries nothing but this',
+    'viewer). Installed inside the packaged application, at bundle-viewer\\NOTICE.txt',
+    '(tauri.conf.json\'s own resource glob), this file is the VIEWER\'s OWN notice -- the',
+    'third-party works compiled into the bundle viewer specifically, not the whole application\'s',
+    'notice set. The application-wide notice set -- covering this viewer, the packaged',
+    'frontend\'s own npm dependencies, and the Rust crates statically linked into the application --',
+    'is the separate NOTICE.txt installed beside the executable, generated by',
+    'frontends/shell/scripts/generateNotice.mjs, whose own header names that wider scope',
+    'explicitly.',
+    '',
+    '',
+  ];
+}
+
+// The header block the packaged shell's own installed `NOTICE.txt` carries once `extra` is passed
+// (RELEASE-0.1 item 9; ADR-030 candidate (a)). Replaces the two "OWED, not yet done" sentences the
+// bundle-only header above used to carry (removed from it too, release-cut fix batch MUST-FIX 1)
+// with a scope sentence naming what THIS artifact's copy actually enumerates -- itself generated,
+// per section, from that section's own build manifest, never hand-copied. Scope sentence narrowed
+// to what the three read manifests actually prove (release-cut fix batch, MUST-FIX 3): DuckDB's
+// own amalgamated build embeds third-party sources none of the three manifests can see, named
+// honestly in its own paragraph after the Rust section below rather than folded into this claim.
+function extraHeaderLines() {
+  return [
+    'NOTICES',
+    '=======',
+    '',
+    'This file is the notice set for the packaged Spatial IDE desktop application: the shell',
+    'executable together with the kernel, data engine, renderer and protocol implementation it',
+    'embeds. It is generated from three separate build manifests, never hand-copied: the bundle',
+    'viewer\'s own esbuild metafile (renderer/bundle-viewer/build.mjs), the packaged frontend\'s own',
+    'Vite/Rollup build output (frontends/shell/vite.config.ts), and frontends/shell/src-tauri/',
+    'Cargo.lock, read via `cargo metadata`/`cargo tree` (RELEASE-0.1\'s item 9, both notice',
+    'generators, before the v0.1.0 tag; ADR-030, docs/adr/ADR-030-conveyed-artifact-notice-set.md,',
+    'candidate (a)). It lists what was actually compiled into and shipped beside this executable,',
+    'rather than what someone remembered to write down.',
+    '',
+    'This SAME text -- specifically the portion below from the "THE VIEWER" heading through the end',
+    'of the "THIRD-PARTY WORKS COMPILED INTO THIS VIEWER" section -- is ALSO, byte for byte, the',
+    'whole notice set a published bundle owes on its own (renderer/bundle-viewer/dist/NOTICE.txt;',
+    'a published bundle carries nothing but this viewer, so its own copy of this file stops there).',
+    'This installed copy scopes wider, because the installed application carries more than the',
+    'viewer alone: it enumerates every npm package compiled into the bundle VIEWER, every npm',
+    'package compiled into the packaged frontend\'s OWN build (frontends/shell/dist, conveyed via',
+    'tauri.conf.json\'s `frontendDist`), and every Rust crate statically linked into the',
+    'kernel/data-engine/renderer/protocol binary this application also embeds -- each in its own',
+    'section below. One further, narrower gap -- third-party sources embedded inside DuckDB\'s own',
+    'amalgamated build, invisible to every one of those three manifests -- is named, not silently',
+    'folded into that claim, after the Rust section below.',
+    '',
+    '',
+  ];
+}
+
+// The header block a BOOTSTRAP pass of `frontends/shell/scripts/generateNotice.mjs` carries, used
+// only when `frontends/shell/dist-metafile.json` does not exist yet (a fresh clone, before this
+// package's own `vite build` has ever run once) -- see that script's own doc comment for why this
+// pass must still succeed rather than deadlock the build. Named as provisional rather than silently
+// claiming the full scope the artifact does not yet carry; superseded within the SAME `npm run
+// build` invocation once `vite build`'s own metafile plugin has written that file.
+//
+// The "by the SECOND generateNotice.mjs pass THAT `npm run build`'s own script body runs" sentence
+// below was missing its relative pronoun ("pass `npm run build`'s own script body runs"), which
+// read as a run-on -- restored, release-cut fix batch, MUST-FIX 12 nit.
+function bootstrapHeaderLines() {
+  return [
+    'NOTICES',
+    '=======',
+    '',
+    '*** BOOTSTRAP PASS -- PROVISIONAL, SUPERSEDED WITHIN THE SAME BUILD ***',
+    '',
+    'frontends/shell/dist-metafile.json (the packaged frontend\'s own Vite/Rollup build manifest)',
+    'does not exist yet, so this pass of frontends/shell/scripts/generateNotice.mjs could not read',
+    'it -- this happens once, on a fresh clone, before this package\'s own `vite build` has ever run.',
+    'This file therefore enumerates only the bundle viewer\'s own third-party works and the Rust',
+    'crates statically linked into the application below; the packaged frontend\'s OWN npm',
+    'dependencies (react, react-dom, @deck.gl/core, @deck.gl/layers, apache-arrow, …) are added, and',
+    'this whole header replaced with the full scope statement, by the SECOND generateNotice.mjs pass',
+    'THAT `npm run build`\'s own script body runs immediately after its first `vite build` -- see',
+    'that script (frontends/shell/package.json\'s "build") for the two-pass sequence this bootstraps.',
+    '',
+    '',
+  ];
+}
+
+// Renders one third-party npm PACKAGE set (the viewer's own, or any `extra.npmSets` entry) in the
+// established visual shape: a heading, then per package sorted by name, its declared license and
+// every retained LICENSE/NOTICE/COPYING file's verbatim text.
+function packageSectionLines(heading, underline, packages, baseDir) {
+  const out = ['', heading, underline, ''];
 
   for (const pkg of [...packages.keys()].sort()) {
     // Resolved against `baseDir` (this file's own directory by default), never against the
@@ -268,5 +454,260 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
     }
   }
 
-  return out.join('\n');
+  return out;
 }
+
+// Splits a declared Cargo SPDX license expression into candidate atomic ids -- deliberately simple
+// (no full SPDX-expression boolean parser): strips stray parentheses and splits on `/`, `,`, or the
+// keywords `OR`/`AND`. Good enough to find which canonical texts a gap crate's declaration needs;
+// an id this misses just gets no canonical text offered, named honestly rather than guessed at.
+//
+// **A DELIBERATE second copy of `frontends/shell/scripts/rustCrateNotices.mjs`'s own exported
+// `extractSpdxIds`, kept identical on purpose** (closing commit, reviewer R3). The obvious
+// de-duplication -- importing the exported one -- would make `renderer/bundle-viewer` (a module every
+// published bundle carries, which builds on its own) depend on `frontends/shell`, inverting the
+// direction docs/02's module map states: `frontends` is "Clients only — no logic" there, a client of
+// the renderer rather than something the renderer reaches into. The two copies
+// have to tokenise identically, because THIS one decides which ids are ANNOUNCED under a crate ("the
+// canonical text for X is in the section below") while the OTHER decides which texts are actually
+// COLLECTED -- a divergence would either announce a text that is not there or embed one nothing
+// points at. `frontends/shell/src/notices/spdxTokenisation.test.ts` imports both and asserts equal
+// output over the expression shapes the linked set actually declares; that test is what keeps them
+// identical, not this comment.
+function extractSpdxIds(license) {
+  if (!license) return [];
+  return license
+    .split(/\s+(?:OR|AND)\s+|\/|,/)
+    .map((s) => s.trim().replace(/^[()]+|[()]+$/g, ''))
+    .filter(Boolean);
+}
+
+// Renders the Rust crate set (`extra.rustCrates`): one entry per linked third-party crate, in the
+// same visual shape `packageSectionLines` uses for npm packages, followed once by the shared
+// "license texts for crates with no bundled license file" section for any SPDX id this exact linked
+// set needs one for.
+function rustCrateSectionLines(heading, underline, crates, canonicalTexts, targetTriple = null) {
+  const out = ['', heading, underline, ''];
+
+  // The section's own intro (release-cut fix batch, SHOULD-FIX 9): states HOW this set was derived,
+  // WHICH target triple it is a fact about, and that it deliberately over-includes build-time-only
+  // proc-macro crates. All three were previously true only in `rustCrateNotices.mjs`'s own source
+  // comments, where no reader of the shipped notice can see them. Written with `--` rather than an
+  // em dash on purpose: `checkDistNotice.mjs` counts this section's package entries by the
+  // generator's own `<name> <version> — ` line shape, and a prose line whose third token were an em
+  // dash would be counted as an entry.
+  out.push(
+    'This section lists every third-party Rust crate cargo resolves as a NORMAL dependency edge of',
+    'frontends/shell/src-tauri, read from that crate\'s own Cargo.lock via `cargo metadata` and',
+    '`cargo tree -e normal` (frontends/shell/scripts/rustCrateNotices.mjs) -- never a hand-kept',
+    'list. Build-dependencies and dev-dependencies are excluded, as are this repository\'s own',
+    'first-party crates.',
+    '',
+    'The set is a fact about ONE build target: the crates below are those linked for the target',
+    `triple ${targetTriple ?? '(not recorded by this generator run)'}. A build for a different`,
+    'target would resolve a different set (a platform-specific crate such as webview2-com is linked',
+    'for this triple and would not be for another).',
+    '',
+    'It deliberately OVER-includes. Proc-macro crates that only ever run at BUILD time (serde_derive,',
+    'syn, quote, proc-macro2 and the like) are reported by cargo as normal edges and are kept here,',
+    'even though the shipped binary never executes their code at runtime. Listing a work that is not',
+    'actually carried is harmless for a notice; omitting one that IS carried is the failure this',
+    'section exists to prevent.',
+    '',
+  );
+
+  // Sorts defensively (release-cut fix batch, MUST-FIX 12 nit): every known caller already passes
+  // `collectLinkedCrates()`'s own sorted output, but this function has no way to enforce that on a
+  // future caller, and a notice's package order is a determinism property this file's own doc
+  // comment promises rather than merely hopes for.
+  const sorted = [...crates].sort((a, b) =>
+    a.name === b.name ? a.version.localeCompare(b.version) : a.name.localeCompare(b.name),
+  );
+
+  for (const crate of sorted) {
+    // `license_file` read too (release-cut fix batch, MUST-FIX 12 nit): a crate with no `license`
+    // SPDX expression sometimes still declares Cargo's own `license-file` key instead (a path to a
+    // non-SPDX or custom text) -- printing that path is real information this crate's own Cargo.toml
+    // supplies; "(license not declared)" would be false for it.
+    const licenseLabel =
+      crate.license ?? (crate.licenseFile ? `license-file: ${crate.licenseFile}` : '(license not declared in Cargo.toml)');
+    out.push('', `${crate.name} ${crate.version} — ${licenseLabel}`, '');
+
+    // **A directory that could not be READ is not a crate that ships nothing** (closing commit:
+    // architect advisory A3, reviewer R2). `collectLinkedCrates` used to swallow a `readdirSync`
+    // failure into an empty `licenseFiles`, which arrived here indistinguishable from a genuine
+    // empty listing and rendered as the AFFIRMATIVE sentence "no LICENSE/NOTICE/COPYING file ships
+    // in <crate>'s registry source" -- a claim about the crate, manufactured out of a failed read
+    // of this machine's disk. The failure is now carried through as `licenseFilesError` and printed
+    // as what it is. `checkDistNotice.mjs`'s own `DEGRADED_LINE_PATTERNS` matches this exact wording,
+    // so an artifact carrying it fails `npm run check:dist-notice` instead of shipping -- the
+    // pipeline fails closed on the anomaly, and no false affirmative reaches a recipient meanwhile.
+    if (crate.licenseFilesError || crate.licenseFiles.length === 0) {
+      if (crate.licenseFilesError) {
+        out.push(
+          `  (the registry source directory for ${crate.name} could not be read: ${crate.licenseFilesError};`,
+          '  whether it ships a license file of its own is UNKNOWN here, and the declared license',
+          '  above is all that this notice can state)',
+        );
+      } else {
+        const ids = extractSpdxIds(crate.license).filter((id) => canonicalTexts.has(id));
+        if (ids.length > 0) {
+          out.push(
+            `  (no LICENSE/NOTICE/COPYING file ships in ${crate.name}'s registry source; its declared`,
+            '  license is above; the canonical text for ' +
+              ids.join(', ') +
+              ' is in the "LICENSE TEXTS FOR',
+            '  CRATES WITH NO BUNDLED LICENSE FILE" section below.)',
+          );
+        } else {
+          out.push(
+            `  (no LICENSE/NOTICE/COPYING file ships in ${crate.name}'s registry source; its declared license is above)`,
+          );
+        }
+      }
+      // `authors`/`repository` from `cargo metadata`, kept rather than discarded (release-cut fix
+      // batch, MUST-FIX 2): this crate's own registry source carries no LICENSE/NOTICE/COPYING file
+      // and (per the shared section below) no OTHER crate's text stands in for one either -- these
+      // two fields are what remains of this crate's OWN declared attribution, printed here so a
+      // reader is not left with nothing to trace back to the source.
+      if (crate.authors && crate.authors.length > 0) {
+        out.push(`  authors (declared in ${crate.name}'s own Cargo.toml): ${crate.authors.join(', ')}`);
+      }
+      if (crate.repository) {
+        out.push(`  repository: ${crate.repository}`);
+      }
+      out.push('');
+      continue;
+    }
+    for (const f of crate.licenseFiles) {
+      out.push(`--- ${crate.name}/${f} ---`, '', readFileSync(join(crate.dir, f), 'utf8'), '');
+    }
+  }
+
+  if (canonicalTexts.size > 0) {
+    out.push(
+      '',
+      'LICENSE TEXTS FOR CRATES WITH NO BUNDLED LICENSE FILE',
+      '-----------------------------------------------------',
+      '',
+      'The crates above whose own registry source carries no LICENSE/NOTICE/COPYING file still',
+      'declare an SPDX license id in their own Cargo.toml; the canonical text for each such id --',
+      'embedded once here rather than once per crate -- follows. Every text below is this',
+      'repository\'s own vetted copy of that licence, from its LICENSES/ directory, whose README',
+      'records for each one its sha256 and how it was obtained — the URL and date it was fetched',
+      'from, or the local file it was copied from and the reason that copy is trustworthy.',
+      '',
+      'No text below is borrowed from another crate. An earlier version of this generator, for an id',
+      'this repository carried no copy of, fell back to the licence text bundled by some OTHER linked',
+      'crate declaring the same id. For a licence whose own body embeds a copyright-holder line --',
+      'MIT and BSD-3-Clause both do -- that put a DIFFERENT project\'s copyright notice into this',
+      'crate\'s section, which no crate here actually wrote. That fallback is removed, and nothing',
+      'stands in its place: if a crate below declared an id this repository carries no text for, this',
+      'notice would not have been generated at all (the generator refuses rather than shipping a gap).',
+      '',
+      'Each text is the licence itself, not a crate-specific notice. Where a licence\'s own body has a',
+      'copyright-holder line, it is left exactly as the unfilled placeholder the licence text carries',
+      '(for example "Copyright (c) <year> <owner>"), and no holder is invented here. What was actually',
+      'checked is narrower than "this crate published no copyright notice anywhere": no crate below',
+      'ships a top-level LICENSE/NOTICE/COPYING/UNLICENSE file in its registry source, which is the',
+      'one thing this generator reads (frontends/shell/scripts/rustCrateNotices.mjs). Some licences',
+      '(MPL-2.0) have no such line at all, and are reproduced as they stand.',
+      '',
+      'Where a crate declares a compound "OR" expression (for example "MIT/Apache-2.0"), every atom',
+      'the expression names may appear below. Offering more than one text is informational, never an',
+      'election of one licence over the other on that crate\'s behalf.',
+      '',
+    );
+    for (const [id, entry] of [...canonicalTexts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      out.push(`--- ${id} (source: ${entry.source}) ---`, '', entry.text, '');
+    }
+  }
+
+  return out;
+}
+
+// The 26 `third_party/` directory names inside DuckDB's own amalgamation tarball
+// (`libduckdb-sys`'s own `duckdb.tar.gz`, compiled in by `build_bundled_cc.rs`/
+// `build_bundled_cmake.rs`) -- release-cut fix batch, MUST-FIX 3. Verified directly against that
+// exact file, not assumed:
+//   tar -tzf duckdb.tar.gz | grep -c '^duckdb/third_party/[^/]*/$'    ->  26
+//   tar -tzf duckdb.tar.gz | grep '^duckdb/third_party/[^/]*/$' | sed 's#^duckdb/third_party/##;s#/$##' | sort
+// and confirmed to carry NO file matching LICEN[CS]E/NOTICE/COPYING anywhere under third_party/ in
+// that same tarball. No Cargo manifest names any of these works individually -- `duckdb`/
+// `libduckdb-sys` are the only crates `collectLinkedCrates()` can see -- so this list is
+// hand-verified against the tarball rather than derived from a build manifest the way every other
+// section of this file is; that is exactly why it is named as its own gap rather than silently
+// folded into the Rust crate section's completeness claim above.
+const DUCKDB_AMALGAMATION_THIRD_PARTY_DIRS = [
+  'brotli',
+  'concurrentqueue',
+  'fast_float',
+  'fastpforlib',
+  'fmt',
+  'fsst',
+  'httplib',
+  'hyperloglog',
+  'jaro_winkler',
+  'libpg_query',
+  'lz4',
+  'mbedtls',
+  'miniz',
+  'parquet',
+  'pcg',
+  'pdqsort',
+  're2',
+  'ska_sort',
+  'skiplist',
+  'snappy',
+  'tdigest',
+  'thrift',
+  'utf8proc',
+  'vergesort',
+  'yyjson',
+  'zstd',
+];
+
+// Named paragraph after the Rust crate section (release-cut fix batch, MUST-FIX 3): the one gap
+// this batch could not close in the time available -- enumerating the UPSTREAM license texts for
+// DuckDB's own bundled third-party sources is deliberately out of scope for this batch (see the
+// piece's own brief) -- named here, in the notice itself, rather than silently covered by the
+// Rust crate section's own completeness claim. Phrased so the forbidden-string family
+// `checkDistNotice.mjs` now guards (`OWED`, `not yet done`, `named gap`) does NOT match this
+// paragraph -- it is a real, deliberately scoped exception to that guard, not an accidental one
+// (release-cut fix batch, SHOULD-FIX 4).
+function duckdbAmalgamationGapLines() {
+  const heading = "DUCKDB'S BUNDLED THIRD-PARTY SOURCES, TRACKED AT DECISIONS-PENDING ENTRY 62";
+  return [
+    '',
+    heading,
+    '-'.repeat(heading.length),
+    '',
+    '`libduckdb-sys` (listed above) compiles DuckDB\'s own amalgamated source tree from a tarball',
+    `(\`duckdb.tar.gz\`) that embeds ${DUCKDB_AMALGAMATION_THIRD_PARTY_DIRS.length} further`,
+    'third-party works under its own `third_party/` directory, by directory name below. None of',
+    'them ships a LICENSE/NOTICE/COPYING file in that tarball, and no Cargo manifest names any of',
+    'them individually, so the Rust crate section above -- read from Cargo.lock -- cannot see them.',
+    'The names below are read from that crate tarball\'s own directory listing at the pinned crate',
+    'version, not from a build manifest -- which is why this set is stated separately here rather',
+    'than folded into the section above. Their license texts are NOT carried in this file:',
+    '',
+    ...DUCKDB_AMALGAMATION_THIRD_PARTY_DIRS.map((d) => `  - ${d}`),
+    '',
+    'This gap is tracked, not silently shipped: listed under DECISIONS-PENDING entry 62.',
+    '',
+  ];
+}
+
+export {
+  extractPackages,
+  // Exported for `frontends/shell/src/notices/spdxTokenisation.test.ts` only (closing commit,
+  // reviewer R3): the equal-tokenisation test needs both copies as values to compare. Nothing
+  // imports it to USE it -- see the deliberate-duplication comment on the function itself.
+  extractSpdxIds,
+  packageSectionLines,
+  rustCrateSectionLines,
+  extraHeaderLines,
+  bootstrapHeaderLines,
+  duckdbAmalgamationGapLines,
+  DUCKDB_AMALGAMATION_THIRD_PARTY_DIRS,
+};

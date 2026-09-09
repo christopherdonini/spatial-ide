@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+// Ambient declaration for `notice.mjs`, so `frontends/shell/src/notices/noticeDeterminism.test.ts`
+// (a TypeScript file, under that package's own `strict`/`noImplicitAny`) can import `notice()`
+// without needing `allowJs` there (which would pull every reachable `.mjs` file into full
+// type-checking, rather than just typing this one module's public surface). Kept in sync with
+// `notice.mjs`'s own exports by hand -- there is no other source of truth for a plain-JS module's
+// types. `renderer/bundle-viewer` itself has no `tsconfig.json`/build step that reads this file; it
+// exists solely for `frontends/shell`'s own `tsc --noEmit` to resolve the cross-package import.
+
+export interface EsbuildLikeMetafile {
+  inputs: Record<string, unknown>;
+}
+
+export interface NoticeNpmPackageSet {
+  heading: string;
+  metafile: EsbuildLikeMetafile;
+  baseDir: string;
+  underline?: string;
+}
+
+export interface NoticeRustCrate {
+  name: string;
+  version: string;
+  license: string | null;
+  licenseFile: string | null;
+  authors: string[];
+  repository: string | null;
+  dir: string;
+  licenseFiles: string[];
+  // Set when the crate's own registry source directory could not be read at all (closing commit:
+  // architect advisory A3, reviewer R2) -- an empty `licenseFiles` beside it means "unknown", never
+  // "ships none". Optional here because `rustCrateSectionLines` is defensive about a caller that
+  // predates the field.
+  licenseFilesError?: string | null;
+}
+
+export interface NoticeRustCrateSet {
+  heading: string;
+  crates: NoticeRustCrate[];
+  canonicalTexts?: Map<string, { text: string; source: string }>;
+  underline?: string;
+  // The target triple this crate set was resolved FOR, named in the rendered section's own intro
+  // (release-cut fix batch, SHOULD-FIX 9). Optional: `rustCrateSectionLines` falls back to saying
+  // the triple was not recorded rather than to naming a triple it was not told.
+  targetTriple?: string | null;
+}
+
+export interface NoticeExtra {
+  npmSets?: NoticeNpmPackageSet[];
+  rustCrates?: NoticeRustCrateSet;
+  bootstrap?: boolean;
+}
+
+export function notice(
+  metafile: EsbuildLikeMetafile,
+  baseDir?: string,
+  extra?: NoticeExtra | null,
+): string;
+
+// Exported by `notice.mjs` for `frontends/shell/src/notices/spdxTokenisation.test.ts` only (closing
+// commit, reviewer R3): it is a DELIBERATE second copy of `scripts/rustCrateNotices.mjs`'s own
+// `extractSpdxIds`, and the test that keeps the two identical needs both as values.
+export function extractSpdxIds(license: string | null | undefined): string[];

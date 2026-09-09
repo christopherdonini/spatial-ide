@@ -280,6 +280,146 @@ and the terms URL:
   into `tauri.conf.json`'s `bundle.resources` and that the packaging decision is out of that
   piece's scope. When packaging lands, this channel needs the same acknowledgement the other two
   already carry; recorded here so it is not forgotten rather than assumed covered by the other two.
+- **The two gaps NAMED IN THE BULLET ABOVE are closed, and one further gap is newly named, dated
+  2026-09-08 (RELEASE-0.1 item 9, "both notice generators"; ADR-030,
+  `docs/adr/ADR-030-conveyed-artifact-notice-set.md`, candidate (a) — filed Proposed, the human
+  queues acceptance on this piece's landing).** *Heading corrected in the release-cut fix batch
+  (MUST-FIX 3): it read "Both gaps CLOSED", which invited the reading that the installed
+  `NOTICE.txt` now owes nothing — the two sets the bullet above named are enumerated, and a third,
+  narrower gap this piece's own verification surfaced (DuckDB's amalgamated third-party sources,
+  named at the end of this bullet) is now tracked instead of unnoticed.* The two sets the bullet
+  above named genuinely owed
+  are now both enumerated in the installed `NOTICE.txt`, generated (never hand-copied) from three
+  build manifests read by `renderer/bundle-viewer/notice.mjs`'s `notice()` function, now accepting
+  a third `extra` argument: (i) **the packaged frontend's own npm dependencies** — enumerated from
+  `frontends/shell`'s OWN Vite/Rollup build manifest, written by a tiny inline Rollup plugin
+  (`frontends/shell/vite.config.ts`'s `packageMetafilePlugin`, `generateBundle` hook) to
+  `frontends/shell/dist-metafile.json` (gitignored, sibling of `dist/`, the same esbuild-metafile
+  shape `renderer/bundle-viewer/build.mjs` already produces for the viewer, so `notice.mjs`'s
+  existing package-extraction logic reads either unchanged) — empirically 26 distinct package names
+  today (not the 8 top-level `dependencies` in `frontends/shell/package.json` — `@deck.gl/core`,
+  `@deck.gl/layers`, `@tauri-apps/api`, `@tauri-apps/plugin-dialog`, `@tauri-apps/plugin-opener`,
+  `apache-arrow`, `react`, `react-dom`; the count read "5" until the release-cut fix batch
+  (SHOULD-FIX 10 / reviewer S-1) checked it against the manifest: deck.gl's own transitive tree —
+  `@loaders.gl/*`, `@luma.gl/*`, `@math.gl/*`, `@probe.gl/*`, `mjolnir.js`, `earcut`, `scheduler` —
+  is what a real build manifest catches that a hand-kept list would not; `@tauri-apps/plugin-dialog`
+  and `@tauri-apps/plugin-opener`, both declared `dependencies`, are verified NOT compiled into
+  `dist/` — grepped, no import anywhere under `frontends/shell/src` — so correctly absent from the
+  npm section rather than silently over-included); and (ii) **the Rust crate notices** — enumerated
+  from `frontends/shell/src-tauri`'s own `Cargo.lock` via `cargo metadata`/`cargo tree`
+  (`frontends/shell/scripts/rustCrateNotices.mjs`'s `collectLinkedCrates()`; `-e normal` excludes
+  build/dev-deps, `--filter-platform`/`--target x86_64-pc-windows-msvc`, `source === null` excludes
+  the six first-party `spatial-*`/`spatial-ide-shell` path crates) — 310 linked third-party
+  `(name, version)` pairs (296 distinct names; some crates resolve two major versions
+  transitively), each with its declared SPDX expression and every `LICENSE*`/`NOTICE*`/`COPYING*`
+  file from its own `%USERPROFILE%\.cargo\registry\src\index.crates.io-*\<name>-<version>\`
+  directory; 12 of the 310 ship no such file in their registry source (`flatbuffers`, `duckdb`,
+  `alloc-stdlib`, `selectors`, the **five** `unic-*` crates — `unic-char-property`,
+  `unic-char-range`, `unic-common`, `unic-ucd-ident`, `unic-ucd-version`, counted and listed by the
+  release-cut fix batch (SHOULD-FIX 10 / architect SF5), which found this had read "the four
+  `unic-*` crates" while the enumeration itself totalled 12 —
+  `webview2-com`/`-macros`/`-sys`) and get their SPDX declaration plus a canonical text in a shared
+  "LICENSE TEXTS FOR CRATES WITH NO BUNDLED LICENSE FILE" section, once per id (`MIT`,
+  `Apache-2.0`, `BSD-3-Clause`, `MPL-2.0` today). **Sourced only from this repository's own
+  `LICENSES/<id>.txt`, never borrowed from another crate (release-cut fix batch, MUST-FIX 2 =
+  architect B2 = reviewer S-5).** As first written, this generator fell back — for an id this
+  repository carried no copy of — to the license text bundled by the alphabetically-first linked
+  crate declaring that id alone. That was wrong for exactly the two licences whose canonical body
+  embeds a copyright line: `duckdb`, `webview2-com`/`-macros`/`-sys` and the five `unic-*` crates
+  were all printed under `atoi 2.0.0`'s own `LICENSE` (whose copyright line reads
+  `Copyright (c) 2017 `, holder field blank), and `alloc-stdlib` under `alloc-no-stdlib 2.0.4`'s,
+  carrying Dropbox's copyright line — none of which those crates wrote. The fallback is removed.
+  `LICENSES/MIT.txt`, `LICENSES/BSD-3-Clause.txt` and `LICENSES/MPL-2.0.txt` were added as SPDX's
+  own PLAIN-TEXT licence texts, any copyright line left as that text's unfilled placeholder (URL,
+  retrieval date and `sha256` recorded in `LICENSES/README.md`, which also states that these are
+  notice-generation inputs and NOT layers of this repository under ADR-009); each gap crate's
+  section additionally prints the `authors` and `repository` its own `Cargo.toml` declares, which is
+  what genuinely remains of its own attribution. **The generator fails closed by throwing.** An id a
+  gap crate declares and `LICENSES/` carries no text for aborts notice generation, naming the id and
+  the crates that needed it, rather than emitting a placeholder into a conveyed artifact — the first
+  version of this fix did emit one, which left `selectors 0.36.1` (`MPL-2.0`) with no licence text
+  in the shipped notice at all, a one-crate attribution gap and the opposite of what ADR-030 (a) is
+  for. `LICENSES/MPL-2.0.txt` closes it; with four texts present (`Apache-2.0`, `BSD-3-Clause`,
+  `MIT`, `MPL-2.0`) every id the current linked set needs is covered, so the throw is unreachable
+  today and becomes reachable the moment a dependency change introduces a fifth. Proven by
+  mutation: removing `LICENSES/MPL-2.0.txt` makes `npm run build` fail in its own `prebuild` hook
+  with `rustCrateNotices: no canonical license text for SPDX id "MPL-2.0". 1 linked crate(s) declare
+  it and ship no LICENSE/NOTICE/COPYING file of their own (selectors 0.36.1) …`.
+  **`BSD-3-Clause.txt` is the plain text, not SPDX's matching template.** It was first stored as the
+  template variant `https://spdx.org/licenses/BSD-3-Clause.txt` serves (`sha256` `0fe4dd69…`),
+  carrying `<<var;name=copyright;original= <year> <owner>;match=.+>>` markup — a licence-detection
+  specification, which was being rendered verbatim into a NOTICE a human reads. Replaced with the
+  plain variant from SPDX's own `license-list-data` repository (`sha256` `5a93d583…`); a test now
+  asserts no `<<var` sequence appears in any `LICENSES/*.txt` used as a canonical text or anywhere
+  in the generated notice.
+  `libduckdb-sys`'s own registry source DOES carry
+  DuckDB's MIT `LICENSE` file directly (verified: it ships a `LICENSE`, `duckdb.tar.gz`, and the
+  bundled C++ sources — the `duckdb` crate itself, the thin Rust wrapper, does not, and falls back
+  to the shared MIT text). The generator runs in two passes within `frontends/shell`'s own
+  `npm run build` (`tsc --noEmit && vite build && npm run generate:notice && vite build`) because
+  the packaged frontend's own npm manifest does not exist until the FIRST `vite build` has produced
+  it, and `NoticesPanel.tsx`'s `?raw` import of `src/generated/NOTICE.txt` bakes whatever that file
+  holds at build time into the shipped `dist/` output — so the file is regenerated with full scope
+  between the two passes and the SECOND build embeds the final text; a bootstrap (first-ever, no
+  prior `dist-metafile.json`) pass names itself provisional in its own header rather than silently
+  claiming a scope it does not yet carry. Checked, not merely asserted: `frontends/shell`'s own
+  `npm run check:dist-notice` (`scripts/checkDistNotice.mjs`, extended) locates the notice text
+  actually embedded in the built `dist/` output and matches the generator's own per-entry line shape
+  (`^<name> <version> — `) at true line start, inside the right section, then requires each
+  section's entry COUNT to equal its own build manifest's: 3 viewer npm packages, 26 packaged-
+  frontend npm packages, 310 Rust crate `(name, version)` pairs. *Softened and strengthened together
+  by the release-cut fix batch (SHOULD-FIX 5 / reviewer S-3): the earlier wording claimed every name
+  "actually appears", which was a substring test. Measured on this exact tree, deleting a name's own
+  entry line left the name still present as a substring for **296 of 296** crate names and **26 of
+  26** npm names — every one of them recurs in the notice's own `--- <name>/LICENSE ---` delimiters,
+  its "no LICENSE/NOTICE/COPYING file ships in `<name>`" lines, its `repository:` URLs, or (for npm)
+  the compiled application code itself. The old check could not have failed for a dropped entry.
+  What is proved now is the entry line's own presence and the count.*
+  `noticeByteIdentity.test.ts` (extended) asserts the same anchored shape against the generator's
+  own output, pins the `sha256` of each `LICENSES/*.txt` used as a canonical text and asserts those
+  bytes reach the notice, refuses a surviving `BOOTSTRAP PASS` sentinel, and asserts the
+  viewer-specific portion of the installed `NOTICE.txt` stays byte-identical to
+  `renderer/bundle-viewer/dist/NOTICE.txt`'s own text, and a companion determinism test
+  (`noticeDeterminism.test.ts`) asserts two independent generation runs — including two real
+  `cargo metadata`/`cargo tree` subprocess calls — produce byte-identical output.
+  <br><br>
+  **The bundle viewer's own header, corrected (release-cut fix batch, MUST-FIX 1 = architect B1).**
+  This bullet originally recorded that the two "OWED, not yet done" sentences were removed from the
+  *installed* copy's header only, and that "the bundle-only header's own two-argument-call text …
+  is untouched, since that artifact's scope has not changed." **That reasoning was wrong, and the
+  text it justified was false in one of the two places it ships.** `notice()`'s two-argument output
+  is not one artifact: it is written to every published bundle (`renderer/bundle-viewer/build.mjs`;
+  `kernel/src/bundle/mod.rs:387` documents the manifest's `notice_path` as the bundle-relative
+  `viewer/NOTICE.txt`) *and* installed inside the packaged application as
+  `bundle-viewer\NOTICE.txt` (`frontends/shell/src-tauri/tauri.conf.json:41`'s resource glob). In
+  the second place its claim that the application's two further notice sets were "OWED, not yet
+  done" stopped being true the moment this same piece generated them. The paragraph is rewritten to
+  read true in BOTH places — it states the bundle scope, then names where an installed reader finds
+  the application's complete set — and the enumeration of the two owed sets is deleted rather than
+  reworded. The viewer SECTION's own bytes are unchanged, which is what
+  `noticeByteIdentity.test.ts` pins; `renderer/bundle-viewer/scripts/notice.test.mjs` now asserts
+  the two-argument output matches no `OWED|not yet done|named gap`, and `check:dist-notice` refuses
+  that same family (and a surviving `BOOTSTRAP PASS` sentinel) in the built `dist/`.
+  <br><br>
+  **NEW GAP, named here rather than left implicit (release-cut fix batch, MUST-FIX 3 = reviewer
+  M-1): DuckDB's amalgamated third-party sources.** `libduckdb-sys` is built with its `bundled`
+  feature, which compiles DuckDB's own amalgamation from the `duckdb.tar.gz` shipped in that crate's
+  registry source. Verified directly against
+  `libduckdb-sys-1.10505.0/duckdb.tar.gz` (`tar -tzf … | grep -c '^duckdb/third_party/[^/]*/$'` →
+  **26**; 511 entries under `third_party/` in total; a case-insensitive search for
+  `licen[cs]e|notice|copying` anywhere under `third_party/` in that tarball returns nothing): it
+  embeds 26 further third-party works, none of which ships a license file inside the tarball and
+  none of which any Cargo manifest names individually — so `collectLinkedCrates()`, which reads
+  `Cargo.lock`, cannot see them at all. The 26 directory names are `brotli`, `concurrentqueue`,
+  `fast_float`, `fastpforlib`, `fmt`, `fsst`, `httplib`, `hyperloglog`, `jaro_winkler`,
+  `libpg_query`, `lz4`, `mbedtls`, `miniz`, `parquet`, `pcg`, `pdqsort`, `re2`, `ska_sort`,
+  `skiplist`, `snappy`, `tdigest`, `thrift`, `utf8proc`, `vergesort`, `yyjson`, `zstd`. Their
+  licence texts are **not** carried by the installed `NOTICE.txt`. Two things follow, both done:
+  the installed header's scope sentence is narrowed to what the three build manifests actually
+  prove (every npm package compiled into the viewer and into the packaged frontend; every Rust
+  crate statically linked), and the notice itself carries a paragraph after the Rust section that
+  lists these 26 names and states the texts are not carried. Tracked under **DECISIONS-PENDING
+  entry 62**; obtaining and carrying the upstream texts is deliberately out of this batch's scope.
 - **Verification (3) reference** — the "Verification (3)" paragraph above and
   `spikes/entry51-epsg2056-equivalence/README.md`, both already in this section, are what the
   `attribution.verified` note (`engine/src/crs-catalog.json:11`) paraphrases; cited there, not

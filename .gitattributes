@@ -15,3 +15,15 @@
 # blob is LF, hashing to 6406980021ca… instead of the pinned fd746c843f22… (run 34190120091).
 # Pin LF at checkout for the same reason the .projjson line above does.
 renderer/bundle-viewer/ceilings.json text eol=lf
+
+# Third instance of the same class, and the one with the widest blast radius (RELEASE-0.1 item 9's
+# closing commit, 2026-09-08). frontends/shell/src/notices/noticeByteIdentity.test.ts pins the
+# sha256 of LICENSES/Apache-2.0.txt, MIT.txt, BSD-3-Clause.txt and MPL-2.0.txt literally, and
+# renderer/bundle-viewer/notice.mjs embeds these bytes VERBATIM into the NOTICE.txt this application
+# conveys -- so the pin is over the exact bytes a recipient reads, not merely over a fixture. All six
+# files here are stored LF (checked); a windows-latest checkout under core.autocrlf=true would
+# materialize them CRLF, every pinned hash would fail, and the conveyed licence text would differ by
+# platform. AGPL-3.0-or-later.txt and CC-BY-4.0.txt are covered by the same glob deliberately: the
+# first is embedded in every published bundle's own notice for the same reason, and a rule that
+# covered only the currently-hashed files would need editing the next time one is added.
+LICENSES/*.txt text eol=lf
