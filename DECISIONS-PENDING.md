@@ -69,6 +69,26 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+70. **[The post-tag ordering, and the drafts' open questions — for the sitting: which of the
+    four post-tag candidates goes first, and do "next cut's first piece" (entry 47, ruled
+    2026-09-08) and "the first post-tag piece" (entry 66 (b), ruled 2026-09-09) name the same
+    queue?]** The four drafts and two architect consults are under `RELEASE-DRAFTS-0.1.0/post-tag/`
+    (nothing filed, nothing decided). The consults' recommendations, each labelled the architect's:
+    decide ADR-032 first on paper (cheap; unblocks limitation/QUICKSTART wording) but build it after
+    the geometric-protection piece if the pick is (B) — three unmet preconditions (no degrees
+    fixture, no accepted ADR-015 §5 amendment, no pinned GeoArrow metadata reading); implementation
+    order 66 (b) → 47 (entry 58 rides with it) → LOD last, gated on its own unwritten overview ×
+    filter rule. Findings that change the drafts before any preregistration: 66 (b) — a retained
+    queued in-view tile past the bound is later ISSUED by the queue drain with no cover re-check
+    (new wire traffic for cells never enumerated), the closing ADR-028 note can close one of the two
+    declared deviations only; 47 — a canvas resize between hover and settle re-aims the stored pixel,
+    and the replacement K6 assertion is self-certifying; LOD — a one-word misquote of docs/07:22
+    ("each requires"), L5/L1/L6 re-sourced, the tier artifact's write class (ADR-006 class 3 if
+    outside the workspace) unanswered; ADR-032 — `MIN_ANCHOR_SPAN = 1` is a declared bound that
+    stops being true in degrees, "v1 + a widened axis_order value" is excluded by the readers' exact
+    equality, ADR-017's version exception is spent. The consults list 12 further open questions
+    between them. Not a tag matter; the ruling is the post-release sitting's.
+
 69. **[The release executable imports `MSVCP140.dll` dynamically — the Microsoft Visual C++
     2015–2022 redistributable — and the NSIS installer does not bundle it. Declare it in
     KNOWN-LIMITATIONS' install entry, static-link the CRT (`-C target-feature=+crt-static`, a build
