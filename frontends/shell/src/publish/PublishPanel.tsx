@@ -15,6 +15,7 @@ import { formatPublishRefusal } from "./formatPublishRefusal";
 import PublishDialog from "./PublishDialog";
 import type { DialogSettleResult } from "./PublishDialog";
 import {
+  prepareCancelKey,
   publishCancel,
   publishExecute,
   publishPrepare,
@@ -61,27 +62,171 @@ export function resolvePublishScope(choice: PublishScopeChoice, bbox: Bbox | nul
   };
 }
 
-/** The panel's own visible state -- `"preparing"` covers the whole native-picker + `preflight` +
- * grant-mint round trip (`binding_publish_prepare` is a single async call; there is no
- * intermediate state to observe inside it). */
+/** The panel's own visible state. `"preparing"` covers the whole native-picker + pin-free-preflight
+ * + pin + grant-mint round trip -- RELEASE-0.1 item 10 gives it real substructure now (the pin
+ * phase's own label and bytes fraction, and whether a Cancel click is already in flight), where
+ * before this piece it was a single opaque wait with nothing to observe inside it. */
 export type PublishPanelState =
   | { kind: "idle" }
-  | { kind: "preparing" }
+  | { kind: "preparing"; phase: string | null; bytesDone: number | null; bytesTotal: number | null; cancelRequested: boolean }
   | { kind: "dialog"; attemptId: string; prompt: PublishPromptData }
+  | { kind: "cancelled" }
   | { kind: "refused"; refusal: FormattedRefusal }
   | {
       kind: "succeeded";
       outcome: Extract<ExecuteOutcome, { status: "success" }> | Extract<ExecuteOutcome, { status: "succeeded-unaudited" }>;
     };
 
+/** The panel's own initial `"preparing"` state, before any progress event has arrived -- one place
+ * so `runPrepare`/`runPrepareWithDestination` cannot spell its four fields two different ways. */
+const PREPARING_START: PublishPanelState = {
+  kind: "preparing",
+  phase: null,
+  bytesDone: null,
+  bytesTotal: null,
+  cancelRequested: false,
+};
+
+/** The `"preparing"` variant of [`PublishPanelState`], named once so the pure transitions below can
+ * return it narrowed rather than re-spelling the shape. */
+type PreparingState = Extract<PublishPanelState, { kind: "preparing" }>;
+
+/**
+ * Whether a Cancel control may be rendered at all -- **MF1, this batch's own reviewer gate, and the
+ * criterion the whole fix turns on**.
+ *
+ * `binding_publish_prepare` (`commands.rs`) awaits the NATIVE save dialog first (`rx.await`) and only
+ * mints and registers the prepare phase's `CancelToken` in `RunningPublishes` afterwards. So for the
+ * whole picker window there is no token under `prepareCancelKey(datasetHandle)` for
+ * `binding_publish_cancel` to reach: a Cancel click there returned `false` (nothing found), the panel
+ * latched `cancelRequested` anyway, and the button sat disabled reading "Cancelling" while the pin ran
+ * on, uncancelled -- the exact defect MF1 names.
+ *
+ * **The criterion is `state.phase !== null`: the first pin-phase progress event has actually
+ * arrived.** That event is emitted from inside the `spawn_blocking` call the token was registered
+ * before (`commands.rs`), so its arrival is PROOF the token is registered and reachable -- not an
+ * assumption about ordering. Before it, no Cancel is offered: during the picker window the operator's
+ * own cancel affordance is the native dialog's own Cancel button (`PrepareOutcome::PickerCancelled`),
+ * which no host-side control can substitute for -- a Tauri command cannot dismiss an open OS save
+ * dialog. Rendering nothing there is the honest surface; rendering a button that cannot act is the
+ * thing being fixed.
+ *
+ * A type predicate, so the transitions below narrow on the one criterion instead of restating it.
+ */
+export function cancelControlVisible(state: PublishPanelState): state is PreparingState {
+  return state.kind === "preparing" && state.phase !== null;
+}
+
+/** A pin-phase progress event folded into the panel's state -- pure, so the subscription in the
+ * component below is a one-liner and every branch is testable without a DOM. Only ever updates while
+ * still `"preparing"`, so a late event after the phase settled (refused, prompted, cancelled) is a
+ * silent no-op rather than corrupting whatever state came next. */
+export function stateAfterPinProgress(
+  prev: PublishPanelState,
+  phase: string,
+  bytesDone?: number,
+  bytesTotal?: number
+): PublishPanelState {
+  if (prev.kind !== "preparing") return prev;
+  return {
+    ...prev,
+    phase,
+    bytesDone: bytesDone ?? prev.bytesDone,
+    bytesTotal: bytesTotal ?? prev.bytesTotal,
+  };
+}
+
+/** The Cancel click's own latch -- set ONLY when a token is proven registered
+ * ([`cancelControlVisible`]). A request that arrives before the first phase event changes nothing at
+ * all: the button it would have disabled is not rendered yet, and latching there is what previously
+ * wedged the panel at "Cancelling" for the rest of an uncancelled pin (MF1). */
+export function stateAfterCancelRequested(prev: PublishPanelState): PublishPanelState {
+  if (!cancelControlVisible(prev)) return prev;
+  return { ...prev, cancelRequested: true };
+}
+
+/** The latch cleared again when the cancel request did not reach a running pin -- either
+ * `binding_publish_cancel` answered `false` (nothing found under the key, so nothing was cancelled)
+ * or the call itself REJECTED (an IPC failure; [`requestPrepareCancel`] treats a throw as the same
+ * `reached === false`, since in both cases the pin is still running). Previously that `false` was
+ * discarded and nothing ever cleared the flag (MF1); clearing it puts a live Cancel back in the
+ * operator's hands instead of a permanently disabled "Cancelling". */
+export function stateAfterCancelRejected(prev: PublishPanelState): PublishPanelState {
+  if (prev.kind !== "preparing") return prev;
+  return { ...prev, cancelRequested: false };
+}
+
+/** The prefix of the one diagnostic [`requestPrepareCancel`] writes when the cancel call rejects --
+ * exported so `PublishPanel.test.ts` asserts the exact text rather than a substring of its own
+ * invention. The message it carries is normalized the way [`settlePrepareOutcome`] normalizes a
+ * rejected prepare (`e instanceof Error ? e.message : String(e)`). */
+export const PREPARE_CANCEL_FAILED_LOG = "publish: the prepare-phase cancel request failed; the pin may still be running";
+
+/**
+ * The Cancel-during-"Preparing…" request itself: guard, latch, call, un-latch on a miss.
+ *
+ * Lives at module scope taking its `applyState`/`cancel` collaborators as parameters -- the same
+ * "pure so it is testable" shape [`settlePrepareOutcome`] and [`nextStateFromPrepareOutcome`] already
+ * establish in this file -- so `PublishPanel.test.ts` can prove BOTH halves of MF1 without a DOM: that
+ * a request before the first phase event neither latches nor calls the host, and that one after it
+ * calls `publishCancel` with `prepareCancelKey(datasetHandle)`.
+ *
+ * The guard here is defence in depth, not the only guard: the button is not rendered before the first
+ * phase event either ([`cancelControlVisible`], used by both) -- this codebase's own recurring
+ * discipline of never trusting a UI-level guard alone (see `resolvePublishScope` above).
+ *
+ * **A REJECTION is treated as `reached === false`** (the re-review's own must-fix). `publishCancel`
+ * (`client.ts`) rethrows whatever `invoke` rejected with, and this function's only call site is
+ * `void requestPrepareCancel(...)` -- so before this try/catch an IPC failure escaped as an
+ * unhandled rejection AND left `cancelRequested` latched, wedging the button at a permanently
+ * disabled "Cancelling" while the pin ran on: the exact shape of the defect MF1 already fixed for
+ * the `false` answer, reachable through the other exit. Nothing was cancelled either way, so the
+ * un-latch is the same and Cancel is clickable again. The error is not swallowed: `publishCancel`
+ * has already recorded the attempt as having thrown in the action console (its own
+ * `entry.resolveThrew()`, which deliberately withholds the text -- S4), and the text itself is
+ * normalized here exactly as [`settlePrepareOutcome`] normalizes a rejected prepare. It does NOT
+ * become a `RefusalBlock`: the in-flight `runPrepare` is still what settles this panel, and a
+ * refusal painted here would be both premature and immediately overwritten.
+ */
+export async function requestPrepareCancel(
+  state: PublishPanelState,
+  datasetHandle: string,
+  applyState: (update: (prev: PublishPanelState) => PublishPanelState) => void,
+  cancel: (key: string) => Promise<boolean>
+): Promise<void> {
+  if (!cancelControlVisible(state)) return;
+  applyState(stateAfterCancelRequested);
+  let reached: boolean;
+  try {
+    reached = await cancel(prepareCancelKey(datasetHandle));
+  } catch (e) {
+    reached = false;
+    console.error(PREPARE_CANCEL_FAILED_LOG, e instanceof Error ? e.message : String(e));
+  }
+  if (!reached) applyState(stateAfterCancelRejected);
+}
+
+/** The bytes readout's own text. Digit grouping via `toLocaleString`, no dependency; the locale is
+ * pinned to `en-US` deliberately -- every other string this panel renders is a fixed English sentence,
+ * and a host-locale-dependent readout would make the rendered text untestable for no gain. A COUNT of
+ * bytes read against the source's own length: never a rate, a percentage or an ETA (ADR-018). */
+export function formatBytesHashed(bytesDone: number | null, bytesTotal: number): string {
+  return `${(bytesDone ?? 0).toLocaleString("en-US")} / ${bytesTotal.toLocaleString("en-US")} bytes hashed`;
+}
+
 /** `binding_publish_prepare`'s own outcome, turned into this panel's next state -- pure, so
- * `PublishPanel.test.ts` can assert every branch (`prompt` / `picker-cancelled` / `refused`)
- * without a DOM (`NEXT-CUT.md`'s own required test list: "PickerCancelled path"). */
+ * `PublishPanel.test.ts` can assert every branch (`prompt` / `picker-cancelled` / `cancelled` /
+ * `refused`) without a DOM (`NEXT-CUT.md`'s own required test list: "PickerCancelled path"). */
 export function nextStateFromPrepareOutcome(outcome: PrepareOutcome): PublishPanelState {
   switch (outcome.status) {
     case "picker-cancelled":
       // Silent return to idle -- not an error (`NEXT-CUT.md` P3 item 4).
       return { kind: "idle" };
+    case "cancelled":
+      // RELEASE-0.1 item 10: the operator cancelled during "Preparing…" -- shown, not silent
+      // (unlike `picker-cancelled`, which is a native-dialog dismissal with nothing to report),
+      // and Publish is re-enabled (`busy` is only true for `"preparing"`, below).
+      return { kind: "cancelled" };
     case "refused":
       return { kind: "refused", refusal: formatPublishRefusal(outcome.message) };
     case "prompt":
@@ -181,6 +326,21 @@ export default function PublishPanel({
   const [scope, setScope] = useState<PublishScopeChoice>("current");
   const [state, setState] = useState<PublishPanelState>({ kind: "idle" });
 
+  /**
+   * Subscribes to the "Preparing…" pin phase's own progress (RELEASE-0.1 item 10) -- the phase
+   * label and the bytes-hashed fraction, through the SAME `subscribePublishProgress` seam
+   * `PublishDialog`'s own execute-phase phase display uses, filtered on
+   * `prepareCancelKey(datasetHandle)` rather than a real attempt id (none exists yet at this
+   * point -- `client.ts::prepareCancelKey`'s own doc comment). Only ever updates state while still
+   * `"preparing"`, so a late-arriving event after the phase has already settled (refused, prompted,
+   * cancelled) is a silent no-op rather than corrupting whatever state came next.
+   */
+  function subscribeToPinProgress(): () => void {
+    return subscribePublishProgress(prepareCancelKey(datasetHandle), (phase, bytesDone, bytesTotal) => {
+      setState((prev) => stateAfterPinProgress(prev, phase, bytesDone, bytesTotal));
+    });
+  }
+
   async function runPrepare(scopeChoice: PublishScopeChoice): Promise<PrepareOutcome> {
     const scopeInput = resolvePublishScope(scopeChoice, getLastViewportBbox());
     if (scopeInput === null) {
@@ -193,12 +353,14 @@ export default function PublishPanel({
       setState(nextStateFromPrepareOutcome(outcome));
       return outcome;
     }
-    setState({ kind: "preparing" });
+    setState(PREPARING_START);
+    const unsubscribe = subscribeToPinProgress();
     const styleDoc = JSON.stringify(toStyleDocument(style));
     // `settlePrepareOutcome` (module scope, above) is what turns an unexpected rejection into a
     // refusal instead of leaving this `await` throw straight out of `runPrepare`, unresolved and
     // with `setState` never called -- see its own doc comment (S2).
     const outcome = await settlePrepareOutcome(publishPrepare(datasetHandle, styleDoc, scopeInput, filterActive));
+    unsubscribe();
     setState(nextStateFromPrepareOutcome(outcome));
     return outcome;
   }
@@ -213,6 +375,12 @@ export default function PublishPanel({
    * (`e2e-test-surface.ts`) for the full design note and its one documented limitation: an E2E run
    * through this path does not exercise the native picker, only the operator's manual walkthrough
    * does.
+   *
+   * **No Cancel is rendered on this path, and that is now true by construction** (MF1, this batch's
+   * reviewer gate -- before it, this path rendered a Cancel that could not cancel anything):
+   * `binding_publish_prepare_e2e_destination` registers no token in `RunningPublishes` and passes
+   * `None` for the pin-progress sink (`commands.rs`), so no phase event ever arrives, `state.phase`
+   * stays `null`, and [`cancelControlVisible`] stays false for the whole call.
    */
   async function runPrepareWithDestination(
     scopeChoice: PublishScopeChoice,
@@ -228,17 +396,36 @@ export default function PublishPanel({
       setState(nextStateFromPrepareOutcome(outcome));
       return outcome;
     }
-    setState({ kind: "preparing" });
+    setState(PREPARING_START);
+    const unsubscribe = subscribeToPinProgress();
     const styleDoc = JSON.stringify(toStyleDocument(style));
     const outcome = await settlePrepareOutcome(
       publishPrepareWithDestination(datasetHandle, styleDoc, scopeInput, filterActive, destination)
     );
+    unsubscribe();
     setState(nextStateFromPrepareOutcome(outcome));
     return outcome;
   }
 
   function handlePublishClick(): void {
     void runPrepare(scope);
+  }
+
+  /**
+   * The "Preparing…" state's own Cancel control (RELEASE-0.1 item 10) -- the same
+   * `publishCancel`/`binding_publish_cancel` control [`PublishDialog`]'s own execute-phase Cancel
+   * button uses, addressed at [`prepareCancelKey`] instead of a real attempt id. Best-effort, the
+   * same posture the execute phase's own `handleCancelExecution` takes: the in-flight `runPrepare`
+   * call is still what ultimately settles this panel's state (via the `PrepareOutcome::Cancelled`
+   * it resolves to), this only requests that the pin stop early.
+   *
+   * The whole body is [`requestPrepareCancel`] (module scope, above) -- MF1's own fix and its own
+   * doc comment: the guard, the latch, and the un-latch when the host answers `false` OR the call
+   * rejects. That second case is why the `void` below is safe: the function handles its own
+   * rejection and never settles rejected, so nothing here can become an unhandled rejection.
+   */
+  function handleCancelPreparing(): void {
+    void requestPrepareCancel(state, datasetHandle, setState, publishCancel);
   }
 
   function handleDialogSettled(result: DialogSettleResult): void {
@@ -307,9 +494,6 @@ export default function PublishPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetHandle, style, filterActive, scope]);
 
-  const currentDisabled = currentViewOptionDisabled(hasSettledView);
-  const busy = state.kind === "preparing";
-
   return (
     <div className="publish-panel">
       <button
@@ -326,91 +510,173 @@ export default function PublishPanel({
         {expanded ? "▾" : "▸"} Publish
       </button>
       {expanded && (
-        <div className="publish-controls">
-          <fieldset className="publish-scope">
-            <legend>Row scope</legend>
-            <label>
-              <input
-                type="radio"
-                name="publish-scope"
-                value="whole"
-                checked={scope === "whole"}
-                onChange={() => setScope("whole")}
-              />
-              Whole dataset
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="publish-scope"
-                value="current"
-                checked={scope === "current"}
-                disabled={currentDisabled}
-                onChange={() => setScope("current")}
-              />
-              Current view
-            </label>
-            {currentDisabled && (
-              <p className="publish-scope-disabled-reason">
-                No settled view yet — pan or zoom the canvas once before publishing the current view.
-              </p>
+        <PublishControls
+          state={state}
+          scope={scope}
+          hasSettledView={hasSettledView}
+          filterActive={filterActive}
+          onScopeChange={setScope}
+          onPublishClick={handlePublishClick}
+          onCancelPreparing={handleCancelPreparing}
+          onDialogSettled={handleDialogSettled}
+        />
+      )}
+    </div>
+  );
+}
+
+export interface PublishControlsProps {
+  state: PublishPanelState;
+  scope: PublishScopeChoice;
+  hasSettledView: boolean;
+  filterActive: boolean;
+  onScopeChange: (scope: PublishScopeChoice) => void;
+  onPublishClick: () => void;
+  onCancelPreparing: () => void;
+  onDialogSettled: (result: DialogSettleResult) => void;
+}
+
+/**
+ * The disclosure's whole body, as a PURE function of the panel's state -- extracted from
+ * [`PublishPanel`]'s own JSX (which renders exactly this, and nothing else, when expanded) for MF3,
+ * this batch's reviewer gate: before it, `PublishPanel.test.ts` imported pure functions only and
+ * NOTHING in the suite rendered this component's markup at all.
+ *
+ * A component that owns no state and no effects can be rendered one-shot with `renderToStaticMarkup`
+ * -- `PublishDialog.test.ts`'s own established in-house route (that file's own describe block: "not a
+ * DOM harness this package deliberately does not carry ... needs no jsdom event loop, and adds no
+ * dependency") -- in any state a test cares to construct, including the two an operator can only
+ * reach mid-flight ("preparing", "cancelled"). Not a second, parallel render path: this IS the panel's
+ * render, one component down.
+ */
+export function PublishControls({
+  state,
+  scope,
+  hasSettledView,
+  filterActive,
+  onScopeChange,
+  onPublishClick,
+  onCancelPreparing,
+  onDialogSettled,
+}: PublishControlsProps) {
+  const currentDisabled = currentViewOptionDisabled(hasSettledView);
+  const busy = state.kind === "preparing";
+
+  return (
+    <div className="publish-controls">
+      <fieldset className="publish-scope">
+        <legend>Row scope</legend>
+        <label>
+          <input
+            type="radio"
+            name="publish-scope"
+            value="whole"
+            checked={scope === "whole"}
+            onChange={() => onScopeChange("whole")}
+          />
+          Whole dataset
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="publish-scope"
+            value="current"
+            checked={scope === "current"}
+            disabled={currentDisabled}
+            onChange={() => onScopeChange("current")}
+          />
+          Current view
+        </label>
+        {currentDisabled && (
+          <p className="publish-scope-disabled-reason">
+            No settled view yet — pan or zoom the canvas once before publishing the current view.
+          </p>
+        )}
+      </fieldset>
+
+      {filterActive && <p className="publish-filter-scope-sentence">{FILTER_SCOPE_SENTENCE}</p>}
+
+      <button
+        type="button"
+        className="publish-open"
+        onClick={onPublishClick}
+        disabled={busy || (scope === "current" && currentDisabled) || state.kind === "dialog"}
+      >
+        {busy ? "Preparing…" : "Publish…"}
+      </button>
+
+      {/* RELEASE-0.1 item 10: the "Preparing…" wait's own phase label, bytes count, and a live
+        * Cancel control -- the same `publishCancel` control PublishDialog's own execute-phase
+        * Cancel button uses, addressed at `prepareCancelKey` instead of a real attempt id. No
+        * duration/rate/ETA anywhere (ADR-018): only a plain "<done> / <total> bytes hashed" count.
+        *
+        * **The Cancel button renders only once `cancelControlVisible(state)` holds** -- MF1, this
+        * batch's reviewer gate; see that function's own doc comment for why the first phase event
+        * is the criterion and why the picker window offers no host-side Cancel at all. */}
+      {state.kind === "preparing" && (
+        <div className="publish-preparing" role="status">
+          <p className="publish-preparing-phase">{state.phase ?? "Preparing…"}</p>
+          {state.bytesTotal !== null && (
+            <p className="publish-preparing-fraction">{formatBytesHashed(state.bytesDone, state.bytesTotal)}</p>
+          )}
+          {cancelControlVisible(state) && (
+            <button
+              type="button"
+              className="publish-preparing-cancel"
+              onClick={onCancelPreparing}
+              disabled={state.cancelRequested}
+            >
+              {state.cancelRequested ? "Cancelling" : "Cancel"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {state.kind === "cancelled" && (
+        <p className="publish-cancelled" role="status">
+          Preparing stopped — nothing was written.
+        </p>
+      )}
+
+      {state.kind === "dialog" && (
+        <PublishDialog
+          attemptId={state.attemptId}
+          prompt={state.prompt}
+          execute={publishExecute}
+          cancelExecution={publishCancel}
+          subscribeProgress={subscribePublishProgress}
+          onSettled={onDialogSettled}
+        />
+      )}
+
+      {state.kind === "refused" && <RefusalBlock refusal={state.refusal} />}
+
+      {state.kind === "succeeded" && (
+        // A quiet summary block -- NO auto-open of anything (NEXT-CUT.md P3 item 4). Deliberately
+        // omits `build_millis`: the evidence guard rail ("no perf figure anywhere ... the UI
+        // publish path is UNMEASURED and stays that way this cut") -- see `types.ts`'s own
+        // comment on that field.
+        <div className="publish-summary" role="status">
+          {state.outcome.status === "succeeded-unaudited" ? (
+            <>
+              <p className="publish-summary-headline">Bundle written, but its outcome record could not be audited.</p>
+              <p className="publish-summary-detail">{state.outcome.detail}</p>
+            </>
+          ) : (
+            <p className="publish-summary-headline">Published.</p>
+          )}
+          <dl className="publish-summary-fields">
+            <dt>Destination</dt>
+            <dd>{state.outcome.bundle_path}</dd>
+            {state.outcome.status === "success" && (
+              <>
+                <dt>Rows</dt>
+                <dd>{state.outcome.rows}</dd>
+                <dt>Partitions</dt>
+                <dd>{state.outcome.partitions}</dd>
+              </>
             )}
-          </fieldset>
-
-          {filterActive && <p className="publish-filter-scope-sentence">{FILTER_SCOPE_SENTENCE}</p>}
-
-          <button
-            type="button"
-            className="publish-open"
-            onClick={handlePublishClick}
-            disabled={busy || (scope === "current" && currentDisabled) || state.kind === "dialog"}
-          >
-            {busy ? "Preparing…" : "Publish…"}
-          </button>
-
-          {state.kind === "dialog" && (
-            <PublishDialog
-              attemptId={state.attemptId}
-              prompt={state.prompt}
-              execute={publishExecute}
-              cancelExecution={publishCancel}
-              subscribeProgress={subscribePublishProgress}
-              onSettled={handleDialogSettled}
-            />
-          )}
-
-          {state.kind === "refused" && <RefusalBlock refusal={state.refusal} />}
-
-          {state.kind === "succeeded" && (
-            // A quiet summary block -- NO auto-open of anything (NEXT-CUT.md P3 item 4). Deliberately
-            // omits `build_millis`: the evidence guard rail ("no perf figure anywhere ... the UI
-            // publish path is UNMEASURED and stays that way this cut") -- see `types.ts`'s own
-            // comment on that field.
-            <div className="publish-summary" role="status">
-              {state.outcome.status === "succeeded-unaudited" ? (
-                <>
-                  <p className="publish-summary-headline">
-                    Bundle written, but its outcome record could not be audited.
-                  </p>
-                  <p className="publish-summary-detail">{state.outcome.detail}</p>
-                </>
-              ) : (
-                <p className="publish-summary-headline">Published.</p>
-              )}
-              <dl className="publish-summary-fields">
-                <dt>Destination</dt>
-                <dd>{state.outcome.bundle_path}</dd>
-                {state.outcome.status === "success" && (
-                  <>
-                    <dt>Rows</dt>
-                    <dd>{state.outcome.rows}</dd>
-                    <dt>Partitions</dt>
-                    <dd>{state.outcome.partitions}</dd>
-                  </>
-                )}
-              </dl>
-            </div>
-          )}
+          </dl>
         </div>
       )}
     </div>

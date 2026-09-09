@@ -373,7 +373,18 @@ impl Dataset {
     /// because "the pin I took a while ago" is precisely the thing this exists to stop trusting.
     /// Returns the pin and the milliseconds the hash took, as separate quantities.
     pub fn pin_content(&self, cancel: &CancelToken) -> Result<(crate::pin::ContentPin, f64)> {
-        let (pin, millis) = crate::pin::ContentPin::take(self.path(), cancel)?;
+        self.pin_content_observed(cancel, None)
+    }
+
+    /// As [`Self::pin_content`], reporting bytes hashed / total through `on_progress` as the hash
+    /// proceeds — RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix), so a caller
+    /// driving a "Preparing…" UI can show the pin phase's own progress rather than a silent wait.
+    pub fn pin_content_observed(
+        &self,
+        cancel: &CancelToken,
+        on_progress: Option<&mut dyn FnMut(u64, u64)>,
+    ) -> Result<(crate::pin::ContentPin, f64)> {
+        let (pin, millis) = crate::pin::ContentPin::take_with_progress(self.path(), cancel, on_progress)?;
         *self.pin.lock().unwrap_or_else(|e| e.into_inner()) = Some(pin.clone());
         Ok((pin, millis))
     }

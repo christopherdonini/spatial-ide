@@ -633,6 +633,36 @@ body,
   opacity: 0.85;
 }
 
+/* RELEASE-0.1 item 10: the "Preparing…" pin phase's own progress + Cancel block -- same visual
+   family `.publish-dialog-executing`/`.publish-dialog-phase` already establish for the execute
+   phase's own phase-label-plus-Cancel row, so the two waits read as the same kind of thing. */
+.publish-preparing {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.publish-preparing-phase {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.publish-preparing-fraction {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.publish-cancelled {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(128, 128, 128, 0.08);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
 .publish-summary {
   padding: 0.5rem 0.75rem;
   background: rgba(128, 128, 128, 0.08);

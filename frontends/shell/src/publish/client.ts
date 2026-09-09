@@ -73,8 +73,26 @@ export async function publishExecute(attemptId: string, typedPhrase: string): Pr
   }
 }
 
+/** The `RunningPublishes` lookup key for the "Preparing…" pin phase's own `CancelToken`
+ * (RELEASE-0.1 item 10) -- mirrors `frontends/shell/src-tauri/src/publish.rs::prepare_cancel_key`
+ * EXACTLY (the two copies are pinned equal by `PublishPanel.test.ts` reading that file's own
+ * source text, the same discipline `FILTER_SCOPE_SENTENCE` already established, above this file).
+ * Computed client-side from `datasetHandle` alone -- a fact this shell already holds before it ever
+ * calls `binding_publish_prepare` -- so the panel can register a `subscribePublishProgress`
+ * listener AND a `publishCancel` call for the pin phase before the round trip even starts, with
+ * **no new Tauri command**: `binding_publish_cancel` already takes an arbitrary lookup string
+ * (`publish.rs::prepare_cancel_key`'s own doc comment has the full reasoning for why this needs no
+ * host-minted id and no new command). */
+export const PREPARE_CANCEL_KEY_PREFIX = "prepare:";
+
+export function prepareCancelKey(datasetHandle: string): string {
+  return `${PREPARE_CANCEL_KEY_PREFIX}${datasetHandle}`;
+}
+
 /** `binding_publish_cancel` (P2's own addition -- `commands.rs`'s doc comment). `true` iff a
- * running publish for this attempt was found and cancelled; `false` is not an error. */
+ * running publish for this attempt was found and cancelled; `false` is not an error. Since
+ * RELEASE-0.1 item 10, `attemptId` may also be a [`prepareCancelKey`] -- the same command reaches
+ * the "Preparing…" pin phase's own token, registered under that key instead of a real attempt id. */
 export async function publishCancel(attemptId: string): Promise<boolean> {
   const entry = recordNamed("binding-command", "binding_publish_cancel");
   try {
@@ -148,12 +166,27 @@ export const PUBLISH_PROGRESS_EVENT = "publish://progress";
  * `@tauri-apps/api/event`'s `listen` resolves asynchronously (it registers the listener over IPC),
  * so a caller that unsubscribes before that promise settles must not leak a live listener --
  * `cancelled` below covers exactly that race.
+ *
+ * `attemptId` may be a real minted attempt id (the execute phase) OR a [`prepareCancelKey`] (the
+ * "Preparing…" pin phase, RELEASE-0.1 item 10) -- the filter is a plain string match either way.
+ * `onPhase`'s two extra arguments are passed ONLY when the event itself carries them (the pin
+ * phase's own `bytes_done`/`bytes_total`, non-null); every other phase still calls `onPhase` with
+ * one argument, exactly as before this piece.
  */
-export function subscribePublishProgress(attemptId: string, onPhase: (phase: string) => void): () => void {
+export function subscribePublishProgress(
+  attemptId: string,
+  onPhase: (phase: string, bytesDone?: number, bytesTotal?: number) => void
+): () => void {
   let unlisten: (() => void) | null = null;
   let cancelled = false;
   listen<PublishProgressEvent>(PUBLISH_PROGRESS_EVENT, (event) => {
-    if (event.payload.attempt_id === attemptId) onPhase(event.payload.phase);
+    if (event.payload.attempt_id !== attemptId) return;
+    const { phase, bytes_done, bytes_total } = event.payload;
+    if (bytes_done != null && bytes_total != null) {
+      onPhase(phase, bytes_done, bytes_total);
+    } else {
+      onPhase(phase);
+    }
   }).then((fn) => {
     if (cancelled) {
       fn();

@@ -50,10 +50,14 @@ export interface PublishPromptData {
  * variant NAMES are kebab-case, field names inside each variant stay their Rust spelling
  * unchanged: `serde`'s enum-level `rename_all` only renames the tag, never a struct variant's own
  * fields). `PickerCancelled` is not an error (`publish.rs`'s own doc comment: "nothing was
- * attempted") -- callers must not treat it as a refusal. */
+ * attempted") -- callers must not treat it as a refusal. Neither is `"cancelled"` (RELEASE-0.1 item
+ * 10): the operator cancelled during the "Preparing…" pin phase -- nothing written, no grant
+ * minted, no pending attempt stashed, the approval dialog never opens (ADR-006: the pin is not a
+ * side effect). */
 export type PrepareOutcome =
   | { status: "prompt"; attempt_id: string; prompt: PublishPromptData }
   | { status: "picker-cancelled" }
+  | { status: "cancelled" }
   | { status: "refused"; message: string };
 
 /** `ExecuteOutcome` (`publish.rs`). `succeeded-unaudited` is a REAL bundle on disk whose outcome
@@ -92,11 +96,21 @@ export type PublishScopeInput =
   | { kind: "whole-file" }
   | { kind: "viewport-bbox"; bbox: { xmin: number; ymin: number; xmax: number; ymax: number } };
 
-/** The Tauri event `execute_with_progress` emits (`publish.rs::PUBLISH_PROGRESS_EVENT`/
- * `PublishProgressEvent`) -- phases only, never a percentage or ETA (NEXT-CUT.md P2 item 3). */
+/** The Tauri event `execute_with_progress` (and, since RELEASE-0.1 item 10, the "Preparing…" pin
+ * phase too) emits (`publish.rs::PUBLISH_PROGRESS_EVENT`/`PublishProgressEvent`) -- phases plus raw
+ * byte counts; never a percentage, rate or ETA (NEXT-CUT.md P2 item 3; the older "phases only"
+ * wording here predated the two byte fields below and contradicted them). During the pin phase,
+ * `attempt_id` carries
+ * `prepareCancelKey(datasetHandle)` (`client.ts`), not a real minted attempt id -- none exists yet
+ * at that point (`publish.rs::prepare_cancel_key`'s own doc comment). `bytes_done`/`bytes_total`
+ * are present ONLY for the pin phase (`phase === "pinning-source"`); every kernel publish phase
+ * still carries `null` on both -- a FRACTION of bytes read, never a rate or an ETA (ADR-018: no
+ * timing claim is derived from these two numbers anywhere in this tree). */
 export interface PublishProgressEvent {
   attempt_id: string;
   phase: string;
+  bytes_done: number | null;
+  bytes_total: number | null;
 }
 
 /**

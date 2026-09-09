@@ -64,7 +64,21 @@ impl ContentPin {
 
     /// Compute a pin. Reads the whole file; cancellable throughout.
     pub fn take(path: &Path, cancel: &CancelToken) -> Result<(Self, f64)> {
-        let (hash, millis) = index::content_hash(path, cancel)?;
+        Self::take_with_progress(path, cancel, None)
+    }
+
+    /// As [`Self::take`], reporting bytes hashed / total through `on_progress` as the hash proceeds
+    /// (RELEASE-0.1 item 10, DECISIONS-PENDING entry 7's ruled pre-fix — `docs/01` principle 7's
+    /// progress/cancel clause, unmet for the pin phase until this piece). `take` is a thin wrapper
+    /// over this with `on_progress: None`, so its own signature and every existing caller are
+    /// unchanged. Cancellation semantics are unchanged: still a typed [`EngineError::Cancelled`],
+    /// never a partial hash — see [`index::content_hash_observed`]'s own doc comment.
+    pub fn take_with_progress(
+        path: &Path,
+        cancel: &CancelToken,
+        on_progress: Option<&mut dyn FnMut(u64, u64)>,
+    ) -> Result<(Self, f64)> {
+        let (hash, millis) = index::content_hash_observed(path, cancel, on_progress)?;
         let h = index::ValidityHeuristic::of(path).ok_or_else(|| {
             EngineError::Source(format!(
                 "{} could not be measured for length and modification time, so no pin can be \
@@ -158,6 +172,50 @@ mod tests {
         let c = CancelToken::new();
         c.cancel();
         assert!(matches!(ContentPin::take(&p, &c), Err(EngineError::Cancelled)));
+        let _ = std::fs::remove_file(&p);
+    }
+
+    /// RELEASE-0.1 item 10: cancellation semantics are unchanged on the progress-bearing path
+    /// either — a typed cancellation, not a partial hash, and zero progress calls for a token
+    /// cancelled before the first read (mirrors the test above exactly, on `take_with_progress`).
+    #[test]
+    fn a_cancelled_progress_pin_is_a_typed_cancellation_and_not_a_partial_hash() {
+        let p = tmp("pin-d.bin");
+        std::fs::write(&p, vec![7u8; 4 << 20]).unwrap();
+        let c = CancelToken::new();
+        c.cancel();
+        let mut calls = 0u32;
+        assert!(matches!(
+            ContentPin::take_with_progress(&p, &c, Some(&mut |_, _| calls += 1)),
+            Err(EngineError::Cancelled)
+        ));
+        assert_eq!(calls, 0, "a token cancelled before the first read must report no progress at all");
+        let _ = std::fs::remove_file(&p);
+    }
+
+    /// The progress-bearing path produces the SAME hash `take` does (`index::content_hash_observed`
+    /// is `content_hash`'s only implementation now, `on_progress: None` vs `Some` aside) and its
+    /// last progress call ends exactly at the total — the fixture-level version of
+    /// `index.rs`'s own `a_progress_observed_hash_reports_monotone_bytes_ending_at_the_total`, one
+    /// layer up, through the type callers actually use.
+    #[test]
+    fn take_with_progress_produces_the_same_pin_as_take_and_reports_progress_ending_at_the_total() {
+        let p = tmp("pin-e.bin");
+        std::fs::write(&p, vec![3u8; 2 << 20]).unwrap();
+
+        let mut seen: Vec<(u64, u64)> = Vec::new();
+        let (pin, _) = ContentPin::take_with_progress(
+            &p,
+            &CancelToken::new(),
+            Some(&mut |done, total| seen.push((done, total))),
+        )
+        .unwrap();
+        assert!(!seen.is_empty());
+        assert_eq!(seen.last().unwrap().0, seen.last().unwrap().1);
+
+        let (plain, _) = ContentPin::take(&p, &CancelToken::new()).unwrap();
+        assert_eq!(pin.hash(), plain.hash(), "the two routes must hash to the same value");
+
         let _ = std::fs::remove_file(&p);
     }
 }

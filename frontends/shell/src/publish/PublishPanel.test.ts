@@ -5,18 +5,30 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 
 import { encodeHexF64 } from "../skp/codec";
 import type { Bbox } from "../skp/types";
+import { PREPARE_CANCEL_KEY_PREFIX, prepareCancelKey } from "./client";
 import type { DialogSettleResult } from "./PublishDialog";
 import {
+  cancelControlVisible,
   currentViewOptionDisabled,
+  formatBytesHashed,
   nextStateFromDialogSettled,
   nextStateFromPrepareOutcome,
+  PREPARE_CANCEL_FAILED_LOG,
+  PublishControls,
+  requestPrepareCancel,
   resolvePublishScope,
   settlePrepareOutcome,
+  stateAfterCancelRejected,
+  stateAfterCancelRequested,
+  stateAfterPinProgress,
 } from "./PublishPanel";
+import type { PublishControlsProps, PublishPanelState } from "./PublishPanel";
 import { FILTER_SCOPE_SENTENCE } from "./types";
 import type { ExecuteOutcome, PrepareOutcome, PublishPromptData } from "./types";
 
@@ -89,6 +101,14 @@ describe("nextStateFromPrepareOutcome", () => {
     if (next.kind === "refused") {
       expect(next.refusal.message).toBe("row filter not recordable");
     }
+  });
+
+  // RELEASE-0.1 item 10 (DECISIONS-PENDING entry 7's ruled pre-fix): the pin phase's own
+  // cancellation outcome, shown rather than silently absorbed -- distinct from `picker-cancelled`
+  // (a native-dialog dismissal with nothing to report).
+  it("cancelled -> a distinct, visible 'cancelled' state, never folded into idle or a refusal", () => {
+    const outcome: PrepareOutcome = { status: "cancelled" };
+    expect(nextStateFromPrepareOutcome(outcome)).toEqual({ kind: "cancelled" });
   });
 });
 
@@ -173,5 +193,247 @@ describe("FILTER_SCOPE_SENTENCE -- pinned against publish.rs's own copy", () => 
     // the two copies are the same text.
     const collapsed = (match as RegExpMatchArray)[1].replace(/\\\r?\n[ \t]*/g, "");
     expect(collapsed).toBe(FILTER_SCOPE_SENTENCE);
+  });
+});
+
+// -----------------------------------------------------------------------------------------------
+// MF1 (this batch's reviewer gate): a Cancel offered during the native-picker window, where no
+// `CancelToken` is registered yet, could not cancel anything -- and latched the button at
+// "Cancelling" for the rest of an uncancelled pin. The criterion is now "the first pin-phase
+// progress event has arrived" (`cancelControlVisible`).
+// -----------------------------------------------------------------------------------------------
+
+const PREPARING_BEFORE_ANY_EVENT: PublishPanelState = {
+  kind: "preparing",
+  phase: null,
+  bytesDone: null,
+  bytesTotal: null,
+  cancelRequested: false,
+};
+
+describe("cancelControlVisible -- MF1's own criterion", () => {
+  it("false during the picker window: still preparing, no phase event yet, so no token is proven registered", () => {
+    expect(cancelControlVisible(PREPARING_BEFORE_ANY_EVENT)).toBe(false);
+  });
+
+  it("true once the pin phase has actually reported -- the event is emitted from inside the call the token was registered before", () => {
+    const withPhase = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    expect(cancelControlVisible(withPhase)).toBe(true);
+  });
+
+  it("false in every settled state -- there is nothing running to cancel", () => {
+    expect(cancelControlVisible({ kind: "idle" })).toBe(false);
+    expect(cancelControlVisible({ kind: "cancelled" })).toBe(false);
+  });
+});
+
+describe("stateAfterPinProgress", () => {
+  it("folds phase and bytes in, leaving cancelRequested alone", () => {
+    expect(stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 10, 100)).toEqual({
+      kind: "preparing",
+      phase: "pinning-source",
+      bytesDone: 10,
+      bytesTotal: 100,
+      cancelRequested: false,
+    });
+  });
+
+  it("a late event after the phase settled is a silent no-op, never a resurrection of 'preparing'", () => {
+    const settled: PublishPanelState = { kind: "cancelled" };
+    expect(stateAfterPinProgress(settled, "pinning-source", 10, 100)).toEqual(settled);
+  });
+
+  it("an event carrying no byte counts keeps whatever counts were last reported", () => {
+    const withBytes = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 10, 100);
+    expect(stateAfterPinProgress(withBytes, "pinning-source")).toEqual({ ...withBytes });
+  });
+});
+
+describe("requestPrepareCancel -- MF1: what a Cancel click may and may not do", () => {
+  /** Applies the reducer updates the function pushes, so the assertions read the SAME state a
+   * React `setState` would have produced -- not a list of un-applied updater functions. */
+  function stateBox(initial: PublishPanelState) {
+    let current = initial;
+    return {
+      apply: (update: (prev: PublishPanelState) => PublishPanelState) => {
+        current = update(current);
+      },
+      get: () => current,
+    };
+  }
+
+  it("a cancel request BEFORE the first phase event does not latch and never calls the host", async () => {
+    const box = stateBox(PREPARING_BEFORE_ANY_EVENT);
+    const cancel = vi.fn().mockResolvedValue(false);
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+    expect(cancel).not.toHaveBeenCalled();
+    expect(box.get()).toEqual(PREPARING_BEFORE_ANY_EVENT);
+  });
+
+  it("AFTER the first phase event: publishCancel is called with the prepare key, and the button latches", async () => {
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    const box = stateBox(running);
+    const cancel = vi.fn().mockResolvedValue(true);
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+    expect(cancel).toHaveBeenCalledWith(prepareCancelKey("ds_abc123"));
+    expect(box.get()).toEqual({ ...running, cancelRequested: true });
+  });
+
+  it("a host answer of `false` (nothing found under the key) un-latches -- the pin is still running, so Cancel must stay clickable", async () => {
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    const box = stateBox(running);
+    const cancel = vi.fn().mockResolvedValue(false);
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+    expect(cancel).toHaveBeenCalledWith(prepareCancelKey("ds_abc123"));
+    expect(box.get()).toEqual({ ...running, cancelRequested: false });
+  });
+
+  /**
+   * **The re-review's own PROBE SCENARIO, shipped as a test.** `publishCancel` REJECTS (an IPC
+   * failure -- `client.ts` rethrows whatever `invoke` rejected with) instead of answering `false`.
+   * That is the same fact about the world as `false` -- nothing was cancelled, the pin is still
+   * running -- so it must produce the same state: the latch cleared and a live Cancel back in the
+   * operator's hands. Before the fix the rejection unwound out of `requestPrepareCancel`, leaving
+   * `cancelRequested` latched forever (a disabled "Cancelling" over a running pin, MF1's own defect
+   * through its other exit) and an unhandled rejection out of the `void requestPrepareCancel(...)`
+   * call site.
+   *
+   * MUTATION (run, and its failure quoted in this commit's own message): delete the `try`/`catch`
+   * in `requestPrepareCancel` so the `await cancel(...)` stands bare again, and this test fails --
+   * the `await requestPrepareCancel(...)` below rejects with "IPC channel closed" before any
+   * assertion runs.
+   */
+  it("a cancel call that REJECTS is treated as `false`: the latch clears, Cancel is live again, and the error is recorded", async () => {
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    const box = stateBox(running);
+    const cancel = vi.fn().mockRejectedValue(new Error("IPC channel closed"));
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // No `.rejects` wrapper and no `.catch`: the point is that awaiting this RESOLVES.
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+
+    expect(cancel).toHaveBeenCalledWith(prepareCancelKey("ds_abc123"));
+    expect(box.get()).toEqual({ ...running, cancelRequested: false });
+    expect(cancelControlVisible(box.get())).toBe(true);
+    expect(logged).toHaveBeenCalledWith(PREPARE_CANCEL_FAILED_LOG, "IPC channel closed");
+    logged.mockRestore();
+  });
+
+  it("a rejection that is not an Error is recorded as its string form, the same normalization settlePrepareOutcome uses", async () => {
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705);
+    const box = stateBox(running);
+    const cancel = vi.fn().mockRejectedValue("unknown attempt");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await requestPrepareCancel(box.get(), "ds_abc123", box.apply, cancel);
+
+    expect(box.get()).toEqual({ ...running, cancelRequested: false });
+    expect(logged).toHaveBeenCalledWith(PREPARE_CANCEL_FAILED_LOG, "unknown attempt");
+    logged.mockRestore();
+  });
+});
+
+describe("stateAfterCancelRequested / stateAfterCancelRejected", () => {
+  it("requested latches only where a token is proven registered", () => {
+    expect(stateAfterCancelRequested(PREPARING_BEFORE_ANY_EVENT)).toEqual(PREPARING_BEFORE_ANY_EVENT);
+    const running = stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1, 2);
+    expect(stateAfterCancelRequested(running)).toEqual({ ...running, cancelRequested: true });
+  });
+
+  it("rejected clears the latch while preparing, and leaves any settled state untouched", () => {
+    const latched = stateAfterCancelRequested(stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1, 2));
+    expect(stateAfterCancelRejected(latched)).toMatchObject({ cancelRequested: false });
+    expect(stateAfterCancelRejected({ kind: "cancelled" })).toEqual({ kind: "cancelled" });
+  });
+});
+
+describe("formatBytesHashed -- a count of bytes read, never a rate, percentage or ETA (ADR-018)", () => {
+  it("groups digits and names what was counted", () => {
+    expect(formatBytesHashed(1048576, 5004376705)).toBe("1,048,576 / 5,004,376,705 bytes hashed");
+  });
+
+  it("a null done (an event carrying only a total) reads as zero", () => {
+    expect(formatBytesHashed(null, 1000)).toBe("0 / 1,000 bytes hashed");
+  });
+});
+
+// -----------------------------------------------------------------------------------------------
+// MF3: the render surface itself. `renderToStaticMarkup` over `PublishControls` -- the panel's own
+// disclosure body, one component down -- the identical in-house route `PublishDialog.test.ts:150-171`
+// established (no DOM harness, no new dependency).
+// -----------------------------------------------------------------------------------------------
+
+describe("the rendered publish controls (MF3)", () => {
+  function render(state: PublishPanelState, overrides: Partial<PublishControlsProps> = {}): string {
+    const raw = renderToStaticMarkup(
+      createElement(PublishControls, {
+        state,
+        scope: "whole",
+        hasSettledView: true,
+        filterActive: false,
+        onScopeChange: vi.fn(),
+        onPublishClick: vi.fn(),
+        onCancelPreparing: vi.fn(),
+        onDialogSettled: vi.fn(),
+        ...overrides,
+      })
+    );
+    return raw.replaceAll("&quot;", '"').replaceAll("&#x27;", "'").replaceAll("&amp;", "&").replaceAll("&#x2F;", "/");
+  }
+
+  it("preparing, before any phase event: the placeholder label, no byte readout, and NO Cancel button (MF1)", () => {
+    const html = render(PREPARING_BEFORE_ANY_EVENT);
+    expect(html).toContain("Preparing…");
+    expect(html).not.toContain("bytes hashed");
+    expect(html).not.toContain("publish-preparing-cancel");
+  });
+
+  it("preparing, after the first phase event: the host's phase label, the bytes readout, and a live Cancel", () => {
+    const html = render(stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705));
+    expect(html).toContain("pinning-source");
+    expect(html).toContain("1,048,576 / 5,004,376,705 bytes hashed");
+    expect(html).toContain("publish-preparing-cancel");
+    expect(html).toContain(">Cancel<");
+    // No rate, no percentage, no ETA anywhere on this surface (ADR-018).
+    expect(html).not.toMatch(/%|\bETA\b|\bper second\b|\bremaining\b/);
+  });
+
+  it("a cancel already requested: the button reads 'Cancelling' and is disabled", () => {
+    const latched = stateAfterCancelRequested(
+      stateAfterPinProgress(PREPARING_BEFORE_ANY_EVENT, "pinning-source", 1048576, 5004376705)
+    );
+    const html = render(latched);
+    expect(html).toContain("Cancelling");
+    expect(html).toMatch(/class="publish-preparing-cancel"[^>]*disabled/);
+  });
+
+  it("cancelled: the ADR-006 sentence, verbatim, and Publish enabled again", () => {
+    const html = render({ kind: "cancelled" });
+    expect(html).toContain("Preparing stopped — nothing was written.");
+    // The Publish button carries no `disabled` attribute in this state -- the operator may retry
+    // immediately, which is what "nothing was written" means in practice.
+    const publishButton = html.match(/<button[^>]*class="publish-open"[^>]*>/)?.[0] ?? "";
+    expect(publishButton).not.toBe("");
+    expect(publishButton).not.toContain("disabled");
+    expect(html).toContain("Publish…");
+  });
+
+  it("preparing disables Publish (one prepare at a time) -- the contrast that makes the cancelled case's re-enable real", () => {
+    const publishButton =
+      render(PREPARING_BEFORE_ANY_EVENT).match(/<button[^>]*class="publish-open"[^>]*>/)?.[0] ?? "";
+    expect(publishButton).toContain("disabled");
+  });
+});
+
+describe("prepareCancelKey -- pinned against publish.rs::prepare_cancel_key's own prefix (RELEASE-0.1 item 10)", () => {
+  it("PREPARE_CANCEL_KEY_PREFIX matches frontends/shell/src-tauri/src/publish.rs::PREPARE_CANCEL_KEY_PREFIX exactly", () => {
+    const rustSource = readFileSync(join(HERE, "../../src-tauri/src/publish.rs"), "utf8");
+    const match = rustSource.match(/PREPARE_CANCEL_KEY_PREFIX: &str = "([^"]*)";/);
+    expect(match).not.toBeNull();
+    expect((match as RegExpMatchArray)[1]).toBe(PREPARE_CANCEL_KEY_PREFIX);
+  });
+
+  it("prepareCancelKey concatenates the prefix and the dataset handle verbatim", () => {
+    expect(prepareCancelKey("ds_abc123")).toBe(`${PREPARE_CANCEL_KEY_PREFIX}ds_abc123`);
   });
 });

@@ -222,11 +222,11 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
 // docs for the design this pair implements.
 // -------------------------------------------------------------------------------------------
 
-/// Opens the **native** destination picker (the destination never crosses from JS), pins the
-/// dataset's content if it is not already pinned (`publish::ensure_pinned` — a real gap this
-/// piece's own P4 evidence found; see that function's own doc comment), runs
-/// `publish::preflight` (pure — P0's row-filter refusal fires here), mints a grant from host-held
-/// facts, and stashes a single-use pending attempt. Returns plain prompt data plus its `attempt_id`.
+/// Opens the **native** destination picker (the destination never crosses from JS), runs the
+/// predictable ADR-025 checks before any byte is hashed, pins the dataset's content if it is not
+/// already pinned (cancellable and progress-reporting — RELEASE-0.1 item 10, DECISIONS-PENDING
+/// entry 7's ruled pre-fix), mints a grant from host-held facts, and stashes a single-use pending
+/// attempt. Returns plain prompt data plus its `attempt_id`.
 ///
 /// `filter_active` is a **disclosed deviation** from `NEXT-CUT.md`'s three-parameter shorthand
 /// (`dataset_handle, style_doc, scope`): composing the filter-scope sentence needs to know whether
@@ -235,12 +235,30 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
 /// inside `scope`'s two ADR-017 §8 shapes without a third shape existing. P3 ("Publish affordance and
 /// scope") is what actually threads the live UI state through this parameter; P1 wires the mechanism
 /// and defaults nothing silently — a caller must pass the fact.
+///
+/// **RELEASE-0.1 item 10's own wiring.** A fresh [`CancelToken`] is minted and registered in
+/// [`RunningPublishes`] under [`publish::prepare_cancel_key`] BEFORE the blocking call starts and
+/// removed unconditionally after, whatever the outcome — the SAME `RunningPublishes` precedent
+/// `binding_publish_execute` below established for the execute phase, written once as
+/// [`publish::with_registered_cancel`]. Pin progress crosses as the SAME
+/// [`publish::PUBLISH_PROGRESS_EVENT`] via a [`publish::PublishProgressEvent`] carrying
+/// [`publish::PIN_PHASE_LABEL`] and the bytes-hashed fraction, `attempt_id` set to the prepare key
+/// (no real `attempt_id` exists yet at this point — `publish::prepare_cancel_key`'s own doc
+/// comment), bounded by [`publish::pin_progress_should_emit`] (MF2).
+///
+/// **What "cancellable" does and does not cover here (MF1).** The token's life starts after the
+/// native picker below has settled, because nothing this command can do would close an open OS save
+/// dialog — during that window the picker's own Cancel is the operator's cancel, and it arrives as
+/// [`PrepareOutcome::PickerCancelled`]. The pin phase that follows is the cancellable part, and the
+/// frontend now offers a Cancel button only once its first progress event has proven the token is
+/// registered (`PublishPanel.tsx::cancelControlVisible`).
 #[tauri::command]
 pub async fn binding_publish_prepare(
     app: tauri::AppHandle,
     host: State<'_, Arc<SkpHost>>,
     grants: State<'_, Arc<Mutex<GrantSet>>>,
     attempts: State<'_, Arc<PendingAttempts>>,
+    running: State<'_, Arc<RunningPublishes>>,
     dataset_handle: String,
     style_doc: String,
     scope: PublishScope,
@@ -275,30 +293,80 @@ pub async fn binding_publish_prepare(
     let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
     let grants = grants.inner().clone();
     let attempts = attempts.inner().clone();
-    // `ensure_pinned` is real IO/CPU (a whole-file hash) — `spawn_blocking`, never the async
-    // runtime's own worker thread, the same discipline `open_dataset`/`viewport_query` already
-    // apply above. `publish::ensure_pinned`'s own doc comment names what this does NOT yet give
-    // that pin phase: a cancel affordance or a progress report of its own.
-    tokio::task::spawn_blocking(move || {
-        if let Err(message) = publish::ensure_pinned(&dataset, &CancelToken::new()) {
-            return PrepareOutcome::Refused { message };
+    let running = running.inner().clone();
+
+    let prepare_key = publish::prepare_cancel_key(&dataset_handle);
+    let progress_app = app.clone();
+    let progress_key = prepare_key.clone();
+    // MF2 (this batch's reviewer gate): `content_hash_observed` calls its sink once per 1 MiB read,
+    // so an ungated emitter put one Tauri event on the webview per MiB — thousands of them, each a
+    // `setState` and a render, at `docs/07`'s own 5 GB scale. `pin_progress_should_emit` bounds
+    // that to one event per 64 MiB read plus two that always cross: the FIRST observation (so the
+    // panel's Cancel control — gated on a pin-phase event having arrived, `cancelControlVisible` —
+    // is up after the first chunk rather than after 64 MiB) and the final one (so the readout ends
+    // at `total / total`, and exactly once even if the source grew past the total read at open
+    // time). `last_emitted` is this closure's own state, `0` until something has crossed, which is
+    // why it is `FnMut` and why the first-observation rule can read it (see that function's own doc
+    // comment — a bound, not a claim about what the events cost).
+    let mut last_emitted = 0u64;
+    let mut on_pin_progress = move |bytes_done: u64, bytes_total: u64| {
+        if !publish::pin_progress_should_emit(bytes_done, bytes_total, last_emitted) {
+            return;
         }
-        publish::prepare(
-            &grants,
-            &attempts,
-            dataset,
-            dataset_name,
-            style_doc,
-            scope,
-            filter_active,
-            viewer,
-            viewer_license,
-            destination,
-            started_at,
-        )
+        last_emitted = bytes_done;
+        // Best-effort, same posture `binding_publish_execute`'s own progress sink takes: an
+        // instrument stream, never a side effect the pin's own success/cancellation depends on.
+        let _ = progress_app.emit(
+            publish::PUBLISH_PROGRESS_EVENT,
+            publish::PublishProgressEvent {
+                attempt_id: progress_key.clone(),
+                phase: publish::PIN_PHASE_LABEL,
+                bytes_done: Some(bytes_done),
+                bytes_total: Some(bytes_total),
+            },
+        );
+    };
+
+    // RELEASE-0.1 item 10: the token is registered BEFORE the blocking call and removed
+    // unconditionally after — whether prepare refused, cancelled, produced a prompt, or the blocking
+    // task itself panicked. `publish::with_registered_cancel` is that sequence, written once and
+    // unit-tested (M4, this batch's reviewer gate: the removal had no test, since this command needs
+    // a live Tauri app to reach).
+    //
+    // **The registration happens AFTER the native picker above, deliberately** (MF1): a
+    // `#[tauri::command]` cannot dismiss an open OS save dialog, so registering a token earlier would
+    // buy nothing an operator could use — the picker's own Cancel button is the affordance during
+    // that window (`PrepareOutcome::PickerCancelled`). What was wrong before this batch was the
+    // FRONTEND offering a Cancel across the picker window regardless; it now renders one only once
+    // the first pin-phase progress event proves this token is registered
+    // (`PublishPanel.tsx::cancelControlVisible`).
+    //
+    // Real IO/CPU (a whole-file hash, when the pin is not already taken) — `spawn_blocking`, never
+    // the async runtime's own worker thread, the same discipline `open_dataset`/`viewport_query`
+    // already apply above.
+    let result = publish::with_registered_cancel(&running, &prepare_key, |cancel| async move {
+        tokio::task::spawn_blocking(move || {
+            publish::prepare_with_progress(
+                &grants,
+                &attempts,
+                dataset,
+                dataset_name,
+                style_doc,
+                scope,
+                filter_active,
+                viewer,
+                viewer_license,
+                destination,
+                started_at,
+                &cancel,
+                Some(&mut on_pin_progress),
+            )
+        })
+        .await
     })
-    .await
-    .map_err(|e| format!("binding_publish_prepare panicked: {e}"))
+    .await;
+
+    result.map_err(|e| format!("binding_publish_prepare panicked: {e}"))
 }
 
 /// Takes the pending attempt (single-use), opens a fresh audit log for it alone (F-9), and runs it
@@ -370,11 +438,14 @@ pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt
 /// save-dialog chrome has no CDP-reachable automation path at all (`e2e/README.md`'s "Evidence
 /// class" paragraph), so unlike admission — where the picker and the downstream call were already
 /// two separate commands an E2E hook could split apart in JS alone — publish's picker is fused
-/// inside [`binding_publish_prepare`] itself, and there is no way to reach [`publish::prepare`]
-/// from JS without a new host-side seam.
+/// inside [`binding_publish_prepare`] itself, and there is no way to reach
+/// [`publish::prepare_with_progress`] from JS without a new host-side seam.
 ///
 /// This command supplies `destination` directly and otherwise calls the **identical**
-/// [`publish::prepare`] the real command calls — same `preflight`, same grant minted **host-side**
+/// [`publish::prepare_with_progress`] the real command calls (SF1, this batch's reviewer gate: this
+/// sentence used to name `publish::prepare`, which neither command has called since RELEASE-0.1
+/// item 10 — a stale link, and a false claim about which code the E2E seam shares) — same
+/// `preflight`, same ADR-025 ordering, same grant minted **host-side**
 /// from this supplied path (never from a JS-asserted grant; F-5's "the requester never mints the
 /// grant" holds exactly as it does for the real command — see `docs/adr/ADR-024-…md`'s own
 /// Decision section for why the test seam does not weaken that property, only which *fact source*
@@ -426,14 +497,18 @@ pub async fn binding_publish_prepare_e2e_destination(
     let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
     let grants = grants.inner().clone();
     let attempts = attempts.inner().clone();
-    // Same pin step, same `spawn_blocking` discipline as the real `binding_publish_prepare` above
-    // — this seam calls the identical `publish::prepare`, so it must not diverge on the one
-    // precondition that command now satisfies.
+    // Same ordering, same `spawn_blocking` discipline as the real `binding_publish_prepare` above
+    // — this seam calls `prepare_with_progress` (the identical function that command now calls),
+    // so it must not diverge on the one precondition that command satisfies: the ADR-025 checks
+    // run before the pin. The cancel token here is a throwaway nothing outside this call can reach
+    // (RELEASE-0.1 item 10 wires a real, `RunningPublishes`-registered one only for the real
+    // command above — this dev-only seam has no manual-walkthrough row that exercises a
+    // prepare-phase cancel, so a second registration is not added here). Since it also passes `None`
+    // for the pin-progress sink, no phase event ever reaches the panel through this path, so the
+    // panel renders no Cancel button on it at all (MF1) — before that fix it rendered one that could
+    // not cancel anything, since nothing is registered under this call's key.
     tokio::task::spawn_blocking(move || {
-        if let Err(message) = publish::ensure_pinned(&dataset, &CancelToken::new()) {
-            return PrepareOutcome::Refused { message };
-        }
-        publish::prepare(
+        publish::prepare_with_progress(
             &grants,
             &attempts,
             dataset,
@@ -445,6 +520,8 @@ pub async fn binding_publish_prepare_e2e_destination(
             viewer_license,
             std::path::PathBuf::from(destination),
             started_at,
+            &CancelToken::new(),
+            None,
         )
     })
     .await
