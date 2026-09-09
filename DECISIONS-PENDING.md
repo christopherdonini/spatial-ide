@@ -69,6 +69,27 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+69. **[The release executable imports `MSVCP140.dll` dynamically — the Microsoft Visual C++
+    2015–2022 redistributable — and the NSIS installer does not bundle it. Declare it in
+    KNOWN-LIMITATIONS' install entry, static-link the CRT (`-C target-feature=+crt-static`, a build
+    configuration change before the tag), or add the redistributable to the installer (a new
+    dependency)?]** Found 2026-09-09 while preparing Part M's clean-profile procedure: `dumpbin
+    /DEPENDENTS` on `frontends/shell/src-tauri/target/release/spatial-ide-shell.exe` (the #31-era
+    build; to be re-run on the v0.1.0 build) lists `MSVCP140.dll` plus the `api-ms-win-crt-*`
+    UCRT forwarders (the UCRT ships with Windows 10; `MSVCP140.dll` does not — it comes with the
+    VC++ redistributable, which most Windows machines have from other software and a fresh one may
+    not). This machine has 14.50.35719.0 in `System32`, so a clean PROFILE here shares it and Part
+    M's M1 cannot observe the absence; only a fresh Windows install or VM can. Tauri's NSIS template
+    installs no redistributable. Options: **(a) RECOMMENDED for v0.1.0 — declare:** one sentence in
+    KNOWN-LIMITATIONS' install entry and the QUICKSTART's install section ("needs the Microsoft
+    Visual C++ 2015–2022 redistributable (x64); if the app does not start, install it from
+    Microsoft"), M1 records that this dependency was not exercised; no build change before the tag;
+    **(b)** static CRT (`crt-static`) — removes the dependency but changes the build configuration
+    and the binary's linkage after Part M, so Part M re-runs on the new build; also interacts with
+    DuckDB's C++ amalgamation linkage (untested); **(c)** bundle the redistributable's installer via
+    NSIS hooks — a new conveyed third-party artifact (ADR-030 reopens for it; Microsoft's redist
+    licence terms apply). Not a tag blocker under (a).
+
 68. **[Line endings: 21 tracked files carry CRLF in the index (pre-existing — spike app files, two
     ADR-003 workflows, `product-ci-rust.yml`, `kernel/src/main.rs`, `kernel/RESULTS.md`,
     `frontends/shell/e2e/residency-harness.mjs`, …), and the repository has no `text=auto` policy —

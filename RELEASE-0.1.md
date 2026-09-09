@@ -1147,3 +1147,35 @@ The entry-60 closing commit and its PR (the human's click); the entry-68 commit 
 6. **The tag.**
 
 The principle the human states governs every remaining record: *a document describing an artifact is written after running it, not before.* Nothing in items 4/5/6 may describe the installed application from the draft alone.
+
+## Amendment 14 — the v0.1.0 candidate build (build-only), the away-window instructions verbatim, and what was prepared for Part M and the tag (2026-09-09, appended during the human's ~8 h absence; session locked, no GUI)
+
+**The human, verbatim (2026-09-09, on leaving):** *"While the human is away (~8 h, session locked — no headed work; the guard's pre-arm check will refuse anything GUI, don't fight it): After #39 merges: the entry-68 line-ending commit + PR as preregistered; then pull main and run the packaged build — installer produced, SHA-256 recorded, path staged. Build-only; do not launch. Part M prep pack: the M1–M13 rows finalized; a clean-profile procedure for me to execute at the sitting (the exact commands to create a throwaway local Windows account, what a stranger's machine lacks that this one has — WebView2 runtime presence, VC++ redistributable, any DuckDB extension cache — and what M1 must observe about each); the M3 notice byte counts pre-filled. Release text: items 5/6 as drafts with bracketed installer-facing slots; the v0.1.0 tag message and GitHub release body drafted to the "every sentence verifiable against a file in the tree" standard — installer + SHA-256 + a KNOWN-LIMITATIONS link above the fold; finalized only after M. Post-tag preregistrations drafted, not filed: entry 66 (b) geometry protection (half-open index ranges); ADR-032's problem statement with the GeoParquet-1.1.0 x,y-override analysis and its ADR-015/ADR-017 touch points; entry 47's re-pick piece brief; the LOD brief revised with the companion note folded in. All for my sight later — no code. Hygiene: ADR-030's acceptance note and docs/README:27 if not yet landed; a repo-level "release day" checklist (description/topics/About set, README top, release page contents) so the tag moment is a checklist, not improvisation. Report in ≤20 lines when done; anything needing a ruling goes to the queue, nothing decided inline."*
+
+### The candidate build
+
+| | |
+|---|---|
+| Source | `main` @ `998be05` — the #39 merge (entry 68); every release PR (#34–#39) in |
+| Command | `npm run tauri build` in `frontends/shell`, 2026-09-09T09:03:44Z; exit 0; **never launched** |
+| Artifact | `frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe` |
+| Size | 10,559,184 bytes |
+| SHA-256 | `712b30632e2c27078686f13defd1fe5462e723dbd4d9124fc010d6958b6aa45a` (`sha256sum` and `Get-FileHash` agree) |
+| Signature | `NotSigned` |
+| Executable | `spatial-ide-shell.exe`, 44,363,776 bytes; per-user install (`RequestExecutionLevel user`; `$INSTDIR = $LOCALAPPDATA\Spatial IDE`, `installer.nsi:104`, `:504`) |
+| Packaged | the executable, `spatial_ide_shell_lib.dll`, `NOTICE.txt`, `bundle-viewer\` (the viewer's `dist/`, its `NOTICE.txt` included), the WebView2 bootstrapper stubs, the uninstaller. No `publish-bundle.exe`, no `slice-host.exe` (M9's "the installer ships no CLI" holds) |
+| Notices | beside the executable 3,186,905 B / 62,081 lines, byte-identical to the in-app `src/generated/NOTICE.txt` and to the bytes the entry-62 reviewer reproduced (sha256 `6eb80fd3…`) — M3's anchors hold unchanged (23 / 721 / 743 / 751 / 3,338 / 5,000 / 59,854 / 62,081; 26 entry lines; 0 forbidden strings); `bundle-viewer\NOTICE.txt` 163,998 B / 3,325 lines |
+| Imports (`dumpbin /DEPENDENTS`) | Windows system DLLs, the `api-ms-win-crt-*` UCRT forwarders, and **`MSVCP140.dll`** — the Visual C++ 2015–2022 redistributable, which the installer does not bundle → **DECISIONS-PENDING entry 69** (declare / static CRT / bundle; not decided here) |
+
+### Prepared, for the human's sight (no code)
+
+- `RELEASE-DRAFTS-0.1.0/part-m-prep-pack.md` (untracked, repository root): the artifact table; M3 pre-filled; the machine-vs-stranger table (WebView2 152.0.4191.66 present machine-wide; the VC++ 14.50 runtime present; no DuckDB extension use — `bundled`+`parquet`+`json` static, no autoload setting anywhere; the per-user paths a clean profile starts without) with what M1/M2 can and cannot observe; the clean-profile PowerShell procedure (create a standard user, stage the fixtures readably, remove account + profile after); row reminders.
+- Part M rows corrected on `main`: M1 (the artifact's name, hash, size), M3 (install root `%LOCALAPPDATA%\Spatial IDE` from the generated script — the earlier `spatial-ide-shell` guess was wrong), M4 (two admitted entries since #32).
+- `RELEASE-DRAFTS-0.1.0/tag-message-v0.1.0.md` and `github-release-body-v0.1.0.md`: installer + SHA-256 + the KNOWN-LIMITATIONS link above the fold; every sentence points at a file; placeholders left for Part M's date and entry 69's ruling.
+- `RELEASE-DAY-CHECKLIST.md` (tracked): preconditions, the artifact re-hash, repository metadata (the human's), the README top, the tag, the release, after the tag, never-on-release-day.
+- `RELEASE-DRAFTS-0.1.0/post-tag/`: the ADR-032 problem statement (architect draft: the pinned GeoParquet 1.1.0 override text, today's refusal at `dataset.rs:302-307` and `error.rs:213-217`, candidates A/B/C with their ADR-015 §5 / ADR-017 / ADR-026 / ADR-013 touch points, the equirectangular display question, nine open questions, the fixtures a B preregistration must pre-commit); the LOD brief revised with the companion note folded in (architect draft: block-on-sight L8–L10 added, the "refuses identity by name" reading drafted for approval, eight open questions, what the brief still lacks — the accumulate-into-image fallback has **no description anywhere in the record**, carried by name and caveat only); the entry-47 re-pick brief and the entry-66 (b) geometry-protection brief (Plan drafts) — filed as they return.
+- Items 5/6 (`README.md`, `QUICKSTART.md`) landed as bracketed drafts earlier this day (`64fa957`).
+
+### Records owed at the sitting
+
+Part M's verdicts verbatim in the walkthrough; entry 69's ruling into KNOWN-LIMITATIONS' install entry and QUICKSTART's install section; the brackets in items 5/6 resolved from M; item 4 written last; the two tag/release drafts finalized; then the tag by the checklist. A stale cite noticed by the architect: `RELEASE-0.1.md` (Amendment 7's 3857 consult) cites `kernel/src/publish/mod.rs:1187` for the `crs_transform` string, which sits at `:1259` on `main` today — a dated correction, recorded here rather than by editing the earlier amendment.
