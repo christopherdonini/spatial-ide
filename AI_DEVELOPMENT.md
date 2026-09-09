@@ -166,7 +166,7 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   necessarily a cargo cache: a worker's env-less run puts regenerated fixtures and test evidence
   there. List the directory, decide, then remove — never in the same command. Corollary for briefs:
   name BOTH target directories on every cargo invocation (root workspace →
-  `C:\dev\spatial-ide	arget`; the shell crate → `frontends\shell\src-tauri	arget`); one missing
+  `C:\dev\spatial-ide\target`; the shell crate → `frontends\shell\src-tauri\target`); one missing
   export grows a 3–18 GB worktree-local target.
 - **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
   `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
@@ -317,17 +317,7 @@ observed burn:
    one of them is ever the right explanation past the declared duration. (Added 2026-08-12 after a
    harness process hung 16 hours *after* successfully printing its result — the cost was a night of
    wall clock, and the result was sitting in the log the whole time.)
-
-## The worker mechanics (2026-08-09)
-
-Implementation runs on the **`worker` subagent** (`.claude/agents/worker.md`, Sonnet, full tools):
-the custodian decomposes a brief into bounded pieces, delegates each, and audits the terse reports
-against the tree — its own context stays small, the grind runs on the cheap model, and
-one-session-per-tree holds by construction. Gates (architect/reviewer/tester) run as always,
-between pieces or after the set. **Fallback for pieces too large for one delegation:** the
-custodian switches itself to Sonnet (`/model sonnet`) for the implementation stretch and back for
-verdicts, noting the switch; after the cut, exit and relaunch a fresh custodian rather than
-carrying the accumulated context forward.
+   *(Items 10-12 re-attached to this list on 2026-09-09: since their addition on 2026-08-17/18 and 2026-09-02 they had sat stranded after the next `##` heading; their text is unchanged.)*
 10. **Cut state archives at cut close.** Transient per-cut files (`NEXT-CUT.md`, `CUT-STATE*.md`,
     ad-hoc `*-STATE.md`) live at the repo root only while their cut is live. The brief is deleted
     by the cut's final docs commit (its own status line says so); the state file moves to
@@ -350,3 +340,14 @@ carrying the accumulated context forward.
     it isn't a hand-typed `git commit`. Run `git config core.hooksPath .githooks` once per clone
     (`CONTRIBUTING.md`'s own "Catch it at commit time, not at the PR") so this is caught locally
     at commit one, not discovered at the PR. (Added 2026-09-02.)
+
+## The worker mechanics (2026-08-09)
+
+Implementation runs on the **`worker` subagent** (`.claude/agents/worker.md`, Sonnet, full tools):
+the custodian decomposes a brief into bounded pieces, delegates each, and audits the terse reports
+against the tree — its own context stays small, the grind runs on the cheap model, and
+one-session-per-tree holds by construction. Gates (architect/reviewer/tester) run as always,
+between pieces or after the set. **Fallback for pieces too large for one delegation:** the
+custodian switches itself to Sonnet (`/model sonnet`) for the implementation stretch and back for
+verdicts, noting the switch; after the cut, exit and relaunch a fresh custodian rather than
+carrying the accumulated context forward.
