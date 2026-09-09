@@ -52,6 +52,13 @@ how obvious they seem:
 
 ## Custodian mechanics (the accumulated hard lessons — do not relearn them)
 
+*Reorganised 2026-09-09 into thematic subsections; every dated mechanic kept — merges are marked inline with both dates (the commit message carries the old-to-new mapping).*
+
+Subsections: The lease and handover · Commits, checks and CI watchers · Line endings (the eol class) · Disk, builds, worktrees and merges · Launching the app and E2E runs ·
+Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims and reports.
+
+### The lease and handover
+
 - **Single-custodian lease (added 2026-09-05, after a two-session concurrency scare).** There is
   exactly ONE custodian at a time. On boot, the custodian writes a **session lease** to the
   untracked file `CUSTODIAN-LEASE` at the repo root (gitignored outright — unlike the working-tree
@@ -82,6 +89,9 @@ how obvious they seem:
   stale, or marked relinquished, AND the origin tip matches the flush `CUT-STATE.md` records. The
   human's word replaces the staleness wait, never the verification — if either check fails, the
   incoming session holds and reports instead of taking the lease.
+
+### Commits, checks and CI watchers
+
 - **Every custodian commit uses `git commit -s`** with the identity flags. DCO gates PRs.
   **Two ways this still leaks, both seen for real:** (a) `git revert`, `git merge`, and other
   git-generated commits do NOT inherit `-s` — `git revert --no-edit` produced an UNSIGNED commit
@@ -91,50 +101,10 @@ how obvious they seem:
   `git config core.hooksPath .githooks`, then confirm it rejects an unsigned message** (pipe a
   no-trailer message file to `sh .githooks/commit-msg <file>` → must exit 1). The fence sat
   unarmed through its first two tests; arming is now a boot step, like the lease above.
-- **Never wholesale-clean `target/` (no `cargo clean`, no `rm -rf target/`).** The repo's `target/`
-  holds NON-artifact data alongside build output — `target/slice-evidence/` (incl. the 5 GB hero
-  fixture, `kernel/FIXTURES.md`) and `target/fixtures/` (the walkthrough set) — so a wholesale
-  clean eats fixtures and campaign evidence. Reclaim disk SURGICALLY: remove only the build-output
-  dirs (`target/debug`, `target/release`, and `frontends/shell/src-tauri/target`), never the data
-  subdirs. (A proper fix — relocating fixtures out of `target/` entirely — is a scoped refactor:
-  paths are hardcoded across 40+ live test/harness files plus append-only preregistration records,
-  so it is not a mechanical move; see `DECISIONS-PENDING.md`.)
-- **A file another process holds open for append shows a STALE size in directory listings
-  (added 2026-09-06, after a false "session log is dead" finding).** NTFS updates the directory
-  entry lazily; `Get-ChildItem`/`ls -l` reported the running app's session log as 0 bytes for an
-  hour while it was 36 KB of real content. Never infer "nothing was written" from a size — read
-  the content (`Get-Content`/`cat`). The same trap made `e2e/out/app.log` look empty mid-launch.
-  Corollary: the app's session logs (`%LOCALAPPDATA%\dev.spatialide.shell\logs\session-*.log`)
-  are a complete, timestamped record of every open, candidate frame, truncation, and refusal —
-  read them before asking the human what happened.
-- **E2E from a worktree (added 2026-09-06, the recipe that works).** Set
-  `CARGO_TARGET_DIR=<main checkout>\frontends\shell\src-tauri\target` (it propagates through
-  `npm` → `tauri dev` → `cargo`; the worktree then creates no `target/` of its own and the cold
-  13.6 GB build never happens), BUT the first launch still rebuilds the workspace crates under
-  `--no-default-features` (a worktree path is a new package id) — several minutes, longer than the
-  harness's 300 s attach window. So launch `tauri dev` once and let it come up, THEN run the harness,
-  which attaches to the running instance (`attachOrLaunch` attaches first). A harness "overall
-  watchdog exceeded" exit does NOT kill the detached launch it started: check
-  `cargo`/`rustc`/`spatial-ide-shell` processes after any watchdog exit before launching again.
-  And the walkthrough operator's own plain `npm run tauri dev` from the main checkout holds Vite's
-  5180 — the two cannot run at once; the human closes theirs, or the harness waits.
-- **Verify the residency arm per reload, never per sitting (added 2026-09-06).** `currentArm`
-  is in-memory JS state that resets to `"baseline"` on every Ctrl+R; a whole half-sitting's verdicts
-  were later proven baseline by the session log. Every operator step under the candidate arm
-  starts with `await window.__SPATIAL_E2E__.getResidencyArm()` printing `"candidate"`, and a
-  session log `candidate-grid-frame-established` line is the after-the-fact proof.
-- **`.ps1` files we write are ASCII-only, or they carry a BOM (added 2026-09-07, after a silently
-  skipped display check).** The Write tool saves BOM-less UTF-8; `powershell.exe` 5.1 `-File`
-  reads a BOM-less file as ANSI (cp1252). A UTF-8 em dash (`E2 80 94`) then decodes to `â€”`, and
-  `0x94` is U+201D `”` — which PowerShell 5.1 accepts as a double-quote delimiter. One em dash
-  inside a `"…"` string shifted the quote parity of an unattended runner so that eight lines
-  (the whole wake-and-verify-display block) parsed as the body of a never-taken `if` and simply did
-  not run; no error, no log line. The same file with the dash on a different line fails to parse
-  instead. Rules: no non-ASCII characters in `.ps1` files (comments included — `–` is `“`);
-  scan before launching anything unattended: `Select-String -Path <file> -Pattern '[^\x00-\x7F]'`
-  must print nothing; put safety-critical steps in their own child script whose lines are logged
-  verbatim and whose exit code gates, so a skip shows up as a missing line rather than silence;
-  prove a new runner with a dry-run switch under the identical `-File` launch before the real run.
+- **The check's exit gates the commit — never chain them (2026-09-08).** An edit, its verification and
+  the commit/push in one command chained with `;` let a broken file ship (PR #36: a patch tool wrote a
+  line break inside a regex; `node --check` printed the error and the push went out anyway). Run the
+  check first; commit in a later step, or gate the commit on the check's exit status.
 - **A CI watcher prints every check line, never a `tail` (added 2026-09-08, after a red PR read as
   green).** `gh pr checks <n> --watch … | tail -5` hid two `fail` rows above the cut and the
   summary said "all green"; the failing job was found only by listing checks again. Print the whole
@@ -144,59 +114,13 @@ how obvious they seem:
   pins that file `text eol=lf` — the checkout converts to CRLF; the `*.projjson` line and its
   comment are the precedent. Reviewers running with `core.autocrlf false` cannot see it locally;
   the class belongs on the checklist whenever a test hashes a checked-in text file.
-- **Never block or pump inside Tauri's `setup()` (added 2026-09-08, the human's ruling on
-  entry 55).** A startup value that is not yet observable when `setup()` runs (the webview's URL is
-  `about:blank` there) is derived from configuration the host already holds, never waited for: a
-  retry loop that pumps Win32 messages inside `setup()` let WebView2 IPC callbacks dispatch a
-  command before `app.manage(...)` — tao buffers its own events under that re-entry, but the COM
-  callbacks are not behind its guard — and needed a direct `windows` dependency plus the crate's
-  only `unsafe`. The pattern is: select from config (`tauri::is_dev()` + `config.build.dev_url`,
-  the same bit Tauri itself resolves the window URL from), then assert against reality once the
-  page has loaded — a logged self-check with a typed mismatch state, never a re-selection.
-- **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
-  `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
-  `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
-  final commits (recovered only because git keeps objects).
-- Accepted ADRs are append-only; corrections are dated corrigenda; a stale provenance field is
-  worse than a missing one; "done" claims are checked (`git status --porcelain`, suite runs), not
-  transcribed.
-- Preregistration before instruments; within-session comparisons only; interval labels on every
-  cancellation figure (ADR-018); no numbers, no claim — the constitution's own rules govern, cited
-  not duplicated.
-- Reports end with: verdicts table where applicable, the decision list for the human, and
-  `git status --porcelain` output.
+- **A CI watcher waits for the run set to exist before "no pending" means anything (2026-09-08).**
+  Polled seconds after a push, `gh pr checks` lists only the checks already created (the DCO job),
+  so "nothing pending" is vacuously true and a false all-green follows. Delay the first poll, require a
+  minimum check count (the PR's workflows are known: DCO, viewer, shell, Rust, tauri-build as the path
+  filters admit), and print every line with the head SHA.
 
-- **Inspect before removing, in its own step (2026-09-08).** A worktree's `target/` is not
-  necessarily a cargo cache: a worker's env-less run puts regenerated fixtures and test evidence
-  there. List the directory, decide, then remove — never in the same command. Corollary for briefs:
-  name BOTH target directories on every cargo invocation (root workspace →
-  `C:\dev\spatial-ide	arget`; the shell crate → `frontends\shell\src-tauri	arget`); one missing
-  export grows a 3–18 GB worktree-local target.
-- **One app at a time; only the harness launches it (2026-09-08).** A worker or gate that needs the
-  shell app launches it through the E2E harness's own attach-or-launch (the CDP port), never a bare
-  `npm run tauri dev` "pre-warm" — that instance is un-attachable and holds port 5180 for everyone.
-  A worker must be able to close what it opened (by PID); if its sandbox denies termination it must
-  not open it. Everyone else waits, bounded, and never kills; the custodian closes a stray by PID
-  only after verifying ownership (creation time + the command line's worktree path). Corollary:
-  `attachOrLaunch` attaches to anything already on the port and returns `launched: false` — an E2E
-  that proves a branch must assert `launched: true` and record PID, exe path and session log.
-  Ownership is checked by the process's `ExecutablePath` (or creation time), not its command line:
-  the harness spawns the app with a RELATIVE command line (`target\debug\spatial-ide-shell.exe`), so a
-  worktree-path match on the command line fails for the instance you own (2026-09-09). A fresh
-  worktree has no debug binary, and the harness's own `tauri dev` cannot compile the shell crate
-  inside its 300 s attach window — `cargo build` in that worktree's `src-tauri` FIRST (a shell debug
-  build is ~16 GB; check free space with `df -h /c` before it — a full disk fails the build at the
-  final archive, os error 112, after the deps compiled). A launch that fails this way leaves no app
-  behind; verify with `tasklist` before relaunching.
-- **The citation-integrity scanner covers five files (2026-09-08).** `e2e/residency*.mjs` and
-  `src/instrument/*` only. A quote in `spikes/`, any other `e2e/*.mjs`, `LICENSES/`, the walkthrough
-  or an ADR is checked by hand at gate time — the class caught twice today was a quotation
-  attributed to a document that does not contain it (the custodian's brief, quoted as "the
-  preregistration"). Label the brief's words as "the custodian's brief, not in the tree" whenever
-  they are quoted; widening the scanner is a NEXT-CUT tooling item.
-- **Rule 7 is counted per step, per design (2026-09-08, applied to #31 and item 1 (b)).** A PASS
-  with must-fixes is not a failed attempt; a gate FAIL followed by a re-review FAIL at the same
-  step is two → stop, record, queue. A design the human re-authorized starts its own count.
+### Line endings (the eol class)
 
 - **No shebang on a module a Vitest suite imports (2026-09-08, PR #35's first CI run).** On
   `windows-latest` (`core.autocrlf=true`) a `#!/usr/bin/env node` first line ending in CR LF makes
@@ -204,19 +128,11 @@ how obvious they seem:
   `node --check` accepts the file and the same commit passes locally under LF. Reproduce by converting
   the module to CRLF; bisect by file. A module that is only imported carries no shebang; a script that
   is only executed may. `node --check` is not the guard; the CRLF checkout is the second member of the
-  eol class (the hash-pin member is above). Third member, same day (PR #36): a check script that reads
-  a repo text file and matches a multi-line pattern must normalise `\r\n` to `\n` on read, or it finds
+  eol class (the hash-pin member is the corollary to the "A CI watcher prints every check line" bullet,
+  under *Commits, checks and CI watchers*). Third member, same day (PR #36): a check script that reads a
+  repo text file and matches a multi-line pattern must normalise `\r\n` to `\n` on read, or it finds
   nothing on `windows-latest` and fails the job while every LF checkout passes. Reproduce any member by
   converting the file to CRLF locally before pushing.
-- **The check's exit gates the commit — never chain them (2026-09-08).** An edit, its verification and
-  the commit/push in one command chained with `;` let a broken file ship (PR #36: a patch tool wrote a
-  line break inside a regex; `node --check` printed the error and the push went out anyway). Run the
-  check first; commit in a later step, or gate the commit on the check's exit status.
-- **A CI watcher waits for the run set to exist before "no pending" means anything (2026-09-08).**
-  Polled seconds after a push, `gh pr checks` lists only the checks already created (the DCO job),
-  so "nothing pending" is vacuously true and a false all-green follows. Delay the first poll, require a
-  minimum check count (the PR's workflows are known: DCO, viewer, shell, Rust, tauri-build as the path
-  filters admit), and print every line with the head SHA.
 - **A script that rewrites a repo text file writes LF — Python `open(path, "w")` on Windows does not
   (2026-09-09).** Text-mode writes translate `\n` to `\r\n`; a custodian script turned seven files on
   main CRLF with no visible diff of its own, and the next rebase of a stacked branch conflicted on
@@ -235,6 +151,120 @@ how obvious they seem:
   text rule must come BEFORE the `-text` lines. The fifth member of the eol class; its symptom is a
   hash mismatch with an empty `git diff`. `git ls-files --eol` shows such a file as
   `i/crlf w/crlf attr/-text` (the pinned directory's own README records the case in full).
+
+### Disk, builds, worktrees and merges
+
+- **Never wholesale-clean `target/` (no `cargo clean`, no `rm -rf target/`).** The repo's `target/`
+  holds NON-artifact data alongside build output — `target/slice-evidence/` (incl. the 5 GB hero
+  fixture, `kernel/FIXTURES.md`) and `target/fixtures/` (the walkthrough set) — so a wholesale
+  clean eats fixtures and campaign evidence. Reclaim disk SURGICALLY: remove only the build-output
+  dirs (`target/debug`, `target/release`, and `frontends/shell/src-tauri/target`), never the data
+  subdirs. (A proper fix — relocating fixtures out of `target/` entirely — is a scoped refactor:
+  paths are hardcoded across 40+ live test/harness files plus append-only preregistration records,
+  so it is not a mechanical move; see `DECISIONS-PENDING.md`.)
+- **Inspect before removing, in its own step (2026-09-08).** A worktree's `target/` is not
+  necessarily a cargo cache: a worker's env-less run puts regenerated fixtures and test evidence
+  there. List the directory, decide, then remove — never in the same command. Corollary for briefs:
+  name BOTH target directories on every cargo invocation (root workspace →
+  `C:\dev\spatial-ide\target`; the shell crate → `frontends\shell\src-tauri\target`); one missing
+  export grows a 3–18 GB worktree-local target.
+- **Before any merge/rebase/force-push: prove the reported tip is reachable** from this checkout —
+  `git cat-file -t <hash>` and `git branch --all --contains <hash>`. Sessions sometimes run in
+  `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
+  final commits (recovered only because git keeps objects).
+
+### Launching the app and E2E runs
+
+- **One app at a time; only the harness launches it (2026-09-08).** A worker or gate that needs the
+  shell app launches it through the E2E harness's own attach-or-launch (the CDP port), never a bare
+  `npm run tauri dev` "pre-warm" — that instance is un-attachable and holds port 5180 for everyone.
+  A worker must be able to close what it opened (by PID); if its sandbox denies termination it must
+  not open it. Everyone else waits, bounded, and never kills; the custodian closes a stray by PID
+  only after verifying ownership (creation time + the command line's worktree path). Corollary:
+  `attachOrLaunch` attaches to anything already on the port and returns `launched: false` — an E2E
+  that proves a branch must assert `launched: true` and record PID, exe path and session log.
+  Ownership is checked by the process's `ExecutablePath` (or creation time), not its command line:
+  the harness spawns the app with a RELATIVE command line (`target\debug\spatial-ide-shell.exe`), so a
+  worktree-path match on the command line fails for the instance you own (2026-09-09). A fresh
+  worktree has no debug binary, and the harness's own `tauri dev` cannot compile the shell crate
+  inside its 300 s attach window — `cargo build` in that worktree's `src-tauri` FIRST (a shell debug
+  build is ~16 GB; check free space with `df -h /c` before it — a full disk fails the build at the
+  final archive, os error 112, after the deps compiled). A launch that fails this way leaves no app
+  behind; verify with `tasklist` before relaunching.
+- **E2E from a worktree (added 2026-09-06, the recipe that works).** Set
+  `CARGO_TARGET_DIR=<main checkout>\frontends\shell\src-tauri\target` (it propagates through
+  `npm` → `tauri dev` → `cargo`; the worktree then creates no `target/` of its own and the cold
+  13.6 GB build never happens), BUT the first launch still rebuilds the workspace crates under
+  `--no-default-features` (a worktree path is a new package id) — several minutes, longer than the
+  harness's 300 s attach window. So launch `tauri dev` once and let it come up, THEN run the harness,
+  which attaches to the running instance (`attachOrLaunch` attaches first). A harness "overall
+  watchdog exceeded" exit does NOT kill the detached launch it started: check
+  `cargo`/`rustc`/`spatial-ide-shell` processes after any watchdog exit before launching again.
+  And the walkthrough operator's own plain `npm run tauri dev` from the main checkout holds Vite's
+  5180 — the two cannot run at once; the human closes theirs, or the harness waits.
+- **Never block or pump inside Tauri's `setup()` (added 2026-09-08, the human's ruling on
+  entry 55).** A startup value that is not yet observable when `setup()` runs (the webview's URL is
+  `about:blank` there) is derived from configuration the host already holds, never waited for: a
+  retry loop that pumps Win32 messages inside `setup()` let WebView2 IPC callbacks dispatch a
+  command before `app.manage(...)` — tao buffers its own events under that re-entry, but the COM
+  callbacks are not behind its guard — and needed a direct `windows` dependency plus the crate's
+  only `unsafe`. The pattern is: select from config (`tauri::is_dev()` + `config.build.dev_url`,
+  the same bit Tauri itself resolves the window URL from), then assert against reality once the
+  page has loaded — a logged self-check with a typed mismatch state, never a re-selection.
+- **Verify the residency arm per reload, never per sitting (added 2026-09-06).** `currentArm`
+  is in-memory JS state that resets to `"baseline"` on every Ctrl+R; a whole half-sitting's verdicts
+  were later proven baseline by the session log. Every operator step under the candidate arm
+  starts with `await window.__SPATIAL_E2E__.getResidencyArm()` printing `"candidate"`, and a
+  session log `candidate-grid-frame-established` line is the after-the-fact proof.
+- **A file another process holds open for append shows a STALE size in directory listings
+  (added 2026-09-06, after a false "session log is dead" finding).** NTFS updates the directory
+  entry lazily; `Get-ChildItem`/`ls -l` reported the running app's session log as 0 bytes for an
+  hour while it was 36 KB of real content. Never infer "nothing was written" from a size — read
+  the content (`Get-Content`/`cat`). The same trap made `e2e/out/app.log` look empty mid-launch.
+  Corollary: the app's session logs (`%LOCALAPPDATA%\dev.spatialide.shell\logs\session-*.log`)
+  are a complete, timestamped record of every open, candidate frame, truncation, and refusal —
+  read them before asking the human what happened.
+
+### Scripts we write
+
+- **`.ps1` files we write are ASCII-only, or they carry a BOM (added 2026-09-07, after a silently
+  skipped display check).** The Write tool saves BOM-less UTF-8; `powershell.exe` 5.1 `-File`
+  reads a BOM-less file as ANSI (cp1252). A UTF-8 em dash (`E2 80 94`) then decodes to `â€”`, and
+  `0x94` is U+201D `”` — which PowerShell 5.1 accepts as a double-quote delimiter. One em dash
+  inside a `"…"` string shifted the quote parity of an unattended runner so that eight lines
+  (the whole wake-and-verify-display block) parsed as the body of a never-taken `if` and simply did
+  not run; no error, no log line. The same file with the dash on a different line fails to parse
+  instead. Rules: no non-ASCII characters in `.ps1` files (comments included — `–` is `“`);
+  scan before launching anything unattended: `Select-String -Path <file> -Pattern '[^\x00-\x7F]'`
+  must print nothing; put safety-critical steps in their own child script whose lines are logged
+  verbatim and whose exit code gates, so a skip shows up as a missing line rather than silence;
+  prove a new runner with a dry-run switch under the identical `-File` launch before the real run.
+
+### Citations and quotes
+
+- **The citation-integrity scanner covers five files (2026-09-08).** `e2e/residency*.mjs` and
+  `src/instrument/*` only. A quote in `spikes/`, any other `e2e/*.mjs`, `LICENSES/`, the walkthrough
+  or an ADR is checked by hand at gate time — the class caught twice today was a quotation
+  attributed to a document that does not contain it (the custodian's brief, quoted as "the
+  preregistration"). Label the brief's words as "the custodian's brief, not in the tree" whenever
+  they are quoted; widening the scanner is a NEXT-CUT tooling item.
+
+### Gates and rule 7
+
+- **Rule 7 is counted per step, per design (2026-09-08, applied to #31 and item 1 (b)).** A PASS
+  with must-fixes is not a failed attempt; a gate FAIL followed by a re-review FAIL at the same
+  step is two → stop, record, queue. A design the human re-authorized starts its own count.
+
+### Records, claims and reports
+
+- Accepted ADRs are append-only; corrections are dated corrigenda; a stale provenance field is
+  worse than a missing one; "done" claims are checked (`git status --porcelain`, suite runs), not
+  transcribed.
+- Preregistration before instruments; within-session comparisons only; interval labels on every
+  cancellation figure (ADR-018); no numbers, no claim — the constitution's own rules govern, cited
+  not duplicated.
+- Reports end with: verdicts table where applicable, the decision list for the human, and
+  `git status --porcelain` output.
 
 ## Away-mode evidence rule
 
@@ -287,17 +317,7 @@ observed burn:
    one of them is ever the right explanation past the declared duration. (Added 2026-08-12 after a
    harness process hung 16 hours *after* successfully printing its result — the cost was a night of
    wall clock, and the result was sitting in the log the whole time.)
-
-## The worker mechanics (2026-08-09)
-
-Implementation runs on the **`worker` subagent** (`.claude/agents/worker.md`, Sonnet, full tools):
-the custodian decomposes a brief into bounded pieces, delegates each, and audits the terse reports
-against the tree — its own context stays small, the grind runs on the cheap model, and
-one-session-per-tree holds by construction. Gates (architect/reviewer/tester) run as always,
-between pieces or after the set. **Fallback for pieces too large for one delegation:** the
-custodian switches itself to Sonnet (`/model sonnet`) for the implementation stretch and back for
-verdicts, noting the switch; after the cut, exit and relaunch a fresh custodian rather than
-carrying the accumulated context forward.
+   *(Items 10-12 re-attached to this list on 2026-09-09: since their addition on 2026-08-17/18 and 2026-09-02 they had sat stranded after the next `##` heading; their text is unchanged.)*
 10. **Cut state archives at cut close.** Transient per-cut files (`NEXT-CUT.md`, `CUT-STATE*.md`,
     ad-hoc `*-STATE.md`) live at the repo root only while their cut is live. The brief is deleted
     by the cut's final docs commit (its own status line says so); the state file moves to
@@ -320,3 +340,14 @@ carrying the accumulated context forward.
     it isn't a hand-typed `git commit`. Run `git config core.hooksPath .githooks` once per clone
     (`CONTRIBUTING.md`'s own "Catch it at commit time, not at the PR") so this is caught locally
     at commit one, not discovered at the PR. (Added 2026-09-02.)
+
+## The worker mechanics (2026-08-09)
+
+Implementation runs on the **`worker` subagent** (`.claude/agents/worker.md`, Sonnet, full tools):
+the custodian decomposes a brief into bounded pieces, delegates each, and audits the terse reports
+against the tree — its own context stays small, the grind runs on the cheap model, and
+one-session-per-tree holds by construction. Gates (architect/reviewer/tester) run as always,
+between pieces or after the set. **Fallback for pieces too large for one delegation:** the
+custodian switches itself to Sonnet (`/model sonnet`) for the implementation stretch and back for
+verdicts, noting the switch; after the cut, exit and relaunch a fresh custodian rather than
+carrying the accumulated context forward.
