@@ -5,6 +5,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import App from "./App";
+import OriginMismatchState from "./OriginMismatchState";
+import { wireOriginSelfCheck } from "./diagnostics/originSelfCheck";
 import "./styles.css";
 
 /**
@@ -16,8 +18,13 @@ export function mount(): void {
   if (!root) {
     throw new Error("no #root element to mount into");
   }
+  // ADR-020 Amendment 1 (rewritten): wired here, alongside `<App />`, rather than inside `App`
+  // itself -- the origin self-check's mismatch state is prior to, and independent of, any dataset
+  // admission `App` owns (`originSelfCheck.ts`'s own doc comment).
+  void wireOriginSelfCheck();
   ReactDOM.createRoot(root).render(
     <React.StrictMode>
+      <OriginMismatchState />
       <App />
     </React.StrictMode>
   );
