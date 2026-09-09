@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { AuthoritativeBbox } from "./viewportBbox";
-import { TILE_GRID_DIMENSIONS, TileGridLevel } from "./tileGridConstants";
+import {
+  COVER_WINDOW_CELLS_PER_AXIS,
+  MAX_COVERING_TILES,
+  TILE_GRID_DIMENSIONS,
+  TileGridLevel,
+} from "./tileGridConstants";
 
 /**
  * Viewport-residency cut P3 item A: a declared, fixed grid over a dataset-scoped square, pure math
@@ -161,16 +166,87 @@ function coveringIndexRange(minCoord: number, maxCoord: number, origin: number, 
   return [start, Math.max(end, start)];
 }
 
-/**
- * Every tile key whose cell intersects `bbox`, in DETERMINISTIC row-major order (ascending row
- * outer, ascending col inner) -- NEXT-CUT.md P3 item A's own ordering requirement, so a caller's
- * planning (which non-resident tile to issue first when queueing) is reproducible run to run, not an
- * artifact of `Map`/`Set` iteration order over some other structure.
- */
-export function tilesCoveringBbox(frame: TileGridFrame, level: TileGridLevel, bbox: AuthoritativeBbox): TileKey[] {
+/** The two index ranges (`coveringIndexRange` per axis) a cover spans, plus the cell size they were
+ * computed against -- the shared arithmetic behind `coveringCellCount` and `tileCoverForBbox`,
+ * allocating nothing but the two pairs themselves however large the cover turns out to be. */
+function coveringIndexRanges(
+  frame: TileGridFrame,
+  level: TileGridLevel,
+  bbox: AuthoritativeBbox
+): { cellSize: number; cols: [number, number]; rows: [number, number] } {
   const cellSize = cellSizeForLevel(frame, level);
-  const [colStart, colEnd] = coveringIndexRange(bbox.xmin, bbox.xmax, frame.originX, cellSize);
-  const [rowStart, rowEnd] = coveringIndexRange(bbox.ymin, bbox.ymax, frame.originY, cellSize);
+  return {
+    cellSize,
+    cols: coveringIndexRange(bbox.xmin, bbox.xmax, frame.originX, cellSize),
+    rows: coveringIndexRange(bbox.ymin, bbox.ymax, frame.originY, cellSize),
+  };
+}
+
+/**
+ * The cover's own cell count, computed from the SPAN alone -- rows x cols, no allocation, no loop.
+ * This is the pre-check `tileCoverForBbox` runs before it materialises anything: the human's
+ * 2026-09-08 ruling on DECISIONS-PENDING entry 60 is a "bound-before-allocate fix in this cut".
+ *
+ * The result may be astronomically large (a camera at zoom -64 makes the viewport's own
+ * authoritative-CRS bbox ~2^64 times wider than at zoom 0, `WorkingCanvas.tsx`'s own
+ * `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom`) or non-finite (a non-finite bbox coordinate) --
+ * both are ordinary inputs to this function and neither costs more than this arithmetic. Callers
+ * treat any non-finite result as "over the bound"; `Number.isFinite` is the check, never a bare
+ * `>` comparison, because `NaN > anything` is `false`.
+ */
+export function coveringCellCount(frame: TileGridFrame, level: TileGridLevel, bbox: AuthoritativeBbox): number {
+  const { cols, rows } = coveringIndexRanges(frame, level, bbox);
+  return (cols[1] - cols[0] + 1) * (rows[1] - rows[0] + 1);
+}
+
+/**
+ * `tileCoverForBbox`'s own result: the covering cells, and whether the declared enumeration bound
+ * (`MAX_COVERING_TILES`) stopped this cover short of the full geometric set.
+ *
+ * `"truncated"` is the SAME outcome `TileViewportStreamManager.onCameraChange` already produces when
+ * a covering set outruns its own issuing/queueing capacity (`TilePlanOutcome.coveringTruncated`/
+ * `truncatedCount`, and the settled-partial status line the candidate arm shows for it) -- this
+ * module reaching it earlier, from the span, does not add a new product state.
+ */
+export type TileCover =
+  | {
+      kind: "complete";
+      /** Every cell of the cover, row-major (`tilesCoveringBbox`'s own ordering contract). */
+      keys: TileKey[];
+      /** `coveringCellCount`'s own result; equals `keys.length` on this branch. */
+      cellCount: number;
+    }
+  | {
+      kind: "truncated";
+      /** The kept cells: a square window of at most `COVER_WINDOW_CELLS_PER_AXIS` per axis centred
+       * on `bbox`'s own centre cell, intersected with the real cover, row-major. Empty only when
+       * that window is not a walkable index range at all (`isEnumerableRange`: a non-finite bbox,
+       * or one so far from the frame origin that its cell indices exceed the safe-integer range). */
+      keys: TileKey[];
+      /** `coveringCellCount`'s own result -- the size of the cover that WOULD have been
+       * materialised. May be non-finite when the bbox is (see `coveringCellCount`); no finite
+       * substitute is invented for it here. */
+      cellCount: number;
+      /** `cellCount - keys.length` -- how many cells this cover omits. Carries `cellCount`'s own
+       * non-finiteness when it has any, for the same reason. */
+      omittedCellCount: number;
+    };
+
+/** Whether `[start, end]` is a cell-index range a plain `for (i = start; i <= end; i++)` loop can
+ * actually walk: both ends safe integers (`Number.isSafeInteger`), `end` at or after `start`. Past
+ * 2^53 an increment is a no-op in double arithmetic, so a loop over such a range never terminates --
+ * the same never-returns failure this module's own count bound exists to close, reached by cell-index
+ * MAGNITUDE (a bbox absurdly far from the frame origin) rather than by cell COUNT. A range that
+ * fails this is reported truncated with nothing kept, never enumerated. */
+function isEnumerableRange(start: number, end: number): boolean {
+  return Number.isSafeInteger(start) && Number.isSafeInteger(end) && end >= start;
+}
+
+/** Materialises the cells of one index rectangle, row-major (ascending row outer, ascending col
+ * inner). Every caller has already bounded `rowEnd - rowStart` and `colEnd - colStart` AND checked
+ * both ranges with `isEnumerableRange`; this function never checks a bound of its own, which is
+ * exactly why nothing else may call it. */
+function materialiseCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): TileKey[] {
   const keys: TileKey[] = [];
   for (let row = rowStart; row <= rowEnd; row++) {
     for (let col = colStart; col <= colEnd; col++) {
@@ -178,4 +254,93 @@ export function tilesCoveringBbox(frame: TileGridFrame, level: TileGridLevel, bb
     }
   }
   return keys;
+}
+
+/**
+ * Every tile key whose cell intersects `bbox`, in DETERMINISTIC row-major order (ascending row
+ * outer, ascending col inner) -- NEXT-CUT.md P3 item A's own ordering requirement, so a caller's
+ * planning (which non-resident tile to issue first when queueing) is reproducible run to run, not an
+ * artifact of `Map`/`Set` iteration order over some other structure -- BOUNDED by
+ * `MAX_COVERING_TILES` (DECISIONS-PENDING entry 60, ruled (a) 2026-09-08; RELEASE-0.1.md Amendment
+ * 10's preregistration).
+ *
+ * **What the bound fixes.** `tilesCoveringBbox` (this function, then unbounded) was called on every
+ * debounced camera settle (`TileViewportStreamManager.onCameraChange`, then
+ * `streaming/tileViewportStreamManager.ts:314`, now `:372` and through `tileCoverForBbox`), and
+ * `MAX_QUEUED_TILES` truncated only AFTERWARDS (the same block either side of the fix: then
+ * `:361-379` there, now `:420-442`) -- so an
+ * ordinary wheel gesture far enough out made this nested loop's own
+ * iteration count a function of the camera alone, with nothing in front of it: the canvas's single
+ * JS thread sat in this loop, which is docs/01's "Never block the canvas." (principle 7) broken on
+ * the camera path. The pre-check below is `coveringCellCount` -- rows x cols from the span, before the
+ * first `TileKey` exists.
+ *
+ * **What it does when the bound is exceeded, and what it deliberately does NOT do.** It keeps a
+ * square window of `COVER_WINDOW_CELLS_PER_AXIS` cells per axis centred on `bbox`'s own centre cell
+ * (intersected with the real cover, so a cover overrunning the bound on one axis only keeps the
+ * other axis whole) and reports `"truncated"`. Nearest-to-the-view-centre-kept /
+ * farthest-dropped is the policy `onCameraChange` itself already applies to its own candidate list
+ * (`tileViewportStreamManager.ts:430-442`); this is that same policy, moved in front of the
+ * allocation. It does NOT introduce a
+ * zoom floor, a `minZoom` clamp, or any new operator-visible state -- entry 60 records the clamp as
+ * an optional follow-up (recorded in the custodian's own next-cut brief, which is untracked and not
+ * in this tree), and the partial-view disclosure stays exactly the settled-partial status line the
+ * candidate arm shows today.
+ *
+ * **What the window costs past the bound is disclosed, not hidden**: at those zoom levels the
+ * covering set this returns is the window, so ADR-028's geometric eviction protection covers the
+ * window only -- `tileGridConstants.ts`'s own `MAX_COVERING_TILES` comment states the consequence in
+ * full. Ruled by the human on 2026-09-09 (DECISIONS-PENDING entry 66 = (d)): a DECLARED EXCEPTION,
+ * recorded in ADR-028's own appended note (the custodian's, landing on this branch beside this
+ * piece), with the enumeration-free redesign preregistered as the first post-tag piece
+ * (`RELEASE-0.1.md` Amendment 12).
+ */
+export function tilesCoveringBbox(frame: TileGridFrame, level: TileGridLevel, bbox: AuthoritativeBbox): TileKey[] {
+  return tileCoverForBbox(frame, level, bbox).keys;
+}
+
+/**
+ * The bounded cover, with the truncation fact the caller needs to report it (`tilesCoveringBbox`
+ * above is this function's own keys-only projection, kept for the callers -- and the tests --
+ * that never needed the fact).
+ *
+ * Pure and total: every branch below allocates at most `MAX_COVERING_TILES` `TileKey`s, whatever
+ * `bbox` says, including a non-finite one.
+ */
+export function tileCoverForBbox(frame: TileGridFrame, level: TileGridLevel, bbox: AuthoritativeBbox): TileCover {
+  const { cellSize, cols, rows } = coveringIndexRanges(frame, level, bbox);
+  const [colStart, colEnd] = cols;
+  const [rowStart, rowEnd] = rows;
+  // The pre-check: the count comes from the span, so this comparison happens with nothing yet
+  // allocated. A non-finite count (a non-finite bbox) is over the bound by definition -- tested
+  // first, since `NaN <= MAX_COVERING_TILES` is `false` but so is `NaN > MAX_COVERING_TILES`.
+  // Reviewer gate should-fix 5: this calls `coveringCellCount` rather than repeating its product
+  // inline, so the exported count and the count the bound is actually applied to are ONE source and
+  // cannot drift. It re-derives the two index ranges (`coveringIndexRanges`, called again inside);
+  // that is the same handful of divides and floors, which allocates nothing proportional to the
+  // cover (the two index pairs themselves are all `coveringIndexRanges` builds), and the
+  // deterministic same result for the same inputs.
+  const cellCount = coveringCellCount(frame, level, bbox);
+  const enumerable = isEnumerableRange(rowStart, rowEnd) && isEnumerableRange(colStart, colEnd);
+  if (enumerable && Number.isFinite(cellCount) && cellCount <= MAX_COVERING_TILES) {
+    return { kind: "complete", keys: materialiseCells(rowStart, rowEnd, colStart, colEnd), cellCount };
+  }
+
+  // Over the bound: the centred window. `min + (max - min) / 2` rather than `(min + max) / 2` --
+  // the halves of an already-astronomical bbox must not sum their way to `Infinity` here.
+  const centreCol = Math.floor((bbox.xmin + (bbox.xmax - bbox.xmin) / 2 - frame.originX) / cellSize);
+  const centreRow = Math.floor((bbox.ymin + (bbox.ymax - bbox.ymin) / 2 - frame.originY) / cellSize);
+  const half = COVER_WINDOW_CELLS_PER_AXIS / 2;
+  const winColStart = Math.max(colStart, centreCol - half);
+  const winColEnd = Math.min(colEnd, centreCol - half + COVER_WINDOW_CELLS_PER_AXIS - 1);
+  const winRowStart = Math.max(rowStart, centreRow - half);
+  const winRowEnd = Math.min(rowEnd, centreRow - half + COVER_WINDOW_CELLS_PER_AXIS - 1);
+  if (!isEnumerableRange(winRowStart, winRowEnd) || !isEnumerableRange(winColStart, winColEnd)) {
+    // A bbox with a non-finite coordinate has no finite centre cell to keep a window around, and one
+    // absurdly far from the frame origin has no walkable one (`isEnumerableRange`) -- the cover is
+    // reported truncated with nothing kept rather than guessed at.
+    return { kind: "truncated", keys: [], cellCount, omittedCellCount: cellCount };
+  }
+  const keys = materialiseCells(winRowStart, winRowEnd, winColStart, winColEnd);
+  return { kind: "truncated", keys, cellCount, omittedCellCount: cellCount - keys.length };
 }

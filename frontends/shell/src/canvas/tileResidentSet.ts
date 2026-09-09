@@ -419,7 +419,11 @@ const EMPTY_RESERVED: ReadonlySet<string> = new Set();
 /**
  * The pure eviction DECISION (item D) -- never evicts a tile in `viewportTileKeys` (the current
  * viewport's own covering set), regardless of distance or budget: "never evict a tile intersecting
- * the current viewport" is absolute, not merely preferred. Ordered farthest-from-`viewCentre` first
+ * the current viewport" is absolute, not merely preferred -- for covers at or under
+ * `MAX_COVERING_TILES`; past that bound the set the caller passes is the centred window rather than
+ * the cover, so the protection is the window's (a declared exception -- ADR-028's appended note,
+ * DECISIONS-PENDING entry 66 = (d), ruled 2026-09-09). This function itself never enumerates a
+ * cover; it protects exactly the set it is given. Ordered farthest-from-`viewCentre` first
  * via `distanceToViewCentre` (typically `tileGrid.ts`'s own `tileDistanceToPoint`, injected here so
  * this function stays free of any grid-frame/level knowledge of its own).
  */
@@ -428,7 +432,9 @@ export function planTileEviction(params: {
    * `TileResidentSet.residentTileKeys()`). */
   residentTileKeys: readonly string[];
   tileVertices: (tileKey: string) => number;
-  /** Tiles the current viewport itself covers -- never evicted, however far the budget overshoots. */
+  /** Tiles the current viewport itself covers -- never evicted, however far the budget overshoots
+   * (on this function's own doc-comment qualification: past `MAX_COVERING_TILES` the caller's set is
+   * the centred window, not the cover). */
   viewportTileKeys: ReadonlySet<string>;
   incomingVertices: number;
   currentTotalVertices: number;
@@ -447,7 +453,9 @@ export function planTileEviction(params: {
    * content is what every real tile's own cross-tile dedupe compared against, so it is the single
    * most valuable thing to keep resident and the honest LAST resort once nothing else is left to
    * free. Still never evicted while itself named in `viewportTileKeys` -- the same absolute rule
-   * every other tile gets. Defaults to empty (ordinary, non-candidate callers are unaffected).
+   * every other tile gets, under the same qualification (this function's own doc comment: past
+   * `MAX_COVERING_TILES` that set is the window). Defaults to empty (ordinary, non-candidate callers
+   * are unaffected).
    */
   reservedTileKeys?: ReadonlySet<string>;
 }): EvictionPlan {

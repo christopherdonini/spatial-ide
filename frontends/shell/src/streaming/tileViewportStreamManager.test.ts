@@ -21,7 +21,7 @@ const logSessionEventMock = vi.hoisted(() => vi.fn());
 vi.mock("../diagnostics/log", () => ({ logSessionEvent: logSessionEventMock }));
 
 import type { TileGridLevel } from "../canvas/tileGridConstants";
-import { MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
+import { MAX_COVERING_TILES, MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
 import type { StreamSink } from "./transport";
 import type { TileResidencyAccessor, TileViewportStreamManagerOptions } from "./tileViewportStreamManager";
 import { TileViewportStreamManager } from "./tileViewportStreamManager";
@@ -516,6 +516,25 @@ describe("TileViewportStreamManager", () => {
       const outcome2 = manager2.onCameraChange(bbox);
       if (outcome2.kind !== "planned") throw new Error("unreachable");
       expect([...outcome2.issued, ...outcome2.queued]).toEqual([...outcome.issued, ...outcome.queued]);
+    });
+
+    it("a camera whose cover exceeds the ENUMERATION bound plans from the bounded cover and records it (entry 60)", () => {
+      // DECISIONS-PENDING entry 60 (ruled (a) 2026-09-08): the zoom -64 shape -- a 1280x800 viewport
+      // at `pixelsPerWorldUnitAtZoom(-64) === 2 ** -64` (`WorkingCanvas.tsx:384-390`), the wedge that
+      // hung the page. Before the fix this call materialised the whole cover first; the assertion
+      // that matters most here is that it RETURNS.
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockReturnValue(new Promise(() => {})); // never resolves -- inspect planning only
+
+      const half = 1280 / 2 ** -64 / 2;
+      const outcome = manager.onCameraChange({ xmin: -half, ymin: -half, xmax: half, ymax: half });
+      if (outcome.kind !== "planned") throw new Error("unreachable");
+      expect(outcome.covering.length).toBeLessThanOrEqual(MAX_COVERING_TILES);
+      expect(outcome.coveringTruncated).toBe(true);
+      // Both bounds fired: cells never enumerated PLUS candidates past the queue ceiling.
+      expect(outcome.truncatedCount).toBeGreaterThan(MAX_COVERING_TILES);
+      expect(outcome.issued.length + outcome.queued.length).toBe(MAX_IN_FLIGHT_TILE_STREAMS + MAX_QUEUED_TILES);
     });
 
     it("an ordinary, small covering set is never marked truncated", () => {

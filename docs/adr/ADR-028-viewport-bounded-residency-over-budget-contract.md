@@ -502,3 +502,17 @@ requested can never be absent from the set a "Showing all N" claim is checked ag
 `cut/residency-debt-fix`, preregistered in `frontends/shell/RESIDENCY-DEBT-1B.md`'s close-out
 section); appended to ADR-028 only on the human's word, at which point this PROPOSED file is
 deleted in the same commit.
+
+## Appended note, 2026-09-09 (on the human's word — DECISIONS-PENDING entry 66 = (d)): a declared exception to the protection rule past a bounded tile cover
+
+**Trigger.** Release cut entry 60 bounds the tile cover BEFORE it is enumerated: a canvas hang at extreme zoom-out (docs/01 principle 7) is closed by refusing to materialise more than `MAX_COVERING_TILES` cells — 65,536 = 128 × `MAX_QUEUED_TILES`, declared in `frontends/shell/src/canvas/tileGridConstants.ts` — and keeping a centred `COVER_WINDOW_CELLS_PER_AXIS` (256 × 256) window instead. The trigger is a cover whose cell count exceeds that bound: from entry 60's own recorded arithmetic and no new measurement (about 3.63× cells per wheel notch), roughly six notches past "Zoom to layer".
+
+**Consequence, in two paths.** Past the bound the windowed array is two things at once downstream. (i) It is the eviction-PROTECTED set (`candidateArmSession.ts` → `WorkingCanvas.tsx`'s `protectionSetFor`/`viewportTileKeys` → `tileResidentSet.ts`'s protected-membership tests): a resident tile that intersects the viewport but lies outside the window is evictable. (ii) It is the supersede KEEP-set (`tileViewportStreamManager.ts`'s `onCameraChange` loop, whose not-covered branch ends at `candidateArmSession.ts`'s `clearTile`): an in-flight in-view tile outside the window is superseded and BLANKED. Amendment 3's geometric rule — *"A tile intersecting the viewport is protected whether it is complete or partial, tracked this round or a prior one, or never requested at all"* — therefore holds inside the window only, at those zooms.
+
+**The second deviation.** The `fits`/over-budget latch reads the windowed cover too — the same consumer in `candidateArmSession.ts` — so past the bound "fits" and over-budget are decided over the window, not over the true cover. Disclosed here, not repaired here.
+
+**Unaffected: completeness.** A windowed cover sets `coveringTruncated`; `candidateArmSession.ts` latches it into `lastCoveringTruncated`, and `isFillComplete` refuses on that flag outright — no "Showing all N" claim is ever made over a windowed cover; the declared partial-view status shows. In KNOWN-LIMITATIONS' words for v0.1.0, the human's: *"at extreme zoom-out, more than ~6 wheel notches beyond Zoom to layer, tiles already drawn may vanish while still on screen; the status continues to report the view as partial."*
+
+**Standing.** Accepted as the price of closing a principle-7 hang in the shipped arm; decided by the human (entry 66 = (d)), not by the code. The bound and the window are declared limits read from the code that enforces them, not measurements.
+
+**Reopen.** Evidence of a visible in-viewport hole at the window regime reopens this as a defect. The geometric predicate that restores the rule at every zoom without enumeration — the cover's half-open index ranges (`coveringIndexRanges`) applied per resident tile, and the supersede keep-set closed the same way — is preregistered as the first post-tag piece (`RELEASE-0.1.md` Amendment 12, "Preregistration — entry 66 (b)"); its landing closes this exception by a further appended note on the human's word.
