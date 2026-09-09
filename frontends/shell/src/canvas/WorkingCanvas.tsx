@@ -541,20 +541,20 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * -- `null` until `establishTileGridContext` is called (once, by `App.tsx`'s candidate session,
    * right after `TileViewportStreamManager.establishGridFrame` succeeds). */
   const tileGridContextRef = useRef<TileGridContext | null>(null);
-  /** The current PROTECTION set -- eviction never drops a tile in here, however far the budget
-   * overshoots (`planTileEviction`'s own "never evict the current viewport" rule). Updated by
-   * `applyTileViewportContext`, read by `pushTileBatch`/`applyTileViewportContext` itself.
+  /** The current PROTECTION set -- eviction never drops a tile in here, however far the budget overshoots
+   * (`planTileEviction`'s own "never evict the current viewport" rule), for covers at or under `MAX_COVERING_TILES`;
+   * past that bound this set is the centred window (ADR-028's appended note, DECISIONS-PENDING entry 66 = (d)).
+   * Updated by `applyTileViewportContext`, read by `pushTileBatch`/`applyTileViewportContext` itself.
    *
-   * **residency-debt cut 1b sub-amendment (entry 48 (a)): this is `coveringTileKeysRef`'s own
-   * geometric covering set UNIONED with that same call's `extraProtectedKeys`, never `covering`
-   * alone.** The two were the SAME set before this sub-amendment; they diverge now because
-   * `extraProtectedKeys` (typically `INITIAL_TILE_KEY`, when the untiled first look's extent
-   * intersects the viewport) must reach eviction protection (this ref, fed to `planTileEviction`'s
-   * `viewportTileKeys` param and `TileResidentSet.evictTile`'s `protectedTileKeys` cascade backstop)
-   * WITHOUT also reaching `anyPartialAmongCovering`'s fits check, which reads `coveringTileKeysRef`
-   * instead (below) -- see `WorkingCanvasHandle.applyTileViewportContext`'s own doc comment for why
-   * folding the two together would be wrong (the durably-partial first look would then latch `fits`
-   * false at every view containing it). */
+   * **residency-debt cut 1b sub-amendment (entry 48 (a)): this is `coveringTileKeysRef`'s own geometric
+   * covering set UNIONED with that same call's `extraProtectedKeys`, never `covering` alone.** The two were
+   * the SAME set before this sub-amendment; they diverge now because `extraProtectedKeys` (typically
+   * `INITIAL_TILE_KEY`, when the untiled first look's extent intersects the viewport) must reach eviction
+   * protection (this ref, fed to `planTileEviction`'s `viewportTileKeys` param and
+   * `TileResidentSet.evictTile`'s `protectedTileKeys` cascade backstop) WITHOUT also reaching
+   * `anyPartialAmongCovering`'s fits check, which reads `coveringTileKeysRef` instead (below) -- see
+   * `WorkingCanvasHandle.applyTileViewportContext`'s own doc comment for why folding the two together would
+   * be wrong (the durably-partial first look would then latch `fits` false at every view containing it). */
   const currentViewportTileKeysRef = useRef<ReadonlySet<string>>(new Set());
   /** residency-debt cut 1b sub-amendment (entry 48 (a)): the geometric covering set ALONE -- exactly
    * `coveringTileKeys` as `applyTileViewportContext` received it this call, never unioned with

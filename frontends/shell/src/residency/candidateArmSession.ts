@@ -1385,14 +1385,18 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // that silently omitted (i) a tile already tracked from a PRIOR round (skipped entirely by the
     // manager's own new-candidate loop, `tileViewportStreamManager.ts`'s own
     // `if (this.tileState.has(tileKey)) continue`) and (ii) a genuinely new candidate dropped THIS
-    // round for lack of headroom while over budget (`:353` there) -- 1a Q2's own gap, entry 44's own
+    // round for lack of headroom while over budget (`:453` there) -- 1a Q2's own gap, entry 44's own
     // thrash mechanism. `outcome.covering` (F1, `TilePlanOutcome`) is the real fix: every key the
     // cover produced this round, geometric, never derived from what this round's own tracked/
     // resident/headroom bookkeeping happened to do with each one. Entry 60 (2026-09-08) bounds that
     // cover at `MAX_COVERING_TILES` before it is allocated (`tileGrid.ts`'s own `tileCoverForBbox`),
     // so "geometric" no longer implies "complete" at an extreme zoom-out: when the bound fires,
     // `outcome.coveringTruncated` says so, `lastCoveringTruncated` (below) carries it, and
-    // `isFillComplete` already refuses to read a truncated covering set as "all".
+    // `isFillComplete` already refuses to read a truncated covering set as "all". The protection this
+    // set carries therefore holds for covers at or under `MAX_COVERING_TILES`; past the bound it is
+    // the centred window that is protected, a declared exception recorded in ADR-028's appended note
+    // (DECISIONS-PENDING entry 66 = (d), ruled 2026-09-09) -- the full account of what that costs at
+    // this seam is `tileViewportStreamManager.ts:101-137`.
     const covering = outcome.covering;
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4

@@ -857,8 +857,17 @@ async function captureResidencyStatusText(page) {
  * tile-ingest` lines, and assert the intersection with the covering set is EMPTY -- ADR-028's
  * architect-gate clarification 3 (Proposed, ~:88) / Amendment 1 (Accepted, ~:334) own rule ("never
  * evict a tile intersecting the current viewport" -- NOT the accepted Decision's own item 3, which is
- * cross-tile de-duplication, an unrelated rule) made real by F1, pinned end-to-end.
- * `residencyQueuedTileCount()` corroborates the step was genuinely over budget.
+ * cross-tile de-duplication, an unrelated rule; the GEOMETRIC form this assertion actually tests --
+ * protection from the covering set itself, independent of any planning round's outcome arrays -- is
+ * Amendment 3's, ADR-028:459-462) made real by F1.
+ *
+ * **What it pins, and what it stopped pinning at entry 60 (2026-09-08).** For covers at or under
+ * `MAX_COVERING_TILES` it pins the rule end-to-end. PAST that bound both sides of the comparison are
+ * the same centred window -- the app's protected set, and this harness's own recomputation, since the
+ * `tilesCoveringBbox` export it calls is bounded by the same constant -- so the assertion still holds
+ * but says nothing about the covering cells outside the window. That narrowing is a declared
+ * exception (ADR-028's appended note, DECISIONS-PENDING entry 66 = (d), ruled 2026-09-09), not a gap
+ * this harness hides. `residencyQueuedTileCount()` corroborates the step was genuinely over budget.
  *
  * **Two disclosures this assertion carries (paraphrased from the piece's own preregistration, not
  * quoted):**

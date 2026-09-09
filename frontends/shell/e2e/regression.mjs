@@ -1011,13 +1011,14 @@ async function stepA9(page, consoleHandle) {
 // (this piece's own first run, K6 hung ~480s and wedged the whole page unresponsive to CDP at
 // zoom=-64): `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom` (`WorkingCanvas.tsx:384-390`) means an
 // extreme low zoom inflates the viewport's own world-space bbox by the same astronomical factor,
-// and `tilesCoveringBbox` (`canvas/tileGrid.ts:170-181`, the candidate arm's own covering-tile
-// enumeration `TileViewportStreamManager.planForBbox` calls directly, `streaming/
-// tileViewportStreamManager.ts:314`, with NO pre-clamp) builds its output with a plain nested
+// and -- before entry 60's fix (this branch) -- `tilesCoveringBbox` (`canvas/tileGrid.ts:298`, the
+// candidate arm's own covering-tile enumeration `TileViewportStreamManager.onCameraChange` calls,
+// `streaming/tileViewportStreamManager.ts:372`, then with no pre-clamp; now bounded before
+// allocation, see stepK7) built its output with a plain nested
 // `for (row) for (col)` loop over the FULL bbox/cellSize span BEFORE `MAX_QUEUED_TILES`
-// (`tileGridConstants.ts:54`) ever truncates the result -- an absurd bbox therefore means an
+// (`tileGridConstants.ts:54`) ever truncated the result -- an absurd bbox therefore meant an
 // attempted allocation/iteration of an absurd tile count, wedging the renderer's single JS thread
-// long before any truncation logic ever runs. This hang is a separate, recorded finding about the
+// long before any truncation logic ever ran. This hang is a separate, recorded finding about the
 // EXTREME value, not about modest seam use (`NEXT-CUT.md`'s "Found during the release cut" section,
 // filed as DECISIONS-PENDING entry 60) -- it is not why this step avoids the seam for modest jumps;
 // the real-product-action preference above is. Assertion (i) instead reuses "Zoom to layer" -- the
@@ -1055,7 +1056,7 @@ const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after fi
 // too few zoom-out notches to reliably cross back below the threshold (assertion (ii), discrete).
 const K6_ZOOM_OUT_NOTCH_DELTA_Y = -ZOOM_NOTCH_DELTA_Y; // reverses A9''s own zoom-in notch magnitude
 // (positive deltaY = wheel-down = zoom out, the opposite of `ZOOM_NOTCH_DELTA_Y`'s zoom-in).
-const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // App.tsx:1416, verbatim.
+const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // App.tsx:1417, verbatim.
 
 /**
  * Shared by both K6 cases: reuses A9''s own densest-patch bisection + interior verification
@@ -1112,8 +1113,8 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
  * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:793-813`), then settles
  * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
- * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1962-1968` (first
- * paragraph labelled at `:1943`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
+ * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1971-1977` (first
+ * paragraph labelled at `:1952`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
  * real `page.mouse.click()` at the button's own screen position -- the pointer is NEVER moved by
  * this call, which is exactly what K6's own "pointer stationary" premise (this section's own top
  * comment) needs whether this is used to CROSS the threshold (assertion (i)) or merely to RESET the
@@ -1211,7 +1212,7 @@ async function stepK6(page, consoleHandle) {
 // suite's existing timeouts (a bound, not a timing claim -- ADR-018)".
 //
 // What entry 60 found, in this suite's own words (`stepK6`'s top comment, the block ending "wedging
-// the renderer's single JS thread long before any truncation logic ever runs"): `tilesCoveringBbox`
+// the renderer's single JS thread long before any truncation logic ever ran"): `tilesCoveringBbox`
 // enumerated the WHOLE cover with a plain nested loop on every debounced camera settle, and
 // `MAX_QUEUED_TILES` truncated only afterwards -- so an ordinary wheel gesture far enough out made
 // that loop's iteration count a function of the camera alone. The fix bounds the cover BEFORE it is
@@ -1241,10 +1242,14 @@ const K7_MIN_RESTORED_NON_BG_FRACTION = 0.02; // the SAME "something is actually
 // merely recorded (reviewer gate should-fix 4). Duplicated verbatim from
 // `src/residency/residencyStatus.ts:429-430` (`SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`) rather than
 // imported: this harness is Node-side and imports nothing from `src/` -- the same convention
-// `K6_REFUSAL_TEXT` above follows ("App.tsx:1416, verbatim"). If that string is ever re-worded (it is
+// `K6_REFUSAL_TEXT` above follows ("App.tsx:1417, verbatim"). If that string is ever re-worded (it is
 // a DRAFT awaiting the human's own 24(b) sight, per its doc comment), this copy must move with it,
 // and this step failing loudly is how that gets noticed.
 const K7_SETTLED_PARTIAL_TEXT = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
+// Re-review should-fix 3: the bound the status assertion re-reads `.residency-status` under, once the
+// notch loop is done. The SAME 10s magnitude each notch's own settle wait already uses -- a BOUND, not
+// a timing claim and not a duration this step reports (ADR-018).
+const K7_STATUS_SETTLE_TIMEOUT_MS = 10_000;
 
 async function stepK7(page, consoleHandle) {
   // The shipped default arm, asserted per this step rather than inherited (the same non-pinning
@@ -1288,11 +1293,25 @@ async function stepK7(page, consoleHandle) {
   // fill settles, and the candidate arm's within-budget partial sentence is what must be on screen --
   // byte-for-byte, no substring match, so a re-worded or differently-derived status fails here rather
   // than passing as "some status showed".
-  if (lastStatus !== K7_SETTLED_PARTIAL_TEXT) {
+  //
+  // Re-review should-fix 3: this RE-READS the element under a bounded wait rather than asserting over
+  // `lastStatus`, the loop's own snapshot. That snapshot is taken the moment the last notch's settle
+  // wait returns -- and that wait is a BOUND, so it can return with the render trace still changing
+  // (`settle.settled === false`), i.e. on a status the fill had not finished producing. The re-read
+  // below is a bound too (ADR-018: no duration is claimed or reported anywhere here, and `runStep`'s
+  // own outer timeout still backstops a genuinely wedged page); what it buys is that the assertion
+  // reads the DOM as it stands once the status has settled, or fails naming whatever was last there.
+  const statusRead = await waitForCondition(
+    () => page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null),
+    (v) => v === K7_SETTLED_PARTIAL_TEXT,
+    K7_STATUS_SETTLE_TIMEOUT_MS
+  );
+  const settledStatus = statusRead.last;
+  if (settledStatus !== K7_SETTLED_PARTIAL_TEXT) {
     throw new Error(
       `K7: expected .residency-status after the last zoom-out notch to be the declared partial-view status ` +
-        `verbatim (residencyStatus.ts:429-430) but it was ${JSON.stringify(lastStatus)}; expected ` +
-        `${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)}`
+        `verbatim (residencyStatus.ts:429-430) but it was ${JSON.stringify(settledStatus)} (per-notch snapshot ` +
+        `at the end of the loop: ${JSON.stringify(lastStatus)}); expected ${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)}`
     );
   }
 
@@ -1338,8 +1357,9 @@ async function stepK7(page, consoleHandle) {
     `${notchesAnswered}/${K7_ZOOM_OUT_NOTCHES} discrete zoom-OUT notches from a "Zoom to layer" fit on the ` +
     `candidate arm (readback asserted); the page answered a fresh DOM read after every notch (no hang), no ` +
     `refusal/banner; render trace went quiet within its wait bound on ${notchesQuiesced}/${K7_ZOOM_OUT_NOTCHES} ` +
-    `notches (last trace count ${lastTraceCount}); .residency-status after the last notch asserted verbatim = ` +
-    `${JSON.stringify(lastStatus)}; .hover-readout after a real pointer move: ${JSON.stringify(readout)}; ` +
+    `notches (last trace count ${lastTraceCount}); .residency-status re-read under its own bound after the last ` +
+    `notch and asserted verbatim = ${JSON.stringify(settledStatus)} (per-notch snapshot at that point: ` +
+    `${JSON.stringify(lastStatus)}); .hover-readout after a real pointer move: ${JSON.stringify(readout)}; ` +
     `"Zoom to layer" restored ${(frac * 100).toFixed(1)}% non-bg pixels`
   );
 }
@@ -1558,8 +1578,10 @@ async function main() {
     // zoom-OUT notches from a "Zoom to layer" fit on the shipped default -- the ordinary gesture that
     // reached the unbounded covering enumeration this cut's fix bounds (`MAX_COVERING_TILES`). Its
     // own composition: two "Zoom to layer" clicks (each settling under a 45s bound), 15 notches each
-    // settling under a 10s bound, one 15s hover read -- 240s is generous headroom over that, and, as
-    // everywhere else in this file, a BOUND rather than a timing claim (ADR-018).
+    // settling under a 10s bound, one 10s status re-read (re-review should-fix 3), one 15s hover read
+    // -- each of those a BOUND rather than a timing claim (ADR-018), none of them a duration this step
+    // reports. 240s is the outer backstop for a wedged page, not the sum of the inner bounds (whose
+    // worst case would exceed it; the step fails loudly on whichever bound it reaches first).
     await runStep("K7", 240_000, () => stepK7(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")

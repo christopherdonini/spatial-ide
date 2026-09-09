@@ -288,7 +288,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
 
     // (c) What it kept: the centred window, so the cells nearest the view centre are the ones a
     // caller can still request (the same nearest-first keep the stream manager's own truncation
-    // applies, `tileViewportStreamManager.ts:422-434`).
+    // applies, `tileViewportStreamManager.ts:430-442`).
     expect(cover.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS ** 2);
     const centreCell = tilesCoveringBbox(frame, "medium", { xmin: 0, ymin: 0, xmax: 0, ymax: 0 })[0];
     expect(cover.keys.map(tileKeyToString)).toContain(tileKeyToString(centreCell));
