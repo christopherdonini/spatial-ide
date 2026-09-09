@@ -10,9 +10,12 @@
 // **What this generates.** The ADR index table in `docs/README.md`, one row per
 // `docs/adr/ADR-0NN-*.md`, whose status cell is that ADR's OWN Status line copied verbatim -- no
 // paraphrase, no classification, no truncation of the status text. The table therefore cannot say
-// anything the ADRs do not say themselves, and `--check` fails when it drifts from them. The
-// human-written narrative paragraph in `docs/README.md`'s "Conventions" section is not touched by
-// this tool and is not replaced by the table: it carries reasoning the Status lines do not.
+// anything the ADRs do not say themselves, and `--check` fails when it drifts from them. It is the
+// ADR's Status FIELD alone, though -- an acceptance condition or qualification recorded in an
+// adjacent header field (ADR-017's and ADR-020's, for two) is NOT in the cell, which is why both
+// the column heading and the block's header line say so (reviewer S1). The human-written narrative
+// paragraph in `docs/README.md`'s "Conventions" section is not touched by this tool and is not
+// replaced by the table: it carries reasoning the Status lines do not.
 //
 // **Where the block goes.** Between `<!-- adr-index:begin -->` and `<!-- adr-index:end -->`. When
 // the markers already exist the block is replaced in place, so a human may move the section
@@ -42,9 +45,14 @@ export const SECTION_HEADING = "## ADR index (generated)";
 export const HEADER_LINE =
   "*Generated from each ADR's own Status line by `frontends/shell/scripts/adrIndex.mjs` — do not " +
   "edit by hand; run `npm run adr-index` in `frontends/shell`. `npm run verify:adr-index` fails on " +
-  "drift.*";
+  "drift. Each status cell is that ADR's **Status field alone**: an acceptance condition, a " +
+  "corrigendum or a qualification recorded in an adjacent header field is not shown here, so read " +
+  "the ADR before relying on a row. A reserved number with no ADR file (ADR-014 and ADR-031 today) " +
+  "has no row.*";
 
-export const TABLE_HEADER = "| ADR | Title | Status (the ADR's own line) |";
+export const TABLE_HEADER =
+  "| ADR | Title | Status (the ADR's own Status field — conditions in adjacent fields are not " +
+  "shown; read the ADR) |";
 const TABLE_RULE = "|---|---|---|";
 
 // `ADR-032-geoparquet-....md` -- three digits, so the two `PROPOSED-amendment-*` files and anything
@@ -57,13 +65,54 @@ const ADR_FILE_RE = /^ADR-(\d{3})-.*\.md$/;
 // to suit this tool; both are recognised only at the start of a line.
 const STATUS_LINE_RE = /^(?:\*\*Status:\*\*|Status:)(.*)$/;
 
-// A front-matter field label opening a NEW field, bolded (`**Related:**`, `**Implemented by:**`)
-// or plain (`Related:`), used as the end boundary of the status paragraph. Most ADR headers run
-// Status, Amends/Resolves, Sources, Related, Implemented by as consecutive lines with no blank
-// line between them, so a blank line alone is not the boundary of the STATUS field: without this
-// rule the status cell would carry other fields' words under a column headed "the ADR's own line".
-// It never shortens a status: it only stops where a differently-named field begins.
-const FIELD_LABEL_RE = /^(?:\*\*[^*\n]{1,80}:\*\*|[A-Z][A-Za-z]*(?: [a-z]+){0,3}:)(?:\s|$)/;
+// The end boundary of the status paragraph. Most ADR headers run Status, Amends/Resolves, Sources,
+// Related, Implemented by as consecutive lines with NO blank line between them, so a blank line
+// alone is not the boundary of the STATUS field: without a boundary rule the status cell would
+// carry other fields' words under a column that says it holds the ADR's own Status field.
+//
+// The boundary is a CLOSED SET of label names, not a label SHAPE (reviewer S2, 2026-09-09): a
+// shape rule stops at any `Something:` line, so a status sentence that continues "Note: ...",
+// "Withheld pending review: ..." or "**But not, and this matters:** ..." would be silently
+// truncated -- and `--check` could never see it, both sides being this same reader. An
+// unrecognised label-shaped line is therefore KEPT in the status: a new header field shows up as
+// extra words in a visible cell, which a human can find and fix, rather than as missing words
+// nobody can see.
+//
+// Derived by grep over `docs/adr/ADR-0*.md` lines 1-40 on 2026-09-09 (`grep -oE
+// '^\*\*[^*]+:\*\*'` plus the plain-label variant), then filtered to the labels that name a HEADER
+// FIELD. The four bold labels found in that window which are body prose rather than fields are
+// deliberately EXCLUDED, so that a status continuing with such a phrase keeps it: `**Forbidden:**`
+// (ADR-004:40), `**Caveat, recorded:**` (ADR-009:11), `**The outcome under §19.9, applied in
+// order:**` and `**Two limits a reader must carry forward, both from §21:**` (ADR-012:14, :31).
+const FIELD_LABELS = new Set([
+  "Acceptance condition (human, 2026-08-13 — binding)",
+  "Acceptance condition attached by the human",
+  "Amends",
+  "Deadline, inherited from that block",
+  "Deliberately not cited as authority anywhere below",
+  "Drafted by",
+  "History",
+  "Implemented by",
+  "Not related",
+  "Related",
+  "Resolves",
+  "Reviewed",
+  "Scope of acceptance (the human's own framing)",
+  "Scope of any evidence below",
+  "Sources",
+  "Split from",
+]);
+
+// A label-shaped line in either shape the tree uses -- `**Label:** ...` or `Label: ...` (ADR-028's
+// own header). The captured name is looked up in `FIELD_LABELS`; the shape alone decides nothing.
+const LABEL_LINE_RE = /^(?:\*\*([^*\n]{1,120}):\*\*|([A-Z][^:\n]{0,120}):)(?:\s|$)/;
+
+/** True when this line opens one of the known adjacent header fields, ending the status paragraph. */
+function startsKnownAdjacentField(line) {
+  const match = LABEL_LINE_RE.exec(line);
+  if (match === null) return false;
+  return FIELD_LABELS.has(match[1] ?? match[2]);
+}
 
 /** Thrown by the core for every refusal; the CLI turns it into one stderr line and exit 1. Every
  * message is already a complete `adrIndex: FAIL -- ...` line naming the file at fault. */
@@ -116,7 +165,7 @@ function readAdrEntry(adrDir, file) {
   for (let i = start + 1; i < lines.length; i += 1) {
     const line = lines[i];
     if (line.trim() === "") break; // the paragraph ends
-    if (FIELD_LABEL_RE.test(line)) break; // a differently-named field begins
+    if (startsKnownAdjacentField(line)) break; // one of the known adjacent header fields begins
     parts.push(line.trim());
   }
   const status = parts.filter((part) => part !== "").join(" ");
@@ -130,14 +179,20 @@ function readAdrEntry(adrDir, file) {
 }
 
 /**
+ * A copy of `entries` in ADR-number order. Its own function so the ordering can be tested directly
+ * rather than through `readdirSync`, whose order this must not depend on (reviewer N1).
+ */
+export function sortEntries(entries) {
+  return [...entries].sort((a, b) => Number(a.number) - Number(b.number));
+}
+
+/**
  * Every `ADR-0NN-*.md` in `adrDir`, sorted by number, each with its own title and Status line.
  * Throws (naming the file) when an ADR has no H1, no Status line, or more than one.
  */
 export function readAdrStatuses(adrDir) {
   const files = readdirSync(adrDir).filter((name) => ADR_FILE_RE.test(name));
-  const entries = files.map((file) => readAdrEntry(adrDir, file));
-  entries.sort((a, b) => Number(a.number) - Number(b.number));
-  return entries;
+  return sortEntries(files.map((file) => readAdrEntry(adrDir, file)));
 }
 
 /** A markdown table cell: newlines collapsed to single spaces, pipes escaped. Nothing else. */
@@ -216,11 +271,13 @@ export function withIndexBlock(readmeText, block) {
   return `${text.slice(0, from)}\n${block}\n${text.slice(to)}`;
 }
 
+/** Every row line in a block, keyed by ADR number -- a LIST per number, because a duplicated row is
+ * itself a drift worth naming as such rather than reporting as whichever copy came last (N2). */
 function rowsByAdr(block) {
   const rows = new Map();
   for (const line of block.split("\n")) {
     const match = /^\| \[ADR-(\d{3})\]/.exec(line);
-    if (match) rows.set(match[1], line);
+    if (match) rows.set(match[1], [...(rows.get(match[1]) ?? []), line]);
   }
   return rows;
 }
@@ -243,9 +300,13 @@ export function checkIndex(readmeText, entries) {
   const expectedRows = rowsByAdr(expected);
   const changed = [];
   const missing = [];
-  for (const [number, row] of expectedRows) {
-    if (!committedRows.has(number)) missing.push(`ADR-${number}`);
-    else if (committedRows.get(number) !== row) changed.push(`ADR-${number}`);
+  const duplicated = [];
+  for (const [number, rows] of expectedRows) {
+    const committedForNumber = committedRows.get(number);
+    if (committedForNumber === undefined) missing.push(`ADR-${number}`);
+    else if (committedForNumber.length > 1) {
+      duplicated.push(`ADR-${number} appears ${committedForNumber.length} times`);
+    } else if (committedForNumber[0] !== rows[0]) changed.push(`ADR-${number}`);
   }
   const extra = [...committedRows.keys()]
     .filter((number) => !expectedRows.has(number))
@@ -255,6 +316,7 @@ export function checkIndex(readmeText, entries) {
   if (changed.length > 0) {
     details.push(`the committed row does not match the ADR's own Status line for ${changed.join(", ")}`);
   }
+  if (duplicated.length > 0) details.push(`the row for ${duplicated.join(", the row for ")}`);
   if (missing.length > 0) details.push(`no row for ${missing.join(", ")}`);
   if (extra.length > 0) details.push(`a row for ${extra.join(", ")}, which has no ADR file`);
   if (details.length === 0) {

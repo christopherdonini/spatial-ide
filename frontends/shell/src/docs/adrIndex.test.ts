@@ -28,6 +28,7 @@ import {
   readAdrStatuses,
   renderAdrIndex,
   renderIndexBlock,
+  sortEntries,
   withIndexBlock,
 } from "../../scripts/adrIndex.mjs";
 
@@ -68,8 +69,22 @@ const THREE_ADRS = {
   "README.md": "# Not an ADR\n\n**Status:** Whatever.\n",
 };
 
-describe("readAdrStatuses (the ADR's own Status line, copied)", () => {
-  it("reads every ADR-0NN file in number order, ignoring the proposed-amendment files", () => {
+describe("sortEntries (ADR-number order, independent of readdir order)", () => {
+  it("orders entries by number whatever order they arrive in", () => {
+    const entries = [
+      { number: "101", file: "c.md", title: "c", status: "c" },
+      { number: "007", file: "a.md", title: "a", status: "a" },
+      { number: "042", file: "b.md", title: "b", status: "b" },
+    ];
+
+    expect(sortEntries(entries).map((entry) => entry.number)).toEqual(["007", "042", "101"]);
+    // A copy, so a caller's own array order is not a side effect of rendering.
+    expect(entries.map((entry) => entry.number)).toEqual(["101", "007", "042"]);
+  });
+});
+
+describe("readAdrStatuses (the ADR's own Status field, copied)", () => {
+  it("reads every ADR-0NN file, ignoring the proposed-amendment files and non-ADR files", () => {
     const entries = readAdrStatuses(fixtureDir(THREE_ADRS));
 
     expect(entries.map((entry) => entry.number)).toEqual(["007", "042", "101"]);
@@ -111,6 +126,59 @@ describe("readAdrStatuses (the ADR's own Status line, copied)", () => {
 
     expect(readAdrStatuses(dir)[0].status).toBe(
       "Accepted, 2026-09-09 — on the evidence below, and not architect-blockable.",
+    );
+  });
+
+  // Reviewer S2's probe cases. A boundary rule keyed on the SHAPE of a line (anything ending in a
+  // colon) truncates these four silently, and `--check` cannot see it because both sides of the
+  // comparison are this same reader. The boundary is a closed set of label names, so each of them
+  // is kept whole.
+  const KEPT_WHOLE: Array<[string, string, string]> = [
+    [
+      "a `Note:` continuation",
+      "Note: this is not a licence to implement.",
+      "Accepted, 2026-09-09 — on the evidence below. Note: this is not a licence to implement.",
+    ],
+    [
+      "a `Withheld pending review:` continuation",
+      "Withheld pending review: the second measurement.",
+      "Accepted, 2026-09-09 — on the evidence below. Withheld pending review: the second measurement.",
+    ],
+    [
+      "a bolded phrase that merely reads like a label",
+      "**But not, and this matters:** the mechanism, never the selector.",
+      "Accepted, 2026-09-09 — on the evidence below. **But not, and this matters:** the mechanism, never the selector.",
+    ],
+    [
+      "a bold body label that is not a header field (`**Forbidden:**`, ADR-004's own)",
+      "**Forbidden:** a trace identifier as a field.",
+      "Accepted, 2026-09-09 — on the evidence below. **Forbidden:** a trace identifier as a field.",
+    ],
+  ];
+
+  it.each(KEPT_WHOLE)("keeps %s in the status", (_name, continuation, expected) => {
+    const dir = fixtureDir({
+      "ADR-060-probe.md":
+        "# ADR-060 — Probe\n\n" +
+        "**Status:** Accepted, 2026-09-09 — on the evidence below.\n" +
+        `${continuation}\n\n` +
+        "## Context\n",
+    });
+
+    expect(readAdrStatuses(dir)[0].status).toBe(expected);
+  });
+
+  it("keeps a plain wrapped continuation whole", () => {
+    const dir = fixtureDir({
+      "ADR-061-probe.md":
+        "# ADR-061 — Probe\n\n" +
+        "**Status:** Accepted, 2026-09-09 — on the evidence below,\n" +
+        "and on nothing else.\n\n" +
+        "## Context\n",
+    });
+
+    expect(readAdrStatuses(dir)[0].status).toBe(
+      "Accepted, 2026-09-09 — on the evidence below, and on nothing else.",
     );
   });
 
@@ -182,6 +250,15 @@ describe("renderAdrIndex (the table)", () => {
 
     expect(block.startsWith(`${HEADER_LINE}\n\n${TABLE_HEADER}\n`)).toBe(true);
   });
+
+  it("says in both headers what the status cell is and is not (reviewer S1, N3)", () => {
+    // The cell is the Status field alone; ADR-017 and ADR-020 both attach their qualifications in
+    // an adjacent header field, which no cell shows. And a reserved number with no file has no row.
+    expect(TABLE_HEADER).toContain("the ADR's own Status field");
+    expect(TABLE_HEADER).toContain("conditions in adjacent fields are not shown; read the ADR");
+    expect(HEADER_LINE).toContain("Status field alone");
+    expect(HEADER_LINE).toContain("A reserved number with no ADR file (ADR-014 and ADR-031 today)");
+  });
 });
 
 describe("checkIndex (`--check`'s core)", () => {
@@ -220,6 +297,19 @@ describe("checkIndex (`--check`'s core)", () => {
 
     expect(result.ok).toBe(false);
     expect(result.message).toContain("no row for ADR-101");
+  });
+
+  it("fails naming the ADR whose row appears twice", () => {
+    const adrs = entries();
+    const block = renderIndexBlock(adrs);
+    const doubledRow = block
+      .split("\n")
+      .flatMap((line) => (line.startsWith("| [ADR-042]") ? [line, line] : [line]))
+      .join("\n");
+    const result = checkIndex(readmeWith(doubledRow), adrs);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain("the row for ADR-042 appears 2 times");
   });
 
   it("fails when the markers are missing", () => {

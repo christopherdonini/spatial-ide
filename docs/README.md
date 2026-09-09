@@ -33,9 +33,9 @@ Stable reference set for humans and AI assistants working on Spatial IDE. Read `
 ## ADR index (generated)
 
 <!-- adr-index:begin -->
-*Generated from each ADR's own Status line by `frontends/shell/scripts/adrIndex.mjs` — do not edit by hand; run `npm run adr-index` in `frontends/shell`. `npm run verify:adr-index` fails on drift.*
+*Generated from each ADR's own Status line by `frontends/shell/scripts/adrIndex.mjs` — do not edit by hand; run `npm run adr-index` in `frontends/shell`. `npm run verify:adr-index` fails on drift. Each status cell is that ADR's **Status field alone**: an acceptance condition, a corrigendum or a qualification recorded in an adjacent header field is not shown here, so read the ADR before relying on a row. A reserved number with no ADR file (ADR-014 and ADR-031 today) has no row.*
 
-| ADR | Title | Status (the ADR's own line) |
+| ADR | Title | Status (the ADR's own Status field — conditions in adjacent fields are not shown; read the ADR) |
 |---|---|---|
 | [ADR-001](adr/ADR-001-frontend-stack.md) | Frontend Stack: Rust Core + Web UI (Tauri) | Accepted — 2026-07-31 · Amended (see Amendments) |
 | [ADR-002](adr/ADR-002-editing-topology-print-scope.md) | Editing, Topology, and Print Composer Scope | Accepted — 2026-07-31 · Amended (see Amendments) |

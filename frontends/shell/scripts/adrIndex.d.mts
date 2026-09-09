@@ -14,7 +14,8 @@ export interface AdrEntry {
   file: string;
   /** The H1 title, minus its own `ADR-0NN — ` prefix. */
   title: string;
-  /** The Status line's text after the `**Status:**` / `Status:` prefix, wrapped lines joined. */
+  /** The Status FIELD's text after the `**Status:**` / `Status:` prefix, wrapped lines joined --
+   * not the adjacent header fields, whatever they qualify. */
   status: string;
 }
 
@@ -28,6 +29,7 @@ export declare const SECTION_HEADING: string;
 export declare const HEADER_LINE: string;
 export declare const TABLE_HEADER: string;
 
+export declare function sortEntries(entries: AdrEntry[]): AdrEntry[];
 export declare function readAdrStatuses(adrDir: string): AdrEntry[];
 export declare function renderAdrIndex(entries: AdrEntry[]): string;
 export declare function renderIndexBlock(entries: AdrEntry[]): string;
