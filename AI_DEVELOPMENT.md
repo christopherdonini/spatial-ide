@@ -180,6 +180,14 @@ how obvious they seem:
   only after verifying ownership (creation time + the command line's worktree path). Corollary:
   `attachOrLaunch` attaches to anything already on the port and returns `launched: false` — an E2E
   that proves a branch must assert `launched: true` and record PID, exe path and session log.
+  Ownership is checked by the process's `ExecutablePath` (or creation time), not its command line:
+  the harness spawns the app with a RELATIVE command line (`target\debug\spatial-ide-shell.exe`), so a
+  worktree-path match on the command line fails for the instance you own (2026-09-09). A fresh
+  worktree has no debug binary, and the harness's own `tauri dev` cannot compile the shell crate
+  inside its 300 s attach window — `cargo build` in that worktree's `src-tauri` FIRST (a shell debug
+  build is ~16 GB; check free space with `df -h /c` before it — a full disk fails the build at the
+  final archive, os error 112, after the deps compiled). A launch that fails this way leaves no app
+  behind; verify with `tasklist` before relaunching.
 - **The citation-integrity scanner covers five files (2026-09-08).** `e2e/residency*.mjs` and
   `src/instrument/*` only. A quote in `spikes/`, any other `e2e/*.mjs`, `LICENSES/`, the walkthrough
   or an ADR is checked by hand at gate time — the class caught twice today was a quotation
