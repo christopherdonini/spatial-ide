@@ -24,7 +24,10 @@ use futures_util::{SinkExt, StreamExt};
 use spatial_data_plane::server::DataPlaneConfig;
 use spatial_data_plane::session::SUBPROTOCOL;
 use spatial_data_plane::{wire, RunningDataPlane};
-use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureFacts, FixtureSpec, ZONE_VALUES};
+use spatial_engine::fixture::{
+    write_geoparquet, AttributeMode, CoordinateDomain, CrsMode, FixtureFacts, FixtureSpec,
+    ZONE_VALUES,
+};
 use spatial_engine::trace::{self, TraceKey};
 use spatial_kernel::skp::{SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
@@ -445,23 +448,71 @@ async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronous
     );
 }
 
+/// **Re-aimed at Brief A P1's ruled contract, and the change is the ruling rather than a fix.**
+///
+/// This test asserted that an absent `crs` key was refused at open with `engine.crs_undeclared`.
+/// Brief A's settled boundary 1 rules the other way for a spec version whose governing text is
+/// pinned in-tree: the key's absence is GeoParquet's own OGC:CRS84 rule, the file is admitted, and
+/// the admission is *recorded* — `engine/ADMISSION-PREREGISTRATION.md` §2b R-C2, whose fixture row
+/// F-1 (§4) reads "admitted, `crs:format-default`, level `metadata`", and whose corpus row #8 (§3)
+/// predicts the same pair for a real GDAL-written file.
+///
+/// **The fixture gains a domain, and that is what makes it F-1 rather than F-2.** The `crs` mode is
+/// unchanged; the coordinates are now degrees, i.e. inside ±180/±90. In the metre domain the same
+/// absent-key file is §4's F-2 row — the format's default is contradicted by the file's own bbox and
+/// the open refuses `engine.format_default_contradicted`, which `engine/tests/slice.rs` asserts.
+///
+/// Everything read here comes through the engine's public API (`Catalog::get`,
+/// `Dataset::admission`). Nothing about `describe`, SKP or the wire is asserted or added: those are
+/// later phases of this cut.
 #[tokio::test(flavor = "multi_thread")]
-async fn opening_a_source_with_no_crs_is_refused_verbatim() {
+async fn opening_a_source_with_no_crs_key_is_admitted_under_the_format_default() {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join("skp-admission-no-crs-actual.parquet");
     write_geoparquet(
         &path,
-        &FixtureSpec { features: 100, crs_mode: CrsMode::AbsentKey, ..Default::default() },
+        &FixtureSpec {
+            features: 100,
+            crs_mode: CrsMode::AbsentKey,
+            domain: CoordinateDomain::Wgs84Degrees,
+            with_geo_bbox: true,
+            ..Default::default()
+        },
     )
     .expect("write fixture");
 
     let catalog = Catalog::new();
     let handle = dataset_handle();
-    let err = catalog.open(handle.as_str(), &path, None).expect_err("no CRS must be refused at open");
-    let skp_err = spatial_kernel::skp::error_of(&err);
-    assert_eq!(skp_err.code, "engine.crs_undeclared");
-    assert!(skp_err.message.contains("OGC:CRS84"), "{}", skp_err.message);
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("an absent `crs` key is admitted under the format's own published rule");
+
+    let ds = catalog.get(handle.as_str()).expect("the admitted dataset is in the catalog");
+    assert_eq!(ds.crs().identifier(), "OGC:CRS84");
+
+    let admission = ds.admission().expect("an admitted dataset carries its admission record");
+    assert_eq!(admission.crs_provenance.as_str(), "crs:format-default");
+    assert_eq!(
+        admission.format_rule_reference.as_deref(),
+        Some("geoparquet:1.1.0#crs-absent-default"),
+        "the record names the spec version and the rule it relied on, whose text is pinned in \
+         `engine/ADMISSION-PREREGISTRATION.md` Appendix A"
+    );
+
+    // F-1's own spelling: level `metadata`. A level is what was read, never a verdict — the reason
+    // names its source, and nothing here says the file passed anything.
+    assert_eq!(admission.sanity_level.as_str(), "metadata");
+    assert!(
+        admission.sanity_reason.contains("`bbox` member"),
+        "the level names what it was decided from: {}",
+        admission.sanity_reason
+    );
+    assert!(
+        !admission.sanity_reason.contains("passed"),
+        "a sanity level is never a verdict: {}",
+        admission.sanity_reason
+    );
 }
 
 /// A known instrumentation-ordering race in `engine::cancel::CancelToken::cancel_inner`, not a
