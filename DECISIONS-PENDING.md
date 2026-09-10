@@ -69,6 +69,30 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+73. **[Brief A, P0 — the reader's polygon-only geometry gate: `engine/src/dataset.rs:275-282`
+    refuses any GeoParquet whose `geo.columns.<primary>.geometry_types` lists anything but `Polygon`,
+    and it fires BEFORE the CRS admission at `:302-307`. Eight of the twelve collected corpus files
+    (every `Point` file, the spec example, the Overture buildings extract — `MultiPolygon`) refuse
+    there, before any rule Brief A changes is reached. Widen the gate in this cut (a scope change to
+    a ruled item and a user-visible behaviour change), hold it (the corpus run then records 8 of 12
+    as "refused, unchanged" and Brief A's rules are carried by purpose-written polygon fixtures), or
+    re-scope the corpus to polygon files only?]** Found 2026-09-10 by the P0 architect consult
+    (Brief A's own routing: "if any corpus file forces a scope change to a ruled item" → the human).
+    The preregistration draft registers "the polygon gate dominates the corpus run" as prediction 1
+    and lists widening the gate under Non-goals pending this ruling. Also for sight from the same
+    consult, not rulings: (a) the absent-`crs`-key default sentence is not pinned in the tree
+    (boundary 1 cites `spikes/item8…/README.md` §2, which pins only the axis passages) — being
+    pinned now under the entry-51 discipline as a P0 prerequisite; (b) four new user-visible states
+    whose strings the human sights at P6 (the format-default provenance line; the session-identity
+    statement; the source-changed status; the degrees-publish preflight refusal); (c) R-S3's open
+    choice — a `covering` naming absent columns opens today and fails at query; the draft keeps it
+    opening with sanity level `none`, refusing at open is the alternative; (d) R-I3's consequence —
+    a file that today refuses `identity_unusable` for lack of an `id` column opens under session
+    identity with the candidate list still offered; (e) the ADR-015 §2 narrowing — a scoping or a
+    guarantee change; (f) `MIN_ANCHOR_SPAN` under degrees — a declared unit-aware value (the
+    boundaries force it) or a typed refusal; (g) the home of the binding equirectangular wording —
+    the ADR-013 amendment or an appended ADR-003 note. All in the P0 PR for sight.
+
 72. **[Porting-time conflict, noticed before porting (Draft 2, Brief A): the brief's commit line
     `git -c user.name=chris -c user.email=chrys92d@gmail.com commit -s` names an author/sign-off
     identity different from every commit in this repository (Christopher Donini
