@@ -69,6 +69,19 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+75. **[Entry 47 (the re-pick on camera settle, being built now on `cut/hover-repick-settle`;
+    merge held until after the tag) — three behaviour choices the ruling did not make, for your
+    answer BEFORE any merge: (1) does a pure PAN's settle re-pick too, or zoom only? The
+    preregistration adopts the ruling's own words ("re-pick on camera settle": a pan is a camera
+    change) behind a declared switch `HOVER_REPICK_ON_PAN` defaulting to pan+zoom, with zoom-only
+    the switch's other value; (2) a resize or DPR change between hover and settle DISARMS the
+    pending re-pick (nothing emitted) rather than re-mapping the pixel — keep, or re-map? (3) no
+    "unconfirmed" mid-gesture marking is introduced (today's blank/refusal stays) — keep, or open
+    it after seeing L7/L8?]** Preregistered 2026-09-10 (`frontends/shell/HOVER-REPICK-PREREGISTRATION.md`
+    §3 D2/D3/D4, §10); the architect's condition 14 puts (1) and (3) outside the ruled (b). The
+    default readings are the safe ones (nothing new is shown; a stale frame is never picked). Not
+    a tag matter.
+
 74. **[Part M split into two sittings (the human, 2026-09-10: M1–M4 first, the rest later) —
     does the v0.1.0 tag wait for sitting 2, or does sitting 1 (install + first open) suffice to
     finalize README/QUICKSTART, write KNOWN-LIMITATIONS and tag?]** Amendment 13's sequence says
