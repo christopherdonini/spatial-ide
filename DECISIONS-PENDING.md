@@ -69,6 +69,27 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+82. **[Entry 47 — the architect gate failed twice (rule 7: stopped, queued). Attempt 1 blocked on
+    the drag-pan falsifier (deck.gl delivers no hover event while a button is down); the fix batch
+    added D11 (arming blocked and the pending settle cancelled while a button is down; preregistration
+    §12 Amendment 2) and the re-gate confirmed D11 correct for the during-drag case. Attempt 2 blocked
+    on a residual of the same root cause: the captured pointer pixel is not invalidated at the release
+    edge, so — hover above threshold → wheel out past it (refusal standing) → left-drag pan → release
+    → one wheel notch back in, pointer never moved — the first camera change after release arms and
+    settles at the PRE-drag pixel and could name a feature the pointer is not over (§9's first
+    falsifier). The architect names the fix as one line of refusal-to-act plus one test: on
+    `pointerup`/`pointercancel` also clear the stored pixel (`lastPointerPxRef.current = null` in
+    `WorkingCanvas.tsx:1565-1567`), so no settle can pick until a real hover has re-answered where the
+    pointer is; the scheduler already returns on a null capture. It also drafted the preregistration's
+    Amendment 3 recording the extended D11 and correcting Amendment 2's "on the canvas element" (the
+    release is observed on the window). Everything else from both gates is closed; the reviewer
+    re-gate PASSED on the same head (verify 923/923; the D11 mutation re-run; block-on-sight 8–14 PASS). Your word: (a) a third attempt under the named
+    fix — I append Amendment 3 (the architect's text, verbatim, in the ledger), the worker lands the
+    line and the test, both gates run a third time, the PR opens as a draft held until after the tag;
+    or (b) hold the piece as it stands (pushed on `cut/hover-repick-settle`, no PR) for your own look.
+    Nothing merges either way.]** Not a tag matter. Related: entry 75 (pan-settle) — the architect
+    notes both findings make the pan-settle reading depend on the guard, where zoom-only would not.
+
 81. **[Brief A P2 — a user-visible guarantee, escalated by the architect: the absent-`crs`-key CRS84
     admission (boundary 1's format default) deliberately carries no CRS definition (P1,
     `engine/src/geoparquet.rs:392-399` — the engine never writes a definition it did not read). The
