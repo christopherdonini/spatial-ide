@@ -69,6 +69,23 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+80. **[Brief A, a conflict the draft did not anticipate — gate G-A6 vs boundary 1: G-A6 reads
+    "Native/mapped unchanged: existing identity and CRS test suites green without edits", but two
+    tests in `engine/tests/slice.rs` (`a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied`,
+    `a_latitude_first_source_is_refused_rather_than_reinterpreted`) and one in
+    `kernel/tests/skp_admission.rs` (`opening_a_source_with_no_crs_is_refused_verbatim`) pin exactly
+    the refusals boundary 1 abolishes (absent key → format default; WKB order → axis override), so
+    they cannot stay green without edits. On the branch (`cut/admission-format-semantics`, merge held)
+    the P1 worker re-aimed the two slice tests to the ruled behaviour, each doc comment naming the
+    ruling; the kernel test's re-aim is in flight the same way. Every identity test is untouched
+    (8/8) and the explicit-null refusal tests are untouched. Your word: (a) G-A6 is read as "green
+    without edits, except tests that pin behaviour boundary 1 itself abolishes, which are re-aimed
+    with the ruling named in the test" — recorded as a dated qualification to the brief, the
+    re-aims stand; or (b) something else you name.]** Queued rather than resolved inline per your
+    porting instruction ("If porting surfaces a conflict with the tree or the record that the drafts
+    didn't anticipate, queue it"). P1's reviewer gate proceeds with the item flagged; no merge
+    before the tag in any case. Not a tag matter.
+
 79. **[Brief B stage B1 consult — three items routed to you, for B1's close and not before (Brief
     B is held until Brief A closes; block-on-sight B-1): (1) the refusal set is wider than DRAFT-3's
     Stage B1 sentence names — the architect drafts six named codes (unknown, type, geometry,
