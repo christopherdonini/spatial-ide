@@ -152,4 +152,6 @@ Landing only on the human's word, as a **further appended note** (ADR-028 is acc
 
 ## §14. Amendments
 
-*(none yet)*
+### Amendment 1 — 2026-09-10, made AFTER the piece's results were seen (the worker's build, 64a7a5a on `cut/geometric-protection`)
+
+§2.5's reason clause — "every comparison is `false`" for a non-finite bbox — is wrong for `±Infinity`: a `[-Infinity, Infinity]` range makes every `<=` comparison **true**, so an unguarded predicate would protect everything, not nothing. **The rule is unchanged**: a non-finite bbox protects nothing (block-on-sight 7; test 6). It is enforced by an explicit finiteness check at the membership's construction (`tileGrid.ts:417`, the factory, as landed), not by the comparisons' own outcome. No test, prediction, gate or ceiling changes; test 6 asserts the rule and passed against the guarded code. Recorded here because the preregistration's own reasoning was inaccurate and a reader must not rely on it.
