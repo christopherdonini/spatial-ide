@@ -69,6 +69,23 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+81. **[Brief A P2 — a user-visible guarantee, escalated by the architect: the absent-`crs`-key CRS84
+    admission (boundary 1's format default) deliberately carries no CRS definition (P1,
+    `engine/src/geoparquet.rs:392-399` — the engine never writes a definition it did not read). The
+    proposed ADR-013 Amendment 1 §2 says the unit is "read from the CRS definition … never inferred
+    from the identifier string, and never defaulted", so read strictly such a dataset has no
+    establishable unit, is NOT a degrees instance, gets no equirectangular statement, and reaches
+    publish with no preflight refusal — the geographic bundle boundary 8 exists to prevent; it also
+    leaves §3 row 8's prediction (the ogr2ogr CRS84 file refuses at publish) unmet. Options: (a)
+    leave it and record the deviation at P4 — the file publishes; (b) amend the still-Proposed ADR-013
+    text so the PINNED FORMAT RULE (GeoParquet 1.1.0's CRS84 default, with its version) is a second
+    admissible source of the unit fact, recorded as `unit:format-rule` beside `unit:definition` — not
+    an identifier string, so its block-on-sight 8 stays intact; the record shows which source
+    supplied the unit. The architect recommends (b) and drafted a Context/Decision/Consequences
+    skeleton for it (in the P2 consult, ledgered). Your word; a Proposed-amendment text change is
+    yours.]** Until ruled, P2 builds the definition-sourced unit only and records the absent-key case
+    as `unestablished` by name; merge held before the tag regardless. Not a tag matter.
+
 80. **[Brief A, a conflict the draft did not anticipate — gate G-A6 vs boundary 1: G-A6 reads
     "Native/mapped unchanged: existing identity and CRS test suites green without edits", but two
     tests in `engine/tests/slice.rs` (`a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied`,
