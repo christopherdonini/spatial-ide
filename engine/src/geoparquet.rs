@@ -148,7 +148,7 @@ impl SanityLevel {
 /// `engine/ADMISSION-PREREGISTRATION.md` §14 item I fixes where it is read from and what the
 /// unreadable cases record; the proposed ADR-013 Amendment 1 §2 is the rule it serves ("the unit is
 /// read from the CRS definition and recorded as a fact of the instance — never inferred from the
-/// identifier string, and never defaulted").
+/// identifier string […], and never defaulted" — the elision is its `docs/05` parenthetical).
 ///
 /// **`Unestablished` is not a refusal and not an instance.** It is what the record says when the
 /// two axes disagree, when the `unit` member is missing, when its form is one this reader takes no
@@ -637,8 +637,8 @@ pub fn coordinate_unit_from_definition(
 ///
 /// **The three places it must not read from, and why they are traps rather than alternatives.**
 /// EPSG:2056's own definition (`engine/src/crs-catalog.json:8`,
-/// `engine/tests/data/epsg2056.projjson`) declares `"unit": "degree"` on six of its
-/// `conversion.parameters` and on both axes of its `base_crs`, while the CRS it defines has
+/// `engine/tests/data/epsg2056.projjson`) declares `"unit": "degree"` on four of its
+/// `conversion.parameters` and on both axes of its `base_crs` (six occurrences), while the CRS it defines has
 /// `metre` axes — so a reader consulting either would call a projected metre CRS a degrees
 /// instance. The `id` is the third: `docs/05` decides CRS identity by comparing definitions and
 /// never by name-string comparison, and a unit taken from `EPSG:2056` or `OGC:CRS84` would be
