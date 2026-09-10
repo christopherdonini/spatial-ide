@@ -350,8 +350,13 @@ pub(crate) fn format_semantics(geo: &GeoMeta) -> FormatSemantics {
 
     match geo.crs_key {
         CrsKeyState::Declared => {
-            let (id, def, declared_axis) =
-                geo.declared_crs.clone().expect("a declared `crs` key parses into a definition");
+            let Some((id, def, declared_axis)) = geo.declared_crs.clone() else {
+                // `GeoMeta::parse` sets `Declared` only where it also produced a definition, so the
+                // two cannot disagree today. If they ever do, the file is treated as having stated
+                // something this reader cannot use — `ExplicitNull`'s outcome, refused with an
+                // assertion admissible — rather than the open path panicking on a file's contents.
+                return FormatSemantics::default();
+            };
             if declared_axis.is_x_first() {
                 // R-C5.
                 FormatSemantics {

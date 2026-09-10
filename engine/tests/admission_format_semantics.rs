@@ -199,6 +199,12 @@ fn f4_a_declared_lat_first_crs_admits_under_the_wkb_override_with_its_declared_o
         "none-performed",
         "no coordinate value was transformed to get here"
     );
+    assert_eq!(
+        md.get("sanity_level").unwrap(),
+        "metadata",
+        "the level records what evidence was available even where no range verdict is taken from \
+         it (R-S2): the CRS is the file's own, and only the data's axis order came from the format"
+    );
     assert!(
         md.get("sanity_reason").unwrap().contains("no range check applies"),
         "the CRS is the file's own declaration, so there is nothing assumed to convict: {:?}",
@@ -242,12 +248,46 @@ fn f6_without_statistics_the_level_is_the_bounded_sample_of_the_covering_columns
     assert_eq!(md.get("sanity_level").unwrap(), "sample");
     let reason = md.get("sanity_reason").unwrap();
     assert!(
-        reason.contains(&format!("first {}", spatial_engine::SANITY_SAMPLE_MAX_ROWS)),
-        "the sample's declared bound is named: {reason}"
+        reason.contains("first row group"),
+        "the sample's unit is named: {reason}"
     );
     assert!(
         reason.contains("covering bbox columns only"),
         "the WKB is never read at open: {reason}"
+    );
+}
+
+/// **R-S1 and §13 B's own words** — the `sample` level is *"the first row group of the covering
+/// bbox columns only, capped at `SANITY_SAMPLE_MAX_ROWS`"*, so on a file with 64-row row groups it
+/// reads 64 rows and not the whole 256-row file. Added at the P1 reviewer gate's follow-through:
+/// before it, the statement carried `LIMIT 8192`, which on this file spans every row group.
+#[test]
+fn the_sample_level_reads_the_first_row_group_and_not_a_fixed_row_count() {
+    let path = write(
+        "sample-first-row-group",
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            statistics: StatisticsMode::Disabled,
+            row_group_rows: 64,
+            ..degrees()
+        },
+    );
+    let ds = Dataset::open(&path).expect("opens");
+    let md = envelope_metadata(&ds);
+    assert_eq!(md.get("sanity_level").unwrap(), "sample");
+    let reason = md.get("sanity_reason").unwrap();
+    assert!(
+        reason.contains("the first row group (64 rows)"),
+        "the row group's own row count is what bounded the read: {reason}"
+    );
+    assert!(
+        !reason.contains("256"),
+        "the file's 256 rows are not what the sample read: {reason}"
+    );
+    assert!(
+        !reason.contains(&spatial_engine::SANITY_SAMPLE_MAX_ROWS.to_string()),
+        "the declared ceiling did not bound this read, so it is not named as though it had: \
+         {reason}"
     );
 }
 

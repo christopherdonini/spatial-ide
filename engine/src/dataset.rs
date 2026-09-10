@@ -349,18 +349,41 @@ impl Dataset {
                     Some(crs.axis_order()),
                     None,
                 ),
-                crs::CrsSource::File => (
-                    semantics.crs_provenance.unwrap_or(crate::geoparquet::CrsProvenance::Declared),
-                    semantics.axis_provenance.unwrap_or(crate::geoparquet::AxisProvenance::Declared),
-                    semantics.declared_axis_order,
-                    semantics.format_rule_reference.clone(),
-                ),
+                // **A provenance class is read or the open stops; it is never substituted.**
+                // `crs::admit` reaches its file arm only because `format_semantics` handed it a
+                // CRS, and every branch that does so sets both provenances — so the `None` arm is
+                // unreachable today. Filling it in with `Declared` would record a class this
+                // reader never established, which is exactly what `docs/01` principle 8 forbids
+                // and what the whole of P1 exists to keep apart from a fact.
+                crs::CrsSource::File => match (semantics.crs_provenance, semantics.axis_provenance)
+                {
+                    (Some(crs_class), Some(axis_class)) => (
+                        crs_class,
+                        axis_class,
+                        semantics.declared_axis_order,
+                        semantics.format_rule_reference.clone(),
+                    ),
+                    (crs_class, axis_class) => {
+                        debug_assert!(
+                            false,
+                            "a file CRS was admitted with crs_provenance {crs_class:?} and \
+                             axis_provenance {axis_class:?}"
+                        );
+                        return Err(EngineError::Source(format!(
+                            "internal inconsistency: {} was admitted as the file's own CRS, but \
+                             the reader recorded crs_provenance {crs_class:?} and axis_provenance \
+                             {axis_class:?}. A provenance class is a recorded fact and is never \
+                             substituted for a missing one",
+                            crs.identifier()
+                        )));
+                    }
+                },
             };
 
         // The sanity check (R-S1…R-S3), before the identity scan: a file the format's own default
         // is contradicted by is refused on that ground, which is the first outcome it reaches.
         let (sanity_level, sanity_reason) =
-            sanity_check(conn, &path_str, &geo, &file_schema, crs_provenance, &semantics)?;
+            sanity_check(conn, &path_str, &geo, &file_schema, crs_provenance, &semantics, cancel)?;
 
         let admission = crate::geoparquet::AdmissionRecord {
             crs_provenance,
@@ -806,13 +829,18 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
 ///
 /// 1. `metadata` — footer-resident facts only: the geometry column's own `bbox` member, else
 ///    Parquet statistics on the covering bbox columns.
-/// 2. `sample` — the first [`SANITY_SAMPLE_MAX_ROWS`] rows of the **covering bbox columns only**,
-///    never the WKB.
+/// 2. `sample` — **the first row group** of the covering bbox columns only, capped at
+///    [`crate::geoparquet::SANITY_SAMPLE_MAX_ROWS`] (R-S1; §13 B), never the WKB.
 /// 3. `none` — neither was available, or the covering names a column the schema does not contain
 ///    (R-S3: the open still succeeds, and the reason is recorded).
 ///
 /// **It never reads all coordinates at open**, and the level it ran at is always recorded, on the
 /// envelope and in the record `describe` will carry.
+///
+/// **Every query it issues is bound to the caller's cancellation token**, the way the identity scan
+/// beside it already is (`docs/01` principle 7). Nothing about what runs changes when nobody
+/// cancels; what changes is that a cancel arriving during an open reaches DuckDB rather than
+/// waiting for the read to finish.
 fn sanity_check(
     conn: &Connection,
     path: &str,
@@ -820,6 +848,7 @@ fn sanity_check(
     schema: &SchemaRef,
     crs_provenance: crate::geoparquet::CrsProvenance,
     semantics: &crate::geoparquet::FormatSemantics,
+    cancel: &CancelToken,
 ) -> Result<(crate::geoparquet::SanityLevel, String)> {
     use crate::geoparquet::{CrsProvenance, SanityLevel};
 
@@ -883,7 +912,7 @@ fn sanity_check(
     }
 
     // 2. Parquet statistics on those columns — footer-resident as well.
-    if let Some(bbox) = covering_statistics(conn, path, covering)? {
+    if let Some(bbox) = covering_statistics(conn, path, covering, cancel)? {
         let reason = format!(
             "read from the covering bbox columns' parquet statistics [{}, {}, {}, {}] under the \
              format rule {rule}",
@@ -892,26 +921,40 @@ fn sanity_check(
         return convict_or_record(SanityLevel::Metadata, reason, bbox, convicts);
     }
 
-    // 3. The sample: the covering bbox columns, first `SANITY_SAMPLE_MAX_ROWS` rows, nothing else.
-    match covering_sample(conn, path, covering)? {
+    // 3. The sample: the covering bbox columns of **the first row group**, capped at the declared
+    //    ceiling, and nothing else. The row group is the unit R-S1 and §13 B name; a fixed row
+    //    count spans several row groups on a file whose groups are small, which is a different read
+    //    from the one the rule states.
+    let first_row_group = first_row_group_rows(conn, path, cancel)?;
+    let cap = crate::geoparquet::SANITY_SAMPLE_MAX_ROWS;
+    let limit = first_row_group.map_or(cap, |rows| rows.min(cap));
+    let (rows_read, qualifier) = match first_row_group {
+        Some(rows) if rows > cap => (
+            format!("the first {limit} row(s) of the first row group ({rows} rows)"),
+            format!(", capped at the declared ceiling of {cap} rows"),
+        ),
+        Some(rows) => (format!("the first row group ({rows} rows)"), String::new()),
+        // The footer gave no row count for the first row group, so the declared ceiling is the only
+        // bound left. Recorded as what it is rather than described as a row group that was read.
+        None => (
+            format!("the first {limit} row(s)"),
+            ", the footer carrying no row count for the first row group".to_string(),
+        ),
+    };
+    match covering_sample(conn, path, covering, limit, cancel)? {
         Some(bbox) => {
             let reason = format!(
-                "read from the first {} row(s) of the covering bbox columns only, [{}, {}, {}, \
+                "read from {rows_read} of the covering bbox columns only{qualifier}, [{}, {}, {}, \
                  {}], under the format rule {rule}",
-                crate::geoparquet::SANITY_SAMPLE_MAX_ROWS,
-                bbox[0],
-                bbox[1],
-                bbox[2],
-                bbox[3]
+                bbox[0], bbox[1], bbox[2], bbox[3]
             );
             convict_or_record(SanityLevel::Sample, reason, bbox, convicts)
         }
         None => Ok((
             SanityLevel::NotChecked,
             format!(
-                "the covering bbox columns carry no value in their first {} row(s), so nothing was \
-                 read. Not checked",
-                crate::geoparquet::SANITY_SAMPLE_MAX_ROWS
+                "the covering bbox columns carry no value in {rows_read}{qualifier}, so nothing \
+                 was read. Not checked"
             ),
         )),
     }
@@ -971,23 +1014,80 @@ fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) ->
     true
 }
 
+/// Run one open-path query bound to the caller's cancellation token.
+///
+/// **The same shape `admit_identity` already uses**, applied to the reads the sanity check issues
+/// (`docs/01` principle 7): attach the connection's interrupt handle before the statement runs,
+/// detach after it, and report a token that was cancelled as `Cancelled` rather than returning a
+/// value read from an interrupted query. Nothing about what runs changes when nothing cancels.
+fn cancellable<T>(
+    conn: &Connection,
+    cancel: &CancelToken,
+    run: impl FnOnce(&Connection) -> Result<T>,
+) -> Result<T> {
+    cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
+    let outcome = run(conn);
+    cancel.detach();
+    if cancel.is_cancelled() {
+        return Err(EngineError::Cancelled);
+    }
+    outcome
+}
+
+/// The first row group's row count, out of the footer this open has already read — the unit R-S1
+/// and §13 B give the `sample` level.
+///
+/// `None` where the footer carries no row count for row group 0 (an empty file, or a rendering this
+/// query cannot read one from); the caller then bounds the read by the declared ceiling alone and
+/// records that it did.
+fn first_row_group_rows(
+    conn: &Connection,
+    path: &str,
+    cancel: &CancelToken,
+) -> Result<Option<usize>> {
+    cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT row_group_num_rows FROM parquet_metadata(?) WHERE row_group_id = 0 LIMIT 1",
+            )
+            .map_err(|e| EngineError::Source(format!("prepare row group metadata: {e}")))?;
+        let mut rows = stmt
+            .query([path])
+            .map_err(|e| EngineError::Source(format!("read row group metadata: {e}")))?;
+        let Some(row) = rows
+            .next()
+            .map_err(|e| EngineError::Source(format!("row group metadata row: {e}")))?
+        else {
+            return Ok(None);
+        };
+        let count: Option<i64> = row
+            .get(0)
+            .map_err(|e| EngineError::Source(format!("row group row count: {e}")))?;
+        Ok(count.and_then(|n| usize::try_from(n).ok()))
+    })
+}
+
 /// The covering bbox columns' Parquet statistics, out of the footer — `None` when the file carries
 /// none for them, which is what sends R-S1 on to its next level.
 fn covering_statistics(
     conn: &Connection,
     path: &str,
     covering: &CoveringBbox,
+    cancel: &CancelToken,
 ) -> Result<Option<[f64; 4]>> {
-    let mut stmt = conn
-        .prepare("SELECT path_in_schema, stats_min_value, stats_max_value FROM parquet_metadata(?)")
-        .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
-    let rows: Vec<(String, Option<String>, Option<String>)> = stmt
-        .query_map([path], |row| {
+    let rows: Vec<(String, Option<String>, Option<String>)> = cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT path_in_schema, stats_min_value, stats_max_value FROM parquet_metadata(?)",
+            )
+            .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
+        stmt.query_map([path], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<String>>(2)?))
         })
         .map_err(|e| EngineError::Source(format!("read parquet metadata: {e}")))?
         .collect::<std::result::Result<Vec<_>, _>>()
-        .map_err(|e| EngineError::Source(format!("parquet metadata row: {e}")))?;
+        .map_err(|e| EngineError::Source(format!("parquet metadata row: {e}")))
+    })?;
 
     // **How a nested path is spelled is DuckDB's own rendering, not a contract.** This build joins
     // a struct child's path with `", "`; another may join it with `.`. Both are normalized to the
@@ -1024,13 +1124,18 @@ fn covering_statistics(
     }
 }
 
-/// The `sample` level's read: the covering bbox columns, bounded to
-/// [`crate::geoparquet::SANITY_SAMPLE_MAX_ROWS`] rows, and no other column named anywhere in the
-/// statement. Never the WKB.
+/// The `sample` level's read: the covering bbox columns, bounded to `limit` rows, and no other
+/// column named anywhere in the statement. Never the WKB.
+///
+/// `limit` is the caller's — the first row group's row count, capped at
+/// [`crate::geoparquet::SANITY_SAMPLE_MAX_ROWS`] (R-S1; §13 B). This function does not choose it,
+/// so the bound the record names and the bound the statement carries are one value.
 fn covering_sample(
     conn: &Connection,
     path: &str,
     covering: &CoveringBbox,
+    limit: usize,
+    cancel: &CancelToken,
 ) -> Result<Option<[f64; 4]>> {
     let sql = format!(
         "SELECT min(x0), min(y0), max(x1), max(y1) FROM (SELECT {xmin} AS x0, {ymin} AS y0, \
@@ -1040,23 +1145,28 @@ fn covering_sample(
         xmax = covering.xmax.to_sql(),
         ymax = covering.ymax.to_sql(),
         p = path.replace('\'', "''"),
-        n = crate::geoparquet::SANITY_SAMPLE_MAX_ROWS,
+        n = limit,
     );
-    let mut stmt = conn
-        .prepare(&sql)
-        .map_err(|e| EngineError::Query(format!("prepare covering sample: {e}")))?;
-    let mut rows = stmt.query([]).map_err(|e| EngineError::Query(format!("covering sample: {e}")))?;
-    let Some(row) = rows.next().map_err(|e| EngineError::Query(format!("covering sample: {e}")))?
-    else {
-        return Ok(None);
-    };
-    let value = |i: usize| -> Result<Option<f64>> {
-        row.get::<_, Option<f64>>(i).map_err(|e| EngineError::Query(format!("covering sample value: {e}")))
-    };
-    match (value(0)?, value(1)?, value(2)?, value(3)?) {
-        (Some(xmin), Some(ymin), Some(xmax), Some(ymax)) => Ok(Some([xmin, ymin, xmax, ymax])),
-        _ => Ok(None),
-    }
+    cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare(&sql)
+            .map_err(|e| EngineError::Query(format!("prepare covering sample: {e}")))?;
+        let mut rows =
+            stmt.query([]).map_err(|e| EngineError::Query(format!("covering sample: {e}")))?;
+        let Some(row) =
+            rows.next().map_err(|e| EngineError::Query(format!("covering sample: {e}")))?
+        else {
+            return Ok(None);
+        };
+        let value = |i: usize| -> Result<Option<f64>> {
+            row.get::<_, Option<f64>>(i)
+                .map_err(|e| EngineError::Query(format!("covering sample value: {e}")))
+        };
+        match (value(0)?, value(1)?, value(2)?, value(3)?) {
+            (Some(xmin), Some(ymin), Some(xmax), Some(ymax)) => Ok(Some([xmin, ymin, xmax, ymax])),
+            _ => Ok(None),
+        }
+    })
 }
 
 /// Admit the dataset's feature identity — **ADR-016 §3–§6**.
