@@ -493,3 +493,25 @@ against the file itself, which can convict and never confirm (the discipline of
 do when the key is absent: whether to assume the default, to refuse, or to surface the absence as an
 undefined CRS is a decision for the CRS-type rules (docs/01's "CRS is a type"; ADR-015 §5's
 territory) and the human's, not something a pinned quotation settles.
+
+## §14. Amendments recorded at P2 (architect-routed values)
+
+*Drafted 2026-09-10 at Brief A's P2, **after P1's results were seen** (P1 landed at 92d87f1) — §5's
+rule. What it touches: P2's own declared values only. No P1 outcome, prediction (§3, §5) or fixture
+(§4) is altered by it, and none is invalidated.*
+
+*(Custodian's filing note: the four items below are the architect agent's text, appended verbatim on the P2 consult of 2026-09-10 under Draft 2 boundary 5 — "architect sets the value; recorded in the preregistration". Item IV is the human's and is queued as DECISIONS-PENDING entry 81; nothing in item IV is decided here.)*
+
+- **I. The coordinate unit is read, never inferred.** From `coordinate_system.axis[0..2].unit` of the
+  admitted PROJJSON only — never `base_crs`, never `conversion.parameters[].unit` (`engine/src/crs-catalog.json:8`).
+  Both axes angular-degree → degrees instance; disagreeing, missing or unrecognized → `unestablished`,
+  which is **not** an instance and **not** a refusal. Recorded on `AdmissionRecord` (`engine/src/geoparquet.rs:177-188`).
+- **II. `MIN_ANCHOR_SPAN` under degrees = `1e-6` degree** (`frontends/shell/src/canvas/tileGrid.ts:78`
+  is the metre-basis value). Declared, not discovered (ADR-010 rule 6); the arithmetic is in the P2
+  architect consult. Sibling owed, value NOT set: `RECENTER_MAX_DRIFT_M` (`offsetFrame.ts:37`).
+- **III. The fourth typed refusal** is `publish.geographic_crs_not_publishable`, publish-class
+  (§13 H), a `PublishError` variant (`kernel/src/publish/error.rs`) with no SKP code and no
+  `error_of` arm — publish is not an SKP command (`protocol/skp/SKP-V0.md:175`).
+- **IV. Open, the human's:** whether an absent-key CRS84 admit (definition `None`,
+  `geoparquet.rs:392-399`) yields the instance. Unresolved, §3 row 8's degrees prediction stands
+  unmet and is recorded as a deviation at P4 (§8).
