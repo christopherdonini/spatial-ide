@@ -898,7 +898,7 @@ async function captureResidencyStatusText(page) {
  */
 async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrumentEnabled, sinceSeq, postViewState }) {
   if (!instrumentEnabled) {
-    return { corroborated: false, reason: "not instrumented -- [render-trace] tile-ingest is instrument-gated (WorkingCanvas.tsx:1027)" };
+    return { corroborated: false, reason: "not instrumented -- [render-trace] tile-ingest is instrument-gated (WorkingCanvas.tsx:1136)" };
   }
   const queuedTileCount = await page.evaluate(() => window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? 0);
   if (queuedTileCount === 0) {

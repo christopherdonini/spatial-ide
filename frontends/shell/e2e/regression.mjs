@@ -1005,15 +1005,15 @@ async function stepA9(page, consoleHandle) {
 // re-aim": "the camera set directly through the E2E surface if the harness offers it"). It is
 // not used below regardless of that: a REAL product action -- "Zoom to layer", the SAME
 // `reevaluateHoverForZoom` code path a human's gesture and the interactive wheel path both drive
-// (`WorkingCanvas.tsx:722-731`) -- was preferred over any DEV-only seam, modest or not. What follows
+// (`WorkingCanvas.tsx:765-774`) -- was preferred over any DEV-only seam, modest or not. What follows
 // is a separate, additional finding, not the reason the seam is unused: an ARBITRARY, EXTREME]
 // `e2eSetViewState` zoom is actively DANGEROUS, not merely insufficient -- proven live
 // (this piece's own first run, K6 hung ~480s and wedged the whole page unresponsive to CDP at
-// zoom=-64): `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom` (`WorkingCanvas.tsx:384-390`) means an
+// zoom=-64): `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom` (`WorkingCanvas.tsx:415-421`) means an
 // extreme low zoom inflates the viewport's own world-space bbox by the same astronomical factor,
-// and -- before entry 60's fix (this branch) -- `tilesCoveringBbox` (`canvas/tileGrid.ts:298`, the
+// and -- before entry 60's fix (this branch) -- `tilesCoveringBbox` (`canvas/tileGrid.ts:304`, the
 // candidate arm's own covering-tile enumeration `TileViewportStreamManager.onCameraChange` calls,
-// `streaming/tileViewportStreamManager.ts:372`, then with no pre-clamp; now bounded before
+// `streaming/tileViewportStreamManager.ts:383`, then with no pre-clamp; now bounded before
 // allocation, see stepK7) built its output with a plain nested
 // `for (row) for (col)` loop over the FULL bbox/cellSize span BEFORE `MAX_QUEUED_TILES`
 // (`tileGridConstants.ts:54`) ever truncated the result -- an absurd bbox therefore meant an
@@ -1036,8 +1036,8 @@ async function stepA9(page, consoleHandle) {
 // hover, confirmed by the SAME check `onHover` itself runs) is, by construction, MORE zoomed-in
 // than the whole-dataset fit -- so fitting to the whole dataset from there can only cross the
 // threshold, never stay above it. [Post-PASS sweep nit: stated precisely rather than glossed --
-// `reevaluateHoverForZoom(fit.zoom)` (`WorkingCanvas.tsx:799`) runs BEFORE `render()` (`:806`)
-// recomputes `averageFeatureExtentRef.current` from the fit's own newly-resident batches (`:756`),
+// `reevaluateHoverForZoom(fit.zoom)` (`WorkingCanvas.tsx:842`) runs BEFORE `render()` (`:849`)
+// recomputes `averageFeatureExtentRef.current` from the fit's own newly-resident batches (`:799`),
 // so the below-threshold decision AT the fit actually compares against whatever average extent the
 // LAST render before the fit already held, not P9's own post-fit measurement of the resident set AT
 // the fit. Both are same-dataset averages (the same fixture's features, whichever subset happens to
@@ -1111,7 +1111,7 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 }
 
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
- * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:793-813`), then settles
+ * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:836-856`), then settles
  * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
  * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1971-1977` (first
  * paragraph labelled at `:1952`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a

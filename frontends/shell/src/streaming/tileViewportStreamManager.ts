@@ -336,8 +336,8 @@ export class TileViewportStreamManager {
    * thunk (`() => string[]`).** The array's own sole reader anywhere in `src/` is the
    * `unrequestedTilesOverBudget` getter's own unit test (`tileViewportStreamManager.test.ts`) --
    * nothing in product code ever consumes it. F1 made the caller's own input the full geometric
-   * covering set (`TilePlanOutcome.covering`, unbounded by `coveringIndexRange`, `tileGrid.ts:158-
-   * 167`), so computing the `!isTileResidentInCandidateSet` filter EAGERLY, on every over-budget
+   * covering set (`TilePlanOutcome.covering`, unbounded by `coveringIndexRange`, `tileGrid.ts:164-
+   * 173`), so computing the `!isTileResidentInCandidateSet` filter EAGERLY, on every over-budget
    * batch ingest and every camera change, did that filtering work for a value this codebase never
    * reads back. A thunk lets the caller (`candidateArmSession.ts`) defer that filter to this getter's
    * own read instead -- the getter's own tested contract (a `readonly string[]`) is unchanged; only
