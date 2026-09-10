@@ -191,6 +191,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     guarantee change; (f) `MIN_ANCHOR_SPAN` under degrees — a declared unit-aware value (the
     boundaries force it) or a typed refusal; (g) the home of the binding equirectangular wording —
     the ADR-013 amendment or an appended ADR-003 note. All in the P0 PR for sight.
+    *Added 2026-09-10 after P1 (architect's note, verbatim class): one more item for the P6 sight list — the envelope state `sanity_level = metadata` paired with a `sanity_reason` saying no range check applies (a declared-CRS file whose data axis order came from the format's WKB rule; F-4 / corpus #3). Also for the ADR-015 Amendment 1 draft at P6: §2b of the preregistration assigns an axis class only under R-C4; the R-C2 (absent-key) admission records `axis:format-override` on the draft's own definition, and the draft should say so.*
 
 72. **[Porting-time conflict, noticed before porting (Draft 2, Brief A): the brief's commit line
     `git -c user.name=chris -c user.email=chrys92d@gmail.com commit -s` names an author/sign-off
