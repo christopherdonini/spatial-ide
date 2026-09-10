@@ -172,6 +172,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     §3 D2/D3/D4, §10); the architect's condition 14 puts (1) and (3) outside the ruled (b). The
     default readings are the safe ones (nothing new is shown; a stale frame is never picked). Not
     a tag matter.
+    *Added 2026-09-10 after the architect gate on the built piece (input to your (1), unruled here): deck.gl delivers no hover event while a mouse button is down, so a drag pan never refreshes the captured pointer pixel; without a button-down guard a pan-settle would re-pick at the pre-drag pixel and could name a feature not under the pointer. The piece now blocks arming and cancels any pending settle while a button is down (preregistration Amendment 2, D11), so pan-settle fires only after release; the gate called this "the strongest input to entry 75" — it makes the pan-settle reading depend on the guard, where zoom-only would not.*
 
 74. **[Part M split into two sittings (the human, 2026-09-10: M1–M4 first, the rest later) —
     does the v0.1.0 tag wait for sitting 2, or does sitting 1 (install + first open) suffice to
