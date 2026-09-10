@@ -123,7 +123,9 @@ pub enum SanityLevel {
     /// Footer-resident facts only: the geometry column's `bbox` member, or Parquet statistics on
     /// the covering bbox columns.
     Metadata,
-    /// The first [`SANITY_SAMPLE_MAX_ROWS`] rows of the covering bbox columns, and nothing else.
+    /// The **first row group** of the covering bbox columns, capped at [`SANITY_SAMPLE_MAX_ROWS`],
+    /// and nothing else (R-S1; `ADMISSION-PREREGISTRATION.md` §13 B). The recorded reason names the
+    /// row group's own row count, or the capped form where the cap is what bounded the read.
     Sample,
     /// Neither was available, or no format rule was applied. Recorded as `none`; the reason says
     /// which. **Not checked — never "passed".**
