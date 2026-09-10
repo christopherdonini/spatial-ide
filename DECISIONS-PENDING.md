@@ -69,6 +69,48 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+79. **[Brief B stage B1 consult — three items routed to you, for B1's close and not before (Brief
+    B is held until Brief A closes; block-on-sight B-1): (1) the refusal set is wider than DRAFT-3's
+    Stage B1 sentence names — the architect drafts six named codes (unknown, type, geometry,
+    identity, duplicate, too-many) plus an optional `projection_empty_list` for `columns: []`, on
+    ADR-021 decision 8's no-catch-all rule; accept the wider named surface, or hold B1 to the two
+    codes DRAFT-3 names? (2) does the hover readout show every projected column, or a bounded subset
+    when the projection is large (a user-visible default)? (3) is the panel's candidate-column list
+    filtered client-side by `arrow_type` (a user-visible default that can disagree with the kernel
+    if the two sets ever drift)?]** The drafted Decision text (ADR-023 stays Proposed) is
+    `RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-b1-adr-023-decision.md`; the ADR-004 review of
+    the data-plane column addition (verdict: pass with notes; `protocol/data-plane/` expected to see
+    an empty diff; each copy on the added columns named; never "zero-copy") is
+    `…/architect-consult-b1-adr-004-data-plane-review.md`, whose §9 queues four conflicts with the
+    record (the shell's style module asserts in code that the live stream carries no attributes;
+    ADR-023's Context sentence becomes historical — a dated corrigendum at acceptance; per-column
+    chunk retention at projection width — the architect's; the pinned `filter_composition` SQL
+    prefix). No code was written. Not a tag matter.
+
+78. **[Repository description + topics — public-facing; applied only on your word: the drafted
+    description (304 characters, measured) and fourteen verified topics are in
+    `RELEASE-DRAFTS-0.1.0/decision-notes/repo-description-and-topics.md` with three alternatives and
+    ready-to-run `gh repo edit` commands; homepage stays empty. One correction it surfaces:
+    `RELEASE-DAY-CHECKLIST.md` line 27 lists the topic `spatial`, which the note did not verify and
+    does not propose — `spatial-data` is offered in its place; correcting the checklist line is a
+    separate one-line change on your word.]** Nothing applied. The custodian runs no `gh repo edit`.
+
+77. **[Code signing for the Windows installer — your decision, docs only: the options note is
+    `RELEASE-DRAFTS-0.1.0/decision-notes/code-signing-options.md` (Azure Artifact Signing, the 2026
+    name of Trusted Signing, vs an OV certificate, with Certum's open-source certificate and SignPath
+    as the other two rows — cost, identity requirements, what SmartScreen shows under each, every
+    fact with its URL and retrieval date). The decisive facts as the note records them: individual
+    developers on Azure Artifact Signing are limited to the United States and Canada, which routes
+    an individual elsewhere to OV; OV requires a hardware crypto module by the CA/B Forum baseline;
+    no option gives instant SmartScreen trust — reputation accrues per binary, and EV no longer
+    bypasses the warning; the one signed/unsigned divergence is that Windows 11 Smart App Control
+    blocks unsigned files. The note's recommendation line, yours to accept or reject: sign nothing
+    for v0.1.0 (adopting an option now would void the recorded candidate hash and re-run the Part M
+    installer rows) and decide after the tag with its open questions 1–4 answered. It also flags a
+    discrepancy between two Microsoft pages on the organisation country list (one includes
+    Switzerland, the other does not), unresolved from primary sources.]** Nothing applied; no Azure
+    resource, no certificate, no `tauri.conf.json` change. Not a tag matter unless you rule it one.
+
 76. **[Entry 66 (b) (the geometric protection piece, being built now on `cut/geometric-protection`;
     merge held until after the tag) — four items its preregistration leaves to you, for your answer
     BEFORE any merge: (1) the `fits`/over-budget latch still reads the enumerated window past the
