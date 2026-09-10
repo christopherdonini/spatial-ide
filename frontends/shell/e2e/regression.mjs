@@ -980,9 +980,14 @@ async function stepA9(page, consoleHandle) {
 //   (iv)  THE DISCRIMINATOR (the preregistration's condition 13, and the reason (ii)'s old falsifier
 //         could be removed without losing coverage): a camera change chosen so a DIFFERENT feature
 //         lies under the same stationary pixel -- a PAN, which translates the world under the
-//         pointer instead of holding it fixed. The emitted id must DIFFER from the retained one, or
-//         be absent where nothing is resident there. An implementation that emitted the confirming
-//         trace while re-asserting the retained id passes (i), (ii) and (iii) and fails this.
+//         pointer instead of holding it fixed. **As corrected by the preregistration's own section
+//         12 Amendment 2 and the reviewer gate:** exactly two outcomes end this case successfully --
+//         an id that DIFFERS from the retained one, or an ABSENCE -- and each must carry a
+//         confirming `readout_confirmed` re-pick line at that camera. The named refusal is
+//         NON-TERMINAL (the mid-gesture rule emits it with no pick behind it, so it cannot
+//         discriminate anything); the case keeps panning through refusals and fails by name if it
+//         exhausts having seen only those. An implementation that emitted the confirming trace while
+//         re-asserting the retained id passes (i), (ii) and (iii) and fails this.
 //
 // **No timing figure is asserted, reported or derivable here** -- every `timeoutMs`/`quietMs` below
 // is a harness BOUND, exactly as this file's other steps already use them (ADR-018), and the settle
@@ -1100,7 +1105,7 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 }
 
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
- * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:793-813`), then settles
+ * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:1050`), then settles
  * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
  * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1971-1977` (first
  * paragraph labelled at `:1952`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
@@ -1193,7 +1198,7 @@ async function stepK6(page, consoleHandle) {
   if (repickId === null) {
     throw new Error(`K6/re-pick: expected a real id readout to start from, got ${JSON.stringify(repickHover.text)}`);
   }
-  await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "once i zoom in to a feature and hover over one"
+  await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "Once i zoom in to a feature and hover over one"
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
   const sameId = await waitForCondition(
@@ -1232,6 +1237,8 @@ async function stepK6(page, consoleHandle) {
   }
   let discriminatorOutcome = null;
   let pressesUsed = 0;
+  let refusalsSeen = 0;
+  let unconfirmedAbsences = 0;
   for (let press = 1; press <= K6_PAN_KEY_PRESSES_MAX && discriminatorOutcome === null; press++) {
     const beforePress = consoleHandle.renderTrace().length;
     await page.keyboard.press("ArrowRight");
@@ -1246,25 +1253,51 @@ async function stepK6(page, consoleHandle) {
     }
     const afterPress = await readHoverReadout(page);
     const afterId = hoverReadoutId(afterPress);
-    if (afterId === null) {
-      // The correct answer where nothing is resident under that pixel any more (or where the pan
-      // left the camera below the declared threshold) -- an absence, never the retained id.
-      discriminatorOutcome = afterPress === null ? "absent" : `refusal (${JSON.stringify(afterPress)})`;
-    } else if (afterId !== repickId) {
+
+    if (afterPress !== null && afterId === null && afterPress !== K6_REFUSAL_TEXT) {
+      throw new Error(`K6/discriminator: unrecognised .hover-readout state after a pan: ${JSON.stringify(afterPress)}`);
+    }
+
+    // THE REFUSAL IS NON-TERMINAL (preregistration section 12 Amendment 2). The mid-gesture rule
+    // emits the named refusal on its own, with no pick behind it, so it cannot tell a fresh re-pick
+    // apart from a re-emitted retained readout -- accepting it here would let this case pass against
+    // exactly the build block-on-sight condition 13 exists to catch. Keep panning instead.
+    if (afterPress === K6_REFUSAL_TEXT) {
+      refusalsSeen++;
+      continue;
+    }
+
+    // AN ABSENCE is a success only WITH a confirming re-pick line naming `cleared` at this camera
+    // (reviewer R4). Without one, the readout being empty says nothing about whether a pick ran: the
+    // mid-gesture rule clears a standing id by itself. Keep panning in that case too.
+    if (afterPress === null) {
+      if (hasConfirmingRepickTrace(consoleHandle, beforePress, "cleared")) {
+        discriminatorOutcome = "an absence, confirmed re-picked (nothing resident under that pixel)";
+      } else {
+        unconfirmedAbsences++;
+      }
+      continue;
+    }
+
+    if (afterId !== repickId) {
       if (!hasConfirmingRepickTrace(consoleHandle, beforePress, `id ${afterId}`)) {
         throw new Error(
           `K6/discriminator: .hover-readout shows id ${afterId} after a pan, but no readout_confirmed re-pick line ` +
             `names it at that camera`
         );
       }
-      discriminatorOutcome = `different id (${repickId} -> ${afterId})`;
+      discriminatorOutcome = `a different id (${repickId} -> ${afterId}), confirmed re-picked`;
     }
   }
   if (discriminatorOutcome === null) {
     throw new Error(
-      `K6/discriminator: after ${K6_PAN_KEY_PRESSES_MAX} keyboard pan presses with the pointer stationary, ` +
-        `.hover-readout still names the SAME feature (id ${repickId}) it named before the world moved underneath it -- ` +
-        `a retained id re-asserted across a camera change, which no fresh pick could have produced`
+      `K6/discriminator: ${K6_PAN_KEY_PRESSES_MAX} keyboard pan presses with the pointer stationary produced no ` +
+        `outcome that can discriminate a fresh pick from a retained readout ` +
+        `(${refusalsSeen} refusal-only press(es), ${unconfirmedAbsences} absence(s) with no confirming re-pick trace, ` +
+        `the rest still naming the SAME feature id ${repickId} the readout named before the world moved underneath ` +
+        `it). A retained id re-asserted across a camera change, a settle that never ran, and a run where only the ` +
+        `mid-gesture refusal ever spoke are all failures of this case, by name -- section 5 (iv) as corrected by the ` +
+        `preregistration's own Amendment 2.`
     );
   }
 
@@ -1297,7 +1330,7 @@ async function stepK6(page, consoleHandle) {
       `camera change ("Zoom to layer") -> refusal text verbatim ("${K6_REFUSAL_TEXT}"); ` +
     `(iii) re-pick: hovered id ${repickId}, one zoom-in notch then ONE discrete zoom-out step, pointer stationary -> ` +
       `the same id, named re-picked by its own confirming trace at that camera; ` +
-    `(iv) discriminator: ${pressesUsed} keyboard pan press(es), pointer stationary -> ${discriminatorOutcome}; ` +
+    `(iv) discriminator: ${pressesUsed} keyboard pan press(es), pointer stationary (${refusalsSeen} refusal-only press(es) passed over as non-terminal) -> ${discriminatorOutcome}; ` +
     `(ii) discrete: hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ${zoomOutNotches} ` +
       `discrete zoom-out notch(es) -> ${notchesShowingAnId} notch(es) showed an id, every one of them with a ` +
       `confirming re-pick trace at its own camera.`
@@ -1666,14 +1699,17 @@ async function main() {
     // the full account of all four cases, including why case (i) uses "Zoom to layer" rather than an
     // extreme camera jump and why case (iv)'s pan is deck.gl's own keyboard pan). This now runs the
     // A9'-proven candidate-finding search THREE times (case (i); case (iii), which case (iv) then
-    // continues from; case (ii)), two "Zoom to layer" clicks (each A7'-scale, bounded there at 150s
-    // including its own drag search), two single wheel notches for case (iii), a bounded key-press
-    // loop for case (iv), and a bounded per-notch settle loop for case (ii)'s own >= 8 notches. The
-    // bound is UNCHANGED at 240s across that widening: the last recorded green run of the two-case
-    // version used well under a third of it (RELEASE-0.1.md's own K6 re-aim entry), so the headroom
-    // absorbs the third search without eating so much of the WHOLE run's own
-    // `SPATIAL_E2E_DEADLINE_MS` that a single slow step here starves every later one. Not a timing
-    // claim (ADR-018), just a bound.
+    // continues from; case (ii)), two "Zoom to layer" clicks, two single wheel notches for case
+    // (iii), a key-press loop for case (iv), and a per-notch settle loop for case (ii)'s own >= 8
+    // notches.
+    //
+    // The bound below is UNCHANGED across that widening, and the reason is structural, not measured:
+    // every wait this step performs is already independently bounded -- each candidate search, each
+    // settle wait, each readout poll, and both loops are counted rather than open-ended -- so a hang
+    // cannot hide inside it, and this bound is a backstop on the composition as a whole rather than
+    // a budget to tune. Widening it would eat the WHOLE run's own `SPATIAL_E2E_DEADLINE_MS`, which
+    // every later step depends on; if a legitimately slow composition ever reaches it, the answer is
+    // to split the step, not to raise the ceiling. Not a timing claim (ADR-018), just a bound.
     await runStep("K6", 240_000, () => stepK6(page, consoleHandle));
     // K7 (DECISIONS-PENDING entry 60, ruled (a) 2026-09-08; RELEASE-0.1.md Amendment 10): 15 discrete
     // zoom-OUT notches from a "Zoom to layer" fit on the shipped default -- the ordinary gesture that
