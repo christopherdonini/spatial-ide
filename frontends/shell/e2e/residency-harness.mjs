@@ -872,7 +872,7 @@ async function captureResidencyStatusText(page) {
  * **Two disclosures this assertion carries (paraphrased from the piece's own preregistration, not
  * quoted):**
  *  1. **Instrument-gated.** `[render-trace] tile-ingest` lines are emitted only when
- *     `isInstrumentedBuild()` is true (`WorkingCanvas.tsx:1027`'s own `if (isInstrumentedBuild())`
+ *     `isInstrumentedBuild()` is true (`WorkingCanvas.tsx:1354`'s own `if (isInstrumentedBuild())`
  *     guard around `traceTileIngest`) -- a `--control` (non-instrumented) run returns `{corroborated:
  *     false}` rather than asserting a vacuous pass over evidence that was never collected.
  *  2. **Post-settle, after the step's LAST plan (the debounce window).** Between a gesture and its
@@ -894,7 +894,7 @@ async function captureResidencyStatusText(page) {
  */
 async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrumentEnabled, sinceSeq, postViewState }) {
   if (!instrumentEnabled) {
-    return { corroborated: false, reason: "not instrumented -- [render-trace] tile-ingest is instrument-gated (WorkingCanvas.tsx:1027)" };
+    return { corroborated: false, reason: "not instrumented -- [render-trace] tile-ingest is instrument-gated (WorkingCanvas.tsx:1354)" };
   }
   const queuedTileCount = await page.evaluate(() => window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? 0);
   if (queuedTileCount === 0) {

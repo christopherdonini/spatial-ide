@@ -8,8 +8,9 @@ import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import type { ResidentBatch } from "./decodeBatch";
-import { HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
+import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import type { HoverReadout } from "./pick";
+import { hoverRepickActionForCameraChange } from "./pickResolution";
 import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
 import {
   applyStyleChange,
@@ -472,5 +473,65 @@ describe("createHoverRepickScheduler (entry 47: the settle seam)", () => {
     vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
     expect(cleared.emit.mock.calls).toEqual([[null]]);
     expect(cleared.resolveCandidate).not.toHaveBeenCalled();
+  });
+});
+
+// D11 (preregistration section 12 Amendment 2, recorded before the fix): the button-down guard,
+// driven exactly the way `WorkingCanvas.tsx`'s own `scheduleHoverRepick` drives it -- the pure
+// decision, then the seam -- the same "drive the product's own gating pattern" shape this file
+// already uses for `shouldScheduleTileRender` gating `coalesceOncePerFrame`.
+function driveCameraChange(
+  h: ReturnType<typeof repickHarness>,
+  { readoutWasStanding = true, zoomChanged = true, pointerButtonDown = false } = {}
+): void {
+  const action = hoverRepickActionForCameraChange(
+    readoutWasStanding,
+    zoomChanged,
+    HOVER_REPICK_ON_PAN,
+    pointerButtonDown
+  );
+  if (action === "cancel") {
+    h.state.armed = false;
+    h.scheduler.cancel();
+    return;
+  }
+  if (action === "arm") h.state.armed = true;
+  h.scheduler.schedule();
+}
+
+describe("the button-down guard (entry 47, D11)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("a camera burst under a HELD pointer button emits nothing at settle; the same burst after release emits exactly one pick", () => {
+    // deck.gl delivers no `onHover` while a button is down, so the stored pixel is the PRE-DRAG one
+    // for the whole gesture -- a settle here would confirm an id for a feature not under the pointer.
+    const h = repickHarness({ armed: false });
+    for (let i = 0; i < 4; i++) driveCameraChange(h, { pointerButtonDown: true });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+    expect(h.trace).not.toHaveBeenCalled();
+
+    // The button comes up. The FIRST camera change after the release arms exactly as D1/D3 say.
+    for (let i = 0; i < 4; i++) driveCameraChange(h, { pointerButtonDown: false });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+    expect(h.emit).toHaveBeenCalledTimes(1);
+    expect(h.emit).toHaveBeenCalledWith(ID_A);
+  });
+
+  it("a button pressed mid-burst cancels the settle that was already pending", () => {
+    const h = repickHarness({ armed: false });
+    driveCameraChange(h); // pointer up: armed and pending
+    vi.advanceTimersByTime(HALF_GAP);
+    driveCameraChange(h, { pointerButtonDown: true }); // the drag begins
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
   });
 });

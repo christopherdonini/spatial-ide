@@ -7,6 +7,7 @@ import type { ResidentBatch } from "./decodeBatch";
 import {
   averageFeatureExtent,
   decideHoverReadoutAtSettle,
+  hoverRepickActionForCameraChange,
   isBelowPickResolution,
   isFramebufferIdentical,
   isPointerOnCanvas,
@@ -235,5 +236,32 @@ describe("decideHoverReadoutAtSettle (the AT-SETTLE decision)", () => {
 
   it("the pointer is off canvas -> nothing is emitted", () => {
     expect(decideHoverReadoutAtSettle(true, false, true, false, idB)).toBeUndefined();
+  });
+});
+
+// D11 (preregistration section 12 Amendment 2): the button-down guard, as a pure decision. The
+// falsifier it closes is deck.gl's own documented behaviour -- no `onHover` while a button is down --
+// which leaves the stored pixel frozen at its pre-drag value for a whole drag pan.
+describe("hoverRepickActionForCameraChange (D11)", () => {
+  it("a button held down: CANCEL, whatever the rest says -- the burst is dropped, nothing is armed", () => {
+    expect(hoverRepickActionForCameraChange(true, true, true, true)).toBe("cancel");
+    expect(hoverRepickActionForCameraChange(true, false, true, true)).toBe("cancel");
+    expect(hoverRepickActionForCameraChange(false, true, false, true)).toBe("cancel");
+  });
+
+  it("no button down, a readout standing, the axis counts: ARM", () => {
+    expect(hoverRepickActionForCameraChange(true, true, true, false)).toBe("arm");
+    expect(hoverRepickActionForCameraChange(true, false, true, false)).toBe("arm"); // pan, under the words' reading
+    expect(hoverRepickActionForCameraChange(true, true, false, false)).toBe("arm"); // zoom, under zoom-only
+  });
+
+  it("no button down but nothing to arm: SCHEDULE only -- the timer stays honest, the settle emits nothing", () => {
+    expect(hoverRepickActionForCameraChange(false, true, true, false)).toBe("schedule");
+    expect(hoverRepickActionForCameraChange(true, false, false, false)).toBe("schedule"); // pure pan, zoom-only
+  });
+
+  it("the release edge: the SAME camera change that cancelled while held arms once the button is up", () => {
+    expect(hoverRepickActionForCameraChange(true, true, true, true)).toBe("cancel");
+    expect(hoverRepickActionForCameraChange(true, true, true, false)).toBe("arm");
   });
 });

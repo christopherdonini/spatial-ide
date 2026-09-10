@@ -50,9 +50,9 @@ import {
   isBelowPickResolution,
   isFramebufferIdentical,
   isPointerOnCanvas,
+  hoverRepickActionForCameraChange,
   mayRepickAtSettle,
   reevaluateStandingHoverOnCameraChange,
-  shouldArmHoverRepick,
 } from "./pickResolution";
 import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
 import { debounce } from "../streaming/debounce";
@@ -593,7 +593,13 @@ export interface HoverRepickScheduler {
  * **The settle seam (entry 47, `HOVER-REPICK-PREREGISTRATION.md` D1/D6/D7).** Exactly one
  * trailing-edge timer, the existing `streaming/debounce.ts` mechanism at the existing
  * viewport-query value (`HOVER_REPICK_SETTLE_MS`, the human's own anchor for this piece), and at the
- * moment a burst of camera changes stops, exactly one pick through the same path `onHover` uses.
+ * moment a burst of camera changes stops, exactly one pick, through the same three steps `onHover`
+ * takes (`deck.pickObject` at the stored pixel, `batchForLayerId` against `activeBatches()`, then
+ * `resolvePick`) -- but NOT with `onHover`'s own ordering in one state, deliberately: where the pick
+ * finds no layer or no resident batch, `onHover` returns `null` BEFORE it ever consults the declared
+ * threshold, while a settle consults the threshold first and so answers the named refusal there.
+ * That difference is preregistered (section 5's "below threshold at the new camera -> the refusal
+ * whatever the pick returned") and is the ADR-028 item 4 ordering, not a drift from the hover path.
  *
  * Order, declared: the three arming conditions first -- when any of them fails **no pick runs at
  * all** and nothing is emitted, leaving the standing readout whatever the mid-gesture decision made
@@ -864,8 +870,29 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * immediately after -- so this stays set for the rest of the burst and is cleared at settle (one
    * settle answers exactly one burst), by a real `onHover` (the pointer path owns the readout again)
    * and on unmount. A burst that began with nothing shown arms nothing: there is no readout whose
-   * staleness a re-pick would be answering. */
+   * staleness a re-pick would be answering.
+   *
+   * **The consequence of that, named rather than left to be discovered:** a settle whose own re-pick
+   * CLEARS the readout leaves nothing standing, so every camera change after it arms nothing and no
+   * further re-pick runs until a real pointer move puts a readout back. Once the operator is shown
+   * nothing, the canvas stays silent under continued camera motion -- which is the honest state (a
+   * readout nothing stands behind is exactly what this piece refuses to produce), not a gap to be
+   * closed by re-arming on ingest or on every frame (both are declared non-goals). */
   const hoverRepickArmedRef = useRef(false);
+
+  /** **D11 (preregistration section 12 Amendment 2): is a pointer button down on this canvas right
+   * now.** deck.gl delivers no `onHover` while a button is held, so through a whole drag pan the
+   * pointer capture and the cancel that a real hover performs never run -- see
+   * `hoverRepickActionForCameraChange` (`pickResolution.ts`) for the falsifier this closes. Written
+   * by the listeners installed in the effect below, read by `scheduleHoverRepick`.
+   *
+   * **`pointerdown` on the canvas, `pointerup`/`pointercancel` on the WINDOW**, deliberately, and
+   * this is the reason that pair was chosen over deck's own `onDragStart`/`onDragEnd`: a button
+   * released OUTSIDE the canvas still clears the flag (a canvas-scoped `pointerup` would not fire at
+   * all, leaving the flag stuck down for the rest of the session), and the flag is true from the
+   * button-down instant rather than from the gesture threshold at which deck's own pan recognizer
+   * first reports a drag. */
+  const pointerButtonDownRef = useRef(false);
 
   /** D4: the framebuffer basis a screen pixel's meaning depends on (ADR-010 rule 1) -- the canvas's
    * own CSS width/height (the basis this file already uses at every other pixel site) and the device
@@ -888,11 +915,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   }
 
   /** Entry 47, D1/D6/D7: the settle seam itself -- see `createHoverRepickScheduler` above for the
-   * order it runs in and why. Constructed eagerly through `useRef` (the same discipline
-   * `coalescedRenderRef` below already follows); every dependency below reads a ref at CALL time, so
-   * there is nothing here for a stale closure to go stale on. */
-  const hoverRepickRef = useRef(
-    createHoverRepickScheduler({
+   * order it runs in and why. Constructed LAZILY, on the first render that reads it, and never
+   * again: an eager `useRef(createHoverRepickScheduler(...))` would build (and immediately discard)
+   * a fresh scheduler -- and with it a fresh timer slot -- on every render of this component, which
+   * is wasted construction at best and, if one of those discarded objects ever held a pending timer,
+   * a second outstanding settle D7 says cannot exist. Every dependency below reads a ref at CALL
+   * time, so there is nothing here for a stale closure to go stale on. */
+  const hoverRepickRef = useRef<HoverRepickScheduler | null>(null);
+  if (hoverRepickRef.current === null) {
+    hoverRepickRef.current = createHoverRepickScheduler({
       capturedPointer: () => lastPointerPxRef.current,
       framebufferNow: () => framebufferIdentityNow(),
       isArmed: () => hoverRepickArmedRef.current,
@@ -917,8 +948,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       emit: (readout) => emitHoverReadout(readout),
       trace: (readout) => traceReadoutConfirmed(hoverReadoutTraceLabel(readout), currentZoomRef.current),
       settleMs: HOVER_REPICK_SETTLE_MS,
-    })
-  );
+    });
+  }
+  const hoverRepick: HoverRepickScheduler = hoverRepickRef.current;
 
   /** Entry 47, D1: called at EXACTLY the three camera-change sites, each immediately after it has
    * written `currentZoomRef.current` and run `reevaluateHoverForZoom` -- the interactive
@@ -929,12 +961,30 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * state the camera change arrived INTO: `zoomChanged` is "did this change move the zoom axis"
    * (D3's switch reads it; under the zoom-only value a pure pan arms nothing), and
    * `readoutWasStanding` is "was something actually shown to the operator" (D6(a)) -- which
-   * `reevaluateHoverForZoom` has already cleared or refused by the time this runs. */
+   * `reevaluateHoverForZoom` has already cleared or refused by the time this runs. The third input,
+   * D11's button-down state, is read here rather than passed: it is not about the camera change at
+   * all, only about whether the pointer's own position can still be trusted.
+   *
+   * The decision itself is pure and unit-tested (`hoverRepickActionForCameraChange`); this is the
+   * ref-plumbing around it. */
   function scheduleHoverRepick(zoomChanged: boolean, readoutWasStanding: boolean): void {
-    if (shouldArmHoverRepick(readoutWasStanding, zoomChanged, HOVER_REPICK_ON_PAN)) {
+    const action = hoverRepickActionForCameraChange(
+      readoutWasStanding,
+      zoomChanged,
+      HOVER_REPICK_ON_PAN,
+      pointerButtonDownRef.current
+    );
+    if (action === "cancel") {
+      // D11: a camera change under a held button -- the stored pixel is from before the drag began
+      // and nothing will refresh it until the button comes up, so the whole burst is dropped.
+      hoverRepickArmedRef.current = false;
+      hoverRepick.cancel();
+      return;
+    }
+    if (action === "arm") {
       hoverRepickArmedRef.current = true;
     }
-    hoverRepickRef.current.schedule();
+    hoverRepick.schedule();
   }
 
   function render(): void {
@@ -1493,6 +1543,39 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [style]);
 
+  // D11 (preregistration section 12 Amendment 2): the button-down guard's own listeners. `pointerdown`
+  // on the canvas -- the only element a drag pan can start on -- and `pointerup`/`pointercancel` on
+  // the WINDOW, so a button released anywhere (off the canvas, off the window's own chrome, after a
+  // cancelled gesture) still clears the flag; a canvas-scoped `pointerup` would simply never fire in
+  // that case and would leave the flag stuck down for the rest of the session. `passive: true` and no
+  // `preventDefault` anywhere: these observe, and deck.gl's own event manager on the same element
+  // keeps handling the gesture exactly as it always has.
+  //
+  // The pending settle is cancelled at the DOWN edge as well as refused at every camera change while
+  // the button is held -- a burst that was already pending when the button came down was aimed at a
+  // pixel the drag is about to invalidate.
+  useEffect(() => {
+    const canvas = canvasElRef.current;
+    if (!canvas) return;
+    const onPointerDown = () => {
+      pointerButtonDownRef.current = true;
+      hoverRepickArmedRef.current = false;
+      hoverRepick.cancel();
+    };
+    const onPointerRelease = () => {
+      pointerButtonDownRef.current = false;
+    };
+    canvas.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener("pointerup", onPointerRelease, { passive: true });
+    window.addEventListener("pointercancel", onPointerRelease, { passive: true });
+    return () => {
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerRelease);
+      window.removeEventListener("pointercancel", onPointerRelease);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // S5's own "cancel on cleanup": unmount-only (`[]` deps, not `[style]` -- cancelling on every
   // style change would defeat the coalescer's own no-op-while-pending logic for no benefit, since a
   // still-pending frame already reads fresh state whenever it fires). Prevents a scheduled frame
@@ -1505,7 +1588,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // Entry 47, D7: the settle timer dies with the instance too -- at most one is ever
       // outstanding, and no pick may fire against a finalized `Deck` or emit into an unmounted
       // parent's `onHover`.
-      hoverRepickRef.current.cancel();
+      hoverRepick.cancel();
     };
   }, []);
 
@@ -1582,7 +1665,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // could have produced.
         captureHoverPointer(info.x, info.y);
         hoverRepickArmedRef.current = false;
-        hoverRepickRef.current.cancel();
+        hoverRepick.cancel();
         if (info.index === undefined || info.index < 0 || !info.layer) {
           emitHoverReadout(null);
           return;

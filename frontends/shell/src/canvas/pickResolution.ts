@@ -252,3 +252,33 @@ export function decideHoverReadoutAtSettle(
   if (belowThreshold) return { kind: "below-pick-resolution" };
   return pickOutcome;
 }
+
+/**
+ * **D11 (preregistration §12 Amendment 2, recorded before this code) -- what a camera change does,
+ * including while a pointer button is held down.** The architect gate's falsifier: deck.gl does not
+ * deliver `onHover` while a mouse button is down (`@deck.gl/core/dist/lib/deck.js`: "Do not trigger
+ * onHover callbacks if mouse button is down"), so through a whole drag pan neither the pointer
+ * capture nor the cancel that a real hover performs ever runs, while the camera-change site arms and
+ * schedules on every drag frame -- a settle would then pick at the PRE-DRAG pixel and confirm an id
+ * for a feature that is not under the pointer. That is refused here rather than papered over: while
+ * a button is down, arming is blocked AND any pending settle is cancelled; the first camera change
+ * after the button is released arms as D1/D3 say.
+ *
+ * The three answers, and what the caller does with each:
+ * - `"cancel"`: forget the burst entirely -- disarm and cancel the pending settle, schedule nothing.
+ * - `"arm"`: a readout was standing and this axis counts (D3) -- arm, then (re)start the settle.
+ * - `"schedule"`: nothing to arm, but the burst is still in motion -- (re)start the settle, which
+ *   will find nothing armed and emit nothing. Keeping the timer honest here costs one `setTimeout`
+ *   and keeps "settle" meaning the same thing at every site.
+ */
+export type HoverRepickCameraChangeAction = "cancel" | "arm" | "schedule";
+
+export function hoverRepickActionForCameraChange(
+  readoutWasStanding: boolean,
+  zoomChanged: boolean,
+  repickOnPan: boolean,
+  pointerButtonDown: boolean
+): HoverRepickCameraChangeAction {
+  if (pointerButtonDown) return "cancel";
+  return shouldArmHoverRepick(readoutWasStanding, zoomChanged, repickOnPan) ? "arm" : "schedule";
+}
