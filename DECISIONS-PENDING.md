@@ -69,6 +69,18 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+74. **[Part M split into two sittings (the human, 2026-09-10: M1–M4 first, the rest later) —
+    does the v0.1.0 tag wait for sitting 2, or does sitting 1 (install + first open) suffice to
+    finalize README/QUICKSTART, write KNOWN-LIMITATIONS and tag?]** Amendment 13's sequence says
+    "items 4/5/6 finalized from what M actually showed — item 4 last — then the tag", and the
+    freeze holds "until Part M and the tag are done". Sitting 1 establishes the install, the first
+    launch, the three notice files and one open; the publish rows (M8–M11), the residency row (M7)
+    and the two ADR-020 rows (M12–M13) are sitting 2's. KNOWN-LIMITATIONS' entries 5–7 and 12
+    describe sitting-2 behaviour on the packaged build. **(a)** tag after sitting 2 (the release
+    text describes only what M showed on the artifact — Amendment 13's own principle); **(b)** tag
+    after sitting 1, with entries 5–7/12 written from the dev-build evidence (Parts G/H/K/L) and
+    marked as such. Not decided here.
+
 73. **[Brief A, P0 — the reader's polygon-only geometry gate: `engine/src/dataset.rs:275-282`
     refuses any GeoParquet whose `geo.columns.<primary>.geometry_types` lists anything but `Polygon`,
     and it fires BEFORE the CRS admission at `:302-307`. Eight of the twelve collected corpus files
