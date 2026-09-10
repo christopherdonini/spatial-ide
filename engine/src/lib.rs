@@ -104,6 +104,10 @@ pub use crs::{AxisOrder, CrsAssertion, CrsSource, DatasetCrs, MAX_CRS_DEFINITION
 pub use crs_catalog::{definition_provenance, CatalogEntry};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
+pub use geoparquet::{
+    AdmissionRecord, AxisProvenance, CrsProvenance, SanityLevel, PINNED_SPEC_VERSIONS,
+    SANITY_SAMPLE_MAX_ROWS,
+};
 pub use identity::{DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
 pub use error::{EngineError, Result};
 pub use predicate::{AdmittedPredicate, FilterError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH};

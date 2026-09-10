@@ -174,15 +174,27 @@ fn a_declared_crs_is_admitted_as_a_file_fact() {
     assert_eq!(ds.geoparquet_version(), "1.1.0");
 }
 
+/// **Changed at Brief A P1, and the change is the ruling, not a fix.** This test asserted that an
+/// absent `crs` key was refused and GeoParquet's OGC:CRS84 default was not applied. Brief A's
+/// settled boundary 1 (2026-09-09, binding and not reopenable) rules the other way for a spec
+/// version whose text is pinned in-tree: the absent key is admitted under the format's own rule and
+/// recorded as `crs:format-default`. The half of this test that is unchanged — explicit `crs: null`
+/// — is unchanged in the code too (R-C3), and it stays here in its original form.
+///
+/// The absent-key half's own assertions now live in
+/// `engine/tests/admission_format_semantics.rs` (F-1, F-2, F-5, and R-C1's unpinned-version case);
+/// what remains here is the fact that the two `crs` states are still two different outcomes.
 #[test]
-fn a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied() {
-    let _wd = Watchdog::new("a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied");
+fn an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes() {
+    let _wd = Watchdog::new("an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes");
     let (path, _) = write(
         "absent-crs",
         &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..small() },
     );
+    // Metre-domain coordinates under the format's OGC:CRS84 rule: the file's own bbox columns
+    // contradict what the rule supplied, and the refusal says so by name (R-S2).
     match Dataset::open(&path) {
-        Err(EngineError::CrsUndeclared { .. }) => {}
+        Err(EngineError::FormatDefaultContradicted { .. }) => {}
         other => panic!("expected a typed refusal, got {other:?}", other = other.err()),
     }
 
@@ -307,20 +319,31 @@ fn a_definition_that_establishes_no_axis_order_is_refused() {
     ));
 }
 
+/// **Changed at Brief A P1, and the change is the ruling, not a fix.** This test asserted that a
+/// lat-first declaration was refused. Boundary 1 rules that the WKB coordinate order is established
+/// from the format's own override (R-C4) and that the definition's declared order is retained as a
+/// recorded fact rather than discarded — so the file is admitted, and **nothing is normalized** to
+/// admit it: `axis_normalization` is still `none-performed` and no coordinate value is touched.
+///
+/// The refusal is not gone. It is what a **caller-asserted** lat-first CRS still meets (no format
+/// rule governs an assertion, R-C6) and what a declared lat-first CRS in a file whose spec version
+/// is not pinned in this tree still meets (R-C1) — both asserted in
+/// `engine/tests/admission_format_semantics.rs`.
 #[test]
-fn a_latitude_first_source_is_refused_rather_than_reinterpreted() {
-    let _wd = Watchdog::new("a_latitude_first_source_is_refused_rather_than_reinterpreted");
-    // The EPSG:4326 trap docs/05 names. This slice normalizes nothing, so it refuses.
+fn a_latitude_first_source_is_admitted_under_the_formats_override_with_its_declared_order_kept() {
+    let _wd = Watchdog::new(
+        "a_latitude_first_source_is_admitted_under_the_formats_override_with_its_declared_order_kept",
+    );
     let (path, _) = write(
         "latlon",
         &FixtureSpec { crs_mode: CrsMode::DeclaredLatLonFirst, ..small() },
     );
-    match Dataset::open(&path) {
-        Err(EngineError::AxisOrderUnsupported { established }) => {
-            assert_eq!(established, "latitude,longitude");
-        }
-        other => panic!("expected AxisOrderUnsupported, got {:?}", other.err()),
-    }
+    let ds = Dataset::open(&path).expect("admitted under the format's WKB axis rule");
+    let md = ds.envelope().schema().metadata().clone();
+    assert_eq!(md.get("axis_order").unwrap(), "longitude,latitude");
+    assert_eq!(md.get("declared_axis_order").unwrap(), "latitude,longitude");
+    assert_eq!(md.get("axis_provenance").unwrap(), "axis:format-override");
+    assert_eq!(md.get("axis_normalization").unwrap(), "none-performed");
 }
 
 // ---------------------------------------------------------------------------------------------

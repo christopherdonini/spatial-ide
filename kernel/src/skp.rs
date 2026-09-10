@@ -620,6 +620,14 @@ pub fn error_of(e: &EngineError) -> SkpError {
         EngineError::AxisOrderUnsupported { established } => {
             ("axis_order_unsupported", vec![("established", established.clone())])
         }
+        // **A P1 stub, and only because this match has no wildcard arm.** Brief A's boundary 9
+        // names `engine.format_default_contradicted` as one of this cut's typed refusals; the
+        // `describe` additions, the SKP version bump and the fixtures that go with it are P3's, and
+        // nothing here bumps a version or adds a wire field. Without this arm the kernel does not
+        // compile at all, which is exactly what the no-wildcard discipline is for.
+        EngineError::FormatDefaultContradicted { detail } => {
+            ("format_default_contradicted", vec![("detail", detail.clone())])
+        }
         EngineError::GeoMetadata(_) => ("geo_metadata", vec![]),
         EngineError::NoCoveringBbox { detail } => {
             ("no_covering_bbox", vec![("detail", detail.clone())])

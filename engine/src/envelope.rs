@@ -20,6 +20,7 @@ use crate::crs::{CrsSource, DatasetCrs};
 use crate::identity::DatasetIdentity;
 use crate::error::{EngineError, Result};
 use crate::geoarrow;
+use crate::geoparquet::AdmissionRecord;
 
 /// ADR-010 rule 1, row 1. The only coordinate a caller outside the renderer may treat as ground
 /// truth, and the only frame this engine emits.
@@ -34,16 +35,39 @@ pub struct BatchEnvelope {
     geometry_column: String,
     identity: DatasetIdentity,
     attributes: Vec<Field>,
+    /// What admission recorded about *how* the CRS and the data's axis order were established
+    /// (Brief A P1). `None` for an envelope assembled outside the open path, which has no admission
+    /// to report — the keys are then absent rather than filled with a value nothing established.
+    admission: Option<AdmissionRecord>,
     schema: SchemaRef,
 }
 
 impl BatchEnvelope {
+    /// An envelope with no admission record — **test-only since Brief A P1**, because every
+    /// `Dataset::open` now carries one and there is no shipped path left that builds an
+    /// admission-less envelope without a projection (`stream_for_publish` uses
+    /// [`Self::with_attributes`]).
+    #[cfg(test)]
     pub(crate) fn new(
         crs: DatasetCrs,
         geometry_column: String,
         identity: DatasetIdentity,
     ) -> Self {
         Self::with_attributes(crs, geometry_column, identity, Vec::new())
+    }
+
+    /// As [`Self::new`], carrying the admission record the open path established.
+    ///
+    /// **Additive in the strict sense**: every key and value the other two constructors write is
+    /// written here identically, and this one adds keys beside them. `axis_normalization` stays
+    /// `none-performed` — nothing this cut adds transforms a coordinate.
+    pub(crate) fn admitted(
+        crs: DatasetCrs,
+        geometry_column: String,
+        identity: DatasetIdentity,
+        admission: AdmissionRecord,
+    ) -> Self {
+        Self::build(crs, geometry_column, identity, Vec::new(), Some(admission))
     }
 
     /// As [`Self::new`], carrying a **declared attribute projection** after the geometry column.
@@ -64,6 +88,16 @@ impl BatchEnvelope {
         geometry_column: String,
         identity: DatasetIdentity,
         attributes: Vec<Field>,
+    ) -> Self {
+        Self::build(crs, geometry_column, identity, attributes, None)
+    }
+
+    fn build(
+        crs: DatasetCrs,
+        geometry_column: String,
+        identity: DatasetIdentity,
+        attributes: Vec<Field>,
+        admission: Option<AdmissionRecord>,
     ) -> Self {
         let mut md = HashMap::new();
 
@@ -86,6 +120,28 @@ impl BatchEnvelope {
         // normalized to get there (docs/05: the normalization performed is recorded).
         md.insert("axis_order".to_string(), crs.axis_order().as_str().to_string());
         md.insert("axis_normalization".to_string(), "none-performed".to_string());
+        // … and, since Brief A P1, **how** each of those two facts was established, as recorded
+        // facts and never as judgements (the proposed ADR-015 Amendment 1, item 5).
+        //
+        // `axis_order` above is the **data's** order. `declared_axis_order` is the definition's
+        // own, retained whenever a definition existed and never discarded — it is what a later
+        // reprojection or export needs, and dropping it to save a field would destroy a file fact
+        // (boundary 1). Where the two differ, both are here, and the rule that established the
+        // data's order is named by `format_rule_reference`.
+        if let Some(a) = admission.as_ref() {
+            md.insert("crs_provenance".to_string(), a.crs_provenance.as_str().to_string());
+            md.insert("axis_provenance".to_string(), a.axis_provenance.as_str().to_string());
+            if let Some(declared) = a.declared_axis_order {
+                md.insert("declared_axis_order".to_string(), declared.as_str().to_string());
+            }
+            if let Some(reference) = a.format_rule_reference.as_ref() {
+                md.insert("format_rule_reference".to_string(), reference.clone());
+            }
+            // The assurance level of the range check, and what it was decided from. A level is
+            // never a verdict: `none` means not checked, and no value here says a file passed.
+            md.insert("sanity_level".to_string(), a.sanity_level.as_str().to_string());
+            md.insert("sanity_reason".to_string(), a.sanity_reason.clone());
+        }
         // … where the feature identity came from, and **what was actually checked about it**.
         //
         // ADR-016 §6. The basis is `docs/11`'s "the ID-assignment policy is per dataset and
@@ -132,12 +188,18 @@ impl BatchEnvelope {
 
         let schema = Arc::new(Schema::new_with_metadata(fields, md));
 
-        Self { crs, geometry_column, identity, attributes, schema }
+        Self { crs, geometry_column, identity, attributes, admission, schema }
     }
 
     /// The declared attribute projection, in declared order. Empty on the streaming query path.
     pub fn attributes(&self) -> &[Field] {
         &self.attributes
+    }
+
+    /// What admission recorded about how this dataset's CRS and data axis order were established.
+    /// `None` for an envelope built outside the open path.
+    pub fn admission(&self) -> Option<&AdmissionRecord> {
+        self.admission.as_ref()
     }
 
     pub fn crs(&self) -> &DatasetCrs {

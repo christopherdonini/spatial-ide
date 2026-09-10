@@ -1,21 +1,191 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! Parsing of the GeoParquet `geo` file-level metadata.
+//! Parsing of the GeoParquet `geo` file-level metadata, and the **format-governed** admission
+//! rules that read from it.
 //!
 //! Pure functions over the JSON document, kept apart from the DuckDB read so the admission rules
 //! can be tested without a database. What this file establishes — CRS identity, the CRS definition,
-//! axis order, the covering bbox column — is what `crs.rs` then admits or refuses.
+//! the declared axis order, the **data's** axis order, the covering bbox column — is what `crs.rs`
+//! then admits or refuses.
 //!
-//! **One deliberate deviation from the GeoParquet specification, stated where a reader will find
-//! it:** the spec says an *absent* `crs` key means OGC:CRS84. This engine does not apply that
-//! default. A CRS the file does not state is a CRS this engine does not have (`docs/05`, no silent
-//! conversion; `docs/01` principle 8). The refusal is typed and tells the caller exactly this.
+//! **This module is the only site that establishes the data's axis order.** `crs.rs` decides who
+//! supplied a CRS (file, caller, or — since Brief A P1 — the format's own rule); it never decides
+//! what order the coordinates are in.
+//!
+//! **What changed at Brief A P1, and what did not.** An *absent* `crs` key is admitted as
+//! OGC:CRS84 under GeoParquet's own published rule, whose text is pinned in-tree
+//! (`engine/ADMISSION-PREREGISTRATION.md` Appendix A), and the admission is recorded with the
+//! provenance `crs:format-default`, the spec version, and the pinned-rule reference it relied on.
+//! An explicit `"crs": null` is **unchanged**: the file says its CRS is undefined or unknown, and
+//! no rule answers for it — `CrsUndeclared` unless the caller asserts. A file declaring a spec
+//! version whose governing text is not pinned in this tree takes **no** format rule at all: reading
+//! a rule and remembering one are different things (`docs/01` principle 8).
 
 use serde_json::Value;
 
 use crate::crs::AxisOrder;
 use crate::error::{EngineError, Result};
+
+/// The GeoParquet versions whose governing `crs` text is pinned in this tree — **R-C1's
+/// precondition** (`engine/ADMISSION-PREREGISTRATION.md` §2b).
+///
+/// The pin is `engine/ADMISSION-PREREGISTRATION.md` Appendix A (URL, commit, UTC retrieval time,
+/// sha256, byte count, verbatim quote, entry-51 discipline). A file declaring any other version —
+/// including `2.0.0`, which has no release tag to pin and is pinned there only at `v2.0.0-rc.1` and
+/// at `main` — takes no format rule from this module.
+pub const PINNED_SPEC_VERSIONS: [&str; 2] = ["1.0.0", "1.1.0"];
+
+/// Where the pinned text lives, carried into the record so a reader of a `describe` can find the
+/// bytes the rule was read from rather than take the rule on this engine's word.
+pub const PINNED_RULE_RECORD: &str = "engine/ADMISSION-PREREGISTRATION.md#appendix-a";
+
+/// The CRS an absent `crs` key resolves to, by the format's own rule.
+pub const FORMAT_DEFAULT_CRS: &str = "OGC:CRS84";
+
+/// Rule fragment for the absent-key default. Pinned at `ADMISSION-PREREGISTRATION.md:322` (1.0.0)
+/// and `:351` (1.1.0); 1.1.0's sentence reads, verbatim:
+///
+/// > If the `crs` key does not exist, all coordinates in the geometries MUST use longitude,
+/// > latitude based on the WGS84 datum, and the default value is
+/// > [OGC:CRS84](https://www.opengis.net/def/crs/OGC/1.3/CRS84) for CRS-aware implementations. Note
+/// > that a missing `crs` key has different meaning than a `crs` key set to `null` (see below).
+const RULE_CRS_ABSENT_DEFAULT: &str = "crs-absent-default";
+
+/// Rule fragment for the WKB coordinate-order override. Pinned at
+/// `spikes/item8-crs-catalog-extension/README.md:62-65`, verbatim:
+///
+/// > **Coordinate axis order** — The axis order of the coordinates in WKB stored in a GeoParquet
+/// > follows the de facto standard for axis order in WKB and is therefore always (x, y) where x is
+/// > easting or longitude and y is northing or latitude. This ordering explicitly overrides the
+/// > axis order as specified in the CRS. This follows the precedent of GeoPackage, see the note in
+/// > their spec.
+const RULE_COORDINATE_AXIS_ORDER: &str = "coordinate-axis-order";
+
+/// The most rows the `sample` sanity level reads — **declared, not discovered** (ADR-010 rule 6),
+/// `engine/ADMISSION-PREREGISTRATION.md` §7: one row group at the row-group figure the tree already
+/// records. The read is of the covering bbox columns only, never of the WKB.
+pub const SANITY_SAMPLE_MAX_ROWS: usize = 8_192;
+
+/// The coordinate domain of OGC:CRS84, in its own units.
+pub const CRS84_MAX_ABS_X: f64 = 180.0;
+/// See [`CRS84_MAX_ABS_X`].
+pub const CRS84_MAX_ABS_Y: f64 = 90.0;
+
+/// Where the dataset's CRS came from — **a recorded fact, never a judgement** (the proposed ADR-015
+/// Amendment 1, item 5; Brief A settled boundary 1).
+///
+/// None of these values is an equivalence finding, and none says anything about whether the file's
+/// producer conformed to the rule that was read.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CrsProvenance {
+    /// The file's own `crs` member.
+    Declared,
+    /// A caller's assertion over a file that declares nothing (unchanged by this cut).
+    Asserted,
+    /// The format's published rule for an absent `crs` key.
+    FormatDefault,
+}
+
+impl CrsProvenance {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Declared => "crs:declared",
+            Self::Asserted => "crs:asserted",
+            Self::FormatDefault => "crs:format-default",
+        }
+    }
+}
+
+/// Where the **data's** axis order came from. The definition's own declared order is a separate
+/// recorded fact and is never discarded (boundary 1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AxisProvenance {
+    /// Established from the CRS definition — the file's, or the caller's assertion.
+    Declared,
+    /// Established from the format's specification, with its version.
+    FormatOverride,
+}
+
+impl AxisProvenance {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Declared => "axis:declared",
+            Self::FormatOverride => "axis:format-override",
+        }
+    }
+}
+
+/// What the range check was decided from at this open — **an assurance level, not a verdict**
+/// (boundary 2; R-S1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SanityLevel {
+    /// Footer-resident facts only: the geometry column's `bbox` member, or Parquet statistics on
+    /// the covering bbox columns.
+    Metadata,
+    /// The first [`SANITY_SAMPLE_MAX_ROWS`] rows of the covering bbox columns, and nothing else.
+    Sample,
+    /// Neither was available, or no format rule was applied. Recorded as `none`; the reason says
+    /// which. **Not checked — never "passed".**
+    NotChecked,
+}
+
+impl SanityLevel {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Metadata => "metadata",
+            Self::Sample => "sample",
+            Self::NotChecked => "none",
+        }
+    }
+}
+
+/// The three states of the `crs` key, which are **three different facts** and must not collapse
+/// into two: 1.1.0 says so in its own words (`ADMISSION-PREREGISTRATION.md:351`, "a missing `crs`
+/// key has different meaning than a `crs` key set to `null`").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CrsKeyState {
+    /// The key is present and is an object.
+    Declared,
+    /// The key is present and is `null` — the file says its CRS is undefined or unknown.
+    ExplicitNull,
+    /// The key is not there at all.
+    Absent,
+}
+
+/// What the format's rules established for one file, before any caller assertion is consulted.
+///
+/// `admissible_crs` is what `crs::admit` is handed as "what the file declares", and **its axis
+/// order is the data's order**, not necessarily the definition's. `declared_axis_order` retains the
+/// definition's own order whenever a definition existed, so a later reprojection or export still
+/// has the file fact (boundary 1: never discarded).
+#[derive(Clone, Debug, Default)]
+pub struct FormatSemantics {
+    pub admissible_crs: Option<(String, Option<String>, AxisOrder)>,
+    pub crs_provenance: Option<CrsProvenance>,
+    pub axis_provenance: Option<AxisProvenance>,
+    pub declared_axis_order: Option<AxisOrder>,
+    pub format_rule_reference: Option<String>,
+    /// Set when R-C1's precondition failed on an absent key: the `detail` the existing
+    /// `CrsUndeclared` refusal must carry, naming the unpinned version. `None` leaves the refusal
+    /// exactly as it is today.
+    pub undeclared_detail: Option<String>,
+}
+
+/// The admission facts recorded on the envelope for one open — additive to every field that was
+/// already there, none of which changes.
+#[derive(Clone, Debug)]
+pub struct AdmissionRecord {
+    pub crs_provenance: CrsProvenance,
+    pub axis_provenance: AxisProvenance,
+    /// Present whenever a CRS definition existed; absent for the format-default admission, where
+    /// there is no definition in the file to retain.
+    pub declared_axis_order: Option<AxisOrder>,
+    /// `geoparquet:<version>#<rule>` — absent when no format rule was applied.
+    pub format_rule_reference: Option<String>,
+    pub sanity_level: SanityLevel,
+    pub sanity_reason: String,
+}
 
 /// The path to one covering-bbox component, e.g. `["bbox", "xmin"]`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -49,8 +219,17 @@ pub struct GeoMeta {
     pub encoding: String,
     pub geometry_types: Vec<String>,
     /// `(identifier, definition_json, axis_order)` — `None` when the file declares no CRS.
+    ///
+    /// The axis order here is **the definition's own**, exactly as it always was. The data's order
+    /// is established separately, in [`format_semantics`].
     pub declared_crs: Option<(String, Option<String>, AxisOrder)>,
     pub covering: Option<CoveringBbox>,
+    /// Which of the three `crs` states the file is in. Kept apart from `declared_crs`, which
+    /// answers only "is there a definition" and cannot tell an absent key from an explicit null.
+    pub crs_key: CrsKeyState,
+    /// The geometry column's own `bbox` member as `[xmin, ymin, xmax, ymax]`, when it carries one.
+    /// Footer-resident, so reading it is not a read of the data.
+    pub bbox: Option<[f64; 4]>,
 }
 
 impl GeoMeta {
@@ -93,25 +272,184 @@ impl GeoMeta {
 
         // Three distinguishable states, only one of which is "the file declares a CRS":
         //   key present and an object -> declared
-        //   key present and null      -> the spec's "no CRS" -> not declared
-        //   key absent                -> the spec's OGC:CRS84 default -> NOT applied; not declared
-        let declared_crs = match col.get("crs") {
+        //   key present and null      -> the file states its CRS is undefined or unknown
+        //   key absent                -> the format's OGC:CRS84 rule, applied in `format_semantics`
+        //                                under R-C1's pinned-version precondition and never here
+        let (declared_crs, crs_key) = match col.get("crs") {
             Some(Value::Object(_)) => {
                 let crs = col.get("crs").unwrap();
                 let axis = axis_order_from_projjson(crs)?;
-                Some((
-                    identifier_from_projjson(crs),
-                    Some(crs.to_string()),
-                    axis,
-                ))
+                (
+                    Some((identifier_from_projjson(crs), Some(crs.to_string()), axis)),
+                    CrsKeyState::Declared,
+                )
             }
-            _ => None,
+            Some(Value::Null) => (None, CrsKeyState::ExplicitNull),
+            None => (None, CrsKeyState::Absent),
+            // A `crs` that is neither an object nor null is not a definition this reader can use
+            // and is not the absent key either; treated as the file having stated something
+            // unusable, which is `ExplicitNull`'s outcome (refused, assertion admissible) rather
+            // than the format default's.
+            Some(_) => (None, CrsKeyState::ExplicitNull),
         };
 
         let covering = col.get("covering").and_then(|c| c.get("bbox")).map(parse_covering).transpose()?;
+        let bbox = col.get("bbox").and_then(parse_bbox_member);
 
-        Ok(Self { version, primary_column, encoding, geometry_types, declared_crs, covering })
+        Ok(Self {
+            version,
+            primary_column,
+            encoding,
+            geometry_types,
+            declared_crs,
+            covering,
+            crs_key,
+            bbox,
+        })
     }
+}
+
+/// The column metadata's `bbox` member, as `[xmin, ymin, xmax, ymax]`.
+///
+/// GeoParquet writes four values in 2D and six when a z range is carried
+/// (`[xmin, ymin, zmin, xmax, ymax, zmax]`); anything else is not a shape this reader takes a fact
+/// from, and the member is treated as absent rather than reinterpreted.
+fn parse_bbox_member(bbox: &Value) -> Option<[f64; 4]> {
+    let arr = bbox.as_array()?;
+    let n: Vec<f64> = arr.iter().filter_map(Value::as_f64).collect();
+    match (arr.len(), n.len()) {
+        (4, 4) => Some([n[0], n[1], n[2], n[3]]),
+        (6, 6) => Some([n[0], n[1], n[3], n[4]]),
+        _ => None,
+    }
+}
+
+/// **R-C1…R-C5** (`engine/ADMISSION-PREREGISTRATION.md` §2b): what the format's own rules establish
+/// for this file, before any caller assertion is consulted.
+///
+/// Rule by rule:
+///
+/// - **R-C1** the rules below apply only when the file's declared `geo.version` is one whose
+///   governing text is pinned in-tree ([`PINNED_SPEC_VERSIONS`]). A file declaring anything else
+///   takes no format rule; with an absent key it carries the `detail` that names the version, and
+///   the existing `CrsUndeclared` refusal is what the caller sees.
+/// - **R-C2** absent key → OGC:CRS84, `crs:format-default`, with the version and the pinned-rule
+///   reference.
+/// - **R-C3** explicit `null` → nothing is established here, exactly as before.
+/// - **R-C4** a declared definition whose own axis order is not x-first → the **data** order comes
+///   from the format's WKB rule ([`data_order_under_wkb_rule`]), `axis:format-override`, and the
+///   definition's declared order is retained beside it.
+/// - **R-C5** a declared x-first definition → admitted as declared, `axis:declared`, no rule
+///   reference.
+///
+/// Nothing here is a statement about the file's producer: applying a format rule records what the
+/// *format* states, and a producer that ignored the rule is not convicted or acquitted by it.
+pub(crate) fn format_semantics(geo: &GeoMeta) -> FormatSemantics {
+    let pinned = PINNED_SPEC_VERSIONS.contains(&geo.version.as_str());
+    let reference = |rule: &str| Some(format!("geoparquet:{}#{rule}", geo.version));
+
+    match geo.crs_key {
+        CrsKeyState::Declared => {
+            let (id, def, declared_axis) =
+                geo.declared_crs.clone().expect("a declared `crs` key parses into a definition");
+            if declared_axis.is_x_first() {
+                // R-C5.
+                FormatSemantics {
+                    admissible_crs: Some((id, def, declared_axis)),
+                    crs_provenance: Some(CrsProvenance::Declared),
+                    axis_provenance: Some(AxisProvenance::Declared),
+                    declared_axis_order: Some(declared_axis),
+                    format_rule_reference: None,
+                    undeclared_detail: None,
+                }
+            } else if pinned {
+                // R-C4. The declared order is retained beside the data order, never replaced by it.
+                FormatSemantics {
+                    admissible_crs: Some((id, def, data_order_under_wkb_rule(declared_axis))),
+                    crs_provenance: Some(CrsProvenance::Declared),
+                    axis_provenance: Some(AxisProvenance::FormatOverride),
+                    declared_axis_order: Some(declared_axis),
+                    format_rule_reference: reference(RULE_COORDINATE_AXIS_ORDER),
+                    undeclared_detail: None,
+                }
+            } else {
+                // R-C1: no format rule. The declaration is handed on as it stands, and a non-x-first
+                // order meets the same refusal it has always met.
+                FormatSemantics {
+                    admissible_crs: Some((id, def, declared_axis)),
+                    crs_provenance: Some(CrsProvenance::Declared),
+                    axis_provenance: Some(AxisProvenance::Declared),
+                    declared_axis_order: Some(declared_axis),
+                    format_rule_reference: None,
+                    undeclared_detail: None,
+                }
+            }
+        }
+        // R-C3, unchanged: the file said "I do not know", and no rule may answer for it.
+        CrsKeyState::ExplicitNull => FormatSemantics::default(),
+        CrsKeyState::Absent => {
+            if pinned {
+                // R-C2. No definition travels with it: the rule names a CRS, and inventing PROJJSON
+                // the file does not carry would be this engine writing a definition it did not read.
+                FormatSemantics {
+                    admissible_crs: Some((
+                        FORMAT_DEFAULT_CRS.to_string(),
+                        None,
+                        AxisOrder::LongitudeLatitude,
+                    )),
+                    crs_provenance: Some(CrsProvenance::FormatDefault),
+                    axis_provenance: Some(AxisProvenance::FormatOverride),
+                    declared_axis_order: None,
+                    format_rule_reference: reference(RULE_CRS_ABSENT_DEFAULT),
+                    undeclared_detail: None,
+                }
+            } else {
+                FormatSemantics {
+                    undeclared_detail: Some(format!(
+                        "the `crs` key is absent and `geo.version` is {}, whose text is not pinned \
+                         in this tree ({}); no format rule is taken from a specification version \
+                         this tree has not read",
+                        geo.version, PINNED_RULE_RECORD
+                    )),
+                    ..FormatSemantics::default()
+                }
+            }
+        }
+    }
+}
+
+/// The **data's** axis order under GeoParquet's WKB rule — the one site in this engine that
+/// establishes it (the proposed ADR-015 Amendment 1, block-on-sight condition 5).
+///
+/// The pinned passage (`spikes/item8-crs-catalog-extension/README.md:62-65`) states the coordinates
+/// in WKB are "always (x, y) where x is easting or longitude and y is northing or latitude", and
+/// that this "explicitly overrides the axis order as specified in the CRS". So a definition
+/// declaring (northing, easting) or (latitude, longitude) describes a file whose coordinates are
+/// stored the other way round, and **the declared order stays on the record** — this function
+/// returns the data's order, it does not overwrite anything.
+///
+/// Nothing is transformed: no coordinate value changes, and `axis_normalization` stays
+/// `none-performed`.
+fn data_order_under_wkb_rule(declared: AxisOrder) -> AxisOrder {
+    match declared {
+        AxisOrder::EastingNorthing | AxisOrder::LongitudeLatitude => declared,
+        AxisOrder::NorthingEasting => AxisOrder::EastingNorthing,
+        AxisOrder::LatitudeLongitude => AxisOrder::LongitudeLatitude,
+    }
+}
+
+/// Whether a bbox `[xmin, ymin, xmax, ymax]` lies inside OGC:CRS84's own domain.
+///
+/// **This can convict and can never confirm.** A `false` says the coordinates cannot be
+/// longitude/latitude on WGS84, which is what the format-default rule assumed; a `true` says
+/// nothing at all about the file. Brief A settled boundary 2, verbatim: *"A projected file inside
+/// ±180/±90 is NOT detected by it"*.
+pub fn inside_crs84_domain(bbox: [f64; 4]) -> bool {
+    let [xmin, ymin, xmax, ymax] = bbox;
+    xmin.abs() <= CRS84_MAX_ABS_X
+        && xmax.abs() <= CRS84_MAX_ABS_X
+        && ymin.abs() <= CRS84_MAX_ABS_Y
+        && ymax.abs() <= CRS84_MAX_ABS_Y
 }
 
 fn parse_covering(bbox: &Value) -> Result<CoveringBbox> {
