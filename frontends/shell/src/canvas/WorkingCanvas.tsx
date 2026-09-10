@@ -48,7 +48,7 @@ import { getResidencyArm } from "../residency/residencyArm";
 import { ingestTileBatch } from "./tileIngest";
 import type { TileGridContext } from "./tileIngest";
 import { tileDistanceToPoint } from "./tileGrid";
-import type { TileGridFrame, TileKey } from "./tileGrid";
+import type { TileGridFrame, TileKey, TileKeyMembership } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { TileGridLevel } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
@@ -253,11 +253,26 @@ export interface WorkingCanvasHandle {
    * `TileResidentSet.evictTile`'s own `protectedTileKeys` cascade backstop) -- never read by
    * `anyPartialAmongCovering`, which iterates `coveringTileKeys` alone via its own dedicated ref. When
    * omitted (or empty), this method's behavior is unchanged from before this sub-amendment.
+   *
+   * **`viewportMembership` (entry 66 (b)): the PREDICATE protects; the ARRAY plans.** The optional
+   * fourth parameter is `tileGrid.ts`'s own `coverMembershipFor(frame, level, bbox)` predicate, built
+   * by the caller from the SAME `(frame, level, bbox)` triple this round's own plan used (that
+   * invariant is the factory's own doc comment, and it is load-bearing: tile keys are frame- and
+   * level-relative). When supplied, it -- unioned with `extraProtectedKeys` when there is any -- is
+   * the eviction-PROTECTION set for this call, in place of the covering array, so a resident tile the
+   * viewport genuinely covers is protected at every zoom even where the enumeration bound
+   * (`MAX_COVERING_TILES`) left it out of `coveringTileKeys`. When OMITTED, the protection set is
+   * exactly what it was before entry 66 (b): `new Set(coveringTileKeys)`, unioned with
+   * `extraProtectedKeys` when non-empty (`protectionSetFor`). `coveringTileKeys` keeps every other
+   * job it had -- the covering-only ref, and therefore `anyPartialAmongCovering`'s `fits` latch,
+   * still read the enumerated array (ADR-028's 2026-09-09 appended note, path (ii), `:512`: standing,
+   * deliberately out of entry 66 (b)'s scope).
    */
   applyTileViewportContext(
     coveringTileKeys: readonly string[],
     viewCentre: { x: number; y: number },
-    extraProtectedKeys?: ReadonlySet<string>
+    extraProtectedKeys?: ReadonlySet<string>,
+    viewportMembership?: TileKeyMembership
   ): boolean;
 }
 
@@ -311,9 +326,25 @@ export function shouldScheduleTileRender(outcome: Pick<TileBatchIngestOutcome, "
  * alone -- `coveringTileKeysRef` (this file's own covering-ONLY consumer, read by
  * `anyPartialAmongCovering` below) must never see `extra`. See `WorkingCanvas.test.ts`'s own direct
  * unit tests for this function's three cases: (a) `extra` undefined -> equals `covering`; (b) `extra`
- * present -> the union; (c) the covering-only consumer (`coveringTileKeysRef`) never sees `extra`. */
-export function protectionSetFor(covering: readonly string[], extra: ReadonlySet<string> | undefined): Set<string> {
-  return extra && extra.size > 0 ? new Set([...covering, ...extra]) : new Set(covering);
+ * present -> the union; (c) the covering-only consumer (`coveringTileKeysRef`) never sees `extra`.
+ *
+ * **Entry 66 (b): the three cases, with `membership`.** (i) A `membership` and a non-empty `extra`:
+ * the union as a PREDICATE (`extra.has(k) || membership.has(k)`) -- nothing is enumerated, and
+ * `covering` is not read at all, since the membership already answers for every cell the viewport
+ * covers, at or past the enumeration bound alike. (ii) A `membership` and no (or an empty) `extra`:
+ * the membership itself. (iii) NO membership: byte-for-byte the behaviour this function had before
+ * entry 66 (b) -- `new Set([...covering, ...extra])` or `new Set(covering)` -- so every caller and
+ * every test that never passes one keeps exactly today's result, a real `Set`, with its size and its
+ * iteration order intact. The result feeds `currentViewportTileKeysRef` (the PROTECTION channel)
+ * alone; `coveringTileKeysRef` is untouched by this function in every case. */
+export function protectionSetFor(
+  covering: readonly string[],
+  extra: ReadonlySet<string> | undefined,
+  membership?: TileKeyMembership
+): TileKeyMembership {
+  if (!membership) return extra && extra.size > 0 ? new Set([...covering, ...extra]) : new Set(covering);
+  if (extra && extra.size > 0) return { has: (k: string) => extra.has(k) || membership.has(k) };
+  return membership;
 }
 
 /** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
@@ -541,9 +572,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * -- `null` until `establishTileGridContext` is called (once, by `App.tsx`'s candidate session,
    * right after `TileViewportStreamManager.establishGridFrame` succeeds). */
   const tileGridContextRef = useRef<TileGridContext | null>(null);
-  /** The current PROTECTION set -- eviction never drops a tile in here, however far the budget overshoots
-   * (`planTileEviction`'s own "never evict the current viewport" rule), for covers at or under `MAX_COVERING_TILES`;
-   * past that bound this set is the centred window (ADR-028's appended note, DECISIONS-PENDING entry 66 = (d)).
+  /** The current PROTECTION set -- eviction never drops a tile in here, however far the budget
+   * overshoots (`planTileEviction`'s own "never evict the current viewport" rule).
+   *
+   * **Entry 66 (b): a MEMBERSHIP, not necessarily an array-derived set -- the predicate protects, the
+   * array plans.** When `applyTileViewportContext` is given a `viewportMembership` (the candidate
+   * arm's own `coverMembershipFor(frame, level, bbox)` predicate, built from the round's own triple)
+   * this ref holds that predicate, unioned with `extraProtectedKeys` where there is any, so a tile the
+   * viewport genuinely covers is protected at every zoom -- including past `MAX_COVERING_TILES`,
+   * where the covering ARRAY is the centred window. ADR-028 Amendment 3's rule -- *"A tile
+   * intersecting the viewport is protected whether it is complete or partial, tracked this round or a
+   * prior one, or never requested at all"* (ADR-028:461-462) -- therefore holds here at every zoom.
+   * The `fits`/over-budget latch below (`anyPartialAmongCovering`) still ITERATES the covering-only
+   * ref and so still reads the enumerated window past the bound: ADR-028's 2026-09-09 appended note,
+   * path (ii) (`:512`), standing and out of entry 66 (b)'s scope. With no membership supplied this
+   * ref is exactly what it was: a real `Set` built from the covering array (`protectionSetFor`).
    * Updated by `applyTileViewportContext`, read by `pushTileBatch`/`applyTileViewportContext` itself.
    *
    * **residency-debt cut 1b sub-amendment (entry 48 (a)): this is `coveringTileKeysRef`'s own geometric
@@ -555,7 +598,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * `anyPartialAmongCovering`'s fits check, which reads `coveringTileKeysRef` instead (below) -- see
    * `WorkingCanvasHandle.applyTileViewportContext`'s own doc comment for why folding the two together would
    * be wrong (the durably-partial first look would then latch `fits` false at every view containing it). */
-  const currentViewportTileKeysRef = useRef<ReadonlySet<string>>(new Set());
+  const currentViewportTileKeysRef = useRef<TileKeyMembership>(new Set());
   /** residency-debt cut 1b sub-amendment (entry 48 (a)): the geometric covering set ALONE -- exactly
    * `coveringTileKeys` as `applyTileViewportContext` received it this call, never unioned with
    * `extraProtectedKeys`. The one and only reader is `anyPartialAmongCovering` (channel 2: "NOT in
@@ -1194,7 +1237,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         tileGridContextRef.current = { frame, level };
       },
 
-      applyTileViewportContext(coveringTileKeys, viewCentre, extraProtectedKeys) {
+      applyTileViewportContext(coveringTileKeys, viewCentre, extraProtectedKeys, viewportMembership) {
         coveringTileKeysRef.current = new Set(coveringTileKeys);
         // entry 48 (a): the PROTECTION set is the geometric covering set unioned with whatever this
         // call's own `extraProtectedKeys` names (typically `INITIAL_TILE_KEY`, while the untiled first
@@ -1202,7 +1245,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // which `anyPartialAmongCovering` (below) reads alone as the covering-only consumer.
         // `protectionSetFor` (S2, reviewer gate, fix batch: this file's own pure seam, exported beside
         // `shouldScheduleTileRender`) computes the union; see its own doc comment/tests.
-        currentViewportTileKeysRef.current = protectionSetFor(coveringTileKeys, extraProtectedKeys);
+        // entry 66 (b): when the caller supplies `viewportMembership`, that PREDICATE (unioned with
+        // `extraProtectedKeys`) is the protection set instead of the covering array -- the array
+        // plans, the predicate protects. Omitted: today's `Set` behaviour, unchanged.
+        currentViewportTileKeysRef.current = protectionSetFor(coveringTileKeys, extraProtectedKeys, viewportMembership);
         viewCentreRef.current = viewCentre;
         const grid = tileGridContextRef.current;
         const tileSet = tileResidentRef.current;
@@ -1242,6 +1288,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // `UNTILED_FIRST_LOOK_ROW_LIMIT`; if its key reached this loop, every fit view containing it
         // would latch `fits` false, stalling `drainQueueIfRoom` at plan time -- see
         // `WorkingCanvasHandle.applyTileViewportContext`'s own doc comment for the full account.
+        // entry 66 (b), path (ii) of ADR-028's 2026-09-09 appended note (`:512`), stated where it
+        // lives: this loop ITERATES the covering-only ref, so it cannot consume the protection
+        // predicate -- past `MAX_COVERING_TILES` the `fits`/over-budget latch still reads the
+        // enumerated window rather than the true cover. Deliberately out of entry 66 (b)'s scope
+        // (inverting it would change an operator-visible status); protection itself no longer
+        // depends on this array (see `currentViewportTileKeysRef`'s own doc comment).
         let anyPartialAmongCovering = false;
         for (const key of coveringTileKeysRef.current) {
           if (tileSet.isTilePartial(key)) {

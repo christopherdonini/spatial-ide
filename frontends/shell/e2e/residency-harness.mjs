@@ -861,23 +861,27 @@ async function captureResidencyStatusText(page) {
  * protection from the covering set itself, independent of any planning round's outcome arrays -- is
  * Amendment 3's, ADR-028:459-462) made real by F1.
  *
- * **What it pins, and what it stopped pinning at entry 60 (2026-09-08).** For covers at or under
- * `MAX_COVERING_TILES` it pins the rule end-to-end. PAST that bound both sides of the comparison are
- * the same centred window -- the app's protected set, and this harness's own recomputation, since the
- * `tilesCoveringBbox` export it calls is bounded by the same constant -- so the assertion still holds
- * but says nothing about the covering cells outside the window. That narrowing is a declared
- * exception (ADR-028's appended note, DECISIONS-PENDING entry 66 = (d), ruled 2026-09-09), not a gap
- * this harness hides. `residencyQueuedTileCount()` corroborates the step was genuinely over budget.
+ * **What it pins, and what changed at entry 66 (b) (2026-09-10).** It recomputes the PREDICATE the
+ * app itself now protects with -- `coverMembershipFor(frame, level, bbox)` from the shell's own
+ * export (`tsModuleLoader.mjs`, real source, never a hand-copied reimplementation) -- rather than a
+ * second bounded `tilesCoveringBbox` array, so the assertion below no longer compares two identical
+ * centred windows to each other when the step's own cover is past `MAX_COVERING_TILES`. Under the
+ * bound the predicate and the cover are the same key set, so the check pins exactly what it always
+ * pinned; past the bound it now pins the covering cells OUTSIDE the window too, which is the whole
+ * point of the change. `coveringKeyCount` in the returned record stays the ENUMERATED window's own
+ * size (a description of what the app planned over, not what it protected), and `coverOverBound`
+ * records whether this step was genuinely in the window regime -- read the two together.
+ * `residencyQueuedTileCount()` corroborates the step was genuinely over budget.
  *
  * **Two disclosures this assertion carries (paraphrased from the piece's own preregistration, not
  * quoted):**
  *  1. **Instrument-gated.** `[render-trace] tile-ingest` lines are emitted only when
- *     `isInstrumentedBuild()` is true (`WorkingCanvas.tsx:1027`'s own `if (isInstrumentedBuild())`
+ *     `isInstrumentedBuild()` is true (`WorkingCanvas.tsx:1136`'s own `if (isInstrumentedBuild())`
  *     guard around `traceTileIngest`) -- a `--control` (non-instrumented) run returns `{corroborated:
  *     false}` rather than asserting a vacuous pass over evidence that was never collected.
  *  2. **Post-settle, after the step's LAST plan (the debounce window).** Between a gesture and its
  *     own debounced plan, the protected set (`candidateArmSession.ts`'s own `lastCoveringTileKeys`)
- *     still describes the PREVIOUS bbox -- `candidateArmSession.ts:1285` (the `applyTileViewportContext`
+ *     still describes the PREVIOUS bbox -- `candidateArmSession.ts:1445` (the `applyTileViewportContext`
  *     call site) is the only refresh. This function never waits or re-settles itself; it is the
  *     CALLER's job to invoke it only after `measureOneStep`'s own settle wait has already returned
  *     for this step, and to supply `sinceSeq` from a point no later than this step's own gesture, so
@@ -917,7 +921,7 @@ async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrum
   // try/catch (which would lose every earlier row, the same P5g discipline this file's own F4/`
   // step-threw` handling already follows elsewhere).
   // S1 (reviewer gate, close-out fix piece): reads the SAME `canvas.clientWidth`/`clientHeight` the
-  // app itself feeds `computeAuthoritativeViewportBbox` with (`WorkingCanvas.tsx:1264-1265`), not
+  // app itself feeds `computeAuthoritativeViewportBbox` with (`WorkingCanvas.tsx:1400-1401`), not
   // `.working-canvas`'s own fractional Playwright bounding box -- an integer-vs-fractional mismatch
   // could otherwise let this check's own covering set gain a column the app's real bbox never had.
   const dimensions = await page.evaluate(() => {
@@ -928,7 +932,12 @@ async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrum
     return { corroborated: false, reason: "no .working-canvas element found (unmounted?) -- cannot read clientWidth/clientHeight" };
   }
 
-  const { tilesCoveringBbox, tileKeyToString } = await loadShellModule("src/canvas/tileGrid.ts");
+  // Entry 66 (b): `coverMembershipFor` is what the app protects with, so it is what this check
+  // recomputes. `tilesCoveringBbox` is still loaded, for the enumerated window's own SIZE alone
+  // (`coveringKeyCount` below) -- never for the assertion -- and `coveringCellCount` answers whether
+  // this step was genuinely past the enumeration bound.
+  const { tilesCoveringBbox, tileKeyToString, coverMembershipFor, coveringCellCount } = await loadShellModule("src/canvas/tileGrid.ts");
+  const { MAX_COVERING_TILES } = await loadShellModule("src/canvas/tileGridConstants.ts");
   const { computeAuthoritativeViewportBbox } = await loadShellModule("src/canvas/viewportBbox.ts");
 
   // The SAME shape `WorkingCanvas.tsx`'s own `onViewStateChange` handler feeds
@@ -944,7 +953,16 @@ async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrum
     originX: postViewState.originX,
     originY: postViewState.originY,
   });
+  // The protection membership, from the same `(frame, level, bbox)` triple the app's own plan used
+  // for this step -- the factory's own declared invariant.
+  const membership = coverMembershipFor(gridFrame, gridFrame.level, bbox);
   const coveringKeys = new Set(tilesCoveringBbox(gridFrame, gridFrame.level, bbox).map(tileKeyToString));
+  const cellCount = coveringCellCount(gridFrame, gridFrame.level, bbox);
+  // Whether this step exercised the WINDOW regime at all: only past the bound do the predicate and
+  // the enumerated array differ, so only there does this check say anything the pre-entry-66 (b)
+  // version did not. Recorded, never assumed -- the trace's own zoom-out step may well sit under the
+  // bound, in which case the row is honest evidence for the sub-bound regime and nothing more.
+  const coverOverBound = !Number.isFinite(cellCount) || cellCount > MAX_COVERING_TILES;
 
   const evictedTileKeys = new Set();
   for (const entry of tileIngestListener.sorted()) {
@@ -952,7 +970,9 @@ async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrum
     for (const key of entry.data?.evictedTileKeys ?? []) evictedTileKeys.add(key);
   }
 
-  const violatingTileKeys = [...evictedTileKeys].filter((k) => coveringKeys.has(k));
+  // Entry 66 (b): the PREDICATE, not a second enumerated window -- an eviction of a covered cell
+  // outside the window is a violation now, where before it was invisible to both sides.
+  const violatingTileKeys = [...evictedTileKeys].filter((k) => membership.has(k));
   // S3 (reviewer gate, close-out fix piece): zero evictions observed since `sinceSeq`, over budget
   // or not, means this protection was never actually EXERCISED this step -- `passed: true` over zero
   // evictions would let the row be read as evidence the eviction rule held, when nothing was ever
@@ -978,6 +998,8 @@ async function assertNoInViewportTileEvicted(page, tileIngestListener, { instrum
     exercised: true,
     queuedTileCount,
     coveringKeyCount: coveringKeys.size,
+    coverCellCount: cellCount,
+    coverOverBound,
     evictedTileKeyCount: evictedTileKeys.size,
     violatingTileKeys,
     passed: violatingTileKeys.length === 0,

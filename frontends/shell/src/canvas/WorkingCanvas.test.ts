@@ -8,6 +8,7 @@ import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import { applyStyleChange, protectionSetFor, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { ApplyStyleChangeDeps, TileBatchIngestOutcome } from "./WorkingCanvas";
 
 // Reviewer gate, style-panel cut P7 fixes, S2: the previous "issues no viewport query" test built a
@@ -289,5 +290,55 @@ describe("pushTileBatch's own render-scheduling pattern (P5h, F1) -- shouldSched
     flush();
     expect(render).toHaveBeenCalledTimes(1);
     expect(requestFrame).toHaveBeenCalledTimes(1); // only the admitting batch ever called schedule()
+  });
+});
+
+// Entry 66 (b) (`frontends/shell/ENTRY-66B-PREREGISTRATION.md`, pre-committed test 7):
+// `protectionSetFor` widened to the union SHAPE -- the four cases the widening declares. The
+// membership stands in for `tileGrid.ts`'s own `coverMembershipFor(frame, level, bbox)` predicate
+// (built by `candidateArmSession.ts` from the round's own triple); this file's own jsdom reach is
+// the pure seam, not the canvas.
+describe("protectionSetFor with a membership (entry 66 (b))", () => {
+  /** A stand-in for the cover predicate: every "row:col" key whose row and col are both under 10. */
+  const membership = { has: (k: string) => /^[0-9]:[0-9]$/.test(k) };
+
+  it("(a) a membership alone IS the protection set -- and covers keys the array never named", () => {
+    const protection = protectionSetFor(["1:1"], undefined, membership);
+    expect(protection.has("1:1")).toBe(true);
+    expect(protection.has("9:9")).toBe(true); // covered by the predicate, absent from `covering`
+    expect(protection.has("50:50")).toBe(false);
+    expect(protection.has(INITIAL_TILE_KEY)).toBe(false); // no `extra` supplied
+  });
+
+  it("(b) a membership WITH extra is the union of the two, and nothing else", () => {
+    const protection = protectionSetFor(["1:1"], new Set([INITIAL_TILE_KEY]), membership);
+    expect(protection.has("1:1")).toBe(true);
+    expect(protection.has("9:9")).toBe(true);
+    expect(protection.has(INITIAL_TILE_KEY)).toBe(true);
+    expect(protection.has("50:50")).toBe(false);
+  });
+
+  it("(c) NO membership supplied -- today's `Set` behaviour, unchanged, in both of its branches", () => {
+    expect(protectionSetFor(["1:1", "1:2"], undefined)).toEqual(new Set(["1:1", "1:2"]));
+    expect(protectionSetFor(["1:1"], new Set([INITIAL_TILE_KEY]))).toEqual(new Set(["1:1", INITIAL_TILE_KEY]));
+    // Still a real `Set`, so a caller reading `.size`/iterating it is unaffected.
+    const protection = protectionSetFor(["1:1", "1:2"], undefined);
+    expect(protection).toBeInstanceOf(Set);
+    expect([...(protection as Set<string>)]).toEqual(["1:1", "1:2"]);
+  });
+
+  it("(d) the covering-only consumer still never sees `extra` -- nor the membership", () => {
+    // `coveringTileKeysRef.current` (`WorkingCanvas.tsx`) is built from `coveringTileKeys` ALONE,
+    // never through this function -- `new Set(covering)` stands in for that covering-only read here.
+    // It is what `anyPartialAmongCovering` (the `fits` latch) iterates, which is exactly why the
+    // latch still reads the enumerated window past the bound: ADR-028's 2026-09-09 appended note,
+    // path (ii), out of entry 66 (b)'s scope.
+    const covering = ["1:1"];
+    const coveringOnly = new Set(covering);
+    const protection = protectionSetFor(covering, new Set([INITIAL_TILE_KEY]), membership);
+    expect(coveringOnly.has(INITIAL_TILE_KEY)).toBe(false);
+    expect(coveringOnly.has("9:9")).toBe(false);
+    expect(protection.has(INITIAL_TILE_KEY)).toBe(true);
+    expect(protection.has("9:9")).toBe(true);
   });
 });

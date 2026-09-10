@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
+import { cellSizeForLevel, coverMembershipFor, deriveTileGridFrame, tileCoverForBbox, tileKeyToString } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
 
@@ -604,5 +605,56 @@ describe("planTileEviction (item D)", () => {
       expect(plan.evict).toEqual([]);
       expect(plan.overBudget).toBe(true);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Entry 66 (b) (`frontends/shell/ENTRY-66B-PREREGISTRATION.md`, pre-committed test 4): the two
+// protected-membership tests in this module -- `planTileEviction`'s own candidate filter and
+// `evictTile`'s own guard -- read a MEMBERSHIP, so a cell the enumeration bound left out of the
+// materialised cover is still protected. `ReadonlySet<string>` satisfies the same shape, which is
+// why every test above this line passes a plain `Set` and is untouched.
+// ---------------------------------------------------------------------------------------
+
+describe("protection past the enumeration bound (entry 66 (b))", () => {
+  it("a cell tileCoverForBbox OMITS is still protected: neither planned for eviction nor evicted", () => {
+    const frame = deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 });
+    const cellSize = cellSizeForLevel(frame, "medium");
+    // 300 x 300 = 90,000 cells, past MAX_COVERING_TILES (65,536): the cover is the centred window.
+    const bbox = {
+      xmin: frame.originX,
+      ymin: frame.originY,
+      xmax: frame.originX + 300 * cellSize,
+      ymax: frame.originY + 300 * cellSize,
+    };
+    const cover = tileCoverForBbox(frame, "medium", bbox);
+    expect(cover.kind).toBe("truncated");
+    const windowKeys = new Set(cover.keys.map(tileKeyToString));
+    const K = "0:0"; // the corner cell: inside the viewport bbox, outside the enumerated window
+    expect(windowKeys.has(K)).toBe(false);
+
+    const membership = coverMembershipFor(frame, "medium", bbox);
+    expect(membership.has(K)).toBe(true);
+
+    const set = new TileResidentSet();
+    set.addBatch(K, batch("sh_k", 0, [1, 2], 100));
+    set.addBatch("far", batch("sh_far", 0, [3, 4], 100));
+
+    // (a) The plan never names K, however far the budget overshoots -- it names the unprotected tile.
+    const plan = planTileEviction({
+      residentTileKeys: set.residentTileKeys(),
+      tileVertices: (k) => set.tileVertexCount(k),
+      viewportTileKeys: membership,
+      incomingVertices: 1000,
+      currentTotalVertices: set.totalResidentVertices,
+      maxResidentVertices: 100,
+      distanceToViewCentre: (k) => (k === K ? 1 : 2),
+    });
+    expect(plan.evict).not.toContain(K);
+    expect(plan.evict).toContain("far");
+
+    // (b) And the structural backstop refuses too, even asked directly for K.
+    expect(set.evictTile(K, membership)).toEqual([]);
+    expect(set.isTileResident(K)).toBe(true);
   });
 });

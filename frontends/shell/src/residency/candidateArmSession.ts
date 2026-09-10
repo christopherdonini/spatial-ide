@@ -4,6 +4,7 @@
 import type { WorkingCanvasHandle } from "../canvas/WorkingCanvas";
 import { chooseFitTarget, unionBbox } from "../canvas/extent";
 import { MAX_RESIDENT_VERTICES } from "../canvas/limits";
+import { coverMembershipFor } from "../canvas/tileGrid";
 import { INITIAL_TILE_KEY, UNTILED_FIRST_LOOK_ROW_LIMIT } from "../canvas/tileGridConstants";
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
@@ -1385,18 +1386,29 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // that silently omitted (i) a tile already tracked from a PRIOR round (skipped entirely by the
     // manager's own new-candidate loop, `tileViewportStreamManager.ts`'s own
     // `if (this.tileState.has(tileKey)) continue`) and (ii) a genuinely new candidate dropped THIS
-    // round for lack of headroom while over budget (`:453` there) -- 1a Q2's own gap, entry 44's own
+    // round for lack of headroom while over budget (`:491` there) -- 1a Q2's own gap, entry 44's own
     // thrash mechanism. `outcome.covering` (F1, `TilePlanOutcome`) is the real fix: every key the
     // cover produced this round, geometric, never derived from what this round's own tracked/
     // resident/headroom bookkeeping happened to do with each one. Entry 60 (2026-09-08) bounds that
     // cover at `MAX_COVERING_TILES` before it is allocated (`tileGrid.ts`'s own `tileCoverForBbox`),
     // so "geometric" no longer implies "complete" at an extreme zoom-out: when the bound fires,
     // `outcome.coveringTruncated` says so, `lastCoveringTruncated` (below) carries it, and
-    // `isFillComplete` already refuses to read a truncated covering set as "all". The protection this
-    // set carries therefore holds for covers at or under `MAX_COVERING_TILES`; past the bound it is
-    // the centred window that is protected, a declared exception recorded in ADR-028's appended note
-    // (DECISIONS-PENDING entry 66 = (d), ruled 2026-09-09) -- the full account of what that costs at
-    // this seam is `tileViewportStreamManager.ts:101-137`.
+    // `isFillComplete` already refuses to read a truncated covering set as "all".
+    //
+    // **Entry 66 (b): the PREDICATE protects; this ARRAY plans.** Eviction protection no longer rides
+    // on this array at all -- `viewportMembership` below is `tileGrid.ts`'s own `coverMembershipFor`,
+    // built from the SAME `(frame, level, bbox)` triple this round's own plan just used (the
+    // manager's frozen frame, its fixed level, and THIS call's `bbox`; that triple is the factory's
+    // own declared invariant), and it answers for the whole cover at every zoom, bound or no bound.
+    // So ADR-028 Amendment 3's rule -- *"A tile intersecting the viewport is protected whether it is
+    // complete or partial, tracked this round or a prior one, or never requested at all"*
+    // (ADR-028:461-462) -- holds here at every zoom. This array keeps its OTHER jobs unchanged:
+    // `lastCoveringTileKeys` (the `isFillComplete` per-tile check), the truncation bookkeeping, and
+    // the `fits` latch inside `applyTileViewportContext`, which iterates the covering-only ref and
+    // therefore still reads the enumerated window past the bound -- path (ii) of ADR-028's 2026-09-09
+    // appended note (`:512`), standing, deliberately out of entry 66 (b)'s scope. The full account of
+    // what the window does and does not decide at this seam is `tileViewportStreamManager.ts`'s own
+    // `TilePlanOutcome.covering` doc comment.
     const covering = outcome.covering;
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4
@@ -1415,7 +1427,22 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // admitted yet this generation) never protects -- there is no extent to intersect.
     const extraProtectedKeys =
       firstLookRunningExtent && bboxesIntersect(firstLookRunningExtent, bbox) ? FIRST_LOOK_PROTECTED_KEYS : undefined;
-    const fits = canvas?.applyTileViewportContext(covering, viewCentre, extraProtectedKeys) ?? true;
+    // Entry 66 (b): the protection PREDICATE for this round, built here from the round's own three
+    // inputs and nothing else -- `manager.gridFrame` (frozen for the dataset session,
+    // `establishGridFrame`), `manager.activeLevel` (fixed at the manager's construction) and THIS
+    // plan's own `bbox`, the same triple `manager.onCameraChange(bbox, ...)` was just called with.
+    // That triple is `coverMembershipFor`'s own declared invariant (tile keys are frame- and
+    // level-relative), and it is why the predicate is built at this line rather than carried on
+    // `TilePlanOutcome`: a function member would make a data type non-data and break the
+    // whole-outcome equality assertions the manager's own tests are written as. `gridFrame` is
+    // non-null on every `"planned"` outcome (`onCameraChange` returns `"no-frame"` otherwise); the
+    // guard is the type-level one, and `undefined` leaves `applyTileViewportContext` at exactly its
+    // pre-entry-66 (b) behaviour.
+    const gridFrameForMembership = manager.gridFrame;
+    const viewportMembership = gridFrameForMembership
+      ? coverMembershipFor(gridFrameForMembership, manager.activeLevel, bbox)
+      : undefined;
+    const fits = canvas?.applyTileViewportContext(covering, viewCentre, extraProtectedKeys, viewportMembership) ?? true;
     // Viewport-residency cut P6a, Defect A: unconditional now, in BOTH directions -- before this
     // piece, only `if (fits) manager.setOverBudget(false)` ran here, so a camera change that left the
     // flag `true` relied entirely on some earlier ingest call to have set it, and a camera change

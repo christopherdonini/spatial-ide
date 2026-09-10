@@ -70,31 +70,36 @@ export const MAX_QUEUED_TILES = 512;
  * enumerating only 512 cells would strip protection from covers that are merely ~2 wheel notches
  * past a "Zoom to layer" fit (entry 60's own arithmetic) and are handled correctly today.
  *
- * **...and past 65,536 cells it does NOT keep naming them (reviewer gate must-fix 1, with the
- * architect's own reading of the seams; the interim disclosure, not the decision).** The sentence
- * above has to be finished honestly: above this count the enumeration returns the centred
- * `COVER_WINDOW_CELLS_PER_AXIS` (256 x 256) window and nothing else, so the second consumer sees the
- * WINDOW, not the cover. Two consequences follow at those zoom levels, both of them real:
- *   1. a RESIDENT tile that does intersect the viewport but lies outside the window is EVICTABLE
- *      (the window is what reaches `WorkingCanvas.tsx`'s own `protectionSetFor`/`viewportTileKeys`
- *      and therefore `tileResidentSet.ts`'s protected-membership tests), and
- *   2. an IN-FLIGHT in-view tile outside the window is superseded and BLANKED (the window is also
- *      `TileViewportStreamManager.onCameraChange`'s own supersede keep-set -> `clearTile`).
+ * **...and past 65,536 cells it does NOT keep naming them -- which since entry 66 (b) no longer
+ * decides protection (the predicate protects; the array plans).** The sentence above still has to be
+ * finished honestly: above this count the enumeration returns the centred
+ * `COVER_WINDOW_CELLS_PER_AXIS` (256 x 256) window and nothing else, so a consumer that READS THE
+ * ARRAY sees the window, not the cover. What that consumer is has changed. Eviction protection and
+ * the supersede keep-set now test `tileGrid.ts`'s own `coverMembershipFor(frame, level, bbox)`
+ * predicate -- the cover's own two index ranges, answered per key, allocating nothing -- so at those
+ * zoom levels:
+ *   1. a RESIDENT tile that intersects the viewport but lies outside the window is NOT evictable (the
+ *      predicate reaches `WorkingCanvas.tsx`'s own `protectionSetFor`/`viewportTileKeys` and
+ *      therefore `tileResidentSet.ts`'s protected-membership tests), and
+ *   2. an IN-FLIGHT in-view tile outside the window is NOT superseded and blanked (the predicate is
+ *      also part of `TileViewportStreamManager.onCameraChange`'s own keep-test).
  * ADR-028 **Amendment 3**'s rule -- its "What replaces it" paragraph (ADR-028:459-462), whose quoted
  * sentence is "A tile intersecting the viewport is protected whether it is complete or partial,
  * tracked this round or a prior one, or never requested at all" (:461-462); Amendment 1 is NOT its
  * source, having declared the partial-covering exception Amendment 3 withdrew (ADR-028:451-453) --
- * therefore holds for the window only, there. What is NOT affected: the
- * completeness claim -- a windowed cover is reported truncated and `candidateArmSession.ts`'s own
- * `isFillComplete` refuses on that flag outright, so no "Showing all N" is ever claimed over one.
- * Reachability, from entry 60's own recorded arithmetic and no new measurement (~3.63x tiles per
- * wheel notch; ~2 notches past a "Zoom to layer" fit already passes 512, and this bound is 128x
- * that): about six notches past the fit. Raising the multiple moves that zoom level further out; it
- * does not remove the case, which is why the number is not the answer here. **Ruled by the human on
- * 2026-09-09: DECISIONS-PENDING entry 66 = (d)** -- the narrowing is a DECLARED EXCEPTION, recorded
- * in ADR-028's own appended note (written by the custodian, landing on this branch beside this
- * piece); the redesign that needs no enumeration at all is preregistered as the first post-tag piece
- * (`RELEASE-0.1.md` Amendment 12). This piece changes neither the protection design nor this number.
+ * therefore holds at every zoom, not for the window only. **What still reads the window:** the
+ * `fits`/over-budget latch (`WorkingCanvas.tsx`'s own `anyPartialAmongCovering`, which iterates the
+ * covering-only ref and so cannot consume a predicate) -- path (ii) of ADR-028's 2026-09-09 appended
+ * note (`:512`), standing, deliberately outside entry 66 (b)'s scope. What is NOT affected either
+ * way: the completeness claim -- a windowed cover is reported truncated and
+ * `candidateArmSession.ts`'s own `isFillComplete` refuses on that flag outright, so no "Showing all
+ * N" is ever claimed over one. Reachability, from entry 60's own recorded arithmetic and no new
+ * measurement (~3.63x tiles per wheel notch; ~2 notches past a "Zoom to layer" fit already passes
+ * 512, and this bound is 128x that): about six notches past the fit. **Ruled by the human on
+ * 2026-09-09: DECISIONS-PENDING entry 66 = (d)** -- the narrowing was a DECLARED EXCEPTION, recorded
+ * in ADR-028's own appended note; the enumeration-free redesign it preregistered
+ * (`RELEASE-0.1.md` Amendment 12, `frontends/shell/ENTRY-66B-PREREGISTRATION.md`) is what closes its
+ * path (i) above. Neither piece changes this number.
  *
  * **Why 128x and not some smaller multiple: this bound must not reclassify anything that is honest
  * today.** A truncated cover is reported truncated, and `candidateArmSession.ts`'s own
@@ -141,7 +146,7 @@ export const MAX_COVERING_TILES = MAX_QUEUED_TILES * 128; // 65,536
 /** The per-axis side of the square cell window `tileGrid.ts`'s own `tileCoverForBbox` keeps when a
  * cover exceeds `MAX_COVERING_TILES` -- centred on the query bbox's own centre cell, which is the
  * SAME nearest-first keep / farthest-first drop policy `TileViewportStreamManager.onCameraChange`
- * already applies to its own candidate list (`:430-442` there), just applied before the allocation
+ * already applies to its own candidate list (`:468-480` there), just applied before the allocation
  * rather than after it. 256 * 256 === `MAX_COVERING_TILES` exactly (pinned by a unit test in
  * `tileGrid.test.ts`), so the window is the largest square this bound admits. */
 export const COVER_WINDOW_CELLS_PER_AXIS = 256;
