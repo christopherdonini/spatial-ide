@@ -140,6 +140,76 @@ impl SanityLevel {
     }
 }
 
+/// The coordinate unit an admitted CRS definition declares **on its own coordinate-system axes** —
+/// a recorded fact, read and never inferred.
+///
+/// `engine/ADMISSION-PREREGISTRATION.md` §14 item I fixes where it is read from and what the
+/// unreadable cases record; the proposed ADR-013 Amendment 1 §2 is the rule it serves ("the unit is
+/// read from the CRS definition and recorded as a fact of the instance — never inferred from the
+/// identifier string, and never defaulted").
+///
+/// **`Unestablished` is not a refusal and not an instance.** It is what the record says when the
+/// two axes disagree, when the `unit` member is missing, when its form is one this reader takes no
+/// name from, or when there was no definition to read at all — the absent-key format-default
+/// admission being the last case, which carries no definition (DECISIONS-PENDING entry 81 is open
+/// and this piece does not pre-empt it).
+///
+/// **Nothing here is normalized.** A name that is neither `degree` nor `metre` is carried in
+/// [`Self::Named`] exactly as the definition spells it; folding case or mapping synonyms would be
+/// this reader deciding that two spellings mean one unit, which is a definitional-equivalence
+/// judgement (`docs/05`) it is not entitled to make.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CoordinateUnit {
+    /// The angular degree — both axes, by name.
+    Degree,
+    /// The linear metre — both axes, by name.
+    Metre,
+    /// Another name, both axes agreeing, recorded exactly as read.
+    Named(String),
+    /// No unit was established. See the type's own note: not a refusal, not an instance.
+    Unestablished,
+}
+
+impl CoordinateUnit {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Degree => "degree",
+            Self::Metre => "metre",
+            Self::Named(name) => name.as_str(),
+            Self::Unestablished => "unestablished",
+        }
+    }
+
+    /// The name as read, mapped onto the two spellings this engine names and nothing else.
+    fn from_name(name: String) -> Self {
+        match name.as_str() {
+            "degree" => Self::Degree,
+            "metre" => Self::Metre,
+            _ => Self::Named(name),
+        }
+    }
+}
+
+/// Where a recorded [`CoordinateUnit`] was read from.
+///
+/// **One class, because this piece can reach exactly one.** The unit is read from the admitted
+/// PROJJSON's coordinate-system axes or it is not established; there is no format rule that supplies
+/// a unit, no catalog lookup and no inference from an identifier. A second class would have to be
+/// something this engine actually did.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CoordinateUnitSource {
+    /// A CRS definition was there to read, and its axes are what was read.
+    Definition,
+}
+
+impl CoordinateUnitSource {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Definition => "unit:definition",
+        }
+    }
+}
+
 /// The three states of the `crs` key, which are **three different facts** and must not collapse
 /// into two: 1.1.0 says so in its own words (`ADMISSION-PREREGISTRATION.md:351`, "a missing `crs`
 /// key has different meaning than a `crs` key set to `null`").
@@ -183,6 +253,13 @@ pub struct AdmissionRecord {
     pub declared_axis_order: Option<AxisOrder>,
     /// `geoparquet:<version>#<rule>` — absent when no format rule was applied.
     pub format_rule_reference: Option<String>,
+    /// The unit the admitted definition declares on both of its coordinate-system axes, or
+    /// `unestablished`. Read from [`coordinate_unit_from_definition`] and nowhere else.
+    pub coordinate_unit: CoordinateUnit,
+    /// Present whenever there was a definition to read the unit from — **including where the read
+    /// established nothing**. It answers "was a definition consulted", not "was a unit found"; the
+    /// second question is `coordinate_unit`'s and the two are different facts.
+    pub coordinate_unit_source: Option<CoordinateUnitSource>,
     pub sanity_level: SanityLevel,
     pub sanity_reason: String,
 }
@@ -531,6 +608,76 @@ pub fn axis_order_from_projjson(crs: &Value) -> Result<AxisOrder> {
     }
 }
 
+/// The coordinate unit of an admitted CRS, read from **the definition that was admitted** — the
+/// file's own, or a caller's assertion — and `Unestablished` where there is none.
+///
+/// The second value is the source fact: `Some(Definition)` exactly when a definition was there to
+/// read, whatever the read established. The absent-key format-default admission carries no
+/// definition (`format_semantics`' R-C2 arm passes `None`), so it records `unestablished` with no
+/// source — DECISIONS-PENDING entry 81 is open on whether that admission should yield the instance,
+/// and recording a unit it has no definition for would answer that question here.
+pub fn coordinate_unit_from_definition(
+    definition_json: Option<&str>,
+) -> (CoordinateUnit, Option<CoordinateUnitSource>) {
+    let Some(text) = definition_json else {
+        return (CoordinateUnit::Unestablished, None);
+    };
+    let Ok(value) = serde_json::from_str::<Value>(text) else {
+        // A definition that does not parse is one nothing can be read from. It is not silently a
+        // degree: the record says `unestablished`, and the source says a definition was there.
+        return (CoordinateUnit::Unestablished, Some(CoordinateUnitSource::Definition));
+    };
+    (coordinate_unit_from_projjson(&value), Some(CoordinateUnitSource::Definition))
+}
+
+/// The unit declared on `coordinate_system.axis[0]` and `coordinate_system.axis[1]`, and on nothing
+/// else — `ADMISSION-PREREGISTRATION.md` §14 item I, in code.
+///
+/// **The three places it must not read from, and why they are traps rather than alternatives.**
+/// EPSG:2056's own definition (`engine/src/crs-catalog.json:8`,
+/// `engine/tests/data/epsg2056.projjson`) declares `"unit": "degree"` on six of its
+/// `conversion.parameters` and on both axes of its `base_crs`, while the CRS it defines has
+/// `metre` axes — so a reader consulting either would call a projected metre CRS a degrees
+/// instance. The `id` is the third: `docs/05` decides CRS identity by comparing definitions and
+/// never by name-string comparison, and a unit taken from `EPSG:2056` or `OGC:CRS84` would be
+/// exactly that comparison (the proposed ADR-013 Amendment 1's block-on-sight 8).
+///
+/// **Both forms PROJJSON writes are read, by `name`.** `"unit": "degree"` and
+/// `"unit": { "type": "AngularUnit", "name": "degree", "conversion_factor": … }` are the same
+/// declaration written two ways; a conversion factor is a number this function does not read, and
+/// no arithmetic is performed on anything here.
+///
+/// Disagreeing axes, a missing member, a form carrying no name, or fewer than two axes all record
+/// [`CoordinateUnit::Unestablished`] — never a default.
+pub fn coordinate_unit_from_projjson(crs: &Value) -> CoordinateUnit {
+    let Some(axes) = crs
+        .get("coordinate_system")
+        .and_then(|cs| cs.get("axis"))
+        .and_then(Value::as_array)
+    else {
+        return CoordinateUnit::Unestablished;
+    };
+    if axes.len() < 2 {
+        return CoordinateUnit::Unestablished;
+    }
+    match (axis_unit_name(&axes[0]), axis_unit_name(&axes[1])) {
+        (Some(x), Some(y)) if x == y => CoordinateUnit::from_name(x),
+        // Two axes in different units are two facts, and this record carries one value. The
+        // disagreement is recorded as "not established" rather than resolved by preferring an axis.
+        _ => CoordinateUnit::Unestablished,
+    }
+}
+
+/// One axis's declared unit name, in either of PROJJSON's two forms. `None` where the member is
+/// absent or carries no name.
+fn axis_unit_name(axis: &Value) -> Option<String> {
+    match axis.get("unit")? {
+        Value::String(name) => Some(name.clone()),
+        Value::Object(unit) => unit.get("name").and_then(Value::as_str).map(str::to_string),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -601,6 +748,83 @@ mod tests {
         let (_, _, axis) = m.declared_crs.unwrap();
         assert_eq!(axis, AxisOrder::LatitudeLongitude);
         assert!(!axis.is_x_first(), "the EPSG:4326 trap must not read as x-first");
+    }
+
+    // ---- the coordinate unit: read from the axes, never from anything else ------------------
+
+    #[test]
+    fn the_unit_comes_from_the_coordinate_system_axes_in_either_form() {
+        let string_form = serde_json::json!({
+            "coordinate_system": {"axis": [
+                {"direction": "east", "unit": "degree"},
+                {"direction": "north", "unit": "degree"}]}
+        });
+        let object_form = serde_json::json!({
+            "coordinate_system": {"axis": [
+                {"direction": "east", "unit": {"type": "AngularUnit", "name": "degree"}},
+                {"direction": "north", "unit": {"type": "AngularUnit", "name": "degree"}}]}
+        });
+        assert_eq!(coordinate_unit_from_projjson(&string_form), CoordinateUnit::Degree);
+        assert_eq!(coordinate_unit_from_projjson(&object_form), CoordinateUnit::Degree);
+    }
+
+    #[test]
+    fn epsg2056s_conversion_parameters_and_base_crs_are_not_a_unit_source() {
+        let lv95: Value = serde_json::from_str(LV95).unwrap();
+        assert!(
+            LV95.contains("\"unit\": \"degree\""),
+            "the fixture must still carry the degree units this test exists for"
+        );
+        assert_eq!(
+            coordinate_unit_from_projjson(&lv95),
+            CoordinateUnit::Metre,
+            "EPSG:2056 declares degrees on its conversion parameters and on its base CRS's axes, \
+             and metres on its own; only the last of the three is the coordinate unit"
+        );
+    }
+
+    #[test]
+    fn disagreeing_a_missing_member_and_an_unreadable_form_all_record_unestablished() {
+        let disagreeing = serde_json::json!({
+            "coordinate_system": {"axis": [{"unit": "degree"}, {"unit": "metre"}]}
+        });
+        let missing = serde_json::json!({
+            "coordinate_system": {"axis": [{"direction": "east"}, {"direction": "north"}]}
+        });
+        let unreadable = serde_json::json!({
+            "coordinate_system": {"axis": [{"unit": 1}, {"unit": 1}]}
+        });
+        let one_axis = serde_json::json!({"coordinate_system": {"axis": [{"unit": "degree"}]}});
+        let no_cs = serde_json::json!({"id": {"authority": "OGC", "code": "CRS84"}});
+        for case in [disagreeing, missing, unreadable, one_axis, no_cs] {
+            assert_eq!(coordinate_unit_from_projjson(&case), CoordinateUnit::Unestablished);
+        }
+    }
+
+    #[test]
+    fn a_name_that_is_neither_degree_nor_metre_is_recorded_exactly_as_read() {
+        let other = serde_json::json!({
+            "coordinate_system": {"axis": [
+                {"unit": "US survey foot"}, {"unit": "US survey foot"}]}
+        });
+        let unit = coordinate_unit_from_projjson(&other);
+        assert_eq!(unit, CoordinateUnit::Named("US survey foot".to_string()));
+        assert_eq!(unit.as_str(), "US survey foot");
+    }
+
+    #[test]
+    fn no_definition_records_unestablished_with_no_source_at_all() {
+        assert_eq!(
+            coordinate_unit_from_definition(None),
+            (CoordinateUnit::Unestablished, None),
+            "the absent-key format default carries no definition, and this record does not invent \
+             one for it (§14 item IV, DECISIONS-PENDING entry 81 — open, the human's)"
+        );
+        assert_eq!(
+            coordinate_unit_from_definition(Some("{not json")),
+            (CoordinateUnit::Unestablished, Some(CoordinateUnitSource::Definition)),
+            "a definition was there to read; nothing was established from it"
+        );
     }
 
     #[test]

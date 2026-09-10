@@ -410,3 +410,216 @@ fn the_two_format_rule_routes_are_distinguishable_on_the_envelope() {
     assert_eq!(by_default.get("axis_order").unwrap(), "longitude,latitude");
     assert_eq!(by_override.get("axis_order").unwrap(), "longitude,latitude");
 }
+
+// ---- Brief A P2: the coordinate unit, and the geographic-degrees instance ------------------
+//
+// `ADMISSION-PREREGISTRATION.md` §14 item I fixes what is read and what the unreadable cases
+// record; the proposed ADR-013 Amendment 1 (§2, and its block-on-sight 2 and 8) is the rule these
+// assertions serve. Nothing below transforms a coordinate, and every envelope assertion checks
+// that `axis_normalization` is still `none-performed`.
+
+/// **(a)** The corpus-shaped CRS84 file: a declared definition carrying `"unit": "degree"` on both
+/// coordinate-system axes, drawn in degrees. The unit is recorded as read, the source says a
+/// definition was read, and the dataset answers the instance predicate.
+#[test]
+fn a_declared_crs84_definition_in_degrees_records_the_degree_unit_and_is_the_instance() {
+    let path = write(
+        "p2-declared-crs84-degrees",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+    );
+    let ds = Dataset::open(&path).expect("a declared x-first CRS84 file opens as it always did");
+    let md = envelope_metadata(&ds);
+
+    assert_eq!(md.get("crs").unwrap(), "OGC:CRS84");
+    assert_eq!(md.get("coordinate_unit").unwrap(), "degree");
+    assert_eq!(md.get("coordinate_unit_source").unwrap(), "unit:definition");
+    assert!(
+        ds.is_geographic_degrees_instance(),
+        "both axes declare the angular degree, which is the whole of what the instance is"
+    );
+
+    // P1's keys, unchanged by an additive one.
+    assert_eq!(md.get("crs_provenance").unwrap(), "crs:declared");
+    assert_eq!(md.get("axis_provenance").unwrap(), "axis:declared");
+    assert_eq!(md.get("axis_order").unwrap(), "longitude,latitude");
+    assert_eq!(
+        md.get("axis_normalization").unwrap(),
+        "none-performed",
+        "reading a unit transforms nothing"
+    );
+}
+
+/// **(b)** EPSG:2056 — the definition this tree pins, whose `conversion.parameters` and whose
+/// `base_crs` axes declare `degree` while the CRS's own axes declare `metre`. The recorded unit is
+/// `metre` and the dataset is not the instance; the test asserts the trap is still in the fixture,
+/// so it cannot pass by the fixture having lost it.
+#[test]
+fn the_degrees_on_epsg2056s_conversion_parameters_do_not_leak_into_the_recorded_unit() {
+    assert!(
+        spatial_engine::fixture::LV95_PROJJSON.contains("\"unit\": \"degree\""),
+        "the pinned EPSG:2056 definition must still carry the degree units this test exists for"
+    );
+    let path = write("p2-declared-lv95-metres", &metres());
+    let ds = Dataset::open(&path).expect("opens as it always did");
+    let md = envelope_metadata(&ds);
+
+    assert_eq!(md.get("crs").unwrap(), "EPSG:2056");
+    assert_eq!(
+        md.get("coordinate_unit").unwrap(),
+        "metre",
+        "the unit is `coordinate_system.axis[i].unit`, not a conversion parameter's and not the \
+         base CRS's"
+    );
+    assert_eq!(md.get("coordinate_unit_source").unwrap(), "unit:definition");
+    assert!(!ds.is_geographic_degrees_instance());
+}
+
+/// **(c)** PROJJSON's object form is the same declaration written another way, on both sides:
+/// `{"type": "AngularUnit", "name": "degree", …}` records `degree` and
+/// `{"type": "LinearUnit", "name": "metre", …}` records `metre`, with the same instance answers as
+/// (a) and (b).
+#[test]
+fn the_object_form_of_a_unit_records_what_the_string_form_records() {
+    let degrees_path = write(
+        "p2-crs84-degrees-object-unit",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84DegreesObjectUnit, ..degrees() },
+    );
+    let metres_path = write(
+        "p2-lv95-metre-object-unit",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredLv95ObjectUnit, ..metres() },
+    );
+
+    let in_degrees = Dataset::open(&degrees_path).expect("opens");
+    let in_metres = Dataset::open(&metres_path).expect("opens");
+
+    assert_eq!(envelope_metadata(&in_degrees).get("coordinate_unit").unwrap(), "degree");
+    assert!(in_degrees.is_geographic_degrees_instance());
+    assert_eq!(envelope_metadata(&in_metres).get("coordinate_unit").unwrap(), "metre");
+    assert!(!in_metres.is_geographic_degrees_instance());
+}
+
+/// **(d)** Two axes in different units are two facts and one record: the unit is recorded
+/// `unestablished`, which is **not** a refusal — the file opens.
+#[test]
+fn axes_declaring_different_units_record_unestablished_and_the_open_still_succeeds() {
+    let path = write(
+        "p2-axis-units-disagree",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredAxisUnitsDisagree, ..degrees() },
+    );
+    let ds = Dataset::open(&path).expect("an unestablished unit is not a refusal");
+    let md = envelope_metadata(&ds);
+    assert_eq!(md.get("coordinate_unit").unwrap(), "unestablished");
+    assert_eq!(
+        md.get("coordinate_unit_source").unwrap(),
+        "unit:definition",
+        "a definition was there and was read; what it said did not establish one unit"
+    );
+    assert!(!ds.is_geographic_degrees_instance());
+}
+
+/// **(e)** A missing `unit` member is not a licence to assume one: `unestablished`, and the file
+/// opens.
+#[test]
+fn a_missing_unit_member_records_unestablished_and_is_never_defaulted() {
+    let path = write(
+        "p2-axis-unit-absent",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredAxisUnitAbsent, ..degrees() },
+    );
+    let ds = Dataset::open(&path).expect("opens");
+    let md = envelope_metadata(&ds);
+    assert_eq!(md.get("coordinate_unit").unwrap(), "unestablished");
+    assert!(!ds.is_geographic_degrees_instance());
+}
+
+/// **(f)** The absent-key format-default admission — F-1's own shape. It carries **no definition**
+/// (the rule names a CRS; it does not supply PROJJSON), so its unit is recorded `unestablished` by
+/// name and no source key is written at all.
+///
+/// **Item IV of `ADMISSION-PREREGISTRATION.md` §14 is open and is the human's**
+/// (DECISIONS-PENDING entry 81): whether such an admission yields the degrees instance. This test
+/// asserts what the code records today and pre-empts nothing — if entry 81 is ruled the other way,
+/// this expectation changes with it.
+#[test]
+fn the_format_default_admission_records_an_unestablished_unit_and_no_source() {
+    let path = write(
+        "p2-format-default-unit",
+        &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_geo_bbox: true, ..degrees() },
+    );
+    let ds = Dataset::open(&path).expect("F-1's shape opens under the format's absent-key rule");
+    let md = envelope_metadata(&ds);
+
+    assert_eq!(md.get("crs_provenance").unwrap(), "crs:format-default");
+    assert_eq!(md.get("coordinate_unit").unwrap(), "unestablished");
+    assert!(
+        !md.contains_key("coordinate_unit_source"),
+        "there was no definition to read a unit from, and the record says so by omitting the key"
+    );
+    assert!(!ds.is_geographic_degrees_instance());
+}
+
+/// **(g)** The identifier is not a unit source. Two files whose definitions differ **only** in
+/// their `id` member — one OGC:CRS84, one EPSG:2056, the identifier of a metre CRS — record the
+/// same unit and give the same answer to the predicate (the proposed ADR-013 Amendment 1's
+/// block-on-sight 8; `docs/05`: never a name-string comparison).
+#[test]
+fn an_identifier_only_change_does_not_flip_the_instance_predicate() {
+    let as_crs84 = write(
+        "p2-identifier-crs84",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+    );
+    let relabelled = write(
+        "p2-identifier-relabelled",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84DegreesWithLv95Identifier, ..degrees() },
+    );
+    let named_crs84 = Dataset::open(&as_crs84).expect("opens");
+    let named_lv95 = Dataset::open(&relabelled).expect("opens");
+
+    let crs84_definition = named_crs84.crs().definition_json().expect("a declared definition");
+    let relabelled_definition =
+        named_lv95.crs().definition_json().expect("a declared definition");
+    assert_eq!(
+        crs84_definition.split(",\"id\":").next(),
+        relabelled_definition.split(",\"id\":").next(),
+        "the two definitions must differ in their `id` member and in nothing else"
+    );
+    assert_ne!(named_crs84.crs().identifier(), named_lv95.crs().identifier());
+    assert_eq!(named_lv95.crs().identifier(), "EPSG:2056");
+
+    assert_eq!(
+        envelope_metadata(&named_crs84).get("coordinate_unit").unwrap(),
+        envelope_metadata(&named_lv95).get("coordinate_unit").unwrap()
+    );
+    assert!(named_crs84.is_geographic_degrees_instance());
+    assert!(
+        named_lv95.is_geographic_degrees_instance(),
+        "the axes declare degrees; an identifier that names a metre CRS does not overrule them"
+    );
+}
+
+/// The human's display-convention sentence, held once and **verbatim**. The literal is written out
+/// here so the two texts are compared mechanically rather than by eye (the proposed ADR-013
+/// Amendment 1's block-on-sight 2: never paraphrased, shortened or reworded).
+///
+/// The two surfaces that must carry it — the shell's own status at open, and `describe` — are P3's
+/// and the cut's. This engine-side piece holds the sentence and consumes it nowhere, which is what
+/// the second assertion records.
+#[test]
+fn the_display_convention_sentence_is_carried_verbatim_and_no_surface_here_consumes_it() {
+    assert_eq!(
+        spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION,
+        "no coordinate value is transformed; the display convention is equirectangular"
+    );
+
+    let path = write(
+        "p2-display-convention",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+    );
+    let ds = Dataset::open(&path).expect("opens");
+    assert!(ds.is_geographic_degrees_instance());
+    let md = envelope_metadata(&ds);
+    assert!(
+        !md.values().any(|v| v.contains(spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION)),
+        "the surfaces that carry the statement are P3's and the cut's, not this envelope's"
+    );
+    assert_eq!(md.get("axis_normalization").unwrap(), "none-performed");
+}

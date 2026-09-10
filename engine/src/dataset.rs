@@ -385,11 +385,21 @@ impl Dataset {
         let (sanity_level, sanity_reason) =
             sanity_check(conn, &path_str, &geo, &file_schema, crs_provenance, &semantics, cancel)?;
 
+        // **The coordinate unit is read from the admitted definition's own axes, or not at all.**
+        // `crs.definition_json()` is the PROJJSON that was admitted — the file's, or the caller's
+        // assertion — so this reads the definition this dataset is actually carrying rather than
+        // one looked up by name. The absent-key format default carries no definition and therefore
+        // records `unestablished` (`ADMISSION-PREREGISTRATION.md` §14, items I and IV).
+        let (coordinate_unit, coordinate_unit_source) =
+            crate::geoparquet::coordinate_unit_from_definition(crs.definition_json());
+
         let admission = crate::geoparquet::AdmissionRecord {
             crs_provenance,
             axis_provenance,
             declared_axis_order,
             format_rule_reference,
+            coordinate_unit,
+            coordinate_unit_source,
             sanity_level,
             sanity_reason,
         };
@@ -746,6 +756,27 @@ impl Dataset {
     /// and at what level the range check ran. Always present for a dataset that opened.
     pub fn admission(&self) -> Option<&crate::geoparquet::AdmissionRecord> {
         self.envelope.admission()
+    }
+
+    /// Whether this dataset is a **geographic-degrees instance** — the proposed ADR-013 Amendment 1.
+    ///
+    /// **Answered from the recorded unit and from nothing else.** True exactly when admission read
+    /// `degree` from the admitted definition's two coordinate-system axes, which is what "on both
+    /// axes" means here: [`crate::geoparquet::CoordinateUnit`] is established only where the axes
+    /// agree, so a file declaring one degree axis and one metre axis records `unestablished` and is
+    /// not an instance.
+    ///
+    /// It is **not** answered from the CRS identifier. That draft's block-on-sight 8 forbids
+    /// inferring a unit from an identifier string, and `docs/05` forbids deciding CRS identity by
+    /// name comparison at all — so changing a definition's `id` and nothing else cannot change this
+    /// answer, and a test asserts exactly that.
+    ///
+    /// An instance is a **runtime fact carried with the value** (ADR-013 §1: "CRS identifiers are
+    /// not baked into the type system"), so this is an accessor and not a type: nothing in this
+    /// engine gains a compile-time coordinate class from it.
+    pub fn is_geographic_degrees_instance(&self) -> bool {
+        self.admission()
+            .is_some_and(|a| a.coordinate_unit == crate::geoparquet::CoordinateUnit::Degree)
     }
 
     pub fn file_schema(&self) -> &SchemaRef {

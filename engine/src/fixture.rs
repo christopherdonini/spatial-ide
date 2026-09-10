@@ -111,6 +111,33 @@ pub enum CrsMode {
     /// the definition and establish axis order, but has no identifier to name it by. Every such
     /// dataset shares the same placeholder, so ADR-015 §7.3 refuses a viewport that echoes it.
     DefinitionOnlyNoId,
+    /// **OGC:CRS84, x-first, `"unit": "degree"` on both axes in PROJJSON's string form.**
+    ///
+    /// The shape the compatibility corpus's own CRS84 file carries (`geoparquet-spec/example…`:
+    /// axes `Geodetic longitude` / `Geodetic latitude`, directions `east`/`north`), so the
+    /// geographic-degrees instance is exercised against a real file written from a definition of
+    /// the shape real files declare.
+    DeclaredCrs84Degrees,
+    /// As [`Self::DeclaredCrs84Degrees`], with the unit in PROJJSON's **object** form
+    /// (`{"type": "AngularUnit", "name": "degree", …}`) — the same declaration written the other
+    /// way, and it must record the same unit.
+    DeclaredCrs84DegreesObjectUnit,
+    /// EPSG:2056's definition with its **coordinate-system** axes' units in object form
+    /// (`{"type": "LinearUnit", "name": "metre", …}`); every other member, including the
+    /// `"unit": "degree"` its conversion parameters and its `base_crs` axes carry, is untouched.
+    DeclaredLv95ObjectUnit,
+    /// A definition whose two axes declare **different** units — degree on the first, metre on the
+    /// second. Legal enough to parse and to establish an axis order from; no single unit follows
+    /// from it.
+    DeclaredAxisUnitsDisagree,
+    /// As [`Self::DeclaredCrs84Degrees`] with **no `unit` member on either axis**. PROJJSON in the
+    /// wild is not always complete, and a missing member is not a licence to assume one.
+    DeclaredAxisUnitAbsent,
+    /// **[`Self::DeclaredCrs84Degrees`]'s definition with only its `id` changed** — to EPSG:2056,
+    /// the identifier of a metre CRS. Every axis, direction and unit is byte-identical to that
+    /// mode's; the identifier is the single difference, which is what makes it the fixture for
+    /// "a unit is read from the definition, never from the identifier string".
+    DeclaredCrs84DegreesWithLv95Identifier,
 }
 
 /// Whether the fixture carries a categorical attribute column.
@@ -361,6 +388,60 @@ fn bbox_fields() -> Fields {
     ])
 }
 
+/// The angular degree as PROJJSON's **string** form writes it, `unit` member and leading comma
+/// included so an axis with no unit at all is the empty string and nothing else moves.
+const UNIT_DEGREE_STRING: &str = ",\"unit\":\"degree\"";
+
+/// The same declaration in PROJJSON's **object** form. `conversion_factor` is transcribed from the
+/// published definition of the degree and is read by nothing: the unit is taken by `name`, and this
+/// engine performs no arithmetic on a conversion factor because it performs no transform.
+const UNIT_DEGREE_OBJECT: &str =
+    ",\"unit\":{\"type\":\"AngularUnit\",\"name\":\"degree\",\"conversion_factor\":0.017453292519943295}";
+
+/// The linear metre, string form.
+const UNIT_METRE_STRING: &str = ",\"unit\":\"metre\"";
+
+/// The linear metre, object form — the metre being PROJJSON's base linear unit, its factor is one.
+const UNIT_METRE_OBJECT: &str =
+    ",\"unit\":{\"type\":\"LinearUnit\",\"name\":\"metre\",\"conversion_factor\":1}";
+
+const ID_CRS84: &str = "{\"authority\":\"OGC\",\"code\":\"CRS84\"}";
+const ID_LV95: &str = "{\"authority\":\"EPSG\",\"code\":2056}";
+
+/// OGC:CRS84 as the corpus's own CRS84 file declares it — longitude first, both directions
+/// `east`/`north`, so no format axis rule is needed to read it — with the two axes' `unit` members
+/// and the `id` supplied by the caller.
+///
+/// Written as one function so that the fixtures which differ **only** in a unit form, or **only**
+/// in an identifier, differ in exactly that and can be asserted against each other.
+fn crs84(unit_x: &str, unit_y: &str, id: &str) -> String {
+    format!(
+        "{{\"type\":\"GeographicCRS\",\"name\":\"WGS 84 (CRS84)\",\
+          \"coordinate_system\":{{\"subtype\":\"ellipsoidal\",\"axis\":[\
+            {{\"name\":\"Geodetic longitude\",\"abbreviation\":\"Lon\",\"direction\":\"east\"{unit_x}}},\
+            {{\"name\":\"Geodetic latitude\",\"abbreviation\":\"Lat\",\"direction\":\"north\"{unit_y}}}]}},\
+          \"id\":{id}}}"
+    )
+}
+
+/// EPSG:2056's own definition with its **coordinate-system** axes' units rewritten into object
+/// form, and nothing else touched — in particular its `conversion.parameters` and its `base_crs`
+/// axes keep their `"unit": "degree"`, which is the trap a reader must not fall into.
+fn lv95_with_object_form_axis_units() -> String {
+    let object_unit: serde_json::Value =
+        serde_json::from_str(&format!("{{{}}}", &UNIT_METRE_OBJECT[1..])).expect("metre unit");
+    let mut v: serde_json::Value = serde_json::from_str(LV95_PROJJSON).expect("lv95 projjson");
+    let axes = v
+        .get_mut("coordinate_system")
+        .and_then(|cs| cs.get_mut("axis"))
+        .and_then(serde_json::Value::as_array_mut)
+        .expect("lv95 declares its coordinate system's axes");
+    for axis in axes.iter_mut() {
+        axis["unit"] = object_unit["unit"].clone();
+    }
+    v.to_string()
+}
+
 fn geo_metadata(spec: &FixtureSpec) -> String {
     let crs_fragment = match spec.crs_mode {
         CrsMode::DeclaredLv95 => format!(",\"crs\":{LV95_PROJJSON}"),
@@ -384,6 +465,22 @@ fn geo_metadata(spec: &FixtureSpec) -> String {
                 {\"name\":\"Geodetic longitude\",\"abbreviation\":\"Lon\",\"direction\":\"east\",\"unit\":\"degree\"}]},\
               \"id\":{\"authority\":\"EPSG\",\"code\":4326}}"
             .to_string(),
+        CrsMode::DeclaredCrs84Degrees => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_STRING, UNIT_DEGREE_STRING, ID_CRS84))
+        }
+        CrsMode::DeclaredCrs84DegreesObjectUnit => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_OBJECT, UNIT_DEGREE_OBJECT, ID_CRS84))
+        }
+        CrsMode::DeclaredCrs84DegreesWithLv95Identifier => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_STRING, UNIT_DEGREE_STRING, ID_LV95))
+        }
+        CrsMode::DeclaredAxisUnitsDisagree => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_STRING, UNIT_METRE_STRING, ID_CRS84))
+        }
+        CrsMode::DeclaredAxisUnitAbsent => format!(",\"crs\":{}", crs84("", "", ID_CRS84)),
+        CrsMode::DeclaredLv95ObjectUnit => {
+            format!(",\"crs\":{}", lv95_with_object_form_axis_units())
+        }
     };
 
     let covering = match (spec.with_covering_bbox, spec.covering_names_absent_column) {
