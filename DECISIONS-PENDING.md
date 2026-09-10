@@ -69,6 +69,17 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+72. **[Porting-time conflict, noticed before porting (Draft 2, Brief A): the brief's commit line
+    `git -c user.name=chris -c user.email=chrys92d@gmail.com commit -s` names an author/sign-off
+    identity different from every commit in this repository (Christopher Donini
+    <donini.christopher@gmail.com>) and from the DCO gate's own author-spoof fix Draft 1 cites.
+    Which identity signs the post-tag cuts' commits?]** Raised 2026-09-10 while reading the drafts
+    (nothing ported yet; the human's order is Part M → tag → Draft 1 → Draft 2 → Draft 3). If the
+    brief's line stands, the DCO check ("every commit is signed off") needs the Signed-off-by to
+    match the author it enforces, and the custodian's worker briefs must carry the same identity;
+    if the repository's identity stands, the brief's line is corrected at porting with a dated note.
+    Not decided here. Not a tag matter.
+
 71. **[ADR-028's header line reads `Status: **Accepted, 2026-09-02** …` — the only ADR whose
     Status label is not the `**Status:**` shape the other 29 use. Leave it (an Accepted ADR is
     immutable; the new index reader accepts both shapes), or append a dated corrigendum line
