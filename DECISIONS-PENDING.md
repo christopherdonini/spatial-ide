@@ -69,6 +69,21 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+76. **[Entry 66 (b) (the geometric protection piece, being built now on `cut/geometric-protection`;
+    merge held until after the tag) — four items its preregistration leaves to you, for your answer
+    BEFORE any merge: (1) the `fits`/over-budget latch still reads the enumerated window past the
+    bound (ADR-028's second declared deviation, `:512`) — invert it in this piece (an operator-visible
+    status changes: views that read as fitting today would read over-budget), or leave it declared and
+    standing? (2) a queued in-view tile outside the window now survives the supersede prune and is
+    ISSUED later by the queue drain with no cover re-check — accepted as declared behaviour within the
+    existing ceilings (the preregistration's reading, on principle 8), or add a drop-at-drain path?
+    (3) must the residency harness (a campaign-class instrument) actually run for its changed
+    assertion, or do the nine unit/E2E tests plus K7 discharge the gates with the harness pass folded
+    into the next campaign? (4) does the KNOWN-LIMITATIONS 13b line retire at this landing (its text
+    names only the vanishing behaviour, which path (i) closes) while the `fits` deviation stands?]**
+    Preregistered 2026-09-10 (`frontends/shell/ENTRY-66B-PREREGISTRATION.md` §5, §4.3, §12); the
+    closing ADR-028 note is drafted in its §13 and lands only on your word. Not a tag matter.
+
 75. **[Entry 47 (the re-pick on camera settle, being built now on `cut/hover-repick-settle`;
     merge held until after the tag) — three behaviour choices the ruling did not make, for your
     answer BEFORE any merge: (1) does a pure PAN's settle re-pick too, or zoom only? The
