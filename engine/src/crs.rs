@@ -35,6 +35,24 @@ pub const DEFINITION_ONLY: &str = "(definition-only)";
 /// reviewer gate, admission-remediation cut).
 pub const MAX_CRS_DEFINITION_BYTES: usize = 65_536;
 
+/// What this project states about a dataset in a geographic CRS — **the human's own sentence, held
+/// once, verbatim**.
+///
+/// Ruled by the human on 2026-09-08 (DECISIONS-PENDING entry 59, item 8; carried in the proposed
+/// ADR-013 Amendment 1 §4). It is a **display statement only**: no coordinate value is transformed
+/// by anything in this engine, `axis_normalization` on every envelope stays `none-performed`, and
+/// nothing here licenses a reprojection — `docs/05`'s transform service is still unbuilt.
+///
+/// **It is never paraphrased, shortened or reworded** (that draft's block-on-sight 2, which names
+/// "no reprojection" and "plate carrée" phrasings as *not* it). It lives here as one constant so
+/// that the surfaces which must carry it read the same bytes rather than retyping them.
+///
+/// **Nothing in this piece consumes it.** The two surfaces the draft names — the shell's own status
+/// at open, and `describe` — are P3's and the cut's; this piece is engine-side only, and a constant
+/// no surface has reached yet is exactly what it looks like.
+pub const GEOGRAPHIC_DISPLAY_CONVENTION: &str =
+    "no coordinate value is transformed; the display convention is equirectangular";
+
 /// Structural checks on a caller's assertion that must hold **before anything about it is
 /// parsed** — SF3/SF4 (reviewer gate, admission-remediation cut).
 ///

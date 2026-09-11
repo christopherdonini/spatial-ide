@@ -30,7 +30,7 @@ use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
 use parquet::arrow::ArrowWriter;
 use parquet::basic::Compression;
-use parquet::file::properties::WriterProperties;
+use parquet::file::properties::{EnabledStatistics, WriterProperties};
 use parquet::file::metadata::KeyValue;
 
 use crate::cancel::CancelToken;
@@ -43,6 +43,51 @@ pub const LV95_PROJJSON: &str = include_str!("../tests/data/epsg2056.projjson");
 pub const E_LO: f64 = 2_600_000.0;
 pub const N_LO: f64 = 1_200_000.0;
 
+/// The degrees domain [`CoordinateDomain::Wgs84Degrees`] draws in — a patch over the same part of
+/// Switzerland the LV95 domain covers, so the two differ in units and not in subject.
+pub const LON_LO: f64 = 7.0;
+pub const LAT_LO: f64 = 46.0;
+
+/// The units the fixture's coordinates are written in.
+///
+/// **An enum, not a flag**, and defaulted to the metre domain every earlier fixture was drawn in,
+/// so an existing spec produces the file it always produced, byte for byte. Brief A's P1 fixtures
+/// F-1, F-4, F-5 and F-6 need coordinates inside ±180/±90 — a real file, not a hand-written
+/// metadata map, is what the admission rules are asserted against here as everywhere else.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CoordinateDomain {
+    /// Metres in the LV95 working domain: outside ±180/±90 on both axes.
+    Lv95Metres,
+    /// Degrees: longitude/latitude inside ±180/±90.
+    Wgs84Degrees,
+}
+
+impl CoordinateDomain {
+    /// `(x_lo, y_lo, cell)` — the grid the parcels tile.
+    fn grid(self) -> (f64, f64, f64) {
+        match self {
+            Self::Lv95Metres => (E_LO, N_LO, 40.0),
+            // ~4e-4 degrees is the same order as 40 m at this latitude; the exact figure matters
+            // only in that every parcel stays well inside the domain.
+            Self::Wgs84Degrees => (LON_LO, LAT_LO, 0.0004),
+        }
+    }
+}
+
+/// Whether the parquet writer writes column statistics.
+///
+/// F-6 needs a file whose covering columns carry none, so that R-S1's `metadata` level is
+/// unavailable and its `sample` level is the one reached. Defaulted to the writer's own behaviour,
+/// which is left untouched — the setter is not called at all in that case, so no existing fixture's
+/// bytes move.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StatisticsMode {
+    /// The parquet writer's own default.
+    WriterDefault,
+    /// `EnabledStatistics::None`.
+    Disabled,
+}
+
 /// How the fixture declares (or fails to declare) its CRS. Each variant exists because a test
 /// needs a real file exercising that admission path — a refusal asserted against a hand-written
 /// JSON string is not the same as a refusal asserted against a file.
@@ -50,7 +95,9 @@ pub const N_LO: f64 = 1_200_000.0;
 pub enum CrsMode {
     /// `crs` is the EPSG:2056 PROJJSON. The ordinary case.
     DeclaredLv95,
-    /// The `crs` key is absent. GeoParquet's spec calls this OGC:CRS84; this engine refuses it.
+    /// The `crs` key is absent. GeoParquet's own rule calls this OGC:CRS84, and since Brief A's P1
+    /// this engine applies that rule — under a spec version whose text is pinned in-tree — and
+    /// records the admission as `crs:format-default`.
     AbsentKey,
     /// `"crs": null` — the spec's explicit "no CRS".
     ExplicitNull,
@@ -64,6 +111,33 @@ pub enum CrsMode {
     /// the definition and establish axis order, but has no identifier to name it by. Every such
     /// dataset shares the same placeholder, so ADR-015 §7.3 refuses a viewport that echoes it.
     DefinitionOnlyNoId,
+    /// **OGC:CRS84, x-first, `"unit": "degree"` on both axes in PROJJSON's string form.**
+    ///
+    /// The shape the compatibility corpus's own CRS84 file carries (`geoparquet-spec/example…`:
+    /// axes `Geodetic longitude` / `Geodetic latitude`, directions `east`/`north`), so the
+    /// geographic-degrees instance is exercised against a real file written from a definition of
+    /// the shape real files declare.
+    DeclaredCrs84Degrees,
+    /// As [`Self::DeclaredCrs84Degrees`], with the unit in PROJJSON's **object** form
+    /// (`{"type": "AngularUnit", "name": "degree", …}`) — the same declaration written the other
+    /// way, and it must record the same unit.
+    DeclaredCrs84DegreesObjectUnit,
+    /// EPSG:2056's definition with its **coordinate-system** axes' units in object form
+    /// (`{"type": "LinearUnit", "name": "metre", …}`); every other member, including the
+    /// `"unit": "degree"` its conversion parameters and its `base_crs` axes carry, is untouched.
+    DeclaredLv95ObjectUnit,
+    /// A definition whose two axes declare **different** units — degree on the first, metre on the
+    /// second. Legal enough to parse and to establish an axis order from; no single unit follows
+    /// from it.
+    DeclaredAxisUnitsDisagree,
+    /// As [`Self::DeclaredCrs84Degrees`] with **no `unit` member on either axis**. PROJJSON in the
+    /// wild is not always complete, and a missing member is not a licence to assume one.
+    DeclaredAxisUnitAbsent,
+    /// **[`Self::DeclaredCrs84Degrees`]'s definition with only its `id` changed** — to EPSG:2056,
+    /// the identifier of a metre CRS. Every axis, direction and unit is byte-identical to that
+    /// mode's; the identifier is the single difference, which is what makes it the fixture for
+    /// "a unit is read from the definition, never from the identifier string".
+    DeclaredCrs84DegreesWithLv95Identifier,
 }
 
 /// Whether the fixture carries a categorical attribute column.
@@ -172,6 +246,26 @@ pub struct FixtureSpec {
     pub attributes: AttributeMode,
     /// Whether the footer declares license metadata. Defaults to `NotDeclared`.
     pub license: LicenseMode,
+    /// The units the coordinates are written in. Defaults to the metre domain every earlier
+    /// fixture used.
+    pub domain: CoordinateDomain,
+    /// Whether the `geo` column metadata carries a `bbox` member.
+    ///
+    /// **What is written is the grid's own bound, not the observed extent** — the `geo` key is
+    /// written into the writer's properties before a single parcel exists, so the observed extent
+    /// is not knowable at that point. A bbox is an outer bound and this one is a true outer bound
+    /// of every parcel drawn (each stays inside its own cell); it is not the tightest one, and this
+    /// comment is the only place that claim is made.
+    pub with_geo_bbox: bool,
+    /// Whether the writer writes column statistics. Defaults to the writer's own behaviour.
+    pub statistics: StatisticsMode,
+    /// Whether the covering's field paths name a column the schema does not contain — R-S3's case,
+    /// and the shape the compatibility corpus's `covering-absent-columns` mutation has. The `bbox`
+    /// column is still written; only the `geo` metadata's paths point elsewhere.
+    pub covering_names_absent_column: bool,
+    /// The `geo.version` string written into the footer. Defaults to `1.1.0`, which every earlier
+    /// fixture wrote; a spec exercising R-C1's unpinned-version branch sets its own.
+    pub geo_version: String,
 }
 
 /// How the fixture carries feature identity.
@@ -209,6 +303,11 @@ impl Default for FixtureSpec {
             identity: IdentityMode::NativeUnique,
             attributes: AttributeMode::None,
             license: LicenseMode::NotDeclared,
+            domain: CoordinateDomain::Lv95Metres,
+            with_geo_bbox: false,
+            statistics: StatisticsMode::WriterDefault,
+            covering_names_absent_column: false,
+            geo_version: "1.1.0".to_string(),
         }
     }
 }
@@ -289,6 +388,60 @@ fn bbox_fields() -> Fields {
     ])
 }
 
+/// The angular degree as PROJJSON's **string** form writes it, `unit` member and leading comma
+/// included so an axis with no unit at all is the empty string and nothing else moves.
+const UNIT_DEGREE_STRING: &str = ",\"unit\":\"degree\"";
+
+/// The same declaration in PROJJSON's **object** form. `conversion_factor` is transcribed from the
+/// published definition of the degree and is read by nothing: the unit is taken by `name`, and this
+/// engine performs no arithmetic on a conversion factor because it performs no transform.
+const UNIT_DEGREE_OBJECT: &str =
+    ",\"unit\":{\"type\":\"AngularUnit\",\"name\":\"degree\",\"conversion_factor\":0.017453292519943295}";
+
+/// The linear metre, string form.
+const UNIT_METRE_STRING: &str = ",\"unit\":\"metre\"";
+
+/// The linear metre, object form — the metre being PROJJSON's base linear unit, its factor is one.
+const UNIT_METRE_OBJECT: &str =
+    ",\"unit\":{\"type\":\"LinearUnit\",\"name\":\"metre\",\"conversion_factor\":1}";
+
+const ID_CRS84: &str = "{\"authority\":\"OGC\",\"code\":\"CRS84\"}";
+const ID_LV95: &str = "{\"authority\":\"EPSG\",\"code\":2056}";
+
+/// OGC:CRS84 as the corpus's own CRS84 file declares it — longitude first, both directions
+/// `east`/`north`, so no format axis rule is needed to read it — with the two axes' `unit` members
+/// and the `id` supplied by the caller.
+///
+/// Written as one function so that the fixtures which differ **only** in a unit form, or **only**
+/// in an identifier, differ in exactly that and can be asserted against each other.
+fn crs84(unit_x: &str, unit_y: &str, id: &str) -> String {
+    format!(
+        "{{\"type\":\"GeographicCRS\",\"name\":\"WGS 84 (CRS84)\",\
+          \"coordinate_system\":{{\"subtype\":\"ellipsoidal\",\"axis\":[\
+            {{\"name\":\"Geodetic longitude\",\"abbreviation\":\"Lon\",\"direction\":\"east\"{unit_x}}},\
+            {{\"name\":\"Geodetic latitude\",\"abbreviation\":\"Lat\",\"direction\":\"north\"{unit_y}}}]}},\
+          \"id\":{id}}}"
+    )
+}
+
+/// EPSG:2056's own definition with its **coordinate-system** axes' units rewritten into object
+/// form, and nothing else touched — in particular its `conversion.parameters` and its `base_crs`
+/// axes keep their `"unit": "degree"`, which is the trap a reader must not fall into.
+fn lv95_with_object_form_axis_units() -> String {
+    let object_unit: serde_json::Value =
+        serde_json::from_str(&format!("{{{}}}", &UNIT_METRE_OBJECT[1..])).expect("metre unit");
+    let mut v: serde_json::Value = serde_json::from_str(LV95_PROJJSON).expect("lv95 projjson");
+    let axes = v
+        .get_mut("coordinate_system")
+        .and_then(|cs| cs.get_mut("axis"))
+        .and_then(serde_json::Value::as_array_mut)
+        .expect("lv95 declares its coordinate system's axes");
+    for axis in axes.iter_mut() {
+        axis["unit"] = object_unit["unit"].clone();
+    }
+    v.to_string()
+}
+
 fn geo_metadata(spec: &FixtureSpec) -> String {
     let crs_fragment = match spec.crs_mode {
         CrsMode::DeclaredLv95 => format!(",\"crs\":{LV95_PROJJSON}"),
@@ -312,19 +465,60 @@ fn geo_metadata(spec: &FixtureSpec) -> String {
                 {\"name\":\"Geodetic longitude\",\"abbreviation\":\"Lon\",\"direction\":\"east\",\"unit\":\"degree\"}]},\
               \"id\":{\"authority\":\"EPSG\",\"code\":4326}}"
             .to_string(),
+        CrsMode::DeclaredCrs84Degrees => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_STRING, UNIT_DEGREE_STRING, ID_CRS84))
+        }
+        CrsMode::DeclaredCrs84DegreesObjectUnit => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_OBJECT, UNIT_DEGREE_OBJECT, ID_CRS84))
+        }
+        CrsMode::DeclaredCrs84DegreesWithLv95Identifier => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_STRING, UNIT_DEGREE_STRING, ID_LV95))
+        }
+        CrsMode::DeclaredAxisUnitsDisagree => {
+            format!(",\"crs\":{}", crs84(UNIT_DEGREE_STRING, UNIT_METRE_STRING, ID_CRS84))
+        }
+        CrsMode::DeclaredAxisUnitAbsent => format!(",\"crs\":{}", crs84("", "", ID_CRS84)),
+        CrsMode::DeclaredLv95ObjectUnit => {
+            format!(",\"crs\":{}", lv95_with_object_form_axis_units())
+        }
     };
 
-    let covering = if spec.with_covering_bbox {
-        ",\"covering\":{\"bbox\":{\"xmin\":[\"bbox\",\"xmin\"],\"ymin\":[\"bbox\",\"ymin\"],\
-          \"xmax\":[\"bbox\",\"xmax\"],\"ymax\":[\"bbox\",\"ymax\"]}}"
+    let covering = match (spec.with_covering_bbox, spec.covering_names_absent_column) {
+        (false, _) => "",
+        (true, false) => {
+            ",\"covering\":{\"bbox\":{\"xmin\":[\"bbox\",\"xmin\"],\"ymin\":[\"bbox\",\"ymin\"],\
+              \"xmax\":[\"bbox\",\"xmax\"],\"ymax\":[\"bbox\",\"ymax\"]}}"
+        }
+        (true, true) => {
+            ",\"covering\":{\"bbox\":{\"xmin\":[\"no_such_bbox_column\",\"xmin\"],\
+              \"ymin\":[\"no_such_bbox_column\",\"ymin\"],\
+              \"xmax\":[\"no_such_bbox_column\",\"xmax\"],\
+              \"ymax\":[\"no_such_bbox_column\",\"ymax\"]}}"
+        }
+    };
+
+    let bbox = if spec.with_geo_bbox {
+        let b = grid_bounds(spec);
+        format!(",\"bbox\":[{},{},{},{}]", b[0], b[1], b[2], b[3])
     } else {
-        ""
+        String::new()
     };
 
+    let version = &spec.geo_version;
     format!(
-        "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
-          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"]{crs_fragment}{covering}}}}}}}"
+        "{{\"version\":\"{version}\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
+          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"]{crs_fragment}{covering}{bbox}}}}}}}"
     )
+}
+
+/// The rectangle every parcel of this spec is drawn inside — a true outer bound, and not the
+/// tightest one (see [`FixtureSpec::with_geo_bbox`]). Each parcel is centred in its own grid cell
+/// with a radius under half the cell, so the grid contains all of them.
+fn grid_bounds(spec: &FixtureSpec) -> [f64; 4] {
+    let (x_lo, y_lo, cell) = spec.domain.grid();
+    let cols = (spec.features as f64).sqrt().ceil().max(1.0);
+    let rows = (spec.features as f64 / cols).ceil().max(1.0);
+    [x_lo, y_lo, x_lo + cols * cell, y_lo + rows * cell]
 }
 
 /// Progress from a running generation, as an observer rather than a log line.
@@ -453,13 +647,19 @@ fn generate(
             kv.push(KeyValue::new("redistribution".to_string(), "forbidden".to_string()));
         }
     }
-    let props = WriterProperties::builder()
+    let builder = WriterProperties::builder()
         .set_compression(Compression::SNAPPY)
         .set_key_value_metadata(Some(kv))
         // See `FixtureSpec::row_group_rows`. Defaulted to the writer's own value, so this line
         // changes no existing fixture's bytes.
-        .set_max_row_group_row_count(Some(spec.row_group_rows))
-        .build();
+        .set_max_row_group_row_count(Some(spec.row_group_rows));
+    // Not called at all under `WriterDefault`, so the writer's own behaviour — and every existing
+    // fixture's bytes — is untouched.
+    let props = match spec.statistics {
+        StatisticsMode::WriterDefault => builder,
+        StatisticsMode::Disabled => builder.set_statistics_enabled(EnabledStatistics::None),
+    }
+    .build();
     let mut writer = ArrowWriter::try_new(file, schema.clone(), Some(props))
         .map_err(|e| EngineError::Source(format!("parquet writer: {e}")))?;
 
@@ -616,9 +816,12 @@ fn generate(
 fn parcel(rng: &mut SplitMix64, spec: &FixtureSpec, id: u64) -> Vec<Vec<[f64; 2]>> {
     let cols = (spec.features as f64).sqrt().ceil() as u64;
     let (gx, gy) = (id % cols, id / cols);
-    let cell = 40.0_f64;
-    let cx = E_LO + gx as f64 * cell + cell / 2.0;
-    let cy = N_LO + gy as f64 * cell + cell / 2.0;
+    // The metre domain's grid is the one every earlier fixture used, restated by
+    // `CoordinateDomain::grid` rather than duplicated, so a spec that does not name a domain draws
+    // exactly the parcels it always drew.
+    let (x_lo, y_lo, cell) = spec.domain.grid();
+    let cx = x_lo + gx as f64 * cell + cell / 2.0;
+    let cy = y_lo + gy as f64 * cell + cell / 2.0;
 
     // Vertex count varies per feature: half the average to 1.5x it, minimum 4 (closed triangle).
     let spread = (spec.avg_vertices / 2).max(2);

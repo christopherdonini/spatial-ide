@@ -299,7 +299,36 @@ impl Dataset {
             None => None,
         };
 
-        let crs = crs::admit(geo.declared_crs.clone(), assertion.as_ref(), asserted_axis)?;
+        // **The reader establishes the format's own semantics; this line consumes them.**
+        // `format_semantics` runs R-C1…R-C5 (`engine/ADMISSION-PREREGISTRATION.md` §2b) and hands
+        // back the tuple `crs::admit` takes as "what the file declares" — whose axis order is the
+        // **data's** order, established in `geoparquet.rs` and nowhere else. The admission policy
+        // itself (`crs::admit`, `crs.rs`) is untouched by this cut.
+        let semantics = crate::geoparquet::format_semantics(&geo);
+        if assertion.is_none() {
+            if let Some(detail) = semantics.undeclared_detail.clone() {
+                // R-C1: the version is not pinned, so no format rule was read. The refusal is the
+                // one that has always been raised here; only its `detail` is new, and it names the
+                // version rather than leaving the caller to guess why the default did not apply.
+                return Err(EngineError::CrsUndeclared { detail });
+            }
+        }
+        // **R-C6, unchanged in every respect.** A caller's assertion over a file that declares
+        // nothing is admissible exactly as it was before this cut: the format's default is a rule
+        // this engine applies when nobody says otherwise, not a declaration by the file, so it does
+        // not turn an assertion into `CrsAssertionConflict`. An assertion over a file that *does*
+        // declare is refused, as it always was — that path is untouched.
+        let admissible = match (assertion.is_some(), semantics.crs_provenance) {
+            (true, Some(crate::geoparquet::CrsProvenance::FormatDefault)) => None,
+            _ => semantics.admissible_crs.clone(),
+        };
+        let crs = crs::admit(admissible, assertion.as_ref(), asserted_axis)?;
+        // **Narrowed by R-C4, not relaxed.** The order checked here is the data's. A file whose
+        // definition is (northing, easting) or (latitude, longitude) now reaches this line carrying
+        // the order the format's WKB rule establishes, so it is admitted and its declared order
+        // travels beside it. What still refuses: a caller-asserted non-x-first CRS (R-C6, unchanged
+        // — no format rule governs an assertion), and a declared non-x-first CRS in a file whose
+        // spec version is not pinned in this tree (R-C1).
         if !crs.axis_order().is_x_first() {
             return Err(EngineError::AxisOrderUnsupported {
                 established: crs.axis_order().as_str().to_string(),
@@ -308,6 +337,72 @@ impl Dataset {
 
         let file_schema = probe_schema(conn, &path_str)?;
         check_geometry_column(&file_schema, &geo.primary_column)?;
+
+        // The provenance of what was just admitted. A caller's assertion is its own class and is
+        // decided here, because `format_semantics` is not told about assertions: the format governs
+        // the file, never the caller's claim about it.
+        let (crs_provenance, axis_provenance, declared_axis_order, format_rule_reference) =
+            match crs.source() {
+                crs::CrsSource::CallerAsserted => (
+                    crate::geoparquet::CrsProvenance::Asserted,
+                    crate::geoparquet::AxisProvenance::Declared,
+                    Some(crs.axis_order()),
+                    None,
+                ),
+                // **A provenance class is read or the open stops; it is never substituted.**
+                // `crs::admit` reaches its file arm only because `format_semantics` handed it a
+                // CRS, and every branch that does so sets both provenances — so the `None` arm is
+                // unreachable today. Filling it in with `Declared` would record a class this
+                // reader never established, which is exactly what `docs/01` principle 8 forbids
+                // and what the whole of P1 exists to keep apart from a fact.
+                crs::CrsSource::File => match (semantics.crs_provenance, semantics.axis_provenance)
+                {
+                    (Some(crs_class), Some(axis_class)) => (
+                        crs_class,
+                        axis_class,
+                        semantics.declared_axis_order,
+                        semantics.format_rule_reference.clone(),
+                    ),
+                    (crs_class, axis_class) => {
+                        debug_assert!(
+                            false,
+                            "a file CRS was admitted with crs_provenance {crs_class:?} and \
+                             axis_provenance {axis_class:?}"
+                        );
+                        return Err(EngineError::Source(format!(
+                            "internal inconsistency: {} was admitted as the file's own CRS, but \
+                             the reader recorded crs_provenance {crs_class:?} and axis_provenance \
+                             {axis_class:?}. A provenance class is a recorded fact and is never \
+                             substituted for a missing one",
+                            crs.identifier()
+                        )));
+                    }
+                },
+            };
+
+        // The sanity check (R-S1…R-S3), before the identity scan: a file the format's own default
+        // is contradicted by is refused on that ground, which is the first outcome it reaches.
+        let (sanity_level, sanity_reason) =
+            sanity_check(conn, &path_str, &geo, &file_schema, crs_provenance, &semantics, cancel)?;
+
+        // **The coordinate unit is read from the admitted definition's own axes, or not at all.**
+        // `crs.definition_json()` is the PROJJSON that was admitted — the file's, or the caller's
+        // assertion — so this reads the definition this dataset is actually carrying rather than
+        // one looked up by name. The absent-key format default carries no definition and therefore
+        // records `unestablished` (`ADMISSION-PREREGISTRATION.md` §14, items I and IV).
+        let (coordinate_unit, coordinate_unit_source) =
+            crate::geoparquet::coordinate_unit_from_definition(crs.definition_json());
+
+        let admission = crate::geoparquet::AdmissionRecord {
+            crs_provenance,
+            axis_provenance,
+            declared_axis_order,
+            format_rule_reference,
+            coordinate_unit,
+            coordinate_unit_source,
+            sanity_level,
+            sanity_reason,
+        };
 
         // Identity admission (ADR-016). Native `id` unless the caller declared a mapping; the
         // uniqueness scan runs either way, so a native column is no longer trusted without it.
@@ -323,7 +418,7 @@ impl Dataset {
 
         Ok(Self {
             path: path.to_path_buf(),
-            envelope: BatchEnvelope::new(crs, geo.primary_column.clone(), identity),
+            envelope: BatchEnvelope::admitted(crs, geo.primary_column.clone(), identity, admission),
             covering: geo.covering.clone(),
             geo,
             file_schema,
@@ -657,6 +752,33 @@ impl Dataset {
         &self.geo.version
     }
 
+    /// What admission recorded about how this dataset's CRS and data axis order were established,
+    /// and at what level the range check ran. Always present for a dataset that opened.
+    pub fn admission(&self) -> Option<&crate::geoparquet::AdmissionRecord> {
+        self.envelope.admission()
+    }
+
+    /// Whether this dataset is a **geographic-degrees instance** — the proposed ADR-013 Amendment 1.
+    ///
+    /// **Answered from the recorded unit and from nothing else.** True exactly when admission read
+    /// `degree` from the admitted definition's two coordinate-system axes, which is what "on both
+    /// axes" means here: [`crate::geoparquet::CoordinateUnit`] is established only where the axes
+    /// agree, so a file declaring one degree axis and one metre axis records `unestablished` and is
+    /// not an instance.
+    ///
+    /// It is **not** answered from the CRS identifier. That draft's block-on-sight 8 forbids
+    /// inferring a unit from an identifier string, and `docs/05` forbids deciding CRS identity by
+    /// name comparison at all — so changing a definition's `id` and nothing else cannot change this
+    /// answer, and a test asserts exactly that.
+    ///
+    /// An instance is a **runtime fact carried with the value** (ADR-013 §1: "CRS identifiers are
+    /// not baked into the type system"), so this is an accessor and not a type: nothing in this
+    /// engine gains a compile-time coordinate class from it.
+    pub fn is_geographic_degrees_instance(&self) -> bool {
+        self.admission()
+            .is_some_and(|a| a.coordinate_unit == crate::geoparquet::CoordinateUnit::Degree)
+    }
+
     pub fn file_schema(&self) -> &SchemaRef {
         &self.file_schema
     }
@@ -721,6 +843,361 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .query_arrow([path])
         .map_err(|e| EngineError::Source(format!("schema probe: {e}")))?;
     Ok(arrow.get_schema())
+}
+
+/// The range check — **R-S1…R-S3** (`engine/ADMISSION-PREREGISTRATION.md` §2c), and **a sanity
+/// check rather than a truth test** (Brief A settled boundary 2).
+///
+/// It exists for one situation: a format rule supplied a CRS the file never stated, and the file's
+/// own coordinates can show that rule to be contradicted. So it **convicts or is silent**. Nothing
+/// it does establishes that a file is correct, conformant or checked-and-sound, and no string it
+/// records may say so.
+///
+/// Its stated limit, which travels with it into KNOWN-LIMITATIONS (boundary 2, verbatim): *"A
+/// projected file inside ±180/±90 is NOT detected by it"*.
+///
+/// **What it reads, in order, and never two of them (R-S1).**
+///
+/// 1. `metadata` — footer-resident facts only: the geometry column's own `bbox` member, else
+///    Parquet statistics on the covering bbox columns.
+/// 2. `sample` — **the first row group** of the covering bbox columns only, capped at
+///    [`crate::geoparquet::SANITY_SAMPLE_MAX_ROWS`] (R-S1; §13 B), never the WKB.
+/// 3. `none` — neither was available, or the covering names a column the schema does not contain
+///    (R-S3: the open still succeeds, and the reason is recorded).
+///
+/// **It never reads all coordinates at open**, and the level it ran at is always recorded, on the
+/// envelope and in the record `describe` will carry.
+///
+/// **Every query it issues is bound to the caller's cancellation token**, the way the identity scan
+/// beside it already is (`docs/01` principle 7). Nothing about what runs changes when nobody
+/// cancels; what changes is that a cancel arriving during an open reaches DuckDB rather than
+/// waiting for the read to finish.
+fn sanity_check(
+    conn: &Connection,
+    path: &str,
+    geo: &GeoMeta,
+    schema: &SchemaRef,
+    crs_provenance: crate::geoparquet::CrsProvenance,
+    semantics: &crate::geoparquet::FormatSemantics,
+    cancel: &CancelToken,
+) -> Result<(crate::geoparquet::SanityLevel, String)> {
+    use crate::geoparquet::{CrsProvenance, SanityLevel};
+
+    // A caller's assertion is not a format rule, and a file that declares its own CRS and needed no
+    // rule has nothing assumed about it to convict.
+    let rule = match crs_provenance {
+        CrsProvenance::Asserted => None,
+        _ => semantics.format_rule_reference.as_deref(),
+    };
+    let Some(rule) = rule else {
+        return Ok((
+            SanityLevel::NotChecked,
+            "no format rule was applied, so nothing about the coordinates was assumed and there \
+             is nothing to convict"
+                .to_string(),
+        ));
+    };
+
+    // Only the absent-key default *assumes* a CRS the file never stated (R-S2). Where the rule
+    // established the data's axis order over a CRS the file did declare, the level below records
+    // what evidence was available; no range verdict is taken from it, because the CRS is the
+    // file's own.
+    let convicts = crs_provenance == CrsProvenance::FormatDefault;
+
+    // 1. The geometry column's own `bbox` member — in the footer, alongside the `geo` key already
+    //    read, so consulting it is not a read of the data.
+    if let Some(bbox) = geo.bbox {
+        let reason = format!(
+            "read from the `geo` metadata's own `bbox` member [{}, {}, {}, {}] under the format \
+             rule {rule}",
+            bbox[0], bbox[1], bbox[2], bbox[3]
+        );
+        return convict_or_record(SanityLevel::Metadata, reason, bbox, convicts);
+    }
+
+    let Some(covering) = geo.covering.as_ref() else {
+        return Ok((
+            SanityLevel::NotChecked,
+            format!(
+                "the file's `geo` metadata carries neither a `bbox` member nor a covering bbox \
+                 column, so nothing footer-resident or column-local was available to decide a \
+                 level from under the format rule {rule}. Not checked"
+            ),
+        ));
+    };
+
+    // R-S3: a covering may name a column that is not in the file. Today such a file opens and
+    // fails later at query; this cut leaves that behaviour alone and records the level as `none`
+    // with the reason, rather than making open refuse — that would be a user-visible behaviour
+    // change, and it is on the preregistration's human list (§12d), not taken here.
+    let paths = [&covering.xmin, &covering.ymin, &covering.xmax, &covering.ymax];
+    if let Some(missing) = paths.iter().find(|p| !field_path_exists(schema, p)) {
+        return Ok((
+            SanityLevel::NotChecked,
+            format!(
+                "the covering names `{}`, which the file's schema does not contain, so no level \
+                 could be decided from it. Not checked",
+                missing.0.join(".")
+            ),
+        ));
+    }
+
+    // 2. Parquet statistics on those columns — footer-resident as well.
+    if let Some(bbox) = covering_statistics(conn, path, covering, cancel)? {
+        let reason = format!(
+            "read from the covering bbox columns' parquet statistics [{}, {}, {}, {}] under the \
+             format rule {rule}",
+            bbox[0], bbox[1], bbox[2], bbox[3]
+        );
+        return convict_or_record(SanityLevel::Metadata, reason, bbox, convicts);
+    }
+
+    // 3. The sample: the covering bbox columns of **the first row group**, capped at the declared
+    //    ceiling, and nothing else. The row group is the unit R-S1 and §13 B name; a fixed row
+    //    count spans several row groups on a file whose groups are small, which is a different read
+    //    from the one the rule states.
+    let first_row_group = first_row_group_rows(conn, path, cancel)?;
+    let cap = crate::geoparquet::SANITY_SAMPLE_MAX_ROWS;
+    let limit = first_row_group.map_or(cap, |rows| rows.min(cap));
+    let (rows_read, qualifier) = match first_row_group {
+        Some(rows) if rows > cap => (
+            format!("the first {limit} row(s) of the first row group ({rows} rows)"),
+            format!(", capped at the declared ceiling of {cap} rows"),
+        ),
+        Some(rows) => (format!("the first row group ({rows} rows)"), String::new()),
+        // The footer gave no row count for the first row group, so the declared ceiling is the only
+        // bound left. Recorded as what it is rather than described as a row group that was read.
+        None => (
+            format!("the first {limit} row(s)"),
+            ", the footer carrying no row count for the first row group".to_string(),
+        ),
+    };
+    match covering_sample(conn, path, covering, limit, cancel)? {
+        Some(bbox) => {
+            let reason = format!(
+                "read from {rows_read} of the covering bbox columns only{qualifier}, [{}, {}, {}, \
+                 {}], under the format rule {rule}",
+                bbox[0], bbox[1], bbox[2], bbox[3]
+            );
+            convict_or_record(SanityLevel::Sample, reason, bbox, convicts)
+        }
+        None => Ok((
+            SanityLevel::NotChecked,
+            format!(
+                "the covering bbox columns carry no value in {rows_read}{qualifier}, so nothing \
+                 was read. Not checked"
+            ),
+        )),
+    }
+}
+
+/// Apply R-S2 where a format rule supplied the CRS, and record the level either way.
+///
+/// A `false` from the domain test says the coordinates cannot be longitude/latitude on WGS84. A
+/// `true` says nothing: the level and what it was read from are recorded, and no outcome is
+/// described as a check that passed.
+fn convict_or_record(
+    level: crate::geoparquet::SanityLevel,
+    reason: String,
+    bbox: [f64; 4],
+    convicts: bool,
+) -> Result<(crate::geoparquet::SanityLevel, String)> {
+    if convicts && !crate::geoparquet::inside_crs84_domain(bbox) {
+        return Err(EngineError::FormatDefaultContradicted {
+            detail: format!(
+                "at level `{}`, {reason}: [{}, {}, {}, {}] leaves ±{}/±{}",
+                level.as_str(),
+                bbox[0],
+                bbox[1],
+                bbox[2],
+                bbox[3],
+                crate::geoparquet::CRS84_MAX_ABS_X,
+                crate::geoparquet::CRS84_MAX_ABS_Y
+            ),
+        });
+    }
+    if convicts {
+        Ok((level, reason))
+    } else {
+        Ok((
+            level,
+            format!(
+                "{reason}; no range check applies, because the CRS is the file's own declaration \
+                 and only the data's axis order came from the format"
+            ),
+        ))
+    }
+}
+
+/// Whether a covering path resolves to a real field, walking struct children.
+fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) -> bool {
+    let mut segments = path.0.iter();
+    let Some(first) = segments.next() else { return false };
+    let Some(field) = schema.fields().iter().find(|f| f.name() == first) else { return false };
+    let mut current = field.clone();
+    for segment in segments {
+        let DataType::Struct(children) = current.data_type() else { return false };
+        match children.iter().find(|f| f.name() == segment) {
+            Some(child) => current = child.clone(),
+            None => return false,
+        }
+    }
+    true
+}
+
+/// Run one open-path query bound to the caller's cancellation token.
+///
+/// **The same shape `admit_identity` already uses**, applied to the reads the sanity check issues
+/// (`docs/01` principle 7): attach the connection's interrupt handle before the statement runs,
+/// detach after it, and report a token that was cancelled as `Cancelled` rather than returning a
+/// value read from an interrupted query. Nothing about what runs changes when nothing cancels.
+fn cancellable<T>(
+    conn: &Connection,
+    cancel: &CancelToken,
+    run: impl FnOnce(&Connection) -> Result<T>,
+) -> Result<T> {
+    cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
+    let outcome = run(conn);
+    cancel.detach();
+    if cancel.is_cancelled() {
+        return Err(EngineError::Cancelled);
+    }
+    outcome
+}
+
+/// The first row group's row count, out of the footer this open has already read — the unit R-S1
+/// and §13 B give the `sample` level.
+///
+/// `None` where the footer carries no row count for row group 0 (an empty file, or a rendering this
+/// query cannot read one from); the caller then bounds the read by the declared ceiling alone and
+/// records that it did.
+fn first_row_group_rows(
+    conn: &Connection,
+    path: &str,
+    cancel: &CancelToken,
+) -> Result<Option<usize>> {
+    cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT row_group_num_rows FROM parquet_metadata(?) WHERE row_group_id = 0 LIMIT 1",
+            )
+            .map_err(|e| EngineError::Source(format!("prepare row group metadata: {e}")))?;
+        let mut rows = stmt
+            .query([path])
+            .map_err(|e| EngineError::Source(format!("read row group metadata: {e}")))?;
+        let Some(row) = rows
+            .next()
+            .map_err(|e| EngineError::Source(format!("row group metadata row: {e}")))?
+        else {
+            return Ok(None);
+        };
+        let count: Option<i64> = row
+            .get(0)
+            .map_err(|e| EngineError::Source(format!("row group row count: {e}")))?;
+        Ok(count.and_then(|n| usize::try_from(n).ok()))
+    })
+}
+
+/// The covering bbox columns' Parquet statistics, out of the footer — `None` when the file carries
+/// none for them, which is what sends R-S1 on to its next level.
+fn covering_statistics(
+    conn: &Connection,
+    path: &str,
+    covering: &CoveringBbox,
+    cancel: &CancelToken,
+) -> Result<Option<[f64; 4]>> {
+    let rows: Vec<(String, Option<String>, Option<String>)> = cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT path_in_schema, stats_min_value, stats_max_value FROM parquet_metadata(?)",
+            )
+            .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
+        stmt.query_map([path], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<String>>(2)?))
+        })
+        .map_err(|e| EngineError::Source(format!("read parquet metadata: {e}")))?
+        .collect::<std::result::Result<Vec<_>, _>>()
+        .map_err(|e| EngineError::Source(format!("parquet metadata row: {e}")))
+    })?;
+
+    // **How a nested path is spelled is DuckDB's own rendering, not a contract.** This build joins
+    // a struct child's path with `", "`; another may join it with `.`. Both are normalized to the
+    // same segment spelling before comparison, and a path this cannot match simply does not supply
+    // a `metadata` level — R-S1 then falls to `sample`, which is a level recorded honestly rather
+    // than a claim made from a path nothing read.
+    let normalize = |s: &str| s.replace(',', ".").replace(' ', "");
+    let extreme = |wanted: &crate::geoparquet::FieldPath, take_max: bool| -> Option<f64> {
+        let key = wanted.0.join(".");
+        let mut out: Option<f64> = None;
+        for (name, lo, hi) in &rows {
+            if normalize(name) != key {
+                continue;
+            }
+            let text = if take_max { hi.as_ref() } else { lo.as_ref() };
+            let v: f64 = text?.parse().ok()?;
+            out = Some(match (out, take_max) {
+                (Some(prev), true) => prev.max(v),
+                (Some(prev), false) => prev.min(v),
+                (None, _) => v,
+            });
+        }
+        out
+    };
+
+    match (
+        extreme(&covering.xmin, false),
+        extreme(&covering.ymin, false),
+        extreme(&covering.xmax, true),
+        extreme(&covering.ymax, true),
+    ) {
+        (Some(xmin), Some(ymin), Some(xmax), Some(ymax)) => Ok(Some([xmin, ymin, xmax, ymax])),
+        _ => Ok(None),
+    }
+}
+
+/// The `sample` level's read: the covering bbox columns, bounded to `limit` rows, and no other
+/// column named anywhere in the statement. Never the WKB.
+///
+/// `limit` is the caller's — the first row group's row count, capped at
+/// [`crate::geoparquet::SANITY_SAMPLE_MAX_ROWS`] (R-S1; §13 B). This function does not choose it,
+/// so the bound the record names and the bound the statement carries are one value.
+fn covering_sample(
+    conn: &Connection,
+    path: &str,
+    covering: &CoveringBbox,
+    limit: usize,
+    cancel: &CancelToken,
+) -> Result<Option<[f64; 4]>> {
+    let sql = format!(
+        "SELECT min(x0), min(y0), max(x1), max(y1) FROM (SELECT {xmin} AS x0, {ymin} AS y0, \
+         {xmax} AS x1, {ymax} AS y1 FROM read_parquet('{p}') LIMIT {n})",
+        xmin = covering.xmin.to_sql(),
+        ymin = covering.ymin.to_sql(),
+        xmax = covering.xmax.to_sql(),
+        ymax = covering.ymax.to_sql(),
+        p = path.replace('\'', "''"),
+        n = limit,
+    );
+    cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare(&sql)
+            .map_err(|e| EngineError::Query(format!("prepare covering sample: {e}")))?;
+        let mut rows =
+            stmt.query([]).map_err(|e| EngineError::Query(format!("covering sample: {e}")))?;
+        let Some(row) =
+            rows.next().map_err(|e| EngineError::Query(format!("covering sample: {e}")))?
+        else {
+            return Ok(None);
+        };
+        let value = |i: usize| -> Result<Option<f64>> {
+            row.get::<_, Option<f64>>(i)
+                .map_err(|e| EngineError::Query(format!("covering sample value: {e}")))
+        };
+        match (value(0)?, value(1)?, value(2)?, value(3)?) {
+            (Some(xmin), Some(ymin), Some(xmax), Some(ymax)) => Ok(Some([xmin, ymin, xmax, ymax])),
+            _ => Ok(None),
+        }
+    })
 }
 
 /// Admit the dataset's feature identity — **ADR-016 §3–§6**.
