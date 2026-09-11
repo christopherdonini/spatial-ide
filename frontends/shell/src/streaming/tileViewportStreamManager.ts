@@ -262,7 +262,11 @@ export class TileViewportStreamManager {
    * every queued tile against it at mint time, so the declared behaviour is: *retained across the
    * supersede prune, and issued only if still in view at drain; otherwise dropped at drain.* `null`
    * until the first plan ever runs -- with no membership yet there is nothing to test against and
-   * the drain issues exactly as it did before (the queue is empty at that point in any case). */
+   * the drain issues exactly as it did before (the queue is empty at that point in any case).
+   * Not reset by `clearAll`/`stop`, and that cannot go stale for any queued tile: `clearAll` empties
+   * the queue, and the queue refills only inside `onCameraChange`, which reassigns this field before
+   * its prune loop -- so every tile the drain ever tests was enqueued under the membership it holds
+   * (Amendment 5 (e)). */
   private latestMembership: TileKeyMembership | null = null;
 
   private tileState = new Map<string, TileRequestState>();
@@ -426,7 +430,7 @@ export class TileViewportStreamManager {
     // never issued. A tile still in view IS issued, as an ordinary `viewport_query` for a cell this
     // round never enumerated: the retention's whole point. Bounds are the ones every other tile
     // request already has and no new ones: at most `MAX_IN_FLIGHT_TILE_STREAMS` concurrent, at most
-    // `MAX_QUEUED_TILES` waiting (`:465-467` and `drainQueueIfRoom`'s own `while`), and the drain
+    // `MAX_QUEUED_TILES` waiting (`:487-489` and `drainQueueIfRoom`'s own `while`), and the drain
     // stays gated by the over-budget flag. No new status, no new wire or protocol change; tile keys
     // still never cross a module or protocol boundary (ADR-028:478-479). The one new piece of state
     // is `latestMembership` (this class's own field, ADR-006 class 1, derived from the round's plan).
