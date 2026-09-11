@@ -137,12 +137,16 @@ impl BatchEnvelope {
             if let Some(reference) = a.format_rule_reference.as_ref() {
                 md.insert("format_rule_reference".to_string(), reference.clone());
             }
-            // The unit the admitted definition declares on its own axes — `degree`, `metre`, another
-            // name as read, or `unestablished`. Additive beside the keys above, and it changes none
-            // of them: `axis_normalization` is still `none-performed`, because reading a unit
-            // transforms nothing. The source key is present only where a definition was there to
-            // read, so a consumer can tell "no unit in the definition" from "no definition"
-            // (`ADMISSION-PREREGISTRATION.md` §14 item I; the proposed ADR-013 Amendment 1 §2).
+            // The unit recorded for this admission — `degree`, `metre`, another name as read, or
+            // `unestablished`. Additive beside the keys above, and it changes none of them:
+            // `axis_normalization` is still `none-performed`, because establishing a unit
+            // transforms nothing. The source key names which of the two sources supplied it —
+            // `unit:definition` where a definition was there to read (whatever the read
+            // established), `unit:format-rule` where the pinned absent-key rule supplied the CRS and
+            // therefore the unit — and is absent where there was neither, so a consumer can tell
+            // "no unit in the definition" from "no definition" and both from a rule-defaulted
+            // admission (`ADMISSION-PREREGISTRATION.md` §14 items I and V; the proposed ADR-013
+            // Amendment 1 §2 with its clarification of 2026-09-11).
             md.insert("coordinate_unit".to_string(), a.coordinate_unit.as_str().to_string());
             if let Some(source) = a.coordinate_unit_source {
                 md.insert("coordinate_unit_source".to_string(), source.as_str().to_string());
