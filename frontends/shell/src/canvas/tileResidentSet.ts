@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { ResidentBatch } from "./decodeBatch";
+import type { TileKeyMembership } from "./tileGrid";
 
 /**
  * Viewport-residency cut P3 items C/D: tile-keyed residency for the candidate arm -- a sibling to
@@ -317,8 +318,8 @@ export class TileResidentSet {
    * evicted it anyway, blanking a tile the "never evict a tile intersecting the current viewport"
    * rule (this class's own `planTileEviction`, and `applyTileViewportContext`'s own doc comment)
    * exists to protect, and did so through `evictedTileKeys`/`plan.evict`-derived counters that never
-   * even recorded it happened. `protectedTileKeys` (typically the caller's own current covering set)
-   * is the fix: a suppressor named in it is never evicted by the cascade -- only its own suppression
+   * even recorded it happened. `protectedTileKeys` (typically the caller's own current viewport
+   * membership -- a `TileKeyMembership`, which any `ReadonlySet<string>` also satisfies) is the fix: a suppressor named in it is never evicted by the cascade -- only its own suppression
    * RECORD for the one id being cascaded is dropped (it may still legitimately suppress other ids
    * whose owner survives), and the tile itself is marked `partial` (Defect A's own machinery) so the
    * very next planning pass re-fetches it once headroom allows, recovering that id's geometry under
@@ -329,7 +330,7 @@ export class TileResidentSet {
    * it equals whatever eviction PLAN it started from, since a plan's own candidate list and reality
    * can now differ exactly where a protected suppressor was involved.
    */
-  evictTile(tileKey: string, protectedTileKeys: ReadonlySet<string> = EMPTY_PROTECTED_TILE_KEYS): string[] {
+  evictTile(tileKey: string, protectedTileKeys: TileKeyMembership = EMPTY_PROTECTED_TILE_KEYS): string[] {
     const entry = this.tiles.get(tileKey);
     if (!entry) return [];
     if (protectedTileKeys.has(tileKey)) {
@@ -418,12 +419,23 @@ const EMPTY_RESERVED: ReadonlySet<string> = new Set();
 
 /**
  * The pure eviction DECISION (item D) -- never evicts a tile in `viewportTileKeys` (the current
- * viewport's own covering set), regardless of distance or budget: "never evict a tile intersecting
- * the current viewport" is absolute, not merely preferred -- for covers at or under
- * `MAX_COVERING_TILES`; past that bound the set the caller passes is the centred window rather than
- * the cover, so the protection is the window's (a declared exception -- ADR-028's appended note,
- * DECISIONS-PENDING entry 66 = (d), ruled 2026-09-09). This function itself never enumerates a
- * cover; it protects exactly the set it is given. Ordered farthest-from-`viewCentre` first
+ * viewport's own membership), regardless of distance or budget: "never evict a tile intersecting
+ * the current viewport" is absolute, not merely preferred.
+ *
+ * **Entry 66 (b): the PREDICATE protects; the ARRAY plans.** `viewportTileKeys` is a
+ * `TileKeyMembership` -- `tileGrid.ts`'s own `coverMembershipFor`, which answers for the whole cover
+ * from its two index ranges without enumerating it (a `ReadonlySet<string>` satisfies the same shape,
+ * so a caller with a genuine set still passes one). The materialised, `MAX_COVERING_TILES`-bounded
+ * covering ARRAY is what a round plans, issues and counts completeness over; it is no longer what
+ * decides protection. So ADR-028 Amendment 3's rule -- *"A tile intersecting the viewport is
+ * protected whether it is complete or partial, tracked this round or a prior one, or never requested
+ * at all"* (`docs/adr/ADR-028-viewport-bounded-residency-over-budget-contract.md:461-462`) -- holds
+ * here at every zoom, not for the window only. The `fits`/over-budget latch that used to read the
+ * enumerated window (`WorkingCanvas.tsx`'s own latch, now `anyPartialInView` over the resident keys
+ * and the round's own membership) reads the true cover too since entry 66 (b)'s second batch: path
+ * (ii) of ADR-028's 2026-09-09 appended note (`:512`) is CLOSED on the human's ruling of
+ * DECISIONS-PENDING entry 76. This function itself never enumerates a cover; it protects exactly what the
+ * membership it is given answers for. Ordered farthest-from-`viewCentre` first
  * via `distanceToViewCentre` (typically `tileGrid.ts`'s own `tileDistanceToPoint`, injected here so
  * this function stays free of any grid-frame/level knowledge of its own).
  */
@@ -432,10 +444,10 @@ export function planTileEviction(params: {
    * `TileResidentSet.residentTileKeys()`). */
   residentTileKeys: readonly string[];
   tileVertices: (tileKey: string) => number;
-  /** Tiles the current viewport itself covers -- never evicted, however far the budget overshoots
-   * (on this function's own doc-comment qualification: past `MAX_COVERING_TILES` the caller's set is
-   * the centred window, not the cover). */
-  viewportTileKeys: ReadonlySet<string>;
+  /** Tiles the current viewport itself covers -- never evicted, however far the budget overshoots.
+   * A membership test, not a list (entry 66 (b); see this function's own doc comment): at every zoom
+   * this answers for the cover itself, so no enumeration bound narrows what is protected. */
+  viewportTileKeys: TileKeyMembership;
   incomingVertices: number;
   currentTotalVertices: number;
   maxResidentVertices: number;
@@ -452,10 +464,10 @@ export function planTileEviction(params: {
    * evictable tile -- the declared policy (recommended by the finding this fixes): a reserved tile's
    * content is what every real tile's own cross-tile dedupe compared against, so it is the single
    * most valuable thing to keep resident and the honest LAST resort once nothing else is left to
-   * free. Still never evicted while itself named in `viewportTileKeys` -- the same absolute rule
-   * every other tile gets, under the same qualification (this function's own doc comment: past
-   * `MAX_COVERING_TILES` that set is the window). Defaults to empty (ordinary, non-candidate callers
-   * are unaffected).
+   * free. Still never evicted while `viewportTileKeys` answers for it -- the same absolute rule
+   * every other tile gets, and since entry 66 (b) under no zoom-dependent qualification at all (this
+   * function's own doc comment: the predicate protects, the array plans). Defaults to empty
+   * (ordinary, non-candidate callers are unaffected).
    */
   reservedTileKeys?: ReadonlySet<string>;
 }): EvictionPlan {

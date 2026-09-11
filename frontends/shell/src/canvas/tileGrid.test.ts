@@ -3,9 +3,16 @@
 
 import { describe, expect, it } from "vitest";
 
-import { COVER_WINDOW_CELLS_PER_AXIS, MAX_COVERING_TILES, MAX_QUEUED_TILES, TILE_GRID_DIMENSIONS } from "./tileGridConstants";
+import {
+  COVER_WINDOW_CELLS_PER_AXIS,
+  INITIAL_TILE_KEY,
+  MAX_COVERING_TILES,
+  MAX_QUEUED_TILES,
+  TILE_GRID_DIMENSIONS,
+} from "./tileGridConstants";
 import {
   cellSizeForLevel,
+  coverMembershipFor,
   coveringCellCount,
   deriveTileGridFrame,
   tileBbox,
@@ -227,7 +234,7 @@ function countingPushes<T>(run: () => T): { result: T; pushes: number } {
   }
 }
 
-/** `WorkingCanvas.tsx:384-390`'s own `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom`, restated here
+/** `WorkingCanvas.tsx:409-417`'s own `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom`, restated here
  * rather than imported (that module needs a real `Deck`/WebGL context this test has no business
  * constructing). Zoom -64 is the exact value the K6 re-aim worker's own `e2eSetViewState(0, 0, -64)`
  * wedge used -- the run that hung the page and produced entry 60. */
@@ -288,7 +295,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
 
     // (c) What it kept: the centred window, so the cells nearest the view centre are the ones a
     // caller can still request (the same nearest-first keep the stream manager's own truncation
-    // applies, `tileViewportStreamManager.ts:430-442`).
+    // applies, `tileViewportStreamManager.ts:468-480`).
     expect(cover.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS ** 2);
     const centreCell = tilesCoveringBbox(frame, "medium", { xmin: 0, ymin: 0, xmax: 0, ymax: 0 })[0];
     expect(cover.keys.map(tileKeyToString)).toContain(tileKeyToString(centreCell));
@@ -381,7 +388,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   });
 
   it("a cover overrunning the bound on ONE axis keeps the OTHER axis whole", () => {
-    // Reviewer gate should-fix 3: `tileGrid.ts:280-281` claims exactly this ("intersected with the
+    // Reviewer gate should-fix 3: `tileGrid.ts:286-287` claims exactly this ("intersected with the
     // real cover, so a cover overrunning the bound on one axis only keeps the other axis whole") and
     // nothing pinned it.
     const frame = deriveTileGridFrame(ANCHOR);
@@ -432,5 +439,163 @@ describe("misaligned grid (RESIDENCY-PREREGISTRATION.md's own deliberate-misalig
     const b = tilesCoveringBbox(frame, "fine", bbox);
     expect(a).toEqual(b);
     expect(a.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Entry 66 (b) (`frontends/shell/ENTRY-66B-PREREGISTRATION.md`, pre-committed tests 3 and 6):
+// protection is a PREDICATE over the cover's own index ranges, so it no longer depends on what the
+// enumeration bound materialised. These tests are that predicate's own contract: it agrees with
+// `tileCoverForBbox`'s key set for every cover at or under `MAX_COVERING_TILES` (test 3, including
+// the boundary-exact and degenerate-point cases the half-open convention exists for), and it is
+// TOTAL over any string whatsoever (test 6).
+// ---------------------------------------------------------------------------------------
+
+describe("coverMembershipFor (entry 66 (b)): agreement with the cover at or under the bound", () => {
+  /** The index rectangle enclosing `keys` -- the agreement below is compared over that rectangle
+   * plus a RING of cells outside it, so a predicate that admits one extra column (a closed-bbox
+   * intersection at a boundary-exact edge) fails here as loudly as one that drops an edge. */
+  function enclosingRect(keys: { row: number; col: number }[]): {
+    rowMin: number;
+    rowMax: number;
+    colMin: number;
+    colMax: number;
+  } {
+    let rowMin = Infinity;
+    let rowMax = -Infinity;
+    let colMin = Infinity;
+    let colMax = -Infinity;
+    for (const k of keys) {
+      if (k.row < rowMin) rowMin = k.row;
+      if (k.row > rowMax) rowMax = k.row;
+      if (k.col < colMin) colMin = k.col;
+      if (k.col > colMax) colMax = k.col;
+    }
+    return { rowMin, rowMax, colMin, colMax };
+  }
+
+  it("the predicate's key set EQUALS tilesCoveringBbox's, over a sweep of bboxes at or under the bound", () => {
+    const frame = deriveTileGridFrame(ANCHOR); // baseSpan 200, origin (-50,-50); medium cell 12.5
+    const cellSize = cellSizeForLevel(frame, "medium");
+    const cases: { name: string; bbox: AuthoritativeBbox }[] = [
+      {
+        name: "an offset multi-cell bbox (both edges mid-cell)",
+        bbox: {
+          xmin: frame.originX + 0.5 * cellSize,
+          ymin: frame.originY + 0.5 * cellSize,
+          xmax: frame.originX + 3.5 * cellSize,
+          ymax: frame.originY + 2.5 * cellSize,
+        },
+      },
+      {
+        name: "boundary-exact on BOTH axes (xmax and ymax land exactly on cell boundaries)",
+        bbox: {
+          xmin: frame.originX,
+          ymin: frame.originY,
+          xmax: frame.originX + 2 * cellSize,
+          ymax: frame.originY + cellSize,
+        },
+      },
+      { name: "a degenerate point", bbox: { xmin: 10, ymin: 10, xmax: 10, ymax: 10 } },
+      {
+        name: "a region at negative cell indices (the grid has no boundary)",
+        bbox: { xmin: -1000, ymin: -1000, xmax: -1000 + 3 * cellSize, ymax: -1000 + 3 * cellSize },
+      },
+      { name: "a large cover still under the bound (100 x 100 cells)", bbox: bboxOfCells(frame, 100, 100) },
+    ];
+
+    const mismatches: string[] = [];
+    for (const c of cases) {
+      const cover = tileCoverForBbox(frame, "medium", c.bbox);
+      // Agreement is claimed for covers AT OR UNDER the bound and no others (past it the predicate is
+      // a declared SUPERSET) -- so every sweep case must genuinely be in that regime.
+      expect(cover.kind).toBe("complete");
+      const coverKeys = new Set(cover.keys.map(tileKeyToString));
+      const membership = coverMembershipFor(frame, "medium", c.bbox);
+      const { rowMin, rowMax, colMin, colMax } = enclosingRect(cover.keys);
+      for (let row = rowMin - 2; row <= rowMax + 2; row++) {
+        for (let col = colMin - 2; col <= colMax + 2; col++) {
+          const key = tileKeyToString({ row, col });
+          const inCover = coverKeys.has(key);
+          const inMembership = membership.has(key);
+          if (inCover !== inMembership) {
+            mismatches.push(`${c.name}: ${key} -- cover ${inCover}, predicate ${inMembership}`);
+          }
+        }
+      }
+    }
+    expect(mismatches).toEqual([]);
+  });
+
+  it("the boundary-exact case: the column whose MIN edge equals xmax is in NEITHER the cover nor the predicate", () => {
+    // Half-open in coordinate space: a bbox edge landing exactly on a cell boundary belongs to the
+    // cell whose MIN edge it is (`coveringIndexRange`'s own doc comment). A closed-bbox intersection
+    // (`tileBbox(key)` overlapping the query with `<=`/`>=`) would admit the next column -- one extra
+    // ring the cover never names, so a tile the eviction rule keeps and no round ever refreshes.
+    const frame = deriveTileGridFrame(ANCHOR);
+    const cellSize = cellSizeForLevel(frame, "medium");
+    const bbox: AuthoritativeBbox = {
+      xmin: frame.originX,
+      ymin: frame.originY,
+      xmax: frame.originX + 2 * cellSize,
+      ymax: frame.originY + cellSize,
+    };
+    const coverKeys = new Set(tilesCoveringBbox(frame, "medium", bbox).map(tileKeyToString));
+    const membership = coverMembershipFor(frame, "medium", bbox);
+    expect(coverKeys).toEqual(new Set(["0:0", "0:1"]));
+    // The xmax column (col 2) and the ymax row (row 1): in neither.
+    expect(coverKeys.has("0:2")).toBe(false);
+    expect(membership.has("0:2")).toBe(false);
+    expect(coverKeys.has("1:0")).toBe(false);
+    expect(membership.has("1:0")).toBe(false);
+    // ...while every cell the cover DOES name is a member.
+    expect(membership.has("0:0")).toBe(true);
+    expect(membership.has("0:1")).toBe(true);
+  });
+
+  it("past the bound the predicate answers for the WHOLE cover, where the enumerated window does not", () => {
+    // The declared-superset half of the same contract, and the case entry 66 (b) exists for:
+    // `tileCoverForBbox` reports `"truncated"` and keeps the centred window, while the predicate
+    // still answers `true` for a covered cell that window omits.
+    const frame = deriveTileGridFrame(ANCHOR);
+    const bbox = bboxOfCells(frame, 300, 300); // 90,000 cells > MAX_COVERING_TILES (65,536)
+    const cover = tileCoverForBbox(frame, "medium", bbox);
+    expect(cover.kind).toBe("truncated");
+    const windowKeys = new Set(cover.keys.map(tileKeyToString));
+    const membership = coverMembershipFor(frame, "medium", bbox);
+    expect(windowKeys.has("0:0")).toBe(false); // the corner cell: covered, but outside the window
+    expect(membership.has("0:0")).toBe(true);
+    expect(membership.has("299:299")).toBe(true);
+    expect(membership.has("300:0")).toBe(false); // one row past the cover: still not a member
+  });
+});
+
+describe("coverMembershipFor: totality (entry 66 (b), block-on-sight 7)", () => {
+  it("answers false -- and never throws -- for any string that is not a row:col cell", () => {
+    const frame = deriveTileGridFrame(ANCHOR);
+    const membership = coverMembershipFor(frame, "medium", { xmin: -50, ymin: -50, xmax: 50, ymax: 50 });
+    // `INITIAL_TILE_KEY` genuinely reaches this predicate in the product (`planTileEviction`'s own
+    // filter and `evictTile`'s own guard both test the protection set with it), and the two
+    // `parseTileKey` helpers this module deliberately does NOT reuse (`tileIngest.ts`,
+    // `WorkingCanvas.tsx`) THROW on exactly these inputs.
+    for (const key of [INITIAL_TILE_KEY, "garbage", "", "1:2:3"]) {
+      expect(() => membership.has(key)).not.toThrow();
+      expect(membership.has(key)).toBe(false);
+    }
+  });
+
+  it("a non-finite bbox protects nothing", () => {
+    const frame = deriveTileGridFrame(ANCHOR);
+    const nonFinite: AuthoritativeBbox = {
+      xmin: Number.NEGATIVE_INFINITY,
+      ymin: Number.NEGATIVE_INFINITY,
+      xmax: Number.POSITIVE_INFINITY,
+      ymax: Number.POSITIVE_INFINITY,
+    };
+    const membership = coverMembershipFor(frame, "medium", nonFinite);
+    expect(membership.has("0:0")).toBe(false);
+    expect(membership.has("-5:12")).toBe(false);
+    // Matching `tileCoverForBbox`'s own empty-keys outcome for the same bbox.
+    expect(tileCoverForBbox(frame, "medium", nonFinite).keys).toEqual([]);
   });
 });
