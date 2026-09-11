@@ -961,12 +961,14 @@ async function stepA9(page, consoleHandle) {
 // some fresh GPU-ordinal-to-stable-id resolution stands behind (ADR-010 rules 2 and 5), never a
 // retained string re-asserted across the change.
 //
-// The four cases below are the ones pre-committed in that preregistration's section 5. `stepK6`'s
+// The five cases below are the ones pre-committed in that preregistration's section 5 -- (v) added
+// by that document's own section 12 Amendment 4, after the same section's design passed its third
+// architect gate: a test addition, changing no design and no product line. `stepK6`'s
 // previous two assertions are cases (i) and (ii): both still pass, restated under the new mechanism,
 // exactly as the file this step replaces required of its successor. Case (ii)'s old falsifier ("the
 // pre-zoom id after any notch = failure") is GONE by design -- a re-confirmed id is now the correct
 // answer -- and is replaced by a strictly stronger one: no readout may ever be an id without a
-// confirming re-pick trace at that camera.
+// confirming re-pick trace since this step's mark.
 //   (i)   CONTINUOUS -- one coalesced camera change crossing the threshold ("Zoom to layer" from a
 //         real above-threshold hover) -> the named refusal, text verbatim, after settle. The refusal
 //         always wins over any id (ADR-028 Decision item 4).
@@ -983,11 +985,24 @@ async function stepA9(page, consoleHandle) {
 //         pointer instead of holding it fixed. **As corrected by the preregistration's own section
 //         12 Amendment 2 and the reviewer gate:** exactly two outcomes end this case successfully --
 //         an id that DIFFERS from the retained one, or an ABSENCE -- and each must carry a
-//         confirming `readout_confirmed` re-pick line at that camera. The named refusal is
+//         confirming `readout_confirmed` re-pick line since this step's mark. The named refusal is
 //         NON-TERMINAL (the mid-gesture rule emits it with no pick behind it, so it cannot
 //         discriminate anything); the case keeps panning through refusals and fails by name if it
 //         exhausts having seen only those. An implementation that emitted the confirming trace while
 //         re-asserting the retained id passes (i), (ii) and (iii) and fails this.
+//   (v)   THE RELEASE EDGE (the preregistration's own section 12 Amendment 5, which re-aimed this
+//         case onto the falsifier's own start state): from an above-threshold hover, wheel OUT with
+//         the pointer stationary until the named refusal STANDS -- the one readout the mid-gesture
+//         rule leaves standing across a drag, and the only start state from which the residual
+//         Amendment 3 closes is reachable at all -- then a real mouse drag (button down, pointer
+//         moved, button up) and ONE wheel notch back IN, above the threshold again, with the pointer
+//         never moved. deck.gl delivers no `onHover` while a button is held, so nothing has answered
+//         "where is the pointer" for the whole gesture; the standing refusal means the first
+//         post-release camera change ARMS, and the settle it starts must still emit nothing. The
+//         readout must NOT be an id (an ABSENCE and the named refusal both pass) and no confirming
+//         `readout_confirmed` line may name an id since this case's own mark. An id here could only
+//         have come from a pick at the PRE-DRAG pixel -- a feature the pointer left behind. This is
+//         the only level that runs the real window `pointerup` listener.
 //
 // **No timing figure is asserted, reported or derivable here** -- every `timeoutMs`/`quietMs` below
 // is a harness BOUND, exactly as this file's other steps already use them (ADR-018), and the settle
@@ -1155,6 +1170,20 @@ function hasConfirmingRepickTrace(consoleHandle, sinceIndex, resolved) {
     .some((e) => pattern.test(e.text));
 }
 
+/** The FIRST `readout_confirmed` re-pick line naming ANY id since `sinceIndex`, as its own text, or
+ * `null` when no such line arrived -- case (v)'s question, which `hasConfirmingRepickTrace` above
+ * cannot ask: that one is handed the exact readout its caller expects, and case (v)'s whole point is
+ * that NO id was confirmed at all. Same `renderTrace.ts` `traceReadoutConfirmed` shape, same
+ * "since the mark" scope (an array index, never a camera identity), same word boundary. */
+function confirmingIdRepickTraceSince(consoleHandle, sinceIndex) {
+  const pattern = /readout_confirmed camera-settle-repick id \d+(\s|$)/;
+  const hit = consoleHandle
+    .renderTrace()
+    .slice(sinceIndex)
+    .find((e) => pattern.test(e.text));
+  return hit ? hit.text : null;
+}
+
 /** One wheel notch with the pointer NEVER moved (this section's own "Realising (ii)/(iii)" note),
  * then a wait for the render trace to go quiet -- the settle re-pick's own trace line is itself a
  * render-trace line, so quiet here means the re-pick has already had its say. */
@@ -1169,6 +1198,17 @@ async function wheelWithoutMoving(page, consoleHandle, deltaY) {
  * suite's search accepts is close to the smallest feature that is hoverable at all at that camera,
  * so a few presses translate the world well past one feature's own width. */
 const K6_PAN_KEY_PRESSES_MAX = 8;
+
+/** How far case (v)'s drag moves the pointer, as a fraction of the canvas's own width and height,
+ * and always TOWARD the canvas centre so the pointer can never be dragged off the element (a
+ * pointer that ended outside would leave the following wheel notch nowhere to land, and the case
+ * would pass having exercised nothing). The drag itself is `doPan` above -- the SAME real
+ * button-down / move / button-up mechanism `A7'` already drives; only the magnitude is this case's
+ * own, and it is a fraction of the canvas rather than a pixel count so it means the same thing at
+ * any window size. Deliberately MODEST: the drag has to move the camera for real, and it also has
+ * to leave the pre-drag pixel somewhere a pick could still answer, since what this case forbids is
+ * a settle answering there at all. */
+const K6_RELEASE_DRAG_FRACTION = 0.1;
 
 async function stepK6(page, consoleHandle) {
   // ASSERTION (i) -- CONTINUOUS: one coalesced camera change crossing the threshold (the
@@ -1227,7 +1267,7 @@ async function stepK6(page, consoleHandle) {
   if (!hasConfirmingRepickTrace(consoleHandle, beforeStepOut, `id ${repickId}`)) {
     throw new Error(
       `K6/re-pick: .hover-readout shows id ${repickId} after the zoom-out step, but no readout_confirmed re-pick line ` +
-        `names it at that camera -- an id no fresh pick stands behind is exactly the staleness this contract forbids`
+        `names it since this step's mark -- an id no fresh pick stands behind is exactly the staleness this contract forbids`
     );
   }
 
@@ -1293,7 +1333,7 @@ async function stepK6(page, consoleHandle) {
       if (!hasConfirmingRepickTrace(consoleHandle, beforePress, `id ${afterId}`)) {
         throw new Error(
           `K6/discriminator: .hover-readout shows id ${afterId} after a pan, but no readout_confirmed re-pick line ` +
-            `names it at that camera`
+            `names it since this step's mark`
         );
       }
       discriminatorOutcome = `a different id (${repickId} -> ${afterId}), confirmed re-picked`;
@@ -1313,7 +1353,7 @@ async function stepK6(page, consoleHandle) {
 
   // ASSERTION (ii) -- DISCRETE: >= 8 separate wheel notches, no interceding `page.mouse.move`. The
   // contract asserted per notch is the NEW one (entry 47): a readout may be an id only where a
-  // confirming re-pick trace names that id at that camera. The old falsifier ("the pre-zoom id after
+  // confirming re-pick trace names that id since this step's mark. The old falsifier ("the pre-zoom id after
   // any notch = failure") is deliberately gone -- under this mechanism a re-confirmed id is the
   // correct answer, which is what case (iv) above exists to keep honest.
   const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
@@ -1330,20 +1370,125 @@ async function stepK6(page, consoleHandle) {
     if (!hasConfirmingRepickTrace(consoleHandle, beforeNotch, `id ${afterId}`)) {
       throw new Error(
         `K6/discrete: .hover-readout showed "id ${afterId}" after discrete notch ${notch}/${zoomOutNotches} with NO ` +
-          `confirming readout_confirmed re-pick line at that camera -- an id no fresh pick stands behind`
+          `confirming readout_confirmed re-pick line since this step's mark -- an id no fresh pick stands behind`
       );
     }
+  }
+
+  // ASSERTION (v) -- THE RELEASE EDGE, from the falsifier's OWN start state (the preregistration's
+  // section 12 Amendment 5, which re-aimed this case after its first construction was built and
+  // shown not to bind: an above-threshold start cannot reach the residual at all, because the
+  // drag's own camera changes CLEAR a standing id, so the first post-release change finds nothing
+  // standing, never arms, and the settle returns before the capture is ever read).
+  //
+  // The reachable state is a standing below-pick-resolution REFUSAL -- the one readout the
+  // mid-gesture rule leaves standing across a drag. So: an above-threshold hover, then wheel OUT
+  // with the pointer stationary until that refusal stands; the mark; a real mouse drag -- button
+  // down, pointer moved, button up; then ONE wheel notch back IN, above the threshold again, with
+  // the pointer never moved.
+  //
+  // deck.gl delivers no `onHover` while a button is held (Amendment 2), so nothing has answered
+  // "where is the pointer" for the whole gesture. The refusal is still standing when that notch
+  // arrives, so the first post-release camera change ARMS exactly as D1/D3 say -- and the settle it
+  // starts must still emit NOTHING, because the release edge dropped the stored pixel (Amendment 3,
+  // `WorkingCanvas.tsx`'s own `onPointerRelease`). An absence and the named refusal both pass; an id
+  // fails, since at this point it could only have come from a pick at the PRE-DRAG pixel, over a
+  // feature the pointer has left.
+  //
+  // This is the only level that runs the real window `pointerup` listener. The unit case that
+  // mirrors it (`WorkingCanvas.test.ts`, the D11 describe) is seam-scoped by section 5's own
+  // declaration and nulls the capture itself, so it exercises the scheduler's null-capture return
+  // rather than the listener that produces it.
+  await clickZoomToLayer(page, consoleHandle, "K6/release-edge (reset)");
+  const releaseHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/release-edge");
+  const releaseId = hoverReadoutId(releaseHover.text);
+  if (releaseId === null) {
+    throw new Error(
+      `K6/release-edge: expected a real id readout to start from, got ${JSON.stringify(releaseHover.text)}`
+    );
+  }
+
+  // Wheel OUT with the pointer stationary until the named refusal STANDS -- case (ii)'s own
+  // mechanism (`wheelWithoutMoving`) under case (ii)'s own notch bound, stopping at the FIRST notch
+  // that refuses so the single notch back in below lands exactly on the camera this hover was just
+  // established above the threshold at.
+  const releaseOutNotchesMax = Math.max(releaseHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
+  let releaseOutNotches = 0;
+  let standingBeforeDrag = null;
+  for (let notch = 1; notch <= releaseOutNotchesMax && standingBeforeDrag !== K6_REFUSAL_TEXT; notch++) {
+    await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y);
+    releaseOutNotches = notch;
+    standingBeforeDrag = await readHoverReadout(page);
+  }
+  if (standingBeforeDrag !== K6_REFUSAL_TEXT) {
+    throw new Error(
+      `K6/release-edge: the named refusal never STOOD within ${releaseOutNotchesMax} zoom-out notch(es) from the ` +
+        `hover (id ${releaseId}), pointer stationary throughout -- last readout ${JSON.stringify(standingBeforeDrag)}. ` +
+        `A standing refusal is this case's whole premise: it is the one readout the mid-gesture rule leaves standing ` +
+        `across a drag, and the only start state the release edge's own residual is reachable from (section 12 ` +
+        `Amendment 5)`
+    );
+  }
+
+  const releaseRect = await canvasRect(page);
+  if (!releaseRect) throw new Error("K6/release-edge: .working-canvas not found");
+  const dragToward = {
+    x: releaseRect.left + releaseRect.width / 2 - releaseHover.css.x,
+    y: releaseRect.top + releaseRect.height / 2 - releaseHover.css.y,
+  };
+  const releaseDrag = {
+    dx: (dragToward.x >= 0 ? 1 : -1) * Math.round(releaseRect.width * K6_RELEASE_DRAG_FRACTION),
+    dy: (dragToward.y >= 0 ? 1 : -1) * Math.round(releaseRect.height * K6_RELEASE_DRAG_FRACTION),
+  };
+  // THIS STEP'S MARK for the case, taken immediately before the gesture it asserts on -- the same
+  // discipline every other case here follows (`hasConfirmingRepickTrace`'s own doc comment states
+  // what "since the mark" checks and what it does not).
+  const beforeRelease = consoleHandle.renderTrace().length;
+  await doPan(page, releaseHover.css, releaseDrag.dx, releaseDrag.dy); // down ON the hovered pixel, move, up
+  // ONE notch back IN -- the exact reverse of the last zoom-out notch above, so this lands on a
+  // camera the hover was already proven above the threshold at, and the first camera change after
+  // the release arms (the refusal was standing when it arrived).
+  await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y);
+  const afterRelease = await readHoverReadout(page);
+  const afterReleaseId = hoverReadoutId(afterRelease);
+  const confirmedIdSinceRelease = confirmingIdRepickTraceSince(consoleHandle, beforeRelease);
+  // The drag and the notch must really have moved the camera, or this case would pass having
+  // asserted nothing at all -- the same guard case (iv) puts on its own pan, by name.
+  if (!hasFreshRenderTraceMotion(consoleHandle.renderTrace(), beforeRelease)) {
+    throw new Error(
+      `K6/release-edge: the drag (${releaseDrag.dx}, ${releaseDrag.dy} px from the hovered pixel) and the wheel notch ` +
+        `after it produced NO camera change at all -- without one there is no settle for the release edge to refuse, ` +
+        `and this case cannot pin anything`
+    );
+  }
+  if (afterReleaseId !== null || confirmedIdSinceRelease !== null) {
+    throw new Error(
+      `K6/release-edge: with the named refusal STANDING, a real drag (button down, pointer moved, button up) and ` +
+        `then ONE wheel notch back in with the pointer never moved, the readout must NOT be an id -- nothing has ` +
+        `re-answered where the pointer is since the button went down, so the settle this armed change starts may ` +
+        `only refuse to act (an absence and the named refusal both pass). ` +
+        `.hover-readout showed ${JSON.stringify(afterRelease)} (the hover before the ${releaseOutNotches} zoom-out ` +
+        `notch(es) was id ${releaseId})` +
+        (confirmedIdSinceRelease === null
+          ? ""
+          : `, and a confirming re-pick line named an id since this step's mark: ${JSON.stringify(confirmedIdSinceRelease)}`) +
+        ` -- a settle that picks at the PRE-DRAG pixel is exactly what the release edge (section 12 Amendment 3) forbids`
+    );
   }
 
   return (
     `(i) continuous: hovered "${continuousHover.text}" at zoom-in notch ${continuousHover.notchesUsed}, one coalesced ` +
       `camera change ("Zoom to layer") -> refusal text verbatim ("${K6_REFUSAL_TEXT}"); ` +
     `(iii) re-pick: hovered id ${repickId}, one zoom-in notch then ONE discrete zoom-out step, pointer stationary -> ` +
-      `the same id, named re-picked by its own confirming trace at that camera; ` +
+      `the same id, named re-picked by its own confirming trace since this step's mark; ` +
     `(iv) discriminator: ${pressesUsed} keyboard pan press(es), pointer stationary (${refusalsSeen} refusal-only press(es) passed over as non-terminal) -> ${discriminatorOutcome}; ` +
     `(ii) discrete: hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ${zoomOutNotches} ` +
       `discrete zoom-out notch(es) -> ${notchesShowingAnId} notch(es) showed an id, every one of them with a ` +
-      `confirming re-pick trace at its own camera.`
+      `confirming re-pick trace at its own camera; ` +
+    `(v) release edge: hovered id ${releaseId}, ${releaseOutNotches} zoom-out notch(es) to a STANDING refusal, then a ` +
+      `real drag (button down, ${releaseDrag.dx}, ${releaseDrag.dy} px, button up) and ONE wheel notch back in with ` +
+      `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no confirming re-pick line naming an id ` +
+      `since that case's own mark.`
   );
 }
 
