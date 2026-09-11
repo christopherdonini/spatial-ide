@@ -53,6 +53,29 @@ export function traceViewState(targetX: number, targetY: number, zoom: number, o
   console.debug(PREFIX, "view-state", { targetX, targetY, zoom, originX, originY });
 }
 
+/**
+ * **D9 (entry 47, `frontends/shell/HOVER-REPICK-PREREGISTRATION.md`): the re-pick a camera settle
+ * produced, and what it resolved to.** Sits beside `traceViewState` above deliberately -- a settle
+ * re-pick always follows the camera changes that armed it, so a reader of one console stream sees
+ * `view-state` lines, then this line naming the readout the operator was actually given at that
+ * camera.
+ *
+ * `resolved` is that readout in the operator's own terms: `id <stable id>`, the named
+ * below-pick-resolution refusal, or `cleared` (nothing resolved under the stored pixel). The event
+ * name is `readout_confirmed` -- one of three instants entry 47's preregistration names for itself
+ * (`camera_change_seen`, `camera_settled`, `readout_confirmed`). **These are that document's own
+ * vocabulary, an extension of ADR-018's discipline, NOT ADR-018's own three names**, and this line
+ * carries no timing figure of any kind, by construction.
+ *
+ * **Not sufficient on its own, and never treated as if it were**: this line is emitted by the same
+ * code whose behaviour it describes, so the E2E contract that rests on it (`e2e/regression.mjs`'s
+ * `stepK6`) also carries a case whose correct answer is a DIFFERENT id or an absence -- an
+ * implementation that emitted this line while re-asserting a retained id fails that case.
+ */
+export function traceReadoutConfirmed(resolved: string, zoom: number): void {
+  console.debug(PREFIX, "readout_confirmed", "camera-settle-repick", resolved, { zoom });
+}
+
 /** DECISIONS-PENDING.md entry 0's residency ledger: every `ResidentSet` mutation attempt, in
  * `WorkingCanvas.pushBatch`/`clearStream`. `residentTotalAfter` is the attempted (not necessarily
  * applied) total on a `"push"` -- the same number whether admitted or refused, since

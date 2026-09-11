@@ -74,7 +74,7 @@ const INSTRUMENT_IDENTIFIERS = [
   //
   // SHOULD-FIX S2 (2026-09-07, reviewer gate; citation corrected 2026-09-08, post-PASS sweep S-a):
   // `getResidencyArm` REMOVED from this list. It is called UNGATED, in every build, at TWO real
-  // production sites -- `WorkingCanvas.tsx:539` (`const armRef = useRef(getResidencyArm())`) and
+  // production sites -- `WorkingCanvas.tsx:665` (`const armRef = useRef(getResidencyArm())`) and
   // inside `residencyArm.ts`'s own `shouldConstructCandidateSession()` (the predicate `App.tsx:1009`'s
   // construction branch calls, `if (shouldConstructCandidateSession())` -- SHOULD-FIX S3's own
   // extraction; `App.tsx`'s branch no longer reads `getResidencyArm()` inline itself). Not dead code
