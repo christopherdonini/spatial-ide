@@ -1410,8 +1410,9 @@ async function stepK6(page, consoleHandle) {
 
   // Wheel OUT with the pointer stationary until the named refusal STANDS -- case (ii)'s own
   // mechanism (`wheelWithoutMoving`) under case (ii)'s own notch bound, stopping at the FIRST notch
-  // that refuses so the single notch back in below lands exactly on the camera this hover was just
-  // established above the threshold at.
+  // that refuses; the single notch back in below then lands one notch in from the first refusing
+  // camera (not necessarily on the camera the hover was established at -- more than one notch out
+  // may have been needed).
   const releaseOutNotchesMax = Math.max(releaseHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
   let releaseOutNotches = 0;
   let standingBeforeDrag = null;
@@ -1450,7 +1451,6 @@ async function stepK6(page, consoleHandle) {
   // the release arms (the refusal was standing when it arrived).
   await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y);
   const afterRelease = await readHoverReadout(page);
-  const afterReleaseId = hoverReadoutId(afterRelease);
   const confirmedIdSinceRelease = confirmingIdRepickTraceSince(consoleHandle, beforeRelease);
   // The drag and the notch must really have moved the camera, or this case would pass having
   // asserted nothing at all -- the same guard case (iv) puts on its own pan, by name.
@@ -1461,7 +1461,8 @@ async function stepK6(page, consoleHandle) {
         `and this case cannot pin anything`
     );
   }
-  if (afterReleaseId !== null || confirmedIdSinceRelease !== null) {
+  const afterReleaseAllowed = afterRelease === null || afterRelease === K6_REFUSAL_TEXT;
+  if (!afterReleaseAllowed || confirmedIdSinceRelease !== null) {
     throw new Error(
       `K6/release-edge: with the named refusal STANDING, a real drag (button down, pointer moved, button up) and ` +
         `then ONE wheel notch back in with the pointer never moved, the readout must NOT be an id -- nothing has ` +

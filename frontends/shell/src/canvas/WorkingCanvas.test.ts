@@ -546,7 +546,7 @@ describe("the button-down guard and the release edge (entry 47, D11 as extended)
     // (`WorkingCanvas.tsx:1597`, in the listener whose release-edge paragraph is `:1573-1579`).
     // Deleting that product line fails nothing in this file; the E2E case (v) in `e2e/regression.mjs`
     // `stepK6` -- a real drag, then a settle -- is the one that pins it (preregistration section 12
-    // Amendment 4).
+    // Amendments 4 and 5; the binding construction is Amendment 5's).
     h.state.capture = null;
 
     // The camera keeps moving after the release (a wheel notch, a keyboard pan, the tail of a
