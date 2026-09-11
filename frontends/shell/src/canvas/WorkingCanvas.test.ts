@@ -7,7 +7,7 @@ import type { PixelRegion } from "../e2e-test-surface";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
-import { applyStyleChange, protectionSetFor, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
+import { anyPartialInView, applyStyleChange, protectionSetFor, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { ApplyStyleChangeDeps, TileBatchIngestOutcome } from "./WorkingCanvas";
 
@@ -330,9 +330,9 @@ describe("protectionSetFor with a membership (entry 66 (b))", () => {
   it("(d) the covering-only consumer still never sees `extra` -- nor the membership", () => {
     // `coveringTileKeysRef.current` (`WorkingCanvas.tsx`) is built from `coveringTileKeys` ALONE,
     // never through this function -- `new Set(covering)` stands in for that covering-only read here.
-    // It is what `anyPartialAmongCovering` (the `fits` latch) iterates, which is exactly why the
-    // latch still reads the enumerated window past the bound: ADR-028's 2026-09-09 appended note,
-    // path (ii), out of entry 66 (b)'s scope.
+    // It is what the `fits` latch reads when no membership is supplied; with one, the latch tests the
+    // membership instead (entry 66 (b), second batch -- `anyPartialInView`'s own tests below), which
+    // is how path (ii) of ADR-028's 2026-09-09 appended note (`:512`) closed.
     const covering = ["1:1"];
     const coveringOnly = new Set(covering);
     const protection = protectionSetFor(covering, new Set([INITIAL_TILE_KEY]), membership);
@@ -340,5 +340,59 @@ describe("protectionSetFor with a membership (entry 66 (b))", () => {
     expect(coveringOnly.has("9:9")).toBe(false);
     expect(protection.has(INITIAL_TILE_KEY)).toBe(true);
     expect(protection.has("9:9")).toBe(true);
+  });
+});
+
+// Entry 66 (b), SECOND batch -- the human's ruling of DECISIONS-PENDING entry 76 item (1)
+// (`ENTRY-66B-PREREGISTRATION.md` §14 Amendment 4): the `fits`/over-budget latch INVERTED. It
+// iterates the resident tile keys and counts `membership.has(key) && isTilePartial(key)` over the
+// round's OWN membership, instead of iterating the enumerated covering window. The membership here
+// stands in for `tileGrid.ts`'s own `coverMembershipFor(frame, level, bbox)` predicate, as the
+// `protectionSetFor` cases above do -- this file's reach is the pure seam, not the canvas.
+describe("anyPartialInView -- the fits latch past the enumeration bound (entry 66 (b), entry 76 (1))", () => {
+  /** The round's own cover: every "row:col" key with row and col in 0..299 -- a 300 x 300 cover,
+   * past `MAX_COVERING_TILES`, which is exactly the regime where the enumerated window and the true
+   * cover differ. */
+  const membership = {
+    has: (k: string) => {
+      const parts = k.split(":");
+      if (parts.length !== 2) return false;
+      const row = Number(parts[0]);
+      const col = Number(parts[1]);
+      return Number.isFinite(row) && Number.isFinite(col) && row >= 0 && row < 300 && col >= 0 && col < 300;
+    },
+  };
+  /** The centred window that round actually enumerated -- it does NOT name "0:0". */
+  const window = new Set(["150:150", "150:151", "151:150"]);
+
+  it("past the bound, a resident partial tile the window excludes but the membership covers makes `fits` false", () => {
+    const resident = ["0:0", "150:150"];
+    const isTilePartial = (k: string) => k === "0:0"; // the tile outside the enumerated window
+    // Inverted: the latch tests the membership, which covers (0, 0) -- so the view is partial.
+    expect(anyPartialInView(resident, isTilePartial, window, membership)).toBe(true);
+    // And the pre-inversion read is pinned right beside it: over the window alone the same view
+    // answered "nothing partial in view", which is what the ruling changed.
+    expect(anyPartialInView(resident, isTilePartial, window)).toBe(false);
+  });
+
+  it("a resident partial tile that is genuinely out of view does NOT latch -- the inversion is not `any partial anywhere`", () => {
+    const resident = ["900:900", "150:150"];
+    expect(anyPartialInView(resident, (k) => k === "900:900", window, membership)).toBe(false);
+  });
+
+  it("with no membership supplied the answer is exactly today's covering-only read, in both directions", () => {
+    expect(anyPartialInView(["150:150"], (k) => k === "150:150", window)).toBe(true);
+    expect(anyPartialInView(["150:150"], () => false, window)).toBe(false);
+    // `isTilePartial` is `false` for a key the resident set never ingested, so "some covering key is
+    // partial" and "some resident key is covered and partial" name the same tiles here.
+    expect(anyPartialInView([], (k) => k === "150:150", window)).toBe(false);
+  });
+
+  it("`INITIAL_TILE_KEY` still never latches the view partial (entry 48 (a), channel 2)", () => {
+    // The untiled first look is durably partial and resident, and neither the window nor the
+    // membership names it -- the membership's own parse answers `false` for a non-"row:col" key.
+    expect(membership.has(INITIAL_TILE_KEY)).toBe(false);
+    expect(anyPartialInView([INITIAL_TILE_KEY], () => true, window, membership)).toBe(false);
+    expect(anyPartialInView([INITIAL_TILE_KEY], () => true, window)).toBe(false);
   });
 });

@@ -837,11 +837,13 @@ describe("TileViewportStreamManager", () => {
   });
 
   // -------------------------------------------------------------------------------------
-  // Entry 66 (b) (`frontends/shell/ENTRY-66B-PREREGISTRATION.md`, pre-committed tests 5 and 8): the
-  // supersede KEEP-set is `coveringKeys.has(k) || membership.has(k)`, so a tracked tile the viewport
-  // genuinely covers survives a plan whose enumerated window left its cell out -- and the queue
-  // drain's own declared consequence (a retained queued tile is ISSUED later, with no cover re-check
-  // at mint) is asserted here as behaviour, not merely allowed.
+  // Entry 66 (b) (`frontends/shell/ENTRY-66B-PREREGISTRATION.md`, pre-committed tests 5 and 8, the
+  // latter split into 8a/8b by §14 Amendment 4 on the human's ruling of DECISIONS-PENDING entry 76
+  // item (2)): the supersede KEEP-set is `coveringKeys.has(k) || membership.has(k)`, so a tracked
+  // tile the viewport genuinely covers survives a plan whose enumerated window left its cell out --
+  // and the drain's own half of that rule is asserted here as behaviour, both ways: a retained
+  // queued tile still in view at mint time IS issued (8a), one whose cell left the view before the
+  // drain is DROPPED there and never issued (8b).
   // -------------------------------------------------------------------------------------
   describe("the supersede keep-set past the enumeration bound (entry 66 (b))", () => {
     /** A camera bbox whose cover is 300 x 300 = 90,000 cells -- past `MAX_COVERING_TILES` (65,536),
@@ -880,8 +882,8 @@ describe("TileViewportStreamManager", () => {
       expect(manager.inFlightCount).toBe(1);
     });
 
-    it("test 8: a retained QUEUED in-view tile is not re-issued by the same plan, IS issued by a later drain, and an out-of-view tracked tile is still dropped", async () => {
-      const { manager } = makeManager();
+    it("test 8a: a retained QUEUED in-view tile is not re-issued by the same plan, IS issued by a later drain while still in view, and an out-of-view tracked tile is still dropped", async () => {
+      const { manager, onTileSuperseded } = makeManager();
       manager.establishGridFrame(ANCHOR);
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -923,9 +925,10 @@ describe("TileViewportStreamManager", () => {
       expect(outcome2.queued).not.toContain("1:1");
       expect(manager.queuedCount).toBe(1 + outcome2.queued.length);
 
-      // The declared consequence (preregistration §4.2): a slot frees, and `drainQueueIfRoom` mints
-      // the retained queued tile with NO cover re-check -- an ordinary `viewport_query` for the cell
-      // (1, 1), which this round never enumerated. Asserted as behaviour, not merely allowed.
+      // The declared consequence (preregistration §4.2 as amended): a slot frees, `drainQueueIfRoom`
+      // re-tests the retained queued tile against the LATEST membership -- which still covers cell
+      // (1, 1) -- and therefore mints it: an ordinary `viewport_query` for a cell this round never
+      // enumerated. Asserted as behaviour, not merely allowed.
       const callsBeforeDrain = viewportQueryMock.mock.calls.length;
       rejectFirstMint(new Error("mint rejected -- frees the slot this drain needs"));
       await flushMicrotasks();
@@ -946,6 +949,69 @@ describe("TileViewportStreamManager", () => {
       expect(manager.queuedCount).toBe(0);
       expect(manager.trackedTileCount).toBe(outcome3.issued.length);
       expect(outcome3.issued).toEqual([tileKeyToString(tilesCoveringBbox(frame, "medium", farBbox)[0])]);
+      // (1, 1) was issued while still in view, so it never reached the drop-at-drain path 8b pins.
+      expect(onTileSuperseded).not.toHaveBeenCalledWith("1:1", null);
+    });
+
+    it("test 8b: a retained queued tile whose cell left the view before the drain is DROPPED at drain -- never issued, the drop reported", async () => {
+      const { manager, onTileSuperseded } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+
+      // The FIRST mint resolves into a real in-flight stream; every later one keeps the suite default
+      // (never resolves), so the other two plan-1 tiles stay `"issuing"` and the fourth stays queued.
+      // The in-flight one is what makes the drop reachable: `cancelTileStream` calls
+      // `drainQueueIfRoom` INLINE, from inside the prune loop of the plan that cancels it, so the
+      // queued tile is drained after that plan's membership has already replaced the previous one --
+      // the tile reaches the drain already out of view.
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+      const plan1Bbox = {
+        xmin: frame.originX,
+        ymin: frame.originY,
+        xmax: frame.originX + 2 * cellSize,
+        ymax: frame.originY + 2 * cellSize,
+      };
+      const outcome1 = manager.onCameraChange(plan1Bbox);
+      if (outcome1.kind !== "planned") throw new Error("unreachable");
+      expect(outcome1.issued).toEqual(["0:0", "0:1", "1:0"]);
+      expect(outcome1.queued).toEqual(["1:1"]);
+      await flushMicrotasks();
+      expect(manager.inFlightCount).toBe(1);
+      expect(manager.queuedCount).toBe(1);
+
+      const cell11 = tileBbox(frame, "medium", { row: 1, col: 1 });
+      const mintedCell11 = () =>
+        viewportQueryMock.mock.calls.some((call) => {
+          const bbox = call[1];
+          return (
+            Math.abs(decodeHexF64(bbox.xmin) - cell11.xmin) < 1e-6 && Math.abs(decodeHexF64(bbox.ymin) - cell11.ymin) < 1e-6
+          );
+        });
+      expect(mintedCell11()).toBe(false); // queued, never minted, before the drain
+
+      // Pan far away. The prune cancels the in-flight tile first, whose inline drain shifts the still
+      // queued (1, 1) off the queue -- and the re-check finds the latest membership no longer covers
+      // it, so it is dropped there rather than minted.
+      const farBbox = { xmin: 10_000, ymin: 10_000, xmax: 10_000 + cellSize, ymax: 10_000 + cellSize };
+      const farMembership = coverMembershipFor(frame, "medium", farBbox);
+      expect(farMembership.has("1:1")).toBe(false); // the regime, asserted rather than assumed
+      const outcome3 = manager.onCameraChange(farBbox);
+      if (outcome3.kind !== "planned") throw new Error("unreachable");
+
+      expect(mintedCell11()).toBe(false); // NO `viewport_query` was ever minted for the dropped cell
+      expect(onTileSuperseded).toHaveBeenCalledWith("1:1", null); // dropped, with no stream of its own
+      expect(onTileSuperseded).toHaveBeenCalledWith("0:0", "sh_1"); // the ordinary in-flight supersede
+      expect(manager.queuedCount).toBe(0);
+      expect(manager.trackedTileCount).toBe(outcome3.issued.length); // nothing of plan 1 survived
+
+      // The drop leaves the tile genuinely re-queryable (its epoch was bumped and its tracking
+      // entry removed, exactly as the supersede path leaves an out-of-view tile): a later plan that
+      // covers (1, 1) again plans it afresh (issued or queued -- the concurrency cap decides which,
+      // and this plan's other three cells take the three slots first, exactly as plan 1 did).
+      const outcome4 = manager.onCameraChange(plan1Bbox);
+      if (outcome4.kind !== "planned") throw new Error("unreachable");
+      expect([...outcome4.issued, ...outcome4.queued]).toContain("1:1");
     });
   });
 });

@@ -949,8 +949,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // can do so in `suppressNestedSupersededEmit = true` for its entire duration (S-a, above) --
       // `onTileSuperseded` is never invoked from anywhere else in this module (`manager`'s own
       // `relinquishOutstanding`, `tileViewportStreamManager.ts`, states plainly it "never calls
-      // `onTileSuperseded`" at all). So `!suppressNestedSupersededEmit` reads `false` at every call
-      // site this callback can actually fire from today, and the emission below never runs. Kept
+      // `onTileSuperseded`" at all). Entry 66 (b)'s second batch adds ONE new producer inside the
+      // manager -- `drainQueueIfRoom`'s drop-at-drain, for a queued tile no longer in view at mint
+      // time -- and it does not widen this: a queued tile can only BE out of view at a drain when the
+      // drain is the one nested inside `onCameraChange`'s own prune (that method's own comment), i.e.
+      // inside `handleViewportChange`'s already-guarded call. So `!suppressNestedSupersededEmit`
+      // still reads `false` at every call site this callback can actually fire from today, and the
+      // emission below never runs. Kept
       // rather than deleted as the honest fallback for a producer this module does not yet have: if a
       // future change ever called `onTileSuperseded` from OUTSIDE those three guarded sites, this line
       // is what keeps the S2 settling-moment obligation from silently going missing for it. TODAY, that
@@ -1403,12 +1408,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // So ADR-028 Amendment 3's rule -- *"A tile intersecting the viewport is protected whether it is
     // complete or partial, tracked this round or a prior one, or never requested at all"*
     // (ADR-028:461-462) -- holds here at every zoom. This array keeps its OTHER jobs unchanged:
-    // `lastCoveringTileKeys` (the `isFillComplete` per-tile check), the truncation bookkeeping, and
-    // the `fits` latch inside `applyTileViewportContext`, which iterates the covering-only ref and
-    // therefore still reads the enumerated window past the bound -- path (ii) of ADR-028's 2026-09-09
-    // appended note (`:512`), standing, deliberately out of entry 66 (b)'s scope. The full account of
-    // what the window does and does not decide at this seam is `tileViewportStreamManager.ts`'s own
-    // `TilePlanOutcome.covering` doc comment.
+    // `lastCoveringTileKeys` (the `isFillComplete` per-tile check) and the truncation bookkeeping.
+    // The `fits` latch inside `applyTileViewportContext` is NOT one of them any more: on the human's
+    // ruling of DECISIONS-PENDING entry 76 item (1) (entry 66 (b)'s second batch) it iterates the
+    // resident keys and tests this same `viewportMembership`, so past the bound it reads the true
+    // cover -- path (ii) of ADR-028's 2026-09-09 appended note (`:512`) is CLOSED with path (i). The
+    // full account of what the window does and does not decide at this seam is
+    // `tileViewportStreamManager.ts`'s own `TilePlanOutcome.covering` doc comment.
     const covering = outcome.covering;
     lastCoveringTileKeys = new Set(covering);
     lastCoveringTruncated = outcome.coveringTruncated === true; // re-review S4

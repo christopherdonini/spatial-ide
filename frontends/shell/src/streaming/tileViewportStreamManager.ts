@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import type { TileGridFrame, TileKey } from "../canvas/tileGrid";
+import type { TileGridFrame, TileKey, TileKeyMembership } from "../canvas/tileGrid";
 import { coverMembershipFor, deriveTileGridFrame, tileBbox, tileCoverForBbox, tileDistanceToPoint, tileKeyToString } from "../canvas/tileGrid";
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { DEFAULT_TILE_GRID_LEVEL, MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
@@ -119,18 +119,20 @@ export type TilePlanOutcome =
        * (:461-462) -- holds at every zoom again, for eviction protection and for the keep-set alike.
        * (Amendment 1 is NOT the source of that sentence: it declared the partial-covering eviction
        * exception Amendment 3 then withdrew, ADR-028:451-453.) The keep-set half has one declared
-       * consequence of its own -- a retained queued tile is later ISSUED by `drainQueueIfRoom` with
-       * no cover re-check -- stated in full at that loop's own comment below.
+       * consequence of its own -- a retained queued tile is issued by `drainQueueIfRoom` only if it
+       * is still in view at mint time, and dropped there otherwise -- stated in full at that loop's
+       * own comment and at `drainQueueIfRoom`'s own doc comment below.
        *
-       * **What still reads the window, disclosed rather than repaired here.** The `fits`/over-budget
-       * latch: `WorkingCanvas.tsx`'s own `anyPartialAmongCovering` ITERATES the covering-only ref, so
-       * it cannot consume a predicate, and past the bound "fits" and over-budget are still decided
-       * over the window rather than the true cover. That is path (ii) of ADR-028's 2026-09-09
-       * appended note (`:512`); it stands, deliberately outside entry 66 (b)'s scope, because
-       * inverting it changes an operator-visible status. Reachability of the window regime at all,
-       * from entry 60's own recorded arithmetic and no new measurement of any kind (~3.63x tiles per
-       * wheel notch; ~2 notches past a "Zoom to layer" fit already passes 512, and this bound is 128x
-       * that): about six notches past the fit.
+       * **The window no longer decides `fits` either (the human's ruling, DECISIONS-PENDING entry
+       * 76 item (1)).** `WorkingCanvas.tsx`'s own latch used to ITERATE the covering-only ref, which
+       * is why it could not consume a predicate; it now iterates the RESIDENT tile keys and tests the
+       * round's own membership (`anyPartialInView`, that file's own exported seam), so past the bound
+       * "fits" and over-budget are decided over the true cover. Path (ii) of ADR-028's 2026-09-09
+       * appended note (`:512`) is CLOSED on that ruling, together with path (i); the operator-visible
+       * consequence is declared there and in `ENTRY-66B-PREREGISTRATION.md` §14 Amendment 4. When the
+       * window regime is reached at all, from entry 60's own recorded arithmetic and no new
+       * measurement of any kind (~3.63x tiles per wheel notch; ~2 notches past a "Zoom to layer" fit
+       * already passes 512, and this bound is 128x that): about six notches past the fit.
        *
        * **What is NOT affected: the completeness claim.** A windowed cover sets `coveringTruncated`
        * below, `candidateArmSession.ts` latches it into `lastCoveringTruncated`, and
@@ -145,8 +147,9 @@ export type TilePlanOutcome =
        * index ranges rather than from a materialised set -- was preregistered as the first post-tag
        * piece (`RELEASE-0.1.md` Amendment 12, expanded in `frontends/shell/ENTRY-66B-PREREGISTRATION
        * .md`) and is what the paragraphs above describe as landed for path (i). Path (ii), the `fits`
-       * latch, still stands: that is why the exception's disclosure is qualified here rather than
-       * deleted.
+       * latch, was left to the human by that piece and is now closed too, on the ruling of entry 76
+       * (the second batch of the same piece): both paths of the exception are discharged, which is
+       * why the disclosure above is stated as closed rather than qualified.
        *
        * Unlike `issued`/`queued`/`alreadyResident` (which between them omit (i) a
        * tile already tracked from a PRIOR round, dropped silently by the `this.tileState.has(tileKey)
@@ -250,6 +253,17 @@ export class TileViewportStreamManager {
   // `setOverBudget`'s own doc comment for why. Defaults to a constant empty-array thunk so this
   // field is never literally `undefined`.
   private unrequestedTileKeysOverBudgetThunk: () => string[] = () => [];
+
+  /** Entry 66 (b), the human's ruling of DECISIONS-PENDING entry 76 item (2): the membership this
+   * manager built at its MOST RECENT `onCameraChange` -- `tileGrid.ts`'s own
+   * `coverMembershipFor(frame, level, bbox)` over that round's own triple, the SAME object the
+   * supersede keep-test below used, never a second predicate and never a second triple
+   * (`ENTRY-66B-PREREGISTRATION.md` §14 Amendment 4, block-on-sight 8). `drainQueueIfRoom` re-tests
+   * every queued tile against it at mint time, so the declared behaviour is: *retained across the
+   * supersede prune, and issued only if still in view at drain; otherwise dropped at drain.* `null`
+   * until the first plan ever runs -- with no membership yet there is nothing to test against and
+   * the drain issues exactly as it did before (the queue is empty at that point in any case). */
+  private latestMembership: TileKeyMembership | null = null;
 
   private tileState = new Map<string, TileRequestState>();
   private inFlightStreams = new Map<string, { streamHandle: string }>();
@@ -387,6 +401,12 @@ export class TileViewportStreamManager {
     // the cover above was built from -- `coverMembershipFor`'s own declared invariant. Nothing else
     // may build it here.
     const membership = coverMembershipFor(frame, this.level, bbox);
+    // ...and it is RETAINED as this manager's latest membership (entry 76 item (2)) BEFORE the prune
+    // loop below runs, not after: `cancelTileStream` calls `drainQueueIfRoom` inline, from inside that
+    // very loop, so a drain can fire before the loop has reached every tracked tile. Assigning here
+    // is what makes such a nested drain test the round's OWN membership rather than the previous
+    // round's -- the one path by which a queued tile can reach the drain already out of view.
+    this.latestMembership = membership;
 
     // Entry 66 (b): keep a tracked tile that the materialised cover names OR that the predicate says
     // the viewport covers. Past `MAX_COVERING_TILES` those differ: `coveringKeys` is the centred
@@ -396,18 +416,20 @@ export class TileViewportStreamManager {
     // is protected whether it is complete or partial, tracked this round or a prior one, or never
     // requested at all"* (ADR-028:461-462), again holds here at every zoom.
     //
-    // **The named consequence, declared as this piece's own behaviour, not discovered.**
-    // `drainQueueIfRoom` (below) mints from `this.queue` with NO cover re-check, and `mintAndStart`
-    // builds the tile's own bbox from `this.level` at mint time -- so a retained QUEUED in-view tile
-    // outside the window will later be ISSUED as an ordinary `viewport_query` for a cell this round
-    // never enumerated. That is the intended reading, not an oversight: a re-check against the
-    // predicate would be a no-op (the same predicate just kept the tile), and a re-check against the
-    // enumerated window would leave the tile queued forever -- never issued, never dropped, holding
-    // declared queue room. Its bounds are the ones every other tile request already has and no new
-    // ones: at most `MAX_IN_FLIGHT_TILE_STREAMS` concurrent, at most `MAX_QUEUED_TILES` waiting
-    // (`:465-467` and `drainQueueIfRoom`'s own `while`), and the drain stays gated by the
-    // over-budget flag. No new state, no new status, no new refusal, no wire or protocol change; tile
-    // keys still never cross a module or protocol boundary (ADR-028:478-479).
+    // **The named consequence, declared as this piece's own behaviour, not discovered -- as amended
+    // by the human's ruling of DECISIONS-PENDING entry 76 (`ENTRY-66B-PREREGISTRATION.md` §14
+    // Amendment 4 item (2)).** A queued tile kept here is RETAINED ACROSS THE PRUNE; it is ISSUED
+    // ONLY IF STILL IN VIEW AT DRAIN, and OTHERWISE DROPPED AT DRAIN. `drainQueueIfRoom` (below)
+    // re-tests each queued tile at mint time against `latestMembership` -- the same predicate over
+    // the same triple, never a second one -- and a tile no longer in view is dropped there exactly as
+    // an out-of-view tracked tile is dropped here (epoch bumped, `onTileSuperseded`/`clearTile`),
+    // never issued. A tile still in view IS issued, as an ordinary `viewport_query` for a cell this
+    // round never enumerated: the retention's whole point. Bounds are the ones every other tile
+    // request already has and no new ones: at most `MAX_IN_FLIGHT_TILE_STREAMS` concurrent, at most
+    // `MAX_QUEUED_TILES` waiting (`:465-467` and `drainQueueIfRoom`'s own `while`), and the drain
+    // stays gated by the over-budget flag. No new status, no new wire or protocol change; tile keys
+    // still never cross a module or protocol boundary (ADR-028:478-479). The one new piece of state
+    // is `latestMembership` (this class's own field, ADR-006 class 1, derived from the round's plan).
     //
     // `coveringKeys` itself is UNCHANGED for the new-candidate loop below, which must only issue
     // tiles this round actually enumerated: the predicate protects, the array plans.
@@ -673,6 +695,24 @@ export class TileViewportStreamManager {
    * instead so every call site is covered at once: while over budget, queued tiles simply wait,
    * however many slots free up, until `setOverBudget(false, ...)` resumes draining (that method's own
    * doc comment has the resume half).
+   *
+   * **Entry 66 (b), the human's ruling of DECISIONS-PENDING entry 76 item (2): the drop-at-drain
+   * re-check.** Retaining an in-view tile across the supersede prune (`onCameraChange`'s keep-test)
+   * is only half the rule; the other half is here. Every queued tile is re-tested at MINT time
+   * against `latestMembership` -- the SAME `coverMembershipFor` predicate over the manager's most
+   * recent `(frame, level, bbox)` triple, never a second predicate and never a closed-bbox test
+   * (`ENTRY-66B-PREREGISTRATION.md` §14 Amendment 4, block-on-sight 8). Still in view: issued exactly
+   * as before. No longer in view: DROPPED here -- epoch bumped and routed as the supersede path
+   * routes an out-of-view tile (`onTileSuperseded`, whose candidate-arm handler clears the tile) --
+   * and never issued, so no `viewport_query` is minted for a cell the viewport has already left.
+   *
+   * The one path by which a queued tile actually reaches this point out of view is a drain nested
+   * INSIDE the prune: `cancelTileStream` calls this method inline while `onCameraChange`'s loop is
+   * still walking its snapshot of `tileState`, so a tile the loop has not reached yet can be shifted
+   * off the queue after `latestMembership` has already been replaced. Without the re-check that tile
+   * mints a query for a cell that is no longer in view (the loop then abandons the mint one iteration
+   * later, after the request has gone out). The prune's own later visit to that key is harmless: it
+   * finds nothing left in `tileState`/`queue` and bumps the epoch a second time, which is idempotent.
    */
   private drainQueueIfRoom(): void {
     if (this.overBudgetFlag) return;
@@ -680,6 +720,15 @@ export class TileViewportStreamManager {
       const key = this.queue.shift()!;
       const tileKey = tileKeyToString(key);
       if (this.tileState.get(tileKey) !== "queued") continue; // dropped while queued -- skip
+      const membership = this.latestMembership;
+      if (membership !== null && !membership.has(tileKey)) {
+        this.tileState.delete(tileKey);
+        this.issueEpoch.set(tileKey, (this.issueEpoch.get(tileKey) ?? 0) + 1);
+        // `null` stream handle: nothing was ever minted for this tile, exactly as `clearAll` reports
+        // a tile it drops without a stream of its own.
+        this.opts.onTileSuperseded(tileKey, null);
+        continue;
+      }
       this.beginIssue(key, tileKey);
     }
   }

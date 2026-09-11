@@ -87,10 +87,11 @@ export const MAX_QUEUED_TILES = 512;
  * sentence is "A tile intersecting the viewport is protected whether it is complete or partial,
  * tracked this round or a prior one, or never requested at all" (:461-462); Amendment 1 is NOT its
  * source, having declared the partial-covering exception Amendment 3 withdrew (ADR-028:451-453) --
- * therefore holds at every zoom, not for the window only. **What still reads the window:** the
- * `fits`/over-budget latch (`WorkingCanvas.tsx`'s own `anyPartialAmongCovering`, which iterates the
- * covering-only ref and so cannot consume a predicate) -- path (ii) of ADR-028's 2026-09-09 appended
- * note (`:512`), standing, deliberately outside entry 66 (b)'s scope. What is NOT affected either
+ * therefore holds at every zoom, not for the window only. **What used to still read the window, and
+ * no longer does:** the `fits`/over-budget latch (`WorkingCanvas.tsx`'s own `anyPartialInView`, which
+ * iterates the RESIDENT keys and tests the round's own membership since entry 66 (b)'s second batch)
+ * -- path (ii) of ADR-028's 2026-09-09 appended note (`:512`) is CLOSED on the human's ruling of
+ * DECISIONS-PENDING entry 76, so both paths of that note are discharged. What is NOT affected either
  * way: the completeness claim -- a windowed cover is reported truncated and
  * `candidateArmSession.ts`'s own `isFillComplete` refuses on that flag outright, so no "Showing all
  * N" is ever claimed over one. Reachability, from entry 60's own recorded arithmetic and no new

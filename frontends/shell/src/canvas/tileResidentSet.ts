@@ -430,10 +430,11 @@ const EMPTY_RESERVED: ReadonlySet<string> = new Set();
  * decides protection. So ADR-028 Amendment 3's rule -- *"A tile intersecting the viewport is
  * protected whether it is complete or partial, tracked this round or a prior one, or never requested
  * at all"* (`docs/adr/ADR-028-viewport-bounded-residency-over-budget-contract.md:461-462`) -- holds
- * here at every zoom, not for the window only. What still reads the enumerated window is the
- * `fits`/over-budget latch (`WorkingCanvas.tsx`'s own `anyPartialAmongCovering`, which iterates the
- * covering-only ref): path (ii) of ADR-028's 2026-09-09 appended note (`:512`), out of entry 66 (b)'s
- * scope and standing. This function itself never enumerates a cover; it protects exactly what the
+ * here at every zoom, not for the window only. The `fits`/over-budget latch that used to read the
+ * enumerated window (`WorkingCanvas.tsx`'s own latch, now `anyPartialInView` over the resident keys
+ * and the round's own membership) reads the true cover too since entry 66 (b)'s second batch: path
+ * (ii) of ADR-028's 2026-09-09 appended note (`:512`) is CLOSED on the human's ruling of
+ * DECISIONS-PENDING entry 76. This function itself never enumerates a cover; it protects exactly what the
  * membership it is given answers for. Ordered farthest-from-`viewCentre` first
  * via `distanceToViewCentre` (typically `tileGrid.ts`'s own `tileDistanceToPoint`, injected here so
  * this function stays free of any grid-frame/level knowledge of its own).
