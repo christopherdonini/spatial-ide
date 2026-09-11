@@ -71,6 +71,21 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+83. **[The tag target after #44's merge — your call, before the tag: you merged PR #44 (Brief A
+    P0–P2, engine-side) to main at 869e185 on 2026-09-11. The v0.1.0 candidate installer was built from
+    998be05 (`RELEASE-0.1.md` Amendment 14: 10,559,184 B, SHA-256 712b3063…), and Part M's installer
+    rows verify that artifact. Main's head now carries engine/kernel code the candidate does not
+    (`kernel/src/skp.rs` gained one `error_of` arm; the reader's format semantics changed what an
+    absent-`crs`-key file does at open). Options: (a) tag 998be05 as v0.1.0 — a tag may point at any
+    commit; the release body already cites that hash and the build commit; main's later commits are
+    post-tag by construction; (b) rebuild the candidate from the tagged head, re-hash, re-run Part M's
+    installer rows (M1–M4) and re-record Amendment 14; (c) something else you name. The release text
+    says nothing that (a) makes false; (b) reopens the sitting. Also for your word: does the merge
+    count as your sight of the preregistration and the ADR drafts, releasing P3 (the session-identity
+    tier, architect-blockable) to start on a branch, or does P3 still wait?]** The remaining Brief A
+    work (entries 80 and 81's code) continues on `cut/admission-format-semantics` and opens as a new
+    PR, held. Not decided here.
+
 82. **[Entry 47 — the architect gate failed twice (rule 7: stopped, queued). Attempt 1 blocked on
     the drag-pan falsifier (deck.gl delivers no hover event while a button is down); the fix batch
     added D11 (arming blocked and the pending settle cancelled while a button is down; preregistration
