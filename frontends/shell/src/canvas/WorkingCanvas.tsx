@@ -862,7 +862,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * branch, including the one where nothing is under the pointer and including deck.gl's own
    * pointerleave sentinel (a negative x/y, recorded as the "off canvas" state it is, never dropped),
    * so a settle always has an explicit, current answer to "where is the pointer" rather than a
-   * silently stale one. `null` only until the pointer has ever been over this canvas at all. */
+   * silently stale one.
+   *
+   * **`null` means exactly "nothing has answered that question yet", and a settle reading it picks
+   * nothing at all** -- which is the state before the pointer has ever been over this canvas AND,
+   * since section 12 Amendment 3, the state the RELEASE edge of a pointer button puts this ref back
+   * into (`onPointerRelease` below, D11 as extended): deck.gl delivers no `onHover` while a button
+   * is down, so after a drag the pixel stored here is the pre-drag one and the capture is dropped
+   * rather than picked at. A settle after a release emits nothing until a real `onHover` has
+   * re-captured; the first camera change after the release still arms as D1/D3 say. */
   const lastPointerPxRef = useRef<HoverPointerCapture | null>(null);
 
   /** Entry 47, D6(a): was a readout actually standing when this burst's FIRST camera change arrived.
@@ -891,7 +899,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * released OUTSIDE the canvas still clears the flag (a canvas-scoped `pointerup` would not fire at
    * all, leaving the flag stuck down for the rest of the session), and the flag is true from the
    * button-down instant rather than from the gesture threshold at which deck's own pan recognizer
-   * first reports a drag. */
+   * first reports a drag.
+   *
+   * **Extended by section 12 Amendment 3:** this flag closes arming only WHILE a button is held. The
+   * release edge additionally invalidates the pointer capture itself (`lastPointerPxRef`, D5) --
+   * without that, the pre-drag pixel survives the release and the first camera change after it could
+   * settle at a pixel the pointer left during the drag. */
   const pointerButtonDownRef = useRef(false);
 
   /** D4: the framebuffer basis a screen pixel's meaning depends on (ADR-010 rule 1) -- the canvas's
@@ -907,8 +920,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     };
   }
 
-  /** D5: the one place `lastPointerPxRef` is written -- the pixel and the basis it was captured
-   * against, always together, so the two can never be compared across different moments. */
+  /** D5: the one place a pointer POSITION is written into `lastPointerPxRef` -- the pixel and the
+   * basis it was captured against, always together, so the two can never be compared across
+   * different moments. (The only other writer, `onPointerRelease` below, never stores a position: it
+   * CLEARS the capture at the release edge, D11 as extended by section 12 Amendment 3.) */
   function captureHoverPointer(x: number, y: number): void {
     const basis = framebufferIdentityNow();
     lastPointerPxRef.current = basis === null ? null : { x, y, ...basis };
@@ -1554,6 +1569,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   // The pending settle is cancelled at the DOWN edge as well as refused at every camera change while
   // the button is held -- a burst that was already pending when the button came down was aimed at a
   // pixel the drag is about to invalidate.
+  //
+  // And at the UP edge (section 12 Amendment 3) the stored pointer pixel itself is dropped: the guard
+  // above closes arming WHILE a button is held, but the pre-drag pixel would otherwise survive the
+  // release, and a standing below-pick-resolution refusal is exactly the readout the mid-gesture rule
+  // leaves standing across a drag -- so the first camera change after release could arm and settle at
+  // a pixel the pointer left long ago. A settle after release therefore emits NOTHING until a real
+  // `onHover` has re-captured; the release is observed on the WINDOW, so a button released off-canvas
+  // clears the capture too.
   useEffect(() => {
     const canvas = canvasElRef.current;
     if (!canvas) return;
@@ -1564,6 +1587,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     };
     const onPointerRelease = () => {
       pointerButtonDownRef.current = false;
+      // D11 as EXTENDED (section 12 Amendment 3): the release edge invalidates the pointer capture.
+      // Nothing has answered "where is the pointer" since the button went down -- deck.gl delivered
+      // no `onHover` for the whole gesture -- so the stored pixel is the pre-drag one and must not
+      // be picked at. The scheduler returns on a null capture before any pick runs
+      // (`createHoverRepickScheduler`, `capture === null`), so the first camera change after release
+      // still ARMS exactly as D1/D3 say and its settle simply emits nothing until a real `onHover`
+      // has re-captured. Refusal to act, the same answer D4 gives a changed framebuffer.
+      lastPointerPxRef.current = null;
     };
     canvas.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("pointerup", onPointerRelease, { passive: true });

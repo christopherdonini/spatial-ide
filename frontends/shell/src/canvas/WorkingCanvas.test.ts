@@ -476,7 +476,8 @@ describe("createHoverRepickScheduler (entry 47: the settle seam)", () => {
   });
 });
 
-// D11 (preregistration section 12 Amendment 2, recorded before the fix): the button-down guard,
+// D11 (preregistration section 12 Amendments 2 and 3, each recorded before its own fix): the
+// button-down guard and the release edge that invalidates the pointer capture,
 // driven exactly the way `WorkingCanvas.tsx`'s own `scheduleHoverRepick` drives it -- the pure
 // decision, then the seam -- the same "drive the product's own gating pattern" shape this file
 // already uses for `shouldScheduleTileRender` gating `coalesceOncePerFrame`.
@@ -499,7 +500,7 @@ function driveCameraChange(
   h.scheduler.schedule();
 }
 
-describe("the button-down guard (entry 47, D11)", () => {
+describe("the button-down guard and the release edge (entry 47, D11 as extended)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -523,6 +524,42 @@ describe("the button-down guard (entry 47, D11)", () => {
     expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
     expect(h.emit).toHaveBeenCalledTimes(1);
     expect(h.emit).toHaveBeenCalledWith(ID_A);
+  });
+
+  it("a camera burst AFTER release, with no onHover since the button went down, emits nothing at settle; a real onHover re-captures and the next burst emits exactly one pick", () => {
+    // D11 as EXTENDED (section 12 Amendment 3): the guard above closes arming WHILE a button is
+    // held, but the stored pixel would otherwise survive the release -- deck.gl delivers no
+    // `onHover` during a drag, and a standing below-pick-resolution refusal is the one readout the
+    // mid-gesture rule leaves standing across one, so the first camera change after release could
+    // arm and settle at the PRE-DRAG pixel. The release edge therefore invalidates the capture.
+    const h = repickHarness({ armed: false });
+    for (let i = 0; i < 3; i++) driveCameraChange(h, { pointerButtonDown: true }); // the drag itself
+
+    // The release, exactly as `WorkingCanvas.tsx`'s own `onPointerRelease` performs it (the button
+    // flag drops -- the `pointerButtonDown: false` below -- and the pointer capture is dropped with
+    // it, since nothing has answered "where is the pointer" since the button went down).
+    h.state.capture = null;
+
+    // The camera keeps moving after the release (a wheel notch, a keyboard pan, the tail of a
+    // gesture): the first change after the release ARMS exactly as D1/D3 say, and its settle picks
+    // nothing at all -- refusal to act, the same answer D4 gives a changed framebuffer.
+    for (let i = 0; i < 3; i++) driveCameraChange(h, { pointerButtonDown: false });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+    expect(h.trace).not.toHaveBeenCalled();
+
+    // A real `onHover` after the release re-answers where the pointer is (and disowns any pending
+    // settle, exactly as the hover site does). Only now may a settle pick again.
+    h.state.capture = ON_CANVAS;
+    h.state.armed = false;
+    h.scheduler.cancel();
+
+    for (let i = 0; i < 3; i++) driveCameraChange(h, { pointerButtonDown: false });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+    expect(h.pickCandidateAt).toHaveBeenCalledWith(ON_CANVAS.x, ON_CANVAS.y);
+    expect(h.emit.mock.calls).toEqual([[ID_A]]);
   });
 
   it("a button pressed mid-burst cancels the settle that was already pending", () => {
