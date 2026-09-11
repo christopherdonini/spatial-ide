@@ -13,7 +13,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use arrow::array::{Array, FixedSizeListArray, Float64Array, ListArray};
-use spatial_engine::fixture::{write_geoparquet, CrsMode, FixtureFacts, FixtureSpec};
+use spatial_engine::fixture::{
+    write_geoparquet, CoordinateDomain, CrsMode, FixtureFacts, FixtureSpec,
+};
 use spatial_engine::{
     Bbox, CancelToken, CrsAssertion, CrsSource, Dataset, EngineError, ViewportQuery,
 };
@@ -184,6 +186,13 @@ fn a_declared_crs_is_admitted_as_a_file_fact() {
 /// The absent-key half's own assertions now live in
 /// `engine/tests/admission_format_semantics.rs` (F-1, F-2, F-5, and R-C1's unpinned-version case);
 /// what remains here is the fact that the two `crs` states are still two different outcomes.
+///
+/// **Why a re-aimed test is green G-A6 and not an edited one.** Gate G-A6 asks that the existing
+/// identity and CRS suites stay green without edits. On the human's ruling of 2026-09-11
+/// (DECISIONS-PENDING entry 80 = "(a), each re-aim naming the ruling AND asserting the new
+/// provenance class") it is read as: except where a test pins behaviour boundary 1 itself
+/// abolishes, in which case the re-aim names the ruling and asserts the class that replaced it.
+/// This is one of the three such tests, and the class it asserts is `crs:format-default`, below.
 #[test]
 fn an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes() {
     let _wd = Watchdog::new("an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes");
@@ -206,6 +215,31 @@ fn an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes() {
         Dataset::open(&path_null),
         Err(EngineError::CrsUndeclared { .. })
     ));
+
+    // The same absent key over coordinates the format's default is **not** contradicted by: the
+    // file opens, and the record names the class the ruling established and the pinned rule it was
+    // taken from. Entry 80 asks a re-aim to assert the new class, not only the absence of the old
+    // refusal — a refusal on the metre-domain file above cannot carry a provenance, because nothing
+    // was admitted.
+    let (path_in_domain, _) = write(
+        "absent-crs-in-domain",
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            domain: CoordinateDomain::Wgs84Degrees,
+            with_geo_bbox: true,
+            ..small()
+        },
+    );
+    let ds = Dataset::open(&path_in_domain).expect("admitted under the format's absent-key rule");
+    let md = ds.envelope().schema().metadata().clone();
+    assert_eq!(md.get("crs_provenance").unwrap(), "crs:format-default");
+    assert_eq!(
+        md.get("format_rule_reference").unwrap(),
+        "geoparquet:1.1.0#crs-absent-default",
+        "the record names the spec version and the rule, whose text is pinned in \
+         `engine/ADMISSION-PREREGISTRATION.md` Appendix A"
+    );
+    assert_eq!(ds.crs().identifier(), "OGC:CRS84");
 }
 
 #[test]
@@ -329,6 +363,11 @@ fn a_definition_that_establishes_no_axis_order_is_refused() {
 /// rule governs an assertion, R-C6) and what a declared lat-first CRS in a file whose spec version
 /// is not pinned in this tree still meets (R-C1) — both asserted in
 /// `engine/tests/admission_format_semantics.rs`.
+///
+/// **G-A6, on the human's ruling of 2026-09-11** (DECISIONS-PENDING entry 80 = "(a), each re-aim
+/// naming the ruling AND asserting the new provenance class"): this is the second of the three
+/// re-aims that reading allows, and the class it asserts is `axis:format-override`, below — the
+/// provenance that replaced the refusal this test used to pin.
 #[test]
 fn a_latitude_first_source_is_admitted_under_the_formats_override_with_its_declared_order_kept() {
     let _wd = Watchdog::new(
