@@ -538,6 +538,15 @@ describe("the button-down guard and the release edge (entry 47, D11 as extended)
     // The release, exactly as `WorkingCanvas.tsx`'s own `onPointerRelease` performs it (the button
     // flag drops -- the `pointerButtonDown: false` below -- and the pointer capture is dropped with
     // it, since nothing has answered "where is the pointer" since the button went down).
+    //
+    // **What this case does and does not exercise, stated as what it is** (reviewer gate 3): this
+    // suite cannot mount the component, so the line below MIRRORS the listener rather than running
+    // it -- what is under test here is the scheduler's own null-capture return at the seam
+    // (`createHoverRepickScheduler`, `capture === null`), NOT `onPointerRelease` itself
+    // (`WorkingCanvas.tsx:1597`, in the listener whose release-edge paragraph is `:1573-1579`).
+    // Deleting that product line fails nothing in this file; the E2E case (v) in `e2e/regression.mjs`
+    // `stepK6` -- a real drag, then a settle -- is the one that pins it (preregistration section 12
+    // Amendment 4).
     h.state.capture = null;
 
     // The camera keeps moving after the release (a wheel notch, a keyboard pan, the tail of a
