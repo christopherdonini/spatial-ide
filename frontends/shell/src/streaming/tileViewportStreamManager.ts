@@ -430,7 +430,8 @@ export class TileViewportStreamManager {
     // never issued. A tile still in view IS issued, as an ordinary `viewport_query` for a cell this
     // round never enumerated: the retention's whole point. Bounds are the ones every other tile
     // request already has and no new ones: at most `MAX_IN_FLIGHT_TILE_STREAMS` concurrent, at most
-    // `MAX_QUEUED_TILES` waiting (`:487-489` and `drainQueueIfRoom`'s own `while`), and the drain
+    // `MAX_QUEUED_TILES` waiting (the `freeSlots`/`availableQueueRoom`/`capacity` computation in
+    // `onCameraChange`, and `drainQueueIfRoom`'s own `while`), and the drain
     // stays gated by the over-budget flag. No new status, no new wire or protocol change; tile keys
     // still never cross a module or protocol boundary (ADR-028:478-479). The one new piece of state
     // is `latestMembership` (this class's own field, ADR-006 class 1, derived from the round's plan).
