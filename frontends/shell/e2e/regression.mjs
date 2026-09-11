@@ -1133,7 +1133,17 @@ async function readHoverReadout(page) {
 }
 
 /** D9's confirming line for a settle re-pick, looked for only among render-trace entries that
- * arrived SINCE `sinceIndex` -- i.e. at the camera the caller just produced, never an older one.
+ * arrived SINCE `sinceIndex` -- the caller's own mark, taken immediately before the camera change it
+ * is about to assert on.
+ *
+ * **What the mechanism actually checks, stated as what it is** (reviewer gate, entry 47): the scope
+ * is the trace ARRAY INDEX, not the camera. This answers "a confirming line arrived after my mark",
+ * which is only "at the camera the caller just produced" because every caller takes its mark
+ * immediately before its own camera change and waits for the trace to go quiet before reading. The
+ * `zoom` the line itself carries (`traceReadoutConfirmed`) is NOT compared against anything here, so
+ * this function cannot by itself tell two settles apart within one caller's window -- read it as
+ * "since the mark", never as a camera identity check.
+ *
  * `resolved` is the readout in the operator's own terms, exactly as `renderTrace.ts`'s
  * `traceReadoutConfirmed` names it (`id <n>`, `below-pick-resolution`, `cleared`); it is matched to
  * a word boundary so `id 42` can never be satisfied by `id 421`. */
