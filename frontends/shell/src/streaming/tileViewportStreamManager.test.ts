@@ -994,29 +994,15 @@ describe("TileViewportStreamManager", () => {
       expect(recoveredCalls).toHaveLength(0); // never retried, so nothing to recover
     });
 
-    // §2.3(iii): `skp.filter_rejected_by_binder` retries ONLY when its `detail` names the
-    // connection lease (the substring `predicate.rs:120` actually mints) -- a genuine DuckDB
-    // binder refusal, same code, different `detail`, keeps today's drop.
-    it("skp.filter_rejected_by_binder retries when its detail names the lease, not when it names a real binder refusal", async () => {
-      const { manager: leaseManager } = makeManager();
-      leaseManager.establishGridFrame(ANCHOR);
-      const frame1 = leaseManager.gridFrame!;
-      const cellSize1 = frame1.baseSpan / 16;
-      const leaseBbox = { xmin: frame1.originX, ymin: frame1.originY, xmax: frame1.originX + cellSize1, ymax: frame1.originY + cellSize1 };
-      viewportQueryMock
-        .mockRejectedValueOnce(
-          new SkpCallError({
-            code: "skp.filter_rejected_by_binder",
-            message: "the predicate was rejected",
-            fields: { detail: "no connection was available to validate this predicate: pool exhausted" },
-          })
-        )
-        .mockResolvedValueOnce({ stream: "sh_lease_retry", expires_in_ms: 30_000 });
-      leaseManager.onCameraChange(leaseBbox);
-      await flushMicrotasks();
-      expect(viewportQueryMock).toHaveBeenCalledTimes(2); // retried
-      expect(leaseManager.inFlightCount).toBe(1);
-
+    // §2.3(iii), post-ADR-033-engine-half (entry 91 (a)): `skp.filter_rejected_by_binder` is never
+    // retried, regardless of its `detail` text. Before the engine half landed, a lease-capacity
+    // failure could arrive under this same code (the shell's own former `LEASE_REFUSAL_DETAIL_
+    // SUBSTRING` compensated by reading `detail`); now `AdmittedPredicate::admit` leases its own
+    // `LeaseClass::Admission` and a residual capacity failure surfaces as `engine.connections_
+    // exhausted` instead, so a `skp.filter_rejected_by_binder` this manager sees is always a
+    // genuine DuckDB binder refusal, and retrying it would just spin on a predicate that will never
+    // become valid.
+    it("skp.filter_rejected_by_binder is never retried", async () => {
       const { manager: binderManager } = makeManager();
       binderManager.establishGridFrame(ANCHOR);
       const frame2 = binderManager.gridFrame!;
@@ -1031,7 +1017,7 @@ describe("TileViewportStreamManager", () => {
       );
       binderManager.onCameraChange(binderBbox);
       await flushMicrotasks();
-      expect(viewportQueryMock).toHaveBeenCalledTimes(3); // NOT retried -- one more attempt, no more
+      expect(viewportQueryMock).toHaveBeenCalledTimes(1); // NOT retried
       expect(binderManager.trackedTileCount).toBe(0);
     });
 

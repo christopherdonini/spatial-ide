@@ -280,43 +280,26 @@ function logMintRecovered(tileKey: string, streamHandle: string): void {
   logSessionEvent("tile-stream-mint-recovered", `${tileKey}: ${streamHandle}`);
 }
 
-/** Entry 87 §2.3(iii)'s declared retryable set. `engine.connections_exhausted` unconditionally --
- * the honest cause §2.3(ii) would have this crate mint instead of `RejectedByBinder`, not built on
- * this branch (entry 91 (a) is the human's to rule on), declared here anyway so a future
- * `connections_exhausted` refusal is retried the moment (ii) lands with no further shell change.
- * `skp.filter_rejected_by_binder` retries ONLY when its `detail` names the connection LEASE, never
- * a real binder refusal -- see `isRetryableRefusal` below for the exact match. */
+/** Entry 87 §2.3(iii)'s declared retryable set -- `engine.connections_exhausted` ALONE, since
+ * ADR-033's engine half landed (entry 91 (a)): `AdmittedPredicate::admit` now leases its own
+ * `LeaseClass::Admission` (`engine/src/predicate.rs`) and a residual capacity failure surfaces as
+ * that typed code, never as `skp.filter_rejected_by_binder` (`engine/src/pool.rs`'s
+ * `MAX_ADMISSION_CONNECTIONS`, sized to this module's own `MAX_IN_FLIGHT_TILE_STREAMS` plus the
+ * baseline query, so this class is composition-unreachable for this shell in ordinary operation).
+ * `skp.filter_rejected_by_binder` is therefore never retried here any more -- it now means what its
+ * name says, a genuine DuckDB binder refusal, and retrying a genuinely invalid predicate would just
+ * spin on a refusal that will never change. */
 const RETRYABLE_ENGINE_CODE = "engine.connections_exhausted";
-const RETRYABLE_BINDER_CODE = "skp.filter_rejected_by_binder";
-
-/** The exact substring `AdmittedPredicate::admit` mints into `FilterError::RejectedByBinder`'s
- * `detail` when the connection LEASE itself could not be acquired (`engine/src/predicate.rs:118-122`,
- * the `format!` at `:120`: `"no connection was available to validate this predicate: {e}"`) -- as
- * opposed to DuckDB's own binder genuinely refusing the predicate text (`predicate.rs:240-243`),
- * whose `detail` never contains this phrase. Matched by substring, not equality: the real message
- * carries the pool's own trailing `{e}`, which this constant deliberately excludes.
- *
- * TEMPORARY, by construction: this string-matches an engine-side error MESSAGE to recover a fact
- * the wire does not yet type (a lease refusal vs a genuine binder refusal, both `skp.filter_rejected_
- * by_binder` today) -- exactly the honest-cause gap §2.3(ii)/ADR-033 close. REMOVE WHEN ADR-033's
- * engine half lands (entry 91 (a)): once `EngineError::ConnectionsExhausted` is minted instead, this
- * constant and its match in `isRetryableRefusal` below are dead code, not merely obsolete. */
-const LEASE_REFUSAL_DETAIL_SUBSTRING = "no connection was available to validate this predicate";
 
 /** Entry 87 §2.3(iii): is this refusal one the bounded requeue may retry at all -- checked BEFORE
  * the per-candidacy "already used its one retry" (`requeuedTiles`) and "still in view"
  * (`latestMembership`) bounds, both enforced at the call site in `mintAndStart`'s own catch. Any
- * code outside the declared set (including a genuine DuckDB binder refusal, `filter_too_long`,
+ * code outside the declared set (including `skp.filter_rejected_by_binder`, `filter_too_long`,
  * `filter_unparsable`, every other `skp.filter_*` code, and a non-SKP transport error) keeps
  * today's drop, now logged by `logMintRefused` above. */
 function isRetryableRefusal(err: unknown): boolean {
   if (!(err instanceof SkpCallError)) return false;
-  const { code, fields } = err.skpError;
-  if (code === RETRYABLE_ENGINE_CODE) return true;
-  if (code === RETRYABLE_BINDER_CODE) {
-    return typeof fields.detail === "string" && fields.detail.includes(LEASE_REFUSAL_DETAIL_SUBSTRING);
-  }
-  return false;
+  return err.skpError.code === RETRYABLE_ENGINE_CODE;
 }
 
 /** `"queued"`: waiting in `queue` for a concurrency slot. `"issuing"`: a slot was claimed and
