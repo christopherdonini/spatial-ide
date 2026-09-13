@@ -17,9 +17,8 @@ scope and limits · applied-to. Entries P-001–P-016 are seeded from `AI_DEVELO
 P-029–P-032 from `AI_DEVELOPMENT.md`'s "Red lines" section — the two groups (P-007–P-016 and
 P-029–P-032) name the same standing rules from two different canonical locations (the matrix line
 that restates them, and the Red lines section itself); they are cross-referenced, not double
-authority. P-033 is from the human's second directive of 2026-09-13, relayed rather than read from
-a file on this branch — its own entry states that provenance rather than citing a line number that
-does not yet exist here.
+authority. P-033 is from the human's second directive of 2026-09-13, carried verbatim in
+`AUTONOMY.md` Appendix A2 on this branch.
 
 ## Delegated classes (source: `AI_DEVELOPMENT.md` Amendment 1 §B, "Delegated to gates + custodian")
 
@@ -337,7 +336,7 @@ adds.
 ### P-025 — No JSON on data hot paths; never claim "zero-copy"
 
 **Ruling (verbatim, `CLAUDE.md:14`):** "No JSON on data hot paths. Binary, chunked, backpressured,
-**copy-minimized** — never claim \"zero-copy\" (ADR-004)."
+**copy-minimized** — never claim "zero-copy" (ADR-004)."
 
 **Generalisation:** Data hot paths stay binary, chunked and backpressured; "zero-copy" is never the
 claim, "copy-minimized" is.
@@ -444,19 +443,18 @@ words.
 
 **Applied to:** The 2026-09-07 corrigendum to the repository's own visibility history.
 
-## From the human's second directive (2026-09-13, relayed; not yet in this branch's tree)
+## From the human's second directive (2026-09-13; `AUTONOMY.md` Appendix A2)
 
 **Provenance note:** the human issued a second directive on 2026-09-13, after the one
-`AUTONOMY.md` Appendix A records; its words reach this entry via the custodian session that
-received them, not via a file this branch can point a line number at (`main` carries a related
-move, ledgering it, at commit `252585b`, ahead of this branch — see `AI_DEVELOPMENT.md` Amendment 2
-§M). Labelled per this repository's own convention for words quoted but not yet in the tree
-(`AI_DEVELOPMENT.md`, "Citations and quotes").
+`AUTONOMY.md` Appendix A records. It is carried verbatim, on this branch, in `AUTONOMY.md`
+Appendix A2 ("the second directive, verbatim as received … the custodian's deduplicated reading is
+items 16–20"); `main` separately carries the ledger's own move (`state/`) at commit `252585b` — see
+`AI_DEVELOPMENT.md` Amendment 2 §M.
 
 ### P-033 — A Dependabot patch-bump precedent for the custodian
 
-**Ruling (verbatim, the human's second directive, item 20, relayed — not yet in this branch's
-tree):** "Dependabot alerts; a patch-bump precedent for the custodian."
+**Ruling (verbatim, `AUTONOMY.md` Appendix A2, item 20):** "Dependabot alerts; a patch-bump
+precedent for the custodian."
 
 **Generalisation:** The custodian may merge a Dependabot patch-level dependency bump when CI is
 green.

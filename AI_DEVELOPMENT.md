@@ -464,6 +464,8 @@ full in `AUTONOMY.md`, which this amendment does not duplicate, only cites. In f
 > by the reading order at the top of CUT-STATE.md. Dry-run once with a forced /compact and confirm
 > the block was written before the summary.
 >
+> […]
+>
 > 9. Docs-only auto-merge: PRs whose diff is mechanically verified docs-only (no ADR status line, no
 > code path) with CI + drift checks green may be merged by the custodian; everything else stays my
 > click. 10. Stop hook: continuation counting; near the daily cap prefer small nodes and defer
@@ -493,8 +495,8 @@ full in `AUTONOMY.md`, which this amendment does not duplicate, only cites. In f
 
 The flush target (paraphrase of `AUTONOMY.md` §7's design bullets 1 and 3) is `state/CUT-STATE.md`'s
 SESSION-CONTINUITY block — `AUTONOMY.md` §7's own quoted text above still names the bare
-`CUT-STATE.md`; that source document is quoted verbatim, not edited, here, and `main` already
-carries the ledger's move to `state/` ahead of this branch (§M, below, has the full note): a heading
+`CUT-STATE.md`; that source document is quoted verbatim, not edited, here (§M, below, has the full
+note on the ledger's move to `state/`): a heading
 `## SESSION-CONTINUITY`, the keyed fields `flushed_at:` and
 `tip:` (a timestamp and the current `HEAD`, the two values §7's freshness check reads), then the
 free-text items the directive lists (Appendix A item 7, verbatim): "exact position and tip hash,
@@ -603,16 +605,12 @@ cites it so Amendment 2 is a complete index of 2026-09-13's mechanics.)
 ### §K — The halt switch
 
 **Provenance note (§K–§N):** the human issued a second directive on 2026-09-13, after the one
-`AUTONOMY.md` Appendix A records. Its items are quoted below as relayed to this piece by the
-custodian session that received them; they are **not yet in this branch's tree** — `main` carries a
-related move (the ledger to `state/`, §M) at commit `252585b`, and that same commit's own message
-records "the second directive ledgered," but this branch (`governance/docs`, off
-`governance/autonomy`) was cut before it, so neither `AUTONOMY.md` Appendix A nor
-`DECISIONS-PENDING.md` on this branch yet carries the second directive's own text. Quoted here per
-the same labelling this file's own "Citations and quotes" section already requires for words not
-yet in the tree.
+`AUTONOMY.md` Appendix A records. It is carried verbatim, on this branch, in `AUTONOMY.md`
+Appendix A2 ("the second directive, verbatim as received … the custodian's deduplicated reading is
+items 16–20"); items 16-20 below are quoted from there. `main` separately carries a related move
+(the ledger to `state/`, §M) at commit `252585b`.
 
-The human, item 18, verbatim (relayed, not yet in the tree): "Halt switch: the Stop hook honours
+The human, item 18, verbatim (`AUTONOMY.md` Appendix A2): "Halt switch: the Stop hook honours
 state/CUSTODIAN-HALT; if present, stop and hold."
 
 The custodian's own obligation beneath the hook, so it holds even if the hook fails: on seeing
@@ -625,7 +623,7 @@ the human removed it, never because the custodian judged the halt no longer nece
 
 ### §L — Telegram alerts
 
-The human, item 16, verbatim (relayed, not yet in the tree): "Telegram alerts via a Notification
+The human, item 16, verbatim (`AUTONOMY.md` Appendix A2): "Telegram alerts via a Notification
 hook (and the Stop hook when blocking on me): one message per blocking event; bot token in an env
 var only, never in the tree. AskUserQuestion stays the answer channel."
 
@@ -638,7 +636,7 @@ one per continuation the Stop hook allows or per poll.
 
 ### §M — The ledger under `state/`
 
-The human, item 17, verbatim (relayed, not yet in the tree): "Track the ledger: CUT-STATE.md,
+The human, item 17, verbatim (`AUTONOMY.md` Appendix A2): "Track the ledger: CUT-STATE.md,
 NEXT-CUT.md, .cut-archive/ → a tracked state/ directory, committed at every flush and report — the
 checkpoint is the commit."
 
@@ -649,18 +647,17 @@ Every path this amendment, and the custodian mechanics it records, write for the
 these is itself the checkpoint** — "committed at every flush and report" means the flush is not
 complete until it is a commit, not merely a working-tree edit.
 
-**Note on branch state (2026-09-13, so a successor is not confused by it):** `main` already carries
-this move at commit `252585b`, including edits to this same file (`AI_DEVELOPMENT.md`) and to
+**Note on branch state (2026-09-13, so a successor is not confused by it):** `main` carries this
+move at commit `252585b`, including edits to this same file (`AI_DEVELOPMENT.md`) and to
 `DECISIONS-PENDING.md` updating their own path references from the old root-level names to
-`state/…`. This branch was cut from `governance/autonomy`, itself cut before `252585b`, so
-`AUTONOMY.md`'s own quoted text above (§A, §7's bullets) and Amendment 1's pre-existing mechanics
-still name the old root-level paths — quoted verbatim, not edited, per this file's own citation
-rule. A future merge of this branch with `main` may touch the same lines `252585b` touched;
-expected, not a defect, and not this piece's own task to resolve.
+`state/…`; this branch's own pre-existing mechanics (e.g. "The lease and handover," above) already
+carry the same `state/…` paths. The one place the bare, old-style names remain is inside a verbatim
+quote — `AUTONOMY.md` §7's own bullets, quoted in §A above and in this amendment's Context — quoted,
+not edited, per this file's own citation rule.
 
 ### §N — The human's own repository settings (recorded, not the custodian's to set)
 
-The human, item 20, verbatim (relayed, not yet in the tree): "For me: branch protection on main +
+The human, item 20, verbatim (`AUTONOMY.md` Appendix A2): "For me: branch protection on main +
 v* tag ruleset (required CI + DCO, no force-push, no deletion), secret scanning with push
 protection, Dependabot alerts; a patch-bump precedent for the custodian. Off-repo, mine: an external
 drive and a monthly disk image."
