@@ -33,3 +33,8 @@ Thumbs.db
 
 # Single-custodian session lease (AI_DEVELOPMENT.md mechanics) — carries a session id, never committed.
 CUSTODIAN-LEASE
+
+# Custodian tooling's own per-session/per-day state (AUTONOMY.md §3, §7; scripts/hooks/) —
+# continuation counters, PreCompact block records, and the Telegram dedupe map. Machine-local,
+# never committed.
+.claude/state/

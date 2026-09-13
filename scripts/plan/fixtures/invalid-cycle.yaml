@@ -1,0 +1,41 @@
+# Two nodes depending on each other -- must be rejected as a dependency cycle.
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: cycle-a
+    title: "Depends on cycle-b"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 1
+    depends_on: [cycle-b]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: half of a dependency cycle"
+    dates: {opened: 2026-09-13, done: null}
+  - id: cycle-b
+    title: "Depends on cycle-a"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 2
+    depends_on: [cycle-a]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: half of a dependency cycle"
+    dates: {opened: 2026-09-13, done: null}

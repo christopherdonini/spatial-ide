@@ -1,0 +1,43 @@
+# Fixture for AUTONOMY.md §3's dry run: one ready node, one human-blocked node.
+# Used by scripts/plan/plan.test.mjs and scripts/hooks/hooks.test.mjs.
+version: 1
+priorities_approved: true
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: two-nodes-ready
+    title: "A ready node with no dependencies and no human need"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: ready
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: ready node for the Stop hook dry run"
+    dates: {opened: 2026-09-13, done: null}
+  - id: two-nodes-human-blocked
+    title: "A node waiting on a human ruling"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 2
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: human-blocked node for the Stop hook dry run"
+    dates: {opened: 2026-09-13, done: null}

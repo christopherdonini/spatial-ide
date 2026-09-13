@@ -1,0 +1,4 @@
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+notes: &anchor "anchors are not part of the declared subset"

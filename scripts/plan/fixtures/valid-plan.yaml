@@ -1,0 +1,200 @@
+# A broader valid fixture exercising ordering (lane priority, order, id), smallFirst,
+# waiting-on-human, blocked-on-deps, proposed, unscheduled, and a felt_verdict done node.
+version: 1
+priorities_approved: false
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+  - {id: engine, title: "Engine", priority: 2}
+  - {id: platform, title: "Platform", priority: 9}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+  - {id: alpha, title: "Alpha", cite: "docs/07_Roadmap.md ## Alpha"}
+nodes:
+  - id: n-done
+    title: "Already landed"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 1}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: a done node"
+    dates: {opened: 2026-09-01, done: 2026-09-02}
+  - id: n-felt-done
+    title: "Landed with a felt verdict"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 2}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: true
+    verdict: {by: human, cite: "DECISIONS-PENDING.md RULED 2026-09-13"}
+    entries: []
+    summary: "fixture: a felt-verdict done node"
+    dates: {opened: 2026-09-01, done: 2026-09-03}
+  - id: n-inprogress
+    title: "Currently open"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: in-progress
+    order: 3
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {branch: "governance/tooling"}
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: an in-progress node"
+    dates: {opened: 2026-09-10, done: null}
+  - id: n-ready-b
+    title: "Ready, shell lane"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: ready
+    order: 5
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 50
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: ready node in the top-priority lane"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-ready-c
+    title: "Ready, engine lane, small budget"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: ready
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 10
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: ready node, small budget"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-ready-a
+    title: "Ready, engine lane, large budget"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: ready
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 200
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: ready node, large budget"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-blocked-dep
+    title: "Blocked on an open dependency"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 4
+    depends_on: [n-inprogress]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: blocked on a dependency that is not yet done"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-waiting-sight
+    title: "Waiting on a sighting"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 6
+    depends_on: []
+    needs_human: {kind: sight, minutes: 15}
+    gate: none
+    evidence: null
+    budget_minutes: 20
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: waiting on a sight"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-waiting-click
+    title: "Waiting on a click"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: blocked
+    order: 3
+    depends_on: []
+    needs_human: {kind: click, minutes: 2}
+    gate: none
+    evidence: null
+    budget_minutes: 5
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: waiting on a click"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-proposed
+    title: "Proposed, not yet placed"
+    kind: task
+    lane: shell
+    phase: alpha
+    status: proposed
+    order: 0
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: a proposed node"
+    dates: {opened: 2026-09-13, done: null}
+  - id: n-unscheduled
+    title: "Unscheduled, future lane"
+    kind: task
+    lane: platform
+    phase: alpha
+    status: unscheduled
+    order: 0
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: an unscheduled node, visible as ambition"
+    dates: {opened: 2026-09-13, done: null}
