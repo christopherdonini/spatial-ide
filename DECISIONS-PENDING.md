@@ -79,6 +79,20 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+90. **[Static CRT as a v0.1.1 build piece (your directive of 2026-09-13: "Static CRT: if the spike passed,
+    queue it as a build piece for v0.1.1") — the spike passed: `spikes/entry69-static-crt/README.md`
+    (a047a23 on `spike/entry69-static-crt`): with `-C target-feature=+crt-static` the release link is
+    clean with zero linker warnings, and the executable imports 16 Windows system DLLs and no
+    `MSVCP140.dll`, `VCRUNTIME140` or `api-ms-win-crt-*` forwarders, against 27 imports including
+    MSVCP140 in the shipped v0.1.0 build; not launched, the installer not rebuilt. The piece: the
+    spike-local `.cargo/config.toml` (deliberately uncommitted) becomes the shell's declared build
+    setting, the installer is rebuilt and hashed, KNOWN-LIMITATIONS line 15 (no VC++ redistributable;
+    the case untested) retires, entry 69 closes. **Your word on the one question the spike left open,
+    before the piece is preregistered:** the licence posture of a statically conveyed Microsoft C
+    runtime inside an AGPL-3.0-or-later executable — whether it changes the NOTICE set (ADR-030) or the
+    Corresponding Source statement (ADR-009 §6(d)), and whether that needs a written source before the
+    build setting lands.]** Queued for v0.1.1; not decided here.
+
 89. **[Sitting 3 on RC2, the hover row — your two preferences, both user-visible and yours: (a) "I'd
     cut the text way before, cause i really zoom out a lot before it tells me 'Features here below
     pick resolution…'" — the pick-resolution threshold is a declared constant (`isBelowPickResolution`
