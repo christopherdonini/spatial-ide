@@ -40,15 +40,15 @@
  * (`10`-`120`) against **this exact external bundle's geometry** before this value was chosen; a
  * `deltaY` of `40` was picked as a reasonable middle point, and the residual this technique reads
  * against a *correct* build was measured directly — **against a temporarily-patched fix, so as not to
- * measure the bug this file exists to catch** — at `deltaY = 40`, across all three §3 configurations:
- * 6.67, 8.55 and 11.97 store px. Repeated: identical to the pixel every time (this is a deterministic
- * property of this dataset's geometry meeting a fixed viewport and zoom step, not run-to-run noise).
- * It is present **even in the CSS-box-forced configuration**, where the buggy and the fixed code
- * compute the identical conversion (ratio = 1 either way) — confirming it is a property of the
+ * measure the bug this file exists to catch** — at `deltaY = 40`, `DEVICE_SCALE_FACTOR = 1.5`, across
+ * all three §3 configurations: 0.22, 11.67 and 14.56 store px. Repeated: identical to the pixel every
+ * time (this is a deterministic property of this dataset's geometry meeting a fixed viewport and zoom
+ * step, not run-to-run noise). It is present **even in the CSS-box-forced configuration**, where the
+ * buggy and the fixed code compute the identical conversion — confirming it is a property of the
  * discriminator and this bundle's geometry, not of anchor correctness. `20` leaves headroom above the
- * worst of those three (11.97) while staying **8-14× below** every pre-fix drift this file measures
- * (170.18 and 278.97 store px at the same `deltaY = 40`, pasted in this piece's own commit history) —
- * the discriminator stays effective with that margin.
+ * worst of those three (14.56) while staying well below every pre-fix drift this file measures at the
+ * same `deltaY`/`DEVICE_SCALE_FACTOR` (110.43 and 182.11 store px, pasted in this piece's own commit
+ * history) — the discriminator stays effective with that margin.
  *
  * `RETURN_TOLERANCE_PX = 1.5` — the reproduction found the round trip exact ("Not cumulative: in-then-
  * out returns exactly", `ZOOM-ANCHOR-PREREGISTRATION.md` §1), so the reversing notch's centroid is
@@ -100,6 +100,21 @@ const RETURN_TOLERANCE_PX = 1.5;
  */
 const WHEEL_DELTA_Y = 40;
 const ZOOM_IN_FACTOR = Math.exp(WHEEL_DELTA_Y * 0.001); // deltaY = -WHEEL_DELTA_Y on the wheel call
+
+/**
+ * A non-1 device pixel ratio. **Deliberately not 1** — with a store that tracks the CSS box exactly
+ * (this fix's own effect) and `deviceScaleFactor: 1`, the measured ratio `toStore` computes is always
+ * exactly `1` regardless of window size, which makes `toStore`'s multiplication a no-op and leaves the
+ * mutation check (§4) unable to see a reverted wheel-site conversion: `1 * anything = anything`. `1.5`
+ * (a common Windows display-scaling value, and not a "nice" integer either, which exercises "measured,
+ * never assumed equal to `devicePixelRatio`" a little harder than `2` would) makes the ratio a real,
+ * nontrivial quantity in every configuration, so a reverted conversion is a real, detectable error
+ * again. The reproduction driver used `1` for a different reason — isolating the store/CSS-box defect
+ * from any DPR question at all (DECISIONS-PENDING entry 86: "Not deck.gl, not DPR") — which was the
+ * right call for *reproducing* the pre-fix bug, but leaves nothing for the *fixed* build's mutation
+ * check to fail against.
+ */
+const DEVICE_SCALE_FACTOR = 1.5;
 
 let chromium;
 let browser;
@@ -210,7 +225,7 @@ function probe() {
  * own page, so the three configurations cannot leak state into each other.
  */
 async function readZoomAnchor(name, viewport, forceCssBox) {
-  const page = await browser.newPage({ viewport, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport, deviceScaleFactor: DEVICE_SCALE_FACTOR });
   try {
     await page.goto(serverUrl, { waitUntil: 'load' });
     await page.waitForFunction(
