@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `13c8db4409a7dc9756258b9f37e43092b5ce13618ef87dc96a9610329d95b207`) at `2026-09-13T21:45:51.143Z`.
+Generated from `PLAN.yaml` (sha256 `3897cd1843d1530135ebf72f1b45ff672067984f071923f207242d077f9e7687`) at `2026-09-13T21:50:22.620Z`.
 
 **Seeded, pending approval.** Lane priorities below are the seeded order from the directive; they have not yet been approved by the human (AUTONOMY.md §2, §4 — the first AskUserQuestion).
 
@@ -12,7 +12,7 @@ Generated from `PLAN.yaml` (sha256 `13c8db4409a7dc9756258b9f37e43092b5ce13618ef8
 
 - (none)
 
-## 3. Waiting on the human (total: 160 min)
+## 3. Waiting on the human (total: 163 min)
 
 ### click
 
@@ -20,6 +20,7 @@ Generated from `PLAN.yaml` (sha256 `13c8db4409a7dc9756258b9f37e43092b5ce13618ef8
 
 ### sight
 
+- **entry-86-known-limitations-rewrite** — Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands (3 min)
 - **m13-bracketed-values** — Part M row M13's two bracketed values (5 min)
 
 ### ruling
@@ -42,16 +43,12 @@ Generated from `PLAN.yaml` (sha256 `13c8db4409a7dc9756258b9f37e43092b5ce13618ef8
 ## 4. Blocked on dependencies
 
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
-- **entry-86-known-limitations-rewrite** — Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands — blocked by: viewer-86-zoom-anchor
 - **evidence-archive-v0-1-0** — First application of the evidence archive — attach v0.1.0's evidence to its release — blocked by: autonomy-work-system
 - **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — blocked by: autonomy-work-system
 
 ## 5. In progress
 
 - **polish-87-88-89** — Filter-and-hover polish (entries 87, 88, 89) — evidence: branch `polish/filter-and-hover`
-- **reaim-no-crs-fixture** — Delegated re-aim — the no-CRS fixture and its tests to Brief A's ruled contract — evidence: branch `fix/no-crs-reaim`
-- **lod-feasibility-spike** — LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only — evidence: branch `spike/lod-feasibility`
-- **viewer-86-zoom-anchor** — Entry 86 — the reference bundle viewer's zoom is not anchored at the pointer — evidence: branch `viewer/zoom-anchor`
 - **autonomy-work-system** — The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page — evidence: branch `governance/autonomy`
 
 ## 6. Proposed / unscheduled

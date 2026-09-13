@@ -363,54 +363,54 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: in-progress
+    status: done
     order: 2
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md
-    evidence: {branch: "viewer/zoom-anchor"}
+    evidence: {pr: 53}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: [86]
     summary: "reproduced headless as a fixed backing store read against a stretched CSS box; the fix piece is preregistered and dispatched"
-    dates: {opened: 2026-09-13, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-13}
 
   - id: lod-feasibility-spike
     title: "LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only"
     kind: task
     lane: measurement
     phase: prototype
-    status: in-progress
+    status: done
     order: 2
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: "spike/lod-feasibility"}
+    evidence: {pr: 51}
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
     summary: "measurement-only; any dependency proposal it surfaces goes to the human before it is added"
-    dates: {opened: 2026-09-13, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-13}
 
   - id: reaim-no-crs-fixture
     title: "Delegated re-aim — the no-CRS fixture and its tests to Brief A's ruled contract"
     kind: task
     lane: shell
     phase: prototype
-    status: in-progress
+    status: done
     order: 6
     depends_on: [briefa-entries-80-81]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: "fix/no-crs-reaim"}
+    evidence: {pr: 52}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: []
     summary: "the pre-Brief-A fixture and its walkthrough rows are re-aimed to the now-ruled format-default contract; no product behaviour changes"
-    dates: {opened: 2026-09-13, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-13}
 
   - id: autonomy-work-system
     title: "The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page"

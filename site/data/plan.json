@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-13T21:45:52.592Z",
-  "plan_hash": "13c8db4409a7dc9756258b9f37e43092b5ce13618ef87dc96a9610329d95b207",
+  "generated_at": "2026-09-13T21:50:22.733Z",
+  "plan_hash": "3897cd1843d1530135ebf72f1b45ff672067984f071923f207242d077f9e7687",
   "priorities_approved": false,
   "lanes": [
     {
@@ -590,7 +590,7 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 2,
       "depends_on": [],
       "needs_human": {
@@ -599,7 +599,7 @@
       },
       "gate": "renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md",
       "evidence": {
-        "branch": "viewer/zoom-anchor"
+        "pr": 53
       },
       "budget_minutes": 180,
       "generation": 1,
@@ -610,7 +610,7 @@
       "summary": "reproduced headless as a fixed backing store read against a stretched CSS box; the fix piece is preregistered and dispatched",
       "dates": {
         "opened": "2026-09-13",
-        "done": null
+        "done": "2026-09-13"
       }
     },
     {
@@ -619,7 +619,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 2,
       "depends_on": [],
       "needs_human": {
@@ -628,7 +628,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "spike/lod-feasibility"
+        "pr": 51
       },
       "budget_minutes": 240,
       "generation": 1,
@@ -637,7 +637,7 @@
       "summary": "measurement-only; any dependency proposal it surfaces goes to the human before it is added",
       "dates": {
         "opened": "2026-09-13",
-        "done": null
+        "done": "2026-09-13"
       }
     },
     {
@@ -646,7 +646,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 6,
       "depends_on": [
         "briefa-entries-80-81"
@@ -657,7 +657,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "fix/no-crs-reaim"
+        "pr": 52
       },
       "budget_minutes": 90,
       "generation": 1,
@@ -666,7 +666,7 @@
       "summary": "the pre-Brief-A fixture and its walkthrough rows are re-aimed to the now-ruled format-default contract; no product behaviour changes",
       "dates": {
         "opened": "2026-09-13",
-        "done": null
+        "done": "2026-09-13"
       }
     },
     {
