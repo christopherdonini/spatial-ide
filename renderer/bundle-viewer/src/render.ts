@@ -80,14 +80,22 @@ export const MAX_ATTRIBUTE_DISPLAY_CHARS: number = ceilings.MAX_ATTRIBUTE_DISPLA
  * property of the viewing device, never of the bundle, so it has no place there and none is added.
  *
  * **Behaviour at the ceiling, declared with it.** `sizeCanvasToClientBox` (`main.ts`) clamps the
- * store to these before assigning `canvas.width`/`canvas.height`, both axes together so a clamped
- * store keeps the client box's aspect. `toStore`'s ratio is then measured from the element as it
- * always is, so it reflects whatever the store actually became — clamped or not — and anchoring stays
- * exact either way. **No quality or sharpness claim**: a clamped store means more world units per
- * backing-store pixel, stated as a consequence and nothing else.
+ * store to these before assigning `canvas.width`/`canvas.height`: the per-axis ceiling first, then
+ * the total-pixel ceiling shrinking both axes together (so a clamped store keeps the client box's
+ * aspect either way). `toStore`'s ratio is then measured from the element as it always is, so it
+ * reflects whatever the store actually became — clamped or not — and anchoring stays exact either
+ * way. **No quality or sharpness claim**: a clamped store means more world units per backing-store
+ * pixel, stated as a consequence and nothing else.
+ *
+ * `MAX_BACKING_STORE_PIXELS` is deliberately **less than `MAX_BACKING_STORE_DIM²`**, not equal to it:
+ * equal would make the total-pixel clamp unreachable dead code, since the per-axis clamp alone
+ * already bounds the area to at most `MAX_BACKING_STORE_DIM²` by the time the pixel-count check runs
+ * — an inconsistency this piece found while writing the ceiling's own unit test and is corrected
+ * here rather than left in place. `MAX_BACKING_STORE_PIXELS` is what actually bounds an elongated
+ * client box (short on one axis, under the per-axis cap on both, but still large in total area).
  */
 export const MAX_BACKING_STORE_DIM: number = 4096;
-export const MAX_BACKING_STORE_PIXELS: number = 4096 * 4096;
+export const MAX_BACKING_STORE_PIXELS: number = 8_388_608; // 2**23, half of MAX_BACKING_STORE_DIM**2
 
 /**
  * The view. `centerX`/`centerY` are the **render origin**: every drawn value is `coord − centre`,

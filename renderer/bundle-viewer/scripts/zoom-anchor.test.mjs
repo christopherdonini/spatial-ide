@@ -18,9 +18,17 @@ import assert from 'node:assert/strict';
 
 import { importModule } from './bundle-for-test.mjs';
 
-const { project, unproject, fitView, pick, panBy, resizeStore, zoomAt } = await importModule(
-  'src/render.ts',
-);
+const {
+  project,
+  unproject,
+  fitView,
+  pick,
+  panBy,
+  resizeStore,
+  zoomAt,
+  MAX_BACKING_STORE_DIM,
+  MAX_BACKING_STORE_PIXELS,
+} = await importModule('src/render.ts');
 
 const LV95 = { xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_400, ymax: 1_200_400 };
 
@@ -169,4 +177,57 @@ test('resizeStore: centre unchanged, scale multiplied by the ratio change', () =
   );
   assert.equal(view.width, 1920);
   assert.equal(view.height, 1200);
+});
+
+// ---- test 5b: the resize invariant at the declared backing-store ceiling ------------------------
+
+test('resizeStore at the ceiling: the store clamps, the measured ratio absorbs it, the centre stays put', () => {
+  // The same clamp arithmetic `sizeCanvasToClientBox` (main.ts) performs, replicated here so this
+  // fixture is tied to the real declared constants rather than an invented pair of numbers. An
+  // elongated client box, chosen so BOTH ceilings do real work: the per-axis ceiling clamps the wide
+  // axis first, and the total-pixel ceiling then shrinks both axes together (proportionally, so the
+  // clamped store keeps the client box's own aspect — §2's "the store clamps ... anchoring stays
+  // exact" behaviour, not a distorted one).
+  const dpr = 1;
+  const cssWidth = 5000;
+  const cssHeight = 3500;
+  let storeWidth = Math.round(cssWidth * dpr);
+  let storeHeight = Math.round(cssHeight * dpr);
+  assert.ok(
+    storeWidth > MAX_BACKING_STORE_DIM,
+    'fixture check: the width must actually exceed the per-axis ceiling',
+  );
+
+  storeWidth = Math.min(storeWidth, MAX_BACKING_STORE_DIM);
+  storeHeight = Math.min(storeHeight, MAX_BACKING_STORE_DIM);
+  assert.ok(
+    storeWidth * storeHeight > MAX_BACKING_STORE_PIXELS,
+    'fixture check: the area must still exceed the pixel-count ceiling after the per-axis clamp — ' +
+      'this is the case MAX_BACKING_STORE_PIXELS < MAX_BACKING_STORE_DIM**2 exists to make reachable',
+  );
+  const shrink = Math.sqrt(MAX_BACKING_STORE_PIXELS / (storeWidth * storeHeight));
+  storeWidth = Math.floor(storeWidth * shrink);
+  storeHeight = Math.floor(storeHeight * shrink);
+  assert.ok(storeWidth < cssWidth, 'fixture check: the clamped store must be smaller than the client box');
+
+  // The ratio `toStore` would measure from the element post-clamp — not `dpr` (1), which is exactly
+  // the "measured, never assumed" property under test here.
+  const clampedRatioX = storeWidth / cssWidth;
+  const priorRatioX = 1; // whatever the previous sizing measured, before this (hypothetical) resize
+
+  const view = fitView(LV95, 2000, 1400); // an existing view, before the resize under test
+  const centerXBefore = view.centerX;
+  const centerYBefore = view.centerY;
+  const scaleBefore = view.scale;
+
+  resizeStore(view, storeWidth, storeHeight, clampedRatioX / priorRatioX);
+
+  assert.equal(view.centerX, centerXBefore, 'clamped or not, a resize must not move the centre');
+  assert.equal(view.centerY, centerYBefore, 'clamped or not, a resize must not move the centre');
+  assert.ok(
+    Math.abs(view.scale - scaleBefore * (clampedRatioX / priorRatioX)) < 1e-9,
+    'clamped or not, scale must still be the old scale x the ratio change',
+  );
+  assert.equal(view.width, storeWidth);
+  assert.equal(view.height, storeHeight);
 });
