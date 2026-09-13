@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-13T22:10:02.560Z",
-  "plan_hash": "dd4799aa81f203a99d412cb053fb2ef86fdb382f067cb1b994234183d0e25e74",
+  "generated_at": "2026-09-13T23:25:03.477Z",
+  "plan_hash": "0d62e02ee2f0d7fea55bf044891de887056b4d70276bed1dd4c07506c35c7a71",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -308,6 +308,29 @@
       "blocked_by": [
         "polish-engine-lease-class"
       ]
+    },
+    {
+      "id": "site-design-v1",
+      "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 300,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged",
+      "blocked_by": [
+        "drill-clean-clone",
+        "site-bugs-first"
+      ]
     }
   ],
   "in_progress": [
@@ -354,6 +377,28 @@
       },
       "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built",
       "evidence_label": "branch `release/ci-artifacts`"
+    },
+    {
+      "id": "site-bugs-first",
+      "title": "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "governance/site-bugs-first"
+      },
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "The human, 2026-09-14: fix DRAFT-4's bugs-first section now as a delegated docs/tooling piece, since two of the three are the health line lying (CI unknown, PRs offline) — read GitHub's API at Pages build time, not gh on the dev machine; machine facts stay machine-side on their own dated line",
+      "evidence_label": "branch `governance/site-bugs-first`"
     }
   ],
   "proposed": [

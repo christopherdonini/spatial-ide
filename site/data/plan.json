@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-13T22:10:02.682Z",
-  "plan_hash": "dd4799aa81f203a99d412cb053fb2ef86fdb382f067cb1b994234183d0e25e74",
+  "generated_at": "2026-09-13T23:25:03.587Z",
+  "plan_hash": "0d62e02ee2f0d7fea55bf044891de887056b4d70276bed1dd4c07506c35c7a71",
   "priorities_approved": true,
   "lanes": [
     {
@@ -729,6 +729,33 @@
       }
     },
     {
+      "id": "site-bugs-first",
+      "title": "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "scripts/plan/DRAFT-4-landing-page-design.md",
+      "evidence": {
+        "branch": "governance/site-bugs-first"
+      },
+      "budget_minutes": 180,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "The human, 2026-09-14: fix DRAFT-4's bugs-first section now as a delegated docs/tooling piece, since two of the three are the health line lying (CI unknown, PRs offline) — read GitHub's API at Pages build time, not gh on the dev machine; machine facts stay machine-side on their own dated line",
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      }
+    },
+    {
       "id": "briefa-p3-p6",
       "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
       "kind": "task",
@@ -1199,6 +1226,34 @@
       "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built",
       "dates": {
         "opened": null,
+        "done": null
+      }
+    },
+    {
+      "id": "site-design-v1",
+      "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "depends_on": [
+        "drill-clean-clone",
+        "site-bugs-first"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "scripts/plan/DRAFT-4-landing-page-design.md",
+      "evidence": null,
+      "budget_minutes": 300,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged",
+      "dates": {
+        "opened": "2026-09-14",
         "done": null
       }
     },

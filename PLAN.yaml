@@ -448,6 +448,24 @@ nodes:
     summary: "AUTONOMY.md is written and this file is its first seeded artifact; the queue, hook and site tooling remain to be built"
     dates: {opened: 2026-09-13, done: 2026-09-13}
 
+  - id: site-bugs-first
+    title: "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: in-progress
+    order: 5
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: scripts/plan/DRAFT-4-landing-page-design.md
+    evidence: {branch: governance/site-bugs-first}
+    budget_minutes: 180
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "The human, 2026-09-14: fix DRAFT-4's bugs-first section now as a delegated docs/tooling piece, since two of the three are the health line lying (CI unknown, PRs offline) — read GitHub's API at Pages build time, not gh on the dev machine; machine facts stay machine-side on their own dated line"
+    dates: {opened: 2026-09-14, done: null}
+
   # ============================== BLOCKED ==============================
 
   - id: briefa-p3-p6
@@ -755,6 +773,24 @@ nodes:
     entries: []
     summary: "waits on the autonomy tooling's release-artifact mechanics before it can be built"
     dates: {opened: null, done: null}
+
+  - id: site-design-v1
+    title: "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: blocked
+    order: 6
+    depends_on: [drill-clean-clone, site-bugs-first]
+    needs_human: {kind: none, minutes: 0}
+    gate: scripts/plan/DRAFT-4-landing-page-design.md
+    evidence: null
+    budget_minutes: 300
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged"
+    dates: {opened: 2026-09-14, done: null}
 
   # ============================== PROPOSED ==============================
   # Appended by the custodian; unplaced. Only the human sets `order` on these.

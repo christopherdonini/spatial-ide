@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `dd4799aa81f203a99d412cb053fb2ef86fdb382f067cb1b994234183d0e25e74`) at `2026-09-13T22:10:02.560Z`.
+Generated from `PLAN.yaml` (sha256 `0d62e02ee2f0d7fea55bf044891de887056b4d70276bed1dd4c07506c35c7a71`) at `2026-09-13T23:25:03.477Z`.
 
 ## 1. Next
 
@@ -41,11 +41,13 @@ Generated from `PLAN.yaml` (sha256 `dd4799aa81f203a99d412cb053fb2ef86fdb382f067c
 
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build — blocked by: polish-engine-lease-class
+- **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone, site-bugs-first
 
 ## 5. In progress
 
 - **polish-engine-lease-class** — Entry 87's engine half — a declared lease class for per-request admission work (ADR-033) — evidence: branch `polish/engine-lease-class`
 - **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — evidence: branch `release/ci-artifacts`
+- **site-bugs-first** — Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates) — evidence: branch `governance/site-bugs-first`
 
 ## 6. Proposed / unscheduled
 
