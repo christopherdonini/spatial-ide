@@ -168,8 +168,11 @@ a forgotten re-run as a failure, so this is a documented discipline with a mecha
 merely a convention. `buildHealth.mjs` is **not** part of that local pair: `checkSiteDrift` always
 renders with the build facts absent, so the committed page never depends on a file that exists in
 the Pages build and nowhere else, and the drift check cannot be made to fail by one. In the Pages
-build the order is `buildHealth.mjs` then `site.mjs`, which is what `pages.yml` runs. Neither health
-script imports or invokes `site.mjs`.
+build the order is `buildHealth.mjs` then `site.mjs`, which is what `pages.yml` runs. The scripts are
+decoupled **in invocation** — neither health script invokes `site.mjs`, and none of them writes
+another's output — but not in imports: `buildHealth.mjs` imports the `CI_BADGE_WORKFLOW` constant
+from `site.mjs` (and `ghRepoSlug` from `verify.mjs`), so the workflow whose badge the page shows and
+the workflow whose run it reports can never drift apart.
 
 ## `docsOnly.mjs` — the mechanical docs-only verdict (§9)
 

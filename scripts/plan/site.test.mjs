@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
-import { renderSite, checkSiteDrift, shippedRecently } from './site.mjs';
+import { renderSite, checkSiteDrift, shippedRecently, readBuildHealth } from './site.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, 'fixtures');
@@ -206,6 +206,39 @@ test('bug 1: without build-health.json the build-time group is one honest senten
   assert.ok(html.includes('<span>Drift</span>'), 'the machine group still renders');
 });
 
+test('bug 1: a corrupt build-health.json says so — it is not read as "generated outside the build"', () => {
+  const dir = makeTempDir('site-corrupt-bh-');
+  const outDir = path.join(dir, 'site');
+  fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'data', 'build-health.json'), '{ this is not json', 'utf8');
+
+  const buildHealth = readBuildHealth(outDir);
+  assert.equal(typeof buildHealth.unreadable, 'string');
+
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth });
+  assert.ok(html.includes('build-health.json unreadable: '));
+  assert.ok(
+    !html.includes('this copy was generated outside that build'),
+    'a corrupt file must not claim the page was generated outside the Pages build',
+  );
+  assert.equal(readBuildHealth(path.join(dir, 'nowhere')), null, 'absent is still absent');
+});
+
+test('bug 1: an API-sourced href is emitted only when it is an https:// URL', () => {
+  const buildHealth = {
+    ...BUILD_HEALTH,
+    ci: { ...BUILD_HEALTH.ci, html_url: 'javascript:alert(1)' },
+    open_prs: { ...BUILD_HEALTH.open_prs, oldest: { ...BUILD_HEALTH.open_prs.oldest, html_url: 'http://example.invalid' } },
+    latest_release: { ...BUILD_HEALTH.latest_release, html_url: null },
+  };
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth });
+  assert.ok(!html.includes('javascript:'), 'a javascript: value never becomes an href');
+  assert.ok(html.includes('<span>CI on main</span><span>success</span>'), 'it renders as text instead');
+  assert.ok(!html.includes('href="http://example.invalid"'), 'plain http is not emitted either');
+  assert.ok(html.includes('<span>Open PRs</span><span>2 open, oldest 10 d (#47)</span>'));
+  assert.ok(html.includes('<span>Latest release</span><span>v0.1.0 (2026-09-13)</span>'));
+});
+
 test('bug 1: the drift check never depends on build-health.json', () => {
   const { plan, planPath, dir } = bugsPlan();
   const outDir = path.join(dir, 'site');
@@ -317,6 +350,25 @@ test('bug 4: ids are metadata — anchors and title attributes, never visible te
 test('bug 4: a cross-lane "after:" note shows the dependency\'s title, linked to its anchor', () => {
   const html = renderBugs();
   assert.ok(html.includes('after: <a href="#node-landed-by-pr" title="landed-by-pr">Landed by a pull request</a>'));
+});
+
+test('bug 4: the machine group\'s waiting-on-human row names the title, not the id', () => {
+  // renderBugs() renders with health = null, so this row only exists with a health object.
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
+  const text = visibleText(html);
+  assert.ok(!text.includes('n-waiting-sight'), 'the id is not visible text');
+  assert.ok(
+    html.includes('1 waiting, oldest 0 d (<a href="#node-n-waiting-sight" title="n-waiting-sight">Waiting on a sighting</a>)'),
+  );
+});
+
+test('bug 4: a waiting-on-human id the plan no longer knows falls back to the id', () => {
+  const health = {
+    ...MACHINE_HEALTH,
+    waiting_on_human: [{ id: 'ghost-node', kind: 'ruling', minutes: 5, opened: '2026-09-01', age_days: 12 }],
+  };
+  const { html } = renderSite(fixturePlan(), health, { repoSlug: REPO });
+  assert.ok(html.includes('1 waiting, oldest 12 d (ghost-node)'));
 });
 
 test('bug 4: an unknown dependency falls back to its id', () => {

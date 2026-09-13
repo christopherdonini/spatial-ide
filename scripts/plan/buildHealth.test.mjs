@@ -2,7 +2,7 @@
 // nothing here touches the network.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHealthData, SOURCE_LABEL } from './buildHealth.mjs';
+import { buildHealthData, summaryLines, SOURCE_LABEL } from './buildHealth.mjs';
 import { CI_BADGE_WORKFLOW } from './site.mjs';
 
 const SLUG = 'owner/repo';
@@ -74,10 +74,16 @@ test('the three endpoints are parsed into the three facts', async () => {
     html_url: 'https://github.com/owner/repo/actions/runs/1',
   });
 
-  assert.equal(data.open_prs.count, 2);
-  assert.equal(data.open_prs.oldest.number, 47); // the earliest created_at, not the lowest index
-  assert.equal(data.open_prs.oldest.age_days, 10);
-  assert.equal(data.open_prs.oldest.html_url, 'https://github.com/owner/repo/pull/47');
+  assert.deepEqual(data.open_prs, {
+    auth: 'token',
+    count: 2,
+    oldest: {
+      number: 47, // the earliest created_at, not the lowest index
+      created_at: '2026-09-04T00:00:00Z',
+      age_days: 10,
+      html_url: 'https://github.com/owner/repo/pull/47',
+    },
+  });
 
   assert.deepEqual(data.latest_release, {
     auth: 'token',
@@ -161,6 +167,24 @@ test('a 403 without a token is an error, not an endless retry', async () => {
   assert.equal(data.ci.error, 'HTTP 403 Forbidden');
   assert.equal(data.ci.auth, 'anonymous');
   assert.equal(fetchImpl.calls.filter((c) => isCi(c.url)).length, 1);
+});
+
+test('the token never reaches the written payload or the printed log', async () => {
+  const TOKEN = 'ghs_FAKETOKENthatmustneverbewritten0123';
+  // Even a hostile-ish API answer cannot smuggle the token out: it is never put into a fact.
+  const fetchImpl = makeFetch((url) => {
+    if (isCi(url)) return response(500, {}, `Internal Server Error for ${TOKEN.slice(0, 4)}`);
+    return happyHandler(url);
+  });
+  const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG, token: TOKEN });
+
+  const written = JSON.stringify(data, null, 2); // exactly what the CLI writes
+  const logged = summaryLines(data).join('\n'); // exactly what the CLI prints
+  assert.ok(!written.includes(TOKEN), 'the payload carries no token');
+  assert.ok(!logged.includes(TOKEN), 'the log carries no token');
+  // The Authorization header did carry it, so the test would catch a leak of the real value.
+  assert.equal(fetchImpl.calls[0].headers.Authorization, `Bearer ${TOKEN}`);
+  assert.ok(logged.includes('read token') || logged.includes('read anonymous'), 'only the reach is reported');
 });
 
 test('no slug is a bad-argument error, not a silent empty page', async () => {

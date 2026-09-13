@@ -318,13 +318,32 @@ function oldestBy(items, ageField) {
   return items.reduce((a, b) => ((a[ageField] ?? -1) >= (b[ageField] ?? -1) ? a : b));
 }
 
-function formatWaitingOnHuman(waiting) {
+/**
+ * Waiting-on-human, machine side. The id is metadata here too (DRAFT-4 bug 4): the oldest item
+ * shows its TITLE, linked to its anchor, with the id in a title attribute; an id the plan no
+ * longer knows falls back to the id itself, which is then the only honest thing to print.
+ */
+function waitingOnHumanValueHtml(waiting, byId) {
   const items = Array.isArray(waiting) ? waiting : [];
-  if (items.length === 0) return '0 waiting';
+  if (items.length === 0) return esc('0 waiting');
   const withAge = items.filter((n) => typeof n.age_days === 'number');
-  if (withAge.length === 0) return `${items.length} waiting (age unknown)`;
+  if (withAge.length === 0) return esc(`${items.length} waiting (age unknown)`);
   const oldest = oldestBy(withAge, 'age_days');
-  return `${items.length} waiting, oldest ${oldest.age_days} d (${oldest.id})`;
+  const node = byId?.get(oldest.id);
+  const who = node
+    ? `<a href="#node-${esc(oldest.id)}" title="${esc(oldest.id)}">${esc(node.title)}</a>`
+    : esc(oldest.id);
+  return `${esc(`${items.length} waiting, oldest ${oldest.age_days} d (`)}${who}${esc(')')}`;
+}
+
+/**
+ * An href built from a value this repository did not write (the GitHub API's own `html_url`s)
+ * is emitted only when it is an https:// URL; anything else renders as escaped text with no
+ * link, so a hostile or malformed value can never become a javascript: target.
+ */
+function externalLink(url, text) {
+  const safe = typeof url === 'string' && url.startsWith('https://');
+  return safe ? `<a href="${esc(url)}">${esc(text)}</a>` : esc(text);
 }
 
 /** CI on main, from the build-time facts: the conclusion, linked to its run. */
@@ -332,7 +351,7 @@ function ciValueHtml(ci) {
   if (!ci) return esc('not read');
   if (ci.error) return esc(`error: ${ci.error}`);
   const label = ci.conclusion ?? ci.status ?? ci.note ?? 'no conclusion recorded';
-  return ci.html_url ? `<a href="${esc(ci.html_url)}">${esc(label)}</a>` : esc(label);
+  return externalLink(ci.html_url, label);
 }
 
 function openPrsValueHtml(openPrs) {
@@ -343,7 +362,7 @@ function openPrsValueHtml(openPrs) {
   const text = oldest
     ? `${openPrs.count} open, oldest ${oldest.age_days ?? '?'} d (#${oldest.number})`
     : `${openPrs.count} open`;
-  return oldest?.html_url ? `<a href="${esc(oldest.html_url)}">${esc(text)}</a>` : esc(text);
+  return externalLink(oldest?.html_url, text);
 }
 
 function latestReleaseValueHtml(release) {
@@ -351,7 +370,7 @@ function latestReleaseValueHtml(release) {
   if (release.error) return esc(`error: ${release.error}`);
   const date = release.published_at ? String(release.published_at).slice(0, 10) : 'date unknown';
   const text = `${release.tag_name ?? 'unnamed'} (${date})`;
-  return release.html_url ? `<a href="${esc(release.html_url)}">${esc(text)}</a>` : esc(text);
+  return externalLink(release.html_url, text);
 }
 
 function healthRowsHtml(rows) {
@@ -365,16 +384,27 @@ function healthRowsHtml(rows) {
  * build-time facts come from GitHub's API inside the Pages build (buildHealth.mjs), the machine
  * facts from the custodian's machine (health.mjs). No row ever mixes the two.
  */
-function renderHealthStrip(health, buildHealth) {
-  const buildGroup = buildHealth
-    ? `<h3 class="health-source">From GitHub's API at Pages build time — built ${esc(buildHealth.built_at ?? 'unknown')}</h3>\n` +
+function renderHealthStrip(health, buildHealth, byId) {
+  let buildGroup;
+  if (buildHealth?.unreadable) {
+    // A corrupt file is not an absent one: saying "generated outside that build" here would be
+    // false in exactly the build that wrote the file.
+    buildGroup =
+      `<h3 class="health-source">From GitHub's API at Pages build time</h3>\n` +
+      `<p class="empty">build-health.json unreadable: ${esc(buildHealth.unreadable)}</p>`;
+  } else if (buildHealth) {
+    buildGroup =
+      `<h3 class="health-source">From GitHub's API at Pages build time — built ${esc(buildHealth.built_at ?? 'unknown')}</h3>\n` +
       healthRowsHtml([
         ['CI on main', ciValueHtml(buildHealth.ci)],
         ['Open PRs', openPrsValueHtml(buildHealth.open_prs)],
         ['Latest release', latestReleaseValueHtml(buildHealth.latest_release)],
-      ])
-    : `<h3 class="health-source">From GitHub's API at Pages build time</h3>\n` +
+      ]);
+  } else {
+    buildGroup =
+      `<h3 class="health-source">From GitHub's API at Pages build time</h3>\n` +
       `<p class="empty">CI on main, open PRs and the latest release are read from GitHub's API in the Pages build; this copy was generated outside that build.</p>`;
+  }
 
   const machineGroup = health
     ? `<h3 class="health-source">From the custodian's machine — refreshed ${esc(health.generated_at ?? 'unknown')}</h3>\n` +
@@ -382,7 +412,7 @@ function renderHealthStrip(health, buildHealth) {
         ['Drift', esc(health.drift?.ok === true ? 'clean' : health.drift?.ok === false ? 'DRIFT' : 'unknown')],
         ['Disk free', esc(formatDiskFree(health.disk_free))],
         ['Stray processes', esc(formatStrayProcesses(health.stray_processes))],
-        ['Waiting on human', esc(formatWaitingOnHuman(health.waiting_on_human))],
+        ['Waiting on human', waitingOnHumanValueHtml(health.waiting_on_human, byId)],
       ])
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
@@ -531,7 +561,7 @@ ${seededNote}
 ${renderWaitingOnYou(waitingOnHuman)}
 ${renderShipped(plan, repoSlug)}
 </div>
-${renderHealthStrip(health, buildHealth)}
+${renderHealthStrip(health, buildHealth, byId)}
 <main>
 ${laneHtml}
 </main>
@@ -637,7 +667,15 @@ function readHealth(outDir) {
  * can never depend on a file that exists on one machine and not another.
  */
 export function readBuildHealth(outDir) {
-  return readJsonIfPresent(path.join(outDir, 'data', 'build-health.json'));
+  const p = path.join(outDir, 'data', 'build-health.json');
+  if (!fs.existsSync(p)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (e) {
+    // Not the same as absent: the page says so rather than claiming it was generated outside the
+    // Pages build, which would be false in exactly the build that wrote this file.
+    return { unreadable: e.message };
+  }
 }
 
 const GENERATED_AT_RE = /"generated_at":\s*"[^"]*"/;

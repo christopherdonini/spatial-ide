@@ -175,6 +175,20 @@ export async function buildHealthData({ fetch: fetchImpl = globalThis.fetch, now
   };
 }
 
+/**
+ * The lines the CLI prints. Exported so a test can assert mechanically that the token appears in
+ * neither the payload nor the log — the only two places this script could leak it.
+ */
+export function summaryLines(data) {
+  return [
+    `  ci: ${data.ci.error ?? data.ci.conclusion ?? data.ci.note ?? 'null'} (read ${data.ci.auth})`,
+    `  open PRs: ${data.open_prs.error ?? data.open_prs.count} (read ${data.open_prs.auth})`,
+    `  latest release: ${
+      data.latest_release === null ? 'none published' : (data.latest_release.error ?? data.latest_release.tag_name)
+    }`,
+  ];
+}
+
 function parseArgs(argv) {
   const args = { outDir: null, repo: null };
   for (let i = 0; i < argv.length; i++) {
@@ -199,11 +213,7 @@ async function main() {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
   console.log(`wrote ${outPath}`);
-  console.log(`  ci: ${data.ci.error ?? data.ci.conclusion ?? data.ci.note ?? 'null'} (read ${data.ci.auth})`);
-  console.log(`  open PRs: ${data.open_prs.error ?? data.open_prs.count} (read ${data.open_prs.auth})`);
-  console.log(
-    `  latest release: ${data.latest_release === null ? 'none published' : (data.latest_release.error ?? data.latest_release.tag_name)}`,
-  );
+  for (const line of summaryLines(data)) console.log(line);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
