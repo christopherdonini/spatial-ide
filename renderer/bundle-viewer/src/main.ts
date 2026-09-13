@@ -194,7 +194,7 @@ function sizeCanvasToClientBox(): void {
 
   canvas.width = storeWidth;
   canvas.height = storeHeight;
-  lastRatio = canvas.width / canvas.clientWidth;
+  lastRatio = ratioAfter; // == storeWidth / cssWidth, already computed above — one read of clientWidth
 
   // `state.view` is null on the very first call: `fitView` (in `load()`, right after this call)
   // computes `scale` fresh from the bounds and has no prior ratio to hold constant against. Only a
