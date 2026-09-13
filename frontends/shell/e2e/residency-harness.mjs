@@ -118,7 +118,7 @@ function resolveFixturePath(argv) {
 }
 const FIXTURE_PATH = resolveFixturePath(process.argv.slice(2));
 const REGEN_FILTER_ZONED =
-  "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_zoned_fixture -- --ignored --nocapture";
+  "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture";
 
 // Entry-40 pass (PASS-PREREGISTRATION.md §2): `--per-step-watchdog-ms <n>`'s resolved value for
 // THIS run, `null` unless the flag was given (`parseCellArgs`, below, parses and validates it via
