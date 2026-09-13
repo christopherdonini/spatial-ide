@@ -57,8 +57,8 @@ const CRS_UNDECLARED_MESSAGE =
   "on the primary geometry column). This engine does not apply GeoParquet's OGC:CRS84 default " +
   "(docs/05, no silent conversion)";
 // Verbatim from `engine/src/error.rs:244`'s `Self::FormatDefaultContradicted` `Display` arm, with
-// the `{detail}` minted at `engine/src/dataset.rs:1006`'s `convict_or_record` (the `format!("at
-// level ...")` construction fed by `dataset.rs`'s `sanity_check`, `geo.bbox` branch) -- read back
+// the `{detail}` minted at `engine/src/dataset.rs:1017`'s `format!("at level ...")`, inside
+// `convict_or_record` (`dataset.rs:1009`), fed by `dataset.rs`'s `sanity_check`, `geo.bbox` branch -- read back
 // from a real run against `absent-crs-contradicted.parquet` (this fixture's own `geo.bbox`
 // [2600000, 1200000, 2600400, 1200400], `geo.version` "1.1.0", so the format-rule reference is
 // "geoparquet:1.1.0#crs-absent-default"; `SanityLevel::Metadata.as_str()` is "metadata"), not
