@@ -123,8 +123,8 @@ Two consequences follow from the equality, and both matter in review:
   that the reserved question is settled.
 
 **What this enlarges, stated here rather than discovered later.** DuckDB's own per-connection memory
-was already outside every bound in the table. It is now a **larger** remainder: up to 5 resident
-in-memory DuckDB instances per open dataset, rather than one per live stream. Nothing above covers
+was already outside every bound in the table. It is now a **larger** remainder: up to 9 resident
+in-memory DuckDB instances per open dataset (`MAX_PHYSICAL_CONNECTIONS`, ADR-033), rather than one per live stream. Nothing above covers
 it and no figure here claims to. The measured process private commit is recorded in `RESULTS.md`
 beside the bound, as it always was, and the two answer different questions.
 
