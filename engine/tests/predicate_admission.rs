@@ -15,7 +15,11 @@
 //! is admitted — not that a column named `name` or `value` exists.
 
 use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec};
-use spatial_engine::{AdmittedPredicate, Dataset, FilterError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH};
+use spatial_engine::pool::LeaseClass;
+use spatial_engine::{
+    AdmittedPredicate, Dataset, FilterError, PredicateAdmitError, MAX_ADMISSION_CONNECTIONS,
+    MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH,
+};
 
 fn dataset() -> Dataset {
     let spec = FixtureSpec {
@@ -250,18 +254,25 @@ fn the_adversarial_corpus_each_row_refused_with_its_specific_code() {
     for row in &rows {
         match AdmittedPredicate::admit(row.predicate.clone(), &ds) {
             Ok(_) => panic!("[{}] predicate `{}` was admitted; expected a refusal", row.label, row.predicate),
-            Err(e) => {
+            Err(PredicateAdmitError::Filter(e)) => {
                 if let Some(msg) = (row.check)(&e) {
                     panic!("[{}] predicate `{}`: {msg}", row.label, row.predicate);
                 }
             }
+            Err(other @ PredicateAdmitError::ConnectionsExhausted { .. }) => panic!(
+                "[{}] predicate `{}`: this adversarial corpus is about the predicate's own text, \
+                 never a lease capacity fact: {other}",
+                row.label, row.predicate
+            ),
         }
     }
 
     // The geometry column: a real column, structurally fine, refused only at namespace admission.
     let geom_predicate = format!("{geometry_column} IS NOT NULL");
     match AdmittedPredicate::admit(geom_predicate.clone(), &ds) {
-        Err(FilterError::ColumnNotFilterable { column, .. }) => assert_eq!(column, geometry_column),
+        Err(PredicateAdmitError::Filter(FilterError::ColumnNotFilterable { column, .. })) => {
+            assert_eq!(column, geometry_column)
+        }
         other => panic!("geometry column reference: expected ColumnNotFilterable, got {other:?}"),
     }
 }
@@ -288,7 +299,7 @@ fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_
 
     // A stage-1 refusal (a subquery — never reaches namespace or bind admission at all).
     match AdmittedPredicate::admit("(SELECT 1)", &ds) {
-        Err(FilterError::ConstructNotAdmitted { .. }) => {}
+        Err(PredicateAdmitError::Filter(FilterError::ConstructNotAdmitted { .. })) => {}
         other => panic!("expected a stage-1 refusal, got {other:?}"),
     }
     assert_eq!(
@@ -300,7 +311,7 @@ fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_
 
     // A stage-2 refusal (an unknown column — structurally fine, only namespace admission refuses).
     match AdmittedPredicate::admit("nonexistent_column_xyz = 1", &ds) {
-        Err(FilterError::UnknownColumn { .. }) => {}
+        Err(PredicateAdmitError::Filter(FilterError::UnknownColumn { .. })) => {}
         other => panic!("expected a stage-2 refusal, got {other:?}"),
     }
     assert_eq!(
@@ -312,7 +323,7 @@ fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_
     // A stage-3 refusal (non-boolean arithmetic — structurally fine, namespace admits trivially
     // since no column is referenced, only the bind check against the surrogate refuses).
     match AdmittedPredicate::admit("1 + 1", &ds) {
-        Err(FilterError::NotBoolean { .. }) => {}
+        Err(PredicateAdmitError::Filter(FilterError::NotBoolean { .. })) => {}
         other => panic!("expected a stage-3 refusal, got {other:?}"),
     }
     // `physical_connections_created` is cumulative and only grows when `acquire` finds the pool
@@ -360,4 +371,57 @@ fn the_positive_controls_from_the_design_note_all_admit() {
     for p in positive {
         AdmittedPredicate::admit(p, &ds).unwrap_or_else(|e| panic!("`{p}` should admit: {e}"));
     }
+}
+
+/// DECISIONS-PENDING entry 91 (a) / PROPOSED ADR-033, preregistration §2.4 test (3)(a): the
+/// declared admission ceiling really is a *concurrency* ceiling, not just a sequential count — real
+/// threads, synchronized with a barrier so every one of them attempts its lease at (as near as a
+/// test can arrange) the same moment, all admitting the same real predicate over the same dataset.
+#[test]
+fn n_concurrent_admit_calls_at_the_declared_ceiling_all_succeed() {
+    let ds = dataset();
+    let barrier = std::sync::Barrier::new(MAX_ADMISSION_CONNECTIONS);
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..MAX_ADMISSION_CONNECTIONS)
+            .map(|i| {
+                let ds = &ds;
+                let barrier = &barrier;
+                scope.spawn(move || {
+                    barrier.wait();
+                    AdmittedPredicate::admit("zone = 'residential'", ds)
+                        .unwrap_or_else(|e| panic!("concurrent admission {i} should admit: {e}"));
+                })
+            })
+            .collect();
+        for h in handles {
+            h.join().expect("admission thread panicked");
+        }
+    });
+}
+
+/// DECISIONS-PENDING entry 91 (a) / PROPOSED ADR-033, preregistration §2.4 test (3)(b): a residual
+/// admission-lease exhaustion — the ceiling held open directly against the pool, `admit` never gets
+/// a free `Admission` lease — surfaces as `PredicateAdmitError::ConnectionsExhausted`, **never**
+/// `PredicateAdmitError::Filter(FilterError::RejectedByBinder { .. })`. Nothing about
+/// `"zone = 'residential'"` is refused here; the predicate's own text is never even reached.
+#[test]
+fn a_residual_admission_lease_exhaustion_surfaces_as_connections_exhausted_never_rejected_by_binder()
+{
+    let ds = dataset();
+    let held: Vec<_> = (0..MAX_ADMISSION_CONNECTIONS)
+        .map(|_| ds.connections().acquire(LeaseClass::Admission).expect("admission lease"))
+        .collect();
+
+    match AdmittedPredicate::admit("zone = 'residential'", &ds) {
+        Err(PredicateAdmitError::ConnectionsExhausted { class, capacity }) => {
+            assert_eq!(class, "admission");
+            assert_eq!(capacity, MAX_ADMISSION_CONNECTIONS);
+        }
+        other => panic!(
+            "expected ConnectionsExhausted{{class: \"admission\", capacity: {MAX_ADMISSION_CONNECTIONS}}}, \
+             never RejectedByBinder, got {other:?}"
+        ),
+    }
+
+    drop(held);
 }
