@@ -384,6 +384,29 @@ test('precompact-flush: a block citing the parent of a commit that also touches 
   assert.match(fresh.reason, /not the parent of a ledger-only flush commit/);
 });
 
+test('precompact-flush: untracked paths (porcelain ??) do not make the tree dirty', () => {
+  const dir = makeGitRepo();
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  writeCutState(
+    dir,
+    `# CUT-STATE
+
+## SESSION-CONTINUITY
+flushed_at: ${new Date().toISOString()}
+tip: ${fakeHead}
+`,
+  );
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'status') return '?? RELEASE-DRAFTS-0.1.0/
+?? scratch.txt';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
+    return null;
+  };
+  assert.deepEqual(checkFreshness(dir, { git: fakeGit }), { fresh: true });
+});
+
 test('precompact-flush: fresh tip/HEAD but a dirty tree is still stale', () => {
   const dir = makeGitRepo();
   const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
