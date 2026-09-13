@@ -10,7 +10,7 @@
 # Shape: two jobs. `verify-and-build` runs `verify.mjs` (the gate — AUTONOMY.md §6: "Pages and
 # the queue are only ever as true as this check") and the site generator, and uploads `site/` as
 # the Pages artifact; it needs `contents: read` for the checkout and for verify.mjs's read-only
-# GitHub calls (the same grant governance-ci.yml makes). `deploy` holds ONLY `pages: write` and
+# GitHub calls of public data (the same grant governance-ci.yml makes; the token reaches only that step). `deploy` holds ONLY `pages: write` and
 # `id-token: write`, as directed, and runs only after the gate passed (`needs`). The workflow-level
 # `permissions: {}` grants nothing by default so each job carries exactly its own grant.
 #
@@ -40,8 +40,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,6 +48,8 @@ jobs:
         with:
           node-version: "24"
       - name: verify:plan — the gate (an inconsistent plan never publishes)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: node scripts/plan/verify.mjs
       - name: generate site/ from PLAN.yaml
         run: node scripts/plan/site.mjs
