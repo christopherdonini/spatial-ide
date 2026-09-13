@@ -1671,7 +1671,11 @@ async function stepK7(page, consoleHandle) {
 //     hold no matching row at all; before the fix their streams reached a clean `Completed`
 //     terminal having delivered no batch and were therefore never marked resident, so
 //     `isFillComplete()` read `false` forever and the operator was told areas had not loaded when
-//     nothing was missing.
+//     nothing was missing. **SUSPENDED, and recorded by name rather than failed** (preregistration
+//     §6 Amendment 1 (b), 2026-09-13): a second cause -- filtered per-tile queries dropped silently
+//     before any stream is issued, DECISIONS-PENDING entry 87 -- leaves covering tiles that reach no
+//     terminal at all, and while any exist this assertion cannot discriminate entry 84's fix. It
+//     reinstates itself, unchanged, on the first run where none exist.
 //
 //   FIND'/zoom-to-layer-after-filter (entry 85) -- the second "Zoom to layer" click must put the
 //     camera back on the fit. Under a filter the fit anchor stops growing after the filtered first
@@ -1746,12 +1750,17 @@ function viewStateLinesSince(consoleHandle, sinceIndex) {
  * log, no status). Those tiles are covered and never resident, which holds `isFillComplete()` false
  * for a reason that has nothing to do with an empty tile's terminal -- so the settled-partial
  * assertion below must not be read as evidence about entry 84 while any exist. The unrestricted
- * (`bbox: null`) first look is excluded: it is not a tile query and mints through another path. */
+ * (`bbox: null`) first look is excluded: it is not a tile query and mints through another path.
+ *
+ * Returns all three counts, because the record line below carries all three. `queries` is the number
+ * of covering tiles the manager actually ASKED for since the mark -- not the size of the covering set
+ * itself, which this harness cannot see (a tile already resident from an earlier plan is never
+ * re-requested); `unminted` of those got no stream and therefore no terminal at all. */
 function unmintedTileQueriesSince(consoleHandle, sinceIndex) {
   const lines = consoleHandle.renderTrace().slice(sinceIndex);
   const queries = lines.filter((e) => e.text.includes("viewport_query") && !e.text.includes("bbox: null")).length;
   const streams = lines.filter((e) => e.text.includes("stream-issued")).length;
-  return queries - streams;
+  return { queries, streams, unminted: queries - streams };
 }
 
 /** Whether the covering set was truncated at any point since `sinceIndex` (`renderTrace.ts`'s
@@ -1792,6 +1801,10 @@ async function stepFind(page, consoleHandle) {
   // the camera never leaving the fit, no fit at all -- still throws where it is found: there is
   // nothing left to observe past it.
   const failures = [];
+  // Preregistration §6 Amendment 1 (b): what this step OBSERVES and reports by name without failing
+  // on it -- today, exactly one thing, entry 84's suspended status assertion (see its own branch
+  // below). Records are printed with the step's own PASS note, never swallowed.
+  const records = [];
 
   // 1) The filter, through the real panel DOM -- the same input + Apply click `filter-panel.mjs`'s
   // own FIND' drives. Apply issues an unrestricted `bbox: null` look and calls
@@ -1908,12 +1921,16 @@ async function stepFind(page, consoleHandle) {
         `status ${JSON.stringify(statusAfterZoomOut)} says nothing about the empty covering tiles this assertion is ` +
         `about. This step's own ${FIND_ZOOM_OUT_NOTCHES}-notch gesture must stay inside the declared covering ceiling.`
     );
-  } else if (unminted > 0) {
-    failures.push(
-      `FIND'/settled-partial-under-filter: PREMISE BROKEN -- ${unminted} per-tile viewport_query attempt(s) since the ` +
-        `zoom-out never became a stream (no stream-issued line, and therefore no terminal and no residency for those ` +
-        `tiles), so the settled status ${JSON.stringify(statusAfterZoomOut)} is not evidence about the empty covering ` +
-        `tiles this assertion is about. See unmintedTileQueriesSince above for what those two trace lines mean.`
+  } else if (unminted.unminted > 0) {
+    // Preregistration §6 Amendment 1 (b), 2026-09-13: this state is RECORDED BY NAME and does not
+    // fail the suite -- entry 84's status assertion is suspended while DECISIONS-PENDING entry 87
+    // (filtered per-tile queries dropped silently before any stream is issued) holds its premise
+    // broken, and is reinstated unchanged, right below, the moment no such tile exists. Entry 85's
+    // half of this step is untouched by the suspension and stays a hard assertion.
+    records.push(
+      `FIND'/settled-partial-under-filter: PREMISE BROKEN -- ${unminted.unminted} of ${unminted.queries} covering ` +
+        `tiles reached no terminal (${unminted.queries} queries, ${unminted.streams} streams); the status assertion ` +
+        `is suspended pending DECISIONS-PENDING entry 87 (preregistration §6 Amendment 1 (b))`
     );
   } else if (statusAfterZoomOut === K7_SETTLED_PARTIAL_TEXT) {
     failures.push(
@@ -1965,14 +1982,14 @@ async function stepFind(page, consoleHandle) {
     `applied "${FIND_PREDICATE}" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom ` +
     `${fitCamera.zoom} (${(fitFraction * 100).toFixed(2)}% non-bg); ${FIND_ZOOM_OUT_NOTCHES} zoom-out notch(es) left ` +
     `${(zoomedOutFraction * 100).toFixed(2)}% non-bg with ${truncated.length} covering-truncated line(s) and ` +
-    `${unminted} unminted tile query(ies); ` +
+    `${unminted.unminted} unminted tile query(ies) of ${unminted.queries}; ` +
     `.residency-status settled to ${JSON.stringify(statusAfterZoomOut)}; the second "Zoom to layer" ` +
     `${refit ? `logged the same fit (zoom ${refit.zoom})` : "logged no matching fit"} and left ` +
     `${(returnedFraction * 100).toFixed(2)}% non-bg`;
   if (failures.length > 0) {
-    throw new Error(`${failures.join(" || ")} || OBSERVED: ${observed}`);
+    throw new Error(`${[...failures, ...records].join(" || ")} || OBSERVED: ${observed}`);
   }
-  return observed;
+  return records.length > 0 ? `${records.join(" || ")} || ${observed}` : observed;
 }
 
 /**
