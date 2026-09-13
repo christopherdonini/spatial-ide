@@ -6,7 +6,7 @@
 # post-tag Brief A (DRAFT-2), Brief B (DRAFT-3), the LOD brief and the ADR-032 problem-statement
 # drafts; RELEASE-0.1.md Amendments 15-19; docs/adr/ Status lines; `gh pr list`; `git tag`.
 #
-# LANE PRIORITIES BELOW ARE SEEDED, PENDING THE HUMAN'S APPROVAL (AUTONOMY.md §2: "the lane
+# Lane priorities APPROVED by the human on 2026-09-13 (question set 1, Q1), in the order recorded below.
 # priorities the queue orders by are approved by the human once ... until then the file carries
 # the seeded order from the directive and says so"). This is the custodian's reading of the
 # directive's numbered list and the closing "seed the queue in my order" paragraph -- not yet
@@ -21,18 +21,19 @@
 # §1's status table).
 
 version: 1
+priorities_approved: true   # the human, 2026-09-13 (question set 1, Q1): "Reorder, (engine, kernel-protocol, shell, publish-viewer, measurement, release, governance, renderer, cli, platform, notebooks-ir, plugins-mcp)"
 
 lanes:
-  - {id: shell, title: "Shell", priority: 1}
-  - {id: measurement, title: "Measurement", priority: 2}
-  - {id: kernel-protocol, title: "Kernel/Protocol", priority: 3}
-  - {id: engine, title: "Engine", priority: 4}
-  - {id: publish-viewer, title: "Publish/Viewer", priority: 5}
-  - {id: governance, title: "Governance", priority: 6}
-  - {id: release, title: "Release", priority: 7}
+  - {id: shell, title: "Shell", priority: 3}
+  - {id: measurement, title: "Measurement", priority: 5}
+  - {id: kernel-protocol, title: "Kernel/Protocol", priority: 2}
+  - {id: engine, title: "Engine", priority: 1}
+  - {id: publish-viewer, title: "Publish/Viewer", priority: 4}
+  - {id: governance, title: "Governance", priority: 7}
+  - {id: release, title: "Release", priority: 6}
   - {id: renderer, title: "Renderer", priority: 8}
-  - {id: platform, title: "Platform", priority: 9}
-  - {id: cli, title: "CLI", priority: 10}
+  - {id: platform, title: "Platform", priority: 10}
+  - {id: cli, title: "CLI", priority: 9}
   - {id: notebooks-ir, title: "Notebooks/IR", priority: 11}
   - {id: plugins-mcp, title: "Plugins/MCP", priority: 12}
 
@@ -345,19 +346,36 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: in-progress
+    status: done
     order: 4
     depends_on: [land-45]
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
-    evidence: {branch: "polish/filter-and-hover"}
+    evidence: {pr: 55}
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: [87, 88, 89]
     summary: "the unconditional parts (refusal logging, bounded requeue, cursor shape, the FIND' assertion) are built; the three ruled halves wait"
-    dates: {opened: 2026-09-13, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-13}
 
+  - id: polish-engine-lease-class
+    title: "Entry 87's engine half — a declared lease class for per-request admission work (ADR-033)"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: in-progress
+    order: 1
+    depends_on: [polish-87-88-89]
+    needs_human: {kind: none, minutes: 0}
+    gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
+    evidence: {branch: polish/engine-lease-class}
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: [87, 91]
+    summary: "The human's ruling of 2026-09-13 (question set 1, Q3): the third lease class, the two tests, FIND′ green as the acceptance evidence, ADR-033's text per the three conditions; ADR-033 accepted on the human's word after its gate"
+    dates: {opened: 2026-09-13, done: null}
   - id: viewer-86-zoom-anchor
     title: "Entry 86 — the reference bundle viewer's zoom is not anchored at the pointer"
     kind: task
@@ -417,18 +435,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: "governance/autonomy"}
+    evidence: {pr: 54}
     budget_minutes: 480
     generation: 1
     felt_verdict: false
     entries: []
     summary: "AUTONOMY.md is written and this file is its first seeded artifact; the queue, hook and site tooling remain to be built"
-    dates: {opened: 2026-09-13, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-13}
 
   # ============================== BLOCKED ==============================
 
@@ -512,14 +530,14 @@ nodes:
     status: blocked
     order: 5
     depends_on: []
-    needs_human: {kind: ruling, minutes: 10}
+    needs_human: {kind: ruling, minutes: 6}
     gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
     evidence: null
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: [91]
-    summary: "a third admission-work lease class (ADR-033), a labelled staleness state, and the refusal threshold's value each wait on the human before they merge"
+    summary: "Entry 91 (b) and (c) still held: entry 88 as a labelled stale state (reopening 75 (3)) and entry 89's threshold value; (a) was ruled on 2026-09-13 (question set 1)"
     dates: {opened: 2026-09-13, done: null}
 
   - id: entry-86-known-limitations-rewrite
@@ -527,18 +545,18 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: blocked
+    status: done
     order: 3
     depends_on: [viewer-86-zoom-anchor]
     needs_human: {kind: sight, minutes: 3}
     gate: none
-    evidence: null
+    evidence: {commit: "de939d1"}
     budget_minutes: 15
     generation: 1
     felt_verdict: true
     entries: [86]
     summary: "the retired KNOWN-LIMITATIONS line's replacement wording waits on the human's sight once the viewer fix piece lands"
-    dates: {opened: null, done: null}
+    dates: {opened: null, done: 2026-09-13}
 
   - id: entry-77-code-signing
     title: "Entry 77 — code signing for the Windows installer"
