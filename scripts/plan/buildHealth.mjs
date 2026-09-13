@@ -7,7 +7,8 @@
 // Three facts, read with Node's global fetch (standard library only — no dependency):
 //   ci             — the latest product-ci workflow run on main (conclusion, status, sha, url)
 //   open_prs       — open pull requests: count and the oldest one's age
-//   latest_release — the latest published release (HTTP 404 -> null; a repository may have none)
+//   latest_release — the newest published release, pre-releases included (the list endpoint, not
+//                    releases/latest, which excludes them; null when there is none)
 //
 // A fact that cannot be read carries {error: "<HTTP status or message>"} and the page renders
 // that text — never a bare "unknown". Each fact records whether it was read with the token or
@@ -140,17 +141,29 @@ export async function openPrsFact(fetchImpl, slug, token, now) {
   };
 }
 
-/** The latest published release, or null when the repository has none (HTTP 404). */
+/**
+ * The latest published release, or null when the repository has none.
+ *
+ * The list endpoint, not `releases/latest`: GitHub's "latest" excludes pre-releases, and this
+ * repository's only release (v0.1.0, published 2026-09-13) IS one — `releases/latest` answers 404
+ * and the page would say "none published", which is false. The list is newest first and includes
+ * pre-releases; drafts are skipped (they are not published). HTTP 404 still means null: a
+ * repository with releases disabled has none either.
+ */
 export async function latestReleaseFact(fetchImpl, slug, token) {
-  const url = `${API_BASE}/repos/${slug}/releases/latest`;
+  const url = `${API_BASE}/repos/${slug}/releases?per_page=5`;
   const r = await apiGet(fetchImpl, url, token);
-  if (r.notFound) return null; // a repository with no release is not an error
+  if (r.notFound) return null; // a repository with no releases is not an error
   if (r.error) return { error: r.error, auth: r.auth };
+  const releases = Array.isArray(r.body) ? r.body : [];
+  const latest = releases.find((rel) => rel && rel.draft === false) ?? null;
+  if (!latest) return null;
   return {
     auth: r.auth,
-    tag_name: r.body?.tag_name ?? null,
-    published_at: r.body?.published_at ?? null,
-    html_url: r.body?.html_url ?? null,
+    tag_name: latest.tag_name ?? null,
+    published_at: latest.published_at ?? null,
+    html_url: latest.html_url ?? null,
+    prerelease: latest.prerelease === true,
   };
 }
 
@@ -184,7 +197,10 @@ export function summaryLines(data) {
     `  ci: ${data.ci.error ?? data.ci.conclusion ?? data.ci.note ?? 'null'} (read ${data.ci.auth})`,
     `  open PRs: ${data.open_prs.error ?? data.open_prs.count} (read ${data.open_prs.auth})`,
     `  latest release: ${
-      data.latest_release === null ? 'none published' : (data.latest_release.error ?? data.latest_release.tag_name)
+      data.latest_release === null
+        ? 'none published'
+        : (data.latest_release.error ??
+          `${data.latest_release.tag_name}${data.latest_release.prerelease ? ' (pre-release)' : ''}`)
     }`,
   ];
 }

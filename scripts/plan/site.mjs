@@ -369,7 +369,9 @@ function latestReleaseValueHtml(release) {
   if (release === null || release === undefined) return esc('none published yet');
   if (release.error) return esc(`error: ${release.error}`);
   const date = release.published_at ? String(release.published_at).slice(0, 10) : 'date unknown';
-  const text = `${release.tag_name ?? 'unnamed'} (${date})`;
+  // A pre-release is published and says so; calling it "none published" would be false, calling it
+  // a release without the qualifier would overstate it.
+  const text = `${release.tag_name ?? 'unnamed'} (${release.prerelease ? 'pre-release, ' : ''}${date})`;
   return externalLink(release.html_url, text);
 }
 

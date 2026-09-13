@@ -137,6 +137,7 @@ const BUILD_HEALTH = {
     tag_name: 'v0.1.0',
     published_at: '2026-09-13T18:00:00Z',
     html_url: 'https://github.com/owner/repo/releases/tag/v0.1.0',
+    prerelease: true, // as v0.1.0 actually is
   },
 };
 
@@ -176,8 +177,21 @@ test('bug 1: the strip renders two labelled groups, each with its own timestamp'
   // Each build-time fact links to its own source.
   assert.ok(html.includes('<a href="https://github.com/owner/repo/actions/runs/1">success</a>'));
   assert.ok(html.includes('<a href="https://github.com/owner/repo/pull/47">2 open, oldest 10 d (#47)</a>'));
-  assert.ok(html.includes('<a href="https://github.com/owner/repo/releases/tag/v0.1.0">v0.1.0 (2026-09-13)</a>'));
+  assert.ok(
+    html.includes('<a href="https://github.com/owner/repo/releases/tag/v0.1.0">v0.1.0 (pre-release, 2026-09-13)</a>'),
+    'a pre-release is published and says so',
+  );
   assert.ok(/\d+\.\d GB free \(drive C\)/.test(html));
+});
+
+test('bug 1: a release that is not a pre-release carries no qualifier', () => {
+  const buildHealth = {
+    ...BUILD_HEALTH,
+    latest_release: { ...BUILD_HEALTH.latest_release, tag_name: 'v0.1.1', prerelease: false },
+  };
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth });
+  assert.ok(html.includes('>v0.1.1 (2026-09-13)</a>'));
+  assert.ok(!html.includes('pre-release'));
 });
 
 test('bug 1: an unreadable fact renders its error text, never a bare "unknown"', () => {
@@ -236,7 +250,7 @@ test('bug 1: an API-sourced href is emitted only when it is an https:// URL', ()
   assert.ok(html.includes('<span>CI on main</span><span>success</span>'), 'it renders as text instead');
   assert.ok(!html.includes('href="http://example.invalid"'), 'plain http is not emitted either');
   assert.ok(html.includes('<span>Open PRs</span><span>2 open, oldest 10 d (#47)</span>'));
-  assert.ok(html.includes('<span>Latest release</span><span>v0.1.0 (2026-09-13)</span>'));
+  assert.ok(html.includes('<span>Latest release</span><span>v0.1.0 (pre-release, 2026-09-13)</span>'));
 });
 
 test('bug 1: the drift check never depends on build-health.json', () => {

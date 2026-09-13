@@ -141,8 +141,12 @@ its own timestamp; no row mixes them.
 API with Node's global `fetch` (no dependency, no `gh`) and writes `site/data/build-health.json`:
 `{built_at, source, repo, ci, open_prs, latest_release}` — the latest `product-ci-rust.yml` run on
 `main` (conclusion, status, head sha, created-at, run URL), the open-PR count with the oldest one's
-age, and the latest published release (tag, published-at, URL; HTTP 404 → `null`, because a
-repository may simply have none).
+age, and the newest published release (tag, published-at, URL, `prerelease`) — read from the
+**list** endpoint `GET /repos/{slug}/releases?per_page=5`, newest first, taking the first entry that
+is not a draft, because GitHub's `releases/latest` **excludes pre-releases** and this repository's
+only release (v0.1.0) is one: that endpoint answers 404 and the strip would say "none published",
+which is false. An empty list or HTTP 404 (releases disabled) → `null`; the page marks a pre-release
+as one ("v0.1.0 (pre-release, 2026-09-13)").
 
 Slug: `GITHUB_REPOSITORY`, else the git remote (`ghRepoSlug` from `verify.mjs`). Auth:
 `Authorization: Bearer` from `GITHUB_TOKEN`/`GH_TOKEN` when set, with `Accept:

@@ -30,7 +30,7 @@ function isPulls(url) {
   return url.includes('/pulls?');
 }
 function isRelease(url) {
-  return url.includes('/releases/latest');
+  return url.includes('/releases?');
 }
 
 const RUN = {
@@ -44,16 +44,33 @@ const PRS = [
   { number: 51, created_at: '2026-09-12T00:00:00Z', html_url: 'https://github.com/owner/repo/pull/51' },
   { number: 47, created_at: '2026-09-04T00:00:00Z', html_url: 'https://github.com/owner/repo/pull/47' },
 ];
+// The real repository's only release is a pre-release, which is why the list endpoint is used.
 const RELEASE = {
   tag_name: 'v0.1.0',
   published_at: '2026-09-13T18:00:00Z',
   html_url: 'https://github.com/owner/repo/releases/tag/v0.1.0',
+  draft: false,
+  prerelease: true,
+};
+const DRAFT_RELEASE = {
+  tag_name: 'v0.2.0-draft',
+  published_at: null,
+  html_url: 'https://github.com/owner/repo/releases/tag/untagged',
+  draft: true,
+  prerelease: false,
+};
+const FULL_RELEASE = {
+  tag_name: 'v0.1.1',
+  published_at: '2026-09-20T10:00:00Z',
+  html_url: 'https://github.com/owner/repo/releases/tag/v0.1.1',
+  draft: false,
+  prerelease: false,
 };
 
 function happyHandler(url) {
   if (isCi(url)) return response(200, { workflow_runs: [RUN] });
   if (isPulls(url)) return response(200, PRS);
-  if (isRelease(url)) return response(200, RELEASE);
+  if (isRelease(url)) return response(200, [RELEASE]);
   return response(404, {});
 }
 
@@ -90,6 +107,7 @@ test('the three endpoints are parsed into the three facts', async () => {
     tag_name: 'v0.1.0',
     published_at: '2026-09-13T18:00:00Z',
     html_url: 'https://github.com/owner/repo/releases/tag/v0.1.0',
+    prerelease: true, // v0.1.0 is one; releases/latest would have answered 404
   });
 
   // The URLs and the required headers, as GitHub's REST API documents them.
@@ -97,6 +115,7 @@ test('the three endpoints are parsed into the three facts', async () => {
   assert.ok(fetchImpl.calls[0].url.startsWith(`https://api.github.com/repos/${SLUG}/`));
   assert.ok(fetchImpl.calls[0].url.includes('branch=main&per_page=1'));
   assert.ok(fetchImpl.calls[1].url.includes('state=open&per_page=100'));
+  assert.ok(fetchImpl.calls[2].url.endsWith('/releases?per_page=5'), 'the list endpoint, not releases/latest');
   const headers = fetchImpl.calls[0].headers;
   assert.equal(headers.Accept, 'application/vnd.github+json');
   assert.equal(headers['X-GitHub-Api-Version'], '2022-11-28');
@@ -112,11 +131,38 @@ test('no open PRs: count 0 and no oldest', async () => {
   assert.equal(data.open_prs.auth, 'anonymous'); // no token was given
 });
 
-test('HTTP 404 on releases/latest is null, not an error (a repository may have none)', async () => {
+test('HTTP 404 on the releases list is null, not an error (releases may be disabled)', async () => {
   const fetchImpl = makeFetch((url) => (isRelease(url) ? response(404, { message: 'Not Found' }) : happyHandler(url)));
   const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG, token: 'tok' });
   assert.equal(data.latest_release, null);
   assert.equal(data.ci.conclusion, 'success'); // the other facts are unaffected
+});
+
+test('an empty releases list is null — a repository with no release at all', async () => {
+  const fetchImpl = makeFetch((url) => (isRelease(url) ? response(200, []) : happyHandler(url)));
+  const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG });
+  assert.equal(data.latest_release, null);
+});
+
+test('a draft ahead of a real release is skipped; the published one is reported', async () => {
+  const fetchImpl = makeFetch((url) =>
+    isRelease(url) ? response(200, [DRAFT_RELEASE, FULL_RELEASE, RELEASE]) : happyHandler(url),
+  );
+  const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG, token: 'tok' });
+  assert.equal(data.latest_release.tag_name, 'v0.1.1');
+  assert.equal(data.latest_release.prerelease, false);
+  assert.equal(data.latest_release.published_at, '2026-09-20T10:00:00Z');
+});
+
+test('a list of drafts only is null — nothing is published', async () => {
+  const fetchImpl = makeFetch((url) => (isRelease(url) ? response(200, [DRAFT_RELEASE]) : happyHandler(url)));
+  const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG });
+  assert.equal(data.latest_release, null);
+});
+
+test('the summary line names a pre-release as one', async () => {
+  const data = await buildHealthData({ fetch: makeFetch(happyHandler), now: NOW, slug: SLUG });
+  assert.ok(summaryLines(data).some((l) => l === '  latest release: v0.1.0 (pre-release)'));
 });
 
 test('an HTTP 500 becomes {error} on that fact alone — never a bare "unknown"', async () => {
