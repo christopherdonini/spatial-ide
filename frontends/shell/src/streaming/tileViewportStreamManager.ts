@@ -272,7 +272,7 @@ function logMintAbandoned(context: string, tileKey: string, streamHandle: string
  * `mintAndStart`), never for an ordinary first-attempt success. Narrow and bounded by the SAME
  * tiles-refused population `logMintRefused` already logs -- the common case (never refused) stays
  * exactly as quiet as it always was; no volume added to it. `e2e/regression.mjs`'s
- * `unmintedTileQueriesSince` reads this line (alongside `tile-stream-mint-refused`) to tell a
+ * `tileMintOutcomesSince` reads this line (alongside `tile-stream-mint-refused`) to tell a
  * tile that was refused-then-recovered apart from one that was refused and never minted at all --
  * a distinction the render trace's own tile-key-less `viewport_query`/`stream-issued` lines cannot
  * make (this module's own long-standing constraint, restated at that function's own doc comment). */
