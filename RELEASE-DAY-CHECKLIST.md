@@ -24,7 +24,7 @@ are mechanical and were run, or are re-run, before the human's step that depends
 ## 2. Repository metadata (human — GitHub "About" panel, or `gh repo edit`)
 
 - [ ] Description set (one sentence; the README's first line without the marketing tone). `gh repo edit --description "<text>"`.
-- [ ] Topics set: `gh repo edit --add-topic geoparquet --add-topic gis --add-topic tauri --add-topic duckdb --add-topic rust --add-topic spatial` (adjust; topics are metadata, not claims).
+- [ ] Topics set: `gh repo edit --add-topic geoparquet --add-topic gis --add-topic tauri --add-topic duckdb --add-topic rust --add-topic spatial-data` (the fourteen verified topics and the final description are in `RELEASE-DRAFTS-0.1.0/decision-notes/repo-description-and-topics.md`; entry 78 ruled 2026-09-11; topics are metadata, not claims).
 - [ ] Homepage: none, or the repository's own README (no marketing site exists). `gh repo edit --homepage ""`.
 - [ ] "Releases" and "Packages" sidebar items as GitHub sets them; nothing else changes. Visibility is NOT touched (already public since 2026-08-03; ADR-009's corrigendum).
 
@@ -34,16 +34,19 @@ are mechanical and were run, or are re-run, before the human's step that depends
 
 ## 4. The tag (human)
 
+**Release-branch pattern (entry 83, ruled 2026-09-13):** `release/<version>` is branched from the commit the candidate installer was built from; fixes ruled into the release land there through their own preregistrations and gates (never Brief-class engine work); the installer is rebuilt from the branch head (RC2, RC3, …) and hashed; the finalized release docs land on the branch as docs-only commits; the tag points at the branch head; the release body states the build commit and that the tagged tree differs from it by documentation only, with the `git diff --stat <build-commit> <tag>` line as proof; the branch merges back to main after the tag. Nothing merges to main before the tag except docs.
+
 - [ ] Tag message finalized from the draft (`RELEASE-0.1.md`'s last amendment names the draft's location); every sentence verifiable against a file in the tree.
 - [ ] `git tag -a v0.1.0 -F <tag-message-file> <commit>` — annotated, on the intended commit; `git tag -v` is not expected (no signing key is declared for this project; the DCO sign-off is per commit).
 - [ ] `git push origin v0.1.0`.
-- [ ] `git describe --tags` on main prints `v0.1.0`.
+- [ ] `git describe --tags` on main prints `v0.1.0` — under the release-branch pattern only after the merge-back, and as `v0.1.0-<N>-g<sha>` when main carries commits above the tag (2026-09-13: `v0.1.0-63-ge9900a3`).
 
 ## 5. The GitHub release (human)
 
 - [ ] `gh release create v0.1.0 --title "Spatial IDE v0.1.0" --notes-file <release-body-file> "frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe"` — the body from the finalized draft: the installer, its SHA-256, and the `KNOWN-LIMITATIONS.md` link ABOVE THE FOLD (the first three lines); then what v0.1.0 is; then the limits digest; then licences and the corresponding-source route.
 - [ ] After upload: download the asset back and re-hash it — the SHA-256 on the release page equals the file's (`gh release download v0.1.0 --pattern "*.exe" --dir <tmp>` then hash).
 - [ ] The release is NOT marked pre-release or draft unless the human decides so (a decision, queued if unsure).
+- [ ] **The lesson of 2026-09-13 (the human, verbatim): "gh release create leaves a draft when asset upload fails; the release is done only when a logged-out fetch of /releases/tag/<tag> shows the asset."** Run the check logged out (a private window, or `curl` without a token against `https://api.github.com/repos/<owner>/<repo>/releases/tags/<tag>`): `draft` must be `false` and the asset must be listed; then download the asset by its public URL and re-hash it. Not the authenticated `gh release view`, which shows drafts to their owner.
 
 ## 6. After the tag (custodian, mechanical)
 

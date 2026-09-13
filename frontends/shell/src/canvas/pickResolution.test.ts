@@ -6,10 +6,17 @@ import { describe, expect, it } from "vitest";
 import type { ResidentBatch } from "./decodeBatch";
 import {
   averageFeatureExtent,
+  decideHoverReadoutAtSettle,
+  hoverRepickActionForCameraChange,
   isBelowPickResolution,
+  isFramebufferIdentical,
+  isPointerOnCanvas,
+  mayRepickAtSettle,
   reevaluateStandingHoverOnCameraChange,
+  shouldArmHoverRepick,
   SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX,
 } from "./pickResolution";
+import type { HoverPointerCapture } from "./pickResolution";
 
 function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "rings"> {
   // One exterior ring per feature, no holes -- `features[i]` is that feature's own ring vertex list.
@@ -64,10 +71,13 @@ describe("isBelowPickResolution", () => {
   });
 });
 
-// Residency-debt cut 1b, Item C (DECISIONS-PENDING entry 29, "K6"): the standing hover re-evaluated
-// on a camera change, no GPU re-pick. Test cases are the ones pre-committed in
-// `RESIDENCY-DEBT-1B.md`'s Item C.
-describe("reevaluateStandingHoverOnCameraChange", () => {
+// The MID-GESTURE decision (entry 47's `HOVER-REPICK-PREREGISTRATION.md` D2; originally
+// residency-debt cut 1b, Item C, DECISIONS-PENDING entry 29, "K6"): the standing hover re-evaluated
+// while camera changes are still arriving, no GPU re-pick. Cases (a)-(e) are the ones pre-committed
+// in `RESIDENCY-DEBT-1B.md`'s Item C, unchanged in meaning by entry 47 -- only relabelled, because a
+// second decision (`decideHoverReadoutAtSettle`, below) now stands beside this one for the instant
+// the burst stops.
+describe("reevaluateStandingHoverOnCameraChange (the MID-GESTURE decision)", () => {
   const standingFeatureId = { streamHandle: "sh_test", batchSeq: 1, id: 42n, anchor: [0, 0] as [number, number] };
   const standingRefusal = { kind: "below-pick-resolution" as const };
 
@@ -104,5 +114,154 @@ describe("reevaluateStandingHoverOnCameraChange", () => {
   it("(e) null standing (nothing shown) -> no-op regardless of the new zoom", () => {
     expect(reevaluateStandingHoverOnCameraChange(null, 1, 1)).toBeUndefined();
     expect(reevaluateStandingHoverOnCameraChange(null, 5, 1)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Entry 47 (`HOVER-REPICK-PREREGISTRATION.md`), the AT-SETTLE decision and the two pure predicates
+// that gate it. Every case below is one of the ones pre-committed in that document's section 5.
+// ---------------------------------------------------------------------------------------
+
+const captureAt = (x: number, y: number): HoverPointerCapture => ({
+  x,
+  y,
+  clientWidth: 800,
+  clientHeight: 600,
+  devicePixelRatio: 1,
+});
+const SAME_FRAMEBUFFER = { clientWidth: 800, clientHeight: 600, devicePixelRatio: 1 };
+
+const idA = { streamHandle: "sh_test", batchSeq: 1, id: 42n, anchor: [0, 0] as [number, number] };
+const idB = { streamHandle: "sh_test", batchSeq: 1, id: 99n, anchor: [5, 5] as [number, number] };
+
+describe("isPointerOnCanvas (D5)", () => {
+  it("an ordinary pixel is on canvas", () => {
+    expect(isPointerOnCanvas(captureAt(120, 340))).toBe(true);
+  });
+
+  it("the origin pixel is on canvas -- the sentinel is strictly negative, never zero", () => {
+    expect(isPointerOnCanvas(captureAt(0, 0))).toBe(true);
+  });
+
+  it("deck.gl's pointerleave sentinel (a negative x/y) is off canvas", () => {
+    expect(isPointerOnCanvas(captureAt(-1, -1))).toBe(false);
+    expect(isPointerOnCanvas(captureAt(-1, 340))).toBe(false);
+    expect(isPointerOnCanvas(captureAt(120, -1))).toBe(false);
+  });
+});
+
+describe("isFramebufferIdentical (D4)", () => {
+  it("the same width, height and device pixel ratio: identical", () => {
+    expect(isFramebufferIdentical(captureAt(10, 10), SAME_FRAMEBUFFER)).toBe(true);
+  });
+
+  it("a resize in either axis is NOT identical", () => {
+    expect(isFramebufferIdentical(captureAt(10, 10), { ...SAME_FRAMEBUFFER, clientWidth: 801 })).toBe(false);
+    expect(isFramebufferIdentical(captureAt(10, 10), { ...SAME_FRAMEBUFFER, clientHeight: 599 })).toBe(false);
+  });
+
+  it("a device-pixel-ratio change alone is NOT identical -- the same CSS size can mean a different framebuffer", () => {
+    expect(isFramebufferIdentical(captureAt(10, 10), { ...SAME_FRAMEBUFFER, devicePixelRatio: 2 })).toBe(false);
+  });
+});
+
+// D3 -- the declared switch, both values exercised. `HOVER_REPICK_ON_PAN`'s shipped value is
+// PROPOSED PENDING THE HUMAN'S SIGHT (DECISIONS-PENDING entry 75); the pure rule takes it as a
+// parameter so neither value is a dormant branch.
+describe("shouldArmHoverRepick (D3/D6(a))", () => {
+  it("pan-and-zoom-alike (the ruling's words): a pure pan with a readout standing DOES arm", () => {
+    expect(shouldArmHoverRepick(true, false, true)).toBe(true);
+  });
+
+  it("zoom-only (the alternative): a pure pan arms NOTHING", () => {
+    expect(shouldArmHoverRepick(true, false, false)).toBe(false);
+  });
+
+  it("zoom-only: a zoom change with a readout standing still arms", () => {
+    expect(shouldArmHoverRepick(true, true, false)).toBe(true);
+  });
+
+  it("nothing standing arms nothing, under either value of the switch", () => {
+    expect(shouldArmHoverRepick(false, true, true)).toBe(false);
+    expect(shouldArmHoverRepick(false, true, false)).toBe(false);
+    expect(shouldArmHoverRepick(false, false, true)).toBe(false);
+    expect(shouldArmHoverRepick(false, false, false)).toBe(false);
+  });
+});
+
+describe("mayRepickAtSettle (D6: all three conditions, or no pick at all)", () => {
+  it("armed, on canvas, framebuffer unchanged -> a pick may run", () => {
+    expect(mayRepickAtSettle(true, true, true)).toBe(true);
+  });
+
+  it("any one of the three failing refuses the pick", () => {
+    expect(mayRepickAtSettle(false, true, true)).toBe(false);
+    expect(mayRepickAtSettle(true, false, true)).toBe(false);
+    expect(mayRepickAtSettle(true, true, false)).toBe(false);
+  });
+});
+
+describe("decideHoverReadoutAtSettle (the AT-SETTLE decision)", () => {
+  it("the re-pick returns the SAME id -> that id is emitted, confirmed at this camera", () => {
+    expect(decideHoverReadoutAtSettle(true, true, true, false, idA)).toEqual(idA);
+  });
+
+  it("the re-pick returns a DIFFERENT id -> the new id, never the retained one", () => {
+    const result = decideHoverReadoutAtSettle(true, true, true, false, idB);
+    expect(result).toEqual(idB);
+    expect(result).not.toEqual(idA);
+  });
+
+  it("the re-pick returns nothing (including over a tile that is not resident, D8) -> clear", () => {
+    expect(decideHoverReadoutAtSettle(true, true, true, false, null)).toBeNull();
+  });
+
+  it("below the threshold at the new camera -> the named refusal, WHATEVER the pick returned", () => {
+    // ADR-028 Decision item 4 / 24(c): the refusal always wins over any id. The threshold is read
+    // first; a pick outcome present here (the caller does not even resolve one in that state) must
+    // not displace it.
+    expect(decideHoverReadoutAtSettle(true, true, true, true, idA)).toEqual({ kind: "below-pick-resolution" });
+    expect(decideHoverReadoutAtSettle(true, true, true, true, null)).toEqual({ kind: "below-pick-resolution" });
+  });
+
+  it("the framebuffer changed between capture and settle -> NOTHING is emitted (D4 disarms)", () => {
+    expect(decideHoverReadoutAtSettle(true, true, false, false, idB)).toBeUndefined();
+    // ...including where the threshold alone would otherwise have produced the refusal.
+    expect(decideHoverReadoutAtSettle(true, true, false, true, null)).toBeUndefined();
+  });
+
+  it("not armed (no readout was standing when the burst began) -> nothing is emitted", () => {
+    expect(decideHoverReadoutAtSettle(false, true, true, false, idB)).toBeUndefined();
+  });
+
+  it("the pointer is off canvas -> nothing is emitted", () => {
+    expect(decideHoverReadoutAtSettle(true, false, true, false, idB)).toBeUndefined();
+  });
+});
+
+// D11 (preregistration section 12 Amendment 2): the button-down guard, as a pure decision. The
+// falsifier it closes is deck.gl's own documented behaviour -- no `onHover` while a button is down --
+// which leaves the stored pixel frozen at its pre-drag value for a whole drag pan.
+describe("hoverRepickActionForCameraChange (D11)", () => {
+  it("a button held down: CANCEL, whatever the rest says -- the burst is dropped, nothing is armed", () => {
+    expect(hoverRepickActionForCameraChange(true, true, true, true)).toBe("cancel");
+    expect(hoverRepickActionForCameraChange(true, false, true, true)).toBe("cancel");
+    expect(hoverRepickActionForCameraChange(false, true, false, true)).toBe("cancel");
+  });
+
+  it("no button down, a readout standing, the axis counts: ARM", () => {
+    expect(hoverRepickActionForCameraChange(true, true, true, false)).toBe("arm");
+    expect(hoverRepickActionForCameraChange(true, false, true, false)).toBe("arm"); // pan, under the words' reading
+    expect(hoverRepickActionForCameraChange(true, true, false, false)).toBe("arm"); // zoom, under zoom-only
+  });
+
+  it("no button down but nothing to arm: SCHEDULE only -- the timer stays honest, the settle emits nothing", () => {
+    expect(hoverRepickActionForCameraChange(false, true, true, false)).toBe("schedule");
+    expect(hoverRepickActionForCameraChange(true, false, false, false)).toBe("schedule"); // pure pan, zoom-only
+  });
+
+  it("the release edge: the SAME camera change that cancelled while held arms once the button is up", () => {
+    expect(hoverRepickActionForCameraChange(true, true, true, true)).toBe("cancel");
+    expect(hoverRepickActionForCameraChange(true, true, true, false)).toBe("arm");
   });
 });

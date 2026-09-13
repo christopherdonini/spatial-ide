@@ -1179,3 +1179,109 @@ The principle the human states governs every remaining record: *a document descr
 ### Records owed at the sitting
 
 Part M's verdicts verbatim in the walkthrough; entry 69's ruling into KNOWN-LIMITATIONS' install entry and QUICKSTART's install section; the brackets in items 5/6 resolved from M; item 4 written last; the two tag/release drafts finalized; then the tag by the checklist. A stale cite noticed by the architect: `RELEASE-0.1.md` (Amendment 7's 3857 consult) cites `kernel/src/publish/mod.rs:1187` for the `crs_transform` string, which sits at `:1259` on `main` today — a dated correction, recorded here rather than by editing the earlier amendment.
+
+## Amendment 15 — Part M, sitting 2 (M5–M13), the human's report of 2026-09-13, verbatim; the custodian's reading follows
+
+*Recorded by the custodian on 2026-09-13 from the human's message. The human ran the v0.1.0 candidate (built from 998be05) on the clean profile and the dev checkout as the prep pack's §4b says. Nothing here is a verdict of the custodian's; the human's words are the record.*
+
+> M1 to M4 work fine. M5, if i filter for example id < 100, if i zoom to layer it works perfectly, but when i zoom out it is saying "filling has finished for this view - some areas were not loaded etc... " Also we still have to fix the hover to show id, zoom once back and even if i still hover the same feature cuase the mouse has not moved and the cursor is completely inside the feature, the id text disappear. That's a breaking rule for me, we need to fix it, and we need it now. No discussion. Also after applying the filter, the zoom to layer doesn't work anymore till you clear the filtering.
+> Also m6, the styling works fine.
+> M7 when presssing zoom to layer it says "filling has finished for thos view etc... ' when i zoom out it says "showing 19100 features - the fartest etc... " No banner refusal appears.
+> M8 is good, it is saying though"this bundle format cannot record a row predicate adr 017 etc... "
+> M9 is fine showing the audit through my account says this ([audit log: C:\Users\sidewalk\AppData\Local\spatial-ide\audit\publish.jsonl]
+> 2026-09-13 12:24 — publish to C:/Users/Public/spatial-ide-fixtures/100k-happy-path — APPROVED via shell dialog and SUCCEEDED (84 rows, 1 partition)
+> 2026-09-13 12:28 — publish to C:/Users/Public/spatial-ide-fixtures/100k-happy-path-2 — APPROVED via shell dialog and SUCCEEDED (100000 rows, 38 partitions)) I did publish it 2 times, a current view and a whole dataset. M10 is fine.
+> M11 works fine, just the zoom is strange, when i zoom in, the map pan by itself to north-west, and when i zoom out it goes the other side, bottom left corner, sud-est.
+> M12 Mode 3 works fine, mode 2 also, mode 1 also. All of them show in the log what was expected.
+> [Mode 2 console output: the first `npx tauri build --debug --no-bundle` failed with `error: failed to remove file …\target\debug\spatial-ide-shell.exe — Access is denied. (os error 5)`; the second succeeded (`Finished dev profile`, `Built application at: …\target\debug\spatial-ide-shell.exe`); the exe then printed the session-log path and `data-plane expected origin (config mirror): http://tauri.localhost`.]
+> M13: `npx tauri build --no-bundle --config e2e\out\m13-overlay.json` → `error: invalid value 'e2e\out\m13-overlay.json' for '--config <CONFIG>': failed to read configuration file e2e\out\m13-overlay.json: The system cannot find the file specified. (os error 2)`; then `& ".\src-tauri\target\release\spatial-ide-shell.exe"; $LASTEXITCODE` → `2`; the newest session log: `info data-plane expected origin (config mirror): http://tauri.localhost` / `policy recovery policy: none -- fail visibly and terminate the canvas with a surfaced error` / `info origin-self-check ok pinned=http://tauri.localhost`.
+
+**The custodian's reading (2026-09-13), row by row — findings, not verdicts:**
+
+- **M1–M4, M6, M8, M9, M10, M12 (all three modes):** as the rows expect, in the human's words. M8's sentence is ADR-017's declared refusal of a row predicate in the bundle (publish under a filter is refused by name) — expected, and the human calls the row good.
+- **M5 — three findings.** (a) The hover id disappears after one zoom-out with the pointer stationary inside the same feature: the pre-entry-47 K6 contract (the id is cleared on zoom-out). **The human's order: fix now, no discussion.** The fix is entry 47's piece, built and gated on `cut/hover-repick-settle` (PR #47, taken out of draft on 2026-09-13; entry 75's switch stays at its built default `true` until the human says otherwise). (b) After "Zoom to layer" under a filter, zooming out shows the settled-partial sentence ("Filling has finished for this view — some areas were not loaded…") for a ~100-feature filtered view — whether that is ADR-028's declared over-budget/partial status misfiring under a filter or a true partial fill is not decided here; queued for investigation (entry 84). (c) After applying a filter, "Zoom to layer" stops working until the filter is cleared — a defect not in any row's expectation; queued (entry 85).
+- **M7 — a PASS as the row is written.** The row (`MANUAL-WALKTHROUGH.md:875`) says either shape passes — the within-budget sentence or the over-budget one — and that "what matters is that **no red-bordered ceiling-refusal banner appears at all**"; the human saw the settled-partial sentence at the fit, then the over-budget sentence ("Showing 19100 features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail.") on zooming out, and no banner. That is the declared-partial-view contract on the shipped default, exactly as the row expects. Recorded as the row's exact sentence sighted.
+- **M11 — the bundle viewer's zoom is not anchored:** zooming in pans the map to the north-west, zooming out to the south-east. The bundle otherwise works. Queued as a reference-viewer defect (entry 86).
+- **M12 mode 2 — a mechanic, not a defect:** the first rebuild failed because the debug executable was still running (`Access is denied`); the second, after the app was closed, succeeded. The pack gains one line: close the app before rebuilding.
+- **M13 — not executed yet: step (a) was skipped.** The row (`:881`) has the operator WRITE the overlay first — "(a) write a config overlay setting `app.windows[0].url` to `https://example.test/` … writing it under `e2e/out/` (gitignored)" — then (b) build with `--config <that file>`, then (c) run the release executable. The pack's condensed command named the file without its step (a), so the file did not exist; the release build ran with the ordinary config, the executable's self-check passed (`origin-self-check ok`), and the deliberate refusal was never attempted (exit code 2 observed on that ordinary run is unexplained and moot). The custodian wrote the overlay on 2026-09-13 at `frontends/shell/e2e/out/m13-overlay.json` (gitignored) so the row can be re-run: (b) `npx tauri build --no-bundle --config e2e/out/m13-overlay.json` from `frontends/shell`, then (c) run `src-tauri/target/release/spatial-ide-shell.exe` directly and read `$LASTEXITCODE` and the newest session log. The expected outcome is the row's: the "Spatial IDE could not start" dialog, exit code 1, one `error` line naming `WebviewUrl::App`; a hang is the finding.
+
+## Amendment 16 — the human's rulings of 2026-09-13 (entry 83 = the release branch; entries 84/85 = now; RC2; entry 86), and M13's result verbatim
+
+*Recorded by the custodian on 2026-09-13. The ruling is quoted verbatim at the top of `DECISIONS-PENDING.md`'s Pending section under "RULED 2026-09-13"; the operative parts for this record:*
+
+- **The tag target.** `release/0.1.0` is branched from 998be05 (the commit the candidate installer was built from). The three shell fixes — entry 47 (the re-pick on camera settle), entry 84 (the settled-partial status under a filter) and entry 85 (Zoom to layer under a filter) — land on that branch; none may depend on #44's engine changes, and no Brief A engine code goes on the release branch. The installer is rebuilt from the branch head = **RC2**, hashed. Part M's finalized docs land on the branch as docs-only commits; **v0.1.0 tags the branch head**; the release body states the build commit and that the tagged tree differs from it by documentation only, with the `git diff --stat` line as proof; the branch merges back to main after the tag. The freeze restated: nothing merges to main before the tag except docs.
+- **Part M under RC2.** Every row is classified by whether RC2's diff from 998be05 touches its code path: touched rows re-run on RC2 (M1's hash, M2, M5 plus zoom-to-layer, M7, the hover row, M12 mode 3, and the new rows for 84/85); untouched rows stand from 998be05 with the diff-stat cited. The classification and the sitting-3 pack follow in Amendment 17 with RC2's hash.
+- **KNOWN-LIMITATIONS.** The drag-release inert-re-pick line (entry 47's Amendment 4: focus lost mid-drag leaves the re-pick inert for the session) belongs to the release that ships 47 — this one. Entry 86 (the bundle viewer's zoom drift) is post-tag, in KNOWN-LIMITATIONS if reproducible.
+- **Brief A.** The #44 merge is not the human's sight; a phone-readable digest (preregistration §2, the corpus manifest, each ADR draft's Decision paragraph) is sent; P3 stays held until the human rules. Rule-7 accounting on 47: the custodian's reading stands.
+
+**M13, the human's result, verbatim (2026-09-13):** *"M13 result: the release-built executable showed the "Spatial IDE could not start — ADR-020 Amendment 1 …" dialog (screenshot recorded); no silent hang — the residual did not come true. Exit code after dismiss: [1 / other]; newest session log: [one error line naming WebviewUrl::App / other]. Record verbatim in the Part M log."* The two bracketed values are as the human typed them and are the human's to fill (the row expects exit code 1 and one `error` line naming `WebviewUrl::App`). The row's finding — a silent hang — did not occur.
+
+## Amendment 17 — RC2 built from `release/0.1.0` (2026-09-13), and the Part M row classification for sitting 3
+
+*Recorded by the custodian on 2026-09-13 under the human's ruling of the same day (Amendment 16). Build-only; nothing was launched by the custodian.*
+
+**RC2.** Built from `release/0.1.0` at **13471a9** (= 998be05 + entry 47 + entries 84/85; the merge of PR #48). Artifact: `C:/dev/spatial-ide/.claude/worktrees/release-0.1.0/frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe`, **10,559,893 B**, SHA-256 `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f`, Authenticode **NotSigned**. NOTICE beside the executable: 3,186,905 B, SHA-256 `6eb80fd3bb4bdf02300fa72a51eb77f6f92ca2637e26b27e4061ce5a4bcdcee6`, byte-equal to `src/generated/NOTICE.txt`; bundle-viewer NOTICE 163,998 B. Built with the candidate's own command (Amendment 14). Build log: `rc2-build-20260913T160258Z.log` (scratchpad). The release branch's head at this writing is 2810b81 — above the build commit by documentation only (Part M rows M14/M15); the tag will point at the branch's final head, and the release body states the build commit and carries `git diff --stat 13471a9 <tag>` as the proof that the difference is documentation.
+
+**RC2's diff from the candidate's build commit** (the proof line for every "stands" row):
+
+```
+git diff --stat 998be05 13471a9
+ frontends/shell/FILTER-84-85-PREREGISTRATION.md    |  58 ++
+ frontends/shell/HOVER-REPICK-PREREGISTRATION.md    | 159 ++++
+ frontends/shell/MANUAL-WALKTHROUGH.md              |   9 +-
+ frontends/shell/RESIDENCY-DEBT-1B.md               |   4 +
+ frontends/shell/e2e/checkDistClean.mjs             |   2 +-
+ frontends/shell/e2e/regression.mjs                 | 948 ++++++++++++++++++---
+ frontends/shell/e2e/residency-harness.mjs          |   4 +-
+ frontends/shell/src/App.test.ts                    |   2 +
+ frontends/shell/src/canvas/WorkingCanvas.test.ts   | 387 ++++++++-
+ frontends/shell/src/canvas/WorkingCanvas.tsx       | 443 +++++++++-
+ frontends/shell/src/canvas/hoverRepickConstants.ts |  53 ++
+ frontends/shell/src/canvas/pickResolution.test.ts  | 167 +++-
+ frontends/shell/src/canvas/pickResolution.ts       | 187 +++-
+ frontends/shell/src/canvas/tileResidentSet.test.ts |  84 ++
+ frontends/shell/src/diagnostics/renderTrace.ts     |  23 +
+ .../src/residency/candidateArmSession.test.ts      | 187 ++++
+ .../shell/src/residency/candidateArmSession.ts     |  19 +
+ 17 files changed, 2559 insertions(+), 177 deletions(-)
+```
+
+Every path is under `frontends/shell/`. No engine, kernel, protocol or bundle-viewer file changed. The release branch carries no Brief A code (the human's rule); the three fixes were verified against 998be05's engine and kernel by the build itself.
+
+**Part M rows, classified by the ruling's criterion (does RC2's diff touch the row's code path):**
+
+- **Re-run on RC2:** M1 (the artifact's hash), M2 (install), **M3 and M4** (the first open fits the view through `fitToExtent`, whose camera write entry 85 changed — the criterion adds them; the human's list omitted them), M5 plus zoom-to-layer, M7 (the residency status path, touched by entry 84's terminal marking), the hover row (Part L's L7/L8 as entry 47 rewrote them), M12 mode 3 (the packaged executable), and the new rows M14 and M15.
+- **Stand from 998be05, the diff-stat cited:** M6 (style), M8, M9, M10, M11 (publish, audit, the bundle viewer), M12 modes 1–2 (the dev checkout's own build), M13 (the ADR-020 refusal path in `src-tauri`). The human's M13 result of 2026-09-13 stands with its two bracketed values still the human's to fill.
+
+**Open at this writing:** entry 87 (the filtered per-tile queries dropped before any stream is issued — the settled-partial sentence may still appear under a filter on RC2; M15 records it); entry 86 (post-tag). The sitting-3 pack is `RELEASE-DRAFTS-0.1.0/part-m-prep-pack.md` §6.
+
+## Amendment 18 — Part M, sitting 3 on RC2 (2026-09-13), the human's report verbatim; the custodian's reading follows
+
+*The first pass of sitting 3 was run on the candidate by mistake (the main checkout's bundle folder still held it; the pack's §2 copy line was sitting 1's) and is recorded in `CUT-STATE.md`; the pack gained §6d (the executable check) and §6e (rows M14/M15 in full), and RC2 was copied to the shared folder by the custodian. The human then installed RC2 and reported:*
+
+> M1 to M4 are ok, M5 after i filter the zoom to layer now works perfectly as intended, M7 after i press zoom to layer says "Showing all 17752 features in view", by zooming out we get a "Showing 19100 features - the farthest areas etc ...". Now the id hover works, eventhougnh through every zomming step the id text briefly disappear and appears back again. I'd cut the text way before, cause i really zoom out a lot before it tells me "Features here below pick resolution... " also cause the pointer is the panning hand, not the pointy cursor, so even less precise. But overall we're getting there. M14 I've already done it in M5, M15 when you zoom out the text changes from showing all 100 features in view to "filling has finished for this view - some areas etc ... ". M12 mode 3 i've got the session log in the user/public/spatil-ide-fixtures folder, name "session-1789320462"
+
+**The custodian's reading, row by row:**
+
+- **M1–M4:** pass on RC2 (the installed executable is RC2's; the candidate's first pass is superseded).
+- **M5 / M14 (entry 85):** pass — "Zoom to layer" under a filter works on every click, as the fix intended and the regression step asserts.
+- **M7:** pass as the row is written — the within-budget sentence at the fit ("Showing all `<N>` features in view"), the over-budget sentence on zooming out ("Showing `<N>` features — the farthest areas…"), and no banner.
+- **The hover row (entry 47):** pass — the id stays across a zoom-out with the pointer still. Two observations recorded as new findings, not as defects of the piece as preregistered: (a) *through every zooming step the id text briefly disappears and reappears* — that is the declared shape (the mid-gesture rule clears at the camera change; the settle re-pick restores it), felt as a blink per notch; whether the readout should stay standing until the settle decides is a design question → DECISIONS-PENDING entry 88. (b) *the refusal ("Features here are below pick resolution — zoom in to inspect them.") should come much earlier when zooming out, and the pointer is the panning hand rather than a precise cursor* — the pick-resolution threshold is a declared constant and the cursor shape a UI choice, both user-visible → entry 89.
+- **M15 (entries 84 and 87):** recorded, as the row says: "Showing all 100 features in view" at the fit, then the settled-partial sentence on zooming out — entry 87's finding, exactly as predicted; entry 84's fix stands at the unit level. Entry 87 still awaits the human's word (RC2 ships with a KNOWN-LIMITATIONS line, or waits for the fix).
+- **M12 mode 3:** pass on RC2; the session log `session-1789320462.log` is in `C:\Users\Public\spatial-ide-fixtures\`.
+- **Standing from 998be05 with the diff-stat cited (Amendment 17):** M6, M8, M9, M10, M11, M12 modes 1–2, M13 (the human's M13 result of 2026-09-13, its two bracketed values still the human's to fill).
+
+**What follows:** the release docs (items 4, 5, 6) finalized onto `release/0.1.0` as docs-only commits for the human's sight; the tag on the branch head; the merge back to main.
+
+**Entry 87, the mechanism (added 2026-09-13 after the human's time-boxed diagnosis — the human's ruling: "Record the mechanism in entry 87 and Amendment 18 either way"):** M15's zoom-out sentence is **neither** truncation-driven nor a second zero-row terminal path. Under a row filter, a share of the per-tile `viewport_query`s are refused by the kernel with the typed code `skp.filter_rejected_by_binder` (63 refusals across 51 tiles in the diagnostic run; nondeterministic for the same predicate), and the shell's minting code discards the refusal silently; those tiles never become streams, their areas are never read, matching features there are not drawn, and the status sentence is true of them. The likely sub-cause is kernel-side (the binder check's maintenance-connection lease failing under concurrent per-tile checks and being reported as a binder rejection — unverified). The full evidence is in DECISIONS-PENDING entry 87. Consequences for this release: RC2 ships; the KNOWN-LIMITATIONS line is worded for the mechanism found and sighted by the human in the docs PR; the fix — shell-side mitigation at least, kernel-side if the sub-cause holds — goes post-tag with its regression step (the suspended FIND′ assertion of the 84/85 preregistration is its acceptance test). The earlier hypothesis (`engine.connections_exhausted`) is refuted and recorded as such.
+
+## Amendment 19 — the tag, and the release cut's close (2026-09-13)
+
+*The checklist's §6 closing record, written by the custodian after the human's tag.*
+
+- **The tag.** `v0.1.0` is an annotated tag (object `fbba9ae8cfd825e837dc71c0df596dc14ff3b2c5`) on **b391e43** — `release/0.1.0`'s head after the release docs and the entry-87 resolution. Its message is `RELEASE-DRAFTS-0.1.0/tag-message-v0.1.0.md` as finalized (RC2's hash; the file-fact CRS statement; the 13b line; the drag-release and filter lines).
+- **The artifact.** RC2, built from **13471a9** on the same branch: `Spatial IDE_0.1.0_x64-setup.exe`, 10,559,893 B, SHA-256 `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f`, NotSigned (Amendment 17). The tagged tree differs from the build commit by documentation only — `git diff --stat 13471a9 b391e43`: `KNOWN-LIMITATIONS.md`, `QUICKSTART.md`, `README.md`, `frontends/shell/MANUAL-WALKTHROUGH.md`; 4 files, +285/−56 — the proof line the release body carries.
+- **The GitHub release.** https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0 — a **pre-release**, `draft: false`, one asset `Spatial.IDE_0.1.0_x64-setup.exe` (GitHub renders the filename's space as a dot), 10,559,893 B. The first attempt left a draft (the asset upload had failed — the API listed no release and `/releases/latest` was 404 while the tag existed); the human re-created it on 2026-09-13. Verified logged out by the custodian: the tag's release page answers HTTP 200 without a token, the unauthenticated API lists the asset, and the asset downloaded by its public URL hashes to `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f` — RC2. The lesson is in `RELEASE-DAY-CHECKLIST.md` §5 in the human's words.
+- **Part M.** Sittings recorded in Amendments 15 (M5–M13 and M1–M4 on the candidate), 17 (the row classification) and 18 (M1–M5, M7, M12 mode 3, M14, M15 and the hover row on RC2; M13's two bracketed values still the human's). Verdicts as the human reported them; the walkthrough's "Part M run" section remains the template on both branches — the record is these amendments.
+- **CI on the tag.** Green on b391e43: Product CI — Rust workspace, Product CI — shell, Product CI — bundle viewer, ADR-003 spike CI (macOS) all `success` (recorded 2026-09-13, after the tag push).
+- **The merge-back.** PR #50 (`merge/release-0.1.0-into-main`) merged by the human on 2026-09-13 (main at e9900a3; `git describe --tags` on main prints `v0.1.0`) — opened as a PR from `merge/release-0.1.0-into-main` (one conflict in `WorkingCanvas.test.ts`, resolved to the release side, a superset; the shell suite green on the merge result). On its merge the cut closes: `CUT-STATE.md` archived (rule 10), and the post-tag queue presented for the human's sequencing — entry 87's fix (the suspended FIND′ assertion as its test), entry 66 (b) (#45), entry 86 if reproducible, entries 88/89, Brief A P3 on the human's word (#46 holds its entries 80/81).

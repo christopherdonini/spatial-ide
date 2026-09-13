@@ -40,8 +40,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use spatial_engine::fixture::{
-    write_geoparquet_cancellable, AttributeMode, CrsMode, FixtureFacts, FixtureProgress,
-    FixtureSpec, IdentityMode, LicenseMode,
+    write_geoparquet_cancellable, AttributeMode, CoordinateDomain, CrsMode, FixtureFacts,
+    FixtureProgress, FixtureSpec, IdentityMode, LicenseMode, StatisticsMode,
 };
 use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
@@ -181,6 +181,17 @@ fn spec_5gb() -> FixtureSpec {
         // Determinism-critical: a source-declared license needs no `--license-at`, and an
         // operator-declared instant is a semantic input inside ADR-017 §12's determinism surface.
         license: LicenseMode::DeclaredBySource,
+        // Brief A P1 added five fields to `FixtureSpec`. This initializer is deliberately
+        // exhaustive — a new field must be a conscious choice here rather than a silent default —
+        // and every value below **is** the generator's default, so this fixture's bytes are
+        // unchanged: the metre domain every earlier fixture drew in, no `geo` `bbox` member, the
+        // writer's own statistics behaviour, a covering that names the column it actually has, and
+        // the `geo.version` this generator has always written.
+        domain: CoordinateDomain::Lv95Metres,
+        with_geo_bbox: false,
+        statistics: StatisticsMode::WriterDefault,
+        covering_names_absent_column: false,
+        geo_version: "1.1.0".to_string(),
     }
 }
 

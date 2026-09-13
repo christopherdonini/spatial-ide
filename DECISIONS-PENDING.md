@@ -5,6 +5,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-13 (later) — entry 87 — the human verbatim:** *"Entry 87: time-boxed read-only diagnosis first (≤30 min): is M15's zoom-out sentence truncation-driven (covering set past the cap → tiles never requested) or a second zero-row terminal path the 84 fix missed? If truncation: contract-correct, no fix — reword the line to explain the knowledge limit: "Under a row filter at wide zooms, the status may report areas not loaded even where no matching features exist: the view's tile budget was exceeded and those areas were never queried, so the app cannot know they are empty." If a second zero-row path: RC2 ships the line as drafted and the fix goes post-tag with its regression step — a status that understates completeness does not justify RC3. Record the mechanism in entry 87 and Amendment 18 either way; remove the brackets accordingly."* Applied by the custodian: a read-only diagnosis dispatched at once under the box (existing run logs and ledgers first; one temporary, uncommitted log line in the shell's mint `catch` and a single harness run only if the logs cannot decide; reverted after); the mechanism recorded in entry 87 and Amendment 18; the KNOWN-LIMITATIONS line worded per the branch that holds — and if the mechanism is neither of the two named (the fix-branch runs showed no truncation and tiles reaching no terminal at all), the accurate wording is drafted for the human's sight before the brackets come off.
+
+**RULED 2026-09-13 — entries 83, 84, 85, 86, the M13 result, RC2 — the human verbatim:** *"Entry 83: tag target = release/0.1.0 branched from 998be05; Part M's finalized docs land there as docs-only commits; v0.1.0 tags its head; the release body states the build commit and that the tagged tree differs from it by documentation only, with the git diff --stat line as proof; the branch merges back to main after the tag; add the pattern to RELEASE-DAY-CHECKLIST. The #44 merge is not my sight — send a phone-readable digest (preregistration §2 + corpus manifest + each ADR draft's Decision paragraph); P3 stays held until I rule. Freeze restated: nothing merges to main before the tag except docs. The drag-release inert-re-pick line belongs to the release that ships 47. Rule-7 accounting on 47: your reading stands.*
+
+*Entries 84/85: now. Both through preregistration and gates with the regression step that would have caught them — 85 extends FIND′ to zoom-to-layer-after-filter on the candidate arm; 84 asserts the zero-row terminal marks the tile resident. RC2: the three shell fixes (47, 84, 85) land on release/0.1.0 — verify none depends on #44's engine changes; no Brief A engine code on the release branch. Rebuild the installer from the branch head = RC2, hashed. Classify every Part M row by whether RC2's diff from 998be05 touches its code path: touched rows re-run on RC2 (M1 hash, M2, M5 + zoom-to-layer, M7, the hover row, M12 mode 3, the new 84/85 rows); untouched rows stand from 998be05 with the diff-stat cited. Docs finalized onto the branch; tag its head; merge back to main. Entry 86 (viewer zoom drift): post-tag, in KNOWN-LIMITATIONS if reproducible.*
+
+*M13 result: the release-built executable showed the "Spatial IDE could not start — ADR-020 Amendment 1 …" dialog (screenshot recorded); no silent hang — the residual did not come true. Exit code after dismiss: [1 / other]; newest session log: [one error line naming WebviewUrl::App / other]. Record verbatim in the Part M log."* Applied by the custodian from this line: `release/0.1.0` created from 998be05 (a worktree, `.claude/worktrees/release-0.1.0`); entry 47's commits carried onto it by cherry-pick with their records; entries 84/85 preregistered on a branch off it, built and gated, then landed there; RC2 = the installer rebuilt from the branch head, hashed and recorded (RELEASE-0.1 Amendment 17 when built); the Part M row classification and the sitting-3 pack written from RC2's `git diff --stat 998be05`; items 4/5/6 finalized onto the branch for the human's sight; the tag and the merge-back are the human's clicks; the checklist gains the pattern; entry 86 post-tag; the M13 result recorded verbatim (the two bracketed values as the human typed them, to be filled by the human); the Brief A digest produced and sent; P3 held.
+
+**RULED 2026-09-11 — entries 76, 77, 78, 79, 80, 81, 82, disk, the trailer question — the human verbatim:** *"76: (1) invert the latch in this piece, named in the Part K row; (2) add the drop-at-drain re-check with the same predicate; (3) unit/E2E + K7 discharge the merge gate, the harness assertion executed once as an unscored smoke if a window exists, else stated unexecuted; (4) 13b retires at the post-tag landing. 77: sign nothing for v0.1.0; post-tag evaluate SignPath OSS first, Certum second. 78: description A with "designed so that the UI, CLI, notebooks and AI are all clients of it"; topics as verified; checklist spatial→spatial-data; I run the edit. 79: (1) the wider named set, projection_empty_list mandatory; (2) hover shows every projected column, the bound is too-many at admission; (3) describe carries per-column projectable, the panel holds no type logic. 80: (a), each re-aim naming the ruling AND asserting the new provenance class. 81: (b), unit:format-rule beside unit:definition. 82: (a), capped — further residual → hold and narrow to zoom-settle only, no fourth attempt. Disk: reclaim both caches. Verify which trailer carries the model name; Signed-off-by must be a human identity — remediate on branches if needed, fix the worker command."* Applied by the custodian from this line: 76 → ENTRY-66B-PREREGISTRATION §14 Amendment 4 then the piece's second batch; 77 → recorded in the code-signing note, no action before the tag; 78 → the note carries the final text, the checklist line corrected, the commands for the human's own run; 79 → recorded in the B1 documents for B1's close (Brief B still held); 80 → NEXT-CUT.md dated qualification + the provenance assertions in the Brief A batch; 81 → the Proposed ADR-013 amendment gains the clarification, §14 item V, the Brief A batch; 82 → HOVER-REPICK-PREREGISTRATION §12 Amendment 3 then the third attempt; disk → both caches removed after inspection; trailers → verified on all 20 branch commits (Signed-off-by = the human identity throughout; the model name only in Co-Authored-By), no remediation, the brief text made explicit.
+
 **RULED 2026-09-09 (later) — #38 and the closing sequence — the human verbatim:** *"#38: clicking.
 Sequence adjustment: the entry-68 line-ending commit proceeds as staged; items 5/6 land as drafts with
 bracketed slots for anything installer-facing; the installer build and my Part M come next; then items
@@ -69,6 +79,226 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+89. **[Sitting 3 on RC2, the hover row — your two preferences, both user-visible and yours: (a) "I'd
+    cut the text way before, cause i really zoom out a lot before it tells me 'Features here below
+    pick resolution…'" — the pick-resolution threshold is a declared constant (`isBelowPickResolution`
+    and its constant in `frontends/shell/src/canvas/pickResolution.ts`); tightening it makes the named
+    refusal appear earlier on zoom-out and is a behaviour change, so its value is yours to set — say
+    the notch or the feature size at which you want the refusal, or "architect picks a declared value
+    and I sight it"; (b) "the pointer is the panning hand, not the pointy cursor, so even less
+    precise" — the canvas cursor shape is deck.gl's default grab hand; a crosshair or arrow while
+    hovering (the hand only while dragging) is a UI choice. Both post-tag unless you say otherwise.]**
+    Not decided here.
+
+88. **[Sitting 3 on RC2, the hover row — "through every zooming step the id text briefly disappears and
+    appears back again." That is entry 47's declared shape: the mid-gesture rule clears the readout at
+    the camera change (D2), and the settle re-pick restores it (D1–D6), felt as a blink per notch. The
+    alternative — keep the last readout standing through the gesture and let the settle re-pick
+    replace or clear it — is the "unconfirmed state" you ruled out in entry 75 (3), or a variant of it
+    (standing but not re-asserted). Your word: keep the blink as declared, or reopen 75 (3) for a
+    standing-until-settle reading, which would be its own preregistered piece post-tag.]** Not decided
+    here.
+
+87. **[Found by entry 84's E2E assertion on `fix/filter-84-85` (2026-09-13) — a second cause of the
+    settled-partial sentence under a filter, deeper than the zero-row terminal: at the zoomed-out
+    filtered camera, 42 of the 115 covering tiles never reach any terminal. Each tile's
+    `viewport_query` is sent (a `viewport-query` trace line) and no `stream-issued` follows; the
+    shell's `mintAndStart` drops them on one of its two silent paths (the ticket-refused `catch`, or an
+    epoch-abandoned ticket) with no trace, no session-log line and no status. Filter-specific in
+    these runs: before the filter 7,958 queries → 7,949 streams; after it 142 → 74. A covered tile
+    that is never resident keeps the fill incomplete whatever the zero-row fix does, so on RC2 the
+    misleading sentence will still appear under a filter; entry 85 (Zoom to layer) is unaffected and
+    proven. Entry 84's terminal marking landed and is unit-pinned (your stated requirement); its E2E
+    status assertion is suspended by name (preregistration §6 Amendment 1 (b)) until this is fixed.
+    Cause under read-only investigation (appended here when it lands); the fix may be shell-only (a
+    logged refusal plus a requeue under the same cover) or may need the kernel (a pending-stream
+    ceiling or refusal semantics), which your RC2 rule excludes. Your word: (a) RC2 ships 47 + 85 +
+    84's terminal marking now, with a KNOWN-LIMITATIONS line for the sentence under a filter and this
+    fix post-tag; (b) RC2 waits for this fix through its own preregistration and gates, shell-only if
+    the cause allows; (c) something else you name.]** Not decided here.
+    *Finding appended 2026-09-13 (read-only investigation of the fix branch; a hypothesis with its discriminator, not a verified cause):* `mintAndStart` (`tileViewportStreamManager.ts:658-669`) traces the query, awaits `viewportQuery`, and lands every rejection in a bare `catch` that deletes the tile's state and drains the queue — no session-log line, no trace, no status, no requeue — so the tile is neither issued nor resident while still counted in the cover. The likeliest rejection is the kernel's typed `engine.connections_exhausted`: `viewport_query` leases a stream connection before minting a ticket (`kernel/src/skp.rs:392`, `:404`) from a pool capped at `MAX_STREAM_CONNECTIONS = 4` (`engine/src/pool.rs:92`, refusal at `:262-275`), and a lease is returned only when the producer thread returns (`engine/src/stream.rs:1073-1083`), whereas the shell frees its own slot and re-mints synchronously on supersede and on a clean terminal (`tileViewportStreamManager.ts:702-733`) — the pool's own comment names this exact reachability (`pool.rs:64-70`). Under a filter the ratio changes because the filtered first-look stream self-cancels while its producer still holds a lease (`candidateArmSession.ts:1175-1195`) and filtered per-tile streams end with zero rows almost at once, so re-mints collide with lingering leases; each refusal drains the queue into the same exhausted pool, a cascade matching 42 contiguous losses. Alternatives ranked lower: `skp.too_many_pending_streams` (its ceiling of 8 is unreachable from a manager holding at most 3+1 pending tickets); `skp.filter_*` admission (deterministic — it would refuse all 115, not 42); the epoch-abandon paths (they cannot drop a tile that stays in the final cover). Discriminator, one line: log the typed code in that `catch` (`tile-stream-mint-refused <key>: <code>`) and its siblings in the two epoch branches. **Fix site: the shell only** — the log line plus requeueing a refused tile under the same cover so the drain retries it once a lease returns; the kernel's ceiling is declared and its lease-release ordering is reserved to ADR-014 (`pool.rs:72-78`), so nothing there changes. Small, preregisterable, and shell-only — within your RC2 rule if you take option (b).
+    *Diagnosis, 2026-09-13 (the human's time-boxed read-only diagnosis; one temporary log line in the shell's mint `catch`, one harness run, reverted): **the mechanism is neither truncation nor a second zero-row terminal path, and the earlier `engine.connections_exhausted` hypothesis is refuted.*** Evidence: in the recorded runs and the diagnostic run, zero `covering-truncated` lines after the filter; every tile terminal `Completed`, none for an unminted tile; the diagnostic line logged **63 `tile-stream-mint-refused … skp.filter_rejected_by_binder`** across 51 distinct tiles, all after the filter marker (134 queries, 74 streams, 60 unminted at the filter step), no `connections_exhausted`, no `too_many_pending_streams`, and the only `mint-abandoned` lines were three pre-filter ones; the pool never exceeded `live=3 active=3`. The refusal is nondeterministic for the same predicate (a tile refused at one fit streams at the next). The kernel's typed refusal is real and the shell discards it silently, so those tiles never become streams: **their areas are never read, matching features there are not drawn, and the status sentence "some areas were not loaded" is true of them.** Likely sub-cause, unverified: the binder check leases a **Maintenance** connection (`engine/src/predicate.rs:118`) and a failed lease is mapped to the same `RejectedByBinder` variant (`:119`, its doc at `:240-242`), so three concurrent per-tile binds can exhaust that class and the losers surface as binder rejections; the discriminator is logging the refusal's `detail` field at the same `catch`. **Fix site:** a shell-only mitigation exists (log the typed refusal; requeue the refused tile under the same cover once a slot frees), but if the sub-cause holds the honest fix is kernel-side (serialize or re-lease the admission bind, or stop mapping lease exhaustion to a binder rejection), which the RC2 rule excludes. Under the human's ruling the mechanism is neither named branch, so the KNOWN-LIMITATIONS wording is drafted for the human's sight (bracketed in the docs PR) rather than taken from either branch; the reviewer's finding stands that the earlier draft's clause "everything matching the filter is drawn" was false. Diagnostic log: `regression-87-diag-20260913-200748.log`; session log `session-1789322905.log`.
+
+86. **[Part M sitting 2, M11 — the reference bundle viewer's zoom is not anchored: "when i zoom in, the map
+    pan by itself to north-west, and when i zoom out it goes the other side, bottom left corner, sud-est"
+    (your report of 2026-09-13; the bundle otherwise works and M11 passes as its row is written). A
+    defect in `renderer/bundle-viewer` (the published artifact's own viewer), not the shell. Your word:
+    fix in the post-tag queue as a preregistered piece (its own row in Part G/M), or before the tag —
+    which would change the bundle viewer shipped inside every published bundle and the reference viewer
+    NOTICE that M's hashes recorded.]** Not the shell; nothing else depends on it. Not decided here.
+
+85. **[Part M sitting 2, M5 (c) — after applying a filter, "Zoom to layer" stops working until the filter
+    is cleared (your report of 2026-09-13; the first click after the filter "works perfectly"). A defect
+    no row expects; root cause under investigation (read-only; the finding is appended to this entry when
+    it lands). Your word on timing: fix now on a branch through the full gates (preregistration, reviewer,
+    architect if the fit path's design changes) and into the same rebuild that carries entry 47's hover
+    fix, or the post-tag queue. A fix touches shell code, which your freeze holds until the tag — so
+    "now" is your call, as it was for the hover.]** Not decided here.
+    *Finding appended 2026-09-13 (read-only investigation of `main`; a hypothesis with its discriminator, not a verified cause):* "Zoom to layer" runs `fitToBounds` → `chooseFitTarget(fitAnchorRef.current)` → `fitToExtent` (`WorkingCanvas.tsx:971-985`, `:793-813`), whose last act is `setProps({ initialViewState: { target: [0, 0, 0], zoom } })` at `:805`. deck.gl re-syncs its camera only when that prop is **not deep-equal** to the previous value (`@deck.gl/core` `index.js:323-327`; the file's own comment at `:80-82` acknowledges it). The fit anchor grows only from the untiled first-look stream (`pushBatch`, `:931-934`; tile batches never grow it) and is cleared on every filter Apply/Clear (`resetFitForNewGeneration`, `:110-136`). Under a ~100-row filter the first look carries everything, the anchor freezes, so every later click computes the byte-identical zoom → the prop is deep-equal → **deck ignores it and the camera does not move**; a wheel zoom-out in between does not write that prop (only `frame.maybeRecenter` does, `:1334-1339`), so the stale value is still exactly the last fit. Unfiltered, the anchor keeps growing between clicks, which is why the button only reads as dead under a filter. Alternatives: the anchor is `null` after the reset if the filtered rows arrived only via tile streams (`:978-979` returns false); or the fit applies but nothing new is drawn. Discriminator: a `[render] view-state` console line with unchanged `zoom`/`origin` and no camera motion on the click (the deep-equal swallow); no such line (the early return); a line plus a fresh `viewport-query` (the fit applied). Fix site if ruled: `WorkingCanvas.tsx:805` — make the fit's camera write unconditional (an imperative view-state set, or a prop deck cannot deep-equal away). No test covers filter + Zoom to layer today.
+
+84. **[Part M sitting 2, M5 (b) — with a filter of about a hundred features applied, "Zoom to layer" then
+    zooming out shows the settled-partial sentence "Filling has finished for this view — some areas were
+    not loaded; pan or zoom to load them." (your report of 2026-09-13). Whether that is ADR-028's declared
+    over-budget/partial status misfiring under a filter (tiles that return no rows under the predicate
+    counted as not loaded), or a true partial fill, is under investigation (read-only; the finding is
+    appended here). If it is a misfire it is a defect of the status, not of what is drawn; if it is the
+    declared contract the sentence is misleading under a filter and its wording is yours. Your word
+    follows the finding.]** Not decided here.
+    *Finding appended 2026-09-13 (read-only investigation of `main`; a hypothesis with its discriminator, not a verified cause):* the settled-partial sentence is `SETTLED_PARTIAL_WITHIN_BUDGET_TEXT` (`residencyStatus.ts:429-430`), emitted only when the view is within budget, settled, and `isFillComplete()` is false. Under a filter, a covering tile whose stream completes with **zero matching rows** never delivers a batch, so it is never marked resident (`markTileResidentEmpty` has no caller outside its own class; `markTileComplete` on a clean terminal is gated on a batch-path entry — `candidateArmSession.ts:977-980`, `:1042-1044`), and `isFillComplete` (`:651-653`) reads it as "not loaded" forever. A ~100-feature filter leaves most covering tiles empty, so the view reads settled-partial although everything that matches is drawn. That is a **status misfire, not a drawing defect**. The alternative cause (the covering set truncated past the queue cap, `:1402`/`:1441`) produces the same sentence; the discriminator is a `[render] covering-truncated` console line (truncation) versus `candidate-tile-terminal … Completed` session lines for tiles that never appear in any ingest line (the zero-row cause). Fix site if ruled: the zero-batch terminal at `candidateArmSession.ts:977-980` or `isFillComplete`'s per-tile predicate — a tile that completed with no rows is complete. No test covers filter + residency status today.
+
+83. **[The tag target after #44's merge — your call, before the tag: you merged PR #44 (Brief A
+    P0–P2, engine-side) to main at 869e185 on 2026-09-11. The v0.1.0 candidate installer was built from
+    998be05 (`RELEASE-0.1.md` Amendment 14: 10,559,184 B, SHA-256 712b3063…), and Part M's installer
+    rows verify that artifact. Main's head now carries engine/kernel code the candidate does not
+    (`kernel/src/skp.rs` gained one `error_of` arm; the reader's format semantics changed what an
+    absent-`crs`-key file does at open). Options: (a) tag 998be05 as v0.1.0 — a tag may point at any
+    commit; the release body already cites that hash and the build commit; main's later commits are
+    post-tag by construction; (b) rebuild the candidate from the tagged head, re-hash, re-run Part M's
+    installer rows (M1–M4) and re-record Amendment 14; (c) something else you name. The release text
+    says nothing that (a) makes false; (b) reopens the sitting. Also for your word: does the merge
+    count as your sight of the preregistration and the ADR drafts, releasing P3 (the session-identity
+    tier, architect-blockable) to start on a branch, or does P3 still wait?]** The remaining Brief A
+    work (entries 80 and 81's code) continues on `cut/admission-format-semantics` and opens as a new
+    PR, held. Not decided here.
+
+82. **[Entry 47 — the architect gate failed twice (rule 7: stopped, queued). Attempt 1 blocked on
+    the drag-pan falsifier (deck.gl delivers no hover event while a button is down); the fix batch
+    added D11 (arming blocked and the pending settle cancelled while a button is down; preregistration
+    §12 Amendment 2) and the re-gate confirmed D11 correct for the during-drag case. Attempt 2 blocked
+    on a residual of the same root cause: the captured pointer pixel is not invalidated at the release
+    edge, so — hover above threshold → wheel out past it (refusal standing) → left-drag pan → release
+    → one wheel notch back in, pointer never moved — the first camera change after release arms and
+    settles at the PRE-drag pixel and could name a feature the pointer is not over (§9's first
+    falsifier). The architect names the fix as one line of refusal-to-act plus one test: on
+    `pointerup`/`pointercancel` also clear the stored pixel (`lastPointerPxRef.current = null` in
+    `WorkingCanvas.tsx:1565-1567`), so no settle can pick until a real hover has re-answered where the
+    pointer is; the scheduler already returns on a null capture. It also drafted the preregistration's
+    Amendment 3 recording the extended D11 and correcting Amendment 2's "on the canvas element" (the
+    release is observed on the window). Everything else from both gates is closed; the reviewer
+    re-gate PASSED on the same head (verify 923/923; the D11 mutation re-run; block-on-sight 8–14 PASS). Your word: (a) a third attempt under the named
+    fix — I append Amendment 3 (the architect's text, verbatim, in the ledger), the worker lands the
+    line and the test, both gates run a third time, the PR opens as a draft held until after the tag;
+    or (b) hold the piece as it stands (pushed on `cut/hover-repick-settle`, no PR) for your own look.
+    Nothing merges either way.]** Not a tag matter. Related: entry 75 (pan-settle) — the architect
+    notes both findings make the pan-settle reading depend on the guard, where zoom-only would not.
+
+81. **[Brief A P2 — a user-visible guarantee, escalated by the architect: the absent-`crs`-key CRS84
+    admission (boundary 1's format default) deliberately carries no CRS definition (P1,
+    `engine/src/geoparquet.rs:392-399` — the engine never writes a definition it did not read). The
+    proposed ADR-013 Amendment 1 §2 says the unit is "read from the CRS definition … never inferred
+    from the identifier string, and never defaulted", so read strictly such a dataset has no
+    establishable unit, is NOT a degrees instance, gets no equirectangular statement, and reaches
+    publish with no preflight refusal — the geographic bundle boundary 8 exists to prevent; it also
+    leaves §3 row 8's prediction (the ogr2ogr CRS84 file refuses at publish) unmet. Options: (a)
+    leave it and record the deviation at P4 — the file publishes; (b) amend the still-Proposed ADR-013
+    text so the PINNED FORMAT RULE (GeoParquet 1.1.0's CRS84 default, with its version) is a second
+    admissible source of the unit fact, recorded as `unit:format-rule` beside `unit:definition` — not
+    an identifier string, so its block-on-sight 8 stays intact; the record shows which source
+    supplied the unit. The architect recommends (b) and drafted a Context/Decision/Consequences
+    skeleton for it (in the P2 consult, ledgered). Your word; a Proposed-amendment text change is
+    yours.]** Until ruled, P2 builds the definition-sourced unit only and records the absent-key case
+    as `unestablished` by name; merge held before the tag regardless. Not a tag matter.
+
+80. **[Brief A, a conflict the draft did not anticipate — gate G-A6 vs boundary 1: G-A6 reads
+    "Native/mapped unchanged: existing identity and CRS test suites green without edits", but two
+    tests in `engine/tests/slice.rs` (`a_file_with_no_crs_is_refused_and_the_geoparquet_default_is_not_applied`,
+    `a_latitude_first_source_is_refused_rather_than_reinterpreted`) and one in
+    `kernel/tests/skp_admission.rs` (`opening_a_source_with_no_crs_is_refused_verbatim`) pin exactly
+    the refusals boundary 1 abolishes (absent key → format default; WKB order → axis override), so
+    they cannot stay green without edits. On the branch (`cut/admission-format-semantics`, merge held)
+    the P1 worker re-aimed the two slice tests to the ruled behaviour, each doc comment naming the
+    ruling; the kernel test's re-aim is in flight the same way. Every identity test is untouched
+    (8/8) and the explicit-null refusal tests are untouched. Your word: (a) G-A6 is read as "green
+    without edits, except tests that pin behaviour boundary 1 itself abolishes, which are re-aimed
+    with the ruling named in the test" — recorded as a dated qualification to the brief, the
+    re-aims stand; or (b) something else you name.]** Queued rather than resolved inline per your
+    porting instruction ("If porting surfaces a conflict with the tree or the record that the drafts
+    didn't anticipate, queue it"). P1's reviewer gate proceeds with the item flagged; no merge
+    before the tag in any case. Not a tag matter.
+
+79. **[Brief B stage B1 consult — three items routed to you, for B1's close and not before (Brief
+    B is held until Brief A closes; block-on-sight B-1): (1) the refusal set is wider than DRAFT-3's
+    Stage B1 sentence names — the architect drafts six named codes (unknown, type, geometry,
+    identity, duplicate, too-many) plus an optional `projection_empty_list` for `columns: []`, on
+    ADR-021 decision 8's no-catch-all rule; accept the wider named surface, or hold B1 to the two
+    codes DRAFT-3 names? (2) does the hover readout show every projected column, or a bounded subset
+    when the projection is large (a user-visible default)? (3) is the panel's candidate-column list
+    filtered client-side by `arrow_type` (a user-visible default that can disagree with the kernel
+    if the two sets ever drift)?]** The drafted Decision text (ADR-023 stays Proposed) is
+    `RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-b1-adr-023-decision.md`; the ADR-004 review of
+    the data-plane column addition (verdict: pass with notes; `protocol/data-plane/` expected to see
+    an empty diff; each copy on the added columns named; never "zero-copy") is
+    `…/architect-consult-b1-adr-004-data-plane-review.md`, whose §9 queues four conflicts with the
+    record (the shell's style module asserts in code that the live stream carries no attributes;
+    ADR-023's Context sentence becomes historical — a dated corrigendum at acceptance; per-column
+    chunk retention at projection width — the architect's; the pinned `filter_composition` SQL
+    prefix). No code was written. Not a tag matter.
+
+78. **[Repository description + topics — public-facing; applied only on your word: the drafted
+    description (304 characters, measured) and fourteen verified topics are in
+    `RELEASE-DRAFTS-0.1.0/decision-notes/repo-description-and-topics.md` with three alternatives and
+    ready-to-run `gh repo edit` commands; homepage stays empty. One correction it surfaces:
+    `RELEASE-DAY-CHECKLIST.md` line 27 lists the topic `spatial`, which the note did not verify and
+    does not propose — `spatial-data` is offered in its place; correcting the checklist line is a
+    separate one-line change on your word.]** Nothing applied. The custodian runs no `gh repo edit`.
+
+77. **[Code signing for the Windows installer — your decision, docs only: the options note is
+    `RELEASE-DRAFTS-0.1.0/decision-notes/code-signing-options.md` (Azure Artifact Signing, the 2026
+    name of Trusted Signing, vs an OV certificate, with Certum's open-source certificate and SignPath
+    as the other two rows — cost, identity requirements, what SmartScreen shows under each, every
+    fact with its URL and retrieval date). The decisive facts as the note records them: individual
+    developers on Azure Artifact Signing are limited to the United States and Canada, which routes
+    an individual elsewhere to OV; OV requires a hardware crypto module by the CA/B Forum baseline;
+    no option gives instant SmartScreen trust — reputation accrues per binary, and EV no longer
+    bypasses the warning; the one signed/unsigned divergence is that Windows 11 Smart App Control
+    blocks unsigned files. The note's recommendation line, yours to accept or reject: sign nothing
+    for v0.1.0 (adopting an option now would void the recorded candidate hash and re-run the Part M
+    installer rows) and decide after the tag with its open questions 1–4 answered. It also flags a
+    discrepancy between two Microsoft pages on the organisation country list (one includes
+    Switzerland, the other does not), unresolved from primary sources.]** Nothing applied; no Azure
+    resource, no certificate, no `tauri.conf.json` change. Not a tag matter unless you rule it one.
+
+76. **[Entry 66 (b) (the geometric protection piece, being built now on `cut/geometric-protection`;
+    merge held until after the tag) — four items its preregistration leaves to you, for your answer
+    BEFORE any merge: (1) the `fits`/over-budget latch still reads the enumerated window past the
+    bound (ADR-028's second declared deviation, `:512`) — invert it in this piece (an operator-visible
+    status changes: views that read as fitting today would read over-budget), or leave it declared and
+    standing? (2) a queued in-view tile outside the window now survives the supersede prune and is
+    ISSUED later by the queue drain with no cover re-check — accepted as declared behaviour within the
+    existing ceilings (the preregistration's reading, on principle 8), or add a drop-at-drain path?
+    (3) must the residency harness (a campaign-class instrument) actually run for its changed
+    assertion, or do the nine unit/E2E tests plus K7 discharge the gates with the harness pass folded
+    into the next campaign? (4) does the KNOWN-LIMITATIONS 13b line retire at this landing (its text
+    names only the vanishing behaviour, which path (i) closes) while the `fits` deviation stands?]**
+    Preregistered 2026-09-10 (`frontends/shell/ENTRY-66B-PREREGISTRATION.md` §5, §4.3, §12); the
+    closing ADR-028 note is drafted in its §13 and lands only on your word. Not a tag matter.
+
+75. **[Entry 47 (the re-pick on camera settle, being built now on `cut/hover-repick-settle`;
+    merge held until after the tag) — three behaviour choices the ruling did not make, for your
+    answer BEFORE any merge: (1) does a pure PAN's settle re-pick too, or zoom only? The
+    preregistration adopts the ruling's own words ("re-pick on camera settle": a pan is a camera
+    change) behind a declared switch `HOVER_REPICK_ON_PAN` defaulting to pan+zoom, with zoom-only
+    the switch's other value; (2) a resize or DPR change between hover and settle DISARMS the
+    pending re-pick (nothing emitted) rather than re-mapping the pixel — keep, or re-map? (3) no
+    "unconfirmed" mid-gesture marking is introduced (today's blank/refusal stays) — keep, or open
+    it after seeing L7/L8?]** Preregistered 2026-09-10 (`frontends/shell/HOVER-REPICK-PREREGISTRATION.md`
+    §3 D2/D3/D4, §10); the architect's condition 14 puts (1) and (3) outside the ruled (b). The
+    default readings are the safe ones (nothing new is shown; a stale frame is never picked). Not
+    a tag matter.
+    *Added 2026-09-10 after the architect gate on the built piece (input to your (1), unruled here): deck.gl delivers no hover event while a mouse button is down, so a drag pan never refreshes the captured pointer pixel; without a button-down guard a pan-settle would re-pick at the pre-drag pixel and could name a feature not under the pointer. The piece now blocks arming and cancels any pending settle while a button is down (preregistration Amendment 2, D11), so pan-settle fires only after release; the gate called this "the strongest input to entry 75" — it makes the pan-settle reading depend on the guard, where zoom-only would not.*
+
+74. **[Part M split into two sittings (the human, 2026-09-10: M1–M4 first, the rest later) —
+    does the v0.1.0 tag wait for sitting 2, or does sitting 1 (install + first open) suffice to
+    finalize README/QUICKSTART, write KNOWN-LIMITATIONS and tag?]** Amendment 13's sequence says
+    "items 4/5/6 finalized from what M actually showed — item 4 last — then the tag", and the
+    freeze holds "until Part M and the tag are done". Sitting 1 establishes the install, the first
+    launch, the three notice files and one open; the publish rows (M8–M11), the residency row (M7)
+    and the two ADR-020 rows (M12–M13) are sitting 2's. KNOWN-LIMITATIONS' entries 5–7 and 12
+    describe sitting-2 behaviour on the packaged build. **(a)** tag after sitting 2 (the release
+    text describes only what M showed on the artifact — Amendment 13's own principle); **(b)** tag
+    after sitting 1, with entries 5–7/12 written from the dev-build evidence (Parts G/H/K/L) and
+    marked as such. Not decided here.
+
 73. **[Brief A, P0 — the reader's polygon-only geometry gate: `engine/src/dataset.rs:275-282`
     refuses any GeoParquet whose `geo.columns.<primary>.geometry_types` lists anything but `Polygon`,
     and it fires BEFORE the CRS admission at `:302-307`. Eight of the twelve collected corpus files
@@ -92,6 +322,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     guarantee change; (f) `MIN_ANCHOR_SPAN` under degrees — a declared unit-aware value (the
     boundaries force it) or a typed refusal; (g) the home of the binding equirectangular wording —
     the ADR-013 amendment or an appended ADR-003 note. All in the P0 PR for sight.
+    *Added 2026-09-10 after P1 (architect's note, verbatim class): one more item for the P6 sight list — the envelope state `sanity_level = metadata` paired with a `sanity_reason` saying no range check applies (a declared-CRS file whose data axis order came from the format's WKB rule; F-4 / corpus #3). Also for the ADR-015 Amendment 1 draft at P6: §2b of the preregistration assigns an axis class only under R-C4; the R-C2 (absent-key) admission records `axis:format-override` on the draft's own definition, and the draft should say so.*
 
 72. **[Porting-time conflict, noticed before porting (Draft 2, Brief A): the brief's commit line
     `git -c user.name=chris -c user.email=chrys92d@gmail.com commit -s` names an author/sign-off

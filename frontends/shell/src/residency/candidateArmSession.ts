@@ -983,6 +983,25 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       const generation = tileGenerationUntrimmed.get(tileKey);
       if (terminal.kind === "Completed" && generation?.streamHandle === streamHandle && generation.allUntrimmed) {
         canvas?.markTileComplete(tileKey);
+      } else if (terminal.kind === "Completed" && generation?.streamHandle !== streamHandle) {
+        // Entry 84 (`FILTER-84-85-PREREGISTRATION.md` §3.2, the human's own words: "the zero-row
+        // terminal marks the tile resident"). No generation entry bound to THIS `streamHandle` is
+        // exactly "this stream delivered no batch": `ingestAndMaybeEstablishFrame` (below) writes
+        // that entry on every tile batch it ingests, keyed by the delivering handle, and every
+        // terminal/supersede deletes it -- so a stale entry from a PRIOR generation reads as "no
+        // batch this generation" here, the same generation check the batch path itself applies, and
+        // never as a delivery this stream never made. The stream is a clean, genuine `Completed`
+        // (the branch condition above; a self-cancel never reaches this callback at all, and a
+        // supersede reports through `onTileSuperseded`), so the tile's own bbox really does hold
+        // nothing under the query that asked for it -- under a filter, that is most covering tiles.
+        // Marking it resident-empty is what lets `isFillComplete` (above) read it as loaded:
+        // `TileResidentSet.markTileResidentEmpty` creates a non-partial entry holding no batches, so
+        // `isTileComplete` reads `true` for it, and the resident vertex total it contributes is zero
+        // -- no threshold, ceiling, eviction rule or status wording is touched by this. A stream
+        // that ends any other way (cancelled, superseded, failed) is unchanged: those never satisfy
+        // `terminal.kind === "Completed"`, and the `failedCoveringTerminals` record just below still
+        // sees every one of them.
+        canvas?.markTileResidentEmpty(tileKey);
       }
       tileGenerationUntrimmed.delete(tileKey);
       // Piece 2(ii) (residency-debt cut 1b, entry 36): the typed-partiality record, set here BEFORE the

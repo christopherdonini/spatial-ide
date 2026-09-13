@@ -16,9 +16,17 @@ pub enum EngineError {
 
     /// The file carries no readable CRS and the caller asserted none.
     ///
-    /// GeoParquet's own specification says an **absent** `crs` key means OGC:CRS84. This engine
-    /// does not apply that default: substituting a CRS the file does not state is precisely the
-    /// silent conversion `docs/05` forbids. See `engine/README.md` and the proposed ADR-015.
+    /// **Which files still reach this, after Brief A P1.** An explicit `"crs": null` — the file
+    /// states its CRS is undefined or unknown, and no rule may answer for it (R-C3, unchanged). And
+    /// an **absent** key in a file whose `geo.version` is not one whose text is pinned in this tree
+    /// (R-C1): the format's OGC:CRS84 rule is read from pinned bytes or not applied at all, and
+    /// `detail` then names the version. An absent key under a pinned version is no longer refused
+    /// here — it is admitted with provenance `crs:format-default`
+    /// (`engine/src/geoparquet.rs::format_semantics`).
+    ///
+    /// The `Display` text below still carries the pre-P1 sentence about the default, verbatim,
+    /// because it is quoted verbatim in the shipped walkthrough and in an SKP fixture; the string
+    /// pass over the four new user-visible states is `ADMISSION-PREREGISTRATION.md` §12d's, at P6.
     CrsUndeclared { detail: String },
 
     /// The file declares a CRS **and** the caller asserted one.
@@ -74,6 +82,19 @@ pub enum EngineError {
     /// This slice performs no normalization, so an (N, E) or (lat, lon) source is refused rather
     /// than silently reinterpreted — the EPSG:4326 trap `docs/05` names, in its GeoParquet form.
     AxisOrderUnsupported { established: String },
+
+    /// A coordinate contradicts the CRS a **format rule** supplied for a file that declared none.
+    ///
+    /// R-S2 (`engine/ADMISSION-PREREGISTRATION.md` §2c). Raised only where the CRS came from
+    /// GeoParquet's absent-key default: a coordinate outside ±180/±90 cannot be
+    /// longitude/latitude on WGS84, so the assumption the rule licensed is contradicted by the
+    /// file's own footer or first rows. `detail` names the level the check ran at and the value
+    /// that convicted it.
+    ///
+    /// **The converse is not a finding.** A file inside the domain is not thereby correct, and no
+    /// message here may say it was checked and found sound — the check convicts or is silent
+    /// (Brief A settled boundary 2).
+    FormatDefaultContradicted { detail: String },
 
     /// The `geo` metadata is present but not usable.
     GeoMetadata(String),
@@ -210,10 +231,22 @@ impl fmt::Display for EngineError {
                 f,
                 "refused: axis order could not be established from the file's CRS definition ({detail})"
             ),
+            // Corrected at Brief A P1 (ADR-032's Proposed record names it): the message claimed the
+            // engine "emits (easting, northing) only" while `crs.rs:122-123` has always admitted
+            // `LongitudeLatitude` as well. What is true is that both x-first orders are emitted and
+            // nothing else is, because nothing is normalized to get there.
             Self::AxisOrderUnsupported { established } => write!(
                 f,
                 "refused: established axis order is {established}; this slice performs no axis \
-                 normalization and emits (easting, northing) only"
+                 normalization and emits x-first orders only — (easting, northing) or \
+                 (longitude, latitude)"
+            ),
+            Self::FormatDefaultContradicted { detail } => write!(
+                f,
+                "refused: the file declares no CRS, so GeoParquet's absent-key rule supplied \
+                 OGC:CRS84 — and the file's own coordinates contradict it ({detail}). A coordinate \
+                 outside ±180/±90 is not longitude/latitude on WGS84. Assert the CRS this file is \
+                 actually in to open it"
             ),
             Self::GeoMetadata(d) => write!(f, "geo metadata: {d}"),
             Self::NoCoveringBbox { detail } => write!(
