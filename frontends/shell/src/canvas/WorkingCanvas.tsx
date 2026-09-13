@@ -47,6 +47,7 @@ import { isPickBelowResolution, resolvePick } from "./pick";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import {
   averageFeatureExtent,
+  cursorForPointerState,
   decideHoverReadoutAtSettle,
   isBelowPickResolution,
   isFramebufferIdentical,
@@ -1829,6 +1830,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       initialViewState: { target: [0, 0, 0], zoom: INITIAL_ZOOM },
       controller: true,
       layers: [],
+      // Entry 89 §4.3: declared, not deck's own default grab/grabbing hand -- `cursorForPointerState`
+      // (`pickResolution.ts`) is the pure decision; this is only its wiring into the seam deck itself
+      // owns (`getCursor`'s own `isDragging` comes from deck's controller, not from this file's own
+      // `pointerButtonDownRef`, which tracks a DOM pointer-down rather than an active drag gesture).
+      getCursor: ({ isDragging }) => cursorForPointerState(isDragging),
       onLoad: () => end("deck-init"),
       onViewStateChange: ({ viewState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };

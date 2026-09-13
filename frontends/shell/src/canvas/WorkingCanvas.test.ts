@@ -472,6 +472,15 @@ function repickHarness(
   return { state, scheduler, pickCandidateAt, resolveCandidate, emit, trace, disarm };
 }
 
+// DECISIONS-PENDING entry 89 §4.3/§4.4 (3): `cursorForPointerState` itself is unit-tested in
+// `pickResolution.test.ts` (the pure decision). Its WIRING into `Deck`'s `getCursor` prop
+// (`WorkingCanvas.tsx`'s Deck construction) is not a seam this file can reach -- this file never
+// constructs a real `Deck` (no WebGL in jsdom; this file's own "two seams a jsdom test can
+// actually reach without a real `Deck`/WebGL context" note, above) -- so the assertion that the
+// CANVAS ELEMENT's own CSS cursor is `"crosshair"`/`"grabbing"` is an E2E assertion instead
+// (`e2e/regression.mjs`'s `stepCursor`, added beside K6/K7). Not run by this piece -- the
+// regression harness is held by another worker; `node --check e2e/regression.mjs` is the only
+// verification this piece performs on it.
 describe("createHoverRepickScheduler (entry 47: the settle seam)", () => {
   beforeEach(() => {
     vi.useFakeTimers();

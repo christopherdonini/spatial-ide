@@ -28,7 +28,7 @@
 // see that file's own top comment for the full account, including why a `page.reload()` mid-script
 // was rejected in favor of a separate launch (the `residency-harness.mjs` S4 precedent).
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1676,6 +1676,40 @@ async function stepK7(page, consoleHandle) {
 }
 
 // ---------------------------------------------------------------------------------------
+// CURSOR' (DECISIONS-PENDING entry 89 §4.3/§4.4 (3), `frontends/shell/POLISH-87-88-89-
+// PREREGISTRATION.md`): the canvas element's own CSS cursor, wired through `Deck`'s `getCursor`
+// prop (`WorkingCanvas.tsx`'s Deck construction) to `cursorForPointerState` (`pickResolution.ts`,
+// unit-tested there). Not reachable from `WorkingCanvas.test.ts`: that file never constructs a
+// real `Deck` (no WebGL in jsdom, its own established "two seams" note), so the live canvas
+// element's `style.cursor` -- which deck.gl itself writes (`@deck.gl/core`'s `Deck._updateCursor`:
+// `container.style.cursor = this.props.getCursor(this.cursorState)`, `container` resolving to the
+// canvas element itself since no `parent` prop is passed here) -- is only observable against the
+// real running app. Placed after K7 (a hover-adjacent step, so the drag pan below disturbs no
+// filter/residency state K7 depends on) and before FIND' (which re-anchors the camera with its own
+// "Zoom to layer" click regardless of where this step's drag leaves it).
+async function stepCursor(page) {
+  const rect = await canvasRect(page);
+  if (!rect) throw new Error("CURSOR': .working-canvas not found");
+  const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+  await page.mouse.move(center.x, center.y);
+  const beforeDrag = await page.evaluate(() => document.querySelector(".working-canvas")?.style.cursor ?? null);
+  if (beforeDrag !== "crosshair") {
+    throw new Error(`CURSOR': hovering with no pointer button down, canvas cursor was ${JSON.stringify(beforeDrag)}, not "crosshair"`);
+  }
+
+  await page.mouse.down();
+  await page.mouse.move(center.x + 40, center.y + 20, { steps: 4 });
+  const duringDrag = await page.evaluate(() => document.querySelector(".working-canvas")?.style.cursor ?? null);
+  await page.mouse.up();
+  if (duringDrag !== "grabbing") {
+    throw new Error(`CURSOR': mid-drag, canvas cursor was ${JSON.stringify(duringDrag)}, not "grabbing"`);
+  }
+
+  return `hover cursor ${JSON.stringify(beforeDrag)}, mid-drag cursor ${JSON.stringify(duringDrag)}`;
+}
+
+// ---------------------------------------------------------------------------------------
 // FIND' (entries 84 and 85, `frontends/shell/FILTER-84-85-PREREGISTRATION.md` §2.4 item 3 and §3.4
 // item 4; the human's ruling of 2026-09-13: "Both through preregistration and gates with the
 // regression step that would have caught them -- 85 extends FIND' to zoom-to-layer-after-filter on
@@ -1763,50 +1797,86 @@ function viewStateLinesSince(consoleHandle, sinceIndex) {
     .filter((v) => v !== null);
 }
 
-/** How many per-tile `viewport_query` attempts since `sinceIndex` never became a stream --
- * `renderTrace.ts` emits `viewport_query` for every attempt (`TileViewportStreamManager.mintAndStart`,
- * before the await) and `stream-issued` only once a ticket has actually been minted and attached, so
- * the difference counts tiles the manager asked for and then dropped without any terminal at all
- * (`mintAndStart`'s own ticket-refused and epoch-abandoned paths, both silent -- no trace, no session
- * log, no status). Those tiles are covered and never resident, which holds `isFillComplete()` false
- * for a reason that has nothing to do with an empty tile's terminal -- so the settled-partial
- * assertion below must not be read as evidence about entry 84 while any exist. The unrestricted
- * (`bbox: null`) first look is excluded: it is not a tile query and mints through another path.
- *
- * Returns all three counts, because the record line below carries all three. `queries` is the number
- * of covering tiles the manager actually ASKED for since the mark -- not the size of the covering set
- * itself, which this harness cannot see (a tile already resident from an earlier plan is never
- * re-requested); `unminted` of those got no stream and therefore no terminal at all.
- *
- * **Counts, not a per-tile-key match, and that is a property of the lines available -- not a choice
- * made here.** Matching each query to its own tile key would be the stronger statement, but NEITHER
- * line carries one: `traceViewportQuery` logs `{dataset, bbox, bboxCrs}` (and CDP renders the bbox as
- * `Object`, so even the geometry is unreadable from the console text) and `traceStreamIssued` logs
- * `{dataset, streamHandle}`. Nothing joins a handle back to a tile key on this side -- only
- * `candidate-tile-terminal`, a session-log line this suite does not read, and only for streams that
- * DID mint. Carrying the tile key on those two trace lines is a product change to
- * `diagnostics/renderTrace.ts` and `TileViewportStreamManager`, outside this piece. What the
- * difference CAN be made honest about is timing, and `settledUnmintedTileQueriesSince` below does
- * that: a query whose stream is merely still in flight must never read as one that never minted. */
-function unmintedTileQueriesSince(consoleHandle, sinceIndex) {
-  const lines = consoleHandle.renderTrace().slice(sinceIndex);
-  const queries = lines.filter((e) => e.text.includes("viewport_query") && !e.text.includes("bbox: null")).length;
-  const streams = lines.filter((e) => e.text.includes("stream-issued")).length;
-  return { queries, streams, unminted: queries - streams };
+/** Reviewer fix (entry 87 §2.4 (4)): resolves the session log this run's own app instance is
+ * writing to -- the newest `session-<epoch-seconds>.log` under the app's log directory
+ * (`%LOCALAPPDATA%\dev.spatialide.shell\logs` on Windows). Simpler than `residencyTrace.mjs`'s own
+ * `newestSessionLogSinceLaunch` (no launch-epoch tolerance match needed): this script talks to
+ * exactly ONE running app instance for its whole run (the "one app at a time" discipline,
+ * AI_DEVELOPMENT.md), so "the file with the highest embedded epoch" is unambiguously this run's
+ * own log, launched or attached alike -- a NEWER session log could only exist if a second app
+ * instance had started, which this script never does. `null` if `LOCALAPPDATA` is unset or no
+ * session log exists yet -- the caller treats that as "cannot be evaluated," never as zero. */
+function newestSessionLogPath() {
+  if (!process.env.LOCALAPPDATA) return null;
+  const dir = join(process.env.LOCALAPPDATA, "dev.spatialide.shell", "logs");
+  if (!existsSync(dir)) return null;
+  const names = readdirSync(dir).filter((n) => /^session-\d+\.log$/.test(n));
+  if (names.length === 0) return null;
+  names.sort((a, b) => Number(a.slice("session-".length, -".log".length)) - Number(b.slice("session-".length, -".log".length)));
+  return join(dir, names[names.length - 1]);
 }
 
-/** The counts above, read only once they have stopped moving toward each other: polls until every
- * query since the mark has its `stream-issued` line, and otherwise returns the LAST reading once the
+/** Reviewer fix (entry 87 §2.4 (4)): per-tile-key mint outcomes since `sinceMs` (a `Date.now()`
+ * mark against the session log's own millisecond-epoch timestamp basis, `state.rs::append`'s
+ * leading `ms` field), read from the SESSION LOG rather than the render trace this diagnostic used
+ * to read (`unmintedTileQueriesSince`, retired). The render trace's own `viewport_query`/
+ * `stream-issued` lines carry no tile key at all (never did -- an unchanged, disclosed constraint);
+ * the bounded requeue's own retry (entry 87 §2.3(iii)) re-fires `traceViewportQuery` on every
+ * attempt, so a raw COUNT difference (queries minus streams) over-counted a tile refused once and
+ * then successfully retried as unminted, which is what made the old diagnostic dishonest under
+ * this piece's own change. `TileViewportStreamManager.mintAndStart`'s `logMintRefused`/
+ * `logMintAbandoned`/`logMintRecovered` (entry 87) are the ONLY lines carrying a tile key, and
+ * together they are a complete per-tile record for every tile that was ever refused in the window:
+ * `logMintRecovered` fires exactly when a previously-refused tile goes on to mint a real stream.
+ *
+ * Reads the file fresh every call (append-only; nothing here mutates or truncates it) and keeps
+ * the LAST event per tile key in file order -- a tile's LAST attempt in the window is what answers
+ * "did it mint," exactly by construction of the bounded requeue's own "at most one retry" rule
+ * (never a third attempt to shadow a second). A tile whose last event is `"recovered"` minted;
+ * `"refused"` or `"abandoned"` as the last event means it did not (an abandoned tile is superseded
+ * away, not resolved by this piece, and keeps the same imprecision the old count-based diagnostic
+ * already carried for that class -- unchanged by this fix, which is scoped to the retry inflation
+ * only). Returns `null`, never a zero count, when the session log cannot be located. */
+function tileMintOutcomesSince(sessionLogPath, sinceMs) {
+  if (sessionLogPath === null || !existsSync(sessionLogPath)) return null;
+  const text = readFileSync(sessionLogPath, "utf8");
+  const REFUSED_RE = /^(\d+) tile-stream-mint-refused (-?\d+:-?\d+): /;
+  const RECOVERED_RE = /^(\d+) tile-stream-mint-recovered (-?\d+:-?\d+): /;
+  const ABANDONED_RE = /^(\d+) tile-stream-mint-abandoned \S+ (-?\d+:-?\d+) \S+: /;
+  const lastByTile = new Map();
+  for (const line of text.split("\n")) {
+    let kind = "refused";
+    let m = REFUSED_RE.exec(line);
+    if (!m) {
+      kind = "recovered";
+      m = RECOVERED_RE.exec(line);
+    }
+    if (!m) {
+      kind = "abandoned";
+      m = ABANDONED_RE.exec(line);
+    }
+    if (!m) continue;
+    if (Number(m[1]) < sinceMs) continue;
+    lastByTile.set(m[2], kind); // file order = chronological (append-only) -- last write wins
+  }
+  const refusedTiles = [...lastByTile.keys()];
+  const unmintedTiles = refusedTiles.filter((k) => lastByTile.get(k) !== "recovered");
+  return { refusedTiles: refusedTiles.length, unmintedTiles: unmintedTiles.length };
+}
+
+/** The counts above, read only once they have stopped moving: polls until every tile refused in
+ * the window has since recovered (fully drained), and otherwise returns the LAST reading once the
  * bound elapses. Called AFTER the render trace has gone quiet and after `.residency-status` has
- * settled, so a difference surviving all of that is a query that never minted, never one still in
- * flight -- the false-PREMISE-BROKEN reading an eager count difference could produce would silently
+ * settled, so a reading surviving all of that is a tile that genuinely never minted, never one
+ * still mid-retry -- the false PREMISE-BROKEN reading an eager read could produce would silently
  * skip the pre-committed assertion, which is the one outcome this step must not allow.
- * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound K7's own status re-read uses; a bound, not a timing
- * claim (ADR-018). */
-async function settledUnmintedTileQueriesSince(consoleHandle, sinceIndex) {
+ * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound K7's own status re-read uses; a bound, not a
+ * timing claim (ADR-018). A `null` reading (session log unreachable) settles immediately -- there
+ * is nothing to poll for. */
+async function settledUnmintedTilesSince(sessionLogPath, sinceMs) {
   const settled = await waitForCondition(
-    async () => unmintedTileQueriesSince(consoleHandle, sinceIndex),
-    (counts) => counts.unminted <= 0,
+    async () => tileMintOutcomesSince(sessionLogPath, sinceMs),
+    (counts) => counts === null || counts.unmintedTiles <= 0,
     K7_STATUS_SETTLE_TIMEOUT_MS
   );
   return settled.last;
@@ -1850,10 +1920,6 @@ async function stepFind(page, consoleHandle) {
   // the camera never leaving the fit, no fit at all -- still throws where it is found: there is
   // nothing left to observe past it.
   const failures = [];
-  // Preregistration §6 Amendment 1 (b): what this step OBSERVES and reports by name without failing
-  // on it -- today, exactly one thing, entry 84's suspended status assertion (see its own branch
-  // below). Records are printed with the step's own PASS note, never swallowed.
-  const records = [];
 
   // 1) The filter, through the real panel DOM -- the same input + Apply click `filter-panel.mjs`'s
   // own FIND' drives. Apply issues an unrestricted `bbox: null` look and calls
@@ -1939,8 +2005,12 @@ async function stepFind(page, consoleHandle) {
 
   // 3) Wheel out, pointer over the canvas centre -- a real gesture, the same discrete notch K6/K7
   // drive. The mark is taken here so the covering-truncation check below covers everything the
-  // zoom-out and its refill actually did.
+  // zoom-out and its refill actually did. `sessionLogMarkMs` is the SAME mark on the session log's
+  // own millisecond-epoch basis, for `tileMintOutcomesSince` below (reviewer fix, entry 87 §2.4 (4));
+  // `sessionLogPath` is resolved once, here, since the app's log directory does not change mid-run.
   const beforeZoomOut = consoleHandle.renderTrace().length;
+  const sessionLogMarkMs = Date.now();
+  const sessionLogPath = newestSessionLogPath();
   for (let notch = 1; notch <= FIND_ZOOM_OUT_NOTCHES; notch++) {
     await doWheel(page, center, K6_ZOOM_OUT_NOTCH_DELTA_Y);
     await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1000, timeoutMs: 30_000 });
@@ -1965,24 +2035,23 @@ async function stepFind(page, consoleHandle) {
   // and a false PREMISE BROKEN record would silently skip the pre-committed assertion below.
   const statusAfterZoomOut = await settledResidencyStatus(page);
   const truncated = coveringTruncatedSince(consoleHandle, beforeZoomOut);
-  const unminted = await settledUnmintedTileQueriesSince(consoleHandle, beforeZoomOut);
+  const unminted = await settledUnmintedTilesSince(sessionLogPath, sessionLogMarkMs);
+  // DECISIONS-PENDING entry 87 (POLISH-87-88-89-PREREGISTRATION.md §2.4 test (4)): entry 84's
+  // status assertion below is a HARD, UNCONDITIONAL `failures.push` -- FILTER-84-85-PREREGISTRATION
+  // .md §6 Amendment 1 (b)'s suspension (a carve-out that RECORDED "PREMISE BROKEN" via
+  // `records.push` instead of failing) is gone, not merely bypassed: there is no branch left
+  // anywhere in this function that reads `unminted` and chooses not to fail. This step FAILS on
+  // this build whenever the covering set was not truncated and the status still reads
+  // settled-partial (or never reaches within-budget) -- expected and honest while the engine half
+  // (entry 91 (a), ADR-033) is not built: the shell-side bounded requeue (§2.3(iii)) only
+  // mitigates the lease contention, it does not resolve it. `unminted` itself is read ONLY in the
+  // `observed` summary below (informational), never in a branch condition here.
   if (truncated.length > 0) {
     failures.push(
       `FIND'/settled-partial-under-filter: PREMISE BROKEN -- the covering set was TRUNCATED during the zoom-out ` +
         `(${truncated.length} covering-truncated line(s), first: ${JSON.stringify(truncated[0])}), so the settled ` +
         `status ${JSON.stringify(statusAfterZoomOut)} says nothing about the empty covering tiles this assertion is ` +
         `about. This step's own ${FIND_ZOOM_OUT_NOTCHES}-notch gesture must stay inside the declared covering ceiling.`
-    );
-  } else if (unminted.unminted > 0) {
-    // Preregistration §6 Amendment 1 (b), 2026-09-13: this state is RECORDED BY NAME and does not
-    // fail the suite -- entry 84's status assertion is suspended while DECISIONS-PENDING entry 87
-    // (filtered per-tile queries dropped silently before any stream is issued) holds its premise
-    // broken, and is reinstated unchanged, right below, the moment no such tile exists. Entry 85's
-    // half of this step is untouched by the suspension and stays a hard assertion.
-    records.push(
-      `FIND'/settled-partial-under-filter: PREMISE BROKEN -- ${unminted.unminted} of ${unminted.queries} covering ` +
-        `tiles reached no terminal (${unminted.queries} queries, ${unminted.streams} streams); the status assertion ` +
-        `is suspended pending DECISIONS-PENDING entry 87 (preregistration §6 Amendment 1 (b))`
     );
   } else if (statusAfterZoomOut === K7_SETTLED_PARTIAL_TEXT) {
     failures.push(
@@ -2030,18 +2099,22 @@ async function stepFind(page, consoleHandle) {
   }
   await assertNoRefusalOrBanner(page, "FIND'");
 
+  const unmintedText =
+    unminted === null
+      ? "session log unreachable (LOCALAPPDATA unset or no log yet) -- per-tile mint outcome not evaluated"
+      : `${unminted.unmintedTiles} unminted tile(s) of ${unminted.refusedTiles} distinct tile(s) ever refused`;
   const observed =
     `applied "${FIND_PREDICATE}" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom ` +
     `${fitCamera.zoom} (${(fitFraction * 100).toFixed(2)}% non-bg); ${FIND_ZOOM_OUT_NOTCHES} zoom-out notch(es) left ` +
     `${(zoomedOutFraction * 100).toFixed(2)}% non-bg with ${truncated.length} covering-truncated line(s) and ` +
-    `${unminted.unminted} unminted tile query(ies) of ${unminted.queries}; ` +
+    `${unmintedText}; ` +
     `.residency-status settled to ${JSON.stringify(statusAfterZoomOut)}; the second "Zoom to layer" ` +
     `${refit ? `logged the same fit (zoom ${refit.zoom})` : "logged no matching fit"} and left ` +
     `${(returnedFraction * 100).toFixed(2)}% non-bg`;
   if (failures.length > 0) {
-    throw new Error(`${[...failures, ...records].join(" || ")} || OBSERVED: ${observed}`);
+    throw new Error(`${failures.join(" || ")} || OBSERVED: ${observed}`);
   }
-  return records.length > 0 ? `${records.join(" || ")} || ${observed}` : observed;
+  return observed;
 }
 
 /**
@@ -2321,6 +2394,10 @@ async function main() {
     // reports. 240s is the outer backstop for a wedged page, not the sum of the inner bounds (whose
     // worst case would exceed it; the step fails loudly on whichever bound it reaches first).
     await runStep("K7", 240_000, () => stepK7(page, consoleHandle));
+    // CURSOR' (entry 89 §4.3): a hover (no button) and a short drag, each read against the live
+    // canvas element's own `style.cursor` -- two pointer moves, one down/up, both well inside a
+    // generous outer bound.
+    await runStep("CURSOR'", 20_000, () => stepCursor(page));
     // FIND' (entries 84 and 85, 2026-09-13): see `stepFind`'s own top comment for the full account of
     // both findings and why this step runs after K7. Its composition: one filtered scan of the fixture
     // this run already has open, two "Zoom to layer" clicks (each settling under `clickZoomToLayer`'s
