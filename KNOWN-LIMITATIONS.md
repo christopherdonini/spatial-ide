@@ -152,7 +152,9 @@ no performance claim at all (`docs/08_Testing.md`).*
 **Pending the human's word — one line, bracketed; the custodian removes the brackets or the line when
 entry 87 is ruled:**
 
-[87, pending the human's word: under a row filter, after zooming out the status may read "Filling has
-finished for this view — some areas were not loaded; pan or zoom to load them." although everything
-matching the filter is drawn]
-<!-- DECISIONS-PENDING.md entry 87 (open: RC2 ships this line, or waits for the fix); MANUAL-WALKTHROUGH.md M15; RELEASE-0.1.md Amendment 18 (M15 on RC2: "Showing all 100 features in view" at the fit, then the settled-partial sentence on zooming out) -->
+[For the human's sight — entry 87, mechanism diagnosed 2026-09-13: neither of the two pre-worded
+branches.] Under a row filter at wide zooms, some of the view's per-tile queries are refused by the
+app's own filter-admission check and never run. The status then reports those areas as not loaded,
+which is true: any matching features there are not drawn until you pan or zoom in and they are
+queried again. The app cannot know whether those areas are empty.
+<!-- DECISIONS-PENDING entry 87 (diagnosis 2026-09-13: skp.filter_rejected_by_binder refusals discarded in tileViewportStreamManager.ts mintAndStart's catch); RELEASE-0.1 Amendment 18; M15 -->
