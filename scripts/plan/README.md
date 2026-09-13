@@ -96,17 +96,23 @@ every other check still runs. Exits 1 with every failure listed, one per line.
 `node scripts/plan/site.mjs [--plan <path>] [--out-dir <dir>] [--repo owner/name] [--check]`
 writes `site/index.html` (self-contained: inline CSS/JS; the only external resources are the
 GitHub Actions workflow badge image and hyperlinks — no CDN, no external script), `site/data/
-plan.json`, and `site/.nojekyll`. Reads `site/data/health.json` if present (written by
-`health.mjs`) for the health strip.
+plan.json`, and `site/.nojekyll`. Reads `site/data/health.json` (machine facts, written by
+`health.mjs`) and `site/data/build-health.json` (build-time facts, written by `buildHealth.mjs`
+inside the Pages build) if present, for the health strip's two groups.
 
 Swimlanes per lane, `done` nodes on the left with dates and evidence links, `ready`/`in-progress`/
 `blocked`/`proposed` on the right with SVG dependency arrows drawn between nodes in the *same*
-lane (a cross-lane dependency is shown as a text "after: `<id>`" note instead — no dependency-graph
-layout library is added). Lanes made up entirely of `unscheduled` nodes render muted, with no
-checkmarks, the phase cite shown (§1: "visible, not active"). Two panels: "Waiting on you" (each
-item's kind and minutes, total on the heading) and "Shipped since your last visit" (computed
-client-side from `localStorage`; first visit shows the last seven days). Responsive down to phone
-width (a single `@media (max-width: 480px)` breakpoint collapses the two-column layout).
+lane (a cross-lane dependency is shown as a text "after: &lt;dependency title&gt;" note instead,
+linked to that node's anchor — no dependency-graph layout library is added). Lanes made up entirely
+of `unscheduled` nodes render muted, with no checkmarks, the phase cite shown (§1: "visible, not
+active"). Two panels: "Waiting on you" (each item's need-type chip and minutes, the estimated total
+and the unestimated count on the heading) and "Shipped …" — a **static** list of `done` nodes within
+seven days of the newest `dates.done` **in the plan** (never the wall clock: the page must render
+the same bytes on every run or the drift check would fail a day later for nothing), which the inline
+JS narrows to the viewer's own last visit when it runs. Node ids are metadata: the visible label is
+the title, the id lives in the `id="node-<id>"` anchor and a `title="<id>"` attribute. Responsive
+down to phone width (a single `@media (max-width: 480px)` breakpoint collapses the two-column
+layout).
 
 **Refuses to generate** (exit 1, naming the node, field, and matched text) when a node's `title` or
 `summary` contains a duration/rate/percentage pattern — `site.mjs`'s own `METRIC_RE`, verbatim:
@@ -114,26 +120,56 @@ width (a single `@media (max-width: 480px)` breakpoint collapses the two-column 
 a `measurement: {results: "...", row: "..."}` field — the mechanical form of "no performance
 numbers except those carrying a docs/08 measurement" (§5).
 
-## `health.mjs` — the health strip's data (§5, §15)
+## `health.mjs` — the health strip's **machine** facts (§5, §15)
 
-`node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>] [--offline]` writes
-`site/data/health.json`: CI on main (the badge URL always; `gh run list --branch main --workflow
-product-ci-rust.yml --limit 1`'s conclusion when reachable), drift (`verify.mjs` run in
-`--offline` mode — its pass/fail is recorded here regardless of this script's own `--offline`
-flag, per §5's own wording), disk free (`(Get-PSDrive C).Free` via PowerShell on Windows, `df`
-elsewhere), stray process counts (`cargo`/`node`/`spatial-ide-shell`, by name only — **this never
-kills anything**), open-PR ages (`gh pr list --json number,createdAt`), and waiting-on-human ages
-(computed from each node's own `dates.opened`). Always timestamped (`generated_at`).
+`node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>]` writes `site/data/health.json`
+— machine facts only, and the file says so (`source: "the custodian's machine"`): drift (`verify.mjs`
+run in `--offline` mode, per §5's own wording), disk free (`(Get-PSDrive C).Free` via PowerShell on
+Windows, `df` elsewhere), stray process counts (`cargo`/`node`/`spatial-ide-shell`, by name only —
+**this never kills anything**), and waiting-on-human ages (computed from each node's own
+`dates.opened`). Always timestamped (`generated_at`).
 
-**Run order matters:** `site.mjs` reads `site/data/health.json` (if present) and bakes its content
-into the health strip inside the committed `site/index.html`. Running `health.mjs` alone changes
-`site/data/health.json` but leaves the previously-generated `site/index.html` describing the *old*
-health data — stale until `site.mjs` runs again. **Chosen: document the order, not couple the two
-scripts.** Always run `node scripts/plan/health.mjs && node scripts/plan/site.mjs` together,
-health first, before committing either output; `site.mjs --check`'s own drift check (`verify.mjs`
-runs it) catches a forgotten re-run as a failure, so this is a documented discipline with a
-mechanical backstop, not merely a convention. `health.mjs` was deliberately left with the single
-responsibility of writing `health.json` — it does not import or invoke `site.mjs`.
+It runs **no `gh` command and makes no network call**, and it has no `--offline` flag any more:
+CI on main, open PRs and the latest release are build-time facts, read from GitHub's API inside the
+Pages build by `buildHealth.mjs` (the human, 2026-09-14: "read GitHub's API at Pages build time,
+not `gh` on the dev machine"). The strip renders the two sources as two labelled groups, each with
+its own timestamp; no row mixes them.
+
+## `buildHealth.mjs` — the health strip's **build-time** facts (§5, §15)
+
+`node scripts/plan/buildHealth.mjs [--out-dir <site-dir>] [--repo owner/name]` reads GitHub's REST
+API with Node's global `fetch` (no dependency, no `gh`) and writes `site/data/build-health.json`:
+`{built_at, source, repo, ci, open_prs, latest_release}` — the latest `product-ci-rust.yml` run on
+`main` (conclusion, status, head sha, created-at, run URL), the open-PR count with the oldest one's
+age, and the latest published release (tag, published-at, URL; HTTP 404 → `null`, because a
+repository may simply have none).
+
+Slug: `GITHUB_REPOSITORY`, else the git remote (`ghRepoSlug` from `verify.mjs`). Auth:
+`Authorization: Bearer` from `GITHUB_TOKEN`/`GH_TOKEN` when set, with `Accept:
+application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28` and a `User-Agent`. **A 403
+answered to the token is retried once anonymously** (the repository is public), and each fact
+records which reach it used (`auth: "token" | "anonymous"`) — a narrowly-scoped Actions token can
+then never blank the strip silently. Any other failure becomes `{error: "<HTTP status or message>"}`
+on that one fact and **the page renders that error text — never a bare "unknown"**. Exit 0 even
+when facts carry errors (the page reports them); exit 1 only on a write failure or a bad argument.
+
+`site/data/build-health.json` is **gitignored**: it is generated inside the Pages build
+(`pages.yml`'s "build-time health facts from GitHub's API" step, between the `verify:plan` gate and
+the generator) and never committed. `governance-ci.yml` runs it once into `$RUNNER_TEMP` as a smoke
+step, which also shows the scoped token's reach in the log.
+
+**Run order matters:** `site.mjs` bakes both data files' content into the committed
+`site/index.html`. Running `health.mjs` alone changes `site/data/health.json` but leaves the
+previously-generated `site/index.html` describing the *old* machine facts — stale until `site.mjs`
+runs again. **Chosen: document the order, not couple the scripts.** On the custodian's machine
+always run `node scripts/plan/health.mjs && node scripts/plan/site.mjs` together, health first,
+before committing either output; `site.mjs --check`'s own drift check (`verify.mjs` runs it) catches
+a forgotten re-run as a failure, so this is a documented discipline with a mechanical backstop, not
+merely a convention. `buildHealth.mjs` is **not** part of that local pair: `checkSiteDrift` always
+renders with the build facts absent, so the committed page never depends on a file that exists in
+the Pages build and nowhere else, and the drift check cannot be made to fail by one. In the Pages
+build the order is `buildHealth.mjs` then `site.mjs`, which is what `pages.yml` runs. Neither health
+script imports or invokes `site.mjs`.
 
 ## `docsOnly.mjs` — the mechanical docs-only verdict (§9)
 
