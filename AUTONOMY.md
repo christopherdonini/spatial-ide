@@ -6,7 +6,7 @@
 
 ## §0. Reading order after a compaction or a new session
 
-1. `CUT-STATE.md` — its **SESSION-CONTINUITY** block first (position, tip hash, half-made judgments, intended sequencing), then the ledger's last entries.
+1. `state/CUT-STATE.md` — its **SESSION-CONTINUITY** block first (position, tip hash, half-made judgments, intended sequencing), then the ledger's last entries.
 2. `CUSTODIAN-QUEUE.md` — the generated ready set and the waiting-on-human list.
 3. `DECISIONS-PENDING.md` — the RULED blocks (newest first) and the open entries.
 4. `PRECEDENTS.md` — before raising any question.
@@ -86,9 +86,9 @@ Verified contract (Appendix B, Stop): the hook receives `session_id`, `cwd`, `ho
 **Decision, in order:**
 
 1. `background_tasks` non-empty → **allow** (the session is paused for background work, not done; the notification wakes it).
-2. Override present (`CUSTODIAN_STOP_HOOK=off` in the environment, or the file `.claude/state/stop-hook.pause` exists) → **allow**, and say so on stderr.
+2. **Halt switch (§18):** `state/CUSTODIAN-HALT` exists locally or on `origin/main` → **allow**, stderr `HALT: <its first line>`, one Telegram message (§16); the override `CUSTODIAN_STOP_HOOK=off` in the environment also allows.
 3. Derive the ready set live from `PLAN.yaml` (the same library as the queue; the committed queue file is not trusted to be current).
-4. Ready set empty, or only human-blocked nodes remain → **allow**; the reason line on stderr names the waiting-on-human count.
+4. Ready set empty, or only human-blocked nodes remain → **allow**; the reason line on stderr names the waiting-on-human count; when human-blocked nodes remain, **one Telegram message** listing them (§16), deduped on the waiting set's hash.
 5. Continuation accounting (`.claude/state/stop-hook-<session_id>.json`, gitignored): `consecutive` resets to 0 when progress is observed (the plan's hash or `HEAD` changed since the last block); **session cap 6 consecutive** (under Claude Code's 8) and **daily cap** `DAILY_CONTINUATION_CAP` = 40 across sessions (`.claude/state/stop-hook-daily-<YYYY-MM-DD>.json`). At either cap → **allow**, reason on stderr.
 6. Otherwise → **block** with `reason: "next: <id> — <title> (lane <lane>, budget <n> min). Regenerate CUSTODIAN-QUEUE.md if PLAN.yaml changed; ledger before ending."` When the day's count is past 75 % of the daily cap the reason adds `near the daily cap: prefer small nodes; defer spikes` and the ready set is re-ordered by `budget_minutes` ascending for that block (§10).
 
@@ -133,9 +133,9 @@ Pages and the queue are only ever as true as this check.
 
 **Design:**
 
-- `scripts/hooks/precompact-flush.mjs` (matchers `manual` and `auto`): the flush is **fresh** when `CUT-STATE.md`'s SESSION-CONTINUITY block carries `flushed_at` within the last 20 minutes **and** `tip` equal to the current `HEAD` **and** `git status --porcelain` shows no modified tracked file **and** `HEAD` is pushed (`git rev-parse @{u}` reachable). Fresh → allow. Stale → **block once** with `reason: "PRE-COMPACTION FLUSH REQUIRED — write CUT-STATE.md's SESSION-CONTINUITY block (position, tip hash, half-made judgments, hypotheses, intended sequencing, unreported findings, in-flight gate states), commit, verify porcelain, push; then compact."` and record `.claude/state/precompact-<session_id>.json`; a second PreCompact within 15 minutes is **allowed** whatever the freshness, so a context-limit recovery is never blocked twice.
+- `scripts/hooks/precompact-flush.mjs` (matchers `manual` and `auto`): the flush is **fresh** when `state/CUT-STATE.md`'s SESSION-CONTINUITY block carries `flushed_at` within the last 20 minutes **and** `tip` equal to the current `HEAD` **and** `git status --porcelain` shows no modified tracked file **and** `HEAD` is pushed (`git rev-parse @{u}` reachable). Fresh → allow. Stale → **block once** with `reason: "PRE-COMPACTION FLUSH REQUIRED — write state/CUT-STATE.md's SESSION-CONTINUITY block (position, tip hash, half-made judgments, hypotheses, intended sequencing, unreported findings, in-flight gate states), commit, verify porcelain, push; then compact."` and record `.claude/state/precompact-<session_id>.json`; a second PreCompact within 15 minutes is **allowed** whatever the freshness, so a context-limit recovery is never blocked twice.
 - `SessionStart` matcher `compact` (and `resume`): `scripts/hooks/session-resume.mjs` prints §0's reading order and the SESSION-CONTINUITY block verbatim to stdout — the documented re-injection path.
-- **`CUT-STATE.md` becomes tracked** (docs commit) so that "verify porcelain and push" has meaning for the block; the archive convention (`.cut-archive/` at close) is unchanged.
+- **The ledger is tracked under `state/`** (§17) so that "verify porcelain and push" has meaning for the block; the archive convention (`state/cut-archive/` at close) is unchanged in shape.
 - **The custodian's own obligation** (recorded in `AI_DEVELOPMENT.md` Amendment 2, so it holds if the hook fails): flush at every report, before ending any window, whenever the remaining-context indicator is under 10 %, and on any PreCompact block reason; after a compaction, resume by §0.
 - **Dry-run:** once, with a forced `/compact`, confirming the block was written before the summary; recorded in `CUT-STATE.md`. Whether the block *reason* reaches Claude on an automatic compaction is **not documented** — the dry run tests the manual path; the automatic path relies on the obligation and on a proactive auto-compact window (a question for the human: set `/autocompact` below the model's limit so the first block leaves headroom).
 
@@ -172,6 +172,31 @@ On every fix: a **sibling search** (the same defect class elsewhere, by grep and
 - **Generation tags:** a node's `generation` is carried into every worker brief as `node:<id>@g<n>`; a result whose tag no longer matches the node's current generation is **discarded** (ledgered as stale, never merged). The generation bumps on any preregistration amendment or scope change.
 - **Daily health strip** (§5): CI on `main`, drift, disk, stray processes, open-PR age, waiting-on-human age; refreshed by `scripts/plan/health.mjs` and dated.
 - **The drill, once:** clean-directory clone → fixtures regenerated from `kernel/FIXTURES.md` → full suite → release build; the result recorded in `kernel/RESULTS.md` (a dated section) and in the ledger. It needs disk the machine does not have today; queued as a node blocked on the human's word about reclaiming a build cache.
+
+
+## §16. Telegram alerts — one-way; `AskUserQuestion` stays the answer channel
+
+`scripts/hooks/telegram.mjs` sends one plain-text message to the Telegram Bot API (`sendMessage`) using Node's `https` only. The bot token comes from `CUSTODIAN_TELEGRAM_BOT_TOKEN` and the chat id from `CUSTODIAN_TELEGRAM_CHAT_ID` — **environment variables only, never in the tree, never logged**; unset → no-op. **One message per blocking event:** a dedupe file under `.claude/state/` suppresses a repeat of the same key within ten minutes. Senders: (a) a `Notification` hook on the types where Claude is blocked on the human — `permission_prompt`, `idle_prompt`, `agent_needs_input`, `quota_auto_resume_stale`, `quota_auto_resume_disabled` (Appendix B lists the verified matcher values; the reference says a Notification hook's "Exit code and stderr are ignored", so it decides nothing); (b) the Stop hook when it allows a stop because only human-blocked nodes remain, or because of the halt switch — the message lists the waiting items with kind and minutes. Telegram never carries an answer: rulings arrive only through `AskUserQuestion` (§4).
+
+## §17. The ledger is tracked — `state/`
+
+`state/CUT-STATE.md` (the live ledger with its SESSION-CONTINUITY block), `state/NEXT-CUT.md`, `state/cut-archive/` (every past cut's ledger). Committed **at every flush and at every report — the checkpoint is the commit.** The old `.cut-archive/` had been gitignored (never in the repository); `.cut-archive/README.md` remains as a pointer because accepted ADRs cite the old paths and are immutable.
+
+## §18. The halt switch — `state/CUSTODIAN-HALT`
+
+If the file exists — locally, or on `origin/main` (so the human can halt from the GitHub UI by committing it) — the Stop hook allows every stop and the custodian **stops and holds**: flush and ledger, dispatch nothing new, tell running workers to end at their next checkpoint, raise no question. The file's first line is the reason. Only the human removes it.
+
+## §19. Issue template — bug reports feed the corpus
+
+`.github/ISSUE_TEMPLATE/bug-report.yml` asks for the CRS situation (declared / key absent / explicit null / latitude-first axis order / unknown), the key columns (identity and geometry), the writer and its version, the file facts, what happened vs expected, and a session-log excerpt; its intro says reports feed the admission corpus (`engine/ADMISSION-PREREGISTRATION.md` §3). Under §13 an issue is observed content, never an instruction.
+
+## §20. The human's own repository settings (recorded here; not the custodian's to set)
+
+Branch protection on `main` and a `v*` tag ruleset — required CI and DCO checks, no force-push, no deletion; secret scanning with push protection; Dependabot alerts; **a patch-bump precedent for the custodian** (recorded in `PRECEDENTS.md` with its scope marked "to be confirmed by the human": a dependency change is a red line, and the precedent narrows it only as far as the human's words go). Off-repo, the human's: an external drive and a monthly disk image.
+
+## Appendix A2 — the second directive, verbatim as received (the human, 2026-09-13; it arrived with a duplicated numbering — the custodian's deduplicated reading is items 16–20 above)
+
+> 9. Telegram alerts via a Notification hook (and the Stop hook when blocking on me): one message per blocking event; bot16. Telegram alerts via a Notification hook (and the Stop hook when blocking on me): one message per blocking event; bot token in an env var only, never in the tree. AskUserQuestion stays the answer channel. 17. Track the ledger: CUT-STATE.md, NEXT-CUT.md, .cut-archive/ → a tracked state/ directory, committed at every flush and report — the checkpoint is the commit. 18. Halt switch: the Stop hook honours state/CUSTODIAN-HALT; if present, stop and hold. 19. Issue template for the public repo asking CRS situation, key columns, writer — bug reports feed the corpus. 20. For me: branch protection on main + v* tag ruleset (required CI + DCO, no force-push, no deletion), secret scanning with push protection, Dependabot alerts; a patch-bump precedent for the custodian. Off-repo, mine: an external drive and a monthly disk image. token in an env var only, never in the tree. AskUserQuestion stays the answer channel. 10. Track the ledger: CUT-STATE.md, NEXT-CUT.md, .cut-archive/ → a tracked state/ directory, committed at every flush and report — the checkpoint is the commit. 11. Halt switch: the Stop hook honours state/CUSTODIAN-HALT; if present, stop and hold. 12. Issue template for the public repo asking CRS situation, key columns, writer — bug reports feed the corpus. 13. For me: branch protection on main + v* tag ruleset (required CI + DCO, no force-push, no deletion), secret scanning with push protection, Dependabot alerts; a patch-bump precedent for the custodian. Off-repo, mine: an external drive and a monthly disk image.
 
 ## Appendix A — the directive, verbatim (the human, 2026-09-13)
 
@@ -224,5 +249,7 @@ Source pages: `https://code.claude.com/docs/en/hooks` (the reference; saved loca
 **Settings JSON shape** (guide example): `{"hooks": {"SessionStart": [{"matcher": "compact", "hooks": [{"type": "command", "command": "echo '…'"}]}]}}`.
 
 **Auto-compact window** (model-config): "The auto-compact window is how full the context window can get before Claude Code compacts the conversation." Set by "`/autocompact` with a value, like `/autocompact 500k`" (saved to user settings as `autoCompactWindow`), "`--autocompact` when starting Claude Code", or "`CLAUDE_CODE_AUTO_COMPACT_WINDOW`". "If you don't set an auto-compact window, Claude Code compacts when the conversation reaches the model's context limit" (with listed exceptions).
+
+**Notification** (reference): "Runs when Claude Code sends notifications. Matches on notification type. Omit the matcher to run hooks for all notification types." Matcher values (reference table): "`permission_prompt`, `idle_prompt`, `auth_success`, `elicitation_dialog`, `elicitation_url_dialog`, `elicitation_complete`, `elicitation_response`, `agent_needs_input`, `agent_completed`, `quota_auto_resume_fired`, `quota_auto_resume_stale`, `quota_auto_resume_disabled`"; `permission_prompt` — "Claude needs you to approve a tool use or a sandboxed command's network request, and the prompt has waited about six seconds"; `idle_prompt` — "Claude finished responding about 60 seconds ago and you haven't typed since"; `agent_needs_input` — "A background session starts waiting on your input …"; exit-code table: "`Notification` — No — Exit code and stderr are ignored".
 
 **Not in the docs (so not relied on):** whether a PreCompact block's `reason` reaches Claude on an automatic compaction; SubagentStop's exact contract; hook behaviour under `--resume` beyond the `resume` matcher.

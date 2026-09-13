@@ -13,7 +13,7 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 *M13 result: the release-built executable showed the "Spatial IDE could not start — ADR-020 Amendment 1 …" dialog (screenshot recorded); no silent hang — the residual did not come true. Exit code after dismiss: [1 / other]; newest session log: [one error line naming WebviewUrl::App / other]. Record verbatim in the Part M log."* Applied by the custodian from this line: `release/0.1.0` created from 998be05 (a worktree, `.claude/worktrees/release-0.1.0`); entry 47's commits carried onto it by cherry-pick with their records; entries 84/85 preregistered on a branch off it, built and gated, then landed there; RC2 = the installer rebuilt from the branch head, hashed and recorded (RELEASE-0.1 Amendment 17 when built); the Part M row classification and the sitting-3 pack written from RC2's `git diff --stat 998be05`; items 4/5/6 finalized onto the branch for the human's sight; the tag and the merge-back are the human's clicks; the checklist gains the pattern; entry 86 post-tag; the M13 result recorded verbatim (the two bracketed values as the human typed them, to be filled by the human); the Brief A digest produced and sent; P3 held.
 
-**RULED 2026-09-11 — entries 76, 77, 78, 79, 80, 81, 82, disk, the trailer question — the human verbatim:** *"76: (1) invert the latch in this piece, named in the Part K row; (2) add the drop-at-drain re-check with the same predicate; (3) unit/E2E + K7 discharge the merge gate, the harness assertion executed once as an unscored smoke if a window exists, else stated unexecuted; (4) 13b retires at the post-tag landing. 77: sign nothing for v0.1.0; post-tag evaluate SignPath OSS first, Certum second. 78: description A with "designed so that the UI, CLI, notebooks and AI are all clients of it"; topics as verified; checklist spatial→spatial-data; I run the edit. 79: (1) the wider named set, projection_empty_list mandatory; (2) hover shows every projected column, the bound is too-many at admission; (3) describe carries per-column projectable, the panel holds no type logic. 80: (a), each re-aim naming the ruling AND asserting the new provenance class. 81: (b), unit:format-rule beside unit:definition. 82: (a), capped — further residual → hold and narrow to zoom-settle only, no fourth attempt. Disk: reclaim both caches. Verify which trailer carries the model name; Signed-off-by must be a human identity — remediate on branches if needed, fix the worker command."* Applied by the custodian from this line: 76 → ENTRY-66B-PREREGISTRATION §14 Amendment 4 then the piece's second batch; 77 → recorded in the code-signing note, no action before the tag; 78 → the note carries the final text, the checklist line corrected, the commands for the human's own run; 79 → recorded in the B1 documents for B1's close (Brief B still held); 80 → NEXT-CUT.md dated qualification + the provenance assertions in the Brief A batch; 81 → the Proposed ADR-013 amendment gains the clarification, §14 item V, the Brief A batch; 82 → HOVER-REPICK-PREREGISTRATION §12 Amendment 3 then the third attempt; disk → both caches removed after inspection; trailers → verified on all 20 branch commits (Signed-off-by = the human identity throughout; the model name only in Co-Authored-By), no remediation, the brief text made explicit.
+**RULED 2026-09-11 — entries 76, 77, 78, 79, 80, 81, 82, disk, the trailer question — the human verbatim:** *"76: (1) invert the latch in this piece, named in the Part K row; (2) add the drop-at-drain re-check with the same predicate; (3) unit/E2E + K7 discharge the merge gate, the harness assertion executed once as an unscored smoke if a window exists, else stated unexecuted; (4) 13b retires at the post-tag landing. 77: sign nothing for v0.1.0; post-tag evaluate SignPath OSS first, Certum second. 78: description A with "designed so that the UI, CLI, notebooks and AI are all clients of it"; topics as verified; checklist spatial→spatial-data; I run the edit. 79: (1) the wider named set, projection_empty_list mandatory; (2) hover shows every projected column, the bound is too-many at admission; (3) describe carries per-column projectable, the panel holds no type logic. 80: (a), each re-aim naming the ruling AND asserting the new provenance class. 81: (b), unit:format-rule beside unit:definition. 82: (a), capped — further residual → hold and narrow to zoom-settle only, no fourth attempt. Disk: reclaim both caches. Verify which trailer carries the model name; Signed-off-by must be a human identity — remediate on branches if needed, fix the worker command."* Applied by the custodian from this line: 76 → ENTRY-66B-PREREGISTRATION §14 Amendment 4 then the piece's second batch; 77 → recorded in the code-signing note, no action before the tag; 78 → the note carries the final text, the checklist line corrected, the commands for the human's own run; 79 → recorded in the B1 documents for B1's close (Brief B still held); 80 → state/NEXT-CUT.md dated qualification + the provenance assertions in the Brief A batch; 81 → the Proposed ADR-013 amendment gains the clarification, §14 item V, the Brief A batch; 82 → HOVER-REPICK-PREREGISTRATION §12 Amendment 3 then the third attempt; disk → both caches removed after inspection; trailers → verified on all 20 branch commits (Signed-off-by = the human identity throughout; the model name only in Co-Authored-By), no remediation, the brief text made explicit.
 
 **RULED 2026-09-09 (later) — #38 and the closing sequence — the human verbatim:** *"#38: clicking.
 Sequence adjustment: the entry-68 line-ending commit proceeds as staged; items 5/6 land as drafts with
@@ -60,8 +60,8 @@ enumeration; the closing commits as authorized); ADR-032 filed Proposed (decisio
 note appended on #32's merge; the ADR-024 note appended on item 10's landing; ADR-030 accepted with
 the enumeration-source note on the amalgamation piece's landing; the drafts updated (the 4326
 refusal prominent; QUICKSTART never says "opens"; the minZoom clamp as an optional follow-up in
-`NEXT-CUT.md`); the post-release sequencing note (ADR-032 likely outranks LOD) recorded in
-`NEXT-CUT.md` beside the LOD companion note — not decided.
+`state/NEXT-CUT.md`); the post-release sequencing note (ADR-032 likely outranks LOD) recorded in
+`state/NEXT-CUT.md` beside the LOD companion note — not decided.
 
 **RULED 2026-09-08 — entries 53 (reduced form), 55, 56, 57, item 8, #30, the sweep — the human
 verbatim:** *"55 = (b): config mirror via tauri::is_dev(); Part M equivalence assertion under dev /
@@ -78,6 +78,8 @@ yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in
 re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #31; item 1 (b) and the
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
+
+93. **[LOD feasibility spike CONCLUDED — the written conclusion is `spikes/lod-feasibility/README.md` on `spike/lod-feasibility` (90ccd15; PR opened for your click; nothing outside `spikes/`). Both routes simplify the 5 GB fixture identity-preservingly at three tolerances with zero invalid geometries (route A everywhere; route B in five of six 100k runs — its RDP variant at tolerance 5.0 left 5 invalid of 100,000, a real implementation-specific divergence). Cancellability: route A about one second from `interrupt()`, leaving a partial file; route B cooperative per row group, about ten seconds observed. All numbers are spike measurements, not docs/08 claims. **Two dependency proposals, both yours (nothing added to the product):** (A) the engine does not load DuckDB's `spatial` extension (`engine/Cargo.toml:32` — features `bundled, parquet, json`); route A as a product path needs that extension bundled or loaded — a dependency change; (B) route B needs `geo` 0.33.1, `wkb` 0.9.2, `geo-traits` 0.3.0, `parquet` 59.3.0, `arrow` 59.3.0 (MIT/Apache-2.0), used only in the spike-only crate. **Three questions for you before ADR-031's preregistration:** (1) which route is preregistered as the product path — A (DuckDB spatial), B (Rust geo), or both measured under one preregistration with the confounds removed (route B multi-threaded; the same algorithm family both sides); (2) whether the preregistration may be drafted now by the architect against the README's five open questions (tier count; tolerance units; where tiers live on disk; invalidation on source change; the relation to ADR-028's residency budget) with those answered as its pre-committed choices for your sight, or whether you answer any of the five first; (3) whether the route-B invalid-output divergence must be explained before either route is preregistered.]** Not decided here; nothing built in the product.
 
 92. **[ADR-029 + the operation lifecycle — the decision draft is filed for your sight
     (`RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-adr-029-operation-lifecycle.md`); three
@@ -170,6 +172,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     which would change the bundle viewer shipped inside every published bundle and the reference viewer
     NOTICE that M's hashes recorded.]** Not the shell; nothing else depends on it. Not decided here.
     *Reproduced 2026-09-13 (headless, `playwright-core` against `serve-bundle.mjs` on the human's published `100k-happy-path` bundle; the pointer held at the canvas centre; two passes each, identical):* with the window larger than the canvas's fixed backing store the painted centroid moves up-left on zoom-in and back down-right on zoom-out; with the window smaller the direction reverses; with the CSS box forced to exactly 1280×900 there is no drift. The solved zoom anchor equals the pointer's CSS offset read as a backing-store coordinate. **Cause:** `renderer/bundle-viewer/index.html:74` pins the canvas at `width="1280" height="900"` while `:26` stretches it with CSS; the wheel handler (`src/main.ts:307-323`) passes `e.offsetX/Y` (CSS pixels) to `unproject` (`src/render.ts:121-124`), which measures from `view.width/2, view.height/2` set once from the canvas attributes (`main.ts:444`); no resize or DPR handling exists. The same mismatch scales a drag's pan (`main.ts:298-299`) and shifts hover picking (`:325-333`). Not deck.gl, not DPR. The displacement is not cumulative (in-then-out returns exactly). KNOWN-LIMITATIONS line 16 added on main; a viewer fix piece (make the pointer and the view share one pixel space — size the backing store to the client box with DPR on resize, or convert CSS offsets by the box ratio — with the reproduction driver as its E2E at two window sizes) is preregistered to ride alongside; its landing retires the line.
+    **Landed on `viewer/zoom-anchor` (2026-09-13; 9c1064c; gates pending) — the KNOWN-LIMITATIONS line-16 replacement, for your sight, not applied:** [16. **In every bundle already published — including every v0.1.0 bundle — the published viewer's wheel-zoom anchors on the wrong point unless the browser window happens to size the canvas to its own backing store, and this is unfixable in place.** A published bundle's viewer is a frozen copy of whatever build produced it (`kernel/src/publish/viewer_assets.rs`), so no already-shipped bundle can pick up a later viewer fix — the direction depends on whether the window was larger or smaller than the frozen 1280×900 backing store, undone by zooming back out, and the same mismatch scaled a drag's pan distance and shifted hover picking. Fixed only for bundles a build carrying `viewer/zoom-anchor` publishes from now on.] The preregistration's §3 tolerance was revised twice after results (recorded in its Amendment 1); the Part G row queues into the next sitting.
 
 85. **[Part M sitting 2, M5 (c) — after applying a filter, "Zoom to layer" stops working until the filter
     is cleared (your report of 2026-09-13; the first click after the filter "works perfectly"). A defect
@@ -535,7 +538,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     sentence), and (b) is preregistered as the first small piece after the tag beside ADR-032/LOD;
     (c) if you want Amendment 3 intact at the tag (one more preregistered piece + gate before it).
     Touches on (a)/(d): ADR-028 (append, your word), two comment blocks (in the fix batch now), one
-    KNOWN-LIMITATIONS line, `NEXT-CUT.md`.
+    KNOWN-LIMITATIONS line, `state/NEXT-CUT.md`.
 
 65. **[Release cut item 9 (both notice generators) — RULE 7 REACHED on the architect step (gate FAIL
     on `1a28fbf`: two blocking; re-review FAIL on `7f2e2fa`: ONE textual clause). The reviewer's
@@ -647,7 +650,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     custodian without a decision: the `?raw` notice payload is now ~3 MB parsed at every launch and
     rendered into one element on expand — declared for v0.1 and observed at Part M M3 (the
     architect's option (a)); moving it to a fetched dist asset (no new command; removes the two-pass
-    build too) is recorded in `NEXT-CUT.md`. Touches on (a): a pinned record under `spikes/` or
+    build too) is recorded in `state/NEXT-CUT.md`. Touches on (a): a pinned record under `spikes/` or
     `LICENSES/third-party/`, the generator's third section, the tests' cardinality, ADR-030's note.
 
 61. **[Release cut item 1 (b), the ADR-020 config mirror — RULE 7 REACHED on the reviewer side
@@ -715,7 +718,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     KNOWN-LIMITATIONS names "zooming far out past the data can hang the canvas" — honest but a poor
     first five minutes for a stranger (item 6's quickstart says zoom out). Touches on (a): the two
     files above, a unit test, one E2E step, a KNOWN-LIMITATIONS line only if it slips; recorded in
-    `NEXT-CUT.md` today under "Found during the release cut" and in the K6 gate record.
+    `state/NEXT-CUT.md` today under "Found during the release cut" and in the K6 gate record.
 
 59. **[Item 8 (CRS catalog: EPSG:4326 + 3857, ruled "yes … under the entry-51 protocol") — the 4326
     half CANNOT be built as ruled; the 3857 half can and proceeds under the ruling. Architect consult
@@ -1003,7 +1006,7 @@ is written until you answer; items 2/3/3e proceed either way.
     the branch and the empty lockfile diff myself. Clicking. Record the packaged-app notice channel
     as a named release-engineering item beside the ADR-020 fix."** Applied: the packaged shell
     app's EPSG/IOGP notice channel is now a named release-engineering item beside the ADR-020
-    packaged-debug fail-closed fix (`NEXT-CUT.md`, "Ordering restated" — the release-engineering
+    packaged-debug fail-closed fix (`state/NEXT-CUT.md`, "Ordering restated" — the release-engineering
     list; `DEPENDENCY-LICENSES.md`'s block already names it OWED). Original entry follows.]**
     **[EPSG terms check done (entry 49 F-16, `DEPENDENCY-LICENSES.md` "Third-party data terms"
     section, 2026-09-07): two obligations are open and one verification is owed before the shipped
@@ -1126,7 +1129,7 @@ is written until you answer; items 2/3/3e proceed either way.
     **1b CLOSED 2026-09-07 on the zoom-out-only re-run** (L6 verbatim: *"L6 works properly now,
     nothing disappearing"*; session log: arm proven, zero first-look evictions) **and the human's
     L9, verbatim:** *"L9 overall it's better and feels better and less clunky now, reactive, non
-    stuck, it feels actually way better"*. Rule-10 archive: `.cut-archive/CUT-STATE-residency-debt.md`.
+    stuck, it feels actually way better"*. Rule-10 archive: `state/cut-archive/CUT-STATE-residency-debt.md`.
     Original entry follows.]**
     **[The untiled first look is evicted wholesale on the first admission that needs room — the
     "already rendered content disappears ~10 s after zooming out" the human named in the post-fix
@@ -1228,7 +1231,7 @@ is written until you answer; items 2/3/3e proceed either way.
     piece's own repro. Touches: `WorkingCanvas.tsx` hover/pick, `pickResolution.ts`.
     **RULED 2026-09-06, the human, verbatim:** *"Entry 47 = (b), re-pick on camera settle, as its
     own named piece on the NEXT cut — not this close-out; the pick-accuracy half stays recorded
-    verbatim for that piece's repro, undiagnosed."* Applied: queued in NEXT-CUT.md as a named
+    verbatim for that piece's repro, undiagnosed."* Applied: queued in state/NEXT-CUT.md as a named
     piece for the next cut; nothing touched now.
     **Criterion sharpened by the human at the 2026-09-07 zoom-out re-run (48-(a) build), verbatim:**
     *"One thing have not been fixed though. Once i zoom in to a feature and hover over one, even if
@@ -1321,7 +1324,7 @@ is written until you answer; items 2/3/3e proceed either way.
     you see that he's rendering tiles for half a second, then they disappear, and a new one appear
     and then disappear, constantly and then the last one rendered in the north, left corner and
     stayed there."* Candidate arm, `fine`, polygons-100k, zoomed out past budget. Entry 27's
-    reopen condition (NEXT-CUT.md's own restatement): *"visible in-viewport holes attributable to
+    reopen condition (state/NEXT-CUT.md's own restatement): *"visible in-viewport holes attributable to
     partial-covering eviction reopen it as a defect."* Mechanism, code-grounded by 1a Q2 and this
     sitting's trace: over budget, each admission evicts to make room; a just-admitted, budget-trimmed
     tile is durably `partial`, and a partial in-viewport tile is absent from the protected set
@@ -1771,7 +1774,7 @@ is written until you answer; items 2/3/3e proceed either way.
 29. **[RESOLVED 2026-09-03 — human: "yes, into 1b as a named piece with its own E2E step; if it
     grows beyond small once opened, it exits back to the queue." K6's hover-staleness fix is now
     a named 1b piece with its own E2E step and an explicit growth escape-hatch; recorded in
-    `NEXT-CUT.md`'s 1b scope. Original entry below, kept for the record.]**
+    `state/NEXT-CUT.md`'s 1b scope. Original entry below, kept for the record.]**
     **[Open defect, promoted from the Part K walkthrough log per the human's own instruction,
     2026-09-03: "open defects don't live only in walkthrough logs".]** K6's sub-pixel hover
     staleness, live-reproduced during the 2026-09-02 sitting: hover a feature at full zoom-in,
@@ -1791,7 +1794,7 @@ is written until you answer; items 2/3/3e proceed either way.
 28. **[RESOLVED 2026-09-03 — human: "(a) — dispatch the read-only attribution pass (the null
     queryToFirstByteMs angle first); LOD's brief finalizes only after its answer." Pass
     dispatched the same day, read-only, no product code; the LOD problem statement in
-    `NEXT-CUT.md` stays draft until it returns. Original entry below, kept for the record.
+    `state/NEXT-CUT.md` stays draft until it returns. Original entry below, kept for the record.
     COMPLETED same day: `spikes/viewport-residency-1a-diagnosis/ATTRIBUTION-PASS.md`. Verdict:
     "upstream of paint" is now a grounded finding on direct records (time-to-data dominates by
     1-2 orders of magnitude; the 150s window decomposes into a 150.058s backlog-drain phase,
@@ -1814,7 +1817,7 @@ is written until you answer; items 2/3/3e proceed either way.
     three-question scope, as the human explicitly dispatched it (queue disposition; finding-3
     pressure-valve-vs-thrash; pan-west's recoverable fraction), did not include this check** — it
     answers different questions and none of its findings bear on query-vs-paint attribution. The
-    LOD problem-statement draft below (`NEXT-CUT.md`) is therefore drafted with this gap named
+    LOD problem-statement draft below (`state/NEXT-CUT.md`) is therefore drafted with this gap named
     explicitly, not silently assumed answered. Recommendation: **your call** — either (a)
     authorize a small, additional read-only diagnosis pass specifically on this attribution
     question before the LOD brief is treated as final (cheapest: re-check whether a fresh
@@ -1946,7 +1949,7 @@ is written until you answer; items 2/3/3e proceed either way.
     credentials/personal-data/third-party material, three stale docs corrected with dated notes
     (`main` @ 8a69260, pushed). What remains is entirely judgment — entries 13–15 plus **making
     the repository public itself, which stays yours regardless**. Full record:
-    `PRE-PUBLIC-CHECKLIST.md` (durable) + `.cut-archive/CUT-STATE-adr009-checklist.md`.
+    `PRE-PUBLIC-CHECKLIST.md` (durable) + `state/cut-archive/CUT-STATE-adr009-checklist.md`.
 
 13. **[RESOLVED 2026-09-07 — OVERTAKEN BY EVENTS (public since 2026-08-03): the "pre-public bar"
     no longer exists; the trademark-register search stays a pre-1.0/counsel item exactly as docs/14
@@ -2053,7 +2056,7 @@ is written until you answer; items 2/3/3e proceed either way.
   §2; dispatch entry 40's empirical producer pass now, independently under the 24(g) guard — it
   gates nothing and informs P1's later risk. After the 48 re-run and L9: rule-10 archive, then the
   flip track (ADR-025 reading, the exposure review, the 12–15 go/no-go) becomes the live queue."*
-  Applied: NEXT-CUT.md's LOD section carries the ruling (its §5 questions answered: (1) the
+  Applied: state/NEXT-CUT.md's LOD section carries the ruling (its §5 questions answered: (1) the
   stable-partial overview is a declared v0.1 limitation, (2) P2, (3) entry 40's pass runs now,
   independently); after 1b closes, the flip track is the live queue. Resolves the 34c-deferred
   LOD-vs-flip ordering.
@@ -2133,7 +2136,7 @@ is written until you answer; items 2/3/3e proceed either way.
   finalizes only after its answer. **(Q4, the LOD brief's scorability question, ruled without a
   numbered entry):** a NEW docs/08 scale-class row, landed WITH its measurement per ADR-011
   gate 2, defined as a dataset class (feature/vertex brackets), not "the 5 GB file"; the 5 GB
-  assertion-only items retained besides — recorded into `NEXT-CUT.md`'s draft. **(25)** `pasted`
+  assertion-only items retained besides — recorded into `state/NEXT-CUT.md`'s draft. **(25)** `pasted`
   retained over `not-in-catalog` (the ruled principle: prefer the wording that records the
   action over one that claims a search result); no change anywhere; the None-case corollary the
   same principle exposes queued as new entry 30, not decided. **(24(g))** closed as superseded
@@ -2244,7 +2247,7 @@ is written until you answer; items 2/3/3e proceed either way.
   reversing the prior declare-and-observe default now that Part H's observation is in: thread
   the `CancelToken` + a phase label into `publish-prepare`. **Not implemented by this batch** —
   a small, host-side cut from `main`, reviewer-gated, scheduled to run only after tonight's
-  sitting closes (its own brief is not drafted here, to avoid clobbering `NEXT-CUT.md`'s current
+  sitting closes (its own brief is not drafted here, to avoid clobbering `state/NEXT-CUT.md`'s current
   occupant, the still-open viewport-residency cut). Touches, when dispatched: the shell's
   publish-prepare path (`frontends/shell/src-tauri`, wherever the whole-file SHA-256 runs
   uncancellably today).
@@ -2273,7 +2276,7 @@ is written until you answer; items 2/3/3e proceed either way.
   green, `reader.rs` mapping present) — only two doc markers needed updating from "QUEUED for
   the human" to "APPROVED 2026-09-02", with the expiry clause (holds only until an external
   reader of `spatial-audit/1` exists) restated, not weakened. Applied: `record.rs`'s doc
-  comment (also fixed a stale `NEXT-CUT.md` cross-reference to the since-overwritten publish
+  comment (also fixed a stale `state/NEXT-CUT.md` cross-reference to the since-overwritten publish
   cut's own brief) and `ADR-024`'s matching paragraph (lines 180-193) — comment-only, zero
   behavior change. ADR-024's own overall Status is untouched, still Proposed, still queued
   (below) — this entry approves only the one value-domain widening, not the ADR.
@@ -2290,7 +2293,7 @@ is written until you answer; items 2/3/3e proceed either way.
   verified at zoom notch 0 with patch fraction 100%, double-green, first all-green
   `e2e:console` run. **No product render/pick code was touched at any point.** The
   hover-at-whole-dataset-zoom UX question is owned by ADR-011's tiling/LOD slice (gate 8),
-  flagged for the next architect consult. Full trail: `.cut-archive/CUT-STATE-action-console.md`,
+  flagged for the next architect consult. Full trail: `state/cut-archive/CUT-STATE-action-console.md`,
   `e2e/README.md`'s resolution note, PR #15 disclosure 1.
 
 - **2026-08-18 — action-console cut gates cleared by the human ("let's roll with the next
@@ -2353,4 +2356,4 @@ is written until you answer; items 2/3/3e proceed either way.
   Full record: `kernel/RESULTS.md`, `frontends/shell/MANUAL-WALKTHROUGH.md`, ADR-011 gate 8.
 
 *(Older intermediate authorizations — the instrumented-session grant, the walkthrough-hold — folded
-into the resolutions above. Full narrative history in git and in `E2E-STATE.md` / `CUT-STATE.md`.)*
+into the resolutions above. Full narrative history in git and in `E2E-STATE.md` / `state/CUT-STATE.md`.)*
