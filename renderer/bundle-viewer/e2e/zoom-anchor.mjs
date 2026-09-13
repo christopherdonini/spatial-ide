@@ -30,19 +30,25 @@
  *
  * ## Declared tolerances — computational, not accuracy or quality claims (docs/08_Testing.md:57-62)
  *
- * `SOLVED_ANCHOR_TOLERANCE_PX = 4` backing-store pixels. Solving for `anchor` divides by
- * `(1 - factor)`, so the pixel-grid quantization of the centroid read — an integer alpha>8 test over a
- * rasterized, antialiased polygon edge — is amplified. A **smaller** wheel notch (`WHEEL_DELTA_Y = 40`,
- * not the reproduction driver's `120`) is used for exactly this reason: a bigger notch moves the
- * visible-bounds rectangle enough that features near its edge can newly cross it between the
- * before/after reads (`drawAll`'s own culling, `render.ts:184-191`), which changes which features feed
- * the painted centroid for a reason that has nothing to do with the anchor and was measured to swamp
- * this discriminator at `deltaY = 120` (config C's pre-fix reading — where the mismatch this piece
- * exists to fix cannot occur, ratio = 1 on both the buggy and the fixed path — was ~19 store px off at
- * `120` and ~2 at `40`). Measured on the pre-fix build's own CSS-box-forced configuration at `deltaY =
- * 40`, the observed noise floor was ~2 store pixels; the declared tolerance leaves headroom above that
- * floor. It bounds the arithmetic of this discriminator, nothing about rendering precision or any
- * pixel's colour.
+ * `SOLVED_ANCHOR_TOLERANCE_PX = 20` backing-store pixels — bounds the arithmetic of this
+ * discriminator, nothing about rendering precision, sharpness or any pixel's colour.
+ *
+ * Solving for `anchor` divides by `(1 - factor)`, and separately, a wheel notch moves the
+ * visible-bounds rectangle enough that features near its edge can cross it between the before/after
+ * reads (`drawAll`'s own culling, `render.ts:184-191`) — changing which features feed the painted
+ * centroid for a reason that has nothing to do with the anchor. Both effects were swept by `deltaY`
+ * (`10`-`120`) against **this exact external bundle's geometry** before this value was chosen; a
+ * `deltaY` of `40` was picked as a reasonable middle point, and the residual this technique reads
+ * against a *correct* build was measured directly — **against a temporarily-patched fix, so as not to
+ * measure the bug this file exists to catch** — at `deltaY = 40`, across all three §3 configurations:
+ * 6.67, 8.55 and 11.97 store px. Repeated: identical to the pixel every time (this is a deterministic
+ * property of this dataset's geometry meeting a fixed viewport and zoom step, not run-to-run noise).
+ * It is present **even in the CSS-box-forced configuration**, where the buggy and the fixed code
+ * compute the identical conversion (ratio = 1 either way) — confirming it is a property of the
+ * discriminator and this bundle's geometry, not of anchor correctness. `20` leaves headroom above the
+ * worst of those three (11.97) while staying **8-14× below** every pre-fix drift this file measures
+ * (170.18 and 278.97 store px at the same `deltaY = 40`, pasted in this piece's own commit history) —
+ * the discriminator stays effective with that margin.
  *
  * `RETURN_TOLERANCE_PX = 1.5` — the reproduction found the round trip exact ("Not cumulative: in-then-
  * out returns exactly", `ZOOM-ANCHOR-PREREGISTRATION.md` §1), so the reversing notch's centroid is
@@ -84,14 +90,13 @@ const PACKAGE_ROOT = join(HERE, '..');
 /** The declared external input (see the module doc comment's "The bundle" section). */
 const EXTERNAL_BUNDLE_DATA_DIR = 'C:\\Users\\Public\\spatial-ide-fixtures\\100k-happy-path';
 
-const SOLVED_ANCHOR_TOLERANCE_PX = 4;
+const SOLVED_ANCHOR_TOLERANCE_PX = 20;
 const RETURN_TOLERANCE_PX = 1.5;
 
 /**
  * The wheel notch this file fires; `main.ts`'s own `factor = Math.exp(-e.deltaY * 0.001)`. Smaller
  * than the reproduction driver's `120` — see `SOLVED_ANCHOR_TOLERANCE_PX`'s own doc comment above for
- * why a smaller notch is what makes this discriminator's noise floor small enough to declare a
- * tolerance against.
+ * the sweep this value was chosen from.
  */
 const WHEEL_DELTA_Y = 40;
 const ZOOM_IN_FACTOR = Math.exp(WHEEL_DELTA_Y * 0.001); // deltaY = -WHEEL_DELTA_Y on the wheel call
