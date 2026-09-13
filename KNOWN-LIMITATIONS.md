@@ -150,12 +150,12 @@ which is true: any matching features there are not drawn until you pan or zoom i
 queried again. The app cannot know whether those areas are empty.
 <!-- DECISIONS-PENDING entry 87 (diagnosis 2026-09-13: skp.filter_rejected_by_binder refusals discarded in tileViewportStreamManager.ts mintAndStart's catch; the fix is queued post-tag with the suspended FIND' assertion as its test); RELEASE-0.1 Amendment 18; M15; resolved on the human's word of 2026-09-13 -->
 
-16. **In the published bundle's viewer, wheel-zoom anchors on the wrong point unless the browser
-    window happens to size the canvas to its own backing store.** The viewer's canvas is a fixed
-    1280×900 backing store stretched by CSS to fill its pane, and the wheel handler feeds the
-    event's CSS-pixel offsets to an unprojection that measures from the backing store's centre, so
-    the map slides one way as it zooms in and back the other way as it zooms out even when the
-    pointer never moves. The direction depends on whether the window is larger or smaller than that
-    backing store, and the displacement is undone by zooming back out. The same mismatch scales a
-    drag's pan distance and shifts hover picking away from the pointer.
-    <!-- renderer/bundle-viewer/index.html:74 (`<canvas id="map" width="1280" height="900">`) and :26 (`canvas { width: 100%; height: 100% }`); renderer/bundle-viewer/src/main.ts:307-323 (the wheel handler, `unproject(e.offsetX, e.offsetY, ...)`), :298-299 (pan), :325-333 (hover) and :444 (`fitView(bounds, canvas.width, canvas.height)`); renderer/bundle-viewer/src/render.ts:121-124 (`unproject` measures from `view.width/2`, `view.height/2`); DECISIONS-PENDING.md entry 86, reproduced 2026-09-13 (post-tag; retires when the viewer piece lands) -->
+16. **In every bundle already published — including every v0.1.0 bundle — the published viewer's
+    wheel-zoom anchors on the wrong point unless the browser window happens to size the canvas to
+    its own backing store, and this is unfixable in place.** A published bundle's viewer is a frozen
+    copy of whatever build produced it (`kernel/src/publish/viewer_assets.rs`), so no already-shipped
+    bundle can pick up a later viewer fix — the direction depends on whether the window was larger or
+    smaller than the frozen 1280×900 backing store, undone by zooming back out, and the same mismatch
+    scaled a drag's pan distance and shifted hover picking. Fixed for every bundle published by a
+    build that includes the viewer zoom-anchor fix (PR #53) or later.
+    <!-- kernel/src/publish/viewer_assets.rs:4-19, :85 and frontends/shell/src-tauri/src/publish.rs:1109-1120 (publish copies the viewer's dist/ into the bundle — a frozen copy, not a version reference); docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md:527-530 (§14: a bundle's viewer cannot verify itself); renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md §5 (already-published bundles are not updated) and its Amendments 1-3; the fix: PR #53 (viewer/zoom-anchor, merged 2026-09-13); DECISIONS-PENDING.md entry 86 (the human's sighting of this line, 2026-09-13). Scope line, not a retirement: it stands for every bundle published before the fix. -->
