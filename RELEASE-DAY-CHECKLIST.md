@@ -39,7 +39,7 @@ are mechanical and were run, or are re-run, before the human's step that depends
 - [ ] Tag message finalized from the draft (`RELEASE-0.1.md`'s last amendment names the draft's location); every sentence verifiable against a file in the tree.
 - [ ] `git tag -a v0.1.0 -F <tag-message-file> <commit>` — annotated, on the intended commit; `git tag -v` is not expected (no signing key is declared for this project; the DCO sign-off is per commit).
 - [ ] `git push origin v0.1.0`.
-- [ ] `git describe --tags` on main prints `v0.1.0`.
+- [ ] `git describe --tags` on main prints `v0.1.0` — under the release-branch pattern only after the merge-back, and as `v0.1.0-<N>-g<sha>` when main carries commits above the tag (2026-09-13: `v0.1.0-63-ge9900a3`).
 
 ## 5. The GitHub release (human)
 
