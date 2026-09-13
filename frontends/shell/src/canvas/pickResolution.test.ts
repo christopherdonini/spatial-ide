@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { ResidentBatch } from "./decodeBatch";
 import {
   averageFeatureExtent,
+  cursorForPointerState,
   decideHoverReadoutAtSettle,
   hoverRepickActionForCameraChange,
   isBelowPickResolution,
@@ -275,5 +276,17 @@ describe("hoverRepickActionForCameraChange (D11)", () => {
   it("the release edge: the SAME camera change that cancelled while held arms once the button is up", () => {
     expect(hoverRepickActionForCameraChange(true, true, true, true)).toBe("cancel");
     expect(hoverRepickActionForCameraChange(true, true, true, false)).toBe("arm");
+  });
+});
+
+// DECISIONS-PENDING entry 89 §4.3/§4.4 (2): the two values `getCursor`'s wiring in
+// `WorkingCanvas.tsx` can ever receive, both exercised -- neither is a dormant branch.
+describe("cursorForPointerState (entry 89 §4.3)", () => {
+  it("no button down / not dragging: crosshair", () => {
+    expect(cursorForPointerState(false)).toBe("crosshair");
+  });
+
+  it("dragging: grabbing", () => {
+    expect(cursorForPointerState(true)).toBe("grabbing");
   });
 });
