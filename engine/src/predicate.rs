@@ -378,37 +378,16 @@ impl From<FilterError> for PredicateAdmitError {
     }
 }
 
-/// **The one place this residual case is folded back into [`FilterError`]'s closed vocabulary.**
-///
-/// Exists only so that an already-published, unchanged external call site whose own `Result` is
-/// pinned to `FilterError` (today: none inside this workspace — `kernel/src/skp.rs`'s
-/// `build_viewport_query` takes the `?`-propagated [`PredicateAdmitError::Filter`] case losslessly
-/// and never exercises this arm at the declared ceiling, see `pool::MAX_ADMISSION_CONNECTIONS`'s
-/// own "composition-unreachable" note) still compiles against this type. **This is not a claim
-/// that the fallback text below is the right wire-level answer** — it recreates the very
-/// `RejectedByBinder` shape entry 91 (a) says a lease failure must never be reported as, and doing
-/// so honestly requires routing `PredicateAdmitError::ConnectionsExhausted` through
-/// `kernel::error_of` (the mapping SKP-V0 already declares, `kernel/src/skp.rs:677-680`) instead of
-/// through `filter_error_of` — a `kernel/src/skp.rs` change this engine-only piece does not make.
-/// Recorded here, not silently, as the one place that follow-up is still owed.
-impl From<PredicateAdmitError> for FilterError {
-    fn from(e: PredicateAdmitError) -> Self {
-        match e {
-            PredicateAdmitError::Filter(fe) => fe,
-            PredicateAdmitError::ConnectionsExhausted { class, capacity } => {
-                FilterError::RejectedByBinder {
-                    detail: format!(
-                        "admission connections exhausted (class={class}, capacity={capacity}); \
-                         this is a pool capacity fact, not a binder rejection — reported here only \
-                         because no `kernel/src/skp.rs` route to `engine.connections_exhausted` \
-                         exists yet for this call path (see `PredicateAdmitError`'s own doc); \
-                         composition-unreachable for the shipped shell at this capacity"
-                    ),
-                }
-            }
-        }
-    }
-}
+// **No `From<PredicateAdmitError> for FilterError`, deliberately, and it may not come back.**
+// An earlier cut carried one so that `kernel/src/skp.rs`'s `build_viewport_query` — whose `Result`
+// was then pinned to `FilterError` — kept compiling unchanged. That fold was the defect the gate
+// reports of 2026-09-14 named: it rewrote `ConnectionsExhausted` into
+// `FilterError::RejectedByBinder`, which the kernel then mapped to `skp.filter_rejected_by_binder`
+// — precisely the false binder refusal the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a))
+// forbids. `build_viewport_query` now returns `PredicateAdmitError` itself and the kernel *matches*
+// on it (`kernel::skp::predicate_admit_error_of`), routing the residual through the existing
+// `engine.connections_exhausted` arm. A caller that needs one kind or the other matches on the
+// enum; re-adding a lossy fold here would restore the defect, not a convenience.
 
 impl std::error::Error for FilterError {}
 

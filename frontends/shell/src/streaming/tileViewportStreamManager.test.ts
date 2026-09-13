@@ -852,7 +852,11 @@ describe("TileViewportStreamManager", () => {
     const RETRYABLE_ENGINE_ERR = new SkpCallError({
       code: "engine.connections_exhausted",
       message: "no admission lease was available",
-      fields: { class: "maintenance", capacity: "1" },
+      // The fields the kernel now actually emits on this path: the residual admission-lease
+      // exhaustion routed through `engine.connections_exhausted`'s own arm
+      // (`kernel/src/skp.rs`'s `predicate_admit_error_of`), i.e. `LeaseClass::Admission` at
+      // `MAX_ADMISSION_CONNECTIONS` -- not the pre-ADR-033 `maintenance`/1 pair.
+      fields: { class: "admission", capacity: "4" },
     });
 
     it("a retryable code (engine.connections_exhausted): one refusal log line, the tile is back in the queue, issued by the next drain, and its recovery is named too", async () => {
