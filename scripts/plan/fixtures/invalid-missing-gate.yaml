@@ -1,0 +1,24 @@
+# "gate" is absent -- every node must carry one, a path or the literal string "none" (reviewer
+# finding 10).
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: no-gate
+    title: "No gate field"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: ready
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: missing gate"
+    dates: {opened: 2026-09-13, done: null}

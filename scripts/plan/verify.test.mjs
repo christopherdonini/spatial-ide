@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
 import { buildQueue, renderMarkdown } from './queue.mjs';
-import { runVerify, verifyStatusAgreement, adrStatusAccepted, verdictCiteExists } from './verify.mjs';
+import { runVerify, verifyStatusAgreement, adrStatusAccepted, verdictCiteExists, commitOnMain } from './verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, 'fixtures');
@@ -26,6 +27,33 @@ test('adrStatusAccepted fails for a nonexistent ADR id', () => {
   const result = adrStatusAccepted(repoRoot, 'ADR-999');
   assert.equal(result.ok, false);
   assert.match(result.reason, /no file for ADR-999/);
+});
+
+function makeGitRepo() {
+  const dir = makeTempDir('commit-on-main-');
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'Test'], { cwd: dir });
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'x');
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'init'], { cwd: dir });
+  const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  return { dir, sha };
+}
+
+test('commitOnMain falls back to a local "main" when origin/main is absent (finding 1)', () => {
+  const { dir, sha } = makeGitRepo();
+  execFileSync('git', ['branch', 'main'], { cwd: dir }); // no "origin" remote at all
+  const result = commitOnMain(dir, sha);
+  assert.deepEqual(result, { ok: true, reason: null });
+});
+
+test('commitOnMain names the shallow clone when neither origin/main nor main resolves', () => {
+  const { dir, sha } = makeGitRepo();
+  execFileSync('git', ['branch', '-m', 'totally-not-main'], { cwd: dir }); // neither ref exists
+  const result = commitOnMain(dir, sha);
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /shallow clone: run with fetch-depth 0/);
 });
 
 test('verdictCiteExists requires the "DECISIONS-PENDING.md " prefix', () => {

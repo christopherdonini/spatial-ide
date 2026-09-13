@@ -121,6 +121,38 @@ test('stop-queue: allows on a local state/CUSTODIAN-HALT file, with its first li
   assert.match(result.stderr, /^HALT: reclaiming the build cache for the drill/);
 });
 
+test('stop-queue: caches a successful origin/main HALT probe for 60s (finding 17)', () => {
+  const dir = makeGitRepo();
+  const bareDir = makeTempDir('halt-cache-bare-');
+  execFileSync('git', ['init', '-q', '--bare', bareDir]);
+  git(dir, ['remote', 'add', 'origin', bareDir]);
+
+  fs.mkdirSync(path.join(dir, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'state', 'CUSTODIAN-HALT'), 'first probe\n');
+  git(dir, ['add', '-A']);
+  git(dir, ['commit', '-q', '-m', 'halt']);
+  git(dir, ['push', '-q', '-u', 'origin', 'HEAD:refs/heads/main']);
+  // Remove the LOCAL copy (not yet pushed) so checkHalt must consult origin/main (the cached
+  // path) instead of the local file -- origin/main still has the halt file at this point.
+  fs.rmSync(path.join(dir, 'state', 'CUSTODIAN-HALT'));
+  git(dir, ['add', '-A']);
+  git(dir, ['commit', '-q', '-m', 'remove the local copy (not pushed yet)']);
+
+  const now = 1_000_000;
+  const first = checkHalt(dir, { now });
+  assert.deepEqual(first, { halted: true, message: 'first probe', source: 'origin/main' });
+
+  // Push the halt-free commit now -- origin/main drops the file. Within the 60s window the
+  // cached (stale) result must still be returned rather than re-fetched.
+  git(dir, ['push', '-q', '-f', 'origin', 'HEAD:refs/heads/main']);
+
+  const second = checkHalt(dir, { now: now + 30_000 }); // 30s later, inside the window
+  assert.deepEqual(second, first);
+
+  const third = checkHalt(dir, { now: now + 61_000 }); // past the window -- re-fetches
+  assert.equal(third.halted, false);
+});
+
 test('stop-queue: allows at the session continuation cap', async () => {
   const projectRoot = makeTempDir('stop-allow-cap-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
@@ -257,6 +289,7 @@ test('precompact-flush: fresh (tip=HEAD, pushed, clean, recent) allows — via a
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
     if (args[0] === 'status') return '';
     if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return ''; // HEAD is its own ancestor
     return null;
   };
   const fresh = checkFreshness(dir, { git: fakeGit });
@@ -265,6 +298,46 @@ test('precompact-flush: fresh (tip=HEAD, pushed, clean, recent) allows — via a
   const result = decidePrecompact({ session_id: 's2' }, { projectRoot: dir, git: fakeGit });
   assert.equal(result.decision, 'allow');
   assert.match(result.stderr, /SESSION-CONTINUITY block is fresh/);
+});
+
+test('precompact-flush: HEAD reachable from a newer @{u} still counts as pushed (finding 7)', () => {
+  // "Pushed" means reachable from upstream, not literally equal to it -- the remote can have
+  // moved further ahead (someone else's later push) while HEAD is still, itself, pushed.
+  const dir = makeGitRepo();
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  const fakeUpstream = 'cafef00dcafef00dcafef00dcafef00dcafef00d';
+  writeCutState(
+    dir,
+    `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${new Date().toISOString()}\ntip: ${fakeHead}\n`,
+  );
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeUpstream;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return ''; // HEAD is an ancestor of @{u}
+    return null;
+  };
+  const fresh = checkFreshness(dir, { git: fakeGit });
+  assert.deepEqual(fresh, { fresh: true });
+});
+
+test('precompact-flush: HEAD not reachable from @{u} is still "not pushed"', () => {
+  const dir = makeGitRepo();
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  writeCutState(
+    dir,
+    `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${new Date().toISOString()}\ntip: ${fakeHead}\n`,
+  );
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return 'some-other-hash-entirely';
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return null; // diverged, not reachable
+    return null;
+  };
+  const fresh = checkFreshness(dir, { git: fakeGit });
+  assert.equal(fresh.fresh, false);
+  assert.match(fresh.reason, /not pushed/);
 });
 
 test('precompact-flush: fresh tip/HEAD but a dirty tree is still stale', () => {

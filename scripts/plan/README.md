@@ -109,9 +109,10 @@ client-side from `localStorage`; first visit shows the last seven days). Respons
 width (a single `@media (max-width: 480px)` breakpoint collapses the two-column layout).
 
 **Refuses to generate** (exit 1, naming the node, field, and matched text) when a node's `title` or
-`summary` contains a duration/rate/percentage pattern (`\d+(\.\d+)?\s*(ms|s|min|hr|hour|fps|%|x)`
-and friends) without a `measurement: {results: "...", row: "..."}` field — the mechanical form of
-"no performance numbers except those carrying a docs/08 measurement" (§5).
+`summary` contains a duration/rate/percentage pattern — `site.mjs`'s own `METRIC_RE`, verbatim:
+`/\d+(\.\d+)?\s*(ms|milliseconds?|secs?|seconds?|mins?|minutes?|hrs?|hours?|fps|%|x\b)/i` — without
+a `measurement: {results: "...", row: "..."}` field — the mechanical form of "no performance
+numbers except those carrying a docs/08 measurement" (§5).
 
 ## `health.mjs` — the health strip's data (§5, §15)
 
@@ -123,6 +124,16 @@ flag, per §5's own wording), disk free (`(Get-PSDrive C).Free` via PowerShell o
 elsewhere), stray process counts (`cargo`/`node`/`spatial-ide-shell`, by name only — **this never
 kills anything**), open-PR ages (`gh pr list --json number,createdAt`), and waiting-on-human ages
 (computed from each node's own `dates.opened`). Always timestamped (`generated_at`).
+
+**Run order matters:** `site.mjs` reads `site/data/health.json` (if present) and bakes its content
+into the health strip inside the committed `site/index.html`. Running `health.mjs` alone changes
+`site/data/health.json` but leaves the previously-generated `site/index.html` describing the *old*
+health data — stale until `site.mjs` runs again. **Chosen: document the order, not couple the two
+scripts.** Always run `node scripts/plan/health.mjs && node scripts/plan/site.mjs` together,
+health first, before committing either output; `site.mjs --check`'s own drift check (`verify.mjs`
+runs it) catches a forgotten re-run as a failure, so this is a documented discipline with a
+mechanical backstop, not merely a convention. `health.mjs` was deliberately left with the single
+responsibility of writing `health.json` — it does not import or invoke `site.mjs`.
 
 ## `docsOnly.mjs` — the mechanical docs-only verdict (§9)
 

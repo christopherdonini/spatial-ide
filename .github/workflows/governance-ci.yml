@@ -69,7 +69,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # fetch-depth: 0 -- verify.mjs's evidence checks need real history: `git tag --list` (evidence
+      # {tag: ...}) and `git merge-base --is-ancestor <commit> origin/main` (evidence {commit: ...})
+      # both silently fail against actions/checkout@v4's default shallow (depth-1, tagless) clone.
+      # CI run 34783672136 failed exactly this way: `git tag "v0.1.0" does not exist` and
+      # `a047a23 is not an ancestor of origin/main` -- the tag and the commit were both real, the
+      # clone just could not see them.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:

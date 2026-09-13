@@ -151,6 +151,26 @@ export function validatePlan(plan) {
         }
       }
     }
+
+    // §1's status table: "in-progress | a branch or open PR named in evidence ({pr: N} open, or
+    // {branch: name})". Structural check only -- whether the named PR is actually still open is
+    // verify.mjs's own (remote) job, not this offline validation's.
+    if (node.status === 'in-progress') {
+      const evidence = node.evidence;
+      const hasBranch = !!evidence && typeof evidence.branch === 'string' && evidence.branch.length > 0;
+      const hasPr = !!evidence && typeof evidence.pr === 'number';
+      if (!hasBranch && !hasPr) {
+        errors.push(
+          `${tag}: status is "in-progress" but evidence names neither a branch ({branch: "..."}) nor a PR ({pr: N})`,
+        );
+      }
+    }
+
+    // §1: "gate: ... the preregistration that must pass; none only for docs nodes" -- every node
+    // carries one, a path or the literal string "none".
+    if (typeof node.gate !== 'string' || node.gate.length === 0) {
+      errors.push(`${tag}: "gate" must be present (a path, or the string "none")`);
+    }
   }
 
   errors.push(...findDependencyCycles(plan.nodes, nodeIds));

@@ -43,7 +43,10 @@ directive):
 2. `CUSTODIAN_STOP_HOOK=off` (environment) → allow. Or `state/CUSTODIAN-HALT` exists, locally or
    on `origin/main` (`git fetch --quiet origin main` with a 5-second timeout; a fetch failure
    means "unknown", not halt) → allow, stderr `HALT: <the file's first line>`. This replaces the
-   old `.claude/state/stop-hook.pause` file override.
+   old `.claude/state/stop-hook.pause` file override. The `origin/main` probe result (only when it
+   actually completed — never a fetch failure) is cached in `.claude/state/halt-probe-cache.json`
+   for 60 seconds (`HALT_CACHE_TTL_MS`, reviewer finding 17), so a stop that keeps recurring
+   within a minute does not re-fetch every time; the local-file check is always live.
 3. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
 4. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
    count; sends one Telegram message listing the waiting items (id, kind, minutes, total), deduped
@@ -83,7 +86,10 @@ via a `reason` field on stdout.
 **Fresh** (AUTONOMY.md §7): `state/CUT-STATE.md`'s `## SESSION-CONTINUITY` block carries
 `flushed_at` within the last 20 minutes (declared `FLUSH_FRESHNESS_MS`) **and** `tip` equal to the
 current `HEAD` **and** `git status --porcelain` shows no modified tracked file **and** `HEAD` is
-pushed (`git rev-parse @{u}` resolves and equals `HEAD`). Fresh → allow. Stale → block once,
+pushed (`git rev-parse @{u}` resolves, **and** `HEAD` is reachable from it —
+`git merge-base --is-ancestor HEAD @{u}`, not literal equality: the upstream ref can be further
+ahead from someone else's later push while `HEAD` is still, itself, pushed — reviewer finding 7).
+Fresh → allow. Stale → block once,
 recording `.claude/state/precompact-<session_id>.json`; a second `PreCompact` within 15 minutes
 (declared `SECOND_CHANCE_WINDOW_MS`) of that record is allowed whatever the freshness, "so a
 context-limit recovery is never blocked twice."
@@ -130,7 +136,10 @@ regular-expression path — confirmed against the matcher-patterns table's own c
 (letters, digits, `_`, `-`, spaces, `,`, `|` → exact-match list).
 
 **Message text:** `"<notification type>: <title/message> (<cwd basename>)"` — `buildMessage()` in
-`notify-telegram.mjs`.
+`notify-telegram.mjs`. Sent via `sendTelegramDeduped` (not the bare `sendTelegram`), keyed on
+`notification_type` plus the message's own first 80 characters (`dedupeKey()`) — reviewer finding
+5: §16's "one message per blocking event" applies here exactly as it does to the Stop hook's own
+waiting-items notice below, on the same ten-minute window.
 
 ## `telegram.mjs` — the send primitive (human's second directive, item 16)
 

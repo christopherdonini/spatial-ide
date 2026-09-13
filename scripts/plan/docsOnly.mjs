@@ -2,11 +2,15 @@
 // scripts/plan/docsOnly.mjs <base> <head>
 //
 // AUTONOMY.md §9's mechanical docs-only verdict: a PR the custodian may merge itself. Verifies
-// MECHANICALLY that every changed path between <base> and <head> is documentation (*.md anywhere,
-// docs/**, site/** generated, CUSTODIAN-QUEUE.*), that no ADR Status line changes, that no code
-// path changes (*.rs *.ts *.tsx *.mjs *.js *.json *.yml *.yaml *.toml *.html *.css, Cargo.lock,
-// lockfiles) -- except the one named exception, PLAN.yaml itself, which may change docs-only PR
-// but only if it changes no lane priority and no felt_verdict node's status.
+// MECHANICALLY that every changed path between the merge-base of <base>/<head> and <head> (PR
+// semantics, not a raw two-dot diff against base's own possibly-moved tip) is documentation
+// (*.md anywhere, docs/**, site/** generated, CUSTODIAN-QUEUE.*) -- EXCEPT any file under
+// docs/adr/ and docs/01_Principles.md, which are never docs-only-eligible regardless of what
+// changed in them (§9 says "docs/** non-ADR"; accepted ADRs are immutable, docs/01 is never
+// edited) -- that no code path changes (*.rs *.ts *.tsx *.mjs *.js *.json *.yml *.yaml *.toml
+// *.html *.css, Cargo.lock, lockfiles) -- except the one named exception, PLAN.yaml itself, which
+// may change in a docs-only PR but only if it changes no lane priority and no felt_verdict node's
+// status. An ADR's own Status line is checked too, as a second, more specific guard.
 //
 // This script does NOT check CI or drift -- §9 also requires "CI and the drift checks are
 // green", which is the custodian's own separate check before calling this one.
@@ -43,9 +47,21 @@ const LOCKFILE_NAMES = new Set([
 ]);
 const NAMED_EXCEPTIONS = new Set(['PLAN.yaml', 'CUSTODIAN-QUEUE.json']);
 const STATUS_LINE_RE = /^(?:\*\*Status:\*\*|Status:)(.*)$/m;
+// AUTONOMY §9: "docs/** non-ADR" -- accepted ADRs are immutable (append amendments, never
+// rewrite), so no ADR file is docs-only-eligible regardless of what changed in it. docs/01 is
+// "never edit" (CLAUDE.md, docs/README.md). Both are excluded outright, not merely status-checked.
+const NEVER_DOCS_ONLY_EXACT = new Set(['docs/01_Principles.md']);
+const isAdrPath = (p) => p.startsWith('docs/adr/') && p.endsWith('.md');
+const isImmutableOrExcludedDoc = (p) => isAdrPath(p) || NEVER_DOCS_ONLY_EXACT.has(p);
 
-function gitDiffNames(repoRoot, base, head) {
-  const out = execFileSync('git', ['diff', '--name-only', `${base}`, `${head}`], {
+/** The merge-base of base/head -- diffing against it (not against base's own tip) is the PR's own
+ * diff, per GitHub's own PR semantics: `git diff base...head` reads exactly this way. */
+function gitMergeBase(repoRoot, base, head) {
+  return execFileSync('git', ['merge-base', base, head], { cwd: repoRoot, encoding: 'utf8' }).trim();
+}
+
+function gitDiffNames(repoRoot, mergeBase, head) {
+  const out = execFileSync('git', ['diff', '--name-only', mergeBase, head], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -61,6 +77,7 @@ function gitShow(repoRoot, ref, filePath) {
 }
 
 function isDocumentationPath(p) {
+  if (isImmutableOrExcludedDoc(p)) return false;
   if (p.endsWith('.md')) return true;
   if (p.startsWith('docs/')) return true;
   if (p.startsWith('site/')) return true; // generated
@@ -76,17 +93,22 @@ function isCodePath(p) {
   return CODE_EXTENSIONS.has(ext);
 }
 
-/** Reports offending paths and reasons for <base>..<head> in repoRoot. Pure, no process.exit. */
+/** Reports offending paths and reasons for <base>...<head> (merge-base diff) in repoRoot. Pure,
+ * no process.exit. */
 export function checkDocsOnly(repoRoot, base, head) {
+  const mergeBase = gitMergeBase(repoRoot, base, head);
   const offending = [];
-  const changed = gitDiffNames(repoRoot, base, head);
+  const changed = gitDiffNames(repoRoot, mergeBase, head);
 
   for (const p of changed) {
     const doc = isDocumentationPath(p);
     const code = isCodePath(p);
     const exempted = NAMED_EXCEPTIONS.has(p) || p.startsWith('site/');
     if (!doc) {
-      offending.push(`${p}: not a documentation path`);
+      const reason = isImmutableOrExcludedDoc(p)
+        ? 'ADR files and docs/01_Principles.md are never docs-only-eligible (AUTONOMY §9: "docs/** non-ADR"; accepted ADRs are immutable, docs/01 is never edited)'
+        : 'not a documentation path';
+      offending.push(`${p}: ${reason}`);
       continue;
     }
     if (code && !exempted) {
@@ -95,10 +117,11 @@ export function checkDocsOnly(repoRoot, base, head) {
     }
   }
 
-  // No ADR Status line changes, for any touched ADR file.
+  // Second guard, independent of the outright exclusion above: names an ADR Status line change
+  // specifically, for a clearer diagnosis when one touched an ADR alongside real docs changes.
   for (const p of changed) {
-    if (!(p.startsWith('docs/adr/') && p.endsWith('.md'))) continue;
-    const baseText = gitShow(repoRoot, base, p);
+    if (!isAdrPath(p)) continue;
+    const baseText = gitShow(repoRoot, mergeBase, p);
     const headText = gitShow(repoRoot, head, p);
     if (baseText === null || headText === null) {
       offending.push(`${p}: ADR added or deleted — not a mechanical docs-only change`);
@@ -113,7 +136,7 @@ export function checkDocsOnly(repoRoot, base, head) {
 
   // PLAN.yaml: no lane priority change, no felt_verdict node's status change.
   if (changed.includes('PLAN.yaml')) {
-    const baseText = gitShow(repoRoot, base, 'PLAN.yaml');
+    const baseText = gitShow(repoRoot, mergeBase, 'PLAN.yaml');
     const headText = gitShow(repoRoot, head, 'PLAN.yaml');
     if (baseText === null || headText === null) {
       offending.push('PLAN.yaml: added or deleted — not a mechanical docs-only change');

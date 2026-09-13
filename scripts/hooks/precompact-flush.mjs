@@ -117,7 +117,12 @@ export function checkFreshness(projectRoot, { now = new Date(), git = (args) => 
 
   const upstream = git(['rev-parse', '@{u}']);
   if (upstream === null) return { fresh: false, reason: 'HEAD has no upstream (@{u} does not resolve)' };
-  if (upstream !== head) return { fresh: false, reason: 'HEAD is not pushed (differs from @{u})' };
+  // "Pushed" means HEAD is reachable from its upstream -- an ancestor of it, or equal to it --
+  // not that the two hashes are literally equal. Equality would wrongly call HEAD "not pushed"
+  // whenever the remote branch has moved further ahead from someone else's later push (reviewer
+  // finding 7). `--is-ancestor` treats a commit as its own ancestor, so an exact match still passes.
+  const reachable = git(['merge-base', '--is-ancestor', 'HEAD', '@{u}']);
+  if (reachable === null) return { fresh: false, reason: 'HEAD is not pushed (not reachable from @{u})' };
 
   return { fresh: true };
 }
