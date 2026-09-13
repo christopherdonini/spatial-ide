@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spatial IDE — custodian's plan</title>
+<style>
+:root { color-scheme: light dark; --gap: 12px; }
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; padding: 16px; max-width: 1200px; margin-inline: auto; line-height: 1.4; }
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.05rem; margin: 0 0 8px; }
+h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: #667; margin: 0 0 6px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin-bottom: 20px; }
+.panel { border: 1px solid #ccd; border-radius: 8px; padding: 10px 14px; }
+.lane { border: 1px solid #ccd; border-radius: 8px; padding: 10px 14px; margin-bottom: var(--gap); }
+.lane-ambition { opacity: 0.6; background: repeating-linear-gradient(45deg, transparent, transparent 10px, #8881 10px, #8881 20px); }
+.ambition-tag { font-size: 0.7rem; text-transform: uppercase; color: #778; border: 1px solid #99a; border-radius: 4px; padding: 1px 6px; }
+.lane-columns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.node-box { border: 1px solid #dde; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; font-size: 0.9rem; position: relative; }
+.node-box.done { border-color: #9c9; }
+.node-box.ambition { border-style: dashed; color: #778; }
+.node-box.blocked-human { border-color: #e0a030; }
+.node-id { font-family: ui-monospace, monospace; font-size: 0.8rem; }
+.check { color: #292; }
+.badge { display: inline-block; font-size: 0.72rem; border-radius: 4px; padding: 0 5px; margin-left: 6px; }
+.badge-human { background: #fde8c0; color: #664400; }
+.cross-note { font-size: 0.72rem; color: #889; }
+.phase-cite { font-size: 0.72rem; color: #889; margin-left: 6px; }
+.date { color: #889; font-size: 0.8rem; }
+.ahead-wrap { display: flex; gap: 4px; }
+.dep-svg { flex: none; }
+.dep-arrow { stroke: #99a; stroke-width: 1.5; }
+.ahead-list { flex: 1; }
+.empty { color: #99a; font-style: italic; margin: 0; }
+.total { font-weight: normal; color: #889; font-size: 0.85rem; }
+.health-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 2px 0; border-top: 1px solid #eef; }
+.refreshed { font-weight: normal; color: #889; font-size: 0.78rem; }
+.seeded-note { background: #fde8c0; border: 1px solid #e0a030; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; margin-bottom: 12px; }
+@media (max-width: 480px) {
+  body { padding: 8px; }
+  .panels { grid-template-columns: 1fr; }
+  .lane-columns { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Spatial IDE — custodian's plan</h1>
+  <a href="https://github.com/christopherdonini/spatial-ide/actions/workflows/product-ci-rust.yml"><img src="https://github.com/christopherdonini/spatial-ide/actions/workflows/product-ci-rust.yml/badge.svg?branch=main" alt="CI on main" /></a>
+  <a href="https://github.com/christopherdonini/spatial-ide">repository</a>
+</header>
+<div class="seeded-note">Seeded, pending approval: lane priorities below are the seeded order from the directive, not yet approved (AUTONOMY.md §2, §4).</div>
+<div class="panels">
+
+  <section class="panel" id="waiting-on-you">
+    <h2>Waiting on you <span class="total">(160 min total)</span></h2>
+    <ul><li><strong>entry-91-polish-held-halves</strong> — Entry 91 — the polish piece&#39;s three held halves (87&#39;s engine half + ADR-033; 88; 89) — ruling (10 min)</li>
+<li><strong>entry-75-hover-repick-defaults</strong> — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make — ruling (10 min)</li>
+<li><strong>sitting-4-rows</strong> — Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows) — sitting (45 min)</li>
+<li><strong>adr-029-operation-lifecycle</strong> — ADR-029 + the operation lifecycle — decision draft filed for sight — ruling (10 min)</li>
+<li><strong>entry-79-b1-consult-items</strong> — Entry 79 — three items routed for Brief B stage B1&#39;s close — ruling (15 min)</li>
+<li><strong>briefa-p3-p6</strong> — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — ruling (20 min)</li>
+<li><strong>entry-73-polygon-gate-scope</strong> — Entry 73 — Brief A P0&#39;s polygon-only geometry gate vs the compatibility corpus — ruling (15 min)</li>
+<li><strong>entry-78-repo-description</strong> — Entry 78 — repository description and topics — click (5 min)</li>
+<li><strong>drill-clean-clone</strong> — The drill — clean-directory clone, regenerated fixtures, full suite, release build — ruling (5 min)</li>
+<li><strong>entry-69-runtime-dependency</strong> — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default — ruling (5 min)</li>
+<li><strong>entry-90-static-crt-v0-1-1</strong> — Entry 90 — static CRT as the v0.1.1 build piece — ruling (5 min)</li>
+<li><strong>entry-77-code-signing</strong> — Entry 77 — code signing for the Windows installer — ruling (10 min)</li>
+<li><strong>m13-bracketed-values</strong> — Part M row M13&#39;s two bracketed values — sight (5 min)</li></ul>
+  </section>
+<section class="panel" id="shipped-since-last-visit">
+  <h2>Shipped since your last visit</h2>
+  <ul id="shipped-list"><li class="empty">loading…</li></ul>
+</section>
+</div>
+
+  <section class="panel health-strip">
+    <h2>Health <span class="refreshed">refreshed 2026-09-13T21:22:37.159Z</span></h2>
+    <div class="health-row"><span>CI on main</span><span>success</span></div>
+<div class="health-row"><span>Drift</span><span>clean</span></div>
+<div class="health-row"><span>Disk free</span><span>[object Object]</span></div>
+<div class="health-row"><span>Stray processes</span><span>[object Object]</span></div>
+<div class="health-row"><span>Open PRs</span><span>[object Object]</span></div>
+  </section>
+<main>
+
+  <section class="lane">
+    <h2>Shell</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">entries-84-85-filter-fixes</span> — Entries 84 and 85 — settled-partial status and Zoom to layer under a filter <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/48">PR #48</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">entry-47-hover-repick</span> — Entry 47 — the hover readout re-picks on camera settle <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/47">PR #47</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">land-45</span> — Entry 66 (b) — geometric protection at every zoom, without enumeration <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/45">PR #45</a></div>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="322" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box" id="node-briefb-b2-save-reopen"><span class="node-id">briefb-b2-save-reopen</span> — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation<div class="cross-note">after: b1-engine-kernel-half</div></div>
+<div class="node-box" id="node-briefb-part-o-walkthrough"><span class="node-id">briefb-part-o-walkthrough</span> — Part O — the nine-step recipe walkthrough, after B3 only<span class="badge badge-human">sitting (0 min)</span><div class="cross-note">after: b1-engine-kernel-half</div></div>
+<div class="node-box" id="node-polish-87-88-89"><span class="node-id">polish-87-88-89</span> — Filter-and-hover polish (entries 87, 88, 89)<div class="cross-note">after: land-45</div></div>
+<div class="node-box blocked-human" id="node-entry-91-polish-held-halves"><span class="node-id">entry-91-polish-held-halves</span> — Entry 91 — the polish piece&#39;s three held halves (87&#39;s engine half + ADR-033; 88; 89)<span class="badge badge-human">ruling (10 min)</span></div>
+<div class="node-box" id="node-reaim-no-crs-fixture"><span class="node-id">reaim-no-crs-fixture</span> — Delegated re-aim — the no-CRS fixture and its tests to Brief A&#39;s ruled contract<div class="cross-note">after: briefa-entries-80-81</div></div>
+<div class="node-box blocked-human" id="node-entry-75-hover-repick-defaults"><span class="node-id">entry-75-hover-repick-defaults</span> — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make<span class="badge badge-human">ruling (10 min)</span><div class="cross-note">after: entry-47-hover-repick</div></div>
+<div class="node-box blocked-human" id="node-sitting-4-rows"><span class="node-id">sitting-4-rows</span> — Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows)<span class="badge badge-human">sitting (45 min)</span></div></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">action-console-remainder</span> — Action console remainder — notebook recording and the AI flywheel (03) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition"><span class="node-id">problems-panel-spatial-linting</span> — Problems panel / spatial linting (03) <span class="phase-cite">alpha</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Measurement</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">spatial-indexing-measurement-close</span> — Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path) <span class="date">(2026-08-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/blob/main/kernel/RESULTS.md">kernel/RESULTS.md</a></div>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="46" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box" id="node-lod-feasibility-spike"><span class="node-id">lod-feasibility-spike</span> — LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only</div></div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Kernel/Protocol</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <p class="empty">(nothing landed yet)</p>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="138" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box blocked-human" id="node-adr-029-operation-lifecycle"><span class="node-id">adr-029-operation-lifecycle</span> — ADR-029 + the operation lifecycle — decision draft filed for sight<span class="badge badge-human">ruling (10 min)</span></div>
+<div class="node-box blocked-human" id="node-b1-engine-kernel-half"><span class="node-id">b1-engine-kernel-half</span> — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)<span class="badge badge-human">ruling (15 min)</span><div class="cross-note">after: briefa-p3-p6</div></div>
+<div class="node-box blocked-human" id="node-entry-79-b1-consult-items"><span class="node-id">entry-79-b1-consult-items</span> — Entry 79 — three items routed for Brief B stage B1&#39;s close<span class="badge badge-human">ruling (15 min)</span></div></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">lineage-time-travel</span> — Lineage time travel + scenario branches (02, 03) <span class="phase-cite">beta</span></div>
+<div class="node-box ambition"><span class="node-id">skp-v1-protocol-freeze</span> — SKP v1 protocol freeze — the ecosystem commitment <span class="phase-cite">v1</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Engine</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">briefa-p1-p2</span> — Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance <span class="date">(2026-09-11)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/44">PR #44</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">briefa-entries-80-81</span> — Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims) <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/46">PR #46</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-filter-sql</span> — Hero slice, part 2 — filter it in SQL <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-open-geoparquet</span> — Hero slice, part 1 — open a GeoParquet <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="184" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box" id="node-adr-031-lod-preregistration"><span class="node-id">adr-031-lod-preregistration</span> — ADR-031 (LOD) preregistration, once the feasibility spike reports<span class="badge badge-human">ruling (20 min)</span><div class="cross-note">after: lod-feasibility-spike</div></div>
+<div class="node-box" id="node-adr-032-decision"><span class="node-id">adr-032-decision</span> — ADR-032 — the GeoParquet non-x-first axis order decision<span class="badge badge-human">ruling (20 min)</span></div>
+<div class="node-box blocked-human" id="node-briefa-p3-p6"><span class="node-id">briefa-p3-p6</span> — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances<span class="badge badge-human">ruling (20 min)</span><div class="cross-note">after: briefa-p1-p2</div></div>
+<div class="node-box blocked-human" id="node-entry-73-polygon-gate-scope"><span class="node-id">entry-73-polygon-gate-scope</span> — Entry 73 — Brief A P0&#39;s polygon-only geometry gate vs the compatibility corpus<span class="badge badge-human">ruling (15 min)</span></div></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">data-doctor-legacy-imports</span> — Data doctor + legacy imports (05) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition"><span class="node-id">postgis-remotes</span> — PostGIS remotes (05) <span class="phase-cite">beta</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Publish/Viewer</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-publish-bundle</span> — Hero slice, part 4 — publish it as a static interactive bundle <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="92" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs><line x1="8" y1="23" x2="8" y2="69" class="dep-arrow" marker-end="url(#arrowhead)" /></svg>
+          <div class="ahead-list"><div class="node-box" id="node-viewer-86-zoom-anchor"><span class="node-id">viewer-86-zoom-anchor</span> — Entry 86 — the reference bundle viewer&#39;s zoom is not anchored at the pointer</div>
+<div class="node-box blocked-human" id="node-entry-86-known-limitations-rewrite"><span class="node-id">entry-86-known-limitations-rewrite</span> — Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands<span class="badge badge-human">sight (3 min)</span></div></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">publishing-bundles-hardened</span> — Publishing bundles hardened (managed sharing service stays out — ADR-008) <span class="phase-cite">beta</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Governance</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <p class="empty">(nothing landed yet)</p>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="138" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box" id="node-autonomy-work-system"><span class="node-id">autonomy-work-system</span> — The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page</div>
+<div class="node-box blocked-human" id="node-entry-78-repo-description"><span class="node-id">entry-78-repo-description</span> — Entry 78 — repository description and topics<span class="badge badge-human">click (5 min)</span></div>
+<div class="node-box blocked-human" id="node-drill-clean-clone"><span class="node-id">drill-clean-clone</span> — The drill — clean-directory clone, regenerated fixtures, full suite, release build<span class="badge badge-human">ruling (5 min)</span></div></div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Release</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">static-crt-spike</span> — Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b) <span class="date">(2026-09-09)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/a047a23">commit a047a23</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">merge-back-pr-50</span> — release/0.1.0 merged back into main after the tag <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/50">PR #50</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">release-docs-finalized</span> — Release docs finalized from Part M for the tag <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/49">PR #49</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">v0-1-0-shipped</span> — v0.1.0 tagged and released — the Prototype hero slice&#39;s first packaged build <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">tag v0.1.0</a></div>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="276" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box blocked-human" id="node-entry-69-runtime-dependency"><span class="node-id">entry-69-runtime-dependency</span> — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default<span class="badge badge-human">ruling (5 min)</span></div>
+<div class="node-box blocked-human" id="node-entry-90-static-crt-v0-1-1"><span class="node-id">entry-90-static-crt-v0-1-1</span> — Entry 90 — static CRT as the v0.1.1 build piece<span class="badge badge-human">ruling (5 min)</span><div class="cross-note">after: static-crt-spike</div></div>
+<div class="node-box blocked-human" id="node-entry-77-code-signing"><span class="node-id">entry-77-code-signing</span> — Entry 77 — code signing for the Windows installer<span class="badge badge-human">ruling (10 min)</span></div>
+<div class="node-box blocked-human" id="node-m13-bracketed-values"><span class="node-id">m13-bracketed-values</span> — Part M row M13&#39;s two bracketed values<span class="badge badge-human">sight (5 min)</span></div>
+<div class="node-box blocked-human" id="node-evidence-archive-v0-1-0"><span class="node-id">evidence-archive-v0-1-0</span> — First application of the evidence archive — attach v0.1.0&#39;s evidence to its release<span class="badge badge-human">click (5 min)</span><div class="cross-note">after: autonomy-work-system</div></div>
+<div class="node-box" id="node-release-artifacts-from-ci"><span class="node-id">release-artifacts-from-ci</span> — Release artifacts built from the tagged commit&#39;s CI run, from v0.1.1<div class="cross-note">after: autonomy-work-system</div></div></div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>Renderer</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">adr-003-spike-gate</span> — ADR-003 renderer/arbitrary-CRS spike — the architecture gate <span class="date">(2026-08-03)</span> <a href="https://github.com/christopherdonini/spatial-ide/blob/main/docs/adr/ADR-003-renderer-arbitrary-crs.md">ADR-003</a></div>
+<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-style</span> — Hero slice, part 3 — style it <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          
+          <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">style-dsl-editor</span> — Style DSL + editor (03, 06) <span class="phase-cite">beta</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane lane-ambition">
+    <h2>Platform <span class="ambition-tag">ambition</span></h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <p class="empty">(nothing landed yet)</p>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          
+          <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">platform-hardware-validation</span> — macOS/WKWebView and Linux/WebKitGTK hardware validation <span class="phase-cite">prototype</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <h2>CLI</h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <p class="empty">(nothing landed yet)</p>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          <svg class="dep-svg" width="16" height="46" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box" id="node-briefb-b3-publish-v2"><span class="node-id">briefb-b3-publish-v2</span> — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation<div class="cross-note">after: b1-engine-kernel-half</div></div></div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <section class="lane lane-ambition">
+    <h2>Notebooks/IR <span class="ambition-tag">ambition</span></h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <p class="empty">(nothing landed yet)</p>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          
+          <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">notebooks-record-replay</span> — Notebooks: record and replay (03) <span class="phase-cite">alpha</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lane lane-ambition">
+    <h2>Plugins/MCP <span class="ambition-tag">ambition</span></h2>
+    <div class="lane-columns">
+      <div class="col col-done">
+        <h3>Built so far</h3>
+        <p class="empty">(nothing landed yet)</p>
+      </div>
+      <div class="col col-ahead">
+        <h3>Ahead</h3>
+        <div class="ahead-wrap">
+          
+          <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
+        </div>
+        <div class="node-box ambition"><span class="node-id">mcp-server-permission-model</span> — MCP server with the permission model (04) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition"><span class="node-id">first-external-plugin-skp-client</span> — First external plugin as an out-of-process SKP client (02) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition"><span class="node-id">plugin-ecosystem-seed</span> — Plugin ecosystem seed (docs, templates, example clients) <span class="phase-cite">v1</span></div>
+<div class="node-box ambition"><span class="node-id">basic-editing-plugin</span> — Basic editing plugin (ADR-002 amended, ADR-007) — scheduled last in 1.0 <span class="phase-cite">v1</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script id="plan-data" type="application/json">{"generated_at":"2026-09-13T21:22:58.546Z","plan_hash":"5fc16a115e0995a7dc91a8dd3a7dfc91980cd16e5728af6e3c06db9c05cd0327","priorities_approved":false,"done_nodes":[{"id":"v0-1-0-shipped","title":"v0.1.0 tagged and released — the Prototype hero slice's first packaged build","lane":"release","dates":{"opened":null,"done":"2026-09-13"}},{"id":"merge-back-pr-50","title":"release/0.1.0 merged back into main after the tag","lane":"release","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"entry-47-hover-repick","title":"Entry 47 — the hover readout re-picks on camera settle","lane":"shell","dates":{"opened":"2026-09-11","done":"2026-09-13"}},{"id":"entries-84-85-filter-fixes","title":"Entries 84 and 85 — settled-partial status and Zoom to layer under a filter","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"release-docs-finalized","title":"Release docs finalized from Part M for the tag","lane":"release","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"briefa-p1-p2","title":"Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance","lane":"engine","dates":{"opened":"2026-09-10","done":"2026-09-11"}},{"id":"briefa-entries-80-81","title":"Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims)","lane":"engine","dates":{"opened":"2026-09-11","done":"2026-09-13"}},{"id":"adr-003-spike-gate","title":"ADR-003 renderer/arbitrary-CRS spike — the architecture gate","lane":"renderer","dates":{"opened":null,"done":"2026-08-03"}},{"id":"spatial-indexing-measurement-close","title":"Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path)","lane":"measurement","dates":{"opened":null,"done":"2026-08-13"}},{"id":"static-crt-spike","title":"Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b)","lane":"release","dates":{"opened":"2026-09-09","done":"2026-09-09"}},{"id":"hero-open-geoparquet","title":"Hero slice, part 1 — open a GeoParquet","lane":"engine","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-filter-sql","title":"Hero slice, part 2 — filter it in SQL","lane":"engine","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-style","title":"Hero slice, part 3 — style it","lane":"renderer","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-publish-bundle","title":"Hero slice, part 4 — publish it as a static interactive bundle","lane":"publish-viewer","dates":{"opened":null,"done":"2026-09-13"}},{"id":"land-45","title":"Entry 66 (b) — geometric protection at every zoom, without enumeration","lane":"shell","dates":{"opened":"2026-09-10","done":"2026-09-13"}}]}</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('plan-data').textContent);
+  var STORAGE_KEY = 'spatial-ide-custodian-last-visit';
+  var now = new Date();
+  var lastVisitRaw = null;
+  try { lastVisitRaw = localStorage.getItem(STORAGE_KEY); } catch (e) { /* localStorage unavailable */ }
+  var since;
+  if (lastVisitRaw) {
+    since = new Date(lastVisitRaw);
+  } else {
+    since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // first visit: last seven days
+  }
+  var shipped = (data.done_nodes || []).filter(function (n) {
+    return n.dates && n.dates.done && new Date(n.dates.done) >= since;
+  });
+  var list = document.getElementById('shipped-list');
+  list.innerHTML = '';
+  if (shipped.length === 0) {
+    var li = document.createElement('li');
+    li.className = 'empty';
+    li.textContent = '(nothing since your last visit)';
+    list.appendChild(li);
+  } else {
+    shipped.forEach(function (n) {
+      var li = document.createElement('li');
+      li.textContent = n.id + ' — ' + n.title + ' (' + n.dates.done + ')';
+      list.appendChild(li);
+    });
+  }
+  try { localStorage.setItem(STORAGE_KEY, now.toISOString()); } catch (e) { /* localStorage unavailable */ }
+})();
+</script>
+</body>
+</html>

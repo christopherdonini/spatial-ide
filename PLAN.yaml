@@ -46,7 +46,7 @@ nodes:
 
   # ============================== DONE ==============================
 
-  - id: v0.1.0-shipped
+  - id: v0-1-0-shipped
     title: "v0.1.0 tagged and released — the Prototype hero slice's first packaged build"
     kind: milestone
     lane: release
@@ -71,7 +71,7 @@ nodes:
     phase: prototype
     status: done
     order: 4
-    depends_on: [v0.1.0-shipped]
+    depends_on: [v0-1-0-shipped]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: {pr: 50}
@@ -468,7 +468,7 @@ nodes:
     summary: "the architect consult and decision draft are filed; three routed questions on state shape, the wire literal and the liveness string wait on the human"
     dates: {opened: 2026-09-13, done: null}
 
-  - id: entry-90-static-crt-v0.1.1
+  - id: entry-90-static-crt-v0-1-1
     title: "Entry 90 — static CRT as the v0.1.1 build piece"
     kind: task
     lane: release
@@ -684,7 +684,7 @@ nodes:
     summary: "needs disk the machine does not have today; waits on the human's word about reclaiming a build cache"
     dates: {opened: null, done: null}
 
-  - id: evidence-archive-v0.1.0
+  - id: evidence-archive-v0-1-0
     title: "First application of the evidence archive — attach v0.1.0's evidence to its release"
     kind: task
     lane: release

@@ -76,7 +76,7 @@ jobs:
           node-version: "24"
 
       - name: node --test (scripts/plan, scripts/hooks)
-        run: node --test scripts/plan scripts/hooks
+        run: node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"
 
       - name: verify:plan (PLAN.yaml agrees with the repository)
         env:

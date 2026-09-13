@@ -100,8 +100,19 @@ export function adrStatusAccepted(repoRoot, adrId) {
 
 export function verdictCiteExists(repoRoot, cite) {
   const prefix = 'DECISIONS-PENDING.md ';
+  // A felt verdict is recorded verbatim either in a DECISIONS-PENDING RULED block or, for a
+  // release's sitting results, in that release's record (`RELEASE-<version>.md Amendment N`,
+  // where the human's walkthrough verdicts were quoted verbatim before the plan existed).
+  const rel = typeof cite === 'string' ? /^(RELEASE-[0-9][^ ]*\.md) Amendment (\d+)\b/.exec(cite) : null;
+  if (rel) {
+    const rp = path.join(repoRoot, rel[1]);
+    if (!fs.existsSync(rp)) return { ok: false, reason: `verdict.cite "${cite}": ${rel[1]} does not exist` };
+    const text = fs.readFileSync(rp, 'utf8');
+    const has = new RegExp('Amendment ' + rel[2] + '(?![0-9])').test(text);
+    return has ? { ok: true, reason: null } : { ok: false, reason: `verdict.cite "${cite}": Amendment ${rel[2]} not found in ${rel[1]}` };
+  }
   if (typeof cite !== 'string' || !cite.startsWith(prefix)) {
-    return { ok: false, reason: `verdict.cite "${cite}" does not start with "DECISIONS-PENDING.md "` };
+    return { ok: false, reason: `verdict.cite "${cite}" does not start with "DECISIONS-PENDING.md " or "RELEASE-<version>.md Amendment N"` };
   }
   const needle = cite.slice(prefix.length);
   const p = path.join(repoRoot, 'DECISIONS-PENDING.md');
