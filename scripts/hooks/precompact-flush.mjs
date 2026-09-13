@@ -13,7 +13,8 @@
 // on main since a40ccfe/252585b); nothing here reads the old root-level path.
 //
 // Fresh (§7): state/CUT-STATE.md's SESSION-CONTINUITY block carries `flushed_at` within the last
-// 20 minutes AND `tip` equal to the current HEAD AND `git status --porcelain` shows no modified
+// 20 minutes AND `tip` equal to the current HEAD (or to HEAD's parent when HEAD is a ledger-only
+// flush commit -- the one commit that cannot cite its own hash) AND `git status --porcelain` shows no modified
 // tracked file AND HEAD is pushed (`git rev-parse @{u}` resolves and matches HEAD). Fresh -> allow.
 // Stale -> block once, recording .claude/state/precompact-<session_id>.json; a second PreCompact
 // within 15 minutes of that record is allowed whatever the freshness.
@@ -105,8 +106,22 @@ export function checkFreshness(projectRoot, { now = new Date(), git = (args) => 
   }
 
   const head = git(['rev-parse', 'HEAD']);
-  if (head === null || head !== parsed.tip) {
-    return { fresh: false, reason: `tip (${parsed.tip}) does not match HEAD (${head ?? 'unknown'})` };
+  if (head === null) {
+    return { fresh: false, reason: 'HEAD is unknown (git rev-parse HEAD failed)' };
+  }
+  if (head !== parsed.tip) {
+    // The flush commit is the one commit that cannot cite its own hash (its content is fixed
+    // before the hash exists), so a block may cite the flush commit's PARENT -- accepted only
+    // when HEAD changes nothing but the ledger itself. Any other mismatch is stale (the human,
+    // 2026-09-14: "the flush's tip field must be the literal HEAD hash, not a description, so
+    // the PreCompact comparison is exact").
+    const parent = git(['rev-parse', 'HEAD^']);
+    const changed = git(['diff', '--name-only', 'HEAD^', 'HEAD']);
+    const files = changed === null ? null : changed.split(/\r?\n/).map((f) => f.trim()).filter(Boolean);
+    const onlyLedger = files !== null && files.length > 0 && files.every((f) => f === 'state/CUT-STATE.md');
+    if (!(parent !== null && parent === parsed.tip && onlyLedger)) {
+      return { fresh: false, reason: `tip (${parsed.tip}) does not match HEAD (${head}) and is not the parent of a ledger-only flush commit` };
+    }
   }
 
   const status = git(['status', '--porcelain']);

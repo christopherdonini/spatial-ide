@@ -340,6 +340,50 @@ test('precompact-flush: HEAD not reachable from @{u} is still "not pushed"', () 
   assert.match(fresh.reason, /not pushed/);
 });
 
+test('precompact-flush: a block citing the PARENT of a ledger-only flush commit is fresh', () => {
+  // The flush commit cannot cite its own hash, so the block cites the parent; the hook accepts
+  // that only when HEAD changes nothing but state/CUT-STATE.md (the human, 2026-09-14).
+  const dir = makeGitRepo();
+  const fakeParent = '1111111111111111111111111111111111111111';
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  writeCutState(
+    dir,
+    `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${new Date().toISOString()}\ntip: ${fakeParent}\n`,
+  );
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD^') return fakeParent;
+    if (args[0] === 'diff' && args[1] === '--name-only') return 'state/CUT-STATE.md';
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
+    return null;
+  };
+  assert.deepEqual(checkFreshness(dir, { git: fakeGit }), { fresh: true });
+});
+
+test('precompact-flush: a block citing the parent of a commit that also touches code is stale', () => {
+  const dir = makeGitRepo();
+  const fakeParent = '1111111111111111111111111111111111111111';
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  writeCutState(
+    dir,
+    `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${new Date().toISOString()}\ntip: ${fakeParent}\n`,
+  );
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD^') return fakeParent;
+    if (args[0] === 'diff' && args[1] === '--name-only') return 'state/CUT-STATE.md\nscripts/hooks/precompact-flush.mjs';
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
+    return null;
+  };
+  const fresh = checkFreshness(dir, { git: fakeGit });
+  assert.equal(fresh.fresh, false);
+  assert.match(fresh.reason, /not the parent of a ledger-only flush commit/);
+});
+
 test('precompact-flush: fresh tip/HEAD but a dirty tree is still stale', () => {
   const dir = makeGitRepo();
   const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
