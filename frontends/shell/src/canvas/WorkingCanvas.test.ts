@@ -1,14 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PixelRegion } from "../e2e-test-surface";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
-import { applyStyleChange, protectionSetFor, shouldScheduleTileRender, summarizePixels } from "./WorkingCanvas";
-import type { ApplyStyleChangeDeps, TileBatchIngestOutcome } from "./WorkingCanvas";
+import type { ResidentBatch } from "./decodeBatch";
+import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
+import type { HoverReadout } from "./pick";
+import { hoverRepickActionForCameraChange } from "./pickResolution";
+import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
+import {
+  applyStyleChange,
+  createHoverRepickScheduler,
+  protectionSetFor,
+  shouldScheduleTileRender,
+  summarizePixels,
+} from "./WorkingCanvas";
+import type { ApplyStyleChangeDeps, HoverPickCandidate, TileBatchIngestOutcome } from "./WorkingCanvas";
 
 // Reviewer gate, style-panel cut P7 fixes, S2: the previous "issues no viewport query" test built a
 // `manager`-shaped mock (`requestViewport`/`cancelStream`) and asserted neither was called -- but
@@ -289,5 +300,284 @@ describe("pushTileBatch's own render-scheduling pattern (P5h, F1) -- shouldSched
     flush();
     expect(render).toHaveBeenCalledTimes(1);
     expect(requestFrame).toHaveBeenCalledTimes(1); // only the admitting batch ever called schedule()
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Entry 47 (`HOVER-REPICK-PREREGISTRATION.md` D1/D4/D6/D7): the settle seam
+// (`createHoverRepickScheduler`), driven on fake timers. Same reason every other seam in this file
+// is tested through an exported function rather than a mounted component: a real `Deck` needs a
+// WebGL context jsdom does not provide (this file's own S6/`applyStyleChange` notes). The cases
+// below are the ones pre-committed in that document's section 5.
+//
+// The only quantity these tests advance by is `HOVER_REPICK_SETTLE_MS` itself, imported from the
+// constants module -- never a private copy of it, so a change to the declared cadence cannot leave
+// these passing against a value the product no longer uses.
+// ---------------------------------------------------------------------------------------
+
+const HALF_GAP = Math.floor(HOVER_REPICK_SETTLE_MS / 2);
+
+const ID_A = { streamHandle: "sh_test", batchSeq: 1, id: 42n, anchor: [0, 0] as [number, number] };
+const ID_B = { streamHandle: "sh_test", batchSeq: 1, id: 99n, anchor: [5, 5] as [number, number] };
+const ON_CANVAS: HoverPointerCapture = { x: 120, y: 340, clientWidth: 800, clientHeight: 600, devicePixelRatio: 1 };
+const OFF_CANVAS: HoverPointerCapture = { ...ON_CANVAS, x: -1, y: -1 };
+const CANDIDATE: HoverPickCandidate = { batch: {} as ResidentBatch, gpuOrdinal: 3 };
+
+function repickHarness(
+  init: Partial<{
+    capture: HoverPointerCapture | null;
+    framebuffer: FramebufferIdentity | null;
+    armed: boolean;
+    below: boolean;
+    candidate: HoverPickCandidate | null;
+    resolved: HoverReadout;
+  }> = {}
+) {
+  const state = {
+    capture: ON_CANVAS as HoverPointerCapture | null,
+    framebuffer: { clientWidth: 800, clientHeight: 600, devicePixelRatio: 1 } as FramebufferIdentity | null,
+    armed: true,
+    below: false,
+    candidate: CANDIDATE as HoverPickCandidate | null,
+    resolved: ID_A as HoverReadout,
+    ...init,
+  };
+  const pickCandidateAt = vi.fn(() => state.candidate);
+  const resolveCandidate = vi.fn(() => (state.resolved === null || !("id" in state.resolved) ? null : state.resolved));
+  const emit = vi.fn();
+  const trace = vi.fn();
+  const disarm = vi.fn(() => {
+    state.armed = false;
+  });
+  const scheduler = createHoverRepickScheduler({
+    capturedPointer: () => state.capture,
+    framebufferNow: () => state.framebuffer,
+    isArmed: () => state.armed,
+    disarm,
+    belowPickResolutionNow: () => state.below,
+    pickCandidateAt,
+    resolveCandidate,
+    emit,
+    trace,
+    settleMs: HOVER_REPICK_SETTLE_MS,
+  });
+  return { state, scheduler, pickCandidateAt, resolveCandidate, emit, trace, disarm };
+}
+
+describe("createHoverRepickScheduler (entry 47: the settle seam)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("N camera changes inside one gap collapse to EXACTLY one pick, and one settle answers exactly one burst", () => {
+    const h = repickHarness();
+    for (let i = 0; i < 5; i++) h.scheduler.schedule();
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+    expect(h.pickCandidateAt).toHaveBeenCalledWith(ON_CANVAS.x, ON_CANVAS.y);
+    expect(h.emit).toHaveBeenCalledTimes(1);
+    expect(h.emit).toHaveBeenCalledWith(ID_A);
+    expect(h.disarm).toHaveBeenCalledTimes(1);
+
+    // A later settle with nothing newly armed picks nothing at all -- arming never carries over.
+    h.scheduler.schedule();
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+    expect(h.emit).toHaveBeenCalledTimes(1);
+  });
+
+  it("a camera change inside the gap RESTARTS it -- a gesture that never pauses runs no pick at all", () => {
+    const h = repickHarness();
+    h.scheduler.schedule();
+    vi.advanceTimersByTime(HALF_GAP);
+    h.scheduler.schedule(); // still moving: the pending settle is replaced, not queued behind
+    vi.advanceTimersByTime(HALF_GAP);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS); // now it actually pauses
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+  });
+
+  it("the pointer off canvas (deck.gl's pointerleave sentinel): NO pick runs and nothing is emitted", () => {
+    const h = repickHarness({ capture: OFF_CANVAS });
+    h.scheduler.schedule();
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+    expect(h.trace).not.toHaveBeenCalled();
+  });
+
+  it("a real onHover between the camera change and the settle cancels the pending pick", () => {
+    const h = repickHarness();
+    h.scheduler.schedule();
+    vi.advanceTimersByTime(HALF_GAP);
+    h.scheduler.cancel(); // what `onHover` does: the pointer path owns the readout again
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  it("unmount cancels: no pick fires after the instance is gone, and cancelling twice is harmless", () => {
+    const h = repickHarness();
+    h.scheduler.schedule();
+    h.scheduler.cancel(); // what the unmount cleanup does, beside coalescedRenderRef.current.cancel()
+    h.scheduler.cancel();
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  it("a RESIZE between capture and settle: NO pick runs and nothing is emitted (D4 disarms)", () => {
+    const h = repickHarness();
+    h.scheduler.schedule();
+    h.state.framebuffer = { clientWidth: 640, clientHeight: 600, devicePixelRatio: 1 };
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  it("a DEVICE PIXEL RATIO change between capture and settle: NO pick runs and nothing is emitted (D4 disarms)", () => {
+    const h = repickHarness();
+    h.scheduler.schedule();
+    h.state.framebuffer = { clientWidth: 800, clientHeight: 600, devicePixelRatio: 2 };
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  it("every readout a settle produces reaches the operator through the ONE emission choke point", () => {
+    // A different id, the named refusal, and a clear -- three different outcomes, each emitted
+    // exactly once through `emit` and named exactly once to the trace, with no other route out.
+    const fresh = repickHarness({ resolved: ID_B });
+    fresh.scheduler.schedule();
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(fresh.emit.mock.calls).toEqual([[ID_B]]);
+    expect(fresh.trace).toHaveBeenCalledTimes(1);
+    expect(fresh.trace).toHaveBeenCalledWith(ID_B);
+
+    const refused = repickHarness({ below: true });
+    refused.scheduler.schedule();
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(refused.emit.mock.calls).toEqual([[{ kind: "below-pick-resolution" }]]);
+    // The threshold decides before anything is resolved: the refusal wins over any id, and no
+    // ordinal-to-id resolution is done for an answer that would only be discarded.
+    expect(refused.resolveCandidate).not.toHaveBeenCalled();
+
+    const cleared = repickHarness({ candidate: null });
+    cleared.scheduler.schedule();
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(cleared.emit.mock.calls).toEqual([[null]]);
+    expect(cleared.resolveCandidate).not.toHaveBeenCalled();
+  });
+});
+
+// D11 (preregistration section 12 Amendments 2 and 3, each recorded before its own fix): the
+// button-down guard and the release edge that invalidates the pointer capture,
+// driven exactly the way `WorkingCanvas.tsx`'s own `scheduleHoverRepick` drives it -- the pure
+// decision, then the seam -- the same "drive the product's own gating pattern" shape this file
+// already uses for `shouldScheduleTileRender` gating `coalesceOncePerFrame`.
+function driveCameraChange(
+  h: ReturnType<typeof repickHarness>,
+  { readoutWasStanding = true, zoomChanged = true, pointerButtonDown = false } = {}
+): void {
+  const action = hoverRepickActionForCameraChange(
+    readoutWasStanding,
+    zoomChanged,
+    HOVER_REPICK_ON_PAN,
+    pointerButtonDown
+  );
+  if (action === "cancel") {
+    h.state.armed = false;
+    h.scheduler.cancel();
+    return;
+  }
+  if (action === "arm") h.state.armed = true;
+  h.scheduler.schedule();
+}
+
+describe("the button-down guard and the release edge (entry 47, D11 as extended)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("a camera burst under a HELD pointer button emits nothing at settle; the same burst after release emits exactly one pick", () => {
+    // deck.gl delivers no `onHover` while a button is down, so the stored pixel is the PRE-DRAG one
+    // for the whole gesture -- a settle here would confirm an id for a feature not under the pointer.
+    const h = repickHarness({ armed: false });
+    for (let i = 0; i < 4; i++) driveCameraChange(h, { pointerButtonDown: true });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+    expect(h.trace).not.toHaveBeenCalled();
+
+    // The button comes up. The FIRST camera change after the release arms exactly as D1/D3 say.
+    for (let i = 0; i < 4; i++) driveCameraChange(h, { pointerButtonDown: false });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+    expect(h.emit).toHaveBeenCalledTimes(1);
+    expect(h.emit).toHaveBeenCalledWith(ID_A);
+  });
+
+  it("a camera burst AFTER release, with no onHover since the button went down, emits nothing at settle; a real onHover re-captures and the next burst emits exactly one pick", () => {
+    // D11 as EXTENDED (section 12 Amendment 3): the guard above closes arming WHILE a button is
+    // held, but the stored pixel would otherwise survive the release -- deck.gl delivers no
+    // `onHover` during a drag, and a standing below-pick-resolution refusal is the one readout the
+    // mid-gesture rule leaves standing across one, so the first camera change after release could
+    // arm and settle at the PRE-DRAG pixel. The release edge therefore invalidates the capture.
+    const h = repickHarness({ armed: false });
+    for (let i = 0; i < 3; i++) driveCameraChange(h, { pointerButtonDown: true }); // the drag itself
+
+    // The release, exactly as `WorkingCanvas.tsx`'s own `onPointerRelease` performs it (the button
+    // flag drops -- the `pointerButtonDown: false` below -- and the pointer capture is dropped with
+    // it, since nothing has answered "where is the pointer" since the button went down).
+    //
+    // **What this case does and does not exercise, stated as what it is** (reviewer gate 3): this
+    // suite cannot mount the component, so the line below MIRRORS the listener rather than running
+    // it -- what is under test here is the scheduler's own null-capture return at the seam
+    // (`createHoverRepickScheduler`, `capture === null`), NOT `onPointerRelease` itself
+    // (`WorkingCanvas.tsx:1597`, in the listener whose release-edge paragraph is `:1573-1579`).
+    // Deleting that product line fails nothing in this file; the E2E case (v) in `e2e/regression.mjs`
+    // `stepK6` -- a real drag, then a settle -- is the one that pins it (preregistration section 12
+    // Amendments 4 and 5; the binding construction is Amendment 5's).
+    h.state.capture = null;
+
+    // The camera keeps moving after the release (a wheel notch, a keyboard pan, the tail of a
+    // gesture): the first change after the release ARMS exactly as D1/D3 say, and its settle picks
+    // nothing at all -- refusal to act, the same answer D4 gives a changed framebuffer.
+    for (let i = 0; i < 3; i++) driveCameraChange(h, { pointerButtonDown: false });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
+    expect(h.trace).not.toHaveBeenCalled();
+
+    // A real `onHover` after the release re-answers where the pointer is (and disowns any pending
+    // settle, exactly as the hover site does). Only now may a settle pick again.
+    h.state.capture = ON_CANVAS;
+    h.state.armed = false;
+    h.scheduler.cancel();
+
+    for (let i = 0; i < 3; i++) driveCameraChange(h, { pointerButtonDown: false });
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).toHaveBeenCalledTimes(1);
+    expect(h.pickCandidateAt).toHaveBeenCalledWith(ON_CANVAS.x, ON_CANVAS.y);
+    expect(h.emit.mock.calls).toEqual([[ID_A]]);
+  });
+
+  it("a button pressed mid-burst cancels the settle that was already pending", () => {
+    const h = repickHarness({ armed: false });
+    driveCameraChange(h); // pointer up: armed and pending
+    vi.advanceTimersByTime(HALF_GAP);
+    driveCameraChange(h, { pointerButtonDown: true }); // the drag begins
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(h.pickCandidateAt).not.toHaveBeenCalled();
+    expect(h.emit).not.toHaveBeenCalled();
   });
 });

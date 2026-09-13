@@ -945,47 +945,68 @@ async function stepA9(page, consoleHandle) {
 }
 
 // ---------------------------------------------------------------------------------------
-// K6 (residency-debt cut 1b, Item C; DECISIONS-PENDING entry 29; `RESIDENCY-DEBT-1B.md`): the
-// sub-pixel-hover pick refusal re-evaluated on a camera change while the pointer stays put.
-// Repro: hover a feature fully zoomed in (its id shows), keep the pointer stationary, zoom OUT
-// past `pickResolution.ts`'s declared threshold -- `WorkingCanvas.tsx`'s own `onHover` only fires
-// on pointer MOVE, so before the fix the stale id readout would persist past the zoom where a
-// fresh hover would refuse by name.
+// K6 (entry 47, `frontends/shell/HOVER-REPICK-PREREGISTRATION.md`; originally residency-debt cut 1b
+// Item C, DECISIONS-PENDING entry 29): the standing hover readout across a camera change, with the
+// pointer never moving. `WorkingCanvas.tsx`'s `onHover` fires only on pointer MOVE, so a camera
+// change alone re-evaluates nothing by itself -- what the operator is shown between the change and
+// the next real pointer move is entirely this contract's business.
 //
-// RE-AIM (DECISIONS-PENDING entries 56/47, the human's ruling of 2026-09-08, quoted in part:
-// "56 = (b) now — stepK6 encodes both cases explicitly (continuous→refusal, discrete→clear, no
-// stale id); 47 = next cut's first piece"; RELEASE-0.1.md Amendment 6's "Preregistration -- the K6
-// re-aim"). Entry 56 diagnosed why the PRE-EXISTING step was red on unmodified main:
-// `reevaluateStandingHoverOnCameraChange` (`pickResolution.ts`) CLEARS the standing readout to
-// `null` the moment a camera change leaves the feature merely above-but-changed threshold -- and
-// once `standing === null`, every LATER camera change is a no-op (the pure function's own
-// `standing === null -> undefined` branch, `pickResolution.test.ts` case (e)), so a run of N
-// discrete camera changes can only ever clear the readout once, on the FIRST change, and can never
-// itself reach the below-resolution refusal. Only a SINGLE camera change that crosses the
-// threshold in that one step reaches the refusal. Entry 56's own diagnosis calls this what a human's
-// one continuous zoom gesture produces (the walkthrough's own L7, ruled "fine" 2026-09-06/07) -- a
-// HYPOTHESIS about the browser's input pipeline coalescing rapid wheel events into fewer camera-
-// change callbacks, UNVERIFIED in this repo (this codebase's own deck.gl does not coalesce anything:
-// one `updateViewport` per wheel event, `controller.js:363`). [Post-PASS sweep should-fix 3] The
-// measured fact this step actually rests on is independent of that hypothesis: a SINGLE wheel event
-// cannot cross the pick-resolution threshold in this harness at all -- deck.gl's own scale formula
-// (see "Realising (i)" below) hard-caps one event at 1.0 zoom level, and this run's own measured
-// threshold crossings ran 1.3x-3.6x larger than that per-event cap -- which is the real reason
-// assertion (i) below is realised via one camera change from "Zoom to layer" rather than one wheel
-// event, whatever the truth of entry 56's browser-coalescing hypothesis. What N separate discrete
-// wheel notches are not, either way: capable of reaching the refusal in one step. This step therefore
-// asserts BOTH halves of the CURRENT, shipped contract explicitly, by name, below:
-//   (i)  CONTINUOUS -- one coalesced camera change crossing the threshold -> the named refusal,
-//        text verbatim (`pickResolution.test.ts` case (a) pins the pure decision this exercises).
-//   (ii) DISCRETE -- >= 8 separate wheel notches, no single-step crossing -> on the FIRST notch the
-//        readout either clears to nothing OR (if that one notch itself crosses the threshold) shows
-//        the named refusal directly -- both honour "discrete -> clear, no stale id" -- and it NEVER
-//        shows the pre-zoom id again at any later notch
-//        (`pickResolution.test.ts` case (b) pins the pure decision this exercises).
-// Entry 47 (re-pick on camera settle, ruled as the NEXT cut's first piece) is expected to REPLACE
-// both assertions below with a single "never goes stale, continuous or discrete alike" contract --
-// when that piece lands, these are the two cases its own new behaviour must still pass, restated
-// under the new mechanism, not just this one.
+// THE CONTRACT THIS STEP NOW ASSERTS (entry 47, ruled (b) by the human on 2026-09-06 -- "re-pick on
+// camera settle" -- and sharpened on 2026-09-07 by the failing case in the human's own words: a
+// screen-sized feature must not lose its id on a one-step zoom-out, "as long as I can tell on which
+// feature I'm hovering, there's no reasono to remove the id"): while camera changes keep arriving
+// the readout is refused by name below the declared pick-resolution threshold and cleared above it
+// (unchanged mid-gesture behaviour); once the burst STOPS, exactly one fresh pick at the stored
+// pixel decides what the operator sees. An id shown after a camera change is therefore always an id
+// some fresh GPU-ordinal-to-stable-id resolution stands behind (ADR-010 rules 2 and 5), never a
+// retained string re-asserted across the change.
+//
+// The five cases below are the ones pre-committed in that preregistration's section 5 -- (v) added
+// by that document's own section 12 Amendment 4, after the same section's design passed its third
+// architect gate: a test addition, changing no design and no product line. `stepK6`'s
+// previous two assertions are cases (i) and (ii): both still pass, restated under the new mechanism,
+// exactly as the file this step replaces required of its successor. Case (ii)'s old falsifier ("the
+// pre-zoom id after any notch = failure") is GONE by design -- a re-confirmed id is now the correct
+// answer -- and is replaced by a strictly stronger one: no readout may ever be an id without a
+// confirming re-pick trace since this step's mark.
+//   (i)   CONTINUOUS -- one coalesced camera change crossing the threshold ("Zoom to layer" from a
+//         real above-threshold hover) -> the named refusal, text verbatim, after settle. The refusal
+//         always wins over any id (ADR-028 Decision item 4).
+//   (ii)  DISCRETE -- >= 8 separate wheel notches, no interceding pointer move: at every notch, if
+//         the readout is an id, a `readout_confirmed` re-pick line naming that id must exist at that
+//         camera.
+//   (iii) THE HUMAN'S OWN FAILING CASE -- zoom in to a feature, hover it, then ONE discrete zoom-out
+//         step with the pointer stationary: the SAME id must still be shown, and the trace must name
+//         it re-picked. (A wheel zoom is anchored at the pointer, so the same world point stays
+//         under the same pixel -- the feature really is still the one under the cursor.)
+//   (iv)  THE DISCRIMINATOR (the preregistration's condition 13, and the reason (ii)'s old falsifier
+//         could be removed without losing coverage): a camera change chosen so a DIFFERENT feature
+//         lies under the same stationary pixel -- a PAN, which translates the world under the
+//         pointer instead of holding it fixed. **As corrected by the preregistration's own section
+//         12 Amendment 2 and the reviewer gate:** exactly two outcomes end this case successfully --
+//         an id that DIFFERS from the retained one, or an ABSENCE -- and each must carry a
+//         confirming `readout_confirmed` re-pick line since this step's mark. The named refusal is
+//         NON-TERMINAL (the mid-gesture rule emits it with no pick behind it, so it cannot
+//         discriminate anything); the case keeps panning through refusals and fails by name if it
+//         exhausts having seen only those. An implementation that emitted the confirming trace while
+//         re-asserting the retained id passes (i), (ii) and (iii) and fails this.
+//   (v)   THE RELEASE EDGE (the preregistration's own section 12 Amendment 5, which re-aimed this
+//         case onto the falsifier's own start state): from an above-threshold hover, wheel OUT with
+//         the pointer stationary until the named refusal STANDS -- the one readout the mid-gesture
+//         rule leaves standing across a drag, and the only start state from which the residual
+//         Amendment 3 closes is reachable at all -- then a real mouse drag (button down, pointer
+//         moved, button up) and ONE wheel notch back IN, above the threshold again, with the pointer
+//         never moved. deck.gl delivers no `onHover` while a button is held, so nothing has answered
+//         "where is the pointer" for the whole gesture; the standing refusal means the first
+//         post-release camera change ARMS, and the settle it starts must still emit nothing. The
+//         readout must NOT be an id (an ABSENCE and the named refusal both pass) and no confirming
+//         `readout_confirmed` line may name an id since this case's own mark. An id here could only
+//         have come from a pick at the PRE-DRAG pixel -- a feature the pointer left behind. This is
+//         the only level that runs the real window `pointerup` listener.
+//
+// **No timing figure is asserted, reported or derivable here** -- every `timeoutMs`/`quietMs` below
+// is a harness BOUND, exactly as this file's other steps already use them (ADR-018), and the settle
+// mechanism's own cadence is never measured, printed or compared against anything.
 //
 // Realising (i): NEITHER a single real `page.mouse.wheel` call NOR an arbitrary absolute jump
 // through the DEV-only `e2eSetViewState` camera seam (`src/e2e-test-surface.ts`) is safe here, for
@@ -997,58 +1018,45 @@ async function stepA9(page, consoleHandle) {
 // asymptotically saturates at 2.0 (a single doubling/halving) as `|delta|` grows -- e.g. deltaY=300
 // (this file's own `ZOOM_NOTCH_DELTA_Y` magnitude) already yields scale~=1.905, and an arbitrarily
 // larger deltaY buys almost nothing further, so one real wheel event is capped at roughly one
-// `ZOOM_NOTCH_DELTA_Y`-notch's worth of zoom change regardless of magnitude; (b) [Post-PASS sweep
-// should-fix 2, restating the real reason -- the proof below is about an EXTREME jump specifically,
-// not about the `e2eSetViewState` seam as such: a MODEST, computed jump (e.g. the current zoom
-// already read off this step's own view-state trace, minus ~2) would in fact have been SAFE, and was
-// the preregistration's own OTHER named route (`RELEASE-0.1.md`'s "Preregistration -- the K6
-// re-aim": "the camera set directly through the E2E surface if the harness offers it"). It is
-// not used below regardless of that: a REAL product action -- "Zoom to layer", the SAME
-// `reevaluateHoverForZoom` code path a human's gesture and the interactive wheel path both drive
-// (`WorkingCanvas.tsx:722-731`) -- was preferred over any DEV-only seam, modest or not. What follows
-// is a separate, additional finding, not the reason the seam is unused: an ARBITRARY, EXTREME]
-// `e2eSetViewState` zoom is actively DANGEROUS, not merely insufficient -- proven live
-// (this piece's own first run, K6 hung ~480s and wedged the whole page unresponsive to CDP at
-// zoom=-64): `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom` (`WorkingCanvas.tsx:384-390`) means an
-// extreme low zoom inflates the viewport's own world-space bbox by the same astronomical factor,
-// and -- before entry 60's fix (this branch) -- `tilesCoveringBbox` (`canvas/tileGrid.ts:298`, the
-// candidate arm's own covering-tile enumeration `TileViewportStreamManager.onCameraChange` calls,
-// `streaming/tileViewportStreamManager.ts:372`, then with no pre-clamp; now bounded before
-// allocation, see stepK7) built its output with a plain nested
-// `for (row) for (col)` loop over the FULL bbox/cellSize span BEFORE `MAX_QUEUED_TILES`
-// (`tileGridConstants.ts:54`) ever truncated the result -- an absurd bbox therefore meant an
-// attempted allocation/iteration of an absurd tile count, wedging the renderer's single JS thread
-// long before any truncation logic ever ran. This hang is a separate, recorded finding about the
-// EXTREME value, not about modest seam use (`NEXT-CUT.md`'s "Found during the release cut" section,
-// filed as DECISIONS-PENDING entry 60) -- it is not why this step avoids the seam for modest jumps;
-// the real-product-action preference above is. Assertion (i) instead reuses "Zoom to layer" -- the
-// SAME real button `A7'`/`clickZoomToLayer` below already click -- which calls `fitToExtent` (`Working
-// Canvas.tsx:793-813`), itself exactly ONE atomic `reevaluateHoverForZoom(fit.zoom)` call (the
-// structural property "one coalesced camera change" is actually about) fitting the bbox to the
-// WHOLE DATASET's own declared extent -- a scale the tile system is designed for (it is this app's
-// own everyday "show me everything" operation, safe by construction, never an arbitrary jump).
-// **This scale is independently already known to sit below the pick-resolution threshold**: this
-// suite's own P9 diagnosis (`e2e/README.md`'s "Entry 21 (2026-08-19), P9 instrumented session")
-// found, on this SAME fixture via this SAME "Zoom to layer" fit, that "individual features are
-// near-sub-pixel, so no 5x5 interior patch...can exist for ANY feature" at that exact camera scale
-// -- and since `isBelowPickResolution` is monotonic in zoom (`pixelsPerWorldUnitAtZoom` strictly
-// increasing), any camera this step's own search established as ABOVE threshold (a real "id NNN"
-// hover, confirmed by the SAME check `onHover` itself runs) is, by construction, MORE zoomed-in
-// than the whole-dataset fit -- so fitting to the whole dataset from there can only cross the
-// threshold, never stay above it. [Post-PASS sweep nit: stated precisely rather than glossed --
-// `reevaluateHoverForZoom(fit.zoom)` (`WorkingCanvas.tsx:799`) runs BEFORE `render()` (`:806`)
-// recomputes `averageFeatureExtentRef.current` from the fit's own newly-resident batches (`:756`),
-// so the below-threshold decision AT the fit actually compares against whatever average extent the
-// LAST render before the fit already held, not P9's own post-fit measurement of the resident set AT
-// the fit. Both are same-dataset averages (the same fixture's features, whichever subset happens to
-// be resident when each is measured), which is why the argument holds in practice -- this run's own
-// green result confirms it does -- but it is not literally the identical quantity P9 measured.]
+// `ZOOM_NOTCH_DELTA_Y`-notch's worth of zoom change regardless of magnitude; (b) an ARBITRARY,
+// EXTREME `e2eSetViewState` zoom is actively DANGEROUS, not merely insufficient -- proven live (the
+// first run of the piece that wrote this step: K6 wedged the whole page unresponsive to CDP at
+// zoom=-64, since `pixelsPerWorldUnitAtZoom(zoom) === 2 ** zoom` inflates the viewport's own
+// world-space bbox by the same astronomical factor and the covering-tile enumeration then attempted
+// an absurd allocation; that finding is DECISIONS-PENDING entry 60, fixed by the bound-before-
+// allocate change stepK7 exercises). A MODEST, computed seam jump would in fact have been safe, and
+// was the K6 re-aim preregistration's own other named route; it is not used regardless, because a
+// REAL product action -- "Zoom to layer", the same `fitToExtent` path a human's click drives -- was
+// preferred over any DEV-only seam. That fit is independently already known to sit below the
+// pick-resolution threshold on this fixture (this suite's own P9 diagnosis, `e2e/README.md`'s "Entry
+// 21 (2026-08-19), P9 instrumented session": at that camera "individual features are near-sub-pixel,
+// so no 5x5 interior patch...can exist for ANY feature"), and `isBelowPickResolution` is monotonic
+// in zoom, so any camera this step's own search established as ABOVE threshold is more zoomed-in
+// than the whole-dataset fit -- fitting from there can only cross the threshold, never stay above
+// it.
 //
-// Realising (ii): `page.mouse.wheel` is called directly (not through `doWheel`/`zoomInOneNotch`,
-// both of which `page.mouse.move` the pointer first) -- any pointer move here would let a real
-// `onHover` re-fire and re-pick normally, masking exactly the gap this step exists to catch (the
-// mechanism under test is the camera-change re-evaluation, not the ordinary pointer-move pick path
-// A9' already covers).
+// Realising (ii)/(iii): `page.mouse.wheel` is called directly (not through `doWheel`/`zoomInOneNotch`,
+// both of which `page.mouse.move` the pointer first) -- any pointer move would let a real `onHover`
+// re-fire and re-pick normally (and cancel the pending settle re-pick), masking exactly the
+// mechanism this step exists to check.
+//
+// Realising (iv): the pan is deck.gl's own KEYBOARD pan -- `ArrowRight` on the focused canvas,
+// `Controller._onKeyDown` -> `OrthographicState.moveRight(50)` in the installed
+// `node_modules/@deck.gl/core/dist/controllers/orthographic-controller.js`, a shipped interaction of
+// this app's own `controller: true`, not a test-only seam. It is the one camera change available
+// that translates the world under a STATIONARY pointer: a wheel zoom is anchored AT the pointer (so
+// the same world point stays under the same pixel, which is what makes (iii) a same-id case), and a
+// drag pan moves the pointer by construction. The canvas is focused through `.focus()` (mjolnir.js's
+// own `KeyInput` sets `tabIndex = 0` on it), never by clicking it -- a click would move the pointer.
+// The step fails loudly and by name if the key presses produce no camera change at all, so a future
+// deck.gl/mjolnir change that removes keyboard panning reads as exactly that rather than as a
+// contract failure.
+//
+// **Case (iv) is written against `HOVER_REPICK_ON_PAN`'s built value** (`src/canvas/hoverRepickConstants.ts`,
+// `true`: pan and zoom settle alike, the reading the ruling's words force). That value is PROPOSED
+// PENDING THE HUMAN'S SIGHT (DECISIONS-PENDING entry 75). If the human selects the zoom-only value
+// instead, this case must be RE-AIMED onto a camera change that both translates and zooms -- it must
+// not be quietly deleted, since it is the only case here whose correct answer is a different id.
 // ---------------------------------------------------------------------------------------
 const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after finding an
 // above-threshold candidate, independent of how many zoom-IN notches that search itself needed --
@@ -1059,10 +1067,11 @@ const K6_ZOOM_OUT_NOTCH_DELTA_Y = -ZOOM_NOTCH_DELTA_Y; // reverses A9''s own zoo
 const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // App.tsx:1417, verbatim.
 
 /**
- * Shared by both K6 cases: reuses A9''s own densest-patch bisection + interior verification
- * (`findInteriorCandidate`/`verifyInteriorCandidate`, UNCHANGED) to find a real, confidently-
- * pickable feature and hover it for real -- both cases need to START from a real, above-threshold
- * hover (an id showing), exactly as A9' establishes one. Runs from WHATEVER camera state the page
+ * Shared by K6's cases (i), (ii) and (iii): reuses A9''s own densest-patch bisection + interior
+ * verification (`findInteriorCandidate`/`verifyInteriorCandidate`, UNCHANGED) to find a real,
+ * confidently-pickable feature and hover it for real -- each of those cases needs to START from a
+ * real, above-threshold hover (an id showing), exactly as A9' establishes one; case (iv) continues
+ * from the hover case (iii) established rather than seeking its own. Runs from WHATEVER camera state the page
  * is currently in (the caller decides that -- e.g. after `clickZoomToLayer` below), zooming further
  * in from there as needed.
  */
@@ -1111,7 +1120,7 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 }
 
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
- * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:793-813`), then settles
+ * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:1050`), then settles
  * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
  * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1971-1977` (first
  * paragraph labelled at `:1952`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
@@ -1126,11 +1135,86 @@ async function clickZoomToLayer(page, consoleHandle, label) {
   await assertNoRefusalOrBanner(page, label);
 }
 
+/** The stable feature id inside a `.hover-readout` id string -- `App.tsx` renders `id <stable id>`
+ * followed, when the pick carried one, by its authoritative anchor. `null` when the readout is not
+ * an id at all (nothing shown, or the named refusal). */
+function hoverReadoutId(text) {
+  const m = /^id (\d+)/.exec(text ?? "");
+  return m ? m[1] : null;
+}
+
+async function readHoverReadout(page) {
+  return page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null);
+}
+
+/** D9's confirming line for a settle re-pick, looked for only among render-trace entries that
+ * arrived SINCE `sinceIndex` -- the caller's own mark, taken immediately before the camera change it
+ * is about to assert on.
+ *
+ * **What the mechanism actually checks, stated as what it is** (reviewer gate, entry 47): the scope
+ * is the trace ARRAY INDEX, not the camera. This answers "a confirming line arrived after my mark",
+ * which is only "at the camera the caller just produced" because every caller takes its mark
+ * immediately before its own camera change and waits for the trace to go quiet before reading. The
+ * `zoom` the line itself carries (`traceReadoutConfirmed`) is NOT compared against anything here, so
+ * this function cannot by itself tell two settles apart within one caller's window -- read it as
+ * "since the mark", never as a camera identity check.
+ *
+ * `resolved` is the readout in the operator's own terms, exactly as `renderTrace.ts`'s
+ * `traceReadoutConfirmed` names it (`id <n>`, `below-pick-resolution`, `cleared`); it is matched to
+ * a word boundary so `id 42` can never be satisfied by `id 421`. */
+function hasConfirmingRepickTrace(consoleHandle, sinceIndex, resolved) {
+  const pattern = new RegExp(`readout_confirmed camera-settle-repick ${resolved}(\\s|$)`);
+  return consoleHandle
+    .renderTrace()
+    .slice(sinceIndex)
+    .some((e) => pattern.test(e.text));
+}
+
+/** The FIRST `readout_confirmed` re-pick line naming ANY id since `sinceIndex`, as its own text, or
+ * `null` when no such line arrived -- case (v)'s question, which `hasConfirmingRepickTrace` above
+ * cannot ask: that one is handed the exact readout its caller expects, and case (v)'s whole point is
+ * that NO id was confirmed at all. Same `renderTrace.ts` `traceReadoutConfirmed` shape, same
+ * "since the mark" scope (an array index, never a camera identity), same word boundary. */
+function confirmingIdRepickTraceSince(consoleHandle, sinceIndex) {
+  const pattern = /readout_confirmed camera-settle-repick id \d+(\s|$)/;
+  const hit = consoleHandle
+    .renderTrace()
+    .slice(sinceIndex)
+    .find((e) => pattern.test(e.text));
+  return hit ? hit.text : null;
+}
+
+/** One wheel notch with the pointer NEVER moved (this section's own "Realising (ii)/(iii)" note),
+ * then a wait for the render trace to go quiet -- the settle re-pick's own trace line is itself a
+ * render-trace line, so quiet here means the re-pick has already had its say. */
+async function wheelWithoutMoving(page, consoleHandle, deltaY) {
+  await page.mouse.wheel(0, deltaY);
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
+}
+
+/** How many `ArrowRight` presses case (iv) will spend looking for a different feature under the same
+ * stationary pixel before calling the contract broken. Each press is deck.gl's own 50-screen-pixel
+ * orthographic keyboard pan (this section's own "Realising (iv)" note); a hover candidate this
+ * suite's search accepts is close to the smallest feature that is hoverable at all at that camera,
+ * so a few presses translate the world well past one feature's own width. */
+const K6_PAN_KEY_PRESSES_MAX = 8;
+
+/** How far case (v)'s drag moves the pointer, as a fraction of the canvas's own width and height,
+ * and always TOWARD the canvas centre so the pointer can never be dragged off the element (a
+ * pointer that ended outside would leave the following wheel notch nowhere to land, and the case
+ * would pass having exercised nothing). The drag itself is `doPan` above -- the SAME real
+ * button-down / move / button-up mechanism `A7'` already drives; only the magnitude is this case's
+ * own, and it is a fraction of the canvas rather than a pixel count so it means the same thing at
+ * any window size. Deliberately MODEST: the drag has to move the camera for real, and it also has
+ * to leave the pre-drag pixel somewhere a pick could still answer, since what this case forbids is
+ * a settle answering there at all. */
+const K6_RELEASE_DRAG_FRACTION = 0.1;
+
 async function stepK6(page, consoleHandle) {
   // ASSERTION (i) -- CONTINUOUS: one coalesced camera change crossing the threshold (the
   // walkthrough's own L7 gesture, realised here via "Zoom to layer" -- this section's own top
   // comment has the full account of why, including the live-proven danger of the alternatives) ->
-  // the named refusal, text verbatim.
+  // the named refusal, text verbatim, asserted AFTER settle.
   const continuousHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/continuous");
   await clickZoomToLayer(page, consoleHandle, "K6/continuous (zoom to layer)");
 
@@ -1151,55 +1235,261 @@ async function stepK6(page, consoleHandle) {
     );
   }
 
-  // Reset before the discrete case's own setup: the SAME "Zoom to layer" click again -- see
+  // Reset before the remaining cases' own setup: the SAME "Zoom to layer" click again -- see
   // `clickZoomToLayer`'s own doc comment for why this is safe and deliberate to call twice.
   await clickZoomToLayer(page, consoleHandle, "K6/reset");
 
-  // ASSERTION (ii) -- DISCRETE: >= 8 separate wheel notches, no interceding `page.mouse.move` (this
-  // section's own top comment). The ruled contract (entry 56, quoted in this section's own top
-  // comment) is "discrete -> clear, no stale id" -- polled after EVERY notch, so a later regression
-  // re-showing the PRE-ZOOM id at ANY notch fails loudly, not just "eventually". [Post-PASS sweep
-  // should-fix 4] On the FIRST notch specifically, the readout may either clear to nothing OR, if
-  // that one notch itself crosses the pick-resolution threshold, show the named refusal directly
-  // (`reevaluateStandingHoverOnCameraChange`'s own below-threshold branch, `pickResolution.ts`) --
-  // no stale id either way, the contract honoured either way. Requiring `=== null` specifically was
-  // STRICTER than the ruled contract and would throw "cleared at notch never" on that legitimate
-  // refusal-at-notch-1 path; both outcomes are accepted below, and the return string below says
-  // which one this run produced.
-  const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
-  const zoomOutNotches = Math.max(discreteHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
-  let notch1Readout; // undefined until notch 1 actually runs (always does: zoomOutNotches >= K6_ZOOM_OUT_NOTCHES_MIN, 8)
-  for (let notch = 1; notch <= zoomOutNotches; notch++) {
-    await page.mouse.wheel(0, K6_ZOOM_OUT_NOTCH_DELTA_Y);
-    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
-    const afterNotch = await page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null);
-    if (afterNotch === discreteHover.text) {
-      throw new Error(
-        `K6/discrete: .hover-readout still showed the PRE-ZOOM id ("${discreteHover.text}") after discrete notch ` +
-          `${notch}/${zoomOutNotches} -- a stale id survived a camera change`
-      );
-    }
-    if (notch === 1) notch1Readout = afterNotch;
+  // ASSERTION (iii) -- THE HUMAN'S OWN FAILING CASE, in the human's own order: zoom in to a feature
+  // and hover it, then zoom out by just one step with the pointer stationary. The zoom-IN notch
+  // first is what makes the zoom-OUT land back on a camera a real hover has ALREADY proven to be
+  // above the declared threshold, so this case tests the re-pick rather than the threshold.
+  const repickHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/re-pick");
+  const repickId = hoverReadoutId(repickHover.text);
+  if (repickId === null) {
+    throw new Error(`K6/re-pick: expected a real id readout to start from, got ${JSON.stringify(repickHover.text)}`);
   }
-  if (notch1Readout === undefined) {
-    throw new Error(`K6/discrete: notch 1 never ran (zoomOutNotches=${zoomOutNotches}) -- cannot evaluate the FIRST-notch contract`);
-  }
-  if (notch1Readout !== null && notch1Readout !== K6_REFUSAL_TEXT) {
+  await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "Once i zoom in to a feature and hover over one"
+  const beforeStepOut = consoleHandle.renderTrace().length;
+  await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
+  const sameId = await waitForCondition(
+    () => readHoverReadout(page),
+    (text) => hoverReadoutId(text) === repickId,
+    10_000
+  );
+  if (!sameId.ok) {
     throw new Error(
-      `K6/discrete: expected .hover-readout to EITHER clear to nothing OR show the named refusal verbatim on the ` +
-        `FIRST discrete notch (the ruled contract, entry 56, this section's own top comment) but it showed ` +
-        `${JSON.stringify(notch1Readout)} (hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ` +
-        `${zoomOutNotches} zoom-out notch(es) total)`
+      `K6/re-pick: after ONE discrete zoom-out step with the pointer stationary, .hover-readout no longer names the ` +
+        `feature the pointer is still over (expected id ${repickId}, last seen ${JSON.stringify(sameId.last)}) -- ` +
+        `the sharpened criterion (entry 47, 2026-09-07) is that the id stays for as long as the operator can tell ` +
+        `which feature is under the pointer`
     );
   }
-  const notch1Outcome = notch1Readout === null ? "cleared" : "refusal";
+  if (!hasConfirmingRepickTrace(consoleHandle, beforeStepOut, `id ${repickId}`)) {
+    throw new Error(
+      `K6/re-pick: .hover-readout shows id ${repickId} after the zoom-out step, but no readout_confirmed re-pick line ` +
+        `names it since this step's mark -- an id no fresh pick stands behind is exactly the staleness this contract forbids`
+    );
+  }
+
+  // ASSERTION (iv) -- THE DISCRIMINATOR: a PAN, with the pointer never moved, until a different
+  // feature (or nothing) lies under that same pixel. See this section's own "Realising (iv)" note
+  // for why the pan is deck.gl's own keyboard pan and why no other camera change can do this.
+  const focusedClass = await page.evaluate(() => {
+    const el = document.querySelector(".working-canvas");
+    if (el) el.focus();
+    return document.activeElement ? document.activeElement.className : null;
+  });
+  if (typeof focusedClass !== "string" || !focusedClass.includes("working-canvas")) {
+    throw new Error(
+      `K6/discriminator: could not focus .working-canvas (document.activeElement is ${JSON.stringify(focusedClass)}) -- ` +
+        `the keyboard pan is what moves the camera while the pointer stays exactly where it is`
+    );
+  }
+  let discriminatorOutcome = null;
+  let pressesUsed = 0;
+  let refusalsSeen = 0;
+  let unconfirmedAbsences = 0;
+  for (let press = 1; press <= K6_PAN_KEY_PRESSES_MAX && discriminatorOutcome === null; press++) {
+    const beforePress = consoleHandle.renderTrace().length;
+    await page.keyboard.press("ArrowRight");
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
+    pressesUsed = press;
+    if (!hasFreshRenderTraceMotion(consoleHandle.renderTrace(), beforePress)) {
+      throw new Error(
+        `K6/discriminator: ArrowRight (press ${press}) produced NO camera change at all -- deck.gl's own keyboard pan ` +
+          `(Controller._onKeyDown -> moveRight) is what this case is built on; without it this case cannot put a ` +
+          `different feature under the stationary pixel`
+      );
+    }
+    const afterPress = await readHoverReadout(page);
+    const afterId = hoverReadoutId(afterPress);
+
+    if (afterPress !== null && afterId === null && afterPress !== K6_REFUSAL_TEXT) {
+      throw new Error(`K6/discriminator: unrecognised .hover-readout state after a pan: ${JSON.stringify(afterPress)}`);
+    }
+
+    // THE REFUSAL IS NON-TERMINAL (preregistration section 12 Amendment 2). The mid-gesture rule
+    // emits the named refusal on its own, with no pick behind it, so it cannot tell a fresh re-pick
+    // apart from a re-emitted retained readout -- accepting it here would let this case pass against
+    // exactly the build block-on-sight condition 13 exists to catch. Keep panning instead.
+    if (afterPress === K6_REFUSAL_TEXT) {
+      refusalsSeen++;
+      continue;
+    }
+
+    // AN ABSENCE is a success only WITH a confirming re-pick line naming `cleared` at this camera
+    // (reviewer R4). Without one, the readout being empty says nothing about whether a pick ran: the
+    // mid-gesture rule clears a standing id by itself. Keep panning in that case too.
+    if (afterPress === null) {
+      if (hasConfirmingRepickTrace(consoleHandle, beforePress, "cleared")) {
+        discriminatorOutcome = "an absence, confirmed re-picked (nothing resident under that pixel)";
+      } else {
+        unconfirmedAbsences++;
+      }
+      continue;
+    }
+
+    if (afterId !== repickId) {
+      if (!hasConfirmingRepickTrace(consoleHandle, beforePress, `id ${afterId}`)) {
+        throw new Error(
+          `K6/discriminator: .hover-readout shows id ${afterId} after a pan, but no readout_confirmed re-pick line ` +
+            `names it since this step's mark`
+        );
+      }
+      discriminatorOutcome = `a different id (${repickId} -> ${afterId}), confirmed re-picked`;
+    }
+  }
+  if (discriminatorOutcome === null) {
+    throw new Error(
+      `K6/discriminator: ${K6_PAN_KEY_PRESSES_MAX} keyboard pan presses with the pointer stationary produced no ` +
+        `outcome that can discriminate a fresh pick from a retained readout ` +
+        `(${refusalsSeen} refusal-only press(es), ${unconfirmedAbsences} absence(s) with no confirming re-pick trace, ` +
+        `the rest still naming the SAME feature id ${repickId} the readout named before the world moved underneath ` +
+        `it). A retained id re-asserted across a camera change, a settle that never ran, and a run where only the ` +
+        `mid-gesture refusal ever spoke are all failures of this case, by name -- section 5 (iv) as corrected by the ` +
+        `preregistration's own Amendment 2.`
+    );
+  }
+
+  // ASSERTION (ii) -- DISCRETE: >= 8 separate wheel notches, no interceding `page.mouse.move`. The
+  // contract asserted per notch is the NEW one (entry 47): a readout may be an id only where a
+  // confirming re-pick trace names that id since this step's mark. The old falsifier ("the pre-zoom id after
+  // any notch = failure") is deliberately gone -- under this mechanism a re-confirmed id is the
+  // correct answer, which is what case (iv) above exists to keep honest.
+  const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
+  const zoomOutNotches = Math.max(discreteHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
+  let notchesShowingAnId = 0;
+  for (let notch = 1; notch <= zoomOutNotches; notch++) {
+    const beforeNotch = consoleHandle.renderTrace().length;
+    await page.mouse.wheel(0, K6_ZOOM_OUT_NOTCH_DELTA_Y);
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
+    const afterNotch = await readHoverReadout(page);
+    const afterId = hoverReadoutId(afterNotch);
+    if (afterId === null) continue;
+    notchesShowingAnId++;
+    if (!hasConfirmingRepickTrace(consoleHandle, beforeNotch, `id ${afterId}`)) {
+      throw new Error(
+        `K6/discrete: .hover-readout showed "id ${afterId}" after discrete notch ${notch}/${zoomOutNotches} with NO ` +
+          `confirming readout_confirmed re-pick line since this step's mark -- an id no fresh pick stands behind`
+      );
+    }
+  }
+
+  // ASSERTION (v) -- THE RELEASE EDGE, from the falsifier's OWN start state (the preregistration's
+  // section 12 Amendment 5, which re-aimed this case after its first construction was built and
+  // shown not to bind: an above-threshold start cannot reach the residual at all, because the
+  // drag's own camera changes CLEAR a standing id, so the first post-release change finds nothing
+  // standing, never arms, and the settle returns before the capture is ever read).
+  //
+  // The reachable state is a standing below-pick-resolution REFUSAL -- the one readout the
+  // mid-gesture rule leaves standing across a drag. So: an above-threshold hover, then wheel OUT
+  // with the pointer stationary until that refusal stands; the mark; a real mouse drag -- button
+  // down, pointer moved, button up; then ONE wheel notch back IN, above the threshold again, with
+  // the pointer never moved.
+  //
+  // deck.gl delivers no `onHover` while a button is held (Amendment 2), so nothing has answered
+  // "where is the pointer" for the whole gesture. The refusal is still standing when that notch
+  // arrives, so the first post-release camera change ARMS exactly as D1/D3 say -- and the settle it
+  // starts must still emit NOTHING, because the release edge dropped the stored pixel (Amendment 3,
+  // `WorkingCanvas.tsx`'s own `onPointerRelease`). An absence and the named refusal both pass; an id
+  // fails, since at this point it could only have come from a pick at the PRE-DRAG pixel, over a
+  // feature the pointer has left.
+  //
+  // This is the only level that runs the real window `pointerup` listener. The unit case that
+  // mirrors it (`WorkingCanvas.test.ts`, the D11 describe) is seam-scoped by section 5's own
+  // declaration and nulls the capture itself, so it exercises the scheduler's null-capture return
+  // rather than the listener that produces it.
+  await clickZoomToLayer(page, consoleHandle, "K6/release-edge (reset)");
+  const releaseHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/release-edge");
+  const releaseId = hoverReadoutId(releaseHover.text);
+  if (releaseId === null) {
+    throw new Error(
+      `K6/release-edge: expected a real id readout to start from, got ${JSON.stringify(releaseHover.text)}`
+    );
+  }
+
+  // Wheel OUT with the pointer stationary until the named refusal STANDS -- case (ii)'s own
+  // mechanism (`wheelWithoutMoving`) under case (ii)'s own notch bound, stopping at the FIRST notch
+  // that refuses; the single notch back in below then lands one notch in from the first refusing
+  // camera (not necessarily on the camera the hover was established at -- more than one notch out
+  // may have been needed).
+  const releaseOutNotchesMax = Math.max(releaseHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
+  let releaseOutNotches = 0;
+  let standingBeforeDrag = null;
+  for (let notch = 1; notch <= releaseOutNotchesMax && standingBeforeDrag !== K6_REFUSAL_TEXT; notch++) {
+    await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y);
+    releaseOutNotches = notch;
+    standingBeforeDrag = await readHoverReadout(page);
+  }
+  if (standingBeforeDrag !== K6_REFUSAL_TEXT) {
+    throw new Error(
+      `K6/release-edge: the named refusal never STOOD within ${releaseOutNotchesMax} zoom-out notch(es) from the ` +
+        `hover (id ${releaseId}), pointer stationary throughout -- last readout ${JSON.stringify(standingBeforeDrag)}. ` +
+        `A standing refusal is this case's whole premise: it is the one readout the mid-gesture rule leaves standing ` +
+        `across a drag, and the only start state the release edge's own residual is reachable from (section 12 ` +
+        `Amendment 5)`
+    );
+  }
+
+  const releaseRect = await canvasRect(page);
+  if (!releaseRect) throw new Error("K6/release-edge: .working-canvas not found");
+  const dragToward = {
+    x: releaseRect.left + releaseRect.width / 2 - releaseHover.css.x,
+    y: releaseRect.top + releaseRect.height / 2 - releaseHover.css.y,
+  };
+  const releaseDrag = {
+    dx: (dragToward.x >= 0 ? 1 : -1) * Math.round(releaseRect.width * K6_RELEASE_DRAG_FRACTION),
+    dy: (dragToward.y >= 0 ? 1 : -1) * Math.round(releaseRect.height * K6_RELEASE_DRAG_FRACTION),
+  };
+  // THIS STEP'S MARK for the case, taken immediately before the gesture it asserts on -- the same
+  // discipline every other case here follows (`hasConfirmingRepickTrace`'s own doc comment states
+  // what "since the mark" checks and what it does not).
+  const beforeRelease = consoleHandle.renderTrace().length;
+  await doPan(page, releaseHover.css, releaseDrag.dx, releaseDrag.dy); // down ON the hovered pixel, move, up
+  // ONE notch back IN -- the exact reverse of the last zoom-out notch above, so this lands on a
+  // camera the hover was already proven above the threshold at, and the first camera change after
+  // the release arms (the refusal was standing when it arrived).
+  await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y);
+  const afterRelease = await readHoverReadout(page);
+  const confirmedIdSinceRelease = confirmingIdRepickTraceSince(consoleHandle, beforeRelease);
+  // The drag and the notch must really have moved the camera, or this case would pass having
+  // asserted nothing at all -- the same guard case (iv) puts on its own pan, by name.
+  if (!hasFreshRenderTraceMotion(consoleHandle.renderTrace(), beforeRelease)) {
+    throw new Error(
+      `K6/release-edge: the drag (${releaseDrag.dx}, ${releaseDrag.dy} px from the hovered pixel) and the wheel notch ` +
+        `after it produced NO camera change at all -- without one there is no settle for the release edge to refuse, ` +
+        `and this case cannot pin anything`
+    );
+  }
+  const afterReleaseAllowed = afterRelease === null || afterRelease === K6_REFUSAL_TEXT;
+  if (!afterReleaseAllowed || confirmedIdSinceRelease !== null) {
+    throw new Error(
+      `K6/release-edge: with the named refusal STANDING, a real drag (button down, pointer moved, button up) and ` +
+        `then ONE wheel notch back in with the pointer never moved, the readout must NOT be an id -- nothing has ` +
+        `re-answered where the pointer is since the button went down, so the settle this armed change starts may ` +
+        `only refuse to act (an absence and the named refusal both pass). ` +
+        `.hover-readout showed ${JSON.stringify(afterRelease)} (the hover before the ${releaseOutNotches} zoom-out ` +
+        `notch(es) was id ${releaseId})` +
+        (confirmedIdSinceRelease === null
+          ? ""
+          : `, and a confirming re-pick line named an id since this step's mark: ${JSON.stringify(confirmedIdSinceRelease)}`) +
+        ` -- a settle that picks at the PRE-DRAG pixel is exactly what the release edge (section 12 Amendment 3) forbids`
+    );
+  }
 
   return (
     `(i) continuous: hovered "${continuousHover.text}" at zoom-in notch ${continuousHover.notchesUsed}, one coalesced ` +
       `camera change ("Zoom to layer") -> refusal text verbatim ("${K6_REFUSAL_TEXT}"); ` +
+    `(iii) re-pick: hovered id ${repickId}, one zoom-in notch then ONE discrete zoom-out step, pointer stationary -> ` +
+      `the same id, named re-picked by its own confirming trace since this step's mark; ` +
+    `(iv) discriminator: ${pressesUsed} keyboard pan press(es), pointer stationary (${refusalsSeen} refusal-only press(es) passed over as non-terminal) -> ${discriminatorOutcome}; ` +
     `(ii) discrete: hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ${zoomOutNotches} ` +
-      `discrete zoom-out notch(es) -> notch 1 ${notch1Outcome}, no stale id at any later notch. Both are the CURRENT ` +
-      `contract entry 47 (DECISIONS-PENDING, re-pick on camera settle) is expected to replace.`
+      `discrete zoom-out notch(es) -> ${notchesShowingAnId} notch(es) showed an id, every one of them with a ` +
+      `confirming re-pick trace at its own camera; ` +
+    `(v) release edge: hovered id ${releaseId}, ${releaseOutNotches} zoom-out notch(es) to a STANDING refusal, then a ` +
+      `real drag (button down, ${releaseDrag.dx}, ${releaseDrag.dy} px, button up) and ONE wheel notch back in with ` +
+      `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no confirming re-pick line naming an id ` +
+      `since that case's own mark.`
   );
 }
 
@@ -1211,8 +1501,8 @@ async function stepK6(page, consoleHandle) {
 // readout/hover still answers; the declared partial-view status shows), no hang, bounded by the
 // suite's existing timeouts (a bound, not a timing claim -- ADR-018)".
 //
-// What entry 60 found, in this suite's own words (`stepK6`'s top comment, the block ending "wedging
-// the renderer's single JS thread long before any truncation logic ever ran"): `tilesCoveringBbox`
+// What entry 60 found, in this suite's own words (`stepK6`'s top comment recorded it before entry
+// 47 rewrote that step; the finding itself is unchanged): `tilesCoveringBbox`
 // enumerated the WHOLE cover with a plain nested loop on every debounced camera settle, and
 // `MAX_QUEUED_TILES` truncated only afterwards -- so an ordinary wheel gesture far enough out made
 // that loop's iteration count a function of the camera alone. The fix bounds the cover BEFORE it is
@@ -1561,18 +1851,21 @@ async function main() {
     // case, plus the grid capture and the empty-space half. 120s gives comfortable headroom without
     // masking a genuine hang (every individual wait inside stays independently bounded).
     await runStep("A9'", 120_000, () => stepA9(page, consoleHandle));
-    // Residency-debt cut 1b, Item C (K6); re-aimed per DECISIONS-PENDING entries 56/47 to encode
-    // BOTH cases of the current contract (continuous zoom -> refusal; discrete notches -> clear, no
-    // stale id -- `stepK6`'s own top comment has the full account, including why assertion (i) uses
-    // "Zoom to layer" rather than an extreme camera jump). This now runs the A9'-proven
-    // candidate-finding search TWICE (once per case, the second after a "Zoom to layer" reset), two
-    // "Zoom to layer" clicks (each A7'-scale, bounded there at 150s including its own drag search),
-    // plus a bounded per-notch settle loop for the discrete case's own >= 8 notches -- 240s gives
-    // generous headroom over that composition without eating so much of the WHOLE run's own 600s
-    // `SPATIAL_E2E_DEADLINE_MS` that a single slow step here starves every later one (this piece's
-    // own first run's cascade failure, at an INTERMEDIATE, never-committed 480s bound this piece
-    // tried mid-session -- main's own last COMMITTED bound before this piece was 90_000 (90s); not a
-    // timing claim (ADR-018), just a bound.
+    // K6, entry 47 (the hover readout's re-pick on camera settle -- `stepK6`'s own top comment has
+    // the full account of all four cases, including why case (i) uses "Zoom to layer" rather than an
+    // extreme camera jump and why case (iv)'s pan is deck.gl's own keyboard pan). This now runs the
+    // A9'-proven candidate-finding search THREE times (case (i); case (iii), which case (iv) then
+    // continues from; case (ii)), two "Zoom to layer" clicks, two single wheel notches for case
+    // (iii), a key-press loop for case (iv), and a per-notch settle loop for case (ii)'s own >= 8
+    // notches.
+    //
+    // The bound below is UNCHANGED across that widening, and the reason is structural, not measured:
+    // every wait this step performs is already independently bounded -- each candidate search, each
+    // settle wait, each readout poll, and both loops are counted rather than open-ended -- so a hang
+    // cannot hide inside it, and this bound is a backstop on the composition as a whole rather than
+    // a budget to tune. Widening it would eat the WHOLE run's own `SPATIAL_E2E_DEADLINE_MS`, which
+    // every later step depends on; if a legitimately slow composition ever reaches it, the answer is
+    // to split the step, not to raise the ceiling. Not a timing claim (ADR-018), just a bound.
     await runStep("K6", 240_000, () => stepK6(page, consoleHandle));
     // K7 (DECISIONS-PENDING entry 60, ruled (a) 2026-09-08; RELEASE-0.1.md Amendment 10): 15 discrete
     // zoom-OUT notches from a "Zoom to layer" fit on the shipped default -- the ordinary gesture that
