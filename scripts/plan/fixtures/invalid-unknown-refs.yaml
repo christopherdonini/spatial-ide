@@ -1,0 +1,25 @@
+# A node citing a lane, phase, and dependency that do not exist, plus a status and a
+# needs_human.kind outside the declared vocabularies, and a ruling with no minutes.
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: bad-refs
+    title: "Dangling references"
+    kind: task
+    lane: nonexistent-lane
+    phase: nonexistent-phase
+    status: sideways
+    order: 1
+    depends_on: [nonexistent-node]
+    needs_human: {kind: maybe}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: every referential and enum check at once"
+    dates: {opened: 2026-09-13, done: null}

@@ -1,0 +1,98 @@
+name: Governance CI — plan, queue, site
+
+# AUTONOMY.md §6, "the ADR-index pattern": PLAN.yaml's recorded statuses must agree with what the
+# repository can verify, or this fails. Pages and CUSTODIAN-QUEUE.md are only ever as true as this
+# check.
+#
+# ## Why ubuntu-latest, unlike product-ci-shell.yml's windows-latest
+#
+# `product-ci-viewer.yml`'s own reasoning applies here without modification: this is pure Node
+# (standard library only — no dependency is added anywhere under scripts/plan or scripts/hooks),
+# with no native or platform-specific surface of its own. It shells out to `git` and `gh`, both
+# preinstalled on GitHub-hosted runners of every OS, so the cheapest runner is the right one.
+#
+# ## Why no `npm ci` step
+#
+# There is no `package.json` here and none is added — the whole point of this piece is that no
+# dependency is added (AUTONOMY.md's own directive). `node --test` and every script under
+# scripts/plan and scripts/hooks run directly against Node's standard library.
+#
+# ## What a green run here means, stated narrowly (the other product workflows' own discipline)
+#
+# It means: every test under scripts/plan and scripts/hooks passes, PLAN.yaml's recorded statuses
+# agree with what the repository can verify (merged PRs, ADR Status lines, tags, releases, commits
+# on main, tracked paths), and regenerating CUSTODIAN-QUEUE.md/.json and site/ produces no diff.
+# It does **not** mean any hook has been exercised inside a real Claude Code session — that is the
+# dry runs recorded in state/CUT-STATE.md (AUTONOMY.md §3, §7), a human-run instrument, not a
+# per-push check.
+#
+# ## Read-only, GITHUB_TOKEN only
+#
+# verify.mjs's own GitHub calls (`gh api .../pulls/N`, `gh release view`) are read-only; no
+# secrets beyond the default GITHUB_TOKEN are used, and the permissions block below grants nothing
+# beyond `contents: read` (AI_DEVELOPMENT.md's public-repo rule: least privilege, re-issued by the
+# human).
+
+on:
+  push:
+    paths:
+      - "PLAN.yaml"
+      - "scripts/plan/**"
+      - "scripts/hooks/**"
+      - "site/**"
+      - "CUSTODIAN-QUEUE.md"
+      - "CUSTODIAN-QUEUE.json"
+      - ".claude/settings.json"
+      - ".github/workflows/governance-ci.yml"
+  pull_request:
+    paths:
+      - "PLAN.yaml"
+      - "scripts/plan/**"
+      - "scripts/hooks/**"
+      - "site/**"
+      - "CUSTODIAN-QUEUE.md"
+      - "CUSTODIAN-QUEUE.json"
+      - ".claude/settings.json"
+      - ".github/workflows/governance-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: governance-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: test · verify:plan · queue/site drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # fetch-depth: 0 -- verify.mjs's evidence checks need real history: `git tag --list` (evidence
+      # {tag: ...}) and `git merge-base --is-ancestor <commit> origin/main` (evidence {commit: ...})
+      # both silently fail against actions/checkout@v4's default shallow (depth-1, tagless) clone.
+      # CI run 34783672136 failed exactly this way: `git tag "v0.1.0" does not exist` and
+      # `a047a23 is not an ancestor of origin/main` -- the tag and the commit were both real, the
+      # clone just could not see them.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: node --test (scripts/plan, scripts/hooks)
+        run: node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"
+
+      - name: verify:plan (PLAN.yaml agrees with the repository)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/plan/verify.mjs
+
+      - name: CUSTODIAN-QUEUE.md/.json drift check
+        run: node scripts/plan/queue.mjs --check
+
+      - name: site/ drift check
+        run: node scripts/plan/site.mjs --check

@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-09-13T21:45:51.389Z",
+  "ci": {
+    "badge_url": "https://github.com/christopherdonini/spatial-ide/actions/workflows/product-ci-rust.yml/badge.svg?branch=main",
+    "conclusion": null,
+    "note": "offline: gh run list skipped"
+  },
+  "drift": {
+    "ok": true,
+    "failures": []
+  },
+  "disk_free": {
+    "bytes": 10794078208,
+    "drive": "C"
+  },
+  "stray_processes": {
+    "total": 2,
+    "by_name": {
+      "cargo": 0,
+      "node": 2,
+      "spatial-ide-shell": 0
+    }
+  },
+  "open_prs": {
+    "note": "offline: gh pr list skipped",
+    "items": []
+  },
+  "waiting_on_human": [
+    {
+      "id": "entry-91-polish-held-halves",
+      "kind": "ruling",
+      "minutes": 10,
+      "opened": "2026-09-13",
+      "age_days": 0
+    },
+    {
+      "id": "entry-75-hover-repick-defaults",
+      "kind": "ruling",
+      "minutes": 10,
+      "opened": "2026-09-10",
+      "age_days": 3
+    },
+    {
+      "id": "sitting-4-rows",
+      "kind": "sitting",
+      "minutes": 45,
+      "opened": null,
+      "age_days": null
+    },
+    {
+      "id": "adr-029-operation-lifecycle",
+      "kind": "ruling",
+      "minutes": 10,
+      "opened": "2026-09-13",
+      "age_days": 0
+    },
+    {
+      "id": "entry-79-b1-consult-items",
+      "kind": "ruling",
+      "minutes": 15,
+      "opened": null,
+      "age_days": null
+    },
+    {
+      "id": "briefa-p3-p6",
+      "kind": "ruling",
+      "minutes": 20,
+      "opened": "2026-09-11",
+      "age_days": 2
+    },
+    {
+      "id": "entry-73-polygon-gate-scope",
+      "kind": "ruling",
+      "minutes": 15,
+      "opened": "2026-09-10",
+      "age_days": 3
+    },
+    {
+      "id": "entry-78-repo-description",
+      "kind": "click",
+      "minutes": 5,
+      "opened": null,
+      "age_days": null
+    },
+    {
+      "id": "drill-clean-clone",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": null,
+      "age_days": null
+    },
+    {
+      "id": "entry-69-runtime-dependency",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-09",
+      "age_days": 4
+    },
+    {
+      "id": "entry-90-static-crt-v0-1-1",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-13",
+      "age_days": 0
+    },
+    {
+      "id": "entry-77-code-signing",
+      "kind": "ruling",
+      "minutes": 10,
+      "opened": "2026-09-13",
+      "age_days": 0
+    },
+    {
+      "id": "m13-bracketed-values",
+      "kind": "sight",
+      "minutes": 5,
+      "opened": "2026-09-13",
+      "age_days": 0
+    }
+  ]
+}

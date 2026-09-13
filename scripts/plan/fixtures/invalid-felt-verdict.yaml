@@ -1,0 +1,25 @@
+# felt_verdict: true and status: done, but no verdict.by/verdict.cite -- only the human may mark
+# a felt-verdict node done, and the record must carry the RULED cite.
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: felt-verdict-without-cite
+    title: "Walkthrough verdict, no cite"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 45}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: true
+    entries: []
+    summary: "fixture: felt_verdict done with no verdict record"
+    dates: {opened: 2026-09-13, done: 2026-09-13}

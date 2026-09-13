@@ -1,0 +1,44 @@
+# Variant of two-nodes.yaml where the ready node has already landed, so only the
+# human-blocked node remains in the derived queue. Used by scripts/hooks/hooks.test.mjs
+# for the "allow when only the human-blocked node remains" dry-run assertion (§3).
+version: 1
+priorities_approved: true
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: two-nodes-ready
+    title: "A ready node with no dependencies and no human need"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {commit: "36f7f09"}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: ready node, now done"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+  - id: two-nodes-human-blocked
+    title: "A node waiting on a human ruling"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 2
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: human-blocked node for the Stop hook dry run"
+    dates: {opened: 2026-09-13, done: null}

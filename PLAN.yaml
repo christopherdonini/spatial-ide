@@ -1,0 +1,1090 @@
+# PLAN.yaml -- plan as data (AUTONOMY.md §1)
+#
+# Seeded 2026-09-13 by the custodian from: AUTONOMY.md §1-§2 + Appendix A (the human's directive,
+# verbatim); docs/07_Roadmap.md; DECISIONS-PENDING.md (RULED blocks + open entries 69, 73, 75, 77,
+# 78, 79, 83, 86-92); CUT-STATE.md's "Open at the close" list and ledger; RELEASE-DRAFTS-0.1.0's
+# post-tag Brief A (DRAFT-2), Brief B (DRAFT-3), the LOD brief and the ADR-032 problem-statement
+# drafts; RELEASE-0.1.md Amendments 15-19; docs/adr/ Status lines; `gh pr list`; `git tag`.
+#
+# LANE PRIORITIES BELOW ARE SEEDED, PENDING THE HUMAN'S APPROVAL (AUTONOMY.md §2: "the lane
+# priorities the queue orders by are approved by the human once ... until then the file carries
+# the seeded order from the directive and says so"). This is the custodian's reading of the
+# directive's numbered list and the closing "seed the queue in my order" paragraph -- not yet
+# ruled.
+#
+# budget_minutes are the custodian's coarse DECLARED estimates, not measurements (AUTONOMY.md
+# §1's "declared, not measured"). Unscheduled nodes (no scoping work done) carry budget_minutes: 0
+# as an explicit not-yet-estimated placeholder, not a claim of zero effort.
+#
+# `order` is set only where the human's Appendix A sequence, or plain chronology for `done` nodes,
+# gives a basis; proposed and unscheduled nodes carry `order: null` (the human places them, per
+# §1's status table).
+
+version: 1
+
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+  - {id: measurement, title: "Measurement", priority: 2}
+  - {id: kernel-protocol, title: "Kernel/Protocol", priority: 3}
+  - {id: engine, title: "Engine", priority: 4}
+  - {id: publish-viewer, title: "Publish/Viewer", priority: 5}
+  - {id: governance, title: "Governance", priority: 6}
+  - {id: release, title: "Release", priority: 7}
+  - {id: renderer, title: "Renderer", priority: 8}
+  - {id: platform, title: "Platform", priority: 9}
+  - {id: cli, title: "CLI", priority: 10}
+  - {id: notebooks-ir, title: "Notebooks/IR", priority: 11}
+  - {id: plugins-mcp, title: "Plugins/MCP", priority: 12}
+
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+  - {id: alpha, title: "Alpha", cite: "docs/07_Roadmap.md ## Alpha"}
+  - {id: beta, title: "Beta", cite: "docs/07_Roadmap.md ## Beta"}
+  - {id: v1, title: "1.0", cite: "docs/07_Roadmap.md ## 1.0"}
+
+nodes:
+
+  # ============================== DONE ==============================
+
+  - id: v0-1-0-shipped
+    title: "v0.1.0 tagged and released — the Prototype hero slice's first packaged build"
+    kind: milestone
+    lane: release
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {tag: "v0.1.0"}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the annotated v0.1.0 tag exists on the release branch head, artifact hashed and released"
+    dates: {opened: null, done: 2026-09-13}
+
+  - id: merge-back-pr-50
+    title: "release/0.1.0 merged back into main after the tag"
+    kind: task
+    lane: release
+    phase: prototype
+    status: done
+    order: 4
+    depends_on: [v0-1-0-shipped]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 50}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the release branch's post-tag docs and fixes are back on main; one test conflict resolved to the release side"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  - id: entry-47-hover-repick
+    title: "Entry 47 — the hover readout re-picks on camera settle"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: frontends/shell/HOVER-REPICK-PREREGISTRATION.md
+    evidence: {pr: 47}
+    budget_minutes: 300
+    generation: 1
+    felt_verdict: false
+    entries: [47]
+    summary: "the id readout survives a stationary hover across a camera change instead of clearing on zoom-out"
+    dates: {opened: 2026-09-11, done: 2026-09-13}
+
+  - id: entries-84-85-filter-fixes
+    title: "Entries 84 and 85 — settled-partial status and Zoom to layer under a filter"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: frontends/shell/FILTER-84-85-PREREGISTRATION.md
+    evidence: {pr: 48}
+    budget_minutes: 180
+    generation: 1
+    felt_verdict: false
+    entries: [84, 85]
+    summary: "a zero-row tile terminal now marks residency, and the fit camera write is no longer swallowed by a deep-equal skip"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  - id: release-docs-finalized
+    title: "Release docs finalized from Part M for the tag"
+    kind: task
+    lane: release
+    phase: prototype
+    status: done
+    order: 3
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 49}
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "README, QUICKSTART and KNOWN-LIMITATIONS written from the operator's own walkthrough words"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  - id: briefa-p1-p2
+    title: "Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: done
+    order: 3
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: engine/ADMISSION-PREREGISTRATION.md
+    evidence: {pr: 44}
+    budget_minutes: 300
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "absent-crs-key and lat-first sources open under named format provenance instead of a blanket refusal"
+    dates: {opened: 2026-09-10, done: 2026-09-11}
+
+  - id: briefa-entries-80-81
+    title: "Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims)"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: done
+    order: 4
+    depends_on: [briefa-p1-p2]
+    needs_human: {kind: none, minutes: 0}
+    gate: engine/ADMISSION-PREREGISTRATION.md
+    evidence: {pr: 46}
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: [80, 81]
+    summary: "the CRS84 format default becomes an admissible unit source, provenance-labelled, and the tests it changes are re-aimed to the ruling"
+    dates: {opened: 2026-09-11, done: 2026-09-13}
+
+  - id: adr-003-spike-gate
+    title: "ADR-003 renderer/arbitrary-CRS spike — the architecture gate"
+    kind: milestone
+    lane: renderer
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {adr: "ADR-003"}
+    budget_minutes: 600
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "deck.gl custom layers accepted as the projected-canvas renderer architecture on Windows/WebView2 evidence"
+    dates: {opened: null, done: 2026-08-03}
+
+  - id: spatial-indexing-measurement-close
+    title: "Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path)"
+    kind: milestone
+    lane: measurement
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {path: "kernel/RESULTS.md"}
+    budget_minutes: 480
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "layout, not any index, is the only lever that moved read volume; the preregistered import-layout gate failed its no-regression condition, so nothing changed in the import path"
+    dates: {opened: null, done: 2026-08-13}
+
+  - id: static-crt-spike
+    title: "Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b)"
+    kind: task
+    lane: release
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {commit: "a047a23"}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: [69]
+    summary: "a release link with the static CRT flag is clean and the executable no longer imports the VC++ runtime DLLs; written conclusion only, nothing shipped"
+    dates: {opened: 2026-09-09, done: 2026-09-09}
+
+  - id: hero-open-geoparquet
+    title: "Hero slice, part 1 — open a GeoParquet"
+    kind: milestone
+    lane: engine
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {release: "v0.1.0"}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: true
+    verdict: {by: human, cite: "RELEASE-0.1.md Amendment 18"}
+    entries: []
+    summary: "the operator opened a supported GeoParquet on the packaged build and the walkthrough's open rows pass"
+    dates: {opened: null, done: 2026-09-13}
+
+  - id: hero-filter-sql
+    title: "Hero slice, part 2 — filter it in SQL"
+    kind: milestone
+    lane: engine
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {release: "v0.1.0"}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: true
+    verdict: {by: human, cite: "RELEASE-0.1.md Amendment 18"}
+    entries: []
+    summary: "the operator applied a row filter and the walkthrough's filter row passes on the released build"
+    dates: {opened: null, done: 2026-09-13}
+
+  - id: hero-style
+    title: "Hero slice, part 3 — style it"
+    kind: milestone
+    lane: renderer
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {release: "v0.1.0"}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: true
+    verdict: {by: human, cite: "RELEASE-0.1.md Amendment 15"}
+    entries: []
+    summary: "the operator's styling row passes on the released build, standing from the candidate by the recorded diff-stat proof"
+    dates: {opened: null, done: 2026-09-13}
+
+  - id: hero-publish-bundle
+    title: "Hero slice, part 4 — publish it as a static interactive bundle"
+    kind: milestone
+    lane: publish-viewer
+    phase: prototype
+    status: done
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {release: "v0.1.0"}
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: true
+    verdict: {by: human, cite: "RELEASE-0.1.md Amendment 15"}
+    entries: []
+    summary: "the operator published a filtered view and a whole dataset from the released build and the audit log recorded both"
+    dates: {opened: null, done: 2026-09-13}
+
+  - id: land-45
+    title: "Entry 66 (b) — geometric protection at every zoom, without enumeration"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 3
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: frontends/shell/ENTRY-66B-PREREGISTRATION.md
+    evidence: {pr: 45}
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: [66]
+    summary: "the fits/over-budget latch and the queued-tile drain path are gated by half-open index ranges instead of enumeration; KNOWN-LIMITATIONS 13b retired"
+    dates: {opened: 2026-09-10, done: 2026-09-13}
+
+  - id: asset-filename-docs-fix
+    title: "Asset-filename docs fix — the release page's dotted installer filename noted"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: done
+    order: 4
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {commit: "875d900"}
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "QUICKSTART and README note the release page's own filename (a dot where the installer's own name has a space)"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  # =========================== IN-PROGRESS ===========================
+
+  - id: polish-87-88-89
+    title: "Filter-and-hover polish (entries 87, 88, 89)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: in-progress
+    order: 4
+    depends_on: [land-45]
+    needs_human: {kind: none, minutes: 0}
+    gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
+    evidence: {branch: "polish/filter-and-hover"}
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: [87, 88, 89]
+    summary: "the unconditional parts (refusal logging, bounded requeue, cursor shape, the FIND' assertion) are built; the three ruled halves wait"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: viewer-86-zoom-anchor
+    title: "Entry 86 — the reference bundle viewer's zoom is not anchored at the pointer"
+    kind: task
+    lane: publish-viewer
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md
+    evidence: {pr: 53}
+    budget_minutes: 180
+    generation: 1
+    felt_verdict: false
+    entries: [86]
+    summary: "reproduced headless as a fixed backing store read against a stretched CSS box; the fix piece is preregistered and dispatched"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  - id: lod-feasibility-spike
+    title: "LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only"
+    kind: task
+    lane: measurement
+    phase: prototype
+    status: done
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 51}
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "measurement-only; any dependency proposal it surfaces goes to the human before it is added"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  - id: reaim-no-crs-fixture
+    title: "Delegated re-aim — the no-CRS fixture and its tests to Brief A's ruled contract"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 6
+    depends_on: [briefa-entries-80-81]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {pr: 52}
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the pre-Brief-A fixture and its walkthrough rows are re-aimed to the now-ruled format-default contract; no product behaviour changes"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
+  - id: autonomy-work-system
+    title: "The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: in-progress
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {branch: "governance/autonomy"}
+    budget_minutes: 480
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "AUTONOMY.md is written and this file is its first seeded artifact; the queue, hook and site tooling remain to be built"
+    dates: {opened: 2026-09-13, done: null}
+
+  # ============================== BLOCKED ==============================
+
+  - id: briefa-p3-p6
+    title: "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: blocked
+    order: 5
+    depends_on: [briefa-p1-p2]
+    needs_human: {kind: ruling, minutes: 20}
+    gate: engine/ADMISSION-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 390
+    generation: 1
+    felt_verdict: true
+    entries: [83]
+    summary: "held for the human's ruling on the P3 digest (entry 83's question) before the session-identity tier starts"
+    dates: {opened: 2026-09-11, done: null}
+
+  - id: b1-engine-kernel-half
+    title: "Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: blocked
+    order: 2
+    depends_on: [briefa-p3-p6]
+    needs_human: {kind: ruling, minutes: 15}
+    gate: none
+    evidence: null
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "waits on ADR-023's Decision text being ruled; the drafted decision text is sent for the human's word"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: adr-029-operation-lifecycle
+    title: "ADR-029 + the operation lifecycle — decision draft filed for sight"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: blocked
+    order: 1
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: [92]
+    summary: "the architect consult and decision draft are filed; three routed questions on state shape, the wire literal and the liveness string wait on the human"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: entry-90-static-crt-v0-1-1
+    title: "Entry 90 — static CRT as the v0.1.1 build piece"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 6
+    depends_on: [static-crt-spike]
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: [90]
+    summary: "the spike passed; queued for v0.1.1 pending the human's word on the licence posture of a statically conveyed Microsoft runtime"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: entry-91-polish-held-halves
+    title: "Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 5
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 10}
+    gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: [91]
+    summary: "a third admission-work lease class (ADR-033), a labelled staleness state, and the refusal threshold's value each wait on the human before they merge"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: entry-86-known-limitations-rewrite
+    title: "Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands"
+    kind: task
+    lane: publish-viewer
+    phase: prototype
+    status: blocked
+    order: 3
+    depends_on: [viewer-86-zoom-anchor]
+    needs_human: {kind: sight, minutes: 3}
+    gate: none
+    evidence: null
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: true
+    entries: [86]
+    summary: "the retired KNOWN-LIMITATIONS line's replacement wording waits on the human's sight once the viewer fix piece lands"
+    dates: {opened: null, done: null}
+
+  - id: entry-77-code-signing
+    title: "Entry 77 — code signing for the Windows installer"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 7
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: [77]
+    summary: "the SignPath-first, Certum-second evaluation note is filed, read-only; nothing applied for pending the human's decision"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: entry-78-repo-description
+    title: "Entry 78 — repository description and topics"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: blocked
+    order: 2
+    depends_on: []
+    needs_human: {kind: click, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 10
+    generation: 1
+    felt_verdict: false
+    entries: [78]
+    summary: "the drafted description and topics are ready-to-run gh commands the human applies themselves"
+    dates: {opened: null, done: null}
+
+  - id: entry-69-runtime-dependency
+    title: "Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 5
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: [69]
+    summary: "v0.1.0 shipped the declared-dependency option; the remaining static-CRT or bundled-redistributable choice is folded into entry 90"
+    dates: {opened: 2026-09-09, done: null}
+
+  - id: entry-73-polygon-gate-scope
+    title: "Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: blocked
+    order: 6
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 15}
+    gate: engine/ADMISSION-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: [73]
+    summary: "widen the polygon-only reader gate, hold it and record most corpus files as refused-unchanged, or re-scope the corpus"
+    dates: {opened: 2026-09-10, done: null}
+
+  - id: entry-75-hover-repick-defaults
+    title: "Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 7
+    depends_on: [entry-47-hover-repick]
+    needs_human: {kind: ruling, minutes: 10}
+    gate: frontends/shell/HOVER-REPICK-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: [75]
+    summary: "pan-settle scope, the resize/DPR disarm behaviour, and whether an unconfirmed mid-gesture state opens all ship at their safe defaults pending the human's word"
+    dates: {opened: 2026-09-10, done: null}
+
+  - id: entry-79-b1-consult-items
+    title: "Entry 79 — three items routed for Brief B stage B1's close"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: blocked
+    order: 3
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 15}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: [79]
+    summary: "the named refusal-code surface, the hover readout's column bound, and the panel's client-side type filter wait on the human by B1's close, not before"
+    dates: {opened: null, done: null}
+
+  - id: m13-bracketed-values
+    title: "Part M row M13's two bracketed values"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 8
+    depends_on: []
+    needs_human: {kind: sight, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 5
+    generation: 1
+    felt_verdict: true
+    entries: []
+    summary: "the human's own exit-code and session-log values from the M13 deliberate-refusal row still need filling into the walkthrough log"
+    dates: {opened: 2026-09-13, done: null}
+
+  - id: sitting-4-rows
+    title: "Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 8
+    depends_on: []
+    needs_human: {kind: sitting, minutes: 45}
+    gate: none
+    evidence: null
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: true
+    entries: [66, 86]
+    summary: "several felt-verdict walkthrough rows queued per rule 11 are batched for one sitting rather than asked piecemeal"
+    dates: {opened: null, done: null}
+
+  - id: drill-clean-clone
+    title: "The drill — clean-directory clone, regenerated fixtures, full suite, release build"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: blocked
+    order: 3
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "needs disk the machine does not have today; waits on the human's word about reclaiming a build cache"
+    dates: {opened: null, done: null}
+
+  - id: evidence-archive-v0-1-0
+    title: "First application of the evidence archive — attach v0.1.0's evidence to its release"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 9
+    depends_on: [autonomy-work-system]
+    needs_human: {kind: click, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "attaching to an already-published release changes that release page, so the first application is the human's click"
+    dates: {opened: null, done: null}
+
+  - id: release-artifacts-from-ci
+    title: "Release artifacts built from the tagged commit's CI run, from v0.1.1"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 10
+    depends_on: [autonomy-work-system]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "waits on the autonomy tooling's release-artifact mechanics before it can be built"
+    dates: {opened: null, done: null}
+
+  # ============================== PROPOSED ==============================
+  # Appended by the custodian; unplaced. Only the human sets `order` on these.
+
+  - id: adr-031-lod-preregistration
+    title: "ADR-031 (LOD) preregistration, once the feasibility spike reports"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [lod-feasibility-spike]
+    needs_human: {kind: ruling, minutes: 20}
+    gate: none
+    evidence: null
+    budget_minutes: 180
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the revised brief's open questions (the overview x filter rule, P1 vs P2, the scale-class row's shape) need the human's word before a preregistration can be written"
+    dates: {opened: null, done: null}
+
+  - id: adr-032-decision
+    title: "ADR-032 — the GeoParquet non-x-first axis order decision"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 20}
+    gate: none
+    evidence: null
+    budget_minutes: 300
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the problem statement and candidates A/B/C are drafted for the human's sight; the admission decision is theirs"
+    dates: {opened: 2026-09-09, done: null}
+
+  - id: briefb-b2-save-reopen
+    title: "Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [b1-engine-kernel-half]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 300
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
+    dates: {opened: null, done: null}
+
+  - id: briefb-b3-publish-v2
+    title: "Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation"
+    kind: task
+    lane: cli
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [b1-engine-kernel-half]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 300
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the filtered-subset bundle format and the CLI's own exposure review, replaying through the shell's own publish code path"
+    dates: {opened: null, done: null}
+
+  - id: briefb-part-o-walkthrough
+    title: "Part O — the nine-step recipe walkthrough, after B3 only"
+    kind: milestone
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [b1-engine-kernel-half]
+    needs_human: {kind: sitting, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: true
+    entries: []
+    summary: "the recipe milestone may only be described as complete after this operator-verified walkthrough's log carries the human's verdict"
+    dates: {opened: null, done: null}
+
+  # ============================== UNSCHEDULED ==============================
+  # Future-phase ambition, visible, never queued.
+
+  - id: notebooks-record-replay
+    title: "Notebooks: record and replay (03)"
+    kind: milestone
+    lane: notebooks-ir
+    phase: alpha
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "session-to-notebook recording, named in docs/07's Alpha list"
+    dates: {opened: null, done: null}
+
+  - id: mcp-server-permission-model
+    title: "MCP server with the permission model (04)"
+    kind: milestone
+    lane: plugins-mcp
+    phase: alpha
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Alpha list, narrowed by ADR-009"
+    dates: {opened: null, done: null}
+
+  - id: first-external-plugin-skp-client
+    title: "First external plugin as an out-of-process SKP client (02)"
+    kind: milestone
+    lane: plugins-mcp
+    phase: alpha
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Alpha list"
+    dates: {opened: null, done: null}
+
+  - id: platform-hardware-validation
+    title: "macOS/WKWebView and Linux/WebKitGTK hardware validation"
+    kind: milestone
+    lane: platform
+    phase: prototype
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "the open Prototype-phase follow-up gate docs/07 names beside the concluded ADR-003 spike; every measured number there is Windows/WebView2 evidence only"
+    dates: {opened: null, done: null}
+
+  - id: data-doctor-legacy-imports
+    title: "Data doctor + legacy imports (05)"
+    kind: milestone
+    lane: engine
+    phase: alpha
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Alpha list"
+    dates: {opened: null, done: null}
+
+  - id: action-console-remainder
+    title: "Action console remainder — notebook recording and the AI flywheel (03)"
+    kind: milestone
+    lane: shell
+    phase: alpha
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "docs/07's Alpha item; the console's principle-4 visibility obligation was pulled into the Prototype phase already and ships separately"
+    dates: {opened: null, done: null}
+
+  - id: problems-panel-spatial-linting
+    title: "Problems panel / spatial linting (03)"
+    kind: milestone
+    lane: shell
+    phase: alpha
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Alpha list"
+    dates: {opened: null, done: null}
+
+  - id: lineage-time-travel
+    title: "Lineage time travel + scenario branches (02, 03)"
+    kind: milestone
+    lane: kernel-protocol
+    phase: beta
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Beta list"
+    dates: {opened: null, done: null}
+
+  - id: postgis-remotes
+    title: "PostGIS remotes (05)"
+    kind: milestone
+    lane: engine
+    phase: beta
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Beta list"
+    dates: {opened: null, done: null}
+
+  - id: style-dsl-editor
+    title: "Style DSL + editor (03, 06)"
+    kind: milestone
+    lane: renderer
+    phase: beta
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Beta list"
+    dates: {opened: null, done: null}
+
+  - id: publishing-bundles-hardened
+    title: "Publishing bundles hardened (managed sharing service stays out — ADR-008)"
+    kind: milestone
+    lane: publish-viewer
+    phase: beta
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's Beta list"
+    dates: {opened: null, done: null}
+
+  - id: skp-v1-protocol-freeze
+    title: "SKP v1 protocol freeze — the ecosystem commitment"
+    kind: milestone
+    lane: kernel-protocol
+    phase: v1
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's 1.0 list"
+    dates: {opened: null, done: null}
+
+  - id: plugin-ecosystem-seed
+    title: "Plugin ecosystem seed (docs, templates, example clients)"
+    kind: milestone
+    lane: plugins-mcp
+    phase: v1
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named in docs/07's 1.0 list"
+    dates: {opened: null, done: null}
+
+  - id: basic-editing-plugin
+    title: "Basic editing plugin (ADR-002 amended, ADR-007) — scheduled last in 1.0"
+    kind: milestone
+    lane: plugins-mcp
+    phase: v1
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "named last in docs/07's 1.0 list; never delays the analysis pillars"
+    dates: {opened: null, done: null}
+
+  # cli lane: no unscheduled node. docs/07 does not itself name a "CLI as a first-class SKP
+  # client" capability outside Brief B's own B3 stage (briefb-b3-publish-v2, above, proposed).
