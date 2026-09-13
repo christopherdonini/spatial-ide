@@ -301,6 +301,14 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
     discrepancy between two Microsoft pages on the organisation country list (one includes
     Switzerland, the other does not), unresolved from primary sources.]** Nothing applied; no Azure
     resource, no certificate, no `tauri.conf.json` change. Not a tag matter unless you rule it one.
+    **Post-tag note filed (2026-09-13, on your ruling "post-tag evaluate SignPath OSS first, Certum second"):**
+    `RELEASE-DRAFTS-0.1.0/decision-notes/signpath-evaluation.md` (92 lines; read-only, nothing applied for).
+    Its decisive lines, each from SignPath's own terms page or Certum's pages: SignPath Foundation is the
+    publisher named on the signature, not the project; the build must be "built from source code in a
+    verifiable way" (the locally built RC2 pattern would not qualify; a CI-built release would); a
+    "Code signing policy" disclosure section is required on the home and release pages; Certum's
+    open-source certificate is issued to an individual's legal name, on a physical card, "from €69.00".
+    Eleven questions for you are in its §5; still unverified items are marked in the note.
 
 76. **[Entry 66 (b) (the geometric protection piece, being built now on `cut/geometric-protection`;
     merge held until after the tag) — four items its preregistration leaves to you, for your answer
