@@ -5,7 +5,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const viewportQueryMock = vi.hoisted(() => vi.fn());
 const cancelMock = vi.hoisted(() => vi.fn());
-vi.mock("../skp/client", () => ({ viewportQuery: viewportQueryMock, cancel: cancelMock }));
+// Entry 87 §2.3(iii): `SkpCallError` must stay the REAL class (spread from `importOriginal`), not
+// dropped by this mock -- both this test file's own retryable-refusal fixtures AND the module
+// under test (`tileViewportStreamManager.ts`, which imports `SkpCallError` from this SAME mocked
+// path) construct/branch on it via `instanceof`; a mock factory that omitted it would make
+// `SkpCallError` `undefined` for both sides and every `instanceof` check throw.
+vi.mock("../skp/client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../skp/client")>();
+  return { ...actual, viewportQuery: viewportQueryMock, cancel: cancelMock };
+});
 
 const dataPlaneAttachMock = vi.hoisted(() => vi.fn());
 vi.mock("./dataPlaneClient", () => ({ dataPlaneAttach: dataPlaneAttachMock }));
@@ -22,6 +30,7 @@ vi.mock("../diagnostics/log", () => ({ logSessionEvent: logSessionEventMock }));
 
 import type { TileGridLevel } from "../canvas/tileGridConstants";
 import { MAX_COVERING_TILES, MAX_IN_FLIGHT_TILE_STREAMS, MAX_QUEUED_TILES } from "../canvas/tileGridConstants";
+import { SkpCallError } from "../skp/client";
 import type { StreamSink } from "./transport";
 import type { TileResidencyAccessor, TileViewportStreamManagerOptions } from "./tileViewportStreamManager";
 import { TileViewportStreamManager } from "./tileViewportStreamManager";
@@ -830,6 +839,169 @@ describe("TileViewportStreamManager", () => {
       expect(logSessionEventMock).toHaveBeenCalledWith(
         "tile-stream-cancel-rejected",
         expect.stringContaining("sh_1")
+      );
+    });
+  });
+
+  // DECISIONS-PENDING entry 87 §2.3/§2.4 (2): a refused ticket mint is always named
+  // (`logMintRefused`), and a DECLARED retryable set gets one bounded requeue rather than the old
+  // silent drop -- both the catch and the two epoch-abandon branches, unconditionally.
+  describe("entry 87: a refused/abandoned mint is named, and a bounded requeue for the declared retryable set", () => {
+    const RETRYABLE_ENGINE_ERR = new SkpCallError({
+      code: "engine.connections_exhausted",
+      message: "no admission lease was available",
+      fields: { class: "maintenance", capacity: "1" },
+    });
+
+    it("a retryable code (engine.connections_exhausted): one log line, the tile is back in the queue and issued by the next drain", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+
+      viewportQueryMock
+        .mockRejectedValueOnce(RETRYABLE_ENGINE_ERR)
+        .mockResolvedValueOnce({ stream: "sh_retry", expires_in_ms: 30_000 });
+
+      manager.onCameraChange(bbox);
+      await flushMicrotasks();
+
+      expect(logSessionEventMock).toHaveBeenCalledTimes(1);
+      expect(logSessionEventMock).toHaveBeenCalledWith(
+        "tile-stream-mint-refused",
+        expect.stringContaining("engine.connections_exhausted")
+      );
+      expect(viewportQueryMock).toHaveBeenCalledTimes(2); // the original attempt, then the bounded retry
+      expect(manager.inFlightCount).toBe(1); // the retry's own ticket minted a real stream
+      expect(startStreamMock).toHaveBeenCalledWith(expect.objectContaining({ ticketHandle: "sh_retry" }));
+    });
+
+    it("the same tile refused twice: no more than one requeue per drain, and no spin", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+
+      viewportQueryMock.mockRejectedValueOnce(RETRYABLE_ENGINE_ERR).mockRejectedValueOnce(RETRYABLE_ENGINE_ERR);
+
+      manager.onCameraChange(bbox);
+      await flushMicrotasks();
+      await flushMicrotasks(); // a second flush finds nothing further -- the bound held, no spin
+
+      expect(viewportQueryMock).toHaveBeenCalledTimes(2); // one original attempt, one bounded retry -- never a third
+      const refusalCalls = logSessionEventMock.mock.calls.filter((c) => c[0] === "tile-stream-mint-refused");
+      expect(refusalCalls).toHaveLength(2); // both refusals are named -- (i) is unconditional
+      expect(manager.inFlightCount).toBe(0);
+      expect(manager.queuedCount).toBe(0);
+      expect(manager.trackedTileCount).toBe(0); // dropped, not stuck
+    });
+
+    it("any other code (e.g. skp.filter_too_long): dropped with one log line, never retried", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+
+      viewportQueryMock.mockRejectedValueOnce(
+        new SkpCallError({ code: "skp.filter_too_long", message: "predicate too long", fields: { limit: "1024", saw: "2048" } })
+      );
+
+      manager.onCameraChange(bbox);
+      await flushMicrotasks();
+
+      expect(viewportQueryMock).toHaveBeenCalledTimes(1); // no retry
+      expect(logSessionEventMock).toHaveBeenCalledTimes(1);
+      expect(logSessionEventMock).toHaveBeenCalledWith(
+        "tile-stream-mint-refused",
+        expect.stringContaining("skp.filter_too_long")
+      );
+      expect(manager.trackedTileCount).toBe(0);
+    });
+
+    // §2.3(iii): `skp.filter_rejected_by_binder` retries ONLY when its `detail` names the
+    // connection lease (the substring `predicate.rs:120` actually mints) -- a genuine DuckDB
+    // binder refusal, same code, different `detail`, keeps today's drop.
+    it("skp.filter_rejected_by_binder retries when its detail names the lease, not when it names a real binder refusal", async () => {
+      const { manager: leaseManager } = makeManager();
+      leaseManager.establishGridFrame(ANCHOR);
+      const frame1 = leaseManager.gridFrame!;
+      const cellSize1 = frame1.baseSpan / 16;
+      const leaseBbox = { xmin: frame1.originX, ymin: frame1.originY, xmax: frame1.originX + cellSize1, ymax: frame1.originY + cellSize1 };
+      viewportQueryMock
+        .mockRejectedValueOnce(
+          new SkpCallError({
+            code: "skp.filter_rejected_by_binder",
+            message: "the predicate was rejected",
+            fields: { detail: "no connection was available to validate this predicate: pool exhausted" },
+          })
+        )
+        .mockResolvedValueOnce({ stream: "sh_lease_retry", expires_in_ms: 30_000 });
+      leaseManager.onCameraChange(leaseBbox);
+      await flushMicrotasks();
+      expect(viewportQueryMock).toHaveBeenCalledTimes(2); // retried
+      expect(leaseManager.inFlightCount).toBe(1);
+
+      const { manager: binderManager } = makeManager();
+      binderManager.establishGridFrame(ANCHOR);
+      const frame2 = binderManager.gridFrame!;
+      const cellSize2 = frame2.baseSpan / 16;
+      const binderBbox = { xmin: frame2.originX, ymin: frame2.originY, xmax: frame2.originX + cellSize2, ymax: frame2.originY + cellSize2 };
+      viewportQueryMock.mockRejectedValueOnce(
+        new SkpCallError({
+          code: "skp.filter_rejected_by_binder",
+          message: "the predicate was rejected",
+          fields: { detail: 'Binder Error: column "nope" does not exist' },
+        })
+      );
+      binderManager.onCameraChange(binderBbox);
+      await flushMicrotasks();
+      expect(viewportQueryMock).toHaveBeenCalledTimes(3); // NOT retried -- one more attempt, no more
+      expect(binderManager.trackedTileCount).toBe(0);
+    });
+
+    it("both epoch-abandon branches log the abandonment", async () => {
+      const { manager } = makeManager();
+      manager.establishGridFrame(ANCHOR);
+      const frame = manager.gridFrame!;
+      const cellSize = frame.baseSpan / 16;
+      const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      const farBbox = { xmin: 10_000, ymin: 10_000, xmax: 10_000 + cellSize, ymax: 10_000 + cellSize };
+
+      // Pre-attach: the ticket resolves AFTER "0:0" has already been superseded (its own epoch
+      // bumped by the cover-drop loop's "issuing" branch) -- `mintAndStart` resumes past its own
+      // `try` with a real ticket nobody wants any more.
+      let resolveTicket: ((v: { stream: string; expires_in_ms: number }) => void) | null = null;
+      viewportQueryMock.mockImplementationOnce(() => new Promise((resolve) => { resolveTicket = resolve; }));
+      manager.onCameraChange(bbox);
+      manager.onCameraChange(farBbox); // supersedes "0:0" while its ticket is still minting
+      resolveTicket!({ stream: "sh_pre", expires_in_ms: 30_000 });
+      await flushMicrotasks();
+
+      expect(logSessionEventMock).toHaveBeenCalledWith(
+        "tile-stream-mint-abandoned",
+        expect.stringContaining("mintAndStart(abandoned-pre-attach) 0:0 sh_pre")
+      );
+
+      // Post-attach: a FRESH manager -- the ticket resolves in time, but `dataPlaneAttach` resolves
+      // only AFTER "0:0" is superseded again.
+      logSessionEventMock.mockClear();
+      const { manager: manager2 } = makeManager();
+      manager2.establishGridFrame(ANCHOR);
+      viewportQueryMock.mockResolvedValueOnce({ stream: "sh_post", expires_in_ms: 30_000 });
+      let resolveAttach: ((v: { url: string; subprotocols: [string, string] }) => void) | null = null;
+      dataPlaneAttachMock.mockImplementationOnce(() => new Promise((resolve) => { resolveAttach = resolve; }));
+      manager2.onCameraChange(bbox);
+      await flushMicrotasks(); // ticket resolves, epoch still current, dataPlaneAttach now pending
+      manager2.onCameraChange(farBbox); // supersedes "0:0" again while dataPlaneAttach is still pending
+      resolveAttach!({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+      await flushMicrotasks();
+
+      expect(logSessionEventMock).toHaveBeenCalledWith(
+        "tile-stream-mint-abandoned",
+        expect.stringContaining("mintAndStart(abandoned-post-attach) 0:0 sh_post")
       );
     });
   });

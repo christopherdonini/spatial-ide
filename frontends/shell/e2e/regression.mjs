@@ -1655,6 +1655,40 @@ async function stepK7(page, consoleHandle) {
 }
 
 // ---------------------------------------------------------------------------------------
+// CURSOR' (DECISIONS-PENDING entry 89 §4.3/§4.4 (3), `frontends/shell/POLISH-87-88-89-
+// PREREGISTRATION.md`): the canvas element's own CSS cursor, wired through `Deck`'s `getCursor`
+// prop (`WorkingCanvas.tsx`'s Deck construction) to `cursorForPointerState` (`pickResolution.ts`,
+// unit-tested there). Not reachable from `WorkingCanvas.test.ts`: that file never constructs a
+// real `Deck` (no WebGL in jsdom, its own established "two seams" note), so the live canvas
+// element's `style.cursor` -- which deck.gl itself writes (`@deck.gl/core`'s `Deck._updateCursor`:
+// `container.style.cursor = this.props.getCursor(this.cursorState)`, `container` resolving to the
+// canvas element itself since no `parent` prop is passed here) -- is only observable against the
+// real running app. Placed after K7 (a hover-adjacent step, so the drag pan below disturbs no
+// filter/residency state K7 depends on) and before FIND' (which re-anchors the camera with its own
+// "Zoom to layer" click regardless of where this step's drag leaves it).
+async function stepCursor(page) {
+  const rect = await canvasRect(page);
+  if (!rect) throw new Error("CURSOR': .working-canvas not found");
+  const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+  await page.mouse.move(center.x, center.y);
+  const beforeDrag = await page.evaluate(() => document.querySelector(".working-canvas")?.style.cursor ?? null);
+  if (beforeDrag !== "crosshair") {
+    throw new Error(`CURSOR': hovering with no pointer button down, canvas cursor was ${JSON.stringify(beforeDrag)}, not "crosshair"`);
+  }
+
+  await page.mouse.down();
+  await page.mouse.move(center.x + 40, center.y + 20, { steps: 4 });
+  const duringDrag = await page.evaluate(() => document.querySelector(".working-canvas")?.style.cursor ?? null);
+  await page.mouse.up();
+  if (duringDrag !== "grabbing") {
+    throw new Error(`CURSOR': mid-drag, canvas cursor was ${JSON.stringify(duringDrag)}, not "grabbing"`);
+  }
+
+  return `hover cursor ${JSON.stringify(beforeDrag)}, mid-drag cursor ${JSON.stringify(duringDrag)}`;
+}
+
+// ---------------------------------------------------------------------------------------
 // FIND' (entries 84 and 85, `frontends/shell/FILTER-84-85-PREREGISTRATION.md` §2.4 item 3 and §3.4
 // item 4; the human's ruling of 2026-09-13: "Both through preregistration and gates with the
 // regression step that would have caught them -- 85 extends FIND' to zoom-to-layer-after-filter on
@@ -1945,23 +1979,18 @@ async function stepFind(page, consoleHandle) {
   const statusAfterZoomOut = await settledResidencyStatus(page);
   const truncated = coveringTruncatedSince(consoleHandle, beforeZoomOut);
   const unminted = await settledUnmintedTileQueriesSince(consoleHandle, beforeZoomOut);
+  // DECISIONS-PENDING entry 87 (POLISH-87-88-89-PREREGISTRATION.md §2.4 test (4)): the suspension
+  // FILTER-84-85-PREREGISTRATION.md §6 Amendment 1 (b) recorded here is REINSTATED, unchanged --
+  // the `unminted.unminted > 0` branch that recorded "PREMISE BROKEN" instead of failing is
+  // removed, so this step falls straight through to the same hard assertions it made before the
+  // amendment. `unminted` itself is still read below (the `observed` summary line), only the
+  // special-case carve-out around it is gone.
   if (truncated.length > 0) {
     failures.push(
       `FIND'/settled-partial-under-filter: PREMISE BROKEN -- the covering set was TRUNCATED during the zoom-out ` +
         `(${truncated.length} covering-truncated line(s), first: ${JSON.stringify(truncated[0])}), so the settled ` +
         `status ${JSON.stringify(statusAfterZoomOut)} says nothing about the empty covering tiles this assertion is ` +
         `about. This step's own ${FIND_ZOOM_OUT_NOTCHES}-notch gesture must stay inside the declared covering ceiling.`
-    );
-  } else if (unminted.unminted > 0) {
-    // Preregistration §6 Amendment 1 (b), 2026-09-13: this state is RECORDED BY NAME and does not
-    // fail the suite -- entry 84's status assertion is suspended while DECISIONS-PENDING entry 87
-    // (filtered per-tile queries dropped silently before any stream is issued) holds its premise
-    // broken, and is reinstated unchanged, right below, the moment no such tile exists. Entry 85's
-    // half of this step is untouched by the suspension and stays a hard assertion.
-    records.push(
-      `FIND'/settled-partial-under-filter: PREMISE BROKEN -- ${unminted.unminted} of ${unminted.queries} covering ` +
-        `tiles reached no terminal (${unminted.queries} queries, ${unminted.streams} streams); the status assertion ` +
-        `is suspended pending DECISIONS-PENDING entry 87 (preregistration §6 Amendment 1 (b))`
     );
   } else if (statusAfterZoomOut === K7_SETTLED_PARTIAL_TEXT) {
     failures.push(
@@ -2245,6 +2274,10 @@ async function main() {
     // reports. 240s is the outer backstop for a wedged page, not the sum of the inner bounds (whose
     // worst case would exceed it; the step fails loudly on whichever bound it reaches first).
     await runStep("K7", 240_000, () => stepK7(page, consoleHandle));
+    // CURSOR' (entry 89 §4.3): a hover (no button) and a short drag, each read against the live
+    // canvas element's own `style.cursor` -- two pointer moves, one down/up, both well inside a
+    // generous outer bound.
+    await runStep("CURSOR'", 20_000, () => stepCursor(page));
     // FIND' (entries 84 and 85, 2026-09-13): see `stepFind`'s own top comment for the full account of
     // both findings and why this step runs after K7. Its composition: one filtered scan of the fixture
     // this run already has open, two "Zoom to layer" clicks (each settling under `clickZoomToLayer`'s

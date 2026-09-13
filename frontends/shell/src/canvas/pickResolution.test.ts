@@ -51,19 +51,31 @@ describe("averageFeatureExtent", () => {
   });
 });
 
+// DECISIONS-PENDING entry 89 §4.4 (1), second clause: every case below is re-derived from
+// `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` itself, never from the literal `2` -- the constant's
+// declared value stays `2` on this branch (entry 91 (c) is the human's to rule on), but these
+// cases hold unchanged the moment it is re-sighted to a new value, with no test edit owed.
 describe("isBelowPickResolution", () => {
   it("above the declared threshold: not below -- an ordinary pick behaves as today", () => {
-    // 5 world units * 1 px/unit = 5px, above the 2px threshold.
-    expect(isBelowPickResolution(5, 1)).toBe(false);
+    // worldUnits * 1 px/unit clearly above the threshold, whatever its declared value is.
+    expect(isBelowPickResolution(SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX + 3, 1)).toBe(false);
   });
 
   it("below the declared threshold: refused", () => {
-    // 1 world unit * 1 px/unit = 1px, below the 2px threshold.
-    expect(isBelowPickResolution(1, 1)).toBe(true);
+    // worldUnits * 1 px/unit clearly below the threshold, whatever its declared value is.
+    expect(isBelowPickResolution(SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX - 1, 1)).toBe(true);
   });
 
   it("exactly at the threshold is NOT below it -- a strict less-than comparison", () => {
     expect(isBelowPickResolution(SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX, 1)).toBe(false);
+  });
+
+  it("just above the threshold: not below", () => {
+    expect(isBelowPickResolution(SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX + 0.01, 1)).toBe(false);
+  });
+
+  it("just below the threshold: refused", () => {
+    expect(isBelowPickResolution(SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX - 0.01, 1)).toBe(true);
   });
 
   it("zero average extent (nothing real resident yet) computes as below resolution -- the pure comparison alone, never reached in practice without a real pick first (WorkingCanvas.tsx's own onHover gates on a valid GPU pick index before ever calling this)", () => {
