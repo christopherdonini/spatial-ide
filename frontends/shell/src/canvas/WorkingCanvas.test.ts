@@ -8,12 +8,14 @@ import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import type { ResidentBatch } from "./decodeBatch";
+import { fitViewStateForBbox } from "./extent";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import type { HoverReadout } from "./pick";
 import { hoverRepickActionForCameraChange } from "./pickResolution";
 import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
 import {
   applyStyleChange,
+  createFitCameraWriteSequence,
   createHoverRepickScheduler,
   protectionSetFor,
   shouldScheduleTileRender,
@@ -579,5 +581,94 @@ describe("the button-down guard and the release edge (entry 47, D11 as extended)
     vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
     expect(h.pickCandidateAt).not.toHaveBeenCalled();
     expect(h.emit).not.toHaveBeenCalled();
+  });
+});
+
+// Entry 85 (`FILTER-84-85-PREREGISTRATION.md` §2.4 item 2): the fit's own camera write, at the seam.
+// A real `Deck` needs a WebGL context this suite cannot produce (this file's own S6 comment), so the
+// subject here is `createFitCameraWriteSequence` -- the exact value `fitToExtent` hands
+// `setProps({initialViewState})` -- driven against a fake that applies deck.gl's OWN acceptance rule.
+//
+// **The rule, restated here because the fake has to apply it** (`@deck.gl/core@9.3.9`'s
+// `lib/deck.js`, `setProps`: `if (props.initialViewState && !deepEqual(this.props.initialViewState,
+// props.initialViewState, 3)) { this.viewState = props.initialViewState; }`): the new value is
+// compared against the value the PROPS already hold -- not against whatever gestures have since
+// moved the live camera to -- and the camera is re-synced only when the two differ. `deepEqual` at
+// depth 3 over these flat `{target: [x, y, z], zoom, ...}` objects is structural equality of every
+// key and every array element, which is what `JSON.stringify` equality means for them too; the fake
+// uses that rather than reaching into deck.gl's own `dist/utils/deep-equal.js`, which the package's
+// `exports` map does not expose (a deep import would resolve today and break on any repackaging).
+describe("createFitCameraWriteSequence (entry 85: the fit's own camera write)", () => {
+  /** deck.gl's uncontrolled camera, reduced to the one behaviour under test: it accepts a new
+   * `initialViewState` only when that value is not deep-equal to the one the props already hold, and
+   * it records every acceptance. `cameraWrites` is therefore "how many times the camera was actually
+   * re-synced", which is the fact entry 85 is about -- not "how many times setProps was called". */
+  function fakeDeck() {
+    let propsViewState: unknown = null;
+    const cameraWrites: Array<{ target: [number, number, number]; zoom: number }> = [];
+    return {
+      cameraWrites,
+      setProps(props: { initialViewState: { target: [number, number, number]; zoom: number } }) {
+        const next = props.initialViewState;
+        if (JSON.stringify(next) !== JSON.stringify(propsViewState)) {
+          cameraWrites.push({ target: next.target, zoom: next.zoom });
+        }
+        propsViewState = next;
+      },
+    };
+  }
+
+  /** The same bbox fitted twice, through the real fit arithmetic -- exactly what two "Zoom to layer"
+   * clicks compute for one filter generation, whose anchor stops growing after the filtered first
+   * look (`WorkingCanvas.tsx`'s `fitAnchorRef` / `resetFitForNewGeneration`). */
+  const BBOX = { xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_400, ymax: 1_200_300 };
+
+  it("two consecutive fits to the same extent each write the camera -- the write is observed twice, not once", () => {
+    const nextFitCameraViewState = createFitCameraWriteSequence();
+    const deck = fakeDeck();
+
+    const first = fitViewStateForBbox(BBOX, 800, 600);
+    const second = fitViewStateForBbox(BBOX, 800, 600);
+    // The premise, asserted rather than assumed: the two fits ARE identical -- this piece changes
+    // neither the fit target nor the zoom arithmetic (§2.2), so the second click really does compute
+    // the same camera the first one did, and a deep-equal-gated write really would be dropped.
+    expect(second).toEqual(first);
+
+    deck.setProps({ initialViewState: nextFitCameraViewState(first) });
+    deck.setProps({ initialViewState: nextFitCameraViewState(second) });
+
+    expect(deck.cameraWrites).toHaveLength(2);
+    // Both writes are the SAME camera: the identity field is what deck.gl's deep-equal sees, and it
+    // is never a camera value (`FitCameraViewState.fitCameraWriteId`).
+    expect(deck.cameraWrites[1]).toEqual(deck.cameraWrites[0]);
+    expect(deck.cameraWrites[0]).toEqual({ target: [first.target[0], first.target[1], 0], zoom: first.zoom });
+  });
+
+  it("the fit's camera fields are exactly the fit's, and the write id is the only thing that moves", () => {
+    const nextFitCameraViewState = createFitCameraWriteSequence();
+    const fit = fitViewStateForBbox(BBOX, 800, 600);
+
+    const a = nextFitCameraViewState(fit);
+    const b = nextFitCameraViewState(fit);
+
+    expect(a.target).toEqual([fit.target[0], fit.target[1], 0]);
+    expect(a.zoom).toBe(fit.zoom);
+    expect(b.target).toEqual(a.target);
+    expect(b.zoom).toBe(a.zoom);
+    expect(b.fitCameraWriteId).not.toBe(a.fitCameraWriteId);
+  });
+
+  it("each canvas instance has its own sequence -- a second canvas never continues the first one's", () => {
+    // Why a factory rather than a module-level counter: two mounted canvases must not share one
+    // sequence (`createFitCameraWriteSequence`'s own doc comment). Both sequences still satisfy the
+    // only property that matters -- consecutive values from the SAME sequence differ.
+    const first = createFitCameraWriteSequence();
+    const second = createFitCameraWriteSequence();
+    const fit = fitViewStateForBbox(BBOX, 800, 600);
+
+    const firstWrite = first(fit);
+    const secondCanvasFirstWrite = second(fit);
+    expect(secondCanvasFirstWrite.fitCameraWriteId).toBe(firstWrite.fitCameraWriteId); // each begins at its own beginning
+    expect(first(fit).fitCameraWriteId).not.toBe(firstWrite.fitCameraWriteId); // and each advances on its own
   });
 });

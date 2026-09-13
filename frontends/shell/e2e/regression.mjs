@@ -1654,6 +1654,375 @@ async function stepK7(page, consoleHandle) {
   );
 }
 
+// ---------------------------------------------------------------------------------------
+// FIND' (entries 84 and 85, `frontends/shell/FILTER-84-85-PREREGISTRATION.md` §2.4 item 3 and §3.4
+// item 4; the human's ruling of 2026-09-13: "Both through preregistration and gates with the
+// regression step that would have caught them -- 85 extends FIND' to zoom-to-layer-after-filter on
+// the candidate arm; 84 asserts the zero-row terminal marks the tile resident").
+//
+// The operator's own scenario, on the SHIPPED DEFAULT arm (candidate, this file's own unpinned
+// readback above), over the dataset A1'-K7 already have open: apply a filter that admits a small
+// subset, "Zoom to layer", wheel out, "Zoom to layer" again. Two independent findings live in that
+// one gesture sequence, and this step names each of them in its own failure:
+//
+//   FIND'/settled-partial-under-filter (entry 84) -- after the filtered fit and the zoom-out, the
+//     view is settled and everything matching the filter is drawn, so `.residency-status` must read
+//     the within-budget sentence, NOT the settled-partial one. Under a filter most covering tiles
+//     hold no matching row at all; before the fix their streams reached a clean `Completed`
+//     terminal having delivered no batch and were therefore never marked resident, so
+//     `isFillComplete()` read `false` forever and the operator was told areas had not loaded when
+//     nothing was missing. **SUSPENDED, and recorded by name rather than failed** (preregistration
+//     §6 Amendment 1 (b), 2026-09-13): a second cause -- filtered per-tile queries dropped silently
+//     before any stream is issued, DECISIONS-PENDING entry 87 -- leaves covering tiles that reach no
+//     terminal at all, and while any exist this assertion cannot discriminate entry 84's fix. It
+//     reinstates itself, unchanged, on the first run where none exist.
+//
+//   FIND'/zoom-to-layer-after-filter (entry 85) -- the second "Zoom to layer" click must put the
+//     camera back on the fit. Under a filter the fit anchor stops growing after the filtered first
+//     look, so the second click computes the IDENTICAL camera value as the first; before the fix
+//     that value was deep-equal to the one deck.gl already held and the re-sync was skipped, so the
+//     click logged its `view-state` line and moved nothing. The pixels are what distinguishes the
+//     two readings -- the trace line is emitted either way (`fitToExtent` logs before it writes).
+//
+// Placed AFTER K7 deliberately: K6 and K7 both need the whole, unfiltered dataset (K7 asserts the
+// settled-partial sentence where the fill really IS partial), and this step is the first thing in
+// the run that changes the filter generation.
+
+/** The 100k fixture's own declared row count (`kernel/tests/manual_walkthrough_fixtures.rs`'s
+ * `generate_the_100k_happy_path_fixture`: `features: 100_000`, with a unique native `id` column)
+ * and the tail of it this step's predicate admits -- the same `id > <features - tail>` shape
+ * `filter-panel.mjs`'s own FIND' uses against the slow fixture, over the fixture this run already
+ * has open. A small subset, spatially clustered, is what makes most covering tiles empty under the
+ * filter (entry 84) and what freezes the fit anchor after one look (entry 85). */
+const FIND_FIXTURE_FEATURES = 100_000;
+const FIND_FILTER_TAIL = 100;
+const FIND_PREDICATE = `id > ${FIND_FIXTURE_FEATURES - FIND_FILTER_TAIL}`;
+
+/** "Wheel out several notches" (§2.4 item 3), realised as the same discrete notch K6/K7 already
+ * drive. Deliberately MODEST, and that is load-bearing twice over: the camera has to leave the fit
+ * far enough that returning to it is visible in the pixels, while the view must stay well inside
+ * the declared covering ceiling (`tileGridConstants.ts`'s `MAX_COVERING_TILES`) -- a truncated
+ * covering set is its own, different reason for an incomplete fill (`isFillComplete`'s own
+ * `lastCoveringTruncated` check), and this step asserts loudly that it did not happen rather than
+ * letting it masquerade as entry 84. */
+const FIND_ZOOM_OUT_NOTCHES = 3;
+
+/** How much of the fit's own non-background fraction the camera must show to count as "back at the
+ * fit", and -- the same figure, used as its own control -- how far below it the zoomed-out view
+ * must fall for the return to mean anything at all. Half is a wide margin either way: the two fits
+ * are the same fit (identical target and zoom by construction), so the returned pixels should be
+ * near-identical, and a view zoomed out by the notches above shows the same features many times
+ * smaller. */
+const FIND_FIT_FRACTION_FLOOR = 0.5;
+
+/** The within-budget sentence, matched against `residencyStatus.ts`'s own
+ * `residencyStatusText` ("candidate-within-budget", `settled: "complete"`): `Showing all ${count}
+ * features in view`. The count is whatever the filter admitted and is not asserted here -- the
+ * claim under test is WHICH sentence the view settles to, not the number it carries.
+ * `K7_SETTLED_PARTIAL_TEXT` above is the other one, already carried verbatim in this file. */
+const FIND_WITHIN_BUDGET_PATTERN = /^Showing all \d+ features in view$/;
+
+/** The `view-state` render-trace line's own fields (`renderTrace.ts`'s `traceViewState`), parsed
+ * back out of the console text CDP delivers (`{targetX: 0, targetY: 0, zoom: -2.75, originX: ...,
+ * originY: ...}`). `null` for any other line. */
+function parseViewStateLine(text) {
+  const m = /view-state \{targetX: (\S+), targetY: (\S+), zoom: (\S+), originX: (\S+), originY: (\S+)\}/.exec(text);
+  if (!m) return null;
+  return { targetX: Number(m[1]), targetY: Number(m[2]), zoom: Number(m[3]), originX: Number(m[4]), originY: Number(m[5]) };
+}
+
+/** Every `view-state` line that arrived since `sinceIndex` -- the caller's own mark, taken
+ * immediately before the camera change it is about to assert on (the same "since the mark, never a
+ * camera identity" scope `hasConfirmingRepickTrace` above states for itself). */
+function viewStateLinesSince(consoleHandle, sinceIndex) {
+  return consoleHandle
+    .renderTrace()
+    .slice(sinceIndex)
+    .map((e) => parseViewStateLine(e.text))
+    .filter((v) => v !== null);
+}
+
+/** How many per-tile `viewport_query` attempts since `sinceIndex` never became a stream --
+ * `renderTrace.ts` emits `viewport_query` for every attempt (`TileViewportStreamManager.mintAndStart`,
+ * before the await) and `stream-issued` only once a ticket has actually been minted and attached, so
+ * the difference counts tiles the manager asked for and then dropped without any terminal at all
+ * (`mintAndStart`'s own ticket-refused and epoch-abandoned paths, both silent -- no trace, no session
+ * log, no status). Those tiles are covered and never resident, which holds `isFillComplete()` false
+ * for a reason that has nothing to do with an empty tile's terminal -- so the settled-partial
+ * assertion below must not be read as evidence about entry 84 while any exist. The unrestricted
+ * (`bbox: null`) first look is excluded: it is not a tile query and mints through another path.
+ *
+ * Returns all three counts, because the record line below carries all three. `queries` is the number
+ * of covering tiles the manager actually ASKED for since the mark -- not the size of the covering set
+ * itself, which this harness cannot see (a tile already resident from an earlier plan is never
+ * re-requested); `unminted` of those got no stream and therefore no terminal at all.
+ *
+ * **Counts, not a per-tile-key match, and that is a property of the lines available -- not a choice
+ * made here.** Matching each query to its own tile key would be the stronger statement, but NEITHER
+ * line carries one: `traceViewportQuery` logs `{dataset, bbox, bboxCrs}` (and CDP renders the bbox as
+ * `Object`, so even the geometry is unreadable from the console text) and `traceStreamIssued` logs
+ * `{dataset, streamHandle}`. Nothing joins a handle back to a tile key on this side -- only
+ * `candidate-tile-terminal`, a session-log line this suite does not read, and only for streams that
+ * DID mint. Carrying the tile key on those two trace lines is a product change to
+ * `diagnostics/renderTrace.ts` and `TileViewportStreamManager`, outside this piece. What the
+ * difference CAN be made honest about is timing, and `settledUnmintedTileQueriesSince` below does
+ * that: a query whose stream is merely still in flight must never read as one that never minted. */
+function unmintedTileQueriesSince(consoleHandle, sinceIndex) {
+  const lines = consoleHandle.renderTrace().slice(sinceIndex);
+  const queries = lines.filter((e) => e.text.includes("viewport_query") && !e.text.includes("bbox: null")).length;
+  const streams = lines.filter((e) => e.text.includes("stream-issued")).length;
+  return { queries, streams, unminted: queries - streams };
+}
+
+/** The counts above, read only once they have stopped moving toward each other: polls until every
+ * query since the mark has its `stream-issued` line, and otherwise returns the LAST reading once the
+ * bound elapses. Called AFTER the render trace has gone quiet and after `.residency-status` has
+ * settled, so a difference surviving all of that is a query that never minted, never one still in
+ * flight -- the false-PREMISE-BROKEN reading an eager count difference could produce would silently
+ * skip the pre-committed assertion, which is the one outcome this step must not allow.
+ * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound K7's own status re-read uses; a bound, not a timing
+ * claim (ADR-018). */
+async function settledUnmintedTileQueriesSince(consoleHandle, sinceIndex) {
+  const settled = await waitForCondition(
+    async () => unmintedTileQueriesSince(consoleHandle, sinceIndex),
+    (counts) => counts.unminted <= 0,
+    K7_STATUS_SETTLE_TIMEOUT_MS
+  );
+  return settled.last;
+}
+
+/** Whether the covering set was truncated at any point since `sinceIndex` (`renderTrace.ts`'s
+ * `traceCoveringTruncated`, emitted beside `candidateArmSession.ts`'s own
+ * `candidate-covering-truncated` session-log line). Truncation is a DIFFERENT cause of an
+ * incomplete fill than entry 84's, and this step refuses to attribute one to the other. */
+function coveringTruncatedSince(consoleHandle, sinceIndex) {
+  return consoleHandle
+    .renderTrace()
+    .slice(sinceIndex)
+    .filter((e) => e.text.includes("covering-truncated"))
+    .map((e) => e.text);
+}
+
+/** Reads `.residency-status` until it settles on one of the two sentences this step distinguishes
+ * (the within-budget one or the settled-partial one), so a transient reading on the way there can
+ * never decide the assertion. Returns whatever the last reading was if neither ever appears --
+ * the caller reports that as the failure it is. `K7_STATUS_SETTLE_TIMEOUT_MS` is the SAME bound
+ * K7's own status re-read already uses; a bound, not a timing claim (ADR-018). */
+async function settledResidencyStatus(page) {
+  const settled = await waitForCondition(
+    () => page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null),
+    (text) => text !== null && (FIND_WITHIN_BUDGET_PATTERN.test(text) || text === K7_SETTLED_PARTIAL_TEXT),
+    K7_STATUS_SETTLE_TIMEOUT_MS
+  );
+  return settled.last;
+}
+
+async function stepFind(page, consoleHandle) {
+  const rect = await canvasRect(page);
+  if (!rect) throw new Error("FIND': .working-canvas not found");
+  const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+  // The two NAMED assertions are collected rather than thrown at first sight, and raised together at
+  // the end: they are two independent findings observed in ONE gesture sequence, and a run in which
+  // the first of them fails must still report what the second one saw (a mutation run reverting one
+  // fix is exactly that run). Everything that invalidates the SCENARIO -- the filter never applying,
+  // the camera never leaving the fit, no fit at all -- still throws where it is found: there is
+  // nothing left to observe past it.
+  const failures = [];
+  // Preregistration §6 Amendment 1 (b): what this step OBSERVES and reports by name without failing
+  // on it -- today, exactly one thing, entry 84's suspended status assertion (see its own branch
+  // below). Records are printed with the step's own PASS note, never swallowed.
+  const records = [];
+
+  // 1) The filter, through the real panel DOM -- the same input + Apply click `filter-panel.mjs`'s
+  // own FIND' drives. Apply issues an unrestricted `bbox: null` look and calls
+  // `resetFitForNewGeneration`, so the camera lands on the matches by itself; that one-shot auto-fit
+  // is the 2026-08-15 Part E E5 behaviour, not this step's subject.
+  //
+  // The wait is deliberately NOT `filter-panel.mjs`'s own two-phase one (observe `button.filter-cancel`
+  // appear, then disappear). That phase-1 signal is only observable while the scan is still running,
+  // and over this fixture the filtered scan can be done before the first poll -- the first run of
+  // this step timed out for exactly that reason while the console trace showed the filtered look had
+  // issued and delivered its rows. What this waits on instead are two facts that SURVIVE a fast
+  // scan: the panel says the filter is applied (`.filter-active`, the operator's own confirmation),
+  // and the new generation's own unrestricted look was issued (a `viewport_query` line carrying
+  // `bbox: null` since this click's mark -- `applyFilter`'s own Apply-as-first-look, which nothing
+  // else in this run issues). Only then does it wait for the scan to have left the in-flight family.
+  const beforeApply = consoleHandle.renderTrace().length;
+  await page.fill("input.filter-predicate", FIND_PREDICATE);
+  await page.click("button.filter-apply");
+  const applied = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        active: document.querySelector(".filter-active")?.textContent ?? null,
+        refusal: document.querySelector(".filter-refusal")?.textContent ?? null,
+      })),
+    (state) => state.active !== null,
+    30_000
+  );
+  if (!applied.ok) {
+    throw new Error(
+      `FIND': .filter-active never appeared after Apply ("${FIND_PREDICATE}") -- the filter was never applied ` +
+        `(last read: ${JSON.stringify(applied.last)})`
+    );
+  }
+  if (!applied.last.active.includes(FIND_PREDICATE)) {
+    throw new Error(`FIND': .filter-active names a different predicate than the one applied: ${JSON.stringify(applied.last.active)}`);
+  }
+  const unrestrictedIssued = await waitForCondition(
+    async () => consoleHandle.renderTrace().slice(beforeApply).some((e) => /viewport_query \{[^}]*bbox: null/.test(e.text)),
+    (seen) => seen === true,
+    30_000
+  );
+  if (!unrestrictedIssued.ok) {
+    throw new Error(
+      `FIND': no unrestricted (bbox: null) viewport_query was issued after Apply ("${FIND_PREDICATE}") -- the new ` +
+        `filter generation's own first look never went out, so nothing below would be observing the filter`
+    );
+  }
+  const scanDone = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        livenessGone: document.querySelector(".scan-liveness") === null,
+        cancelGone: document.querySelector("button.filter-cancel") === null,
+        incompleteText: document.querySelector(".scan-incomplete")?.textContent ?? null,
+      })),
+    (state) => state.livenessGone && state.cancelGone,
+    120_000
+  );
+  if (!scanDone.ok) {
+    throw new Error(
+      `FIND': the filtered scan never left the in-flight family (liveness/Cancel both gone) within its bound ` +
+        `(last observed: ${JSON.stringify(scanDone.last)})`
+    );
+  }
+  if (scanDone.last.incompleteText !== null) {
+    throw new Error(`FIND': .scan-incomplete present after a scan nobody cancelled -- ${JSON.stringify(scanDone.last.incompleteText)}`);
+  }
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 45_000 });
+
+  // 2) "Zoom to layer" #1 -- the fit this step will later demand the camera come back to. Its own
+  // `view-state` line is what names the fit's camera (`fitToExtent`'s `traceViewState`), and the
+  // pixels it leaves are the reference the return is measured against.
+  const beforeFirstClick = consoleHandle.renderTrace().length;
+  await clickZoomToLayer(page, consoleHandle, "FIND' (zoom to layer #1)");
+  const firstFitLines = viewStateLinesSince(consoleHandle, beforeFirstClick);
+  if (firstFitLines.length === 0) {
+    throw new Error(
+      `FIND': the first "Zoom to layer" click under the filter logged no view-state line at all -- the fit anchor ` +
+        `was null (fitToBounds' own no-op return), so neither entry's subject can be exercised from here`
+    );
+  }
+  const fitCamera = firstFitLines[firstFitLines.length - 1];
+  const fitFraction = fractionOf(await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()));
+
+  // 3) Wheel out, pointer over the canvas centre -- a real gesture, the same discrete notch K6/K7
+  // drive. The mark is taken here so the covering-truncation check below covers everything the
+  // zoom-out and its refill actually did.
+  const beforeZoomOut = consoleHandle.renderTrace().length;
+  for (let notch = 1; notch <= FIND_ZOOM_OUT_NOTCHES; notch++) {
+    await doWheel(page, center, K6_ZOOM_OUT_NOTCH_DELTA_Y);
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1000, timeoutMs: 30_000 });
+  }
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 45_000 });
+  const zoomedOutFraction = fractionOf(await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()));
+  if (zoomedOutFraction >= fitFraction * FIND_FIT_FRACTION_FLOOR) {
+    throw new Error(
+      `FIND': ${FIND_ZOOM_OUT_NOTCHES} zoom-out notch(es) left the canvas at ${(zoomedOutFraction * 100).toFixed(3)}% ` +
+        `non-background, not below ${(FIND_FIT_FRACTION_FLOOR * 100).toFixed(0)}% of the fit's own ` +
+        `${(fitFraction * 100).toFixed(3)}% -- the camera did not visibly leave the fit, so a later "return to the ` +
+        `fit" assertion would hold vacuously`
+    );
+  }
+
+  // 4) FIND'/settled-partial-under-filter (entry 84). A truncated covering set is checked FIRST and
+  // reported as itself: it would make the fill genuinely incomplete for a reason entry 84's fix does
+  // not address, so the status reading is not evidence about entry 84 at all in that case, and this
+  // step says so rather than attributing one cause to the other.
+  // Both readings are taken AFTER the status has settled (architect should-fix, 2026-09-13): taken
+  // before it, a query whose stream had simply not minted yet would read as one that never minted,
+  // and a false PREMISE BROKEN record would silently skip the pre-committed assertion below.
+  const statusAfterZoomOut = await settledResidencyStatus(page);
+  const truncated = coveringTruncatedSince(consoleHandle, beforeZoomOut);
+  const unminted = await settledUnmintedTileQueriesSince(consoleHandle, beforeZoomOut);
+  if (truncated.length > 0) {
+    failures.push(
+      `FIND'/settled-partial-under-filter: PREMISE BROKEN -- the covering set was TRUNCATED during the zoom-out ` +
+        `(${truncated.length} covering-truncated line(s), first: ${JSON.stringify(truncated[0])}), so the settled ` +
+        `status ${JSON.stringify(statusAfterZoomOut)} says nothing about the empty covering tiles this assertion is ` +
+        `about. This step's own ${FIND_ZOOM_OUT_NOTCHES}-notch gesture must stay inside the declared covering ceiling.`
+    );
+  } else if (unminted.unminted > 0) {
+    // Preregistration §6 Amendment 1 (b), 2026-09-13: this state is RECORDED BY NAME and does not
+    // fail the suite -- entry 84's status assertion is suspended while DECISIONS-PENDING entry 87
+    // (filtered per-tile queries dropped silently before any stream is issued) holds its premise
+    // broken, and is reinstated unchanged, right below, the moment no such tile exists. Entry 85's
+    // half of this step is untouched by the suspension and stays a hard assertion.
+    records.push(
+      `FIND'/settled-partial-under-filter: PREMISE BROKEN -- ${unminted.unminted} of ${unminted.queries} covering ` +
+        `tiles reached no terminal (${unminted.queries} queries, ${unminted.streams} streams); the status assertion ` +
+        `is suspended pending DECISIONS-PENDING entry 87 (preregistration §6 Amendment 1 (b))`
+    );
+  } else if (statusAfterZoomOut === K7_SETTLED_PARTIAL_TEXT) {
+    failures.push(
+      `FIND'/settled-partial-under-filter: with "${FIND_PREDICATE}" applied and the covering set NOT truncated, ` +
+        `.residency-status settled to the partial-view sentence ${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)} ` +
+        `(residencyStatus.ts's SETTLED_PARTIAL_WITHIN_BUDGET_TEXT) -- everything matching the filter is drawn, so a ` +
+        `covering tile whose own stream completed carrying no matching row was never marked resident ` +
+        `(FILTER-84-85-PREREGISTRATION.md §3.2)`
+    );
+  } else if (statusAfterZoomOut === null || !FIND_WITHIN_BUDGET_PATTERN.test(statusAfterZoomOut)) {
+    failures.push(
+      `FIND'/settled-partial-under-filter: .residency-status never settled to the within-budget sentence ` +
+        `(/${FIND_WITHIN_BUDGET_PATTERN.source}/, residencyStatus.ts's own "candidate-within-budget" text) within its ` +
+        `bound; last reading was ${JSON.stringify(statusAfterZoomOut)}`
+    );
+  }
+
+  // 5) FIND'/zoom-to-layer-after-filter (entry 85). BOTH halves are asserted: the fit ran (a fresh
+  // view-state line since this click's own mark, carrying the same camera the first fit computed --
+  // the anchor has not grown, so an identical fit is exactly what is expected), and the camera
+  // ACTUALLY MOVED there (the pixels are back at the fit's). The second half is what the trace line
+  // alone cannot show: `fitToExtent` logs its line before it writes the prop, so the line appears
+  // whether or not deck.gl accepted the write.
+  const beforeSecondClick = consoleHandle.renderTrace().length;
+  await clickZoomToLayer(page, consoleHandle, "FIND' (zoom to layer #2)");
+  const secondFitLines = viewStateLinesSince(consoleHandle, beforeSecondClick);
+  const refit = secondFitLines.find(
+    (v) => v.zoom === fitCamera.zoom && v.originX === fitCamera.originX && v.originY === fitCamera.originY
+  );
+  const returnedFraction = fractionOf(await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()));
+  if (!refit) {
+    failures.push(
+      `FIND'/zoom-to-layer-after-filter: no view-state line matching the first fit ` +
+        `(zoom ${fitCamera.zoom}, origin ${fitCamera.originX}/${fitCamera.originY}) arrived after the second ` +
+        `"Zoom to layer" click; lines since the click: ${JSON.stringify(secondFitLines)}`
+    );
+  } else if (returnedFraction < fitFraction * FIND_FIT_FRACTION_FLOOR) {
+    failures.push(
+      `FIND'/zoom-to-layer-after-filter: the second "Zoom to layer" click computed the fit (view-state line at ` +
+        `zoom ${refit.zoom}) but the canvas is still at ${(returnedFraction * 100).toFixed(3)}% non-background, ` +
+        `below ${(FIND_FIT_FRACTION_FLOOR * 100).toFixed(0)}% of the fit's own ${(fitFraction * 100).toFixed(3)}% ` +
+        `(zoomed out, before the click: ${(zoomedOutFraction * 100).toFixed(3)}%) -- the camera did not move to the ` +
+        `fit it computed (FILTER-84-85-PREREGISTRATION.md §2.2)`
+    );
+  }
+  await assertNoRefusalOrBanner(page, "FIND'");
+
+  const observed =
+    `applied "${FIND_PREDICATE}" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom ` +
+    `${fitCamera.zoom} (${(fitFraction * 100).toFixed(2)}% non-bg); ${FIND_ZOOM_OUT_NOTCHES} zoom-out notch(es) left ` +
+    `${(zoomedOutFraction * 100).toFixed(2)}% non-bg with ${truncated.length} covering-truncated line(s) and ` +
+    `${unminted.unminted} unminted tile query(ies) of ${unminted.queries}; ` +
+    `.residency-status settled to ${JSON.stringify(statusAfterZoomOut)}; the second "Zoom to layer" ` +
+    `${refit ? `logged the same fit (zoom ${refit.zoom})` : "logged no matching fit"} and left ` +
+    `${(returnedFraction * 100).toFixed(2)}% non-bg`;
+  if (failures.length > 0) {
+    throw new Error(`${[...failures, ...records].join(" || ")} || OBSERVED: ${observed}`);
+  }
+  return records.length > 0 ? `${records.join(" || ")} || ${observed}` : observed;
+}
+
 /**
  * P5 repair (admission-remediation cut): known-broken since P3 removed the blanket cut-2 note
  * (`RefusalBlock.tsx`'s own top comment -- "the blanket cut-2 note this block used to render ... is
@@ -1876,6 +2245,14 @@ async function main() {
     // reports. 240s is the outer backstop for a wedged page, not the sum of the inner bounds (whose
     // worst case would exceed it; the step fails loudly on whichever bound it reaches first).
     await runStep("K7", 240_000, () => stepK7(page, consoleHandle));
+    // FIND' (entries 84 and 85, 2026-09-13): see `stepFind`'s own top comment for the full account of
+    // both findings and why this step runs after K7. Its composition: one filtered scan of the fixture
+    // this run already has open, two "Zoom to layer" clicks (each settling under `clickZoomToLayer`'s
+    // own 45s bound), `FIND_ZOOM_OUT_NOTCHES` wheel notches each settling under a 30s bound, and one
+    // status re-read under K7's own `K7_STATUS_SETTLE_TIMEOUT_MS`. 300s is the outer backstop for a
+    // wedged page -- the same one `filter-panel.mjs` gives its own FIND' -- not the sum of the inner
+    // bounds, and not a duration this step reports (ADR-018).
+    await runStep("FIND'", 300_000, () => stepFind(page, consoleHandle));
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
     );
