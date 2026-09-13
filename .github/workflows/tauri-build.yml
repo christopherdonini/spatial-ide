@@ -1,0 +1,98 @@
+name: tauri build (reusable) — NSIS, build-only, no signing
+
+# Extracted from `product-ci-shell.yml`'s own `tauri-build` job (RELEASE-0.1 Amendment 3 item 4)
+# so the build steps live in exactly one place (2026-09-14, `chore(ci):
+# release-artifacts-from-ci`). Called by:
+#   - `product-ci-shell.yml`'s own `tauri-build` job — pull_request / push[paths] /
+#     workflow_dispatch, unchanged in trigger/behaviour from before this extraction.
+#   - `release-artifacts.yml` — push of a `v*` tag (AUTONOMY.md §11; the human's directive item
+#     11, 2026-09-14, verbatim: "Release artifacts are the tagged commit's CI build,
+#     hash-recorded; the dev machine is for headed work only — apply from v0.1.1.").
+#
+# Build-only. No signing (entry 77 is open); nothing here or in either caller runs `gh release` —
+# the uploaded artifact is for a human to attach by hand.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: >-
+          The git ref to build. Empty (the default) checks out whatever ref triggered the calling
+          workflow run — no behaviour change for product-ci-shell.yml's own call.
+        required: false
+        type: string
+      artifact_name:
+        description: The name the built NSIS installer is uploaded as (actions/upload-artifact@v4).
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: tauri build (NSIS, build-only, no signing)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontends/shell/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-latest-shell-tauri-build
+          workspaces: "frontends/shell/src-tauri"
+
+      # Same precondition `product-ci-shell.yml`'s own `shell` job states: the viewer must be
+      # built before the shell's own `prebuild` step (notice generation) and before
+      # `bundle.resources` has anything to map.
+      - name: Install and build the bundle viewer
+        working-directory: renderer/bundle-viewer
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install shell dependencies (locked)
+        working-directory: frontends/shell
+        run: npm ci
+
+      - name: tauri build (NSIS only, per-user install — tauri.conf.json's own targets/installMode)
+        working-directory: frontends/shell
+        run: npm run tauri build
+
+      # AUTONOMY.md §11 / the human's directive item 11: hash-recorded here so
+      # `RELEASE-DAY-CHECKLIST.md` §4 can compare a locally-computed hash against this run's own,
+      # rather than trusting a downloaded file unverified.
+      - name: Compute and record the installer's SHA-256
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path "frontends/shell/src-tauri/target/release/bundle/nsis/*.exe" | Select-Object -First 1
+          if (-not $installer) { throw "No NSIS installer found under frontends/shell/src-tauri/target/release/bundle/nsis/" }
+          $sha256 = (Get-FileHash -Algorithm SHA256 -Path $installer.FullName).Hash
+          $bytes = (Get-Item $installer.FullName).Length
+          Write-Host "Installer: $($installer.Name)"
+          Write-Host "Size: $bytes bytes"
+          Write-Host "SHA-256: $sha256"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### tauri-build installer"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| field | value |"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "|---|---|"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| file | $($installer.Name) |"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| bytes | $bytes |"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| SHA-256 | ``$sha256`` |"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: frontends/shell/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 90

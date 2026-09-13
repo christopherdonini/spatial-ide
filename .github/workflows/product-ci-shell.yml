@@ -108,38 +108,11 @@ name: Product CI — shell
 #   | trigger | first green | duration |
 #   |---|---|---|
 #   | `push` | — | — |
-#   | `workflow_dispatch` | `34786140667` (`f67ff2c`) | 5m46s |
+#   | `workflow_dispatch` | — | — |
 #   | `pull_request` | `34190120055` (`34a1896`) | 27m19s |
-#
-#   **`workflow_dispatch` first green (2026-09-14, `chore(ci): release-artifacts-from-ci`'s own
-#   step 4 dry run):** run id `34786140667`, job id `103801857451`, head commit `f67ff2c` (on
-#   `release/ci-artifacts`, this piece's own branch — `workflow_dispatch` has no `tags`/`paths`
-#   filter, so this result does not itself verify the `push`-on-tag trigger added by the same
-#   piece; see that trigger's own comment above), duration 5m46s (22:13:29Z–22:19:15Z, 2026-09-13).
-#   Dispatched with `ref=v0.0.0-dryrun`; the job resolved and printed that as its artifact-naming
-#   tag, uploaded `spatial-ide-v0.0.0-dryrun-x64-setup`, and its own hash step reported
-#   `Spatial IDE_0.1.0_x64-setup.exe`, 10425624 B, SHA-256
-#   `EECE72CB707B1D3390D730B7B0A5572E07A732407C92C9AF400B6191E6142948`.
 
-# ## The release-tag trigger (AUTONOMY.md §11; the human's directive item 11, 2026-09-14, verbatim:
-# "Release artifacts are the tagged commit's CI build, hash-recorded; the dev machine is for headed
-# work only — apply from v0.1.1.") — `tauri-build` below now also runs on a pushed `v*` tag, so
-# `RELEASE-DAY-CHECKLIST.md` §4's v0.1.1 step can download this run's own installer rather than
-# trust a dev-machine build. `tags` is added to the SAME `push:` filter as the existing `paths:`
-# below (YAML disallows a second `push:` key), which carries one unverified risk worth flagging
-# rather than silently assuming away: GitHub combines a push event's `tags`/`branches` filter and
-# its `paths` filter with AND semantics, and some reports describe a tag pushed at an
-# already-existing commit — exactly `RELEASE-DAY-CHECKLIST.md` §4's release-branch pattern — as
-# reporting an empty changed-files list, which can leave a `paths`-filtered workflow un-triggered on
-# that tag push. This cannot be exercised by a `workflow_dispatch` dry run (no tag involved) or from
-# this docs/CI-only piece (tags are the human's to push). **Verify at the actual v0.1.1 tag push:**
-# confirm `tauri-build` appears in `gh run list --branch v0.1.1`; if it does not, drop `paths` from
-# `on.push` (or split the tag trigger into its own workflow).
-#
 on:
   push:
-    tags:
-      - "v*"
     paths:
       - "frontends/shell/**"
       - "kernel/**"
@@ -174,14 +147,6 @@ on:
       - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
   workflow_dispatch:
-    inputs:
-      ref:
-        description: >-
-          Optional. A tag-like string (e.g. v0.1.1-dryrun) used only to name the uploaded artifact
-          for a manual dry run of the tauri-build job off a non-tag ref. Leave blank on an ordinary
-          dispatch; the artifact name then falls back to a sanitized branch/PR ref.
-        required: false
-        type: string
 
 concurrency:
   group: product-ci-shell-${{ github.ref }}
@@ -257,92 +222,16 @@ jobs:
   # published from CI. This workflow's own standing not-a-gate note (top of file) applies to this
   # job exactly as it does to `shell` above: nothing may cite a green run here as a gate until one
   # has actually gone green end to end, recorded with its run id/commit/trigger/duration.
+  #
+  # 2026-09-14 (`chore(ci): release-artifacts-from-ci`): the build steps themselves moved to
+  # `.github/workflows/tauri-build.yml` (a `workflow_call` reusable workflow) so this job and
+  # `release-artifacts.yml`'s own tag-triggered build (AUTONOMY.md §11) share exactly one copy of
+  # them. This job's own triggers, artifact name and behaviour are unchanged from before that
+  # extraction — it does not run on a tag push; `release-artifacts.yml` does that, deliberately as
+  # its own file (see that file's header for why: GitHub ANDs a push event's `tags` filter with a
+  # `paths` filter, which this job's `paths`-filtered triggers below would otherwise inherit).
   tauri-build:
     name: tauri build (NSIS, build-only, no signing)
-    runs-on: windows-latest
-    timeout-minutes: 60
-    # AUTONOMY.md §11 / the human's directive item 11: this job builds and uploads a workflow
-    # artifact for the human to attach by hand (`RELEASE-DAY-CHECKLIST.md` §4/§5) — it never
-    # publishes a release itself, so it needs nothing beyond read access to the repository.
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      # Used only to name the uploaded artifact below (`spatial-ide-<tag>-x64-setup`). No signing,
-      # no release publishing happens here or anywhere else in this job.
-      - name: Determine the release tag (or ref, for a dry run) for artifact naming
-        id: tag
-        shell: pwsh
-        run: |
-          if ($env:GITHUB_REF -like 'refs/tags/*') {
-            $tag = $env:GITHUB_REF -replace '^refs/tags/', ''
-          } elseif ("${{ github.event.inputs.ref }}" -ne '') {
-            $tag = "${{ github.event.inputs.ref }}"
-          } else {
-            $tag = $env:GITHUB_REF_NAME
-          }
-          # Sanitize characters actions/upload-artifact's name disallows (a PR ref like
-          # "123/merge" would otherwise contain "/").
-          $tag = $tag -replace '[\\/:*?"<>|]', '-'
-          if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "unknown" }
-          Write-Host "Resolved tag/ref for artifact naming: $tag"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=$tag"
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: frontends/shell/package-lock.json
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: windows-latest-shell-tauri-build
-          workspaces: "frontends/shell/src-tauri"
-
-      # Same precondition as the `shell` job above: the viewer must be built before the shell's own
-      # `prebuild` step (notice generation) and before `bundle.resources` has anything to map.
-      - name: Install and build the bundle viewer
-        working-directory: renderer/bundle-viewer
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install shell dependencies (locked)
-        working-directory: frontends/shell
-        run: npm ci
-
-      - name: tauri build (NSIS only, per-user install — tauri.conf.json's own targets/installMode)
-        working-directory: frontends/shell
-        run: npm run tauri build
-
-      # AUTONOMY.md §11 / the human's directive item 11: hash-recorded here so
-      # `RELEASE-DAY-CHECKLIST.md` §4 can compare a locally-computed hash against this run's own,
-      # rather than trusting a downloaded file unverified.
-      - name: Compute and record the installer's SHA-256
-        id: hash
-        shell: pwsh
-        run: |
-          $installer = Get-ChildItem -Path "frontends/shell/src-tauri/target/release/bundle/nsis/*.exe" | Select-Object -First 1
-          if (-not $installer) { throw "No NSIS installer found under frontends/shell/src-tauri/target/release/bundle/nsis/" }
-          $sha256 = (Get-FileHash -Algorithm SHA256 -Path $installer.FullName).Hash
-          $bytes = (Get-Item $installer.FullName).Length
-          Write-Host "Installer: $($installer.Name)"
-          Write-Host "Size: $bytes bytes"
-          Write-Host "SHA-256: $sha256"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### tauri-build installer"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| field | value |"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "|---|---|"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| file | $($installer.Name) |"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| bytes | $bytes |"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "| SHA-256 | ``$sha256`` |"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: spatial-ide-${{ steps.tag.outputs.tag }}-x64-setup
-          path: frontends/shell/src-tauri/target/release/bundle/nsis/*.exe
-          if-no-files-found: error
-          retention-days: 90
+    uses: ./.github/workflows/tauri-build.yml
+    with:
+      artifact_name: spatial-ide-nsis-installer
