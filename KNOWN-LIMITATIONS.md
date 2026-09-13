@@ -128,11 +128,6 @@ no performance claim at all (`docs/08_Testing.md`).*
     never pick at a pixel the pointer has left, so this is refusal to act rather than a wrong answer.
     <!-- frontends/shell/HOVER-REPICK-PREREGISTRATION.md §12 Amendment 4, final paragraph ("Known limitation, recorded here for the human's word on a KNOWN-LIMITATIONS line"); RELEASE-0.1.md Amendment 16 (the human: this line "belongs to the release that ships 47", which is this one) -->
 
-13b. **Tiles can vanish at extreme zoom-out** — in the operator's own words, quoted verbatim:
-    *"at extreme zoom-out, more than ~6 wheel notches beyond Zoom to layer, tiles already drawn may
-    vanish while still on screen; the status continues to report the view as partial"*.
-    <!-- DECISIONS-PENDING.md, RULED 2026-09-09, entry 66 = (d): this sentence is the human's own wording, quoted verbatim; the fix (entry 66 (b)) is post-tag and the line retires at its landing (RULED 2026-09-11, item 76 (4)) -->
-
 14. **The installer is not signed.** Authenticode reports `NotSigned` for
     `Spatial IDE_0.1.0_x64-setup.exe`, so Windows may warn that the publisher is unrecognised, and on
     a machine with Smart App Control an unsigned file may be blocked outright. There is no signature

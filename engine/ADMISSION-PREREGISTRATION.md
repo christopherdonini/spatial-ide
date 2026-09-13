@@ -515,3 +515,11 @@ rule. What it touches: P2's own declared values only. No P1 outcome, prediction 
 - **IV. Open, the human's:** whether an absent-key CRS84 admit (definition `None`,
   `geoparquet.rs:392-399`) yields the instance. Unresolved, §3 row 8's degrees prediction stands
   unmet and is recorded as a deviation at P4 (§8).
+- **V. Item IV resolved — 2026-09-11, the human (DECISIONS-PENDING entry 81 = "(b), unit:format-rule
+  beside unit:definition"); recorded BEFORE the code.** The pinned format rule is a second admissible
+  source of the unit fact: the R-C2 (absent-key, pinned-version) admission records `coordinate_unit =
+  degree` on both axes with `coordinate_unit_source = unit:format-rule`; `unit:definition` is unchanged;
+  the identifier string stays forbidden as a source; no definition is invented. §3 row 8's degrees
+  prediction is thereby reachable (at the publish preflight, P2's held part). The P4 record names item
+  I's original reading, this resolution and its date. The Proposed ADR-013 amendment carries the
+  matching clarification, appended the same day.

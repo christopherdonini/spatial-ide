@@ -465,6 +465,13 @@ async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronous
 /// Everything read here comes through the engine's public API (`Catalog::get`,
 /// `Dataset::admission`). Nothing about `describe`, SKP or the wire is asserted or added: those are
 /// later phases of this cut.
+///
+/// **G-A6, on the human's ruling of 2026-09-11** (DECISIONS-PENDING entry 80 = "(a), each re-aim
+/// naming the ruling AND asserting the new provenance class"): this is the third of the three
+/// re-aims that reading allows — the gate's "green without edits" holds for every identity test and
+/// every explicit-null refusal, and is read to except a test pinning behaviour boundary 1 abolishes,
+/// which re-aims naming the ruling and asserting the class that replaced it (`crs:format-default`,
+/// below).
 #[tokio::test(flavor = "multi_thread")]
 async fn opening_a_source_with_no_crs_key_is_admitted_under_the_format_default() {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");

@@ -142,19 +142,23 @@ impl SanityLevel {
     }
 }
 
-/// The coordinate unit an admitted CRS definition declares **on its own coordinate-system axes** —
-/// a recorded fact, read and never inferred.
+/// The coordinate unit recorded for one admission — a fact established from one of **two named
+/// sources** ([`CoordinateUnitSource`]) and never inferred.
 ///
-/// `engine/ADMISSION-PREREGISTRATION.md` §14 item I fixes where it is read from and what the
-/// unreadable cases record; the proposed ADR-013 Amendment 1 §2 is the rule it serves ("the unit is
+/// `engine/ADMISSION-PREREGISTRATION.md` §14 item I fixes the first source — the admitted CRS
+/// definition's own coordinate-system axes — and what the unreadable cases record. §14 item V adds
+/// the second on the human's ruling of 2026-09-11 (DECISIONS-PENDING entry 81 = "(b),
+/// unit:format-rule beside unit:definition"): the pinned format rule that supplied the CRS also
+/// supplies the unit. The rule both serve is the proposed ADR-013 Amendment 1 §2 ("the unit is
 /// read from the CRS definition and recorded as a fact of the instance — never inferred from the
-/// identifier string […], and never defaulted" — the elision is its `docs/05` parenthetical).
+/// identifier string […], and never defaulted" — the elision is its `docs/05` parenthetical), as
+/// clarified by that amendment's "Clarification appended 2026-09-11": a rule-sourced unit is a
+/// distinct, recorded source, and the identifier string stays forbidden as one.
 ///
 /// **`Unestablished` is not a refusal and not an instance.** It is what the record says when the
 /// two axes disagree, when the `unit` member is missing, when its form is one this reader takes no
-/// name from, or when there was no definition to read at all — the absent-key format-default
-/// admission being the last case, which carries no definition (DECISIONS-PENDING entry 81 is open
-/// and this piece does not pre-empt it).
+/// name from, or when there was neither a definition to read nor a format rule that supplied the
+/// CRS.
 ///
 /// **Nothing here is normalized.** A name that is neither `degree` nor `metre` is carried in
 /// [`Self::Named`] exactly as the definition spells it; folding case or mapping synonyms would be
@@ -192,22 +196,38 @@ impl CoordinateUnit {
     }
 }
 
-/// Where a recorded [`CoordinateUnit`] was read from.
+/// Where a recorded [`CoordinateUnit`] was established from.
 ///
-/// **One class, because this piece can reach exactly one.** The unit is read from the admitted
-/// PROJJSON's coordinate-system axes or it is not established; there is no format rule that supplies
-/// a unit, no catalog lookup and no inference from an identifier. A second class would have to be
-/// something this engine actually did.
+/// **Two classes, because this engine reaches exactly two** — each one something it actually did:
+/// it read a definition, or it applied a format rule whose text is pinned in this tree
+/// (`ADMISSION-PREREGISTRATION.md` §14 item V, the human's ruling of 2026-09-11 on
+/// DECISIONS-PENDING entry 81). They stay apart on the record so a reader can tell a
+/// declared-degrees file from a rule-defaulted one — the "Consequences" of the proposed ADR-013
+/// Amendment 1's clarification of the same date.
+///
+/// What is **not** a class here, and will not become one: the identifier string. `docs/05` decides
+/// CRS identity by comparing definitions and never by name comparison, and that amendment's
+/// block-on-sight 8 forbids a unit inferred from an identifier — unchanged by entry 81.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CoordinateUnitSource {
     /// A CRS definition was there to read, and its axes are what was read.
     Definition,
+    /// No definition was there: the **pinned format rule** supplied the CRS (R-C2's absent-key
+    /// default) and the same rule states the unit — its default names OGC:CRS84, whose axes are
+    /// longitude and latitude in degrees (`ADMISSION-PREREGISTRATION.md` §14 item V; the proposed
+    /// ADR-013 Amendment 1's clarification, "Decision").
+    ///
+    /// Nothing was read from a definition and **none was invented**: the record still carries no
+    /// definition and no declared axis order for such an admission, because the file carries
+    /// neither.
+    FormatRule,
 }
 
 impl CoordinateUnitSource {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Definition => "unit:definition",
+            Self::FormatRule => "unit:format-rule",
         }
     }
 }
@@ -255,12 +275,14 @@ pub struct AdmissionRecord {
     pub declared_axis_order: Option<AxisOrder>,
     /// `geoparquet:<version>#<rule>` — absent when no format rule was applied.
     pub format_rule_reference: Option<String>,
-    /// The unit the admitted definition declares on both of its coordinate-system axes, or
-    /// `unestablished`. Read from [`coordinate_unit_from_definition`] and nowhere else.
+    /// The unit of this admission's two coordinate axes, or `unestablished` — the admitted
+    /// definition's own declaration, or the pinned format rule's where the rule supplied the CRS.
+    /// Established by [`coordinate_unit_for_admission`] and nowhere else.
     pub coordinate_unit: CoordinateUnit,
-    /// Present whenever there was a definition to read the unit from — **including where the read
-    /// established nothing**. It answers "was a definition consulted", not "was a unit found"; the
-    /// second question is `coordinate_unit`'s and the two are different facts.
+    /// Which of the two sources was consulted — **including where consulting it established
+    /// nothing** (the definition branch: a definition was there and said no single unit). It
+    /// answers "what was consulted", not "was a unit found"; the second question is
+    /// `coordinate_unit`'s and the two are different facts. Absent where neither source existed.
     pub coordinate_unit_source: Option<CoordinateUnitSource>,
     pub sanity_level: SanityLevel,
     pub sanity_reason: String,
@@ -610,14 +632,50 @@ pub fn axis_order_from_projjson(crs: &Value) -> Result<AxisOrder> {
     }
 }
 
+/// The coordinate unit recorded for one admission, from whichever of §14's **two** sources that
+/// admission actually has — and from nothing else.
+///
+/// **The recorded provenance class decides which, and the identifier is consulted in neither
+/// branch.** An admission whose CRS came from the pinned absent-key rule (`crs:format-default`,
+/// R-C2) has no definition at all, and takes the unit from that rule: the rule's own default names
+/// OGC:CRS84, whose axes are longitude and latitude in degrees, so the record is `degree` on both
+/// axes with the source `unit:format-rule` (`ADMISSION-PREREGISTRATION.md` §14 item V — the human's
+/// ruling of 2026-09-11, DECISIONS-PENDING entry 81 = "(b)"). Every other admission — the file's own
+/// declaration, a caller's assertion — reads [`coordinate_unit_from_definition`] and records
+/// `unit:definition`.
+///
+/// **No definition is invented for the rule branch.** The value below is the rule's statement about
+/// the CRS it named, not PROJJSON this engine wrote: `format_semantics`' R-C2 arm still passes no
+/// definition on, `declared_axis_order` stays absent, and nothing claims a definition was read.
+/// Taking the unit from the identifier string instead would be the name-string comparison `docs/05`
+/// forbids and the proposed ADR-013 Amendment 1's block-on-sight 8 names.
+pub fn coordinate_unit_for_admission(
+    crs_provenance: CrsProvenance,
+    definition_json: Option<&str>,
+) -> (CoordinateUnit, Option<CoordinateUnitSource>) {
+    match crs_provenance {
+        CrsProvenance::FormatDefault => {
+            debug_assert!(
+                definition_json.is_none(),
+                "the absent-key rule supplies a CRS and no definition; one appearing here would \
+                 mean the rule branch was reached by an admission it does not describe"
+            );
+            (CoordinateUnit::Degree, Some(CoordinateUnitSource::FormatRule))
+        }
+        CrsProvenance::Declared | CrsProvenance::Asserted => {
+            coordinate_unit_from_definition(definition_json)
+        }
+    }
+}
+
 /// The coordinate unit of an admitted CRS, read from **the definition that was admitted** — the
 /// file's own, or a caller's assertion — and `Unestablished` where there is none.
 ///
 /// The second value is the source fact: `Some(Definition)` exactly when a definition was there to
-/// read, whatever the read established. The absent-key format-default admission carries no
-/// definition (`format_semantics`' R-C2 arm passes `None`), so it records `unestablished` with no
-/// source — DECISIONS-PENDING entry 81 is open on whether that admission should yield the instance,
-/// and recording a unit it has no definition for would answer that question here.
+/// read, whatever the read established. Called with `None` it records `unestablished` with no
+/// source at all, which is the honest record for an admission that had neither a definition nor a
+/// format rule; the rule branch is [`coordinate_unit_for_admission`]'s and is never reached from
+/// here, so nothing in this function can record a unit it did not read.
 pub fn coordinate_unit_from_definition(
     definition_json: Option<&str>,
 ) -> (CoordinateUnit, Option<CoordinateUnitSource>) {
@@ -819,13 +877,35 @@ mod tests {
         assert_eq!(
             coordinate_unit_from_definition(None),
             (CoordinateUnit::Unestablished, None),
-            "the absent-key format default carries no definition, and this record does not invent \
-             one for it (§14 item IV, DECISIONS-PENDING entry 81 — open, the human's)"
+            "the definition branch invents nothing when there is no definition; the rule branch is \
+             `coordinate_unit_for_admission`'s and is not reached from here (§14 items I and V)"
         );
         assert_eq!(
             coordinate_unit_from_definition(Some("{not json")),
             (CoordinateUnit::Unestablished, Some(CoordinateUnitSource::Definition)),
             "a definition was there to read; nothing was established from it"
+        );
+    }
+
+    /// The two sources at the pure-function level: the provenance class picks the branch, and the
+    /// rule branch names itself (§14 item V; DECISIONS-PENDING entry 81 = "(b)", 2026-09-11).
+    #[test]
+    fn the_provenance_class_decides_which_source_supplies_the_unit() {
+        assert_eq!(
+            coordinate_unit_for_admission(CrsProvenance::FormatDefault, None),
+            (CoordinateUnit::Degree, Some(CoordinateUnitSource::FormatRule)),
+            "the pinned absent-key rule names OGC:CRS84 — longitude and latitude in degrees — and \
+             the record says the rule is where that came from"
+        );
+        assert_eq!(
+            coordinate_unit_for_admission(CrsProvenance::Declared, Some(LV95)),
+            (CoordinateUnit::Metre, Some(CoordinateUnitSource::Definition)),
+            "a declared definition is read, and its own axes are what is recorded"
+        );
+        assert_eq!(
+            coordinate_unit_for_admission(CrsProvenance::Asserted, None),
+            (CoordinateUnit::Unestablished, None),
+            "an assertion without a definition has neither source; no rule governs an assertion"
         );
     }
 

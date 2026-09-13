@@ -30,7 +30,7 @@ sessions — the subagent pins in `.claude/agents/` stay as configured).
 
 ## The working loop (unchanged from three weeks of practice)
 
-Brief (`NEXT-CUT.md`, transient, self-deleting) → single worker session executes → architect/
+Brief (`state/NEXT-CUT.md`, transient, self-deleting) → single worker session executes → architect/
 reviewer/tester gates → custodian **verifies in the repo** → human decisions queued → human
 answers → custodian applies → ff-merge → push. One session per working tree at a time; a
 superseding brief names inherited work-in-progress as the predecessor's, never as a parallel
@@ -62,7 +62,7 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
 - **Single-custodian lease (added 2026-09-05, after a two-session concurrency scare).** There is
   exactly ONE custodian at a time. On boot, the custodian writes a **session lease** to the
   untracked file `CUSTODIAN-LEASE` at the repo root (gitignored outright — unlike the working-tree
-  state files such as `CUT-STATE.md`, which stay untracked merely by never being staged, the lease
+  state files such as `state/CUT-STATE.md`, which stay untracked merely by never being staged, the lease
   is `.gitignore`d so a stray `git add` can never commit a session id): a line
   carrying a unique session id and an ISO-8601 UTC timestamp, e.g.
   `lease: <session-id> refreshed: 2026-09-05T20:14:03Z`. It refreshes that timestamp at the start
@@ -83,10 +83,10 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   first live use):** on the human's explicit word — and only then — custodianship transfers
   without waiting out the 30-minute staleness window, as relinquish-then-takeover. The OUTGOING
   session: flush all session-only state to files, verify the branch pushed (origin tip = the
-  flushed tip), record the handover and relinquish in `CUT-STATE.md`'s final line, and delete its
+  flushed tip), record the handover and relinquish in `state/CUT-STATE.md`'s final line, and delete its
   `CUSTODIAN-LEASE` (or rewrite it to a single `relinquished:` line). The INCOMING session, before
   writing its own lease, VERIFIES the relinquish rather than trusting it: the lease is absent,
-  stale, or marked relinquished, AND the origin tip matches the flush `CUT-STATE.md` records. The
+  stale, or marked relinquished, AND the origin tip matches the flush `state/CUT-STATE.md` records. The
   human's word replaces the staleness wait, never the verification — if either check fails, the
   incoming session holds and reports instead of taking the lease.
 
@@ -318,10 +318,10 @@ observed burn:
    harness process hung 16 hours *after* successfully printing its result — the cost was a night of
    wall clock, and the result was sitting in the log the whole time.)
    *(Items 10-12 re-attached to this list on 2026-09-09: since their addition on 2026-08-17/18 and 2026-09-02 they had sat stranded after the next `##` heading; their text is unchanged.)*
-10. **Cut state archives at cut close.** Transient per-cut files (`NEXT-CUT.md`, `CUT-STATE*.md`,
+10. **Cut state archives at cut close.** Transient per-cut files (`state/NEXT-CUT.md`, `CUT-STATE*.md`,
     ad-hoc `*-STATE.md`) live at the repo root only while their cut is live. The brief is deleted
     by the cut's final docs commit (its own status line says so); the state file moves to
-    `.cut-archive/` (untracked, gitignored) in the same close-out. The durable record is never
+    `state/cut-archive/` (untracked, gitignored) in the same close-out. The durable record is never
     the state file — it is RESULTS.md sections, walkthrough result logs, ADRs, and commits. A
     root that accumulates dead state files is a root where a successor reads the wrong cut's
     truth. (Added 2026-08-17 at the human's direction, after four cuts' files had piled up.)

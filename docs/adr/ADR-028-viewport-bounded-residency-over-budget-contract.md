@@ -516,3 +516,17 @@ deleted in the same commit.
 **Standing.** Accepted as the price of closing a principle-7 hang in the shipped arm; decided by the human (entry 66 = (d)), not by the code. The bound and the window are declared limits read from the code that enforces them, not measurements.
 
 **Reopen.** Evidence of a visible in-viewport hole at the window regime reopens this as a defect. The geometric predicate that restores the rule at every zoom without enumeration — the cover's half-open index ranges (`coveringIndexRanges`) applied per resident tile, and the supersede keep-set closed the same way — is preregistered as the first post-tag piece (`RELEASE-0.1.md` Amendment 12, "Preregistration — entry 66 (b)"); its landing closes this exception by a further appended note on the human's word.
+
+## Appended note, 2026-09-13 (on the human's word — entry 66 (b) landed): the 2026-09-09 exception is closed on both paths
+
+*Appended on the human's post-tag directive of 2026-09-13: "#45 (66(b), with the ADR-028 closing note and 13b's retirement)". ADR-028 is accepted and immutable; this is an appended note, and nothing above it is edited.*
+
+**What landed.** The geometric predicate preregistered at `RELEASE-0.1.md` Amendment 12 and expanded in `frontends/shell/ENTRY-66B-PREREGISTRATION.md` (with its §14 Amendments 1–4): a resident, tracked or queued tile is protected iff its (row, col) lies inside the cover's own index ranges — half-open in coordinate space, inclusive in index space — computed from the span, allocating nothing. Enumeration, `MAX_COVERING_TILES`, `COVER_WINDOW_CELLS_PER_AXIS` and the completeness bookkeeping are unchanged.
+
+**Path (i) of the 2026-09-09 note (`:510`) is CLOSED.** Amendment 3's rule — *"A tile intersecting the viewport is protected whether it is complete or partial, tracked this round or a prior one, or never requested at all"* (`:461-462`) — again holds at every zoom, for eviction protection and for the supersede keep-set alike.
+
+**Path (ii) of that note (`:512`) is CLOSED on the human's ruling (DECISIONS-PENDING entry 76).** The `fits`/over-budget latch now reads the true cover past the bound: it counts partial tiles among the resident set by membership, wherever a round's membership exists — the candidate arm always supplies one on a planned round; the no-membership fallback is today's window read, declared in code. Operator-visible consequence, declared: a view that read as fitting only because its window happened to be complete now reads over-budget / settled-partial past the bound.
+
+**Named consequence of the keep-set half, as ruled.** A queued in-view tile outside the window survives the supersede prune and is re-checked at drain against the latest membership: still in view, it is issued as a `viewport_query` for a cell that round never enumerated, within `MAX_IN_FLIGHT_TILE_STREAMS` and `MAX_QUEUED_TILES`; out of view by then, it is dropped at drain and never issued. ADR-006 class 1 throughout; no wire change; tile keys still never cross a module or protocol boundary (`:478-479`). No performance claim is made or implied.
+
+**KNOWN-LIMITATIONS 13b** retires with this landing. **Reopen.** The 2026-09-09 note's reopen sentence (`:518`) is discharged for both paths; a tile drawn and then vanishing while still on screen, or a `fits` reading that disagrees with the true cover, reopens this as a defect on the human's word.
