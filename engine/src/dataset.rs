@@ -385,13 +385,16 @@ impl Dataset {
         let (sanity_level, sanity_reason) =
             sanity_check(conn, &path_str, &geo, &file_schema, crs_provenance, &semantics, cancel)?;
 
-        // **The coordinate unit is read from the admitted definition's own axes, or not at all.**
-        // `crs.definition_json()` is the PROJJSON that was admitted — the file's, or the caller's
-        // assertion — so this reads the definition this dataset is actually carrying rather than
-        // one looked up by name. The absent-key format default carries no definition and therefore
-        // records `unestablished` (`ADMISSION-PREREGISTRATION.md` §14, items I and IV).
+        // **The coordinate unit comes from one of the two sources this admission has, or from
+        // neither.** `crs.definition_json()` is the PROJJSON that was admitted — the file's, or the
+        // caller's assertion — so the definition branch reads the definition this dataset is
+        // actually carrying rather than one looked up by name. The absent-key format default
+        // carries no definition and takes its unit from the pinned rule itself, recorded
+        // `unit:format-rule` (`ADMISSION-PREREGISTRATION.md` §14 items I and V; the human's ruling
+        // of 2026-09-11, DECISIONS-PENDING entry 81 = "(b)"). Which branch is taken is decided by
+        // `crs_provenance`, the class established above — never by the CRS identifier.
         let (coordinate_unit, coordinate_unit_source) =
-            crate::geoparquet::coordinate_unit_from_definition(crs.definition_json());
+            crate::geoparquet::coordinate_unit_for_admission(crs_provenance, crs.definition_json());
 
         let admission = crate::geoparquet::AdmissionRecord {
             crs_provenance,
@@ -760,11 +763,18 @@ impl Dataset {
 
     /// Whether this dataset is a **geographic-degrees instance** — the proposed ADR-013 Amendment 1.
     ///
-    /// **Answered from the recorded unit and from nothing else.** True exactly when admission read
-    /// `degree` from the admitted definition's two coordinate-system axes, which is what "on both
-    /// axes" means here: [`crate::geoparquet::CoordinateUnit`] is established only where the axes
-    /// agree, so a file declaring one degree axis and one metre axis records `unestablished` and is
-    /// not an instance.
+    /// **Answered from the recorded unit and from nothing else.** True exactly when admission
+    /// established `degree` on both coordinate axes, from either of the two sources §14 (items I
+    /// and V) admits: the admitted definition's own axes, or the pinned absent-key format rule,
+    /// whose default names OGC:CRS84 — longitude and latitude in degrees (the human's ruling of
+    /// 2026-09-11, DECISIONS-PENDING entry 81 = "(b), unit:format-rule beside unit:definition"). On
+    /// the definition branch "on both axes" is literal: [`crate::geoparquet::CoordinateUnit`] is
+    /// established only where the axes agree, so a file declaring one degree axis and one metre
+    /// axis records `unestablished` and is not an instance.
+    ///
+    /// Which source supplied the unit stays readable beside it
+    /// ([`crate::geoparquet::CoordinateUnitSource`]), so this answer never hides a rule-defaulted
+    /// file among declared-degrees ones.
     ///
     /// It is **not** answered from the CRS identifier. That draft's block-on-sight 8 forbids
     /// inferring a unit from an identifier string, and `docs/05` forbids deciding CRS identity by

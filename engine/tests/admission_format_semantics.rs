@@ -532,15 +532,19 @@ fn a_missing_unit_member_records_unestablished_and_is_never_defaulted() {
 }
 
 /// **(f)** The absent-key format-default admission — F-1's own shape. It carries **no definition**
-/// (the rule names a CRS; it does not supply PROJJSON), so its unit is recorded `unestablished` by
-/// name and no source key is written at all.
+/// (the rule names a CRS; it does not supply PROJJSON), and since the human's ruling of 2026-09-11
+/// (DECISIONS-PENDING entry 81 = "(b), unit:format-rule beside unit:definition") the **pinned rule
+/// itself** is the second admissible source of the unit fact: the rule's default names OGC:CRS84,
+/// whose axes are longitude and latitude in degrees, so the admission records `degree` on both axes
+/// with the source `unit:format-rule` and is a geographic-degrees instance.
 ///
-/// **Item IV of `ADMISSION-PREREGISTRATION.md` §14 is open and is the human's**
-/// (DECISIONS-PENDING entry 81): whether such an admission yields the degrees instance. This test
-/// asserts what the code records today and pre-empts nothing — if entry 81 is ruled the other way,
-/// this expectation changes with it.
+/// **Re-aimed by that ruling, and the change is the ruling rather than a fix.** Until it, this test
+/// asserted `unestablished` with no source key at all, which was `ADMISSION-PREREGISTRATION.md` §14
+/// item IV left open; §14 item V resolves it and was recorded before this code changed. What the
+/// ruling did **not** change is asserted below too: no definition is invented, so no declared axis
+/// order appears, and the identifier is still not a unit source (test (g) and its mirror).
 #[test]
-fn the_format_default_admission_records_an_unestablished_unit_and_no_source() {
+fn the_format_default_admission_records_degrees_sourced_from_the_pinned_rule() {
     let path = write(
         "p2-format-default-unit",
         &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_geo_bbox: true, ..degrees() },
@@ -549,12 +553,29 @@ fn the_format_default_admission_records_an_unestablished_unit_and_no_source() {
     let md = envelope_metadata(&ds);
 
     assert_eq!(md.get("crs_provenance").unwrap(), "crs:format-default");
-    assert_eq!(md.get("coordinate_unit").unwrap(), "unestablished");
-    assert!(
-        !md.contains_key("coordinate_unit_source"),
-        "there was no definition to read a unit from, and the record says so by omitting the key"
+    assert_eq!(md.get("coordinate_unit").unwrap(), "degree");
+    assert_eq!(
+        md.get("coordinate_unit_source").unwrap(),
+        "unit:format-rule",
+        "the rule supplied the CRS and the same rule states its axes' unit; the record says which \
+         of the two sources that was"
     );
-    assert!(!ds.is_geographic_degrees_instance());
+    assert!(
+        ds.is_geographic_degrees_instance(),
+        "§3 row 8's degrees prediction, reachable since entry 81 = (b)"
+    );
+
+    // Nothing was invented to get there: the rule named a CRS, it did not supply PROJJSON.
+    assert!(
+        !md.contains_key("declared_axis_order"),
+        "no definition travelled with the file, so there is no declared order to retain"
+    );
+    assert_eq!(
+        md.get("format_rule_reference").unwrap(),
+        "geoparquet:1.1.0#crs-absent-default",
+        "the rule the unit came from is the one the record already names"
+    );
+    assert_eq!(md.get("axis_normalization").unwrap(), "none-performed");
 }
 
 /// **(g)** The identifier is not a unit source. Two files whose definitions differ **only** in
@@ -594,6 +615,76 @@ fn an_identifier_only_change_does_not_flip_the_instance_predicate() {
         named_lv95.is_geographic_degrees_instance(),
         "the axes declare degrees; an identifier that names a metre CRS does not overrule them"
     );
+}
+
+/// **(g)'s mirror, on the rule path.** The two sources are two facts and stay apart: a file
+/// carrying an **explicit** OGC:CRS84 definition records `unit:definition` — never
+/// `unit:format-rule`, though the rule would have named the same CRS and the same unit — and the
+/// cases the ruling did not touch still refuse, with nothing recorded for them.
+///
+/// The human's ruling of 2026-09-11 (DECISIONS-PENDING entry 81 = "(b), unit:format-rule beside
+/// unit:definition") added a second source; it did not merge the two, and it did not make the
+/// identifier one. A reader of a record must still be able to tell a declared-degrees file from a
+/// rule-defaulted one — the "Consequences" of the proposed ADR-013 Amendment 1's clarification of
+/// the same date.
+#[test]
+fn a_declared_definition_records_the_definition_source_and_never_the_rule() {
+    // Same identifier the rule would have named, same unit — and the record says the definition is
+    // where the unit came from, because that is what happened.
+    let declared = write(
+        "p2-declared-crs84-unit-source",
+        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+    );
+    let ds = Dataset::open(&declared).expect("opens");
+    let md = envelope_metadata(&ds);
+    assert_eq!(ds.crs().identifier(), "OGC:CRS84");
+    assert_eq!(md.get("crs_provenance").unwrap(), "crs:declared");
+    assert_eq!(md.get("coordinate_unit").unwrap(), "degree");
+    assert_eq!(
+        md.get("coordinate_unit_source").unwrap(),
+        "unit:definition",
+        "a definition was read; the rule was not consulted and must not be claimed"
+    );
+    assert_ne!(
+        md.get("coordinate_unit_source").unwrap(),
+        "unit:format-rule",
+        "the rule branch is reached from the recorded provenance class, never from the identifier \
+         string — a CRS84 identifier on a declared definition is not a format-rule admission"
+    );
+    assert!(
+        !md.contains_key("format_rule_reference"),
+        "no format rule was applied to a declared x-first CRS (R-C5), so none is named"
+    );
+    assert!(ds.is_geographic_degrees_instance());
+
+    // R-C3, untouched by the ruling: the file said its CRS is undefined or unknown, no rule answers
+    // for it, and there is therefore no rule to take a unit from either.
+    let null_path = write(
+        "p2-explicit-null-unit-source",
+        &FixtureSpec { crs_mode: CrsMode::ExplicitNull, ..degrees() },
+    );
+    assert!(
+        matches!(Dataset::open(&null_path), Err(EngineError::CrsUndeclared { .. })),
+        "entry 81 added a source to an admission that happens; it did not add an admission"
+    );
+
+    // R-C1, untouched by the ruling: no format rule is taken from a specification version this tree
+    // has not read, so an absent key still refuses and records nothing at all.
+    let unpinned = write(
+        "p2-unpinned-version-unit-source",
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            geo_version: "2.0.0".to_string(),
+            with_geo_bbox: true,
+            ..degrees()
+        },
+    );
+    match Dataset::open(&unpinned) {
+        Err(EngineError::CrsUndeclared { detail }) => {
+            assert!(detail.contains("2.0.0"), "the unpinned version is named: {detail}");
+        }
+        other => panic!("expected CrsUndeclared naming the version, got {:?}", other.err()),
+    }
 }
 
 /// The human's display-convention sentence, held once and **verbatim**. The literal is written out

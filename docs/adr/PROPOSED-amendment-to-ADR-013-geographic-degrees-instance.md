@@ -118,3 +118,13 @@ reviewers do not read it as scope creep); the exact `describe` field the convent
 path (behaviour); whether the binding equirectangular wording's **home** is this amendment or an
 appended ADR-003 note — the record so far names only that an ADR-003 note is "owed", and two homes
 for one binding sentence is a decision, not an implementation detail.
+
+## Clarification appended 2026-09-11 on the human's ruling (DECISIONS-PENDING entry 81 = (b)) — becomes part of the proposed text at acceptance
+
+*The architect's P2 consult escalated this; the human ruled "(b), unit:format-rule beside unit:definition". The Context/Decision/Consequences below expand the architect's own skeleton; the Proposed status is unchanged and nothing here is in force before acceptance at P6.*
+
+**Context.** §2 requires the unit to be read from the CRS definition. The format-default admission (Brief A boundary 1, rule R-C2 — an absent `crs` key under a pinned GeoParquet version) deliberately carries **no** definition: the engine never writes a definition it did not read. Read strictly, §2 left a CRS84-by-absent-key dataset with no unit, therefore no instance, no display statement, and no publish preflight refusal — the geographic bundle boundary 8 exists to prevent — and it left the preregistration's §3 row 8 prediction unmet.
+
+**Decision.** The **pinned format rule** is a second admissible source of the unit fact, beside the definition. GeoParquet 1.1.0's absent-key default names OGC:CRS84, whose axes are longitude and latitude in degrees; an admission under that rule records the unit `degree` on both axes with the source `unit:format-rule` (and the rule's reference the envelope already carries), where a unit read from a definition records `unit:definition`. The identifier string remains forbidden as a source (block-on-sight 8 unchanged); no PROJJSON is invented; P1's "never write a definition it did not read" stands. §2's sentence "A definition from which no unit can be established does not yield this instance" applies to definitions; a rule-sourced unit is a distinct, recorded source.
+
+**Consequences.** Corpus #8 (the ogr2ogr CRS84 file) reaches the degrees instance, the display statement and the publish preflight refusal as §3 row 8 predicted. The record shows which of the two sources supplied the unit, so a reader can tell a declared-degrees file from a rule-defaulted one. Nothing changes for a file with a definition, for explicit `null`, or for an unpinned version (which takes no format rule).
