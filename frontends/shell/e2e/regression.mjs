@@ -1120,7 +1120,7 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 }
 
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
- * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:1050`), then settles
+ * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:1227`), then settles
  * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
  * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1971-1977` (first
  * paragraph labelled at `:1952`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a

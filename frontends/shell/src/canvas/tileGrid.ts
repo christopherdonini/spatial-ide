@@ -111,7 +111,13 @@ export function cellSizeForLevel(frame: TileGridFrame, level: TileGridLevel): nu
 
 /** The canonical stable string form of a `TileKey`, for `Map`/`Set` keys and wire-free logging --
  * two keys with the same `row`/`col` always produce the same string, and the string round-trips
- * nowhere else (there is no `tileKeyFromString`; nothing needs to parse this back). */
+ * nowhere else (there is no `tileKeyFromString`; nothing needs to parse this back), with one
+ * qualification since entry 66 (b): `coverMembershipFor` below carries its own TOTAL parse of this
+ * same form (`parseTileKeyOrNull` -- `null`, never a throw, for anything that is not two
+ * finite-numeric colon-separated parts), because a membership test is asked about every key there
+ * is, including keys with no cell at all. That parse is private to this module and is not exported
+ * either; the two throwing `parseTileKey` helpers (`tileIngest.ts`, `WorkingCanvas.tsx`) stay
+ * exactly where they are and neither is reused for it. */
 export function tileKeyToString(key: TileKey): string {
   return `${key.row}:${key.col}`;
 }
@@ -266,9 +272,9 @@ function materialiseCells(rowStart: number, rowEnd: number, colStart: number, co
  *
  * **What the bound fixes.** `tilesCoveringBbox` (this function, then unbounded) was called on every
  * debounced camera settle (`TileViewportStreamManager.onCameraChange`, then
- * `streaming/tileViewportStreamManager.ts:314`, now `:372` and through `tileCoverForBbox`), and
+ * `streaming/tileViewportStreamManager.ts:314`, now `:383` and through `tileCoverForBbox`), and
  * `MAX_QUEUED_TILES` truncated only AFTERWARDS (the same block either side of the fix: then
- * `:361-379` there, now `:420-442`) -- so an
+ * `:361-379` there, now `:458-480`) -- so an
  * ordinary wheel gesture far enough out made this nested loop's own
  * iteration count a function of the camera alone, with nothing in front of it: the canvas's single
  * JS thread sat in this loop, which is docs/01's "Never block the canvas." (principle 7) broken on
@@ -280,7 +286,7 @@ function materialiseCells(rowStart: number, rowEnd: number, colStart: number, co
  * (intersected with the real cover, so a cover overrunning the bound on one axis only keeps the
  * other axis whole) and reports `"truncated"`. Nearest-to-the-view-centre-kept /
  * farthest-dropped is the policy `onCameraChange` itself already applies to its own candidate list
- * (`tileViewportStreamManager.ts:430-442`); this is that same policy, moved in front of the
+ * (`tileViewportStreamManager.ts:468-480`); this is that same policy, moved in front of the
  * allocation. It does NOT introduce a
  * zoom floor, a `minZoom` clamp, or any new operator-visible state -- entry 60 records the clamp as
  * an optional follow-up (recorded in the custodian's own next-cut brief, which is untracked and not
@@ -343,4 +349,92 @@ export function tileCoverForBbox(frame: TileGridFrame, level: TileGridLevel, bbo
   }
   const keys = materialiseCells(winRowStart, winRowEnd, winColStart, winColEnd);
   return { kind: "truncated", keys, cellCount, omittedCellCount: cellCount - keys.length };
+}
+
+/** The shape every eviction-protection consumer actually reads: membership by tile-key STRING, and
+ * nothing else. `ReadonlySet<string>` satisfies it structurally, so every call site that passes a
+ * `Set` today keeps compiling and behaving exactly as it did, and every existing test that passes one
+ * keeps passing; `coverMembershipFor` below returns the GEOMETRIC form, which answers for every cell
+ * of a cover without materialising any of them. */
+export interface TileKeyMembership {
+  has(key: string): boolean;
+}
+
+/** `tileKeyToString`'s inverse, TOTAL: `null` -- never a throw -- for any string that is not exactly
+ * two finite-numeric colon-separated parts (the same acceptance rule the two throwing parsers use,
+ * answered rather than thrown). `tileIngest.ts:43-51` and `WorkingCanvas.tsx:367-375` each carry
+ * their own `parseTileKey` that THROWS on such a key, deliberately (their own doc comments have the
+ * account: a malformed key reaching an eviction-ORDER comparator must fail loudly rather than
+ * silently produce a `NaN` distance) -- which is exactly why neither may be reused here. A
+ * membership test is asked about EVERY resident or tracked key there is, including the candidate
+ * arm's reserved `INITIAL_TILE_KEY` (`tileGridConstants.ts`), which is not a grid key at all: it
+ * answers "not a member" for a key with no cell, and never throws. */
+function parseTileKeyOrNull(key: string): TileKey | null {
+  const parts = key.split(":");
+  if (parts.length !== 2) return null;
+  const row = Number(parts[0]);
+  const col = Number(parts[1]);
+  if (!Number.isFinite(row) || !Number.isFinite(col)) return null;
+  return { row, col };
+}
+
+/**
+ * Membership in the cover of `bbox` at `level` in `frame` -- the SAME two index ranges
+ * `coveringCellCount` and `tileCoverForBbox` already compute (`coveringIndexRanges`), asked per key
+ * instead of materialised into an array. It allocates the two index pairs and nothing else, whatever
+ * the cover's own cell count turns out to be, so protection no longer depends on enumeration.
+ *
+ * **What it answers.** `has(key)` is true iff that key's own cell lies inside those ranges --
+ * `cols[0] <= col && col <= cols[1] && rows[0] <= row && row <= rows[1]`, two `<=` per axis, exactly
+ * the bounds `materialiseCells` walks. Cells are half-open in COORDINATE space (`[cellMin, cellMax)`,
+ * this module's own covering convention -- `coveringIndexRange`'s doc comment) while the ranges it
+ * returns are INCLUSIVE in INDEX space, which is why both comparisons are `<=` and why a bbox edge
+ * landing exactly on a cell boundary belongs to the cell whose MIN edge it is: the column whose min
+ * edge equals `bbox.xmax` is in neither this predicate nor `tileCoverForBbox`'s keys. A closed-bbox
+ * intersection test (`tileBbox(key)` overlapping `bbox` with `<=`/`>=`) would admit that column, and
+ * would therefore protect a cell no round ever plans, requests, or counts for completeness.
+ *
+ * **Agreement with the cover, and where it is deliberately a SUPERSET.** For every bbox whose cover
+ * is at or under `MAX_COVERING_TILES` this is exactly `tileCoverForBbox`'s own key set (pinned in
+ * `tileGrid.test.ts`, boundary-exact and degenerate-point cases included) -- that agreement is
+ * claimed for those covers and no others. Past the bound `tileCoverForBbox` returns the centred
+ * window while this predicate keeps answering for the whole cover, which is the point of it. Two
+ * declared edges: a non-finite bbox is a member of nothing -- checked explicitly at construction,
+ * NOT left to the comparisons (an infinite range end would make them all true rather than all false;
+ * see the guard's own comment) -- matching the cover's own empty-keys outcome for such a bbox; and a
+ * finite bbox
+ * whose cell indices exceed the safe-integer range (`isEnumerableRange`) is answered `true` inside
+ * those ranges although the cover keeps nothing there -- a DECLARED superset (ADR-010 rule 6:
+ * declared, not discovered), never a claim of agreement.
+ *
+ * **The invariant a caller owes this factory (load-bearing).** Tile keys are frame- and
+ * level-relative, so a membership must be built from the SAME `(frame, level, bbox)` triple the
+ * round's own plan used -- a predicate built at one level and tested against keys minted at another
+ * answers about cells no key in play names. `TileViewportStreamManager`'s frame is frozen for a
+ * dataset session (`establishGridFrame`) and its level is fixed at construction, so that triple is
+ * `manager.gridFrame` / `manager.activeLevel` plus that plan's own bbox, and nothing else.
+ */
+export function coverMembershipFor(
+  frame: TileGridFrame,
+  level: TileGridLevel,
+  bbox: AuthoritativeBbox
+): TileKeyMembership {
+  const { cols, rows } = coveringIndexRanges(frame, level, bbox);
+  // A non-finite bbox protects NOTHING (block-on-sight 7), and that is checked here rather than left
+  // to the comparisons: a `NaN` range end would indeed make every comparison `false`, but an INFINITE
+  // one (an infinite bbox coordinate: `cols` becomes `[-Infinity, Infinity]`) would make them all
+  // `true` instead, which would protect every key there is. Tested once, at construction, so `has`
+  // itself stays a comparison. This is the only case where the predicate answers `false` inside its
+  // own ranges, and it is exactly `tileCoverForBbox`'s own outcome for the same bbox: truncated,
+  // nothing kept.
+  const finiteRanges =
+    Number.isFinite(cols[0]) && Number.isFinite(cols[1]) && Number.isFinite(rows[0]) && Number.isFinite(rows[1]);
+  return {
+    has(key: string): boolean {
+      if (!finiteRanges) return false;
+      const cell = parseTileKeyOrNull(key);
+      if (cell === null) return false;
+      return cols[0] <= cell.col && cell.col <= cols[1] && rows[0] <= cell.row && cell.row <= rows[1];
+    },
+  };
 }

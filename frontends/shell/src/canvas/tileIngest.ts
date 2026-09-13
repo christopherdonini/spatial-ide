@@ -4,6 +4,7 @@
 import type { ResidentBatch } from "./decodeBatch";
 import { EvictionPlan, planTileEviction, TileResidentSet } from "./tileResidentSet";
 import { tileDistanceToPoint, TileGridFrame, TileKey } from "./tileGrid";
+import type { TileKeyMembership } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { TileGridLevel } from "./tileGridConstants";
 import type { AuthoritativeBbox } from "./viewportBbox";
@@ -116,7 +117,13 @@ export function ingestTileBatch(params: {
   tileKey: string;
   batch: ResidentBatch;
   grid: TileGridContext | null;
-  viewportTileKeys: ReadonlySet<string>;
+  /** The current viewport's own protection membership -- forwarded unchanged to `planTileEviction`'s
+   * own `viewportTileKeys` and to `TileResidentSet.evictTile`'s own `protectedTileKeys` cascade
+   * backstop, read for `.has` and nothing else. A `ReadonlySet<string>` satisfies the shape, so a
+   * caller holding a genuine set (every non-candidate path, and every test that passes one) is
+   * unaffected; the candidate arm passes `tileGrid.ts`'s own `coverMembershipFor` predicate, which
+   * answers for the whole cover at every zoom (entry 66 (b)). */
+  viewportTileKeys: TileKeyMembership;
   viewCentre: { x: number; y: number };
   maxResidentVertices: number;
   priorExtent: AuthoritativeBbox | null;

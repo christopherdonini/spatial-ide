@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
 import { extentOfBatch, unionBbox } from "./extent";
-import { deriveTileGridFrame } from "./tileGrid";
+import { cellSizeForLevel, coverMembershipFor, deriveTileGridFrame, tileCoverForBbox, tileKeyToString } from "./tileGrid";
+import type { AuthoritativeBbox } from "./viewportBbox";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import { TileResidentSet } from "./tileResidentSet";
 import { ingestTileBatch, trimBatchToVertexBudget } from "./tileIngest";
@@ -479,5 +480,89 @@ describe("ingestTileBatch: T-D, batchExtent's own admitted-rows-only contract", 
     expect(result.rowsAdmitted).toBe(1);
     expect(result.batchExtent).toEqual({ xmin: 0, ymin: 0, xmax: 0, ymax: 0 });
     expect(result.unionedExtent).toEqual({ xmin: 0, ymin: 0, xmax: 50, ymax: 50 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Entry 66 (b) (`frontends/shell/ENTRY-66B-PREREGISTRATION.md`, pre-committed tests 1 and 2): the
+// eviction path with a MEMBERSHIP predicate as `viewportTileKeys` instead of the materialised,
+// `MAX_COVERING_TILES`-bounded covering array. Test 1: a resident tile the viewport genuinely covers
+// but the enumerated window leaves out is not evicted. Test 2: the same fixture still evicts a tile
+// the viewport does not cover -- the piece must not protect everything.
+// ---------------------------------------------------------------------------------------
+
+describe("ingestTileBatch: geometric protection past the enumeration bound (entry 66 (b))", () => {
+  /** A viewport bbox whose cover is 300 x 300 = 90,000 cells -- past `MAX_COVERING_TILES` (65,536),
+   * so `tileCoverForBbox` keeps the centred `COVER_WINDOW_CELLS_PER_AXIS` window and omits the
+   * corner cells. Anchored at the frame origin, so cell (0, 0) is one of the omitted ones. */
+  function overBoundViewport(): AuthoritativeBbox {
+    const cellSize = cellSizeForLevel(GRID.frame, GRID.level);
+    return {
+      xmin: GRID.frame.originX,
+      ymin: GRID.frame.originY,
+      xmax: GRID.frame.originX + 300 * cellSize,
+      ymax: GRID.frame.originY + 300 * cellSize,
+    };
+  }
+
+  /** The three-tile fixture both tests below share: `"0:0"` (covered by the viewport, OUTSIDE the
+   * enumerated window), `"150:150"` (inside the window) and `"1000:1000"` (not covered at all), each
+   * 100 vertices resident, plus the membership and view centre of that same viewport. */
+  function fixture() {
+    const bbox = overBoundViewport();
+    const cover = tileCoverForBbox(GRID.frame, GRID.level, bbox);
+    // The fixture is only meaningful in the window regime -- assert it, never assume it.
+    expect(cover.kind).toBe("truncated");
+    const windowKeys = new Set(cover.keys.map(tileKeyToString));
+    expect(windowKeys.has("0:0")).toBe(false);
+    expect(windowKeys.has("150:150")).toBe(true);
+    const membership = coverMembershipFor(GRID.frame, GRID.level, bbox);
+    expect(membership.has("0:0")).toBe(true); // covered, though the window omits it
+    expect(membership.has("1000:1000")).toBe(false); // genuinely outside the viewport
+
+    const tileSet = new TileResidentSet();
+    // Distinct ids per tile: item C's own cross-tile dedupe would otherwise admit the first tile's
+    // rows and refuse the other two, leaving them resident but empty.
+    ["0:0", "150:150", "1000:1000"].forEach((key, i) => {
+      ingestTileBatch(
+        baseParams({ tileSet, tileKey: key, batch: batch(`sh_${key}`, 0, [i + 1], 100), viewportTileKeys: membership })
+      );
+    });
+    expect(tileSet.totalResidentVertices).toBe(300);
+    const viewCentre = { x: (bbox.xmin + bbox.xmax) / 2, y: (bbox.ymin + bbox.ymax) / 2 };
+    return { tileSet, membership, viewCentre };
+  }
+
+  it("test 1: a resident tile the viewport covers but the WINDOW omits is not evicted, and stays resident", () => {
+    const { tileSet, membership, viewCentre } = fixture();
+    // A batch that forces eviction: 300 resident + 100 incoming, against a 350-vertex budget.
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "150:151",
+        batch: batch("sh_incoming", 0, [900], 100),
+        viewportTileKeys: membership,
+        viewCentre,
+        maxResidentVertices: 350,
+      })
+    );
+    expect(result.evictedTileKeys).not.toContain("0:0");
+    expect(tileSet.isTileResident("0:0")).toBe(true);
+  });
+
+  it("test 2: the same fixture DOES evict a resident tile the viewport genuinely does not cover", () => {
+    const { tileSet, membership, viewCentre } = fixture();
+    const result = ingestTileBatch(
+      baseParams({
+        tileSet,
+        tileKey: "150:151",
+        batch: batch("sh_incoming", 0, [900], 100),
+        viewportTileKeys: membership,
+        viewCentre,
+        maxResidentVertices: 350,
+      })
+    );
+    expect(result.evictedTileKeys).toContain("1000:1000");
+    expect(tileSet.isTileResident("1000:1000")).toBe(false);
   });
 });
