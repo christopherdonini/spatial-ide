@@ -1,0 +1,26 @@
+{
+  "route": "A-duckdb",
+  "variant": "preserve",
+  "function": "ST_SimplifyPreserveTopology",
+  "input": "target/slice-evidence/scale-pass/parcels-5gb.parquet",
+  "output": "target/spikes/lod/a_5gb_t0.1_preserve.parquet",
+  "tolerance": 0.1,
+  "wall_s": 121.55037599999923,
+  "input_bytes": 5004376705,
+  "output_bytes": 4610958878,
+  "output_over_input_ratio": 0.9213852493144798,
+  "features_before": 3300000,
+  "features_after": 3300000,
+  "vertices_before": 345507850,
+  "vertices_after": 326390493,
+  "vertex_reduction_ratio": 0.05533117988491432,
+  "invalid_after": 0,
+  "identity": {
+    "n_in": 3300000,
+    "n_out": 3300000,
+    "duplicate_ids_out": 0,
+    "missing_from_output": 0,
+    "extra_in_output": 0,
+    "preserved": true
+  }
+}

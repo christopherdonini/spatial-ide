@@ -1,0 +1,17 @@
+{
+  "route": "A-duckdb",
+  "mode": "cancel",
+  "input": "target/slice-evidence/scale-pass/parcels-5gb.parquet",
+  "tolerance": 1.0,
+  "interrupt_after_s_requested": 20.0,
+  "join_timeout_s": 60.0,
+  "thread_alive_after_join": false,
+  "time_from_interrupt_to_join_return_s": 0.9984665000229143,
+  "worker": {
+    "completed": false,
+    "error": "INTERRUPT Error: Interrupted!",
+    "worker_wall_s": 21.019573500030674
+  },
+  "output_exists": true,
+  "output_bytes": 107094052
+}

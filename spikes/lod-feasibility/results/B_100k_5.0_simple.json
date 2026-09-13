@@ -1,0 +1,20 @@
+{
+  "route": "B-geo",
+  "variant": "simple",
+  "function": "geo::Simplify (Ramer-Douglas-Peucker)",
+  "input": "C:/dev/spatial-ide/target/fixtures/slice-budgets/polygons-100k.parquet",
+  "tolerance": 5,
+  "wall_s": 1.8887665,
+  "features_before": 100000,
+  "features_after": 100000,
+  "vertices_before": 10467093,
+  "vertices_after": 1246052,
+  "vertex_reduction_ratio": 0.8809552948464296,
+  "invalid_after": 5,
+  "identity": {
+    "n_in": 100000,
+    "n_out": 100000,
+    "duplicate_ids_out": 0,
+    "preserved": true
+  }
+}

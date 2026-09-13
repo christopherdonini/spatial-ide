@@ -1,0 +1,26 @@
+{
+  "route": "A-duckdb",
+  "variant": "simple",
+  "function": "ST_Simplify",
+  "input": "target/slice-evidence/scale-pass/parcels-5gb.parquet",
+  "output": "target/spikes/lod/a_5gb_t1.0_simple.parquet",
+  "tolerance": 1.0,
+  "wall_s": 58.73541089997161,
+  "input_bytes": 5004376705,
+  "output_bytes": 2872576891,
+  "output_over_input_ratio": 0.5740129211555828,
+  "features_before": 3300000,
+  "features_after": 3300000,
+  "vertices_before": 345507850,
+  "vertices_after": 202237856,
+  "vertex_reduction_ratio": 0.4146649461075921,
+  "invalid_after": 0,
+  "identity": {
+    "n_in": 3300000,
+    "n_out": 3300000,
+    "duplicate_ids_out": 0,
+    "missing_from_output": 0,
+    "extra_in_output": 0,
+    "preserved": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "route": "B-geo",
+  "mode": "stream-cancel",
+  "input": "C:/dev/spatial-ide/target/slice-evidence/scale-pass/parcels-5gb.parquet",
+  "tolerance": 1,
+  "interrupt_after_s_requested": 20,
+  "row_groups_total": 403,
+  "row_groups_processed": 3,
+  "features_processed": 24576,
+  "wall_s_total": 30.0113766,
+  "flag_set_at_s": 20.0589098,
+  "loop_exit_at_s": 30.0113762,
+  "time_from_flag_set_to_loop_exit_s": 9.952466400000002,
+  "output_bytes": 0,
+  "note": "cooperative flag checked once per row group boundary; no partial file, nothing written"
+}

@@ -1,0 +1,22 @@
+# LOD feasibility spike -- route (B): Rust-side simplification via `geo`.
+#
+# Standalone crate, deliberately isolated from the product workspace: the empty [workspace] table
+# below stops cargo from walking up and attaching this crate to the root Cargo.toml, so a build here
+# never touches the parent Cargo.lock. Build with:
+#   cargo build --release --manifest-path spikes/lod-feasibility/rust/Cargo.toml
+# Not a product crate, not published, not a dependency proposal in itself -- see the spike README's
+# Route comparison section for the actual proposal (crate names + versions) to the human.
+[workspace]
+
+[package]
+name = "lod-feasibility-spike"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+arrow = "59.3.0"
+geo = "0.33.1"
+geo-traits = "0.3.0"
+parquet = { version = "59.3.0", features = ["arrow"] }
+wkb = "0.9.2"
