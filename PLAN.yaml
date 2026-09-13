@@ -707,9 +707,9 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: blocked
     order: 3
-    depends_on: []
+    depends_on: [polish-engine-lease-class]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -717,7 +717,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded by the human on 2026-09-14: the main checkout shell debug cache (21 GB) reclaimed"
+    summary: "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded 2026-09-14 (the debug cache reclaimed). Sequenced after the engine half: its harness run needs the quiet machine the drill would load (the mechanics rule)"
     dates: {opened: null, done: null}
 
   - id: evidence-archive-v0-1-0
@@ -743,12 +743,12 @@ nodes:
     kind: task
     lane: release
     phase: prototype
-    status: ready
+    status: in-progress
     order: 10
     depends_on: [autonomy-work-system]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {branch: release/ci-artifacts}
     budget_minutes: 90
     generation: 1
     felt_verdict: false

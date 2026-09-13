@@ -1,15 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `36025bf5ee8fd3fcae4c0932f2d54663face9ee171c40272da9a17ff01ab42d6`) at `2026-09-13T22:09:20.775Z`.
+Generated from `PLAN.yaml` (sha256 `dd4799aa81f203a99d412cb053fb2ef86fdb382f067cb1b994234183d0e25e74`) at `2026-09-13T22:10:02.560Z`.
 
 ## 1. Next
 
-- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 (lane `release`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 (lane `release`, order 10, budget 90 min)
-- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 156 min)
 
@@ -41,10 +40,12 @@ Generated from `PLAN.yaml` (sha256 `36025bf5ee8fd3fcae4c0932f2d54663face9ee171c4
 ## 4. Blocked on dependencies
 
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
+- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build — blocked by: polish-engine-lease-class
 
 ## 5. In progress
 
 - **polish-engine-lease-class** — Entry 87's engine half — a declared lease class for per-request admission work (ADR-033) — evidence: branch `polish/engine-lease-class`
+- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — evidence: branch `release/ci-artifacts`
 
 ## 6. Proposed / unscheduled
 

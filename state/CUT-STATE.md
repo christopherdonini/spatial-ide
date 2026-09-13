@@ -1,13 +1,13 @@
 # CUT-STATE — post-v0.1.0 (opened 2026-09-13 at the release cut's close)
 
 ## SESSION-CONTINUITY
-flushed_at: 2026-09-13T21:51:58Z
-tip: (main, this flush commit's parent); governance/autonomy a4daa39 (PR #54); polish/filter-and-hover ea7a494 (PR #55); viewer/zoom-anchor, fix/no-crs-reaim, spike/lod-feasibility MERGED (#53, #52, #51)
-position: the post-tag arc's first window is complete — every unblocked node exhausted; five PRs merged by the human today (#45, #46, #51, #52, #53); two open for the click (#54 governance, #55 polish shell half); the first AskUserQuestion set is being raised (lane priorities; the waiting-on-you list; confirmations). The hooks go live on #54's merge; the Stop-hook and /compact dry runs follow it.
+flushed_at: 2026-09-13T22:10:03Z
+tip: (main, this flush commit's parent); polish/engine-lease-class (the engine half, worker running); release/ci-artifacts (worker running); everything else merged
+position: window 2 of the post-tag arc — the work system is LIVE on main (#54 merged); the polish shell half merged (#55); question sets 1 and 2 answered and applied (priorities; 91 (a) → the engine half in progress; 86 and 94 applied; M13's log line recorded, exit code pending); the human's disk ruling applied (30.7 GB free). Running: the engine half (harness holder) and the CI-artifacts job. Held for a quiet machine: the drill (sequenced after the engine half in the plan).
 half-made judgments: PLAN.yaml-change PRs custodian-mergeable only with verify:plan green and no lane-priority / felt-verdict change — to be confirmed in the first question set; the PreCompact block reason may not reach the model on automatic compaction (undocumented) — the obligation and a proactive /autocompact window are the backstop; the patch-bump precedent's scope is the human's to confirm; the polish shell half lands with FIND′ recorded FAILING for the held engine cause (entry 91 (a)) — the human decides whether to merge it before the engine half; the "113 of 193" figure is per-attempt and inflated — the per-tile figure comes with the fix round.
-intended sequencing: raise the first question set → quote every answer verbatim into DECISIONS-PENDING (RULED block) → apply rulings (lane priorities → PLAN.yaml `priorities_approved`; entry 91 (a) → the engine half + ADR-033 or hold; 86's line 16; 93's route; 90; 92; 77; the disk reclaim → the drill; the evidence attach) → after #54 merges: live Stop-hook dry run at the next natural stop, forced /compact dry run, Pages enabled by the human → report ≤ 20 lines.
+intended sequencing: engine half reports → gates (reviewer + architect; ADR-033 text) → PR (the human's click; ADR-033 accepted on their word after the gate) → the drill worker on the quiet machine → its result in kernel/RESULTS.md → CI-artifacts PR → next round's question sets (the deferred rulings: 91 b/c, 93, 92, 90, 77, 75, 73, 69, ADR-023's Decision; the sitting date; M13's exit code; the confirmations) → report ≤ 20 lines. The live Stop-hook run is observable only when no background agents run and a ready node exists; the forced /compact dry run is the human's command.
 unreported findings: none beyond the ledger. Disk about 10 GB free; the main checkout's shell debug cache is 21.2 GB (the reclaim question).
-in-flight gate states: none running. #54 gated PASS (CI green); #55 gated PASS (reviewer) / PASS with notes (architect) with FIND′ recorded failing for entry 91 (a).
+in-flight gate states: engine half — not yet reported; CI artifacts — not yet reported; nothing else open.
 
 Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the release cut, 2026-09-08 → 2026-09-13; v0.1.0 = b391e43 on release/0.1.0, RC2 = 13471a9; merged back to main at e9900a3).
 

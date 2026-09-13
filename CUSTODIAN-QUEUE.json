@@ -1,66 +1,9 @@
 {
-  "generated_at": "2026-09-13T22:09:20.775Z",
-  "plan_hash": "36025bf5ee8fd3fcae4c0932f2d54663face9ee171c40272da9a17ff01ab42d6",
+  "generated_at": "2026-09-13T22:10:02.560Z",
+  "plan_hash": "dd4799aa81f203a99d412cb053fb2ef86fdb382f067cb1b994234183d0e25e74",
   "priorities_approved": true,
-  "next": {
-    "id": "release-artifacts-from-ci",
-    "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
-    "lane": "release",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 10,
-    "budget_minutes": 90,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": null,
-      "done": null
-    },
-    "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built"
-  },
-  "ready": [
-    {
-      "id": "release-artifacts-from-ci",
-      "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 10,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built"
-    },
-    {
-      "id": "drill-clean-clone",
-      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded by the human on 2026-09-14: the main checkout shell debug cache (21 GB) reclaimed"
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 156,
     "by_kind": {
@@ -343,6 +286,28 @@
       "blocked_by": [
         "briefa-p3-p6"
       ]
+    },
+    {
+      "id": "drill-clean-clone",
+      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 3,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded 2026-09-14 (the debug cache reclaimed). Sequenced after the engine half: its harness run needs the quiet machine the drill would load (the mechanics rule)",
+      "blocked_by": [
+        "polish-engine-lease-class"
+      ]
     }
   ],
   "in_progress": [
@@ -367,6 +332,28 @@
       },
       "summary": "The human's ruling of 2026-09-13 (question set 1, Q3): the third lease class, the two tests, FIND′ green as the acceptance evidence, ADR-033's text per the three conditions; ADR-033 accepted on the human's word after its gate",
       "evidence_label": "branch `polish/engine-lease-class`"
+    },
+    {
+      "id": "release-artifacts-from-ci",
+      "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 10,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "release/ci-artifacts"
+      },
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built",
+      "evidence_label": "branch `release/ci-artifacts`"
     }
   ],
   "proposed": [
