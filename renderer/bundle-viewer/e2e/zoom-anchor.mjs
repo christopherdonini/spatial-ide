@@ -74,6 +74,20 @@
  * `playwright-core`'s Chromium, imported from `frontends/shell/node_modules` by relative path rather
  * than added as a dependency of this package — the same browser the reproduction driver used, with no
  * new dependency introduced to reach it. This launches no Spatial IDE app and no harness.
+ *
+ * ## Why `npm run test:e2e` is not in `verify`
+ *
+ * `verify` is what `.github/workflows/product-ci-viewer.yml` runs, on `ubuntu-latest`, installing
+ * only this package's own `node_modules` (`npm ci` with `working-directory: renderer/bundle-viewer`).
+ * This file needs two things that are true on this machine and not there: `frontends/shell`'s own
+ * `playwright-core` (a sibling package CI never installs from this workflow) and
+ * `EXTERNAL_BUNDLE_DATA_DIR`, a declared external input outside the repository entirely. Wiring this
+ * into `verify` would not make CI exercise it — it would make every push under
+ * `renderer/bundle-viewer/**` fail on a missing path, for a reason that has nothing to do with the
+ * change being pushed. `scripts/run-acceptance.mjs` is the existing precedent for exactly this
+ * shape — "an operator-run instrument rather than a per-push check" (that file's own workflow
+ * comment) — and this file follows it: a standalone `npm run test:e2e`, run by an operator with the
+ * browser and the bundle present, not part of `test` or `verify`.
  */
 
 import { execFileSync, spawn } from 'node:child_process';

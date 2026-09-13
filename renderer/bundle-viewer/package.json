@@ -9,6 +9,7 @@
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"scripts/**/*.test.mjs\"",
+    "test:e2e": "node --test e2e/zoom-anchor.mjs",
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
