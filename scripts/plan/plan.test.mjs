@@ -117,6 +117,37 @@ test('validatePlan rejects needs_human.kind != none with no minutes', () => {
   assert.ok(caught.errors.some((e) => e.includes('needs_human.minutes must be present')));
 });
 
+test('validatePlan rejects in-progress with no branch/PR evidence (reviewer finding 10)', () => {
+  let caught;
+  try {
+    loadPlan(fixture('invalid-in-progress-no-evidence.yaml'));
+  } catch (e) {
+    caught = e;
+  }
+  assert.ok(caught instanceof PlanValidationError);
+  assert.ok(caught.errors.some((e) => e.includes('in-progress') && e.includes('neither a branch')));
+});
+
+test('validatePlan accepts in-progress with a PR pointer, not only a branch', () => {
+  const plan = { ...loadPlan(fixture('valid-plan.yaml')) };
+  const mutated = {
+    ...plan,
+    nodes: plan.nodes.map((n) => (n.id === 'n-inprogress' ? { ...n, evidence: { pr: 46 } } : n)),
+  };
+  assert.deepEqual(validatePlan(mutated), []);
+});
+
+test('validatePlan rejects a missing "gate" field (reviewer finding 10)', () => {
+  let caught;
+  try {
+    loadPlan(fixture('invalid-missing-gate.yaml'));
+  } catch (e) {
+    caught = e;
+  }
+  assert.ok(caught instanceof PlanValidationError);
+  assert.ok(caught.errors.some((e) => e.includes('"gate" must be present')));
+});
+
 test('deriveStates on the two-node fixture: one ready, one waiting on human', () => {
   const plan = loadPlan(fixture('two-nodes.yaml'));
   const { ready, waitingOnHuman, blockedOnDeps } = deriveStates(plan);

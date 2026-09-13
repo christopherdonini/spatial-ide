@@ -45,7 +45,7 @@ test('checkDocsOnly: a code path change is offending', () => {
   assert.match(offending[0], /index\.mjs/);
 });
 
-test('checkDocsOnly: an ADR Status line change is offending', () => {
+test('checkDocsOnly: an ADR Status line change is offending (excluded outright, plus the specific status-line guard)', () => {
   const dir = makeRepo();
   fs.mkdirSync(path.join(dir, 'docs', 'adr'), { recursive: true });
   const adrPath = path.join(dir, 'docs', 'adr', 'ADR-099-test.md');
@@ -54,11 +54,14 @@ test('checkDocsOnly: an ADR Status line change is offending', () => {
   fs.writeFileSync(adrPath, '# ADR-099\n\nStatus: **Accepted, 2026-09-13**\n\nBody.\n');
   const head = commitAll(dir, 'accept the ADR');
   const offending = checkDocsOnly(dir, base, head);
-  assert.equal(offending.length, 1);
-  assert.match(offending[0], /Status line changed/);
+  // Two independent findings for the same path: the outright ADR exclusion (finding 2), and the
+  // more specific Status-line guard kept alongside it.
+  assert.equal(offending.length, 2);
+  assert.ok(offending.some((o) => o.includes('never docs-only-eligible')));
+  assert.ok(offending.some((o) => o.includes('Status line changed')));
 });
 
-test('checkDocsOnly: an ADR body edit that leaves Status untouched is eligible', () => {
+test('checkDocsOnly: any ADR touch is offending outright, even with Status untouched (finding 2)', () => {
   const dir = makeRepo();
   fs.mkdirSync(path.join(dir, 'docs', 'adr'), { recursive: true });
   const adrPath = path.join(dir, 'docs', 'adr', 'ADR-099-test.md');
@@ -66,6 +69,41 @@ test('checkDocsOnly: an ADR body edit that leaves Status untouched is eligible',
   const base = commitAll(dir, 'init');
   fs.writeFileSync(adrPath, '# ADR-099\n\nStatus: **Accepted, 2026-09-13**\n\nAmended body.\n');
   const head = commitAll(dir, 'amend the ADR body');
+  const offending = checkDocsOnly(dir, base, head);
+  assert.equal(offending.length, 1);
+  assert.match(offending[0], /never docs-only-eligible/);
+});
+
+test('checkDocsOnly: docs/01_Principles.md is never docs-only-eligible (finding 2)', () => {
+  const dir = makeRepo();
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  const p = path.join(dir, 'docs', '01_Principles.md');
+  fs.writeFileSync(p, '# Principles\n\nOriginal.\n');
+  const base = commitAll(dir, 'init');
+  fs.writeFileSync(p, '# Principles\n\nA one-word typo fix.\n');
+  const head = commitAll(dir, 'typo fix');
+  const offending = checkDocsOnly(dir, base, head);
+  assert.equal(offending.length, 1);
+  assert.match(offending[0], /never docs-only-eligible/);
+});
+
+test("checkDocsOnly: uses the merge-base, not base's own moved-ahead tip (finding 2)", () => {
+  const dir = makeRepo();
+  fs.writeFileSync(path.join(dir, 'README.md'), '# hello\n');
+  commitAll(dir, 'init'); // the common ancestor both branches share
+  const defaultBranch = git(dir, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+
+  git(dir, ['checkout', '-q', '-b', 'pr-branch']);
+  fs.writeFileSync(path.join(dir, 'README.md'), '# hello world\n');
+  const head = commitAll(dir, "the PR's own docs-only commit");
+
+  git(dir, ['checkout', '-q', defaultBranch]);
+  fs.writeFileSync(path.join(dir, 'unrelated.mjs'), 'console.log(1);\n');
+  // base moves on with a commit the PR branch never saw. A two-dot diff against base's new tip
+  // would show unrelated.mjs being "removed" (present in base, absent on the PR branch) and
+  // wrongly flag the PR as touching a code path.
+  const base = commitAll(dir, "base moves on after the PR's branch point, unrelated to the PR");
+
   assert.deepEqual(checkDocsOnly(dir, base, head), []);
 });
 

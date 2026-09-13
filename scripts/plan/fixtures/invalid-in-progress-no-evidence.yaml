@@ -1,0 +1,24 @@
+# status: in-progress but evidence names neither a branch nor a PR (reviewer finding 10).
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: in-progress-no-evidence
+    title: "In progress with no branch or PR"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: in-progress
+    order: 1
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: in-progress with no branch/PR evidence"
+    dates: {opened: 2026-09-13, done: null}
