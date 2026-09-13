@@ -54,8 +54,15 @@
 //!    priority beyond the three fixed class bounds. Anything that *waits* for a connection would be
 //!    an admission policy wearing a pool's clothes.
 //! 2. **The ceilings are the engine's own**, justified by what this engine will serve over one
-//!    dataset. This module names no constant belonging to a binding: `docs/02` makes that split
-//!    structural, and `engine/tests/slice.rs` scans this crate's own source to keep it that way.
+//!    dataset, and **no ceiling here is *computed* from a binding's constant** — every value below
+//!    is a literal this crate owns and can change alone (`docs/02`'s module split). One of them,
+//!    `MAX_ADMISSION_CONNECTIONS`, is nonetheless *sized to* a binding's declared concurrency and
+//!    **says so in its own doc**, naming the shell's `MAX_IN_FLIGHT_TILE_STREAMS` as the quantity
+//!    it was chosen against (ADR-010 rule 6: a declared ceiling states what it bounds). That is a
+//!    prose derivation the reader can check, not a code dependency — nothing here imports, reads or
+//!    is rebuilt by any binding — and the *composition* claim it implies (that the shipped shell
+//!    therefore never collides at this class) belongs to `kernel/README.md`, the only file
+//!    entitled to know both sides, where it is recorded.
 //! 3. `MAX_STREAM_CONNECTIONS` equals the concurrent-stream ceiling the shipped binding happens to
 //!    declare, so on the **natural-completion** path `ConnectionsExhausted { class: "stream" }` is
 //!    unreachable in composition: the producer resolves its lease before it drops the channel, so a
@@ -104,7 +111,7 @@ pub const MAX_MAINTENANCE_CONNECTIONS: usize = 1;
 /// **What quantity this bounds, declared per ADR-010 rule 6 ("ceilings are declared, not
 /// discovered").** The concurrent admissions one binding can present at once: the shell's declared
 /// tile-stream concurrency, `MAX_IN_FLIGHT_TILE_STREAMS = 3`
-/// (`frontends/shell/src/canvas/tileGridConstants.ts:38`), plus the baseline (non-tiled) viewport
+/// (`frontends/shell/src/canvas/tileGridConstants.ts:40`), plus the baseline (non-tiled) viewport
 /// query a session also issues, `1` — `3 + 1 = 4`. This is a **chosen ceiling**, not a measured or
 /// derived one: it is sized to the shipped shell's own composition so that, in that composition,
 /// this class is never the thing that refuses (DECISIONS-PENDING entry 91 (a); PROPOSED ADR-033).

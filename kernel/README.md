@@ -68,20 +68,35 @@ different questions, and `RESULTS.md` says which.
 ### DuckDB connections, and the coincidence that is not a decision
 
 `engine` owns a bounded connection pool **per open dataset**: `MAX_STREAM_CONNECTIONS` 4 +
-`MAX_MAINTENANCE_CONNECTIONS` 1 = **5 physical connections per dataset**. The composed process
+`MAX_MAINTENANCE_CONNECTIONS` 1 + `MAX_ADMISSION_CONNECTIONS` 4 = **9 physical connections per
+dataset**. The composed process
 ceiling is therefore **`open datasets × MAX_PHYSICAL_CONNECTIONS`**, and it scales with the catalog
-rather than with the concurrent-stream ceiling — a reader who takes 5 as the process figure will be
-wrong the moment a second dataset is registered. `slice-host` opens exactly one, so **5** today.
+rather than with the concurrent-stream ceiling — a reader who takes 9 as the process figure will be
+wrong the moment a second dataset is registered. `slice-host` opens exactly one, so **9** today.
 One query per physical connection; a lease moves
 the connection out of the pool and no lock is held across a query. A stream that completes returns
 its connection after a drained verification statement; a stream that fails or is cancelled discards
 and replaces it, because this engine has established no post-interrupt health guarantee for DuckDB.
 
 **The engine's stream ceiling and this crate's `MAX_CONCURRENT_STREAMS` are both 4, and this file is
-the only one entitled to notice that.** The engine names no constant belonging to a binding —
-`docs/02` makes that split structural and `engine/tests/slice.rs` scans that crate's own source to
-keep it so — and it justifies its own ceiling by what it will serve over one dataset. The
-composition is the fact, and it is recorded here.
+the only one entitled to notice that.** The engine computes no ceiling from a binding's constant —
+`docs/02` makes that split structural — and it justifies each of its own by what it will serve over
+one dataset. The composition is the fact, and it is recorded here.
+
+**The same shape, for the admission class (PROPOSED ADR-033; DECISIONS-PENDING entry 91 (a)).**
+`MAX_ADMISSION_CONNECTIONS` is 4 and the shell's `MAX_IN_FLIGHT_TILE_STREAMS`
+(`frontends/shell/src/canvas/tileGridConstants.ts:40`) is 3; the engine's ceiling is a literal it
+owns, chosen so that the shell's three concurrent tile-keyed `viewport_query` admissions plus the
+one baseline (non-tiled) viewport query — `3 + 1 = 4` — cannot collide at this class. The engine
+says in `pool.rs`'s own doc what quantity it sized that ceiling against (ADR-010 rule 6); the
+**composition** claim that follows — that in the shipped shell this class therefore never refuses,
+so a per-tile filter admission is never lost to a lease — is stated only here. Two consequences, and
+both are consequences of the *equality holding*, never guarantees independent of it: raising the
+shell's fan-out above 3 without raising this ceiling puts the residual refusal back in reach, and
+that residual, when reached, is `engine.connections_exhausted` carrying `class`/`capacity` — never
+`skp.filter_rejected_by_binder` (`kernel/src/skp.rs`'s `predicate_admit_error_of`, which matches on
+`PredicateAdmitError` rather than folding it into the filter taxonomy). The shell retries that code
+and only that code.
 
 Two consequences follow from the equality, and both matter in review:
 
