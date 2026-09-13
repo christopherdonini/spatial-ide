@@ -1254,3 +1254,21 @@ Every path is under `frontends/shell/`. No engine, kernel, protocol or bundle-vi
 - **Stand from 998be05, the diff-stat cited:** M6 (style), M8, M9, M10, M11 (publish, audit, the bundle viewer), M12 modes 1–2 (the dev checkout's own build), M13 (the ADR-020 refusal path in `src-tauri`). The human's M13 result of 2026-09-13 stands with its two bracketed values still the human's to fill.
 
 **Open at this writing:** entry 87 (the filtered per-tile queries dropped before any stream is issued — the settled-partial sentence may still appear under a filter on RC2; M15 records it); entry 86 (post-tag). The sitting-3 pack is `RELEASE-DRAFTS-0.1.0/part-m-prep-pack.md` §6.
+
+## Amendment 18 — Part M, sitting 3 on RC2 (2026-09-13), the human's report verbatim; the custodian's reading follows
+
+*The first pass of sitting 3 was run on the candidate by mistake (the main checkout's bundle folder still held it; the pack's §2 copy line was sitting 1's) and is recorded in `CUT-STATE.md`; the pack gained §6d (the executable check) and §6e (rows M14/M15 in full), and RC2 was copied to the shared folder by the custodian. The human then installed RC2 and reported:*
+
+> M1 to M4 are ok, M5 after i filter the zoom to layer now works perfectly as intended, M7 after i press zoom to layer says "Showing all 17752 features in view", by zooming out we get a "Showing 19100 features - the farthest areas etc ...". Now the id hover works, eventhougnh through every zomming step the id text briefly disappear and appears back again. I'd cut the text way before, cause i really zoom out a lot before it tells me "Features here below pick resolution... " also cause the pointer is the panning hand, not the pointy cursor, so even less precise. But overall we're getting there. M14 I've already done it in M5, M15 when you zoom out the text changes from showing all 100 features in view to "filling has finished for this view - some areas etc ... ". M12 mode 3 i've got the session log in the user/public/spatil-ide-fixtures folder, name "session-1789320462"
+
+**The custodian's reading, row by row:**
+
+- **M1–M4:** pass on RC2 (the installed executable is RC2's; the candidate's first pass is superseded).
+- **M5 / M14 (entry 85):** pass — "Zoom to layer" under a filter works on every click, as the fix intended and the regression step asserts.
+- **M7:** pass as the row is written — the within-budget sentence at the fit ("Showing all `<N>` features in view"), the over-budget sentence on zooming out ("Showing `<N>` features — the farthest areas…"), and no banner.
+- **The hover row (entry 47):** pass — the id stays across a zoom-out with the pointer still. Two observations recorded as new findings, not as defects of the piece as preregistered: (a) *through every zooming step the id text briefly disappears and reappears* — that is the declared shape (the mid-gesture rule clears at the camera change; the settle re-pick restores it), felt as a blink per notch; whether the readout should stay standing until the settle decides is a design question → DECISIONS-PENDING entry 88. (b) *the refusal ("Features here are below pick resolution — zoom in to inspect them.") should come much earlier when zooming out, and the pointer is the panning hand rather than a precise cursor* — the pick-resolution threshold is a declared constant and the cursor shape a UI choice, both user-visible → entry 89.
+- **M15 (entries 84 and 87):** recorded, as the row says: "Showing all 100 features in view" at the fit, then the settled-partial sentence on zooming out — entry 87's finding, exactly as predicted; entry 84's fix stands at the unit level. Entry 87 still awaits the human's word (RC2 ships with a KNOWN-LIMITATIONS line, or waits for the fix).
+- **M12 mode 3:** pass on RC2; the session log `session-1789320462.log` is in `C:\Users\Public\spatial-ide-fixtures\`.
+- **Standing from 998be05 with the diff-stat cited (Amendment 17):** M6, M8, M9, M10, M11, M12 modes 1–2, M13 (the human's M13 result of 2026-09-13, its two bracketed values still the human's to fill).
+
+**What follows:** the release docs (items 4, 5, 6) finalized onto `release/0.1.0` as docs-only commits for the human's sight; the tag on the branch head; the merge back to main.

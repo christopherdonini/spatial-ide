@@ -77,6 +77,26 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+89. **[Sitting 3 on RC2, the hover row — your two preferences, both user-visible and yours: (a) "I'd
+    cut the text way before, cause i really zoom out a lot before it tells me 'Features here below
+    pick resolution…'" — the pick-resolution threshold is a declared constant (`isBelowPickResolution`
+    and its constant in `frontends/shell/src/canvas/pickResolution.ts`); tightening it makes the named
+    refusal appear earlier on zoom-out and is a behaviour change, so its value is yours to set — say
+    the notch or the feature size at which you want the refusal, or "architect picks a declared value
+    and I sight it"; (b) "the pointer is the panning hand, not the pointy cursor, so even less
+    precise" — the canvas cursor shape is deck.gl's default grab hand; a crosshair or arrow while
+    hovering (the hand only while dragging) is a UI choice. Both post-tag unless you say otherwise.]**
+    Not decided here.
+
+88. **[Sitting 3 on RC2, the hover row — "through every zooming step the id text briefly disappears and
+    appears back again." That is entry 47's declared shape: the mid-gesture rule clears the readout at
+    the camera change (D2), and the settle re-pick restores it (D1–D6), felt as a blink per notch. The
+    alternative — keep the last readout standing through the gesture and let the settle re-pick
+    replace or clear it — is the "unconfirmed state" you ruled out in entry 75 (3), or a variant of it
+    (standing but not re-asserted). Your word: keep the blink as declared, or reopen 75 (3) for a
+    standing-until-settle reading, which would be its own preregistered piece post-tag.]** Not decided
+    here.
+
 87. **[Found by entry 84's E2E assertion on `fix/filter-84-85` (2026-09-13) — a second cause of the
     settled-partial sentence under a filter, deeper than the zero-row terminal: at the zoomed-out
     filtered camera, 42 of the 115 covering tiles never reach any terminal. Each tile's
