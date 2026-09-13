@@ -40,6 +40,7 @@ export const SESSION_CONSECUTIVE_CAP = 6; // "under Claude Code's own 8" -- stay
 export const DAILY_CONTINUATION_CAP = 40; // "daily cap DAILY_CONTINUATION_CAP = 40 across sessions"
 export const NEAR_DAILY_CAP_RATIO = 0.75; // "past 75% of the daily cap: prefer small nodes; defer spikes"
 export const HALT_FETCH_TIMEOUT_MS = 5000; // "run git fetch --quiet origin main with a 5-second timeout"
+export const HALT_CACHE_TTL_MS = 60 * 1000; // reviewer finding 17: cache the origin/main probe so every stop does not fetch
 export const TELEGRAM_DEDUPE_WINDOW_MS = 10 * 60 * 1000; // "deduped on a hash of the waiting set" within 10 minutes
 
 function firstLineOf(text) {
@@ -63,11 +64,38 @@ function tryGit(args, cwd, opts = {}) {
   }
 }
 
+function haltCachePath(projectRoot) {
+  return path.join(projectRoot, '.claude', 'state', 'halt-probe-cache.json');
+}
+
+function readHaltCache(projectRoot, now) {
+  try {
+    const raw = JSON.parse(fs.readFileSync(haltCachePath(projectRoot), 'utf8'));
+    if (typeof raw.checkedAt !== 'number' || now - raw.checkedAt > HALT_CACHE_TTL_MS) return null;
+    return raw.result;
+  } catch {
+    return null;
+  }
+}
+
+function writeHaltCache(projectRoot, result, now) {
+  try {
+    const p = haltCachePath(projectRoot);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, JSON.stringify({ checkedAt: now, result }), 'utf8');
+  } catch {
+    // best-effort -- a cache-write failure never changes the hook's decision
+  }
+}
+
 /**
  * §18: state/CUSTODIAN-HALT locally, or on origin/main (fetch with a 5s timeout; a fetch failure
- * means "unknown", not halt).
+ * means "unknown", not halt). The local check always runs live (it is a single fs.existsSync).
+ * The remote (origin/main) probe result is cached for HALT_CACHE_TTL_MS (reviewer finding 17:
+ * "so every stop does not fetch") -- only a *successful* probe is cached; a fetch failure is
+ * never cached, so a transient network blip is retried next time rather than sticking for 60s.
  */
-export function checkHalt(projectRoot) {
+export function checkHalt(projectRoot, { now = Date.now() } = {}) {
   const localPath = path.join(projectRoot, 'state', 'CUSTODIAN-HALT');
   if (fs.existsSync(localPath)) {
     let message = '';
@@ -79,6 +107,9 @@ export function checkHalt(projectRoot) {
     return { halted: true, message, source: 'local' };
   }
 
+  const cached = readHaltCache(projectRoot, now);
+  if (cached) return cached;
+
   try {
     execFileSync('git', ['fetch', '--quiet', 'origin', 'main'], {
       cwd: projectRoot,
@@ -86,14 +117,15 @@ export function checkHalt(projectRoot) {
       stdio: ['ignore', 'ignore', 'ignore'],
     });
   } catch {
-    return { halted: false, unknown: true }; // fetch failure -> "unknown", not halt
+    return { halted: false, unknown: true }; // fetch failure -> "unknown", not halt; not cached
   }
 
   const exists = tryGit(['cat-file', '-e', 'origin/main:state/CUSTODIAN-HALT'], projectRoot) !== null;
-  if (!exists) return { halted: false };
-
-  const content = tryGit(['cat-file', '-p', 'origin/main:state/CUSTODIAN-HALT'], projectRoot);
-  return { halted: true, message: firstLineOf(content ?? ''), source: 'origin/main' };
+  const result = exists
+    ? { halted: true, message: firstLineOf(tryGit(['cat-file', '-p', 'origin/main:state/CUSTODIAN-HALT'], projectRoot) ?? ''), source: 'origin/main' }
+    : { halted: false };
+  writeHaltCache(projectRoot, result, now);
+  return result;
 }
 
 function waitingSummary(waitingOnHuman) {
@@ -170,7 +202,7 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   if (process.env.CUSTODIAN_STOP_HOOK === 'off') {
     return allow('allow: CUSTODIAN_STOP_HOOK=off override is set.');
   }
-  const halt = checkHalt(projectRoot);
+  const halt = checkHalt(projectRoot, { now: now.getTime() });
   if (halt.halted) {
     stderrLines.push(`HALT: ${halt.message || '(state/CUSTODIAN-HALT present, no message)'}`);
     // Best-effort: still tell the human what is waiting, if the plan loads.
@@ -181,7 +213,9 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
     } catch {
       // plan unavailable — halt still allows the stop.
     }
-    return allow(stderrLines.join('\n'));
+    // The HALT line is already on stderrLines (pushed above) -- allow() with no argument avoids
+    // pushing (and printing) the same joined text a second time (reviewer finding 6).
+    return allow();
   }
 
   // 3. Derive the ready set live from PLAN.yaml.
@@ -200,7 +234,8 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   if (ready.length === 0) {
     stderrLines.push(`allow: no unblocked node is ready; ${waitingOnHuman.length} waiting on human.`);
     await notify(projectRoot, waitingOnHuman, 'Only human-blocked nodes remain.');
-    return allow(stderrLines.join('\n'));
+    // Already pushed above -- see the HALT branch's own note (reviewer finding 6).
+    return allow();
   }
 
   // 5. Continuation accounting.

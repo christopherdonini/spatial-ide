@@ -63,6 +63,12 @@ export function findMetricViolations(plan) {
   return violations;
 }
 
+/** JSON for embedding inside an inline <script> tag: `</script` in a string value must not be
+ * able to close the tag early. */
+function safeJsonForScript(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({
     '&': '&amp;',
@@ -234,16 +240,65 @@ function renderWaitingOnYou(waitingOnHuman) {
   </section>`;
 }
 
+function formatDiskFree(disk) {
+  if (!disk) return 'unknown';
+  if (disk.error) return `error: ${disk.error}`;
+  if (typeof disk.bytes === 'number') {
+    const gb = disk.bytes / 1024 ** 3;
+    return `${gb.toFixed(1)} GB free${disk.drive ? ` (drive ${disk.drive})` : ''}`;
+  }
+  if (disk.raw) return disk.raw.split(/\r?\n/)[0]; // first line only -- `df` output can be wide
+  return 'unknown';
+}
+
+function formatStrayProcesses(stray) {
+  if (!stray) return 'unknown';
+  if (stray.error) return `error: ${stray.error}`;
+  if (typeof stray.total === 'number') {
+    const byName = stray.by_name
+      ? Object.entries(stray.by_name)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ')
+      : '';
+    return `${stray.total} total${byName ? ` (${byName})` : ''}`;
+  }
+  return 'unknown';
+}
+
+function oldestBy(items, ageField) {
+  return items.reduce((a, b) => ((a[ageField] ?? -1) >= (b[ageField] ?? -1) ? a : b));
+}
+
+function formatOpenPrs(openPrs) {
+  if (!openPrs) return 'unknown';
+  if (openPrs.error) return `error: ${openPrs.error}`;
+  const items = openPrs.items ?? [];
+  if (items.length === 0) return openPrs.note ? openPrs.note : '0 open';
+  const oldest = oldestBy(items, 'age_days');
+  return `${items.length} open, oldest ${oldest.age_days ?? '?'} d (#${oldest.number})`;
+}
+
+function formatWaitingOnHuman(waiting) {
+  const items = Array.isArray(waiting) ? waiting : [];
+  if (items.length === 0) return '0 waiting';
+  const withAge = items.filter((n) => typeof n.age_days === 'number');
+  if (withAge.length === 0) return `${items.length} waiting (age unknown)`;
+  const oldest = oldestBy(withAge, 'age_days');
+  return `${items.length} waiting, oldest ${oldest.age_days} d (${oldest.id})`;
+}
+
 function renderHealthStrip(health) {
   if (!health) {
     return `<section class="panel health-strip"><h2>Health</h2><p class="empty">no site/data/health.json yet — never refreshed</p></section>`;
   }
+  // Six rows (§5/§15): CI on main, drift, disk free, stray processes, open-PR age, waiting-on-human age.
   const rows = [
     ['CI on main', health.ci?.conclusion ?? 'unknown'],
     ['Drift', health.drift?.ok === true ? 'clean' : health.drift?.ok === false ? 'DRIFT' : 'unknown'],
-    ['Disk free', health.disk_free ?? 'unknown'],
-    ['Stray processes', health.stray_processes !== undefined ? String(health.stray_processes) : 'unknown'],
-    ['Open PRs', health.open_prs !== undefined ? String(health.open_prs.length ?? health.open_prs) : 'unknown'],
+    ['Disk free', formatDiskFree(health.disk_free)],
+    ['Stray processes', formatStrayProcesses(health.stray_processes)],
+    ['Open PRs', formatOpenPrs(health.open_prs)],
+    ['Waiting on human', formatWaitingOnHuman(health.waiting_on_human)],
   ];
   const rowsHtml = rows.map(([k, v]) => `<div class="health-row"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('\n');
   return `
@@ -348,7 +403,7 @@ ${renderHealthStrip(health)}
 <main>
 ${laneHtml}
 </main>
-<script id="plan-data" type="application/json">${JSON.stringify(planData)}</script>
+<script id="plan-data" type="application/json">${safeJsonForScript(planData)}</script>
 <script>
 (function () {
   var data = JSON.parse(document.getElementById('plan-data').textContent);

@@ -65,12 +65,26 @@ function gitTagExists(repoRoot, tag) {
   return out === tag;
 }
 
-function commitOnMain(repoRoot, commit) {
+/**
+ * "commit on main" (§6). Prefers `origin/main`; falls back to a local `main` when the remote ref
+ * is absent (e.g. a checkout with no remote configured). When neither resolves, names the shallow
+ * clone as the likely cause rather than reporting a false "not an ancestor" — actions/checkout@v4
+ * defaults to a depth-1, tagless, branchless clone that has neither ref until `fetch-depth: 0` is
+ * set (reviewer finding 1; CI run 34783672136 failed exactly this way).
+ */
+export function commitOnMain(repoRoot, commit) {
+  const ref = ['origin/main', 'main'].find((candidate) => tryGit(['rev-parse', '--verify', candidate], repoRoot) !== null);
+  if (!ref) {
+    return {
+      ok: false,
+      reason: `neither origin/main nor main resolves (shallow clone: run with fetch-depth 0) — cannot check commit "${commit}"`,
+    };
+  }
   try {
-    execFileSync('git', ['merge-base', '--is-ancestor', commit, 'origin/main'], { cwd: repoRoot, stdio: 'ignore' });
-    return true;
+    execFileSync('git', ['merge-base', '--is-ancestor', commit, ref], { cwd: repoRoot, stdio: 'ignore' });
+    return { ok: true, reason: null };
   } catch {
-    return false;
+    return { ok: false, reason: `commit "${commit}" is not an ancestor of ${ref}` };
   }
 }
 
@@ -150,9 +164,8 @@ export function verifyEvidence(node, { repoRoot, offline, slug }) {
       : [`${tag}: release "${evidence.release}" was not found (gh release view)`];
   }
   if (evidence.commit !== undefined) {
-    return commitOnMain(repoRoot, evidence.commit)
-      ? []
-      : [`${tag}: commit "${evidence.commit}" is not an ancestor of origin/main`];
+    const result = commitOnMain(repoRoot, evidence.commit);
+    return result.ok ? [] : [`${tag}: ${result.reason}`];
   }
   if (evidence.path !== undefined) {
     const [filePath] = evidence.path.split('#');

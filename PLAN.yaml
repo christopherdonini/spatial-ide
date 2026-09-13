@@ -320,6 +320,24 @@ nodes:
     summary: "the fits/over-budget latch and the queued-tile drain path are gated by half-open index ranges instead of enumeration; KNOWN-LIMITATIONS 13b retired"
     dates: {opened: 2026-09-10, done: 2026-09-13}
 
+  - id: asset-filename-docs-fix
+    title: "Asset-filename docs fix — the release page's dotted installer filename noted"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: done
+    order: 4
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {commit: "875d900"}
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "QUICKSTART and README note the release page's own filename (a dot where the installer's own name has a space)"
+    dates: {opened: 2026-09-13, done: 2026-09-13}
+
   # =========================== IN-PROGRESS ===========================
 
   - id: polish-87-88-89
