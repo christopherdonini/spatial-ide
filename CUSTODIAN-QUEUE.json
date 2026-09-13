@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-13T22:04:34.213Z",
-  "plan_hash": "ef41a8006cf84907f0c695e0c9eb362966943661d543c54d9de0a6066395813d",
+  "generated_at": "2026-09-13T22:09:20.775Z",
+  "plan_hash": "36025bf5ee8fd3fcae4c0932f2d54663face9ee171c40272da9a17ff01ab42d6",
   "priorities_approved": true,
   "next": {
     "id": "release-artifacts-from-ci",
@@ -122,7 +122,7 @@
             "opened": "2026-09-13",
             "done": null
           },
-          "summary": "the human's own exit-code and session-log values from the M13 deliberate-refusal row still need filling into the walkthrough log"
+          "summary": "M13: the session-log error line given verbatim on 2026-09-14 (recorded); the exit code after dismissing the dialog still to be given"
         }
       ],
       "ruling": [

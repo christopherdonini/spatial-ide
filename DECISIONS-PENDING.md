@@ -5,6 +5,10 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-14 (question set 2, sights, via AskUserQuestion; each answer verbatim) — entry 94, M13 — the human:**
+*Q1 (entry 94, KNOWN-LIMITATIONS line 40):* "Apply as proposed (Recommended)" — applied on main: the quoted message replaced with `error.rs:238-243`'s text verbatim, the rest of the line unchanged.
+*Q2 (M13's two bracketed values):* "1789337271564 error ADR-020 Amendment 1: the main window's configured url (External(Url { scheme: "https", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("example.test")), port: None, path: "/", query: None, fragment: None })) is not WebviewUrl::App -- this mirror reproduces AppManager::get_app_url's App-window resolution only (tauri-2.11.5/src/manager/webview.rs:443-461); refusing to start rather than pin an origin the webview might not actually navigate to" — recorded verbatim in RELEASE-0.1.md's M13 record as the session log's error line (value 2); the exit code (value 1) was not given and stays bracketed, re-asked next round (the b21111d rule).
+
 **RULED 2026-09-14 — disk for the drill — the human verbatim (a mid-turn message):** *"the 21 GB shell debug cache is regenerable, and it funds the clean-clone drill"* — applied: the main checkout's `frontends/shell/src-tauri/target/debug` (21.2 GB) deleted; the release cache (8.5 GB, RC2's build) kept; the drill node becomes ready.
 
 **RULED 2026-09-13 (question set 1 of the autonomous work system, via AskUserQuestion; each answer verbatim) — lane priorities, the waiting list, entry 91 (a), entry 86 — the human:**

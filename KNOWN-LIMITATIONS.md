@@ -37,7 +37,7 @@ no performance claim at all (`docs/08_Testing.md`).*
 
    - **A CRS whose definition declares latitude first is refused, not reinterpreted** — code
      `engine.axis_order_unsupported`: *"refused: established axis order is northing,easting; this
-     slice performs no axis normalization and emits (easting, northing) only"*. EPSG:4326 — what most
+     slice performs no axis normalization and emits x-first orders only — (easting, northing) or (longitude, latitude)"*. EPSG:4326 — what most
      public GeoParquet declares — is refused for exactly this reason, by decision and not by
      accident. A declaration that establishes no axis order at all — a definition with no coordinate
      system — is refused too, as `engine.axis_order_unestablished`.

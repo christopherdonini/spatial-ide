@@ -681,7 +681,7 @@ nodes:
     generation: 1
     felt_verdict: true
     entries: []
-    summary: "the human's own exit-code and session-log values from the M13 deliberate-refusal row still need filling into the walkthrough log"
+    summary: "M13: the session-log error line given verbatim on 2026-09-14 (recorded); the exit code after dismissing the dialog still to be given"
     dates: {opened: 2026-09-13, done: null}
 
   - id: sitting-4-rows
