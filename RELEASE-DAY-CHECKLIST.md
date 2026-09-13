@@ -44,14 +44,19 @@ are mechanical and were run, or are re-run, before the human's step that depends
       "Release artifacts are the tagged commit's CI build, hash-recorded; the dev machine is for
       headed work only — apply from v0.1.1."): the release asset is the tagged commit's CI build,
       not a dev-machine build.** Not in force for v0.1.0, which was built on the dev machine per
-      Part M's own record. From v0.1.1, `product-ci-shell.yml`'s `tauri-build` job also runs on a
-      pushed `v*` tag (`chore(ci): release-artifacts-from-ci`, 2026-09-14) and uploads the installer
-      as a workflow artifact named `spatial-ide-<tag>-x64-setup` (e.g. `spatial-ide-v0.1.1-x64-setup`
-      for the v0.1.1 tag), printing the installer's file name, byte size and SHA-256 to the run's job
-      summary. Procedure:
+      Part M's own record. From v0.1.1, a dedicated workflow — `.github/workflows/release-artifacts.yml`
+      (`chore(ci): release-artifacts-from-ci`, 2026-09-14; not a `tags` trigger folded into
+      `product-ci-shell.yml`, since GitHub ANDs a push event's `tags` filter with a `paths` filter,
+      which would leave a tag pushed at an already-existing commit — this release-branch pattern
+      exactly — at risk of reporting no changed paths and never firing) — runs on a pushed `v*` tag,
+      calling the same reusable build steps as `product-ci-shell.yml`'s own `tauri-build` job
+      (`.github/workflows/tauri-build.yml`), and uploads the installer as a workflow artifact named
+      `spatial-ide-<tag>-x64-setup` (e.g. `spatial-ide-v0.1.1-x64-setup` for the v0.1.1 tag),
+      printing the installer's file name, byte size and SHA-256 to the run's job summary. Procedure:
       1. Push the tag (§4 above): `git push origin v<version>`.
-      2. Wait for the `tauri-build` run on the tag: `gh run list --branch v<version> --limit 3` (or
-         watch it directly once its run id is known: `gh run watch <run-id>`).
+      2. Wait for the run on the tag: `gh run list --branch v<version> --workflow
+         release-artifacts.yml --limit 3` (or watch it directly once its run id is known: `gh run
+         watch <run-id>`).
       3. Download the artifact: `gh run download <run-id> -n spatial-ide-v<version>-x64-setup -D
          <dir>`.
       4. Hash it locally: `Get-FileHash -Algorithm SHA256 "<dir>\Spatial IDE_<version>_x64-setup.exe"`
