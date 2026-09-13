@@ -77,6 +77,24 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+87. **[Found by entry 84's E2E assertion on `fix/filter-84-85` (2026-09-13) — a second cause of the
+    settled-partial sentence under a filter, deeper than the zero-row terminal: at the zoomed-out
+    filtered camera, 42 of the 115 covering tiles never reach any terminal. Each tile's
+    `viewport_query` is sent (a `viewport-query` trace line) and no `stream-issued` follows; the
+    shell's `mintAndStart` drops them on one of its two silent paths (the ticket-refused `catch`, or an
+    epoch-abandoned ticket) with no trace, no session-log line and no status. Filter-specific in
+    these runs: before the filter 7,958 queries → 7,949 streams; after it 142 → 74. A covered tile
+    that is never resident keeps the fill incomplete whatever the zero-row fix does, so on RC2 the
+    misleading sentence will still appear under a filter; entry 85 (Zoom to layer) is unaffected and
+    proven. Entry 84's terminal marking landed and is unit-pinned (your stated requirement); its E2E
+    status assertion is suspended by name (preregistration §6 Amendment 1 (b)) until this is fixed.
+    Cause under read-only investigation (appended here when it lands); the fix may be shell-only (a
+    logged refusal plus a requeue under the same cover) or may need the kernel (a pending-stream
+    ceiling or refusal semantics), which your RC2 rule excludes. Your word: (a) RC2 ships 47 + 85 +
+    84's terminal marking now, with a KNOWN-LIMITATIONS line for the sentence under a filter and this
+    fix post-tag; (b) RC2 waits for this fix through its own preregistration and gates, shell-only if
+    the cause allows; (c) something else you name.]** Not decided here.
+
 86. **[Part M sitting 2, M11 — the reference bundle viewer's zoom is not anchored: "when i zoom in, the map
     pan by itself to north-west, and when i zoom out it goes the other side, bottom left corner, sud-est"
     (your report of 2026-09-13; the bundle otherwise works and M11 passes as its row is written). A
