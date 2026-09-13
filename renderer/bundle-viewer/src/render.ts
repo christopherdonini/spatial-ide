@@ -79,23 +79,72 @@ export const MAX_ATTRIBUTE_DISPLAY_CHARS: number = ceilings.MAX_ATTRIBUTE_DISPLA
  * under a hash (`kernel/src/publish/ceilings.rs:36`/`:191`) — a canvas backing-store dimension is a
  * property of the viewing device, never of the bundle, so it has no place there and none is added.
  *
- * **Behaviour at the ceiling, declared with it.** `sizeCanvasToClientBox` (`main.ts`) clamps the
- * store to these before assigning `canvas.width`/`canvas.height`: the per-axis ceiling first, then
- * the total-pixel ceiling shrinking both axes together (so a clamped store keeps the client box's
- * aspect either way). `toStore`'s ratio is then measured from the element as it always is, so it
- * reflects whatever the store actually became — clamped or not — and anchoring stays exact either
- * way. **No quality or sharpness claim**: a clamped store means more world units per backing-store
- * pixel, stated as a consequence and nothing else.
+ * **`MAX_RESIDENT_BYTES` above is a bundle-bytes ceiling only.** The backing store's own bytes — up
+ * to `MAX_BACKING_STORE_DIM² × 4` (RGBA8) at the per-axis ceiling — are a viewer-process allocation,
+ * not a fetched-and-verified bundle asset, and are outside that count. Declared here rather than
+ * silently left for a reader to assume either way; no ceiling changes because of this.
  *
- * `MAX_BACKING_STORE_PIXELS` is deliberately **less than `MAX_BACKING_STORE_DIM²`**, not equal to it:
- * equal would make the total-pixel clamp unreachable dead code, since the per-axis clamp alone
- * already bounds the area to at most `MAX_BACKING_STORE_DIM²` by the time the pixel-count check runs
- * — an inconsistency this piece found while writing the ceiling's own unit test and is corrected
- * here rather than left in place. `MAX_BACKING_STORE_PIXELS` is what actually bounds an elongated
- * client box (short on one axis, under the per-axis cap on both, but still large in total area).
+ * **`MAX_BACKING_STORE_DIM = 4096`: a declared choice, not a device measurement.** Nothing here reads
+ * a GPU's or a canvas 2D backend's actual maximum texture/surface dimension — `4096` is this viewer's
+ * own self-imposed bound, chosen generously above any window size a desktop session is likely to
+ * present, so the ceiling is reached in practice only by `clampStoreSize`'s own unit test, not by an
+ * ordinary window.
+ *
+ * **`MAX_BACKING_STORE_PIXELS` is deliberately less than `MAX_BACKING_STORE_DIM²`**, not equal to it:
+ * equal would make the total-pixel clamp in `clampStoreSize` unreachable dead code, since the
+ * per-axis clamp alone already bounds the area to at most `MAX_BACKING_STORE_DIM²` by the time the
+ * pixel-count check runs — an inconsistency this piece found while writing the ceiling's own unit
+ * test and corrected rather than left in place. `8_388_608` (`2²³`, half of `MAX_BACKING_STORE_DIM²`)
+ * is what actually bounds an elongated client box (short on one axis, under the per-axis cap on
+ * both, but still large in total area).
+ *
+ * **Behaviour at the ceiling, declared with it: `clampStoreSize` (below), the one function that
+ * computes it.** `sizeCanvasToClientBox` (`main.ts`) calls it before assigning
+ * `canvas.width`/`canvas.height` — never a second, hand-inlined copy of this arithmetic. `toStore`'s
+ * ratio is then measured from the element as it always is, so it reflects whatever the store actually
+ * became — clamped or not. **No quality or sharpness claim**: a clamped store means more world units
+ * per backing-store pixel, stated as a consequence and nothing else.
  */
 export const MAX_BACKING_STORE_DIM: number = 4096;
 export const MAX_BACKING_STORE_PIXELS: number = 8_388_608; // 2**23, half of MAX_BACKING_STORE_DIM**2
+
+/**
+ * The backing-store size for a client box of `cssWidth × cssHeight` CSS pixels at `dpr` — the one
+ * place `MAX_BACKING_STORE_DIM`/`MAX_BACKING_STORE_PIXELS` are applied, called by
+ * `sizeCanvasToClientBox` (`main.ts`) rather than reimplemented there.
+ *
+ * **One shared factor `f`, applied to both axes together — never two independent per-axis clamps.**
+ * An earlier version of this function (reviewer B1) clamped width and height separately: whichever
+ * axis alone exceeded `MAX_BACKING_STORE_DIM` got cut to it while the other axis did not, and the
+ * *following* total-pixel shrink then scaled that already-distorted rectangle uniformly — never
+ * recovering the client box's own aspect. A 5000×3500 client box clamped to 4096×3500 (aspect 1.17,
+ * not the client box's 1.43) and then to 3133×2677 (aspect still 1.17). Since `View` carries one
+ * scalar `scale` for both axes, a store whose aspect disagrees with the client box's paints a square
+ * CRS extent as non-square once the CSS box stretches it back — exactly the defect §2 rejected
+ * option (a) for, reintroduced through the ceiling instead of through the base case. `f = min(1,
+ * MAX_BACKING_STORE_DIM / wantWidth, MAX_BACKING_STORE_DIM / wantHeight, √(MAX_BACKING_STORE_PIXELS /
+ * (wantWidth × wantHeight)))`, and both axes are `round(want × f)`: one factor means the result's
+ * aspect equals the requested one, up to the sub-pixel difference two independent `round`s of the
+ * same ratio can introduce — not the gross distortion above.
+ */
+export function clampStoreSize(
+  cssWidth: number,
+  cssHeight: number,
+  dpr: number,
+): { width: number; height: number } {
+  const wantWidth = cssWidth * dpr;
+  const wantHeight = cssHeight * dpr;
+  const f = Math.min(
+    1,
+    MAX_BACKING_STORE_DIM / wantWidth,
+    MAX_BACKING_STORE_DIM / wantHeight,
+    Math.sqrt(MAX_BACKING_STORE_PIXELS / (wantWidth * wantHeight)),
+  );
+  return {
+    width: Math.max(1, Math.round(wantWidth * f)),
+    height: Math.max(1, Math.round(wantHeight * f)),
+  };
+}
 
 /**
  * The view. `centerX`/`centerY` are the **render origin**: every drawn value is `coord − centre`,

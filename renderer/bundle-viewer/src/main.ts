@@ -51,11 +51,10 @@ import {
 } from './manifest.js';
 import { decodePartition, type Partition } from './partition.js';
 import {
+  clampStoreSize,
   drawAll,
   fitView,
   MAX_ATTRIBUTE_COLUMNS,
-  MAX_BACKING_STORE_DIM,
-  MAX_BACKING_STORE_PIXELS,
   MAX_FEATURES,
   MAX_PARTITIONS,
   MAX_RESIDENT_BYTES,
@@ -133,15 +132,24 @@ const ctx = canvas.getContext('2d')!;
  * world-units-per-CSS-pixel constant (`resizeStore`'s `ratioChange`). Not `devicePixelRatio`: it is
  * whatever `sizeCanvasToClientBox` last actually measured off the element, so a clamped store is
  * accounted for exactly rather than approximately. `1` before the canvas has ever been sized.
+ *
+ * **One variable, not an X/Y pair (reviewer B2).** `clampStoreSize` (`render.ts`) applies one shared
+ * factor to both axes, so the ratio it produces is the same on both — carrying a second `lastRatioY`
+ * would only ever agree with this one and go stale unread. `toStore` below still measures `rx`/`ry`
+ * separately from the element itself, because *that* measurement must hold even if something outside
+ * this module's control ever stretched the canvas anisotropically (e.g. a CSS transform); this
+ * variable is this module's own record of the ratio *this function* last established, which — by
+ * construction of `clampStoreSize` — is one number.
  */
-let lastRatioX = 1;
-let lastRatioY = 1;
+let lastRatio = 1;
 
 /**
  * The single conversion (§2): every pointer coordinate this viewer acts on passes through here once,
  * and nothing downstream of it sees a CSS pixel again. **The ratio is measured from the element,
- * never assumed to equal `devicePixelRatio`** — exact whether or not the store was clamped, and exact
- * if a future stylesheet sizes the canvas differently.
+ * never assumed to equal `devicePixelRatio`** — exact in the arithmetic `unit tests exercise directly
+ * (`zoomAt`/`panBy`/`resizeStore`'s own tests); end-to-end, through a real paint and a real wheel
+ * event, the E2E discriminator (`e2e/zoom-anchor.mjs`) reads it to its own declared tolerance, not
+ * this file's own claim.
  */
 function toStore(e: MouseEvent): [number, number] {
   const rx = canvas.width / canvas.clientWidth;
@@ -150,14 +158,15 @@ function toStore(e: MouseEvent): [number, number] {
 }
 
 /**
- * Size the backing store to the canvas's own CSS box × `devicePixelRatio` (§2(b)). Called once before
- * the first `fitView`, and again on every `ResizeObserver` callback — **the only place
- * `canvas.width`/`canvas.height` are ever assigned.**
+ * Size the backing store to the canvas's own CSS box × `devicePixelRatio` (§2(b)), through
+ * `clampStoreSize` (`render.ts`) — never a second, hand-inlined copy of that arithmetic (reviewer
+ * item 1). Called once before the first `fitView`, and again on every `ResizeObserver` callback —
+ * **the only place `canvas.width`/`canvas.height` are ever assigned.**
  *
  * `devicePixelRatio` decides the *target* resolution here, same as any other viewer would use it for.
  * That is not the conversion `toStore` performs — `toStore` measures the ratio actually achieved
- * (`canvas.width / canvas.clientWidth`), which is this same target unless the ceiling below clamped
- * it, in which case the measured ratio silently absorbs the difference and anchoring stays exact.
+ * (`canvas.width / canvas.clientWidth`), which is this same target unless `clampStoreSize` clamped
+ * it, in which case the measured ratio silently absorbs the difference.
  */
 function sizeCanvasToClientBox(): void {
   const cssWidth = canvas.clientWidth;
@@ -165,33 +174,29 @@ function sizeCanvasToClientBox(): void {
   if (cssWidth <= 0 || cssHeight <= 0) return; // not laid out yet; nothing to size against
 
   const dpr = window.devicePixelRatio || 1;
-  let storeWidth = Math.max(1, Math.round(cssWidth * dpr));
-  let storeHeight = Math.max(1, Math.round(cssHeight * dpr));
+  const { width: storeWidth, height: storeHeight } = clampStoreSize(cssWidth, cssHeight, dpr);
 
-  // Declared ceiling (ADR-010 rule 6), not discovered — see MAX_BACKING_STORE_DIM/PIXELS' own doc
-  // comment in render.ts. Both axes clamp together so the store's aspect stays the client box's.
-  storeWidth = Math.min(storeWidth, MAX_BACKING_STORE_DIM);
-  storeHeight = Math.min(storeHeight, MAX_BACKING_STORE_DIM);
-  if (storeWidth * storeHeight > MAX_BACKING_STORE_PIXELS) {
-    const shrink = Math.sqrt(MAX_BACKING_STORE_PIXELS / (storeWidth * storeHeight));
-    storeWidth = Math.max(1, Math.floor(storeWidth * shrink));
-    storeHeight = Math.max(1, Math.floor(storeHeight * shrink));
-  }
+  // Measured and recorded BEFORE the early return below (reviewer B2). The store's own integer
+  // dimensions can stay unchanged across a client-box change that `clampStoreSize`'s rounding
+  // absorbs — but the ratio `toStore` would compute right now has already moved, and it is what the
+  // NEXT real resize's `ratioChange` must be measured against. Leaving `lastRatio` stale here (as an
+  // earlier version of this function did, only updating it below the early return) would multiply a
+  // future resize's `scale` by a ratio computed against a client box that no longer exists — a
+  // resize silently becoming a zoom.
+  const ratioBefore = canvas.width / cssWidth;
+  lastRatio = ratioBefore;
 
-  if (canvas.width === storeWidth && canvas.height === storeHeight) return; // nothing changed
+  if (canvas.width === storeWidth && canvas.height === storeHeight) return; // the store itself is unchanged
 
-  const oldRatioX = lastRatioX;
-  const oldRatioY = lastRatioY;
   canvas.width = storeWidth;
   canvas.height = storeHeight;
-  lastRatioX = canvas.width / canvas.clientWidth;
-  lastRatioY = canvas.height / canvas.clientHeight;
+  lastRatio = canvas.width / canvas.clientWidth;
 
   // `state.view` is null on the very first call: `fitView` (in `load()`, right after this call)
   // computes `scale` fresh from the bounds and has no prior ratio to hold constant against. Only a
   // later, post-load resize goes through the invariant.
   if (state.view) {
-    resizeStore(state.view, canvas.width, canvas.height, lastRatioX / oldRatioX);
+    resizeStore(state.view, canvas.width, canvas.height, lastRatio / ratioBefore);
     redraw();
   }
 }
