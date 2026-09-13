@@ -346,9 +346,21 @@ async function stepAxistrap(page, ctx) {
   if (outcome.kind !== "refused" || outcome.code !== "engine.axis_order_unsupported") {
     throw new Error(`AXISTRAP': expected {kind:"refused", code:"engine.axis_order_unsupported"}, got ${JSON.stringify(outcome)}`);
   }
+  // Re-aimed (DECISIONS-PENDING entry 80's rule: "naming the ruling AND asserting the new
+  // provenance class"): `engine/src/error.rs:238`'s `AxisOrderUnsupported` `Display` arm was
+  // corrected at Brief A P1 (commit 92d87f1, "feat(engine): Brief A P1 -- the reader's format
+  // semantics, provenance classes and sanity-check levels"; `error.rs`'s own inline comment there
+  // names ADR-032; `engine/ADMISSION-PREREGISTRATION.md` §3 row 3's "today" column documents the
+  // same corrected refusal, `AxisOrderUnsupported{established:"latitude,longitude"}` -- that row's
+  // own RULED column is a different outcome, `admitted-under-format-rule-with-provenance
+  // axis:format-override` (that file's DECLARED CRS reaches R-C4; AXISTRAP' asserts a CALLER CRS,
+  // which R-C4 does not reach, so this refusal is unchanged by Brief A either way). The old text
+  // claimed the engine "emits (easting, northing) only"; `crs.rs:122-123` has always admitted
+  // `LongitudeLatitude` too, so the corrected wording names both x-first orders. Read from the
+  // Display arm verbatim, not hand-typed.
   const expectedMessage =
     "refused: established axis order is northing,easting; this slice performs no axis " +
-    "normalization and emits (easting, northing) only";
+    "normalization and emits x-first orders only — (easting, northing) or (longitude, latitude)";
   if (outcome.message !== expectedMessage) {
     throw new Error(`AXISTRAP': message mismatch.\nExpected: ${expectedMessage}\nActual:   ${outcome.message}`);
   }
@@ -453,8 +465,10 @@ async function stepDupkey(page) {
 }
 
 /**
- * `BOTHNEEDED'`: `bothneeded-refused.parquet` needs BOTH remediations -- no `crs` key, no `id`
- * column. A plain open refuses CRS first (`engine::dataset::open_inner` admits CRS before identity,
+ * `BOTHNEEDED'`: `bothneeded-refused.parquet` needs BOTH remediations -- an explicit `"crs": null`
+ * (F-3, `engine/ADMISSION-PREREGISTRATION.md` §4; re-aimed from an absent key, same reason as
+ * `no-crs-refused.parquet`), and no `id` column. A plain open refuses CRS first
+ * (`engine::dataset::open_inner` admits CRS before identity,
  * I11: footer read vs full scan); asserting the CRS alone then refuses identity, with the CRS
  * assertion visible as a carried claim (`.admission-carried-option`); only a request carrying BOTH
  * fields together admits -- the reviewer's MF2 loop case, permanently encoded.

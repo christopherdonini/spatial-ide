@@ -77,10 +77,17 @@ fn null_crs_assertion_and_null_identity_admit_exactly_as_before() {
     assert_eq!(describe.identity.source, "file:id");
 }
 
-/// (2) An assertion over a file that declares no CRS is admitted, and `describe` carries
+/// (2) An assertion over a file with an absent `crs` key is admitted, and `describe` carries
 /// `caller_asserted`, a non-empty `by`, and an RFC-3339-shaped `at` — the kernel's own mint. The
 /// wire's `CrsAssertion` has no `by`/`at` field at all (P0), so there is nothing for the host to
 /// echo; a non-null result here can only have come from `host_minted_crs_assertion`.
+///
+/// **Wording, post-Brief-A-P1 (same class, same ruling as the no-crs-refused.parquet re-aim):**
+/// this fixture's own absent key no longer means the file "declares no CRS" plain-open — since
+/// Brief A's P1/P2 it admits under GeoParquet's own OGC:CRS84 format default absent an assertion
+/// (`engine/ADMISSION-PREREGISTRATION.md` §2b R-C2). R-C6 (a caller assertion, unchanged in every
+/// respect) runs regardless of what a plain open of this same file would now do, so what this test
+/// asserts is untouched by that change; only the fixture's own description here was stale.
 #[test]
 fn asserted_crs_over_a_crs_less_file_is_admitted_with_host_minted_attribution() {
     let path = fixture(
