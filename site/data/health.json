@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-13T23:39:34.130Z",
+  "generated_at": "2026-09-13T23:50:03.929Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
     "failures": []
   },
   "disk_free": {
-    "bytes": 25387368448,
+    "bytes": 25123983360,
     "drive": "C"
   },
   "stray_processes": {
@@ -38,13 +38,6 @@
       "minutes": 10,
       "opened": "2026-09-13",
       "age_days": 0
-    },
-    {
-      "id": "entry-79-b1-consult-items",
-      "kind": "ruling",
-      "minutes": 15,
-      "opened": null,
-      "age_days": null
     },
     {
       "id": "entry-91-polish-held-halves",
