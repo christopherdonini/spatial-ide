@@ -23,9 +23,11 @@ const {
   unproject,
   fitView,
   pick,
+  drawAll,
   panBy,
   resizeStore,
   zoomAt,
+  clampStoreSize,
   MAX_BACKING_STORE_DIM,
   MAX_BACKING_STORE_PIXELS,
 } = await importModule('src/render.ts');
@@ -72,6 +74,60 @@ function partition(path, features) {
     groups: new Uint8Array(features.length),
     attributes: [],
     bytes: 0,
+  };
+}
+
+/**
+ * A canvas context that records what was painted, in **world** coordinates (via `unproject`) — the
+ * same pattern `render.test.mjs`'s own `recordingContext` uses, duplicated here (not imported) so
+ * this file stays self-contained, matching this file's existing convention for `square`/`partition`.
+ */
+function recordingContext(view) {
+  const fills = [];
+  let current = null;
+  const point = (px, py) => {
+    if (!current) return;
+    const [wx, wy] = unproject(px, py, view);
+    current.xmin = Math.min(current.xmin, wx);
+    current.ymin = Math.min(current.ymin, wy);
+    current.xmax = Math.max(current.xmax, wx);
+    current.ymax = Math.max(current.ymax, wy);
+  };
+  const ctx = {
+    fillStyle: '',
+    strokeStyle: '',
+    lineWidth: 0,
+    clearRect() {},
+    beginPath() {
+      current = { xmin: Infinity, ymin: Infinity, xmax: -Infinity, ymax: -Infinity };
+    },
+    moveTo: point,
+    lineTo: point,
+    closePath() {},
+    fill() {
+      fills.push({ ...current, fillStyle: ctx.fillStyle });
+    },
+    stroke() {},
+  };
+  return { ctx, fills };
+}
+
+/** The last painted path that covers a world point — what a viewer actually shows there. */
+function topmostAt(fills, x, y) {
+  for (let i = fills.length - 1; i >= 0; i--) {
+    const f = fills[i];
+    const pad = 1e-6;
+    if (x >= f.xmin - pad && x <= f.xmax + pad && y >= f.ymin - pad && y <= f.ymax + pad) return f;
+  }
+  return null;
+}
+
+/** A style stub: one group, so `drawAll` has a `DrawParameters` to read. */
+function styleStub() {
+  return {
+    matchColumn: null,
+    legend: [],
+    groups: [{ fillColor: '#000000', fillOpacity: 1, outlineColor: '#000000', outlineWidth: 0 }],
   };
 }
 
@@ -147,16 +203,46 @@ test('panBy: world distance moved = CSS drag distance x ratio / scale', () => {
 
 // ---- test 4: hover at a non-native size --------------------------------------------------------
 
-test('hover: a pick at a non-native size hits the feature under the pointer', () => {
-  const view = fitView({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 }, 733, 511);
-  const p = partition('data/part-00000.arrows', [square(42, 10, 10, 20)]);
-  // A point inside the square (20, 20), converted the same way a real pointer's toStore output
-  // would be: project to store pixels at THIS view's own dimensions, then unproject exactly as
-  // `hover()` does.
-  const [storeX, storeY] = project(20, 20, view);
+test('hover: a store coordinate built the way toStore builds one (css * ratio) hits what drawAll actually painted, at a non-native size', () => {
+  // **Not a second call to `project`, which test 1 already covers exhaustively — this test's
+  // predecessor built its store coordinate that way and was tautological for exactly that reason
+  // (reviewer note).** The view centre is `view.width/2, view.height/2` by `project`'s own
+  // definition, so it is known without calling `project` at all; the bounds below put it at world
+  // (50, 50), inside feature 42's square.
+  const bounds = { xmin: 0, ymin: 0, xmax: 100, ymax: 100 };
+  const view = fitView(bounds, 733, 511); // a non-native store size
+  const features = [square(42, 40, 40, 20), square(7, 0, 0, 10)];
+  const p = partition('data/part-00000.arrows', features);
+  const { ctx, fills } = recordingContext(view);
+  const stats = drawAll(ctx, [p], styleStub(), view);
+  assert.equal(stats.drawn, 2, 'both features must have been drawn for this fixture to mean anything');
+
+  const storeXAtCentre = view.width / 2;
+  const storeYAtCentre = view.height / 2;
+
+  // A non-1 ratio, and the store coordinate reconstructed as `css * ratio` — exactly `toStore`'s own
+  // arithmetic (`toStore(e) = [e.offsetX * rx, e.offsetY * ry]`, `main.ts`), which is the property
+  // this test exists to exercise: a real hover handler never has a store coordinate handed to it
+  // directly, only a CSS one and a ratio to multiply by.
+  const ratio = 1.37;
+  const cssX = storeXAtCentre / ratio;
+  const cssY = storeYAtCentre / ratio;
+  const storeX = cssX * ratio;
+  const storeY = cssY * ratio;
+
   const [wx, wy] = unproject(storeX, storeY, view);
   const hit = pick([p], wx, wy);
-  assert.equal(hit?.id, 42n, 'the pick at a non-native box size missed the feature under the point');
+  assert.equal(
+    hit?.id,
+    42n,
+    'the pick from a css*ratio store coordinate missed the feature at a non-native size',
+  );
+
+  // Independent oracle: `drawAll`'s own rasterization loop — a different code path from
+  // `pick`/`unproject` — agrees that something is actually painted where the pick resolved to. This
+  // is what gives the test a pixel-space reason to fail, not only an algebraic one.
+  const painted = topmostAt(fills, wx, wy);
+  assert.ok(painted, 'nothing was actually painted at the point the pick resolved to');
 });
 
 // ---- test 5: resize invariant ------------------------------------------------------------------
@@ -181,51 +267,51 @@ test('resizeStore: centre unchanged, scale multiplied by the ratio change', () =
 
 // ---- test 5b: the resize invariant at the declared backing-store ceiling ------------------------
 
-test('resizeStore at the ceiling: the store clamps, the measured ratio absorbs it, the centre stays put', () => {
-  // The same clamp arithmetic `sizeCanvasToClientBox` (main.ts) performs, replicated here so this
-  // fixture is tied to the real declared constants rather than an invented pair of numbers. An
-  // elongated client box, chosen so BOTH ceilings do real work: the per-axis ceiling clamps the wide
-  // axis first, and the total-pixel ceiling then shrinks both axes together (proportionally, so the
-  // clamped store keeps the client box's own aspect — §2's "the store clamps ... anchoring stays
-  // exact" behaviour, not a distorted one).
-  const dpr = 1;
+test('clampStoreSize at the ceiling: one shared factor, the store keeps the client box aspect', () => {
+  // An elongated client box, chosen so BOTH ceilings do real work: the per-axis ceiling alone would
+  // clamp only the wide axis (reviewer B1's counterexample, at the *previous* two-step
+  // implementation: 5000x3500 -> 4096x3500, aspect 1.17 against the client box's own 1.43).
   const cssWidth = 5000;
   const cssHeight = 3500;
-  let storeWidth = Math.round(cssWidth * dpr);
-  let storeHeight = Math.round(cssHeight * dpr);
+  const dpr = 1;
   assert.ok(
-    storeWidth > MAX_BACKING_STORE_DIM,
+    cssWidth * dpr > MAX_BACKING_STORE_DIM,
     'fixture check: the width must actually exceed the per-axis ceiling',
   );
 
-  storeWidth = Math.min(storeWidth, MAX_BACKING_STORE_DIM);
-  storeHeight = Math.min(storeHeight, MAX_BACKING_STORE_DIM);
-  assert.ok(
-    storeWidth * storeHeight > MAX_BACKING_STORE_PIXELS,
-    'fixture check: the area must still exceed the pixel-count ceiling after the per-axis clamp — ' +
-      'this is the case MAX_BACKING_STORE_PIXELS < MAX_BACKING_STORE_DIM**2 exists to make reachable',
-  );
-  const shrink = Math.sqrt(MAX_BACKING_STORE_PIXELS / (storeWidth * storeHeight));
-  storeWidth = Math.floor(storeWidth * shrink);
-  storeHeight = Math.floor(storeHeight * shrink);
+  // The shipped function, not a replica of its arithmetic (reviewer item 1): this test exercises the
+  // exact code `sizeCanvasToClientBox` (main.ts) calls.
+  const { width: storeWidth, height: storeHeight } = clampStoreSize(cssWidth, cssHeight, dpr);
+
+  assert.ok(storeWidth <= MAX_BACKING_STORE_DIM && storeHeight <= MAX_BACKING_STORE_DIM);
+  assert.ok(storeWidth * storeHeight <= MAX_BACKING_STORE_PIXELS);
   assert.ok(storeWidth < cssWidth, 'fixture check: the clamped store must be smaller than the client box');
+
+  // **One shared factor means the clamped store keeps the client box's own aspect** (reviewer B1) —
+  // not the per-axis-then-uniform-shrink sequence that produced 1.17 against 1.43 before the fix.
+  const clientAspect = cssWidth / cssHeight;
+  const storeAspect = storeWidth / storeHeight;
+  assert.ok(
+    Math.abs(storeAspect - clientAspect) / clientAspect < 0.01,
+    `store aspect ${storeAspect} drifted more than 1% from the client box's own ${clientAspect}`,
+  );
 
   // The ratio `toStore` would measure from the element post-clamp — not `dpr` (1), which is exactly
   // the "measured, never assumed" property under test here.
-  const clampedRatioX = storeWidth / cssWidth;
-  const priorRatioX = 1; // whatever the previous sizing measured, before this (hypothetical) resize
+  const clampedRatio = storeWidth / cssWidth;
+  const priorRatio = 1; // whatever the previous sizing measured, before this (hypothetical) resize
 
   const view = fitView(LV95, 2000, 1400); // an existing view, before the resize under test
   const centerXBefore = view.centerX;
   const centerYBefore = view.centerY;
   const scaleBefore = view.scale;
 
-  resizeStore(view, storeWidth, storeHeight, clampedRatioX / priorRatioX);
+  resizeStore(view, storeWidth, storeHeight, clampedRatio / priorRatio);
 
   assert.equal(view.centerX, centerXBefore, 'clamped or not, a resize must not move the centre');
   assert.equal(view.centerY, centerYBefore, 'clamped or not, a resize must not move the centre');
   assert.ok(
-    Math.abs(view.scale - scaleBefore * (clampedRatioX / priorRatioX)) < 1e-9,
+    Math.abs(view.scale - scaleBefore * (clampedRatio / priorRatio)) < 1e-9,
     'clamped or not, scale must still be the old scale x the ratio change',
   );
   assert.equal(view.width, storeWidth);

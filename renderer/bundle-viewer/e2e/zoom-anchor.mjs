@@ -61,13 +61,17 @@
  * `scripts/` builds and unit-tests source modules only (`bundle-for-test.mjs`, `render.test.mjs`,
  * etc.), and `build.mjs` builds the *viewer*, never a bundle. `EXTERNAL_BUNDLE_DATA_DIR` below is the
  * bundle the reproduction driver already used: the human's published `100k-happy-path` bundle, which
- * lives **outside this repository** at a fixed machine path. This test serves that bundle's *data*
- * (`manifest.json`, `style.json`, `data/`) alongside **this checkout's own freshly built viewer**
- * (`dist/index.html`, `dist/app.js`, rebuilt by this script every run) — never the external bundle's
- * own frozen `viewer/` copy, which would still be the pre-fix build forever (§5 of the
- * preregistration: a published bundle's viewer is a frozen copy of whatever built it). If
- * `EXTERNAL_BUNDLE_DATA_DIR` is not present on the machine running this test, the test fails naming
- * the missing path — a missing external input is not a pass and is not silently skipped.
+ * lives **outside this repository**. This test serves that bundle's *data* (`manifest.json`,
+ * `style.json`, `data/`) alongside **this checkout's own freshly built viewer** (`dist/index.html`,
+ * `dist/app.js`, rebuilt by this script every run) — never the external bundle's own frozen `viewer/`
+ * copy, which would still be the pre-fix build forever (§5 of the preregistration: a published
+ * bundle's viewer is a frozen copy of whatever built it).
+ *
+ * **`ZOOM_ANCHOR_BUNDLE_DIR` overrides the path** (an environment variable, read below), for any
+ * machine or CI runner where the fixture lives somewhere other than the default. The default is the
+ * path this piece's own gates ran against: `C:\Users\Public\spatial-ide-fixtures\100k-happy-path`. If
+ * the resolved path (override or default) is not present, the test fails naming it — a missing
+ * external input is not a pass and is not silently skipped.
  *
  * ## Browser
  *
@@ -101,8 +105,12 @@ import assert from 'node:assert/strict';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = join(HERE, '..');
 
-/** The declared external input (see the module doc comment's "The bundle" section). */
-const EXTERNAL_BUNDLE_DATA_DIR = 'C:\\Users\\Public\\spatial-ide-fixtures\\100k-happy-path';
+/**
+ * The declared external input (see the module doc comment's "The bundle" section).
+ * `ZOOM_ANCHOR_BUNDLE_DIR` overrides the default path below.
+ */
+const EXTERNAL_BUNDLE_DATA_DIR =
+  process.env.ZOOM_ANCHOR_BUNDLE_DIR || 'C:\\Users\\Public\\spatial-ide-fixtures\\100k-happy-path';
 
 const SOLVED_ANCHOR_TOLERANCE_PX = 20;
 const RETURN_TOLERANCE_PX = 1.5;
