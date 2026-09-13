@@ -146,10 +146,10 @@ let lastRatio = 1;
 /**
  * The single conversion (§2): every pointer coordinate this viewer acts on passes through here once,
  * and nothing downstream of it sees a CSS pixel again. **The ratio is measured from the element,
- * never assumed to equal `devicePixelRatio`** — exact in the arithmetic `unit tests exercise directly
- * (`zoomAt`/`panBy`/`resizeStore`'s own tests); end-to-end, through a real paint and a real wheel
- * event, the E2E discriminator (`e2e/zoom-anchor.mjs`) reads it to its own declared tolerance, not
- * this file's own claim.
+ * never assumed to equal `devicePixelRatio`** — exact in the arithmetic the unit tests exercise
+ * directly (`zoomAt`/`panBy`/`resizeStore`'s own tests); end-to-end, through a real paint and a real
+ * wheel event, the E2E discriminator (`e2e/zoom-anchor.mjs`) reads it to its own declared tolerance,
+ * not this file's own claim.
  */
 function toStore(e: MouseEvent): [number, number] {
   const rx = canvas.width / canvas.clientWidth;
@@ -176,17 +176,21 @@ function sizeCanvasToClientBox(): void {
   const dpr = window.devicePixelRatio || 1;
   const { width: storeWidth, height: storeHeight } = clampStoreSize(cssWidth, cssHeight, dpr);
 
-  // Measured and recorded BEFORE the early return below (reviewer B2). The store's own integer
-  // dimensions can stay unchanged across a client-box change that `clampStoreSize`'s rounding
-  // absorbs — but the ratio `toStore` would compute right now has already moved, and it is what the
-  // NEXT real resize's `ratioChange` must be measured against. Leaving `lastRatio` stale here (as an
-  // earlier version of this function did, only updating it below the early return) would multiply a
-  // future resize's `scale` by a ratio computed against a client box that no longer exists — a
-  // resize silently becoming a zoom.
-  const ratioBefore = canvas.width / cssWidth;
-  lastRatio = ratioBefore;
+  // `ratioBefore` is `lastRatio` as it stood at the start of this call — the ratio actually in
+  // effect for whatever this viewer last rendered (reviewer B2, and the pixel-ceiling regime the
+  // architect's second pass found). **Same store dimensions do not mean nothing changed.** Once
+  // `clampStoreSize`'s total-pixel factor is the binding one, its result depends on the client box's
+  // ASPECT alone (that function's own doc comment) — a uniform-aspect window growth recomputes the
+  // identical integer `storeWidth`/`storeHeight` however large the box gets, even though the ratio
+  // this call would measure (`storeWidth / cssWidth`) keeps moving as `cssWidth` grows. Comparing
+  // dimensions alone would let that resize through the early return with `scale` uncorrected —
+  // world-units-per-CSS-pixel moving silently, a resize becoming a zoom in exactly that regime. Both
+  // the dimension comparison and the ratio comparison must hold for nothing to be owed.
+  const ratioBefore = lastRatio;
+  const ratioAfter = storeWidth / cssWidth;
+  const dimsUnchanged = canvas.width === storeWidth && canvas.height === storeHeight;
 
-  if (canvas.width === storeWidth && canvas.height === storeHeight) return; // the store itself is unchanged
+  if (dimsUnchanged && ratioAfter === ratioBefore) return; // nothing changed, nothing to correct
 
   canvas.width = storeWidth;
   canvas.height = storeHeight;
@@ -194,7 +198,8 @@ function sizeCanvasToClientBox(): void {
 
   // `state.view` is null on the very first call: `fitView` (in `load()`, right after this call)
   // computes `scale` fresh from the bounds and has no prior ratio to hold constant against. Only a
-  // later, post-load resize goes through the invariant.
+  // later, post-load resize — including a same-dimensions, ratio-only one — goes through the
+  // invariant.
   if (state.view) {
     resizeStore(state.view, canvas.width, canvas.height, lastRatio / ratioBefore);
     redraw();

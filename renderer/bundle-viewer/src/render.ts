@@ -86,9 +86,7 @@ export const MAX_ATTRIBUTE_DISPLAY_CHARS: number = ceilings.MAX_ATTRIBUTE_DISPLA
  *
  * **`MAX_BACKING_STORE_DIM = 4096`: a declared choice, not a device measurement.** Nothing here reads
  * a GPU's or a canvas 2D backend's actual maximum texture/surface dimension — `4096` is this viewer's
- * own self-imposed bound, chosen generously above any window size a desktop session is likely to
- * present, so the ceiling is reached in practice only by `clampStoreSize`'s own unit test, not by an
- * ordinary window.
+ * own self-imposed bound.
  *
  * **`MAX_BACKING_STORE_PIXELS` is deliberately less than `MAX_BACKING_STORE_DIM²`**, not equal to it:
  * equal would make the total-pixel clamp in `clampStoreSize` unreachable dead code, since the
@@ -126,6 +124,15 @@ export const MAX_BACKING_STORE_PIXELS: number = 8_388_608; // 2**23, half of MAX
  * (wantWidth × wantHeight)))`, and both axes are `round(want × f)`: one factor means the result's
  * aspect equals the requested one, up to the sub-pixel difference two independent `round`s of the
  * same ratio can introduce — not the gross distortion above.
+ *
+ * **When the total-pixel factor is the binding one, the result depends on the client box's ASPECT
+ * alone, not its absolute size.** `wantWidth × f = wantWidth × √(MAX_BACKING_STORE_PIXELS /
+ * (wantWidth × wantHeight)) = √(MAX_BACKING_STORE_PIXELS × wantWidth / wantHeight)` — a function of
+ * `wantWidth / wantHeight` only. A uniform-aspect window growth in this regime therefore returns the
+ * **identical integer dimensions** call after call, however large the box gets, even though the
+ * ratio a caller would measure against the (unchanged) client box keeps moving. `main.ts`'s
+ * `sizeCanvasToClientBox` accounts for this: comparing dimensions alone is not sufficient to decide
+ * whether `scale` needs correcting (architect's second-pass note).
  */
 export function clampStoreSize(
   cssWidth: number,
