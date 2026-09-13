@@ -1,24 +1,26 @@
 #!/usr/bin/env node
-// scripts/plan/health.mjs — writes site/data/health.json (AUTONOMY.md §5's health strip, §15's
-// "Daily health strip"). Node's standard library only.
+// scripts/plan/health.mjs — writes site/data/health.json: the **machine facts** half of the
+// landing page's health strip (AUTONOMY.md §5, §15). Node's standard library only.
 //
-// Fields: CI on main (the badge URL, and `gh run list --branch main --limit 1` conclusion when
-// available), drift (runs verify.mjs in --offline mode and records pass/fail), disk free
-// (PowerShell `(Get-PSDrive C).Free` on Windows, `df` elsewhere), stray processes (count of
-// cargo, node, spatial-ide-shell processes — names only, never kills), open-PR ages
-// (`gh pr list --json number,createdAt`), waiting-on-human ages (from the plan's dates.opened).
-// Timestamped.
+// Machine facts only, and they say so (`source: "the custodian's machine"`): drift (runs
+// verify.mjs in --offline mode and records pass/fail), disk free (PowerShell `(Get-PSDrive C).Free`
+// on Windows, `df` elsewhere), stray processes (count of cargo, node, spatial-ide-shell processes
+// — names only, never kills), waiting-on-human ages (from the plan's dates.opened). Timestamped.
+//
+// CI on main, open PRs and the latest release are NOT read here: they are build-time facts, read
+// from GitHub's API inside the Pages build by buildHealth.mjs (the human, 2026-09-14: "read
+// GitHub's API at Pages build time, not gh on the dev machine"). The strip renders the two groups
+// separately, each with its own timestamp; no row ever mixes the two sources.
 //
 // Usage:
-//   node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>] [--offline]
+//   node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>]
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan, deriveStates } from './plan.mjs';
-import { runVerify, ghRepoSlug } from './verify.mjs';
-import { CI_BADGE_WORKFLOW } from './site.mjs';
+import { runVerify } from './verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -73,52 +75,6 @@ export function strayProcessCount() {
   }
 }
 
-/** CI on main: the badge URL always; the latest run's conclusion when `gh` is reachable. */
-export function ciInfo(repoRoot, slug, { offline = false } = {}) {
-  const badgeUrl = slug
-    ? `https://github.com/${slug}/actions/workflows/${CI_BADGE_WORKFLOW}/badge.svg?branch=main`
-    : null;
-  if (offline || !slug) {
-    return { badge_url: badgeUrl, conclusion: null, note: offline ? 'offline: gh run list skipped' : 'no repo slug found' };
-  }
-  try {
-    const out = execFileSync(
-      'gh',
-      ['run', 'list', '--branch', 'main', '--workflow', CI_BADGE_WORKFLOW, '--limit', '1', '--json', 'conclusion,status,headSha,createdAt'],
-      { cwd: repoRoot, encoding: 'utf8' },
-    );
-    const runs = JSON.parse(out);
-    const latest = runs[0] ?? null;
-    return {
-      badge_url: badgeUrl,
-      conclusion: latest?.conclusion ?? null,
-      status: latest?.status ?? null,
-      head_sha: latest?.headSha ?? null,
-      created_at: latest?.createdAt ?? null,
-    };
-  } catch (e) {
-    return { badge_url: badgeUrl, conclusion: null, error: e.message };
-  }
-}
-
-/** Open PRs and their ages, via `gh pr list --json number,createdAt`. */
-export function openPrAges(repoRoot, { offline = false, now = new Date() } = {}) {
-  if (offline) return { note: 'offline: gh pr list skipped', items: [] };
-  try {
-    const out = execFileSync('gh', ['pr', 'list', '--json', 'number,createdAt'], { cwd: repoRoot, encoding: 'utf8' });
-    const prs = JSON.parse(out);
-    return {
-      items: prs.map((pr) => ({
-        number: pr.number,
-        created_at: pr.createdAt,
-        age_days: Math.floor((now.getTime() - new Date(pr.createdAt).getTime()) / 86400000),
-      })),
-    };
-  } catch (e) {
-    return { error: e.message, items: [] };
-  }
-}
-
 /** Waiting-on-human items with their age (from the plan's own dates.opened). */
 export function computeWaitingAges(plan, { now = new Date() } = {}) {
   const { waitingOnHuman } = deriveStates(plan);
@@ -130,32 +86,32 @@ export function computeWaitingAges(plan, { now = new Date() } = {}) {
   });
 }
 
+export const MACHINE_SOURCE_LABEL = "the custodian's machine";
+
 /**
- * Assembles the full health.json payload. Every field beyond `generated_at`/`drift`/
- * `waiting_on_human` accepts a precomputed override, so tests can inject deterministic values
- * instead of hitting the real OS/gh.
+ * Assembles the full health.json payload — machine facts only. `disk_free`/`stray_processes`
+ * accept a precomputed override, so tests can inject deterministic values instead of hitting the
+ * real OS.
  */
 export function buildHealthData(plan, opts = {}) {
-  const { repoRoot, planPath, siteDir, now = new Date(), offline = false, slug } = opts;
+  const { repoRoot, planPath, siteDir, now = new Date() } = opts;
   const driftResult = runVerify({ planPath, repoRoot, siteDir, offline: true }); // §6: verify runs --offline here
   return {
     generated_at: now.toISOString(),
-    ci: opts.ci ?? ciInfo(repoRoot, slug, { offline }),
+    source: MACHINE_SOURCE_LABEL,
     drift: { ok: driftResult.ok, failures: driftResult.failures },
     disk_free: opts.disk ?? diskFree(),
     stray_processes: opts.strayProcesses ?? strayProcessCount(),
-    open_prs: opts.openPrs ?? openPrAges(repoRoot, { offline, now }),
     waiting_on_human: computeWaitingAges(plan, { now }),
   };
 }
 
 function parseArgs(argv) {
-  const args = { plan: null, outDir: null, offline: false };
+  const args = { plan: null, outDir: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--plan') args.plan = argv[++i];
     else if (a === '--out-dir') args.outDir = argv[++i];
-    else if (a === '--offline') args.offline = true;
     else throw new Error(`unknown argument: ${a}`);
   }
   return args;
@@ -168,8 +124,7 @@ function main() {
   const repoRoot = REPO_ROOT;
 
   const plan = loadPlan(planPath);
-  const slug = ghRepoSlug(repoRoot);
-  const health = buildHealthData(plan, { repoRoot, planPath, siteDir, offline: args.offline, slug });
+  const health = buildHealthData(plan, { repoRoot, planPath, siteDir });
 
   const outPath = path.join(siteDir, 'data', 'health.json');
   fs.mkdirSync(path.dirname(outPath), { recursive: true });

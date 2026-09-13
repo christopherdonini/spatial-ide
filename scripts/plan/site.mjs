@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 // scripts/plan/site.mjs
 //
-// Generates the landing page (AUTONOMY.md §5) from PLAN.yaml (+ site/data/health.json, if
-// present): site/index.html (self-contained: inline CSS/JS; the only external resources are the
-// GitHub workflow badge image and hyperlinks), site/data/plan.json, site/.nojekyll.
-// Node's standard library only.
+// Generates the landing page (AUTONOMY.md §5) from PLAN.yaml (+ site/data/health.json and
+// site/data/build-health.json, each if present): site/index.html (self-contained: inline CSS/JS;
+// the only external resources are the GitHub workflow badge image and hyperlinks),
+// site/data/plan.json, site/.nojekyll. Node's standard library only.
+//
+// The health strip has two sources and never mixes them (the human, 2026-09-14): build-time facts
+// (CI, open PRs, latest release) come from GitHub's API inside the Pages build, via
+// buildHealth.mjs -> site/data/build-health.json (gitignored); machine facts (drift, disk, stray
+// processes, waiting-on-human) come from health.mjs -> site/data/health.json. The drift check
+// always renders with the build facts ABSENT, so it never depends on that file.
 //
 // Usage:
 //   node scripts/plan/site.mjs [--plan <path>] [--out-dir <dir>] [--repo <owner/repo>] [--check]
@@ -147,35 +153,79 @@ function renderAheadArrows(aheadNodes) {
   return { svg, crossNotes };
 }
 
-function humanKindLabel(kind, minutes) {
-  return `${esc(kind)} (${minutes} min)`;
+/** Estimated minutes, or 0 when a node carries no usable estimate (DRAFT-4 bug 5: never "0 min"). */
+function estimatedMinutes(needs) {
+  const m = needs?.minutes;
+  return typeof m === 'number' && m > 0 ? m : 0;
 }
 
-function renderNodeBox(node, { showCheckmark = false, ambition = false, crossNotes = [] } = {}) {
+/**
+ * The need-type chip (DRAFT-4 bug 3): its own element, never concatenated onto the title. A
+ * zero or absent estimate reads "unestimated", never "0 min".
+ */
+function needChip(needs) {
+  if (!needs || needs.kind === 'none') return '';
+  const minutes = estimatedMinutes(needs);
+  const text = minutes > 0 ? `${needs.kind} · ${minutes} min` : `${needs.kind} · unestimated`;
+  const aria = minutes > 0 ? `needs a ${needs.kind}, about ${minutes} minutes` : `needs a ${needs.kind}, unestimated`;
+  return ` <span class="chip chip-need" aria-label="${esc(aria)}">${esc(text)}</span>`;
+}
+
+/** "(<sum> min estimated; <k> unestimated)" — and nothing at all when there is nothing to total. */
+function needTotalLabel(nodes) {
+  const minutes = nodes.map((n) => estimatedMinutes(n.needs_human));
+  const sum = minutes.reduce((a, b) => a + b, 0);
+  const unestimated = minutes.filter((m) => m === 0).length;
+  const parts = [];
+  if (sum > 0) parts.push(`${sum} min estimated`);
+  if (unestimated > 0) parts.push(`${unestimated} unestimated`);
+  if (parts.length === 0) return '';
+  return ` <span class="total">(${esc(parts.join('; '))})</span>`;
+}
+
+/**
+ * A done node's date, labelled by what the evidence actually dates (DRAFT-4 bug 5): a release or
+ * tag dates the evidence, not the work; a PR/commit/path/ADR/log is when the work landed.
+ */
+function doneDateLabel(node) {
+  const date = node.dates?.done;
+  if (!date) return '';
+  const e = node.evidence ?? {};
+  const kind = e.release !== undefined || e.tag !== undefined ? 'evidence dated' : 'landed';
+  return ` <span class="date">${kind} ${esc(date)}</span>`;
+}
+
+/** Cross-lane "after:" note: the dependency's title, linked to its anchor; its id only if unknown. */
+function crossNoteHtml(crossNotes, byId) {
+  if (crossNotes.length === 0) return '';
+  const parts = crossNotes.map((depId) => {
+    const dep = byId?.get(depId);
+    return dep
+      ? `<a href="#node-${esc(depId)}" title="${esc(depId)}">${esc(dep.title)}</a>`
+      : esc(depId);
+  });
+  return `<div class="cross-note">after: ${parts.join(', ')}</div>`;
+}
+
+function renderNodeBox(node, { showCheckmark = false, ambition = false, crossNotes = [], byId } = {}) {
   const classes = ['node-box'];
   if (ambition) classes.push('ambition');
   if (node.status === 'blocked' && node.needs_human && node.needs_human.kind !== 'none') {
     classes.push('blocked-human');
   }
   const mark = showCheckmark ? '<span class="check" aria-hidden="true">&#10003;</span> ' : '';
-  const humanBadge =
-    node.needs_human && node.needs_human.kind !== 'none'
-      ? `<span class="badge badge-human">${humanKindLabel(node.needs_human.kind, node.needs_human.minutes)}</span>`
-      : '';
-  const crossNote =
-    crossNotes.length > 0
-      ? `<div class="cross-note">after: ${crossNotes.map((d) => esc(d)).join(', ')}</div>`
-      : '';
+  // DRAFT-4 bug 4: the id is metadata — the anchor and the title attribute carry it, never the
+  // visible label.
   return (
-    `<div class="${classes.join(' ')}" id="node-${esc(node.id)}">` +
-    `${mark}<span class="node-id">${esc(node.id)}</span> — ${esc(node.title)}` +
-    `${humanBadge}` +
-    crossNote +
+    `<div class="${classes.join(' ')}" id="node-${esc(node.id)}" title="${esc(node.id)}">` +
+    `${mark}${esc(node.title)}` +
+    `${needChip(node.needs_human)}` +
+    crossNoteHtml(crossNotes, byId) +
     `</div>`
   );
 }
 
-function renderLane(lane, nodesInLane, { repoSlug }) {
+function renderLane(lane, nodesInLane, { repoSlug, byId }) {
   const done = nodesInLane
     .filter((n) => n.status === 'done')
     .sort((a, b) => (a.dates?.done ?? '').localeCompare(b.dates?.done ?? '') || a.id.localeCompare(b.id));
@@ -187,21 +237,21 @@ function renderLane(lane, nodesInLane, { repoSlug }) {
   const allUnscheduled = nodesInLane.length > 0 && nodesInLane.every((n) => n.status === 'unscheduled');
 
   const doneHtml = done
-    .map((n) => {
-      const date = n.dates?.done ? ` <span class="date">(${esc(n.dates.done)})</span>` : '';
-      return `<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">${esc(n.id)}</span> — ${esc(n.title)}${date} ${evidenceLink(n.evidence, repoSlug)}</div>`;
-    })
+    .map(
+      (n) =>
+        `<div class="node-box done" id="node-${esc(n.id)}" title="${esc(n.id)}"><span class="check" aria-hidden="true">&#10003;</span> ${esc(n.title)}${doneDateLabel(n)} ${evidenceLink(n.evidence, repoSlug)}</div>`,
+    )
     .join('\n');
 
   const { svg, crossNotes } = renderAheadArrows(ahead);
   const aheadHtml = ahead
-    .map((n) => renderNodeBox(n, { crossNotes: crossNotes.get(n.id) ?? [] }))
+    .map((n) => renderNodeBox(n, { crossNotes: crossNotes.get(n.id) ?? [], byId }))
     .join('\n');
 
   const unscheduledHtml = unscheduled
     .map(
       (n) =>
-        `<div class="node-box ambition"><span class="node-id">${esc(n.id)}</span> — ${esc(n.title)} <span class="phase-cite">${esc(n.phase)}</span></div>`,
+        `<div class="node-box ambition" id="node-${esc(n.id)}" title="${esc(n.id)}">${esc(n.title)} <span class="phase-cite">${esc(n.phase)}</span></div>`,
     )
     .join('\n');
 
@@ -226,16 +276,15 @@ function renderLane(lane, nodesInLane, { repoSlug }) {
 }
 
 function renderWaitingOnYou(waitingOnHuman) {
-  const total = waitingOnHuman.reduce((sum, n) => sum + (n.needs_human.minutes ?? 0), 0);
   const items = waitingOnHuman
     .map(
       (n) =>
-        `<li><strong>${esc(n.id)}</strong> — ${esc(n.title)} — ${humanKindLabel(n.needs_human.kind, n.needs_human.minutes)}</li>`,
+        `<li title="${esc(n.id)}"><a href="#node-${esc(n.id)}">${esc(n.title)}</a>${needChip(n.needs_human)}</li>`,
     )
     .join('\n');
   return `
   <section class="panel" id="waiting-on-you">
-    <h2>Waiting on you <span class="total">(${total} min total)</span></h2>
+    <h2>Waiting on you${needTotalLabel(waitingOnHuman)}</h2>
     <ul>${items || '<li class="empty">(nothing)</li>'}</ul>
   </section>`;
 }
@@ -269,15 +318,6 @@ function oldestBy(items, ageField) {
   return items.reduce((a, b) => ((a[ageField] ?? -1) >= (b[ageField] ?? -1) ? a : b));
 }
 
-function formatOpenPrs(openPrs) {
-  if (!openPrs) return 'unknown';
-  if (openPrs.error) return `error: ${openPrs.error}`;
-  const items = openPrs.items ?? [];
-  if (items.length === 0) return openPrs.note ? openPrs.note : '0 open';
-  const oldest = oldestBy(items, 'age_days');
-  return `${items.length} open, oldest ${oldest.age_days ?? '?'} d (#${oldest.number})`;
-}
-
 function formatWaitingOnHuman(waiting) {
   const items = Array.isArray(waiting) ? waiting : [];
   if (items.length === 0) return '0 waiting';
@@ -287,25 +327,117 @@ function formatWaitingOnHuman(waiting) {
   return `${items.length} waiting, oldest ${oldest.age_days} d (${oldest.id})`;
 }
 
-function renderHealthStrip(health) {
-  if (!health) {
-    return `<section class="panel health-strip"><h2>Health</h2><p class="empty">no site/data/health.json yet — never refreshed</p></section>`;
-  }
-  // Six rows (§5/§15): CI on main, drift, disk free, stray processes, open-PR age, waiting-on-human age.
-  const rows = [
-    ['CI on main', health.ci?.conclusion ?? 'unknown'],
-    ['Drift', health.drift?.ok === true ? 'clean' : health.drift?.ok === false ? 'DRIFT' : 'unknown'],
-    ['Disk free', formatDiskFree(health.disk_free)],
-    ['Stray processes', formatStrayProcesses(health.stray_processes)],
-    ['Open PRs', formatOpenPrs(health.open_prs)],
-    ['Waiting on human', formatWaitingOnHuman(health.waiting_on_human)],
-  ];
-  const rowsHtml = rows.map(([k, v]) => `<div class="health-row"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('\n');
+/** CI on main, from the build-time facts: the conclusion, linked to its run. */
+function ciValueHtml(ci) {
+  if (!ci) return esc('not read');
+  if (ci.error) return esc(`error: ${ci.error}`);
+  const label = ci.conclusion ?? ci.status ?? ci.note ?? 'no conclusion recorded';
+  return ci.html_url ? `<a href="${esc(ci.html_url)}">${esc(label)}</a>` : esc(label);
+}
+
+function openPrsValueHtml(openPrs) {
+  if (!openPrs) return esc('not read');
+  if (openPrs.error) return esc(`error: ${openPrs.error}`);
+  if (!openPrs.count) return esc('0 open');
+  const oldest = openPrs.oldest;
+  const text = oldest
+    ? `${openPrs.count} open, oldest ${oldest.age_days ?? '?'} d (#${oldest.number})`
+    : `${openPrs.count} open`;
+  return oldest?.html_url ? `<a href="${esc(oldest.html_url)}">${esc(text)}</a>` : esc(text);
+}
+
+function latestReleaseValueHtml(release) {
+  if (release === null || release === undefined) return esc('none published yet');
+  if (release.error) return esc(`error: ${release.error}`);
+  const date = release.published_at ? String(release.published_at).slice(0, 10) : 'date unknown';
+  const text = `${release.tag_name ?? 'unnamed'} (${date})`;
+  return release.html_url ? `<a href="${esc(release.html_url)}">${esc(text)}</a>` : esc(text);
+}
+
+function healthRowsHtml(rows) {
+  return rows
+    .map(([label, valueHtml]) => `<div class="health-row"><span>${esc(label)}</span><span>${valueHtml}</span></div>`)
+    .join('\n');
+}
+
+/**
+ * Two labelled groups, each with its own timestamp (DRAFT-4 bug 1; the human, 2026-09-14): the
+ * build-time facts come from GitHub's API inside the Pages build (buildHealth.mjs), the machine
+ * facts from the custodian's machine (health.mjs). No row ever mixes the two.
+ */
+function renderHealthStrip(health, buildHealth) {
+  const buildGroup = buildHealth
+    ? `<h3 class="health-source">From GitHub's API at Pages build time — built ${esc(buildHealth.built_at ?? 'unknown')}</h3>\n` +
+      healthRowsHtml([
+        ['CI on main', ciValueHtml(buildHealth.ci)],
+        ['Open PRs', openPrsValueHtml(buildHealth.open_prs)],
+        ['Latest release', latestReleaseValueHtml(buildHealth.latest_release)],
+      ])
+    : `<h3 class="health-source">From GitHub's API at Pages build time</h3>\n` +
+      `<p class="empty">CI on main, open PRs and the latest release are read from GitHub's API in the Pages build; this copy was generated outside that build.</p>`;
+
+  const machineGroup = health
+    ? `<h3 class="health-source">From the custodian's machine — refreshed ${esc(health.generated_at ?? 'unknown')}</h3>\n` +
+      healthRowsHtml([
+        ['Drift', esc(health.drift?.ok === true ? 'clean' : health.drift?.ok === false ? 'DRIFT' : 'unknown')],
+        ['Disk free', esc(formatDiskFree(health.disk_free))],
+        ['Stray processes', esc(formatStrayProcesses(health.stray_processes))],
+        ['Waiting on human', esc(formatWaitingOnHuman(health.waiting_on_human))],
+      ])
+    : `<h3 class="health-source">From the custodian's machine</h3>\n` +
+      `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
+
   return `
   <section class="panel health-strip">
-    <h2>Health <span class="refreshed">refreshed ${esc(health.generated_at ?? 'unknown')}</span></h2>
-    ${rowsHtml}
+    <h2>Health</h2>
+    ${buildGroup}
+    ${machineGroup}
   </section>`;
+}
+
+const SHIPPED_WINDOW_DAYS = 7;
+
+function shiftDays(isoDate, delta) {
+  const t = Date.parse(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(t)) return isoDate;
+  return new Date(t + delta * 86400000).toISOString().slice(0, 10);
+}
+
+/**
+ * The static "shipped recently" list (DRAFT-4 bug 2): the window is measured from the NEWEST
+ * `dates.done` in the plan, never from the wall clock — the page must render the same bytes on
+ * every run or the drift check would fail a day later for no reason. The inline JS narrows this
+ * list to the viewer's last visit when it runs; when it does not, this is what the page says.
+ */
+export function shippedRecently(plan) {
+  const done = (plan.nodes ?? []).filter(
+    (n) => n.status === 'done' && typeof n.dates?.done === 'string' && n.dates.done.length > 0,
+  );
+  if (done.length === 0) return { newest: null, nodes: [] };
+  const newest = done.reduce((a, b) => (a.dates.done >= b.dates.done ? a : b)).dates.done;
+  const cutoff = shiftDays(newest, -SHIPPED_WINDOW_DAYS);
+  const nodes = done
+    .filter((n) => n.dates.done >= cutoff)
+    .sort((a, b) => b.dates.done.localeCompare(a.dates.done) || a.id.localeCompare(b.id));
+  return { newest, nodes };
+}
+
+function renderShipped(plan, repoSlug) {
+  const { newest, nodes } = shippedRecently(plan);
+  const heading = newest
+    ? `Shipped in the ${SHIPPED_WINDOW_DAYS} days to ${esc(newest)}`
+    : 'Shipped recently';
+  const items = nodes
+    .map(
+      (n) =>
+        `<li title="${esc(n.id)}"><a href="#node-${esc(n.id)}">${esc(n.title)}</a> <span class="date">(${esc(n.dates.done)})</span> ${evidenceLink(n.evidence, repoSlug)}</li>`,
+    )
+    .join('\n');
+  return `
+<section class="panel" id="shipped-since-last-visit">
+  <h2 id="shipped-heading">${heading}</h2>
+  <ul id="shipped-list">${items || '<li class="empty">(nothing with a recorded date yet)</li>'}</ul>
+</section>`;
 }
 
 const CSS = `
@@ -326,10 +458,9 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 .node-box.done { border-color: #9c9; }
 .node-box.ambition { border-style: dashed; color: #778; }
 .node-box.blocked-human { border-color: #e0a030; }
-.node-id { font-family: ui-monospace, monospace; font-size: 0.8rem; }
 .check { color: #292; }
-.badge { display: inline-block; font-size: 0.72rem; border-radius: 4px; padding: 0 5px; margin-left: 6px; }
-.badge-human { background: #fde8c0; color: #664400; }
+.chip { display: inline-block; font-size: 0.72rem; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.chip-need { background: #fde8c0; color: #664400; }
 .cross-note { font-size: 0.72rem; color: #889; }
 .phase-cite { font-size: 0.72rem; color: #889; margin-left: 6px; }
 .date { color: #889; font-size: 0.8rem; }
@@ -340,6 +471,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 .empty { color: #99a; font-style: italic; margin: 0; }
 .total { font-weight: normal; color: #889; font-size: 0.85rem; }
 .health-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 2px 0; border-top: 1px solid #eef; }
+.health-source { font-size: 0.72rem; text-transform: none; letter-spacing: normal; color: #667; margin: 10px 0 2px; }
 .refreshed { font-weight: normal; color: #889; font-size: 0.78rem; }
 .seeded-note { background: #fde8c0; border: 1px solid #e0a030; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; margin-bottom: 12px; }
 @media (max-width: 480px) {
@@ -349,7 +481,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 }
 `;
 
-function renderHtml(plan, health, { repoSlug, generatedAt }) {
+function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null }) {
   const violations = findMetricViolations(plan);
   if (violations.length > 0) throw new SiteMetricViolationError(violations);
 
@@ -366,7 +498,10 @@ function renderHtml(plan, health, { repoSlug, generatedAt }) {
     ? ''
     : `<div class="seeded-note">Seeded, pending approval: lane priorities below are the seeded order from the directive, not yet approved (AUTONOMY.md §2, §4).</div>`;
 
-  const laneHtml = lanes.map((lane) => renderLane(lane, nodesByLane.get(lane.id) ?? [], { repoSlug })).join('\n');
+  const byId = indexById(plan.nodes ?? []);
+  const laneHtml = lanes
+    .map((lane) => renderLane(lane, nodesByLane.get(lane.id) ?? [], { repoSlug, byId }))
+    .join('\n');
 
   const planData = {
     generated_at: generatedAt,
@@ -394,47 +529,63 @@ function renderHtml(plan, health, { repoSlug, generatedAt }) {
 ${seededNote}
 <div class="panels">
 ${renderWaitingOnYou(waitingOnHuman)}
-<section class="panel" id="shipped-since-last-visit">
-  <h2>Shipped since your last visit</h2>
-  <ul id="shipped-list"><li class="empty">loading…</li></ul>
-</section>
+${renderShipped(plan, repoSlug)}
 </div>
-${renderHealthStrip(health)}
+${renderHealthStrip(health, buildHealth)}
 <main>
 ${laneHtml}
 </main>
 <script id="plan-data" type="application/json">${safeJsonForScript(planData)}</script>
 <script>
+// Progressive enhancement only: the list and heading above are already true without JS. This
+// narrows them to the viewer's own last visit, and only if everything below succeeds.
 (function () {
-  var data = JSON.parse(document.getElementById('plan-data').textContent);
   var STORAGE_KEY = 'spatial-ide-custodian-last-visit';
-  var now = new Date();
+  function todayLocal() {
+    var d = new Date();
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
   var lastVisitRaw = null;
-  try { lastVisitRaw = localStorage.getItem(STORAGE_KEY); } catch (e) { /* localStorage unavailable */ }
-  var since;
-  if (lastVisitRaw) {
-    since = new Date(lastVisitRaw);
-  } else {
-    since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // first visit: last seven days
-  }
-  var shipped = (data.done_nodes || []).filter(function (n) {
-    return n.dates && n.dates.done && new Date(n.dates.done) >= since;
-  });
-  var list = document.getElementById('shipped-list');
-  list.innerHTML = '';
-  if (shipped.length === 0) {
-    var li = document.createElement('li');
-    li.className = 'empty';
-    li.textContent = '(nothing since your last visit)';
-    list.appendChild(li);
-  } else {
-    shipped.forEach(function (n) {
-      var li = document.createElement('li');
-      li.textContent = n.id + ' — ' + n.title + ' (' + n.dates.done + ')';
-      list.appendChild(li);
-    });
-  }
-  try { localStorage.setItem(STORAGE_KEY, now.toISOString()); } catch (e) { /* localStorage unavailable */ }
+  try { lastVisitRaw = localStorage.getItem(STORAGE_KEY); } catch (e) { lastVisitRaw = null; }
+  try {
+    // Calendar days, inclusive of the last-visit day: comparing a date-only value with an instant
+    // hid anything that landed on the day of the visit itself. A first visit changes nothing.
+    if (lastVisitRaw && lastVisitRaw.length >= 10) {
+      var lastDay = lastVisitRaw.slice(0, 10);
+      var data = JSON.parse(document.getElementById('plan-data').textContent);
+      var shipped = (data.done_nodes || []).filter(function (n) {
+        return n.dates && typeof n.dates.done === 'string' && n.dates.done >= lastDay;
+      });
+      shipped.sort(function (a, b) {
+        return a.dates.done < b.dates.done ? 1 : a.dates.done > b.dates.done ? -1 : 0;
+      });
+      var list = document.getElementById('shipped-list');
+      var heading = document.getElementById('shipped-heading');
+      var fresh = document.createDocumentFragment();
+      if (shipped.length === 0) {
+        var none = document.createElement('li');
+        none.className = 'empty';
+        none.textContent = '(nothing since your last visit)';
+        fresh.appendChild(none);
+      } else {
+        shipped.forEach(function (n) {
+          var li = document.createElement('li');
+          li.title = n.id;
+          var a = document.createElement('a');
+          a.href = '#node-' + n.id;
+          a.textContent = n.title;
+          li.appendChild(a);
+          li.appendChild(document.createTextNode(' (' + n.dates.done + ')'));
+          fresh.appendChild(li);
+        });
+      }
+      list.innerHTML = '';
+      list.appendChild(fresh);
+      heading.textContent = 'Shipped since your last visit (' + lastDay + ')';
+    }
+  } catch (e) { /* leave the generated list and heading exactly as they are */ }
+  try { localStorage.setItem(STORAGE_KEY, todayLocal()); } catch (e) { /* localStorage unavailable */ }
 })();
 </script>
 </body>
@@ -442,11 +593,15 @@ ${laneHtml}
 `;
 }
 
-/** Pure: builds { html, planJson } from an already-loaded plan and optional health object. */
+/**
+ * Pure: builds { html, planJson } from an already-loaded plan, the optional machine-facts health
+ * object, and (via `options.buildHealth`) the optional build-time facts.
+ */
 export function renderSite(plan, health, options = {}) {
   const repoSlug = options.repoSlug ?? DEFAULT_REPO_SLUG;
   const generatedAt = options.generatedAt ?? new Date().toISOString();
-  const html = renderHtml(plan, health, { repoSlug, generatedAt });
+  const buildHealth = options.buildHealth ?? null;
+  const html = renderHtml(plan, health, { repoSlug, generatedAt, buildHealth });
   const planJson = `${JSON.stringify(
     {
       generated_at: generatedAt,
@@ -462,14 +617,27 @@ export function renderSite(plan, health, options = {}) {
   return { html, planJson };
 }
 
-function readHealth(outDir) {
-  const p = path.join(outDir, 'data', 'health.json');
+function readJsonIfPresent(p) {
   if (!fs.existsSync(p)) return null;
   try {
     return JSON.parse(fs.readFileSync(p, 'utf8'));
   } catch {
     return null;
   }
+}
+
+function readHealth(outDir) {
+  return readJsonIfPresent(path.join(outDir, 'data', 'health.json'));
+}
+
+/**
+ * The build-time facts, written by buildHealth.mjs inside the Pages build only (gitignored, never
+ * committed). Generation reads it when it happens to be there; `checkSiteDrift` never does — the
+ * committed page is compared against a generation with the build facts absent, so the drift check
+ * can never depend on a file that exists on one machine and not another.
+ */
+export function readBuildHealth(outDir) {
+  return readJsonIfPresent(path.join(outDir, 'data', 'build-health.json'));
 }
 
 const GENERATED_AT_RE = /"generated_at":\s*"[^"]*"/;
@@ -485,7 +653,8 @@ export function checkSiteDrift({ planPath, outDir, repoSlug }) {
   const health = readHealth(outDir);
   let html, planJson;
   try {
-    ({ html, planJson } = renderSite(plan, health, { repoSlug }));
+    // buildHealth stays absent here on purpose (see readBuildHealth).
+    ({ html, planJson } = renderSite(plan, health, { repoSlug, buildHealth: null }));
   } catch (e) {
     if (e instanceof SiteMetricViolationError) return { ok: false, problems: [e.message] };
     throw e;
@@ -563,7 +732,8 @@ function main() {
 
   const plan = loadPlan(planPath);
   const health = readHealth(outDir);
-  const { html, planJson } = renderSite(plan, health, { repoSlug });
+  const buildHealth = readBuildHealth(outDir);
+  const { html, planJson } = renderSite(plan, health, { repoSlug, buildHealth });
 
   fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
   fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');

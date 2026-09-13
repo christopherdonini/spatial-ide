@@ -12,6 +12,9 @@ dist-metafile.json
 # `notice()`, is what produces this file; never hand-edited, never committed.
 frontends/shell/src/generated/
 
+# Build-time health facts (scripts/plan/buildHealth.mjs) — generated only in the Pages build, never committed.
+site/data/build-health.json
+
 # Tauri
 src-tauri/gen/
 
