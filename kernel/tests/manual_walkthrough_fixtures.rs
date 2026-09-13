@@ -239,8 +239,8 @@ fn generate_the_dupkey_refusing_fixture() {
 
 /// The "both remediations needed" file (`NEXT-CUT.md` admission-remediation cut, P5's `BOTHNEEDED'`
 /// E2E step and Part I's I5 — the reviewer's MUST-FIX-2 loop case, permanently encoded): **neither**
-/// a CRS nor a stable identity is admissible without an explicit operator act — no `crs` key at all
-/// (`CrsMode::AbsentKey`) **and** no `id` column, only
+/// a CRS nor a stable identity is admissible without an explicit operator act — an explicit
+/// `"crs": null` (`CrsMode::ExplicitNull`) **and** no `id` column, only
 /// `parcel_key` (`IdentityMode::ForeignKeyColumn`, the same mode `missing-identity-refused.parquet`
 /// uses) — combined in one file for the first time; both fields are independent `FixtureSpec`
 /// members, so no engine-side change was needed to write this combination.
@@ -249,20 +249,16 @@ fn generate_the_dupkey_refusing_fixture() {
 /// refuses identity; only a request carrying BOTH admits — the combined-request path the P3b
 /// reviewer fix (options accumulation, MF2) exists to make reachable in the real UI.
 ///
-/// **Cross-reference corrected (the no-CRS-refusal re-aim, `engine/ADMISSION-PREREGISTRATION.md`
-/// §4 F-2/F-3): this file's CRS half is NO LONGER "the same mode `no-crs-refused.parquet` uses" —
-/// that fixture moved to `CrsMode::ExplicitNull` (F-3) so it keeps refusing `crs_undeclared`; this
-/// fixture still writes `CrsMode::AbsentKey` in the metre domain, which is §4's F-2 shape.** Reading
-/// `engine::dataset::sanity_check` (`dataset.rs:885-956`): with `with_covering_bbox: true` and
-/// `statistics: StatisticsMode::WriterDefault` (both this spec's defaults), the covering columns'
-/// Parquet statistics are very likely present at the footer, so this file's own plain-open CRS
-/// refusal is now, in all likelihood, `engine.format_default_contradicted` (F-2), not
-/// `engine.crs_undeclared` (F-3) — **not verified by a run in this piece** (out of its scope; only
-/// `kernel/tests/manual_walkthrough_fixtures.rs`, `frontends/shell/e2e/regression.mjs` and
-/// `frontends/shell/MANUAL-WALKTHROUGH.md` moved). `frontends/shell/e2e/admission-remediation.mjs`'s
-/// `stepBothNeeded` (its `first.code !== "engine.crs_undeclared"` check) has NOT been re-aimed to
-/// match and is very likely stale the same way `regression.mjs`'s `B2'/B3'` was — flagged here
-/// rather than silently left implying the old contract still holds; a follow-up re-aim's to fix.
+/// **Re-aimed, same ruling and same class as `no-crs-refused.parquet`
+/// (`engine/ADMISSION-PREREGISTRATION.md` §4 F-2/F-3).** This generator used to write
+/// `CrsMode::AbsentKey` in the metre domain — since Brief A's P1/P2 an absent key admits under
+/// GeoParquet's own OGC:CRS84 format default and this file's metre-domain coordinates would
+/// contradict it (`engine.format_default_contradicted`, F-2), not the `engine.crs_undeclared`
+/// refusal `frontends/shell/e2e/admission-remediation.mjs`'s `stepBothNeeded` expects first and
+/// this fixture's own "both remediations needed" intent depends on (a CRS-assertion form has to
+/// render so the carried-claim flow has something to assert through). Moving to
+/// `CrsMode::ExplicitNull` (F-3, unchanged refusal, same filename) keeps both the code
+/// `stepBothNeeded` checks and the form it requires correct — no change needed there.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
 fn generate_the_bothneeded_refusing_fixture() {
@@ -272,7 +268,7 @@ fn generate_the_bothneeded_refusing_fixture() {
         &FixtureSpec {
             features: 100,
             avg_vertices: 12,
-            crs_mode: CrsMode::AbsentKey,
+            crs_mode: CrsMode::ExplicitNull,
             identity: IdentityMode::ForeignKeyColumn,
             ..Default::default()
         },
