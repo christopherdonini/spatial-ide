@@ -346,9 +346,18 @@ async function stepAxistrap(page, ctx) {
   if (outcome.kind !== "refused" || outcome.code !== "engine.axis_order_unsupported") {
     throw new Error(`AXISTRAP': expected {kind:"refused", code:"engine.axis_order_unsupported"}, got ${JSON.stringify(outcome)}`);
   }
+  // Re-aimed (DECISIONS-PENDING entry 80's rule: "naming the ruling AND asserting the new
+  // provenance class"): `engine/src/error.rs:238`'s `AxisOrderUnsupported` `Display` arm was
+  // corrected at Brief A P1 (commit 92d87f1, "feat(engine): Brief A P1 -- the reader's format
+  // semantics, provenance classes and sanity-check levels"; `error.rs`'s own inline comment there
+  // names ADR-032; `engine/ADMISSION-PREREGISTRATION.md` §3 row 3 documents the same corrected
+  // refusal, `AxisOrderUnsupported{established:"latitude,longitude"}`). The old text claimed the
+  // engine "emits (easting, northing) only"; `crs.rs:122-123` has always admitted
+  // `LongitudeLatitude` too, so the corrected wording names both x-first orders. Read from the
+  // Display arm verbatim, not hand-typed.
   const expectedMessage =
     "refused: established axis order is northing,easting; this slice performs no axis " +
-    "normalization and emits (easting, northing) only";
+    "normalization and emits x-first orders only — (easting, northing) or (longitude, latitude)";
   if (outcome.message !== expectedMessage) {
     throw new Error(`AXISTRAP': message mismatch.\nExpected: ${expectedMessage}\nActual:   ${outcome.message}`);
   }
