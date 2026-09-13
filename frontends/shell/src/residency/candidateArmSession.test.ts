@@ -88,6 +88,7 @@ function fakeCanvas(overrides: Partial<WorkingCanvasHandle> = {}): WorkingCanvas
     isTileCompleteInCandidateSet: vi.fn(() => false),
     markTilePartial: vi.fn(),
     markTileComplete: vi.fn(),
+    markTileResidentEmpty: vi.fn(),
     establishTileGridContext: vi.fn(),
     applyTileViewportContext: vi.fn(() => true),
     ...overrides,
@@ -3271,5 +3272,191 @@ describe("the untiled sink's failed terminal feeds the typed-partiality accounti
     expect(onResidencyStatusChange).not.toHaveBeenCalledWith(
       expect.objectContaining({ untiledStreamStillRunning: expect.anything() })
     );
+  });
+});
+
+// Entry 84 (`FILTER-84-85-PREREGISTRATION.md` §3.2 and §3.4 item 2, the human's own words: "the
+// zero-row terminal marks the tile resident"). A tile stream that reaches its clean `Completed`
+// terminal having delivered NO batch has answered for its own bbox: there is nothing there under the
+// query that asked. Before this piece nothing marked such a tile at all -- `markTileResidentEmpty`
+// had no caller outside `TileResidentSet` itself, and the clean-terminal `markTileComplete` is gated
+// on a batch-path generation entry -- so `isFillComplete()` never read the covering set as loaded and
+// the view reported settled-partial although everything matching was drawn. Under a filter that is
+// most covering tiles, which is how the finding was reached.
+//
+// The three cases below are the preregistration's own pre-committed list: the zero-row terminal
+// marks resident-empty and complete; a terminal that DID deliver a batch is unchanged; a stream that
+// ends any other way marks nothing.
+describe("entry 84: a clean Completed terminal that delivered no batch marks the tile resident-empty", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  /** A single-cell bbox, entirely inside cell (0,0) of the grid this file's own bootstrap
+   * establishes -- exactly ONE tile is ever in play, so every assertion below is traceable to that
+   * one tile key. The same bbox the sticky-partial exit test above uses, for the same reason. */
+  const ONE_TILE_BBOX = { xmin: -1, ymin: -1, xmax: -0.95, ymax: -0.95 };
+  /** Far enough away that the tile above is no longer covered -- what makes a re-plan supersede the
+   * in-flight stream instead of leaving it alone. */
+  const FAR_BBOX = { xmin: 0.9, ymin: 0.9, xmax: 0.95, ymax: 0.95 };
+
+  /** A minimal stand-in for `TileResidentSet`'s own residency/completeness bookkeeping, wired to the
+   * REAL methods the session calls: `markTileResidentEmpty` creates a non-partial entry (so the tile
+   * reads resident AND complete, `TileResidentSet.markTileResidentEmpty`/`isTileComplete`),
+   * `markTilePartial` takes completeness away without taking residency, `markTileComplete` restores
+   * it in place. Observing the session drive a tile from "never heard of" to "resident and complete"
+   * is the point -- not call-argument assertions alone. */
+  function residentSetModel() {
+    const resident = new Set<string>();
+    const partial = new Set<string>();
+    return {
+      resident,
+      partial,
+      overrides: {
+        isTileResidentInCandidateSet: vi.fn((tileKey: string) => resident.has(tileKey)),
+        isTileCompleteInCandidateSet: vi.fn((tileKey: string) => resident.has(tileKey) && !partial.has(tileKey)),
+        markTileResidentEmpty: vi.fn((tileKey: string) => {
+          resident.add(tileKey);
+        }),
+        markTilePartial: vi.fn((tileKey: string) => partial.add(tileKey)),
+        markTileComplete: vi.fn((tileKey: string) => partial.delete(tileKey)),
+      },
+    };
+  }
+
+  /** Bootstrap: the untiled first look establishes the grid frame (this file's own
+   * `completeUntiledLook`), then ONE camera change plans the single covering tile and mints its
+   * stream. Returns that stream's own sink for the caller to terminate by hand. */
+  async function armOneTile(canvas: WorkingCanvasHandle, onResidencyStatusChange: ReturnType<typeof vi.fn>) {
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook();
+    expect(session.manager.gridFrame).not.toBeNull();
+
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValueOnce({ stream: "sh_tile_1" });
+    vi.useFakeTimers();
+    try {
+      session.onViewportChanged(ONE_TILE_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(viewportQueryMock).toHaveBeenCalledTimes(1);
+    return { session, tileSink: lastSink() };
+  }
+
+  it("the zero-row terminal: no batch, clean Completed -> resident-empty and complete -> isFillComplete true", async () => {
+    const model = residentSetModel();
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
+      ...model.overrides,
+    });
+    const onResidencyStatusChange = vi.fn();
+    const { session, tileSink } = await armOneTile(canvas, onResidencyStatusChange);
+
+    // Mid-fill: the tile is tracked and has told this session nothing yet.
+    expect(session.isFillComplete()).toBe(false);
+    expect(canvas.markTileResidentEmpty).not.toHaveBeenCalled();
+
+    // The stream ends cleanly having delivered nothing at all -- the filtered tile whose own bbox
+    // holds no matching row.
+    onResidencyStatusChange.mockClear();
+    tileSink.onTerminal({ kind: "Completed", detail: "" });
+
+    expect(canvas.markTileResidentEmpty).toHaveBeenCalledTimes(1);
+    const [emptyTileKey] = (canvas.markTileResidentEmpty as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(emptyTileKey).not.toBe(INITIAL_TILE_KEY); // a real grid tile, never the untiled first look
+    expect(model.resident.has(emptyTileKey)).toBe(true);
+    expect(model.partial.has(emptyTileKey)).toBe(false); // resident AND complete: nothing its bbox covers is missing
+    // `markTileComplete` is the batch path's own proof-carrying call and has nothing to clear here --
+    // `markTileResidentEmpty` created the entry non-partial to begin with.
+    expect(canvas.markTileComplete).not.toHaveBeenCalled();
+
+    // The covering set is this one tile, so the fill really is complete now. `isFillComplete()`
+    // iterates `lastCoveringTileKeys` itself, so this could only read true if the key marked above is
+    // exactly the key the plan covered -- the assertion checks the marking AND its aim.
+    expect(session.isFillComplete()).toBe(true);
+    expect(onResidencyStatusChange).toHaveBeenCalledWith({
+      kind: "candidate-within-budget",
+      residentFeatureCount: 1,
+      settled: "complete",
+    });
+  });
+
+  it("a terminal that DID deliver a batch is unchanged: markTileComplete, never markTileResidentEmpty", async () => {
+    const model = residentSetModel();
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
+      ...model.overrides,
+    });
+    const { session, tileSink } = await armOneTile(canvas, vi.fn());
+
+    tileSink.onBatch(new Uint8Array([2]), true);
+    const [tileKey] = (canvas.pushTileBatch as ReturnType<typeof vi.fn>).mock.calls.at(-1)!;
+    // The real `TileResidentSet` marks a tile resident from inside `addBatch` itself; this model
+    // mirrors that, so the batch path's own residency does not come from the session.
+    model.resident.add(tileKey);
+
+    tileSink.onTerminal({ kind: "Completed", detail: "" });
+
+    expect(canvas.markTileComplete).toHaveBeenCalledWith(tileKey);
+    expect(canvas.markTileResidentEmpty).not.toHaveBeenCalled();
+    expect(session.isFillComplete()).toBe(true);
+  });
+
+  it("a failed terminal marks nothing -- and the recorded failure keeps the fill honestly incomplete", async () => {
+    const model = residentSetModel();
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
+      ...model.overrides,
+    });
+    const { session, tileSink } = await armOneTile(canvas, vi.fn());
+
+    tileSink.onTerminal({ kind: "ProducerFailed", detail: "engine.stream_failed" });
+
+    expect(canvas.markTileResidentEmpty).not.toHaveBeenCalled();
+    expect(canvas.markTileComplete).not.toHaveBeenCalled();
+    expect(model.resident.size).toBe(0);
+    expect(session.isFillComplete()).toBe(false);
+  });
+
+  it("a superseded stream marks nothing -- its own terminal never reaches this session at all", async () => {
+    const model = residentSetModel();
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
+      ...model.overrides,
+    });
+    const { session, tileSink } = await armOneTile(canvas, vi.fn());
+
+    // The camera moves off the tile while its stream is still in flight, so the manager cancels it.
+    // A self-cancelled handle's own terminal never reaches this session's `onTerminal`
+    // (`TileViewportStreamManager`'s `selfCancelledHandles` short-circuit), which is exactly why a
+    // supersede can never be read here as "completed carrying nothing" -- asserted by driving the
+    // cancelled terminal through the very same sink anyway.
+    cancelMock.mockClear();
+    viewportQueryMock.mockClear();
+    viewportQueryMock.mockResolvedValue({ stream: "sh_tile_far" });
+    vi.useFakeTimers();
+    try {
+      session.onViewportChanged(FAR_BBOX);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(cancelMock).toHaveBeenCalledWith("sh_tile_1");
+    expect(canvas.clearTile).toHaveBeenCalled(); // the supersede's own path: residency dropped, not marked
+
+    tileSink.onTerminal({ kind: "Cancelled", detail: "superseded" });
+    expect(canvas.markTileResidentEmpty).not.toHaveBeenCalled();
+    expect(canvas.markTileComplete).not.toHaveBeenCalled();
   });
 });

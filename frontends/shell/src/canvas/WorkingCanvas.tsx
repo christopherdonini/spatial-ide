@@ -34,6 +34,7 @@ import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import { decodeBatch } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
+import type { FitViewState } from "./extent";
 import {
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
@@ -92,7 +93,10 @@ import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportB
  * later programmatic jump (recentering the camera after an origin move) still works uncontrolled:
  * `setProps` re-syncs `this.viewState` from `initialViewState` whenever the *new* value is not
  * deep-equal to the previous one (`deck.js`'s `setProps`), which is exactly "jump to a new place"
- * without ever setting `viewState` and flipping the instance into controlled mode.
+ * without ever setting `viewState` and flipping the instance into controlled mode. **That
+ * deep-equal is a condition, not a formality** (entry 85): a programmatic camera write whose value
+ * repeats the previous one exactly is dropped, and the camera keeps whatever a gesture last left in
+ * `this.viewState` -- see `createFitCameraWriteSequence` below for the fit's own answer to it.
  */
 
 export interface WorkingCanvasHandle {
@@ -224,6 +228,15 @@ export interface WorkingCanvasHandle {
    * genuinely admitted everything its bbox holds. A no-op for a tile not currently resident, exactly
    * like `markTilePartial`'s own contract. */
   markTileComplete(tileKey: string): void;
+  /** Entry 84 (`FILTER-84-85-PREREGISTRATION.md` §3.2): marks `tileKey` resident with no content of
+   * its own -- the tile was genuinely asked for and genuinely answered, and the answer was empty.
+   * `TileResidentSet.markTileResidentEmpty` (which `addBatch` has always called for itself on every
+   * ingest) had no caller outside its own class before this piece; `candidateArmSession.ts`'s tile
+   * `onTerminal` is now that caller, for the one case a batch can never speak for: a tile stream
+   * that reaches its clean `Completed` terminal having delivered no batch at all, which under a
+   * filter is most covering tiles. An empty resident tile holds no vertices and counts for nothing
+   * in the budget; it is complete (`isTileComplete`) because nothing its bbox covers is missing. */
+  markTileResidentEmpty(tileKey: string): void;
   /** Declares the tile grid frame/level this canvas instance's own eviction ordering should use --
    * called once, by `App.tsx`'s candidate session, immediately after
    * `TileViewportStreamManager.establishGridFrame` succeeds. Idempotent past the first call, mirroring
@@ -327,6 +340,49 @@ export function shouldScheduleTileRender(outcome: Pick<TileBatchIngestOutcome, "
  * present -> the union; (c) the covering-only consumer (`coveringTileKeysRef`) never sees `extra`. */
 export function protectionSetFor(covering: readonly string[], extra: ReadonlySet<string> | undefined): Set<string> {
   return extra && extra.size > 0 ? new Set([...covering, ...extra]) : new Set(covering);
+}
+
+/**
+ * Entry 85 (`FILTER-84-85-PREREGISTRATION.md` §2.2): the fit's own camera write, produced as a
+ * sequence no two elements of which are ever deep-equal -- not even when the fit itself is
+ * identical.
+ *
+ * deck.gl re-syncs its own uncontrolled camera from `initialViewState` ONLY when the new value is
+ * not deep-equal to the previous one (`deck.js`'s `setProps`, at depth 3 -- this file's own top doc
+ * comment has the full account of why this canvas passes `initialViewState`, never `viewState`).
+ * Every fit recentres the frame origin on the fitted bbox's own centre (`fitToExtent`'s
+ * `forceRecenter`), so `fit.target` is always `[0, 0]` by `fitViewStateForBbox`'s own contract
+ * (`extent.ts`) and zoom is the only field two fits can ever differ in. Under a filter the fit
+ * anchor stops growing once the filtered delivery's own first look is in (`pushBatch`'s
+ * `fitAnchorRef` union; cleared per generation by `resetFitForNewGeneration`), so a SECOND "Zoom to
+ * layer" click computes the identical zoom, the prop is deep-equal to the one the instance already
+ * holds, deck.gl keeps whatever camera the user's own wheel/pan gestures last left in
+ * `this.viewState`, and the click moves nothing. That is entry 85.
+ *
+ * `fitCameraWriteId` is the click's own identity and nothing else. deck.gl's `OrthographicViewport`
+ * and its controller's `OrthographicState` both rebuild their own props from NAMED fields (`target`,
+ * `zoom`, the zoom bounds), so a field neither of them names reaches no camera math whatsoever; it
+ * is read by exactly one thing, deck.gl's own `deepEqual`, which is the entire point. The fit target
+ * and the zoom arithmetic are untouched -- the same fit, written so the deep-equal cannot swallow
+ * it.
+ *
+ * A FACTORY, so the sequence belongs to one canvas instance (a module-level counter would be shared
+ * by two mounted canvases), and so `WorkingCanvas.test.ts` can drive the real sequence directly: a
+ * live `Deck` needs a WebGL context no jsdom unit test has (this file's own S6 comment).
+ */
+export interface FitCameraViewState {
+  target: [number, number, number];
+  zoom: number;
+  /** Strictly increasing per canvas instance, per fit written. Never a camera value. */
+  fitCameraWriteId: number;
+}
+
+export function createFitCameraWriteSequence(): (fit: FitViewState) => FitCameraViewState {
+  let fitCameraWriteId = 0;
+  return (fit) => {
+    fitCameraWriteId += 1;
+    return { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom, fitCameraWriteId };
+  };
 }
 
 /** N4: the shape `getResidentCounts` returns -- named and exported so `App.tsx`'s E2E wiring and
@@ -645,6 +701,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck<OrthographicView> | null>(null);
+  /** Entry 85: THIS instance's own fit-camera write sequence -- see `createFitCameraWriteSequence`
+   * (above) for why every fit's camera write has to carry the click's own identity, and why the
+   * sequence is per-instance rather than module-level. */
+  const nextFitCameraViewStateRef = useRef(createFitCameraWriteSequence());
   const residentRef = useRef(new ResidentSet());
   /** Viewport-residency cut P3w item B: the candidate arm's own tile-keyed sibling of `residentRef`
    * -- always constructed (cheap, empty until ever used), but only ever WRITTEN to by
@@ -1077,8 +1137,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     frame.forceRecenter(fit.centerX, fit.centerY);
     frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX));
     traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
-    // See this file's own doc comment: `initialViewState`, never `viewState`.
-    deckRef.current?.setProps({ initialViewState: { target: [fit.target[0], fit.target[1], 0], zoom: fit.zoom } });
+    // See this file's own doc comment: `initialViewState`, never `viewState`. Entry 85: the value
+    // comes from THIS instance's own fit-camera write sequence, never an inline literal -- a fit
+    // that repeats a previous fit exactly is still a camera write deck.gl's deep-equal cannot
+    // swallow (`createFitCameraWriteSequence`'s own doc comment has the full account).
+    deckRef.current?.setProps({ initialViewState: nextFitCameraViewStateRef.current(fit) });
     render();
     if (notifyViewport) {
       // `frame.originX`/`frame.originY` read now, i.e. AFTER `forceRecenter` above moved them --
@@ -1463,6 +1526,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
 
       markTileComplete(tileKey) {
         tileResidentRef.current.markTileComplete(tileKey);
+      },
+
+      markTileResidentEmpty(tileKey) {
+        // Entry 84: a straight delegation, exactly like the two marks above -- this canvas decides
+        // nothing about streams or terminals here, it only applies the fact its caller holds (see
+        // this method's own doc comment on `WorkingCanvasHandle`). No `render()`: an empty tile adds
+        // no geometry, so `buildLayers`' own output over the resident set is unchanged by it.
+        tileResidentRef.current.markTileResidentEmpty(tileKey);
       },
 
       establishTileGridContext(frame, level) {
