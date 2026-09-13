@@ -52,7 +52,11 @@ are mechanical and were run, or are re-run, before the human's step that depends
       calling the same reusable build steps as `product-ci-shell.yml`'s own `tauri-build` job
       (`.github/workflows/tauri-build.yml`), and uploads the installer as a workflow artifact named
       `spatial-ide-<tag>-x64-setup` (e.g. `spatial-ide-v0.1.1-x64-setup` for the v0.1.1 tag),
-      printing the installer's file name, byte size and SHA-256 to the run's job summary. Procedure:
+      printing the installer's file name, byte size and SHA-256 to the run's job summary.
+      **Precondition:** a local `uses: ./.github/workflows/tauri-build.yml` is resolved from the
+      tagged commit's own tree, so this chain works only for tags cut at or after the merge that
+      introduced those two workflow files — which is exactly the from-v0.1.1 rule above; a tag on
+      an earlier commit would find neither file and trigger nothing. Procedure:
       1. Push the tag (§4 above): `git push origin v<version>`.
       2. Wait for the run on the tag: `gh run list --branch v<version> --workflow
          release-artifacts.yml --limit 3` (or watch it directly once its run id is known: `gh run
@@ -60,7 +64,11 @@ are mechanical and were run, or are re-run, before the human's step that depends
       3. Download the artifact: `gh run download <run-id> -n spatial-ide-v<version>-x64-setup -D
          <dir>`.
       4. Hash it locally: `Get-FileHash -Algorithm SHA256 "<dir>\Spatial IDE_<version>_x64-setup.exe"`
-         in PowerShell (or `sha256sum "<dir>/<installer>"` in Git Bash).
+         in PowerShell (or `sha256sum "<dir>/<installer>"` in Git Bash) — the installer's file name
+         follows `frontends/shell/src-tauri/tauri.conf.json`'s own `version` (the same field §1's
+         installer name comes from), which this release's version bump must already have raised to
+         `<version>` on the tagged commit — so read the real name off the run's job summary, which
+         prints it, rather than assuming this pattern.
       5. Compare the locally-computed hash against the run's own job summary (`gh run view <run-id>
          --log` prints the job log's `SHA-256:` line; the step summary is also visible on the run's
          page) — they must match exactly before proceeding.

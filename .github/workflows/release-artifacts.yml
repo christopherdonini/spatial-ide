@@ -71,11 +71,16 @@ jobs:
       - name: Resolve tag/ref for artifact naming
         id: resolve
         shell: pwsh
+        # The dispatch input reaches the script through the environment, never through `${{ }}`
+        # substitution into the script text: an expression is expanded before pwsh parses the
+        # script, so an input containing quotes or `;` would otherwise be parsed as script.
+        env:
+          INPUT_REF: ${{ github.event.inputs.ref }}
         run: |
           if ($env:GITHUB_REF -like 'refs/tags/*') {
             $tag = $env:GITHUB_REF -replace '^refs/tags/', ''
-          } elseif ("${{ github.event.inputs.ref }}" -ne '') {
-            $tag = "${{ github.event.inputs.ref }}"
+          } elseif ("$env:INPUT_REF" -ne '') {
+            $tag = "$env:INPUT_REF"
           } else {
             $tag = $env:GITHUB_REF_NAME
           }

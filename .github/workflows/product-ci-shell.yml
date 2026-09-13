@@ -129,6 +129,9 @@ on:
       # `cargo test` step below exercises, not just the two TypeScript workflows.
       - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
+      # The `tauri-build` job below is a thin call into this reusable workflow, which is where the
+      # build steps themselves now live — without it listed here, editing them triggers no CI.
+      - ".github/workflows/tauri-build.yml"
   pull_request:
     paths:
       - "frontends/shell/**"
@@ -146,6 +149,9 @@ on:
       # `cargo test` step below exercises, not just the two TypeScript workflows.
       - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
+      # The `tauri-build` job below is a thin call into this reusable workflow, which is where the
+      # build steps themselves now live — without it listed here, editing them triggers no CI.
+      - ".github/workflows/tauri-build.yml"
   workflow_dispatch:
 
 concurrency:
@@ -226,10 +232,13 @@ jobs:
   # 2026-09-14 (`chore(ci): release-artifacts-from-ci`): the build steps themselves moved to
   # `.github/workflows/tauri-build.yml` (a `workflow_call` reusable workflow) so this job and
   # `release-artifacts.yml`'s own tag-triggered build (AUTONOMY.md §11) share exactly one copy of
-  # them. This job's own triggers, artifact name and behaviour are unchanged from before that
-  # extraction — it does not run on a tag push; `release-artifacts.yml` does that, deliberately as
-  # its own file (see that file's header for why: GitHub ANDs a push event's `tags` filter with a
-  # `paths` filter, which this job's `paths`-filtered triggers below would otherwise inherit).
+  # them. This job's own triggers, artifact name and build steps are unchanged from before that
+  # extraction; the reusable workflow adds two things this job did not do before — a SHA-256 summary
+  # step (file name, byte size, hash, written to the run's job summary) and `retention-days: 90` on
+  # the uploaded artifact. It does not run on a tag push; `release-artifacts.yml` does that,
+  # deliberately as its own file (see that file's header for why: GitHub ANDs a push event's
+  # `tags` filter with a `paths` filter, which this job's `paths`-filtered triggers below would
+  # otherwise inherit).
   tauri-build:
     name: tauri build (NSIS, build-only, no signing)
     uses: ./.github/workflows/tauri-build.yml

@@ -15,12 +15,6 @@ name: tauri build (reusable) — NSIS, build-only, no signing
 on:
   workflow_call:
     inputs:
-      ref:
-        description: >-
-          The git ref to build. Empty (the default) checks out whatever ref triggered the calling
-          workflow run — no behaviour change for product-ci-shell.yml's own call.
-        required: false
-        type: string
       artifact_name:
         description: The name the built NSIS installer is uploaded as (actions/upload-artifact@v4).
         required: true
@@ -35,9 +29,13 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
+      # Always the ref that triggered the CALLING run (`github.ref` is the caller's own ref in a
+      # reusable workflow): the branch/PR merge ref for product-ci-shell.yml, the `v*` tag for
+      # release-artifacts.yml. Neither caller can ask for a different ref — there is no input for
+      # it, so what CI builds is always what triggered it.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.ref }}
 
       - uses: actions/setup-node@v4
         with:
