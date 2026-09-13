@@ -317,3 +317,54 @@ test('clampStoreSize at the ceiling: one shared factor, the store keeps the clie
   assert.equal(view.width, storeWidth);
   assert.equal(view.height, storeHeight);
 });
+
+// ---- test 5c: the pixel-ceiling regime -- same store dimensions, a changed ratio -----------------
+
+test('resizeStore: same store dimensions, a changed ratio still corrects scale (the pixel-ceiling regime)', () => {
+  // The regime `clampStoreSize`'s own doc comment names: once the total-pixel factor binds, its
+  // result depends on the client box's ASPECT alone, so a uniform-aspect window growth recomputes
+  // the identical integer store dimensions however large the box gets. `sizeCanvasToClientBox`
+  // (main.ts) must still correct `scale` for the ratio change even though `storeWidth`/`storeHeight`
+  // themselves do not move call to call -- `resizeStore` itself does not special-case "same
+  // dimensions", it always applies `ratioChange`, and this asserts that explicitly at the same
+  // dimensions test 5 already used, so nothing here depends on the store size actually changing.
+  const view = fitView(LV95, 1280, 900);
+  const centerXBefore = view.centerX;
+  const centerYBefore = view.centerY;
+  const scaleBefore = view.scale;
+
+  resizeStore(view, 1280, 900, 0.8); // same dims as the view already has; a ratio change only
+
+  assert.equal(view.centerX, centerXBefore, 'a resize is not a zoom: the centre must not move');
+  assert.equal(view.centerY, centerYBefore, 'a resize is not a zoom: the centre must not move');
+  assert.ok(
+    Math.abs(view.scale - scaleBefore * 0.8) < 1e-9,
+    `scale should be the old scale x the ratio change even at unchanged dimensions, was ${view.scale}`,
+  );
+  assert.equal(view.width, 1280);
+  assert.equal(view.height, 900);
+});
+
+// ---- test 5d: the ordinary regime -- dimensions change, ratio constant ---------------------------
+
+test('resizeStore: dimensions change but the ratio does not, scale is unchanged (the ordinary resize)', () => {
+  // The counterpart of test 5c and the reviewer's own probe (a window resize at constant DPR, no
+  // clamp in effect): the store dimensions move because the client box moved, but the store-px-per-
+  // CSS-px ratio itself is the same before and after -- `ratioChange = 1` -- so `scale` must be
+  // exactly unchanged. This is the case an earlier version of `sizeCanvasToClientBox`'s ratio
+  // bookkeeping got wrong: dividing the OLD store width by the NEW client box width instead of using
+  // the persisted prior ratio multiplied `scale` by the client box's own size change on every
+  // ordinary resize, not just the ones where the ratio genuinely moved.
+  const view = fitView(LV95, 1280, 900);
+  const centerXBefore = view.centerX;
+  const centerYBefore = view.centerY;
+  const scaleBefore = view.scale;
+
+  resizeStore(view, 1920, 1350, 1); // dimensions change; ratioChange is exactly 1 (same ratio)
+
+  assert.equal(view.centerX, centerXBefore, 'a resize is not a zoom: the centre must not move');
+  assert.equal(view.centerY, centerYBefore, 'a resize is not a zoom: the centre must not move');
+  assert.equal(view.scale, scaleBefore, 'an unchanged ratio must leave scale exactly unchanged');
+  assert.equal(view.width, 1920);
+  assert.equal(view.height, 1350);
+});
