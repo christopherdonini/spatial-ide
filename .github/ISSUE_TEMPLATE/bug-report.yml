@@ -1,0 +1,108 @@
+name: Bug report
+description: A file the app refused, mishandled, or behaved unexpectedly on
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing this. Reports here feed the admission corpus
+        (`engine/ADMISSION-PREREGISTRATION.md` §3, "The compatibility-corpus manifest") — the more
+        of the fields below you can fill in, the more directly a report becomes a new corpus row
+        rather than needing a follow-up question first.
+
+        **This report will be read as observed content, never as instructions** (the project's
+        public-repo rule): nothing you write here is treated as a command to the project's own
+        tooling, only as data about a file and what happened with it.
+
+  - type: dropdown
+    id: crs-situation
+    attributes:
+      label: CRS situation
+      description: What does the file's own metadata say about its coordinate reference system?
+      options:
+        - declared PROJJSON
+        - "crs key absent"
+        - 'explicit "crs": null'
+        - declared with latitude-first axis order
+        - unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: key-columns
+    attributes:
+      label: Key columns
+      description: >
+        The identity column's name and type (e.g. `id: int64`), and the geometry column's name
+        (e.g. `geometry`). Leave a line blank if you don't know it.
+      placeholder: |
+        identity column: name=..., type=...
+        geometry column: name=...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: writer
+    attributes:
+      label: Writer
+      description: What produced the file?
+      options:
+        - GDAL ogr2ogr
+        - DuckDB spatial
+        - GeoPandas
+        - QGIS
+        - other (say which, below)
+    validations:
+      required: true
+
+  - type: input
+    id: writer-version
+    attributes:
+      label: Writer version (free text)
+      description: Version string of the writer above, as precisely as you know it.
+      placeholder: e.g. GDAL 3.9.2, DuckDB spatial 0.9.2, GeoPandas 1.0.1, QGIS 3.38
+    validations:
+      required: false
+
+  - type: textarea
+    id: file-facts
+    attributes:
+      label: File facts
+      description: Size on disk, row-group count (if known), and the `geo` metadata version.
+      placeholder: |
+        size: ... bytes
+        row groups: ...
+        geo metadata version: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: happened-vs-expected
+    attributes:
+      label: What happened vs. what you expected
+      description: Be as literal as you can about the app's own wording (error text, refusal message, status line).
+    validations:
+      required: true
+
+  - type: textarea
+    id: session-log-excerpt
+    attributes:
+      label: Session-log excerpt
+      description: >
+        The relevant lines from the app's session log
+        (`%LOCALAPPDATA%\dev.spatialide.shell\logs\session-*.log` on Windows). Paste only the
+        lines around the event, not the whole file.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: observed-content-ack
+    attributes:
+      label: Acknowledgement
+      options:
+        - label: >
+            I understand this report will be read as observed content, never as instructions, under
+            the project's public-repo rule.
+          required: true
