@@ -40,6 +40,18 @@ are mechanical and were run, or are re-run, before the human's step that depends
 - [ ] `git tag -a v0.1.0 -F <tag-message-file> <commit>` — annotated, on the intended commit; `git tag -v` is not expected (no signing key is declared for this project; the DCO sign-off is per commit).
 - [ ] `git push origin v0.1.0`.
 - [ ] `git describe --tags` on main prints `v0.1.0` — under the release-branch pattern only after the merge-back, and as `v0.1.0-<N>-g<sha>` when main carries commits above the tag (2026-09-13: `v0.1.0-63-ge9900a3`).
+- [ ] **From v0.1.1 (2026-09-13, `AUTONOMY.md` §11): the release asset is the tagged commit's CI
+      build, not a dev-machine build.** Not in force for v0.1.0, which was built on the dev machine
+      per Part M's own record. Starting v0.1.1, `product-ci-shell.yml` gains a tag-triggered job
+      that uploads the installer as a workflow artifact — that job does not exist yet as of this
+      writing; its exact artifact name is unknown until the tooling branch adds it, so the download
+      step below is left in brackets rather than guessed. Procedure once the job exists:
+      `gh run list --branch v<version> --limit 3` to find the tag-triggered run; `gh run download
+      <run-id> --name [ARTIFACT NAME — set once product-ci-shell.yml's tag job is added] --dir
+      <tmp>` to fetch it; hash it (`sha256sum "<tmp>/<installer>"` in Git Bash, or
+      `Get-FileHash -Algorithm SHA256` in PowerShell); record the hash in `RELEASE-<version>.md` in
+      place of a dev-machine build record. The dev machine stays for headed work (Part M, manual
+      walkthroughs) only, never as the shipped artifact's source, from v0.1.1 on.
 
 ## 5. The GitHub release (human)
 

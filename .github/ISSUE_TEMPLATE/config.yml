@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Getting started
+    url: https://github.com/christopherdonini/spatial-ide/blob/main/QUICKSTART.md
+    about: Install and first-run steps live in QUICKSTART.md, not in an issue.
