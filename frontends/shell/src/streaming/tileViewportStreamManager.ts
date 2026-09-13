@@ -11,7 +11,7 @@ import { logSessionEvent } from "../diagnostics/log";
 import { recordResidencyBatchArrived } from "../instrument/residencyInstrument";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { encodeHexF64 } from "../skp/codec";
-import { cancel as skpCancel, viewportQuery } from "../skp/client";
+import { cancel as skpCancel, SkpCallError, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
 import { dataPlaneAttach } from "./dataPlaneClient";
@@ -222,6 +222,64 @@ function logRelinquishDropped(tileKey: string): void {
   );
 }
 
+/** DECISIONS-PENDING entry 87 §2.3(i), UNCONDITIONAL (docs/01 principle 8): every refusal
+ * `mintAndStart`'s own `viewportQuery` catch can receive is now named, never silently deleted
+ * again. `SkpCallError` carries the typed `code` and `fields` `protocol/skp/SKP-V0.md` §5 declares
+ * (`skp/client.ts:24-31`); a non-SKP throw (a genuine transport/network failure, never a typed
+ * refusal) logs under the exact same line shape with the declared code `"unknown"` -- this is
+ * always one log line per refusal, never a second shape to keep in sync with this one. Fired
+ * BEFORE the epoch check below it in `mintAndStart` -- an epoch-superseded refusal (the tile left
+ * the view before its own mint even resolved) is still a refusal that happened and is still named,
+ * exactly as `logRejectedCancel` above already names a rejected cancel regardless of what the
+ * caller goes on to do with that fact. */
+function logMintRefused(tileKey: string, err: unknown): void {
+  const code = err instanceof SkpCallError ? err.skpError.code : "unknown";
+  const fields = err instanceof SkpCallError ? err.skpError.fields : {};
+  logSessionEvent("tile-stream-mint-refused", `${tileKey}: ${code} ${JSON.stringify(fields)}`);
+}
+
+/** Entry 87 §2.3(i)'s other unconditional site: the two epoch-abandon branches in `mintAndStart`
+ * (a ticket minted successfully, but the tile is no longer wanted -- the dataset stopped, or a
+ * later camera change already moved this tile's own epoch on). Distinct from `logMintRefused`
+ * above (that is a REFUSAL; this ticket was granted and is simply no longer needed) and distinct
+ * from `logRejectedCancel` (that logs only if the cancel THIS function issues itself then fails) --
+ * this one names the abandonment itself, which previously had no trace at all. */
+function logMintAbandoned(context: string, tileKey: string, streamHandle: string): void {
+  logSessionEvent("tile-stream-mint-abandoned", `${context} ${tileKey} ${streamHandle}: ticket minted but no longer wanted -- cancel issued`);
+}
+
+/** Entry 87 §2.3(iii)'s declared retryable set. `engine.connections_exhausted` unconditionally --
+ * the honest cause §2.3(ii) would have this crate mint instead of `RejectedByBinder`, not built on
+ * this branch (entry 91 (a) is the human's to rule on), declared here anyway so a future
+ * `connections_exhausted` refusal is retried the moment (ii) lands with no further shell change.
+ * `skp.filter_rejected_by_binder` retries ONLY when its `detail` names the connection LEASE, never
+ * a real binder refusal -- see `isRetryableRefusal` below for the exact match. */
+const RETRYABLE_ENGINE_CODE = "engine.connections_exhausted";
+const RETRYABLE_BINDER_CODE = "skp.filter_rejected_by_binder";
+
+/** The exact substring `AdmittedPredicate::admit` mints into `FilterError::RejectedByBinder`'s
+ * `detail` when the connection LEASE itself could not be acquired (`engine/src/predicate.rs:118-122`,
+ * the `format!` at `:120`: `"no connection was available to validate this predicate: {e}"`) -- as
+ * opposed to DuckDB's own binder genuinely refusing the predicate text (`predicate.rs:240-243`),
+ * whose `detail` never contains this phrase. Matched by substring, not equality: the real message
+ * carries the pool's own trailing `{e}`, which this constant deliberately excludes. */
+const LEASE_REFUSAL_DETAIL_SUBSTRING = "no connection was available to validate this predicate";
+
+/** Entry 87 §2.3(iii): is this refusal one the bounded requeue may retry at all -- checked BEFORE
+ * the per-tile "already used its one retry" and "still in the current cover" bounds, both enforced
+ * at the call site in `mintAndStart`'s own catch. Any code outside the declared set (including a
+ * genuine DuckDB binder refusal, `filter_too_long`, `filter_unparsable`, every other `skp.filter_*`
+ * code, and a non-SKP transport error) keeps today's drop, now logged by `logMintRefused` above. */
+function isRetryableRefusal(err: unknown): boolean {
+  if (!(err instanceof SkpCallError)) return false;
+  const { code, fields } = err.skpError;
+  if (code === RETRYABLE_ENGINE_CODE) return true;
+  if (code === RETRYABLE_BINDER_CODE) {
+    return typeof fields.detail === "string" && fields.detail.includes(LEASE_REFUSAL_DETAIL_SUBSTRING);
+  }
+  return false;
+}
+
 /** `"queued"`: waiting in `queue` for a concurrency slot. `"issuing"`: a slot was claimed and
  * `viewportQuery`/`dataPlaneAttach` are in flight (no stream handle yet -- ticket minting itself
  * crosses real awaits, see `issueEpoch`'s own doc comment). `"in-flight"`: a real stream is
@@ -251,6 +309,19 @@ export class TileViewportStreamManager {
   private nextBatchSeqByStream = new Map<string, number>();
   private readonly selfCancelledHandles = new Set<string>();
   private currentFilter: Filter | null = null;
+  /** Entry 87 §2.3(iii): the most recent `onCameraChange`'s own covering set, kept so the bounded
+   * requeue (in `mintAndStart`, which resolves well after `onCameraChange` itself returned) can
+   * check "only while the tile is still in the current cover" without re-deriving it. Empty before
+   * the first `onCameraChange` -- nothing can be mid-mint that early, so nothing reads it that
+   * early either. */
+  private currentCoveringKeys = new Set<string>();
+  /** Entry 87 §2.3(iii): which tiles have already spent their one bounded requeue -- the "at most
+   * one retry per drain per tile" bound, `isRetryableRefusal`'s own doc has the full account of why
+   * a per-epoch key cannot express this (a requeue's own reissue always claims a fresh epoch).
+   * Cleared the moment a tileKey becomes a genuinely NEW candidate in `onCameraChange` (a fresh
+   * admission cycle owes a fresh retry budget) and on an ordinary (non-retried) drop, so a stale
+   * entry never outlives the attempt it was spent on. */
+  private readonly requeuedTiles = new Set<string>();
 
   constructor(private readonly opts: TileViewportStreamManagerOptions) {
     this.level = opts.level ?? DEFAULT_TILE_GRID_LEVEL;
@@ -372,6 +443,9 @@ export class TileViewportStreamManager {
     const cover = tileCoverForBbox(frame, this.level, bbox);
     const covering = cover.keys;
     const coveringKeys = new Set(covering.map(tileKeyToString));
+    // Entry 87 §2.3(iii): latched for the bounded requeue's own "still in the current cover" check,
+    // which runs later, from `mintAndStart`'s catch -- see this field's own doc comment.
+    this.currentCoveringKeys = coveringKeys;
 
     for (const [tileKey, state] of [...this.tileState.entries()]) {
       if (coveringKeys.has(tileKey)) continue;
@@ -414,6 +488,9 @@ export class TileViewportStreamManager {
         alreadyResident.push(tileKey);
         continue;
       }
+      // Entry 87 §2.3(iii): a genuinely NEW candidate owes a fresh one-shot retry budget -- see
+      // `requeuedTiles`'s own doc comment.
+      this.requeuedTiles.delete(tileKey);
       newCandidates.push(key);
     }
 
@@ -660,8 +737,31 @@ export class TileViewportStreamManager {
     let ticket: { stream: string };
     try {
       ticket = await viewportQuery(this.opts.dataset, wireBbox, null, null, this.currentFilter);
-    } catch {
+    } catch (err) {
+      // Entry 87 §2.3(i), unconditional: named before anything below decides what to do about it.
+      logMintRefused(tileKey, err);
       if (this.issueEpoch.get(tileKey) === epoch) {
+        // Entry 87 §2.3(iii): the bounded requeue. Three conditions, all required: not stopped, a
+        // declared-retryable code (`isRetryableRefusal`), this tile has not already spent its one
+        // retry (`requeuedTiles`), and the tile is still in the most recent covering set
+        // (`currentCoveringKeys` -- in practice `onCameraChange`'s own cover-drop loop would already
+        // have bumped this tile's epoch and routed it away from this branch entirely once it leaves
+        // the cover, so this check is normally redundant with the epoch guard above; kept explicit
+        // rather than assumed, the same discipline `clearAll`'s own "should never actually skip
+        // anything" guard above uses).
+        if (
+          !this.stopped &&
+          isRetryableRefusal(err) &&
+          !this.requeuedTiles.has(tileKey) &&
+          this.currentCoveringKeys.has(tileKey)
+        ) {
+          this.requeuedTiles.add(tileKey);
+          this.tileState.set(tileKey, "queued");
+          this.queue.push(key);
+          this.drainQueueIfRoom();
+          return;
+        }
+        this.requeuedTiles.delete(tileKey);
         this.tileState.delete(tileKey);
         this.drainQueueIfRoom();
       }
@@ -669,12 +769,14 @@ export class TileViewportStreamManager {
     }
 
     if (this.stopped || this.issueEpoch.get(tileKey) !== epoch) {
+      logMintAbandoned("mintAndStart(abandoned-pre-attach)", tileKey, ticket.stream);
       await skpCancel(ticket.stream).catch((err) => logRejectedCancel("mintAndStart(abandoned-pre-attach)", ticket.stream, err));
       return;
     }
 
     const attach = await dataPlaneAttach();
     if (this.stopped || this.issueEpoch.get(tileKey) !== epoch) {
+      logMintAbandoned("mintAndStart(abandoned-post-attach)", tileKey, ticket.stream);
       await skpCancel(ticket.stream).catch((err) => logRejectedCancel("mintAndStart(abandoned-post-attach)", ticket.stream, err));
       return;
     }
