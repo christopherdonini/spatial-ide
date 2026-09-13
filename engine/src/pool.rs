@@ -51,7 +51,7 @@
 //! Three consequences of that, which are constraints rather than notes:
 //!
 //! 1. **`try_acquire` semantics only.** No queue, no wait, no timeout-on-acquire, no fairness, no
-//!    priority beyond the two fixed class bounds. Anything that *waits* for a connection would be
+//!    priority beyond the three fixed class bounds. Anything that *waits* for a connection would be
 //!    an admission policy wearing a pool's clothes.
 //! 2. **The ceilings are the engine's own**, justified by what this engine will serve over one
 //!    dataset. This module names no constant belonging to a binding: `docs/02` makes that split
@@ -98,12 +98,44 @@ pub const MAX_STREAM_CONNECTIONS: usize = 4;
 /// impossible; neither is a decision anyone made.
 pub const MAX_MAINTENANCE_CONNECTIONS: usize = 1;
 
-/// Physical DuckDB connections one dataset may hold at once, idle and leased together.
-pub const MAX_PHYSICAL_CONNECTIONS: usize = MAX_STREAM_CONNECTIONS + MAX_MAINTENANCE_CONNECTIONS;
+/// Short, per-request predicate-admission work (`predicate.rs`'s three admission stages) that may
+/// run at once over one dataset — **its own class, bounded separately from both of the above.**
+///
+/// **What quantity this bounds, declared per ADR-010 rule 6 ("ceilings are declared, not
+/// discovered").** The concurrent admissions one binding can present at once: the shell's declared
+/// tile-stream concurrency, `MAX_IN_FLIGHT_TILE_STREAMS = 3`
+/// (`frontends/shell/src/canvas/tileGridConstants.ts:38`), plus the baseline (non-tiled) viewport
+/// query a session also issues, `1` — `3 + 1 = 4`. This is a **chosen ceiling**, not a measured or
+/// derived one: it is sized to the shipped shell's own composition so that, in that composition,
+/// this class is never the thing that refuses (DECISIONS-PENDING entry 91 (a); PROPOSED ADR-033).
+///
+/// **Admission-side capacity, not stream concurrency — ADR-014 stays reserved.** This ceiling
+/// bounds how many *predicate admissions* (a short control-plane check, `predicate.rs`) may be in
+/// flight; it says nothing about how many *streams* a binding may run concurrently
+/// (`MAX_STREAM_CONNECTIONS`, above) or about the lease/permit release ordering ADR-014 owns
+/// (`:72-78`, this module's header). Raising or lowering it is not an answer to either question.
+///
+/// **Why it must not share `Maintenance`'s budget (capacity 1).** Before this class existed,
+/// `predicate.rs` leased `Maintenance` for admission, so concurrent `viewport_query` admissions
+/// under a row filter collided at capacity 1 and the losers were refused as binder rejections
+/// (`predicate.rs`'s own history, DECISIONS-PENDING entry 87) — a *typed* refusal with the *wrong
+/// cause*. Splitting admission into its own, adequately-sized class removes that contention
+/// entirely for the shipped shell's composition; a residual failure beyond this ceiling is refused
+/// as `ConnectionsExhausted`, never folded back into a binder rejection (`predicate.rs`).
+pub const MAX_ADMISSION_CONNECTIONS: usize = 4;
+
+/// Physical DuckDB connections one dataset may hold at once, idle and leased together —
+/// re-derived from all three lease classes below.
+pub const MAX_PHYSICAL_CONNECTIONS: usize =
+    MAX_STREAM_CONNECTIONS + MAX_MAINTENANCE_CONNECTIONS + MAX_ADMISSION_CONNECTIONS;
 
 const _: () = assert!(MAX_STREAM_CONNECTIONS >= 1);
 const _: () = assert!(MAX_MAINTENANCE_CONNECTIONS >= 1);
-const _: () = assert!(MAX_PHYSICAL_CONNECTIONS == MAX_STREAM_CONNECTIONS + MAX_MAINTENANCE_CONNECTIONS);
+const _: () = assert!(MAX_ADMISSION_CONNECTIONS >= 1);
+const _: () = assert!(
+    MAX_PHYSICAL_CONNECTIONS
+        == MAX_STREAM_CONNECTIONS + MAX_MAINTENANCE_CONNECTIONS + MAX_ADMISSION_CONNECTIONS
+);
 
 /// The statement every physical connection is configured with, **once, at creation**.
 ///
@@ -126,13 +158,17 @@ const _: () = assert!(MAX_PHYSICAL_CONNECTIONS == MAX_STREAM_CONNECTIONS + MAX_M
 /// module**: it was previously executed on the query's own critical path.
 const CONFIGURE_SQL: &str = "SET enable_geoparquet_conversion=false";
 
-/// What a lease is for. The two classes are bounded separately over one physical pool.
+/// What a lease is for. The three classes are bounded separately over one physical pool.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LeaseClass {
     /// One streaming query.
     Stream,
     /// A whole-file pass that is not a stream — today, building the spatial index.
     Maintenance,
+    /// Short, per-request predicate-admission work (`predicate.rs`) — never a whole-file pass and
+    /// never a stream. See [`MAX_ADMISSION_CONNECTIONS`] for what its ceiling bounds and why it is
+    /// not shared with either of the other two.
+    Admission,
 }
 
 impl LeaseClass {
@@ -140,6 +176,7 @@ impl LeaseClass {
         match self {
             Self::Stream => "stream",
             Self::Maintenance => "maintenance",
+            Self::Admission => "admission",
         }
     }
 
@@ -147,6 +184,7 @@ impl LeaseClass {
         match self {
             Self::Stream => MAX_STREAM_CONNECTIONS,
             Self::Maintenance => MAX_MAINTENANCE_CONNECTIONS,
+            Self::Admission => MAX_ADMISSION_CONNECTIONS,
         }
     }
 }
@@ -203,6 +241,7 @@ struct PoolState {
     live: usize,
     active_stream: usize,
     active_maintenance: usize,
+    active_admission: usize,
 }
 
 impl PoolState {
@@ -210,12 +249,14 @@ impl PoolState {
         match class {
             LeaseClass::Stream => self.active_stream,
             LeaseClass::Maintenance => self.active_maintenance,
+            LeaseClass::Admission => self.active_admission,
         }
     }
     fn active_mut(&mut self, class: LeaseClass) -> &mut usize {
         match class {
             LeaseClass::Stream => &mut self.active_stream,
             LeaseClass::Maintenance => &mut self.active_maintenance,
+            LeaseClass::Admission => &mut self.active_admission,
         }
     }
 }
@@ -382,7 +423,7 @@ impl ConnectionPool {
 
     pub fn active_leases(&self) -> usize {
         let st = self.state.lock().unwrap_or_else(|e| e.into_inner());
-        st.active_stream + st.active_maintenance
+        st.active_stream + st.active_maintenance + st.active_admission
     }
 }
 
@@ -578,9 +619,22 @@ mod tests {
         // …and maintenance is unaffected, which is the point of the split.
         let m = pool.acquire(LeaseClass::Maintenance).expect("maintenance is its own budget");
         assert!(pool.acquire(LeaseClass::Maintenance).is_err(), "and is itself bounded");
+        // …and neither is admission — the third class this piece adds, bounded the same way.
+        let mut admission_held = Vec::new();
+        for _ in 0..MAX_ADMISSION_CONNECTIONS {
+            admission_held.push(pool.acquire(LeaseClass::Admission).expect("admission is its own budget too"));
+        }
+        match pool.acquire(LeaseClass::Admission) {
+            Err(EngineError::ConnectionsExhausted { class, capacity }) => {
+                assert_eq!(class, "admission");
+                assert_eq!(capacity, MAX_ADMISSION_CONNECTIONS);
+            }
+            other => panic!("expected a typed refusal, got {other:?}", other = other.map(|_| ())),
+        }
         assert_eq!(pool.live_connections(), MAX_PHYSICAL_CONNECTIONS);
         drop(m);
         drop(held);
+        drop(admission_held);
         assert_eq!(pool.live_connections(), 0);
     }
 

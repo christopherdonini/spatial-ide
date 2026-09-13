@@ -113,10 +113,12 @@ pub use geoparquet::{
 };
 pub use identity::{DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
 pub use error::{EngineError, Result};
-pub use predicate::{AdmittedPredicate, FilterError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH};
+pub use predicate::{
+    AdmittedPredicate, FilterError, PredicateAdmitError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH,
+};
 pub use pool::{
-    ConnectionPool, LeaseClass, PoolConfig, MAX_MAINTENANCE_CONNECTIONS, MAX_PHYSICAL_CONNECTIONS,
-    MAX_STREAM_CONNECTIONS,
+    ConnectionPool, LeaseClass, PoolConfig, MAX_ADMISSION_CONNECTIONS, MAX_MAINTENANCE_CONNECTIONS,
+    MAX_PHYSICAL_CONNECTIONS, MAX_STREAM_CONNECTIONS,
 };
 pub use rowgroup::{RowGroupIndex, RowGroupRefusal, RowGroupSelection};
 pub use stream::{
