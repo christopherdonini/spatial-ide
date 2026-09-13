@@ -1215,3 +1215,42 @@ Part M's verdicts verbatim in the walkthrough; entry 69's ruling into KNOWN-LIMI
 - **Brief A.** The #44 merge is not the human's sight; a phone-readable digest (preregistration §2, the corpus manifest, each ADR draft's Decision paragraph) is sent; P3 stays held until the human rules. Rule-7 accounting on 47: the custodian's reading stands.
 
 **M13, the human's result, verbatim (2026-09-13):** *"M13 result: the release-built executable showed the "Spatial IDE could not start — ADR-020 Amendment 1 …" dialog (screenshot recorded); no silent hang — the residual did not come true. Exit code after dismiss: [1 / other]; newest session log: [one error line naming WebviewUrl::App / other]. Record verbatim in the Part M log."* The two bracketed values are as the human typed them and are the human's to fill (the row expects exit code 1 and one `error` line naming `WebviewUrl::App`). The row's finding — a silent hang — did not occur.
+
+## Amendment 17 — RC2 built from `release/0.1.0` (2026-09-13), and the Part M row classification for sitting 3
+
+*Recorded by the custodian on 2026-09-13 under the human's ruling of the same day (Amendment 16). Build-only; nothing was launched by the custodian.*
+
+**RC2.** Built from `release/0.1.0` at **13471a9** (= 998be05 + entry 47 + entries 84/85; the merge of PR #48). Artifact: `C:/dev/spatial-ide/.claude/worktrees/release-0.1.0/frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe`, **10,559,893 B**, SHA-256 `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f`, Authenticode **NotSigned**. NOTICE beside the executable: 3,186,905 B, SHA-256 `6eb80fd3bb4bdf02300fa72a51eb77f6f92ca2637e26b27e4061ce5a4bcdcee6`, byte-equal to `src/generated/NOTICE.txt`; bundle-viewer NOTICE 163,998 B. Built with the candidate's own command (Amendment 14). Build log: `rc2-build-20260913T160258Z.log` (scratchpad). The release branch's head at this writing is 2810b81 — above the build commit by documentation only (Part M rows M14/M15); the tag will point at the branch's final head, and the release body states the build commit and carries `git diff --stat 13471a9 <tag>` as the proof that the difference is documentation.
+
+**RC2's diff from the candidate's build commit** (the proof line for every "stands" row):
+
+```
+git diff --stat 998be05 13471a9
+ frontends/shell/FILTER-84-85-PREREGISTRATION.md    |  58 ++
+ frontends/shell/HOVER-REPICK-PREREGISTRATION.md    | 159 ++++
+ frontends/shell/MANUAL-WALKTHROUGH.md              |   9 +-
+ frontends/shell/RESIDENCY-DEBT-1B.md               |   4 +
+ frontends/shell/e2e/checkDistClean.mjs             |   2 +-
+ frontends/shell/e2e/regression.mjs                 | 948 ++++++++++++++++++---
+ frontends/shell/e2e/residency-harness.mjs          |   4 +-
+ frontends/shell/src/App.test.ts                    |   2 +
+ frontends/shell/src/canvas/WorkingCanvas.test.ts   | 387 ++++++++-
+ frontends/shell/src/canvas/WorkingCanvas.tsx       | 443 +++++++++-
+ frontends/shell/src/canvas/hoverRepickConstants.ts |  53 ++
+ frontends/shell/src/canvas/pickResolution.test.ts  | 167 +++-
+ frontends/shell/src/canvas/pickResolution.ts       | 187 +++-
+ frontends/shell/src/canvas/tileResidentSet.test.ts |  84 ++
+ frontends/shell/src/diagnostics/renderTrace.ts     |  23 +
+ .../src/residency/candidateArmSession.test.ts      | 187 ++++
+ .../shell/src/residency/candidateArmSession.ts     |  19 +
+ 17 files changed, 2559 insertions(+), 177 deletions(-)
+```
+
+Every path is under `frontends/shell/`. No engine, kernel, protocol or bundle-viewer file changed. The release branch carries no Brief A code (the human's rule); the three fixes were verified against 998be05's engine and kernel by the build itself.
+
+**Part M rows, classified by the ruling's criterion (does RC2's diff touch the row's code path):**
+
+- **Re-run on RC2:** M1 (the artifact's hash), M2 (install), **M3 and M4** (the first open fits the view through `fitToExtent`, whose camera write entry 85 changed — the criterion adds them; the human's list omitted them), M5 plus zoom-to-layer, M7 (the residency status path, touched by entry 84's terminal marking), the hover row (Part L's L7/L8 as entry 47 rewrote them), M12 mode 3 (the packaged executable), and the new rows M14 and M15.
+- **Stand from 998be05, the diff-stat cited:** M6 (style), M8, M9, M10, M11 (publish, audit, the bundle viewer), M12 modes 1–2 (the dev checkout's own build), M13 (the ADR-020 refusal path in `src-tauri`). The human's M13 result of 2026-09-13 stands with its two bracketed values still the human's to fill.
+
+**Open at this writing:** entry 87 (the filtered per-tile queries dropped before any stream is issued — the settled-partial sentence may still appear under a filter on RC2; M15 records it); entry 86 (post-tag). The sitting-3 pack is `RELEASE-DRAFTS-0.1.0/part-m-prep-pack.md` §6.
