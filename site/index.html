@@ -22,10 +22,9 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 .node-box.done { border-color: #9c9; }
 .node-box.ambition { border-style: dashed; color: #778; }
 .node-box.blocked-human { border-color: #e0a030; }
-.node-id { font-family: ui-monospace, monospace; font-size: 0.8rem; }
 .check { color: #292; }
-.badge { display: inline-block; font-size: 0.72rem; border-radius: 4px; padding: 0 5px; margin-left: 6px; }
-.badge-human { background: #fde8c0; color: #664400; }
+.chip { display: inline-block; font-size: 0.72rem; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.chip-need { background: #fde8c0; color: #664400; }
 .cross-note { font-size: 0.72rem; color: #889; }
 .phase-cite { font-size: 0.72rem; color: #889; margin-left: 6px; }
 .date { color: #889; font-size: 0.8rem; }
@@ -36,6 +35,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 .empty { color: #99a; font-style: italic; margin: 0; }
 .total { font-weight: normal; color: #889; font-size: 0.85rem; }
 .health-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 2px 0; border-top: 1px solid #eef; }
+.health-source { font-size: 0.72rem; text-transform: none; letter-spacing: normal; color: #667; margin: 10px 0 2px; }
 .refreshed { font-weight: normal; color: #889; font-size: 0.78rem; }
 .seeded-note { background: #fde8c0; border: 1px solid #e0a030; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; margin-bottom: 12px; }
 @media (max-width: 480px) {
@@ -55,33 +55,55 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 <div class="panels">
 
   <section class="panel" id="waiting-on-you">
-    <h2>Waiting on you <span class="total">(141 min total)</span></h2>
-    <ul><li><strong>briefa-p3-p6</strong> — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — ruling (20 min)</li>
-<li><strong>entry-73-polygon-gate-scope</strong> — Entry 73 — Brief A P0&#39;s polygon-only geometry gate vs the compatibility corpus — ruling (15 min)</li>
-<li><strong>adr-029-operation-lifecycle</strong> — ADR-029 + the operation lifecycle — decision draft filed for sight — ruling (10 min)</li>
-<li><strong>entry-91-polish-held-halves</strong> — Entry 91 — the polish piece&#39;s three held halves (87&#39;s engine half + ADR-033; 88; 89) — ruling (6 min)</li>
-<li><strong>entry-75-hover-repick-defaults</strong> — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make — ruling (10 min)</li>
-<li><strong>sitting-4-rows</strong> — Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows) — sitting (45 min)</li>
-<li><strong>entry-69-runtime-dependency</strong> — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default — ruling (5 min)</li>
-<li><strong>entry-90-static-crt-v0-1-1</strong> — Entry 90 — static CRT as the v0.1.1 build piece — ruling (5 min)</li>
-<li><strong>entry-77-code-signing</strong> — Entry 77 — code signing for the Windows installer — ruling (10 min)</li>
-<li><strong>m13-bracketed-values</strong> — Part M row M13&#39;s two bracketed values — sight (5 min)</li>
-<li><strong>evidence-archive-v0-1-0</strong> — First application of the evidence archive — attach v0.1.0&#39;s evidence to its release — click (5 min)</li>
-<li><strong>entry-78-repo-description</strong> — Entry 78 — repository description and topics — click (5 min)</li></ul>
+    <h2>Waiting on you <span class="total">(156 min estimated)</span></h2>
+    <ul><li title="briefa-p3-p6"><a href="#node-briefa-p3-p6">Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances</a> <span class="chip chip-need" aria-label="needs a ruling, about 20 minutes">ruling · 20 min</span></li>
+<li title="entry-73-polygon-gate-scope"><a href="#node-entry-73-polygon-gate-scope">Entry 73 — Brief A P0&#39;s polygon-only geometry gate vs the compatibility corpus</a> <span class="chip chip-need" aria-label="needs a ruling, about 15 minutes">ruling · 15 min</span></li>
+<li title="adr-029-operation-lifecycle"><a href="#node-adr-029-operation-lifecycle">ADR-029 + the operation lifecycle — decision draft filed for sight</a> <span class="chip chip-need" aria-label="needs a ruling, about 10 minutes">ruling · 10 min</span></li>
+<li title="entry-79-b1-consult-items"><a href="#node-entry-79-b1-consult-items">Entry 79 — three items routed for Brief B stage B1&#39;s close</a> <span class="chip chip-need" aria-label="needs a ruling, about 15 minutes">ruling · 15 min</span></li>
+<li title="entry-91-polish-held-halves"><a href="#node-entry-91-polish-held-halves">Entry 91 — the polish piece&#39;s three held halves (87&#39;s engine half + ADR-033; 88; 89)</a> <span class="chip chip-need" aria-label="needs a ruling, about 6 minutes">ruling · 6 min</span></li>
+<li title="entry-75-hover-repick-defaults"><a href="#node-entry-75-hover-repick-defaults">Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make</a> <span class="chip chip-need" aria-label="needs a ruling, about 10 minutes">ruling · 10 min</span></li>
+<li title="sitting-4-rows"><a href="#node-sitting-4-rows">Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows)</a> <span class="chip chip-need" aria-label="needs a sitting, about 45 minutes">sitting · 45 min</span></li>
+<li title="entry-69-runtime-dependency"><a href="#node-entry-69-runtime-dependency">Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default</a> <span class="chip chip-need" aria-label="needs a ruling, about 5 minutes">ruling · 5 min</span></li>
+<li title="entry-90-static-crt-v0-1-1"><a href="#node-entry-90-static-crt-v0-1-1">Entry 90 — static CRT as the v0.1.1 build piece</a> <span class="chip chip-need" aria-label="needs a ruling, about 5 minutes">ruling · 5 min</span></li>
+<li title="entry-77-code-signing"><a href="#node-entry-77-code-signing">Entry 77 — code signing for the Windows installer</a> <span class="chip chip-need" aria-label="needs a ruling, about 10 minutes">ruling · 10 min</span></li>
+<li title="m13-bracketed-values"><a href="#node-m13-bracketed-values">Part M row M13&#39;s two bracketed values</a> <span class="chip chip-need" aria-label="needs a sight, about 5 minutes">sight · 5 min</span></li>
+<li title="evidence-archive-v0-1-0"><a href="#node-evidence-archive-v0-1-0">First application of the evidence archive — attach v0.1.0&#39;s evidence to its release</a> <span class="chip chip-need" aria-label="needs a click, about 5 minutes">click · 5 min</span></li>
+<li title="entry-78-repo-description"><a href="#node-entry-78-repo-description">Entry 78 — repository description and topics</a> <span class="chip chip-need" aria-label="needs a click, about 5 minutes">click · 5 min</span></li></ul>
   </section>
+
 <section class="panel" id="shipped-since-last-visit">
-  <h2>Shipped since your last visit</h2>
-  <ul id="shipped-list"><li class="empty">loading…</li></ul>
+  <h2 id="shipped-heading">Shipped in the 7 days to 2026-09-13</h2>
+  <ul id="shipped-list"><li title="asset-filename-docs-fix"><a href="#node-asset-filename-docs-fix">Asset-filename docs fix — the release page&#39;s dotted installer filename noted</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/875d900">commit 875d900</a></li>
+<li title="autonomy-work-system"><a href="#node-autonomy-work-system">The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/54">PR #54</a></li>
+<li title="briefa-entries-80-81"><a href="#node-briefa-entries-80-81">Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims)</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/46">PR #46</a></li>
+<li title="entries-84-85-filter-fixes"><a href="#node-entries-84-85-filter-fixes">Entries 84 and 85 — settled-partial status and Zoom to layer under a filter</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/48">PR #48</a></li>
+<li title="entry-47-hover-repick"><a href="#node-entry-47-hover-repick">Entry 47 — the hover readout re-picks on camera settle</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/47">PR #47</a></li>
+<li title="entry-86-known-limitations-rewrite"><a href="#node-entry-86-known-limitations-rewrite">Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/de939d1">commit de939d1</a></li>
+<li title="hero-filter-sql"><a href="#node-hero-filter-sql">Hero slice, part 2 — filter it in SQL</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></li>
+<li title="hero-open-geoparquet"><a href="#node-hero-open-geoparquet">Hero slice, part 1 — open a GeoParquet</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></li>
+<li title="hero-publish-bundle"><a href="#node-hero-publish-bundle">Hero slice, part 4 — publish it as a static interactive bundle</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></li>
+<li title="hero-style"><a href="#node-hero-style">Hero slice, part 3 — style it</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></li>
+<li title="land-45"><a href="#node-land-45">Entry 66 (b) — geometric protection at every zoom, without enumeration</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/45">PR #45</a></li>
+<li title="lod-feasibility-spike"><a href="#node-lod-feasibility-spike">LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/51">PR #51</a></li>
+<li title="merge-back-pr-50"><a href="#node-merge-back-pr-50">release/0.1.0 merged back into main after the tag</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/50">PR #50</a></li>
+<li title="polish-87-88-89"><a href="#node-polish-87-88-89">Filter-and-hover polish (entries 87, 88, 89)</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/55">PR #55</a></li>
+<li title="reaim-no-crs-fixture"><a href="#node-reaim-no-crs-fixture">Delegated re-aim — the no-CRS fixture and its tests to Brief A&#39;s ruled contract</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/52">PR #52</a></li>
+<li title="release-docs-finalized"><a href="#node-release-docs-finalized">Release docs finalized from Part M for the tag</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/49">PR #49</a></li>
+<li title="v0-1-0-shipped"><a href="#node-v0-1-0-shipped">v0.1.0 tagged and released — the Prototype hero slice&#39;s first packaged build</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">tag v0.1.0</a></li>
+<li title="viewer-86-zoom-anchor"><a href="#node-viewer-86-zoom-anchor">Entry 86 — the reference bundle viewer&#39;s zoom is not anchored at the pointer</a> <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/53">PR #53</a></li>
+<li title="briefa-p1-p2"><a href="#node-briefa-p1-p2">Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance</a> <span class="date">(2026-09-11)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/44">PR #44</a></li>
+<li title="static-crt-spike"><a href="#node-static-crt-spike">Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b)</a> <span class="date">(2026-09-09)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/a047a23">commit a047a23</a></li></ul>
 </section>
 </div>
 
   <section class="panel health-strip">
-    <h2>Health <span class="refreshed">refreshed 2026-09-13T21:45:51.389Z</span></h2>
-    <div class="health-row"><span>CI on main</span><span>unknown</span></div>
+    <h2>Health</h2>
+    <h3 class="health-source">From GitHub's API at Pages build time</h3>
+<p class="empty">CI on main, open PRs and the latest release are read from GitHub's API in the Pages build; this copy was generated outside that build.</p>
+    <h3 class="health-source">From the custodian's machine — refreshed 2026-09-13T23:39:34.130Z</h3>
 <div class="health-row"><span>Drift</span><span>clean</span></div>
-<div class="health-row"><span>Disk free</span><span>10.1 GB free (drive C)</span></div>
+<div class="health-row"><span>Disk free</span><span>23.6 GB free (drive C)</span></div>
 <div class="health-row"><span>Stray processes</span><span>2 total (cargo: 0, node: 2, spatial-ide-shell: 0)</span></div>
-<div class="health-row"><span>Open PRs</span><span>offline: gh pr list skipped</span></div>
 <div class="health-row"><span>Waiting on human</span><span>13 waiting, oldest 4 d (entry-69-runtime-dependency)</span></div>
   </section>
 <main>
@@ -91,23 +113,23 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">briefa-p1-p2</span> — Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance <span class="date">(2026-09-11)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/44">PR #44</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">briefa-entries-80-81</span> — Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims) <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/46">PR #46</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-filter-sql</span> — Hero slice, part 2 — filter it in SQL <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-open-geoparquet</span> — Hero slice, part 1 — open a GeoParquet <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+        <div class="node-box done" id="node-briefa-p1-p2" title="briefa-p1-p2"><span class="check" aria-hidden="true">&#10003;</span> Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance <span class="date">landed 2026-09-11</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/44">PR #44</a></div>
+<div class="node-box done" id="node-briefa-entries-80-81" title="briefa-entries-80-81"><span class="check" aria-hidden="true">&#10003;</span> Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims) <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/46">PR #46</a></div>
+<div class="node-box done" id="node-hero-filter-sql" title="hero-filter-sql"><span class="check" aria-hidden="true">&#10003;</span> Hero slice, part 2 — filter it in SQL <span class="date">evidence dated 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+<div class="node-box done" id="node-hero-open-geoparquet" title="hero-open-geoparquet"><span class="check" aria-hidden="true">&#10003;</span> Hero slice, part 1 — open a GeoParquet <span class="date">evidence dated 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
         <div class="ahead-wrap">
           <svg class="dep-svg" width="16" height="230" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
-          <div class="ahead-list"><div class="node-box" id="node-adr-031-lod-preregistration"><span class="node-id">adr-031-lod-preregistration</span> — ADR-031 (LOD) preregistration, once the feasibility spike reports<span class="badge badge-human">ruling (20 min)</span><div class="cross-note">after: lod-feasibility-spike</div></div>
-<div class="node-box" id="node-adr-032-decision"><span class="node-id">adr-032-decision</span> — ADR-032 — the GeoParquet non-x-first axis order decision<span class="badge badge-human">ruling (20 min)</span></div>
-<div class="node-box" id="node-polish-engine-lease-class"><span class="node-id">polish-engine-lease-class</span> — Entry 87&#39;s engine half — a declared lease class for per-request admission work (ADR-033)<div class="cross-note">after: polish-87-88-89</div></div>
-<div class="node-box blocked-human" id="node-briefa-p3-p6"><span class="node-id">briefa-p3-p6</span> — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances<span class="badge badge-human">ruling (20 min)</span><div class="cross-note">after: briefa-p1-p2</div></div>
-<div class="node-box blocked-human" id="node-entry-73-polygon-gate-scope"><span class="node-id">entry-73-polygon-gate-scope</span> — Entry 73 — Brief A P0&#39;s polygon-only geometry gate vs the compatibility corpus<span class="badge badge-human">ruling (15 min)</span></div></div>
+          <div class="ahead-list"><div class="node-box" id="node-adr-031-lod-preregistration" title="adr-031-lod-preregistration">ADR-031 (LOD) preregistration, once the feasibility spike reports <span class="chip chip-need" aria-label="needs a ruling, about 20 minutes">ruling · 20 min</span><div class="cross-note">after: <a href="#node-lod-feasibility-spike" title="lod-feasibility-spike">LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only</a></div></div>
+<div class="node-box" id="node-adr-032-decision" title="adr-032-decision">ADR-032 — the GeoParquet non-x-first axis order decision <span class="chip chip-need" aria-label="needs a ruling, about 20 minutes">ruling · 20 min</span></div>
+<div class="node-box" id="node-polish-engine-lease-class" title="polish-engine-lease-class">Entry 87&#39;s engine half — a declared lease class for per-request admission work (ADR-033)<div class="cross-note">after: <a href="#node-polish-87-88-89" title="polish-87-88-89">Filter-and-hover polish (entries 87, 88, 89)</a></div></div>
+<div class="node-box blocked-human" id="node-briefa-p3-p6" title="briefa-p3-p6">Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances <span class="chip chip-need" aria-label="needs a ruling, about 20 minutes">ruling · 20 min</span><div class="cross-note">after: <a href="#node-briefa-p1-p2" title="briefa-p1-p2">Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance</a></div></div>
+<div class="node-box blocked-human" id="node-entry-73-polygon-gate-scope" title="entry-73-polygon-gate-scope">Entry 73 — Brief A P0&#39;s polygon-only geometry gate vs the compatibility corpus <span class="chip chip-need" aria-label="needs a ruling, about 15 minutes">ruling · 15 min</span></div></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">data-doctor-legacy-imports</span> — Data doctor + legacy imports (05) <span class="phase-cite">alpha</span></div>
-<div class="node-box ambition"><span class="node-id">postgis-remotes</span> — PostGIS remotes (05) <span class="phase-cite">beta</span></div>
+        <div class="node-box ambition" id="node-data-doctor-legacy-imports" title="data-doctor-legacy-imports">Data doctor + legacy imports (05) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition" id="node-postgis-remotes" title="postgis-remotes">PostGIS remotes (05) <span class="phase-cite">beta</span></div>
       </div>
     </div>
   </section>
@@ -122,13 +144,13 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
       <div class="col col-ahead">
         <h3>Ahead</h3>
         <div class="ahead-wrap">
-          <svg class="dep-svg" width="16" height="138" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs><line x1="8" y1="69" x2="8" y2="115" class="dep-arrow" marker-end="url(#arrowhead)" /></svg>
-          <div class="ahead-list"><div class="node-box blocked-human" id="node-adr-029-operation-lifecycle"><span class="node-id">adr-029-operation-lifecycle</span> — ADR-029 + the operation lifecycle — decision draft filed for sight<span class="badge badge-human">ruling (10 min)</span></div>
-<div class="node-box blocked-human" id="node-b1-engine-kernel-half"><span class="node-id">b1-engine-kernel-half</span> — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)<span class="badge badge-human">ruling (15 min)</span><div class="cross-note">after: briefa-p3-p6</div></div>
-<div class="node-box" id="node-entry-79-b1-consult-items"><span class="node-id">entry-79-b1-consult-items</span> — Entry 79 — three items routed for Brief B stage B1&#39;s close</div></div>
+          <svg class="dep-svg" width="16" height="138" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
+          <div class="ahead-list"><div class="node-box blocked-human" id="node-adr-029-operation-lifecycle" title="adr-029-operation-lifecycle">ADR-029 + the operation lifecycle — decision draft filed for sight <span class="chip chip-need" aria-label="needs a ruling, about 10 minutes">ruling · 10 min</span></div>
+<div class="node-box blocked-human" id="node-b1-engine-kernel-half" title="b1-engine-kernel-half">Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) <span class="chip chip-need" aria-label="needs a ruling, about 15 minutes">ruling · 15 min</span><div class="cross-note">after: <a href="#node-briefa-p3-p6" title="briefa-p3-p6">Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances</a></div></div>
+<div class="node-box blocked-human" id="node-entry-79-b1-consult-items" title="entry-79-b1-consult-items">Entry 79 — three items routed for Brief B stage B1&#39;s close <span class="chip chip-need" aria-label="needs a ruling, about 15 minutes">ruling · 15 min</span></div></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">lineage-time-travel</span> — Lineage time travel + scenario branches (02, 03) <span class="phase-cite">beta</span></div>
-<div class="node-box ambition"><span class="node-id">skp-v1-protocol-freeze</span> — SKP v1 protocol freeze — the ecosystem commitment <span class="phase-cite">v1</span></div>
+        <div class="node-box ambition" id="node-lineage-time-travel" title="lineage-time-travel">Lineage time travel + scenario branches (02, 03) <span class="phase-cite">beta</span></div>
+<div class="node-box ambition" id="node-skp-v1-protocol-freeze" title="skp-v1-protocol-freeze">SKP v1 protocol freeze — the ecosystem commitment <span class="phase-cite">v1</span></div>
       </div>
     </div>
   </section>
@@ -138,24 +160,24 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">entries-84-85-filter-fixes</span> — Entries 84 and 85 — settled-partial status and Zoom to layer under a filter <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/48">PR #48</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">entry-47-hover-repick</span> — Entry 47 — the hover readout re-picks on camera settle <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/47">PR #47</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">land-45</span> — Entry 66 (b) — geometric protection at every zoom, without enumeration <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/45">PR #45</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">polish-87-88-89</span> — Filter-and-hover polish (entries 87, 88, 89) <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/55">PR #55</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">reaim-no-crs-fixture</span> — Delegated re-aim — the no-CRS fixture and its tests to Brief A&#39;s ruled contract <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/52">PR #52</a></div>
+        <div class="node-box done" id="node-entries-84-85-filter-fixes" title="entries-84-85-filter-fixes"><span class="check" aria-hidden="true">&#10003;</span> Entries 84 and 85 — settled-partial status and Zoom to layer under a filter <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/48">PR #48</a></div>
+<div class="node-box done" id="node-entry-47-hover-repick" title="entry-47-hover-repick"><span class="check" aria-hidden="true">&#10003;</span> Entry 47 — the hover readout re-picks on camera settle <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/47">PR #47</a></div>
+<div class="node-box done" id="node-land-45" title="land-45"><span class="check" aria-hidden="true">&#10003;</span> Entry 66 (b) — geometric protection at every zoom, without enumeration <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/45">PR #45</a></div>
+<div class="node-box done" id="node-polish-87-88-89" title="polish-87-88-89"><span class="check" aria-hidden="true">&#10003;</span> Filter-and-hover polish (entries 87, 88, 89) <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/55">PR #55</a></div>
+<div class="node-box done" id="node-reaim-no-crs-fixture" title="reaim-no-crs-fixture"><span class="check" aria-hidden="true">&#10003;</span> Delegated re-aim — the no-CRS fixture and its tests to Brief A&#39;s ruled contract <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/52">PR #52</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
         <div class="ahead-wrap">
           <svg class="dep-svg" width="16" height="230" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
-          <div class="ahead-list"><div class="node-box" id="node-briefb-b2-save-reopen"><span class="node-id">briefb-b2-save-reopen</span> — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation<div class="cross-note">after: b1-engine-kernel-half</div></div>
-<div class="node-box" id="node-briefb-part-o-walkthrough"><span class="node-id">briefb-part-o-walkthrough</span> — Part O — the nine-step recipe walkthrough, after B3 only<span class="badge badge-human">sitting (0 min)</span><div class="cross-note">after: b1-engine-kernel-half</div></div>
-<div class="node-box blocked-human" id="node-entry-91-polish-held-halves"><span class="node-id">entry-91-polish-held-halves</span> — Entry 91 — the polish piece&#39;s three held halves (87&#39;s engine half + ADR-033; 88; 89)<span class="badge badge-human">ruling (6 min)</span></div>
-<div class="node-box blocked-human" id="node-entry-75-hover-repick-defaults"><span class="node-id">entry-75-hover-repick-defaults</span> — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make<span class="badge badge-human">ruling (10 min)</span><div class="cross-note">after: entry-47-hover-repick</div></div>
-<div class="node-box blocked-human" id="node-sitting-4-rows"><span class="node-id">sitting-4-rows</span> — Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows)<span class="badge badge-human">sitting (45 min)</span></div></div>
+          <div class="ahead-list"><div class="node-box" id="node-briefb-b2-save-reopen" title="briefb-b2-save-reopen">Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation<div class="cross-note">after: <a href="#node-b1-engine-kernel-half" title="b1-engine-kernel-half">Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)</a></div></div>
+<div class="node-box" id="node-briefb-part-o-walkthrough" title="briefb-part-o-walkthrough">Part O — the nine-step recipe walkthrough, after B3 only <span class="chip chip-need" aria-label="needs a sitting, unestimated">sitting · unestimated</span><div class="cross-note">after: <a href="#node-b1-engine-kernel-half" title="b1-engine-kernel-half">Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)</a></div></div>
+<div class="node-box blocked-human" id="node-entry-91-polish-held-halves" title="entry-91-polish-held-halves">Entry 91 — the polish piece&#39;s three held halves (87&#39;s engine half + ADR-033; 88; 89) <span class="chip chip-need" aria-label="needs a ruling, about 6 minutes">ruling · 6 min</span></div>
+<div class="node-box blocked-human" id="node-entry-75-hover-repick-defaults" title="entry-75-hover-repick-defaults">Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make <span class="chip chip-need" aria-label="needs a ruling, about 10 minutes">ruling · 10 min</span><div class="cross-note">after: <a href="#node-entry-47-hover-repick" title="entry-47-hover-repick">Entry 47 — the hover readout re-picks on camera settle</a></div></div>
+<div class="node-box blocked-human" id="node-sitting-4-rows" title="sitting-4-rows">Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows) <span class="chip chip-need" aria-label="needs a sitting, about 45 minutes">sitting · 45 min</span></div></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">action-console-remainder</span> — Action console remainder — notebook recording and the AI flywheel (03) <span class="phase-cite">alpha</span></div>
-<div class="node-box ambition"><span class="node-id">problems-panel-spatial-linting</span> — Problems panel / spatial linting (03) <span class="phase-cite">alpha</span></div>
+        <div class="node-box ambition" id="node-action-console-remainder" title="action-console-remainder">Action console remainder — notebook recording and the AI flywheel (03) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition" id="node-problems-panel-spatial-linting" title="problems-panel-spatial-linting">Problems panel / spatial linting (03) <span class="phase-cite">alpha</span></div>
       </div>
     </div>
   </section>
@@ -165,9 +187,9 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">entry-86-known-limitations-rewrite</span> — Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/de939d1">commit de939d1</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-publish-bundle</span> — Hero slice, part 4 — publish it as a static interactive bundle <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">viewer-86-zoom-anchor</span> — Entry 86 — the reference bundle viewer&#39;s zoom is not anchored at the pointer <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/53">PR #53</a></div>
+        <div class="node-box done" id="node-entry-86-known-limitations-rewrite" title="entry-86-known-limitations-rewrite"><span class="check" aria-hidden="true">&#10003;</span> Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/de939d1">commit de939d1</a></div>
+<div class="node-box done" id="node-hero-publish-bundle" title="hero-publish-bundle"><span class="check" aria-hidden="true">&#10003;</span> Hero slice, part 4 — publish it as a static interactive bundle <span class="date">evidence dated 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+<div class="node-box done" id="node-viewer-86-zoom-anchor" title="viewer-86-zoom-anchor"><span class="check" aria-hidden="true">&#10003;</span> Entry 86 — the reference bundle viewer&#39;s zoom is not anchored at the pointer <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/53">PR #53</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
@@ -175,7 +197,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
           
           <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">publishing-bundles-hardened</span> — Publishing bundles hardened (managed sharing service stays out — ADR-008) <span class="phase-cite">beta</span></div>
+        <div class="node-box ambition" id="node-publishing-bundles-hardened" title="publishing-bundles-hardened">Publishing bundles hardened (managed sharing service stays out — ADR-008) <span class="phase-cite">beta</span></div>
       </div>
     </div>
   </section>
@@ -185,8 +207,8 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">spatial-indexing-measurement-close</span> — Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path) <span class="date">(2026-08-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/blob/main/kernel/RESULTS.md">kernel/RESULTS.md</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">lod-feasibility-spike</span> — LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/51">PR #51</a></div>
+        <div class="node-box done" id="node-spatial-indexing-measurement-close" title="spatial-indexing-measurement-close"><span class="check" aria-hidden="true">&#10003;</span> Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path) <span class="date">landed 2026-08-13</span> <a href="https://github.com/christopherdonini/spatial-ide/blob/main/kernel/RESULTS.md">kernel/RESULTS.md</a></div>
+<div class="node-box done" id="node-lod-feasibility-spike" title="lod-feasibility-spike"><span class="check" aria-hidden="true">&#10003;</span> LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/51">PR #51</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
@@ -204,21 +226,21 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">static-crt-spike</span> — Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b) <span class="date">(2026-09-09)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/a047a23">commit a047a23</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">merge-back-pr-50</span> — release/0.1.0 merged back into main after the tag <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/50">PR #50</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">release-docs-finalized</span> — Release docs finalized from Part M for the tag <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/49">PR #49</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">v0-1-0-shipped</span> — v0.1.0 tagged and released — the Prototype hero slice&#39;s first packaged build <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">tag v0.1.0</a></div>
+        <div class="node-box done" id="node-static-crt-spike" title="static-crt-spike"><span class="check" aria-hidden="true">&#10003;</span> Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b) <span class="date">landed 2026-09-09</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/a047a23">commit a047a23</a></div>
+<div class="node-box done" id="node-merge-back-pr-50" title="merge-back-pr-50"><span class="check" aria-hidden="true">&#10003;</span> release/0.1.0 merged back into main after the tag <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/50">PR #50</a></div>
+<div class="node-box done" id="node-release-docs-finalized" title="release-docs-finalized"><span class="check" aria-hidden="true">&#10003;</span> Release docs finalized from Part M for the tag <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/49">PR #49</a></div>
+<div class="node-box done" id="node-v0-1-0-shipped" title="v0-1-0-shipped"><span class="check" aria-hidden="true">&#10003;</span> v0.1.0 tagged and released — the Prototype hero slice&#39;s first packaged build <span class="date">evidence dated 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">tag v0.1.0</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
         <div class="ahead-wrap">
           <svg class="dep-svg" width="16" height="276" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
-          <div class="ahead-list"><div class="node-box blocked-human" id="node-entry-69-runtime-dependency"><span class="node-id">entry-69-runtime-dependency</span> — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default<span class="badge badge-human">ruling (5 min)</span></div>
-<div class="node-box blocked-human" id="node-entry-90-static-crt-v0-1-1"><span class="node-id">entry-90-static-crt-v0-1-1</span> — Entry 90 — static CRT as the v0.1.1 build piece<span class="badge badge-human">ruling (5 min)</span><div class="cross-note">after: static-crt-spike</div></div>
-<div class="node-box blocked-human" id="node-entry-77-code-signing"><span class="node-id">entry-77-code-signing</span> — Entry 77 — code signing for the Windows installer<span class="badge badge-human">ruling (10 min)</span></div>
-<div class="node-box blocked-human" id="node-m13-bracketed-values"><span class="node-id">m13-bracketed-values</span> — Part M row M13&#39;s two bracketed values<span class="badge badge-human">sight (5 min)</span></div>
-<div class="node-box blocked-human" id="node-evidence-archive-v0-1-0"><span class="node-id">evidence-archive-v0-1-0</span> — First application of the evidence archive — attach v0.1.0&#39;s evidence to its release<span class="badge badge-human">click (5 min)</span><div class="cross-note">after: autonomy-work-system</div></div>
-<div class="node-box" id="node-release-artifacts-from-ci"><span class="node-id">release-artifacts-from-ci</span> — Release artifacts built from the tagged commit&#39;s CI run, from v0.1.1<div class="cross-note">after: autonomy-work-system</div></div></div>
+          <div class="ahead-list"><div class="node-box blocked-human" id="node-entry-69-runtime-dependency" title="entry-69-runtime-dependency">Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default <span class="chip chip-need" aria-label="needs a ruling, about 5 minutes">ruling · 5 min</span></div>
+<div class="node-box blocked-human" id="node-entry-90-static-crt-v0-1-1" title="entry-90-static-crt-v0-1-1">Entry 90 — static CRT as the v0.1.1 build piece <span class="chip chip-need" aria-label="needs a ruling, about 5 minutes">ruling · 5 min</span><div class="cross-note">after: <a href="#node-static-crt-spike" title="static-crt-spike">Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b)</a></div></div>
+<div class="node-box blocked-human" id="node-entry-77-code-signing" title="entry-77-code-signing">Entry 77 — code signing for the Windows installer <span class="chip chip-need" aria-label="needs a ruling, about 10 minutes">ruling · 10 min</span></div>
+<div class="node-box blocked-human" id="node-m13-bracketed-values" title="m13-bracketed-values">Part M row M13&#39;s two bracketed values <span class="chip chip-need" aria-label="needs a sight, about 5 minutes">sight · 5 min</span></div>
+<div class="node-box blocked-human" id="node-evidence-archive-v0-1-0" title="evidence-archive-v0-1-0">First application of the evidence archive — attach v0.1.0&#39;s evidence to its release <span class="chip chip-need" aria-label="needs a click, about 5 minutes">click · 5 min</span><div class="cross-note">after: <a href="#node-autonomy-work-system" title="autonomy-work-system">The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page</a></div></div>
+<div class="node-box" id="node-release-artifacts-from-ci" title="release-artifacts-from-ci">Release artifacts built from the tagged commit&#39;s CI run, from v0.1.1<div class="cross-note">after: <a href="#node-autonomy-work-system" title="autonomy-work-system">The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page</a></div></div></div>
         </div>
         
       </div>
@@ -230,17 +252,17 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">asset-filename-docs-fix</span> — Asset-filename docs fix — the release page&#39;s dotted installer filename noted <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/875d900">commit 875d900</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">autonomy-work-system</span> — The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/54">PR #54</a></div>
+        <div class="node-box done" id="node-asset-filename-docs-fix" title="asset-filename-docs-fix"><span class="check" aria-hidden="true">&#10003;</span> Asset-filename docs fix — the release page&#39;s dotted installer filename noted <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/commit/875d900">commit 875d900</a></div>
+<div class="node-box done" id="node-autonomy-work-system" title="autonomy-work-system"><span class="check" aria-hidden="true">&#10003;</span> The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page <span class="date">landed 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/pull/54">PR #54</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
         <div class="ahead-wrap">
           <svg class="dep-svg" width="16" height="184" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs><line x1="8" y1="69" x2="8" y2="161" class="dep-arrow" marker-end="url(#arrowhead)" /><line x1="8" y1="115" x2="8" y2="161" class="dep-arrow" marker-end="url(#arrowhead)" /></svg>
-          <div class="ahead-list"><div class="node-box blocked-human" id="node-entry-78-repo-description"><span class="node-id">entry-78-repo-description</span> — Entry 78 — repository description and topics<span class="badge badge-human">click (5 min)</span></div>
-<div class="node-box" id="node-drill-clean-clone"><span class="node-id">drill-clean-clone</span> — The drill — clean-directory clone, regenerated fixtures, full suite, release build<div class="cross-note">after: polish-engine-lease-class</div></div>
-<div class="node-box" id="node-site-bugs-first"><span class="node-id">site-bugs-first</span> — Landing page — DRAFT-4&#39;s bugs-first section (health facts from GitHub&#39;s API at Pages build time; the shipped panel&#39;s fallback; chips, ids, dates)</div>
-<div class="node-box" id="node-site-design-v1"><span class="node-id">site-design-v1</span> — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)</div></div>
+          <div class="ahead-list"><div class="node-box blocked-human" id="node-entry-78-repo-description" title="entry-78-repo-description">Entry 78 — repository description and topics <span class="chip chip-need" aria-label="needs a click, about 5 minutes">click · 5 min</span></div>
+<div class="node-box" id="node-drill-clean-clone" title="drill-clean-clone">The drill — clean-directory clone, regenerated fixtures, full suite, release build<div class="cross-note">after: <a href="#node-polish-engine-lease-class" title="polish-engine-lease-class">Entry 87&#39;s engine half — a declared lease class for per-request admission work (ADR-033)</a></div></div>
+<div class="node-box" id="node-site-bugs-first" title="site-bugs-first">Landing page — DRAFT-4&#39;s bugs-first section (health facts from GitHub&#39;s API at Pages build time; the shipped panel&#39;s fallback; chips, ids, dates)</div>
+<div class="node-box" id="node-site-design-v1" title="site-design-v1">Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)</div></div>
         </div>
         
       </div>
@@ -252,8 +274,8 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
     <div class="lane-columns">
       <div class="col col-done">
         <h3>Built so far</h3>
-        <div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">adr-003-spike-gate</span> — ADR-003 renderer/arbitrary-CRS spike — the architecture gate <span class="date">(2026-08-03)</span> <a href="https://github.com/christopherdonini/spatial-ide/blob/main/docs/adr/ADR-003-renderer-arbitrary-crs.md">ADR-003</a></div>
-<div class="node-box done"><span class="check" aria-hidden="true">&#10003;</span> <span class="node-id">hero-style</span> — Hero slice, part 3 — style it <span class="date">(2026-09-13)</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
+        <div class="node-box done" id="node-adr-003-spike-gate" title="adr-003-spike-gate"><span class="check" aria-hidden="true">&#10003;</span> ADR-003 renderer/arbitrary-CRS spike — the architecture gate <span class="date">landed 2026-08-03</span> <a href="https://github.com/christopherdonini/spatial-ide/blob/main/docs/adr/ADR-003-renderer-arbitrary-crs.md">ADR-003</a></div>
+<div class="node-box done" id="node-hero-style" title="hero-style"><span class="check" aria-hidden="true">&#10003;</span> Hero slice, part 3 — style it <span class="date">evidence dated 2026-09-13</span> <a href="https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0">release v0.1.0</a></div>
       </div>
       <div class="col col-ahead">
         <h3>Ahead</h3>
@@ -261,7 +283,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
           
           <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">style-dsl-editor</span> — Style DSL + editor (03, 06) <span class="phase-cite">beta</span></div>
+        <div class="node-box ambition" id="node-style-dsl-editor" title="style-dsl-editor">Style DSL + editor (03, 06) <span class="phase-cite">beta</span></div>
       </div>
     </div>
   </section>
@@ -277,7 +299,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
         <h3>Ahead</h3>
         <div class="ahead-wrap">
           <svg class="dep-svg" width="16" height="46" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" /></marker></defs></svg>
-          <div class="ahead-list"><div class="node-box" id="node-briefb-b3-publish-v2"><span class="node-id">briefb-b3-publish-v2</span> — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation<div class="cross-note">after: b1-engine-kernel-half</div></div></div>
+          <div class="ahead-list"><div class="node-box" id="node-briefb-b3-publish-v2" title="briefb-b3-publish-v2">Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation<div class="cross-note">after: <a href="#node-b1-engine-kernel-half" title="b1-engine-kernel-half">Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)</a></div></div></div>
         </div>
         
       </div>
@@ -297,7 +319,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
           
           <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">platform-hardware-validation</span> — macOS/WKWebView and Linux/WebKitGTK hardware validation <span class="phase-cite">prototype</span></div>
+        <div class="node-box ambition" id="node-platform-hardware-validation" title="platform-hardware-validation">macOS/WKWebView and Linux/WebKitGTK hardware validation <span class="phase-cite">prototype</span></div>
       </div>
     </div>
   </section>
@@ -315,7 +337,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
           
           <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">notebooks-record-replay</span> — Notebooks: record and replay (03) <span class="phase-cite">alpha</span></div>
+        <div class="node-box ambition" id="node-notebooks-record-replay" title="notebooks-record-replay">Notebooks: record and replay (03) <span class="phase-cite">alpha</span></div>
       </div>
     </div>
   </section>
@@ -333,46 +355,65 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
           
           <div class="ahead-list"><p class="empty">(nothing queued)</p></div>
         </div>
-        <div class="node-box ambition"><span class="node-id">mcp-server-permission-model</span> — MCP server with the permission model (04) <span class="phase-cite">alpha</span></div>
-<div class="node-box ambition"><span class="node-id">first-external-plugin-skp-client</span> — First external plugin as an out-of-process SKP client (02) <span class="phase-cite">alpha</span></div>
-<div class="node-box ambition"><span class="node-id">plugin-ecosystem-seed</span> — Plugin ecosystem seed (docs, templates, example clients) <span class="phase-cite">v1</span></div>
-<div class="node-box ambition"><span class="node-id">basic-editing-plugin</span> — Basic editing plugin (ADR-002 amended, ADR-007) — scheduled last in 1.0 <span class="phase-cite">v1</span></div>
+        <div class="node-box ambition" id="node-mcp-server-permission-model" title="mcp-server-permission-model">MCP server with the permission model (04) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition" id="node-first-external-plugin-skp-client" title="first-external-plugin-skp-client">First external plugin as an out-of-process SKP client (02) <span class="phase-cite">alpha</span></div>
+<div class="node-box ambition" id="node-plugin-ecosystem-seed" title="plugin-ecosystem-seed">Plugin ecosystem seed (docs, templates, example clients) <span class="phase-cite">v1</span></div>
+<div class="node-box ambition" id="node-basic-editing-plugin" title="basic-editing-plugin">Basic editing plugin (ADR-002 amended, ADR-007) — scheduled last in 1.0 <span class="phase-cite">v1</span></div>
       </div>
     </div>
   </section>
 </main>
-<script id="plan-data" type="application/json">{"generated_at":"2026-09-13T23:43:43.721Z","plan_hash":"3db2ef89f84f2b887a0400d54526796a1032d45b87756236db873bfab48ecca3","priorities_approved":true,"done_nodes":[{"id":"v0-1-0-shipped","title":"v0.1.0 tagged and released — the Prototype hero slice's first packaged build","lane":"release","dates":{"opened":null,"done":"2026-09-13"}},{"id":"merge-back-pr-50","title":"release/0.1.0 merged back into main after the tag","lane":"release","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"entry-47-hover-repick","title":"Entry 47 — the hover readout re-picks on camera settle","lane":"shell","dates":{"opened":"2026-09-11","done":"2026-09-13"}},{"id":"entries-84-85-filter-fixes","title":"Entries 84 and 85 — settled-partial status and Zoom to layer under a filter","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"release-docs-finalized","title":"Release docs finalized from Part M for the tag","lane":"release","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"briefa-p1-p2","title":"Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance","lane":"engine","dates":{"opened":"2026-09-10","done":"2026-09-11"}},{"id":"briefa-entries-80-81","title":"Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims)","lane":"engine","dates":{"opened":"2026-09-11","done":"2026-09-13"}},{"id":"adr-003-spike-gate","title":"ADR-003 renderer/arbitrary-CRS spike — the architecture gate","lane":"renderer","dates":{"opened":null,"done":"2026-08-03"}},{"id":"spatial-indexing-measurement-close","title":"Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path)","lane":"measurement","dates":{"opened":null,"done":"2026-08-13"}},{"id":"static-crt-spike","title":"Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b)","lane":"release","dates":{"opened":"2026-09-09","done":"2026-09-09"}},{"id":"hero-open-geoparquet","title":"Hero slice, part 1 — open a GeoParquet","lane":"engine","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-filter-sql","title":"Hero slice, part 2 — filter it in SQL","lane":"engine","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-style","title":"Hero slice, part 3 — style it","lane":"renderer","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-publish-bundle","title":"Hero slice, part 4 — publish it as a static interactive bundle","lane":"publish-viewer","dates":{"opened":null,"done":"2026-09-13"}},{"id":"land-45","title":"Entry 66 (b) — geometric protection at every zoom, without enumeration","lane":"shell","dates":{"opened":"2026-09-10","done":"2026-09-13"}},{"id":"asset-filename-docs-fix","title":"Asset-filename docs fix — the release page's dotted installer filename noted","lane":"governance","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"polish-87-88-89","title":"Filter-and-hover polish (entries 87, 88, 89)","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"viewer-86-zoom-anchor","title":"Entry 86 — the reference bundle viewer's zoom is not anchored at the pointer","lane":"publish-viewer","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"lod-feasibility-spike","title":"LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only","lane":"measurement","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"reaim-no-crs-fixture","title":"Delegated re-aim — the no-CRS fixture and its tests to Brief A's ruled contract","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"autonomy-work-system","title":"The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page","lane":"governance","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"entry-86-known-limitations-rewrite","title":"Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands","lane":"publish-viewer","dates":{"opened":null,"done":"2026-09-13"}}]}</script>
+<script id="plan-data" type="application/json">{"generated_at":"2026-09-13T23:39:35.398Z","plan_hash":"0d62e02ee2f0d7fea55bf044891de887056b4d70276bed1dd4c07506c35c7a71","priorities_approved":true,"done_nodes":[{"id":"v0-1-0-shipped","title":"v0.1.0 tagged and released — the Prototype hero slice's first packaged build","lane":"release","dates":{"opened":null,"done":"2026-09-13"}},{"id":"merge-back-pr-50","title":"release/0.1.0 merged back into main after the tag","lane":"release","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"entry-47-hover-repick","title":"Entry 47 — the hover readout re-picks on camera settle","lane":"shell","dates":{"opened":"2026-09-11","done":"2026-09-13"}},{"id":"entries-84-85-filter-fixes","title":"Entries 84 and 85 — settled-partial status and Zoom to layer under a filter","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"release-docs-finalized","title":"Release docs finalized from Part M for the tag","lane":"release","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"briefa-p1-p2","title":"Brief A P0-P2 (engine-side) — admission preregistration, reader format semantics, the degrees instance","lane":"engine","dates":{"opened":"2026-09-10","done":"2026-09-11"}},{"id":"briefa-entries-80-81","title":"Brief A — entries 80 and 81 (the format rule as a second unit source; test re-aims)","lane":"engine","dates":{"opened":"2026-09-11","done":"2026-09-13"}},{"id":"adr-003-spike-gate","title":"ADR-003 renderer/arbitrary-CRS spike — the architecture gate","lane":"renderer","dates":{"opened":null,"done":"2026-08-03"}},{"id":"spatial-indexing-measurement-close","title":"Spatial indexing — measured to a close (no ADR filed; layout stays out of the import path)","lane":"measurement","dates":{"opened":null,"done":"2026-08-13"}},{"id":"static-crt-spike","title":"Spike — static CRT for the shell executable drops MSVCP140 (entry 69 option b)","lane":"release","dates":{"opened":"2026-09-09","done":"2026-09-09"}},{"id":"hero-open-geoparquet","title":"Hero slice, part 1 — open a GeoParquet","lane":"engine","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-filter-sql","title":"Hero slice, part 2 — filter it in SQL","lane":"engine","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-style","title":"Hero slice, part 3 — style it","lane":"renderer","dates":{"opened":null,"done":"2026-09-13"}},{"id":"hero-publish-bundle","title":"Hero slice, part 4 — publish it as a static interactive bundle","lane":"publish-viewer","dates":{"opened":null,"done":"2026-09-13"}},{"id":"land-45","title":"Entry 66 (b) — geometric protection at every zoom, without enumeration","lane":"shell","dates":{"opened":"2026-09-10","done":"2026-09-13"}},{"id":"asset-filename-docs-fix","title":"Asset-filename docs fix — the release page's dotted installer filename noted","lane":"governance","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"polish-87-88-89","title":"Filter-and-hover polish (entries 87, 88, 89)","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"viewer-86-zoom-anchor","title":"Entry 86 — the reference bundle viewer's zoom is not anchored at the pointer","lane":"publish-viewer","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"lod-feasibility-spike","title":"LOD feasibility spike — Rust geo vs DuckDB-spatial, headless, reported-only","lane":"measurement","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"reaim-no-crs-fixture","title":"Delegated re-aim — the no-CRS fixture and its tests to Brief A's ruled contract","lane":"shell","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"autonomy-work-system","title":"The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page","lane":"governance","dates":{"opened":"2026-09-13","done":"2026-09-13"}},{"id":"entry-86-known-limitations-rewrite","title":"Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands","lane":"publish-viewer","dates":{"opened":null,"done":"2026-09-13"}}]}</script>
 <script>
+// Progressive enhancement only: the list and heading above are already true without JS. This
+// narrows them to the viewer's own last visit, and only if everything below succeeds.
 (function () {
-  var data = JSON.parse(document.getElementById('plan-data').textContent);
   var STORAGE_KEY = 'spatial-ide-custodian-last-visit';
-  var now = new Date();
+  function todayLocal() {
+    var d = new Date();
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
   var lastVisitRaw = null;
-  try { lastVisitRaw = localStorage.getItem(STORAGE_KEY); } catch (e) { /* localStorage unavailable */ }
-  var since;
-  if (lastVisitRaw) {
-    since = new Date(lastVisitRaw);
-  } else {
-    since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // first visit: last seven days
-  }
-  var shipped = (data.done_nodes || []).filter(function (n) {
-    return n.dates && n.dates.done && new Date(n.dates.done) >= since;
-  });
-  var list = document.getElementById('shipped-list');
-  list.innerHTML = '';
-  if (shipped.length === 0) {
-    var li = document.createElement('li');
-    li.className = 'empty';
-    li.textContent = '(nothing since your last visit)';
-    list.appendChild(li);
-  } else {
-    shipped.forEach(function (n) {
-      var li = document.createElement('li');
-      li.textContent = n.id + ' — ' + n.title + ' (' + n.dates.done + ')';
-      list.appendChild(li);
-    });
-  }
-  try { localStorage.setItem(STORAGE_KEY, now.toISOString()); } catch (e) { /* localStorage unavailable */ }
+  try { lastVisitRaw = localStorage.getItem(STORAGE_KEY); } catch (e) { lastVisitRaw = null; }
+  try {
+    // Calendar days, inclusive of the last-visit day: comparing a date-only value with an instant
+    // hid anything that landed on the day of the visit itself. A first visit changes nothing.
+    if (lastVisitRaw && lastVisitRaw.length >= 10) {
+      var lastDay = lastVisitRaw.slice(0, 10);
+      var data = JSON.parse(document.getElementById('plan-data').textContent);
+      var shipped = (data.done_nodes || []).filter(function (n) {
+        return n.dates && typeof n.dates.done === 'string' && n.dates.done >= lastDay;
+      });
+      shipped.sort(function (a, b) {
+        return a.dates.done < b.dates.done ? 1 : a.dates.done > b.dates.done ? -1 : 0;
+      });
+      var list = document.getElementById('shipped-list');
+      var heading = document.getElementById('shipped-heading');
+      var fresh = document.createDocumentFragment();
+      if (shipped.length === 0) {
+        var none = document.createElement('li');
+        none.className = 'empty';
+        none.textContent = '(nothing since your last visit)';
+        fresh.appendChild(none);
+      } else {
+        shipped.forEach(function (n) {
+          var li = document.createElement('li');
+          li.title = n.id;
+          var a = document.createElement('a');
+          a.href = '#node-' + n.id;
+          a.textContent = n.title;
+          li.appendChild(a);
+          li.appendChild(document.createTextNode(' (' + n.dates.done + ')'));
+          fresh.appendChild(li);
+        });
+      }
+      list.innerHTML = '';
+      list.appendChild(fresh);
+      heading.textContent = 'Shipped since your last visit (' + lastDay + ')';
+    }
+  } catch (e) { /* leave the generated list and heading exactly as they are */ }
+  try { localStorage.setItem(STORAGE_KEY, todayLocal()); } catch (e) { /* localStorage unavailable */ }
 })();
 </script>
 </body>
