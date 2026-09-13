@@ -1755,12 +1755,40 @@ function viewStateLinesSince(consoleHandle, sinceIndex) {
  * Returns all three counts, because the record line below carries all three. `queries` is the number
  * of covering tiles the manager actually ASKED for since the mark -- not the size of the covering set
  * itself, which this harness cannot see (a tile already resident from an earlier plan is never
- * re-requested); `unminted` of those got no stream and therefore no terminal at all. */
+ * re-requested); `unminted` of those got no stream and therefore no terminal at all.
+ *
+ * **Counts, not a per-tile-key match, and that is a property of the lines available -- not a choice
+ * made here.** Matching each query to its own tile key would be the stronger statement, but NEITHER
+ * line carries one: `traceViewportQuery` logs `{dataset, bbox, bboxCrs}` (and CDP renders the bbox as
+ * `Object`, so even the geometry is unreadable from the console text) and `traceStreamIssued` logs
+ * `{dataset, streamHandle}`. Nothing joins a handle back to a tile key on this side -- only
+ * `candidate-tile-terminal`, a session-log line this suite does not read, and only for streams that
+ * DID mint. Carrying the tile key on those two trace lines is a product change to
+ * `diagnostics/renderTrace.ts` and `TileViewportStreamManager`, outside this piece. What the
+ * difference CAN be made honest about is timing, and `settledUnmintedTileQueriesSince` below does
+ * that: a query whose stream is merely still in flight must never read as one that never minted. */
 function unmintedTileQueriesSince(consoleHandle, sinceIndex) {
   const lines = consoleHandle.renderTrace().slice(sinceIndex);
   const queries = lines.filter((e) => e.text.includes("viewport_query") && !e.text.includes("bbox: null")).length;
   const streams = lines.filter((e) => e.text.includes("stream-issued")).length;
   return { queries, streams, unminted: queries - streams };
+}
+
+/** The counts above, read only once they have stopped moving toward each other: polls until every
+ * query since the mark has its `stream-issued` line, and otherwise returns the LAST reading once the
+ * bound elapses. Called AFTER the render trace has gone quiet and after `.residency-status` has
+ * settled, so a difference surviving all of that is a query that never minted, never one still in
+ * flight -- the false-PREMISE-BROKEN reading an eager count difference could produce would silently
+ * skip the pre-committed assertion, which is the one outcome this step must not allow.
+ * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound K7's own status re-read uses; a bound, not a timing
+ * claim (ADR-018). */
+async function settledUnmintedTileQueriesSince(consoleHandle, sinceIndex) {
+  const settled = await waitForCondition(
+    async () => unmintedTileQueriesSince(consoleHandle, sinceIndex),
+    (counts) => counts.unminted <= 0,
+    K7_STATUS_SETTLE_TIMEOUT_MS
+  );
+  return settled.last;
 }
 
 /** Whether the covering set was truncated at any point since `sinceIndex` (`renderTrace.ts`'s
@@ -1911,9 +1939,12 @@ async function stepFind(page, consoleHandle) {
   // reported as itself: it would make the fill genuinely incomplete for a reason entry 84's fix does
   // not address, so the status reading is not evidence about entry 84 at all in that case, and this
   // step says so rather than attributing one cause to the other.
-  const truncated = coveringTruncatedSince(consoleHandle, beforeZoomOut);
-  const unminted = unmintedTileQueriesSince(consoleHandle, beforeZoomOut);
+  // Both readings are taken AFTER the status has settled (architect should-fix, 2026-09-13): taken
+  // before it, a query whose stream had simply not minted yet would read as one that never minted,
+  // and a false PREMISE BROKEN record would silently skip the pre-committed assertion below.
   const statusAfterZoomOut = await settledResidencyStatus(page);
+  const truncated = coveringTruncatedSince(consoleHandle, beforeZoomOut);
+  const unminted = await settledUnmintedTileQueriesSince(consoleHandle, beforeZoomOut);
   if (truncated.length > 0) {
     failures.push(
       `FIND'/settled-partial-under-filter: PREMISE BROKEN -- the covering set was TRUNCATED during the zoom-out ` +

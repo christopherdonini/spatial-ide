@@ -703,8 +703,19 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   const deckRef = useRef<Deck<OrthographicView> | null>(null);
   /** Entry 85: THIS instance's own fit-camera write sequence -- see `createFitCameraWriteSequence`
    * (above) for why every fit's camera write has to carry the click's own identity, and why the
-   * sequence is per-instance rather than module-level. */
-  const nextFitCameraViewStateRef = useRef(createFitCameraWriteSequence());
+   * sequence is per-instance rather than module-level.
+   *
+   * Lazily initialised through a null ref, the same idiom `hoverRepickRef` (entry 47) uses below and
+   * for the same reason: `useRef(createFitCameraWriteSequence())` evaluates its argument on EVERY
+   * render and throws the result away, constructing a fresh sequence each time -- wasted here, and
+   * the kind of thing that silently becomes a defect if the constructed object ever holds state
+   * something else can reach. Behaviour is unchanged: the surviving sequence is still the first one
+   * constructed, one per mounted canvas. */
+  const nextFitCameraViewStateRef = useRef<((fit: FitViewState) => FitCameraViewState) | null>(null);
+  if (nextFitCameraViewStateRef.current === null) {
+    nextFitCameraViewStateRef.current = createFitCameraWriteSequence();
+  }
+  const nextFitCameraViewState = nextFitCameraViewStateRef.current;
   const residentRef = useRef(new ResidentSet());
   /** Viewport-residency cut P3w item B: the candidate arm's own tile-keyed sibling of `residentRef`
    * -- always constructed (cheap, empty until ever used), but only ever WRITTEN to by
@@ -1141,7 +1152,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // comes from THIS instance's own fit-camera write sequence, never an inline literal -- a fit
     // that repeats a previous fit exactly is still a camera write deck.gl's deep-equal cannot
     // swallow (`createFitCameraWriteSequence`'s own doc comment has the full account).
-    deckRef.current?.setProps({ initialViewState: nextFitCameraViewStateRef.current(fit) });
+    deckRef.current?.setProps({ initialViewState: nextFitCameraViewState(fit) });
     render();
     if (notifyViewport) {
       // `frame.originX`/`frame.originY` read now, i.e. AFTER `forceRecenter` above moved them --
