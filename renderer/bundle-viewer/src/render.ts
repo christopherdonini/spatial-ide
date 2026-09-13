@@ -73,6 +73,23 @@ export const MAX_ATTRIBUTE_COLUMNS: number = ceilings.MAX_ATTRIBUTE_COLUMNS;
 export const MAX_ATTRIBUTE_DISPLAY_CHARS: number = ceilings.MAX_ATTRIBUTE_DISPLAY_CHARS;
 
 /**
+ * Backing-store ceilings (ADR-010 rule 6, ZOOM-ANCHOR-PREREGISTRATION.md §2), declared beside the
+ * bundle-content ceilings above though **not** sourced from `ceilings.json`: that file's five values
+ * are feature/partition/byte/attribute counts the kernel's publish preflight compiles into a bundle
+ * under a hash (`kernel/src/publish/ceilings.rs:36`/`:191`) — a canvas backing-store dimension is a
+ * property of the viewing device, never of the bundle, so it has no place there and none is added.
+ *
+ * **Behaviour at the ceiling, declared with it.** `sizeCanvasToClientBox` (`main.ts`) clamps the
+ * store to these before assigning `canvas.width`/`canvas.height`, both axes together so a clamped
+ * store keeps the client box's aspect. `toStore`'s ratio is then measured from the element as it
+ * always is, so it reflects whatever the store actually became — clamped or not — and anchoring stays
+ * exact either way. **No quality or sharpness claim**: a clamped store means more world units per
+ * backing-store pixel, stated as a consequence and nothing else.
+ */
+export const MAX_BACKING_STORE_DIM: number = 4096;
+export const MAX_BACKING_STORE_PIXELS: number = 4096 * 4096;
+
+/**
  * The view. `centerX`/`centerY` are the **render origin**: every drawn value is `coord − centre`,
  * which keeps the magnitudes small enough that the canvas's narrowing is harmless.
  */
@@ -122,6 +139,61 @@ export function unproject(px: number, py: number, view: View): [number, number] 
     view.centerX + (px - view.width / 2) / view.scale,
     view.centerY - (py - view.height / 2) / view.scale,
   ];
+}
+
+/**
+ * Zoom the view about one store-pixel point, holding the world point under it fixed.
+ *
+ * **The pure function `main.ts`'s wheel listener now delegates to** (ZOOM-ANCHOR-PREREGISTRATION.md
+ * §4 test 2), factored out so the anchoring property — the world point under `(storeX, storeY)` is
+ * identical before and after — is testable without a DOM. `storeX`/`storeY` are already in the one
+ * shared pixel space (the listener's own `toStore(e)`); this function takes no CSS-pixel value and
+ * performs no conversion of its own. `unproject` stays the only device→world function; its two
+ * results here select the anchor and are then discarded exactly as its own doc comment declares —
+ * never shown, never stored. Mutates `view` in place, as every other input handler does, and returns
+ * it for convenience.
+ */
+export function zoomAt(view: View, storeX: number, storeY: number, factor: number): View {
+  const [wx, wy] = unproject(storeX, storeY, view);
+  view.scale *= factor;
+  const [nx, ny] = unproject(storeX, storeY, view);
+  view.centerX += wx - nx;
+  view.centerY += wy - ny;
+  return view;
+}
+
+/**
+ * Pan the view by a delta already in store pixels (the caller's `toStore(e)` applied the one
+ * conversion; this function takes no CSS-pixel value). World distance moved is the store delta
+ * divided by `scale` — the law ZOOM-ANCHOR-PREREGISTRATION.md §4 test 3 names as "CSS drag distance ×
+ * ratio ÷ scale", factored out here for the same reason `zoomAt` is: testable without a DOM.
+ */
+export function panBy(view: View, storeDeltaX: number, storeDeltaY: number): View {
+  view.centerX -= storeDeltaX / view.scale;
+  view.centerY += storeDeltaY / view.scale;
+  return view;
+}
+
+/**
+ * Apply a backing-store resize to an already-fitted view (§2's resize invariant: **a resize is not a
+ * zoom**). `centerX`/`centerY` are untouched, so the world point at the view centre stays at the
+ * centre for free; `scale` is multiplied by `ratioChange` — the newly measured store-px-per-CSS-px
+ * ratio divided by the previous one — which is what holds world-units-per-CSS-pixel constant across
+ * the resize. `main.ts`'s `sizeCanvasToClientBox` measures both ratios and the new store dimensions
+ * from the element; this is the pure arithmetic core, factored out so the invariant is testable
+ * without a DOM. Not called on the initial fit — `fitView` computes `scale` fresh from the bounds and
+ * has no prior ratio to hold constant against.
+ */
+export function resizeStore(
+  view: View,
+  storeWidth: number,
+  storeHeight: number,
+  ratioChange: number,
+): View {
+  view.scale *= ratioChange;
+  view.width = storeWidth;
+  view.height = storeHeight;
+  return view;
 }
 
 /** The world rectangle currently visible, for culling. */

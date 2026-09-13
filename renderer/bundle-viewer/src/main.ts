@@ -54,11 +54,16 @@ import {
   drawAll,
   fitView,
   MAX_ATTRIBUTE_COLUMNS,
+  MAX_BACKING_STORE_DIM,
+  MAX_BACKING_STORE_PIXELS,
   MAX_FEATURES,
   MAX_PARTITIONS,
   MAX_RESIDENT_BYTES,
+  panBy,
   pick,
+  resizeStore,
   unproject,
+  zoomAt,
   type View,
 } from './render.js';
 import { sha256Prefixed } from './sha256.js';
@@ -116,6 +121,80 @@ const state: State = {
 
 const canvas = document.getElementById('map') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
+
+// ---------------------------------------------------------------------------------------------
+// One pixel space (ZOOM-ANCHOR-PREREGISTRATION.md, entry 86). The backing store is sized to the
+// canvas's own CSS box, and every input site converts through the one function below — never
+// `unproject` directly on a raw `e.offsetX/Y`.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The previous measured ratio (store px per CSS px), kept so a later resize can hold
+ * world-units-per-CSS-pixel constant (`resizeStore`'s `ratioChange`). Not `devicePixelRatio`: it is
+ * whatever `sizeCanvasToClientBox` last actually measured off the element, so a clamped store is
+ * accounted for exactly rather than approximately. `1` before the canvas has ever been sized.
+ */
+let lastRatioX = 1;
+let lastRatioY = 1;
+
+/**
+ * The single conversion (§2): every pointer coordinate this viewer acts on passes through here once,
+ * and nothing downstream of it sees a CSS pixel again. **The ratio is measured from the element,
+ * never assumed to equal `devicePixelRatio`** — exact whether or not the store was clamped, and exact
+ * if a future stylesheet sizes the canvas differently.
+ */
+function toStore(e: MouseEvent): [number, number] {
+  const rx = canvas.width / canvas.clientWidth;
+  const ry = canvas.height / canvas.clientHeight;
+  return [e.offsetX * rx, e.offsetY * ry];
+}
+
+/**
+ * Size the backing store to the canvas's own CSS box × `devicePixelRatio` (§2(b)). Called once before
+ * the first `fitView`, and again on every `ResizeObserver` callback — **the only place
+ * `canvas.width`/`canvas.height` are ever assigned.**
+ *
+ * `devicePixelRatio` decides the *target* resolution here, same as any other viewer would use it for.
+ * That is not the conversion `toStore` performs — `toStore` measures the ratio actually achieved
+ * (`canvas.width / canvas.clientWidth`), which is this same target unless the ceiling below clamped
+ * it, in which case the measured ratio silently absorbs the difference and anchoring stays exact.
+ */
+function sizeCanvasToClientBox(): void {
+  const cssWidth = canvas.clientWidth;
+  const cssHeight = canvas.clientHeight;
+  if (cssWidth <= 0 || cssHeight <= 0) return; // not laid out yet; nothing to size against
+
+  const dpr = window.devicePixelRatio || 1;
+  let storeWidth = Math.max(1, Math.round(cssWidth * dpr));
+  let storeHeight = Math.max(1, Math.round(cssHeight * dpr));
+
+  // Declared ceiling (ADR-010 rule 6), not discovered — see MAX_BACKING_STORE_DIM/PIXELS' own doc
+  // comment in render.ts. Both axes clamp together so the store's aspect stays the client box's.
+  storeWidth = Math.min(storeWidth, MAX_BACKING_STORE_DIM);
+  storeHeight = Math.min(storeHeight, MAX_BACKING_STORE_DIM);
+  if (storeWidth * storeHeight > MAX_BACKING_STORE_PIXELS) {
+    const shrink = Math.sqrt(MAX_BACKING_STORE_PIXELS / (storeWidth * storeHeight));
+    storeWidth = Math.max(1, Math.floor(storeWidth * shrink));
+    storeHeight = Math.max(1, Math.floor(storeHeight * shrink));
+  }
+
+  if (canvas.width === storeWidth && canvas.height === storeHeight) return; // nothing changed
+
+  const oldRatioX = lastRatioX;
+  const oldRatioY = lastRatioY;
+  canvas.width = storeWidth;
+  canvas.height = storeHeight;
+  lastRatioX = canvas.width / canvas.clientWidth;
+  lastRatioY = canvas.height / canvas.clientHeight;
+
+  // `state.view` is null on the very first call: `fitView` (in `load()`, right after this call)
+  // computes `scale` fresh from the bounds and has no prior ratio to hold constant against. Only a
+  // later, post-load resize goes through the invariant.
+  if (state.view) {
+    resizeStore(state.view, canvas.width, canvas.height, lastRatioX / oldRatioX);
+    redraw();
+  }
+}
 
 /**
  * The bundle root, resolved from this page's own location.
@@ -284,25 +363,24 @@ function installInteraction(): void {
 
   canvas.addEventListener('mousedown', (e) => {
     dragging = true;
-    lastX = e.offsetX;
-    lastY = e.offsetY;
+    [lastX, lastY] = toStore(e);
   });
   window.addEventListener('mouseup', () => {
     dragging = false;
   });
   canvas.addEventListener('mousemove', (e) => {
     if (!state.view) return;
+    const [sx, sy] = toStore(e);
     if (dragging) {
       // Pan in world units, in f64: the view's centre *is* the render origin, so panning moves the
       // origin and every drawn value stays small.
-      state.view.centerX -= (e.offsetX - lastX) / state.view.scale;
-      state.view.centerY += (e.offsetY - lastY) / state.view.scale;
-      lastX = e.offsetX;
-      lastY = e.offsetY;
+      panBy(state.view, sx - lastX, sy - lastY);
+      lastX = sx;
+      lastY = sy;
       redraw();
       return;
     }
-    hover(e.offsetX, e.offsetY);
+    hover(sx, sy);
   });
   canvas.addEventListener(
     'wheel',
@@ -310,26 +388,32 @@ function installInteraction(): void {
       if (!state.view) return;
       e.preventDefault();
       const factor = Math.exp(-e.deltaY * 0.001);
-      // Zoom about the cursor: unproject before, re-project after, and move the centre to keep the
-      // world point under the pointer. The unprojected value is used for this and discarded.
-      const [wx, wy] = unproject(e.offsetX, e.offsetY, state.view);
-      state.view.scale *= factor;
-      const [nx, ny] = unproject(e.offsetX, e.offsetY, state.view);
-      state.view.centerX += wx - nx;
-      state.view.centerY += wy - ny;
+      // Zoom about the cursor, in the one shared pixel space `toStore` converts into.
+      const [sx, sy] = toStore(e);
+      zoomAt(state.view, sx, sy, factor);
       redraw();
     },
     { passive: false },
   );
 }
 
-function hover(px: number, py: number): void {
+/**
+ * The client-box resize side of §2's one-pixel-space rule. `sizeCanvasToClientBox` re-measures and
+ * re-sizes on every callback; the observer itself does nothing beyond calling it.
+ */
+function installResizeObserver(): void {
+  const ro = new ResizeObserver(() => sizeCanvasToClientBox());
+  ro.observe(canvas);
+}
+
+/** `storeX`/`storeY`: already `toStore(e)`-converted by every caller — never a raw CSS pixel. */
+function hover(storeX: number, storeY: number): void {
   if (!state.view || !state.style) return;
   const el = document.getElementById('hover');
   if (!el) return;
   // Cursor unprojection, permitted by ADR-010 rule 2 for hover feedback. Its result selects a
   // candidate and is then discarded — it is never shown and never stored.
-  const [wx, wy] = unproject(px, py, state.view);
+  const [wx, wy] = unproject(storeX, storeY, state.view);
   const hit = pick(state.partitions, wx, wy);
 
   el.textContent = '';
@@ -441,8 +525,13 @@ async function load(): Promise<void> {
     );
   }
   const bounds = manifest.bounds ?? { xmin: 0, ymin: 0, xmax: 1, ymax: 1 };
+  // The backing store is sized to the client box before the first fit, so `fitView` computes `scale`
+  // against the dimensions the pointer's own conversion (`toStore`) will measure — never the fixed
+  // `1280×900` markup attributes.
+  sizeCanvasToClientBox();
   state.view = fitView(bounds, canvas.width, canvas.height);
   installInteraction();
+  installResizeObserver();
 
   // ---- partitions -------------------------------------------------------------------------
   for (let i = 0; i < manifest.partitions.length; i++) {
