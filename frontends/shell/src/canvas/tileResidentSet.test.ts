@@ -606,3 +606,87 @@ describe("planTileEviction (item D)", () => {
     });
   });
 });
+
+// Entry 84 (`FILTER-84-85-PREREGISTRATION.md` §3.4 item 3): `markTileResidentEmpty` gains its first
+// caller outside this class (`candidateArmSession.ts`'s tile `onTerminal`, for a clean `Completed`
+// terminal that delivered no batch). What that tile IS, to every other reader of this set, is what
+// these cases pin: resident and complete, holding nothing, evictable like any other tile, and
+// protected while the viewport covers it -- "an empty resident tile holds no vertices and counts for
+// nothing in the budget" (§3.2).
+describe("TileResidentSet: the empty resident tile (entry 84)", () => {
+  it("is resident and complete, and contributes nothing to the totals or to the batches drawn", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1, 2]));
+    const verticesBefore = set.totalResidentVertices;
+    const featuresBefore = set.totalResidentFeatures;
+
+    set.markTileResidentEmpty("1:1");
+
+    expect(set.isTileResident("1:1")).toBe(true);
+    expect(set.isTilePartial("1:1")).toBe(false);
+    expect(set.isTileComplete("1:1")).toBe(true); // nothing its bbox covers is missing
+    expect(set.tileVertexCount("1:1")).toBe(0);
+    expect(set.totalResidentVertices).toBe(verticesBefore);
+    expect(set.totalResidentFeatures).toBe(featuresBefore);
+    expect(set.getBatches()).toHaveLength(1); // the one real batch; an empty tile adds nothing to draw
+  });
+
+  it("is evictable like any other tile, and evicting it changes no total", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1, 2]));
+    set.markTileResidentEmpty("5:5");
+
+    const plan = planTileEviction({
+      residentTileKeys: set.residentTileKeys(),
+      tileVertices: (k) => set.tileVertexCount(k),
+      viewportTileKeys: new Set(["0:0"]),
+      incomingVertices: 10,
+      currentTotalVertices: set.totalResidentVertices,
+      maxResidentVertices: 1, // forces a plan: everything evictable is a candidate
+      distanceToViewCentre: (k) => (k === "5:5" ? 10 : 1),
+    });
+    expect(plan.evict).toEqual(["5:5"]);
+
+    const evicted = set.evictTile("5:5");
+    expect(evicted).toEqual(["5:5"]);
+    expect(set.isTileResident("5:5")).toBe(false);
+    expect(set.isTileComplete("5:5")).toBe(false); // gone is gone: nothing to be complete about
+    expect(set.totalResidentVertices).toBe(2);
+    expect(set.totalResidentFeatures).toBe(2);
+  });
+
+  it("is protected while the viewport covers it -- never a plan candidate, and never blanked directly", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [1, 2]));
+    set.markTileResidentEmpty("1:1");
+    const viewportTileKeys = new Set(["0:0", "1:1"]);
+
+    const plan = planTileEviction({
+      residentTileKeys: set.residentTileKeys(),
+      tileVertices: (k) => set.tileVertexCount(k),
+      viewportTileKeys,
+      incomingVertices: 10,
+      currentTotalVertices: set.totalResidentVertices,
+      maxResidentVertices: 1,
+      distanceToViewCentre: () => 1,
+    });
+    expect(plan.evict).toEqual([]); // both covered: the absolute rule, however far the budget overshoots
+    expect(plan.overBudget).toBe(true);
+
+    // The structural backstop too (`evictTile`'s own `protectedTileKeys` guard): an empty tile the
+    // viewport covers is no more blankable than a full one.
+    expect(set.evictTile("1:1", viewportTileKeys)).toEqual([]);
+    expect(set.isTileResident("1:1")).toBe(true);
+  });
+
+  it("a later real delivery for the same tile is admitted normally -- an empty entry suppresses nothing", () => {
+    const set = new TileResidentSet();
+    set.markTileResidentEmpty("2:2");
+    const result = set.addBatch("2:2", batch("sh_b", 0, [7, 8]));
+
+    expect(result.duplicatesDropped).toBe(0);
+    expect(result.accepted?.ids).toHaveLength(2);
+    expect(set.tileVertexCount("2:2")).toBe(2);
+    expect(set.isTileComplete("2:2")).toBe(true);
+  });
+});
