@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-09-13T23:25:03.477Z",
-  "plan_hash": "0d62e02ee2f0d7fea55bf044891de887056b4d70276bed1dd4c07506c35c7a71",
+  "generated_at": "2026-09-13T23:43:43.540Z",
+  "plan_hash": "3db2ef89f84f2b887a0400d54526796a1032d45b87756236db873bfab48ecca3",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 156,
+    "total_minutes": 141,
     "by_kind": {
       "click": [
         {
@@ -125,25 +125,6 @@
             "done": null
           },
           "summary": "the architect consult and decision draft are filed; three routed questions on state shape, the wire literal and the liveness string wait on the human"
-        },
-        {
-          "id": "entry-79-b1-consult-items",
-          "title": "Entry 79 — three items routed for Brief B stage B1's close",
-          "lane": "kernel-protocol",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 3,
-          "budget_minutes": 30,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 15
-          },
-          "evidence": null,
-          "dates": {
-            "opened": null,
-            "done": null
-          },
-          "summary": "the named refusal-code surface, the hover readout's column bound, and the panel's client-side type filter wait on the human by B1's close, not before"
         },
         {
           "id": "entry-91-polish-held-halves",
@@ -288,6 +269,28 @@
       ]
     },
     {
+      "id": "entry-79-b1-consult-items",
+      "title": "Entry 79 — three items routed for Brief B stage B1's close",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 3,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half",
+      "blocked_by": [
+        "b1-engine-kernel-half"
+      ]
+    },
+    {
       "id": "drill-clean-clone",
       "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
       "lane": "governance",
@@ -369,14 +372,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "release/ci-artifacts"
+        "pr": 57
       },
       "dates": {
         "opened": null,
         "done": null
       },
       "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built",
-      "evidence_label": "branch `release/ci-artifacts`"
+      "evidence_label": "PR #57"
     },
     {
       "id": "site-bugs-first",

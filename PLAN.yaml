@@ -673,15 +673,15 @@ nodes:
     phase: prototype
     status: blocked
     order: 3
-    depends_on: []
-    needs_human: {kind: ruling, minutes: 15}
+    depends_on: [b1-engine-kernel-half]
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: [79]
-    summary: "the named refusal-code surface, the hover readout's column bound, and the panel's client-side type filter wait on the human by B1's close, not before"
+    summary: "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half"
     dates: {opened: null, done: null}
 
   - id: m13-bracketed-values
@@ -766,7 +766,7 @@ nodes:
     depends_on: [autonomy-work-system]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: release/ci-artifacts}
+    evidence: {pr: 57}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
@@ -809,7 +809,7 @@ nodes:
     budget_minutes: 180
     generation: 1
     felt_verdict: false
-    entries: []
+    entries: [93]
     summary: "the revised brief's open questions (the overview x filter rule, P1 vs P2, the scale-class row's shape) need the human's word before a preregistration can be written"
     dates: {opened: null, done: null}
 

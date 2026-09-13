@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0d62e02ee2f0d7fea55bf044891de887056b4d70276bed1dd4c07506c35c7a71`) at `2026-09-13T23:25:03.477Z`.
+Generated from `PLAN.yaml` (sha256 `3db2ef89f84f2b887a0400d54526796a1032d45b87756236db873bfab48ecca3`) at `2026-09-13T23:43:43.540Z`.
 
 ## 1. Next
 
@@ -10,7 +10,7 @@ Generated from `PLAN.yaml` (sha256 `0d62e02ee2f0d7fea55bf044891de887056b4d70276b
 
 - (none)
 
-## 3. Waiting on the human (total: 156 min)
+## 3. Waiting on the human (total: 141 min)
 
 ### click
 
@@ -26,7 +26,6 @@ Generated from `PLAN.yaml` (sha256 `0d62e02ee2f0d7fea55bf044891de887056b4d70276b
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (20 min)
 - **entry-73-polygon-gate-scope** — Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus (15 min)
 - **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (10 min)
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (15 min)
 - **entry-91-polish-held-halves** — Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89) (6 min)
 - **entry-75-hover-repick-defaults** — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make (10 min)
 - **entry-69-runtime-dependency** — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default (5 min)
@@ -40,13 +39,14 @@ Generated from `PLAN.yaml` (sha256 `0d62e02ee2f0d7fea55bf044891de887056b4d70276b
 ## 4. Blocked on dependencies
 
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build — blocked by: polish-engine-lease-class
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone, site-bugs-first
 
 ## 5. In progress
 
 - **polish-engine-lease-class** — Entry 87's engine half — a declared lease class for per-request admission work (ADR-033) — evidence: branch `polish/engine-lease-class`
-- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — evidence: branch `release/ci-artifacts`
+- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — evidence: PR #57
 - **site-bugs-first** — Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates) — evidence: branch `governance/site-bugs-first`
 
 ## 6. Proposed / unscheduled
