@@ -1,0 +1,73 @@
+# Pages — the landing page generated from PLAN.yaml, published only when the plan verifies.
+#
+# The human's directive (2026-09-14, verbatim): "Pages source is set to GitHub Actions. Add
+# .github/workflows/pages.yml: on push to main (and manual dispatch), run verify:plan and the
+# site generator, upload site/ with actions/upload-pages-artifact, deploy with
+# actions/deploy-pages; permissions pages: write and id-token: write only; the four official
+# actions pinned to full commit SHAs like the existing workflows. Gate it on verify:plan passing
+# so an inconsistent plan never publishes."
+#
+# Shape: two jobs. `verify-and-build` runs `verify.mjs` (the gate — AUTONOMY.md §6: "Pages and
+# the queue are only ever as true as this check") and the site generator, and uploads `site/` as
+# the Pages artifact; it needs `contents: read` for the checkout and for verify.mjs's read-only
+# GitHub calls of public data (the same grant governance-ci.yml makes; the token reaches only that step). `deploy` holds ONLY `pages: write` and
+# `id-token: write`, as directed, and runs only after the gate passed (`needs`). The workflow-level
+# `permissions: {}` grants nothing by default so each job carries exactly its own grant.
+#
+# Pins: the four official actions are pinned to full commit SHAs (resolved on 2026-09-14 from
+# each action's latest release tag; the tag is noted beside each pin). The other workflows in
+# this repository pin by tag (`@v4`) — noted for the human; upgrading them is a separate hygiene
+# piece, not this workflow's scope.
+
+name: Pages — plan, site, deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  verify-and-build:
+    name: verify:plan (gate) · generate site/ · upload artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - name: verify:plan — the gate (an inconsistent plan never publishes)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/plan/verify.mjs
+      - name: generate site/ from PLAN.yaml
+        run: node scripts/plan/site.mjs
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy:
+    name: deploy to GitHub Pages
+    needs: verify-and-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
