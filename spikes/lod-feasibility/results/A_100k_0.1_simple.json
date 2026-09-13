@@ -1,0 +1,26 @@
+{
+  "route": "A-duckdb",
+  "variant": "simple",
+  "function": "ST_Simplify",
+  "input": "target/fixtures/slice-budgets/polygons-100k.parquet",
+  "output": "target/spikes/lod/a_100k_t0.1_simple.parquet",
+  "tolerance": 0.1,
+  "wall_s": 11.91676940000616,
+  "input_bytes": 151812642,
+  "output_bytes": 139707015,
+  "output_over_input_ratio": 0.9202594274065792,
+  "features_before": 100000,
+  "features_after": 100000,
+  "vertices_before": 10467093,
+  "vertices_after": 9887689,
+  "vertex_reduction_ratio": 0.05535481532456055,
+  "invalid_after": 0,
+  "identity": {
+    "n_in": 100000,
+    "n_out": 100000,
+    "duplicate_ids_out": 0,
+    "missing_from_output": 0,
+    "extra_in_output": 0,
+    "preserved": true
+  }
+}

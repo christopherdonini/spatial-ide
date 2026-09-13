@@ -1,0 +1,17 @@
+{
+  "route": "B-geo",
+  "mode": "stream-count",
+  "variant": "preserve",
+  "function": "geo::SimplifyVwPreserve (topology-preserving Visvalingam-Whyatt)",
+  "input": "C:/dev/spatial-ide/target/slice-evidence/scale-pass/parcels-5gb.parquet",
+  "tolerance": 1,
+  "row_groups": 403,
+  "wall_s": 804.6862253,
+  "features": 3300000,
+  "vertices_before": 345507850,
+  "vertices_after": 252277009,
+  "vertex_reduction_ratio": 0.2698371136864184,
+  "invalid_after": 0,
+  "output_bytes": 0,
+  "note": "no parquet written; vertices_after computed but discarded, disk cost zero"
+}
