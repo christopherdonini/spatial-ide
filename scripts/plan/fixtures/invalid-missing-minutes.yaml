@@ -1,0 +1,24 @@
+# needs_human.kind is not "none" but minutes is absent.
+version: 1
+lanes:
+  - {id: shell, title: "Shell", priority: 1}
+phases:
+  - {id: prototype, title: "Prototype — the hero slice", cite: "docs/07_Roadmap.md ## Prototype — the hero slice"}
+nodes:
+  - id: ruling-without-minutes
+    title: "Needs a ruling, no minutes estimate"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 1
+    depends_on: []
+    needs_human: {kind: ruling}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "fixture: needs_human.kind without minutes"
+    dates: {opened: 2026-09-13, done: null}
