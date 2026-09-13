@@ -71,6 +71,31 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+86. **[Part M sitting 2, M11 — the reference bundle viewer's zoom is not anchored: "when i zoom in, the map
+    pan by itself to north-west, and when i zoom out it goes the other side, bottom left corner, sud-est"
+    (your report of 2026-09-13; the bundle otherwise works and M11 passes as its row is written). A
+    defect in `renderer/bundle-viewer` (the published artifact's own viewer), not the shell. Your word:
+    fix in the post-tag queue as a preregistered piece (its own row in Part G/M), or before the tag —
+    which would change the bundle viewer shipped inside every published bundle and the reference viewer
+    NOTICE that M's hashes recorded.]** Not the shell; nothing else depends on it. Not decided here.
+
+85. **[Part M sitting 2, M5 (c) — after applying a filter, "Zoom to layer" stops working until the filter
+    is cleared (your report of 2026-09-13; the first click after the filter "works perfectly"). A defect
+    no row expects; root cause under investigation (read-only; the finding is appended to this entry when
+    it lands). Your word on timing: fix now on a branch through the full gates (preregistration, reviewer,
+    architect if the fit path's design changes) and into the same rebuild that carries entry 47's hover
+    fix, or the post-tag queue. A fix touches shell code, which your freeze holds until the tag — so
+    "now" is your call, as it was for the hover.]** Not decided here.
+
+84. **[Part M sitting 2, M5 (b) — with a filter of about a hundred features applied, "Zoom to layer" then
+    zooming out shows the settled-partial sentence "Filling has finished for this view — some areas were
+    not loaded; pan or zoom to load them." (your report of 2026-09-13). Whether that is ADR-028's declared
+    over-budget/partial status misfiring under a filter (tiles that return no rows under the predicate
+    counted as not loaded), or a true partial fill, is under investigation (read-only; the finding is
+    appended here). If it is a misfire it is a defect of the status, not of what is drawn; if it is the
+    declared contract the sentence is misleading under a filter and its wording is yours. Your word
+    follows the finding.]** Not decided here.
+
 83. **[The tag target after #44's merge — your call, before the tag: you merged PR #44 (Brief A
     P0–P2, engine-side) to main at 869e185 on 2026-09-11. The v0.1.0 candidate installer was built from
     998be05 (`RELEASE-0.1.md` Amendment 14: 10,559,184 B, SHA-256 712b3063…), and Part M's installer
