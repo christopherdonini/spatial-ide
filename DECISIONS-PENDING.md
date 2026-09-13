@@ -79,6 +79,35 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+92. **[ADR-029 + the operation lifecycle — the decision draft is filed for your sight
+    (`RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-adr-029-operation-lifecycle.md`); three
+    questions routed to you: (Q1) unknown/finished as typed STATES (`{ state: scanning | finished |
+    unknown }`, mirroring `cancel`'s own shape) rather than refusal codes — the draft departs from your
+    "refusal shape" wording there and says why; (Q2) the wire literal — its own `skp/0.5` (recommended:
+    §13 E closes 0.3 at Brief A's merge and gives 0.4 to Brief B) vs folding into 0.4; (Q3) the liveness
+    string's wording (the string-sight route). Two premises corrected by the consult before any code:
+    "rows emitted" is post-filter and zero across the very window the debt names; "row groups consumed"
+    exists only as a plan-time denominator, never a counter — so the piece opens with a blocking
+    feasibility gate (G1) on the vendored DuckDB crate and returns the quantity question to you if no
+    monotone reading exists.]** Not decided here; nothing built.
+
+91. **[The "filter-and-hover polish" piece (entries 87, 88, 89) is preregistered on
+    `polish/filter-and-hover` (`frontends/shell/POLISH-87-88-89-PREREGISTRATION.md`) with three items that
+    are yours before their halves merge: **(a) entry 87's engine half** — the consult confirmed the cause
+    by arithmetic (`MAX_MAINTENANCE_CONNECTIONS = 1`, per-tile filter admission borrows that lease, the
+    shell runs three concurrent tile streams; losers are misreported as binder rejections); the honest
+    fix is a third declared lease class for admission work (ADR-033, filed Proposed beside the
+    preregistration: `docs/adr/PROPOSED-ADR-033-connection-lease-classes-for-admission-work.md`), no
+    wire change, no new code — your word on that engine change and on ADR-033; the shell half (log the
+    refusal; bounded requeue) proceeds regardless; **(b) entry 88** — the blink can only go if a stale
+    readout is shown WITH a visible declared distinction (ADR-010 rule 5: staleness signalled, never
+    silently served), which is entry 75 (3)'s "unconfirmed state" said plainly — reopen it as a labelled
+    state (the marking's wording yours) or keep today's clear; **(c) entry 89** — the refusal threshold's
+    new declared value `9` px (four times the 2.27 px figure ADR-010 rule 6 records, its caveats carried;
+    a declared choice, not a measurement), in tension with entry 47's sharpened criterion — sight it or
+    name another; the crosshair-while-hovering cursor needs no word.]** The worker builds the
+    unconditional parts now; (a)/(b)/(c) wait.
+
 90. **[Static CRT as a v0.1.1 build piece (your directive of 2026-09-13: "Static CRT: if the spike passed,
     queue it as a build piece for v0.1.1") — the spike passed: `spikes/entry69-static-crt/README.md`
     (a047a23 on `spike/entry69-static-crt`): with `-C target-feature=+crt-static` the release link is
