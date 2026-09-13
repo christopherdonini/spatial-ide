@@ -557,7 +557,7 @@ nodes:
     entries: [86]
     summary: "the retired KNOWN-LIMITATIONS line's replacement wording waits on the human's sight once the viewer fix piece lands"
     dates: {opened: null, done: 2026-09-13}
-
+    verdict: {by: human, cite: "DECISIONS-PENDING.md RULED 2026-09-13 (question set 1"}
   - id: entry-77-code-signing
     title: "Entry 77 — code signing for the Windows installer"
     kind: task
@@ -707,17 +707,17 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: 3
     depends_on: []
-    needs_human: {kind: ruling, minutes: 5}
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "needs disk the machine does not have today; waits on the human's word about reclaiming a build cache"
+    summary: "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded by the human on 2026-09-14: the main checkout shell debug cache (21 GB) reclaimed"
     dates: {opened: null, done: null}
 
   - id: evidence-archive-v0-1-0
@@ -743,7 +743,7 @@ nodes:
     kind: task
     lane: release
     phase: prototype
-    status: blocked
+    status: ready
     order: 10
     depends_on: [autonomy-work-system]
     needs_human: {kind: none, minutes: 0}

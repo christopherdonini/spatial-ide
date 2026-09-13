@@ -1,42 +1,42 @@
 {
-  "generated_at": "2026-09-13T21:50:22.733Z",
-  "plan_hash": "3897cd1843d1530135ebf72f1b45ff672067984f071923f207242d077f9e7687",
-  "priorities_approved": false,
+  "generated_at": "2026-09-13T22:04:34.334Z",
+  "plan_hash": "ef41a8006cf84907f0c695e0c9eb362966943661d543c54d9de0a6066395813d",
+  "priorities_approved": true,
   "lanes": [
     {
       "id": "shell",
       "title": "Shell",
-      "priority": 1
+      "priority": 3
     },
     {
       "id": "measurement",
       "title": "Measurement",
-      "priority": 2
+      "priority": 5
     },
     {
       "id": "kernel-protocol",
       "title": "Kernel/Protocol",
-      "priority": 3
+      "priority": 2
     },
     {
       "id": "engine",
       "title": "Engine",
-      "priority": 4
+      "priority": 1
     },
     {
       "id": "publish-viewer",
       "title": "Publish/Viewer",
-      "priority": 5
+      "priority": 4
     },
     {
       "id": "governance",
       "title": "Governance",
-      "priority": 6
+      "priority": 7
     },
     {
       "id": "release",
       "title": "Release",
-      "priority": 7
+      "priority": 6
     },
     {
       "id": "renderer",
@@ -46,12 +46,12 @@
     {
       "id": "platform",
       "title": "Platform",
-      "priority": 9
+      "priority": 10
     },
     {
       "id": "cli",
       "title": "CLI",
-      "priority": 10
+      "priority": 9
     },
     {
       "id": "notebooks-ir",
@@ -557,7 +557,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 4,
       "depends_on": [
         "land-45"
@@ -568,7 +568,7 @@
       },
       "gate": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
       "evidence": {
-        "branch": "polish/filter-and-hover"
+        "pr": 55
       },
       "budget_minutes": 240,
       "generation": 1,
@@ -579,6 +579,38 @@
         89
       ],
       "summary": "the unconditional parts (refusal logging, bounded requeue, cursor shape, the FIND' assertion) are built; the three ruled halves wait",
+      "dates": {
+        "opened": "2026-09-13",
+        "done": "2026-09-13"
+      }
+    },
+    {
+      "id": "polish-engine-lease-class",
+      "title": "Entry 87's engine half — a declared lease class for per-request admission work (ADR-033)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "depends_on": [
+        "polish-87-88-89"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "polish/engine-lease-class"
+      },
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        87,
+        91
+      ],
+      "summary": "The human's ruling of 2026-09-13 (question set 1, Q3): the third lease class, the two tests, FIND′ green as the acceptance evidence, ADR-033's text per the three conditions; ADR-033 accepted on the human's word after its gate",
       "dates": {
         "opened": "2026-09-13",
         "done": null
@@ -675,7 +707,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -684,7 +716,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "governance/autonomy"
+        "pr": 54
       },
       "budget_minutes": 480,
       "generation": 1,
@@ -693,7 +725,7 @@
       "summary": "AUTONOMY.md is written and this file is its first seeded artifact; the queue, hook and site tooling remain to be built",
       "dates": {
         "opened": "2026-09-13",
-        "done": null
+        "done": "2026-09-13"
       }
     },
     {
@@ -819,7 +851,7 @@
       "depends_on": [],
       "needs_human": {
         "kind": "ruling",
-        "minutes": 10
+        "minutes": 6
       },
       "gate": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
       "evidence": null,
@@ -829,7 +861,7 @@
       "entries": [
         91
       ],
-      "summary": "a third admission-work lease class (ADR-033), a labelled staleness state, and the refusal threshold's value each wait on the human before they merge",
+      "summary": "Entry 91 (b) and (c) still held: entry 88 as a labelled stale state (reopening 75 (3)) and entry 89's threshold value; (a) was ruled on 2026-09-13 (question set 1)",
       "dates": {
         "opened": "2026-09-13",
         "done": null
@@ -841,7 +873,7 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 3,
       "depends_on": [
         "viewer-86-zoom-anchor"
@@ -851,7 +883,9 @@
         "minutes": 3
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "commit": "de939d1"
+      },
       "budget_minutes": 15,
       "generation": 1,
       "felt_verdict": true,
@@ -861,7 +895,11 @@
       "summary": "the retired KNOWN-LIMITATIONS line's replacement wording waits on the human's sight once the viewer fix piece lands",
       "dates": {
         "opened": null,
-        "done": null
+        "done": "2026-09-13"
+      },
+      "verdict": {
+        "by": "human",
+        "cite": "DECISIONS-PENDING.md RULED 2026-09-13 (question set 1"
       }
     },
     {
@@ -1087,12 +1125,12 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 3,
       "depends_on": [],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
       "evidence": null,
@@ -1100,7 +1138,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "needs disk the machine does not have today; waits on the human's word about reclaiming a build cache",
+      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded by the human on 2026-09-14: the main checkout shell debug cache (21 GB) reclaimed",
       "dates": {
         "opened": null,
         "done": null
@@ -1139,7 +1177,7 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 10,
       "depends_on": [
         "autonomy-work-system"

@@ -5,6 +5,8 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**RULED 2026-09-14 — disk for the drill — the human verbatim (a mid-turn message):** *"the 21 GB shell debug cache is regenerable, and it funds the clean-clone drill"* — applied: the main checkout's `frontends/shell/src-tauri/target/debug` (21.2 GB) deleted; the release cache (8.5 GB, RC2's build) kept; the drill node becomes ready.
+
 **RULED 2026-09-13 (question set 1 of the autonomous work system, via AskUserQuestion; each answer verbatim) — lane priorities, the waiting list, entry 91 (a), entry 86 — the human:**
 *Q1 (lane priorities, "Approve as seeded?"):* "Reorder, (engine, kernel-protocol, shell, publish-viewer, measurement, release, governance, renderer, cli, platform, notebooks-ir, plugins-mcp)" — applied: `PLAN.yaml` lanes re-prioritised in that order, `priorities_approved: true`.
 *Q2 (the waiting-on-you groups, scheduling):* "Clicks now, Sights now" — the rulings (sets 2–4) and the sitting date are not taken this round; re-asked next round (the b21111d rule).

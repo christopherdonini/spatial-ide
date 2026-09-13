@@ -1,13 +1,89 @@
 {
-  "generated_at": "2026-09-13T21:50:22.620Z",
-  "plan_hash": "3897cd1843d1530135ebf72f1b45ff672067984f071923f207242d077f9e7687",
-  "priorities_approved": false,
-  "next": null,
-  "ready": [],
+  "generated_at": "2026-09-13T22:04:34.213Z",
+  "plan_hash": "ef41a8006cf84907f0c695e0c9eb362966943661d543c54d9de0a6066395813d",
+  "priorities_approved": true,
+  "next": {
+    "id": "release-artifacts-from-ci",
+    "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
+    "lane": "release",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 10,
+    "budget_minutes": 90,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": null,
+      "done": null
+    },
+    "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built"
+  },
+  "ready": [
+    {
+      "id": "release-artifacts-from-ci",
+      "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 10,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built"
+    },
+    {
+      "id": "drill-clean-clone",
+      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded by the human on 2026-09-14: the main checkout shell debug cache (21 GB) reclaimed"
+    }
+  ],
   "waiting_on_human": {
-    "total_minutes": 163,
+    "total_minutes": 156,
     "by_kind": {
       "click": [
+        {
+          "id": "evidence-archive-v0-1-0",
+          "title": "First application of the evidence archive — attach v0.1.0's evidence to its release",
+          "lane": "release",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 9,
+          "budget_minutes": 15,
+          "needs_human": {
+            "kind": "click",
+            "minutes": 5
+          },
+          "evidence": null,
+          "dates": {
+            "opened": null,
+            "done": null
+          },
+          "summary": "attaching to an already-published release changes that release page, so the first application is the human's click"
+        },
         {
           "id": "entry-78-repo-description",
           "title": "Entry 78 — repository description and topics",
@@ -30,25 +106,6 @@
       ],
       "sight": [
         {
-          "id": "entry-86-known-limitations-rewrite",
-          "title": "Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands",
-          "lane": "publish-viewer",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 3,
-          "budget_minutes": 15,
-          "needs_human": {
-            "kind": "sight",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": null,
-            "done": null
-          },
-          "summary": "the retired KNOWN-LIMITATIONS line's replacement wording waits on the human's sight once the viewer fix piece lands"
-        },
-        {
           "id": "m13-bracketed-values",
           "title": "Part M row M13's two bracketed values",
           "lane": "release",
@@ -70,42 +127,42 @@
       ],
       "ruling": [
         {
-          "id": "entry-91-polish-held-halves",
-          "title": "Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89)",
-          "lane": "shell",
+          "id": "briefa-p3-p6",
+          "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
+          "lane": "engine",
           "phase": "prototype",
           "status": "blocked",
           "order": 5,
-          "budget_minutes": 60,
+          "budget_minutes": 390,
           "needs_human": {
             "kind": "ruling",
-            "minutes": 10
+            "minutes": 20
           },
           "evidence": null,
           "dates": {
-            "opened": "2026-09-13",
+            "opened": "2026-09-11",
             "done": null
           },
-          "summary": "a third admission-work lease class (ADR-033), a labelled staleness state, and the refusal threshold's value each wait on the human before they merge"
+          "summary": "held for the human's ruling on the P3 digest (entry 83's question) before the session-identity tier starts"
         },
         {
-          "id": "entry-75-hover-repick-defaults",
-          "title": "Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make",
-          "lane": "shell",
+          "id": "entry-73-polygon-gate-scope",
+          "title": "Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus",
+          "lane": "engine",
           "phase": "prototype",
           "status": "blocked",
-          "order": 7,
-          "budget_minutes": 15,
+          "order": 6,
+          "budget_minutes": 30,
           "needs_human": {
             "kind": "ruling",
-            "minutes": 10
+            "minutes": 15
           },
           "evidence": null,
           "dates": {
             "opened": "2026-09-10",
             "done": null
           },
-          "summary": "pan-settle scope, the resize/DPR disarm behaviour, and whether an unconfirmed mid-gesture state opens all ship at their safe defaults pending the human's word"
+          "summary": "widen the polygon-only reader gate, hold it and record most corpus files as refused-unchanged, or re-scope the corpus"
         },
         {
           "id": "adr-029-operation-lifecycle",
@@ -146,61 +203,42 @@
           "summary": "the named refusal-code surface, the hover readout's column bound, and the panel's client-side type filter wait on the human by B1's close, not before"
         },
         {
-          "id": "briefa-p3-p6",
-          "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
-          "lane": "engine",
+          "id": "entry-91-polish-held-halves",
+          "title": "Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89)",
+          "lane": "shell",
           "phase": "prototype",
           "status": "blocked",
           "order": 5,
-          "budget_minutes": 390,
+          "budget_minutes": 60,
           "needs_human": {
             "kind": "ruling",
-            "minutes": 20
+            "minutes": 6
           },
           "evidence": null,
           "dates": {
-            "opened": "2026-09-11",
+            "opened": "2026-09-13",
             "done": null
           },
-          "summary": "held for the human's ruling on the P3 digest (entry 83's question) before the session-identity tier starts"
+          "summary": "Entry 91 (b) and (c) still held: entry 88 as a labelled stale state (reopening 75 (3)) and entry 89's threshold value; (a) was ruled on 2026-09-13 (question set 1)"
         },
         {
-          "id": "entry-73-polygon-gate-scope",
-          "title": "Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus",
-          "lane": "engine",
+          "id": "entry-75-hover-repick-defaults",
+          "title": "Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make",
+          "lane": "shell",
           "phase": "prototype",
           "status": "blocked",
-          "order": 6,
-          "budget_minutes": 30,
+          "order": 7,
+          "budget_minutes": 15,
           "needs_human": {
             "kind": "ruling",
-            "minutes": 15
+            "minutes": 10
           },
           "evidence": null,
           "dates": {
             "opened": "2026-09-10",
             "done": null
           },
-          "summary": "widen the polygon-only reader gate, hold it and record most corpus files as refused-unchanged, or re-scope the corpus"
-        },
-        {
-          "id": "drill-clean-clone",
-          "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
-          "lane": "governance",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 3,
-          "budget_minutes": 60,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": null,
-            "done": null
-          },
-          "summary": "needs disk the machine does not have today; waits on the human's word about reclaiming a build cache"
+          "summary": "pan-settle scope, the resize/DPR disarm behaviour, and whether an unconfirmed mid-gesture state opens all ship at their safe defaults pending the human's word"
         },
         {
           "id": "entry-69-runtime-dependency",
@@ -305,96 +343,30 @@
       "blocked_by": [
         "briefa-p3-p6"
       ]
-    },
-    {
-      "id": "evidence-archive-v0-1-0",
-      "title": "First application of the evidence archive — attach v0.1.0's evidence to its release",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 9,
-      "budget_minutes": 15,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 5
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "attaching to an already-published release changes that release page, so the first application is the human's click",
-      "blocked_by": [
-        "autonomy-work-system"
-      ]
-    },
-    {
-      "id": "release-artifacts-from-ci",
-      "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 10,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built",
-      "blocked_by": [
-        "autonomy-work-system"
-      ]
     }
   ],
   "in_progress": [
     {
-      "id": "polish-87-88-89",
-      "title": "Filter-and-hover polish (entries 87, 88, 89)",
-      "lane": "shell",
+      "id": "polish-engine-lease-class",
+      "title": "Entry 87's engine half — a declared lease class for per-request admission work (ADR-033)",
+      "lane": "engine",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 4,
+      "order": 1,
       "budget_minutes": 240,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "branch": "polish/filter-and-hover"
+        "branch": "polish/engine-lease-class"
       },
       "dates": {
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "the unconditional parts (refusal logging, bounded requeue, cursor shape, the FIND' assertion) are built; the three ruled halves wait",
-      "evidence_label": "branch `polish/filter-and-hover`"
-    },
-    {
-      "id": "autonomy-work-system",
-      "title": "The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 480,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "governance/autonomy"
-      },
-      "dates": {
-        "opened": "2026-09-13",
-        "done": null
-      },
-      "summary": "AUTONOMY.md is written and this file is its first seeded artifact; the queue, hook and site tooling remain to be built",
-      "evidence_label": "branch `governance/autonomy`"
+      "summary": "The human's ruling of 2026-09-13 (question set 1, Q3): the third lease class, the two tests, FIND′ green as the acceptance evidence, ADR-033's text per the three conditions; ADR-033 accepted on the human's word after its gate",
+      "evidence_label": "branch `polish/engine-lease-class`"
     }
   ],
   "proposed": [

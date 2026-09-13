@@ -1,37 +1,35 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3897cd1843d1530135ebf72f1b45ff672067984f071923f207242d077f9e7687`) at `2026-09-13T21:50:22.620Z`.
-
-**Seeded, pending approval.** Lane priorities below are the seeded order from the directive; they have not yet been approved by the human (AUTONOMY.md §2, §4 — the first AskUserQuestion).
+Generated from `PLAN.yaml` (sha256 `ef41a8006cf84907f0c695e0c9eb362966943661d543c54d9de0a6066395813d`) at `2026-09-13T22:04:34.213Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 (lane `release`)
 
 ## 2. Ready
 
-- (none)
+- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 (lane `release`, order 10, budget 90 min)
+- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
-## 3. Waiting on the human (total: 163 min)
+## 3. Waiting on the human (total: 156 min)
 
 ### click
 
+- **evidence-archive-v0-1-0** — First application of the evidence archive — attach v0.1.0's evidence to its release (5 min)
 - **entry-78-repo-description** — Entry 78 — repository description and topics (5 min)
 
 ### sight
 
-- **entry-86-known-limitations-rewrite** — Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands (3 min)
 - **m13-bracketed-values** — Part M row M13's two bracketed values (5 min)
 
 ### ruling
 
-- **entry-91-polish-held-halves** — Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89) (10 min)
-- **entry-75-hover-repick-defaults** — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make (10 min)
-- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (10 min)
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (15 min)
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (20 min)
 - **entry-73-polygon-gate-scope** — Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus (15 min)
-- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (5 min)
+- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (10 min)
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (15 min)
+- **entry-91-polish-held-halves** — Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89) (6 min)
+- **entry-75-hover-repick-defaults** — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make (10 min)
 - **entry-69-runtime-dependency** — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default (5 min)
 - **entry-90-static-crt-v0-1-1** — Entry 90 — static CRT as the v0.1.1 build piece (5 min)
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer (10 min)
@@ -43,13 +41,10 @@ Generated from `PLAN.yaml` (sha256 `3897cd1843d1530135ebf72f1b45ff672067984f0719
 ## 4. Blocked on dependencies
 
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
-- **evidence-archive-v0-1-0** — First application of the evidence archive — attach v0.1.0's evidence to its release — blocked by: autonomy-work-system
-- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — blocked by: autonomy-work-system
 
 ## 5. In progress
 
-- **polish-87-88-89** — Filter-and-hover polish (entries 87, 88, 89) — evidence: branch `polish/filter-and-hover`
-- **autonomy-work-system** — The autonomous work system itself — plan-as-data, queue, Stop hook, rulings, landing page — evidence: branch `governance/autonomy`
+- **polish-engine-lease-class** — Entry 87's engine half — a declared lease class for per-request admission work (ADR-033) — evidence: branch `polish/engine-lease-class`
 
 ## 6. Proposed / unscheduled
 
