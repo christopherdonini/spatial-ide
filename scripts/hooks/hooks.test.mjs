@@ -398,8 +398,7 @@ tip: ${fakeHead}
   );
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
-    if (args[0] === 'status') return '?? RELEASE-DRAFTS-0.1.0/
-?? scratch.txt';
+    if (args[0] === 'status') return '?? RELEASE-DRAFTS-0.1.0/\n?? scratch.txt';
     if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
     if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
     return null;

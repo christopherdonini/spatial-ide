@@ -128,8 +128,7 @@ export function checkFreshness(projectRoot, { now = new Date(), git = (args) => 
   if (status === null) return { fresh: false, reason: 'git status --porcelain failed' };
   // Only TRACKED changes make the tree dirty for this purpose: untracked paths (porcelain `??`,
   // e.g. the drafts directory kept out of the repository by design) never block a compaction.
-  const dirtyTracked = status.split(/?
-/).filter((l) => l.trim() !== '' && !l.startsWith('??'));
+  const dirtyTracked = status.split(/\r?\n/).filter((l) => l.trim() !== '' && !l.startsWith('??'));
   if (dirtyTracked.length > 0) {
     return { fresh: false, reason: 'git status --porcelain shows a modified tracked file' };
   }
