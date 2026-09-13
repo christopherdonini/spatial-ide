@@ -12,7 +12,13 @@ What follows is what exists today.)*
 Every statement below about the installed application was written after the operator ran it: the
 build this release ships, installed on a clean Windows account and walked through step by step, as
 `frontends/shell/MANUAL-WALKTHROUGH.md` Part M records it and `RELEASE-0.1.md` Amendments 15–18 keep
-the operator's own words. Everything else can be checked against a file in this repository.
+the operator's own words. Two builds, precisely: the walkthrough rows whose code paths this build
+changed were re-run on it (install and first open, the filter and status rows, the hover row, the
+packaged-executable origin check), and the rows it did not touch — style, the publish and audit
+rows, the bundle viewer, the development-build origin rows, the deliberate-refusal row — stand from
+the candidate build they were run on, with `git diff --stat 998be05 13471a9` as the proof that
+nothing under their paths changed (Amendments 17 and 18). Everything else can be checked against a
+file in this repository.
 
 ## What v0.1.0 is
 
@@ -46,9 +52,9 @@ already present on the machine the walkthrough ran on.
 
 ## First five minutes
 
-[`QUICKSTART.md`](QUICKSTART.md): what your GeoParquet needs (a declared coordinate reference system
-the catalog admits, and an identity column), what the app says when it refuses a file, and the slice
-end to end.
+[`QUICKSTART.md`](QUICKSTART.md): what your GeoParquet needs (a declared CRS whose definition
+establishes an easting-first axis order, and an identity column), what the app says when it refuses
+a file, and the slice end to end.
 
 ## What this repository is
 

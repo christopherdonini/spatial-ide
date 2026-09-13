@@ -3,7 +3,11 @@
 *What this release does not do, declared rather than discovered. Every line below is true of the
 artifact that carries the v0.1.0 tag — the installer built from this branch, walked through by the
 operator on a clean Windows account (`frontends/shell/MANUAL-WALKTHROUGH.md` Part M; the sittings are
-recorded verbatim in `RELEASE-0.1.md` Amendments 15–18). Each line carries its source in an HTML
+recorded verbatim in `RELEASE-0.1.md` Amendments 15–18). Part M was run across two builds: the rows
+whose code paths this build changed (M1–M5, M7, M12 mode 3, M14, M15 and the hover row) were re-run
+on it; the rows it did not touch (M6, M8, M9, M10, M11, M12 modes 1–2, M13) stand from the candidate
+build `998be05`, with `git diff --stat 998be05 13471a9` as the proof that nothing under their paths
+changed — the classification and that diff are Amendment 17's. Each line carries its source in an HTML
 comment so it can be checked. No line here states a speed, a duration or a rate: this release makes
 no performance claim at all (`docs/08_Testing.md`).*
 
@@ -37,7 +41,7 @@ no performance claim at all (`docs/08_Testing.md`).*
      public GeoParquet declares — is refused for exactly this reason, by decision and not by
      accident. A declaration that establishes no axis order at all — a definition with no coordinate
      system — is refused too, as `engine.axis_order_unestablished`.
-     <!-- engine/src/dataset.rs:303-306 (the gate); engine/src/error.rs:213-216 (the message); engine/src/crs.rs:230-233 and MANUAL-WALKTHROUGH.md NODEF' (axis_order_unestablished); MANUAL-WALKTHROUGH.md I3 (the message verbatim, "refused, not reinterpreted"); ADR-015 §5 -->
+     <!-- engine/src/dataset.rs:303-306 (the gate); engine/src/error.rs:213-216 (the message); engine/src/geoparquet.rs:101 (the file-declared CRS's own axis order is read here) with :164, :169, :185 (the three axis_order_unestablished refusals: no `coordinate_system.axis`, fewer than two axes, directions that are not a planar east/north pair); MANUAL-WALKTHROUGH.md NODEF'; MANUAL-WALKTHROUGH.md I3 (the message verbatim, "refused, not reinterpreted"); ADR-015 §5 -->
 
 3. **Identity must already exist in the file, as a single integer column.** The app uses the file's
    own `id` column, or one column you declare a mapping from, and scans it for uniqueness at open.
@@ -94,7 +98,7 @@ no performance claim at all (`docs/08_Testing.md`).*
    types; this slice reads polygons only"*), as is any encoding other than WKB (*"geometry encoding is
    `…`; this slice reads WKB-encoded GeoParquet only"*). A file whose `geo` metadata declares no
    `covering.bbox` is refused when the view is queried, because there is nothing to index with.
-   <!-- engine/src/dataset.rs:275-281 (polygon gate), :269-272 (encoding gate), :439-440 and :548-550 (NoCoveringBbox) -->
+   <!-- engine/src/dataset.rs:275-281 (polygon gate), :269-272 (encoding gate); engine/src/stream.rs:1185-1187 (NoCoveringBbox, raised on the bbox branch of the view query itself) -->
 
 10. **One file per session, and nothing is remembered.** The app holds a single admitted dataset;
     opening another replaces it, and there is no layer list. Nothing persists across a session: no

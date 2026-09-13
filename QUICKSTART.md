@@ -34,8 +34,9 @@ honestly. Two requirements will meet most first-time users:
   **assert** one — a panel titled *"Pick a pinned definition"* (the catalog) or *"Or paste a
   definition"* (a full PROJJSON document, verbatim). It never guesses, never applies a default, and
   never fetches a definition from the network (ADR-026). Admission also needs WKB-encoded polygon
-  geometry, and the `geo` metadata must carry a `covering.bbox` — without one the view cannot be
-  queried. Each refusal is typed and names what is missing.
+  geometry. Separately, the `geo` metadata must carry a `covering.bbox`: without one the file may
+  open, but the view cannot be queried, and that is refused too. Each refusal is typed and names
+  what is missing.
 - **An identity column.** Every feature needs a stable, per-row identity; by default the app looks for
   an integer column named `id`. If none is usable it refuses with `engine.identity_unusable` and lets
   you declare which column carries identity. Composite and non-integer keys are not supported in
@@ -55,8 +56,8 @@ the top right of the canvas.
 Pan and zoom. Hover a feature and the readout reads `id <value>`; zoom out past the point where
 features are smaller than the pick can resolve and it is replaced, never blanked, by *"Features here
 are below pick resolution — zoom in to inspect them."* The readout survives a zoom-out with the
-pointer held still, and it clears and comes back at each camera change while you are zooming (Part M,
-the hover row).
+pointer held still, and it clears and comes back at each camera change while you are zooming (the
+hover row Part M re-ran on this build — Part L's L7 and L8).
 
 A status line above the canvas says what is drawn. Within the render budget it reads *"Showing all
 `<N>` features in view"*; past it, *"Showing `<N>` features — the farthest areas of this view are
@@ -82,8 +83,9 @@ build: the panel echoed it on an `Applied:` line, the canvas redrew to the match
 ## 5. Style
 
 Styling in v0.1.0 is **by literal**: the style panel offers **Fill colour**, **Fill opacity**,
-**Outline colour** and **Outline width** for the layer, and a **Reset**. There is no "colour by
-attribute" in the shell yet — that is a named limit (ADR-023; `KNOWN-LIMITATIONS.md`, entry 4). An
+**Outline colour** and **Outline width** for the layer, and a **Reset to default** button. There is
+no "colour by attribute" in the shell yet — that is a named limit (ADR-023;
+`KNOWN-LIMITATIONS.md`, entry 4). An
 edit re-renders what is already resident; nothing round-trips through the kernel. Part M styled the
 packaged build this way (M6), and the bundle it then published rendered in the browser with the same
 fill, opacity and outline (M11). The style is held in memory only — it is not written to any project
