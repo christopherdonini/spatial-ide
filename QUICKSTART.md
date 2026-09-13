@@ -7,7 +7,7 @@ Part M, rows cited as they are used — and from nothing else.*
 
 ## 1. Install
 
-Download `Spatial IDE_0.1.0_x64-setup.exe` from the v0.1.0 release and run it. It installs for the
+Download the installer from the v0.1.0 release — the release page lists it as `Spatial.IDE_0.1.0_x64-setup.exe` (GitHub shows the filename's space as a dot; the file is `Spatial IDE_0.1.0_x64-setup.exe`) — and run it. It installs for the
 current user only, into `%LOCALAPPDATA%\Spatial IDE`, and needs no administrator rights — Part M
 installed it that way on a clean Windows account (M1), and the app then opened with the title
 **Spatial IDE**, no console and no crash dialog (M2). The installer is **not code-signed**

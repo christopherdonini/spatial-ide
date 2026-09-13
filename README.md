@@ -36,7 +36,7 @@ without a measurement against its own budgets (`docs/08_Testing.md`), and none i
 
 ## Install
 
-Windows, x64. Download `Spatial IDE_0.1.0_x64-setup.exe` from the v0.1.0 release, compare its
+Windows, x64. Download `Spatial IDE_0.1.0_x64-setup.exe` (listed on the release page as `Spatial.IDE_0.1.0_x64-setup.exe` — GitHub shows the space as a dot) from the v0.1.0 release, compare its
 SHA-256 with the one the release page states, and run it. It installs for the current user only,
 into `%LOCALAPPDATA%\Spatial IDE`, and asks for no administrator rights — Part M installed it that
 way on a clean Windows account (M1), and the window opened with the title **Spatial IDE**, no
