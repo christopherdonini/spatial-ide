@@ -154,3 +154,13 @@ app's own filter-admission check and never run. The status then reports those ar
 which is true: any matching features there are not drawn until you pan or zoom in and they are
 queried again. The app cannot know whether those areas are empty.
 <!-- DECISIONS-PENDING entry 87 (diagnosis 2026-09-13: skp.filter_rejected_by_binder refusals discarded in tileViewportStreamManager.ts mintAndStart's catch; the fix is queued post-tag with the suspended FIND' assertion as its test); RELEASE-0.1 Amendment 18; M15; resolved on the human's word of 2026-09-13 -->
+
+16. **In the published bundle's viewer, wheel-zoom anchors on the wrong point unless the browser
+    window happens to size the canvas to its own backing store.** The viewer's canvas is a fixed
+    1280×900 backing store stretched by CSS to fill its pane, and the wheel handler feeds the
+    event's CSS-pixel offsets to an unprojection that measures from the backing store's centre, so
+    the map slides one way as it zooms in and back the other way as it zooms out even when the
+    pointer never moves. The direction depends on whether the window is larger or smaller than that
+    backing store, and the displacement is undone by zooming back out. The same mismatch scales a
+    drag's pan distance and shifts hover picking away from the pointer.
+    <!-- renderer/bundle-viewer/index.html:74 (`<canvas id="map" width="1280" height="900">`) and :26 (`canvas { width: 100%; height: 100% }`); renderer/bundle-viewer/src/main.ts:307-323 (the wheel handler, `unproject(e.offsetX, e.offsetY, ...)`), :298-299 (pan), :325-333 (hover) and :444 (`fitView(bounds, canvas.width, canvas.height)`); renderer/bundle-viewer/src/render.ts:121-124 (`unproject` measures from `view.width/2`, `view.height/2`); DECISIONS-PENDING.md entry 86, reproduced 2026-09-13 (post-tag; retires when the viewer piece lands) -->
