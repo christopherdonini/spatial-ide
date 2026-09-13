@@ -34,6 +34,8 @@ are mechanical and were run, or are re-run, before the human's step that depends
 
 ## 4. The tag (human)
 
+**Release-branch pattern (entry 83, ruled 2026-09-13):** `release/<version>` is branched from the commit the candidate installer was built from; fixes ruled into the release land there through their own preregistrations and gates (never Brief-class engine work); the installer is rebuilt from the branch head (RC2, RC3, …) and hashed; the finalized release docs land on the branch as docs-only commits; the tag points at the branch head; the release body states the build commit and that the tagged tree differs from it by documentation only, with the `git diff --stat <build-commit> <tag>` line as proof; the branch merges back to main after the tag. Nothing merges to main before the tag except docs.
+
 - [ ] Tag message finalized from the draft (`RELEASE-0.1.md`'s last amendment names the draft's location); every sentence verifiable against a file in the tree.
 - [ ] `git tag -a v0.1.0 -F <tag-message-file> <commit>` — annotated, on the intended commit; `git tag -v` is not expected (no signing key is declared for this project; the DCO sign-off is per commit).
 - [ ] `git push origin v0.1.0`.
