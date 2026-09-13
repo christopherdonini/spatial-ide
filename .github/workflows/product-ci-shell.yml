@@ -108,8 +108,18 @@ name: Product CI — shell
 #   | trigger | first green | duration |
 #   |---|---|---|
 #   | `push` | — | — |
-#   | `workflow_dispatch` | — | — |
+#   | `workflow_dispatch` | `34786140667` (`f67ff2c`) | 5m46s |
 #   | `pull_request` | `34190120055` (`34a1896`) | 27m19s |
+#
+#   **`workflow_dispatch` first green (2026-09-14, `chore(ci): release-artifacts-from-ci`'s own
+#   step 4 dry run):** run id `34786140667`, job id `103801857451`, head commit `f67ff2c` (on
+#   `release/ci-artifacts`, this piece's own branch — `workflow_dispatch` has no `tags`/`paths`
+#   filter, so this result does not itself verify the `push`-on-tag trigger added by the same
+#   piece; see that trigger's own comment above), duration 5m46s (22:13:29Z–22:19:15Z, 2026-09-13).
+#   Dispatched with `ref=v0.0.0-dryrun`; the job resolved and printed that as its artifact-naming
+#   tag, uploaded `spatial-ide-v0.0.0-dryrun-x64-setup`, and its own hash step reported
+#   `Spatial IDE_0.1.0_x64-setup.exe`, 10425624 B, SHA-256
+#   `EECE72CB707B1D3390D730B7B0A5572E07A732407C92C9AF400B6191E6142948`.
 
 # ## The release-tag trigger (AUTONOMY.md §11; the human's directive item 11, 2026-09-14, verbatim:
 # "Release artifacts are the tagged commit's CI build, hash-recorded; the dev machine is for headed
