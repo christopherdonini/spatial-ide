@@ -46,6 +46,7 @@ are mechanical and were run, or are re-run, before the human's step that depends
 - [ ] `gh release create v0.1.0 --title "Spatial IDE v0.1.0" --notes-file <release-body-file> "frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe"` — the body from the finalized draft: the installer, its SHA-256, and the `KNOWN-LIMITATIONS.md` link ABOVE THE FOLD (the first three lines); then what v0.1.0 is; then the limits digest; then licences and the corresponding-source route.
 - [ ] After upload: download the asset back and re-hash it — the SHA-256 on the release page equals the file's (`gh release download v0.1.0 --pattern "*.exe" --dir <tmp>` then hash).
 - [ ] The release is NOT marked pre-release or draft unless the human decides so (a decision, queued if unsure).
+- [ ] **The lesson of 2026-09-13 (the human, verbatim): "gh release create leaves a draft when asset upload fails; the release is done only when a logged-out fetch of /releases/tag/<tag> shows the asset."** Run the check logged out (a private window, or `curl` without a token against `https://api.github.com/repos/<owner>/<repo>/releases/tags/<tag>`): `draft` must be `false` and the asset must be listed; then download the asset by its public URL and re-hash it. Not the authenticated `gh release view`, which shows drafts to their owner.
 
 ## 6. After the tag (custodian, mechanical)
 
