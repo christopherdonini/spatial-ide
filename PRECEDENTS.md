@@ -459,7 +459,7 @@ precedent for the custodian."
 **Generalisation:** The custodian may merge a Dependabot patch-level dependency bump when CI is
 green.
 
-**Scope and limits — to be confirmed by the human, not yet exercised:** A dependency change is
+**Scope and limits — CONFIRMED by the human on 2026-09-14 (the verbatim scope follows the paragraph below); not yet exercised:** A dependency change is
 otherwise always the human's (P-011, P-014's neighbour in the Red lines list, and Amendment 1 §B's
 matrix). This ruling's own four words ("a patch-bump precedent for the custodian") do not themselves
 define "patch-level," do not say whether a lockfile-only bump or a manifest bump, and do not say
@@ -468,5 +468,7 @@ narrowest reading consistent with the words ("patch-bump," "for the custodian," 
 merge authority scoped to Dependabot's own patch-level PRs) — it is marked to be confirmed rather
 than treated as settled, and no dependency bump should be merged under it without checking
 `DECISIONS-PENDING.md` for a confirming ruling first.
+
+**Confirmed scope — the human, 2026-09-14 (`DECISIONS-PENDING.md`, RULED 2026-09-14 question set C, C4), verbatim:** *"Patch-level means: a semver patch of a direct dependency, or a lockfile-only bump of a transitive one — a bump that introduces any NEW crate or package into the lockfile is not patch-level and comes to me. CI green is necessary, not sufficient: the licence audit must show no licence change, the notice generator's output must be regenerated and checked, and the lockfile diff must be read for new entries. Dependabot security patches count if they meet the above and merge without waiting; they are announced in the same window's report and flagged; a security fix that is minor or major comes to me immediately via the alert channel. Non-security bumps are batched weekly in one PR. Any crate or package named in a preregistration's pins — measurement instruments, the transport bake-off crate, pinned tooling — is never bumped under this precedent: a dependency bump cannot silently change a measured artifact."*
 
 **Applied to:** None yet.
