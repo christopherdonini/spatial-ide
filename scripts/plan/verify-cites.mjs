@@ -52,6 +52,15 @@
 // existence and bounds, not that line N still says what the citation implies); a citation with the
 // right line count but the wrong file among same-basename siblings; and, by the tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Node's standard library only.
+//
+// RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
+// citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
+// quoted SENTENCE attributed to a document verbatim appears in it (fabricated-quote detection), and
+// its target resolution defaults to the shell's own RESIDENCY-PREREGISTRATION.md section numbering,
+// so it is deliberately shell-scoped and is left intact here, not weakened or generalized (its
+// RESIDENCY default would mis-resolve across the whole tree). verify-cites.mjs is the GENERAL,
+// whole-tree half of "citation integrity": that a `path:line` reference points at a real place.
+// The two are complementary; neither subsumes the other.
 
 import fs from 'node:fs';
 import path from 'node:path';
