@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `137a2833804696f81d15e1438aa7db74ce5c88d53e263bf63211e81ee981325f`) at `2026-09-14T19:37:25.951Z`.
+Generated from `PLAN.yaml` (sha256 `db201ea47e00c84e97ab81e0e8445e20083a3221698acdb521fbfbd8324246cc`) at `2026-09-14T19:50:41.663Z`.
 
 ## 1. Next
 
@@ -10,12 +10,7 @@ Generated from `PLAN.yaml` (sha256 `137a2833804696f81d15e1438aa7db74ce5c88d53e26
 
 - (none)
 
-## 3. Waiting on the human (total: 55 min)
-
-### click
-
-- **evidence-archive-v0-1-0** — First application of the evidence archive — attach v0.1.0's evidence to its release (5 min)
-- **entry-78-repo-description** — Entry 78 — repository description and topics (5 min)
+## 3. Waiting on the human (total: 45 min)
 
 ### sitting
 
@@ -27,7 +22,8 @@ Generated from `PLAN.yaml` (sha256 `137a2833804696f81d15e1438aa7db74ce5c88d53e26
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
-- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — blocked by: adr-029-operation-lifecycle, sitting-4-rows
+- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — blocked by: sitting-4-rows
+- **marker-wording-final** — The confirming marker's final wording — apply the sitting's felt verdict — blocked by: sitting-4-rows
 - **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) — blocked by: sitting-4-rows
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -37,8 +33,7 @@ Generated from `PLAN.yaml` (sha256 `137a2833804696f81d15e1438aa7db74ce5c88d53e26
 
 ## 5. In progress
 
-- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight — evidence: branch `docs/adr-029-decision`
-- **hover-confirming-marker** — Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick — evidence: PR #64
+- (none)
 
 ## 6. Proposed / unscheduled
 

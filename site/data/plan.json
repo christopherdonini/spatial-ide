@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-14T19:37:26.131Z",
-  "plan_hash": "137a2833804696f81d15e1438aa7db74ce5c88d53e263bf63211e81ee981325f",
+  "generated_at": "2026-09-14T19:50:41.816Z",
+  "plan_hash": "db201ea47e00c84e97ab81e0e8445e20083a3221698acdb521fbfbd8324246cc",
   "priorities_approved": true,
   "lanes": [
     {
@@ -785,6 +785,37 @@
       }
     },
     {
+      "id": "marker-wording-final",
+      "title": "The confirming marker's final wording — apply the sitting's felt verdict",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 10,
+      "depends_on": [
+        "sitting-4-rows",
+        "hover-confirming-marker"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 20,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        88,
+        91
+      ],
+      "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR",
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      }
+    },
+    {
       "id": "briefa-p3-p6",
       "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
       "kind": "task",
@@ -848,7 +879,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -857,7 +888,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "docs/adr-029-decision"
+        "pr": 66
       },
       "budget_minutes": 120,
       "generation": 1,
@@ -865,10 +896,10 @@
       "entries": [
         92
       ],
-      "summary": "RULED 2026-09-14 (question set C, C2): the Decision text drafted for the human sight (typed states scanning|finished|unknown; the wire literal by merge order; the liveness string sighted; the standing conditions) -- ported to the ADR, Status Proposed, PR for the click. G1 is its own node adr-029-g1-feasibility",
+      "summary": "RULED 2026-09-14 (C2): the Decision text drafted for the human sight (typed states scanning|finished|unknown; wire literal by merge order; liveness string sighted); ported, Status Proposed; merged PR #66. G1 is node adr-029-g1-feasibility",
       "dates": {
-        "opened": "2026-09-13",
-        "done": null
+        "opened": "2026-09-14",
+        "done": "2026-09-14"
       }
     },
     {
@@ -1001,25 +1032,27 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 2,
       "depends_on": [],
       "needs_human": {
-        "kind": "click",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "path": "RELEASE-DAY-CHECKLIST.md"
+      },
       "budget_minutes": 10,
       "generation": 1,
       "felt_verdict": false,
       "entries": [
         78
       ],
-      "summary": "the drafted description and topics are ready-to-run gh commands the human applies themselves",
+      "summary": "Done 2026-09-14: the human ran gh repo edit -- description A (321 chars) and the fourteen verified topics; RELEASE-DAY-CHECKLIST s2 boxes checked",
       "dates": {
         "opened": null,
-        "done": null
+        "done": "2026-09-14"
       }
     },
     {
@@ -1229,25 +1262,27 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 9,
       "depends_on": [
         "autonomy-work-system"
       ],
       "needs_human": {
-        "kind": "click",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "path": "RELEASE-0.1.md"
+      },
       "budget_minutes": 15,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-14 (question set A, A3): the custodian prepares and verifies the archive; the upload is the human click (a published release page changes)",
+      "summary": "Done 2026-09-14 (RULED A3): the custodian built and verified the archive (81,993,512 B, SHA-256 56660e95...e6186a, 409 files at or before the tag); the human attached it to the v0.1.0 release; the citation is RELEASE-0.1.md Amendment 20",
       "dates": {
         "opened": null,
-        "done": null
+        "done": "2026-09-14"
       }
     },
     {
@@ -1313,7 +1348,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 9,
       "depends_on": [],
       "needs_human": {
@@ -1332,10 +1367,10 @@
         91,
         75
       ],
-      "summary": "RULED 2026-09-14 (question set B, B1) — the labelled confirming state; both gates PASS, the K6 re-run green (POLISH s4.4(4) discharged); PR #64 for the human. The marker WORDING is a placeholder the sitting fixes; entry 89 9 px is on the same PR",
+      "summary": "RULED 2026-09-14 (B1): the labelled confirming state + entry 89 9 px threshold; both gates PASS, the K6 re-run green; merged PR #64. The marker WORDING is a placeholder -- the sitting fixes it (node marker-wording-final)",
       "dates": {
         "opened": "2026-09-14",
-        "done": null
+        "done": "2026-09-14"
       }
     },
     {

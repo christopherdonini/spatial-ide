@@ -1,52 +1,13 @@
 {
-  "generated_at": "2026-09-14T19:37:25.951Z",
-  "plan_hash": "137a2833804696f81d15e1438aa7db74ce5c88d53e263bf63211e81ee981325f",
+  "generated_at": "2026-09-14T19:50:41.663Z",
+  "plan_hash": "db201ea47e00c84e97ab81e0e8445e20083a3221698acdb521fbfbd8324246cc",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 55,
+    "total_minutes": 45,
     "by_kind": {
-      "click": [
-        {
-          "id": "evidence-archive-v0-1-0",
-          "title": "First application of the evidence archive — attach v0.1.0's evidence to its release",
-          "lane": "release",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 9,
-          "budget_minutes": 15,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": null,
-            "done": null
-          },
-          "summary": "RULED 2026-09-14 (question set A, A3): the custodian prepares and verifies the archive; the upload is the human click (a published release page changes)"
-        },
-        {
-          "id": "entry-78-repo-description",
-          "title": "Entry 78 — repository description and topics",
-          "lane": "governance",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 2,
-          "budget_minutes": 10,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": null,
-            "done": null
-          },
-          "summary": "the drafted description and topics are ready-to-run gh commands the human applies themselves"
-        }
-      ],
+      "click": [],
       "sight": [],
       "ruling": [],
       "sitting": [
@@ -180,7 +141,28 @@
       },
       "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
       "blocked_by": [
-        "adr-029-operation-lifecycle",
+        "sitting-4-rows"
+      ]
+    },
+    {
+      "id": "marker-wording-final",
+      "title": "The confirming marker's final wording — apply the sitting's felt verdict",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 10,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR",
+      "blocked_by": [
         "sitting-4-rows"
       ]
     },
@@ -317,52 +299,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "adr-029-operation-lifecycle",
-      "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "docs/adr-029-decision"
-      },
-      "dates": {
-        "opened": "2026-09-13",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C2): the Decision text drafted for the human sight (typed states scanning|finished|unknown; the wire literal by merge order; the liveness string sighted; the standing conditions) -- ported to the ADR, Status Proposed, PR for the click. G1 is its own node adr-029-g1-feasibility",
-      "evidence_label": "branch `docs/adr-029-decision`"
-    },
-    {
-      "id": "hover-confirming-marker",
-      "title": "Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 9,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 64
-      },
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set B, B1) — the labelled confirming state; both gates PASS, the K6 re-run green (POLISH s4.4(4) discharged); PR #64 for the human. The marker WORDING is a placeholder the sitting fixes; entry 89 9 px is on the same PR",
-      "evidence_label": "PR #64"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "release-v0-1-1",
