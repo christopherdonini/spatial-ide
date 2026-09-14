@@ -80,3 +80,25 @@ The piece is wrong if any of these is observed: a bare id rendered between a cam
 2. **The K6 (ii) E2E contract change** — preregistered in `POLISH-87-88-89-PREREGISTRATION.md` §3.3, not built or run here (§7).
 3. **`HOVER_REPICK_ON_PAN`'s value** — ruled (B3 (1)) and kept as built; the sitting's flip rule is the human's.
 4. **Whether the labelled state should be suppressed under the zoom-only switch value** — M5 declares the marked-then-cleared behaviour instead; unbuilt alternatives are not attempted here.
+
+---
+
+## Results (appended 2026-09-14, AFTER the code and the runs; records facts, decides nothing)
+
+**Suites, in this worktree's `frontends/shell`.** `npm test` (its `pretest` build ran): `Test Files 67 passed (67)` · `Tests 977 passed (977)`, exit **0**. `npm run typecheck` (`tsc --noEmit`), exit **0**. No E2E and no harness run by this piece (§7); `HOVER_REPICK_SETTLE_MS`, `HOVER_REPICK_ON_PAN` and every timing figure are untouched.
+
+**Mutation record — one per new test, applied, observed to fail BY NAME, reverted.** Each line: the mutation · the named test that failed · other named tests that also failed under it.
+
+1. §6 (1) — the marker `<span>` deleted from `HoverReadoutView.tsx`'s confirming branch · *"the labelled state cannot render without the marker"* · no others.
+2. §6 (2) — `PickConfirming` given an `id` field and `confirmingReadout` made to copy the standing id into it · *"the bare id is never rendered for a labelled state -- the type carries no id of its own"* · plus `tsc` itself: `src/canvas/HoverReadoutView.test.tsx(96,5): error TS2578: Unused '@ts-expect-error' directive.` — the type-level half.
+3. §6 (3) — the mid-gesture decision returns `standing` (the bare id) instead of the labelled state · *"a camera change over a standing id produces the labelled state, never a bare id or a clear"* · also *"(b) standing feature id + zoom stays above the threshold …"*.
+4. §6 (4) — the mid-gesture decision returns `null` for a standing labelled state instead of `undefined` · *"only a re-pick result removes it"* · no others.
+5. §6 (5) — the at-settle decision returns the standing labelled state instead of the pick outcome · *"confirm drops the marker and keeps the id"* · also (6) and (7).
+6. §6 (6) — the at-settle decision returns the STANDING id (`standing.standing`) instead of the pick outcome, the retained-id defect · *"a different feature replaces the readout"* · also (7).
+7. §6 (7) — the at-settle decision returns `pickOutcome ?? standing`, so a re-pick that resolved nothing leaves the marker up · *"none or below-threshold becomes the refusal or clears"* · no others.
+8. §6 (8) — `clearLabelledStateWithoutRepick` returns `undefined` for a labelled state too · *"the disarm case: a settle that runs no re-pick clears a standing labelled state"* · also (9).
+9. §6 (9) — the settle seam's no-re-pick branch drops its `emit` · *"a resize or DPR change between capture and settle clears the standing labelled state and still runs no pick"* · no others.
+
+**Recorded beside this piece: entry 89's held half** (DECISIONS-PENDING question set B, B2 — the threshold sighted at 9 px), preregistered not here but in `POLISH-87-88-89-PREREGISTRATION.md` §4.2/§4.4 and built on this branch as its own commit. Its two mutations, same discipline: the constant silently returned to `2` · *"the declared value is the one the human sighted: 9 px"* (also the sitting-row case); the comparison weakened from `<` to `<=` · *"the sitting row's three feature sizes: ~5 px refused, ~9 px and ~15 px answered"* (also *"exactly at the threshold is NOT below it — a strict less-than comparison"*).
+
+**Not done, noticed:** `POLISH-87-88-89-PREREGISTRATION.md` §3.3's K6 (ii) E2E contract change is still owed — `e2e/regression.mjs`'s `hoverReadoutId` reads `.hover-readout`'s text and would read a marked readout's `id <n> · confirming…` as a confirmed id. The structural hook it needs exists: the container's `.hover-readout-confirming` class, and the marker's own `.hover-readout-confirming-marker` element, read exactly the way `belowResolution` is already read at `regression.mjs:1246`. No E2E file was edited and no harness was run by this piece (§7).
