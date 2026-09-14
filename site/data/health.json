@@ -1,106 +1,49 @@
 {
-  "generated_at": "2026-09-13T23:50:03.929Z",
+  "generated_at": "2026-09-14T21:47:31.292Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
     "failures": []
   },
   "disk_free": {
-    "bytes": 25123983360,
-    "drive": "C"
+    "drives": [
+      {
+        "drive": "C",
+        "bytes": 65348927488,
+        "total": 510319915008
+      },
+      {
+        "drive": "D",
+        "bytes": 107320893440,
+        "total": 500090007552
+      }
+    ]
   },
   "stray_processes": {
-    "total": 2,
+    "total": 3,
     "by_name": {
       "cargo": 0,
-      "node": 2,
+      "node": 3,
       "spatial-ide-shell": 0
     }
   },
   "waiting_on_human": [
     {
-      "id": "briefa-p3-p6",
-      "kind": "ruling",
-      "minutes": 20,
-      "opened": "2026-09-11",
-      "age_days": 2
-    },
-    {
-      "id": "entry-73-polygon-gate-scope",
-      "kind": "ruling",
-      "minutes": 15,
-      "opened": "2026-09-10",
-      "age_days": 3
-    },
-    {
-      "id": "adr-029-operation-lifecycle",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-13",
-      "age_days": 0
-    },
-    {
-      "id": "entry-91-polish-held-halves",
-      "kind": "ruling",
-      "minutes": 6,
-      "opened": "2026-09-13",
-      "age_days": 0
-    },
-    {
-      "id": "entry-75-hover-repick-defaults",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-10",
-      "age_days": 3
-    },
-    {
       "id": "sitting-4-rows",
       "kind": "sitting",
       "minutes": 45,
-      "opened": null,
-      "age_days": null
-    },
-    {
-      "id": "entry-69-runtime-dependency",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-09",
-      "age_days": 4
-    },
-    {
-      "id": "entry-90-static-crt-v0-1-1",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-13",
+      "opened": "2026-09-14",
       "age_days": 0
-    },
-    {
-      "id": "entry-77-code-signing",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-13",
-      "age_days": 0
-    },
-    {
-      "id": "m13-bracketed-values",
-      "kind": "sight",
-      "minutes": 5,
-      "opened": "2026-09-13",
-      "age_days": 0
-    },
-    {
-      "id": "evidence-archive-v0-1-0",
-      "kind": "click",
-      "minutes": 5,
-      "opened": null,
-      "age_days": null
-    },
-    {
-      "id": "entry-78-repo-description",
-      "kind": "click",
-      "minutes": 5,
-      "opened": null,
-      "age_days": null
     }
-  ]
+  ],
+  "median_opened_to_done": {
+    "days": 0,
+    "n": 25
+  },
+  "gate_first_pass": {
+    "present": true,
+    "nodes": 0,
+    "first_pass": 0,
+    "rate": null
+  }
 }

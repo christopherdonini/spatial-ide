@@ -124,16 +124,50 @@ numbers except those carrying a docs/08 measurement" (§5).
 
 `node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>]` writes `site/data/health.json`
 — machine facts only, and the file says so (`source: "the custodian's machine"`): drift (`verify.mjs`
-run in `--offline` mode, per §5's own wording), disk free (`(Get-PSDrive C).Free` via PowerShell on
-Windows, `df` elsewhere), stray process counts (`cargo`/`node`/`spatial-ide-shell`, by name only —
-**this never kills anything**), and waiting-on-human ages (computed from each node's own
+run in `--offline` mode, per §5's own wording), disk free (**both drives** — `(Get-PSDrive C).Free`
+and `(Get-PSDrive D).Free` with total `.Used + .Free`, via PowerShell on Windows; D: is omitted, not
+an error, on a machine without it; `df` for the repo filesystem elsewhere. Shape: `disk_free:
+{drives: [{drive, bytes, total}, ...]}` on Windows, `{raw}` on `df`. The human, 2026-09-14: "the
+health strip reports both drives"), stray process counts (`cargo`/`node`/`spatial-ide-shell`, by
+name only — **this never kills anything**), and waiting-on-human ages (computed from each node's own
 `dates.opened`). Always timestamped (`generated_at`).
+
+Two governance metrics (the human, 2026-09-14: "median ready→done hours and gate first-pass rate")
+— operational counts, **not** docs/08 product perf, and labelled as such:
+
+- `median_opened_to_done: {days, n}` (`medianOpenedToDone(plan)`, pure): the median of
+  (`dates.done` − `dates.opened`) over `done` nodes that carry both. The plan records **dates, not
+  timestamps**, so this is at **day resolution** and is labelled "median opened→done (day
+  resolution, N nodes)" — it is deliberately **not** stored as, or called, "hours": the plan has no
+  finer source and inventing one would be a fabricated number. `days` is `null` when nothing
+  qualifies.
+- `gate_first_pass: {present, nodes, first_pass, rate}` (`gateFirstPassRate(log)`, pure): reads
+  `state/gate-log.json` (below). For each node, its **first recorded gate attempt** across all its
+  gates (earliest by date, then attempt, then log order) decides; rate = passed-first / nodes-with-
+  any-record, always reported **with the N**. Absent file → `{present: false}` → the strip says "no
+  gate log yet"; a present-but-empty log → "no gate records yet".
 
 It runs **no `gh` command and makes no network call**, and it has no `--offline` flag any more:
 CI on main, open PRs and the latest release are build-time facts, read from GitHub's API inside the
 Pages build by `buildHealth.mjs` (the human, 2026-09-14: "read GitHub's API at Pages build time,
 not `gh` on the dev machine"). The strip renders the two sources as two labelled groups, each with
 its own timestamp; no row mixes them.
+
+### `state/gate-log.json` — the tracked gate history
+
+The plan carries no gate history, so the gate first-pass metric reads a tiny tracked file the
+custodian **appends to after each gate**: a JSON array of entries, one per gate attempt:
+
+```json
+[
+  {"node": "<node-id>", "gate": "<gate path or name>", "attempt": 1, "verdict": "PASS", "date": "2026-09-14"}
+]
+```
+
+`verdict` is `"PASS"` or `"FAIL"`; `attempt` counts from 1 for that node+gate; `date` is a plain
+`YYYY-MM-DD`. It is committed (plain text, diffable — a JSON array cannot carry a top-of-file
+comment, hence this note). It ships seeded as `[]`. `health.mjs`'s `readGateLog` treats an absent
+file as "no gate log yet" and a corrupt file as empty (degrade, never throw).
 
 ## `buildHealth.mjs` — the health strip's **build-time** facts (§5, §15)
 

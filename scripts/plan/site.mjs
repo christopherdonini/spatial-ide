@@ -289,15 +289,47 @@ function renderWaitingOnYou(waitingOnHuman) {
   </section>`;
 }
 
+function gb(bytes) {
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+}
+
 function formatDiskFree(disk) {
   if (!disk) return 'unknown';
   if (disk.error) return `error: ${disk.error}`;
+  // New shape: one entry per present drive (C:, and D: when the machine has it). "C: N GB, D: M GB".
+  if (Array.isArray(disk.drives)) {
+    const parts = disk.drives
+      .filter((d) => d && typeof d.bytes === 'number')
+      .map((d) => `${d.drive}: ${gb(d.bytes)}`);
+    return parts.length > 0 ? parts.join(', ') : 'unknown';
+  }
+  // Back-compat: the earlier single-drive shape.
   if (typeof disk.bytes === 'number') {
-    const gb = disk.bytes / 1024 ** 3;
-    return `${gb.toFixed(1)} GB free${disk.drive ? ` (drive ${disk.drive})` : ''}`;
+    return `${gb(disk.bytes)} free${disk.drive ? ` (drive ${disk.drive})` : ''}`;
   }
   if (disk.raw) return disk.raw.split(/\r?\n/)[0]; // first line only -- `df` output can be wide
   return 'unknown';
+}
+
+/**
+ * Median opened->done, labelled at the resolution it actually has: the plan carries dates, so this
+ * is days, and the row says so. Never claims hours.
+ */
+function formatMedianOpenedToDone(m) {
+  if (!m || typeof m.days !== 'number') return 'no dated done nodes yet';
+  const unit = m.days === 1 ? 'day' : 'days';
+  return `${m.days} ${unit} (day resolution, ${m.n} node${m.n === 1 ? '' : 's'})`;
+}
+
+/**
+ * Gate first-pass rate, an operational governance count (not a docs/08 perf number): the fraction
+ * of nodes whose first recorded gate attempt passed, with the N. Absent log -> "no gate log yet".
+ */
+function formatGateFirstPass(g) {
+  if (!g || g.present === false) return 'no gate log yet';
+  if (!g.nodes) return 'no gate records yet';
+  const pct = Math.round((g.rate ?? 0) * 100);
+  return `${g.first_pass}/${g.nodes} nodes passed first gate (${pct}%)`;
 }
 
 function formatStrayProcesses(stray) {
@@ -415,6 +447,8 @@ function renderHealthStrip(health, buildHealth, byId) {
         ['Disk free', esc(formatDiskFree(health.disk_free))],
         ['Stray processes', esc(formatStrayProcesses(health.stray_processes))],
         ['Waiting on human', waitingOnHumanValueHtml(health.waiting_on_human, byId)],
+        ['Median opened→done', esc(formatMedianOpenedToDone(health.median_opened_to_done))],
+        ['Gate first-pass', esc(formatGateFirstPass(health.gate_first_pass))],
       ])
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
