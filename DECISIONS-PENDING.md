@@ -5,6 +5,15 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**FELT VERDICTS 2026-09-14 — sitting (human-present, dev app @ 74465c0; the human's words verbatim; sitting-4-rows stays open — the human closes a felt-verdict node, and Rows 4 and 6 remain):**
+
+- *Row 1 — K7, entry 66 (b):* **"Row 1 is fine"** — PASS.
+- *Row 2 — L7/L8, entry 47:* **"Row 2 feels so much better now, it's almost perfect !"** — PASS.
+- *Row 3 — M14/M15, entries 85 and 84/87 (and entry 87's settled sentence):* **"Row 3 is finally perfect !"** — PASS.
+- *Row 5 — entry 89 (the cursor):* **"R5 is good"** — PASS.
+- *Row 4 — entry 86:* NOT RUN — **"R4 I don't knwo, I couldn't open published design, the serve start but in 100k-happy-path-whole-dataset it is saying 'not found'"** — a publish/serve issue (most likely the `target/` move in progress), not the anchor verdict; re-run after the migration.
+- *Rows 6 (a)/(b)/(c)* (the 9 px felt verdict on entry 91 (c), the pan feel on entry 75 (1), the confirming-marker wording on entry 88 / 91 (b)) remain — the app closed for the migration before them.
+
 **RULED 2026-09-14 — Brief A P3 release and entry 90 (AskUserQuestion; the human's answers verbatim):**
 
 - *Brief A P3 (entry 83; node `briefa-p3-p6`):* **"Sight done on the preregistration and the ADR drafts (via Fable's digest of §2, §3, §5, §7, §12d — the settled boundaries are mirrored, prediction 4 registers the same-size mutation as undetected, no snapshot claim, no hash on the open path). P3 released to start on a branch under the reviewer + architect gate, build sequenced after tonight's sitting. Acceptances remain mine at P6."** Applied: `briefa-p3-p6` no longer waits on the human — P3 (the session-identity tier) is released to a branch under its reviewer + architect gate; the cargo-heavy build is sequenced after the sitting (the node depends on `sitting-4-rows` for the machine window); P4 (corpus run) and P5 (tests) follow as worker/tester phases; **P6's ADR acceptances remain the human's**, at the sitting.

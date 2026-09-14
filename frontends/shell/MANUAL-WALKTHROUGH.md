@@ -1329,3 +1329,18 @@ so); record the build they actually ran on. Result log, verbatim when they are r
 - **M17 (the "confirming…" marker through a camera change; the wording verdict):**
 - **M18 (a) (the cursor, hovering and dragging):**
 - **M18 (b) (the readout at roughly 5, 9 and 15 px, verbatim; the felt verdict on the onset):**
+
+
+### Sitting — 2026-09-14 (human-present at the machine; dev app from `main` @ 74465c0)
+
+Interrupted mid-sitting by the D: drive migration — the app closed during a robocopy pass. Rows 1–3 and 5 given; Row 4 blocked on a publish/serve issue; Row 6 not yet run.
+
+- **Date run:** 2026-09-14 (human-present).
+- **Run by:** the human.
+- **Build/commit:** dev app (`npm run e2e:debug`), `main` @ 74465c0 — **not** the installed artifact; the confirming-marker state and the 9 px threshold are on this build (PR #64).
+- **Row 1 — K7 (entry 66 (b), geometric protection at every zoom):** the human, verbatim: *"Row 1 is fine"*. **PASS.**
+- **Row 2 — L7/L8 (entry 47, hover re-pick on camera settle):** verbatim: *"Row 2 feels so much better now, it's almost perfect !"*. **PASS.**
+- **Row 3 — M14/M15 (entries 85, 84/87, Zoom-to-layer and the settled status under a filter; discharges M16 = entry 87's settled sentence):** verbatim: *"Row 3 is finally perfect !"*. **PASS.**
+- **Row 4 — entry 86 (the bundle viewer's zoom anchored at the pointer):** **NOT RUN** — verbatim: *"R4 I don't knwo, I couldn't open published design, the serve start but in 100k-happy-path-whole-dataset it is saying 'not found'"*. A publish/serve tooling issue (most likely the `target/` move in progress during the migration), **not** a verdict on the zoom anchor; re-run after the migration settles.
+- **Row 5 — M18 (a) (entry 89 cursor, crosshair/grabbing):** verbatim: *"R5 is good"*. **PASS.**
+- **Row 6 — NOT YET RUN** (the app closed for the migration before it): the confirming-marker WORDING sight (M17 / entry 88 / 91 (b)), the 5/9/15 px felt verdict (M18 (b) / entry 91 (c)), and the pan re-pick feel (entry 75 (1)) remain. The sitting continues after the migration.
