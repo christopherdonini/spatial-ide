@@ -373,7 +373,7 @@ fn the_positive_controls_from_the_design_note_all_admit() {
     }
 }
 
-/// DECISIONS-PENDING entry 91 (a) / PROPOSED ADR-033, preregistration §2.4 test (3)(a): the
+/// DECISIONS-PENDING entry 91 (a) / ADR-033 (accepted 2026-09-14), preregistration §2.4 test (3)(a): the
 /// declared admission ceiling really is a *concurrency* ceiling, not just a sequential count — real
 /// threads, synchronized with a barrier so every one of them attempts its lease at (as near as a
 /// test can arrange) the same moment, all admitting the same real predicate over the same dataset.
@@ -399,7 +399,7 @@ fn n_concurrent_admit_calls_at_the_declared_ceiling_all_succeed() {
     });
 }
 
-/// DECISIONS-PENDING entry 91 (a) / PROPOSED ADR-033, preregistration §2.4 test (3)(b): a residual
+/// DECISIONS-PENDING entry 91 (a) / ADR-033 (accepted 2026-09-14), preregistration §2.4 test (3)(b): a residual
 /// admission-lease exhaustion — the ceiling held open directly against the pool, `admit` never gets
 /// a free `Admission` lease — surfaces as `PredicateAdmitError::ConnectionsExhausted`, **never**
 /// `PredicateAdmitError::Filter(FilterError::RejectedByBinder { .. })`. Nothing about
