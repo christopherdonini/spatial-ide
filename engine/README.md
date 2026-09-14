@@ -313,8 +313,9 @@ ADR-004 and `docs/10`, the semantic API surface, not ADR-010 rule 1. `physical_i
 per-dataset counter and never an address.
 
 **What is outside the declared bound**, and larger than it was: DuckDB's own per-connection memory.
-There may now be up to five resident in-memory instances per dataset rather than one per live
-stream. That remainder is not claimed to be inside any ceiling here — see `kernel/README.md`.
+There may now be up to nine resident in-memory instances per dataset (`MAX_PHYSICAL_CONNECTIONS`,
+ADR-033) rather than one per live stream. That remainder is not claimed to be inside any ceiling
+here — see `kernel/README.md`.
 
 ## Progressive first-batch sizing
 
