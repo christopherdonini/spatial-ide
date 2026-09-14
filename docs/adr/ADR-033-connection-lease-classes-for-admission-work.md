@@ -1,6 +1,6 @@
-# PROPOSED ADR-033 — Connection lease classes for per-request admission work
+# ADR-033 — Connection lease classes for per-request admission work
 
-**Status:** Proposed — **decision deliberately open; binds nothing.** Drafted 2026-09-13 by the architect agent on the custodian's brief while preregistering the "filter-and-hover polish" piece (DECISIONS-PENDING entry 87); filed on `polish/filter-and-hover` for the human's sight. Accepted only on the human's word. Number: 031 is reserved for LOD, 032 is filed; 014 stays reserved.
+**Status:** Accepted 2026-09-14 — on the human's word after the completed gate (reviewer PASS; architect affirmed the design at gates 2 and 3), the FIND′ condition met at #59's head (b2c9aac; the Acceptance section below records the instrument's line verbatim). Ruling: DECISIONS-PENDING.md, RULED 2026-09-14 question set A, A4, quoted in the Acceptance section. History, unchanged: drafted 2026-09-13 by the architect agent on the custodian's brief while preregistering the "filter-and-hover polish" piece (DECISIONS-PENDING entry 87); filed for the human's sight on `polish/filter-and-hover`, its decision then deliberately open and binding nothing; the engine half built on `polish/engine-lease-class` and landed by PR #59. Number: 031 is reserved for LOD, 032 is filed; 014 stays reserved.
 
 **Would decide:** how the engine's connection pool serves short, per-request admission work, so that a lease failure is reported as what it is.
 
@@ -8,7 +8,7 @@
 
 At filing, `engine/src/pool.rs` declared two lease classes (the `LeaseClass` enum, today `:170-179`, where the third now sits); `Maintenance` is documented as *"whole-file maintenance passes — today, an index build"* with capacity 1 (today `:101-106`). Predicate admission — a short, per-request, control-plane check — was folded into that class for a good reason (`engine/src/predicate.rs`: no ad-hoc connections, nothing leaves the crate), but it is not a whole-file pass. The consequence, observed as DECISIONS-PENDING entry 87 (diagnosed 2026-09-13): concurrent `viewport_query` admissions under a row filter collide at capacity 1 and the losers are refused as binder rejections (`predicate.rs`'s own history → `skp.filter_rejected_by_binder`, whose mapping is `kernel/src/skp.rs:777-781`), which the shell then discards. The pool never blocks or queues by design (this module's header item 1, `pool.rs:53-56`; `acquire`'s own doc, `:301-303`), and ordering the stream lease against the binding's permit is reserved to ADR-014 (`pool.rs:79-85`) — this question is neither.
 
-## Decision (the engine half has landed on `polish/engine-lease-class`, per entry 91 (a)'s ruling; Acceptance below is unchanged — this ADR stays Proposed until the human's word)
+## Decision (landed via PR #59; accepted as recorded under Acceptance)
 
 The pool now declares **three** lease classes, each its own capacity, each a **chosen ceiling under ADR-010 rule 6** — declared, not discovered or measured:
 
@@ -27,3 +27,15 @@ Four more physical connections per open dataset (`MAX_PHYSICAL_CONNECTIONS` 5 �
 ## Acceptance
 
 On the human's word, after the polish piece's engine half lands with its tests (the concurrent-admission test; the lease-failure-surfaces-as-`ConnectionsExhausted` test) and the architect gate affirms it.
+
+### Accepted — 2026-09-14 (appended at acceptance; the text above is the acceptance clause as it stood, retained)
+
+**The human's ruling, quoted verbatim** (`DECISIONS-PENDING.md`, RULED 2026-09-14 question set A, item A4 — a red-line item, typed): *"ADR-033 accepted, on the completed gate (reviewer PASS; architect affirmed the design at gates 2 and 3), with one condition carried from my 2026-09-13 ruling: FIND′ recorded green — 63 of 63 tiles minted — on #59's head is the acceptance evidence. If FIND′ is green there, the Status line changes in #59 quoting these words and I merge; if it is not, the acceptance waits on the commit that makes it green. The three lease classes and their capacities stand as ADR-010 rule 6 declared ceilings; the ADR's statement that it does not pre-empt reserved ADR-014 is part of what I accept."*
+
+**The condition's evidence.** `npm run e2e:regression` run by the custodian in the `cut-hover-repick` worktree at `b2c9aac` (= PR #59's head), 2026-09-14 10:31:12Z → 10:36:29Z, harness exit code 0, every step PASS: A1′ A3′ A4′ A7′ A8′ A9′ K6 K7 CURSOR′ FIND′ ABSENTCRS′. The instrument's own line, verbatim: `[FIND'] PASS (14929ms): applied "id > 99900" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom -1.9466138465216192 (1.67% non-bg); 3 zoom-out notch(es) left 0.10% non-bg with 0 covering-truncated line(s) and 0 unminted tile(s) of 0 distinct tile(s) ever refused; .residency-status settled to "Showing all 99 features in view"; the second "Zoom to layer" logged the same fit (zoom -1.9466138465216192) and left 1.67% non-bg`. The log is preserved at `frontends/shell/e2e/out/find-prime-b2c9aac-2026-09-14.log` (an untracked evidence directory, archived by campaign).
+
+**Stated plainly, against the ruling's own phrasing.** FIND′ is green by the instrument's own reinstated assertion. With the admission class in place **no tile was ever refused**, so the instrument reports zero unminted of zero refused rather than the "63 of 63" minted-of-refused phrase: that phrase described the earlier *failing* run's denominator (34 unminted of 63 refused, at `2a1fc3c`), a denominator that no longer exists. No number in this section is a performance figure — each is an event count, a zoom value, a coverage percentage or the instrument's own step duration, quoted as read (docs/01; ADR-018).
+
+**Gate history, in one sentence.** Gate 1 failed on both arms — reviewer and architect, on the single finding that a residual admission-lease exhaustion still reached the wire as `skp.filter_rejected_by_binder` (the kernel arm), closed by the closing commit recorded in the Decision above; the **reviewer gate 2 returned PASS** (on `6bd45ab`); the **architect gates 2 and 3 affirmed the design in full** and failed only on stale declared-ceiling figures in `engine/README.md` and `kernel/README.md` (the `MAX_PHYSICAL_CONNECTIONS` 5 → 9 remainder passages, one of them spelled out as a word), closed under `AI_DEVELOPMENT.md` Amendment 1 §A's one bounded closing commit, `b2c9aac`.
+
+**The merge.** PR #59 was merged by the human as `c3d258f` (2026-09-14) — before the FIND′ run, so this Status change rides the follow-on documentation PR rather than #59 itself, per the ruling's own words about where the change goes.
