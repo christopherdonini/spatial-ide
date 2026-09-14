@@ -72,6 +72,7 @@ in this table, as a new row, once one exists:
 | Location | Copied | Verified hash matches |
 |---|---|---|
 | *(none yet — blocked)* | 2026-09-06: no second physical location is available on this machine to copy to *(wording generalised 2026-09-07 per DECISIONS-PENDING entry 49 F-12(d); the technical fact — one copy, regenerable — is unchanged)*. Held until one is available; the fixture's DR story remains its deterministic regenerability (above) meanwhile. | — |
+| D: — the second internal SSD (`AUTONOMY.md` §15a, the human's third directive, Appendix A3) | 2026-09-14: a second physical copy now lives on the D: drive (a second physical disk, not a second path on C:). | To be recorded on the machine: re-hash the D: copy against the SHA-256 above and enter the result here — a docs-only governance piece cannot run the hash, so this cell stays owed until the machine records it, per the cross-machine caveat above. |
 
 **Location note (2026-09-06):** this file's `Path` field still reads `target/slice-evidence/…`
 because the fixture has NOT been relocated — relocating fixtures out of `target/` is a scoped
@@ -79,3 +80,13 @@ because the fixture has NOT been relocated — relocating fixtures out of `targe
 instead by the AI_DEVELOPMENT.md clean-discipline mechanic (never wholesale-clean `target/`;
 reclaim only `debug/`+`release/`+`src-tauri/target`). The fixture is therefore safe from routine
 disk reclaims where it sits.
+
+**Location note (2026-09-14) — the single-point-of-failure concern is RESOLVED.** A second internal
+SSD is now installed as **D:** (`AUTONOMY.md` §15a, the human's third directive, Appendix A3), and a
+second physical copy of this fixture lives there — a second physical **disk**, so the loss of either
+drive no longer loses the fixture. The 2026-09-02 framing "no other known copies exist … the one
+true copy on this machine" and the blocked-backup row above are kept as history; they are answered by
+the D: copy (new table row, above). Two lines of defence now stand: the D: second-disk copy, and the
+generator's deterministic regenerability (confirmed twice, above) as the deeper story. The
+cross-machine/cross-toolchain caveat above still applies to any regeneration on D:'s own toolchain —
+re-verify the hash there and record any mismatch, exactly as for any other machine.

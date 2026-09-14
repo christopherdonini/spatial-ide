@@ -1171,6 +1171,18 @@ is written until you answer; items 2/3/3e proceed either way.
     repository — the durable location ADR-017 C3 wanted now exists; (2) accept, optionally
     parameterise; (3) generalise the three sentences; fix-forward set: yes, one commit. Touches, once
     ruled: the files named; no ADR text edited; no history rewrite.
+    **Note appended 2026-09-14 (F-12(d)'s technical fact, now RESOLVED — `AUTONOMY.md` §15a, the
+    human's third directive, Appendix A3):** F-12(d) generalised the wording of the "single-disk /
+    no-backup" sentence (`kernel/FIXTURES.md:74`) while its own ruling noted "the technical facts
+    (fixture SPOF, regenerability) survive generalisation". That underlying technical fact — one
+    physical copy on one disk — is now itself resolved: a second internal SSD (D:) holds a second
+    physical copy of the 5 GB fixture, so the SPOF the generalised sentence described no longer
+    stands. The wording generalisation is untouched; only the single-disk fact behind it changes.
+    Recorded in `kernel/FIXTURES.md` and in entry 38's own appended note. (Routing note: the third
+    directive named "entries 38/62" for the one-disk notes; entry 62 is the DuckDB-amalgamation
+    licence entry and carries no disk content, whereas this entry (49, F-12(d)) is the one
+    `FIXTURES.md:74` cites — so the resolution is recorded here and in 38, and flagged for the
+    custodian in case 62 was intended for a reason not visible from the tree.)
 
 48. **[THIRD ATTEMPT AUTHORIZED 2026-09-07, the human verbatim: "third attempt AUTHORIZED, with
     three conditions. (1) The dated prereg amendment first, as you say it needs. (2) The gate must
@@ -1605,6 +1617,15 @@ is written until you answer; items 2/3/3e proceed either way.
     this entry's ruling is "defer-with-trigger" — the clean-discipline mechanic is accepted as
     sufficient; the FIXTURES_ROOT refactor is deferred, its trigger standing: it opens as its own
     scoped piece only if the human later wants fixtures physically out of `target/`.
+    **Note appended 2026-09-14 (the "one disk only" concern, RESOLVED — `AUTONOMY.md` §15a, the
+    human's third directive, Appendix A3):** the parenthetical above recorded the 5 GB fixture's
+    second-physical-location copy as *blocked — no second physical location available on this
+    machine*. That is no longer true: a second internal SSD is installed as **D:**, and a second
+    physical copy of the fixture now lives on it (a second physical disk, not a second path on C:),
+    so the single-point-of-failure concern is resolved. The FIXTURES_ROOT refactor's defer-with-
+    trigger ruling is untouched by this note — the note resolves only the second-copy blocker, not
+    the relocation question. Recorded in `kernel/FIXTURES.md` (a new backup-table row and a dated
+    Location note). History above kept intact.
 
 37. **[APPLIED 2026-09-05 — the conditional approval's cure executed. The flag was delivered
     (draft lacked reopen conditions; #36 was about to change the described behavior); the
