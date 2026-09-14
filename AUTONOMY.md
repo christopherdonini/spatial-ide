@@ -154,7 +154,7 @@ The Stop hook counts continuations per session and per day (§3). Near the daily
 
 ## §11. Release artifacts (from v0.1.1)
 
-The release asset is **the tagged commit's CI build**, downloaded from the workflow run on the tag, hashed, and the hash recorded in `RELEASE-<version>.md`; the dev machine is for headed work only. `RELEASE-DAY-CHECKLIST.md` §4 gains the step; `product-ci-shell.yml` gains a tag-triggered build that uploads the installer as a workflow artifact (tooling, reviewer-gated; no signing — entry 77 is open).
+The release asset is **the tagged commit's CI build**, downloaded from the workflow run on the tag, hashed, and the hash recorded in `RELEASE-<version>.md`; the dev machine is for headed work only. `RELEASE-DAY-CHECKLIST.md` §4 gains the step; `product-ci-shell.yml` gains a tag-triggered build that uploads the installer as a workflow artifact (tooling, reviewer-gated; no signing — entry 77 is open). **Done (2026-09-14, `chore(ci): release-artifacts-from-ci`):** a dedicated `.github/workflows/release-artifacts.yml` (push of a `v*` tag, no `paths` filter — kept separate from `product-ci-shell.yml` precisely so a tag push is never ANDed against that file's `paths` filter) uploads the installer as `spatial-ide-<tag>-x64-setup` and writes its file name, byte size and SHA-256 to the run's job summary (`$GITHUB_STEP_SUMMARY`) alongside the job log; its build steps are shared with `product-ci-shell.yml`'s own `tauri-build` job via a reusable `.github/workflows/tauri-build.yml` (`workflow_call`), so `RELEASE-DAY-CHECKLIST.md` §4 can compare a local hash against the run's own without re-downloading to compute it first.
 
 ## §12. Evidence archive
 

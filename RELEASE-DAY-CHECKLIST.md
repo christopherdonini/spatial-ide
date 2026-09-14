@@ -40,18 +40,46 @@ are mechanical and were run, or are re-run, before the human's step that depends
 - [ ] `git tag -a v0.1.0 -F <tag-message-file> <commit>` — annotated, on the intended commit; `git tag -v` is not expected (no signing key is declared for this project; the DCO sign-off is per commit).
 - [ ] `git push origin v0.1.0`.
 - [ ] `git describe --tags` on main prints `v0.1.0` — under the release-branch pattern only after the merge-back, and as `v0.1.0-<N>-g<sha>` when main carries commits above the tag (2026-09-13: `v0.1.0-63-ge9900a3`).
-- [ ] **From v0.1.1 (2026-09-13, `AUTONOMY.md` §11): the release asset is the tagged commit's CI
-      build, not a dev-machine build.** Not in force for v0.1.0, which was built on the dev machine
-      per Part M's own record. Starting v0.1.1, `product-ci-shell.yml` gains a tag-triggered job
-      that uploads the installer as a workflow artifact — that job does not exist yet as of this
-      writing; its exact artifact name is unknown until the tooling branch adds it, so the download
-      step below is left in brackets rather than guessed. Procedure once the job exists:
-      `gh run list --branch v<version> --limit 3` to find the tag-triggered run; `gh run download
-      <run-id> --name [ARTIFACT NAME — set once product-ci-shell.yml's tag job is added] --dir
-      <tmp>` to fetch it; hash it (`sha256sum "<tmp>/<installer>"` in Git Bash, or
-      `Get-FileHash -Algorithm SHA256` in PowerShell); record the hash in `RELEASE-<version>.md` in
-      place of a dev-machine build record. The dev machine stays for headed work (Part M, manual
-      walkthroughs) only, never as the shipped artifact's source, from v0.1.1 on.
+- [ ] **From v0.1.1 (`AUTONOMY.md` §11; the human's directive item 11, 2026-09-14, verbatim:
+      "Release artifacts are the tagged commit's CI build, hash-recorded; the dev machine is for
+      headed work only — apply from v0.1.1."): the release asset is the tagged commit's CI build,
+      not a dev-machine build.** Not in force for v0.1.0, which was built on the dev machine per
+      Part M's own record. From v0.1.1, a dedicated workflow — `.github/workflows/release-artifacts.yml`
+      (`chore(ci): release-artifacts-from-ci`, 2026-09-14; not a `tags` trigger folded into
+      `product-ci-shell.yml`, since GitHub ANDs a push event's `tags` filter with a `paths` filter,
+      which would leave a tag pushed at an already-existing commit — this release-branch pattern
+      exactly — at risk of reporting no changed paths and never firing) — runs on a pushed `v*` tag,
+      calling the same reusable build steps as `product-ci-shell.yml`'s own `tauri-build` job
+      (`.github/workflows/tauri-build.yml`), and uploads the installer as a workflow artifact named
+      `spatial-ide-<tag>-x64-setup` (e.g. `spatial-ide-v0.1.1-x64-setup` for the v0.1.1 tag),
+      printing the installer's file name, byte size and SHA-256 to the run's job summary.
+      **Precondition:** a local `uses: ./.github/workflows/tauri-build.yml` is resolved from the
+      tagged commit's own tree, so this chain works only for tags cut at or after the merge that
+      introduced those two workflow files — which is exactly the from-v0.1.1 rule above; a tag on
+      an earlier commit would find neither file and trigger nothing. Procedure:
+      1. Push the tag (§4 above): `git push origin v<version>`.
+      2. Wait for the run on the tag: `gh run list --branch v<version> --workflow
+         release-artifacts.yml --limit 3` (or watch it directly once its run id is known: `gh run
+         watch <run-id>`).
+      3. Download the artifact: `gh run download <run-id> -n spatial-ide-v<version>-x64-setup -D
+         <dir>`.
+      4. Hash it locally: `Get-FileHash -Algorithm SHA256 "<dir>\Spatial IDE_<version>_x64-setup.exe"`
+         in PowerShell (or `sha256sum "<dir>/<installer>"` in Git Bash) — the installer's file name
+         follows `frontends/shell/src-tauri/tauri.conf.json`'s own `version` (the same field §1's
+         installer name comes from), which this release's version bump must already have raised to
+         `<version>` on the tagged commit — so read the real name off the run's job summary, which
+         prints it, rather than assuming this pattern.
+      5. Compare the locally-computed hash against the run's own job summary (`gh run view <run-id>
+         --log` prints the job log's `SHA-256:` line; the step summary is also visible on the run's
+         page) — they must match exactly before proceeding.
+      6. Record the file name, byte size and SHA-256 in `RELEASE-<version>.md`, in place of a
+         dev-machine build record (`RELEASE-0.1.md` Amendment 17 is the house form for this record).
+      7. `gh release upload` — the human's own step (§5 below); the custodian never publishes.
+      8. The logged-out verification (§5's "lesson of 2026-09-13") still applies unchanged: the
+         asset on the public release page must hash to the same value.
+      The dev machine builds nothing for the release from v0.1.1 on — a local build there is for
+      headed walkthrough work only (Part M, manual walkthroughs), never the shipped artifact's
+      source.
 
 ## 5. The GitHub release (human)
 

@@ -1,0 +1,102 @@
+name: Release artifacts — tagged CI build
+
+# AUTONOMY.md §11; the human's directive item 11 (2026-09-14, verbatim): "Release artifacts are
+# the tagged commit's CI build, hash-recorded; the dev machine is for headed work only — apply
+# from v0.1.1." This workflow exists ONLY for that: it builds the NSIS installer from a pushed
+# `v*` tag and uploads it as a workflow artifact for the human to attach by hand
+# (`RELEASE-DAY-CHECKLIST.md` §4/§5). No signing (entry 77 is open); nothing is published to a
+# release from CI — the human's own `gh release upload` click does that.
+#
+# Deliberately its own file rather than a `tags` trigger folded into `product-ci-shell.yml`'s
+# `on.push`: GitHub combines a push event's `tags`/`branches` filter with its `paths` filter using
+# AND semantics, and a tag pushed at an already-existing commit — exactly
+# `RELEASE-DAY-CHECKLIST.md` §4's release-branch pattern (`git tag -a v<version> ...
+# <commit already on the branch>`) — can report an empty changed-files list for that push, which
+# some GitHub Actions users have reported leaves a `paths`-filtered workflow un-triggered on a tag
+# push. An earlier version of this same piece added `tags` to `product-ci-shell.yml`'s own
+# `paths`-filtered `on.push` and flagged this as an unverified risk rather than resolving it; this
+# file resolves it by construction — it carries NO `paths` filter at all, so the risk does not
+# apply here.
+#
+# The build steps themselves live in `.github/workflows/tauri-build.yml` (`workflow_call`),
+# shared with `product-ci-shell.yml`'s own `tauri-build` job, so there is exactly one copy of them.
+#
+# ## Standing not-a-gate note (product-ci-shell.yml's own convention, repeated here)
+#
+# Until a run of this workflow has gone green on an ACTUAL tag push, nothing may cite that as a
+# gate. The `workflow_dispatch` dry run recorded below only proves the job runs and the
+# artifact/hash mechanism works — `workflow_dispatch` carries no `tags` filter, so it does not
+# itself verify that the `push.tags` trigger fires on a real tag push. That is untestable from
+# this docs/CI-only piece (tags are the human's to push, `RELEASE-DAY-CHECKLIST.md` §4 /
+# `AI_DEVELOPMENT.md`'s red lines) — verify at the actual v0.1.1 tag push: confirm this workflow
+# appears in `gh run list --branch v0.1.1 --workflow release-artifacts.yml`.
+#
+# **First `workflow_dispatch` dry run:** EMPTY — filled only after a run has actually gone green
+# end to end (house form, `product-ci-shell.yml`'s own "first-green record slot" pattern).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: >-
+          Optional. A tag-like string (e.g. v0.1.1-dryrun) used only to name the uploaded
+          artifact for a manual dry run. Leave blank on an ordinary dispatch; the artifact name
+          then falls back to a sanitized branch/PR ref. The build itself always checks out
+          whatever ref actually triggered this run (a real tag on a tag push; the dispatch's own
+          target ref otherwise) — this input never overrides what gets built, only its name.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-artifacts-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: resolve the artifact name from the triggering ref
+    runs-on: ubuntu-latest
+    # Cheap string resolution only — no Tauri/Rust/Node toolchain needed, so this one job need not
+    # pay for a windows-latest runner the way the actual build (tauri-build.yml) must.
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.resolve.outputs.artifact_name }}
+    steps:
+      - name: Resolve tag/ref for artifact naming
+        id: resolve
+        shell: pwsh
+        # The dispatch input reaches the script through the environment, never through `${{ }}`
+        # substitution into the script text: an expression is expanded before pwsh parses the
+        # script, so an input containing quotes or `;` would otherwise be parsed as script.
+        env:
+          INPUT_REF: ${{ github.event.inputs.ref }}
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $tag = $env:GITHUB_REF -replace '^refs/tags/', ''
+          } elseif ("$env:INPUT_REF" -ne '') {
+            $tag = "$env:INPUT_REF"
+          } else {
+            $tag = $env:GITHUB_REF_NAME
+          }
+          # Sanitize characters actions/upload-artifact's name disallows (a PR ref like
+          # "123/merge" would otherwise contain "/"; this workflow is not triggered by pull_request
+          # today, but the same sanitizer costs nothing and removes one way to break later).
+          $tag = $tag -replace '[\\/:*?"<>|]', '-'
+          if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "unknown" }
+          Write-Host "Resolved tag/ref for artifact naming: $tag"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "artifact_name=spatial-ide-$tag-x64-setup"
+
+  tauri-build:
+    name: tauri build (NSIS, build-only, no signing)
+    needs: resolve
+    permissions:
+      contents: read
+    uses: ./.github/workflows/tauri-build.yml
+    with:
+      artifact_name: ${{ needs.resolve.outputs.artifact_name }}

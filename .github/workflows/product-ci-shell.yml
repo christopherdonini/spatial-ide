@@ -129,6 +129,9 @@ on:
       # `cargo test` step below exercises, not just the two TypeScript workflows.
       - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
+      # The `tauri-build` job below is a thin call into this reusable workflow, which is where the
+      # build steps themselves now live — without it listed here, editing them triggers no CI.
+      - ".github/workflows/tauri-build.yml"
   pull_request:
     paths:
       - "frontends/shell/**"
@@ -146,6 +149,9 @@ on:
       # `cargo test` step below exercises, not just the two TypeScript workflows.
       - "renderer/bundle-viewer/ceilings.json"
       - ".github/workflows/product-ci-shell.yml"
+      # The `tauri-build` job below is a thin call into this reusable workflow, which is where the
+      # build steps themselves now live — without it listed here, editing them triggers no CI.
+      - ".github/workflows/tauri-build.yml"
   workflow_dispatch:
 
 concurrency:
@@ -222,44 +228,19 @@ jobs:
   # published from CI. This workflow's own standing not-a-gate note (top of file) applies to this
   # job exactly as it does to `shell` above: nothing may cite a green run here as a gate until one
   # has actually gone green end to end, recorded with its run id/commit/trigger/duration.
+  #
+  # 2026-09-14 (`chore(ci): release-artifacts-from-ci`): the build steps themselves moved to
+  # `.github/workflows/tauri-build.yml` (a `workflow_call` reusable workflow) so this job and
+  # `release-artifacts.yml`'s own tag-triggered build (AUTONOMY.md §11) share exactly one copy of
+  # them. This job's own triggers, artifact name and build steps are unchanged from before that
+  # extraction; the reusable workflow adds two things this job did not do before — a SHA-256 summary
+  # step (file name, byte size, hash, written to the run's job summary) and `retention-days: 90` on
+  # the uploaded artifact. It does not run on a tag push; `release-artifacts.yml` does that,
+  # deliberately as its own file (see that file's header for why: GitHub ANDs a push event's
+  # `tags` filter with a `paths` filter, which this job's `paths`-filtered triggers below would
+  # otherwise inherit).
   tauri-build:
     name: tauri build (NSIS, build-only, no signing)
-    runs-on: windows-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: frontends/shell/package-lock.json
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: windows-latest-shell-tauri-build
-          workspaces: "frontends/shell/src-tauri"
-
-      # Same precondition as the `shell` job above: the viewer must be built before the shell's own
-      # `prebuild` step (notice generation) and before `bundle.resources` has anything to map.
-      - name: Install and build the bundle viewer
-        working-directory: renderer/bundle-viewer
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install shell dependencies (locked)
-        working-directory: frontends/shell
-        run: npm ci
-
-      - name: tauri build (NSIS only, per-user install — tauri.conf.json's own targets/installMode)
-        working-directory: frontends/shell
-        run: npm run tauri build
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: spatial-ide-nsis-installer
-          path: frontends/shell/src-tauri/target/release/bundle/nsis/*.exe
-          if-no-files-found: error
+    uses: ./.github/workflows/tauri-build.yml
+    with:
+      artifact_name: spatial-ide-nsis-installer
