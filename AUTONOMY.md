@@ -226,6 +226,45 @@ architect gate assumes the mechanical checks are already green and fails only on
 - **Generation tags:** a node's `generation` is carried into every worker brief as `node:<id>@g<n>`; a result whose tag no longer matches the node's current generation is **discarded** (ledgered as stale, never merged). The generation bumps on any preregistration amendment or scope change.
 - **Daily health strip** (§5), each source on its own dated line (the human, 2026-09-14): CI on `main`, open PRs and the latest release are **build-time facts**, read from GitHub's API in the Pages build by `scripts/plan/buildHealth.mjs` and dated `built_at`; drift, disk, stray processes and waiting-on-human age are **machine facts**, refreshed by `scripts/plan/health.mjs` and dated `generated_at`. No row mixes the two.
 - **The drill, once:** clean-directory clone → fixtures regenerated from `kernel/FIXTURES.md` → full suite → release build; the result recorded in `kernel/RESULTS.md` (a dated section) and in the ledger. It needs disk the machine does not have today; queued as a node blocked on the human's word about reclaiming a build cache.
+- **Two throughput metrics on the health strip** (Appendix A3, the speed-work part: *"median
+  ready→done hours and gate first-pass rate"*): **median ready→done hours** — the median hours a node
+  spends from entering the ready set (the queue-derivation moment, §2) to its `dates.done` (§1) — and
+  **gate first-pass rate** — the fraction of gated pieces that pass their gate on the first attempt
+  (the inverse of the rule-7 traffic Amendment 1 was written for). Both are **machine facts**,
+  computed and dated by `scripts/plan/health.mjs` (§5's machine-facts half), never mixed with the
+  build-time lines. (`PLAN.yaml` records `dates.opened` and `dates.done`, not a stored readiness
+  timestamp — the ready→done start point is the queue derivation's own, so the metric is a
+  best-available reading, not a claim of precision, and it carries no docs/08 measurement, §5.)
+
+### §15a. The D: drive setup (Appendix A3, the second-SSD part)
+
+The human's third directive, verbatim (Appendix A3): *"Second internal SSD installed as D:. target/,
+the cargo registry and the npm cache now live there via directory junctions — every path unchanged.
+… the health strip reports both drives; the 5 GB fixture's second physical copy and the evidence
+archive's local home are on D: … The clean-clone drill can now run on D: without touching C:."*
+
+- **Junctions, every path unchanged.** `target/`, the cargo registry (`~/.cargo/registry`) and the
+  npm cache live on **D:** via **directory junctions**, so every tracked path and every tool
+  invocation reads exactly as before — no `Cargo.toml`, no script, no CI path changes because a
+  junction is transparent to the path. Nothing in the tree names `D:`.
+- **The health strip reports both drives.** `scripts/plan/health.mjs`'s disk-free machine fact
+  (§5, §15) now reports **C: and D: on their own lines**, each dated `generated_at`, alongside the
+  median ready→done hours and gate first-pass rate above.
+- **The fixture's second physical copy is on D:.** The 5 GB hero-slice fixture
+  (`kernel/FIXTURES.md`) now has a **second physical copy on the D: SSD** — a second physical disk,
+  not a second path on the same disk — which is what resolves the single-point-of-failure concern
+  the fixture registry and `DECISIONS-PENDING.md` entries 38 / 49 (F-12(d)) recorded as blocked
+  (item logged there, dated). The evidence archive's **local home** (§12) is on D: as well.
+- **The clean-clone drill can run on D: without touching C:.** §15's drill (clean-directory clone →
+  fixtures regenerated → full suite → release build) can now be run on **D:** with its own free
+  space, leaving C: undisturbed — the disk blocker §15 recorded is answered by the second SSD (and
+  the 2026-09-14 ruling that freed the 21 GB shell debug cache, `DECISIONS-PENDING.md`).
+- **Standing rule — the fixture's drive is a confound.** Any preregistration that **measures**
+  against the 5 GB fixture **discloses which drive the fixture was read from (C: or D:)** in its
+  Disclosure section, as a confound — a different physical disk has different read characteristics,
+  and a measurement that does not name the drive cannot be compared against one that ran from the
+  other. This is a disclosure duty, not a docs/08 row: it constrains no number, it only names the
+  condition under which a number was read (`docs/PREREGISTRATION-TEMPLATE.md` carries the reminder).
 
 
 ## §16. Telegram alerts — one-way; `AskUserQuestion` stays the answer channel
