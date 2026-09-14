@@ -904,14 +904,17 @@ async function stepA9(page, consoleHandle) {
       const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
       const attemptStart = Date.now();
       await page.mouse.move(css.x, css.y);
+      // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
+      // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
+      // since it names an id no pick at this camera stands behind (§3.3).
       const result = await waitForCondition(
-        () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
-        (text) => text !== null && /^id \d+/.test(text),
+        () => readHoverReadoutState(page),
+        (readout) => hoverReadoutId(readout) !== null,
         5_000
       );
       attempts.push({ point, flipY, css, ok: result.ok, last: result.last, attemptStart });
       if (result.ok) {
-        found = { point, flipY, css, text: result.last };
+        found = { point, flipY, css, text: result.last.text };
         break outer;
       }
     }
@@ -946,9 +949,11 @@ async function stepA9(page, consoleHandle) {
 
   const emptyPoint = bufferRegionToCss(grid.regions[emptyIdx], rect, 0.08, 0.08);
   await page.mouse.move(emptyPoint.x, emptyPoint.y);
+  // Explicitly the `clear` state -- nothing shown at all. A refusal or a labelled state would each
+  // be a different answer, and neither is what "the readout disappears over empty space" means.
   const gone = await waitForCondition(
-    () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
-    (text) => text === null,
+    () => readHoverReadoutState(page),
+    (readout) => readout.state === "clear",
     15_000
   );
   if (!gone.ok) {
@@ -1085,7 +1090,7 @@ const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after fi
 // too few zoom-out notches to reliably cross back below the threshold (assertion (ii), discrete).
 const K6_ZOOM_OUT_NOTCH_DELTA_Y = -ZOOM_NOTCH_DELTA_Y; // reverses A9''s own zoom-in notch magnitude
 // (positive deltaY = wheel-down = zoom out, the opposite of `ZOOM_NOTCH_DELTA_Y`'s zoom-in).
-const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // App.tsx:1417, verbatim.
+const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // canvas/HoverReadoutView.tsx, verbatim (moved there from App.tsx by entry 88's labelled-state piece; the string itself is unchanged).
 
 /**
  * Shared by K6's cases (i), (ii) and (iii): reuses A9''s own densest-patch bisection + interior
@@ -1119,13 +1124,16 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
     for (const flipY of [true, false]) {
       const css = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, flipY);
       await page.mouse.move(css.x, css.y);
+      // Explicitly a CONFIRMED id: the pointer just moved, so a fresh pick owns the readout, and a
+      // labelled ("confirming") state here would mean the camera moved under us -- not a start state
+      // any K6 case may begin from (§3.3: a marked stale readout is not a confirmed readout).
       const result = await waitForCondition(
-        () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
-        (text) => text !== null && /^id \d+/.test(text),
+        () => readHoverReadoutState(page),
+        (readout) => hoverReadoutId(readout) !== null,
         5_000
       );
       if (result.ok) {
-        found = { css, text: result.last };
+        found = { css, text: result.last.text, id: hoverReadoutId(result.last) };
         break;
       }
     }
@@ -1156,16 +1164,51 @@ async function clickZoomToLayer(page, consoleHandle, label) {
   await assertNoRefusalOrBanner(page, label);
 }
 
-/** The stable feature id inside a `.hover-readout` id string -- `App.tsx` renders `id <stable id>`
- * followed, when the pick carried one, by its authoritative anchor. `null` when the readout is not
- * an id at all (nothing shown, or the named refusal). */
-function hoverReadoutId(text) {
-  const m = /^id (\d+)/.exec(text ?? "");
-  return m ? m[1] : null;
+/**
+ * **The hover readout's state, read STRUCTURALLY** -- the K6 (ii) contract change
+ * `frontends/shell/POLISH-87-88-89-PREREGISTRATION.md` §3.3 recorded as owed, in that section's own
+ * words: *"no **confirmed** readout is ever an id without a confirming trace since the mark; a
+ * marked stale readout is not a confirmed readout"*. The labelled state it teaches this harness is
+ * DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (question set B, B1;
+ * `frontends/shell/HOVER-CONFIRMING-MARKER-PREREGISTRATION.md`).
+ *
+ * Four states, told apart by CLASS and never by wording -- the marker's own text is a placeholder
+ * the human sights live (B1: *"Wording sighted live at the sitting"*), so no assertion in this file
+ * may depend on its characters:
+ * - `clear`: no `.hover-readout` at all.
+ * - `refusal`: `.hover-readout-below-resolution` (the named below-pick-resolution refusal).
+ * - `confirming`: `.hover-readout-confirming` -- the standing id, visible, under its own
+ *   `.hover-readout-confirming-marker` element, between a camera change and its settle re-pick.
+ *   `marker` carries that element's text so a labelled state rendered WITHOUT it fails here.
+ * - `confirmed`: an ordinary id readout, produced by a pick at this camera.
+ *
+ * `id` is the stable id's digits in both id-bearing states; `hoverReadoutId` below is what decides
+ * which of them may be read as a CONFIRMED id, and it is never the labelled one.
+ */
+async function readHoverReadoutState(page) {
+  return page.evaluate(() => {
+    const el = document.querySelector(".hover-readout");
+    if (!el) return { state: "clear", text: null, id: null, marker: null };
+    const text = el.textContent ?? null;
+    const m = /^id (\d+)/.exec(text ?? "");
+    const markerEl = el.querySelector(".hover-readout-confirming-marker");
+    const marker = markerEl ? markerEl.textContent : null;
+    if (el.classList.contains("hover-readout-below-resolution")) {
+      return { state: "refusal", text, id: null, marker };
+    }
+    if (el.classList.contains("hover-readout-confirming")) {
+      return { state: "confirming", text, id: m ? m[1] : null, marker };
+    }
+    return { state: "confirmed", text, id: m ? m[1] : null, marker };
+  });
 }
 
-async function readHoverReadout(page) {
-  return page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null);
+/** The stable feature id of a **confirmed** readout (`HoverReadoutView.tsx` renders `id <stable id>`
+ * followed, when the pick carried one, by its authoritative anchor). `null` for every other state --
+ * and, by §3.3's own words, **never an id while the container carries `.hover-readout-confirming`**:
+ * a marked stale readout is not a confirmed readout, whatever its text begins with. */
+function hoverReadoutId(readout) {
+  return readout !== null && readout.state === "confirmed" ? readout.id : null;
 }
 
 /** D9's confirming line for a settle re-pick, looked for only among render-trace entries that
@@ -1239,13 +1282,11 @@ async function stepK6(page, consoleHandle) {
   const continuousHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/continuous");
   await clickZoomToLayer(page, consoleHandle, "K6/continuous (zoom to layer)");
 
+  // UNCHANGED by the §3.3 contract change: the named refusal, by its own class and its text
+  // verbatim -- exactly what this case asserted before the labelled state existed.
   const continuousResult = await waitForCondition(
-    () =>
-      page.evaluate(() => ({
-        text: document.querySelector(".hover-readout")?.textContent ?? null,
-        belowResolution: document.querySelector(".hover-readout-below-resolution") !== null,
-      })),
-    (v) => v.belowResolution && v.text === K6_REFUSAL_TEXT,
+    () => readHoverReadoutState(page),
+    (readout) => readout.state === "refusal" && readout.text === K6_REFUSAL_TEXT,
     10_000
   );
   if (!continuousResult.ok) {
@@ -1265,16 +1306,18 @@ async function stepK6(page, consoleHandle) {
   // first is what makes the zoom-OUT land back on a camera a real hover has ALREADY proven to be
   // above the declared threshold, so this case tests the re-pick rather than the threshold.
   const repickHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/re-pick");
-  const repickId = hoverReadoutId(repickHover.text);
+  const repickId = repickHover.id;
   if (repickId === null) {
     throw new Error(`K6/re-pick: expected a real id readout to start from, got ${JSON.stringify(repickHover.text)}`);
   }
   await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "Once i zoom in to a feature and hover over one"
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
+  // AFTER the settle (`wheelWithoutMoving` waits for trace quiet): the id must be CONFIRMED, i.e.
+  // the marker is gone. A labelled state here would be a marker outliving its own settle (B1).
   const sameId = await waitForCondition(
-    () => readHoverReadout(page),
-    (text) => hoverReadoutId(text) === repickId,
+    () => readHoverReadoutState(page),
+    (readout) => hoverReadoutId(readout) === repickId,
     10_000
   );
   if (!sameId.ok) {
@@ -1322,10 +1365,23 @@ async function stepK6(page, consoleHandle) {
           `different feature under the stationary pixel`
       );
     }
-    const afterPress = await readHoverReadout(page);
+    const afterPress = await readHoverReadoutState(page);
     const afterId = hoverReadoutId(afterPress);
 
-    if (afterPress !== null && afterId === null && afterPress !== K6_REFUSAL_TEXT) {
+    // Read AFTER the settle, so exactly three states are admissible here: `clear`, the named
+    // `refusal`, or a `confirmed` id. A LABELLED state at this point is a marker that outlived its
+    // own settle, which B1 forbids by name -- reported as itself, never passed over.
+    if (afterPress.state === "confirming") {
+      throw new Error(
+        `K6/discriminator: the labelled "confirming" state was still standing AFTER the settle for pan press ` +
+          `${press} (${JSON.stringify(afterPress.text)}) -- the marker never outlives a settle (B1); only a re-pick ` +
+          `result may remove it, and one has had its say by now`
+      );
+    }
+    if (afterPress.state === "refusal" && afterPress.text !== K6_REFUSAL_TEXT) {
+      throw new Error(`K6/discriminator: unrecognised .hover-readout state after a pan: ${JSON.stringify(afterPress)}`);
+    }
+    if (afterPress.state === "confirmed" && afterId === null) {
       throw new Error(`K6/discriminator: unrecognised .hover-readout state after a pan: ${JSON.stringify(afterPress)}`);
     }
 
@@ -1333,7 +1389,7 @@ async function stepK6(page, consoleHandle) {
     // emits the named refusal on its own, with no pick behind it, so it cannot tell a fresh re-pick
     // apart from a re-emitted retained readout -- accepting it here would let this case pass against
     // exactly the build block-on-sight condition 13 exists to catch. Keep panning instead.
-    if (afterPress === K6_REFUSAL_TEXT) {
+    if (afterPress.state === "refusal") {
       refusalsSeen++;
       continue;
     }
@@ -1341,7 +1397,7 @@ async function stepK6(page, consoleHandle) {
     // AN ABSENCE is a success only WITH a confirming re-pick line naming `cleared` at this camera
     // (reviewer R4). Without one, the readout being empty says nothing about whether a pick ran: the
     // mid-gesture rule clears a standing id by itself. Keep panning in that case too.
-    if (afterPress === null) {
+    if (afterPress.state === "clear") {
       if (hasConfirmingRepickTrace(consoleHandle, beforePress, "cleared")) {
         discriminatorOutcome = "an absence, confirmed re-picked (nothing resident under that pixel)";
       } else {
@@ -1373,19 +1429,94 @@ async function stepK6(page, consoleHandle) {
   }
 
   // ASSERTION (ii) -- DISCRETE: >= 8 separate wheel notches, no interceding `page.mouse.move`. The
-  // contract asserted per notch is the NEW one (entry 47): a readout may be an id only where a
-  // confirming re-pick trace names that id since this step's mark. The old falsifier ("the pre-zoom id after
-  // any notch = failure") is deliberately gone -- under this mechanism a re-confirmed id is the
-  // correct answer, which is what case (iv) above exists to keep honest.
+  // contract asserted per notch is the one `POLISH-87-88-89-PREREGISTRATION.md` §3.3 wrote for the
+  // labelled state, in its own words:
+  //
+  //   "no **confirmed** readout is ever an id without a confirming trace since the mark; a marked
+  //    stale readout is not a confirmed readout"
+  //
+  // and B1's own ruling, which this asserts as a SEQUENCE rather than as a final id: *"Between a
+  // camera change and its settle re-pick, the standing id stays visible with a plain, muted marker
+  // ... never the bare id"* + *"the marker never outlives a settle"*. So, per notch: read once
+  // IMMEDIATELY after the wheel (mid-gesture, before the settle has had its say) and once after the
+  // settle. Mid-gesture the standing id must still be there WITH its marker; after the settle the
+  // marker must be gone -- the id confirmed by a fresh pick's own trace, or the readout changed to
+  // the refusal or to nothing.
+  //
+  // The mid-gesture read RACES the settle by construction (one CDP round trip against the declared
+  // settle gap), so a mid read that already shows the settle's own result is not treated as a
+  // failure -- it is counted, and the invariant that does not depend on the race carries the case:
+  // a `confirmed` id, whenever it is seen, must be named by a confirming trace since this notch's
+  // mark. The old falsifier ("the pre-zoom id after any notch = failure") stays deliberately gone --
+  // under this mechanism a re-confirmed id is the correct answer, which is what case (iv) above
+  // exists to keep honest.
   const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
   const zoomOutNotches = Math.max(discreteHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
   let notchesShowingAnId = 0;
+  let notchesWithStandingId = 0;
+  let markerSightings = 0;
+  let settleRaces = 0;
+  let midSameIdReads = 0;
+  let standing = await readHoverReadoutState(page);
   for (let notch = 1; notch <= zoomOutNotches; notch++) {
     const beforeNotch = consoleHandle.renderTrace().length;
+    const standingIdBefore = hoverReadoutId(standing);
     await page.mouse.wheel(0, K6_ZOOM_OUT_NOTCH_DELTA_Y);
+
+    // MID-GESTURE, read with no wait at all.
+    const mid = await readHoverReadoutState(page);
+    let midBareId = null;
+    if (mid.state === "confirming") {
+      markerSightings++;
+      if (mid.marker === null || mid.marker === "") {
+        throw new Error(
+          `K6/discrete: the labelled state rendered at notch ${notch}/${zoomOutNotches} with NO marker element ` +
+            `(${JSON.stringify(mid)}) -- a stale id is never served without its marker (B1, ADR-010 rule 5)`
+        );
+      }
+      if (standingIdBefore !== null && mid.id !== standingIdBefore) {
+        throw new Error(
+          `K6/discrete: the labelled state at notch ${notch}/${zoomOutNotches} names id ${mid.id}, but the readout ` +
+            `standing before the notch was id ${standingIdBefore} -- the marker labels the STANDING id, and a ` +
+            `different one there would be an id nothing has shown the operator (B1)`
+        );
+      }
+    } else if (mid.state === "confirmed" && hoverReadoutId(mid) !== standingIdBefore) {
+      // A DIFFERENT confirmed id than the one standing before the notch: only a settle's own re-pick
+      // can produce that, so the read simply landed after the settle had already answered. Checked
+      // below by the same trace rule the post-settle read uses (looked for only once the trace has
+      // gone quiet, so it cannot fail merely because a console message was still in flight).
+      settleRaces++;
+      midBareId = hoverReadoutId(mid);
+    } else if (mid.state === "confirmed") {
+      // The SAME confirmed id as before the notch. This read cannot tell two things apart, and says
+      // so rather than guessing: the settle may have re-confirmed that id already, or the DOM may
+      // simply not have repainted the mid-gesture state yet (one CDP round trip against a React
+      // commit). Neither is asserted on here. What a build that serves the BARE stale id through the
+      // whole window cannot escape is the aggregate below: it would never once show the marker.
+      midSameIdReads++;
+    }
+
     await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 500, timeoutMs: 10_000 });
-    const afterNotch = await readHoverReadout(page);
+    const afterNotch = await readHoverReadoutState(page);
+    if (standingIdBefore !== null) notchesWithStandingId++;
+    if (midBareId !== null && !hasConfirmingRepickTrace(consoleHandle, beforeNotch, `id ${midBareId}`)) {
+      throw new Error(
+        `K6/discrete: .hover-readout showed the BARE id ${midBareId} during notch ${notch}/${zoomOutNotches} -- a ` +
+          `different id than the ${standingIdBefore} standing before it, so a settle produced it -- with NO ` +
+          `confirming readout_confirmed re-pick line since this notch's mark. Between a camera change and its settle ` +
+          `re-pick an id may only appear under its marker, never bare (B1; §3.3: "a marked stale readout is not a ` +
+          `confirmed readout")`
+      );
+    }
+    if (afterNotch.state === "confirming") {
+      throw new Error(
+        `K6/discrete: the labelled "confirming" state was still standing AFTER the settle at notch ` +
+          `${notch}/${zoomOutNotches} (${JSON.stringify(afterNotch.text)}) -- the marker never outlives a settle (B1)`
+      );
+    }
     const afterId = hoverReadoutId(afterNotch);
+    standing = afterNotch;
     if (afterId === null) continue;
     notchesShowingAnId++;
     if (!hasConfirmingRepickTrace(consoleHandle, beforeNotch, `id ${afterId}`)) {
@@ -1394,6 +1525,16 @@ async function stepK6(page, consoleHandle) {
           `confirming readout_confirmed re-pick line since this step's mark -- an id no fresh pick stands behind`
       );
     }
+  }
+  if (notchesWithStandingId > 0 && markerSightings === 0) {
+    throw new Error(
+      `K6/discrete: across ${zoomOutNotches} discrete notch(es), ${notchesWithStandingId} of them with a confirmed id ` +
+        `standing when the notch arrived, the labelled "confirming" state was NEVER observed between a camera change ` +
+        `and its settle (${settleRaces} mid-gesture read(s) landed on a settle's own different id; ${midSameIdReads} ` +
+        `read(s) still showed the same id, which is either a re-confirm or an unrepainted DOM) -- B1's ruled sequence ` +
+        `is that the standing id stays visible under its marker for that window, so never seeing it once across ` +
+        `${zoomOutNotches} notches is the blink this contract replaced, not a timing artefact of a single read`
+    );
   }
 
   // ASSERTION (v) -- THE RELEASE EDGE, from the falsifier's OWN start state (the preregistration's
@@ -1422,7 +1563,7 @@ async function stepK6(page, consoleHandle) {
   // rather than the listener that produces it.
   await clickZoomToLayer(page, consoleHandle, "K6/release-edge (reset)");
   const releaseHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/release-edge");
-  const releaseId = hoverReadoutId(releaseHover.text);
+  const releaseId = releaseHover.id;
   if (releaseId === null) {
     throw new Error(
       `K6/release-edge: expected a real id readout to start from, got ${JSON.stringify(releaseHover.text)}`
@@ -1436,13 +1577,16 @@ async function stepK6(page, consoleHandle) {
   // may have been needed).
   const releaseOutNotchesMax = Math.max(releaseHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
   let releaseOutNotches = 0;
-  let standingBeforeDrag = null;
-  for (let notch = 1; notch <= releaseOutNotchesMax && standingBeforeDrag !== K6_REFUSAL_TEXT; notch++) {
+  // The standing readout is read AFTER each notch's settle, and the state this case needs is the
+  // named `refusal` by its own class -- never a labelled state (which the settle has removed by
+  // then) and never a confirmed id.
+  let standingBeforeDrag = { state: "clear", text: null, id: null, marker: null };
+  for (let notch = 1; notch <= releaseOutNotchesMax && standingBeforeDrag.state !== "refusal"; notch++) {
     await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y);
     releaseOutNotches = notch;
-    standingBeforeDrag = await readHoverReadout(page);
+    standingBeforeDrag = await readHoverReadoutState(page);
   }
-  if (standingBeforeDrag !== K6_REFUSAL_TEXT) {
+  if (standingBeforeDrag.state !== "refusal" || standingBeforeDrag.text !== K6_REFUSAL_TEXT) {
     throw new Error(
       `K6/release-edge: the named refusal never STOOD within ${releaseOutNotchesMax} zoom-out notch(es) from the ` +
         `hover (id ${releaseId}), pointer stationary throughout -- last readout ${JSON.stringify(standingBeforeDrag)}. ` +
@@ -1471,7 +1615,7 @@ async function stepK6(page, consoleHandle) {
   // camera the hover was already proven above the threshold at, and the first camera change after
   // the release arms (the refusal was standing when it arrived).
   await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y);
-  const afterRelease = await readHoverReadout(page);
+  const afterRelease = await readHoverReadoutState(page);
   const confirmedIdSinceRelease = confirmingIdRepickTraceSince(consoleHandle, beforeRelease);
   // The drag and the notch must really have moved the camera, or this case would pass having
   // asserted nothing at all -- the same guard case (iv) puts on its own pan, by name.
@@ -1482,7 +1626,11 @@ async function stepK6(page, consoleHandle) {
         `and this case cannot pin anything`
     );
   }
-  const afterReleaseAllowed = afterRelease === null || afterRelease === K6_REFUSAL_TEXT;
+  // Exactly two states pass, named: nothing shown, or the named refusal. A confirmed id fails (it
+  // could only have come from a pick at the pre-drag pixel), and so does a labelled state -- this
+  // read is after the settle, and a marker may not outlive one (B1).
+  const afterReleaseAllowed =
+    afterRelease.state === "clear" || (afterRelease.state === "refusal" && afterRelease.text === K6_REFUSAL_TEXT);
   if (!afterReleaseAllowed || confirmedIdSinceRelease !== null) {
     throw new Error(
       `K6/release-edge: with the named refusal STANDING, a real drag (button down, pointer moved, button up) and ` +
@@ -1505,8 +1653,11 @@ async function stepK6(page, consoleHandle) {
       `the same id, named re-picked by its own confirming trace since this step's mark; ` +
     `(iv) discriminator: ${pressesUsed} keyboard pan press(es), pointer stationary (${refusalsSeen} refusal-only press(es) passed over as non-terminal) -> ${discriminatorOutcome}; ` +
     `(ii) discrete: hovered "${discreteHover.text}" at zoom-in notch ${discreteHover.notchesUsed}, ${zoomOutNotches} ` +
-      `discrete zoom-out notch(es) -> ${notchesShowingAnId} notch(es) showed an id, every one of them with a ` +
-      `confirming re-pick trace at its own camera; ` +
+      `discrete zoom-out notch(es) -> ${notchesShowingAnId} notch(es) showed a CONFIRMED id, every one of them with a ` +
+      `confirming re-pick trace at its own camera; the labelled "confirming" state was sighted mid-gesture at ` +
+      `${markerSightings}/${notchesWithStandingId} notch(es) that had an id standing (${settleRaces} mid-gesture ` +
+      `read(s) landed on a settle's own different id, ${midSameIdReads} on the same id), and it never outlived a ` +
+      `settle; ` +
     `(v) release edge: hovered id ${releaseId}, ${releaseOutNotches} zoom-out notch(es) to a STANDING refusal, then a ` +
       `real drag (button down, ${releaseDrag.dx}, ${releaseDrag.dy} px, button up) and ONE wheel notch back in with ` +
       `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no confirming re-pick line naming an id ` +
@@ -1553,7 +1704,7 @@ const K7_MIN_RESTORED_NON_BG_FRACTION = 0.02; // the SAME "something is actually
 // merely recorded (reviewer gate should-fix 4). Duplicated verbatim from
 // `src/residency/residencyStatus.ts:429-430` (`SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`) rather than
 // imported: this harness is Node-side and imports nothing from `src/` -- the same convention
-// `K6_REFUSAL_TEXT` above follows ("App.tsx:1417, verbatim"). If that string is ever re-worded (it is
+// `K6_REFUSAL_TEXT` above follows ("canvas/HoverReadoutView.tsx, verbatim"). If that string is ever re-worded (it is
 // a DRAFT awaiting the human's own 24(b) sight, per its doc comment), this copy must move with it,
 // and this step failing loudly is how that gets noticed.
 const K7_SETTLED_PARTIAL_TEXT = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
@@ -1638,6 +1789,7 @@ async function stepK7(page, consoleHandle) {
     () =>
       page.evaluate(() => ({
         readout: document.querySelector(".hover-readout")?.textContent ?? null,
+        confirming: document.querySelector(".hover-readout-confirming") !== null,
         status: document.querySelector(".residency-status")?.textContent ?? null,
         answered: true,
       })),
@@ -1648,6 +1800,16 @@ async function stepK7(page, consoleHandle) {
     throw new Error(`K7: the page did not answer a hover-state read within 15000ms after ${K7_ZOOM_OUT_NOTCHES} zoom-out notches`);
   }
   const readout = hover.last.readout;
+  // The three states this step accepts, named: nothing, the named refusal, a confirmed id. The
+  // labelled "confirming" state is NOT among them -- the pointer has just moved for real here, so
+  // the pointer path owns the readout and a marker would mean an unanswered settle (B1;
+  // `frontends/shell/HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` §4).
+  if (hover.last.confirming) {
+    throw new Error(
+      `K7: .hover-readout still carried the labelled "confirming" marker after a real pointer move: ` +
+        `${JSON.stringify(readout)} -- only a re-pick result removes it, and the pointer path owns the readout here`
+    );
+  }
   if (readout !== null && readout !== K6_REFUSAL_TEXT && !/^id \d+/.test(readout)) {
     throw new Error(`K7: .hover-readout showed an unrecognised state after the zoom-out gesture: ${JSON.stringify(readout)}`);
   }

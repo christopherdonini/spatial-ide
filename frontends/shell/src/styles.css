@@ -224,6 +224,18 @@ body,
   pointer-events: none;
 }
 
+/* DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (question set B, B1): the labelled state's
+   marker -- "a plain, muted marker". Muted is the whole visual rule: the id keeps the readout's own
+   colour and weight (it is the same id the operator was already shown), and only the marker beside
+   it is dimmed, so the pair reads as one line with a qualifier rather than as a second message. The
+   marker is a separate element for exactly that reason (`HoverReadoutView.tsx`, M2) -- it is never
+   concatenated into the id string, and `.hover-readout-confirming` on the container is what a test
+   or a reader tells the two states apart by, not the colour. */
+.hover-readout-confirming-marker {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
 /* S1 fix (reviewer round, 2026-08-13): `.canvas-refusal` and `.residency-status` used to be two
    independently absolute-positioned elements at fixed offsets -- `.residency-status`'s old fixed
    `top: 3.25rem` assumed `.canvas-refusal` never grew past ~2.75rem tall, which a wrapped (2+

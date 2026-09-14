@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { ResidentBatch } from "./decodeBatch";
-import { isPickBelowResolution, type HoverReadout, type PickResult } from "./pick";
+import {
+  confirmingReadout,
+  isPickBelowResolution,
+  isPickConfirming,
+  type HoverReadout,
+  type PickResult,
+} from "./pick";
 
 /**
  * Viewport-residency cut P6a, decision 24(c): sub-pixel pick refusal by name (ADR-028 item 4, ADR-010
@@ -14,11 +20,11 @@ import { isPickBelowResolution, type HoverReadout, type PickResult } from "./pic
  * is the one caller, for both arms alike -- the check needs only the batches already resident and the
  * current zoom, neither of which is arm-specific.
  *
- * **The threshold, declared:** `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` below. Below one CSS pixel a
- * feature's own on-screen footprint is smaller than the thing a pointer can aim at; this module uses
- * twice that (2px) as the declared refusal line so the refusal fires slightly before a feature is
- * *literally* invisible, not only once it already is -- a single round number, not a measured or
- * fitted constant (rule 6: state it as the declared choice it is).
+ * **The threshold, declared:** `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` below, sighted by the human at
+ * **9 px** on 2026-09-14 (DECISIONS-PENDING entry 89 / 91 (c), question set B, B2;
+ * `POLISH-87-88-89-PREREGISTRATION.md` §4.2). It is a **declared choice, not a measurement or a fit**
+ * (ADR-010 rule 6, "declared, not discovered") -- see the constant's own comment for the rationale,
+ * the measured figure it records beside itself, and the only thing that may revise it.
  *
  * **The mechanic, kept simple and honest:** rather than sizing every individual feature under the
  * cursor (expensive, and picking already resolved to exactly one candidate feature by then), this
@@ -42,7 +48,36 @@ import { isPickBelowResolution, type HoverReadout, type PickResult } from "./pic
  * module compares) is future work, owed once pick discrimination becomes style-aware -- not
  * attempted here.
  */
-export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 2;
+/**
+ * **The declared refusal threshold: 9 CSS pixels of average on-screen feature extent.** Below it a
+ * hover is refused by name instead of answered.
+ *
+ * **Rationale (the human's own, RULED 2026-09-14, question set B, B2, verbatim):** *"human pointer
+ * targeting, not pixel resolution, decides whether "which feature" is answerable."* That is the
+ * quantity this number bounds -- not what the pick machinery can resolve, but what a person can aim
+ * at well enough for the answer to mean anything.
+ *
+ * **The measured figure, recorded beside it and NEVER presented as its measurement** (ADR-010 rule
+ * 6, `docs/adr/ADR-010-render-frames-origins-boundaries.md:74`): id discrimination was reliable only
+ * from **2.27 px** separation (0.30 m at 1:500). Both of that figure's own caveats travel with it,
+ * in the ADR's words (its own emphasis marks omitted): *"scale invariance was never verified at a second zoom, so 2.27 px is a
+ * measurement at 1:500 rather than a demonstrated invariant"*, and *"because the figure moves with
+ * style, a heavier symbol raises it with no change to the data or the CRS"* -- which this module's
+ * own style-independence limitation (above) compounds. 9 px is roughly four times 2.27 px; that
+ * relation is how the declared value was ARRIVED at
+ * (`POLISH-87-88-89-PREREGISTRATION.md` §4.2), not evidence for it. **No claim is made that 9 px is
+ * where discrimination or targeting fails.**
+ *
+ * **Revisable only by a walkthrough-recorded felt verdict** (the same ruling): a sitting row
+ * hovering features of roughly 5, 9 and 15 px, recorded in `MANUAL-WALKTHROUGH.md` -- **never by a
+ * guess**, and never by a number fitted after the fact.
+ *
+ * **Recorded tension, sighted with the value** (`POLISH-87-88-89-PREREGISTRATION.md` §4.2): entry
+ * 47's sharpened criterion pulls the other way -- a higher threshold necessarily refuses at some
+ * cameras where the operator could still tell which feature is under the pointer. The trade was the
+ * human's to make, and was made here.
+ */
+export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 9;
 
 /**
  * The average resident feature's own bounding-box extent (the larger of its width/height, across
@@ -108,9 +143,15 @@ export function isBelowPickResolution(averageFeatureExtentWorldUnits: number, pi
  * picking during a gesture, which entry 47's preregistration declares a non-goal; the re-pick
  * belongs to the settle instant instead (`decideHoverReadoutAtSettle` below), where exactly one
  * pick answers the whole burst. Mid-gesture the honest answer is therefore the threshold's own:
- * refuse by name below it, clear above it, never re-assert an id that nothing has re-confirmed.
- * **No third "unconfirmed" readout state is introduced** -- that would be a new operator-visible
- * state, outside entry 47's ruling, and the preregistration lists it as not decided.
+ * refuse by name below it, and above it show the id the operator already had **under a marker that
+ * says nothing has re-confirmed it** -- never a bare id.
+ *
+ * **CHANGED by DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (question set B, B1;
+ * `HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M1):** the above-threshold branch returned `null`
+ * (a clear) until that ruling -- the blink per notch the sitting felt. It now returns the **labelled
+ * state** (`confirmingReadout`, `pick.ts`), in the human's own words: *"Between a camera change and
+ * its settle re-pick, the standing id stays visible with a plain, muted marker ... never the bare
+ * id. The marker is removed only by a re-pick result."* Nothing else about this decision moves.
  *
  * Returns the readout the caller should now emit, or `undefined` when nothing should be emitted at
  * all (the caller's own `lastHoverReadoutRef` -- mirroring the last EMITTED readout, not merely the
@@ -119,14 +160,21 @@ export function isBelowPickResolution(averageFeatureExtentWorldUnits: number, pi
  * - `standing === null` (nothing shown): `undefined` -- a later real `onHover` evaluates normally
  *   once the pointer actually moves; there is nothing standing to go stale.
  * - Below the new threshold: the named refusal (`PickBelowResolution`) -- UNLESS `standing` is
- *   already that same refusal, in which case `undefined` (no redundant re-emit, test case (d)).
- * - Not below the new threshold: `null` -- reached whether `standing` was a resolved feature id
- *   (test case (b): a previously-shown id cannot be confirmed to sit under the pointer without a
- *   fresh GPU pick, and mid-gesture this piece declines to run one, so clearing is the honest
- *   minimum) or the refusal itself (test case (c): a previously-shown refusal is no longer known
- *   true either). Never re-asserts or keep-corrects a feature id across the camera change -- an id
- *   is only ever emitted from a FRESH GPU-ordinal to stable-id resolution (ADR-010 rules 2 and 5),
- *   which at settle is exactly what happens.
+ *   already that same refusal, in which case `undefined` (no redundant re-emit, test case (d)). A
+ *   standing LABELLED state is replaced by the refusal here: crossing the threshold is exactly the
+ *   ruling's "below-threshold -> the readout becomes the refusal", and the refusal names no id.
+ * - Not below the new threshold, `standing` a resolved feature id (test case (b)): the **labelled
+ *   state** carrying that id. A previously-shown id still cannot be confirmed to sit under the
+ *   pointer without a fresh GPU pick, and mid-gesture this piece still declines to run one -- so it
+ *   is shown as what it is, unconfirmed at this camera, until the settle's re-pick result replaces
+ *   or clears it. No id is ever ASSERTED across a camera change: an id is only ever emitted bare
+ *   from a FRESH GPU-ordinal to stable-id resolution (ADR-010 rules 2 and 5), which at settle is
+ *   exactly what happens.
+ * - Not below the new threshold, `standing` already the labelled state: `undefined` -- **only a
+ *   re-pick result removes it** (the ruling's second named test); a burst's later camera changes
+ *   leave it exactly as it stands, with no re-emit.
+ * - Not below the new threshold, `standing` the refusal itself (test case (c)): `null` -- a
+ *   previously-shown refusal is no longer known true, and it names no id to keep standing.
  */
 export function reevaluateStandingHoverOnCameraChange(
   standing: HoverReadout,
@@ -139,7 +187,9 @@ export function reevaluateStandingHoverOnCameraChange(
     if (isPickBelowResolution(standing)) return undefined;
     return { kind: "below-pick-resolution" };
   }
-  return null;
+  if (isPickConfirming(standing)) return undefined;
+  if (isPickBelowResolution(standing)) return null;
+  return confirmingReadout(standing);
 }
 
 /**
@@ -240,17 +290,43 @@ export function mayRepickAtSettle(armed: boolean, onCanvas: boolean, framebuffer
  * - `pickOutcome` `null`: clear. Nothing resolved under that pixel -- including over a tile that is
  *   not resident (D8: the re-pick only ever resolves against the batches actually resident; nothing
  *   is guessed, and a later ingest does not re-arm it).
+ *
+ * All three of those outcomes are re-pick RESULTS, and each of them removes the labelled state
+ * (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M1) -- the id bare, a different id bare, or the
+ * refusal/clear. `standing` is what the operator currently sees, and it is read for exactly one
+ * thing: the no-re-pick branch below (M4).
+ *
+ * **M4, the disarm case:** when the three conditions do NOT hold, no pick runs and no result will
+ * ever arrive -- so a standing labelled state is **cleared** rather than left marked forever (the
+ * ruling: *"the marker never outlives a settle"*). A standing confirmed id or refusal still emits
+ * nothing at all in that state, exactly as before this piece: refusal to act, unchanged.
  */
 export function decideHoverReadoutAtSettle(
   armed: boolean,
   onCanvas: boolean,
   framebufferIdentical: boolean,
   belowThreshold: boolean,
-  pickOutcome: PickResult | null
+  pickOutcome: PickResult | null,
+  standing: HoverReadout
 ): HoverReadout | undefined {
-  if (!mayRepickAtSettle(armed, onCanvas, framebufferIdentical)) return undefined;
+  if (!mayRepickAtSettle(armed, onCanvas, framebufferIdentical)) return clearLabelledStateWithoutRepick(standing);
   if (belowThreshold) return { kind: "below-pick-resolution" };
   return pickOutcome;
+}
+
+/**
+ * **M4 -- the one rule for every path on which no re-pick result can arrive** (the settle that
+ * refuses to pick, above; a camera change under a held pointer button; the `pointerdown` edge that
+ * cancels a pending settle -- `WorkingCanvas.tsx`'s two cancel sites). The ruling makes the marker's
+ * removal the exclusive business of a re-pick result *and* forbids it outliving a settle; where no
+ * result is coming, the only answer that satisfies both is to clear the readout.
+ *
+ * Returns `null` (clear) for a standing labelled state and `undefined` (emit nothing, leave the
+ * readout exactly as it is) for everything else -- a confirmed id, the named refusal, or nothing
+ * shown at all are all untouched by this piece.
+ */
+export function clearLabelledStateWithoutRepick(standing: HoverReadout): HoverReadout | undefined {
+  return isPickConfirming(standing) ? null : undefined;
 }
 
 /**

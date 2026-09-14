@@ -27,13 +27,43 @@ export interface PickBelowResolution {
   kind: "below-pick-resolution";
 }
 
+/**
+ * **The labelled state** (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M1/M2; DECISIONS-PENDING
+ * entry 88 with entry 75 (3), RULED 2026-09-14 question set B, B1): the readout between a camera
+ * change and its settle re-pick -- *"the standing id stays visible with a plain, muted marker ...
+ * never the bare id"*. It is a TYPE rather than a CSS class deliberately: the id it carries lives in
+ * `standing` and this variant has **no `id` of its own**, so no render path can reach the id without
+ * naming the variant first -- the bare-id branch simply stops compiling on it (ADR-010 rule 5,
+ * `:68`: staleness is signalled, never silently served, and here the signal cannot be bypassed).
+ *
+ * `standing` is the id the operator was ALREADY shown, re-displayed under the marker; it is never a
+ * fresh claim about the new camera (rule 2's indirection is untouched -- only a settle re-pick's own
+ * GPU-ordinal resolution ever produces a new id). Construct it through `confirmingReadout` below,
+ * the one place it is built.
+ */
+export interface PickConfirming {
+  kind: "confirming";
+  standing: PickResult;
+}
+
 /** `WorkingCanvasProps.onHover`'s own full result type -- `null` (nothing under the cursor),
- * `PickResult` (an ordinary, above-threshold pick), or `PickBelowResolution` (24(c)'s refusal).
- * Discriminate with `isPickBelowResolution` below, never a bare `"kind" in value` at a call site. */
-export type HoverReadout = PickResult | PickBelowResolution | null;
+ * `PickResult` (an ordinary, above-threshold pick, confirmed at the camera it was picked at),
+ * `PickBelowResolution` (24(c)'s refusal), or `PickConfirming` (B1's labelled state).
+ * Discriminate with the guards below, never a bare `"kind" in value` at a call site. */
+export type HoverReadout = PickResult | PickBelowResolution | PickConfirming | null;
 
 export function isPickBelowResolution(value: HoverReadout): value is PickBelowResolution {
   return value !== null && "kind" in value && value.kind === "below-pick-resolution";
+}
+
+export function isPickConfirming(value: HoverReadout): value is PickConfirming {
+  return value !== null && "kind" in value && value.kind === "confirming";
+}
+
+/** The one constructor for the labelled state (M2). A confirmed pick goes in; what comes out cannot
+ * be rendered as a bare id, and cannot be un-labelled by anything except a re-pick result. */
+export function confirmingReadout(standing: PickResult): PickConfirming {
+  return { kind: "confirming", standing };
 }
 
 /**
