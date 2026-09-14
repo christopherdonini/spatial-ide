@@ -158,6 +158,41 @@ developer's own environment).
 for the same `key` within a 10-minute window (declared `DEDUPE_WINDOW_MS`), recorded in
 `.claude/state/telegram-sent.json`.
 
+`sendDocument(filePath, caption)`: `POST https://api.telegram.org/bot<TOKEN>/sendDocument` as
+`multipart/form-data`, the body built by hand (`buildMultipartBody`, exported for testing) with the
+same `https` module — **no dependency**. Same environment, same 8-second timeout, and the **same
+result shape** as `sendTelegram`. **No `parse_mode` on either send** (plain text; markdown escaping
+would break copy-paste of the verbatim question text — the human's 2026-09-14 directive).
+
+## Question round mirror — `questions-mirror.mjs`
+
+**Obligation (the human, 2026-09-14, AUTONOMY.md Appendix A3):** every question round gets a
+Telegram mirror. **Before the first `AskUserQuestion` of a round**, the custodian writes the full
+round — every question set, verbatim: item number, red-line marker, the digest text, the numbered
+options with their descriptions — to `state/questions/round-<n>.md` (a **tracked** record; only the
+`.gitkeep` marker ships empty), then runs:
+
+```
+node scripts/hooks/questions-mirror.mjs state/questions/round-<n>.md
+```
+
+**Telegram is read-and-copy only — never an answer channel.** `AskUserQuestion` stays the answer
+channel; Telegram exists so the round is copy-paste-ready on the phone. The mirror never reads
+Telegram for answers.
+
+**Format (plain text, no markdown — escaping breaks copy-paste):** each item is separated from the
+next by a blank line and a `---` rule so it forwards cleanly, and **item order in the file = the
+order the prompts will ask**.
+
+**The 4096 fallback:** the boundary is measured on the message text as `[...text].length` (Unicode
+code points, matching Telegram's own "characters" limit). `≤ 4096` → one plain-text `sendMessage`
+of the file contents. `> 4096` → a short summary message
+(`Question round <n> — <k> items; full text attached (copy-paste ready)`) **then** `sendDocument`
+of the round file with that same summary as the caption. The CLI exits `0` on success and `1` (with
+a stderr line) on a missing file, missing token/chat-id env, or an API error. The pure-ish core
+`mirrorRound({ file, sendMessage, sendDocument, readFile })` takes its dependencies injected, so
+tests drive it with fakes and never touch the network.
+
 ## State directory
 
 All of the above keep their own state under `<project root>/.claude/state/` (gitignored —
