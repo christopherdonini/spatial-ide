@@ -439,6 +439,7 @@ function repickHarness(
     below: boolean;
     candidate: HoverPickCandidate | null;
     resolved: HoverReadout;
+    standing: HoverReadout;
   }> = {}
 ) {
   const state = {
@@ -448,6 +449,10 @@ function repickHarness(
     below: false,
     candidate: CANDIDATE as HoverPickCandidate | null,
     resolved: ID_A as HoverReadout,
+    // What the operator currently sees (`lastHoverReadoutRef`). Read at settle for M4's decision
+    // only (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md`): `null` here, so every pre-existing case
+    // below keeps exactly its original meaning.
+    standing: null as HoverReadout,
     ...init,
   };
   const pickCandidateAt = vi.fn(() => state.candidate);
@@ -465,6 +470,7 @@ function repickHarness(
     belowPickResolutionNow: () => state.below,
     pickCandidateAt,
     resolveCandidate,
+    standingReadout: () => state.standing,
     emit,
     trace,
     settleMs: HOVER_REPICK_SETTLE_MS,

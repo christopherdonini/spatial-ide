@@ -43,10 +43,11 @@ import {
 } from "./limits";
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import type { HoverReadout, PickResult } from "./pick";
-import { isPickBelowResolution, resolvePick } from "./pick";
+import { isPickBelowResolution, isPickConfirming, resolvePick } from "./pick";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import {
   averageFeatureExtent,
+  clearLabelledStateWithoutRepick,
   cursorForPointerState,
   decideHoverReadoutAtSettle,
   isBelowPickResolution,
@@ -666,6 +667,10 @@ export function applyStyleChange(style: StyleState, deps: ApplyStyleChangeDeps):
 function hoverReadoutTraceLabel(readout: HoverReadout): string {
   if (readout === null) return "cleared";
   if (isPickBelowResolution(readout)) return "below-pick-resolution";
+  // B1's labelled state (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M1/M2): never reached from the
+  // settle path -- a re-pick RESULT is one of the three above -- but named here so the diagnostic can
+  // never print a bare id for a readout the operator is seeing under a marker.
+  if (isPickConfirming(readout)) return `confirming id ${readout.standing.id.toString()}`;
   return `id ${readout.id.toString()}`;
 }
 
@@ -704,6 +709,11 @@ export interface HoverRepickDeps {
   pickCandidateAt(x: number, y: number): HoverPickCandidate | null;
   /** `resolvePick` -- GPU ordinal to stable id, against exactly the batch the candidate names. */
   resolveCandidate(candidate: HoverPickCandidate): PickResult | null;
+  /** What the operator is seeing right now (`lastHoverReadoutRef`), read at settle for exactly one
+   * decision: M4's -- whether a labelled "confirming..." state is standing that this settle must
+   * clear because no re-pick result is coming
+   * (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M4; B1: "the marker never outlives a settle"). */
+  standingReadout(): HoverReadout;
   /** The component's own single hover-emission choke point (`emitHoverReadout`). */
   emit(readout: HoverReadout): void;
   /** D9's one observability line, emitted only when a re-pick actually produced a readout. */
@@ -755,12 +765,28 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
     const onCanvas = capture !== null && isPointerOnCanvas(capture);
     const framebufferIdentical =
       capture !== null && framebufferAtSettle !== null && isFramebufferIdentical(capture, framebufferAtSettle);
-    if (capture === null || !mayRepickAtSettle(armed, onCanvas, framebufferIdentical)) return;
+    if (capture === null || !mayRepickAtSettle(armed, onCanvas, framebufferIdentical)) {
+      // M4: NO pick runs here -- that is unchanged (D4's resize/DPR disarm, the off-canvas pointer,
+      // the invalidated capture, nothing armed). What is new is that a standing labelled state must
+      // not survive this settle: no re-pick result will ever arrive to remove its marker, so it is
+      // cleared through the same choke point. Nothing is traced -- D9's line names a readout a
+      // re-pick PRODUCED, and this one is the absence of a re-pick.
+      const clearedByDisarm = clearLabelledStateWithoutRepick(deps.standingReadout());
+      if (clearedByDisarm !== undefined) deps.emit(clearedByDisarm);
+      return;
+    }
 
     const candidate = deps.pickCandidateAt(capture.x, capture.y);
     const belowThreshold = deps.belowPickResolutionNow();
     const pickOutcome = belowThreshold || candidate === null ? null : deps.resolveCandidate(candidate);
-    const next = decideHoverReadoutAtSettle(armed, onCanvas, framebufferIdentical, belowThreshold, pickOutcome);
+    const next = decideHoverReadoutAtSettle(
+      armed,
+      onCanvas,
+      framebufferIdentical,
+      belowThreshold,
+      pickOutcome,
+      deps.standingReadout()
+    );
     if (next === undefined) return;
     deps.emit(next);
     deps.trace(next);
@@ -1019,6 +1045,20 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     }
   }
 
+  /** **M4's two CANCEL sites** (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md`): where a pending settle
+   * is dropped outright rather than allowed to fire -- a camera change under a held pointer button
+   * (`scheduleHoverRepick`'s `"cancel"` action) and the `pointerdown` edge itself (the D11 listener)
+   * -- no re-pick result can arrive, so a standing labelled state would keep its marker forever. B1
+   * forbids exactly that ("the marker never outlives a settle"), and the pure rule that decides it is
+   * the same one the settle seam uses (`clearLabelledStateWithoutRepick`). A confirmed id, the named
+   * refusal and an empty readout are all left untouched -- nothing is emitted for them. */
+  function clearStandingLabelledState(): void {
+    const next = clearLabelledStateWithoutRepick(lastHoverReadoutRef.current);
+    if (next !== undefined) {
+      emitHoverReadout(next);
+    }
+  }
+
   /** Entry 47, D5: the pointer's own last known SCREEN x/y -- nothing else about it is stored, ever
    * (ADR-010 rule 1; `PICKING.md`, and the scan `noCoordinateLeak.test.ts` runs) -- together with the
    * framebuffer basis that fixes what those two numbers mean (D4). Written on EVERY `onHover`
@@ -1123,6 +1163,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         return batch === undefined ? null : { batch, gpuOrdinal: info.index };
       },
       resolveCandidate: (candidate) => resolvePick(candidate.batch, candidate.gpuOrdinal),
+      standingReadout: () => lastHoverReadoutRef.current,
       emit: (readout) => emitHoverReadout(readout),
       trace: (readout) => traceReadoutConfirmed(hoverReadoutTraceLabel(readout), currentZoomRef.current),
       settleMs: HOVER_REPICK_SETTLE_MS,
@@ -1157,6 +1198,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // and nothing will refresh it until the button comes up, so the whole burst is dropped.
       hoverRepickArmedRef.current = false;
       hoverRepick.cancel();
+      // M4: the mid-gesture decision has just marked the standing id (this runs after
+      // `reevaluateHoverForZoom`), and no settle will now answer it -- clear rather than strand it.
+      clearStandingLabelledState();
       return;
     }
     if (action === "arm") {
@@ -1770,6 +1814,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       pointerButtonDownRef.current = true;
       hoverRepickArmedRef.current = false;
       hoverRepick.cancel();
+      // M4, the second cancel site: a settle already pending from an earlier wheel burst is dropped
+      // here, so a labelled state standing at this instant would outlive it. Cleared, never stranded.
+      clearStandingLabelledState();
     };
     const onPointerRelease = () => {
       pointerButtonDownRef.current = false;

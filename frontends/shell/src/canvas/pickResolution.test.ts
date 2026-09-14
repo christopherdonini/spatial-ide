@@ -18,6 +18,7 @@ import {
   SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX,
 } from "./pickResolution";
 import type { HoverPointerCapture } from "./pickResolution";
+import { confirmingReadout } from "./pick";
 
 function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "rings"> {
   // One exterior ring per feature, no holes -- `features[i]` is that feature's own ring vertex list.
@@ -93,13 +94,17 @@ describe("isBelowPickResolution", () => {
 describe("reevaluateStandingHoverOnCameraChange (the MID-GESTURE decision)", () => {
   const standingFeatureId = { streamHandle: "sh_test", batchSeq: 1, id: 42n, anchor: [0, 0] as [number, number] };
   const standingRefusal = { kind: "below-pick-resolution" as const };
+  // DECISIONS-PENDING entry 89 §4.4 (1), second clause: every case below is re-derived from the
+  // declared constant, never from a literal -- at 1 px per world unit these are "clearly above" and
+  // "clearly below" the declared line whatever its sighted value is.
+  const ABOVE_THRESHOLD_EXTENT = SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX + 3;
+  const BELOW_THRESHOLD_EXTENT = SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX / 2;
 
   // Mirrors `e2e/regression.mjs`'s `stepK6` assertion (i), the CONTINUOUS case (DECISIONS-PENDING
   // entries 56/47, the K6 re-aim): a single camera change that itself crosses the threshold ->
   // the named refusal, not a clear.
   it("(a) standing feature id + zoom-out crosses below the threshold -> refuse by name", () => {
-    // extent 1 * 1 px/unit = 1px, below the 2px threshold.
-    const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, 1, 1);
+    const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, BELOW_THRESHOLD_EXTENT, 1);
     expect(result).toEqual({ kind: "below-pick-resolution" });
   });
 
@@ -108,25 +113,27 @@ describe("reevaluateStandingHoverOnCameraChange (the MID-GESTURE decision)", () 
   // the standing id rather than re-asserting it -- entry 56's diagnosed mechanism for why every
   // LATER discrete notch is then a no-op (test (e) below: `standing === null` -> `undefined`),
   // never a stale id.
-  it("(b) standing feature id + zoom stays above the threshold -> clear to null, never re-assert the id", () => {
-    // extent 5 * 1 px/unit = 5px, above the 2px threshold.
-    const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, 5, 1);
-    expect(result).toBeNull();
+  // RE-AIMED by DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (B1): this case asserted a
+  // CLEAR until that ruling -- the blink the sitting felt. The ruling replaces the clear with the
+  // labelled state, and nothing else about the case moves: the id is still never re-asserted bare.
+  it("(b) standing feature id + zoom stays above the threshold -> the LABELLED state, never a bare id and never a clear", () => {
+    const result = reevaluateStandingHoverOnCameraChange(standingFeatureId, ABOVE_THRESHOLD_EXTENT, 1);
+    expect(result).toEqual(confirmingReadout(standingFeatureId));
   });
 
   it("(c) standing refusal + zoom-in crosses above the threshold -> clear to null", () => {
-    const result = reevaluateStandingHoverOnCameraChange(standingRefusal, 5, 1);
+    const result = reevaluateStandingHoverOnCameraChange(standingRefusal, ABOVE_THRESHOLD_EXTENT, 1);
     expect(result).toBeNull();
   });
 
   it("(d) standing refusal + still below the threshold -> unchanged, no redundant re-emit", () => {
-    const result = reevaluateStandingHoverOnCameraChange(standingRefusal, 1, 1);
+    const result = reevaluateStandingHoverOnCameraChange(standingRefusal, BELOW_THRESHOLD_EXTENT, 1);
     expect(result).toBeUndefined();
   });
 
   it("(e) null standing (nothing shown) -> no-op regardless of the new zoom", () => {
-    expect(reevaluateStandingHoverOnCameraChange(null, 1, 1)).toBeUndefined();
-    expect(reevaluateStandingHoverOnCameraChange(null, 5, 1)).toBeUndefined();
+    expect(reevaluateStandingHoverOnCameraChange(null, BELOW_THRESHOLD_EXTENT, 1)).toBeUndefined();
+    expect(reevaluateStandingHoverOnCameraChange(null, ABOVE_THRESHOLD_EXTENT, 1)).toBeUndefined();
   });
 });
 
@@ -214,41 +221,45 @@ describe("mayRepickAtSettle (D6: all three conditions, or no pick at all)", () =
   });
 });
 
+// The sixth argument is the STANDING readout (what the operator currently sees), read for exactly
+// one decision -- M4's, in `HOVER-CONFIRMING-MARKER-PREREGISTRATION.md`. The cases below keep their
+// original meaning: a re-pick RESULT never consults it, and the no-re-pick cases pass a standing
+// CONFIRMED id, for which M4 changes nothing (still: emit nothing at all).
 describe("decideHoverReadoutAtSettle (the AT-SETTLE decision)", () => {
   it("the re-pick returns the SAME id -> that id is emitted, confirmed at this camera", () => {
-    expect(decideHoverReadoutAtSettle(true, true, true, false, idA)).toEqual(idA);
+    expect(decideHoverReadoutAtSettle(true, true, true, false, idA, null)).toEqual(idA);
   });
 
   it("the re-pick returns a DIFFERENT id -> the new id, never the retained one", () => {
-    const result = decideHoverReadoutAtSettle(true, true, true, false, idB);
+    const result = decideHoverReadoutAtSettle(true, true, true, false, idB, null);
     expect(result).toEqual(idB);
     expect(result).not.toEqual(idA);
   });
 
   it("the re-pick returns nothing (including over a tile that is not resident, D8) -> clear", () => {
-    expect(decideHoverReadoutAtSettle(true, true, true, false, null)).toBeNull();
+    expect(decideHoverReadoutAtSettle(true, true, true, false, null, null)).toBeNull();
   });
 
   it("below the threshold at the new camera -> the named refusal, WHATEVER the pick returned", () => {
     // ADR-028 Decision item 4 / 24(c): the refusal always wins over any id. The threshold is read
     // first; a pick outcome present here (the caller does not even resolve one in that state) must
     // not displace it.
-    expect(decideHoverReadoutAtSettle(true, true, true, true, idA)).toEqual({ kind: "below-pick-resolution" });
-    expect(decideHoverReadoutAtSettle(true, true, true, true, null)).toEqual({ kind: "below-pick-resolution" });
+    expect(decideHoverReadoutAtSettle(true, true, true, true, idA, null)).toEqual({ kind: "below-pick-resolution" });
+    expect(decideHoverReadoutAtSettle(true, true, true, true, null, null)).toEqual({ kind: "below-pick-resolution" });
   });
 
   it("the framebuffer changed between capture and settle -> NOTHING is emitted (D4 disarms)", () => {
-    expect(decideHoverReadoutAtSettle(true, true, false, false, idB)).toBeUndefined();
+    expect(decideHoverReadoutAtSettle(true, true, false, false, idB, idA)).toBeUndefined();
     // ...including where the threshold alone would otherwise have produced the refusal.
-    expect(decideHoverReadoutAtSettle(true, true, false, true, null)).toBeUndefined();
+    expect(decideHoverReadoutAtSettle(true, true, false, true, null, idA)).toBeUndefined();
   });
 
   it("not armed (no readout was standing when the burst began) -> nothing is emitted", () => {
-    expect(decideHoverReadoutAtSettle(false, true, true, false, idB)).toBeUndefined();
+    expect(decideHoverReadoutAtSettle(false, true, true, false, idB, idA)).toBeUndefined();
   });
 
   it("the pointer is off canvas -> nothing is emitted", () => {
-    expect(decideHoverReadoutAtSettle(true, false, true, false, idB)).toBeUndefined();
+    expect(decideHoverReadoutAtSettle(true, false, true, false, idB, idA)).toBeUndefined();
   });
 });
 

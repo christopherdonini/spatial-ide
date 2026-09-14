@@ -9,7 +9,7 @@ import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import type { HoverReadout } from "./canvas/pick";
-import { isPickBelowResolution } from "./canvas/pick";
+import { HoverReadoutView } from "./canvas/HoverReadoutView";
 import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
@@ -1408,21 +1408,14 @@ export default function App() {
             >
               Zoom to layer
             </button>
-            {/* Viewport-residency cut P6a, decision 24(c): `hover` is `HoverReadout`, not merely
-              * `PickResult | null` -- a below-pick-resolution refusal is its own distinct branch, a
-              * typed hover-readout state (never null-silence), rendered in the SAME `.hover-readout`
-              * slot an ordinary pick uses. */}
-            {hover && isPickBelowResolution(hover) && (
-              <div className="hover-readout hover-readout-below-resolution">
-                Features here are below pick resolution — zoom in to inspect them.
-              </div>
-            )}
-            {hover && !isPickBelowResolution(hover) && (
-              <div className="hover-readout">
-                id {hover.id.toString()}
-                {hover.anchor && ` @ (${hover.anchor[0].toFixed(3)}, ${hover.anchor[1].toFixed(3)})`}
-              </div>
-            )}
+            {/* Viewport-residency cut P6a, decision 24(c) + DECISIONS-PENDING entry 88 / 75 (3),
+              * RULED 2026-09-14 (B1): all four hover-readout states are rendered by one component
+              * (`canvas/HoverReadoutView.tsx`), moved out of this file unchanged in markup, classes
+              * and text. The move is what makes B1's own first named test possible -- "the labelled
+              * state cannot render without the marker" is a render-level assertion against that
+              * component (`HoverReadoutView.test.tsx`), which this file, needing a WebGL context it
+              * has no way to provide in jsdom, could not host. */}
+            <HoverReadoutView readout={hover} />
             {/* S1 (reviewer round, 2026-08-13): a single top-anchored flex column, not three
               * independently absolute-positioned elements at fixed offsets. `.canvas-refusal` can
               * wrap to 2+ lines (a long stream-failure or refusal message), and a fixed offset for
