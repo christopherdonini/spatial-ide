@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { ResidentBatch } from "./decodeBatch";
 import {
   averageFeatureExtent,
+  clearLabelledStateWithoutRepick,
   cursorForPointerState,
   decideHoverReadoutAtSettle,
   hoverRepickActionForCameraChange,
@@ -18,7 +19,7 @@ import {
   SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX,
 } from "./pickResolution";
 import type { HoverPointerCapture } from "./pickResolution";
-import { confirmingReadout } from "./pick";
+import { confirmingReadout, isPickConfirming } from "./pick";
 
 function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "rings"> {
   // One exterior ring per feature, no holes -- `features[i]` is that feature's own ring vertex list.
@@ -260,6 +261,85 @@ describe("decideHoverReadoutAtSettle (the AT-SETTLE decision)", () => {
 
   it("the pointer is off canvas -> nothing is emitted", () => {
     expect(decideHoverReadoutAtSettle(true, false, true, false, idB, idA)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (question set B, B1) -- the labelled state.
+// The cases pre-committed in `HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` §6 (3)-(8). The ruling's
+// own two named tests are §6 (1)/(2) (render-level, `HoverReadoutView.test.tsx`) and (4) here.
+// ---------------------------------------------------------------------------------------
+describe("the labelled state (B1): the marker goes up mid-gesture and only a re-pick result takes it down", () => {
+  const ABOVE = SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX + 3;
+  const BELOW = SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX / 2;
+  const labelledA = confirmingReadout(idA);
+
+  it("a camera change over a standing id produces the labelled state, never a bare id or a clear", () => {
+    const result = reevaluateStandingHoverOnCameraChange(idA, ABOVE, 1);
+    expect(result).toEqual(labelledA);
+    // Not the bare id (that would be a stale id served without its marker, ADR-010 rule 5) and not
+    // a clear (the blink entry 88 recorded).
+    expect(result).not.toEqual(idA);
+    expect(result).not.toBeNull();
+    // The id under the marker is the one the operator was already shown, unchanged.
+    expect(isPickConfirming(result ?? null) && (result as ReturnType<typeof confirmingReadout>).standing).toEqual(idA);
+  });
+
+  it("only a re-pick result removes it", () => {
+    // Every later camera change of the burst, above the threshold: the marker stands, and nothing is
+    // even re-emitted. No number of camera changes can take it down.
+    for (let i = 0; i < 5; i++) {
+      expect(reevaluateStandingHoverOnCameraChange(labelledA, ABOVE, 1)).toBeUndefined();
+    }
+    // The one mid-gesture exception the ruling itself names: crossing below the threshold replaces it
+    // with the refusal, which names no id at all.
+    expect(reevaluateStandingHoverOnCameraChange(labelledA, BELOW, 1)).toEqual({ kind: "below-pick-resolution" });
+  });
+
+  it("confirm drops the marker and keeps the id", () => {
+    // The re-pick resolved the same feature at this camera: a FRESH resolution (ADR-010 rule 2), so
+    // the id is now shown bare -- "if the re-pick confirms, the marker drops".
+    const result = decideHoverReadoutAtSettle(true, true, true, false, idA, labelledA);
+    expect(result).toEqual(idA);
+    expect(isPickConfirming(result ?? null)).toBe(false);
+  });
+
+  it("a different feature replaces the readout", () => {
+    const result = decideHoverReadoutAtSettle(true, true, true, false, idB, labelledA);
+    expect(result).toEqual(idB);
+    expect(result).not.toEqual(idA);
+    expect(isPickConfirming(result ?? null)).toBe(false);
+  });
+
+  it("none or below-threshold becomes the refusal or clears", () => {
+    // Nothing resolved under the pixel -> clear.
+    expect(decideHoverReadoutAtSettle(true, true, true, false, null, labelledA)).toBeNull();
+    // Below the declared threshold at the new camera -> the named refusal, whatever the pick said.
+    expect(decideHoverReadoutAtSettle(true, true, true, true, idA, labelledA)).toEqual({
+      kind: "below-pick-resolution",
+    });
+    expect(decideHoverReadoutAtSettle(true, true, true, true, null, labelledA)).toEqual({
+      kind: "below-pick-resolution",
+    });
+  });
+
+  it("the disarm case: a settle that runs no re-pick clears a standing labelled state", () => {
+    // M4. Each of the four conditions on which no pick runs, and therefore no result will ever
+    // arrive: the marker would otherwise outlive its settle, which B1 forbids by name.
+    expect(decideHoverReadoutAtSettle(true, true, false, false, idB, labelledA)).toBeNull(); // resize/DPR (B3 (2))
+    expect(decideHoverReadoutAtSettle(true, false, true, false, idB, labelledA)).toBeNull(); // pointer off canvas
+    expect(decideHoverReadoutAtSettle(false, true, true, false, idB, labelledA)).toBeNull(); // nothing armed
+    expect(decideHoverReadoutAtSettle(true, true, false, true, null, labelledA)).toBeNull(); // ...even below threshold
+
+    // The same rule, at the two sites where a settle is cancelled outright rather than fired.
+    expect(clearLabelledStateWithoutRepick(labelledA)).toBeNull();
+    // ...and it touches nothing else: a confirmed id, the named refusal and an empty readout are all
+    // left exactly as they stand (emit nothing at all), exactly as before this piece.
+    expect(clearLabelledStateWithoutRepick(idA)).toBeUndefined();
+    expect(clearLabelledStateWithoutRepick({ kind: "below-pick-resolution" })).toBeUndefined();
+    expect(clearLabelledStateWithoutRepick(null)).toBeUndefined();
+    expect(decideHoverReadoutAtSettle(true, true, false, false, idB, idA)).toBeUndefined();
+    expect(decideHoverReadoutAtSettle(true, true, false, false, idB, null)).toBeUndefined();
   });
 });
 

@@ -11,6 +11,7 @@ import type { ResidentBatch } from "./decodeBatch";
 import { fitViewStateForBbox } from "./extent";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import type { HoverReadout } from "./pick";
+import { confirmingReadout } from "./pick";
 import { hoverRepickActionForCameraChange } from "./pickResolution";
 import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
@@ -571,6 +572,39 @@ describe("createHoverRepickScheduler (entry 47: the settle seam)", () => {
     vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
     expect(h.pickCandidateAt).not.toHaveBeenCalled();
     expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  // DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (B1), and entry 75 (2) as ruled in B3
+  // ("Keep: a resize or DPR change disarms the pending re-pick"):
+  // `HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` §6 (9)/M4. The disarm keeps its exact shape -- no
+  // pick runs -- and the labelled state that was standing when the burst began is cleared through
+  // the same choke point, because no re-pick result will ever arrive to remove its marker.
+  it("a resize or DPR change between capture and settle clears the standing labelled state and still runs no pick", () => {
+    for (const changed of [
+      { clientWidth: 640, clientHeight: 600, devicePixelRatio: 1 }, // a resize
+      { clientWidth: 800, clientHeight: 600, devicePixelRatio: 2 }, // a DPR change
+    ]) {
+      const h = repickHarness({ standing: confirmingReadout(ID_A) });
+      h.scheduler.schedule();
+      h.state.framebuffer = changed;
+      vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+
+      // Unchanged by this piece: a stale frame is never picked at.
+      expect(h.pickCandidateAt).not.toHaveBeenCalled();
+      // New: the marker does not outlive the settle -- the readout clears.
+      expect(h.emit.mock.calls).toEqual([[null]]);
+      // Not traced: D9's line names a readout a re-pick PRODUCED, and no re-pick ran.
+      expect(h.trace).not.toHaveBeenCalled();
+    }
+
+    // ...and with no labelled state standing, the same disarm emits nothing at all, exactly as it
+    // did before this piece (a standing confirmed id is left untouched by M4).
+    const untouched = repickHarness({ standing: ID_A });
+    untouched.scheduler.schedule();
+    untouched.state.framebuffer = { clientWidth: 640, clientHeight: 600, devicePixelRatio: 1 };
+    vi.advanceTimersByTime(HOVER_REPICK_SETTLE_MS);
+    expect(untouched.pickCandidateAt).not.toHaveBeenCalled();
+    expect(untouched.emit).not.toHaveBeenCalled();
   });
 
   it("every readout a settle produces reaches the operator through the ONE emission choke point", () => {
