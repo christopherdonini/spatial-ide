@@ -1526,9 +1526,10 @@ async function hoverEvidenceWaitForCondition(getValue, predicate, timeoutMs, pol
  * The live evidence lane itself: finds the densest patch (`findDensestPatchHoverCandidate`), hovers
  * its centre pixel (trying both `flipY` orientations, since this minimal version skips
  * `stepA9`'s own interior-neighbourhood pre-verification that would otherwise pin one down), and
- * confirms `.hover-readout` resolves a real feature id (`/^id \d+/`) -- the above-threshold case
- * (ADR-028 decision 24(c)). Never throws; the caller (`runTrace` below) decides what a `{ok:false}`
- * means for the trial as a whole.
+ * confirms `.hover-readout` resolves a real CONFIRMED feature id (`readConfirmedHoverId`, which
+ * rejects the labelled "confirming" state and the refusal by class, not by the `/^id \d+/` text
+ * alone) -- the above-threshold case (ADR-028 decision 24(c)). Never throws; the caller (`runTrace`
+ * below) decides what a `{ok:false}` means for the trial as a whole.
  *
  * **Below-threshold refusal (decision 24(c)'s OTHER half) is deliberately NOT exercised here.**
  * Reaching it live would need a genuine zoomed-out camera where the average resident feature's own
@@ -1556,13 +1557,42 @@ function hoverEvidenceGridRegions() {
   return regions;
 }
 
+/** The readout's state, read STRUCTURALLY -- the same discipline `regression.mjs`'s own
+ * `readHoverReadoutState`/`hoverReadoutId` follow (the K6 (ii) contract,
+ * `POLISH-87-88-89-PREREGISTRATION.md` §3.3): a CONFIRMED id is `.hover-readout` WITHOUT the
+ * `.hover-readout-confirming` (labelled-state) or `.hover-readout-below-resolution` (refusal)
+ * classes, whose text begins `id <digits>`. A minimal inline copy, not an import: `regression.mjs`
+ * ends its module body with an unconditional top-level `await main()` (this section's own disclosure
+ * above) and so cannot be imported here without launching a second suite.
+ *
+ * Why this matters for this lane: DECISIONS-PENDING entry 88 / 75 (3) (RULED 2026-09-14, B1) made
+ * `id <n> · confirming…` a real on-screen readout, and its text matches the old `/^id \d+/` regex --
+ * so that regex alone would classify the labelled "confirming" state as a resolved feature id. This
+ * lane only ever HOVERS (moves the pointer, `page.mouse.move` below) and never changes the camera
+ * while a readout stands, and it runs only after the fit step's own settle is already quiet with
+ * nothing previously hovered (`runTrace`'s `smoke && step.id === "fit"` gate) -- so the marker
+ * cannot in fact arise here today. This read is nonetheless made state-correct rather than
+ * regex-correct, so a future caller that hovers mid-settle cannot silently count a marked stale id
+ * as a confirmed one. */
+async function readConfirmedHoverId(page) {
+  return page.evaluate(() => {
+    const el = document.querySelector(".hover-readout");
+    if (!el) return null;
+    if (el.classList.contains("hover-readout-confirming") || el.classList.contains("hover-readout-below-resolution")) {
+      return null; // a marked stale id or the named refusal -- neither is a confirmed feature id
+    }
+    const text = el.textContent ?? "";
+    return /^id \d+/.test(text) ? text : null;
+  });
+}
+
 async function tryHoverCandidate(page, rect, point, bufferWidth, bufferHeight, label) {
   for (const flipY of [true, false]) {
     const css = hoverEvidenceBufferPointToCss(point, rect, bufferWidth, bufferHeight, flipY);
     await page.mouse.move(css.x, css.y);
     const result = await hoverEvidenceWaitForCondition(
-      () => page.evaluate(() => document.querySelector(".hover-readout")?.textContent ?? null),
-      (text) => text !== null && /^id \d+/.test(text),
+      () => readConfirmedHoverId(page),
+      (id) => id !== null,
       5_000
     );
     if (result.ok) return { ok: true, resolvedId: result.last, point, flipY, candidateLabel: label };
