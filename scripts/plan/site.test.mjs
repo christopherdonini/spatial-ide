@@ -145,9 +145,16 @@ const MACHINE_HEALTH = {
   generated_at: '2026-09-13T21:45:51.389Z',
   source: "the custodian's machine",
   drift: { ok: true, failures: [] },
-  disk_free: { bytes: 10794078208, drive: 'C' },
+  disk_free: {
+    drives: [
+      { drive: 'C', bytes: 10794078208, total: 250000000000 },
+      { drive: 'D', bytes: 500000000000, total: 1000000000000 },
+    ],
+  },
   stray_processes: { total: 2, by_name: { cargo: 0, node: 2, 'spatial-ide-shell': 0 } },
   waiting_on_human: [{ id: 'n-waiting-sight', kind: 'sight', minutes: 15, opened: '2026-09-13', age_days: 0 }],
+  median_opened_to_done: { days: 3, n: 12 },
+  gate_first_pass: { present: true, nodes: 3, first_pass: 2, rate: 2 / 3 },
 };
 
 // ---------------------------------------------------------------- bug 1: health from two sources
@@ -169,7 +176,7 @@ test('bug 1: the strip renders two labelled groups, each with its own timestamp'
     const at = html.indexOf(`<span>${label}</span>`);
     assert.ok(at > buildHeading && at < machineHeading, `${label} belongs to the build-time group`);
   }
-  for (const label of ['Drift', 'Disk free', 'Stray processes', 'Waiting on human']) {
+  for (const label of ['Drift', 'Disk free', 'Stray processes', 'Waiting on human', 'Median opened→done', 'Gate first-pass']) {
     const at = html.indexOf(`<span>${label}</span>`);
     assert.ok(at > machineHeading, `${label} belongs to the machine group`);
   }
@@ -181,7 +188,26 @@ test('bug 1: the strip renders two labelled groups, each with its own timestamp'
     html.includes('<a href="https://github.com/owner/repo/releases/tag/v0.1.0">v0.1.0 (pre-release, 2026-09-13)</a>'),
     'a pre-release is published and says so',
   );
-  assert.ok(/\d+\.\d GB free \(drive C\)/.test(html));
+  assert.ok(html.includes('<span>Disk free</span><span>C: 10.1 GB, D: 465.7 GB</span>'), 'both drives on one row');
+});
+
+test('machine group: the two governance metrics render plainly, day resolution and a first-pass rate with its N', () => {
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
+  assert.ok(html.includes('<span>Median opened→done</span><span>3 days (day resolution, 12 nodes)</span>'));
+  assert.ok(html.includes('<span>Gate first-pass</span><span>2/3 nodes passed first gate (67%)</span>'));
+});
+
+test('machine group: an absent gate log says so; no dated done nodes says so; a single drive renders alone', () => {
+  const health = {
+    ...MACHINE_HEALTH,
+    disk_free: { drives: [{ drive: 'C', bytes: 10794078208, total: 250000000000 }] },
+    median_opened_to_done: { days: null, n: 0 },
+    gate_first_pass: { present: false },
+  };
+  const { html } = renderSite(fixturePlan(), health, { repoSlug: REPO });
+  assert.ok(html.includes('<span>Disk free</span><span>C: 10.1 GB</span>'), 'D: omitted when the machine has none');
+  assert.ok(html.includes('<span>Median opened→done</span><span>no dated done nodes yet</span>'));
+  assert.ok(html.includes('<span>Gate first-pass</span><span>no gate log yet</span>'));
 });
 
 test('bug 1: a release that is not a pre-release carries no qualifier', () => {
