@@ -1,35 +1,29 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3db2ef89f84f2b887a0400d54526796a1032d45b87756236db873bfab48ecca3`) at `2026-09-13T23:43:43.540Z`.
+Generated from `PLAN.yaml` (sha256 `377528851624e602c2bf687528e98b00f4ef32e1133ed307656df34a33b027a6`) at `2026-09-14T10:35:08.700Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (lane `kernel-protocol`, order 1, budget 120 min)
+- **hover-confirming-marker** — Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick (lane `shell`, order 9, budget 180 min)
+- **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) (lane `measurement`, order 3, budget 240 min)
+- **entry-90-static-crt-v0-1-1** — Entry 90 — static CRT as the v0.1.1 build piece (lane `release`, order 6, budget 90 min)
+- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
-## 3. Waiting on the human (total: 141 min)
+## 3. Waiting on the human (total: 85 min)
 
 ### click
 
 - **evidence-archive-v0-1-0** — First application of the evidence archive — attach v0.1.0's evidence to its release (5 min)
 - **entry-78-repo-description** — Entry 78 — repository description and topics (5 min)
 
-### sight
-
-- **m13-bracketed-values** — Part M row M13's two bracketed values (5 min)
-
 ### ruling
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (20 min)
-- **entry-73-polygon-gate-scope** — Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus (15 min)
-- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (10 min)
-- **entry-91-polish-held-halves** — Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89) (6 min)
-- **entry-75-hover-repick-defaults** — Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make (10 min)
-- **entry-69-runtime-dependency** — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default (5 min)
-- **entry-90-static-crt-v0-1-1** — Entry 90 — static CRT as the v0.1.1 build piece (5 min)
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer (10 min)
 
 ### sitting
@@ -38,16 +32,17 @@ Generated from `PLAN.yaml` (sha256 `3db2ef89f84f2b887a0400d54526796a1032d45b8775
 
 ## 4. Blocked on dependencies
 
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6, adr-023-decision-text
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
-- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build — blocked by: polish-engine-lease-class
-- **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone, site-bugs-first
+- **entry-69-runtime-dependency** — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default — blocked by: entry-90-static-crt-v0-1-1
+- **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: entry-90-static-crt-v0-1-1
+- **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: entry-90-static-crt-v0-1-1
+- **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone
 
 ## 5. In progress
 
-- **polish-engine-lease-class** — Entry 87's engine half — a declared lease class for per-request admission work (ADR-033) — evidence: branch `polish/engine-lease-class`
-- **release-artifacts-from-ci** — Release artifacts built from the tagged commit's CI run, from v0.1.1 — evidence: PR #57
-- **site-bugs-first** — Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates) — evidence: branch `governance/site-bugs-first`
+- **adr-023-decision-text** — ADR-023 Decision text as ruled — the drafted Decision ported with two admissions amended and the four B1 conditions — evidence: branch `docs/adr-023-decision`
 
 ## 6. Proposed / unscheduled
 
