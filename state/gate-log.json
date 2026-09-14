@@ -1,1 +1,17 @@
-[]
+[
+  {"node": "polish-engine-lease-class", "gate": "reviewer", "attempt": 1, "verdict": "FAIL", "date": "2026-09-14"},
+  {"node": "polish-engine-lease-class", "gate": "architect", "attempt": 1, "verdict": "FAIL", "date": "2026-09-14"},
+  {"node": "polish-engine-lease-class", "gate": "reviewer", "attempt": 2, "verdict": "PASS", "date": "2026-09-14"},
+  {"node": "polish-engine-lease-class", "gate": "architect", "attempt": 2, "verdict": "FAIL", "date": "2026-09-14"},
+  {"node": "polish-engine-lease-class", "gate": "architect", "attempt": 3, "verdict": "FAIL", "date": "2026-09-14"},
+  {"node": "release-artifacts-from-ci", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-14"},
+  {"node": "site-bugs-first", "gate": "reviewer", "attempt": 1, "verdict": "FAIL", "date": "2026-09-14"},
+  {"node": "site-bugs-first", "gate": "reviewer", "attempt": 2, "verdict": "PASS", "date": "2026-09-14"},
+  {"node": "hover-confirming-marker", "gate": "architect", "attempt": 1, "verdict": "PASS", "date": "2026-09-14"},
+  {"node": "hover-confirming-marker", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-14"},
+  {"node": "telegram-round-mirror", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "health-drives-metrics", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "autonomy-policy-2026-09-14", "gate": "reviewer", "attempt": 1, "verdict": "FAIL", "date": "2026-09-15"},
+  {"node": "autonomy-policy-2026-09-14", "gate": "reviewer", "attempt": 2, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "pre-gate-self-checks", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"}
+]
