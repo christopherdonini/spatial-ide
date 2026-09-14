@@ -270,7 +270,7 @@ archive's local home are on D: … The clean-clone drill can now run on D: witho
 
 `scripts/hooks/telegram.mjs` sends one plain-text message to the Telegram Bot API (`sendMessage`) using Node's `https` only. The bot token comes from `CUSTODIAN_TELEGRAM_BOT_TOKEN` and the chat id from `CUSTODIAN_TELEGRAM_CHAT_ID` — **environment variables only, never in the tree, never logged**; unset → no-op. **One message per blocking event:** a dedupe file under `.claude/state/` suppresses a repeat of the same key within ten minutes. Senders: (a) a `Notification` hook on the types where Claude is blocked on the human — `permission_prompt`, `idle_prompt`, `agent_needs_input`, `quota_auto_resume_stale`, `quota_auto_resume_disabled` (Appendix B lists the verified matcher values; the reference says a Notification hook's "Exit code and stderr are ignored", so it decides nothing); (b) the Stop hook when it allows a stop because only human-blocked nodes remain, or because of the halt switch — the message lists the waiting items with kind and minutes. Telegram never carries an answer: rulings arrive only through `AskUserQuestion` (§4).
 
-**The round mirror (Appendix A3, the Telegram part).** A third sender, `scripts/hooks/questions-mirror.mjs`,
+**The round mirror (Appendix A3, the Telegram part).** A third sender, `scripts/hooks/questions-mirror.mjs` (it ships on `governance/telegram-round-mirror`, PR #69, and is runnable once that is on `main`),
 runs **before the first `AskUserQuestion` of a round** (§4's obligation) and sends the round file
 `state/questions/round-<n>.md` **as ONE message**. If the file exceeds Telegram's **4096-character**
 limit, it is sent **as a document (`sendDocument`)** with a short summary message above it — never

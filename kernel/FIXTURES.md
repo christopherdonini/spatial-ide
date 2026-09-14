@@ -72,7 +72,7 @@ in this table, as a new row, once one exists:
 | Location | Copied | Verified hash matches |
 |---|---|---|
 | *(none yet — blocked)* | 2026-09-06: no second physical location is available on this machine to copy to *(wording generalised 2026-09-07 per DECISIONS-PENDING entry 49 F-12(d); the technical fact — one copy, regenerable — is unchanged)*. Held until one is available; the fixture's DR story remains its deterministic regenerability (above) meanwhile. | — |
-| D: — the second internal SSD (`AUTONOMY.md` §15a, the human's third directive, Appendix A3) | 2026-09-14: a second physical copy now lives on the D: drive (a second physical disk, not a second path on C:). | To be recorded on the machine: re-hash the D: copy against the SHA-256 above and enter the result here — a docs-only governance piece cannot run the hash, so this cell stays owed until the machine records it, per the cross-machine caveat above. |
+| D: — the second internal SSD (`AUTONOMY.md` §15a, the human's third directive, Appendix A3) | 2026-09-14: a second physical copy now lives on the D: drive (a second physical disk, not a second path on C:). | To be recorded on the machine (the human, 2026-09-14): re-hash **both** the D: copy **and** the original against the recorded SHA-256 above, once the copy is settled, and enter both results here in this same cell — a docs-only governance piece cannot run the hash, so this cell stays owed until the machine records it, per the cross-machine caveat above. |
 
 **Location note (2026-09-06):** this file's `Path` field still reads `target/slice-evidence/…`
 because the fixture has NOT been relocated — relocating fixtures out of `target/` is a scoped
