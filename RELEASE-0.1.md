@@ -1285,3 +1285,11 @@ Every path is under `frontends/shell/`. No engine, kernel, protocol or bundle-vi
 - **Part M.** Sittings recorded in Amendments 15 (M5–M13 and M1–M4 on the candidate), 17 (the row classification) and 18 (M1–M5, M7, M12 mode 3, M14, M15 and the hover row on RC2; M13's two bracketed values still the human's). Verdicts as the human reported them; the walkthrough's "Part M run" section remains the template on both branches — the record is these amendments.
 - **CI on the tag.** Green on b391e43: Product CI — Rust workspace, Product CI — shell, Product CI — bundle viewer, ADR-003 spike CI (macOS) all `success` (recorded 2026-09-13, after the tag push).
 - **The merge-back.** PR #50 (`merge/release-0.1.0-into-main`) merged by the human on 2026-09-13 (main at e9900a3; `git describe --tags` on main prints `v0.1.0`) — opened as a PR from `merge/release-0.1.0-into-main` (one conflict in `WorkingCanvas.test.ts`, resolved to the release side, a superset; the shell suite green on the merge result). On its merge the cut closes: `CUT-STATE.md` archived (rule 10), and the post-tag queue presented for the human's sequencing — entry 87's fix (the suspended FIND′ assertion as its test), entry 66 (b) (#45), entry 86 if reproducible, entries 88/89, Brief A P3 on the human's word (#46 holds its entries 80/81).
+
+## Amendment 20 — v0.1.0 evidence archive attached (2026-09-14)
+
+The human ruled (question set A, A3) that the custodian prepares and verifies the evidence archive and the human attaches it — a published release page is the human's to change. Done 2026-09-14:
+
+- **Archive:** `evidence-v0-1-0-2026-09-14.zip`, 81,993,512 bytes, 409 files — every file under `frontends/shell/e2e/out/` dated at or before the tag (`v0.1.0`, 2026-09-13T20:28:44+02:00); the one later file (today's marker-branch harness log) excluded by date, so the archive carries only v0.1.0's own Part M and regression evidence. Built by `node scripts/evidence/archive.mjs` with a per-file SHA-256 manifest.
+- **Attached to the release** by the human with `gh release upload v0.1.0`; it sits beside `Spatial.IDE_0.1.0_x64-setup.exe`.
+- **Citation (AUTONOMY §12):** `Evidence: https://github.com/christopherdonini/spatial-ide/releases/download/v0.1.0/evidence-v0-1-0-2026-09-14.zip (SHA-256 56660e9570c82a0de56eaf43a59d9818670dca86d8a774ded77dd5462de6186a)`
