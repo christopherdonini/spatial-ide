@@ -364,18 +364,18 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: in-progress
+    status: done
     order: 1
     depends_on: [polish-87-88-89]
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
-    evidence: {branch: polish/engine-lease-class}
+    evidence: {pr: 59}
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: [87, 91]
     summary: "The human's ruling of 2026-09-13 (question set 1, Q3): the third lease class, the two tests, FIND′ green as the acceptance evidence, ADR-033's text per the three conditions; ADR-033 accepted on the human's word after its gate"
-    dates: {opened: 2026-09-13, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-14}
   - id: viewer-86-zoom-anchor
     title: "Entry 86 — the reference bundle viewer's zoom is not anchored at the pointer"
     kind: task
@@ -453,17 +453,35 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 5
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/plan/DRAFT-4-landing-page-design.md
-    evidence: {branch: governance/site-bugs-first}
+    evidence: {pr: 58}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: []
     summary: "The human, 2026-09-14: fix DRAFT-4's bugs-first section now as a delegated docs/tooling piece, since two of the three are the health line lying (CI unknown, PRs offline) — read GitHub's API at Pages build time, not gh on the dev machine; machine facts stay machine-side on their own dated line"
+    dates: {opened: 2026-09-14, done: 2026-09-14}
+
+  - id: adr-023-decision-text
+    title: "ADR-023 Decision text as ruled — the drafted Decision ported with two admissions amended and the four B1 conditions"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: in-progress
+    order: 4
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {branch: docs/adr-023-decision}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: [79]
+    summary: "RULED 2026-09-14 (question set D, D2): Float32 admitted as its own Arrow type; dictionary-encoded columns decoded to their value type; dates the declared next admission; four ADR-004 conflicts carried as B1 conditions; Status Proposed until B1 close; the PR is the human click (ADR files are never docs-only)"
     dates: {opened: 2026-09-14, done: null}
 
   # ============================== BLOCKED ==============================
@@ -493,15 +511,15 @@ nodes:
     phase: prototype
     status: blocked
     order: 2
-    depends_on: [briefa-p3-p6]
-    needs_human: {kind: ruling, minutes: 15}
+    depends_on: [briefa-p3-p6, adr-023-decision-text]
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "waits on ADR-023's Decision text being ruled; the drafted decision text is sent for the human's word"
+    summary: "ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then"
     dates: {opened: 2026-09-13, done: null}
 
   - id: adr-029-operation-lifecycle
@@ -509,17 +527,17 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: 1
     depends_on: []
-    needs_human: {kind: ruling, minutes: 10}
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: [92]
-    summary: "the architect consult and decision draft are filed; three routed questions on state shape, the wire literal and the liveness string wait on the human"
+    summary: "RULED 2026-09-14 (question set C, C2): typed states scanning | finished | unknown mirroring cancel; its own wire literal numbered by merge order; the liveness string sighted as a new state; the operation id non-authorising; G1 returns the quantity question if no monotone reading exists. Next: ADR-029 text and the piece preregistration; the Status change stays the human word after its gate"
     dates: {opened: 2026-09-13, done: null}
 
   - id: entry-90-static-crt-v0-1-1
@@ -527,17 +545,17 @@ nodes:
     kind: task
     lane: release
     phase: prototype
-    status: blocked
+    status: ready
     order: 6
     depends_on: [static-crt-spike]
-    needs_human: {kind: ruling, minutes: 5}
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: [90]
-    summary: "the spike passed; queued for v0.1.1 pending the human's word on the licence posture of a statically conveyed Microsoft runtime"
+    summary: "RULED 2026-09-14 (question set C, C1): hold for the sourced licence note with the expected posture stated (NOTICE entry under ADR-030; System Library under AGPL-3.0 s1 for Corresponding Source; the note before the build setting, entry-51 discipline); the piece stops and returns to the human if the terms restrict static distribution"
     dates: {opened: 2026-09-13, done: null}
 
   - id: entry-91-polish-held-halves
@@ -545,18 +563,18 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: blocked
+    status: done
     order: 5
     depends_on: []
-    needs_human: {kind: ruling, minutes: 6}
+    needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
-    evidence: null
+    evidence: {path: "DECISIONS-PENDING.md"}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: [91]
-    summary: "Entry 91 (b) and (c) still held: entry 88 as a labelled stale state (reopening 75 (3)) and entry 89's threshold value; (a) was ruled on 2026-09-13 (question set 1)"
-    dates: {opened: 2026-09-13, done: null}
+    summary: "RULED 2026-09-14 (question set B, B1 and B2): entry 88 reopened as a labelled confirming state (built as hover-confirming-marker); the 9 px threshold sighted as the declared value with its rationale and revisability rule; the crosshair cursor no objection"
+    dates: {opened: 2026-09-13, done: 2026-09-14}
 
   - id: entry-86-known-limitations-rewrite
     title: "Entry 86 — KNOWN-LIMITATIONS wording once the zoom-anchor fix lands"
@@ -619,15 +637,15 @@ nodes:
     phase: prototype
     status: blocked
     order: 5
-    depends_on: []
-    needs_human: {kind: ruling, minutes: 5}
+    depends_on: [entry-90-static-crt-v0-1-1]
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 15
     generation: 1
     felt_verdict: false
     entries: [69]
-    summary: "v0.1.0 shipped the declared-dependency option; the remaining static-CRT or bundled-redistributable choice is folded into entry 90"
+    summary: "folded into entry 90 (RULED 2026-09-14, C1): the residue of the dynamically imported VC++ runtime closes with the static-CRT piece"
     dates: {opened: 2026-09-09, done: null}
 
   - id: entry-73-polygon-gate-scope
@@ -635,36 +653,36 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: done
     order: 6
     depends_on: []
-    needs_human: {kind: ruling, minutes: 15}
+    needs_human: {kind: none, minutes: 0}
     gate: engine/ADMISSION-PREREGISTRATION.md
-    evidence: null
+    evidence: {path: "DECISIONS-PENDING.md"}
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: [73]
-    summary: "widen the polygon-only reader gate, hold it and record most corpus files as refused-unchanged, or re-scope the corpus"
-    dates: {opened: 2026-09-10, done: null}
+    summary: "RULED 2026-09-14 (question set B, B4): the gate held, the corpus not re-scoped; the non-polygon files record as refused, unchanged; widening geometry support is its own node (geometry-types-beyond-polygons)"
+    dates: {opened: 2026-09-10, done: 2026-09-14}
 
   - id: entry-75-hover-repick-defaults
     title: "Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make"
     kind: task
     lane: shell
     phase: prototype
-    status: blocked
+    status: done
     order: 7
     depends_on: [entry-47-hover-repick]
-    needs_human: {kind: ruling, minutes: 10}
+    needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/HOVER-REPICK-PREREGISTRATION.md
-    evidence: null
+    evidence: {path: "DECISIONS-PENDING.md"}
     budget_minutes: 15
     generation: 1
     felt_verdict: false
     entries: [75]
-    summary: "pan-settle scope, the resize/DPR disarm behaviour, and whether an unconfirmed mid-gesture state opens all ship at their safe defaults pending the human's word"
-    dates: {opened: 2026-09-10, done: null}
+    summary: "RULED 2026-09-14 (question set B, B3): pan+zoom stays the default behind HOVER_REPICK_ON_PAN, the sitting may flip it to zoom-only on a felt verdict; a resize or DPR change keeps disarming the pending re-pick; (3) is the labelled confirming state (B1)"
+    dates: {opened: 2026-09-10, done: 2026-09-14}
 
   - id: entry-79-b1-consult-items
     title: "Entry 79 — three items routed for Brief B stage B1's close"
@@ -691,15 +709,15 @@ nodes:
     phase: prototype
     status: blocked
     order: 8
-    depends_on: []
-    needs_human: {kind: sight, minutes: 5}
+    depends_on: [entry-90-static-crt-v0-1-1]
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 5
     generation: 1
     felt_verdict: true
     entries: []
-    summary: "M13: the session-log error line given verbatim on 2026-09-14 (recorded); the exit code after dismissing the dialog still to be given"
+    summary: "RULED 2026-09-14 (question set A, A2): the exit code was not observed; the bracket stays and the row is re-tested at the v0.1.1 release build, which the static-CRT piece produces"
     dates: {opened: 2026-09-13, done: null}
 
   - id: sitting-4-rows
@@ -717,15 +735,15 @@ nodes:
     generation: 1
     felt_verdict: true
     entries: [66, 86]
-    summary: "several felt-verdict walkthrough rows queued per rule 11 are batched for one sitting rather than asked piecemeal"
-    dates: {opened: null, done: null}
+    summary: "the human, 2026-09-14 (question set D): tonight around ten pm local; rows: Part K 66(b), L7/L8, 84/85, Part G 86, the polish rows, the set-B rows (the threshold hovered at roughly 5, 9 and 15 px features; the pan re-pick feel; the confirming marker wording only if landed)"
+    dates: {opened: 2026-09-14, done: null}
 
   - id: drill-clean-clone
     title: "The drill — clean-directory clone, regenerated fixtures, full suite, release build"
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: 3
     depends_on: [polish-engine-lease-class]
     needs_human: {kind: none, minutes: 0}
@@ -753,7 +771,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "attaching to an already-published release changes that release page, so the first application is the human's click"
+    summary: "RULED 2026-09-14 (question set A, A3): the custodian prepares and verifies the archive; the upload is the human click (a published release page changes)"
     dates: {opened: null, done: null}
 
   - id: release-artifacts-from-ci
@@ -761,7 +779,7 @@ nodes:
     kind: task
     lane: release
     phase: prototype
-    status: in-progress
+    status: done
     order: 10
     depends_on: [autonomy-work-system]
     needs_human: {kind: none, minutes: 0}
@@ -772,7 +790,7 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "waits on the autonomy tooling's release-artifact mechanics before it can be built"
-    dates: {opened: null, done: null}
+    dates: {opened: 2026-09-13, done: 2026-09-14}
 
   - id: site-design-v1
     title: "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)"
@@ -792,6 +810,78 @@ nodes:
     summary: "Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged"
     dates: {opened: 2026-09-14, done: null}
 
+  - id: hover-confirming-marker
+    title: "Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: ready
+    order: 9
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 180
+    generation: 1
+    felt_verdict: false
+    entries: [88, 91, 75]
+    summary: "RULED 2026-09-14 (question set B, B1): the marker is removed only by a re-pick result (confirm drops it; a different feature replaces the readout; none or below-threshold becomes the refusal or clears); a stale id is never served without its marker (ADR-010 rule 5) and the marker never outlives a settle; tests: the state cannot render without the marker, only a re-pick result removes it; wording sighted at the sitting. A preregistration amendment precedes the code"
+    dates: {opened: 2026-09-14, done: null}
+
+  - id: lod-route-b-divergence
+    title: "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)"
+    kind: task
+    lane: measurement
+    phase: prototype
+    status: ready
+    order: 3
+    depends_on: [lod-feasibility-spike]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: [93]
+    summary: "RULED 2026-09-14 (question set C, C3): whether geo topology-preserving simplification (SimplifyVwPreserve) removes the divergence, plain Douglas-Peucker producing invalid polygons being the expected cause; whether the DuckDB spatial extension can be statically bundled with no runtime fetch (ADR-021); spike-only dependencies stay spike-only"
+    dates: {opened: 2026-09-14, done: null}
+
+  - id: geometry-types-beyond-polygons
+    title: "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration"
+    kind: task
+    lane: engine
+    phase: alpha
+    status: blocked
+    order: 6
+    depends_on: [briefa-p3-p6]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 480
+    generation: 1
+    felt_verdict: false
+    entries: [73]
+    summary: "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider"
+    dates: {opened: 2026-09-14, done: null}
+
+  - id: signpath-application-draft
+    title: "Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built"
+    kind: task
+    lane: release
+    phase: prototype
+    status: blocked
+    order: 11
+    depends_on: [entry-90-static-crt-v0-1-1]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: [77]
+    summary: "RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note"
+    dates: {opened: 2026-09-14, done: null}
+
   # ============================== PROPOSED ==============================
   # Appended by the custodian; unplaced. Only the human sets `order` on these.
 
@@ -802,15 +892,15 @@ nodes:
     phase: prototype
     status: proposed
     order: null
-    depends_on: [lod-feasibility-spike]
-    needs_human: {kind: ruling, minutes: 20}
+    depends_on: [lod-feasibility-spike, lod-route-b-divergence]
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: [93]
-    summary: "the revised brief's open questions (the overview x filter rule, P1 vs P2, the scale-class row's shape) need the human's word before a preregistration can be written"
+    summary: "RULED 2026-09-14 (question set C, C3): route B divergence explained first; route A admissible only if the spatial extension bundles statically with no runtime fetch (ADR-021); then the architect drafts the preregistration with the five open questions pre-committed for the human sight (a sight node when the draft exists); no dependency approved by the ruling"
     dates: {opened: null, done: null}
 
   - id: adr-032-decision

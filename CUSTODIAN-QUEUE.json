@@ -1,11 +1,125 @@
 {
-  "generated_at": "2026-09-13T23:43:43.540Z",
-  "plan_hash": "3db2ef89f84f2b887a0400d54526796a1032d45b87756236db873bfab48ecca3",
+  "generated_at": "2026-09-14T10:35:08.700Z",
+  "plan_hash": "377528851624e602c2bf687528e98b00f4ef32e1133ed307656df34a33b027a6",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "adr-029-operation-lifecycle",
+    "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
+    "lane": "kernel-protocol",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 1,
+    "budget_minutes": 120,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-13",
+      "done": null
+    },
+    "summary": "RULED 2026-09-14 (question set C, C2): typed states scanning | finished | unknown mirroring cancel; its own wire literal numbered by merge order; the liveness string sighted as a new state; the operation id non-authorising; G1 returns the quantity question if no monotone reading exists. Next: ADR-029 text and the piece preregistration; the Status change stays the human word after its gate"
+  },
+  "ready": [
+    {
+      "id": "adr-029-operation-lifecycle",
+      "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-13",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C2): typed states scanning | finished | unknown mirroring cancel; its own wire literal numbered by merge order; the liveness string sighted as a new state; the operation id non-authorising; G1 returns the quantity question if no monotone reading exists. Next: ADR-029 text and the piece preregistration; the Status change stays the human word after its gate"
+    },
+    {
+      "id": "hover-confirming-marker",
+      "title": "Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set B, B1): the marker is removed only by a re-pick result (confirm drops it; a different feature replaces the readout; none or below-threshold becomes the refusal or clears); a stale id is never served without its marker (ADR-010 rule 5) and the marker never outlives a settle; tests: the state cannot render without the marker, only a re-pick result removes it; wording sighted at the sitting. A preregistration amendment precedes the code"
+    },
+    {
+      "id": "lod-route-b-divergence",
+      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C3): whether geo topology-preserving simplification (SimplifyVwPreserve) removes the divergence, plain Douglas-Peucker producing invalid polygons being the expected cause; whether the DuckDB spatial extension can be statically bundled with no runtime fetch (ADR-021); spike-only dependencies stay spike-only"
+    },
+    {
+      "id": "entry-90-static-crt-v0-1-1",
+      "title": "Entry 90 — static CRT as the v0.1.1 build piece",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 6,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-13",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C1): hold for the sourced licence note with the expected posture stated (NOTICE entry under ADR-030; System Library under AGPL-3.0 s1 for Corresponding Source; the note before the build setting, entry-51 discipline); the piece stops and returns to the human if the terms restrict static distribution"
+    },
+    {
+      "id": "drill-clean-clone",
+      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded 2026-09-14 (the debug cache reclaimed). Sequenced after the engine half: its harness run needs the quiet machine the drill would load (the mechanics rule)"
+    }
+  ],
   "waiting_on_human": {
-    "total_minutes": 141,
+    "total_minutes": 85,
     "by_kind": {
       "click": [
         {
@@ -25,7 +139,7 @@
             "opened": null,
             "done": null
           },
-          "summary": "attaching to an already-published release changes that release page, so the first application is the human's click"
+          "summary": "RULED 2026-09-14 (question set A, A3): the custodian prepares and verifies the archive; the upload is the human click (a published release page changes)"
         },
         {
           "id": "entry-78-repo-description",
@@ -47,27 +161,7 @@
           "summary": "the drafted description and topics are ready-to-run gh commands the human applies themselves"
         }
       ],
-      "sight": [
-        {
-          "id": "m13-bracketed-values",
-          "title": "Part M row M13's two bracketed values",
-          "lane": "release",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 8,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "sight",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-13",
-            "done": null
-          },
-          "summary": "M13: the session-log error line given verbatim on 2026-09-14 (recorded); the exit code after dismissing the dialog still to be given"
-        }
-      ],
+      "sight": [],
       "ruling": [
         {
           "id": "briefa-p3-p6",
@@ -87,120 +181,6 @@
             "done": null
           },
           "summary": "held for the human's ruling on the P3 digest (entry 83's question) before the session-identity tier starts"
-        },
-        {
-          "id": "entry-73-polygon-gate-scope",
-          "title": "Entry 73 — Brief A P0's polygon-only geometry gate vs the compatibility corpus",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 30,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 15
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-10",
-            "done": null
-          },
-          "summary": "widen the polygon-only reader gate, hold it and record most corpus files as refused-unchanged, or re-scope the corpus"
-        },
-        {
-          "id": "adr-029-operation-lifecycle",
-          "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
-          "lane": "kernel-protocol",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 1,
-          "budget_minutes": 120,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 10
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-13",
-            "done": null
-          },
-          "summary": "the architect consult and decision draft are filed; three routed questions on state shape, the wire literal and the liveness string wait on the human"
-        },
-        {
-          "id": "entry-91-polish-held-halves",
-          "title": "Entry 91 — the polish piece's three held halves (87's engine half + ADR-033; 88; 89)",
-          "lane": "shell",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 5,
-          "budget_minutes": 60,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 6
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-13",
-            "done": null
-          },
-          "summary": "Entry 91 (b) and (c) still held: entry 88 as a labelled stale state (reopening 75 (3)) and entry 89's threshold value; (a) was ruled on 2026-09-13 (question set 1)"
-        },
-        {
-          "id": "entry-75-hover-repick-defaults",
-          "title": "Entry 75 — the three hover-repick behaviour choices the ruling on entry 47 did not make",
-          "lane": "shell",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 7,
-          "budget_minutes": 15,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 10
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-10",
-            "done": null
-          },
-          "summary": "pan-settle scope, the resize/DPR disarm behaviour, and whether an unconfirmed mid-gesture state opens all ship at their safe defaults pending the human's word"
-        },
-        {
-          "id": "entry-69-runtime-dependency",
-          "title": "Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default",
-          "lane": "release",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 5,
-          "budget_minutes": 15,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-09",
-            "done": null
-          },
-          "summary": "v0.1.0 shipped the declared-dependency option; the remaining static-CRT or bundled-redistributable choice is folded into entry 90"
-        },
-        {
-          "id": "entry-90-static-crt-v0-1-1",
-          "title": "Entry 90 — static CRT as the v0.1.1 build piece",
-          "lane": "release",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 90,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-13",
-            "done": null
-          },
-          "summary": "the spike passed; queued for v0.1.1 pending the human's word on the licence posture of a statically conveyed Microsoft runtime"
         },
         {
           "id": "entry-77-code-signing",
@@ -237,15 +217,37 @@
           },
           "evidence": null,
           "dates": {
-            "opened": null,
+            "opened": "2026-09-14",
             "done": null
           },
-          "summary": "several felt-verdict walkthrough rows queued per rule 11 are batched for one sitting rather than asked piecemeal"
+          "summary": "the human, 2026-09-14 (question set D): tonight around ten pm local; rows: Part K 66(b), L7/L8, 84/85, Part G 86, the polish rows, the set-B rows (the threshold hovered at roughly 5, 9 and 15 px features; the pan re-pick feel; the confirming marker wording only if landed)"
         }
       ]
     }
   },
   "blocked_on_dependencies": [
+    {
+      "id": "geometry-types-beyond-polygons",
+      "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
+      "lane": "engine",
+      "phase": "alpha",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 480,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider",
+      "blocked_by": [
+        "briefa-p3-p6"
+      ]
+    },
     {
       "id": "b1-engine-kernel-half",
       "title": "Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)",
@@ -255,17 +257,18 @@
       "order": 2,
       "budget_minutes": 240,
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 15
+        "kind": "none",
+        "minutes": 0
       },
       "evidence": null,
       "dates": {
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "waits on ADR-023's Decision text being ruled; the drafted decision text is sent for the human's word",
+      "summary": "ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "blocked_by": [
-        "briefa-p3-p6"
+        "briefa-p3-p6",
+        "adr-023-decision-text"
       ]
     },
     {
@@ -291,25 +294,69 @@
       ]
     },
     {
-      "id": "drill-clean-clone",
-      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
-      "lane": "governance",
+      "id": "entry-69-runtime-dependency",
+      "title": "Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default",
+      "lane": "release",
       "phase": "prototype",
       "status": "blocked",
-      "order": 3,
-      "budget_minutes": 60,
+      "order": 5,
+      "budget_minutes": 15,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": null,
+        "opened": "2026-09-09",
         "done": null
       },
-      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded 2026-09-14 (the debug cache reclaimed). Sequenced after the engine half: its harness run needs the quiet machine the drill would load (the mechanics rule)",
+      "summary": "folded into entry 90 (RULED 2026-09-14, C1): the residue of the dynamically imported VC++ runtime closes with the static-CRT piece",
       "blocked_by": [
-        "polish-engine-lease-class"
+        "entry-90-static-crt-v0-1-1"
+      ]
+    },
+    {
+      "id": "m13-bracketed-values",
+      "title": "Part M row M13's two bracketed values",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 8,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-13",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set A, A2): the exit code was not observed; the bracket stays and the row is re-tested at the v0.1.1 release build, which the static-CRT piece produces",
+      "blocked_by": [
+        "entry-90-static-crt-v0-1-1"
+      ]
+    },
+    {
+      "id": "signpath-application-draft",
+      "title": "Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 11,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note",
+      "blocked_by": [
+        "entry-90-static-crt-v0-1-1"
       ]
     },
     {
@@ -331,77 +378,32 @@
       },
       "summary": "Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged",
       "blocked_by": [
-        "drill-clean-clone",
-        "site-bugs-first"
+        "drill-clean-clone"
       ]
     }
   ],
   "in_progress": [
     {
-      "id": "polish-engine-lease-class",
-      "title": "Entry 87's engine half — a declared lease class for per-request admission work (ADR-033)",
-      "lane": "engine",
+      "id": "adr-023-decision-text",
+      "title": "ADR-023 Decision text as ruled — the drafted Decision ported with two admissions amended and the four B1 conditions",
+      "lane": "kernel-protocol",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 240,
+      "order": 4,
+      "budget_minutes": 60,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "branch": "polish/engine-lease-class"
-      },
-      "dates": {
-        "opened": "2026-09-13",
-        "done": null
-      },
-      "summary": "The human's ruling of 2026-09-13 (question set 1, Q3): the third lease class, the two tests, FIND′ green as the acceptance evidence, ADR-033's text per the three conditions; ADR-033 accepted on the human's word after its gate",
-      "evidence_label": "branch `polish/engine-lease-class`"
-    },
-    {
-      "id": "release-artifacts-from-ci",
-      "title": "Release artifacts built from the tagged commit's CI run, from v0.1.1",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 10,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 57
-      },
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "waits on the autonomy tooling's release-artifact mechanics before it can be built",
-      "evidence_label": "PR #57"
-    },
-    {
-      "id": "site-bugs-first",
-      "title": "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 5,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "governance/site-bugs-first"
+        "branch": "docs/adr-023-decision"
       },
       "dates": {
         "opened": "2026-09-14",
         "done": null
       },
-      "summary": "The human, 2026-09-14: fix DRAFT-4's bugs-first section now as a delegated docs/tooling piece, since two of the three are the health line lying (CI unknown, PRs offline) — read GitHub's API at Pages build time, not gh on the dev machine; machine facts stay machine-side on their own dated line",
-      "evidence_label": "branch `governance/site-bugs-first`"
+      "summary": "RULED 2026-09-14 (question set D, D2): Float32 admitted as its own Arrow type; dictionary-encoded columns decoded to their value type; dates the declared next admission; four ADR-004 conflicts carried as B1 conditions; Status Proposed until B1 close; the PR is the human click (ADR files are never docs-only)",
+      "evidence_label": "branch `docs/adr-023-decision`"
     }
   ],
   "proposed": [
@@ -414,15 +416,15 @@
       "order": null,
       "budget_minutes": 180,
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 20
+        "kind": "none",
+        "minutes": 0
       },
       "evidence": null,
       "dates": {
         "opened": null,
         "done": null
       },
-      "summary": "the revised brief's open questions (the overview x filter rule, P1 vs P2, the scale-class row's shape) need the human's word before a preregistration can be written"
+      "summary": "RULED 2026-09-14 (question set C, C3): route B divergence explained first; route A admissible only if the spatial extension bundles statically with no runtime fetch (ADR-021); then the architect drafts the preregistration with the five open questions pre-committed for the human sight (a sight node when the draft exists); no dependency approved by the ruling"
     },
     {
       "id": "adr-032-decision",
