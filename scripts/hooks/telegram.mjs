@@ -18,6 +18,14 @@
 // send for the same key within a 10-minute window, recorded in
 // <project root>/.claude/state/telegram-sent.json (gitignored; the same convention scripts/hooks
 // use for their other per-session/per-day state).
+//
+// sendDocument(filePath, caption): POST https://api.telegram.org/bot<TOKEN>/sendDocument as
+// multipart/form-data, built by hand with the same `https` module -- no dependency added. Used by
+// the question-round mirror (questions-mirror.mjs) to attach a round file that exceeds Telegram's
+// 4096-character message limit. Returns the SAME result shape as sendTelegram. NO parse_mode on
+// either send: the human's 2026-09-14 Appendix A3 directive is plain text only, because markdown
+// escaping breaks copy-paste of the verbatim question text. `sendMessage` is exported as an alias
+// of sendTelegram so callers can speak in the mirror's own vocabulary.
 
 import https from 'node:https';
 import fs from 'node:fs';
@@ -93,6 +101,124 @@ export function sendTelegram(text) {
     });
     req.on('error', (err) => {
       console.error(`telegram: send failed (${err.message}); a failure never changes a hook's decision.`);
+      finish({ ok: false, error: err.message });
+    });
+    req.write(body);
+    req.end();
+  });
+}
+
+/** Alias so the question-round mirror (and its tests) can inject/speak `sendMessage`. */
+export const sendMessage = sendTelegram;
+
+/**
+ * Builds a multipart/form-data body for a single-file sendDocument call, by hand (no dependency).
+ * Returns a Buffer so the raw file bytes survive verbatim (a document part is not text-only).
+ * Exported so the body shape can be unit-tested in isolation.
+ */
+export function buildMultipartBody({ boundary, chatId, caption, filename, fileBuffer }) {
+  const CRLF = '\r\n';
+  const field = (name, value) =>
+    Buffer.from(
+      `--${boundary}${CRLF}Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}${value}${CRLF}`,
+      'utf8',
+    );
+  const parts = [field('chat_id', String(chatId))];
+  if (caption != null) parts.push(field('caption', String(caption)));
+  // The document part carries the raw file bytes between a header buffer and a trailing CRLF, so
+  // the bytes are never re-encoded through a template string.
+  parts.push(
+    Buffer.from(
+      `--${boundary}${CRLF}Content-Disposition: form-data; name="document"; filename="${filename}"${CRLF}` +
+        `Content-Type: application/octet-stream${CRLF}${CRLF}`,
+      'utf8',
+    ),
+  );
+  parts.push(fileBuffer);
+  parts.push(Buffer.from(CRLF, 'utf8'));
+  parts.push(Buffer.from(`--${boundary}--${CRLF}`, 'utf8'));
+  return Buffer.concat(parts);
+}
+
+/**
+ * Sends one file as a Telegram document. Never throws; resolves with the same shape as
+ * sendTelegram ({ ok, status, body } on completion, { ok:true, dryRun:true } in dry-run,
+ * { ok:false, skipped:true } when env is missing, { ok:false, error } on a read/network error).
+ */
+export function sendDocument(filePath, caption) {
+  const token = process.env.CUSTODIAN_TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.CUSTODIAN_TELEGRAM_CHAT_ID;
+  const dryRun = process.env.CUSTODIAN_TELEGRAM_DRY_RUN === '1';
+
+  if (dryRun) {
+    console.error(`[telegram dry-run] would send document: ${filePath}${caption ? ` (caption: ${caption})` : ''}`);
+    return Promise.resolve({ ok: true, dryRun: true });
+  }
+  if (!token || !chatId) {
+    console.error(
+      'telegram: CUSTODIAN_TELEGRAM_BOT_TOKEN or CUSTODIAN_TELEGRAM_CHAT_ID is not set in the environment; no-op.',
+    );
+    return Promise.resolve({ ok: false, skipped: true });
+  }
+
+  let fileBuffer;
+  try {
+    fileBuffer = fs.readFileSync(filePath);
+  } catch (e) {
+    console.error(`telegram: could not read the document to send (${e.message}); a failure never changes a hook's decision.`);
+    return Promise.resolve({ ok: false, error: e.message });
+  }
+
+  const filename = path.basename(filePath);
+  const boundary = `CustodianBoundary${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+  const body = buildMultipartBody({ boundary, chatId, caption, filename, fileBuffer });
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+
+    let req;
+    try {
+      req = https.request(
+        {
+          hostname: 'api.telegram.org',
+          path: `/bot${token}/sendDocument`,
+          method: 'POST',
+          headers: {
+            'Content-Type': `multipart/form-data; boundary=${boundary}`,
+            'Content-Length': body.length,
+          },
+          timeout: TIMEOUT_MS,
+        },
+        (res) => {
+          let data = '';
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+          res.on('end', () => {
+            const ok = res.statusCode >= 200 && res.statusCode < 300;
+            if (!ok) {
+              console.error(`telegram: sendDocument failed (HTTP ${res.statusCode}); a failure never changes a hook's decision.`);
+            }
+            finish({ ok, status: res.statusCode, body: data });
+          });
+        },
+      );
+    } catch (e) {
+      console.error(`telegram: sendDocument failed (${e.message}); a failure never changes a hook's decision.`);
+      finish({ ok: false, error: e.message });
+      return;
+    }
+
+    req.on('timeout', () => {
+      req.destroy(new Error('telegram sendDocument timed out'));
+    });
+    req.on('error', (err) => {
+      console.error(`telegram: sendDocument failed (${err.message}); a failure never changes a hook's decision.`);
       finish({ ok: false, error: err.message });
     });
     req.write(body);
