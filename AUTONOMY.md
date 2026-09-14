@@ -112,7 +112,7 @@ Existing token rules (`AI_DEVELOPMENT.md` "Token discipline") are respected: the
   text, no markdown formatting** (escaping breaks copy-paste). **Each item is separated by a blank
   line and a `---` rule**, and **item order in the file equals the ask order**, so answers can be
   pasted back in sequence. The custodian then runs `node scripts/hooks/questions-mirror.mjs
-  state/questions/round-<n>.md` (§16). This is the one-way mirror only: **Telegram is read-and-copy,
+  state/questions/round-<n>.md` (§16; the script ships on `governance/telegram-round-mirror`, PR #69 — the obligation is live once it is on `main`). This is the one-way mirror only: **Telegram is read-and-copy,
   never an answer channel** — a reply typed into Telegram is not a ruling and is never read as one.
   `AskUserQuestion` stays the sole answer channel (an explicit selection or typed text, the b21111d
   rule above), unchanged.
@@ -143,8 +143,7 @@ Pages and the queue are only ever as true as this check.
 The human's third directive, verbatim (Appendix A3): *"verify:cites — every path:line reference in
 docs and comments resolved against the tree in CI; the citation-integrity scan extended to all
 files; a claimed-test-exists check; the mutation-per-new-test rule automated — all run as pre-gate
-self-checks so gates fail only on semantics."* Four mechanical checks run in `governance-ci.yml`
-alongside `verify:plan`, **before** any reviewer or architect gate:
+self-checks so gates fail only on semantics."* Four mechanical checks are **added to** `governance-ci.yml` (alongside `verify:plan`), to run **before** any reviewer or architect gate. **They are not yet on `main`:** the scripts and the CI wiring ship on the piece `governance/pre-gate-self-checks`; this section is the design of record, and the obligation below takes effect when that piece merges:
 
 1. **`verify:cites`** (`scripts/plan/verify-cites.mjs`) — every `path:line` (and `path:line-range`)
    reference in documentation and in code comments is resolved against the tree at that commit: the
@@ -215,10 +214,10 @@ two-agent gating for ADR / security / data-plane / guarantee changes or anything
 size threshold; a single combined reviewer gate plus a five-line preregistration for docs, tests and
 polish under it (the human's third directive, Appendix A3).
 
-**The mutation-per-new-test rule is automated as a pre-gate self-check (§6a).** The gate defaults
+**The mutation-per-new-test rule is automated as a pre-gate self-check (§6a) — once that piece lands.** When `governance/pre-gate-self-checks` merges, the gate defaults
 above are no longer only a discipline the piece self-reports: `verify:test-claims` (§6a) mechanically
 confirms every claimed-and-required mutation exists and fails its test by name, so a reviewer or
-architect gate assumes the mechanical checks are already green and fails only on semantics
+architect gate can assume the mechanical checks are green and fail only on semantics
 (Appendix A3, the speed-work part).
 
 ## §15. Generations, the health strip, the drill
