@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-14T11:35:59.799Z",
-  "plan_hash": "67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c6cb7b2c046ced48c2b08",
+  "generated_at": "2026-09-14T19:37:26.131Z",
+  "plan_hash": "137a2833804696f81d15e1438aa7db74ce5c88d53e263bf63211e81ee981325f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -793,11 +793,12 @@
       "status": "blocked",
       "order": 5,
       "depends_on": [
-        "briefa-p1-p2"
+        "briefa-p1-p2",
+        "sitting-4-rows"
       ],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 20
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": null,
@@ -807,7 +808,7 @@
       "entries": [
         83
       ],
-      "summary": "held for the human's ruling on the P3 digest (entry 83's question) before the session-identity tier starts",
+      "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting",
       "dates": {
         "opened": "2026-09-11",
         "done": null
@@ -876,27 +877,29 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 6,
       "depends_on": [
         "static-crt-spike"
       ],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 10
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "path": "DECISIONS-PENDING.md"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
       "entries": [
         90
       ],
-      "summary": "RULED 2026-09-14 (question set C, C1) then RETURNED to the human by their own stop condition: the sourced licence note (RELEASE-DRAFTS-0.1.0/decision-notes/static-crt-licence-note.md) found the AGPL s1 System Library reading for a statically conveyed MS CRT contested (the FSF text reads against static linking); the build setting does not land; the note decision points await the human ruling",
+      "summary": "RULED 2026-09-14: 69a stands for v0.1.1 (dynamic CRT, declared in KNOWN-LIMITATIONS + QUICKSTART); the static-CRT build does NOT land (the System Library reading contested, the libcmt/libvcruntime grant missing; ADR-009 Caveat governs, no counsel engaged); 69c not taken; points 2-5 parked behind point 1; the licence note is the recorded state of knowledge",
       "dates": {
         "opened": "2026-09-13",
-        "done": null
+        "done": "2026-09-14"
       }
     },
     {
@@ -971,10 +974,12 @@
       "phase": "prototype",
       "status": "blocked",
       "order": 7,
-      "depends_on": [],
+      "depends_on": [
+        "signpath-application-draft"
+      ],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 10
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
       "evidence": null,
@@ -984,7 +989,7 @@
       "entries": [
         77
       ],
-      "summary": "the SignPath-first, Certum-second evaluation note is filed, read-only; nothing applied for pending the human's decision",
+      "summary": "RULED: v0.1.0 signs nothing (2026-09-11); the post-tag action is D3 (2026-09-14) -- draft the SignPath application after v0.1.1, nothing submitted -- folded into node signpath-application-draft. No ruling owed",
       "dates": {
         "opened": "2026-09-13",
         "done": null
@@ -1023,27 +1028,27 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 5,
-      "depends_on": [
-        "entry-90-static-crt-v0-1-1"
-      ],
+      "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "path": "DECISIONS-PENDING.md"
+      },
       "budget_minutes": 15,
       "generation": 1,
       "felt_verdict": false,
       "entries": [
         69
       ],
-      "summary": "folded into entry 90 (RULED 2026-09-14, C1): the residue of the dynamically imported VC++ runtime closes with the static-CRT piece",
+      "summary": "RULED 2026-09-14 (with entry 90): option (a) declare stands -- the dynamically imported VC++ runtime is declared, not static-linked and not bundled, for v0.1.1 as for v0.1.0",
       "dates": {
         "opened": "2026-09-09",
-        "done": null
+        "done": "2026-09-14"
       }
     },
     {
@@ -1144,7 +1149,7 @@
       "status": "blocked",
       "order": 8,
       "depends_on": [
-        "entry-90-static-crt-v0-1-1"
+        "release-v0-1-1"
       ],
       "needs_human": {
         "kind": "none",
@@ -1156,7 +1161,7 @@
       "generation": 1,
       "felt_verdict": true,
       "entries": [],
-      "summary": "RULED 2026-09-14 (question set A, A2): the exit code was not observed; the bracket stays and the row is re-tested at the v0.1.1 release build, which the static-CRT piece produces",
+      "summary": "RULED 2026-09-14 (question set A, A2): the exit code was not observed; re-tested at the v0.1.1 release build (a proposed milestone, the human schedules it)",
       "dates": {
         "opened": "2026-09-13",
         "done": null
@@ -1401,7 +1406,7 @@
       "status": "blocked",
       "order": 11,
       "depends_on": [
-        "entry-90-static-crt-v0-1-1"
+        "release-v0-1-1"
       ],
       "needs_human": {
         "kind": "none",
@@ -1448,6 +1453,35 @@
       "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
       "dates": {
         "opened": "2026-09-14",
+        "done": null
+      }
+    },
+    {
+      "id": "release-v0-1-1",
+      "title": "v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it",
+      "kind": "milestone",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        69,
+        77,
+        90
+      ],
+      "summary": "A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it",
+      "dates": {
+        "opened": null,
         "done": null
       }
     },

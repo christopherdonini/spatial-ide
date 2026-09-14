@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c6cb7b2c046ced48c2b08`) at `2026-09-14T11:35:59.672Z`.
+Generated from `PLAN.yaml` (sha256 `137a2833804696f81d15e1438aa7db74ce5c88d53e263bf63211e81ee981325f`) at `2026-09-14T19:37:25.951Z`.
 
 ## 1. Next
 
@@ -10,18 +10,12 @@ Generated from `PLAN.yaml` (sha256 `67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c
 
 - (none)
 
-## 3. Waiting on the human (total: 95 min)
+## 3. Waiting on the human (total: 55 min)
 
 ### click
 
 - **evidence-archive-v0-1-0** — First application of the evidence archive — attach v0.1.0's evidence to its release (5 min)
 - **entry-78-repo-description** — Entry 78 — repository description and topics (5 min)
-
-### ruling
-
-- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (20 min)
-- **entry-90-static-crt-v0-1-1** — Entry 90 — static CRT as the v0.1.1 build piece (10 min)
-- **entry-77-code-signing** — Entry 77 — code signing for the Windows installer (10 min)
 
 ### sitting
 
@@ -29,14 +23,15 @@ Generated from `PLAN.yaml` (sha256 `67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c
 
 ## 4. Blocked on dependencies
 
+- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — blocked by: sitting-4-rows
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — blocked by: adr-029-operation-lifecycle, sitting-4-rows
 - **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) — blocked by: sitting-4-rows
-- **entry-69-runtime-dependency** — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default — blocked by: entry-90-static-crt-v0-1-1
-- **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: entry-90-static-crt-v0-1-1
-- **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: entry-90-static-crt-v0-1-1
+- **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
+- **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
+- **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build — blocked by: sitting-4-rows
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone
 
@@ -49,6 +44,7 @@ Generated from `PLAN.yaml` (sha256 `67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c
 
 ### Proposed
 
+- **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-031-lod-preregistration** — ADR-031 (LOD) preregistration, once the feasibility spike reports (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
