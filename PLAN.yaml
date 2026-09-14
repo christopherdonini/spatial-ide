@@ -471,18 +471,18 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: in-progress
+    status: done
     order: 4
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: docs/adr-023-decision}
+    evidence: {pr: 61}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: [79]
     summary: "RULED 2026-09-14 (question set D, D2): Float32 admitted as its own Arrow type; dictionary-encoded columns decoded to their value type; dates the declared next admission; four ADR-004 conflicts carried as B1 conditions; Status Proposed until B1 close; the PR is the human click (ADR files are never docs-only)"
-    dates: {opened: 2026-09-14, done: null}
+    dates: {opened: 2026-09-14, done: 2026-09-14}
 
   # ============================== BLOCKED ==============================
 
@@ -527,17 +527,17 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {branch: docs/adr-029-decision}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: [92]
-    summary: "RULED 2026-09-14 (question set C, C2): typed states scanning | finished | unknown mirroring cancel; its own wire literal numbered by merge order; the liveness string sighted as a new state; the operation id non-authorising; G1 returns the quantity question if no monotone reading exists. Next: ADR-029 text and the piece preregistration; the Status change stays the human word after its gate"
+    summary: "RULED 2026-09-14 (question set C, C2): the Decision text drafted for the human sight (typed states scanning|finished|unknown; the wire literal by merge order; the liveness string sighted; the standing conditions) -- ported to the ADR, Status Proposed, PR for the click. G1 is its own node adr-029-g1-feasibility"
     dates: {opened: 2026-09-13, done: null}
 
   - id: entry-90-static-crt-v0-1-1
@@ -545,17 +545,17 @@ nodes:
     kind: task
     lane: release
     phase: prototype
-    status: ready
+    status: blocked
     order: 6
     depends_on: [static-crt-spike]
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: ruling, minutes: 10}
     gate: none
     evidence: null
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: [90]
-    summary: "RULED 2026-09-14 (question set C, C1): hold for the sourced licence note with the expected posture stated (NOTICE entry under ADR-030; System Library under AGPL-3.0 s1 for Corresponding Source; the note before the build setting, entry-51 discipline); the piece stops and returns to the human if the terms restrict static distribution"
+    summary: "RULED 2026-09-14 (question set C, C1) then RETURNED to the human by their own stop condition: the sourced licence note (RELEASE-DRAFTS-0.1.0/decision-notes/static-crt-licence-note.md) found the AGPL s1 System Library reading for a statically conveyed MS CRT contested (the FSF text reads against static linking); the build setting does not land; the note decision points await the human ruling"
     dates: {opened: 2026-09-13, done: null}
 
   - id: entry-91-polish-held-halves
@@ -743,9 +743,9 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: blocked
     order: 3
-    depends_on: [polish-engine-lease-class]
+    depends_on: [polish-engine-lease-class, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -753,7 +753,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded 2026-09-14 (the debug cache reclaimed). Sequenced after the engine half: its harness run needs the quiet machine the drill would load (the mechanics rule)"
+    summary: "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Machine/disk-sequenced AFTER the sitting (2026-09-14): target/debug is held for the sitting launch, then deleted to re-fund the drill (the debug cache is regenerable, the human 2026-09-14). One heavy run at a time (the quiet-machine mechanics rule)"
     dates: {opened: null, done: null}
 
   - id: evidence-archive-v0-1-0
@@ -815,17 +815,17 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: ready
+    status: in-progress
     order: 9
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/POLISH-87-88-89-PREREGISTRATION.md
-    evidence: null
+    evidence: {pr: 64}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: [88, 91, 75]
-    summary: "RULED 2026-09-14 (question set B, B1): the marker is removed only by a re-pick result (confirm drops it; a different feature replaces the readout; none or below-threshold becomes the refusal or clears); a stale id is never served without its marker (ADR-010 rule 5) and the marker never outlives a settle; tests: the state cannot render without the marker, only a re-pick result removes it; wording sighted at the sitting. A preregistration amendment precedes the code"
+    summary: "RULED 2026-09-14 (question set B, B1) — the labelled confirming state; both gates PASS, the K6 re-run green (POLISH s4.4(4) discharged); PR #64 for the human. The marker WORDING is a placeholder the sitting fixes; entry 89 9 px is on the same PR"
     dates: {opened: 2026-09-14, done: null}
 
   - id: lod-route-b-divergence
@@ -833,9 +833,9 @@ nodes:
     kind: task
     lane: measurement
     phase: prototype
-    status: ready
+    status: blocked
     order: 3
-    depends_on: [lod-feasibility-spike]
+    depends_on: [lod-feasibility-spike, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -843,7 +843,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [93]
-    summary: "RULED 2026-09-14 (question set C, C3): whether geo topology-preserving simplification (SimplifyVwPreserve) removes the divergence, plain Douglas-Peucker producing invalid polygons being the expected cause; whether the DuckDB spatial extension can be statically bundled with no runtime fetch (ADR-021); spike-only dependencies stay spike-only"
+    summary: "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)"
     dates: {opened: 2026-09-14, done: null}
 
   - id: geometry-types-beyond-polygons
@@ -880,6 +880,24 @@ nodes:
     felt_verdict: false
     entries: [77]
     summary: "RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note"
+    dates: {opened: 2026-09-14, done: null}
+
+  - id: adr-029-g1-feasibility
+    title: "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: blocked
+    order: 5
+    depends_on: [adr-029-operation-lifecycle, sitting-4-rows]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: [92]
+    summary: "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
     dates: {opened: 2026-09-14, done: null}
 
   # ============================== PROPOSED ==============================

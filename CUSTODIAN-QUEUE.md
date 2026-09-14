@@ -1,20 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `377528851624e602c2bf687528e98b00f4ef32e1133ed307656df34a33b027a6`) at `2026-09-14T10:35:08.700Z`.
+Generated from `PLAN.yaml` (sha256 `67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c6cb7b2c046ced48c2b08`) at `2026-09-14T11:35:59.672Z`.
 
 ## 1. Next
 
-- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight (lane `kernel-protocol`, order 1, budget 120 min)
-- **hover-confirming-marker** — Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick (lane `shell`, order 9, budget 180 min)
-- **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) (lane `measurement`, order 3, budget 240 min)
-- **entry-90-static-crt-v0-1-1** — Entry 90 — static CRT as the v0.1.1 build piece (lane `release`, order 6, budget 90 min)
-- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
+- (none)
 
-## 3. Waiting on the human (total: 85 min)
+## 3. Waiting on the human (total: 95 min)
 
 ### click
 
@@ -24,6 +20,7 @@ Generated from `PLAN.yaml` (sha256 `377528851624e602c2bf687528e98b00f4ef32e1133e
 ### ruling
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (20 min)
+- **entry-90-static-crt-v0-1-1** — Entry 90 — static CRT as the v0.1.1 build piece (10 min)
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer (10 min)
 
 ### sitting
@@ -33,16 +30,20 @@ Generated from `PLAN.yaml` (sha256 `377528851624e602c2bf687528e98b00f4ef32e1133e
 ## 4. Blocked on dependencies
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6, adr-023-decision-text
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
+- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — blocked by: adr-029-operation-lifecycle, sitting-4-rows
+- **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) — blocked by: sitting-4-rows
 - **entry-69-runtime-dependency** — Entry 69 — the dynamically imported VC++ runtime, beyond the v0.1.0 declared default — blocked by: entry-90-static-crt-v0-1-1
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: entry-90-static-crt-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: entry-90-static-crt-v0-1-1
+- **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build — blocked by: sitting-4-rows
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone
 
 ## 5. In progress
 
-- **adr-023-decision-text** — ADR-023 Decision text as ruled — the drafted Decision ported with two admissions amended and the four B1 conditions — evidence: branch `docs/adr-023-decision`
+- **adr-029-operation-lifecycle** — ADR-029 + the operation lifecycle — decision draft filed for sight — evidence: branch `docs/adr-029-decision`
+- **hover-confirming-marker** — Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick — evidence: PR #64
 
 ## 6. Proposed / unscheduled
 
