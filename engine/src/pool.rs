@@ -114,7 +114,7 @@ pub const MAX_MAINTENANCE_CONNECTIONS: usize = 1;
 /// (`frontends/shell/src/canvas/tileGridConstants.ts:40`), plus the baseline (non-tiled) viewport
 /// query a session also issues, `1` — `3 + 1 = 4`. This is a **chosen ceiling**, not a measured or
 /// derived one: it is sized to the shipped shell's own composition so that, in that composition,
-/// this class is never the thing that refuses (DECISIONS-PENDING entry 91 (a); PROPOSED ADR-033).
+/// this class is never the thing that refuses (DECISIONS-PENDING entry 91 (a); ADR-033 (accepted 2026-09-14)).
 ///
 /// **Admission-side capacity, not stream concurrency — ADR-014 stays reserved.** This ceiling
 /// bounds how many *predicate admissions* (a short control-plane check, `predicate.rs`) may be in

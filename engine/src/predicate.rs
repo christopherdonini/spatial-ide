@@ -334,7 +334,7 @@ impl fmt::Display for FilterError {
 /// **Why this is not a bare [`FilterError`].** `FilterError`'s eleven variants are a deliberate,
 /// closed, 1:1 correspondence with the wire's `skp.filter_*` taxonomy (this module's own doc,
 /// above) — every one of them is a claim about the *predicate's own text*. An admission-lease
-/// capacity failure (DECISIONS-PENDING entry 91 (a); PROPOSED ADR-033) is not that kind of claim
+/// capacity failure (DECISIONS-PENDING entry 91 (a); ADR-033 (accepted 2026-09-14)) is not that kind of claim
 /// at all: it is a fact about this dataset's connection pool, true or false independent of what
 /// the caller wrote. Folding it into `FilterError::RejectedByBinder` — the only shape available
 /// before this type existed — was exactly the defect entry 87 diagnosed: a typed refusal naming

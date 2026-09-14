@@ -83,7 +83,7 @@ the only one entitled to notice that.** The engine computes no ceiling from a bi
 `docs/02` makes that split structural — and it justifies each of its own by what it will serve over
 one dataset. The composition is the fact, and it is recorded here.
 
-**The same shape, for the admission class (PROPOSED ADR-033; DECISIONS-PENDING entry 91 (a)).**
+**The same shape, for the admission class (ADR-033 (accepted 2026-09-14); DECISIONS-PENDING entry 91 (a)).**
 `MAX_ADMISSION_CONNECTIONS` is 4 and the shell's `MAX_IN_FLIGHT_TILE_STREAMS`
 (`frontends/shell/src/canvas/tileGridConstants.ts:40`) is 3; the engine's ceiling is a literal it
 owns, chosen so that the shell's three concurrent tile-keyed `viewport_query` admissions plus the
