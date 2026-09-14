@@ -20,11 +20,11 @@ import {
  * is the one caller, for both arms alike -- the check needs only the batches already resident and the
  * current zoom, neither of which is arm-specific.
  *
- * **The threshold, declared:** `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` below. Below one CSS pixel a
- * feature's own on-screen footprint is smaller than the thing a pointer can aim at; this module uses
- * twice that (2px) as the declared refusal line so the refusal fires slightly before a feature is
- * *literally* invisible, not only once it already is -- a single round number, not a measured or
- * fitted constant (rule 6: state it as the declared choice it is).
+ * **The threshold, declared:** `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` below, sighted by the human at
+ * **9 px** on 2026-09-14 (DECISIONS-PENDING entry 89 / 91 (c), question set B, B2;
+ * `POLISH-87-88-89-PREREGISTRATION.md` §4.2). It is a **declared choice, not a measurement or a fit**
+ * (ADR-010 rule 6, "declared, not discovered") -- see the constant's own comment for the rationale,
+ * the measured figure it records beside itself, and the only thing that may revise it.
  *
  * **The mechanic, kept simple and honest:** rather than sizing every individual feature under the
  * cursor (expensive, and picking already resolved to exactly one candidate feature by then), this
@@ -48,7 +48,36 @@ import {
  * module compares) is future work, owed once pick discrimination becomes style-aware -- not
  * attempted here.
  */
-export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 2;
+/**
+ * **The declared refusal threshold: 9 CSS pixels of average on-screen feature extent.** Below it a
+ * hover is refused by name instead of answered.
+ *
+ * **Rationale (the human's own, RULED 2026-09-14, question set B, B2, verbatim):** *"human pointer
+ * targeting, not pixel resolution, decides whether "which feature" is answerable."* That is the
+ * quantity this number bounds -- not what the pick machinery can resolve, but what a person can aim
+ * at well enough for the answer to mean anything.
+ *
+ * **The measured figure, recorded beside it and NEVER presented as its measurement** (ADR-010 rule
+ * 6, `docs/adr/ADR-010-render-frames-origins-boundaries.md:74`): id discrimination was reliable only
+ * from **2.27 px** separation (0.30 m at 1:500). Both of that figure's own caveats travel with it,
+ * in the ADR's words (its own emphasis marks omitted): *"scale invariance was never verified at a second zoom, so 2.27 px is a
+ * measurement at 1:500 rather than a demonstrated invariant"*, and *"because the figure moves with
+ * style, a heavier symbol raises it with no change to the data or the CRS"* -- which this module's
+ * own style-independence limitation (above) compounds. 9 px is roughly four times 2.27 px; that
+ * relation is how the declared value was ARRIVED at
+ * (`POLISH-87-88-89-PREREGISTRATION.md` §4.2), not evidence for it. **No claim is made that 9 px is
+ * where discrimination or targeting fails.**
+ *
+ * **Revisable only by a walkthrough-recorded felt verdict** (the same ruling): a sitting row
+ * hovering features of roughly 5, 9 and 15 px, recorded in `MANUAL-WALKTHROUGH.md` -- **never by a
+ * guess**, and never by a number fitted after the fact.
+ *
+ * **Recorded tension, sighted with the value** (`POLISH-87-88-89-PREREGISTRATION.md` §4.2): entry
+ * 47's sharpened criterion pulls the other way -- a higher threshold necessarily refuses at some
+ * cameras where the operator could still tell which feature is under the pointer. The trade was the
+ * human's to make, and was made here.
+ */
+export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 9;
 
 /**
  * The average resident feature's own bounding-box extent (the larger of its width/height, across

@@ -58,6 +58,26 @@ describe("averageFeatureExtent", () => {
 // `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` itself, never from the literal `2` -- the constant's
 // declared value stays `2` on this branch (entry 91 (c) is the human's to rule on), but these
 // cases hold unchanged the moment it is re-sighted to a new value, with no test edit owed.
+// DECISIONS-PENDING entry 89 / 91 (c), RULED 2026-09-14 (question set B, B2):
+// `POLISH-87-88-89-PREREGISTRATION.md` §4.4 (1), first clause -- the comparison AT THE NEW VALUE.
+// These two cases are the only ones in this file that name a figure in pixels: the sighted value
+// itself, which a silent change must not survive, and the three feature sizes the ruling's own
+// walkthrough row hovers.
+describe("the declared refusal threshold (entry 89: 9 px, sighted by the human on 2026-09-14)", () => {
+  it("the declared value is the one the human sighted: 9 px", () => {
+    expect(SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX).toBe(9);
+  });
+
+  it("the sitting row's three feature sizes: ~5 px refused, ~9 px and ~15 px answered", () => {
+    // "a sitting row hovering features of roughly 5, 9 and 15 px" (the ruling): the felt verdict on
+    // exactly these is the only thing that may revise the value, so the comparison at each of them
+    // is pinned here. 1 px per world unit, so the extent IS the on-screen size.
+    expect(isBelowPickResolution(5, 1)).toBe(true); // below the line: refused by name
+    expect(isBelowPickResolution(9, 1)).toBe(false); // exactly at the line: NOT below it
+    expect(isBelowPickResolution(15, 1)).toBe(false); // comfortably above: answered
+  });
+});
+
 describe("isBelowPickResolution", () => {
   it("above the declared threshold: not below -- an ordinary pick behaves as today", () => {
     // worldUnits * 1 px/unit clearly above the threshold, whatever its declared value is.
