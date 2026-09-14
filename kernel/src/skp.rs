@@ -18,7 +18,10 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
-use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, EngineError, FilterError, ViewportQuery};
+use spatial_engine::{
+    AdmittedPredicate, CancelToken, Dataset, EngineError, FilterError, PredicateAdmitError,
+    ViewportQuery,
+};
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, CrsInfo,
     DatasetHandle, DecU64, DescribeRequest, DescribeResponse, Extent, FieldInfo, GeometryInfo,
@@ -384,8 +387,10 @@ impl SkpHost {
         // `self.tickets.mint` ever runs. A refused predicate returns here, synchronously, as one of
         // the eleven typed `skp.filter_*` codes (`filter_error_of`) — never as a data-plane terminal
         // frame arriving after a round trip, and never after a ticket a client would have to redeem
-        // just to learn it was refused (SKP-V0 §1, ADR-019 §1).
-        let query = build_viewport_query(&ds, &req).map_err(|e| filter_error_of(&e))?;
+        // just to learn it was refused (SKP-V0 §1, ADR-019 §1). A residual admission-*lease*
+        // exhaustion is not one of those eleven: it routes through `engine.connections_exhausted`
+        // instead — see [`predicate_admit_error_of`].
+        let query = build_viewport_query(&ds, &req).map_err(predicate_admit_error_of)?;
         // Validated **before** any handle is minted (SKP-V0.md §1): `ViewportCrsMismatch`,
         // `ViewportCrsUnidentifiable` and `NoCoveringBbox` return here, synchronously, with their
         // full typed text — never as a data-plane terminal frame arriving after a round trip.
@@ -491,10 +496,31 @@ fn host_minted_identity_declaration(
     )
 }
 
+/// Maps [`AdmittedPredicate::admit`]'s two failure kinds to the wire code each one already has —
+/// the match `viewport_query` takes on [`build_viewport_query`]'s error.
+///
+/// **Two kinds, two existing codes, no new one.** A [`PredicateAdmitError::Filter`] is a claim
+/// about the predicate's own text and keeps its `skp.filter_*` code via [`filter_error_of`].
+/// [`PredicateAdmitError::ConnectionsExhausted`] is a fact about the engine's admission-class
+/// connection pool, never about the text, so it routes through [`error_of`]'s existing
+/// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md `:266`'s
+/// `engine.` + variant-name rule) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
+/// residual exhaustion surfaces as the typed `engine.connections_exhausted`, **never** as a false
+/// binder refusal. ADR-021 item 8's eleven-code `skp.filter_*` list is untouched: this function
+/// mints no code either side of the match does not already mint.
+fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
+    match e {
+        PredicateAdmitError::Filter(fe) => filter_error_of(&fe),
+        PredicateAdmitError::ConnectionsExhausted { class, capacity } => {
+            error_of(&EngineError::ConnectionsExhausted { class, capacity })
+        }
+    }
+}
+
 fn build_viewport_query(
     ds: &Dataset,
     req: &ViewportQueryRequest,
-) -> Result<ViewportQuery, FilterError> {
+) -> Result<ViewportQuery, PredicateAdmitError> {
     let query = match &req.bbox {
         Some(b) => {
             let bbox =
@@ -517,7 +543,9 @@ fn build_viewport_query(
         // column against `ds`'s resident schema (namespace admission), and asks DuckDB's own binder
         // whether it evaluates to `BOOLEAN` (bind admission) — all three stages, in that order, each
         // gating the next. `?` here is what makes this function, and so `viewport_query` above,
-        // refuse synchronously and typed the moment any stage refuses.
+        // refuse synchronously and typed the moment any stage refuses — carrying
+        // `PredicateAdmitError`'s two kinds apart, never folded into one another (the caller's
+        // match, [`predicate_admit_error_of`], is what puts each on its own wire code).
         Some(f) => Ok(query.with_filter(AdmittedPredicate::admit(f.predicate.clone(), ds)?)),
         None => Ok(query),
     }
@@ -1025,5 +1053,42 @@ mod tests {
         let e = filter_error_of(&FilterError::RejectedByBinder { detail: "binder refused".into() });
         assert_eq!(e.code, "skp.filter_rejected_by_binder");
         assert_eq!(e.fields.get("detail").map(String::as_str), Some("binder refused"));
+    }
+
+    /// The ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)) at this crate's own boundary: a
+    /// residual admission-lease exhaustion reaching `viewport_query`'s error match surfaces as the
+    /// typed `engine.connections_exhausted`, **never** as a binder rejection. Before this arm
+    /// existed the same value folded through `From<PredicateAdmitError> for FilterError` into
+    /// `FilterError::RejectedByBinder` and left here as `skp.filter_rejected_by_binder` — a refusal
+    /// the shell's declared retryable set does not retry, i.e. a silent tile drop.
+    #[test]
+    fn a_residual_admission_lease_exhaustion_maps_to_engine_connections_exhausted_never_filter_rejected_by_binder(
+    ) {
+        let e = predicate_admit_error_of(PredicateAdmitError::ConnectionsExhausted {
+            class: "admission",
+            capacity: 4,
+        });
+        assert_ne!(
+            e.code, "skp.filter_rejected_by_binder",
+            "a lease-capacity fact must never be reported as a binder rejection: {e:?}"
+        );
+        assert_eq!(e.code, "engine.connections_exhausted");
+        assert_eq!(e.fields.get("class").map(String::as_str), Some("admission"));
+        assert_eq!(e.fields.get("capacity").map(String::as_str), Some("4"));
+
+        // The other half of the same match, in the same test: an admission-*content* refusal still
+        // takes `filter_error_of`'s eleven-code route, unchanged (ADR-021 item 8) — including the
+        // genuine binder rejection, whose code the arm above must not be allowed to steal.
+        let e = predicate_admit_error_of(PredicateAdmitError::Filter(
+            FilterError::RejectedByBinder { detail: "binder refused".into() },
+        ));
+        assert_eq!(e.code, "skp.filter_rejected_by_binder");
+        assert_eq!(e.fields.get("detail").map(String::as_str), Some("binder refused"));
+
+        let e = predicate_admit_error_of(PredicateAdmitError::Filter(FilterError::NotBoolean {
+            inferred_type: "BIGINT".into(),
+        }));
+        assert_eq!(e.code, "skp.filter_not_boolean");
+        assert_eq!(e.fields.get("inferred_type").map(String::as_str), Some("BIGINT"));
     }
 }

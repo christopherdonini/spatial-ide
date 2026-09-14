@@ -260,8 +260,8 @@ keeps reaching the *query*). ADR-010 rule 6 is cited only for the declared-ceili
 | | |
 |---|---|
 | **Owner** | the `Dataset`. Never a process-wide path-keyed cache — that would let a connection outlive the CRS (ADR-015) and identity (ADR-016) facts admitted beside it |
-| **Capacity** | `MAX_STREAM_CONNECTIONS` 4 + `MAX_MAINTENANCE_CONNECTIONS` 1 = `MAX_PHYSICAL_CONNECTIONS` **5 per dataset** |
-| **Classes** | two bounded classes over one physical pool, so four admitted streams can never make an index build impossible and a build can never take a stream's connection |
+| **Capacity** | `MAX_STREAM_CONNECTIONS` 4 + `MAX_MAINTENANCE_CONNECTIONS` 1 + `MAX_ADMISSION_CONNECTIONS` 4 = `MAX_PHYSICAL_CONNECTIONS` **9 per dataset** (ADR-033; the admission class added 2026-09-14) |
+| **Classes** | three bounded classes over one physical pool — streams, maintenance, and per-request admission work (ADR-033) — so four admitted streams can never make an index build impossible, a build can never take a stream's connection, and predicate admission never competes with either |
 | **One query per connection** | a lease *moves* the connection out of the pool; no lock is held across a query |
 | **Exhaustion** | a typed `ConnectionsExhausted` refusal. **Never a queue** |
 | **Prepared at open** | `Dataset::open` runs on a lease and returns it, so a configured connection is ready before the first query — adding no connection and no new prelude work, only one drained verification statement |
@@ -313,8 +313,9 @@ ADR-004 and `docs/10`, the semantic API surface, not ADR-010 rule 1. `physical_i
 per-dataset counter and never an address.
 
 **What is outside the declared bound**, and larger than it was: DuckDB's own per-connection memory.
-There may now be up to five resident in-memory instances per dataset rather than one per live
-stream. That remainder is not claimed to be inside any ceiling here — see `kernel/README.md`.
+There may now be up to nine resident in-memory instances per dataset (`MAX_PHYSICAL_CONNECTIONS`,
+ADR-033) rather than one per live stream. That remainder is not claimed to be inside any ceiling
+here — see `kernel/README.md`.
 
 ## Progressive first-batch sizing
 

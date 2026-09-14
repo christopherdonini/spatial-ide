@@ -42,6 +42,7 @@ use serde_json::Value;
 
 use crate::dataset::Dataset;
 use crate::envelope::ID_COLUMN;
+use crate::error::EngineError;
 use crate::identity::IdSource;
 use crate::pool::LeaseClass;
 
@@ -98,10 +99,18 @@ impl AdmittedPredicate {
     /// a public signature accepting a raw `&duckdb::Connection` would either violate that invariant
     /// or be uncallable by an external crate (`kernel/`, P4's caller) without engine changes P4
     /// would then owe anyway. Taking `&Dataset` keeps every DuckDB connection admission uses inside
-    /// this crate, on the dataset's own bounded pool (`LeaseClass::Maintenance` — the same class
-    /// `Dataset::open` itself uses for its own admission work), so a burst of filter admissions
-    /// cannot bypass the pool's declared connection ceiling by minting ad-hoc connections per call.
-    pub fn admit(text: impl Into<String>, dataset: &Dataset) -> Result<Self, FilterError> {
+    /// this crate, on the dataset's own bounded pool (`LeaseClass::Admission` — its own class,
+    /// sized to the concurrent admissions a binding can present; see `pool::
+    /// MAX_ADMISSION_CONNECTIONS`), so a burst of filter admissions cannot bypass the pool's
+    /// declared connection ceiling by minting ad-hoc connections per call.
+    ///
+    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** Ten of its eleven admission
+    /// refusals (every stage this module implements) still arrive wrapped in
+    /// [`PredicateAdmitError::Filter`], unchanged; the twelfth possibility, a residual admission-
+    /// lease exhaustion, is a fact about this pool's capacity, never about the predicate, and is
+    /// therefore a sibling variant rather than a twelfth `FilterError`/`skp.filter_*` case (ADR-021
+    /// item 8 stays untouched — see [`PredicateAdmitError`]'s own doc).
+    pub fn admit(text: impl Into<String>, dataset: &Dataset) -> Result<Self, PredicateAdmitError> {
         let text = text.into();
 
         // Cheap, pool-free refusal, checked **before** anything touches the connection pool — an
@@ -112,14 +121,36 @@ impl AdmittedPredicate {
             return Err(FilterError::TooLong {
                 limit: MAX_PREDICATE_BYTES as u64,
                 saw: text.len() as u64,
-            });
+            }
+            .into());
         }
 
-        let lease = dataset.connections().acquire(LeaseClass::Maintenance).map_err(|e| {
-            FilterError::RejectedByBinder {
-                detail: format!("no connection was available to validate this predicate: {e}"),
-            }
-        })?;
+        // `LeaseClass::Admission`, not `Maintenance` (DECISIONS-PENDING entry 91 (a); PROPOSED
+        // ADR-033; `pool::MAX_ADMISSION_CONNECTIONS`'s own doc). Before this class existed,
+        // admission shared `Maintenance`'s capacity-1 budget with whole-file passes, so concurrent
+        // `viewport_query` admissions collided there and the losers were refused as
+        // `FilterError::RejectedByBinder` — a typed refusal naming the wrong cause (the lease, not
+        // the predicate's own text). A residual failure here is a fact about this connection
+        // pool's admission-class capacity, never a claim about the predicate, so a genuine
+        // exhaustion is returned as `EngineError::ConnectionsExhausted` **unchanged** — never
+        // folded into `RejectedByBinder` (docs/01 principle 8: the reported cause must be the
+        // cause). A failure to configure a *new* physical connection (`EngineError::
+        // ConnectionSetup`, a real connection problem, not a capacity one) keeps the previous,
+        // still-accurate `RejectedByBinder` text — that substring
+        // (`tileViewportStreamManager.ts`'s former `LEASE_REFUSAL_DETAIL_SUBSTRING` match) stays
+        // truthful for a genuine connection failure; only the capacity-exhaustion case moves.
+        let lease = dataset
+            .connections()
+            .acquire(LeaseClass::Admission)
+            .map_err(|e| match e {
+                EngineError::ConnectionsExhausted { class, capacity } => {
+                    PredicateAdmitError::ConnectionsExhausted { class, capacity }
+                }
+                other => FilterError::RejectedByBinder {
+                    detail: format!("no connection was available to validate this predicate: {other}"),
+                }
+                .into(),
+            })?;
         let conn = lease.connection();
 
         // Stages 1 and 2 never run anything but `SELECT json_serialize_sql(CAST(? AS VARCHAR))`
@@ -133,7 +164,7 @@ impl AdmittedPredicate {
             Ok(columns) => columns,
             Err(e) => {
                 lease.release_healthy();
-                return Err(e);
+                return Err(e.into());
             }
         };
         let namespace = match namespace_admit(&columns, dataset) {
@@ -142,7 +173,7 @@ impl AdmittedPredicate {
                 // `namespace_admit` never touches `conn` at all — the connection is exactly as
                 // clean here as it was right after `structural_admit` succeeded.
                 lease.release_healthy();
-                return Err(e);
+                return Err(e.into());
             }
         };
 
@@ -238,8 +269,14 @@ pub enum FilterError {
     TooDeep { limit: u64, saw: u64 },
 
     /// Structural and namespace admission both passed, but DuckDB's own binder refused the
-    /// predicate against the surrogate relation — or a connection to run that check on could not be
-    /// acquired at all ([`AdmittedPredicate::admit`]'s own doc explains why that folds in here).
+    /// predicate against the surrogate relation ([`bind_admit`]) — or a *new* physical connection
+    /// to run that check on could not be configured ([`AdmittedPredicate::admit`]'s own doc:
+    /// `EngineError::ConnectionSetup`, a genuine connection problem, still folds in here). **Never**
+    /// an admission-lease capacity failure: since DECISIONS-PENDING entry 91 (a) / PROPOSED
+    /// ADR-033, that residual case is [`PredicateAdmitError::ConnectionsExhausted`], a sibling of
+    /// this enum, not a variant of it — a lease being unavailable says nothing about this
+    /// predicate's own text, and this variant's own wire mapping (`skp.filter_rejected_by_binder`)
+    /// must not be minted for it.
     RejectedByBinder { detail: String },
 }
 
@@ -291,6 +328,66 @@ impl fmt::Display for FilterError {
         }
     }
 }
+
+/// Every way [`AdmittedPredicate::admit`] can fail.
+///
+/// **Why this is not a bare [`FilterError`].** `FilterError`'s eleven variants are a deliberate,
+/// closed, 1:1 correspondence with the wire's `skp.filter_*` taxonomy (this module's own doc,
+/// above) — every one of them is a claim about the *predicate's own text*. An admission-lease
+/// capacity failure (DECISIONS-PENDING entry 91 (a); PROPOSED ADR-033) is not that kind of claim
+/// at all: it is a fact about this dataset's connection pool, true or false independent of what
+/// the caller wrote. Folding it into `FilterError::RejectedByBinder` — the only shape available
+/// before this type existed — was exactly the defect entry 87 diagnosed: a typed refusal naming
+/// the wrong cause. Giving it a twelfth `FilterError` arm was rejected in the same review that
+/// added this type, for the same reason `FilterError`'s own doc gives for staying at eleven: it
+/// would be inventing wire taxonomy this crate does not own (no new `skp.filter_*` code, ADR-021
+/// item 8) merely to carry information that was never about the wire's filter taxonomy to begin
+/// with. This type carries both without conflating them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PredicateAdmitError {
+    /// One of [`FilterError`]'s eleven admission-content refusals, unchanged.
+    Filter(FilterError),
+    /// [`crate::pool::LeaseClass::Admission`] had no free lease when this call needed one.
+    ///
+    /// **Never [`FilterError::RejectedByBinder`].** Nothing about the predicate's text was
+    /// examined; DuckDB's binder was never reached. `class` and `capacity` are the same fields
+    /// `EngineError::ConnectionsExhausted` already carries (`kernel/src/skp.rs`'s existing
+    /// `engine.connections_exhausted` mapping) — this variant is that fact, not a rewrapped one.
+    /// Composition-unreachable for the shipped shell at the declared ceiling
+    /// (`pool::MAX_ADMISSION_CONNECTIONS`'s own doc); recorded here as raw material for ADR-014,
+    /// citable as evidence for nothing else.
+    ConnectionsExhausted { class: &'static str, capacity: usize },
+}
+
+impl fmt::Display for PredicateAdmitError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Filter(e) => fmt::Display::fmt(e, f),
+            Self::ConnectionsExhausted { class, capacity } => write!(
+                f,
+                "refused: no `{class}`-class connection lease was free (capacity {capacity}) — a \
+                 pool capacity fact, not a refusal of the predicate's own text"
+            ),
+        }
+    }
+}
+
+impl From<FilterError> for PredicateAdmitError {
+    fn from(e: FilterError) -> Self {
+        Self::Filter(e)
+    }
+}
+
+// **No `From<PredicateAdmitError> for FilterError`, deliberately, and it may not come back.**
+// An earlier cut carried one so that `kernel/src/skp.rs`'s `build_viewport_query` — whose `Result`
+// was then pinned to `FilterError` — kept compiling unchanged. That fold was the defect the gate
+// reports of 2026-09-14 named: it rewrote `ConnectionsExhausted` into
+// `FilterError::RejectedByBinder`, which the kernel then mapped to `skp.filter_rejected_by_binder`
+// — precisely the false binder refusal the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a))
+// forbids. `build_viewport_query` now returns `PredicateAdmitError` itself and the kernel *matches*
+// on it (`kernel::skp::predicate_admit_error_of`), routing the residual through the existing
+// `engine.connections_exhausted` arm. A caller that needs one kind or the other matches on the
+// enum; re-adding a lossy fold here would restore the defect, not a convenience.
 
 impl std::error::Error for FilterError {}
 
