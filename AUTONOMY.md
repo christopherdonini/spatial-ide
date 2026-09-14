@@ -105,6 +105,17 @@ Existing token rules (`AI_DEVELOPMENT.md` "Token discipline") are respected: the
 - **Every answer is quoted verbatim into `DECISIONS-PENDING.md`** (a RULED block, dated), and the node's `needs_human` clears only on that record.
 - Before any question: check `PRECEDENTS.md` (§8). A matching precedent is **cited, not asked**.
 - `AskUserQuestion` allows at most four questions per call; a larger batch is raised as consecutive calls in the same window, the digest saying "question set n of m".
+- **The round mirror (Appendix A3), BEFORE the first `AskUserQuestion` of a round.** The custodian
+  writes the **full round, verbatim** to `state/questions/round-<n>.md` — for every question set and
+  every item: the **item number**, its **red-line marker** (a red-line item accepts typed text only,
+  §4 above), the **digest text**, and the **numbered options with their descriptions**. **Plain
+  text, no markdown formatting** (escaping breaks copy-paste). **Each item is separated by a blank
+  line and a `---` rule**, and **item order in the file equals the ask order**, so answers can be
+  pasted back in sequence. The custodian then runs `node scripts/hooks/questions-mirror.mjs
+  state/questions/round-<n>.md` (§16). This is the one-way mirror only: **Telegram is read-and-copy,
+  never an answer channel** — a reply typed into Telegram is not a ruling and is never read as one.
+  `AskUserQuestion` stays the sole answer channel (an explicit selection or typed text, the b21111d
+  rule above), unchanged.
 
 ## §5. The landing page — `site/` for GitHub Pages
 
@@ -126,6 +137,37 @@ Existing token rules (`AI_DEVELOPMENT.md` "Token discipline") are respected: the
 4. Lane priorities and `felt_verdict` done-marks are the human's: the check cannot know who edited the file, so it verifies the *record* — a `done` on a `felt_verdict` node without a RULED cite fails.
 
 Pages and the queue are only ever as true as this check.
+
+### §6a. Pre-gate self-checks — so gates fail only on semantics (Appendix A3, the speed-work part)
+
+The human's third directive, verbatim (Appendix A3): *"verify:cites — every path:line reference in
+docs and comments resolved against the tree in CI; the citation-integrity scan extended to all
+files; a claimed-test-exists check; the mutation-per-new-test rule automated — all run as pre-gate
+self-checks so gates fail only on semantics."* Four mechanical checks run in `governance-ci.yml`
+alongside `verify:plan`, **before** any reviewer or architect gate:
+
+1. **`verify:cites`** (`scripts/plan/verify-cites.mjs`) — every `path:line` (and `path:line-range`)
+   reference in documentation and in code comments is resolved against the tree at that commit: the
+   file exists and the line exists. A dangling or off-by-N cite fails the check by name, with the
+   citing file and line reported.
+2. **The citation-integrity scan, extended to all files** — the same scan already run over the ADR
+   index (§6's drift pattern) is widened to **every** tracked file, so a stale cross-reference is
+   caught wherever it lives, not only in the docs it was first written for.
+3. **A claimed-test-exists check** (`scripts/plan/verify-test-claims.mjs`) — where a document or a
+   commit message asserts a named test (the entry-61/64/65/67 failure class: *"the record claimed a
+   test the tree lacked"*, `AI_DEVELOPMENT.md` Amendment 1 Context), the named test must be present
+   in the tree. A claimed-but-missing test fails the check.
+4. **The mutation-per-new-test rule, automated** (`scripts/plan/verify-test-claims.mjs`, the same
+   runner) — §14's "one mutation per new test that fails it by name" is verified mechanically rather
+   than only self-reported.
+
+**Contract for the gates:** a reviewer or architect gate **assumes these mechanical checks are
+already green** and spends its attention on semantics — design, guarantees, vocabulary, scope. A
+piece whose pre-gate self-checks are red is not sent to a gate at all; it is fixed first. This holds
+under both proportionate-gating shapes (§21): the single combined reviewer gate relies on exactly
+the same green pre-gate checks as the full two-agent gate. None of these checks decides a red line —
+they are mechanical hygiene beneath the gates, never a substitute for a human ruling (§21,
+`AI_DEVELOPMENT.md` Amendment 1 §B).
 
 ## §7. Pre-compaction flush — mechanical, with the custodian's own obligation beneath it
 
@@ -173,6 +215,12 @@ two-agent gating for ADR / security / data-plane / guarantee changes or anything
 size threshold; a single combined reviewer gate plus a five-line preregistration for docs, tests and
 polish under it (the human's third directive, Appendix A3).
 
+**The mutation-per-new-test rule is automated as a pre-gate self-check (§6a).** The gate defaults
+above are no longer only a discipline the piece self-reports: `verify:test-claims` (§6a) mechanically
+confirms every claimed-and-required mutation exists and fails its test by name, so a reviewer or
+architect gate assumes the mechanical checks are already green and fails only on semantics
+(Appendix A3, the speed-work part).
+
 ## §15. Generations, the health strip, the drill
 
 - **Generation tags:** a node's `generation` is carried into every worker brief as `node:<id>@g<n>`; a result whose tag no longer matches the node's current generation is **discarded** (ledgered as stale, never merged). The generation bumps on any preregistration amendment or scope change.
@@ -183,6 +231,18 @@ polish under it (the human's third directive, Appendix A3).
 ## §16. Telegram alerts — one-way; `AskUserQuestion` stays the answer channel
 
 `scripts/hooks/telegram.mjs` sends one plain-text message to the Telegram Bot API (`sendMessage`) using Node's `https` only. The bot token comes from `CUSTODIAN_TELEGRAM_BOT_TOKEN` and the chat id from `CUSTODIAN_TELEGRAM_CHAT_ID` — **environment variables only, never in the tree, never logged**; unset → no-op. **One message per blocking event:** a dedupe file under `.claude/state/` suppresses a repeat of the same key within ten minutes. Senders: (a) a `Notification` hook on the types where Claude is blocked on the human — `permission_prompt`, `idle_prompt`, `agent_needs_input`, `quota_auto_resume_stale`, `quota_auto_resume_disabled` (Appendix B lists the verified matcher values; the reference says a Notification hook's "Exit code and stderr are ignored", so it decides nothing); (b) the Stop hook when it allows a stop because only human-blocked nodes remain, or because of the halt switch — the message lists the waiting items with kind and minutes. Telegram never carries an answer: rulings arrive only through `AskUserQuestion` (§4).
+
+**The round mirror (Appendix A3, the Telegram part).** A third sender, `scripts/hooks/questions-mirror.mjs`,
+runs **before the first `AskUserQuestion` of a round** (§4's obligation) and sends the round file
+`state/questions/round-<n>.md` **as ONE message**. If the file exceeds Telegram's **4096-character**
+limit, it is sent **as a document (`sendDocument`)** with a short summary message above it — never
+split into several `sendMessage` chunks, so the sequence forwards and pastes cleanly. Same transport
+discipline as the alerts above: Node's `https` only; token and chat id from the environment
+(`CUSTODIAN_TELEGRAM_BOT_TOKEN`, `CUSTODIAN_TELEGRAM_CHAT_ID`), never in the tree, never logged;
+unset → no-op. **This message carries no answer and reads none back:** it exists so the human can
+read and copy the round on the phone; the ruling itself still arrives only through `AskUserQuestion`
+(§4). The mirror's content is the same plain text §4 pins (item number, red-line marker, digest,
+numbered options with descriptions, blank-line-plus-`---` between items, ask order preserved).
 
 ## §17. The ledger is tracked — `state/`
 
