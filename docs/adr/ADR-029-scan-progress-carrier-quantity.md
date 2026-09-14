@@ -1,6 +1,6 @@
 # ADR-029 — The Scan-Progress Carrier Quantity
 
-**Status:** Proposed — **decision drafted 2026-09-14 for the human's sight (below); binds nothing until its gate and the human's word; binds nothing.** Filed 2026-09-02 as the
+**Status:** Proposed — **decision drafted 2026-09-14 for the human's sight (below); binds nothing until its gate and the human's word.** Filed 2026-09-02 as the
 named home for the true-scan-progress debt (SKP-V0.md §4 item 5), so the gap has an address
 instead of rolling to "the next SKP version that opens the wire" a third time (the ADR-023
 pattern, the ADR-011-gate-8 pattern applied to a protocol quantity). Not architect-blockable. No
@@ -36,7 +36,9 @@ the quantity itself is undecided; the interim already ships) plus this filing as
 makes a third rollover impossible: the question now has an address, here, rather than a clause
 buried in a spec file that the next SKP version has to remember to re-read.
 
-## Decision
+## Decision — the original OPEN framing (2026-09-02), superseded 2026-09-14
+
+*The blockquote below is the question as it stood open from 2026-09-02. It is kept as the record of what was undecided; the drafted answer is **"Decision — drafted 2026-09-14 for the human's sight"** further down, folding the human's ruling of 2026-09-14 (question set C2). Read the drafted section for the current proposal; this one is history.*
 
 > OPEN: what the scan-progress quantity actually **is** — rows scanned, bytes read, row groups
 > completed, elapsed-since-first-source-row, or something else entirely — is undecided and is an
