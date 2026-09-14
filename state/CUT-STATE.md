@@ -1,14 +1,14 @@
 # CUT-STATE — post-v0.1.0 (opened 2026-09-13 at the release cut's close)
 
 ## SESSION-CONTINUITY
-flushed_at: 2026-09-14T11:37:57Z
-tip: 30b3b7a12cbeab131ebebfeb4276c933767fd12e
-branches: shell/hover-confirming-marker 72ca6c1 (PR #64); docs/adr-029-decision (worker RUNNING, PR next) — the two open branches; main = the commit above (this flush is ledger-only).
+flushed_at: 2026-09-14T11:40:36Z
+tip: a473c141e8c95dae5f4ebc888c4c8924b4e13c12
+branches: shell/hover-confirming-marker 72ca6c1 (PR #64); docs/adr-029-decision ca3aa1a (PR #66) — both the human's clicks; main = the commit above (this flush is ledger-only).
 position: 2026-09-14 ~11:55Z — the Stop hook flagged adr-029 as ready; corrected: its Decision-text port (machine-light, RULED C2) is dispatched now (branch docs/adr-029-decision), and PR #65 brought the plan current (adr-029 in-progress; marker in-progress #64; adr-023-text done #61; entry-90 returned to the human; drill, lod-route-b-divergence and a new adr-029-g1-feasibility node all sequenced AFTER the sitting — machine/disk, one heavy run at a time). 0 ready nodes now. Everything else awaits the human: PR #64, the sitting ~22:00, entry 90's ruling, the v0.1.0 evidence upload.
 half-made judgments: the marker WORDING is a placeholder — the sitting's felt verdict fixes it, applied as a follow-up commit after #64 merges (M3/§10(1); the trace label and one test literal declared to track it, prereg Amendment 1). The next-wave ready nodes are all machine-heavy and sequenced AFTER the sitting: ADR-029's G1 feasibility spike (verify a monotone DuckDB scan reading against the vendored crate; bounces the quantity question to the human if none exists — RULED C2), the LOD route-B divergence piece (RULED C3; explain the invalid-output divergence + check route A's static-bundling admissibility under ADR-021), the drill (delete target/debug to re-fund it, then a clean clone build). The next PLAN PR (via PR, ruling A1) moves nodes to done: adr-023-decision-text -> done {pr:61}; hover-confirming-marker -> done on #64's merge; and records entry 90's return, the geometry node, etc.
 intended sequencing (next session): if the human clicks #64: apply the wording after the sitting. AFTER the sitting tonight: record the felt verdicts verbatim into DECISIONS-PENDING (the marker wording, the 5/9/15 px row, the pan feel, K7/66(b)/84-85/86); apply the marker wording verdict (follow-up commit on a branch -> PR); delete C:/dev/spatial-ide/target/debug; run the drill (worker, quiet machine); then ADR-029 G1 + the LOD divergence; then a plan PR for the node moves. The SHA-pin workflow-hardening node stays proposed until the human places it.
 unreported findings: the leftover .claude/worktrees/release-0.1.0/renderer/bundle-viewer holds 1 file (Cargo.toml) under a busy handle (Device or resource busy); its git registration is already gone; retry the delete when the handle clears. Disk 48 GB free; the 28 GB target/debug is the warm build kept for tonight's sitting launch, deleted after to fund the drill.
-in-flight gate states: none gating. Running: the ADR-029 Decision-text port worker (docs, branch docs/adr-029-decision, opens its own PR). PR #64 (marker) open for the human. Plan is current: 0 ready, 6 waiting-on-human, 10 blocked-on-deps.
+in-flight gate states: none. No agent running. Two PRs open for the human (#64 marker, #66 ADR-029 Decision text — both Proposed/placeholder-safe). Plan current: 0 ready, 6 waiting-on-human, 10 blocked-on-deps.
 
 Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the release cut, 2026-09-08 → 2026-09-13; v0.1.0 = b391e43 on release/0.1.0, RC2 = 13471a9; merged back to main at e9900a3).
 
