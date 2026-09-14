@@ -1,16 +1,12 @@
 {
-  "generated_at": "2026-09-13T21:45:51.389Z",
-  "ci": {
-    "badge_url": "https://github.com/christopherdonini/spatial-ide/actions/workflows/product-ci-rust.yml/badge.svg?branch=main",
-    "conclusion": null,
-    "note": "offline: gh run list skipped"
-  },
+  "generated_at": "2026-09-13T23:50:03.929Z",
+  "source": "the custodian's machine",
   "drift": {
     "ok": true,
     "failures": []
   },
   "disk_free": {
-    "bytes": 10794078208,
+    "bytes": 25123983360,
     "drive": "C"
   },
   "stray_processes": {
@@ -21,46 +17,7 @@
       "spatial-ide-shell": 0
     }
   },
-  "open_prs": {
-    "note": "offline: gh pr list skipped",
-    "items": []
-  },
   "waiting_on_human": [
-    {
-      "id": "entry-91-polish-held-halves",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-13",
-      "age_days": 0
-    },
-    {
-      "id": "entry-75-hover-repick-defaults",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-10",
-      "age_days": 3
-    },
-    {
-      "id": "sitting-4-rows",
-      "kind": "sitting",
-      "minutes": 45,
-      "opened": null,
-      "age_days": null
-    },
-    {
-      "id": "adr-029-operation-lifecycle",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-13",
-      "age_days": 0
-    },
-    {
-      "id": "entry-79-b1-consult-items",
-      "kind": "ruling",
-      "minutes": 15,
-      "opened": null,
-      "age_days": null
-    },
     {
       "id": "briefa-p3-p6",
       "kind": "ruling",
@@ -76,16 +33,30 @@
       "age_days": 3
     },
     {
-      "id": "entry-78-repo-description",
-      "kind": "click",
-      "minutes": 5,
-      "opened": null,
-      "age_days": null
+      "id": "adr-029-operation-lifecycle",
+      "kind": "ruling",
+      "minutes": 10,
+      "opened": "2026-09-13",
+      "age_days": 0
     },
     {
-      "id": "drill-clean-clone",
+      "id": "entry-91-polish-held-halves",
       "kind": "ruling",
-      "minutes": 5,
+      "minutes": 6,
+      "opened": "2026-09-13",
+      "age_days": 0
+    },
+    {
+      "id": "entry-75-hover-repick-defaults",
+      "kind": "ruling",
+      "minutes": 10,
+      "opened": "2026-09-10",
+      "age_days": 3
+    },
+    {
+      "id": "sitting-4-rows",
+      "kind": "sitting",
+      "minutes": 45,
       "opened": null,
       "age_days": null
     },
@@ -116,6 +87,20 @@
       "minutes": 5,
       "opened": "2026-09-13",
       "age_days": 0
+    },
+    {
+      "id": "evidence-archive-v0-1-0",
+      "kind": "click",
+      "minutes": 5,
+      "opened": null,
+      "age_days": null
+    },
+    {
+      "id": "entry-78-repo-description",
+      "kind": "click",
+      "minutes": 5,
+      "opened": null,
+      "age_days": null
     }
   ]
 }

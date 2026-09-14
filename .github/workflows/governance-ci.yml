@@ -91,6 +91,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/plan/verify.mjs
 
+      - name: buildHealth smoke (temp dir; shows the scoped token's reach in the log)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/plan/buildHealth.mjs --out-dir "$RUNNER_TEMP/site" && cat "$RUNNER_TEMP/site/data/build-health.json"
+
       - name: CUSTODIAN-QUEUE.md/.json drift check
         run: node scripts/plan/queue.mjs --check
 

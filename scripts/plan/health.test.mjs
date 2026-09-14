@@ -26,16 +26,14 @@ test('computeWaitingAges reports days since dates.opened for each waiting-on-hum
   assert.equal(byId['n-waiting-click'].age_days, 7);
 });
 
-test('buildHealthData assembles generated_at, drift, and injected fields without touching the OS/gh', () => {
+test('buildHealthData assembles machine facts only — generated_at, source, drift, injected OS fields', () => {
   const dir = makeTempDir('health-build-');
   const planPath = path.join(dir, 'PLAN.yaml');
   fs.copyFileSync(path.join(fixturesDir, 'valid-plan.yaml'), planPath);
   const plan = loadPlan(planPath);
 
-  const fakeCi = { badge_url: 'https://example.invalid/badge.svg', conclusion: 'success' };
   const fakeDisk = { bytes: 123456789 };
   const fakeStray = { total: 2, by_name: { cargo: 1, node: 1, 'spatial-ide-shell': 0 } };
-  const fakeOpenPrs = { items: [{ number: 46, created_at: '2026-09-10T00:00:00Z', age_days: 3 }] };
 
   const now = new Date('2026-09-13T12:00:00Z');
   const health = buildHealthData(plan, {
@@ -43,21 +41,40 @@ test('buildHealthData assembles generated_at, drift, and injected fields without
     planPath,
     siteDir: path.join(dir, 'site'),
     now,
-    ci: fakeCi,
     disk: fakeDisk,
     strayProcesses: fakeStray,
-    openPrs: fakeOpenPrs,
   });
 
   assert.equal(health.generated_at, now.toISOString());
-  assert.equal(health.ci, fakeCi);
+  assert.equal(health.source, "the custodian's machine");
   assert.equal(health.disk_free, fakeDisk);
   assert.equal(health.stray_processes, fakeStray);
-  assert.equal(health.open_prs, fakeOpenPrs);
   assert.equal(typeof health.drift.ok, 'boolean');
   assert.ok(Array.isArray(health.drift.failures));
   assert.ok(Array.isArray(health.waiting_on_human));
   assert.ok(health.waiting_on_human.some((w) => w.id === 'n-waiting-sight'));
+});
+
+test('health.mjs carries no build-time facts: CI, open PRs and the latest release are not its business', () => {
+  const dir = makeTempDir('health-shape-');
+  const planPath = path.join(dir, 'PLAN.yaml');
+  fs.copyFileSync(path.join(fixturesDir, 'valid-plan.yaml'), planPath);
+  const plan = loadPlan(planPath);
+  const health = buildHealthData(plan, {
+    repoRoot,
+    planPath,
+    siteDir: path.join(dir, 'site'),
+    disk: {},
+    strayProcesses: {},
+  });
+  assert.deepEqual(Object.keys(health), [
+    'generated_at',
+    'source',
+    'drift',
+    'disk_free',
+    'stray_processes',
+    'waiting_on_human',
+  ]);
 });
 
 test('buildHealthData drift.ok is false when the queue has not been generated', () => {
@@ -69,10 +86,8 @@ test('buildHealthData drift.ok is false when the queue has not been generated', 
     repoRoot,
     planPath,
     siteDir: path.join(dir, 'site'),
-    ci: { badge_url: null, conclusion: null },
     disk: {},
     strayProcesses: {},
-    openPrs: { items: [] },
   });
   assert.equal(health.drift.ok, false);
 });
