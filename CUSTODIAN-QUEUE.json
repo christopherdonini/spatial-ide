@@ -1,125 +1,11 @@
 {
-  "generated_at": "2026-09-14T10:35:08.700Z",
-  "plan_hash": "377528851624e602c2bf687528e98b00f4ef32e1133ed307656df34a33b027a6",
+  "generated_at": "2026-09-14T11:35:59.672Z",
+  "plan_hash": "67acc1bba2ea5e0a69b665af1fac74d5e11858d01c7c6cb7b2c046ced48c2b08",
   "priorities_approved": true,
-  "next": {
-    "id": "adr-029-operation-lifecycle",
-    "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
-    "lane": "kernel-protocol",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 1,
-    "budget_minutes": 120,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-13",
-      "done": null
-    },
-    "summary": "RULED 2026-09-14 (question set C, C2): typed states scanning | finished | unknown mirroring cancel; its own wire literal numbered by merge order; the liveness string sighted as a new state; the operation id non-authorising; G1 returns the quantity question if no monotone reading exists. Next: ADR-029 text and the piece preregistration; the Status change stays the human word after its gate"
-  },
-  "ready": [
-    {
-      "id": "adr-029-operation-lifecycle",
-      "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-13",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C2): typed states scanning | finished | unknown mirroring cancel; its own wire literal numbered by merge order; the liveness string sighted as a new state; the operation id non-authorising; G1 returns the quantity question if no monotone reading exists. Next: ADR-029 text and the piece preregistration; the Status change stays the human word after its gate"
-    },
-    {
-      "id": "hover-confirming-marker",
-      "title": "Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set B, B1): the marker is removed only by a re-pick result (confirm drops it; a different feature replaces the readout; none or below-threshold becomes the refusal or clears); a stale id is never served without its marker (ADR-010 rule 5) and the marker never outlives a settle; tests: the state cannot render without the marker, only a re-pick result removes it; wording sighted at the sitting. A preregistration amendment precedes the code"
-    },
-    {
-      "id": "lod-route-b-divergence",
-      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C3): whether geo topology-preserving simplification (SimplifyVwPreserve) removes the divergence, plain Douglas-Peucker producing invalid polygons being the expected cause; whether the DuckDB spatial extension can be statically bundled with no runtime fetch (ADR-021); spike-only dependencies stay spike-only"
-    },
-    {
-      "id": "entry-90-static-crt-v0-1-1",
-      "title": "Entry 90 — static CRT as the v0.1.1 build piece",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 6,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-13",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C1): hold for the sourced licence note with the expected posture stated (NOTICE entry under ADR-030; System Library under AGPL-3.0 s1 for Corresponding Source; the note before the build setting, entry-51 discipline); the piece stops and returns to the human if the terms restrict static distribution"
-    },
-    {
-      "id": "drill-clean-clone",
-      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Disk funded 2026-09-14 (the debug cache reclaimed). Sequenced after the engine half: its harness run needs the quiet machine the drill would load (the mechanics rule)"
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
-    "total_minutes": 85,
+    "total_minutes": 95,
     "by_kind": {
       "click": [
         {
@@ -181,6 +67,25 @@
             "done": null
           },
           "summary": "held for the human's ruling on the P3 digest (entry 83's question) before the session-identity tier starts"
+        },
+        {
+          "id": "entry-90-static-crt-v0-1-1",
+          "title": "Entry 90 — static CRT as the v0.1.1 build piece",
+          "lane": "release",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 6,
+          "budget_minutes": 90,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 10
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-13",
+            "done": null
+          },
+          "summary": "RULED 2026-09-14 (question set C, C1) then RETURNED to the human by their own stop condition: the sourced licence note (RELEASE-DRAFTS-0.1.0/decision-notes/static-crt-licence-note.md) found the AGPL s1 System Library reading for a statically conveyed MS CRT contested (the FSF text reads against static linking); the build setting does not land; the note decision points await the human ruling"
         },
         {
           "id": "entry-77-code-signing",
@@ -267,8 +172,7 @@
       },
       "summary": "ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "blocked_by": [
-        "briefa-p3-p6",
-        "adr-023-decision-text"
+        "briefa-p3-p6"
       ]
     },
     {
@@ -291,6 +195,51 @@
       "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half",
       "blocked_by": [
         "b1-engine-kernel-half"
+      ]
+    },
+    {
+      "id": "adr-029-g1-feasibility",
+      "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 5,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
+      "blocked_by": [
+        "adr-029-operation-lifecycle",
+        "sitting-4-rows"
+      ]
+    },
+    {
+      "id": "lod-route-b-divergence",
+      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 3,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)",
+      "blocked_by": [
+        "sitting-4-rows"
       ]
     },
     {
@@ -360,6 +309,28 @@
       ]
     },
     {
+      "id": "drill-clean-clone",
+      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 3,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Machine/disk-sequenced AFTER the sitting (2026-09-14): target/debug is held for the sitting launch, then deleted to re-fund the drill (the debug cache is regenerable, the human 2026-09-14). One heavy run at a time (the quiet-machine mechanics rule)",
+      "blocked_by": [
+        "sitting-4-rows"
+      ]
+    },
+    {
       "id": "site-design-v1",
       "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
       "lane": "governance",
@@ -384,26 +355,48 @@
   ],
   "in_progress": [
     {
-      "id": "adr-023-decision-text",
-      "title": "ADR-023 Decision text as ruled — the drafted Decision ported with two admissions amended and the four B1 conditions",
+      "id": "adr-029-operation-lifecycle",
+      "title": "ADR-029 + the operation lifecycle — decision draft filed for sight",
       "lane": "kernel-protocol",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 4,
-      "budget_minutes": 60,
+      "order": 1,
+      "budget_minutes": 120,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "branch": "docs/adr-023-decision"
+        "branch": "docs/adr-029-decision"
+      },
+      "dates": {
+        "opened": "2026-09-13",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C2): the Decision text drafted for the human sight (typed states scanning|finished|unknown; the wire literal by merge order; the liveness string sighted; the standing conditions) -- ported to the ADR, Status Proposed, PR for the click. G1 is its own node adr-029-g1-feasibility",
+      "evidence_label": "branch `docs/adr-029-decision`"
+    },
+    {
+      "id": "hover-confirming-marker",
+      "title": "Entry 88 as a labelled state — the standing id keeps a plain muted confirming marker between a camera change and its settle re-pick",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 9,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 64
       },
       "dates": {
         "opened": "2026-09-14",
         "done": null
       },
-      "summary": "RULED 2026-09-14 (question set D, D2): Float32 admitted as its own Arrow type; dictionary-encoded columns decoded to their value type; dates the declared next admission; four ADR-004 conflicts carried as B1 conditions; Status Proposed until B1 close; the PR is the human click (ADR files are never docs-only)",
-      "evidence_label": "branch `docs/adr-023-decision`"
+      "summary": "RULED 2026-09-14 (question set B, B1) — the labelled confirming state; both gates PASS, the K6 re-run green (POLISH s4.4(4) discharged); PR #64 for the human. The marker WORDING is a placeholder the sitting fixes; entry 89 9 px is on the same PR",
+      "evidence_label": "PR #64"
     }
   ],
   "proposed": [
