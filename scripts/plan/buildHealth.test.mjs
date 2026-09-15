@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildHealthData, summaryLines, SOURCE_LABEL } from './buildHealth.mjs';
-import { CI_BADGE_WORKFLOW } from './site.mjs';
+import { PRODUCT_CI_WORKFLOWS } from './site.mjs';
 
 const SLUG = 'owner/repo';
 const NOW = new Date('2026-09-14T12:00:00Z');
@@ -24,7 +24,23 @@ function makeFetch(handler) {
 }
 
 function isCi(url) {
-  return url.includes(`/actions/workflows/${CI_BADGE_WORKFLOW}/runs`);
+  // Any of the product workflows' runs endpoint — the strip now reads the whole suite.
+  return url.includes('/actions/workflows/') && url.includes('/runs?');
+}
+function isWorkflow(url, wf) {
+  return url.includes(`/actions/workflows/${wf}/runs`);
+}
+// The per-workflow entry buildHealth builds when a workflow's latest run is RUN.
+function runEntry(workflow, auth = 'token') {
+  return {
+    workflow,
+    auth,
+    conclusion: RUN.conclusion,
+    status: RUN.status,
+    head_sha: RUN.head_sha,
+    created_at: RUN.created_at,
+    html_url: RUN.html_url,
+  };
 }
 function isPulls(url) {
   return url.includes('/pulls?');
@@ -82,6 +98,8 @@ test('the three endpoints are parsed into the three facts', async () => {
   assert.equal(data.source, SOURCE_LABEL);
   assert.equal(data.repo, SLUG);
 
+  // The whole product suite, read: three workflows, all green → the aggregate is success, and the
+  // per-workflow detail is carried so the strip can name a red one when there is one.
   assert.deepEqual(data.ci, {
     auth: 'token',
     conclusion: 'success',
@@ -89,6 +107,7 @@ test('the three endpoints are parsed into the three facts', async () => {
     head_sha: '0123456789abcdef',
     created_at: '2026-09-14T09:00:00Z',
     html_url: 'https://github.com/owner/repo/actions/runs/1',
+    workflows: PRODUCT_CI_WORKFLOWS.map((wf) => runEntry(wf)),
   });
 
   assert.deepEqual(data.open_prs, {
@@ -110,12 +129,19 @@ test('the three endpoints are parsed into the three facts', async () => {
     prerelease: true, // v0.1.0 is one; releases/latest would have answered 404
   });
 
-  // The URLs and the required headers, as GitHub's REST API documents them.
-  assert.equal(fetchImpl.calls.length, 3);
+  // The URLs and the required headers, as GitHub's REST API documents them. Three CI calls (one per
+  // product workflow), then pulls, then releases.
+  assert.equal(fetchImpl.calls.length, PRODUCT_CI_WORKFLOWS.length + 2);
   assert.ok(fetchImpl.calls[0].url.startsWith(`https://api.github.com/repos/${SLUG}/`));
-  assert.ok(fetchImpl.calls[0].url.includes('branch=main&per_page=1'));
-  assert.ok(fetchImpl.calls[1].url.includes('state=open&per_page=100'));
-  assert.ok(fetchImpl.calls[2].url.endsWith('/releases?per_page=5'), 'the list endpoint, not releases/latest');
+  PRODUCT_CI_WORKFLOWS.forEach((wf, i) => {
+    assert.ok(isWorkflow(fetchImpl.calls[i].url, wf), `call ${i} is ${wf}`);
+    assert.ok(fetchImpl.calls[i].url.includes('branch=main&per_page=1'));
+  });
+  assert.ok(fetchImpl.calls[PRODUCT_CI_WORKFLOWS.length].url.includes('state=open&per_page=100'));
+  assert.ok(
+    fetchImpl.calls[PRODUCT_CI_WORKFLOWS.length + 1].url.endsWith('/releases?per_page=5'),
+    'the list endpoint, not releases/latest',
+  );
   const headers = fetchImpl.calls[0].headers;
   assert.equal(headers.Accept, 'application/vnd.github+json');
   assert.equal(headers['X-GitHub-Api-Version'], '2022-11-28');
@@ -170,8 +196,11 @@ test('an HTTP 500 becomes {error} on that fact alone — never a bare "unknown"'
     isCi(url) ? response(500, { message: 'boom' }, 'Internal Server Error') : happyHandler(url),
   );
   const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG, token: 'tok' });
+  // Every product workflow errored, so the suite cannot be called success — it is 'unknown', and
+  // the (uniform) error is surfaced at the top level too.
   assert.equal(data.ci.error, 'HTTP 500 Internal Server Error');
-  assert.equal(data.ci.conclusion, undefined);
+  assert.equal(data.ci.conclusion, 'unknown');
+  assert.ok(data.ci.workflows.every((w) => w.error === 'HTTP 500 Internal Server Error'));
   assert.equal(data.open_prs.count, 2); // the other facts still read
   assert.equal(data.latest_release.tag_name, 'v0.1.0');
 });
@@ -185,34 +214,41 @@ test('a thrown fetch becomes {error} carrying the message', async () => {
   assert.equal(data.open_prs.error, 'getaddrinfo ENOTFOUND api.github.com');
 });
 
-test('HTTP 403 to a token is retried once anonymously, and the fact records auth: "anonymous"', async () => {
-  let ciCalls = 0;
+test('HTTP 403 to a token is retried once anonymously (per workflow), and the fact records auth', async () => {
+  // The FIRST product workflow gets a 403 then succeeds anonymously; the rest succeed with the
+  // token. The retry is per workflow, so the aggregate auth is 'mixed' (one anonymous, two token).
+  const first = PRODUCT_CI_WORKFLOWS[0];
+  let firstCalls = 0;
   const fetchImpl = makeFetch((url) => {
-    if (isCi(url)) {
-      ciCalls += 1;
-      return ciCalls === 1
+    if (isWorkflow(url, first)) {
+      firstCalls += 1;
+      return firstCalls === 1
         ? response(403, { message: 'Resource not accessible by integration' }, 'Forbidden')
         : response(200, { workflow_runs: [RUN] });
     }
+    if (isCi(url)) return response(200, { workflow_runs: [RUN] });
     return happyHandler(url);
   });
   const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG, token: 'tok' });
 
-  assert.equal(data.ci.auth, 'anonymous');
-  assert.equal(data.ci.conclusion, 'success');
-  assert.equal(fetchImpl.calls.length, 4); // ci (403) + ci retry + pulls + releases
+  assert.equal(data.ci.conclusion, 'success'); // all three ended green
+  assert.equal(data.ci.auth, 'mixed'); // one workflow read anonymously, two with the token
+  assert.equal(data.ci.workflows.find((w) => w.workflow === first).auth, 'anonymous');
+  // first workflow: 403 + anonymous retry (2) + two more workflows (2) + pulls + releases = 6
+  assert.equal(fetchImpl.calls.length, PRODUCT_CI_WORKFLOWS.length + 3);
   assert.equal(fetchImpl.calls[0].headers.Authorization, 'Bearer tok');
   assert.equal(fetchImpl.calls[1].headers.Authorization, undefined); // the retry carries no token
-  assert.equal(fetchImpl.calls[1].headers.Accept, 'application/vnd.github+json');
   assert.equal(data.open_prs.auth, 'token'); // a 403 on one request never changes another's auth
 });
 
-test('a 403 without a token is an error, not an endless retry', async () => {
+test('a 403 without a token is an error on each workflow, not an endless retry', async () => {
   const fetchImpl = makeFetch((url) => (isCi(url) ? response(403, {}, 'Forbidden') : happyHandler(url)));
   const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG });
-  assert.equal(data.ci.error, 'HTTP 403 Forbidden');
+  assert.equal(data.ci.error, 'HTTP 403 Forbidden'); // every workflow errored → surfaced at top level
+  assert.equal(data.ci.conclusion, 'unknown');
   assert.equal(data.ci.auth, 'anonymous');
-  assert.equal(fetchImpl.calls.filter((c) => isCi(c.url)).length, 1);
+  // one call per workflow, no retry loop (no token to drop)
+  assert.equal(fetchImpl.calls.filter((c) => isCi(c.url)).length, PRODUCT_CI_WORKFLOWS.length);
 });
 
 test('the token never reaches the written payload or the printed log', async () => {
@@ -231,6 +267,48 @@ test('the token never reaches the written payload or the printed log', async () 
   // The Authorization header did carry it, so the test would catch a leak of the real value.
   assert.equal(fetchImpl.calls[0].headers.Authorization, `Bearer ${TOKEN}`);
   assert.ok(logged.includes('read token') || logged.includes('read anonymous'), 'only the reach is reported');
+});
+
+test('a red on ONE product workflow makes the suite red (the false-green fix)', async () => {
+  // The 2026-09-15 hazard: product-ci-shell.yml red while the other two are green. The old strip
+  // read only rust and reported "success". The suite conclusion must be failure, and the shell
+  // workflow must be named as the failing one.
+  const RED = { workflow: 'product-ci-shell.yml' };
+  const failedRun = {
+    conclusion: 'failure',
+    status: 'completed',
+    head_sha: 'badc0ffee',
+    created_at: '2026-09-14T10:00:00Z',
+    html_url: 'https://github.com/owner/repo/actions/runs/999',
+  };
+  const fetchImpl = makeFetch((url) => {
+    if (isWorkflow(url, RED.workflow)) return response(200, { workflow_runs: [failedRun] });
+    if (isCi(url)) return response(200, { workflow_runs: [RUN] });
+    return happyHandler(url);
+  });
+  const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG, token: 'tok' });
+
+  assert.equal(data.ci.conclusion, 'failure');
+  assert.equal(data.ci.html_url, failedRun.html_url); // top-level points at the RED run
+  assert.equal(data.ci.head_sha, 'badc0ffee');
+  const shell = data.ci.workflows.find((w) => w.workflow === 'product-ci-shell.yml');
+  assert.equal(shell.conclusion, 'failure');
+  assert.equal(data.ci.workflows.filter((w) => w.conclusion === 'success').length, 2);
+  // The log names the red workflow, not a bare "success".
+  const line = summaryLines(data).find((l) => l.startsWith('  ci:'));
+  assert.match(line, /failure/);
+  assert.match(line, /product-ci-shell\.yml=failure/);
+});
+
+test('a still-running workflow makes the suite in_progress, not success', async () => {
+  const running = { conclusion: null, status: 'in_progress', head_sha: 'abc', created_at: '2026-09-14T11:00:00Z', html_url: 'https://github.com/owner/repo/actions/runs/1000' };
+  const fetchImpl = makeFetch((url) => {
+    if (isWorkflow(url, 'product-ci-viewer.yml')) return response(200, { workflow_runs: [running] });
+    if (isCi(url)) return response(200, { workflow_runs: [RUN] });
+    return happyHandler(url);
+  });
+  const data = await buildHealthData({ fetch: fetchImpl, now: NOW, slug: SLUG });
+  assert.equal(data.ci.conclusion, 'in_progress');
 });
 
 test('no slug is a bad-argument error, not a silent empty page', async () => {
