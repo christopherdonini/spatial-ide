@@ -1886,9 +1886,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       onViewStateChange: ({ viewState, interactionState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
         // Entry 95 (PAN-ANCHOR-PREREGISTRATION.md §3, candidate 3): whether this tick is inside a
-        // live drag gesture. deck's own controller reports it (measured: 10 `isDragging:true` ticks
-        // then a final `isDragging:false` tick at gesture end). The recenter below is deferred out of
-        // the live drag on the strength of it.
+        // live drag gesture, as deck's own controller reports it. The recenter below is deferred out
+        // of the live drag on the strength of it (see the `if (!isDragging …)` note).
+        //
+        // DEPENDS ON deck 9.3.7's trailing settled tick: a drag fires a run of `isDragging: true`
+        // ticks and then ONE `isDragging: false` tick at gesture end (`panend`), where the deferred
+        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (pinned), NOT
+        // a documented invariant. A future deck upgrade that stops emitting that trailing settled
+        // tick — or ends a gesture on `pointercancel` with no `panend` — would silently defer the
+        // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT_M` headroom
+        // (`offsetFrame.ts`), but there is no in-code fallback and the only guard is the operator-run
+        // `e2e/pan-anchor.mjs` (not in CI). Re-run that E2E after any `@deck.gl/*` bump.
         const isDragging = Boolean((interactionState as { isDragging?: boolean } | undefined)?.isDragging);
         // Entry 47, D1/D6(a): both read BEFORE the new zoom is written -- see `scheduleHoverRepick`.
         const zoomChanged = vs.zoom !== currentZoomRef.current;
