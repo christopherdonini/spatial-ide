@@ -125,8 +125,16 @@ Do not prejudge; the fix follows the measured cause.
    is derived from the pre-fix noise floor against a KNOWN-CORRECT reference (a temporarily-patched,
    uncommitted correct build, or a configuration where the bug is provably absent) — **NEVER from the
    post-fix build** (entry 86, Amendment 1: measuring the floor off the post-fix build would measure
-   the very bug the test exists to catch). **VALUE: `<to be measured and frozen here before the fix
-   commit>`.** Once set, frozen.
+   the very bug the test exists to catch). **VALUE: `4.0` drawing-buffer px.** Basis (frozen
+   2026-09-15, this execution): the empirical noise floor on a KNOWN-CORRECT reference build — the
+   temporarily-patched, uncommitted fix (candidate 3 deferred; §Measured results) — measured
+   `1.000` buffer px worst case across both drag directions, both axes, and a there-and-back leg,
+   with Instrument A itself at `≤0.333` buffer px. That `1.000` is bounded below by ADR-010 rule 2's
+   integer-pixel quantization floor of `1.352` buffer px (rule 2, quoted: "M3 measured the dead-centre
+   residual at 0.1789 m (1.352 px) … entirely attributable to integer-pixel click quantization"), so
+   the floor, not the noise, is the binding lower bound. `4.0` sits above both, asserts no sub-pixel
+   anchoring (rule 6), and the measured cause fails it by ~1100 buffer px (single crossing) to ~18160
+   buffer px (repeated crossing) pre-fix — the separation is not marginal. Once set, frozen.
 2. **Authoritative pixel space for the OrthographicView zoom.** Declared: **CSS pixels** — the shell's
    authoritative model (`pixelsPerWorldUnitAtZoom` :531-537 and the `viewportBbox.ts` math) already
    reads `clientWidth` (CSS); the fix aligns deck's logical viewport to this, and the
@@ -178,3 +186,61 @@ Do not prejudge; the fix follows the measured cause.
 Worker executes under this record: reproduce → measure (pre-fix readings committed) → freeze §5.1 →
 fix → `e2e/pan-anchor.mjs` → mutation check. Then reviewer + architect gates. The **felt re-verdict
 is the human's, at a sitting** — held for tonight; nothing here claims it.
+
+## Measured results (entry 95 execution, 2026-09-15)
+
+Headless via `e2e/pan-anchor.mjs` + throwaway diagnostics (since removed), on the quiet Win10 19045
+host, DPR 1.0, against `target/fixtures/manual-walkthrough/100k-happy-path.parquet`. Instrument A is
+the trace-derived grab-point invariant; the synthetic-drag `dx/steps` deficit (deck's controller
+registers its pan-start on the first `pointermove`, not on pointerdown — measured residual ratio ==
+1/steps to 5 decimals across steps=1,2,4,8,16,32, zero excess) is a harness property, not the app,
+and is subtracted.
+
+**Four-width diagnostic (candidate 1/2, refuted).** deck logical viewport, deck width/height,
+`clientWidth/Height`, `gl.drawingBufferWidth/Height` and the canvas attribute size ALL coincided at
+`1280×200` (and again after resize, e.g. `1400×277`), buffer/CSS ratio `1.000`, `devicePixelRatio`
+`1`. A CDP `Emulation.setDeviceMetricsOverride{deviceScaleFactor:1.25/1.5}` moved
+`window.devicePixelRatio` to 1.25/1.5 but left the GL drawing-buffer ratio at `1.000` — WebView2 does
+not rescale the backing store from that override, so a genuine fractional-DPR backing store was NOT
+achievable (disclosed limitation). Instrument A excess stayed `0.000` even with the spoofed DPR.
+Candidate 1 (viewport≠box) and candidate 2 (fractional-DPR rounding) are refuted at the host's real
+scaling.
+
+**Instrument B (paint vs event, refuted split).** With the finite dataset seated fully in frame, the
+painted non-background centroid shift equalled deck's own target shift within ~1 buffer px (e.g.
+painted −243.0 vs deck −243.0), both carrying only the `dx/steps` deficit. Paint == event; no
+candidate-1/2 paint-vs-event split.
+
+**Growth signature.** In normal near-data use (all zooms z=−4…+2, both directions, off-centre grabs),
+Instrument A excess drift == `0.000` and the there-and-back nets `~0` — the app anchors correctly.
+The drift does NOT grow with distance-from-centre and is NOT cumulative. Candidate 4 (inertia) is
+refuted (residual survives settle == the exact `dx/steps` artifact, no more); candidate 5 (flipY) is
+refuted (an x-drag yields an x-only residual).
+
+**The cause — candidate 3 (mid-drag origin recenter).** Drift appears if and only if the mid-drag
+`maybeRecenter → setProps({initialViewState}) + render()` fires during the gesture. At a zoomed-out
+camera (z=−7) whose pan crosses the recenter threshold, the grab-point invariant broke by ~18160
+buffer px (steps=40, ~15 origin jumps) — a runaway: each recenter re-frames deck's uncontrolled view
+state while deck's controller pan-start is still expressed in the OLD frame, so the next tick
+re-crosses. A single controlled crossing (steps=12, dx=1200) broke it by ~1100 buffer px. Repeated
+crossings could close the WebView2 page (observed once at z=−7/−8, dx=4000). No recenter fires in
+normal near-data panning (threshold is 131072 m, capped, at ordinary zooms), which is why the defect
+is invisible there and only a large / zoomed-out pan reaches it.
+
+**Fix.** Single site, `WorkingCanvas.tsx` `onViewStateChange`: gate the recenter on
+`!isDragging` (deck's own `interactionState.isDragging`; measured 10 `true` ticks then one `false`
+tick at gesture end), deferring the origin advance to the settled non-dragging tick. The origin still
+advances (offset-relative f32 precision preserved, ADR-010 rule 3 / offsetFrame.ts) but with no live
+pan-start to desynchronize. Stays in deck's uncontrolled model. `viewportBbox.ts:16` corrected
+"device"→"CSS" (§5.2), measurement-backed.
+
+**pan-anchor.mjs (post-fix).** 16/16 PASS at both window sizes: `normal-A` `±0.50` buffer px,
+`paint-vs-event` `≤~1.1` buffer px, `there-and-back-net` `1.00`, `recenter-crossing-A` `~0.00`.
+**Mutation check:** reverting the gate at its single site makes `large: recenter-crossing-A dx=1200`
+(and its three siblings) FAIL BY NAME at `−1100` buffer px; the normal/paint/there-and-back cases
+still pass (12/16). Restored → 16/16.
+
+**Not claimed.** The felt re-verdict is the human's, at a sitting. The reproduced candidate-3 drift is
+large, not "slight"; whether it is the same thing the human felt is theirs to judge. A residual the
+human may still perceive — deck's own pan-start-on-first-`pointermove` startup lag — is a deck/mjolnir
+controller property, not the app defect this piece fixes, and is out of this piece's scope.
