@@ -5,14 +5,17 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
-**FELT VERDICTS 2026-09-14 — sitting (human-present, dev app @ 74465c0; the human's words verbatim; sitting-4-rows stays open — the human closes a felt-verdict node, and Rows 4 and 6 remain):**
+**FELT VERDICTS 2026-09-14/15 — sitting (human-present, dev app; the human's words verbatim; the 2026-09-14 rows are below, Rows 4 and 6 completed on 2026-09-15 after the D: migration — sitting-4-rows now CLOSED, all six rows given):**
 
 - *Row 1 — K7, entry 66 (b):* **"Row 1 is fine"** — PASS.
 - *Row 2 — L7/L8, entry 47:* **"Row 2 feels so much better now, it's almost perfect !"** — PASS.
 - *Row 3 — M14/M15, entries 85 and 84/87 (and entry 87's settled sentence):* **"Row 3 is finally perfect !"** — PASS.
 - *Row 5 — entry 89 (the cursor):* **"R5 is good"** — PASS.
-- *Row 4 — entry 86:* NOT RUN — **"R4 I don't knwo, I couldn't open published design, the serve start but in 100k-happy-path-whole-dataset it is saying 'not found'"** — a publish/serve issue (most likely the `target/` move in progress), not the anchor verdict; re-run after the migration.
-- *Rows 6 (a)/(b)/(c)* (the 9 px felt verdict on entry 91 (c), the pan feel on entry 75 (1), the confirming-marker wording on entry 88 / 91 (b)) remain — the app closed for the migration before them.
+- *Row 4 — entry 86 (2026-09-15 continuation; the bundle viewer served from the C: copy of the 100k bundle, viewer refreshed with the current dist):* **"Row 4 is fine"** — PASS. The 2026-09-14 "not found" was the mid-robocopy window, not a verdict; the zoom now anchors at the pointer with no drift, across window sizes — entry 86's fix confirmed felt.
+- *Row 6 — all three given 2026-09-15, verbatim:* **"Row 6 is now perfect, just a tiny detail … but everything else is perfect"**.
+  - *(a) confirming-marker wording (M17 / entry 88 / 91 (b)):* PASS — "perfect"; the wording *"id 6430 · confirming…"* sighted live and accepted.
+  - *(b) 5/9/15 px felt verdict (M18 (b) / entry 91 (c)):* PASS — "perfect"; the refusal did not arrive too early. **9 px STANDS** — the declared threshold is now confirmed by the walkthrough-recorded felt verdict that alone can move it, and it holds.
+  - *(c) pan re-pick feel (entry 75 (1)):* the re-pick itself PASSES ("everything else is perfect") — but a distinct pan-**anchoring** detail surfaced, verbatim: **"when i pan i'd like for the pointer to be still in the exactly same position from where i pressed to start the pan, now it goes slightly sideways"** → filed as **entry 95** (the only defect from this sitting; the grabbed world point should stay pinned under the pointer through the drag).
 
 **RULED 2026-09-14 — Brief A P3 release and entry 90 (AskUserQuestion; the human's answers verbatim):**
 
@@ -137,6 +140,8 @@ yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in
 re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #31; item 1 (b) and the
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
+
+95. **[Pan anchoring in the shell canvas — the grabbed point should stay pinned under the pointer through a drag, and it drifts slightly sideways. Surfaced at the 2026-09-15 sitting, Row 6 (c); the human verbatim: "when i pan i'd like for the pointer to be still in the exactly same position from where i pressed to start the pan, now it goes slightly sideways, but everything else is perfect." The felt verdict on the pan RE-PICK (entry 75 (1)) passed; this is a *distinct* anchoring-precision defect, not the re-pick. HYPOTHESIS, not yet confirmed by inspection: the pointer-space/scale family entry 86 fixed in the bundle viewer (a devicePixelRatio or backing-store-vs-CSS-px factor making the screen→world pan delta slightly off), here in the shell's Deck canvas — "slightly sideways" reads like a small consistent proportional error, to be MEASURED, never assumed. Recommendation: a small polish piece — reproduce and measure the drift at two window sizes/DPRs first (cause before fix, entry-86 discipline), one pure screen→world pan-delta conversion, an E2E asserting the grab point's world coordinate is invariant across a drag, then a felt re-verdict at the next sitting. Needs a quiet machine (the sitting app is a full rebuild). Not built; no cause confirmed.]** Surfaced 2026-09-15; nothing built.
 
 94. **[KNOWN-LIMITATIONS.md line 40 quotes, as verbatim, the axis-order refusal message from before Brief A P1 ("…normalization and emits (easting, northing) only"); `engine/src/error.rs:238-243` now emits "…emits x-first orders only — (easting, northing) or (longitude, latitude)" (92d87f1, ADMISSION-PREREGISTRATION §3 row 3). The re-aim branch corrected the same string in `AXISTRAP'` and the walkthrough's I3 row; KNOWN-LIMITATIONS is release text you sighted at Part M, so its correction is for your sight: [replace the quoted message with the current `error.rs` text verbatim, the rest of the line unchanged].]** Not applied; found by the reviewer gate on `fix/no-crs-reaim`, 2026-09-13.
 
