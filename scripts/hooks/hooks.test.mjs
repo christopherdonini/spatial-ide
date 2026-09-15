@@ -384,6 +384,57 @@ test('precompact-flush: a block citing the parent of a commit that also touches 
   assert.match(fresh.reason, /not the parent of a ledger-only flush commit/);
 });
 
+test('precompact-flush: flushed_at predating the last ledger change is stale (hash equality is not freshness)', () => {
+  // The block's tip lines up with HEAD, the tree is clean and pushed -- yet a ledger change below
+  // HEAD is NEWER than flushed_at, so the block does not reflect the latest state. Stale.
+  const dir = makeGitRepo();
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  const flushedAt = new Date('2026-09-15T12:00:00Z').toISOString();
+  const laterLedgerChange = '2026-09-15T12:03:00Z'; // 3 minutes AFTER the flush
+  writeCutState(dir, `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${flushedAt}\ntip: ${fakeHead}\n`);
+  const fakeGit = (args) => {
+    if (args[0] === 'log') return laterLedgerChange;
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
+    return null;
+  };
+  // now = just after the later ledger change, so the 10-minute window is not what fails it.
+  const fresh = checkFreshness(dir, { now: new Date('2026-09-15T12:04:00Z'), git: fakeGit });
+  assert.equal(fresh.fresh, false);
+  assert.match(fresh.reason, /predates the last ledger change/);
+});
+
+test('precompact-flush: flushed_at at/after the last ledger change is fresh', () => {
+  const dir = makeGitRepo();
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  const flushedAt = new Date('2026-09-15T12:05:00Z').toISOString();
+  const earlierLedgerChange = '2026-09-15T12:00:00Z'; // BEFORE the flush
+  writeCutState(dir, `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${flushedAt}\ntip: ${fakeHead}\n`);
+  const fakeGit = (args) => {
+    if (args[0] === 'log') return earlierLedgerChange;
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
+    return null;
+  };
+  assert.deepEqual(checkFreshness(dir, { now: new Date('2026-09-15T12:06:00Z'), git: fakeGit }), { fresh: true });
+});
+
+test('precompact-flush: flushed_at more than 10 minutes old is stale (window tightened 2026-09-15)', () => {
+  const dir = makeGitRepo();
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  const flushedAt = new Date('2026-09-15T12:00:00Z').toISOString();
+  writeCutState(dir, `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${flushedAt}\ntip: ${fakeHead}\n`);
+  const fakeGit = () => ''; // never reached: the window check runs before any git
+  // 11 minutes after the flush -- inside the old 20-minute window, outside the new 10-minute one.
+  const fresh = checkFreshness(dir, { now: new Date('2026-09-15T12:11:00Z'), git: fakeGit });
+  assert.equal(fresh.fresh, false);
+  assert.match(fresh.reason, /more than 10 minutes old/);
+});
+
 test('precompact-flush: untracked paths (porcelain ??) do not make the tree dirty', () => {
   const dir = makeGitRepo();
   const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';

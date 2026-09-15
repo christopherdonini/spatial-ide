@@ -83,10 +83,15 @@ This hook blocks via **exit code 2** (stderr shown for manual `/compact`; no doc
 `"reason"` field for PreCompact, unlike Stop — only `"decision": "block"` is documented for it), not
 via a `reason` field on stdout.
 
-**Fresh** (AUTONOMY.md §7): `state/CUT-STATE.md`'s `## SESSION-CONTINUITY` block carries
-`flushed_at` within the last 20 minutes (declared `FLUSH_FRESHNESS_MS`) **and** `tip` equal to the
-current `HEAD` **and** `git status --porcelain` shows no modified tracked file **and** `HEAD` is
-pushed (`git rev-parse @{u}` resolves, **and** `HEAD` is reachable from it —
+**Fresh** (AUTONOMY.md §7; tightened 2026-09-15 on the human's word): `state/CUT-STATE.md`'s
+`## SESSION-CONTINUITY` block carries `flushed_at` within the last **10 minutes** (declared
+`FLUSH_FRESHNESS_MS`) **and** `flushed_at` **at or after the last ledger change** below the flush
+commit (`git log -1 --format=%cI HEAD~1 -- state/CUT-STATE.md`; skipped when it cannot be read —
+no prior ledger history or a shallow clone — since an unknown last-change is not grounds to block:
+"hash equality alone is not freshness") **and** `tip` equal to the current `HEAD` (or to `HEAD`'s
+parent when `HEAD` is a ledger-only flush commit — the one commit that cannot cite its own hash)
+**and** `git status --porcelain` shows no modified tracked file **and** `HEAD` is pushed
+(`git rev-parse @{u}` resolves, **and** `HEAD` is reachable from it —
 `git merge-base --is-ancestor HEAD @{u}`, not literal equality: the upstream ref can be further
 ahead from someone else's later push while `HEAD` is still, itself, pushed — reviewer finding 7).
 Fresh → allow. Stale → block once,

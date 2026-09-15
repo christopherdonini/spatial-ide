@@ -12,12 +12,15 @@
 // PATHS (human's second directive, item 17): the ledger now lives at state/CUT-STATE.md (tracked
 // on main since a40ccfe/252585b); nothing here reads the old root-level path.
 //
-// Fresh (§7): state/CUT-STATE.md's SESSION-CONTINUITY block carries `flushed_at` within the last
-// 20 minutes AND `tip` equal to the current HEAD (or to HEAD's parent when HEAD is a ledger-only
-// flush commit -- the one commit that cannot cite its own hash) AND `git status --porcelain` shows no modified
-// tracked file AND HEAD is pushed (`git rev-parse @{u}` resolves and matches HEAD). Fresh -> allow.
-// Stale -> block once, recording .claude/state/precompact-<session_id>.json; a second PreCompact
-// within 15 minutes of that record is allowed whatever the freshness.
+// Fresh (§7, tightened 2026-09-15 on the human's word): state/CUT-STATE.md's SESSION-CONTINUITY
+// block carries `flushed_at` within the last 10 minutes AND `flushed_at` at or after the last
+// ledger change below the flush commit (hash equality alone is not freshness -- a block whose tip
+// lines up but whose timestamp predates the newest ledger change is stale) AND `tip` equal to the
+// current HEAD (or to HEAD's parent when HEAD is a ledger-only flush commit -- the one commit that
+// cannot cite its own hash) AND `git status --porcelain` shows no modified tracked file AND HEAD is
+// pushed (`git rev-parse @{u}` resolves and matches HEAD). Fresh -> allow. Stale -> block once,
+// recording .claude/state/precompact-<session_id>.json; a second PreCompact within 15 minutes of
+// that record is allowed whatever the freshness.
 //
 // Never throws to the shell: any unexpected error is caught and treated as allow, noted on stderr.
 
@@ -26,7 +29,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
-export const FLUSH_FRESHNESS_MS = 20 * 60 * 1000; // §7: "flushed_at within the last 20 minutes"
+export const FLUSH_FRESHNESS_MS = 10 * 60 * 1000; // §7, tightened 2026-09-15: "within the last 10 minutes"
 export const SECOND_CHANCE_WINDOW_MS = 15 * 60 * 1000; // §7: "a second PreCompact within 15 minutes is allowed"
 
 export const BLOCK_REASON =
@@ -102,7 +105,24 @@ export function checkFreshness(projectRoot, { now = new Date(), git = (args) => 
     return { fresh: false, reason: `flushed_at "${parsed.flushedAt}" is not a valid ISO-8601 timestamp` };
   }
   if (now.getTime() - flushedDate.getTime() > FLUSH_FRESHNESS_MS) {
-    return { fresh: false, reason: 'flushed_at is more than 20 minutes old' };
+    return { fresh: false, reason: 'flushed_at is more than 10 minutes old' };
+  }
+
+  // Hash equality alone is not freshness (the human, 2026-09-15). The block must also have been
+  // WRITTEN at or after the most recent ledger change it is meant to summarize. The flush commit is
+  // HEAD (the block cites HEAD, or HEAD^ for the ledger-only convention handled below), so "the last
+  // ledger change" is the newest commit BELOW HEAD that touched state/CUT-STATE.md; flushed_at must
+  // not predate it. When it cannot be read -- no prior ledger history, a shallow clone -- the
+  // sub-check is skipped (an unknown last-change is not grounds to block a real flush).
+  const lastLedgerChange = git(['log', '-1', '--format=%cI', 'HEAD~1', '--', 'state/CUT-STATE.md']);
+  if (lastLedgerChange) {
+    const ledgerDate = new Date(lastLedgerChange);
+    if (!Number.isNaN(ledgerDate.getTime()) && flushedDate.getTime() < ledgerDate.getTime()) {
+      return {
+        fresh: false,
+        reason: `flushed_at (${parsed.flushedAt}) predates the last ledger change (${lastLedgerChange}) -- re-flush after the latest state change`,
+      };
+    }
   }
 
   const head = git(['rev-parse', 'HEAD']);
