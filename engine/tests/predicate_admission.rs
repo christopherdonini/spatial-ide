@@ -21,18 +21,28 @@ use spatial_engine::{
     MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH,
 };
 
+// All six tests in this file need the SAME read-only fixture (one identical spec). Each test used
+// to `write_geoparquet` it to a single shared path and then open it — and because cargo runs the
+// tests in parallel, one test's write truncated `zoned.parquet` while another test opened it,
+// failing intermittently with "File 'zoned.parquet' too small to be a Parquet file" (green by luck,
+// red by luck). It is written exactly once, synchronized by the `OnceLock`, before any test opens
+// it; every test then opens that finished file read-only, which is safe to do concurrently.
 fn dataset() -> Dataset {
-    let spec = FixtureSpec {
-        features: 200,
-        attributes: AttributeMode::CategoricalZone,
-        crs_mode: CrsMode::DeclaredLv95,
-        ..Default::default()
-    };
-    let dir = std::env::temp_dir().join("spatial-engine-predicate-admission-tests");
-    std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("zoned.parquet");
-    write_geoparquet(&path, &spec).expect("fixture");
-    Dataset::open(&path).expect("open")
+    static FIXTURE: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+    let path = FIXTURE.get_or_init(|| {
+        let spec = FixtureSpec {
+            features: 200,
+            attributes: AttributeMode::CategoricalZone,
+            crs_mode: CrsMode::DeclaredLv95,
+            ..Default::default()
+        };
+        let dir = std::env::temp_dir().join("spatial-engine-predicate-admission-tests");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("zoned.parquet");
+        write_geoparquet(&path, &spec).expect("fixture");
+        path
+    });
+    Dataset::open(path).expect("open")
 }
 
 /// One adversarial-corpus row: a predicate text and a check against the *specific* refusal it must
