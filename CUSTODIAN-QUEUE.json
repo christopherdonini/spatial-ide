@@ -1,45 +1,33 @@
 {
-  "generated_at": "2026-09-14T19:50:41.663Z",
-  "plan_hash": "db201ea47e00c84e97ab81e0e8445e20083a3221698acdb521fbfbd8324246cc",
+  "generated_at": "2026-09-15T10:58:47.427Z",
+  "plan_hash": "9e6fd6703da9903d4b364dec3a852902c29a8f03d93c20a78a4a6ebace3e6cf4",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
-  "waiting_on_human": {
-    "total_minutes": 45,
-    "by_kind": {
-      "click": [],
-      "sight": [],
-      "ruling": [],
-      "sitting": [
-        {
-          "id": "sitting-4-rows",
-          "title": "Walkthrough sitting — the queued operator rows (Part K 66(b), L7/L8, 84/85, Part G 86, polish rows)",
-          "lane": "shell",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 8,
-          "budget_minutes": 45,
-          "needs_human": {
-            "kind": "sitting",
-            "minutes": 45
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-14",
-            "done": null
-          },
-          "summary": "the human, 2026-09-14 (question set D): tonight around ten pm local; rows: Part K 66(b), L7/L8, 84/85, Part G 86, the polish rows, the set-B rows (the threshold hovered at roughly 5, 9 and 15 px features; the pan re-pick feel; the confirming marker wording only if landed)"
-        }
-      ]
-    }
+  "next": {
+    "id": "briefa-p3-p6",
+    "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
+    "lane": "engine",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 5,
+    "budget_minutes": 390,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-11",
+      "done": null
+    },
+    "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting"
   },
-  "blocked_on_dependencies": [
+  "ready": [
     {
       "id": "briefa-p3-p6",
       "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 5,
       "budget_minutes": 390,
       "needs_human": {
@@ -51,11 +39,95 @@
         "opened": "2026-09-11",
         "done": null
       },
-      "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting",
-      "blocked_by": [
-        "sitting-4-rows"
-      ]
+      "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting"
     },
+    {
+      "id": "adr-029-g1-feasibility",
+      "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 5,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
+    },
+    {
+      "id": "marker-wording-final",
+      "title": "The confirming marker's final wording — apply the sitting's felt verdict",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 10,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR"
+    },
+    {
+      "id": "lod-route-b-divergence",
+      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)"
+    },
+    {
+      "id": "drill-clean-clone",
+      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Machine/disk-sequenced AFTER the sitting (2026-09-14): target/debug is held for the sitting launch, then deleted to re-fund the drill (the debug cache is regenerable, the human 2026-09-14). One heavy run at a time (the quiet-machine mechanics rule)"
+    }
+  ],
+  "waiting_on_human": {
+    "total_minutes": 0,
+    "by_kind": {
+      "click": [],
+      "sight": [],
+      "ruling": [],
+      "sitting": []
+    }
+  },
+  "blocked_on_dependencies": [
     {
       "id": "geometry-types-beyond-polygons",
       "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
@@ -123,72 +195,6 @@
       ]
     },
     {
-      "id": "adr-029-g1-feasibility",
-      "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 5,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
-      "blocked_by": [
-        "sitting-4-rows"
-      ]
-    },
-    {
-      "id": "marker-wording-final",
-      "title": "The confirming marker's final wording — apply the sitting's felt verdict",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 10,
-      "budget_minutes": 20,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR",
-      "blocked_by": [
-        "sitting-4-rows"
-      ]
-    },
-    {
-      "id": "lod-route-b-divergence",
-      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 3,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)",
-      "blocked_by": [
-        "sitting-4-rows"
-      ]
-    },
-    {
       "id": "entry-77-code-signing",
       "title": "Entry 77 — code signing for the Windows installer",
       "lane": "release",
@@ -252,28 +258,6 @@
       "summary": "RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note",
       "blocked_by": [
         "release-v0-1-1"
-      ]
-    },
-    {
-      "id": "drill-clean-clone",
-      "title": "The drill — clean-directory clone, regenerated fixtures, full suite, release build",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 3,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Machine/disk-sequenced AFTER the sitting (2026-09-14): target/debug is held for the sitting launch, then deleted to re-fund the drill (the debug cache is regenerable, the human 2026-09-14). One heavy run at a time (the quiet-machine mechanics rule)",
-      "blocked_by": [
-        "sitting-4-rows"
       ]
     },
     {

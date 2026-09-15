@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-15T00:52:39.683Z",
-  "plan_hash": "db201ea47e00c84e97ab81e0e8445e20083a3221698acdb521fbfbd8324246cc",
+  "generated_at": "2026-09-15T10:58:47.565Z",
+  "plan_hash": "9e6fd6703da9903d4b364dec3a852902c29a8f03d93c20a78a4a6ebace3e6cf4",
   "priorities_approved": true,
   "lanes": [
     {
@@ -790,7 +790,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 10,
       "depends_on": [
         "sitting-4-rows",
@@ -821,7 +821,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 5,
       "depends_on": [
         "briefa-p1-p2",
@@ -1206,7 +1206,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 8,
       "depends_on": [],
       "needs_human": {
@@ -1214,10 +1214,16 @@
         "minutes": 45
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "commit": "69e14f6"
+      },
       "budget_minutes": 45,
       "generation": 1,
       "felt_verdict": true,
+      "verdict": {
+        "by": "human",
+        "cite": "DECISIONS-PENDING.md RULED 2026-09-15 — question round 1"
+      },
       "entries": [
         66,
         86
@@ -1225,7 +1231,7 @@
       "summary": "the human, 2026-09-14 (question set D): tonight around ten pm local; rows: Part K 66(b), L7/L8, 84/85, Part G 86, the polish rows, the set-B rows (the threshold hovered at roughly 5, 9 and 15 px features; the pan re-pick feel; the confirming marker wording only if landed)",
       "dates": {
         "opened": "2026-09-14",
-        "done": null
+        "done": "2026-09-15"
       }
     },
     {
@@ -1234,7 +1240,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 3,
       "depends_on": [
         "polish-engine-lease-class",
@@ -1379,7 +1385,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 3,
       "depends_on": [
         "lod-feasibility-spike",
@@ -1467,7 +1473,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 5,
       "depends_on": [
         "adr-029-operation-lifecycle",

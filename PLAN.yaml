@@ -492,7 +492,7 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: blocked
+    status: ready
     order: 10
     depends_on: [sitting-4-rows, hover-confirming-marker]
     needs_human: {kind: none, minutes: 0}
@@ -510,7 +510,7 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: ready
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
@@ -744,25 +744,26 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: blocked
+    status: done
     order: 8
     depends_on: []
     needs_human: {kind: sitting, minutes: 45}
     gate: none
-    evidence: null
+    evidence: {commit: "69e14f6"}
     budget_minutes: 45
     generation: 1
     felt_verdict: true
+    verdict: {by: human, cite: "DECISIONS-PENDING.md RULED 2026-09-15 — question round 1"}
     entries: [66, 86]
     summary: "the human, 2026-09-14 (question set D): tonight around ten pm local; rows: Part K 66(b), L7/L8, 84/85, Part G 86, the polish rows, the set-B rows (the threshold hovered at roughly 5, 9 and 15 px features; the pan re-pick feel; the confirming marker wording only if landed)"
-    dates: {opened: 2026-09-14, done: null}
+    dates: {opened: 2026-09-14, done: 2026-09-15}
 
   - id: drill-clean-clone
     title: "The drill — clean-directory clone, regenerated fixtures, full suite, release build"
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: 3
     depends_on: [polish-engine-lease-class, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
@@ -852,7 +853,7 @@ nodes:
     kind: task
     lane: measurement
     phase: prototype
-    status: blocked
+    status: ready
     order: 3
     depends_on: [lod-feasibility-spike, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
@@ -906,7 +907,7 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: 5
     depends_on: [adr-029-operation-lifecycle, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
