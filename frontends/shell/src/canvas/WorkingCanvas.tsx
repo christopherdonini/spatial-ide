@@ -1883,8 +1883,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `pointerButtonDownRef`, which tracks a DOM pointer-down rather than an active drag gesture).
       getCursor: ({ isDragging }) => cursorForPointerState(isDragging),
       onLoad: () => end("deck-init"),
-      onViewStateChange: ({ viewState }) => {
+      onViewStateChange: ({ viewState, interactionState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
+        // Entry 95 (PAN-ANCHOR-PREREGISTRATION.md §3, candidate 3): whether this tick is inside a
+        // live drag gesture, as deck's own controller reports it. The recenter below is deferred out
+        // of the live drag on the strength of it (see the `if (!isDragging …)` note).
+        //
+        // DEPENDS ON deck 9.3.7's trailing settled tick: a drag fires a run of `isDragging: true`
+        // ticks and then ONE `isDragging: false` tick at gesture end (`panend`), where the deferred
+        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (pinned), NOT
+        // a documented invariant. A future deck upgrade that stops emitting that trailing settled
+        // tick — or ends a gesture on `pointercancel` with no `panend` — would silently defer the
+        // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT_M` headroom
+        // (`offsetFrame.ts`), but there is no in-code fallback and the only guard is the operator-run
+        // `e2e/pan-anchor.mjs` (not in CI). Re-run that E2E after any `@deck.gl/*` bump.
+        const isDragging = Boolean((interactionState as { isDragging?: boolean } | undefined)?.isDragging);
         // Entry 47, D1/D6(a): both read BEFORE the new zoom is written -- see `scheduleHoverRepick`.
         const zoomChanged = vs.zoom !== currentZoomRef.current;
         const readoutWasStanding = lastHoverReadoutRef.current !== null;
@@ -1904,7 +1917,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const worldX = vs.target[0] + originXBeforeRecenter;
         const worldY = vs.target[1] + originYBeforeRecenter;
 
-        if (frame.maybeRecenter(worldX, worldY)) {
+        // Entry 95 (PAN-ANCHOR-PREREGISTRATION.md §3, candidate 3 -- measured cause of the drag
+        // anchor drift). The recenter below re-frames deck's uncontrolled view state mid-gesture
+        // (`setProps({ initialViewState })`), but deck's controller still holds the pan-start it
+        // recorded in the OLD frame, so every remaining pointermove pans against a now-shifted target
+        // and the grabbed point slides. Measured pre-fix: at a zoomed-out camera whose pan crosses
+        // the recenter threshold, the grab-point invariant broke by thousands of drawing-buffer px
+        // (a runaway -- each recenter desynchronizes the next tick into re-crossing), versus a
+        // clean 0-excess residual on every pan that does not recenter.
+        //
+        // Fix: defer the recenter to the settled (non-dragging) tick deck fires at gesture end. The
+        // origin still advances -- so the offset-relative precision `maybeRecenter` exists to keep
+        // (ADR-010 rule 3, per offsetFrame.ts's own doc comment) is preserved -- but it advances when
+        // there is no live pan-start to desynchronize. Stays in deck's uncontrolled model
+        // (`initialViewState`, never `viewState`; this file's top doc comment on why).
+        if (!isDragging && frame.maybeRecenter(worldX, worldY)) {
           // The origin moved. Keep the camera visually anchored on the same authoritative point by
           // re-expressing it in the new local frame and snapping deck's own uncontrolled view state
           // to it (see this file's top doc comment for why `initialViewState` is what does that).
