@@ -4,11 +4,13 @@
 import { isPickBelowResolution, isPickConfirming, type HoverReadout, type PickResult } from "./pick";
 
 /**
- * **The marker's text -- PLACEHOLDER wording** (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M3).
+ * **The marker's text -- FINAL wording** (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M3).
  * DECISIONS-PENDING entry 88 / 75 (3), RULED 2026-09-14 (question set B, B1): the human's own
  * example line is `id 6430 · confirming…`, and the ruling's last sentence holds the wording open --
- * *"Wording sighted live at the sitting; the state itself is ruled now."* So this constant is the
- * ruling's example, declared as a placeholder: re-wording it is a one-line change here, with no
+ * *"Wording sighted live at the sitting; the state itself is ruled now."* **Sighted and accepted at the
+ * 2026-09-15 sitting, Row 6 (a)** -- the human, verbatim: *"Row 6 is now perfect"*, the wording judged
+ * in their own words (entry 91 (b) discharged; MANUAL-WALKTHROUGH.md, the 2026-09-14/15 sitting). The
+ * example line is therefore the FINAL wording. Re-wording it remains a one-line change here, with no
  * behaviour, type or test structure depending on the characters themselves.
  *
  * It is the MARKER only -- the leading separator included, the id excluded. The id is rendered by
