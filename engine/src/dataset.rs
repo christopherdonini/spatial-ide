@@ -124,6 +124,14 @@ pub struct Dataset {
     /// License and attribution as the **file** declares them, read once at open and carried
     /// verbatim.
     source_license: SourceLicense,
+    /// The source's structural facts as they were **at this open** — R-D1 (§2e).
+    ///
+    /// Read once here and compared against a fresh read before every query issue (R-D2) and after
+    /// every stream terminal (§13 C). It is a change detector: its only outcome is
+    /// [`EngineError::SourceChanged`], which ends the dataset-session generation the kernel minted
+    /// for this open. It is not a snapshot claim and it is not what makes session ordinals distinct
+    /// (R-D3) — see [`crate::descriptor`].
+    descriptor: crate::descriptor::SourceDescriptor,
 }
 
 /// License and attribution as a source file declares them — **verbatim, uninterpreted**.
@@ -238,6 +246,15 @@ impl Dataset {
         cancel: &CancelToken,
         connections: PoolConfig,
     ) -> Result<Self> {
+        // **R-I4, before anything is read** (§2d; boundary 7; A5). A partitioned source is refused
+        // by name rather than by the generic "not a readable file" below, because the two are
+        // different facts and a caller cannot act on the second one: a directory of parquet parts
+        // is a real dataset this engine will not admit *for a stated reason*, while a mistyped path
+        // is not a dataset at all. Detected structurally and narrowly —
+        // [`partitioned_source_detail`] — never by opening anything.
+        if let Some(detail) = partitioned_source_detail(path) {
+            return Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail });
+        }
         if !path.is_file() {
             return Err(EngineError::Source(format!("{} is not a readable file", path.display())));
         }
@@ -369,13 +386,18 @@ impl Dataset {
                             "a file CRS was admitted with crs_provenance {crs_class:?} and \
                              axis_provenance {axis_class:?}"
                         );
-                        return Err(EngineError::Source(format!(
-                            "internal inconsistency: {} was admitted as the file's own CRS, but \
-                             the reader recorded crs_provenance {crs_class:?} and axis_provenance \
-                             {axis_class:?}. A provenance class is a recorded fact and is never \
-                             substituted for a missing one",
-                            crs.identifier()
-                        )));
+                        // Retyped at Brief A P3 (the brief's scoped carry-over): this was
+                        // `EngineError::Source`, which is "the file could not be opened or read at
+                        // all" and sent a caller to look at its file for a defect in this code.
+                        return Err(EngineError::InternalInconsistency {
+                            detail: format!(
+                                "{} was admitted as the file's own CRS, but the reader recorded \
+                                 crs_provenance {crs_class:?} and axis_provenance {axis_class:?}. \
+                                 A provenance class is a recorded fact and is never substituted \
+                                 for a missing one",
+                                crs.identifier()
+                            ),
+                        });
                     }
                 },
             };
@@ -411,6 +433,13 @@ impl Dataset {
         // uniqueness scan runs either way, so a native column is no longer trusted without it.
         let identity = admit_identity(conn, &path_str, &file_schema, declared_identity, cancel)?;
 
+        // **R-D1, at open, after admission and before the dataset exists.** A file that never
+        // admitted has no descriptor and can never produce `SourceChanged` — the M-2 truncated
+        // fixture's registered outcome (§4): the refusal precedes any descriptor. Reads at most the
+        // declared footer ceiling and never the whole file, so it does not turn a session-ordinal
+        // open into the whole-file read boundary 6 forbids.
+        let descriptor = crate::descriptor::SourceDescriptor::of(path)?;
+
         // Verified, then kept. `probe_schema` abandons a result iterator mid-flight and
         // `read_geo_metadata`'s own comment records what that used to cost two calls later; while
         // the connection died at the end of every open, the latent state died with it. It no longer
@@ -428,7 +457,28 @@ impl Dataset {
             pool,
             pin: std::sync::Mutex::new(None),
             source_license,
+            descriptor,
         })
+    }
+
+    /// This open's structural descriptor — R-D1 (§2e). Read once at open; never recomputed here.
+    pub fn descriptor(&self) -> &crate::descriptor::SourceDescriptor {
+        &self.descriptor
+    }
+
+    /// **R-D2's pre-check: run before every query issue.**
+    ///
+    /// Re-reads the source's four structural components and compares them with the ones this
+    /// dataset opened against. A difference in any of them is
+    /// [`EngineError::SourceChanged`], whose `detail` names every component that differed.
+    ///
+    /// What it does **not** establish is the point of saying so here: it is not snapshot
+    /// consistency, it cannot see every in-place modification, and a change it does not report is
+    /// not a check that passed (boundary 4; A1). `stream_inner` calls it before it prepares,
+    /// leases or spawns anything, so a refusal costs no connection.
+    pub fn check_source_unchanged(&self) -> Result<()> {
+        let now = crate::descriptor::SourceDescriptor::of(&self.path)?;
+        self.descriptor.refuse_if_changed(&now)
     }
 
     /// License and attribution as the source file declares them. Verbatim, uninterpreted.
@@ -970,11 +1020,20 @@ fn sanity_check(
     let cap = crate::geoparquet::SANITY_SAMPLE_MAX_ROWS;
     let limit = first_row_group.map_or(cap, |rows| rows.min(cap));
     let (rows_read, qualifier) = match first_row_group {
+        // **Reworded at Brief A P3** (the brief's scoped carry-over). The statement below is
+        // `LIMIT n` over the file, not a read scoped to a row group, so a reason reading "the first
+        // row group (N rows)" claimed a read that did not happen. What runs is the first N rows;
+        // where N came from is a separate fact and is recorded as one.
         Some(rows) if rows > cap => (
-            format!("the first {limit} row(s) of the first row group ({rows} rows)"),
-            format!(", capped at the declared ceiling of {cap} rows"),
+            format!("the first {limit} row(s), N capped at the declared ceiling"),
+            format!(
+                ", the first row group carrying {rows} rows and the ceiling being {cap} rows"
+            ),
         ),
-        Some(rows) => (format!("the first row group ({rows} rows)"), String::new()),
+        Some(rows) => (
+            format!("the first {limit} row(s), N = the first row group's row count ({rows})"),
+            String::new(),
+        ),
         // The footer gave no row count for the first row group, so the declared ceiling is the only
         // bound left. Recorded as what it is rather than described as a row group that was read.
         None => (
@@ -1225,6 +1284,85 @@ fn covering_sample(
 /// alone**: the name must first match a field in the file's own Arrow schema, refused typed
 /// otherwise, before any SQL is composed — SKP-V0 §7.4's "never string-concatenated" discipline,
 /// made explicit for the one site that interpolates an identifier at all (docs/09).
+/// Whether this source is **partitioned** — more than one file — and why, or `None`.
+///
+/// **Structural and narrow, and it opens nothing.** Two shapes count, because they are the two a
+/// caller reaches a partition set through: a directory, and a path carrying a glob metacharacter.
+/// Anything else — a missing path, a path that is not parquet — keeps the refusal it already had
+/// (`EngineError::Source`), because calling a typo a partition set would be this engine inventing a
+/// diagnosis (`docs/01` principle 8).
+///
+/// **It is not a file-list or packing contract** (A5). It decides one thing: whether R-I4's named
+/// refusal is the honest answer instead of "not a readable file". Nothing here enumerates parts,
+/// orders them, or attaches meaning to their names.
+fn partitioned_source_detail(path: &Path) -> Option<String> {
+    if path.is_dir() {
+        return Some(format!("{} is a directory", path.display()));
+    }
+    let text = path.to_str()?;
+    // **Windows' extended-length prefix is not a glob.** `\\?\C:\...` and `\\?\UNC\...` are the
+    // canonical forms `std::fs::canonicalize` returns on this platform, and they carry a literal
+    // `?` — scanning the raw string made every canonicalized path look like a pattern. Stripped
+    // first, so the scan below sees the path and not its prefix.
+    let scanned = text
+        .strip_prefix(r"\\?\UNC\")
+        .or_else(|| text.strip_prefix(r"\\?\"))
+        .unwrap_or(text);
+    // `*` and `?` only. `[` is deliberately not treated as a glob character here: a character class
+    // in a source path is exotic, while a bracket in a real directory name is not, and a false
+    // positive turns an ordinary file into a refusal about partitioning it does not have.
+    if scanned.contains('*') || scanned.contains('?') {
+        return Some(format!("{text} is a glob naming more than one file"));
+    }
+    None
+}
+
+/// The narrow in-code form of the session tier's own assumption: that DuckDB's `file_row_number`
+/// names a **physical** row position rather than a scan-ordered one.
+///
+/// **Proposed placement, flagged for the architect and not wired into `open` here.** It is exposed
+/// as a callable check rather than run unconditionally at admission because running it at open
+/// would read rows on a path boundary 6 declares reads nothing — which would break the very claim
+/// the session tier makes. The corpus-wide verification is **P4**'s (§3/§5); this function is what
+/// P4's run and the tier's own test module call, and nothing in this cut claims its result in
+/// advance.
+///
+/// What it asks: over `limit` rows, does the ordinal stay attached to the same row when the scan is
+/// reordered and filtered? A scan-ordered ordinal renumbers under `ORDER BY`; a physical one does
+/// not. It is evidence, not a proof of the general property — which is why the claim it supports
+/// stays "checked against the corpus at P4", never "guaranteed".
+pub fn ordinal_is_physical_not_scan_ordered(
+    conn: &Connection,
+    path: &str,
+    key_column: &str,
+    limit: usize,
+) -> Result<bool> {
+    let frn = crate::identity::FILE_ROW_NUMBER_COLUMN;
+    let p = path.replace('\'', "''");
+    let k = key_column.replace('"', "\"\"");
+    let natural = format!(
+        "SELECT {frn}, \"{k}\" FROM read_parquet('{p}', file_row_number=true) LIMIT {limit}"
+    );
+    let reordered = format!(
+        "SELECT {frn}, \"{k}\" FROM read_parquet('{p}', file_row_number=true) \
+         ORDER BY \"{k}\" DESC"
+    );
+    let pairs = |sql: &str| -> Result<Vec<(i64, i64)>> {
+        let mut stmt = conn
+            .prepare(sql)
+            .map_err(|e| EngineError::Query(format!("prepare ordinal check: {e}")))?;
+        let rows = stmt
+            .query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?)))
+            .map_err(|e| EngineError::Query(format!("ordinal check: {e}")))?;
+        rows.collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| EngineError::Query(format!("ordinal check row: {e}")))
+    };
+    let baseline: std::collections::HashMap<i64, i64> = pairs(&natural)?.into_iter().collect();
+    Ok(pairs(&reordered)?
+        .into_iter()
+        .all(|(ordinal, key)| baseline.get(&ordinal).is_none_or(|k| *k == key)))
+}
+
 fn admit_identity(
     conn: &Connection,
     path: &str,
@@ -1240,20 +1378,34 @@ fn admit_identity(
         None => (IdSource::File, ID_COLUMN.to_string(), false),
     };
 
-    let field = schema.fields().iter().find(|f| f.name() == &column).ok_or_else(|| {
-        EngineError::IdentityUnusable {
-            column: column.clone(),
-            detail: if matches!(source, IdSource::File) {
-                "the file has no such column, and no identity mapping was declared. Stable \
-                 per-feature identity is required (docs/11); declare a mapping to a column that \
-                 carries it"
-                    .to_string()
-            } else {
-                "the file has no such column".to_string()
-            },
-            candidate_columns: identity::candidate_identity_columns(schema),
+    let Some(field) = schema.fields().iter().find(|f| f.name() == &column) else {
+        // **R-I3 — the session tier** (§2d; the proposed ADR-016 Amendment 1, point 1). This is
+        // where `identity_unusable` used to be raised for a single-file keyless source. It is not
+        // raised here any more: the dataset opens with identity = (dataset-session generation,
+        // `file_row_number`).
+        //
+        // **Nothing is read to reach it.** No whole-file read, no content hash, no uniqueness scan
+        // (boundary 6) — this arm returns without issuing a statement, which is the structural form
+        // of the claim G-A1 (P5) asserts on read accounting.
+        //
+        // A *declared* mapping naming a column the file does not carry still refuses: the caller
+        // named something specific and got it wrong, and silently demoting that to the session tier
+        // would answer a different question than the one asked (ADR-016 §3, declared never
+        // inferred).
+        if matches!(source, IdSource::Mapped { .. }) {
+            return Err(EngineError::IdentityUnusable {
+                column: column.clone(),
+                detail: "the file has no such column".to_string(),
+                candidate_columns: identity::candidate_identity_columns(schema),
+            });
         }
-    })?;
+        // The ADR-016 candidate list is still *reported* — on the envelope's record rather than in
+        // a refusal — so an operator can still declare a mapping (R-I3's own sentence). It is
+        // unranked and unpreselected, exactly as it is in the refusal.
+        return Ok(DatasetIdentity::new_session_ordinal(identity::candidate_identity_columns(
+            schema,
+        )));
+    };
 
     // §4's value-preserving test. A type needing a transform to reach u64 is refused outright.
     identity::admit_column_type(&column, field.data_type(), schema)?;

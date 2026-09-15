@@ -110,6 +110,24 @@ pub enum PublishError {
     /// rather than emitted and left for a reader to discover.
     RowFilterNotRecordable,
 
+    /// A **geographic-degrees** dataset cannot be published yet — refused at preflight, by name.
+    ///
+    /// **Brief A settled boundary 8**, held at P2 and closed here at P3 ("must be closed at P3, not
+    /// carried silently" — the P2 reviewer). Reusing ADR-025's own pattern (`:3-4`): where the
+    /// preflight can predict the artifact would be wrong, the publish surface refuses, typed,
+    /// before any write, rather than emitting a dead artifact for a reader to discover.
+    ///
+    /// The bundled viewer has no degrees path: it renders in the authoritative project CRS, and the
+    /// shell's own degrees display is an **equirectangular display convention** applied at view
+    /// time, not a property of the data or of any bundle. Publishing a degrees dataset would hand a
+    /// recipient coordinates whose only correct rendering is a convention the bundle does not carry.
+    ///
+    /// **Until Brief B's reader change** — it reopens then, on the same terms ADR-025's own reopen
+    /// condition is written in. Nothing about this refusal claims a transform exists or is planned:
+    /// `axis_normalization` stays `none-performed` everywhere and no coordinate value is
+    /// transformed by anything in this tree.
+    GeographicCrsNotPublishable { crs_identifier: String, unit_source: String },
+
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
 
@@ -245,6 +263,19 @@ impl std::fmt::Display for PublishError {
                  record (docs/01 principle 3). Clear the filter and publish the whole file, or \
                  publish the viewport bbox instead — a filtered-subset bundle format is \
                  bundle_version 2 and does not exist yet"
+            ),
+            // Names the CRS and where the degrees unit was established from, because a
+            // rule-defaulted degrees dataset and a declared one are different facts and an operator
+            // acting on this refusal needs to know which it has (the preregistration's §5
+            // consequence: the two provenance routes must stay distinguishable at sight).
+            Self::GeographicCrsNotPublishable { crs_identifier, unit_source } => write!(
+                f,
+                "refused: {crs_identifier} is a geographic CRS whose coordinates are in degrees \
+                 ({unit_source}), and the bundled viewer has no degrees path — it renders in the \
+                 dataset's own CRS, while this shell's degrees display is a view-time convention a \
+                 bundle does not carry. Publishing it would hand a recipient a bundle nothing can \
+                 render correctly. Reproject the source to a projected CRS and open that, or wait \
+                 for the reader change that adds the degrees path"
             ),
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,

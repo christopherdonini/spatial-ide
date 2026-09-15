@@ -20,7 +20,7 @@
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, UInt64Array};
@@ -573,9 +573,28 @@ pub struct StreamStats {
     pub rows_generated: AtomicU64,
     pub resident_bytes: AtomicUsize,
     pub peak_resident_bytes: AtomicUsize,
+    /// What the **post-check** found, if it found a change (§13 C). Set on the producer thread
+    /// after the iterator is drained and the lease released; read by the host after the terminal.
+    ///
+    /// **It exists because rule (ii) needs it.** A cancelled stream keeps its `cancelled` terminal,
+    /// so on that path the change cannot ride the terminal — but the dataset-session generation
+    /// still has to end. This is the record that makes both true at once. It carries the
+    /// components that differed, never a generation value (A2).
+    source_changed_detail: Mutex<Option<String>>,
 }
 
 impl StreamStats {
+    fn record_source_changed(&self, detail: &str) {
+        *self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some(detail.to_string());
+    }
+
+    /// The post-check's finding for this stream, or `None` if it found no change. Meaningful only
+    /// once the stream has reached its terminal — before that the post-check has not run.
+    pub fn source_changed_detail(&self) -> Option<String> {
+        self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
     fn add_resident(&self, n: usize) {
         let now = self.resident_bytes.fetch_add(n, Ordering::SeqCst) + n;
         self.peak_resident_bytes.fetch_max(now, Ordering::SeqCst);
@@ -972,6 +991,14 @@ impl Dataset {
                 cut: policy.cut.as_str(),
             });
         }
+        // **R-D2's pre-check — "before every query issue", and this is that point.** Every stream
+        // entry point funnels through `stream_inner`, so one call here is every query issue and not
+        // a set of call sites that can drift apart. Placed beside the check above and for the same
+        // reason: before anything is prepared, leased or spawned, so a refusal costs no connection.
+        //
+        // It is not a snapshot check. It says the file is no longer the one that opened, or it says
+        // nothing (boundary 4; A1).
+        self.check_source_unchanged()?;
         // **A viewport CRS is a caller assertion about the query, not an equivalence judgement
         // about two definitions.** ADR-015 §7. The engine does not decide that the caller's CRS
         // and the dataset's "agree" — it has no PROJ and cannot — it only refuses a viewport that
@@ -1036,6 +1063,12 @@ impl Dataset {
         let thread_stats = Arc::clone(&stats);
         let thread_cancel = cancel.clone();
         let thread_env = envelope.clone();
+        // Captured for the post-check below: the descriptor this dataset **opened** against, and
+        // the path to re-read. Cloned rather than borrowed because the producer thread outlives
+        // this call — and it is the open-time descriptor, never a fresh one, that the comparison is
+        // against.
+        let post_check_descriptor = self.descriptor().clone();
+        let post_check_path = self.path().to_path_buf();
 
         std::thread::Builder::new()
             .name("engine-geoparquet-stream".into())
@@ -1070,6 +1103,7 @@ impl Dataset {
                 // on this connection, and this engine has established no post-interrupt health
                 // guarantee, so discard-and-replace is the declared bounded behaviour rather than
                 // an optimisation. A completed query returns its connection, verified first.
+                let outcome_was_clean = outcome.is_ok();
                 match outcome {
                     Ok(()) => lease.release_healthy(),
                     Err(e) => {
@@ -1078,6 +1112,44 @@ impl Dataset {
                         // not an error in itself. H7's "no partial view presented as complete" is
                         // enforced on the consumer side by the terminal frame, not by this send
                         // succeeding.
+                        let _ = tx.send(Err(e));
+                    }
+                }
+
+                // ---------------------------------------------------------------------------
+                // **R-D2's post-check — `ADMISSION-PREREGISTRATION.md` §13 C's named call site.**
+                //
+                // `produce` above has returned, so DuckDB's result iterator is fully drained; the
+                // `match` above has decided the lease, so the lease is released; and `tx` is still
+                // alive, so the terminal has not been emitted — for the `Ok` path the terminal IS
+                // the drop of `tx` at the end of this closure, which is why "before the terminal"
+                // means here and not one line later.
+                //
+                // **Never inside the batch loop** (§13 C): a per-batch descriptor read would put
+                // filesystem work on the data path (docs/10) and would multiply one refusal into
+                // many.
+                //
+                // (i) On a clean run the terminal is `ok` **only if** the post-check finds no
+                //     change; otherwise the terminal *is* the typed `engine.source_changed`, sent
+                //     here.
+                // (ii) A **cancelled** stream keeps its `cancelled` terminal (ADR-018 vocabulary).
+                //     The check still runs and still records the change — that is what invalidates
+                //     the dataset-session generation — but a cancel is never reported as a source
+                //     change. The same holds for any other terminal error: it already happened and
+                //     it is what the caller needs to see, so the change rides the recorded flag
+                //     rather than displacing it.
+                // (iii) A change caught only here is exactly boundary 4's declared limit, and the
+                //     refusal's own text says so: "may detect a change during a query only after
+                //     that query has finished reading" (`EngineError::SourceChanged`'s `Display`).
+                //     Nothing anywhere claims the batches already delivered were a snapshot (A1).
+                let post = post_check_source(&post_check_path, &post_check_descriptor);
+                if let Err(EngineError::SourceChanged { detail }) = &post {
+                    // Recorded regardless of which terminal is emitted, so the host can end the
+                    // generation on a cancelled stream too (rule ii).
+                    thread_stats.record_source_changed(detail);
+                }
+                if outcome_was_clean {
+                    if let Err(e) = post {
                         let _ = tx.send(Err(e));
                     }
                 }
@@ -1413,6 +1485,29 @@ impl Dataset {
             sql.push_str(&format!(" LIMIT {n}"));
         }
         Ok((sql, plan))
+    }
+}
+
+/// The post-check's own read — R-D2 after a stream terminal, §13 C.
+///
+/// Separate from `Dataset::check_source_unchanged` only because the producer thread does not hold
+/// the `Dataset`; the comparison is the identical one, on `SourceDescriptor::refuse_if_changed`,
+/// so the pre-check and the post-check cannot drift into two ideas of "changed".
+///
+/// A descriptor that cannot be read at all here — the file was removed mid-query, say — is
+/// **reported as the change it is**, not swallowed: `SourceDescriptor::of`'s own typed error is
+/// mapped onto `SourceChanged` with the reason named, because "the file is gone" is precisely the
+/// situation this check exists for and treating an unreadable source as unchanged would be the
+/// silent staleness `docs/01` principle 8 forbids.
+fn post_check_source(
+    path: &std::path::Path,
+    opened_with: &crate::descriptor::SourceDescriptor,
+) -> Result<()> {
+    match crate::descriptor::SourceDescriptor::of(path) {
+        Ok(now) => opened_with.refuse_if_changed(&now),
+        Err(e) => Err(EngineError::SourceChanged {
+            detail: format!("{{the source could not be re-read: {e}}}"),
+        }),
     }
 }
 

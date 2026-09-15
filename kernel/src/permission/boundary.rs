@@ -225,6 +225,7 @@ fn error_kind(e: &BoundaryError) -> &'static str {
             PublishError::CorrespondingSourceNotDurable { .. } => "CorrespondingSourceNotDurable",
             PublishError::DatasetNameRejected { .. } => "DatasetNameRejected",
             PublishError::RowFilterNotRecordable => "RowFilterNotRecordable",
+            PublishError::GeographicCrsNotPublishable { .. } => "GeographicCrsNotPublishable",
             PublishError::CeilingExceeded { .. } => "CeilingExceeded",
             PublishError::ReaderCeilingExceeded { .. } => "ReaderCeilingExceeded",
             PublishError::Cancelled => "Cancelled",
@@ -280,6 +281,9 @@ fn publish_outcome(e: &PublishError) -> Outcome {
         | PublishError::CorrespondingSourceNotDurable { .. }
         | PublishError::DatasetNameRejected { .. }
         | PublishError::RowFilterNotRecordable
+        // The gate working, not a broken machine: the request describes a dataset this version
+        // cannot publish honestly (Brief A boundary 8).
+        | PublishError::GeographicCrsNotPublishable { .. }
         | PublishError::CeilingExceeded { .. }
         | PublishError::ReaderCeilingExceeded { .. } => Outcome::Refused,
         PublishError::DestinationNotWritable { .. }

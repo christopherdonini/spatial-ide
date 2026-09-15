@@ -8,7 +8,10 @@
     "asserted_at": "2026-08-18T00:00:00Z",
     "definition_provenance": "catalog:epsg-2056@sha256:254016888ff4",
     "axis_order": "easting,northing",
-    "axis_normalization": "none-performed"
+    "axis_normalization": "none-performed",
+    "provenance": "crs:asserted",
+    "axis_provenance": "axis:declared",
+    "display_convention": null
   },
   "geometry": {
     "column": "geometry",
@@ -21,7 +24,9 @@
     "uniqueness": "verified-at-open-full-file",
     "verified_rows": "100000",
     "max_value": "99999",
-    "js_exact": true
+    "js_exact": true,
+    "class": "native",
+    "session_statement": null
   },
   "schema": [
     { "name": "id", "arrow_type": "UInt64", "nullable": false },
@@ -35,5 +40,9 @@
     "attribution": null,
     "redistribution": null,
     "declares_anything": false
+  },
+  "sanity": {
+    "level": "none",
+    "reason": "the caller asserted the CRS, so no format rule was applied and there is nothing assumed to check. Not checked"
   }
 }

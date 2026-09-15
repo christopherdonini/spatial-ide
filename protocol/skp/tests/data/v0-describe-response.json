@@ -8,7 +8,10 @@
     "asserted_at": null,
     "definition_provenance": null,
     "axis_order": "easting,northing",
-    "axis_normalization": "none-performed"
+    "axis_normalization": "none-performed",
+    "provenance": "crs:declared",
+    "axis_provenance": "axis:declared",
+    "display_convention": null
   },
   "geometry": {
     "column": "geometry",
@@ -21,7 +24,9 @@
     "uniqueness": "verified-at-open-full-file",
     "verified_rows": "100000",
     "max_value": "99999",
-    "js_exact": true
+    "js_exact": true,
+    "class": "native",
+    "session_statement": null
   },
   "schema": [
     { "name": "id", "arrow_type": "UInt64", "nullable": false },
@@ -35,5 +40,9 @@
     "attribution": null,
     "redistribution": null,
     "declares_anything": false
+  },
+  "sanity": {
+    "level": "none",
+    "reason": "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked"
   }
 }

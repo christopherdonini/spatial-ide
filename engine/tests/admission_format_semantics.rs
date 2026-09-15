@@ -276,8 +276,12 @@ fn the_sample_level_reads_the_first_row_group_and_not_a_fixed_row_count() {
     let md = envelope_metadata(&ds);
     assert_eq!(md.get("sanity_level").unwrap(), "sample");
     let reason = md.get("sanity_reason").unwrap();
+    // **Brief A P3 reword, and the only change to this assertion.** The statement that runs is
+    // `LIMIT n` over the file, not a read scoped to a row group, so the recorded reason said a read
+    // had happened that had not. What this test asserts is unchanged: the row group's own row count
+    // is what bounded the read, the file's full row count did not, and the declared ceiling did not.
     assert!(
-        reason.contains("the first row group (64 rows)"),
+        reason.contains("the first 64 row(s), N = the first row group's row count (64)"),
         "the row group's own row count is what bounded the read: {reason}"
     );
     assert!(
