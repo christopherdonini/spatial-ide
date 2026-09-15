@@ -13,5 +13,9 @@
   {"node": "health-drives-metrics", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
   {"node": "autonomy-policy-2026-09-14", "gate": "reviewer", "attempt": 1, "verdict": "FAIL", "date": "2026-09-15"},
   {"node": "autonomy-policy-2026-09-14", "gate": "reviewer", "attempt": 2, "verdict": "PASS", "date": "2026-09-15"},
-  {"node": "pre-gate-self-checks", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"}
+  {"node": "pre-gate-self-checks", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "adr-index-drift", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "adr-index-guard", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "flush-hardening", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "health-strip-honest", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"}
 ]
