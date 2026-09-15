@@ -1,0 +1,78 @@
+name: ADR index — docs/README.md matches every ADR Status line
+
+# The guard for `docs/README.md`'s generated ADR index, triggered by the files it actually reads.
+#
+# ## Why this workflow exists (the 2026-09-15 stop-the-line)
+#
+# `docs/README.md`'s ADR index is generated from each ADR's own Status line by
+# `frontends/shell/scripts/adrIndex.mjs`; `--check` fails when the committed table drifts from the
+# ADRs. That check already ran — but ONLY inside `product-ci-shell.yml`'s `npm run verify`, whose
+# path filters watch `frontends/shell/**`, `kernel/**`, `engine/**` and the like. They do **not**
+# watch `docs/adr/**` or `docs/README.md`. So a commit that edits an ADR's Status line (a legitimate
+# edit — Proposed ADRs are editable) desynced the index with **no guard running on it**, and the
+# break sat latent on `main` until an unrelated commit touched a watched path and re-triggered the
+# suite. That is the defect this workflow closes: **the check must run on the files it validates**,
+# so a docs-only change can never redden `main` latently.
+#
+# ## Why a dedicated workflow rather than widening an existing one
+#
+# GitHub applies `on.*.paths` per **workflow**, not per job. Adding `docs/adr/**` to
+# `product-ci-shell.yml` would spend that workflow's Windows Node+Rust install — build, vitest,
+# `cargo test`, a Tauri `cargo check --release` — on every ADR prose edit, to run one Node script
+# that needs none of it. Adding it to `governance-ci.yml` would run the plan/queue/site checks on
+# every ADR edit for the same one script. This job is `node <builtins-only script> --check` on
+# `ubuntu-latest`: no `npm ci`, no toolchain, seconds. `adrIndex.mjs` imports only `node:fs`,
+# `node:path` and `node:url` and resolves its paths from its own file location, so it runs from the
+# repo root with nothing installed.
+#
+# ## What a green run here means, stated narrowly
+#
+# It means `docs/README.md`'s ADR index table reproduces every `docs/adr/ADR-0NN-*.md` file's own
+# Status field, verbatim. It says nothing about whether an ADR's *content* is correct, accepted, or
+# wise — only that the generated index has not drifted from the ADRs it summarizes. The ADRs are the
+# source; the table is generated, never hand-edited.
+#
+# ## Making this BLOCK a merge
+#
+# Running on the PR makes drift visible (a red check). To make it *block* a merge, an admin adds
+# "ADR index — docs/README.md matches every ADR Status line" to the branch-protection required
+# checks for `main` — a repository setting outside this file.
+
+on:
+  push:
+    paths:
+      - "docs/adr/**"
+      - "docs/README.md"
+      - "frontends/shell/scripts/adrIndex.mjs"
+      - ".github/workflows/adr-index-ci.yml"
+  pull_request:
+    paths:
+      - "docs/adr/**"
+      - "docs/README.md"
+      - "frontends/shell/scripts/adrIndex.mjs"
+      - ".github/workflows/adr-index-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: adr-index-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  adr-index:
+    name: verify:adr-index (--check)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # The same check `frontends/shell`'s `npm run verify` runs, invoked directly so no install is
+      # needed. The script resolves docs/adr and docs/README.md from its own location, not the CWD.
+      - name: verify:adr-index (docs/README.md matches every ADR Status line)
+        run: node frontends/shell/scripts/adrIndex.mjs --check
