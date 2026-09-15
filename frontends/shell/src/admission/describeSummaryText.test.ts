@@ -16,6 +16,10 @@ function fileCrs(overrides: Partial<CrsInfo> = {}): CrsInfo {
     definition_provenance: null,
     axis_order: "easting,northing",
     axis_normalization: "none-performed",
+    // skp/0.3 (Brief A boundary 9): additive, so this builder keeps the shape the wire has.
+    provenance: "crs:declared",
+    axis_provenance: "axis:declared",
+    display_convention: null,
     ...overrides,
   };
 }
@@ -62,6 +66,8 @@ describe("identitySummaryLine (I6: the payload's own uniqueness fact, verbatim, 
       verified_rows: "100000",
       max_value: "99999",
       js_exact: true,
+      class: "native",
+      session_statement: null,
     };
     expect(identitySummaryLine(identity)).toBe("file:id — verified-at-open-full-file");
   });
@@ -73,6 +79,8 @@ describe("identitySummaryLine (I6: the payload's own uniqueness fact, verbatim, 
       verified_rows: "20",
       max_value: null,
       js_exact: null,
+      class: "mapped",
+      session_statement: null,
     };
     const line = identitySummaryLine(identity);
     expect(line).toBe("mapped:parcel_key — verified-at-open-full-file");
