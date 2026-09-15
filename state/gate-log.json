@@ -17,5 +17,6 @@
   {"node": "adr-index-drift", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
   {"node": "adr-index-guard", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
   {"node": "flush-hardening", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
-  {"node": "health-strip-honest", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"}
+  {"node": "health-strip-honest", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"},
+  {"node": "predicate-admission-fixture-race", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-15"}
 ]
