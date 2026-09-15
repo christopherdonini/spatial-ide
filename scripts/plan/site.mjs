@@ -25,12 +25,11 @@ import { formatEvidence } from './queue.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
 
-// Judgment call, not fixed by AUTONOMY.md: which workflow's badge stands for "CI on main" on the
-// landing page. product-ci-rust.yml is the kernel/engine suite every module ultimately depends
-// on; swap this constant if the human wants a different primary indicator (e.g.
-// governance-ci.yml, or a composite of all product workflows). health.mjs records the actual run
-// conclusion independently of which badge is shown here.
-export const CI_BADGE_WORKFLOW = 'product-ci-rust.yml';
+// "CI on main" is the WHOLE product suite, not one workflow of it. Reading a single workflow was a
+// false-green hazard (2026-09-15: the strip read product-ci-rust.yml = green and reported CI
+// "success" while product-ci-shell.yml was red on main). A red on ANY product workflow is a red for
+// the suite, so the strip reads all three and reports the worst, naming which one is red.
+export const PRODUCT_CI_WORKFLOWS = ['product-ci-rust.yml', 'product-ci-viewer.yml', 'product-ci-shell.yml'];
 const DEFAULT_REPO_SLUG = 'christopherdonini/spatial-ide';
 
 // A duration, rate, or percentage pattern in a title/summary, per §5: "The generator refuses a
@@ -289,15 +288,47 @@ function renderWaitingOnYou(waitingOnHuman) {
   </section>`;
 }
 
+function gb(bytes) {
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+}
+
 function formatDiskFree(disk) {
   if (!disk) return 'unknown';
   if (disk.error) return `error: ${disk.error}`;
+  // New shape: one entry per present drive (C:, and D: when the machine has it). "C: N GB, D: M GB".
+  if (Array.isArray(disk.drives)) {
+    const parts = disk.drives
+      .filter((d) => d && typeof d.bytes === 'number')
+      .map((d) => `${d.drive}: ${gb(d.bytes)}`);
+    return parts.length > 0 ? parts.join(', ') : 'unknown';
+  }
+  // Back-compat: the earlier single-drive shape.
   if (typeof disk.bytes === 'number') {
-    const gb = disk.bytes / 1024 ** 3;
-    return `${gb.toFixed(1)} GB free${disk.drive ? ` (drive ${disk.drive})` : ''}`;
+    return `${gb(disk.bytes)} free${disk.drive ? ` (drive ${disk.drive})` : ''}`;
   }
   if (disk.raw) return disk.raw.split(/\r?\n/)[0]; // first line only -- `df` output can be wide
   return 'unknown';
+}
+
+/**
+ * Median opened->done, labelled at the resolution it actually has: the plan carries dates, so this
+ * is days, and the row says so. Never claims hours.
+ */
+function formatMedianOpenedToDone(m) {
+  if (!m || typeof m.days !== 'number') return 'no dated done nodes yet';
+  const unit = m.days === 1 ? 'day' : 'days';
+  return `${m.days} ${unit} (day resolution, ${m.n} node${m.n === 1 ? '' : 's'})`;
+}
+
+/**
+ * Gate first-pass rate, an operational governance count (not a docs/08 perf number): the fraction
+ * of nodes whose first recorded gate attempt passed, with the N. Absent log -> "no gate log yet".
+ */
+function formatGateFirstPass(g) {
+  if (!g || g.present === false) return 'no gate log yet';
+  if (!g.nodes) return 'no gate records yet';
+  const pct = Math.round((g.rate ?? 0) * 100);
+  return `${g.first_pass}/${g.nodes} nodes passed first gate (${pct}%)`;
 }
 
 function formatStrayProcesses(stray) {
@@ -346,12 +377,35 @@ function externalLink(url, text) {
   return safe ? `<a href="${esc(url)}">${esc(text)}</a>` : esc(text);
 }
 
-/** CI on main, from the build-time facts: the conclusion, linked to its run. */
+/**
+ * CI on main across the whole product suite. The strip must never read "success" while any product
+ * workflow is red, so the worst-of the workflows is shown and any non-green workflow is named and
+ * linked to its run. Falls back to the pre-composite single-fact shape if `workflows` is absent.
+ */
 function ciValueHtml(ci) {
   if (!ci) return esc('not read');
-  if (ci.error) return esc(`error: ${ci.error}`);
-  const label = ci.conclusion ?? ci.status ?? ci.note ?? 'no conclusion recorded';
-  return externalLink(ci.html_url, label);
+  if (ci.error && !Array.isArray(ci.workflows)) return esc(`error: ${ci.error}`);
+
+  const workflows = Array.isArray(ci.workflows) ? ci.workflows : null;
+  if (!workflows) {
+    // Legacy single-fact shape.
+    const label = ci.conclusion ?? ci.status ?? ci.note ?? 'no conclusion recorded';
+    return externalLink(ci.html_url, label);
+  }
+
+  const shortName = (wf) => String(wf.workflow ?? '').replace(/^product-ci-|\.yml$/g, '') || wf.workflow;
+  // A workflow is "not green" if it failed, errored, is still running, or has no run yet.
+  const notGreen = workflows.filter((w) => w.conclusion !== 'success');
+  if (notGreen.length === 0) {
+    return esc(`all green (${workflows.length}/${workflows.length})`);
+  }
+  // Name each non-green workflow with its state, linked to its run when there is one.
+  const parts = notGreen.map((w) => {
+    const state = w.error ? 'unreadable' : (w.conclusion ?? w.status ?? w.note ?? 'unknown');
+    return externalLink(w.html_url, `${shortName(w)}: ${state}`);
+  });
+  const headline = ci.conclusion === 'failure' ? 'FAILURE' : (ci.conclusion ?? 'not all green');
+  return `${esc(headline)} — ${parts.join(', ')}`;
 }
 
 function openPrsValueHtml(openPrs) {
@@ -415,6 +469,8 @@ function renderHealthStrip(health, buildHealth, byId) {
         ['Disk free', esc(formatDiskFree(health.disk_free))],
         ['Stray processes', esc(formatStrayProcesses(health.stray_processes))],
         ['Waiting on human', waitingOnHumanValueHtml(health.waiting_on_human, byId)],
+        ['Median opened→done', esc(formatMedianOpenedToDone(health.median_opened_to_done))],
+        ['Gate first-pass', esc(formatGateFirstPass(health.gate_first_pass))],
       ])
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
@@ -525,7 +581,11 @@ function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null })
   }
   const { waitingOnHuman } = deriveStates(plan);
 
-  const badgeUrl = `https://github.com/${repoSlug}/actions/workflows/${CI_BADGE_WORKFLOW}/badge.svg?branch=main`;
+  // One badge per product workflow — a single badge would show green while another workflow is red.
+  const ciBadges = PRODUCT_CI_WORKFLOWS.map(
+    (wf) =>
+      `<a href="https://github.com/${repoSlug}/actions/workflows/${wf}"><img src="https://github.com/${repoSlug}/actions/workflows/${wf}/badge.svg?branch=main" alt="${wf} on main" /></a>`,
+  ).join('\n  ');
   const seededNote = prioritiesApproved(plan)
     ? ''
     : `<div class="seeded-note">Seeded, pending approval: lane priorities below are the seeded order from the directive, not yet approved (AUTONOMY.md §2, §4).</div>`;
@@ -555,7 +615,7 @@ function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null })
 <body>
 <header>
   <h1>Spatial IDE — custodian's plan</h1>
-  <a href="https://github.com/${repoSlug}/actions/workflows/${CI_BADGE_WORKFLOW}"><img src="${badgeUrl}" alt="CI on main" /></a>
+  ${ciBadges}
   <a href="https://github.com/${repoSlug}">repository</a>
 </header>
 ${seededNote}

@@ -19,9 +19,11 @@ name: Governance CI — plan, queue, site
 #
 # ## What a green run here means, stated narrowly (the other product workflows' own discipline)
 #
-# It means: every test under scripts/plan and scripts/hooks passes, PLAN.yaml's recorded statuses
-# agree with what the repository can verify (merged PRs, ADR Status lines, tags, releases, commits
-# on main, tracked paths), and regenerating CUSTODIAN-QUEUE.md/.json and site/ produces no diff.
+# It means: every test under scripts/plan and scripts/hooks passes, every rooted (in-tree) path:line
+# reference resolves against the tree (verify:cites) and every test named in a preregistration/ADR
+# exists (verify:test-claims), PLAN.yaml's recorded statuses agree with what the repository can verify
+# (merged PRs, ADR Status lines, tags, releases, commits on main, tracked paths), and regenerating
+# CUSTODIAN-QUEUE.md/.json and site/ produces no diff.
 # It does **not** mean any hook has been exercised inside a real Claude Code session — that is the
 # dry runs recorded in state/CUT-STATE.md (AUTONOMY.md §3, §7), a human-run instrument, not a
 # per-push check.
@@ -85,6 +87,14 @@ jobs:
 
       - name: node --test (scripts/plan, scripts/hooks)
         run: node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"
+
+      # Pre-gate self-checks (AUTONOMY.md Appendix A3): mechanical integrity so the semantic gates
+      # below fail only on semantics. Both are pure Node over `git ls-files`, no network, no `gh`.
+      - name: verify:cites (path:line references resolve against the tree)
+        run: node scripts/plan/verify-cites.mjs
+
+      - name: verify:test-claims (a test named in a preregistration/ADR actually exists)
+        run: node scripts/plan/verify-test-claims.mjs
 
       - name: verify:plan (PLAN.yaml agrees with the repository)
         env:

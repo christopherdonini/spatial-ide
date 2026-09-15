@@ -117,7 +117,7 @@ No save, no persistence of a projection anywhere durable (ADR-021's predicate-pe
 
 ### 10. SKP version consequence
 
-A new field on `viewport_query` is a wire change, and schema evolution here happens exactly once, as a version bump, never as a tolerant reader (`protocol/SKP-V0.md:237-243`). Current literal is `skp/0.2` (`protocol/skp/src/v0/mod.rs:29`). **Brief A takes 0.3** (`DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md:67`, `:76`, `:89`) and merges first, so **B1 bumps to `skp/0.4`**, `==` unchanged — no ranges, no capability set, no handshake; a `skp/0.3` client and a `skp/0.4` host fail on the first call. Every fixture on both the Rust and TypeScript sides updates in the same commit as the literal, `deny_unknown_fields` stays on every derived struct in both directions. If Brief A does not merge first, this decision's number is wrong and is corrected before B1's PR, never assumed.
+A new field on `viewport_query` is a wire change, and schema evolution here happens exactly once, as a version bump, never as a tolerant reader (`protocol/skp/SKP-V0.md:237-243`). Current literal is `skp/0.2` (`protocol/skp/src/v0/mod.rs:29`). **Brief A takes 0.3** (`DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md:67`, `:76`, `:89`) and merges first, so **B1 bumps to `skp/0.4`**, `==` unchanged — no ranges, no capability set, no handshake; a `skp/0.3` client and a `skp/0.4` host fail on the first call. Every fixture on both the Rust and TypeScript sides updates in the same commit as the literal, `deny_unknown_fields` stays on every derived struct in both directions. If Brief A does not merge first, this decision's number is wrong and is corrected before B1's PR, never assumed.
 
 ### 11. Block-on-sight conditions for B1's reviewer
 

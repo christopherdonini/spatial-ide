@@ -28,7 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ghRepoSlug } from './verify.mjs';
-import { CI_BADGE_WORKFLOW } from './site.mjs';
+import { PRODUCT_CI_WORKFLOWS } from './site.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -84,31 +84,83 @@ async function apiGet(fetchImpl, url, token) {
   }
 }
 
-/** Latest run of CI_BADGE_WORKFLOW on main. */
-export async function ciFact(fetchImpl, slug, token) {
-  const url = `${API_BASE}/repos/${slug}/actions/workflows/${encodeURIComponent(CI_BADGE_WORKFLOW)}/runs?branch=main&per_page=1`;
+// A failing terminal conclusion. Any of these on any product workflow makes the suite red.
+const FAILING_CONCLUSIONS = new Set(['failure', 'timed_out', 'startup_failure', 'cancelled', 'action_required']);
+
+/** The latest run of one workflow on main. */
+async function oneWorkflowRun(fetchImpl, slug, token, workflow) {
+  const url = `${API_BASE}/repos/${slug}/actions/workflows/${encodeURIComponent(workflow)}/runs?branch=main&per_page=1`;
   const r = await apiGet(fetchImpl, url, token);
-  if (r.error) return { error: r.error, auth: r.auth };
-  if (r.notFound) return { error: 'HTTP 404 (no such workflow on this repository)', auth: r.auth };
+  if (r.error) return { workflow, error: r.error, auth: r.auth };
+  if (r.notFound) return { workflow, error: 'HTTP 404 (no such workflow on this repository)', auth: r.auth };
   const run = (r.body?.workflow_runs ?? [])[0] ?? null;
   if (!run) {
-    return {
-      auth: r.auth,
-      conclusion: null,
-      status: null,
-      head_sha: null,
-      created_at: null,
-      html_url: null,
-      note: 'no run on main yet',
-    };
+    return { workflow, auth: r.auth, conclusion: null, status: null, head_sha: null, created_at: null, html_url: null, note: 'no run on main yet' };
   }
   return {
+    workflow,
     auth: r.auth,
     conclusion: run.conclusion ?? null,
     status: run.status ?? null,
     head_sha: run.head_sha ?? null,
     created_at: run.created_at ?? null,
     html_url: run.html_url ?? null,
+  };
+}
+
+/**
+ * "CI on main" across the WHOLE product suite (PRODUCT_CI_WORKFLOWS), not one workflow. Reading a
+ * single workflow was a false-green hazard: the strip once reported CI "success" (product-ci-rust)
+ * while product-ci-shell was red. A red on ANY product workflow is a red for the suite. The
+ * aggregate `conclusion` is the worst of the three; `workflows` carries the per-workflow detail so
+ * the strip can name which one is red. Top-level fields point at the representative run (the first
+ * failing one, else the newest), keeping the pre-composite fields (`conclusion`, `html_url`, ...)
+ * populated for any older reader.
+ */
+export async function ciFact(fetchImpl, slug, token) {
+  const workflows = [];
+  for (const wf of PRODUCT_CI_WORKFLOWS) {
+    // Sequential, not Promise.all: apiGet's own 403-anonymous retry already keeps this cheap, and a
+    // handful of serial GETs at Pages-build time is not worth the concurrency surface.
+    workflows.push(await oneWorkflowRun(fetchImpl, slug, token, wf));
+  }
+
+  const failing = workflows.filter((w) => FAILING_CONCLUSIONS.has(w.conclusion));
+  const errored = workflows.filter((w) => w.error);
+  const running = workflows.filter((w) => !w.error && w.conclusion == null && w.status && w.status !== 'completed');
+  const noRun = workflows.filter((w) => !w.error && w.conclusion == null && (!w.status || w.status === 'completed'));
+  const succeeded = workflows.filter((w) => w.conclusion === 'success');
+
+  let conclusion;
+  if (failing.length > 0) conclusion = 'failure';
+  else if (errored.length > 0) conclusion = 'unknown'; // cannot claim success while a workflow is unreadable
+  else if (running.length > 0) conclusion = 'in_progress';
+  else if (noRun.length > 0) conclusion = null; // has a run for some, none for others
+  else if (succeeded.length === workflows.length) conclusion = 'success';
+  // A non-success terminal that is not itself failing (neutral/skipped/stale). The `?? 'unknown'`
+  // tail is unreachable given the filters above, but it must NEVER default to 'success' — success is
+  // only ever set when every workflow succeeded.
+  else conclusion = workflows.find((w) => w.conclusion !== 'success')?.conclusion ?? 'unknown';
+
+  // Representative run for the top-level convenience fields: the first failing one (so a reader that
+  // only looks at html_url still lands on the red run), else the newest by created_at.
+  const rep =
+    failing[0] ??
+    [...workflows]
+      .filter((w) => w.created_at)
+      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0] ??
+    workflows[0];
+
+  const auths = new Set(workflows.map((w) => w.auth));
+  return {
+    auth: auths.size === 1 ? [...auths][0] : 'mixed',
+    conclusion,
+    status: rep?.status ?? null,
+    head_sha: rep?.head_sha ?? null,
+    created_at: rep?.created_at ?? null,
+    html_url: rep?.html_url ?? null,
+    workflows,
+    ...(errored.length === workflows.length ? { error: errored[0].error } : {}),
   };
 }
 
@@ -192,9 +244,20 @@ export async function buildHealthData({ fetch: fetchImpl = globalThis.fetch, now
  * The lines the CLI prints. Exported so a test can assert mechanically that the token appears in
  * neither the payload nor the log — the only two places this script could leak it.
  */
+/** The CI line for the log: the suite conclusion, plus the names of any non-green workflows. */
+function ciSummary(ci) {
+  if (ci.error && !Array.isArray(ci.workflows)) return ci.error;
+  const overall = ci.conclusion ?? ci.note ?? 'null';
+  if (!Array.isArray(ci.workflows)) return overall;
+  const notGreen = ci.workflows.filter((w) => w.conclusion !== 'success');
+  if (notGreen.length === 0) return `${overall} (${ci.workflows.length}/${ci.workflows.length} green)`;
+  const named = notGreen.map((w) => `${w.workflow}=${w.error ? 'unreadable' : (w.conclusion ?? w.status ?? w.note ?? 'unknown')}`);
+  return `${overall} [${named.join(', ')}]`;
+}
+
 export function summaryLines(data) {
   return [
-    `  ci: ${data.ci.error ?? data.ci.conclusion ?? data.ci.note ?? 'null'} (read ${data.ci.auth})`,
+    `  ci: ${ciSummary(data.ci)} (read ${data.ci.auth})`,
     `  open PRs: ${data.open_prs.error ?? data.open_prs.count} (read ${data.open_prs.auth})`,
     `  latest release: ${
       data.latest_release === null

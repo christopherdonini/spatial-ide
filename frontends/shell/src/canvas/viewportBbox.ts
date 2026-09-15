@@ -13,7 +13,13 @@ export interface ViewportBboxInput {
   /** The view target, in the *local* offset frame (deck.gl's own `viewState.target`). */
   targetX: number;
   targetY: number;
-  /** deck.gl `OrthographicView` zoom: one world unit is `2^zoom` device pixels. */
+  /** deck.gl `OrthographicView` zoom: one world unit is `2^zoom` **CSS** pixels -- the same units as
+   * `clientWidth`/`clientHeight` feed `widthPx`/`heightPx` below, not device (DPR-scaled) pixels.
+   * Corrected from "device pixels" per DECISIONS-PENDING entry 95 (PAN-ANCHOR-PREREGISTRATION.md
+   * §5.2): the contradiction with `WorkingCanvas.tsx`'s `pixelsPerWorldUnitAtZoom` was resolved in
+   * favour of CSS, measured -- at the host's DPR 1.0 the canvas client box, drawing buffer and deck's
+   * own logical viewport all coincide (buffer/CSS ratio 1.000), and the bbox math is self-consistent
+   * with the CSS reading. */
   zoom: number;
   widthPx: number;
   heightPx: number;
