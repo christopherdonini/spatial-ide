@@ -3,43 +3,55 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- DECISIONS-PENDING entry 95, the pan drag-anchor drift.
-// **Pre-fix recorder** (PAN-ANCHOR-PREREGISTRATION.md §1: reproduce & MEASURE before any fix). This
-// is the initial instrument committed BEFORE the fix; it MEASURES and PRINTS, it does not assert.
-// The tolerance-gated named-case assertions and the mutation check are added in the E2E/tests commit,
-// once the fix has landed. Standalone, operator-run, NOT wired into `npm run verify` / CI (needs the
-// 100k fixture, a real WebView2, a real display): `node e2e/pan-anchor.mjs`.
+// Standalone, operator-run instrument. **NOT wired into `npm run verify` / CI** -- like entry-86's
+// `test:e2e` and this repo's other `e2e/*.mjs`, it needs the 100k fixture, a real WebView2, and a
+// real display none of which CI carries. Run it by hand against a `tauri dev --config
+// e2e/out/tauri.e2e.conf.json` (or let `attachOrLaunch` spawn one): `node e2e/pan-anchor.mjs`.
 //
-// Two complementary instruments (§1):
-//   A -- trace-derived grab-point invariant, computed from the shell's OWN authoritative model,
-//        `world = (target + origin) + (pixel - center)/2^zoom`, reading target/origin/zoom off the
-//        always-on `[render-trace] view-state` line. deck.gl's own `info.coordinate`/`unproject` is
-//        NEVER read -- ADR-010 rule 1, quoted: deck.gl's bare `info.coordinate` "is a renderer-local
-//        value with no tag, so it is renderer-internal and may not cross a boundary at all". A
-//        synthetic Playwright drag loses the mousedown->first-`pointermove` segment (deck's controller
-//        registers its pan-start on the first move, not on pointerdown) -- measured EXACTLY `dx/steps`,
-//        zero excess, across steps=1,2,4,8,16,32; a real continuous mouse drag has no such step, so it
-//        is subtracted.
-//   B -- painted-pixel truth. With the finite dataset seated fully in frame, its non-background column
-//        centroid translates rigidly; the painted shift is compared to deck's OWN target shift
-//        (paint == event). `capturePixels` region counts only; the raw framebuffer never leaves the
-//        page (docs/09).
+// Two complementary instruments (PAN-ANCHOR-PREREGISTRATION.md §1):
+//   A -- trace-derived grab-point invariant. The world point under a fixed pixel is computed from
+//        the shell's OWN authoritative model, `world = (target + origin) + (pixel - center)/2^zoom`
+//        (`center = (clientWidth/2, clientHeight/2)`, Y per `flipY:false`), reading target/origin/
+//        zoom off the always-on `[render-trace] view-state` line. deck.gl's own `info.coordinate`/
+//        `unproject` is NEVER read -- ADR-010 rule 1, quoted: deck.gl's bare `info.coordinate` "is a
+//        renderer-local value with no tag, so it is renderer-internal and may not cross a boundary at
+//        all". Grab pixel p -> W0; drag
+//        N CSS px; after settle the world under the ENDING pointer pixel (p+N) must equal W0 -- a
+//        grabbed point stays under the moving pointer. Residual localizes the shell's own
+//        target/origin bookkeeping.
+//   B -- painted-pixel truth. With the finite 100k dataset seated fully in frame, its non-background
+//        column centroid translates rigidly under a pan; the painted shift must equal deck's own
+//        target shift (paint == event). Uses `capturePixels` region non-background counts only; the
+//        raw framebuffer never leaves the page (docs/09).
 //
-// Recorded pre-fix state (2026-09-15, DPR 1.0 host): four widths all coincide (deck logical == deck
-// == client == drawing buffer == canvas attr, `1280x200`, buffer/CSS ratio 1.000) -> candidate 1/2
-// refuted; paint == event within ~1 buffer px -> no paint/event split; normal-use Instrument A excess
-// == 0.000 at every zoom and both directions, there-and-back nets ~0 -> the app anchors correctly in
-// normal use. The ONLY drift is candidate 3: a zoomed-out pan that crosses the origin-recenter
-// threshold breaks the grab-point invariant by ~1100 buffer px (single crossing) to ~18160 buffer px
-// (repeated), a runaway. See PAN-ANCHOR-PREREGISTRATION.md's Measured results.
+// **Measurement note (a mechanically-known harness artifact, subtracted -- not the app):** a
+// synthetic Playwright drag loses the mousedown->first-`pointermove` segment, because deck's
+// controller registers its pan-start on the first move, not on pointerdown. Measured: the deficit is
+// EXACTLY one step, `dx/steps`, with zero excess, across steps=1,2,4,8,16,32 (residual ratio ==
+// 1/steps to 5 decimals). A real continuous mouse drag has no such discrete first step. Instrument A
+// therefore subtracts `dx/steps`; the leftover is the app's own residual (validated: ~0 on a
+// known-correct build across every condition). Instrument B needs no such correction -- it compares
+// the painted shift to deck's OWN target shift, and both carry the same deficit.
 
 import { attachOrLaunch, waitForSettle } from "./lib.mjs";
 
-const FIXTURE = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\100k-happy-path.parquet";
-// Dataset centre in EPSG:2056, from `engine/src/fixture.rs`: E_LO=2_600_000, N_LO=1_200_000, 40 m
-// cell, 100_000 features -> 317x316 cells -> centre (E_LO + 317*40/2, N_LO + 316*40/2).
-const E_C = 2_606_340, N_C = 1_206_320;
-const Y_SIGN = -1; // OrthographicView flipY:false (verified: a pure-y drag yields a y-only residual).
+// Frozen tolerance, drawing-buffer px (PAN-ANCHOR-PREREGISTRATION.md §5.1). Basis: empirical noise
+// floor 1.0 px on a KNOWN-CORRECT reference build across every condition (both directions, both
+// axes, there-and-back), bounded below by ADR-010 rule 2's integer-pixel quantization floor of
+// 1.352 px ("M3 measured the dead-centre residual at 0.1789 m (1.352 px) ... entirely attributable
+// to integer-pixel click quantization" -- quoted from ADR-010 rule 2). 4.0 px sits above both and
+// asserts no sub-pixel anchoring (ADR-010 rule 6). The measured cause (candidate 3) fails it by
+// thousands of px pre-fix, so the separation is not marginal.
+const TOLERANCE_BUFFER_PX = 4.0;
 
+const FIXTURE = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\100k-happy-path.parquet";
+// Dataset centre in EPSG:2056, derived from `engine/src/fixture.rs`: E_LO=2_600_000, N_LO=1_200_000,
+// 40 m grid cell, 100_000 features -> 317x316 cells -> centre (E_LO + 317*40/2, N_LO + 316*40/2).
+const E_C = 2_606_340, N_C = 1_206_320;
+const Y_SIGN = -1; // OrthographicView flipY:false: screen-y-down vs world-y-up (verified: a pure-y
+// drag produces a y-only residual, x untouched -- PAN-ANCHOR-PREREGISTRATION.md §1 axis check).
+
+const MEASURE = process.argv.includes("--measure");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function setup() {
@@ -51,11 +63,12 @@ async function setup() {
   });
   await page.reload({ waitUntil: "load" });
   for (let i = 0; i < 240; i++) {
-    if (await page.evaluate(() => typeof window.__SPATIAL_E2E__?.openPath === "function").catch(() => false)) break;
+    const ok = await page.evaluate(() => typeof window.__SPATIAL_E2E__?.openPath === "function").catch(() => false);
+    if (ok) break;
     await sleep(500);
   }
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE);
-  if (outcome?.kind !== "admitted") throw new Error(`openPath did not admit: ${JSON.stringify(outcome)}`);
+  if (outcome?.kind !== "admitted") throw new Error(`openPath did not admit the fixture: ${JSON.stringify(outcome)}`);
   await sleep(1500);
   return { page, vs, stop };
 }
@@ -66,15 +79,22 @@ async function readBox(page) {
     if (!el) return null;
     const r = el.getBoundingClientRect();
     const gl = el.getContext("webgl2");
-    return { left: r.left, top: r.top, cw: el.clientWidth, ch: el.clientHeight,
-      bw: gl ? gl.drawingBufferWidth : el.clientWidth, bh: gl ? gl.drawingBufferHeight : el.clientHeight, dpr: window.devicePixelRatio };
+    return {
+      left: r.left, top: r.top,
+      cw: el.clientWidth, ch: el.clientHeight,
+      bw: gl ? gl.drawingBufferWidth : el.clientWidth,
+      bh: gl ? gl.drawingBufferHeight : el.clientHeight,
+      dpr: window.devicePixelRatio,
+    };
   });
 }
 
 let jit = 0;
 async function setCam(page, vs, tx, ty, z) {
-  // Jitter zoom so deck's uncontrolled `initialViewState` deep-equal guard never drops a repeat reset.
-  jit += 1; vs.length = 0;
+  // Jitter the zoom so deck's uncontrolled `initialViewState` deep-equal guard (this file's own
+  // WorkingCanvas header, entry 85) never drops a repeated identical reset.
+  jit += 1;
+  vs.length = 0;
   await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, z + jit * 1e-5]);
   await sleep(500);
   return vs[vs.length - 1];
@@ -82,20 +102,24 @@ async function setCam(page, vs, tx, ty, z) {
 const last = (vs) => vs[vs.length - 1];
 
 async function drag(page, vs, box, gpx, gpy, dx, dy, steps) {
+  const before = vs.length;
   await page.mouse.move(box.left + gpx, box.top + gpy);
   await page.mouse.down();
   await page.mouse.move(box.left + gpx + dx, box.top + gpy + dy, { steps });
   await page.mouse.up();
   await waitForSettle(() => vs, { quietMs: 600, timeoutMs: 9000 });
   await sleep(180);
+  return before;
 }
 
-// Instrument A residual (drawing-buffer px), harness `dx/steps` deficit subtracted.
+// Instrument A residual (drawing-buffer px) for a single drag, with the mechanically-known
+// harness artifact `dx/steps` (deck's pan-start-on-first-move deficit) subtracted -- see header.
 function instrumentA(box, s0, s1, dx, dy, steps) {
   const z = s1.zoom;
-  const rcx = ((s1.targetX + s1.originX) - (s0.targetX + s0.originX)) * 2 ** z + dx - dx / steps;
-  const rcy = ((s1.targetY + s1.originY) - (s0.targetY + s0.originY)) * 2 ** z + Y_SIGN * (dy - dy / steps);
-  return { bx: rcx * (box.bw / box.cw), by: rcy * (box.bh / box.ch) };
+  const residCssX = ((s1.targetX + s1.originX) - (s0.targetX + s0.originX)) * 2 ** z + dx - dx / steps;
+  const residCssY = ((s1.targetY + s1.originY) - (s0.targetY + s0.originY)) * 2 ** z + Y_SIGN * (dy - dy / steps);
+  const ratio = box.bw / box.cw; // element-measured buffer/CSS ratio -- never an assumed DPR
+  return { bx: residCssX * ratio, by: residCssY * (box.bh / box.ch) };
 }
 
 const NSTRIP = 128;
@@ -105,61 +129,117 @@ async function columnCentroid(page) {
   const s = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
   let num = 0, den = 0;
   s.regions.forEach((rg, i) => { const cx = ((i + 0.5) / NSTRIP) * s.width; num += cx * rg.nonBackgroundCount; den += rg.nonBackgroundCount; });
-  return den > 0 ? num / den : null;
+  return { cx: den > 0 ? num / den : null, total: den };
+}
+
+async function resizeWindow(page, w, h) {
+  try {
+    const client = await page.context().newCDPSession(page);
+    const { windowId } = await client.send("Browser.getWindowForTarget");
+    await client.send("Browser.setWindowBounds", { windowId, bounds: { width: w, height: h, windowState: "normal" } });
+    await sleep(700);
+    return true;
+  } catch (e) {
+    console.log(`  (window resize to ${w}x${h} unavailable: ${e?.message ?? e} -- measuring at the host's actual size)`);
+    return false;
+  }
+}
+
+// deck defers its drawing-buffer resize to the render loop, so right after a window resize the buffer
+// can still be the OLD size while the CSS box already changed. `capturePixels` forces a redraw;
+// loop until the buffer matches the client (pixel spaces coincide) before measuring, or give up.
+async function settleCanvasSize(page) {
+  for (let i = 0; i < 20; i++) {
+    await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()).catch(() => {});
+    await sleep(200);
+    const box = await readBox(page);
+    if (box && box.bw === box.cw && box.bh === box.ch) return box;
+  }
+  return readBox(page);
+}
+
+const results = [];
+function record(name, ok, detail) {
+  results.push({ name, ok, detail });
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name}  ::  ${detail}`);
+}
+
+async function runCasesForSize(page, vs, sizeLabel) {
+  const box = await settleCanvasSize(page);
+  if (!box) { record(`${sizeLabel}: canvas`, false, "no .working-canvas mounted"); return; }
+  const gpx = box.cw / 2, gpy = box.ch / 2;
+  console.log(`\n--- window ${sizeLabel}: client ${box.cw}x${box.ch}, buffer ${box.bw}x${box.bh}, DPR ${box.dpr} ---`);
+  // Four-width refutation of candidate 1/2 (deck logical viewport read via the throwaway diagnostic
+  // during investigation was also 1280 == client; recorded in PAN-ANCHOR-PREREGISTRATION.md results).
+  record(`${sizeLabel}: pixel-spaces-coincide`, box.bw === box.cw && box.bh === box.ch,
+    `client==buffer (${box.cw}x${box.ch} == ${box.bw}x${box.bh}), ratio ${(box.bw / box.cw).toFixed(3)}`);
+
+  // Normal-use anchor (regression guard): Instrument A + B, both directions. No recenter fires here
+  // (threshold is huge at these zooms), so this passes pre- and post-fix -- it guards that the fix
+  // did not break the common case.
+  for (const dx of [300, -300]) {
+    const s0 = await setCam(page, vs, E_C, N_C, -1);
+    await drag(page, vs, box, gpx, gpy, dx, 0, 40);
+    const s1 = last(vs);
+    const a = instrumentA(box, s0, s1, dx, 0, 40);
+    record(`${sizeLabel}: normal-A dx=${dx}`, Math.abs(a.bx) <= TOLERANCE_BUFFER_PX,
+      `grab-point residual ${a.bx.toFixed(2)} buffer px (tol ${TOLERANCE_BUFFER_PX})`);
+  }
+  // Instrument B (paint == event): whole dataset in frame at z=-6.5; small drag keeps it in frame.
+  for (const dx of [250, -250]) {
+    const s0 = await setCam(page, vs, E_C, N_C, -6.5);
+    const c0 = await columnCentroid(page);
+    await drag(page, vs, box, gpx, gpy, dx, 0, 40);
+    const s1 = last(vs);
+    const c1 = await columnCentroid(page);
+    const deckShiftPx = -((s1.targetX + s1.originX) - (s0.targetX + s0.originX)) * 2 ** s1.zoom * (box.bw / box.cw);
+    const paintedShift = (c0.cx != null && c1.cx != null) ? (c1.cx - c0.cx) : null;
+    const ok = paintedShift != null && Math.abs(paintedShift - deckShiftPx) <= TOLERANCE_BUFFER_PX;
+    record(`${sizeLabel}: paint-vs-event dx=${dx}`, ok,
+      paintedShift == null ? "centroid unavailable (content left frame)"
+        : `painted ${paintedShift.toFixed(1)} vs deck ${deckShiftPx.toFixed(1)} -> ${(paintedShift - deckShiftPx).toFixed(2)} buffer px (tol ${TOLERANCE_BUFFER_PX})`);
+  }
+  // There-and-back: net ~0.
+  {
+    const s0 = await setCam(page, vs, E_C, N_C, -1);
+    await drag(page, vs, box, gpx, gpy, 300, 0, 40);
+    await drag(page, vs, box, gpx + 300, gpy, -300, 0, 40);
+    const s1 = last(vs);
+    const net = ((s1.targetX + s1.originX) - (s0.targetX + s0.originX)) * 2 ** s1.zoom * (box.bw / box.cw);
+    record(`${sizeLabel}: there-and-back-net`, Math.abs(net) <= TOLERANCE_BUFFER_PX,
+      `net residual ${net.toFixed(2)} buffer px (tol ${TOLERANCE_BUFFER_PX})`);
+  }
+  // THE DISCRIMINATOR (candidate 3): a zoomed-out pan that crosses the recenter threshold mid-drag.
+  // Pre-fix this desynchronizes deck's pan-start into a runaway (measured -18160 buffer px, 15 origin
+  // jumps); post-fix the recenter is deferred to gesture end and the grab-point invariant holds.
+  // Instrument B is infeasible here -- the finite dataset leaves the frame -- so this is A only.
+  for (const dx of [1200, -1200]) {
+    const s0 = await setCam(page, vs, E_C, N_C, -7);
+    await drag(page, vs, box, gpx, gpy, dx, 0, 12);
+    const s1 = last(vs);
+    const a = instrumentA(box, s0, s1, dx, 0, 12);
+    record(`${sizeLabel}: recenter-crossing-A dx=${dx}`, Math.abs(a.bx) <= TOLERANCE_BUFFER_PX,
+      `grab-point residual ${a.bx.toFixed(2)} buffer px (tol ${TOLERANCE_BUFFER_PX})`);
+  }
 }
 
 async function main() {
   const { page, vs, stop } = await setup();
   try {
-    const box = await readBox(page);
-    console.log(`\n[four-width] client ${box.cw}x${box.ch}  buffer ${box.bw}x${box.bh}  ratio ${(box.bw / box.cw).toFixed(3)}  DPR ${box.dpr}  (deck logical viewport read == client during investigation)`);
-    const gpx = box.cw / 2, gpy = box.ch / 2;
-
-    console.log("\n[Instrument A -- normal use, excess over the dx/steps harness deficit]");
-    for (const [z, dx, steps] of [[-1, 320, 40], [-1, -320, 40], [-4, 500, 60], [2, 200, 60], [-1, 0, 40]]) {
-      const s0 = await setCam(page, vs, E_C, N_C, z);
-      const dy = dx === 0 ? 120 : 0;
-      await drag(page, vs, box, gpx, gpy, dx, dy, steps);
-      const a = instrumentA(box, s0, last(vs), dx, dy, steps);
-      console.log(`  z=${z} d=(${dx},${dy}) steps=${steps}: residual (${a.bx.toFixed(2)}, ${a.by.toFixed(2)}) buffer px`);
-    }
-
-    console.log("\n[Instrument A -- off-centre grab, +x160, z=-1 (residual independent of grab position)]");
-    for (const f of [0.2, 0.5, 0.8]) {
-      const s0 = await setCam(page, vs, E_C, N_C, -1);
-      await drag(page, vs, box, box.cw * f, gpy, 160, 0, 40);
-      console.log(`  grab x-frac ${f}: residual ${instrumentA(box, s0, last(vs), 160, 0, 40).bx.toFixed(2)} buffer px`);
-    }
-
-    console.log("\n[Instrument A -- there-and-back, z=-1]");
-    {
-      const s0 = await setCam(page, vs, E_C, N_C, -1);
-      await drag(page, vs, box, gpx, gpy, 300, 0, 40);
-      await drag(page, vs, box, gpx + 300, gpy, -300, 0, 40);
-      const net = ((last(vs).targetX + last(vs).originX) - (s0.targetX + s0.originX)) * 2 ** last(vs).zoom * (box.bw / box.cw);
-      console.log(`  net residual ${net.toFixed(2)} buffer px`);
-    }
-
-    console.log("\n[Instrument B -- paint vs event, z=-6.5 (dataset fully in frame)]");
-    for (const dx of [250, -250]) {
-      const s0 = await setCam(page, vs, E_C, N_C, -6.5);
-      const c0 = await columnCentroid(page);
-      await drag(page, vs, box, gpx, gpy, dx, 0, 40);
-      const c1 = await columnCentroid(page);
-      const deckShift = -((last(vs).targetX + last(vs).originX) - (s0.targetX + s0.originX)) * 2 ** last(vs).zoom * (box.bw / box.cw);
-      const painted = (c0 != null && c1 != null) ? c1 - c0 : null;
-      console.log(`  dx=${dx}: painted ${painted == null ? "n/a" : painted.toFixed(1)} vs deck ${deckShift.toFixed(1)} -> ${painted == null ? "n/a" : (painted - deckShift).toFixed(2)} buffer px`);
-    }
-
-    console.log("\n[candidate 3 -- zoomed-out pan crossing the recenter threshold, z=-7]");
-    for (const [dx, steps] of [[1200, 12], [-1200, 12]]) {
-      const s0 = await setCam(page, vs, E_C, N_C, -7);
-      await drag(page, vs, box, gpx, gpy, dx, 0, steps);
-      console.log(`  dx=${dx} steps=${steps}: grab-point residual ${instrumentA(box, s0, last(vs), dx, 0, steps).bx.toFixed(2)} buffer px  (0 == anchored; large == candidate-3 drift)`);
-    }
-    console.log("\nRecorded. See PAN-ANCHOR-PREREGISTRATION.md's Measured results for the pre-fix figures.");
+    // Two window sizes (PAN-ANCHOR-PREREGISTRATION.md §1 conditions). Candidate 1 (viewport vs box)
+    // is refuted, so size is a regression breadth check, not the discriminator.
+    await resizeWindow(page, 820, 640);
+    await runCasesForSize(page, vs, "small");
+    await resizeWindow(page, 1400, 900);
+    await runCasesForSize(page, vs, "large");
   } finally {
     await stop?.().catch(() => {});
+  }
+  const failed = results.filter((r) => !r.ok);
+  console.log(`\n==== ${results.length - failed.length}/${results.length} PASS ====`);
+  if (failed.length && !MEASURE) {
+    console.log("FAILED:", failed.map((f) => f.name).join(", "));
+    process.exit(1);
   }
   process.exit(0);
 }
