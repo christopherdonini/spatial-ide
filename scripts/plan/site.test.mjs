@@ -126,6 +126,15 @@ const BUILD_HEALTH = {
     head_sha: 'abc',
     created_at: '2026-09-14T09:00:00Z',
     html_url: 'https://github.com/owner/repo/actions/runs/1',
+    workflows: ['product-ci-rust.yml', 'product-ci-viewer.yml', 'product-ci-shell.yml'].map((workflow) => ({
+      workflow,
+      auth: 'token',
+      conclusion: 'success',
+      status: 'completed',
+      head_sha: 'abc',
+      created_at: '2026-09-14T09:00:00Z',
+      html_url: 'https://github.com/owner/repo/actions/runs/1',
+    })),
   },
   open_prs: {
     auth: 'token',
@@ -181,8 +190,9 @@ test('bug 1: the strip renders two labelled groups, each with its own timestamp'
     assert.ok(at > machineHeading, `${label} belongs to the machine group`);
   }
 
-  // Each build-time fact links to its own source.
-  assert.ok(html.includes('<a href="https://github.com/owner/repo/actions/runs/1">success</a>'));
+  // Each build-time fact links to its own source. An all-green suite has no single red run to link,
+  // so the CI row is plain text naming the pass count; open PRs and the release still link.
+  assert.ok(html.includes('<span>CI on main</span><span>all green (3/3)</span>'));
   assert.ok(html.includes('<a href="https://github.com/owner/repo/pull/47">2 open, oldest 10 d (#47)</a>'));
   assert.ok(
     html.includes('<a href="https://github.com/owner/repo/releases/tag/v0.1.0">v0.1.0 (pre-release, 2026-09-13)</a>'),
@@ -265,18 +275,43 @@ test('bug 1: a corrupt build-health.json says so — it is not read as "generate
 });
 
 test('bug 1: an API-sourced href is emitted only when it is an https:// URL', () => {
+  // A failing shell workflow whose run URL is hostile: the strip names it but must not emit the
+  // javascript: URL as a live href.
   const buildHealth = {
     ...BUILD_HEALTH,
-    ci: { ...BUILD_HEALTH.ci, html_url: 'javascript:alert(1)' },
+    ci: {
+      auth: 'token',
+      conclusion: 'failure',
+      status: 'completed',
+      head_sha: 'x',
+      created_at: '2026-09-14T09:00:00Z',
+      html_url: 'javascript:alert(1)',
+      workflows: [
+        { workflow: 'product-ci-rust.yml', auth: 'token', conclusion: 'success', status: 'completed', head_sha: 'a', created_at: '2026-09-14T09:00:00Z', html_url: 'https://github.com/owner/repo/actions/runs/1' },
+        { workflow: 'product-ci-viewer.yml', auth: 'token', conclusion: 'success', status: 'completed', head_sha: 'b', created_at: '2026-09-14T09:00:00Z', html_url: 'https://github.com/owner/repo/actions/runs/2' },
+        { workflow: 'product-ci-shell.yml', auth: 'token', conclusion: 'failure', status: 'completed', head_sha: 'x', created_at: '2026-09-14T09:00:00Z', html_url: 'javascript:alert(1)' },
+      ],
+    },
     open_prs: { ...BUILD_HEALTH.open_prs, oldest: { ...BUILD_HEALTH.open_prs.oldest, html_url: 'http://example.invalid' } },
     latest_release: { ...BUILD_HEALTH.latest_release, html_url: null },
   };
   const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth });
   assert.ok(!html.includes('javascript:'), 'a javascript: value never becomes an href');
-  assert.ok(html.includes('<span>CI on main</span><span>success</span>'), 'it renders as text instead');
+  assert.ok(html.includes('FAILURE'), 'the suite reads FAILURE, never success, when a workflow is red');
+  assert.ok(html.includes('shell: failure'), 'the red workflow is named');
   assert.ok(!html.includes('href="http://example.invalid"'), 'plain http is not emitted either');
   assert.ok(html.includes('<span>Open PRs</span><span>2 open, oldest 10 d (#47)</span>'));
   assert.ok(html.includes('<span>Latest release</span><span>v0.1.0 (pre-release, 2026-09-13)</span>'));
+});
+
+test('bug 1: an all-green suite reads "all green (3/3)", and a red workflow reads FAILURE and is named', () => {
+  // All green (the BUILD_HEALTH fixture): the row says all green, not a bare "success".
+  const green = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH }).html;
+  assert.ok(green.includes('<span>CI on main</span><span>all green (3/3)</span>'));
+  // Three product-workflow badges in the header, not one.
+  for (const wf of ['product-ci-rust.yml', 'product-ci-viewer.yml', 'product-ci-shell.yml']) {
+    assert.ok(green.includes(`/actions/workflows/${wf}/badge.svg?branch=main`), `${wf} badge present`);
+  }
 });
 
 test('bug 1: the drift check never depends on build-health.json', () => {
