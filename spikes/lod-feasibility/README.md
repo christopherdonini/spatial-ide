@@ -243,8 +243,11 @@ MIT-OR-Apache-2.0, compatible with the workspace's `AGPL-3.0-or-later`):
 Nothing in this table has been added to any product crate; `Cargo.lock` and the root `Cargo.toml`
 are unchanged by this spike (verified before commit). Before this could be a real proposal rather
 than a feasibility note: (1) the workspace already pins one Arrow version, `arrow = "58"`
-(`Cargo.toml`'s `[workspace.dependencies]`, "so a second arrow major in the tree would [not] force
-a re-encode at the engine/protocol boundary") — this spike's crate resolved to Arrow 59.3.0
+(`Cargo.toml`'s `[workspace.dependencies]`, whose comment reads, verbatim: "a second arrow major in
+the tree would make `RecordBatch` two incompatible types and force a re-encode at the engine/protocol
+boundary that ADR-004's copy-minimized clause would then have to account for" — *quote corrected
+2026-09-15: the 2026-09-13 rendering inserted a bracketed "[not]" that inverted the pin's reason;
+the conclusion below was and is unchanged*) — this spike's crate resolved to Arrow 59.3.0
 because it is deliberately standalone and unconstrained by that pin; reconciling the two versions
 is a real, unresolved question, not a detail. (2) Route B here never writes output, so a product
 tier-writer is unbuilt and unmeasured. (3) Route B here is single-threaded; the wall-time gap on
