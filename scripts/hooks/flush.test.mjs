@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -10,11 +12,13 @@ import {
   blockFieldLabels,
   findBlockRange,
   updateBlockFields,
+  parseArgs,
   cutStatePath,
 } from './flush.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(here, '..', '..');
+const CLI = path.join(here, 'flush.mjs');
 
 // A minimal but faithful block: the real field labels, a heading before and after so the range
 // logic has boundaries to find.
@@ -122,4 +126,43 @@ test('flush: findBlockRange finds the block between headings', () => {
   assert.ok(range);
   assert.equal(lines[range.start].trim(), BLOCK_HEADING);
   assert.equal(lines[range.end].trim(), '## Ledger');
+});
+
+test('flush: parseArgs reads --file, --json and repeated --field', () => {
+  const { updates, jsonPath, file } = parseArgs([
+    '--file', 'x/CUT-STATE.md',
+    '--json', 'j.json',
+    '--field', 'position=a',
+    '--field', 'unreported findings=b=c', // value may contain '='
+  ]);
+  assert.equal(file, 'x/CUT-STATE.md');
+  assert.equal(jsonPath, 'j.json');
+  assert.deepEqual(updates, { position: 'a', 'unreported findings': 'b=c' });
+  assert.throws(() => parseArgs(['--field', 'no-equals']), /is not label=value/);
+  assert.throws(() => parseArgs(['--bogus']), /unknown argument/);
+});
+
+test('flush CLI: --file round-trip writes the field; the incident typo exits non-zero and writes nothing', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spatial-flush-cli-'));
+  const target = path.join(dir, 'CUT-STATE.md');
+  const original = fixtureBlock();
+  fs.writeFileSync(target, original, 'utf8');
+
+  // Happy path: an explicit field is written (flushed_at/tip auto-fill too, but we assert position).
+  const ok = spawnSync(process.execPath, [CLI, '--file', target, '--field', 'position=CLI WROTE THIS'], {
+    encoding: 'utf8',
+  });
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(fs.readFileSync(target, 'utf8'), /^position: CLI WROTE THIS$/m);
+
+  // Fail-loud path: the exact incident typo. Non-zero exit AND the file is left exactly as it was.
+  const before = fs.readFileSync(target, 'utf8');
+  const bad = spawnSync(process.execPath, [CLI, '--file', target, '--field', 'intended sequencing (next)=x'], {
+    encoding: 'utf8',
+  });
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /is not a SESSION-CONTINUITY field/);
+  assert.equal(fs.readFileSync(target, 'utf8'), before, 'a rejected flush must not modify the file');
+
+  fs.rmSync(dir, { recursive: true, force: true });
 });

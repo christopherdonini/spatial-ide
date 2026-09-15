@@ -30,6 +30,7 @@
 // CLI:
 //   node scripts/hooks/flush.mjs --json <path>     # {label: value, ...}; unknown labels rejected
 //   node scripts/hooks/flush.mjs --field 'position=...' --field 'tip=...'
+//   node scripts/hooks/flush.mjs --file <path> ... # target a different file (default: the ledger)
 // `flushed_at` defaults to now (ISO-8601 UTC) and `tip` to `git rev-parse HEAD` when omitted, so a
 // caller supplies only the prose fields. Reads and rewrites state/CUT-STATE.md in place.
 
@@ -155,14 +156,18 @@ function tryGit(args, cwd) {
   }
 }
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const updates = {};
   let jsonPath = null;
+  let file = null;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--json') {
       jsonPath = argv[++i];
       if (jsonPath === undefined) throw new Error('--json needs a path');
+    } else if (a === '--file') {
+      file = argv[++i];
+      if (file === undefined) throw new Error('--file needs a path');
     } else if (a === '--field') {
       const kv = argv[++i];
       if (kv === undefined) throw new Error('--field needs label=value');
@@ -173,11 +178,11 @@ function parseArgs(argv) {
       throw new Error(`unknown argument: ${a}`);
     }
   }
-  return { updates, jsonPath };
+  return { updates, jsonPath, file };
 }
 
 function main() {
-  const { updates, jsonPath } = parseArgs(process.argv.slice(2));
+  const { updates, jsonPath, file } = parseArgs(process.argv.slice(2));
   let all = { ...updates };
   if (jsonPath) {
     const fromFile = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
@@ -194,7 +199,7 @@ function main() {
     else delete all.tip; // no git → don't invent a tip; updateBlockFields still writes the rest
   }
 
-  const p = cutStatePath();
+  const p = file ?? cutStatePath();
   const text = fs.readFileSync(p, 'utf8');
   const next = updateBlockFields(text, all); // throws (writing nothing) on any problem
   fs.writeFileSync(p, next, 'utf8');
