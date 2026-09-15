@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-15T11:20:31.681Z",
-  "plan_hash": "960283fdee77a8458a7958838cba2635096b553fbcfbd79a740968d2983a493e",
+  "generated_at": "2026-09-15T12:45:51.263Z",
+  "plan_hash": "1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec206a69d0ac1aab447703c",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1084,6 +1084,31 @@
       "dates": {
         "opened": "2026-09-09",
         "done": "2026-09-14"
+      }
+    },
+    {
+      "id": "engine-extension-autoload-off",
+      "title": "Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 6,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)",
+      "dates": {
+        "opened": "2026-09-15",
+        "done": null
       }
     },
     {

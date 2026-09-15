@@ -1,27 +1,46 @@
 {
-  "generated_at": "2026-09-15T11:20:31.587Z",
-  "plan_hash": "960283fdee77a8458a7958838cba2635096b553fbcfbd79a740968d2983a493e",
+  "generated_at": "2026-09-15T12:45:51.165Z",
+  "plan_hash": "1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec206a69d0ac1aab447703c",
   "priorities_approved": true,
   "next": {
-    "id": "adr-029-g1-feasibility",
-    "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
-    "lane": "kernel-protocol",
+    "id": "engine-extension-autoload-off",
+    "title": "Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate)",
+    "lane": "engine",
     "phase": "prototype",
     "status": "ready",
-    "order": 5,
-    "budget_minutes": 120,
+    "order": 6,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-14",
+      "opened": "2026-09-15",
       "done": null
     },
-    "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
+    "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)"
   },
   "ready": [
+    {
+      "id": "engine-extension-autoload-off",
+      "title": "Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 6,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-15",
+        "done": null
+      },
+      "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)"
+    },
     {
       "id": "adr-029-g1-feasibility",
       "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",

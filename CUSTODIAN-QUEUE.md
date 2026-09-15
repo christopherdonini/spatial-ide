@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `960283fdee77a8458a7958838cba2635096b553fbcfbd79a740968d2983a493e`) at `2026-09-15T11:20:31.587Z`.
+Generated from `PLAN.yaml` (sha256 `1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec206a69d0ac1aab447703c`) at `2026-09-15T12:45:51.165Z`.
 
 ## 1. Next
 
-- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`)
+- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) (lane `engine`)
 
 ## 2. Ready
 
+- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) (lane `engine`, order 6, budget 90 min)
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`, order 5, budget 120 min)
 - **marker-wording-final** — The confirming marker's final wording — apply the sitting's felt verdict (lane `shell`, order 10, budget 20 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
