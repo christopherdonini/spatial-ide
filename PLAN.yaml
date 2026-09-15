@@ -510,12 +510,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
     gate: engine/ADMISSION-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/briefa-p3}
     budget_minutes: 390
     generation: 1
     felt_verdict: true
@@ -853,12 +853,12 @@ nodes:
     kind: task
     lane: measurement
     phase: prototype
-    status: ready
+    status: in-progress
     order: 3
     depends_on: [lod-feasibility-spike, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {branch: spike/lod-divergence-c3}
     budget_minutes: 240
     generation: 1
     felt_verdict: false

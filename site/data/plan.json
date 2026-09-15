@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-15T10:58:47.565Z",
-  "plan_hash": "9e6fd6703da9903d4b364dec3a852902c29a8f03d93c20a78a4a6ebace3e6cf4",
+  "generated_at": "2026-09-15T11:20:31.681Z",
+  "plan_hash": "960283fdee77a8458a7958838cba2635096b553fbcfbd79a740968d2983a493e",
   "priorities_approved": true,
   "lanes": [
     {
@@ -821,7 +821,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 5,
       "depends_on": [
         "briefa-p1-p2",
@@ -832,7 +832,9 @@
         "minutes": 0
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/briefa-p3"
+      },
       "budget_minutes": 390,
       "generation": 1,
       "felt_verdict": true,
@@ -1385,7 +1387,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 3,
       "depends_on": [
         "lod-feasibility-spike",
@@ -1396,7 +1398,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "branch": "spike/lod-divergence-c3"
+      },
       "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,

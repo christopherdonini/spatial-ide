@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-09-15T10:58:47.427Z",
-  "plan_hash": "9e6fd6703da9903d4b364dec3a852902c29a8f03d93c20a78a4a6ebace3e6cf4",
+  "generated_at": "2026-09-15T11:20:31.587Z",
+  "plan_hash": "960283fdee77a8458a7958838cba2635096b553fbcfbd79a740968d2983a493e",
   "priorities_approved": true,
   "next": {
-    "id": "briefa-p3-p6",
-    "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
-    "lane": "engine",
+    "id": "adr-029-g1-feasibility",
+    "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
     "order": 5,
-    "budget_minutes": 390,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-11",
+      "opened": "2026-09-14",
       "done": null
     },
-    "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting"
+    "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
   },
   "ready": [
-    {
-      "id": "briefa-p3-p6",
-      "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 5,
-      "budget_minutes": 390,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-11",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting"
-    },
     {
       "id": "adr-029-g1-feasibility",
       "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
@@ -78,25 +59,6 @@
         "done": null
       },
       "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR"
-    },
-    {
-      "id": "lod-route-b-divergence",
-      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)"
     },
     {
       "id": "drill-clean-clone",
@@ -283,7 +245,52 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "briefa-p3-p6",
+      "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 390,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/briefa-p3"
+      },
+      "dates": {
+        "opened": "2026-09-11",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting",
+      "evidence_label": "branch `cut/briefa-p3`"
+    },
+    {
+      "id": "lod-route-b-divergence",
+      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "spike/lod-divergence-c3"
+      },
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)",
+      "evidence_label": "branch `spike/lod-divergence-c3`"
+    }
+  ],
   "proposed": [
     {
       "id": "release-v0-1-1",

@@ -1,17 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9e6fd6703da9903d4b364dec3a852902c29a8f03d93c20a78a4a6ebace3e6cf4`) at `2026-09-15T10:58:47.427Z`.
+Generated from `PLAN.yaml` (sha256 `960283fdee77a8458a7958838cba2635096b553fbcfbd79a740968d2983a493e`) at `2026-09-15T11:20:31.587Z`.
 
 ## 1. Next
 
-- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (lane `engine`)
+- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances (lane `engine`, order 5, budget 390 min)
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`, order 5, budget 120 min)
 - **marker-wording-final** — The confirming marker's final wording — apply the sitting's felt verdict (lane `shell`, order 10, budget 20 min)
-- **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) (lane `measurement`, order 3, budget 240 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -30,7 +28,8 @@ Generated from `PLAN.yaml` (sha256 `9e6fd6703da9903d4b364dec3a852902c29a8f03d93c
 
 ## 5. In progress
 
-- (none)
+- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
+- **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) — evidence: branch `spike/lod-divergence-c3`
 
 ## 6. Proposed / unscheduled
 
