@@ -1,0 +1,17 @@
+{
+  "archive": "C:/Users/Christopher/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libduckdb-sys-1.10505.0/duckdb.tar.gz",
+  "regular_file_members": 3596,
+  "member_paths_containing_spatial": [],
+  "marker_hits": {
+    "ST_Simplify": [],
+    "spatial_extension": [],
+    "SpatialExtension": [],
+    "GEOSSimplify": [],
+    "ST_NPoints": []
+  },
+  "manifest_extensions": [
+    "core_functions",
+    "json",
+    "parquet"
+  ]
+}
