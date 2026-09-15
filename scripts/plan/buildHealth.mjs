@@ -137,7 +137,10 @@ export async function ciFact(fetchImpl, slug, token) {
   else if (running.length > 0) conclusion = 'in_progress';
   else if (noRun.length > 0) conclusion = null; // has a run for some, none for others
   else if (succeeded.length === workflows.length) conclusion = 'success';
-  else conclusion = workflows.find((w) => w.conclusion !== 'success')?.conclusion ?? 'success'; // neutral/skipped
+  // A non-success terminal that is not itself failing (neutral/skipped/stale). The `?? 'unknown'`
+  // tail is unreachable given the filters above, but it must NEVER default to 'success' — success is
+  // only ever set when every workflow succeeded.
+  else conclusion = workflows.find((w) => w.conclusion !== 'success')?.conclusion ?? 'unknown';
 
   // Representative run for the top-level convenience fields: the first failing one (so a reader that
   // only looks at html_url still lands on the red run), else the newest by created_at.

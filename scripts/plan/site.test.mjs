@@ -304,6 +304,17 @@ test('bug 1: an API-sourced href is emitted only when it is an https:// URL', ()
   assert.ok(html.includes('<span>Latest release</span><span>v0.1.0 (pre-release, 2026-09-13)</span>'));
 });
 
+test('bug 1: a legacy build-health.json without a workflows array still renders (mid-deploy back-compat)', () => {
+  // An older on-disk build-health.json (single-fact shape, no `workflows`) can be read during a
+  // deploy that straddles this change; it must still render a linked conclusion, not break.
+  const buildHealth = {
+    ...BUILD_HEALTH,
+    ci: { auth: 'token', conclusion: 'success', status: 'completed', head_sha: 'abc', created_at: '2026-09-14T09:00:00Z', html_url: 'https://github.com/owner/repo/actions/runs/1' },
+  };
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth });
+  assert.ok(html.includes('<a href="https://github.com/owner/repo/actions/runs/1">success</a>'), 'legacy shape links its conclusion');
+});
+
 test('bug 1: an all-green suite reads "all green (3/3)", and a red workflow reads FAILURE and is named', () => {
   // All green (the BUILD_HEALTH fixture): the row says all green, not a bare "success".
   const green = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH }).html;
