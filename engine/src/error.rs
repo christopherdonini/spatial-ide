@@ -139,6 +139,38 @@ pub enum EngineError {
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
     IdentityUnusable { column: String, detail: String, candidate_columns: Vec<String> },
 
+    /// The source is not the file this dataset opened against — the **structural descriptor**
+    /// differs (R-D1/R-D2, `engine/ADMISSION-PREREGISTRATION.md` §2e).
+    ///
+    /// `detail` names **every component that differed** — size, mtime, footer-length, footer-hash —
+    /// because no fixture isolates a single component and an assertion has to be exact without one
+    /// (§4's two recorded coverage gaps, the rule adopted there).
+    ///
+    /// **This is a change detector and it is not a snapshot claim.** It does not establish snapshot
+    /// consistency, it cannot detect every in-place modification, and it may detect a change during
+    /// a query only at the post-check (Brief A boundary 4, its own words). A change it does not see
+    /// is not a check that passed.
+    SourceChanged { detail: String },
+
+    /// A **partitioned** source reached the session-ordinal path — R-I4 (§2d; boundary 7).
+    ///
+    /// The session tier's identity is (dataset-session generation, physical file-row ordinal), and
+    /// a file-row ordinal is a position **within one file**. Across a partition set there is no
+    /// such position without a declared file order, and declaring one would be a packing contract
+    /// this cut does not introduce (A5). Refused by name rather than admitted with an ordinal that
+    /// would silently mean a different row per scan.
+    IdentityOrdinalPartitionedUnsupported { detail: String },
+
+    /// This engine's own record of an admission contradicts itself.
+    ///
+    /// **Not `Source`** — retyped at Brief A P3, a scoped carry-over the brief names. `Source` is
+    /// "the file could not be opened or read at all", and a caller shown that for an internal
+    /// inconsistency would go looking at its file for a defect that is in this code. The only
+    /// construction site is `dataset::open_inner`'s provenance arm, which a `debug_assert` already
+    /// calls unreachable: a provenance class is a recorded fact and is never substituted for a
+    /// missing one, so the alternative to this variant is filling one in.
+    InternalInconsistency { detail: String },
+
     /// One feature alone is larger than the largest batch this engine will emit.
     ///
     /// Separate from `CeilingExceeded` because the remedy differs and the diagnosis has to name a
@@ -269,6 +301,26 @@ impl fmt::Display for EngineError {
                 "refused: `{column}` cannot serve as stable feature identity — {detail}. \
                  Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"
             ),
+            // No "snapshot" and no "was verified" anywhere in this text (A1, boundary 2): it says
+            // what differed and what that ends, and the limitation sentence is the one boundary 4
+            // declares in its own words.
+            Self::SourceChanged { detail } => write!(
+                f,
+                "refused: the source file changed while it was open ({detail}). Everything read \
+                 for this session is discarded and the identities it handed out no longer refer to \
+                 anything; reopen the file to continue. This check does not establish snapshot \
+                 consistency, cannot detect every in-place modification, and may detect a change \
+                 during a query only after that query has finished reading"
+            ),
+            Self::IdentityOrdinalPartitionedUnsupported { detail } => write!(
+                f,
+                "refused: this source is partitioned across more than one file ({detail}), and \
+                 session identity is a row's position within one file. Open a single file, or \
+                 declare an identity column that is carried in the data"
+            ),
+            Self::InternalInconsistency { detail } => {
+                write!(f, "internal inconsistency: {detail}")
+            }
             Self::FeatureTooLarge { id, limit, saw } => write!(
                 f,
                 "feature {id} needs about {saw} B on its own, above the declared per-batch \

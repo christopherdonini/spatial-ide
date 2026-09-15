@@ -105,6 +105,85 @@ fn describe_response_with_a_caller_asserted_crs_round_trips() {
     assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
 }
 
+/// **`skp/0.3`, Brief A P3** — boundary 9's four `describe` additions, exercised in their populated
+/// shape on a session-tier dataset, the same precedent the caller-asserted fixture above set.
+///
+/// **And the A2 assertion in its wire form**: this response is the most generation-adjacent shape
+/// the protocol has, and it carries no generation value anywhere. The session statement names the
+/// tier without naming a number, because the number is kernel and client state.
+#[test]
+fn describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_generation() {
+    let v = fixture("v0-describe-response-session-ordinal");
+    let parsed: DescribeResponse = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as DescribeResponse: {e}"));
+    assert_eq!(parsed.identity.class, "session-ordinal");
+    assert_eq!(parsed.identity.source, "session-ordinal:file_row_number");
+    assert_eq!(parsed.identity.uniqueness, "by-construction-within-generation");
+    // Never counted, so never claimed — `None` is the honest answer and not a gap.
+    assert_eq!(parsed.identity.verified_rows, None);
+    assert_eq!(parsed.identity.js_exact, None);
+    assert!(parsed.identity.session_statement.is_some());
+    assert_eq!(parsed.crs.provenance, "crs:format-default");
+    assert_eq!(parsed.crs.axis_provenance, "axis:declared");
+    assert!(parsed.crs.display_convention.is_some());
+    assert_eq!(parsed.sanity.level, "metadata");
+
+    // **A2, asserted on the wire rather than only in the kernel.** The whole serialized document is
+    // searched, so a future field cannot slip a generation onto `describe` without failing here.
+    //
+    // The word itself is not banned and cannot be: ADR-016's §6 record value is literally
+    // `by-construction-within-generation`, and it is a *label for a basis*, not a value. What A2
+    // forbids is a generation **value** — so the assertion is that `dataset_session_generation`
+    // appears nowhere and that every occurrence of the word is that one label.
+    let text = serde_json::to_string(&parsed).unwrap();
+    assert!(
+        !text.contains("dataset_session_generation"),
+        "no generation value or field may appear on the wire (Brief A boundary 9, A2): {text}"
+    );
+    assert_eq!(
+        text.matches("generation").count(),
+        text.matches("by-construction-within-generation").count(),
+        "the only occurrence of the word on the wire is ADR-016 §6's record value, which names a \
+         basis and is not a value (A2): {text}"
+    );
+    // **A1**, in the same sweep: no snapshot claim in any string this response carries.
+    assert!(
+        !text.to_lowercase().contains("snapshot"),
+        "no snapshot-consistency claim may appear in any wire string (A1): {text}"
+    );
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
+/// **`skp/0.3`** — the two typed refusals boundary 9 names, plus the retyped internal-inconsistency
+/// arm, each in its wire shape with its `detail` field populated.
+#[test]
+fn the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields() {
+    let changed = fixture("v0-error-source_changed");
+    let parsed: SkpError = serde_json::from_value(changed.clone())
+        .unwrap_or_else(|e| panic!("source_changed fixture does not deserialize: {e}"));
+    assert_eq!(parsed.code, "engine.source_changed");
+    // §4's adopted rule: the detail names every component that differed, not the first.
+    assert_eq!(
+        parsed.fields.get("detail").map(String::as_str),
+        Some("{size, mtime, footer-length, footer-hash}")
+    );
+    // A1 again, on the refusal that is most tempting to phrase as a snapshot statement.
+    assert!(!parsed.message.to_lowercase().contains("snapshot consistency, ") || parsed.message.contains("does not establish snapshot consistency"));
+    assert!(parsed.message.contains("does not establish snapshot consistency"));
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), changed);
+
+    for name in
+        ["v0-error-identity_ordinal_partitioned_unsupported", "v0-error-internal_inconsistency"]
+    {
+        let v = fixture(name);
+        let parsed: SkpError = serde_json::from_value(v.clone())
+            .unwrap_or_else(|e| panic!("{name} does not deserialize as SkpError: {e}"));
+        assert!(parsed.code.starts_with("engine."), "{name}: {}", parsed.code);
+        assert!(parsed.fields.contains_key("detail"), "{name} must carry a detail field");
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name} round trip changed the shape");
+    }
+}
+
 #[test]
 fn viewport_query_fixtures_round_trip() {
     round_trip::<ViewportQueryRequest>("v0-viewport_query-request");

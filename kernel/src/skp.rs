@@ -248,7 +248,156 @@ impl StreamRegistry {
         }
         n
     }
+}
 
+/// **The authoritative ticket → dataset-session-generation mapping** (`§13 D`; Brief A boundary 4).
+///
+/// The name is `dataset_session_generation` everywhere and never the bare word `generation`:
+/// `engine/src/pool.rs` already owns a connection **lease** generation
+/// (`ConnectionFacts::lease_generation`, ADR-004 Amendment 4), and the two are unrelated facts. A
+/// diff that reused the bare name would make the A2 grep read the wrong symbol (the proposed
+/// ADR-016 Amendment 1's block-on-sight 3).
+///
+/// **The kernel side is authoritative and the client side mirrors it.** This is where a refusal is
+/// decided; the shell mirrors by *live-ticket set* rather than by value, so **no generation value
+/// crosses the wire** (boundary 9; A2/A3) and both sides fail closed independently.
+///
+/// **A generation is minted per open and is never persisted and never published.** It is a `u64`
+/// counter in this process's memory: it is not a ResourceRef field — neither logical URI, content
+/// hash, source revision, locator, cache status nor portability policy (ADR-005; `docs/11`) — and
+/// no ADR-005 amendment is needed or implied, because nothing is stored and no grade is claimed.
+#[derive(Default)]
+pub struct GenerationRegistry {
+    inner: Mutex<GenerationState>,
+}
+
+#[derive(Default)]
+struct GenerationState {
+    /// The generation currently live for each open dataset. A dataset absent from this map has no
+    /// live generation — either it never opened, or its generation was invalidated.
+    live: HashMap<String, u64>,
+    /// Which generation each minted ticket belongs to. Boundary 4's "every batch is attributed to
+    /// a generation via its ticket", held here rather than on the wire.
+    tickets: HashMap<String, (String, u64)>,
+    /// Datasets whose generation was **ended by a detected change**.
+    ///
+    /// **Three states, not two, and the third is why this set exists.** A dataset absent from
+    /// `live` is either one whose source was observed to have changed *or* one that never had a
+    /// generation minted at all — a `Catalog` this host shares can be opened through other entry
+    /// points (`kernel::Catalog::open_*`, which every in-process caller and several test harnesses
+    /// use). Collapsing the two would refuse `viewport_query` on a perfectly good dataset with a
+    /// message saying its file changed, which is a false statement about the file
+    /// (`docs/01` principle 8). Only membership here refuses.
+    invalidated: std::collections::HashSet<String>,
+    next: u64,
+}
+
+impl GenerationRegistry {
+    pub fn new() -> Arc<Self> {
+        Arc::new(Self::default())
+    }
+
+    /// Mint a fresh generation for one open. Called once per successful `open_dataset`.
+    ///
+    /// Counts up and never reuses a value, so an invalidated generation can never be confused with
+    /// a later one for the same dataset name — the handle is minted fresh per open too, but the
+    /// two are independent and this does not rely on that.
+    pub fn mint_for_open(&self, dataset: &str) -> u64 {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        st.next += 1;
+        let g = st.next;
+        st.live.insert(dataset.to_string(), g);
+        // A fresh open clears an earlier invalidation for the same name: that is what reopening
+        // *is*, and boundary 4's refusals say "until reopen" in as many words.
+        st.invalidated.remove(dataset);
+        g
+    }
+
+    /// Whether this dataset's generation was ended by a detected change.
+    ///
+    /// **The only condition that refuses.** A dataset with no generation at all has not been
+    /// observed to change and must not be told that it has.
+    pub fn is_invalidated(&self, dataset: &str) -> bool {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner()).invalidated.contains(dataset)
+    }
+
+    /// The dataset's live generation, minting one if it has never had a generation and has not been
+    /// invalidated.
+    ///
+    /// Exists because this host shares its `Catalog` with entry points that do not run
+    /// `open_dataset` — a dataset that arrived by one of those still gets a session rather than no
+    /// session. It never resurrects an invalidated generation: that returns `None`.
+    pub fn live_or_mint(&self, dataset: &str) -> Option<u64> {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        if st.invalidated.contains(dataset) {
+            return None;
+        }
+        if let Some(g) = st.live.get(dataset).copied() {
+            return Some(g);
+        }
+        st.next += 1;
+        let g = st.next;
+        st.live.insert(dataset.to_string(), g);
+        Some(g)
+    }
+
+    /// The live generation for a dataset, or `None` if it has none (never opened, or invalidated).
+    pub fn live_generation(&self, dataset: &str) -> Option<u64> {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner()).live.get(dataset).copied()
+    }
+
+    /// Attribute a freshly minted ticket to the dataset's live generation.
+    ///
+    /// Returns `false` when the dataset has **no** live generation — the ticket is then not
+    /// attributable and its caller must refuse rather than record it under a generation that does
+    /// not exist.
+    pub fn attribute_ticket(&self, handle: &str, dataset: &str) -> bool {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(g) = st.live.get(dataset).copied() else { return false };
+        st.tickets.insert(handle.to_string(), (dataset.to_string(), g));
+        true
+    }
+
+    /// Whether this ticket still belongs to its dataset's live generation.
+    ///
+    /// **Fails closed**: an unknown ticket is not live. A ticket whose generation was invalidated
+    /// is not live, and neither is one for a dataset with no live generation at all.
+    pub fn ticket_is_live(&self, handle: &str) -> bool {
+        let st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        match st.tickets.get(handle) {
+            Some((dataset, g)) => st.live.get(dataset) == Some(g),
+            None => false,
+        }
+    }
+
+    /// End a dataset's generation, and return every ticket handle that belonged to it.
+    ///
+    /// Called when the source is observed to have changed — at the pre-check, where the refusal is
+    /// synchronous, or at a stream's post-check, where the change may be found only after that
+    /// stream has finished reading (boundary 4's declared limit). The caller cancels the returned
+    /// tickets through the **existing** cancel; nothing new is introduced for it.
+    ///
+    /// Idempotent: invalidating an already-invalidated generation removes nothing and returns an
+    /// empty list.
+    pub fn invalidate(&self, dataset: &str) -> Vec<String> {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        st.invalidated.insert(dataset.to_string());
+        let Some(g) = st.live.remove(dataset) else { return Vec::new() };
+        st.tickets
+            .iter()
+            .filter(|(_, (d, tg))| d == dataset && *tg == g)
+            .map(|(h, _)| h.clone())
+            .collect()
+    }
+
+    /// Forget a dataset entirely — its live generation and every ticket attributed to it. Called
+    /// from `close_dataset`, so the map does not grow for the life of the process.
+    pub fn forget_dataset(&self, dataset: &str) {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        st.live.remove(dataset);
+        st.invalidated.remove(dataset);
+        st.tickets.retain(|_, (d, _)| d != dataset);
+    }
 }
 
 /// Names an in-flight `open_dataset` call so `cancel(cancel_key)` can reach it before it returns a
@@ -307,11 +456,26 @@ pub struct SkpHost {
     catalog: Arc<Catalog>,
     tickets: Arc<StreamRegistry>,
     opens: OpenRegistry,
+    /// The authoritative ticket → `dataset_session_generation` mapping (§13 D). Owned here because
+    /// this host is where a ticket is minted and where a refusal under an invalidated generation is
+    /// decided.
+    generations: Arc<GenerationRegistry>,
 }
 
 impl SkpHost {
     pub fn new(catalog: Arc<Catalog>, tickets: Arc<StreamRegistry>) -> Self {
-        Self { catalog, tickets, opens: OpenRegistry::default() }
+        Self {
+            catalog,
+            tickets,
+            opens: OpenRegistry::default(),
+            generations: GenerationRegistry::new(),
+        }
+    }
+
+    /// This host's generation registry — for a caller that needs to read the same state (a test,
+    /// or a future host-side surface). Cloning the `Arc` never creates a second mapping.
+    pub fn generations(&self) -> Arc<GenerationRegistry> {
+        self.generations.clone()
     }
 
     /// The catalog this host mutates. `frontends/shell/src-tauri`'s app setup gives the identical
@@ -350,6 +514,11 @@ impl SkpHost {
         let outcome =
             self.catalog.open_cancellable(handle.as_str(), &req.path, assertion, identity, &cancel);
         outcome.map_err(|e| error_of(&e))?;
+        // **Minted per open, and only for an open that succeeded** (boundary 3). A file that
+        // refused has no generation and can never produce `engine.source_changed` — the M-2
+        // truncated fixture's registered outcome. The value stays here: it is never persisted,
+        // never published, and never put on the wire (A2, §13 D).
+        self.generations.mint_for_open(handle.as_str());
         Ok(OpenDatasetResponse { dataset: handle })
     }
 
@@ -390,11 +559,37 @@ impl SkpHost {
         // just to learn it was refused (SKP-V0 §1, ADR-019 §1). A residual admission-*lease*
         // exhaustion is not one of those eleven: it routes through `engine.connections_exhausted`
         // instead — see [`predicate_admit_error_of`].
+        // **A ticket is refused under an invalidated generation, before anything is built** (§13 D;
+        // boundary 4's "new tickets refused under G"). The kernel side is authoritative: this
+        // refusal does not depend on the client noticing anything, and the client's own live-ticket
+        // mirror fails closed independently of it.
+        //
+        // An **invalidated** dataset is one whose source was observed to have changed. It stays in
+        // the catalog deliberately — `describe` still answers, and the operator is told to reopen
+        // rather than finding the name gone. A dataset that simply never had a generation minted is
+        // not that, and `live_or_mint` below gives it one rather than accusing its file.
+        if self.generations.live_or_mint(&dataset_name).is_none() {
+            return Err(error_of(&EngineError::SourceChanged {
+                detail: "{this dataset's session ended when its source was observed to have \
+                         changed}"
+                    .to_string(),
+            }));
+        }
         let query = build_viewport_query(&ds, &req).map_err(predicate_admit_error_of)?;
         // Validated **before** any handle is minted (SKP-V0.md §1): `ViewportCrsMismatch`,
         // `ViewportCrsUnidentifiable` and `NoCoveringBbox` return here, synchronously, with their
         // full typed text — never as a data-plane terminal frame arriving after a round trip.
-        let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| error_of(&e))?;
+        // R-D2's pre-check runs inside `Dataset::stream_inner`, so a source that changed refuses
+        // here, synchronously and typed. **The generation ends on that refusal** — the check is
+        // what detected the change, and leaving the generation live would let the next
+        // `viewport_query` mint another ticket against a file that is no longer the one that
+        // opened. Every ticket that belonged to it is cancelled through the existing cancel.
+        let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| {
+            if matches!(e, EngineError::SourceChanged { .. }) {
+                self.end_generation(&dataset_name);
+            }
+            error_of(&e)
+        })?;
         // `None`: `frontends/shell` has no consumer for `StreamConnectionRecord` telemetry yet
         // (unlike `kernel::main`'s own product binary, which does via `with_connection_reports`) —
         // no half-built reporting path here waiting for a caller that doesn't exist (S7, reviewer,
@@ -407,7 +602,39 @@ impl SkpHost {
             None,
         );
         let handle = self.tickets.mint(&dataset_name, source, source_cancel)?;
+        // Boundary 4's "every batch is attributed to a generation via its ticket", held entirely
+        // kernel-side. `attribute_ticket` returning false means the generation ended between the
+        // check above and this line — a real race, and the honest answer is to cancel the ticket
+        // just minted rather than hand out one that is already dead.
+        if !self.generations.attribute_ticket(handle.as_str(), &dataset_name) {
+            self.tickets.cancel(handle.as_str());
+            return Err(error_of(&EngineError::SourceChanged {
+                detail: "{this dataset's session ended while this query was being prepared}"
+                    .to_string(),
+            }));
+        }
         Ok(ViewportQueryResponse { stream: handle, expires_in_ms: TICKET_TTL.as_millis() as u32 })
+    }
+
+    /// End a dataset's `dataset_session_generation` and cancel every ticket that belonged to it.
+    ///
+    /// **Boundary 4's invalidation path, kernel half.** New tickets are refused (the live-generation
+    /// check in `viewport_query`), in-flight producer streams are cancelled through the **existing**
+    /// cancel (`StreamRegistry::cancel`, the same one a data-plane CANCEL frame reaches — ADR-019's
+    /// Consequences), and the client is left to clear residency and refuse picks off the typed
+    /// status it receives.
+    ///
+    /// Idempotent, so the pre-check path and a post-check path observing the same change do not
+    /// double-cancel.
+    pub fn end_generation(&self, dataset: &str) -> u32 {
+        let handles = self.generations.invalidate(dataset);
+        let mut cancelled = 0u32;
+        for h in handles {
+            if matches!(self.tickets.cancel(&h), CancelOutcome::Requested) {
+                cancelled += 1;
+            }
+        }
+        cancelled
     }
 
     pub fn cancel(&self, req: CancelRequest) -> Result<CancelResponse, SkpError> {
@@ -435,6 +662,9 @@ impl SkpHost {
         // which would let a `viewport_query` racing this call mint a ticket against a name already
         // gone from the catalog.
         let cancelled_streams = self.tickets.cancel_all_for_dataset(name);
+        // The generation dies with the open it was minted for; its ticket attributions go with it,
+        // so the mapping does not grow for the life of the process.
+        self.generations.forget_dataset(name);
         self.catalog.remove(name);
         Ok(CloseDatasetResponse { cancelled_streams })
     }
@@ -582,6 +812,24 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             definition_provenance: crs.definition_provenance().map(str::to_string),
             axis_order: crs.axis_order().as_str().to_string(),
             axis_normalization: "none-performed".to_string(),
+            // Boundary 9's two provenance fields, read from the admission record the engine made
+            // at open — never re-derived here, and never defaulted. `admission()` is `Some` for
+            // every dataset that opened (`Dataset::admission`'s own contract), so the `None` arms
+            // below are unreachable; they record "not established" rather than inventing a class,
+            // which is the same rule `dataset::open_inner` applies to itself.
+            provenance: ds
+                .admission()
+                .map_or_else(|| "not-established".to_string(), |a| a.crs_provenance.as_str().to_string()),
+            axis_provenance: ds
+                .admission()
+                .map_or_else(|| "not-established".to_string(), |a| a.axis_provenance.as_str().to_string()),
+            // **The P2-held carrier, closed at P3** (the P2 architect: "P3 carries it over the
+            // wire via describe, never as a second TypeScript literal"). The bytes are
+            // `spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION`'s own, read from the constant, so the
+            // shell renders them rather than retyping them.
+            display_convention: ds
+                .is_geographic_degrees_instance()
+                .then(|| spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION.to_string()),
         },
         geometry: GeometryInfo {
             column: ds.geometry_column().to_string(),
@@ -595,6 +843,18 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             verified_rows: identity.verified_rows().map(DecU64),
             max_value: identity.max_value().map(DecU64),
             js_exact: identity.js_exact(),
+            class: match identity.source() {
+                spatial_engine::IdSource::File => "native",
+                spatial_engine::IdSource::Mapped { .. } => "mapped",
+                spatial_engine::IdSource::SessionOrdinal => "session-ordinal",
+            }
+            .to_string(),
+            // The statement, verbatim from the engine's constant, for the session tier only. No
+            // generation value accompanies it and none exists on this response (A2, §13 D).
+            session_statement: identity
+                .source()
+                .is_session_ordinal()
+                .then(|| spatial_engine::SESSION_IDENTITY_STATEMENT.to_string()),
         },
         schema: ds
             .file_schema()
@@ -616,6 +876,17 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             attribution: license.attribution.clone(),
             redistribution: license.redistribution.clone(),
             declares_anything: license.declares_anything(),
+        },
+        // Boundary 9's sanity-check level, read from the same admission record. `level` and
+        // `reason` say what was read and from where; neither ever says a file passed (boundary 2).
+        sanity: spatial_skp::v0::SanityInfo {
+            level: ds
+                .admission()
+                .map_or_else(|| "none".to_string(), |a| a.sanity_level.as_str().to_string()),
+            reason: ds.admission().map_or_else(
+                || "no admission record; not checked".to_string(),
+                |a| a.sanity_reason.clone(),
+            ),
         },
     }
 }
@@ -655,6 +926,26 @@ pub fn error_of(e: &EngineError) -> SkpError {
         // compile at all, which is exactly what the no-wildcard discipline is for.
         EngineError::FormatDefaultContradicted { detail } => {
             ("format_default_contradicted", vec![("detail", detail.clone())])
+        }
+        // **Brief A P3, boundary 9's remaining two typed refusals.** Both are `engine.` + the
+        // variant name, per SKP-V0.md `:266`'s rule, and both carry `detail` in the structured
+        // field rather than only in the message — a client that must clear residency and refuse
+        // picks needs the code, not the prose.
+        //
+        // `source_changed`'s `detail` names **every** descriptor component that differed
+        // (`{size, mtime, footer-length, footer-hash}`), never a generation value: the generation
+        // it ends is kernel and client state and never reaches the wire (§13 D, A2).
+        EngineError::SourceChanged { detail } => {
+            ("source_changed", vec![("detail", detail.clone())])
+        }
+        EngineError::IdentityOrdinalPartitionedUnsupported { detail } => {
+            ("identity_ordinal_partitioned_unsupported", vec![("detail", detail.clone())])
+        }
+        // The retyped internal-inconsistency arm (Brief A P3's scoped carry-over). It used to
+        // arrive here as `engine.source`, telling a caller its file was unreadable when the
+        // contradiction is in this tree's own record.
+        EngineError::InternalInconsistency { detail } => {
+            ("internal_inconsistency", vec![("detail", detail.clone())])
         }
         EngineError::GeoMetadata(_) => ("geo_metadata", vec![]),
         EngineError::NoCoveringBbox { detail } => {

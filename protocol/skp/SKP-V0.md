@@ -564,3 +564,72 @@ APPROVED 2026-09-02), and it carries **entry 6's own expiry clause, restated not
 widening-rides-the-version license holds only while no external reader of `skp/0.2` exists (a
 dated fact — pre-ADR-009, repo private); the moment such a reader exists, a value-set change of
 this class is a compatibility event that a version bump must carry. Until then, `skp/0.2` stands.
+
+### skp/0.3 — Brief A (admission and session lifecycle), P3 (2026-09-15)
+
+**The version's FULL field set, as §8's own discipline requires — every field `skp/0.3` adds, in
+one list. Nothing below rewrites an earlier entry.**
+
+`describe` **response** gains five members, four of them Brief A's settled boundary 9 by name:
+
+- **`crs.provenance: String`** — boundary 9's `crs.provenance`. How this dataset's CRS was
+  established: `"crs:declared"`, `"crs:asserted"`, `"crs:format-default"`. A recorded fact and never
+  a judgement; it says nothing about whether the file's producer conformed to the rule that was
+  read. Two format-rule routes stay distinguishable at sight, deliberately: an absent `crs` key and
+  a declared lat-first CRS reach the *same* real-world CRS by different routes and a single line
+  would collapse two different facts.
+- **`crs.axis_provenance: String`** — boundary 9's `axis.provenance`. How the **data's** axis order
+  was established: `"axis:declared"` or `"axis:format-override"`. The definition's own declared
+  order is retained engine-side as a recorded fact and is never discarded.
+- **`crs.display_convention: Option<String>`** — the **P2-held carrier, closed here at P3** rather
+  than carried silently. `Some` exactly for a geographic-degrees dataset, carrying
+  `spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION` verbatim from the Rust constant so that no client
+  retypes it. A display statement only: no coordinate value is transformed by anything in this
+  engine and `axis_normalization` stays `"none-performed"`.
+- **`identity.class: String`** — boundary 9's `identity.class`: `"native"`, `"mapped"` or
+  `"session-ordinal"`.
+- **`identity.session_statement: Option<String>`** — boundary 9's session-tier statement, `Some`
+  exactly for `"session-ordinal"`, carrying `spatial_engine::SESSION_IDENTITY_STATEMENT` verbatim.
+- **`sanity: { level: String, reason: String }`** — boundary 9's sanity-check level. `level` is
+  `"metadata"`, `"sample"` or `"none"`; `reason` is what the level was decided from. **A sanity
+  check convicts, never confirms**: no value here says a file passed, is valid, or was verified,
+  and `"none"` means *not checked*.
+
+Three new typed refusal codes on the `engine.` namespace (SKP-V0.md `:266`'s `engine.` +
+variant-name rule, unchanged), each carrying `detail` in `SkpError.fields`:
+
+- **`engine.source_changed`** — the structural descriptor differs from the one this dataset opened
+  against. `detail` names **every** component that differed (`{size, mtime, footer-length,
+  footer-hash}`), because no mutation fixture isolates a single component and an assertion is exact
+  only if the refusal enumerates them. Its message carries boundary 4's limitation in that
+  boundary's own words: the check does not establish snapshot consistency, cannot detect every
+  in-place modification, and may detect a change during a query only after that query has finished
+  reading.
+- **`engine.identity_ordinal_partitioned_unsupported`** — a partitioned source reached the
+  session-ordinal path (boundary 7). No file-list or packing contract is introduced by it.
+- **`engine.internal_inconsistency`** — a retype, not a new failure: the provenance-arm
+  contradiction in `dataset::open_inner` used to arrive as `engine.source`, telling a caller its
+  file was unreadable when the contradiction is in this tree's own record.
+
+Beside them, on the publish surface and **not** an SKP `engine.` code:
+`publish.geographic_crs_not_publishable` (boundary 8, also held at P2 and closed here) — a
+geographic-degrees dataset refuses at preflight, by name, before any write, reusing ADR-025's
+refuse-typed-at-preflight pattern.
+
+**What `skp/0.3` deliberately does NOT add.** No generation value crosses the wire in either
+direction, on `describe` or anywhere else (boundary 9;
+`engine/ADMISSION-PREREGISTRATION.md` §13 D). The dataset-session generation is minted per open,
+lives in kernel and client state, and is never persisted and never published; generation attribution
+rides the **existing** ticket, and the client mirrors it by live-ticket set rather than by value. A
+fixture test asserts the absence on the serialized document rather than by inspection. **`protocol/data-plane/`
+has an empty diff for this version.**
+
+Mechanics, the `skp/0.2` precedent followed exactly (`:456-486`): one literal bumped once on Brief
+A's branch; plain `==` comparison retained (`kernel/src/skp.rs`'s `check_version`);
+`deny_unknown_fields` kept both directions; every fixture on both the Rust
+(`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`) and TypeScript
+(`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire updated in this same
+commit. While `skp/0.3` is unmerged, further additions to it are **appended addenda to this entry**,
+the `skp/0.2` P2/P3c addendum precedent. Once Brief A merges to `main`, `skp/0.3`'s field set is
+closed and the next brief bumps to `skp/0.4`. **`skp/1` stays RESERVED** and must not be used for
+any interim version.

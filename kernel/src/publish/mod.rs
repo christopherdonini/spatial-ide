@@ -424,6 +424,23 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     }
 
     let ds = req.dataset;
+    // **Brief A settled boundary 8, closed here at P3** (held at P2). Second-cheapest check in this
+    // function — one field read off the admission record already made at open, no IO — and it runs
+    // before license admission for the same reason the filter gate runs before everything: a
+    // degrees dataset's publish cannot be made honest by fixing anything else in the request.
+    //
+    // Answered from the **recorded unit** and from nothing else (`Dataset::is_geographic_degrees_instance`),
+    // never from the CRS identifier string — `docs/05` forbids deciding CRS identity by name
+    // comparison, so changing a definition's `id` and nothing else cannot change this answer.
+    if ds.is_geographic_degrees_instance() {
+        return Err(PublishError::GeographicCrsNotPublishable {
+            crs_identifier: ds.crs().identifier().to_string(),
+            unit_source: ds
+                .admission()
+                .and_then(|a| a.coordinate_unit_source)
+                .map_or_else(|| "unit source not recorded".to_string(), |s| s.as_str().to_string()),
+        });
+    }
     let logical_uri = dataset_logical_uri(req.dataset_name)?;
 
     // ---- license, before any work is spent on a bundle that may not be publishable -------------
