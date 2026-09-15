@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.2";
+export const SKP_VERSION = "skp/0.3";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -76,6 +76,21 @@ export interface CrsInfo {
   definition_provenance: string | null;
   axis_order: string;
   axis_normalization: string;
+  /** `skp/0.3` (Brief A boundary 9): how this dataset's CRS was established --
+   * `"crs:declared"`, `"crs:asserted"` or `"crs:format-default"`. A recorded fact, never a
+   * judgement: it says nothing about whether the file's producer conformed to the rule read. */
+  provenance: string;
+  /** `skp/0.3` (Brief A boundary 9): how the **data's** axis order was established --
+   * `"axis:declared"` or `"axis:format-override"`. */
+  axis_provenance: string;
+  /** `skp/0.3`: the display-convention sentence for a geographic-degrees dataset, **carried over
+   * the wire from the Rust constant** (`engine/src/crs.rs`'s `GEOGRAPHIC_DISPLAY_CONVENTION`) and
+   * never retyped as a TypeScript literal -- the P2 architect's rule, which is why this is a
+   * field and not a string in this repository's frontend. `null` for every other dataset.
+   *
+   * A display statement only: no coordinate value is transformed, and `axis_normalization` stays
+   * `"none-performed"`. Render it verbatim; never paraphrase or shorten it. */
+  display_convention: string | null;
 }
 
 export interface GeometryInfo {
@@ -91,6 +106,25 @@ export interface IdentityInfo {
   verified_rows: DecU64 | null;
   max_value: DecU64 | null;
   js_exact: boolean | null;
+  /** `skp/0.3` (Brief A boundary 9): `"native"`, `"mapped"` or `"session-ordinal"`. */
+  class: string;
+  /** `skp/0.3`: the session-tier statement, non-null exactly when `class === "session-ordinal"`,
+   * carried verbatim from the Rust constant for the reason `display_convention` is.
+   *
+   * It makes **no snapshot claim** -- it says the identity does not outlive the open. No
+   * generation value accompanies it, here or anywhere else on the wire: the generation is kernel
+   * and client state, and this client mirrors it by live-ticket set rather than by value. */
+  session_statement: string | null;
+}
+
+/** `skp/0.3` (Brief A boundary 9): what the range check was decided from at this open.
+ *
+ * **A sanity check convicts, never confirms.** Nothing here says a file passed, is valid or was
+ * verified; `"none"` means *not checked*. Do not render it as a green tick. */
+export interface SanityInfo {
+  /** `"metadata"`, `"sample"` or `"none"`. */
+  level: string;
+  reason: string;
 }
 
 export interface FieldInfo {
@@ -126,6 +160,8 @@ export interface DescribeResponse {
   row_count: RowCount;
   extent: Extent;
   license: LicenseInfo;
+  /** `skp/0.3` (Brief A boundary 9). */
+  sanity: SanityInfo;
 }
 
 export interface Bbox {

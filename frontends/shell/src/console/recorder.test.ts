@@ -23,7 +23,7 @@ function asSkpRequestEntry(entry: { kind: string }): SkpRequestEntry {
 describe("ConsoleRecorder", () => {
   it("records the exact request reference, not a copy (I2)", () => {
     const recorder = new ConsoleRecorder();
-    const request = { skp: "skp/0.2", dataset: "ds_x" };
+    const request = { skp: "skp/0.3", dataset: "ds_x" };
 
     recorder.record(request);
 
@@ -153,7 +153,7 @@ describe("ConsoleRecorder", () => {
 
   it("record() carries the optional command name on the entry (P3: command-name header)", () => {
     const recorder = new ConsoleRecorder();
-    recorder.record({ skp: "skp/0.2", dataset: "ds_x" }, "describe");
+    recorder.record({ skp: "skp/0.3", dataset: "ds_x" }, "describe");
 
     expect(recorder.entries()[0]!.kind).toBe("skp-request");
     expect(asSkpRequestEntry(recorder.entries()[0]!).command).toBe("describe");

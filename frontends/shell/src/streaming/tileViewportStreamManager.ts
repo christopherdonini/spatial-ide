@@ -14,6 +14,7 @@ import { encodeHexF64 } from "../skp/codec";
 import { cancel as skpCancel, SkpCallError, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
+import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
 import { dataPlaneAttach } from "./dataPlaneClient";
 import type { StreamSink, Terminal } from "./transport";
 
@@ -311,6 +312,16 @@ function isRetryableRefusal(err: unknown): boolean {
 type TileRequestState = "queued" | "issuing" | "in-flight";
 
 export class TileViewportStreamManager {
+  /**
+   * **The dataset-session generation, mirrored by live-ticket set** (Brief A boundary 4; §13 D) --
+   * the tiled arm's own instance of `ViewportStreamManager`'s, holding every tile's ticket rather
+   * than one. Invalidation clears all of them at once, which is what the generation being *per
+   * dataset-session* means: a change to the source does not end one tile, it ends the session.
+   *
+   * Deliberately not named `generation`: `issueEpoch` beside it is this manager's own per-tile
+   * supersede counter and an unrelated fact.
+   */
+  private readonly liveTickets = new LiveTicketSet();
   private frame: TileGridFrame | null = null;
   private readonly level: TileGridLevel;
   private stopped = false;
@@ -919,6 +930,9 @@ export class TileViewportStreamManager {
 
     this.tileState.set(tileKey, "in-flight");
     this.inFlightStreams.set(tileKey, { streamHandle: ticket.stream });
+    // Minted under the dataset's live generation (the kernel refuses otherwise), so admitted to the
+    // client's mirror at the mint site -- the same place and the same rule as the untiled arm.
+    this.liveTickets.admit(ticket.stream);
     this.nextBatchSeqByStream.set(ticket.stream, 0);
     const streamHandleAtStart = ticket.stream;
     // Entry 87 §2.4(4) reviewer fix: named ONLY when this mint spent its bounded retry -- see
@@ -930,6 +944,11 @@ export class TileViewportStreamManager {
     const sink: StreamSink = {
       onOpen: () => {},
       onBatch: (payload) => {
+        // **Brief A P3, boundary 4**: the live-ticket check, before the supersede check and for a
+        // different reason -- this one says the ticket no longer belongs to a live dataset-session
+        // generation. A batch dropped here must never repopulate a tile. No generation value is
+        // consulted, because this client is never told one (§13 D, A2).
+        if (!this.liveTickets.isLive(streamHandleAtStart)) return;
         if (this.inFlightStreams.get(tileKey)?.streamHandle !== streamHandleAtStart) return;
         // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
         // candidate arm's own analogue of `viewportStreamManager.ts`'s identical hook -- the earliest
@@ -949,6 +968,13 @@ export class TileViewportStreamManager {
           this.tileState.delete(tileKey);
         }
         this.nextBatchSeqByStream.delete(streamHandleAtStart);
+        this.liveTickets.retire(streamHandleAtStart);
+        // The client half of the invalidation path, identical in rule to the untiled arm's: one
+        // tile's terminal naming `engine.source_changed` ends the whole session, so every other
+        // tile's ticket is dropped too and any batch still in flight for them is refused above.
+        if (isSourceChangedTerminal(terminal)) {
+          this.liveTickets.invalidate();
+        }
         if (this.selfCancelledHandles.delete(streamHandleAtStart)) {
           this.drainQueueIfRoom();
           return;

@@ -237,6 +237,74 @@ DECISIONS-PENDING entry 73 carries them: the polygon-only gate (the ruling); and
 
 *(none — this section opens empty and is append-only from the first commit)*
 
+### Amendment 1 — P3 implementation record (2026-09-15, appended)
+
+**Written AFTER outcomes were seen.** §12e's own rule, honoured in this line: the §13 F escalation
+gate had already been run and passed, and the P3 code had already been written and tested, before
+this amendment was drafted. Nothing above is edited; every item below is a record of what P3 did,
+or a named deviation, and none of it is a prediction.
+
+1. **§13 F's escalation gate — PASSED, and what the probe observed.** The vendored `duckdb`
+   `1.10505.0` (reporting DuckDB `v1.5.5`) accepts `file_row_number = true` on the `read_parquet`
+   path, in the interpolated form and in the **bound-parameter** form the engine's own statements
+   use (`FROM read_parquet(?, file_row_number=true)`). Over a 240-row corpus file it returned
+   `count 240, min 0, max 239, count(DISTINCT) 240`. The escalation was therefore **not** raised and
+   the identity mechanism is unchanged from §2d's. The probe is kept as a standing test
+   (`engine/tests/session_identity.rs`), because the answer is a property of the vendored crate.
+2. **R-I3's reach, narrowed in implementation and recorded here.** R-I3 is implemented for the case
+   where the file carries **no `id` column at all** and no mapping is declared. A file that *does*
+   carry an `id` column which then fails admission — a non-integer type, a negative value, a
+   repeated value — still refuses `identity_unusable` by name and does **not** fall through to the
+   session tier. Reason: those are a different fact (the file offers an identity and it does not
+   work), and routing them to the session tier would have silently changed three existing ADR-016
+   behaviours that A4 protects. Consequence for §3: unchanged — all six predicted session-ordinal
+   corpus admits are no-`id` files.
+3. **R-I4's detection, and its narrowness.** Implemented as a structural check that opens nothing:
+   a **directory**, or a path carrying a `*` or `?` glob metacharacter, is a partitioned source. A
+   missing path or a non-parquet file keeps `EngineError::Source`. `[` is deliberately **not**
+   treated as a glob character (a bracket in a real directory name is ordinary). Windows'
+   extended-length prefix (`\?\`) is stripped before the scan — an earlier revision did not, and
+   every canonicalized path was read as a glob; caught by the kernel's own permission-boundary
+   suite and recorded here rather than only fixed.
+4. **The post-check's call site, as §13 C required P3 to name it.** `engine/src/stream.rs`, inside
+   the producer thread's closure: after `produce(...)` returns (DuckDB's iterator fully drained),
+   after `thread_cancel.detach()`, and after the `match outcome` that releases or discards the
+   lease — and **before** `tx` is dropped, which for a clean run is the terminal itself. Rules (i),
+   (ii) and (iii) are implemented as written; rule (ii) required a side channel, because a cancelled
+   stream keeps its `cancelled` terminal and the change must still end the generation:
+   `StreamStats::source_changed_detail`, which carries the components that differed and never a
+   generation value.
+5. **A fourth `EngineError` variant, beyond boundary 9's three.** `InternalInconsistency` — the
+   retype of `dataset::open_inner`'s provenance arm, which the brief names as a scoped carry-over.
+   It is a retype of an existing failure, not a new refusal: no input reaches it that did not reach
+   `EngineError::Source` before. Recorded here so an A3/A5 reviewer does not read the count as scope
+   creep, in the same shape §13 H records boundary 8's own fourth refusal.
+6. **Two `describe` facts recorded but NOT put on the wire**, because boundary 9's list is closed
+   and says "only": the descriptor's **footer bytes read** and its **degradation text** (§7/§13 A
+   require the degradation to be *shown*), and the **ADR-016 candidate list** on a session-tier open
+   (R-I3 requires it to be *reported*). Both are recorded on the engine and reachable through
+   accessors (`Dataset::descriptor()`, `DatasetIdentity::candidate_columns()`); neither reaches an
+   operator's eye in this cut. Surfacing either needs a `describe` field boundary 9 does not name,
+   which is a decision above P3's authority and is flagged to the architect and the human rather
+   than taken.
+7. **Two existing tests changed, both unavoidable consequences of work the brief assigns, both
+   narrow.** (a) `engine/tests/admission_format_semantics.rs`'s covering-sample assertion quotes the
+   exact wording the brief asks to reword; only the quoted phrase changed and every other assertion
+   in it (the row-group count bounds the read; the file's row count does not; the ceiling does not)
+   stands. (b) `engine/tests/identity.rs`'s keyless-file assertion is the one R-I3 replaces — the
+   consequence §12d already put on the human's sight list by name. The mapped half of that test is
+   untouched. No other existing test was edited (A4/G-A6).
+8. **The invalidation state is three-valued, not two.** "Never had a generation minted" and
+   "generation ended by a detected change" are held apart in the kernel
+   (`GenerationRegistry`): only the second refuses. A `Catalog` this host shares is reachable
+   through entry points that do not run `open_dataset`, and collapsing the two told a caller its
+   file had changed when nothing about the file was ever observed — a false statement, caught by the
+   kernel's own SKP admission suite.
+9. **What P3 did NOT build, so no reader infers it from a green suite.** No gate test: G-A1, G-A2,
+   G-A3 and G-A4 are P5's and are not approximated. No corpus run (P4). No Part N, no
+   KNOWN-LIMITATIONS, no ADR acceptance (P6). No duration, no rate and no performance word anywhere
+   in this piece (A6).
+
 ---
 
 ## 13. Architect-routed answers recorded at P0 (implementation-level; none changes behaviour, authority, a guarantee or scope)

@@ -70,6 +70,10 @@ function describeFixture(): DescribeResponse {
       definition_provenance: null,
       axis_order: "easting,northing",
       axis_normalization: "none-performed",
+      // skp/0.3 (Brief A boundary 9): additive, so this builder keeps the shape the wire has.
+      provenance: "crs:declared",
+      axis_provenance: "axis:declared",
+      display_convention: null,
     },
     geometry: {
       column: "geometry",
@@ -83,12 +87,16 @@ function describeFixture(): DescribeResponse {
       verified_rows: "100000",
       max_value: "99999",
       js_exact: true,
+      class: "native",
+      session_statement: null,
     },
     schema: [{ name: "id", arrow_type: "UInt64", nullable: false }],
     covering_bbox: true,
     row_count: { basis: "identity-uniqueness-scan-full-file", value: "100000" },
     extent: { basis: "not-established-at-open", value: null },
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
+    // skp/0.3 (Brief A boundary 9). "none" means NOT CHECKED -- never "nothing wrong".
+    sanity: { level: "none", reason: "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked" },
   };
 }
 
