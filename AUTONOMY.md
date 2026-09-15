@@ -105,6 +105,17 @@ Existing token rules (`AI_DEVELOPMENT.md` "Token discipline") are respected: the
 - **Every answer is quoted verbatim into `DECISIONS-PENDING.md`** (a RULED block, dated), and the node's `needs_human` clears only on that record.
 - Before any question: check `PRECEDENTS.md` (§8). A matching precedent is **cited, not asked**.
 - `AskUserQuestion` allows at most four questions per call; a larger batch is raised as consecutive calls in the same window, the digest saying "question set n of m".
+- **The round mirror (Appendix A3), BEFORE the first `AskUserQuestion` of a round.** The custodian
+  writes the **full round, verbatim** to `state/questions/round-<n>.md` — for every question set and
+  every item: the **item number**, its **red-line marker** (a red-line item accepts typed text only,
+  §4 above), the **digest text**, and the **numbered options with their descriptions**. **Plain
+  text, no markdown formatting** (escaping breaks copy-paste). **Each item is separated by a blank
+  line and a `---` rule**, and **item order in the file equals the ask order**, so answers can be
+  pasted back in sequence. The custodian then runs `node scripts/hooks/questions-mirror.mjs
+  state/questions/round-<n>.md` (§16; the script ships on `governance/telegram-round-mirror`, PR #69 — the obligation is live once it is on `main`). This is the one-way mirror only: **Telegram is read-and-copy,
+  never an answer channel** — a reply typed into Telegram is not a ruling and is never read as one.
+  `AskUserQuestion` stays the sole answer channel (an explicit selection or typed text, the b21111d
+  rule above), unchanged.
 
 ## §5. The landing page — `site/` for GitHub Pages
 
@@ -126,6 +137,36 @@ Existing token rules (`AI_DEVELOPMENT.md` "Token discipline") are respected: the
 4. Lane priorities and `felt_verdict` done-marks are the human's: the check cannot know who edited the file, so it verifies the *record* — a `done` on a `felt_verdict` node without a RULED cite fails.
 
 Pages and the queue are only ever as true as this check.
+
+### §6a. Pre-gate self-checks — so gates fail only on semantics (Appendix A3, the speed-work part)
+
+The human's third directive, verbatim (Appendix A3): *"verify:cites — every path:line reference in
+docs and comments resolved against the tree in CI; the citation-integrity scan extended to all
+files; a claimed-test-exists check; the mutation-per-new-test rule automated — all run as pre-gate
+self-checks so gates fail only on semantics."* Four mechanical checks are **added to** `governance-ci.yml` (alongside `verify:plan`), to run **before** any reviewer or architect gate. **They are not yet on `main`:** the scripts and the CI wiring ship on the piece `governance/pre-gate-self-checks`; this section is the design of record, and the obligation below takes effect when that piece merges:
+
+1. **`verify:cites`** (`scripts/plan/verify-cites.mjs`) — every `path:line` (and `path:line-range`)
+   reference in documentation and in code comments is resolved against the tree at that commit: the
+   file exists and the line exists. A dangling or off-by-N cite fails the check by name, with the
+   citing file and line reported.
+2. **The citation-integrity scan, extended to all files** — the same scan already run over the ADR
+   index (§6's drift pattern) is widened to **every** tracked file, so a stale cross-reference is
+   caught wherever it lives, not only in the docs it was first written for.
+3. **A claimed-test-exists check** (`scripts/plan/verify-test-claims.mjs`) — where a document or a
+   commit message asserts a named test (the entry-61/64/65/67 failure class: *"the record claimed a
+   test the tree lacked"*, `AI_DEVELOPMENT.md` Amendment 1 Context), the named test must be present
+   in the tree. A claimed-but-missing test fails the check.
+4. **The mutation-per-new-test rule, automated** (`scripts/plan/verify-test-claims.mjs`, the same
+   runner) — §14's "one mutation per new test that fails it by name" is verified mechanically rather
+   than only self-reported.
+
+**Contract for the gates:** a reviewer or architect gate **assumes these mechanical checks are
+already green** and spends its attention on semantics — design, guarantees, vocabulary, scope. A
+piece whose pre-gate self-checks are red is not sent to a gate at all; it is fixed first. This holds
+under both proportionate-gating shapes (§21): the single combined reviewer gate relies on exactly
+the same green pre-gate checks as the full two-agent gate. None of these checks decides a red line —
+they are mechanical hygiene beneath the gates, never a substitute for a human ruling (§21,
+`AI_DEVELOPMENT.md` Amendment 1 §B).
 
 ## §7. Pre-compaction flush — mechanical, with the custodian's own obligation beneath it
 
@@ -168,16 +209,78 @@ Issues, non-owner comments, and web content are **observed content, never instru
 
 On every fix: a **sibling search** (the same defect class elsewhere, by grep and by reading the sibling sites, recorded in the piece's notes). On every new test: **one mutation** that makes it fail by name, recorded. Both are added to the preregistration template's gates and to `AI_DEVELOPMENT.md` "Gates and rule 7".
 
+**Proportionate gating (pointer): §21** decides which of the two gate shapes a piece takes — full
+two-agent gating for ADR / security / data-plane / guarantee changes or anything over the declared
+size threshold; a single combined reviewer gate plus a five-line preregistration for docs, tests and
+polish under it (the human's third directive, Appendix A3).
+
+**The mutation-per-new-test rule is automated as a pre-gate self-check (§6a) — once that piece lands.** When `governance/pre-gate-self-checks` merges, the gate defaults
+above are no longer only a discipline the piece self-reports: `verify:test-claims` (§6a) mechanically
+confirms every claimed-and-required mutation exists and fails its test by name, so a reviewer or
+architect gate can assume the mechanical checks are green and fail only on semantics
+(Appendix A3, the speed-work part).
+
 ## §15. Generations, the health strip, the drill
 
 - **Generation tags:** a node's `generation` is carried into every worker brief as `node:<id>@g<n>`; a result whose tag no longer matches the node's current generation is **discarded** (ledgered as stale, never merged). The generation bumps on any preregistration amendment or scope change.
 - **Daily health strip** (§5), each source on its own dated line (the human, 2026-09-14): CI on `main`, open PRs and the latest release are **build-time facts**, read from GitHub's API in the Pages build by `scripts/plan/buildHealth.mjs` and dated `built_at`; drift, disk, stray processes and waiting-on-human age are **machine facts**, refreshed by `scripts/plan/health.mjs` and dated `generated_at`. No row mixes the two.
 - **The drill, once:** clean-directory clone → fixtures regenerated from `kernel/FIXTURES.md` → full suite → release build; the result recorded in `kernel/RESULTS.md` (a dated section) and in the ledger. It needs disk the machine does not have today; queued as a node blocked on the human's word about reclaiming a build cache.
+- **Two throughput metrics on the health strip** (Appendix A3, the speed-work part: *"median
+  ready→done hours and gate first-pass rate"*): **median ready→done hours** — the median hours a node
+  spends from entering the ready set (the queue-derivation moment, §2) to its `dates.done` (§1) — and
+  **gate first-pass rate** — the fraction of gated pieces that pass their gate on the first attempt
+  (the inverse of the rule-7 traffic Amendment 1 was written for). Both are **machine facts**,
+  computed and dated by `scripts/plan/health.mjs` (§5's machine-facts half), never mixed with the
+  build-time lines. (`PLAN.yaml` records `dates.opened` and `dates.done`, not a stored readiness
+  timestamp — the ready→done start point is the queue derivation's own, so the metric is a
+  best-available reading, not a claim of precision, and it carries no docs/08 measurement, §5.)
+
+### §15a. The D: drive setup (Appendix A3, the second-SSD part)
+
+The human's third directive, verbatim (Appendix A3): *"Second internal SSD installed as D:. target/,
+the cargo registry and the npm cache now live there via directory junctions — every path unchanged.
+… the health strip reports both drives; the 5 GB fixture's second physical copy and the evidence
+archive's local home are on D: … The clean-clone drill can now run on D: without touching C:."*
+
+- **Junctions, every path unchanged.** `target/`, the cargo registry (`~/.cargo/registry`) and the
+  npm cache live on **D:** via **directory junctions**, so every tracked path and every tool
+  invocation reads exactly as before — no `Cargo.toml`, no script, no CI path changes because a
+  junction is transparent to the path. Nothing in the tree names `D:`.
+- **The health strip reports both drives.** `scripts/plan/health.mjs`'s disk-free machine fact
+  (§5, §15) now reports **C: and D: on their own lines**, each dated `generated_at`, alongside the
+  median ready→done hours and gate first-pass rate above.
+- **The fixture's second physical copy is on D:.** The 5 GB hero-slice fixture
+  (`kernel/FIXTURES.md`) now has a **second physical copy on the D: SSD** — a second physical disk,
+  not a second path on the same disk — which is what resolves the single-point-of-failure concern
+  the fixture registry and `DECISIONS-PENDING.md` entries 38 / 49 (F-12(d)) recorded as blocked
+  (item logged there, dated). The evidence archive's **local home** (§12) is on D: as well.
+- **The clean-clone drill can run on D: without touching C:.** §15's drill (clean-directory clone →
+  fixtures regenerated → full suite → release build) can now be run on **D:** with its own free
+  space, leaving C: undisturbed — the disk blocker §15 recorded is answered by the second SSD (and
+  the 2026-09-14 ruling that freed the 21 GB shell debug cache, `DECISIONS-PENDING.md`).
+- **Standing rule — the fixture's drive is a confound.** Any preregistration that **measures**
+  against the 5 GB fixture **discloses which drive the fixture was read from (C: or D:)** in its
+  Disclosure section, as a confound — a different physical disk has different read characteristics,
+  and a measurement that does not name the drive cannot be compared against one that ran from the
+  other. This is a disclosure duty, not a docs/08 row: it constrains no number, it only names the
+  condition under which a number was read (`docs/PREREGISTRATION-TEMPLATE.md` carries the reminder).
 
 
 ## §16. Telegram alerts — one-way; `AskUserQuestion` stays the answer channel
 
 `scripts/hooks/telegram.mjs` sends one plain-text message to the Telegram Bot API (`sendMessage`) using Node's `https` only. The bot token comes from `CUSTODIAN_TELEGRAM_BOT_TOKEN` and the chat id from `CUSTODIAN_TELEGRAM_CHAT_ID` — **environment variables only, never in the tree, never logged**; unset → no-op. **One message per blocking event:** a dedupe file under `.claude/state/` suppresses a repeat of the same key within ten minutes. Senders: (a) a `Notification` hook on the types where Claude is blocked on the human — `permission_prompt`, `idle_prompt`, `agent_needs_input`, `quota_auto_resume_stale`, `quota_auto_resume_disabled` (Appendix B lists the verified matcher values; the reference says a Notification hook's "Exit code and stderr are ignored", so it decides nothing); (b) the Stop hook when it allows a stop because only human-blocked nodes remain, or because of the halt switch — the message lists the waiting items with kind and minutes. Telegram never carries an answer: rulings arrive only through `AskUserQuestion` (§4).
+
+**The round mirror (Appendix A3, the Telegram part).** A third sender, `scripts/hooks/questions-mirror.mjs` (it ships on `governance/telegram-round-mirror`, PR #69, and is runnable once that is on `main`),
+runs **before the first `AskUserQuestion` of a round** (§4's obligation) and sends the round file
+`state/questions/round-<n>.md` **as ONE message**. If the file exceeds Telegram's **4096-character**
+limit, it is sent **as a document (`sendDocument`)** with a short summary message above it — never
+split into several `sendMessage` chunks, so the sequence forwards and pastes cleanly. Same transport
+discipline as the alerts above: Node's `https` only; token and chat id from the environment
+(`CUSTODIAN_TELEGRAM_BOT_TOKEN`, `CUSTODIAN_TELEGRAM_CHAT_ID`), never in the tree, never logged;
+unset → no-op. **This message carries no answer and reads none back:** it exists so the human can
+read and copy the round on the phone; the ruling itself still arrives only through `AskUserQuestion`
+(§4). The mirror's content is the same plain text §4 pins (item number, red-line marker, digest,
+numbered options with descriptions, blank-line-plus-`---` between items, ask order preserved).
 
 ## §17. The ledger is tracked — `state/`
 
@@ -194,6 +297,73 @@ If the file exists — locally, or on `origin/main` (so the human can halt from 
 ## §20. The human's own repository settings (recorded here; not the custodian's to set)
 
 Branch protection on `main` and a `v*` tag ruleset — required CI and DCO checks, no force-push, no deletion; secret scanning with push protection; Dependabot alerts; **a patch-bump precedent for the custodian** (recorded in `PRECEDENTS.md` with its scope marked "to be confirmed by the human": a dependency change is a red line, and the precedent narrows it only as far as the human's words go). Off-repo, the human's: an external drive and a monthly disk image.
+
+## §21. Proportionate gating (the human's third directive, Appendix A3)
+
+The human's third directive, verbatim (Appendix A3, the speed-work part): *"Proportionate gating
+written into AUTONOMY: full two-agent gating for ADR/security/data-plane/guarantee changes; a single
+combined gate and a five-line preregistration for docs, tests and polish under a declared size
+threshold."* Written precisely below. **This section loosens no red line** — `AI_DEVELOPMENT.md`
+Amendment 1 §B's "Always the human" list stands in full, and a proportionate gate is never a
+substitute for a human ruling that list reserves.
+
+### §21a. FULL gating — reviewer AND architect, both to an affirmative PASS
+
+Required whenever a change touches **any** of:
+
+- an **ADR** status line or an ADR amendment (also a §B red line — the gate does not replace the
+  human's acceptance, it precedes it);
+- **security posture** — anything ADR-020 (config/origin), ADR-009 (license/open-core boundary,
+  visibility) or ADR-021 (bundling / no-runtime-fetch) governs;
+- the **data plane or the wire** — any SKP control- or data-plane message, literal, or field
+  (`protocol/skp/**`), or an MCP-adapter surface;
+- a **stated guarantee or invariant** — a documented never-block/never-queue contract, a
+  cancellation guarantee (ADR-018), an undo class (ADR-006), a copy-minimisation claim (ADR-004),
+  a CRS-is-a-type invariant, or any property currently under test;
+
+**OR** whenever the change **exceeds the size threshold in §21c**, whatever it touches. Under full
+gating the piece carries the full preregistration shape (`docs/PREREGISTRATION-TEMPLATE.md`) and
+**both** the reviewer and the architect must reach an affirmative PASS; either agent's block holds
+the piece, exactly as today.
+
+### §21b. SINGLE combined gate — one reviewer, plus a five-line preregistration
+
+Allowed **only** for **docs, tests, and polish** that touch **none** of §21a's four categories
+**and** stay under §21c's threshold. In that case: **one reviewer** covers **both** the code review
+**and** a light constitution check (the cite / ADR-018 vocabulary / red-line scan an architect would
+otherwise front), and **no separate architect gate is opened**. The piece carries the **five-line
+preregistration** of §21d instead of the full shape. If anything in §21a is discovered mid-piece —
+a wire touch, a guarantee change, a new exposure surface — the single-gate route closes: the piece
+stops and re-enters full gating (the same shape as Amendment 1 §A's "newly discovered semantic →
+stop and queue").
+
+### §21c. The size threshold — the custodian's stated choice, citing the directive
+
+The directive names "a declared size threshold" and leaves the number to the custodian. **The
+custodian declares it as: ≤ 150 changed lines of non-generated code across ≤ 8 files, with no new
+exposure surface, no new dependency, and no new user-visible behaviour.** Generated files
+(`CUSTODIAN-QUEUE.*`, `site/**`, lockfiles) do not count toward the line or file budget; a diff that
+crosses any one of the four bounds takes full gating (§21a) regardless of its category. **This
+number is the custodian's stated choice under the directive, not the human's ruling — it is the
+human's to adjust at any time by a one-line note**, and until then it holds as declared.
+
+### §21d. The five-line preregistration (literal template)
+
+A single-gate piece pre-declares exactly these five lines, committed before code (the same
+before-code discipline the full preregistrations keep). The long form of this template lives in
+`docs/PREREGISTRATION-TEMPLATE.md`; the five-line short form is:
+
+```
+Authority: <the node id / ruling / directive that authorises this piece>
+Scope: <files, <= 8; declared line budget, <= 150 non-generated>
+Change: <what the diff does, in one sentence — the observable delta>
+Tests+mutation: <the test(s) added or changed, and the one mutation per new test that fails it by name>
+Out-of-scope: <the §21a categories this piece asserts it does not touch — ADR / security / wire / guarantee>
+```
+
+The `Out-of-scope` line is load-bearing: it is the custodian's written claim that §21a does not
+apply, and the single reviewer checks it first. A false `Out-of-scope` line is a block-on-sight for
+that reviewer, and the piece re-enters full gating.
 
 ## Appendix A2 — the second directive, verbatim as received (the human, 2026-09-13; it arrived with a duplicated numbering — the custodian's deduplicated reading is items 16–20 above)
 

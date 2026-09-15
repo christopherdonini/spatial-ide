@@ -72,6 +72,7 @@ in this table, as a new row, once one exists:
 | Location | Copied | Verified hash matches |
 |---|---|---|
 | *(none yet — blocked)* | 2026-09-06: no second physical location is available on this machine to copy to *(wording generalised 2026-09-07 per DECISIONS-PENDING entry 49 F-12(d); the technical fact — one copy, regenerable — is unchanged)*. Held until one is available; the fixture's DR story remains its deterministic regenerability (above) meanwhile. | — |
+| D: — the second internal SSD (`AUTONOMY.md` §15a, the human's third directive, Appendix A3) | 2026-09-14/15: after the D: migration, `target/` is a directory junction to `D:\spatial-ide\target`, so the canonical fixture at the pinned `Path` above now physically lives on D:; a second physical copy is held on C: at `C:\Users\Public\spatial-ide-fixtures\parcels-5gb.parquet`. Two physical disks, either loss survivable. | **2026-09-15: verified — MATCH.** Both physical copies were re-hashed against the recorded SHA-256 above and both equal it (`5ae955c5…1788`): the canonical on D: (`target/slice-evidence/scale-pass/parcels-5gb.parquet`, 5,004,376,705 B) and the C: backup (`C:\Users\Public\spatial-ide-fixtures\parcels-5gb.parquet`, 5,004,376,705 B). Recorded in the ledger `state/CUT-STATE.md` (verification commit `3fd4293`). The migration's irreversible `rmdir` cost nothing. The cross-machine/cross-toolchain caveat still applies to any *future* regeneration on D:'s own toolchain — re-verify and record any mismatch then. |
 
 **Location note (2026-09-06):** this file's `Path` field still reads `target/slice-evidence/…`
 because the fixture has NOT been relocated — relocating fixtures out of `target/` is a scoped
@@ -79,3 +80,13 @@ because the fixture has NOT been relocated — relocating fixtures out of `targe
 instead by the AI_DEVELOPMENT.md clean-discipline mechanic (never wholesale-clean `target/`;
 reclaim only `debug/`+`release/`+`src-tauri/target`). The fixture is therefore safe from routine
 disk reclaims where it sits.
+
+**Location note (2026-09-14) — the single-point-of-failure concern is RESOLVED.** A second internal
+SSD is now installed as **D:** (`AUTONOMY.md` §15a, the human's third directive, Appendix A3), and a
+second physical copy of this fixture lives there — a second physical **disk**, so the loss of either
+drive no longer loses the fixture. The 2026-09-02 framing "no other known copies exist … the one
+true copy on this machine" and the blocked-backup row above are kept as history; they are answered by
+the D: copy (new table row, above). Two lines of defence now stand: the D: second-disk copy, and the
+generator's deterministic regenerability (confirmed twice, above) as the deeper story. The
+cross-machine/cross-toolchain caveat above still applies to any regeneration on D:'s own toolchain —
+re-verify the hash there and record any mismatch, exactly as for any other machine.
