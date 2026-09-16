@@ -35,7 +35,42 @@ pub enum IdSource {
     File,
     /// A caller-declared mapping from a named source column.
     Mapped { column: String, by: String, at: String },
+    /// **The session tier** — the third identity class (R-I3,
+    /// `engine/ADMISSION-PREREGISTRATION.md` §2d; the proposed ADR-016 Amendment 1, point 1).
+    ///
+    /// Reached when neither a native `id` column nor a caller declaration yields an admissible
+    /// identity on a **single-file** source. Identity is the pair (dataset-session generation,
+    /// [`FILE_ROW_NUMBER_COLUMN`]) and the ordinal has no meaning outside the generation it was
+    /// read under — which is why this variant carries no value of its own: the generation is
+    /// **kernel and client state**, minted per open, never persisted, never published, and never on
+    /// the wire (§13 D; block-on-sight A2).
+    ///
+    /// **No whole-file read, no content hash, no uniqueness scan** happens to reach it (boundary
+    /// 6). What makes the ordinals distinct within one generation is where they come from, not a
+    /// scan — see [`IdUniqueness::ByConstructionWithinGeneration`].
+    SessionOrdinal,
 }
+
+/// DuckDB's physical file-row ordinal on the `read_parquet` path.
+///
+/// **Verified available against the vendored crate before any session-ordinal code was written**
+/// (`ADMISSION-PREREGISTRATION.md` §13 F's escalation gate) — see
+/// `engine/tests/session_identity.rs::the_vendored_duckdb_exposes_file_row_number_on_read_parquet`,
+/// which is the standing form of that probe rather than a note about one.
+///
+/// **That this ordinal is physical rather than scan-ordered is the assumption the session tier
+/// rests on** (the proposed ADR-016 Amendment 1, point 1; its block-on-sight 5). **The engine
+/// performs no such check at open**, and this const claims nothing about one: the evidence is a
+/// test's own local helper — the `pairs` closure at `engine/tests/session_identity.rs:136-142`,
+/// inside `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture`
+/// (`engine/tests/session_identity.rs:126-159`), which asserts the property on one written fixture
+/// and nothing beyond that file. A
+/// prose cite, not an intra-doc link: a test is not part of this crate's public item tree, and the
+/// `pub fn` this sentence used to link to (`dataset::ordinal_is_physical_not_scan_ordered`) was
+/// deleted under the caller rule — it had no product caller and, because it ran two queries, the
+/// instrument-accessor exemption did not cover it (Amendment 4 (iii)). The corpus-wide form runs at
+/// **P4** and nothing here claims its result in advance.
+pub const FILE_ROW_NUMBER_COLUMN: &str = "file_row_number";
 
 impl IdSource {
     /// The envelope value. `mapped:` carries the column, because a consumer handed two identity
@@ -44,6 +79,9 @@ impl IdSource {
         match self {
             Self::File => format!("file:{}", crate::envelope::ID_COLUMN),
             Self::Mapped { column, .. } => format!("mapped:{column}"),
+            // Deliberately names the ordinal's origin and not a generation: the value that
+            // namespaces it is not the engine's to carry (§13 D).
+            Self::SessionOrdinal => format!("session-ordinal:{FILE_ROW_NUMBER_COLUMN}"),
         }
     }
 
@@ -51,7 +89,15 @@ impl IdSource {
         match self {
             Self::File => crate::envelope::ID_COLUMN,
             Self::Mapped { column, .. } => column,
+            Self::SessionOrdinal => FILE_ROW_NUMBER_COLUMN,
         }
+    }
+
+    /// Whether this identity is the session tier. Asked by the sites that must behave differently
+    /// for it (the identity scan that does not run, the statement `describe` carries), so that
+    /// neither has to re-derive the class from a string.
+    pub fn is_session_ordinal(&self) -> bool {
+        matches!(self, Self::SessionOrdinal)
     }
 }
 
@@ -66,6 +112,17 @@ pub enum IdUniqueness {
     VerifiedAtOpenFullFile,
     /// Declared by the caller and **not** checked. Reachable only by explicit opt-out.
     DeclaredNotVerified,
+    /// **A third what-was-checked value, from the PROPOSED ADR-016 Amendment 1, point 1** — the
+    /// accepted ADR's §6 lists two, and that amendment binds nothing until the human accepts it at
+    /// P6. It is emitted because this cut implements the tier: the ordinals are
+    /// distinct within one dataset-session generation **because of where they come from**, not
+    /// because anything counted them.
+    ///
+    /// §5's full-column uniqueness scan does **not** run on this path and this value must never be
+    /// reported as though it had. It says what the basis is and no more: the bare word "unique"
+    /// appears nowhere here, and nothing about this value extends across two generations — no
+    /// comparison of ordinals across generations is defined.
+    ByConstructionWithinGeneration,
 }
 
 impl IdUniqueness {
@@ -73,9 +130,23 @@ impl IdUniqueness {
         match self {
             Self::VerifiedAtOpenFullFile => "verified-at-open-full-file",
             Self::DeclaredNotVerified => "declared-not-verified",
+            Self::ByConstructionWithinGeneration => "by-construction-within-generation",
         }
     }
 }
+
+/// The statement `describe` carries beside `identity.class` for a session-tier dataset.
+///
+/// One constant, so the shell reads these bytes over the wire rather than retyping them (the P2
+/// architect's rule for the equirectangular sentence, applied to this sentence for the same
+/// reason). It states what the identity is, what it is not, and what ends it — and it makes **no
+/// snapshot claim** (A1): it says the identity does not outlive the open, never that the open reads
+/// one snapshot.
+pub const SESSION_IDENTITY_STATEMENT: &str =
+    "this dataset has no admissible identity column, so features are identified for this session \
+     only, by their position in the file. The identity does not survive this open, a reopen, or a \
+     change to the source, and it is never saved or published. Declare an identity column to get \
+     an identity that does.";
 
 /// A caller's declaration that a named column carries this dataset's feature identity.
 ///
@@ -122,6 +193,10 @@ pub struct DatasetIdentity {
     /// consumer see, from the envelope, whether narrowing would have been lossy — instead of
     /// finding out per value.
     max_value: Option<u64>,
+    /// The file's 64-bit integer columns, reported on the **session tier** so an operator can still
+    /// declare a mapping (R-I3's own sentence). Empty on the native and mapped paths, where the
+    /// list is carried by the refusal instead. Unranked and unpreselected, as it is there.
+    candidate_columns: Vec<String>,
 }
 
 /// Values at or above this cannot survive a round trip through a JS `Number` (ADR-016 §7).
@@ -134,7 +209,41 @@ impl DatasetIdentity {
         verified_rows: Option<u64>,
         max_value: Option<u64>,
     ) -> Self {
-        Self { source, uniqueness, verified_rows, max_value }
+        Self { source, uniqueness, verified_rows, max_value, candidate_columns: Vec::new() }
+    }
+
+    /// The session tier's identity — **R-I3**.
+    ///
+    /// `verified_rows` and `max_value` are `None` and that is the honest answer, not a gap: no scan
+    /// ran, so nothing was counted and no extreme value was observed. In particular
+    /// [`Self::js_exact`] stays `None` — the session tier establishes no width fact, and defaulting
+    /// it to `true` would claim one (ADR-016 §7).
+    pub(crate) fn new_session_ordinal(candidate_columns: Vec<String>) -> Self {
+        Self {
+            source: IdSource::SessionOrdinal,
+            uniqueness: IdUniqueness::ByConstructionWithinGeneration,
+            verified_rows: None,
+            max_value: None,
+            candidate_columns,
+        }
+    }
+
+    /// Columns an operator could declare a mapping to, on the session tier. Empty elsewhere.
+    ///
+    /// **An instrument: its only caller is the test suite**, and not `cfg(test)`-gated, for the
+    /// reason [`crate::descriptor::SourceDescriptor::footer_bytes_read`] is not — R-I3 requires the
+    /// ADR-016 candidate list to still be *recorded* on a session-tier open, and that has to be
+    /// true of the shipped build rather than of a test build. **No surface carries it to an
+    /// operator in P3a**: the refusal that used to carry it no longer fires on this path, and
+    /// `describe` may not gain a field for it (boundary 9's list is closed). Where it is owed is
+    /// recorded in `engine/ADMISSION-PREREGISTRATION.md`'s Amendment 4.
+    ///
+    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
+    /// 2026-09-16, round 5 item 4):
+    /// `engine/tests/session_identity.rs::a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis`
+    /// and `engine/tests/identity.rs::a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared`.
+    pub fn candidate_columns(&self) -> &[String] {
+        &self.candidate_columns
     }
 
     pub fn source(&self) -> &IdSource {

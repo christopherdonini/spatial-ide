@@ -25,7 +25,7 @@ describe("viewportQuery request shape", () => {
     await viewportQuery("ds_x", null, null, null);
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
-      request: { skp: "skp/0.2", dataset: "ds_x", bbox: null, bbox_crs: null, limit: null, filter: null },
+      request: { skp: "skp/0.3", dataset: "ds_x", bbox: null, bbox_crs: null, limit: null, filter: null },
     });
   });
 
@@ -37,7 +37,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.2",
+        skp: "skp/0.3",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,

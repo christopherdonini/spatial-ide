@@ -113,11 +113,28 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
 #[test]
 fn a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared() {
     let _wd = Watchdog::new("a_foreign_key_column_needs_a_declaration");
-    // The shape most real GeoParquet has, and the reason ADR-016 exists: refusal stays the
-    // default (§2)…
+    // The shape most real GeoParquet has, and the reason ADR-016 exists.
     let (path, facts) =
         write("foreign-key", &FixtureSpec { identity: IdentityMode::ForeignKeyColumn, ..small() });
-    assert!(matches!(Dataset::open(&path), Err(EngineError::IdentityUnusable { .. })));
+    // **Changed at Brief A P3 — R-I3, and this is the consequence the preregistration §12d put on
+    // the human's sight list by name** ("R-I3's consequence for files that today refuse
+    // `identity_unusable`"). This file used to refuse here. It now admits on the **session tier**:
+    // identity is (dataset-session generation, `file_row_number`), and the ADR-016 candidate list
+    // is still reported so the declaration below is still the route to an identity that outlives
+    // the open. The rest of this test — the mapped path and its full verification scan — is
+    // untouched, which is the half A4 protects.
+    let unmapped = Dataset::open(&path).expect("R-I3: a single-file keyless source now admits");
+    assert_eq!(*unmapped.identity().source(), IdSource::SessionOrdinal);
+    assert_eq!(
+        unmapped.identity().uniqueness(),
+        IdUniqueness::ByConstructionWithinGeneration,
+        "no scan ran, and the record says what the basis is rather than the bare word"
+    );
+    assert!(
+        unmapped.identity().candidate_columns().contains(&"parcel_key".to_string()),
+        "the candidate list is still reported so an operator can declare a mapping (R-I3)"
+    );
+    drop(unmapped);
 
     // …and a declaration redirects identity without weakening anything.
     let ds = Dataset::open_with_declared_identity(&path, declare("parcel_key"), &CancelToken::new())

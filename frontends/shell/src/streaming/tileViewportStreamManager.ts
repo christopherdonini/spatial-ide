@@ -14,6 +14,7 @@ import { encodeHexF64 } from "../skp/codec";
 import { cancel as skpCancel, SkpCallError, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
+import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
 import { dataPlaneAttach } from "./dataPlaneClient";
 import type { StreamSink, Terminal } from "./transport";
 
@@ -187,7 +188,11 @@ export type TilePlanOutcome =
     }
   /** `onCameraChange` called before `establishGridFrame` ever ran -- nothing to plan against yet. */
   | { kind: "no-frame" }
-  | { kind: "stopped" };
+  | { kind: "stopped" }
+  /** Brief A boundary 4: this dataset's session ended because its source was observed to have
+   * changed. Distinct from `"stopped"`, which is an ordinary teardown -- this one means the data
+   * this manager was serving is gone, and the only way forward is to reopen the dataset. */
+  | { kind: "session-ended" };
 
 function toWireBbox(bbox: AuthoritativeBbox): Bbox {
   return {
@@ -311,9 +316,22 @@ function isRetryableRefusal(err: unknown): boolean {
 type TileRequestState = "queued" | "issuing" | "in-flight";
 
 export class TileViewportStreamManager {
+  /**
+   * **The dataset-session generation, mirrored by live-ticket set** (Brief A boundary 4; §13 D) --
+   * the tiled arm's own instance of `ViewportStreamManager`'s, holding every tile's ticket rather
+   * than one. Invalidation clears all of them at once, which is what the generation being *per
+   * dataset-session* means: a change to the source does not end one tile, it ends the session.
+   *
+   * Deliberately not named `generation`: `issueEpoch` beside it is this manager's own per-tile
+   * supersede counter and an unrelated fact.
+   */
+  private readonly liveTickets = new LiveTicketSet();
   private frame: TileGridFrame | null = null;
   private readonly level: TileGridLevel;
   private stopped = false;
+  /** Brief A boundary 4: latched the moment a terminal carries `engine.source_changed`. Permanent
+   * for this manager -- reopening the dataset builds a new one. */
+  private sessionEnded = false;
   private overBudgetFlag = false;
   // S2 (reviewer gate, close-out fix piece): a THUNK, not an eagerly-computed array -- see
   // `setOverBudget`'s own doc comment for why. Defaults to a constant empty-array thunk so this
@@ -465,6 +483,10 @@ export class TileViewportStreamManager {
    */
   onCameraChange(bbox: AuthoritativeBbox, filter: Filter | null = null): TilePlanOutcome {
     if (this.stopped) return { kind: "stopped" };
+    // Latched by `endSession`: nothing is re-requested after the source was observed to have
+    // changed. Checked before `frame`, because a session that ended is a stronger fact than a
+    // manager that has not been given a frame yet.
+    if (this.sessionEnded) return { kind: "session-ended" };
     const frame = this.frame;
     if (frame === null) return { kind: "no-frame" };
     this.currentFilter = filter;
@@ -671,6 +693,34 @@ export class TileViewportStreamManager {
     this.requeuedTiles.clear();
   }
 
+  /**
+   * **End the dataset session: the source was observed to have changed** (boundary 4).
+   *
+   * Idempotent -- several tiles' terminals can carry the same code, and a session ends once.
+   *
+   * **What it does**: every ticket leaves the live set, so a batch still on the wire for any of them
+   * is refused by `onBatch`'s live check; every in-flight and queued tile is dropped through the
+   * existing `clearAll`; and this manager latches closed, so `onCameraChange` returns
+   * `"session-ended"` and plans nothing further until the dataset is reopened (which builds a new
+   * manager). `detail` is the terminal's own text, logged and not otherwise acted on here.
+   *
+   * **What it does NOT do, and what P3a therefore does not claim.** It does not clear residency and
+   * it does not refuse picks. Both live with the owner (`candidateArmSession.ts` /
+   * `App.tsx`) -- `TileResidencyAccessor` can answer about one tile but cannot enumerate the
+   * resident set, and this manager has no pick surface at all. Wiring the owner is **P3b**'s, by
+   * the human's ruling of 2026-09-16 (round 4). What an operator sees today is that this manager
+   * stops filling and that stale batches are dropped; the view it already holds stays.
+   */
+  private endSession(detail: string): void {
+    if (this.sessionEnded) return;
+    this.sessionEnded = true;
+    this.liveTickets.invalidate();
+    // No resident-key hint: this manager does not hold the resident set. Clearing what the owner
+    // holds is P3b's; `clearAll` here drops only this manager's own queued and in-flight work.
+    this.clearAll();
+    logSessionEvent("warn", `tile-session-ended-source-changed: ${detail}`);
+  }
+
   /** Cancels the active stream (if any) for a specific tile, wherever it is in this manager's own
    * lifecycle -- mirrors `ViewportStreamManager.cancelStream`'s "regardless of whether it is
    * currently active" contract, restated per-tile. */
@@ -810,6 +860,10 @@ export class TileViewportStreamManager {
    * finds nothing left in `tileState`/`queue` and bumps the epoch a second time, which is idempotent.
    */
   private drainQueueIfRoom(): void {
+    // Brief A boundary 4: once the session has ended, nothing is issued — including from this
+    // path, which `cancelTileStream` reaches on its way out and which would otherwise refill the
+    // slots `endSession`'s own `clearAll` was in the middle of emptying.
+    if (this.sessionEnded) return;
     if (this.overBudgetFlag) return;
     while (this.queue.length > 0 && this.activeSlotCount() < MAX_IN_FLIGHT_TILE_STREAMS) {
       const key = this.queue.shift()!;
@@ -919,6 +973,9 @@ export class TileViewportStreamManager {
 
     this.tileState.set(tileKey, "in-flight");
     this.inFlightStreams.set(tileKey, { streamHandle: ticket.stream });
+    // Minted under the dataset's live generation (the kernel refuses otherwise), so admitted to the
+    // client's mirror at the mint site -- the same place and the same rule as the untiled arm.
+    this.liveTickets.admit(ticket.stream);
     this.nextBatchSeqByStream.set(ticket.stream, 0);
     const streamHandleAtStart = ticket.stream;
     // Entry 87 §2.4(4) reviewer fix: named ONLY when this mint spent its bounded retry -- see
@@ -930,6 +987,11 @@ export class TileViewportStreamManager {
     const sink: StreamSink = {
       onOpen: () => {},
       onBatch: (payload) => {
+        // **Brief A P3, boundary 4**: the live-ticket check, before the supersede check and for a
+        // different reason -- this one says the ticket no longer belongs to a live dataset-session
+        // generation. A batch dropped here must never repopulate a tile. No generation value is
+        // consulted, because this client is never told one (§13 D, A2).
+        if (!this.liveTickets.isLive(streamHandleAtStart)) return;
         if (this.inFlightStreams.get(tileKey)?.streamHandle !== streamHandleAtStart) return;
         // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only, the
         // candidate arm's own analogue of `viewportStreamManager.ts`'s identical hook -- the earliest
@@ -949,6 +1011,22 @@ export class TileViewportStreamManager {
           this.tileState.delete(tileKey);
         }
         this.nextBatchSeqByStream.delete(streamHandleAtStart);
+        this.liveTickets.retire(streamHandleAtStart);
+        // **The manager's own half of the invalidation path.** One tile's terminal naming
+        // `engine.source_changed` ends the whole session, because the generation is per
+        // dataset-session and not per tile: every ticket leaves the live set, this manager's queued
+        // and in-flight work is cancelled, and it latches closed.
+        //
+        // **Residency is NOT cleared and picks are NOT refused by this, and P3a claims neither.**
+        // Both live with the owner (`candidateArmSession.ts` / `App.tsx`), which this piece does not
+        // wire -- that is P3b's (`state/NEXT-CUT.md`'s split row: "P3a claims nothing about boundary
+        // 4's owner-side consequences"; P3b carries "residency cleared and picks refused in both
+        // owners"). Nothing here, and no test narration, may say the operator's view is cleared:
+        // what is true today is that this manager stops filling it and that stale batches are
+        // dropped.
+        if (isSourceChangedTerminal(terminal)) {
+          this.endSession(terminal.detail);
+        }
         if (this.selfCancelledHandles.delete(streamHandleAtStart)) {
           this.drainQueueIfRoom();
           return;

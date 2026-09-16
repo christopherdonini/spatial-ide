@@ -13,6 +13,7 @@ import {
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
+import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
 import { dataPlaneAttach } from "./dataPlaneClient";
 import type { StreamSink, Terminal } from "./transport";
 
@@ -57,7 +58,11 @@ export type RequestOutcome =
   | { kind: "issued"; streamHandle: string }
   | { kind: "throttled" }
   | { kind: "superseded" }
-  | { kind: "stopped" };
+  | { kind: "stopped" }
+  /** Brief A boundary 4: this dataset's session ended because its source was observed to have
+   * changed. Distinct from `"stopped"`, which is an ordinary teardown -- this one means the data
+   * this manager was serving is gone, and the only way forward is to reopen the dataset. */
+  | { kind: "session-ended" };
 
 /**
  * Viewport-driven streaming with supersede-on-pan (NEXT-CUT.md item 3; architect review D3.7).
@@ -72,6 +77,18 @@ export type RequestOutcome =
  * else knows that handle exists) and does nothing else -- it never touches `currentStreamHandle`.
  */
 export class ViewportStreamManager {
+  /**
+   * **The dataset-session generation, mirrored by live-ticket set** (Brief A boundary 4; §13 D).
+   *
+   * Deliberately **not** named `generation` and deliberately a separate member from
+   * `this.generation` below, which is this manager's own supersede counter and an unrelated fact.
+   * Conflating the two would make a pan drop batches as though the file had changed, and a changed
+   * file look like a pan.
+   */
+  private readonly liveTickets = new LiveTicketSet();
+  /** Brief A boundary 4: latched the moment a terminal carries `engine.source_changed`. Permanent
+   * for this manager -- reopening the dataset builds a new one. */
+  private sessionEnded = false;
   private currentStreamHandle: string | null = null;
   /**
    * The stream handle whose batches are believed resident on the canvas right now, or `null`.
@@ -131,6 +148,11 @@ export class ViewportStreamManager {
     nowMs: number = Date.now(),
     filter: Filter | null = null
   ): Promise<RequestOutcome> {
+    if (this.sessionEnded) {
+      // Brief A boundary 4: nothing is re-issued after the source was observed to have changed.
+      // Checked before `stopped` because it is the more specific fact about why.
+      return { kind: "session-ended" };
+    }
     if (this.stopped) {
       return { kind: "stopped" };
     }
@@ -159,6 +181,9 @@ export class ViewportStreamManager {
     this.currentStreamHandle = stream;
     this.residentStreamHandle = stream;
     this.nextBatchSeq = 0;
+    // The ticket was minted under the dataset's live generation (the kernel refuses to mint one
+    // otherwise), so it is admitted to the client's mirror here, at the mint site.
+    this.liveTickets.admit(stream);
 
     const attach = await dataPlaneAttach();
     if (myGeneration !== this.generation) {
@@ -190,6 +215,19 @@ export class ViewportStreamManager {
         // Admitted only if this is still the active stream. A batch that arrives after its stream
         // was superseded is dropped here, never handed to the canvas -- this is the check D3.7's
         // acceptance criterion asks to be asserted rather than eyeballed.
+        // **Brief A P3, boundary 4: the live-ticket mirror, beside the supersede drop below and
+        // deliberately before it.** The two drops are different facts. Supersede means "a newer
+        // query replaced this one"; this means "this ticket no longer belongs to a live
+        // dataset-session generation, because the source was observed to have changed". A batch
+        // dropped here must never repopulate the canvas, and it is dropped without consulting any
+        // generation value -- this client is never told one (§13 D, A2).
+        if (!this.liveTickets.isLive(streamHandleAtStart)) {
+          logSessionEvent(
+            "debug",
+            `stream-batch-dropped-not-live: ${streamHandleAtStart}: its ticket is not in the live set`
+          );
+          return;
+        }
         if (this.currentStreamHandle !== streamHandleAtStart) {
           // P1d suggestion 10: `payload` HAS already arrived over the wire at this point -- only
           // forwarding it is skipped. Counted here (DEV-gated, same discipline as
@@ -215,6 +253,29 @@ export class ViewportStreamManager {
       onTerminal: (terminal) => {
         if (this.currentStreamHandle === streamHandleAtStart) {
           this.currentStreamHandle = null;
+        }
+        // This ticket is over, whichever terminal it reached; no further batch for it is expected.
+        this.liveTickets.retire(streamHandleAtStart);
+        // **What this manager does when the kernel reports the source changed -- and what P3a does
+        // NOT claim.** A terminal naming `engine.source_changed` says the dataset-session
+        // generation ended, at a stream's post-check. This manager drops every ticket it holds (so
+        // any batch still on the wire is refused by `onBatch`'s live check above), forgets the
+        // handles it was tracking, and latches closed so nothing is re-issued.
+        //
+        // **Residency is NOT cleared and picks are NOT refused by this, and P3a claims neither.**
+        // Both live with the owner (`App.tsx` / `candidateArmSession.ts`), which this piece does not
+        // wire -- that is P3b's, by the human's ruling of 2026-09-16 (round 4). Nothing here, and no
+        // test narration, may say the operator's view is cleared: what is true today is that this
+        // manager stops feeding it and that stale batches are dropped.
+        if (isSourceChangedTerminal(terminal)) {
+          this.sessionEnded = true;
+          this.liveTickets.invalidate();
+          this.residentStreamHandle = null;
+          this.currentStreamHandle = null;
+          logSessionEvent(
+            "warn",
+            `session-ended-source-changed: ${streamHandleAtStart}: ${terminal.detail}`
+          );
         }
         // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
         // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the

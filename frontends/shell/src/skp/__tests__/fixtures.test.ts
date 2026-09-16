@@ -98,7 +98,7 @@ describe("SKP v0 shared fixtures", () => {
     const res = loadFixture<DescribeResponse>("v0-describe-response");
     assertExactKeys(
       res,
-      ["source", "crs", "geometry", "identity", "schema", "covering_bbox", "row_count", "extent", "license"],
+      ["source", "crs", "geometry", "identity", "schema", "covering_bbox", "row_count", "extent", "license", "sanity"],
       "describe response"
     );
     assertExactKeys(res.source, ["path_display", "geoparquet_version"], "describe response .source");
@@ -113,6 +113,10 @@ describe("SKP v0 shared fixtures", () => {
         "definition_provenance",
         "axis_order",
         "axis_normalization",
+        // skp/0.3, Brief A boundary 9
+        "provenance",
+        "axis_provenance",
+        "display_convention",
       ],
       "describe response .crs"
     );
@@ -124,7 +128,7 @@ describe("SKP v0 shared fixtures", () => {
     );
     assertExactKeys(
       res.identity,
-      ["source", "uniqueness", "verified_rows", "max_value", "js_exact"],
+      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement"],
       "describe response .identity"
     );
     for (const [i, field] of res.schema.entries()) {
@@ -148,6 +152,81 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.row_count.basis).toBe("identity-uniqueness-scan-full-file");
     expect(res.row_count.value).toBe("100000");
     expect(res.identity.js_exact).toBe(true);
+    // skp/0.3, Brief A boundary 9: the four additions, in their unpopulated shape on a
+    // file-declared, natively-identified dataset.
+    assertExactKeys(res.sanity, ["level", "reason"], "describe response .sanity");
+    expect(res.crs.provenance).toBe("crs:declared");
+    expect(res.crs.axis_provenance).toBe("axis:declared");
+    expect(res.crs.display_convention).toBeNull(); // not a degrees dataset
+    expect(res.identity.class).toBe("native");
+    expect(res.identity.session_statement).toBeNull();
+    // A sanity check convicts, never confirms: "none" is *not checked*, and no string here says a
+    // file passed, is valid, or was verified (Brief A settled boundary 2).
+    expect(res.sanity.level).toBe("none");
+    expect(res.sanity.reason).toMatch(/not checked/i);
+    expect(res.sanity.reason).not.toMatch(/passed|valid|verified/i);
+  });
+
+  // Mutation: add a generation member to the describe response shape and populate the fixture.
+  // Expected failure: "describe response for a session-ordinal dataset carries the tier, its
+  // statement and the P2-held display convention -- and no generation value" fails its A2 sweep.
+  it("describe response for a session-ordinal dataset carries the tier, its statement and the " +
+    "P2-held display convention -- and no generation value (skp/0.3, Brief A boundary 9)", () => {
+    const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    expect(res.identity.class).toBe("session-ordinal");
+    expect(res.identity.source).toBe("session-ordinal:file_row_number");
+    expect(res.identity.uniqueness).toBe("by-construction-within-generation");
+    // Nothing was counted, so nothing is claimed -- `null` is the honest answer, not a gap.
+    expect(res.identity.verified_rows).toBeNull();
+    expect(res.identity.js_exact).toBeNull();
+    expect(res.identity.session_statement).toBeTruthy();
+    // A1: the statement says the identity does not outlive the open. It never says the open read
+    // one snapshot, and no string on this response does.
+    expect(res.identity.session_statement).toContain("does not survive this open");
+    // The equirectangular sentence travels over the wire from the Rust constant. This test asserts
+    // its bytes are carried; it is deliberately the only place in this frontend that quotes it, and
+    // it quotes it from the fixture rather than retyping it into rendering code.
+    expect(res.crs.display_convention).toBe(
+      "no coordinate value is transformed; the display convention is equirectangular"
+    );
+    expect(res.crs.provenance).toBe("crs:format-default");
+
+    // **A2 on the wire**: no generation value anywhere on this response. The word itself is not
+    // banned and cannot be -- ADR-016 §6's record value is literally
+    // `by-construction-within-generation`, a label for a basis and not a value -- so the assertion
+    // is that `dataset_session_generation` appears nowhere and every occurrence of the word is that
+    // one label.
+    const text = JSON.stringify(res);
+    expect(text).not.toContain("dataset_session_generation");
+    expect(text.match(/generation/g)?.length ?? 0).toBe(
+      text.match(/by-construction-within-generation/g)?.length ?? 0
+    );
+    expect(text.toLowerCase()).not.toContain("snapshot");
+  });
+
+  // Mutation: drop the `detail` field from the source_changed fixture. Expected failure:
+  // "the three new typed refusals carry their code and detail (skp/0.3)" fails -- a client that
+  // must clear residency on a specific component change would have only prose to read.
+  it("the three new typed refusals carry their code and detail (skp/0.3)", () => {
+    const changed = loadFixture<SkpError>("v0-error-source_changed");
+    expect(changed.code).toBe("engine.source_changed");
+    // The detail names every descriptor component that differed, not the first one.
+    expect(changed.fields.detail).toBe("{size, mtime, footer-length, footer-hash}");
+    // The message carries boundary 4's limitation in that boundary's own words, and claims nothing
+    // more (A1).
+    expect(changed.message).toContain("does not establish snapshot consistency");
+    expect(changed.message).toContain("cannot detect every in-place modification");
+    expect(changed.message).not.toContain("reads one snapshot");
+
+    for (const name of [
+      "v0-error-identity_ordinal_partitioned_unsupported",
+      "v0-error-internal_inconsistency",
+    ]) {
+      const err = loadFixture<SkpError>(name);
+      assertExactKeys(err, ["code", "message", "fields"], name);
+      expect(err.code.startsWith("engine.")).toBe(true);
+      expect(err.fields.detail).toBeDefined();
+    }
   });
 
   it("describe response with a caller-asserted CRS carries a populated definition_provenance " +
@@ -164,6 +243,10 @@ describe("SKP v0 shared fixtures", () => {
         "definition_provenance",
         "axis_order",
         "axis_normalization",
+        // skp/0.3, Brief A boundary 9
+        "provenance",
+        "axis_provenance",
+        "display_convention",
       ],
       "describe response (caller-asserted) .crs"
     );

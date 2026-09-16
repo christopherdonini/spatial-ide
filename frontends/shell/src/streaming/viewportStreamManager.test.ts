@@ -16,6 +16,7 @@ vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 import { debounce } from "./debounce";
 import type { StreamSink } from "./transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS, ViewportStreamManager } from "./viewportStreamManager";
+import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 
 function mockStream(handle: string) {
   viewportQueryMock.mockResolvedValueOnce({ stream: handle, expires_in_ms: 30_000 });
@@ -598,5 +599,109 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
       expect(onStreamOpened).toHaveBeenCalledWith("sh_b");
     });
+  });
+});
+
+/**
+ * **Brief A settled boundary 4, in the untiled arm** — P3 gate attempt 1, blocking finding 1.
+ *
+ * Attempt 1's client test invented a terminal shape (`code: prose`) that the kernel never produces,
+ * so it passed while the real path could not fire at all. Every terminal here is built by
+ * `sourceChangedTerminal`, whose bytes come from `testUtils/terminalShapes.ts` -- captured from a real
+ * `cargo test` run and pinned by exact equality on the producing side
+ * (`kernel/tests/typed_terminal_codes.rs`), never transcribed by hand.
+ */
+describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset();
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock
+      .mockReset()
+      .mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock
+      .mockReset()
+      .mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  /** The kernel's real terminal shape for this refusal. */
+  /** The kernel's real terminal shape for this refusal -- the bytes
+   * `kernel/tests/typed_terminal_codes.rs` pins by exact equality, not a transcription. */
+  function sourceChangedTerminal(): { kind: "ProducerFailed"; detail: string } {
+    return { kind: "ProducerFailed", detail: REAL_SOURCE_CHANGED_TERMINAL_DETAIL };
+  }
+
+  /** Mutation recorded in-source: dropping the `terminal_detail_of` prefix kernel-side (so the
+   * detail is `Display` text alone) makes `isSourceChangedTerminal` false and fails every
+   * assertion below -- which is exactly the defect attempt 1 shipped. */
+  it("drops its tickets, refuses further requests, and returns session-ended", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const onSuperseded = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+    await manager.requestViewport(null, null, 1_000);
+
+    const terminal = sourceChangedTerminal();
+    sinkFor(0).onTerminal(terminal);
+
+    // The handles this manager was tracking are dropped.
+    expect(manager.activeStreamHandle).toBeNull();
+
+    // **What P3a does NOT assert, stated so nobody reads it in.** Nothing here claims the
+    // operator's residency is cleared or that picks are refused: this manager neither holds the
+    // resident geometry nor has a pick surface, and the owner that has both is not wired in this
+    // piece. That is P3b's (the human's ruling of 2026-09-16, round 4). What is true today, and
+    // all that is asserted, is that this manager stops issuing and drops stale batches.
+
+    // Refused until reopen: nothing is re-issued, and no second ticket is minted.
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /** A batch still on the wire for a ticket minted before the change must never reach the canvas
+   * -- boundary 4's "late results never repopulate the canvas".
+   *
+   * Mutation recorded in-source: removing the `liveTickets.isLive` guard from `onBatch` lets this
+   * late batch through and fails the assertion. */
+  it("drops a batch that arrives after the session ended", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+
+    const sink = sinkFor(0);
+    sink.onBatch(new Uint8Array([1, 2, 3]), true);
+    expect(onBatch).toHaveBeenCalledTimes(1);
+
+    sink.onTerminal(sourceChangedTerminal());
+    onBatch.mockClear();
+    // The old socket delivering late, which is the whole race this guard exists for.
+    sink.onBatch(new Uint8Array([4, 5, 6]), true);
+    expect(onBatch).not.toHaveBeenCalled();
+  });
+
+  /** An ordinary cancel is NOT a source change -- §13 C rule (ii), on the client side. A pan that
+   * supersedes must not look like a file that changed.
+   *
+   * Mutation recorded in-source: relaxing `isSourceChangedTerminal` to a substring search over the
+   * whole detail, or matching on the prose instead of the code, breaks this. */
+  it("an ordinary cancelled terminal does not end the session", async () => {
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded: vi.fn(),
+    });
+    await manager.requestViewport(null, null, 1_000);
+
+    sinkFor(0).onTerminal({ kind: "Cancelled", detail: "engine.cancelled: cancelled" });
+
+    // And the manager is still usable: the next request is subject to the ordinary issue-rate
+    // throttle, never to the session-ended latch. `"throttled"` is this call's honest outcome here
+    // (`VIEWPORT_QUERY_MIN_INTERVAL_MS`); what this asserts is that it is not `"session-ended"`.
+    mockStream("sh_b");
+    const outcome = await manager.requestViewport(null, null, 1_000);
+    expect(outcome.kind).not.toBe("session-ended");
   });
 });

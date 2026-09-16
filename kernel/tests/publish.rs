@@ -25,7 +25,8 @@ use arrow::array::Array as _;
 use std::path::{Path, PathBuf};
 
 use spatial_engine::fixture::{
-    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, LicenseMode,
+    write_geoparquet, AttributeMode, CoordinateDomain, CrsMode, FixtureSpec, IdentityMode,
+    LicenseMode,
 };
 use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::{self, redaction};
@@ -1412,4 +1413,100 @@ fn a_source_that_forbids_redistribution_is_refused_before_anything_is_written() 
         other => panic!("expected LicenseNotCarryable, got {other}"),
     }
     assert!(!dest.exists(), "a bundle was written for a source that forbids redistribution");
+}
+
+// ---- Brief A settled boundary 8: a degrees dataset refuses at preflight, by name ----------------
+
+/// A geographic-degrees fixture: CRS84, coordinates in degrees, otherwise the same file every other
+/// test in this module publishes.
+fn degrees_fixture(dir: &Path, features: usize) -> PathBuf {
+    let path = dir.join("parcels-degrees.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features,
+            attributes: AttributeMode::CategoricalZone,
+            crs_mode: CrsMode::DeclaredCrs84Degrees,
+            domain: CoordinateDomain::Wgs84Degrees,
+            identity: IdentityMode::NativeUnique,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    path
+}
+
+/// **Brief A settled boundary 8, held at P2 and closed at P3** — modelled on this file's own
+/// `RowFilterNotRecordable` tests, and asserting the same property they do: the refusal happens
+/// before any byte is written, so nothing is left behind.
+///
+/// The bundled viewer renders in the dataset's own CRS and has no degrees path; the shell's degrees
+/// display is a view-time convention a bundle does not carry. Publishing would hand a recipient a
+/// bundle nothing can render correctly, so it refuses, typed, at preflight — ADR-025's pattern.
+///
+/// Mutation recorded in-source: deleting the `ds.is_geographic_degrees_instance()` guard in
+/// `publish::preflight_pinless_parts` lets this publish succeed and fails this test.
+#[test]
+fn a_geographic_degrees_dataset_refuses_at_preflight_by_name_and_writes_nothing() {
+    let d = workspace("degrees-not-publishable");
+    let ds = pinned(&degrees_fixture(&d, 50));
+    let v = viewer();
+    let dest = d.join("bundle");
+
+    let e =
+        publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None).unwrap_err();
+    assert!(matches!(e, PublishError::GeographicCrsNotPublishable { .. }), "got {e}");
+    assert_eq!(e.code(), "publish.geographic_crs_not_publishable");
+
+    let msg = e.to_string();
+    assert!(msg.contains("degrees"), "the refusal names the condition: {msg}");
+    // It names WHERE the unit came from, because a rule-defaulted degrees dataset and a declared
+    // one are different facts and an operator acting on this needs to know which they have.
+    assert!(msg.contains("unit:"), "the refusal names the unit's source: {msg}");
+    // No transform is claimed to exist or to be planned, anywhere in it.
+    assert!(!msg.contains("reproject it for you"), "{msg}");
+
+    // The same property the row-filter tests assert: refused before any byte is written.
+    assert!(!dest.exists(), "a destination was created despite the refusal");
+    let leftovers: Vec<String> = std::fs::read_dir(&d)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .filter(|n| n.contains(".staging-"))
+        .collect();
+    assert!(leftovers.is_empty(), "a staging directory survived despite the refusal: {leftovers:?}");
+}
+
+/// The refusal is in `preflight` itself — reachable without `publish_unguarded`, which is what lets
+/// the permission boundary refuse a degrees publish with no side effect of any kind.
+///
+/// Mutation recorded in-source: moving the guard out of `preflight_pinless_parts` into
+/// `publish_prepared` makes this test fail while the one above still passes.
+#[test]
+fn the_degrees_refusal_is_in_preflight_itself() {
+    let d = workspace("degrees-preflight");
+    let ds = pinned(&degrees_fixture(&d, 50));
+    let v = viewer();
+    match spatial_kernel::publish::preflight(&request(&ds, &v, d.join("bundle"))) {
+        Err(e) => assert!(matches!(e, PublishError::GeographicCrsNotPublishable { .. }), "got {e}"),
+        Ok(_) => panic!("a geographic-degrees dataset was admitted by preflight"),
+    }
+}
+
+/// **The gate is narrow**: a projected dataset is unaffected. Stated explicitly rather than left
+/// implicit in every other test in this file, so a future widening of the check fails here.
+/// Mutation: widen the guard to `ds.admission().is_some()`. Expected failure:
+/// `a_projected_dataset_is_untouched_by_the_degrees_gate` fails — the gate would refuse every
+/// dataset, which is the direction a protective check is most likely to drift in.
+#[test]
+fn a_projected_dataset_is_untouched_by_the_degrees_gate() {
+    let d = workspace("degrees-gate-narrow");
+    let ds = pinned(&fixture(&d, 50));
+    let v = viewer();
+    assert!(
+        !matches!(
+            spatial_kernel::publish::preflight(&request(&ds, &v, d.join("bundle"))),
+            Err(PublishError::GeographicCrsNotPublishable { .. })
+        ),
+        "an EPSG:2056 dataset must not reach boundary 8's refusal"
+    );
 }

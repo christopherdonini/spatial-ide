@@ -191,9 +191,37 @@ impl CoordinateUnit {
         match name.as_str() {
             "degree" => Self::Degree,
             "metre" => Self::Metre,
-            _ => Self::Named(name),
+            // **Bounded here, at the one construction site** (ADR-010 rule 6: declared, not
+            // discovered), at Brief A P3. `Named` holds a string taken verbatim
+            // from a file's own PROJJSON, and `describe` and a published bundle's manifest echo it;
+            // unbounded, a file could put an arbitrarily long unit name into both. Truncating, not
+            // refusing: a unit name is a recorded fact rather than an admission gate, and a file
+            // should not fail to open over one. The truncation is **shown**, never silent.
+            _ => Self::Named(cap_unit_name(name)),
         }
     }
+}
+
+/// The declared ceiling on a recorded coordinate-unit name (ADR-010 rule 6).
+///
+/// Sized in the shape of `MAX_CRS_DEFINITION_BYTES` (`crs.rs`) and by the same kind of reasoning:
+/// real unit names in PROJJSON are a handful of characters ("US survey foot" is 14). Declared, not
+/// measured, and deliberately far above anything a definition legitimately carries.
+pub const MAX_UNIT_NAME_BYTES: usize = 128;
+
+/// Truncate a unit name to [`MAX_UNIT_NAME_BYTES`] and **say that it was truncated**.
+///
+/// Truncation happens on a character boundary, so the result is always valid UTF-8 and may be
+/// shorter than the ceiling for a multi-byte name — a bound on bytes, honoured in characters.
+fn cap_unit_name(name: String) -> String {
+    if name.len() <= MAX_UNIT_NAME_BYTES {
+        return name;
+    }
+    let mut end = MAX_UNIT_NAME_BYTES;
+    while end > 0 && !name.is_char_boundary(end) {
+        end -= 1;
+    }
+    format!("{} (truncated at the declared {MAX_UNIT_NAME_BYTES}-byte ceiling)", &name[..end])
 }
 
 /// Where a recorded [`CoordinateUnit`] was established from.

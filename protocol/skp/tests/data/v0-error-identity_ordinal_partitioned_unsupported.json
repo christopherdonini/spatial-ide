@@ -1,0 +1,7 @@
+{
+  "code": "engine.identity_ordinal_partitioned_unsupported",
+  "message": "refused: this source is partitioned across more than one file (C:/data/parcels is a directory), and session identity is a row's position within one file. Open a single file, or declare an identity column that is carried in the data",
+  "fields": {
+    "detail": "C:/data/parcels is a directory"
+  }
+}

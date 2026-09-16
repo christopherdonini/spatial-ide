@@ -117,3 +117,78 @@ describe("refusalGuidance", () => {
     expect(refusalGuidance("engine.ceiling_exceeded")).toBeNull();
   });
 });
+
+/**
+ * **Brief A P3's four new user-visible states** — and the fact that their codes reach this function
+ * at all, which is what P3 gate attempt 1 got wrong.
+ *
+ * The publish case was unreachable then: a publish refusal crossed the Tauri boundary as
+ * `PrepareOutcome::Refused { message }`, a `Display` string with no code in it. It now crosses as
+ * `"<code>: <display>"` (`PublishError::refusal_detail`), and **the product parses it** --
+ * `publish/formatPublishRefusal.ts`, whose own test drives that parser from the kernel's real
+ * output. A test-local parser used to stand in for it here; it is gone, because a test that
+ * re-implements the interface it is meant to be checking proves nothing about the product.
+ *
+ * **One string here IS asserted verbatim — `engine.source_changed`, in "says only what is true at
+ * this commit" below, because the human ruled its exact words (round 5 item 1).** The header used
+ * to say "no string here is asserted verbatim. All four are placeholders", twelve lines above that
+ * assertion; it was true when written and stopped being true when the ruling landed. The other
+ * three are placeholders for the P6 sight, and
+ * for those what is asserted is that each state has guidance at all and that it says the thing the
+ * operator needs (what ended, whether their file is at fault, what to do) — properties a rewording
+ * keeps.
+ */
+describe("refusalGuidance for Brief A P3's new states", () => {
+  // Mutation: restore the pre-round-5 string (the "Everything read so far has been discarded"
+  // wording). Expected failure: "engine.source_changed: says only what is true at this commit"
+  // fails on both the exact-equality assertion and the no-discarding-claim assertion.
+  it("engine.source_changed: says only what is true at this commit", () => {
+    // **Asserted verbatim, unlike its three siblings below** -- the human ruled this exact sentence
+    // (2026-09-16, round 5 item 1) precisely because the previous one described behaviour P3a does
+    // not have. A rewording is a decision, not a refactor, so it must break this test.
+    expect(refusalGuidance("engine.source_changed")).toBe(
+      "The source file changed while it was open; reopen the dataset to continue."
+    );
+    // The specific falsehood that was there: nothing is discarded in P3a, because nothing clears
+    // the resident view until P3b.
+    expect(refusalGuidance("engine.source_changed")).not.toMatch(/discard/i);
+    // And no snapshot is claimed for what came before (A1).
+    expect(refusalGuidance("engine.source_changed")).not.toMatch(/snapshot/i);
+  });
+
+  // Mutation: drop the "identity column" sentence from that case. Expected failure:
+  // "engine.identity_ordinal_partitioned_unsupported: names both real routes forward" fails --
+  // an operator would be told only to split their data, never that declaring a column works.
+  it("engine.identity_ordinal_partitioned_unsupported: names both real routes forward", () => {
+    const guidance = refusalGuidance("engine.identity_ordinal_partitioned_unsupported");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/more than one file/i);
+    expect(guidance).toMatch(/single file/i);
+    expect(guidance).toMatch(/identity column/i);
+  });
+
+  // Mutation: reword that case to blame the file. Expected failure:
+  // "engine.internal_inconsistency: says the defect is in the program, not in the operator's
+  // file" fails -- which is the whole reason the variant was retyped off `Source`.
+  it("engine.internal_inconsistency: says the defect is in the program, not in the operator's file", () => {
+    const guidance = refusalGuidance("engine.internal_inconsistency");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/defect in this program/i);
+    expect(guidance).toMatch(/not in your file/i);
+  });
+
+  // Mutation: add a `publish.row_filter_not_recordable` case. Expected failure: "the guidance
+  // count matches the cases: four new states, four non-null" fails on its no-accidental-widening
+  // assertion.
+  it("the guidance count matches the cases: four new states, four non-null", () => {
+    const added = [
+      "engine.source_changed",
+      "engine.identity_ordinal_partitioned_unsupported",
+      "publish.geographic_crs_not_publishable",
+      "engine.internal_inconsistency",
+    ];
+    expect(added.filter((c) => refusalGuidance(c) !== null)).toHaveLength(4);
+    // And nothing was widened by accident: a neighbouring publish code still has none.
+    expect(refusalGuidance("publish.row_filter_not_recordable")).toBeNull();
+  });
+});

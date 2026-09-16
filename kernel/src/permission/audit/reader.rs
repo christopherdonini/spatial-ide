@@ -247,6 +247,10 @@ fn plain_reason(kind: &str) -> String {
         "RowFilterNotRecordable" => {
             "the active row filter cannot be recorded in this bundle format".to_string()
         }
+        "GeographicCrsNotPublishable" => {
+            "the dataset's coordinates are in degrees, which the bundled viewer cannot render"
+                .to_string()
+        }
         "CeilingExceeded" => "a declared ceiling was exceeded".to_string(),
         "StagingNotRemoved" => "the operation failed and left a staging directory behind".to_string(),
         "Engine" => "an engine-level error occurred".to_string(),

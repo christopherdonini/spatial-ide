@@ -564,3 +564,119 @@ APPROVED 2026-09-02), and it carries **entry 6's own expiry clause, restated not
 widening-rides-the-version license holds only while no external reader of `skp/0.2` exists (a
 dated fact — pre-ADR-009, repo private); the moment such a reader exists, a value-set change of
 this class is a compatibility event that a version bump must carry. Until then, `skp/0.2` stands.
+
+### skp/0.3 — Brief A (admission and session lifecycle), P3 (2026-09-15)
+
+**The version's FULL field set, as §8's own discipline requires — every field `skp/0.3` adds, in
+one list. Nothing below rewrites an earlier entry.**
+
+`describe` **response** gains six members: four are Brief A's settled boundary 9 by name, one is
+the P2-licensed display-convention carrier, and one is boundary 9's sanity level as its own object.
+
+- **`crs.provenance: String`** — boundary 9's `crs.provenance`. How this dataset's CRS was
+  established: `"crs:declared"`, `"crs:asserted"`, `"crs:format-default"`. A recorded fact and never
+  a judgement; it says nothing about whether the file's producer conformed to the rule that was
+  read. Two format-rule routes stay distinguishable at sight, deliberately: an absent `crs` key and
+  a declared lat-first CRS reach the *same* real-world CRS by different routes and a single line
+  would collapse two different facts.
+- **`crs.axis_provenance: String`** — boundary 9's `axis.provenance`. How the **data's** axis order
+  was established: `"axis:declared"` or `"axis:format-override"`. The definition's own declared
+  order is retained engine-side as a recorded fact and is never discarded.
+- **`crs.display_convention: Option<String>`** — the **P2-held carrier, closed here at P3** rather
+  than carried silently. `Some` exactly for a geographic-degrees dataset, carrying
+  `spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION` verbatim from the Rust constant so that no client
+  retypes it. A display statement only: no coordinate value is transformed by anything in this
+  engine and `axis_normalization` stays `"none-performed"`.
+- **`identity.class: String`** — boundary 9's `identity.class`: `"native"`, `"mapped"` or
+  `"session-ordinal"`.
+- **`identity.session_statement: Option<String>`** — boundary 9's session-tier statement, `Some`
+  exactly for `"session-ordinal"`, carrying `spatial_engine::SESSION_IDENTITY_STATEMENT` verbatim.
+- **`sanity: { level: String, reason: String }`** — boundary 9's sanity-check level. `level` is
+  `"metadata"`, `"sample"` or `"none"`; `reason` is what the level was decided from. **A sanity
+  check convicts, never confirms**: no value here says a file passed, is valid, or was verified,
+  and `"none"` means *not checked*.
+
+Three new typed refusal codes on the `engine.` namespace (SKP-V0.md `:266`'s `engine.` +
+variant-name rule, unchanged), each carrying `detail` in `SkpError.fields`:
+
+- **`engine.source_changed`** — the structural descriptor differs from the one this dataset opened
+  against. `detail` names **every** component that differed (`{size, mtime, footer-length,
+  footer-hash}`), because no mutation fixture isolates a single component and an assertion is exact
+  only if the refusal enumerates them. Its message carries boundary 4's limitation in that
+  boundary's own words: the check does not establish snapshot consistency, cannot detect every
+  in-place modification, and may detect a change during a query only after that query has finished
+  reading.
+- **`engine.identity_ordinal_partitioned_unsupported`** — a partitioned source reached the
+  session-ordinal path (boundary 7). No file-list or packing contract is introduced by it.
+- **`engine.internal_inconsistency`** — a retype, not a new failure: the provenance-arm
+  contradiction in `dataset::open_inner` used to arrive as `engine.source`, telling a caller its
+  file was unreadable when the contradiction is in this tree's own record.
+
+Beside them, on the publish surface and **not** an SKP `engine.` code:
+`publish.geographic_crs_not_publishable` (boundary 8, also held at P2 and closed here) — a
+geographic-degrees dataset refuses at preflight, by name, before any write, reusing ADR-025's
+refuse-typed-at-preflight pattern.
+
+**What `skp/0.3` deliberately does NOT add.** No generation value crosses the wire in either
+direction, on `describe` or anywhere else (boundary 9;
+`engine/ADMISSION-PREREGISTRATION.md` §13 D). The dataset-session generation is minted per open,
+lives in kernel and client state, and is never persisted and never published; generation attribution
+rides the **existing** ticket, and the client mirrors it by live-ticket set rather than by value. A
+fixture test asserts the absence on the serialized document rather than by inspection. **`protocol/data-plane/`
+has an empty diff for this version.**
+
+Mechanics, the `skp/0.2` precedent followed exactly (`:456-486`): one literal bumped once on Brief
+A's branch; plain `==` comparison retained (`kernel/src/skp.rs`'s `check_version`);
+`deny_unknown_fields` kept both directions; every fixture on both the Rust
+(`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`) and TypeScript
+(`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire updated in this same
+commit. While `skp/0.3` is unmerged, further additions to it are **appended addenda to this entry**,
+the `skp/0.2` P2/P3c addendum precedent. Once Brief A merges to `main`, `skp/0.3`'s field set is
+closed and the next brief bumps to `skp/0.4`. **`skp/1` stays RESERVED** and must not be used for
+any interim version.
+
+**P3 gate-fix addendum (2026-09-16, appended — the entry above is unchanged).** Three corrections
+and one value-domain widening, all still inside `skp/0.3` while it is unmerged (this entry's own
+"further additions to it are appended addenda", the `skp/0.2` P2/P3c precedent).
+
+- **Correction to this entry's own first line.** It read "gains five members" and then listed six.
+  Six is right: `crs.provenance`, `crs.axis_provenance`, `crs.display_convention`,
+  `identity.class`, `identity.session_statement` and `sanity`.
+- **`crs.source` gains a third value, `"format-rule"` — a value-domain widening of an existing key,
+  not a new key.** The human's ruling of 2026-09-16 (`DECISIONS-PENDING.md` RULED 2026-09-16 —
+  question round 3, item 3), verbatim: *"Crs.source gains the third value `format-rule` beside
+  `file` and `caller_asserted`, with crs.provenance carrying the specific class
+  (`crs:format-default`). Existing assertions re-aimed with the ruling named; the manifest carries
+  the same value; recorded as a value-domain widening under the SKP 0.3 bump."*
+
+  Why it is owed: an admission GeoParquet's absent-`crs`-key rule supplied recorded
+  `crs_source = "file"`, which states that the file declared a CRS it does not declare — a false
+  record, and one that reached published bundle manifests (`crs_source` /`crs_source_kind` in
+  `kernel/src/bundle`). The P1 reviewer's Finding 1 named it; this closes it. The two facts now sit
+  side by side and say different things: `crs.source` says *a rule supplied it*,
+  `crs.provenance` says *which rule* (`crs:format-default`).
+
+  **Recorded as a widening under a bump that is already happening, not as a licence to widen
+  silently.** The entry-30 addendum above sets out when a value-domain widening may ride an
+  unchanged version and when it may not; this one does not need that licence, because `skp/0.3` is
+  being minted in the same commit and its field set is not yet closed. The manifest carries the
+  identical value by construction — `kernel/src/publish` writes `crs.source().as_str()` — so the
+  wire and the published artifact cannot disagree.
+- **Both new refusal surfaces now carry their typed code into the string they cross as.** A
+  data-plane terminal's `detail` is `"<code>: <display>"` (`kernel/src/skp.rs::terminal_detail_of`,
+  applied at `kernel/src/lib.rs`'s `EngineSource::next_into`), and a publish refusal reaching the
+  shell is `"<code>: <display>"` too (`PublishError::refusal_detail`, applied at **both** of
+  `frontends/shell/src-tauri/src/publish.rs`'s preflight sites). **Scoped to `PublishError`**: the
+  same seam also carries refusals that are not publish errors at all — a permission error, an IPC
+  rejection, the unknown-attempt sentence — and those have no typed code and are not given one. The
+  shell's own parser (`frontends/shell/src/publish/formatPublishRefusal.ts`) reads a `publish.*`
+  prefix when there is one and labels the rest `publish-refused`.
+
+  **Neither is a wire-format change**: both ride a `String` that already existed, and
+  `protocol/data-plane/` still has an empty diff for this version. It is recorded here because a
+  client now depends on the shape: the code is a **prefix**, and a client matches it as one.
+- **`identity.uniqueness`'s documented value set was two and is three.** The third,
+  `"by-construction-within-generation"`, comes from the **PROPOSED** ADR-016 Amendment 1, which
+  binds nothing until the human accepts it; it is emitted because this cut implements the session
+  tier, not because the accepted ADR lists it. The accepted ADR-016 §6 lists two, and nothing in
+  this cut treats the amendment as settled.

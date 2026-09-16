@@ -20,7 +20,7 @@
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, UInt64Array};
@@ -573,9 +573,62 @@ pub struct StreamStats {
     pub rows_generated: AtomicU64,
     pub resident_bytes: AtomicUsize,
     pub peak_resident_bytes: AtomicUsize,
+    /// What the **post-check** found, if it found a change (§13 C). Set on the producer thread
+    /// after the iterator is drained and the lease released; read by the host after the terminal.
+    ///
+    /// **It exists because rule (ii) needs it.** A cancelled stream keeps its `cancelled` terminal,
+    /// so on that path the change cannot ride the terminal — but the dataset-session generation
+    /// still has to end. This is the record that makes both true at once. It carries the
+    /// components that differed, never a generation value (A2).
+    source_changed_detail: Mutex<Option<String>>,
+    /// Footer bytes the **post-check** read, bounded by
+    /// [`crate::descriptor::FOOTER_DESCRIPTOR_MAX_BYTES`] (8 MiB).
+    ///
+    /// **Reported so the post-check's cost is never silent** (the human's ruling of 2026-09-16,
+    /// round 5 item 3), on the stats that already travel with a stream's terminal. It is a byte
+    /// count, not a duration, and nothing anywhere claims a duration from it.
+    post_check_bytes_read: AtomicU64,
 }
 
 impl StreamStats {
+    fn record_post_check_bytes(&self, bytes: u64) {
+        self.post_check_bytes_read.store(bytes, Ordering::SeqCst);
+    }
+
+    /// Footer bytes the post-check read for this stream, bounded by
+    /// [`crate::descriptor::FOOTER_DESCRIPTOR_MAX_BYTES`]. `0` before the post-check has run, and
+    /// `0` when the source could not be re-read at all.
+    ///
+    /// **No longer an instrument accessor: it is product-called.** It was declared under the
+    /// exemption while its only caller was a test; that declaration is retired, because two product
+    /// call sites now read it, both in `kernel/src/lib.rs`'s `EngineSource`:
+    /// `Drop::drop` fills `StreamConnectionRecord::post_check_bytes_read` (consumed by
+    /// `kernel/src/main.rs`'s connection reporter, which prints it), and
+    /// `end_session_if_source_changed` puts the same figure on the always-on `session ended for
+    /// dataset` line. The exemption is for accessors with no product caller; this one has two, so
+    /// it stands on the plain caller rule instead.
+    ///
+    /// Still not `cfg(test)`-gated, for the reason `SourceDescriptor::footer_bytes_read` is not:
+    /// the obligation is that the *shipped* build reports this cost.
+    ///
+    /// `engine::trace`'s `POST_CHECK_END` carries the same figure, but **only in a traced run** —
+    /// `trace::ENABLED` is `false` by default and `trace::start` has no product caller — so the
+    /// trace marks are not what discharges "never silent"; the two kernel-side carriers above are.
+    pub fn post_check_bytes_read(&self) -> u64 {
+        self.post_check_bytes_read.load(Ordering::SeqCst)
+    }
+
+    fn record_source_changed(&self, detail: &str) {
+        *self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some(detail.to_string());
+    }
+
+    /// The post-check's finding for this stream, or `None` if it found no change. Meaningful only
+    /// once the stream has reached its terminal — before that the post-check has not run.
+    pub fn source_changed_detail(&self) -> Option<String> {
+        self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
     fn add_resident(&self, n: usize) {
         let now = self.resident_bytes.fetch_add(n, Ordering::SeqCst) + n;
         self.peak_resident_bytes.fetch_max(now, Ordering::SeqCst);
@@ -972,6 +1025,14 @@ impl Dataset {
                 cut: policy.cut.as_str(),
             });
         }
+        // **R-D2's pre-check — "before every query issue", and this is that point.** Every stream
+        // entry point funnels through `stream_inner`, so one call here is every query issue and not
+        // a set of call sites that can drift apart. Placed beside the check above and for the same
+        // reason: before anything is prepared, leased or spawned, so a refusal costs no connection.
+        //
+        // It is not a snapshot check. It says the file is no longer the one that opened, or it says
+        // nothing (boundary 4; A1).
+        self.check_source_unchanged()?;
         // **A viewport CRS is a caller assertion about the query, not an equivalence judgement
         // about two definitions.** ADR-015 §7. The engine does not decide that the caller's CRS
         // and the dataset's "agree" — it has no PROJ and cannot — it only refuses a viewport that
@@ -1036,6 +1097,12 @@ impl Dataset {
         let thread_stats = Arc::clone(&stats);
         let thread_cancel = cancel.clone();
         let thread_env = envelope.clone();
+        // Captured for the post-check below: the descriptor this dataset **opened** against, and
+        // the path to re-read. Cloned rather than borrowed because the producer thread outlives
+        // this call — and it is the open-time descriptor, never a fresh one, that the comparison is
+        // against.
+        let post_check_descriptor = self.descriptor().clone();
+        let post_check_path = self.path().to_path_buf();
 
         std::thread::Builder::new()
             .name("engine-geoparquet-stream".into())
@@ -1070,14 +1137,81 @@ impl Dataset {
                 // on this connection, and this engine has established no post-interrupt health
                 // guarantee, so discard-and-replace is the declared bounded behaviour rather than
                 // an optimisation. A completed query returns its connection, verified first.
-                match outcome {
+                //
+                // **The lease is decided here and the terminal is NOT sent here.** The two used to
+                // happen in one `match`, which put `tx.send(Err(e))` before the post-check below —
+                // so a host reading the post-check's flag when the terminal arrived raced the
+                // producer still computing it (P3 gate attempt 1, blocking finding 2). Splitting
+                // them costs nothing and removes the race by construction: by the time any terminal
+                // leaves this thread, the flag is already written.
+                match &outcome {
                     Ok(()) => lease.release_healthy(),
+                    Err(_) => drop(lease),
+                }
+
+                // ---------------------------------------------------------------------------
+                // **R-D2's post-check — `ADMISSION-PREREGISTRATION.md` §13 C's named call site.**
+                //
+                // `produce` above has returned, so DuckDB's result iterator is fully drained; the
+                // `match` above has decided the lease, so the lease is released; and **no terminal
+                // of any class has been sent yet** — for the `Ok` path the terminal is the drop of
+                // `tx` at the end of this closure, and for every error path it is the `tx.send`
+                // below this block. That is what "before the terminal" means, for all of them.
+                //
+                // **Never inside the batch loop** (§13 C): a per-batch descriptor read would put
+                // filesystem work on the data path (docs/10) and would multiply one refusal into
+                // many.
+                //
+                // (i) On a clean run the terminal is `ok` **only if** the post-check finds no
+                //     change; otherwise the terminal *is* the typed `engine.source_changed`, sent
+                //     here.
+                // (ii) A **cancelled** stream keeps its `cancelled` terminal (ADR-018 vocabulary).
+                //     The check still runs and still records the change — that is what invalidates
+                //     the dataset-session generation — but a cancel is never reported as a source
+                //     change. The same holds for any other terminal error: it already happened and
+                //     it is what the caller needs to see, so the change rides the recorded flag
+                //     rather than displacing it.
+                // (iii) A change caught only here is exactly boundary 4's declared limit, and the
+                //     refusal's own text says so: "may detect a change during a query only after
+                //     that query has finished reading" (`EngineError::SourceChanged`'s `Display`).
+                //     Nothing anywhere claims the batches already delivered were a snapshot (A1).
+                // **The post-check's cost is reported, never silent** (the human's ruling of
+                // 2026-09-16, round 5 item 3). The marks bound the interval in the session log; the
+                // bytes come from the read the post-check already performed — counting them by
+                // re-reading would have doubled the very cost this reports — and ride both
+                // `POST_CHECK_END`'s `bytes` field and `StreamStats`, where a stream's terminal
+                // stats already travel. The read is bounded by `FOOTER_DESCRIPTOR_MAX_BYTES`.
+                // **No duration is claimed here or anywhere else**; measuring the interval is P5's.
+                crate::trace::mark(crate::trace::POST_CHECK_BEGIN, 0, 0);
+                let (post, post_check_bytes) =
+                    post_check_source(&post_check_path, &post_check_descriptor);
+                crate::trace::mark(crate::trace::POST_CHECK_END, 0, post_check_bytes);
+                thread_stats.record_post_check_bytes(post_check_bytes);
+                if let Err(EngineError::SourceChanged { detail }) = &post {
+                    // Recorded **before any terminal is sent**, so a host that reads this flag when
+                    // a terminal arrives always sees a finished answer — on the clean, the errored
+                    // and the cancelled path alike (rule ii).
+                    thread_stats.record_source_changed(detail);
+                }
+
+                // Now, and only now, the terminal.
+                match outcome {
+                    // Rule (i): `ok` only if the post-check found no change; otherwise the terminal
+                    // *is* the typed `engine.source_changed`. On the no-change path nothing is sent
+                    // and the terminal is the drop of `tx` below.
+                    Ok(()) => {
+                        if let Err(e) = post {
+                            let _ = tx.send(Err(e));
+                        }
+                    }
+                    // Rule (ii): the stream's own terminal stands — a cancel is reported as a
+                    // cancel, and any other failure as itself. The source change rides the flag
+                    // recorded above, never this frame.
+                    //
+                    // Best-effort: if the consumer is gone there is nobody to tell, which is not an
+                    // error in itself. H7's "no partial view presented as complete" is enforced on
+                    // the consumer side by the terminal frame, not by this send succeeding.
                     Err(e) => {
-                        drop(lease);
-                        // Best-effort: if the consumer is gone there is nobody to tell, which is
-                        // not an error in itself. H7's "no partial view presented as complete" is
-                        // enforced on the consumer side by the terminal frame, not by this send
-                        // succeeding.
                         let _ = tx.send(Err(e));
                     }
                 }
@@ -1089,6 +1223,20 @@ impl Dataset {
                 // *above* the `detach` and the `match` — review measured it at 33 µs after the last
                 // batch, i.e. covering none of the teardown, so any acknowledgement figure derived
                 // from it would have systematically excluded the term the taxonomy says dominates.
+                //
+                // **The post-check sits inside this window, and it is the UNBUDGETED one.**
+                // `PRODUCER_FINISHED` is the producer's `cancel_acknowledged` — the
+                // operation-quiescent instant (`trace.rs:363`'s own table: "`cancel_acknowledged`
+                // (the operation quiescent)… | [`PRODUCER_FINISHED`]"). `docs/08:8` budgets
+                // `cancel_requested → cancel_observed` and reports the quiescent term "beside it
+                // with no budget", and `cancel_observed` on this side is `PRODUCER_CANCELLED`,
+                // stamped inside `produce()` — **before** the R-D2 post-check above. So the
+                // post-check does not enter the budgeted term at all; it lands in the unbudgeted
+                // quiescent one, as a bounded metadata read plus a footer read bounded by
+                // `FOOTER_DESCRIPTOR_MAX_BYTES`.
+                //
+                // No figure is claimed for it and none is implied. It is recorded so that a
+                // measurement of the quiescent term knows the term is there — **P5's** to make.
                 crate::trace::mark(crate::trace::PRODUCER_FINISHED, 0, 0);
             })
             .map_err(|e| {
@@ -1413,6 +1561,41 @@ impl Dataset {
             sql.push_str(&format!(" LIMIT {n}"));
         }
         Ok((sql, plan))
+    }
+}
+
+/// The post-check's own read — R-D2 after a stream terminal, §13 C.
+///
+/// Separate from `Dataset::check_source_unchanged` only because the producer thread does not hold
+/// the `Dataset`; the comparison is the identical one, on `SourceDescriptor::refuse_if_changed`,
+/// so the pre-check and the post-check cannot drift into two ideas of "changed".
+///
+/// A descriptor that cannot be read at all here — the file was removed mid-query, say — is
+/// **reported as the change it is**, not swallowed: `SourceDescriptor::of`'s own typed error is
+/// mapped onto `SourceChanged` with the reason named, because "the file is gone" is precisely the
+/// situation this check exists for and treating an unreadable source as unchanged would be the
+/// silent staleness `docs/01` principle 8 forbids.
+/// Runs the post-check and reports **the footer bytes it read**, so the cost is accounted from the
+/// read that actually happened rather than measured by doing it a second time (the human's ruling
+/// of 2026-09-16, round 5 item 3: reported per cancellation, never silent).
+///
+/// `0` bytes means the source could not be re-read at all — the refusal then says so, and there was
+/// no footer to read.
+fn post_check_source(
+    path: &std::path::Path,
+    opened_with: &crate::descriptor::SourceDescriptor,
+) -> (Result<()>, u64) {
+    match crate::descriptor::SourceDescriptor::of(path) {
+        Ok(now) => {
+            let bytes = now.footer_bytes_read();
+            (opened_with.refuse_if_changed(&now), bytes)
+        }
+        Err(e) => (
+            Err(EngineError::SourceChanged {
+                detail: format!("{{the source could not be re-read: {e}}}"),
+            }),
+            0,
+        ),
     }
 }
 
