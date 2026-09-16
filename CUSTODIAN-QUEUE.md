@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `acfe337b09c49b6ef1b04c4964efb7ca975ad691af1857d46174442331902ad5`) at `2026-09-16T11:49:36.169Z`.
+Generated from `PLAN.yaml` (sha256 `f2c4a4e8e9a6d17a8cfc0e81901418474c3c24a90db515042ad38ef5d5edae5a`) at `2026-09-16T11:51:31.169Z`.
 
 ## 1. Next
 
@@ -31,7 +31,7 @@ Generated from `PLAN.yaml` (sha256 `acfe337b09c49b6ef1b04c4964efb7ca975ad691af18
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
 - **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: PR #81
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: branch `engine/lod-tier-builder`
-- **self-check-false-readings** — Pre-gate self-checks -- verify:test-claims reads a preregistration's planned tests as advisory until a node naming it as gate is done (the stop-the-line fix); also queued: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff — evidence: branch `governance/test-claims-planned`
+- **self-check-false-readings** — Pre-gate self-checks -- verify:test-claims reads a preregistration's planned tests as advisory until a node naming it as gate is done (the stop-the-line fix); also queued: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff — evidence: PR #82
 
 ## 6. Proposed / unscheduled
 

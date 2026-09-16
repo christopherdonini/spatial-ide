@@ -458,7 +458,7 @@ nodes:
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: governance/test-claims-planned}
+    evidence: {pr: 82}
     budget_minutes: 60
     generation: 1
     felt_verdict: false

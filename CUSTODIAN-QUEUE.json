@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T11:49:36.169Z",
-  "plan_hash": "acfe337b09c49b6ef1b04c4964efb7ca975ad691af1857d46174442331902ad5",
+  "generated_at": "2026-09-16T11:51:31.169Z",
+  "plan_hash": "f2c4a4e8e9a6d17a8cfc0e81901418474c3c24a90db515042ad38ef5d5edae5a",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -328,14 +328,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "governance/test-claims-planned"
+        "pr": 82
       },
       "dates": {
         "opened": "2026-09-16",
         "done": null
       },
       "summary": "STOP-THE-LINE 2026-09-16: main red on verify:test-claims since 2a939d3 -- a preregistration committed before code (the template rule) names tests that do not exist yet; fix forward reviewer-gated: claims in a not-done node gate file are advisory (planned), binding once the node is done. Originally proposed from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form",
-      "evidence_label": "branch `governance/test-claims-planned`"
+      "evidence_label": "PR #82"
     }
   ],
   "proposed": [

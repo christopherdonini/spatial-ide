@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T11:49:51.665Z",
-  "plan_hash": "acfe337b09c49b6ef1b04c4964efb7ca975ad691af1857d46174442331902ad5",
+  "generated_at": "2026-09-16T11:51:31.296Z",
+  "plan_hash": "f2c4a4e8e9a6d17a8cfc0e81901418474c3c24a90db515042ad38ef5d5edae5a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -743,7 +743,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "governance/test-claims-planned"
+        "pr": 82
       },
       "budget_minutes": 60,
       "generation": 1,
