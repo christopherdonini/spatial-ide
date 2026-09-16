@@ -549,7 +549,7 @@ nodes:
     status: in-progress
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
-    needs_human: {kind: click, minutes: 5}
+    needs_human: {kind: sitting, minutes: 15}
     gate: engine/ADMISSION-PREREGISTRATION.md
     evidence: {pr: 83}
     budget_minutes: 390
@@ -798,12 +798,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: in-progress
     order: 5
     depends_on: [briefa-p3-p6]
     needs_human: {kind: sight, minutes: 20}
     gate: frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/briefa-p3b}
     budget_minutes: 240
     generation: 1
     felt_verdict: false

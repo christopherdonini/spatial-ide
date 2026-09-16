@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T22:17:05.408Z",
-  "plan_hash": "c66d95b140aea8501901f0185ef1cf4087abb2a67b9003718fff64003e26d8f5",
+  "generated_at": "2026-09-16T22:38:46.856Z",
+  "plan_hash": "b14c9fdf11b7ea49898fa7401108b318a0a8a06cda06eeb37ffe928ddaf4d51f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -884,8 +884,8 @@
         "sitting-4-rows"
       ],
       "needs_human": {
-        "kind": "click",
-        "minutes": 5
+        "kind": "sitting",
+        "minutes": 15
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": {
@@ -1296,7 +1296,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "in-progress",
       "order": 5,
       "depends_on": [
         "briefa-p3-p6"
@@ -1306,7 +1306,9 @@
         "minutes": 20
       },
       "gate": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/briefa-p3b"
+      },
       "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,

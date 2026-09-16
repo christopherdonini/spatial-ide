@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c66d95b140aea8501901f0185ef1cf4087abb2a67b9003718fff64003e26d8f5`) at `2026-09-16T22:17:05.254Z`.
+Generated from `PLAN.yaml` (sha256 `b14c9fdf11b7ea49898fa7401108b318a0a8a06cda06eeb37ffe928ddaf4d51f`) at `2026-09-16T22:38:46.638Z`.
 
 ## 1. Next
 
@@ -17,7 +17,6 @@ Generated from `PLAN.yaml` (sha256 `c66d95b140aea8501901f0185ef1cf4087abb2a67b90
 
 ## 4. Blocked on dependencies
 
-- **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — blocked by: briefa-p3-p6
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
@@ -31,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `c66d95b140aea8501901f0185ef1cf4087abb2a67b90
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: PR #83
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: branch `engine/lod-tier-builder`
+- **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: branch `cut/briefa-p3b`
 
 ## 6. Proposed / unscheduled
 
