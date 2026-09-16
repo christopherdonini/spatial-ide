@@ -695,7 +695,7 @@ nodes:
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md
-    evidence: {branch: engine/extension-autoload-off}
+    evidence: {pr: 81}
     budget_minutes: 90
     generation: 1
     felt_verdict: false

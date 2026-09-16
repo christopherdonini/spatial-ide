@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a11749195a3298f2b0b444b7dc4d7c814c59ef7b4f713701ea10c4f7c6b7a30a`) at `2026-09-16T10:31:10.241Z`.
+Generated from `PLAN.yaml` (sha256 `02d0f054ef806d36e9d0b47cde6e7a9b28ed993423735b8df98ba2f487ad4f2a`) at `2026-09-16T10:36:08.200Z`.
 
 ## 1. Next
 
@@ -29,7 +29,7 @@ Generated from `PLAN.yaml` (sha256 `a11749195a3298f2b0b444b7dc4d7c814c59ef7b4f71
 ## 5. In progress
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
-- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: branch `engine/extension-autoload-off`
+- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: PR #81
 
 ## 6. Proposed / unscheduled
 

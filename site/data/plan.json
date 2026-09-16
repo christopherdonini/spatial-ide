@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T10:31:10.343Z",
-  "plan_hash": "a11749195a3298f2b0b444b7dc4d7c814c59ef7b4f713701ea10c4f7c6b7a30a",
+  "generated_at": "2026-09-16T10:36:08.304Z",
+  "plan_hash": "02d0f054ef806d36e9d0b47cde6e7a9b28ed993423735b8df98ba2f487ad4f2a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1128,7 +1128,7 @@
       },
       "gate": "engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md",
       "evidence": {
-        "branch": "engine/extension-autoload-off"
+        "pr": 81
       },
       "budget_minutes": 90,
       "generation": 1,

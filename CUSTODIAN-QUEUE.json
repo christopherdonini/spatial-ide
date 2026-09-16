@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T10:31:10.241Z",
-  "plan_hash": "a11749195a3298f2b0b444b7dc4d7c814c59ef7b4f713701ea10c4f7c6b7a30a",
+  "generated_at": "2026-09-16T10:36:08.200Z",
+  "plan_hash": "02d0f054ef806d36e9d0b47cde6e7a9b28ed993423735b8df98ba2f487ad4f2a",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-builder-route-b",
@@ -281,14 +281,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "engine/extension-autoload-off"
+        "pr": 81
       },
       "dates": {
         "opened": "2026-09-15",
         "done": null
       },
       "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)",
-      "evidence_label": "branch `engine/extension-autoload-off`"
+      "evidence_label": "PR #81"
     }
   ],
   "proposed": [
