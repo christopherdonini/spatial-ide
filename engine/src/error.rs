@@ -306,16 +306,26 @@ impl fmt::Display for EngineError {
                 "refused: `{column}` cannot serve as stable feature identity — {detail}. \
                  Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"
             ),
-            // No "snapshot" and no "was verified" anywhere in this text (A1, boundary 2): it says
-            // what differed and what that ends, and the limitation sentence is the one boundary 4
-            // declares in its own words.
+            // **Two sentences, and both are facts about this engine's own check**: what it found
+            // differing, and what the check does not establish (boundary 4's limitation, in that
+            // boundary's own words). No "snapshot" claim and no "was verified" anywhere (A1,
+            // boundary 2).
+            //
+            // **What is deliberately absent: the consequence and the guidance.** The text carried
+            // "Everything read for this session is discarded … reopen the file to continue" until
+            // the human's ruling of 2026-09-16 (question round 7): *"the engine's SourceChanged
+            // Display text states the engine's fact only — 'the source file changed while it was
+            // open (<component>)' — and never a consequence: the engine cannot know what the shell
+            // discarded, so the consequence sentence belongs to the owner that performs it, added
+            // by P3b when it becomes true. Engine messages state engine facts; owners state
+            // consequences."* The owner's sentence lives in
+            // `frontends/shell/src/admission/formatRefusal.ts::refusalGuidance`, and P3b is what
+            // makes a stronger one true.
             Self::SourceChanged { detail } => write!(
                 f,
-                "refused: the source file changed while it was open ({detail}). Everything read \
-                 for this session is discarded and the identities it handed out no longer refer to \
-                 anything; reopen the file to continue. This check does not establish snapshot \
-                 consistency, cannot detect every in-place modification, and may detect a change \
-                 during a query only after that query has finished reading"
+                "refused: the source file changed while it was open ({detail}). This check does not \
+                 establish snapshot consistency, cannot detect every in-place modification, and may \
+                 detect a change during a query only after that query has finished reading"
             ),
             Self::IdentityOrdinalPartitionedUnsupported { detail } => write!(
                 f,

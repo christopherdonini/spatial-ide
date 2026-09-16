@@ -155,14 +155,29 @@ fn a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code() {
     // code or to the `Display` text fails in the PRODUCER's suite first, instead of leaving the
     // consumers asserting against a shape that is no longer sent. Same discipline as the publish
     // seam below, and it retires the hand-transcribed terminal string those tests used to carry.
+    //
+    // **Re-pinned on the human's ruling of 2026-09-16 (round 7)**: the engine's text states the
+    // engine's fact only — what differed, and what the check does not establish — and carries no
+    // consequence sentence and no guidance. Those belong to the owner that performs them (P3b).
     assert_eq!(
         detail,
         "engine.source_changed: refused: the source file changed while it was open ({size, mtime, \
-footer-length, footer-hash}). Everything read for this session is discarded and the identities it \
-handed out no longer refer to anything; reopen the file to continue. This check does not establish \
-snapshot consistency, cannot detect every in-place modification, and may detect a change during a \
-query only after that query has finished reading"
+footer-length, footer-hash}). This check does not establish snapshot consistency, cannot detect \
+every in-place modification, and may detect a change during a query only after that query has \
+finished reading"
     );
+
+    // **No consequence and no guidance in the ENGINE's words** (the same ruling). The owner's
+    // sentence is `refusalGuidance("engine.source_changed")`, asserted in
+    // `frontends/shell/src/admission/formatRefusal.test.ts`; nothing the engine emits may duplicate
+    // it or contradict it.
+    for forbidden in ["discard", "no longer refer", "reopen the file"] {
+        assert!(
+            !detail.contains(forbidden),
+            "the engine states its own fact only; `{forbidden}` is a consequence or a guidance: \
+             {detail}"
+        );
+    }
 
     // One source of codes: this is `error_of`'s table, not a second spelling beside it.
     assert_eq!(error_of(&e).code, SOURCE_CHANGED_CODE);

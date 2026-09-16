@@ -16,10 +16,14 @@
  * `a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code`. A change to the code or to
  * `EngineError::SourceChanged`'s `Display` therefore fails in the kernel's own suite first, instead
  * of leaving these tests asserting against a shape that is no longer sent.
+ *
+ * **Re-captured 2026-09-16 on the human's round-7 ruling** — "Engine messages state engine facts;
+ * owners state consequences". The engine's text lost its consequence sentence ("Everything read …
+ * no longer refer to anything") and its guidance ("reopen the file to continue"); the owner's
+ * sentence is `refusalGuidance("engine.source_changed")`.
  */
 export const REAL_SOURCE_CHANGED_TERMINAL_DETAIL =
   "engine.source_changed: refused: the source file changed while it was open ({size, mtime, " +
-  "footer-length, footer-hash}). Everything read for this session is discarded and the identities " +
-  "it handed out no longer refer to anything; reopen the file to continue. This check does not " +
-  "establish snapshot consistency, cannot detect every in-place modification, and may detect a " +
-  "change during a query only after that query has finished reading";
+  "footer-length, footer-hash}). This check does not establish snapshot consistency, cannot " +
+  "detect every in-place modification, and may detect a change during a query only after that " +
+  "query has finished reading";
