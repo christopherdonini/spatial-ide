@@ -708,12 +708,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 7
     depends_on: [adr-031-lod-preregistration]
     needs_human: {kind: none, minutes: 0}
     gate: engine/LOD-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: engine/lod-tier-builder}
     budget_minutes: 480
     generation: 1
     felt_verdict: false

@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-09-16T11:29:17.417Z",
-  "plan_hash": "65be07b936f40d1ac9579852e8cf896af5982483a767d8478ca1109adc6581ca",
+  "generated_at": "2026-09-16T11:33:21.086Z",
+  "plan_hash": "b07c9ac4d0bcc229171d1746c102877a29378bc6359af6d34342fbef19d027bf",
   "priorities_approved": true,
   "next": {
-    "id": "lod-tier-builder-route-b",
-    "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
-    "lane": "engine",
+    "id": "adr-029-g1-feasibility",
+    "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
-    "order": 7,
-    "budget_minutes": 480,
+    "order": 5,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-16",
+      "opened": "2026-09-14",
       "done": null
     },
-    "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim"
+    "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
   },
   "ready": [
-    {
-      "id": "lod-tier-builder-route-b",
-      "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 7,
-      "budget_minutes": 480,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-16",
-        "done": null
-      },
-      "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim"
-    },
     {
       "id": "adr-029-g1-feasibility",
       "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
@@ -311,6 +292,28 @@
       },
       "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)",
       "evidence_label": "PR #81"
+    },
+    {
+      "id": "lod-tier-builder-route-b",
+      "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 7,
+      "budget_minutes": 480,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "engine/lod-tier-builder"
+      },
+      "dates": {
+        "opened": "2026-09-16",
+        "done": null
+      },
+      "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
+      "evidence_label": "branch `engine/lod-tier-builder`"
     },
     {
       "id": "self-check-false-readings",

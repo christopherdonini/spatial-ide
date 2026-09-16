@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T11:29:17.515Z",
-  "plan_hash": "65be07b936f40d1ac9579852e8cf896af5982483a767d8478ca1109adc6581ca",
+  "generated_at": "2026-09-16T11:33:21.187Z",
+  "plan_hash": "b07c9ac4d0bcc229171d1746c102877a29378bc6359af6d34342fbef19d027bf",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1149,7 +1149,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 7,
       "depends_on": [
         "adr-031-lod-preregistration"
@@ -1159,7 +1159,9 @@
         "minutes": 0
       },
       "gate": "engine/LOD-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "engine/lod-tier-builder"
+      },
       "budget_minutes": 480,
       "generation": 1,
       "felt_verdict": false,

@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `65be07b936f40d1ac9579852e8cf896af5982483a767d8478ca1109adc6581ca`) at `2026-09-16T11:29:17.417Z`.
+Generated from `PLAN.yaml` (sha256 `b07c9ac4d0bcc229171d1746c102877a29378bc6359af6d34342fbef19d027bf`) at `2026-09-16T11:33:21.086Z`.
 
 ## 1. Next
 
-- **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps (lane `engine`)
+- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps (lane `engine`, order 7, budget 480 min)
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`, order 5, budget 120 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
@@ -31,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `65be07b936f40d1ac9579852e8cf896af5982483a767
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
 - **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: PR #81
+- **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: branch `engine/lod-tier-builder`
 - **self-check-false-readings** — Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff — evidence: branch `governance/test-claims-planned`
 
 ## 6. Proposed / unscheduled
