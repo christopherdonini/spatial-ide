@@ -220,8 +220,18 @@ pub(crate) fn wrap_for_data_plane(
     dataset: String,
     dataset_reuses_connections: bool,
     reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+    invalidator: Option<Arc<skp::SessionInvalidator>>,
 ) -> (Box<dyn BatchSource>, Arc<dyn SourceCancel>) {
-    let source = EngineSource { stream, dataset, dataset_reuses_connections, reports };
+    let stats = stream.stats();
+    let source = EngineSource {
+        stream,
+        dataset,
+        dataset_reuses_connections,
+        reports,
+        stats,
+        invalidator,
+        session_ended: false,
+    };
     (Box::new(source), Arc::new(EngineCancel(cancel)))
 }
 
@@ -235,7 +245,11 @@ pub(crate) fn wrap_for_data_plane(
 /// a raw-`StreamParams` START is refused rather than silently accepted (`kernel/tests/skp_admission.rs`).
 enum AdmissionMode {
     Raw,
-    TicketOnly(Arc<skp::StreamRegistry>),
+    /// The ticket registry, and the generation map a redeemed ticket is checked against.
+    ///
+    /// The generation map is `Option` because the raw-params tests construct a factory without an
+    /// `SkpHost`; where it is present, redemption consults it (see `create_from_ticket`).
+    TicketOnly(Arc<skp::StreamRegistry>, Option<Arc<skp::GenerationRegistry>>),
 }
 
 /// Turns an operation request into an engine stream. This is the whole composition.
@@ -271,7 +285,25 @@ impl EngineSourceFactory {
     /// [`spatial_skp::v0::StreamHandle`] ticket already built and validated by
     /// `SkpHost::viewport_query`, never decoded as [`StreamParams`].
     pub fn ticket_only(catalog: Arc<Catalog>, tickets: Arc<skp::StreamRegistry>) -> Self {
-        Self { catalog, connection_reports: None, mode: AdmissionMode::TicketOnly(tickets) }
+        Self { catalog, connection_reports: None, mode: AdmissionMode::TicketOnly(tickets, None) }
+    }
+
+    /// As [`Self::ticket_only`], also refusing a ticket whose **dataset-session generation** ended
+    /// between mint and redemption (Brief A boundary 4).
+    ///
+    /// `generations` must be the identical `Arc` the `SkpHost` holds (`SkpHost::generations()`) —
+    /// two registries would mean this check reads state nothing writes. The shell's app setup is
+    /// the caller.
+    pub fn ticket_only_with_generations(
+        catalog: Arc<Catalog>,
+        tickets: Arc<skp::StreamRegistry>,
+        generations: Arc<skp::GenerationRegistry>,
+    ) -> Self {
+        Self {
+            catalog,
+            connection_reports: None,
+            mode: AdmissionMode::TicketOnly(tickets, Some(generations)),
+        }
     }
 }
 
@@ -288,7 +320,9 @@ impl SourceFactory for EngineSourceFactory {
         }
         match &self.mode {
             AdmissionMode::Raw => self.create_from_raw_params(request),
-            AdmissionMode::TicketOnly(tickets) => Self::create_from_ticket(tickets, request),
+            AdmissionMode::TicketOnly(tickets, generations) => {
+                Self::create_from_ticket(tickets, generations.as_ref(), request)
+            }
         }
     }
 }
@@ -326,6 +360,10 @@ impl EngineSourceFactory {
             p.dataset,
             ds.connections().config().reuses_connections(),
             self.connection_reports.clone(),
+            // The raw-params path has no `SkpHost`, so there is no dataset-session generation for a
+            // post-check finding to end. The post-check still runs and the terminal still carries
+            // its typed code; only the invalidation has nobody to reach.
+            None,
         ))
     }
 
@@ -341,6 +379,7 @@ impl EngineSourceFactory {
     /// process never installs both admission paths (ADR-019's own consequence).
     fn create_from_ticket(
         tickets: &Arc<skp::StreamRegistry>,
+        generations: Option<&Arc<skp::GenerationRegistry>>,
         request: &OpenRequest,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
         let handle_str = std::str::from_utf8(&request.params)
@@ -348,6 +387,21 @@ impl EngineSourceFactory {
         let handle: spatial_skp::v0::StreamHandle = handle_str
             .parse()
             .map_err(|e: String| format!("not a ticket this producer minted: {e}"))?;
+        // **Brief A boundary 4, kernel-authoritative.** A ticket minted under a live generation
+        // whose source was then observed to have changed must not produce a stream, even though
+        // `StreamRegistry` itself still knows the handle. Checked before `redeem` so a refused
+        // ticket is not consumed: a ticket is single-use, and spending it to learn it was dead
+        // would turn a refusal into a second, different refusal on any retry.
+        if let Some(generations) = generations {
+            if !generations.ticket_is_live(handle.as_str()) {
+                return Err(format!(
+                    "{}: ticket `{}` belongs to a dataset session that ended when its source was \
+                     observed to have changed; reopen the dataset",
+                    skp::SOURCE_CHANGED_CODE,
+                    handle.as_str()
+                ));
+            }
+        }
         tickets.redeem(handle.as_str())
     }
 }
@@ -357,6 +411,46 @@ struct EngineSource {
     dataset: String,
     dataset_reuses_connections: bool,
     reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+    /// This stream's own stats, where its producer records what the **post-check** found
+    /// (`spatial_engine::StreamStats::source_changed_detail`). Held as the `Arc` the producer
+    /// writes through, so this side reads the same cell rather than a copy.
+    stats: Arc<spatial_engine::StreamStats>,
+    /// Where a post-check finding ends the dataset-session generation. `None` for the raw-params
+    /// admission path, which has no `SkpHost` and therefore no generation to end.
+    invalidator: Option<Arc<skp::SessionInvalidator>>,
+    /// Whether this source already ended its session. The operation is idempotent anyway; this
+    /// keeps a drained-then-dropped stream from taking the registry's lock twice for nothing.
+    session_ended: bool,
+}
+
+impl EngineSource {
+    /// **Read the post-check's finding and end the generation if it found a change** — §13 C's
+    /// rule (ii), given the reader it lacked at P3 gate attempt 1.
+    ///
+    /// Called on **every terminal class**: the clean end (`next_into` returns `None`), a terminal
+    /// error, a cancellation (which arrives as a terminal error and keeps its own `cancelled`
+    /// terminal — a cancel is never reported as a source change), and `Drop` as the backstop for a
+    /// consumer that walked away without draining.
+    ///
+    /// The producer records the flag **before it sends any terminal**
+    /// (`engine/src/stream.rs`), so by the time any of those arrive here the cell is already
+    /// written — there is no race between the terminal and the finding it belongs to.
+    fn end_session_if_source_changed(&mut self) {
+        if self.session_ended {
+            return;
+        }
+        let Some(detail) = self.stats.source_changed_detail() else { return };
+        self.session_ended = true;
+        let Some(invalidator) = self.invalidator.as_ref() else { return };
+        let cancelled = invalidator.end_generation(&self.dataset);
+        // Not a log-and-continue: the generation really is over, and this line only records which
+        // stream noticed and how many siblings went with it.
+        eprintln!(
+            "session ended for dataset `{}`: the source changed during use ({detail}); \
+             {cancelled} in-flight stream(s) cancelled",
+            self.dataset
+        );
+    }
 }
 
 impl Drop for EngineSource {
@@ -367,6 +461,9 @@ impl Drop for EngineSource {
     /// reports the same facts a completed one does and a measurement cannot silently describe only
     /// its successes.
     fn drop(&mut self) {
+        // The backstop for a consumer that walked away without draining: the producer still ran its
+        // post-check, and a change it found must still end the session.
+        self.end_session_if_source_changed();
         let Some(reports) = self.reports.as_ref() else { return };
         let facts = self.stream.connection_facts();
         // A closed receiver means nobody is recording, which is not an error.
@@ -383,9 +480,27 @@ impl Drop for EngineSource {
 impl BatchSource for EngineSource {
     fn next_into(&mut self, out: &mut Vec<u8>) -> Option<Result<BatchMeta, String>> {
         match self.stream.next_into(out) {
-            None => None,
+            // The clean terminal: the producer is done and `tx` was dropped. Its post-check has
+            // already run and already recorded anything it found.
+            None => {
+                self.end_session_if_source_changed();
+                None
+            }
             Some(Ok(info)) => Some(Ok(BatchMeta { rows: info.rows as u64 })),
-            Some(Err(e)) => Some(Err(e.to_string())),
+            // Every terminal error, cancellation included.
+            //
+            // **The detail carries the typed code, `"<code>: <display>"`** — P3 gate attempt 1,
+            // architect-ruled. `BatchSource` is typed `Result<_, String>`, so this is where the
+            // typed `EngineError` stops being typed; without the prefix a client that must clear
+            // residency and refuse picks on `engine.source_changed` would have to match on prose
+            // whose wording is the human's at P6. The code comes from `skp::error_of`'s own table,
+            // so there is one place a code is minted. The data plane is untouched: the prefix rides
+            // the `String` the terminal frame already carries (A3).
+            Some(Err(e)) => {
+                let detail = skp::terminal_detail_of(&e);
+                self.end_session_if_source_changed();
+                Some(Err(detail))
+            }
         }
     }
 

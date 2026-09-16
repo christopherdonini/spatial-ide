@@ -81,6 +81,21 @@ export interface TileViewportStreamManagerOptions {
    * residency itself is what needs clearing). */
   onTileSuperseded: (tileKey: string, streamHandle: string | null) => void;
   onTerminal?: (tileKey: string, streamHandle: string, terminal: Terminal) => void;
+  /**
+   * **The dataset session ended: the source was observed to have changed** (Brief A settled
+   * boundary 4 -- `state/NEXT-CUT.md:103`'s "residency cleared, picks refused, typed status").
+   *
+   * Fired once, from the terminal that carried `engine.source_changed`. By the time it runs this
+   * manager has already cancelled every in-flight tile, emptied its queue, dropped every ticket
+   * from its live set, and latched itself closed -- `onCameraChange` returns `"session-ended"` from
+   * then on, so nothing is re-requested.
+   *
+   * What the manager cannot do for the owner, and why this callback exists: **residency lives with
+   * the caller** (`TileResidencyAccessor` can answer about one tile but cannot enumerate the
+   * resident set), and so does picking. The owner clears what it holds and refuses picks until the
+   * dataset is reopened. `detail` is the terminal's own text, for the typed status.
+   */
+  onSessionEnded?: (detail: string) => void;
 }
 
 export type TilePlanOutcome =
@@ -188,7 +203,11 @@ export type TilePlanOutcome =
     }
   /** `onCameraChange` called before `establishGridFrame` ever ran -- nothing to plan against yet. */
   | { kind: "no-frame" }
-  | { kind: "stopped" };
+  | { kind: "stopped" }
+  /** Brief A boundary 4: this dataset's session ended because its source was observed to have
+   * changed. Distinct from `"stopped"`, which is an ordinary teardown -- this one means the data
+   * this manager was serving is gone, and the only way forward is to reopen the dataset. */
+  | { kind: "session-ended" };
 
 function toWireBbox(bbox: AuthoritativeBbox): Bbox {
   return {
@@ -325,6 +344,9 @@ export class TileViewportStreamManager {
   private frame: TileGridFrame | null = null;
   private readonly level: TileGridLevel;
   private stopped = false;
+  /** Brief A boundary 4: latched the moment a terminal carries `engine.source_changed`. Permanent
+   * for this manager -- reopening the dataset builds a new one. */
+  private sessionEnded = false;
   private overBudgetFlag = false;
   // S2 (reviewer gate, close-out fix piece): a THUNK, not an eagerly-computed array -- see
   // `setOverBudget`'s own doc comment for why. Defaults to a constant empty-array thunk so this
@@ -476,6 +498,10 @@ export class TileViewportStreamManager {
    */
   onCameraChange(bbox: AuthoritativeBbox, filter: Filter | null = null): TilePlanOutcome {
     if (this.stopped) return { kind: "stopped" };
+    // Latched by `endSession`: nothing is re-requested after the source was observed to have
+    // changed. Checked before `frame`, because a session that ended is a stronger fact than a
+    // manager that has not been given a frame yet.
+    if (this.sessionEnded) return { kind: "session-ended" };
     const frame = this.frame;
     if (frame === null) return { kind: "no-frame" };
     this.currentFilter = filter;
@@ -682,6 +708,36 @@ export class TileViewportStreamManager {
     this.requeuedTiles.clear();
   }
 
+  /**
+   * **End the dataset session: the source was observed to have changed** (boundary 4).
+   *
+   * Idempotent -- several tiles' terminals can carry the same code, and a session ends once.
+   *
+   * What it does, in the order `state/NEXT-CUT.md:103` names: every ticket leaves the live set, so
+   * a batch still on the wire for any of them is refused by `onBatch`'s live check; every in-flight
+   * and queued tile is dropped through the existing `clearAll`; this manager latches closed, so
+   * `onCameraChange` re-requests nothing until the dataset is reopened (which builds a new
+   * manager); and the owner is told, so it can clear the residency it holds and refuse picks --
+   * the two things that live with the caller and not here.
+   */
+  private endSession(detail: string): void {
+    if (this.sessionEnded) return;
+    this.sessionEnded = true;
+    this.liveTickets.invalidate();
+    // No resident-key hint: this manager does not hold the resident set, and `onSessionEnded` is
+    // how the owner that does is told to clear all of it -- not tile by tile.
+    this.clearAll();
+    this.opts.onSessionEnded?.(detail);
+  }
+
+  /**
+   * Whether this manager's dataset session ended because the source changed. `true` is permanent
+   * for this manager: reopening the dataset builds a new one.
+   */
+  isSessionEnded(): boolean {
+    return this.sessionEnded;
+  }
+
   /** Cancels the active stream (if any) for a specific tile, wherever it is in this manager's own
    * lifecycle -- mirrors `ViewportStreamManager.cancelStream`'s "regardless of whether it is
    * currently active" contract, restated per-tile. */
@@ -821,6 +877,10 @@ export class TileViewportStreamManager {
    * finds nothing left in `tileState`/`queue` and bumps the epoch a second time, which is idempotent.
    */
   private drainQueueIfRoom(): void {
+    // Brief A boundary 4: once the session has ended, nothing is issued — including from this
+    // path, which `cancelTileStream` reaches on its way out and which would otherwise refill the
+    // slots `endSession`'s own `clearAll` was in the middle of emptying.
+    if (this.sessionEnded) return;
     if (this.overBudgetFlag) return;
     while (this.queue.length > 0 && this.activeSlotCount() < MAX_IN_FLIGHT_TILE_STREAMS) {
       const key = this.queue.shift()!;
@@ -969,11 +1029,12 @@ export class TileViewportStreamManager {
         }
         this.nextBatchSeqByStream.delete(streamHandleAtStart);
         this.liveTickets.retire(streamHandleAtStart);
-        // The client half of the invalidation path, identical in rule to the untiled arm's: one
-        // tile's terminal naming `engine.source_changed` ends the whole session, so every other
-        // tile's ticket is dropped too and any batch still in flight for them is refused above.
+        // **The client half of the invalidation path, with its consequences** (boundary 4;
+        // `state/NEXT-CUT.md:103`: "residency cleared, picks refused, typed status"). One tile's
+        // terminal naming `engine.source_changed` ends the whole session, because the generation is
+        // per dataset-session and not per tile.
         if (isSourceChangedTerminal(terminal)) {
-          this.liveTickets.invalidate();
+          this.endSession(terminal.detail);
         }
         if (this.selfCancelledHandles.delete(streamHandleAtStart)) {
           this.drainQueueIfRoom();

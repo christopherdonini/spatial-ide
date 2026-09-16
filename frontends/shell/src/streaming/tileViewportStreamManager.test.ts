@@ -1282,3 +1282,128 @@ describe("TileViewportStreamManager", () => {
     });
   });
 });
+
+/**
+ * **Brief A settled boundary 4, in the tiled arm** — P3 gate attempt 1, blocking finding 1.
+ *
+ * At attempt 1 this arm dropped late batches but did nothing else: no residency clearing, no
+ * refusal of further work, no typed status. `state/NEXT-CUT.md:103` asks for all three
+ * ("residency cleared, picks refused, typed status"), and this manager's own test file was
+ * untouched in that diff, which is why it went unseen.
+ *
+ * Every terminal here is the shape the kernel actually sends — `"<code>: <display>"`
+ * (`kernel/src/skp.rs::terminal_detail_of`, pinned on the Rust side by
+ * `kernel/tests/typed_terminal_codes.rs`) — never an invented one.
+ */
+describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", () => {
+  // This block is a sibling of the main `describe` above, so it needs its own mock setup -- the
+  // outer `beforeEach` does not reach it, and without this every mock here carries the previous
+  // test file's leftovers.
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockImplementation(() => new Promise(() => {}));
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock
+      .mockReset()
+      .mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock
+      .mockReset()
+      .mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+    logSessionEventMock.mockReset();
+  });
+
+  function sourceChangedTerminal(): { kind: "ProducerFailed"; detail: string } {
+    return {
+      kind: "ProducerFailed",
+      detail:
+        "engine.source_changed: refused: the source file changed while it was open " +
+        "({size, mtime, footer-length, footer-hash}). Everything read for this session is " +
+        "discarded and the identities it handed out no longer refer to anything; reopen the file " +
+        "to continue. This check does not establish snapshot consistency, cannot detect every " +
+        "in-place modification, and may detect a change during a query only after that query has " +
+        "finished reading",
+    };
+  }
+
+  /** Mutation recorded in-source: replacing `this.endSession(...)` in `onTerminal` with the bare
+   * `this.liveTickets.invalidate()` attempt 1 shipped fails every assertion below except the
+   * late-batch one — which is precisely the gap the gate found. */
+  it("ends the whole session from one tile's terminal: work dropped, further planning refused, owner told", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR);
+    viewportQueryMock
+      .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
+      .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 })
+      .mockResolvedValueOnce({ stream: "sh_3", expires_in_ms: 30_000 });
+    manager.onCameraChange(ANCHOR);
+    await flushMicrotasks();
+    expect(manager.inFlightCount).toBeGreaterThan(0);
+
+    const terminal = sourceChangedTerminal();
+    (startStreamMock.mock.calls[0][0].sink as StreamSink).onTerminal(terminal);
+    await flushMicrotasks();
+
+    // The generation is per dataset-session, not per tile: ONE tile's terminal ends all of it.
+    expect(manager.inFlightCount).toBe(0);
+    expect(manager.queuedCount).toBe(0);
+    expect(manager.isSessionEnded()).toBe(true);
+
+    // The typed status reaches the owner, which clears the residency it holds and refuses picks --
+    // the two things that live with the caller, since this manager cannot enumerate the resident
+    // set. The detail is the terminal's own text.
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded.mock.calls[0][0]).toBe(terminal.detail);
+
+    // Refused until reopen: a later camera change plans nothing and mints nothing.
+    viewportQueryMock.mockClear();
+    expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /** Boundary 4's "late results never repopulate the canvas", per tile.
+   *
+   * Mutation recorded in-source: removing the `liveTickets.isLive` guard from this arm's `onBatch`
+   * lets the late batch through and fails this. */
+  it("drops a batch that arrives for another tile after the session ended", async () => {
+    const { manager, onBatch } = makeManager();
+    manager.establishGridFrame(ANCHOR);
+    viewportQueryMock
+      .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
+      .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 });
+    manager.onCameraChange(ANCHOR);
+    await flushMicrotasks();
+
+    const secondSink = startStreamMock.mock.calls[1][0].sink as StreamSink;
+    (startStreamMock.mock.calls[0][0].sink as StreamSink).onTerminal(sourceChangedTerminal());
+    await flushMicrotasks();
+
+    onBatch.mockClear();
+    // A sibling tile's socket delivering late, after the session it belonged to ended.
+    secondSink.onBatch(new Uint8Array([1, 2, 3]), true);
+    expect(onBatch).not.toHaveBeenCalled();
+  });
+
+  /** An ordinary cancel is not a source change — §13 C rule (ii) on the client side. A supersede
+   * must not latch this manager closed.
+   *
+   * Mutation recorded in-source: matching on the refusal's prose instead of its code makes an
+   * ordinary terminal that happens to mention a change end the session, and breaks this. */
+  it("an ordinary terminal does not end the session", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR);
+    viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+    manager.onCameraChange(ANCHOR);
+    await flushMicrotasks();
+
+    (startStreamMock.mock.calls[0][0].sink as StreamSink).onTerminal({
+      kind: "Completed",
+      detail: "",
+    });
+    await flushMicrotasks();
+
+    expect(onSessionEnded).not.toHaveBeenCalled();
+    expect(manager.isSessionEnded()).toBe(false);
+    expect(manager.onCameraChange(ANCHOR).kind).not.toBe("session-ended");
+  });
+});

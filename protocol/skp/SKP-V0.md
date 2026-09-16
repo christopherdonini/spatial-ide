@@ -570,7 +570,8 @@ this class is a compatibility event that a version bump must carry. Until then, 
 **The version's FULL field set, as §8's own discipline requires — every field `skp/0.3` adds, in
 one list. Nothing below rewrites an earlier entry.**
 
-`describe` **response** gains five members, four of them Brief A's settled boundary 9 by name:
+`describe` **response** gains six members: four are Brief A's settled boundary 9 by name, one is
+the P2-licensed display-convention carrier, and one is boundary 9's sanity level as its own object.
 
 - **`crs.provenance: String`** — boundary 9's `crs.provenance`. How this dataset's CRS was
   established: `"crs:declared"`, `"crs:asserted"`, `"crs:format-default"`. A recorded fact and never
@@ -633,3 +634,43 @@ commit. While `skp/0.3` is unmerged, further additions to it are **appended adde
 the `skp/0.2` P2/P3c addendum precedent. Once Brief A merges to `main`, `skp/0.3`'s field set is
 closed and the next brief bumps to `skp/0.4`. **`skp/1` stays RESERVED** and must not be used for
 any interim version.
+
+**P3 gate-fix addendum (2026-09-16, appended — the entry above is unchanged).** Three corrections
+and one value-domain widening, all still inside `skp/0.3` while it is unmerged (this entry's own
+"further additions to it are appended addenda", the `skp/0.2` P2/P3c precedent).
+
+- **Correction to this entry's own first line.** It read "gains five members" and then listed six.
+  Six is right: `crs.provenance`, `crs.axis_provenance`, `crs.display_convention`,
+  `identity.class`, `identity.session_statement` and `sanity`.
+- **`crs.source` gains a third value, `"format-rule"` — a value-domain widening of an existing key,
+  not a new key.** The human's ruling of 2026-09-16 (`DECISIONS-PENDING.md` RULED 2026-09-16 —
+  question round 3, item 3), verbatim: *"Crs.source gains the third value `format-rule` beside
+  `file` and `caller_asserted`, with crs.provenance carrying the specific class
+  (`crs:format-default`). Existing assertions re-aimed with the ruling named; the manifest carries
+  the same value; recorded as a value-domain widening under the SKP 0.3 bump."*
+
+  Why it is owed: an admission GeoParquet's absent-`crs`-key rule supplied recorded
+  `crs_source = "file"`, which states that the file declared a CRS it does not declare — a false
+  record, and one that reached published bundle manifests (`crs_source` /`crs_source_kind` in
+  `kernel/src/bundle`). The P1 reviewer's Finding 1 named it; this closes it. The two facts now sit
+  side by side and say different things: `crs.source` says *a rule supplied it*,
+  `crs.provenance` says *which rule* (`crs:format-default`).
+
+  **Recorded as a widening under a bump that is already happening, not as a licence to widen
+  silently.** The entry-30 addendum above sets out when a value-domain widening may ride an
+  unchanged version and when it may not; this one does not need that licence, because `skp/0.3` is
+  being minted in the same commit and its field set is not yet closed. The manifest carries the
+  identical value by construction — `kernel/src/publish` writes `crs.source().as_str()` — so the
+  wire and the published artifact cannot disagree.
+- **Both new refusal surfaces now carry their typed code into the string they cross as.** A
+  data-plane terminal's `detail` is `"<code>: <display>"` (`kernel/src/skp.rs::terminal_detail_of`,
+  applied at `kernel/src/lib.rs`'s `EngineSource::next_into`), and a publish refusal reaching the
+  shell is `"<code>: <display>"` too (`PublishError::refusal_detail`). **Neither is a wire-format
+  change**: both ride a `String` that already existed, and `protocol/data-plane/` still has an empty
+  diff for this version. It is recorded here because a client now depends on the shape: the code is
+  a **prefix**, and a client matches it as one.
+- **`identity.uniqueness`'s documented value set was two and is three.** The third,
+  `"by-construction-within-generation"`, comes from the **PROPOSED** ADR-016 Amendment 1, which
+  binds nothing until the human accepts it; it is emitted because this cut implements the session
+  tier, not because the accepted ADR lists it. The accepted ADR-016 §6 lists two, and nothing in
+  this cut treats the amendment as settled.

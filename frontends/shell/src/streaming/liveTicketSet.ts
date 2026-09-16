@@ -27,17 +27,28 @@ import type { Terminal } from "./transport";
 
 /**
  * The typed refusal code that ends a dataset-session generation
- * (`kernel/src/skp.rs::error_of`, `EngineError::SourceChanged`).
+ * (`kernel/src/skp.rs::SOURCE_CHANGED_CODE`, minted by `error_of` for `EngineError::SourceChanged`).
  *
- * **Matched on the code, not on prose.** `Terminal.detail` is the refusal's own message carried
- * verbatim, and a client that decided by reading its wording would break the moment that wording
- * changes -- which it will, at P6, where the human sights these strings.
+ * **Matched on the code, not on prose.** `Terminal.detail` is `"<code>: <display>"` --
+ * `kernel/src/skp.rs::terminal_detail_of`, applied at `kernel/src/lib.rs`'s
+ * `EngineSource::next_into`, which is the single place a typed `EngineError` becomes the `String`
+ * the data-plane terminal carries. A client deciding by reading the message's wording would break
+ * the moment that wording changes, which it will: those strings are the human's at P6.
+ *
+ * The prefix is why this works at all. Before it, the detail was the `Display` text alone and this
+ * predicate could never fire (P3 gate attempt 1, blocking finding 1).
  */
 export const SOURCE_CHANGED_CODE = "engine.source_changed";
 
-/** Whether this terminal is the kernel telling the client its session ended. */
+/**
+ * Whether this terminal is the kernel telling the client its session ended.
+ *
+ * Anchored to the **start** of the detail, not searched anywhere in it: the code is a prefix by
+ * construction, and a substring match would also fire on a different refusal that happened to
+ * quote this code in its prose.
+ */
 export function isSourceChangedTerminal(terminal: Terminal): boolean {
-  return terminal.detail.includes(SOURCE_CHANGED_CODE);
+  return terminal.detail.startsWith(`${SOURCE_CHANGED_CODE}: `);
 }
 
 export class LiveTicketSet {

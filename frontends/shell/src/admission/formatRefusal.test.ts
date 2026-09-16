@@ -117,3 +117,90 @@ describe("refusalGuidance", () => {
     expect(refusalGuidance("engine.ceiling_exceeded")).toBeNull();
   });
 });
+
+/**
+ * **Brief A P3's four new user-visible states** — and the fact that their codes reach this function
+ * at all, which is what P3 gate attempt 1 got wrong.
+ *
+ * The publish case was unreachable then: a publish refusal crossed the Tauri boundary as
+ * `PrepareOutcome::Refused { message }`, a `Display` string with no code in it. It now crosses as
+ * `"<code>: <display>"` (`PublishError::refusal_detail`, pinned on the Rust side by
+ * `kernel/tests/typed_terminal_codes.rs`), so `codeOf` below finds a real code in a real message.
+ *
+ * **No string here is asserted verbatim.** All four are placeholders for the human's P6 sight; what
+ * is asserted is that each state has guidance at all and that it says the thing the operator needs
+ * (what ended, whether their file is at fault, what to do) — properties a rewording keeps.
+ */
+describe("refusalGuidance for Brief A P3's new states", () => {
+  /** How a client recovers a typed code from a refusal string the kernel prefixed. */
+  function codeOf(detail: string): string {
+    return detail.slice(0, detail.indexOf(":"));
+  }
+
+  // Mutation: return `e.to_string()` instead of `e.refusal_detail()` at the Tauri publish site.
+  // Expected failure: "recovers the publish code from the real prefixed refusal shape, and has
+  // guidance for it" fails -- which is exactly the unreachable case attempt 1 shipped.
+  it("recovers the publish code from the real prefixed refusal shape, and has guidance for it", () => {
+    // The shape `PublishError::refusal_detail` produces, spelled out here rather than invented.
+    const detail =
+      "publish.geographic_crs_not_publishable: refused: OGC:CRS84 is a geographic CRS whose " +
+      "coordinates are in degrees (unit:format-rule), and the bundled viewer has no degrees path";
+    expect(codeOf(detail)).toBe("publish.geographic_crs_not_publishable");
+
+    const guidance = refusalGuidance(codeOf(detail));
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/degrees/i);
+    // It says nothing was written — a publish refusal that leaves the operator unsure whether a
+    // bundle exists is the thing the preflight ordering exists to make answerable.
+    expect(guidance).toMatch(/nothing has been written/i);
+  });
+
+  // Mutation: delete the `engine.source_changed` case from `refusalGuidance`. Expected failure:
+  // "engine.source_changed: says what ended, what to do, and states the check's limit" fails --
+  // the operator would see the raw refusal with no account of what the check cannot do.
+  it("engine.source_changed: says what ended, what to do, and states the check's limit", () => {
+    const guidance = refusalGuidance("engine.source_changed");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/no longer the one this session opened/i);
+    expect(guidance).toMatch(/reopen/i);
+    // Boundary 4's limit is carried, and no snapshot is claimed for what came before (A1).
+    expect(guidance).toMatch(/cannot see every possible edit/i);
+    expect(guidance).not.toMatch(/one snapshot/i);
+  });
+
+  // Mutation: drop the "identity column" sentence from that case. Expected failure:
+  // "engine.identity_ordinal_partitioned_unsupported: names both real routes forward" fails --
+  // an operator would be told only to split their data, never that declaring a column works.
+  it("engine.identity_ordinal_partitioned_unsupported: names both real routes forward", () => {
+    const guidance = refusalGuidance("engine.identity_ordinal_partitioned_unsupported");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/more than one file/i);
+    expect(guidance).toMatch(/single file/i);
+    expect(guidance).toMatch(/identity column/i);
+  });
+
+  // Mutation: reword that case to blame the file. Expected failure:
+  // "engine.internal_inconsistency: says the defect is in the program, not in the operator's
+  // file" fails -- which is the whole reason the variant was retyped off `Source`.
+  it("engine.internal_inconsistency: says the defect is in the program, not in the operator's file", () => {
+    const guidance = refusalGuidance("engine.internal_inconsistency");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/defect in this program/i);
+    expect(guidance).toMatch(/not in your file/i);
+  });
+
+  // Mutation: add a `publish.row_filter_not_recordable` case. Expected failure: "the guidance
+  // count matches the cases: four new states, four non-null" fails on its no-accidental-widening
+  // assertion.
+  it("the guidance count matches the cases: four new states, four non-null", () => {
+    const added = [
+      "engine.source_changed",
+      "engine.identity_ordinal_partitioned_unsupported",
+      "publish.geographic_crs_not_publishable",
+      "engine.internal_inconsistency",
+    ];
+    expect(added.filter((c) => refusalGuidance(c) !== null)).toHaveLength(4);
+    // And nothing was widened by accident: a neighbouring publish code still has none.
+    expect(refusalGuidance("publish.row_filter_not_recordable")).toBeNull();
+  });
+});

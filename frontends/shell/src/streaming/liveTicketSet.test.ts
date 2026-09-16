@@ -13,6 +13,9 @@ import { isSourceChangedTerminal, LiveTicketSet, SOURCE_CHANGED_CODE } from "./l
  * admit at mint, drop what is not live, clear everything on invalidation.
  */
 describe("the live-ticket mirror of the dataset-session generation", () => {
+  // Mutation: make `isLive` return true for an unknown handle. Expected failure: "admits a minted
+  // ticket and drops one it has never seen (fails closed)" fails -- the mirror would stop failing
+  // closed, which is the property the whole type exists for.
   it("admits a minted ticket and drops one it has never seen (fails closed)", () => {
     const live = new LiveTicketSet();
     live.admit("sh_a");
@@ -21,6 +24,9 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     expect(live.isLive("sh_never_minted")).toBe(false);
   });
 
+  // Mutation: have `invalidate` delete only the most recently admitted handle. Expected failure:
+  // "drops every ticket on invalidation, including ones minted before the change was seen" fails
+  // -- a generation is per dataset-session, not per ticket.
   it("drops every ticket on invalidation, including ones minted before the change was seen", () => {
     const live = new LiveTicketSet();
     live.admit("sh_a");
@@ -36,6 +42,8 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     expect(live.size).toBe(0);
   });
 
+  // Mutation: make `retire` call `invalidate`. Expected failure: "retires one finished ticket
+  // without touching the others" fails -- one stream completing would drop every sibling tile.
   it("retires one finished ticket without touching the others", () => {
     const live = new LiveTicketSet();
     live.admit("sh_a");
@@ -45,6 +53,9 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     expect(live.isLive("sh_b")).toBe(true);
   });
 
+  // Mutation: change `isSourceChangedTerminal` to search the detail for the words "source" and
+  // "changed". Expected failure: "recognises the session-ending terminal by its typed code and
+  // not by its wording" fails on its prose case.
   it("recognises the session-ending terminal by its typed code and not by its wording", () => {
     expect(
       isSourceChangedTerminal({
@@ -60,6 +71,9 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     ).toBe(false);
   });
 
+  // Mutation: add a `dataset_session_generation` field to `LiveTicketSet`. Expected failure:
+  // "carries no generation value anywhere -- the client is never told one" fails, which is the
+  // client-side half of block-on-sight A2.
   it("carries no generation value anywhere -- the client is never told one", () => {
     const live = new LiveTicketSet();
     live.admit("sh_a");

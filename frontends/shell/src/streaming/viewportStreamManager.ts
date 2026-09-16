@@ -39,6 +39,19 @@ export interface ViewportStreamManagerOptions {
    * stream this manager has already superseded must not report liveness for a query nobody is
    * waiting on anymore. */
   onStreamOpened?: (streamHandle: string) => void;
+  /**
+   * **The dataset session ended: the source was observed to have changed** (Brief A settled
+   * boundary 4 -- `state/NEXT-CUT.md:103`'s "residency cleared, picks refused, typed status").
+   *
+   * Fired once, from the terminal that carried `engine.source_changed`. By then this manager has
+   * dropped every ticket from its live set -- so a batch still on the wire is refused -- forgotten
+   * its resident handle, and latched itself closed: `requestViewport` returns `"session-ended"`
+   * from here on, so nothing is re-issued until the dataset is reopened.
+   *
+   * The owner clears the residency it holds and refuses picks. Those two live with the caller, not
+   * here. `detail` is the terminal's own text, for the typed status.
+   */
+  onSessionEnded?: (detail: string) => void;
 }
 
 /**
@@ -58,7 +71,11 @@ export type RequestOutcome =
   | { kind: "issued"; streamHandle: string }
   | { kind: "throttled" }
   | { kind: "superseded" }
-  | { kind: "stopped" };
+  | { kind: "stopped" }
+  /** Brief A boundary 4: this dataset's session ended because its source was observed to have
+   * changed. Distinct from `"stopped"`, which is an ordinary teardown -- this one means the data
+   * this manager was serving is gone, and the only way forward is to reopen the dataset. */
+  | { kind: "session-ended" };
 
 /**
  * Viewport-driven streaming with supersede-on-pan (NEXT-CUT.md item 3; architect review D3.7).
@@ -82,6 +99,9 @@ export class ViewportStreamManager {
    * file look like a pan.
    */
   private readonly liveTickets = new LiveTicketSet();
+  /** Brief A boundary 4: latched the moment a terminal carries `engine.source_changed`. Permanent
+   * for this manager -- reopening the dataset builds a new one. */
+  private sessionEnded = false;
   private currentStreamHandle: string | null = null;
   /**
    * The stream handle whose batches are believed resident on the canvas right now, or `null`.
@@ -141,6 +161,11 @@ export class ViewportStreamManager {
     nowMs: number = Date.now(),
     filter: Filter | null = null
   ): Promise<RequestOutcome> {
+    if (this.sessionEnded) {
+      // Brief A boundary 4: nothing is re-issued after the source was observed to have changed.
+      // Checked before `stopped` because it is the more specific fact about why.
+      return { kind: "session-ended" };
+    }
     if (this.stopped) {
       return { kind: "stopped" };
     }
@@ -251,12 +276,18 @@ export class ViewportStreamManager {
         // wire for any of them is refused by `onBatch`'s live check above; residency is cleared and
         // picks refused by `App.tsx` off the terminal it receives next.
         if (isSourceChangedTerminal(terminal)) {
+          this.sessionEnded = true;
           this.liveTickets.invalidate();
+          // Residency this manager knows about is dropped here; the owner clears what it holds —
+          // and refuses picks — off `onSessionEnded`, because the resident geometry and the pick
+          // index live with the caller and not here.
           this.residentStreamHandle = null;
+          this.currentStreamHandle = null;
           logSessionEvent(
             "warn",
             `session-ended-source-changed: ${streamHandleAtStart}: ${terminal.detail}`
           );
+          this.opts.onSessionEnded?.(terminal.detail);
         }
         // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
         // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the

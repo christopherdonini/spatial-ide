@@ -402,7 +402,11 @@ pub fn prepare_with_progress(
     // The predictable ADR-025 checks (and every other pin-free refusal), BEFORE any byte is
     // hashed — the reordering this piece exists to build.
     if let Err(e) = publish::preflight_pinless(&request) {
-        return PrepareOutcome::Refused { message: e.to_string() };
+        // **The typed code travels with the prose** (P3 gate attempt 1, blocking finding 5). This
+        // is the one refusal site whose codes the shell renders code-specific guidance for —
+        // `publish.geographic_crs_not_publishable` among them — and a `Display` string alone gave
+        // it nothing to match on but wording the human has not yet sighted.
+        return PrepareOutcome::Refused { message: e.refusal_detail() };
     }
 
     // The pin phase: cancellable and progress-reporting (`docs/01` principle 7). A cancel here

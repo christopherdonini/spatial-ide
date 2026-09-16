@@ -366,6 +366,14 @@ impl Dataset {
                     Some(crs.axis_order()),
                     None,
                 ),
+                // **Unreachable here, and deliberately matched rather than wildcarded.**
+                // `CrsSource::FormatRule` is stamped *below* this block, from the very
+                // `crs_provenance` this block computes, so no `DatasetCrs` carries it yet at this
+                // line. A wildcard arm would let a future re-stamp move above this point and
+                // silently take the file branch; this arm makes that a compile error instead.
+                crs::CrsSource::FormatRule => unreachable!(
+                    "`FormatRule` is stamped from `crs_provenance`, which this match computes"
+                ),
                 // **A provenance class is read or the open stops; it is never substituted.**
                 // `crs::admit` reaches its file arm only because `format_semantics` handed it a
                 // CRS, and every branch that does so sets both provenances — so the `None` arm is
@@ -386,7 +394,7 @@ impl Dataset {
                             "a file CRS was admitted with crs_provenance {crs_class:?} and \
                              axis_provenance {axis_class:?}"
                         );
-                        // Retyped at Brief A P3 (the brief's scoped carry-over): this was
+                        // Retyped at Brief A P3, on its own merits and not on a cited authority: this was
                         // `EngineError::Source`, which is "the file could not be opened or read at
                         // all" and sent a caller to look at its file for a defect in this code.
                         return Err(EngineError::InternalInconsistency {
@@ -401,6 +409,18 @@ impl Dataset {
                     }
                 },
             };
+
+        // **The human's ruling of 2026-09-16** (`DECISIONS-PENDING.md` RULED 2026-09-16 — question
+        // round 3, item 3), applied at the one site that knows the class the reader established: an
+        // admission the *format rule* supplied records `crs_source = "format-rule"`, not `"file"`.
+        // Recording it as `file` was a false record about the file — nothing in such a file says
+        // `OGC:CRS84` — and it reached published manifests (the P1 reviewer's Finding 1). The
+        // specific rule stays readable beside it in `describe.crs.provenance` (`crs:format-default`).
+        let crs = if crs_provenance == crate::geoparquet::CrsProvenance::FormatDefault {
+            crs.recorded_as_format_rule()
+        } else {
+            crs
+        };
 
         // The sanity check (R-S1…R-S3), before the identity scan: a file the format's own default
         // is contradicted by is refused on that ground, which is the first outcome it reaches.
@@ -476,9 +496,14 @@ impl Dataset {
     /// consistency, it cannot see every in-place modification, and a change it does not report is
     /// not a check that passed (boundary 4; A1). `stream_inner` calls it before it prepares,
     /// leases or spawns anything, so a refusal costs no connection.
+    /// **A source that cannot be re-read refuses as `SourceChanged` too**, not as
+    /// `EngineError::Source`. This used to propagate the read failure with `?`, which typed a
+    /// deleted-mid-session file as "the file could not be opened at all" — true of the file, wrong
+    /// about the session, and invisible to the host that ends the generation on `SourceChanged`
+    /// (P3 gate attempt 1, blocking finding 4). The post-check has always mapped it this way; this
+    /// is the two checks agreeing again.
     pub fn check_source_unchanged(&self) -> Result<()> {
-        let now = crate::descriptor::SourceDescriptor::of(&self.path)?;
-        self.descriptor.refuse_if_changed(&now)
+        self.descriptor.refuse_if_changed_or_unreadable(&self.path)
     }
 
     /// License and attribution as the source file declares them. Verbatim, uninterpreted.
@@ -1020,7 +1045,7 @@ fn sanity_check(
     let cap = crate::geoparquet::SANITY_SAMPLE_MAX_ROWS;
     let limit = first_row_group.map_or(cap, |rows| rows.min(cap));
     let (rows_read, qualifier) = match first_row_group {
-        // **Reworded at Brief A P3** (the brief's scoped carry-over). The statement below is
+        // **Reworded at Brief A P3.** The statement below is
         // `LIMIT n` over the file, not a read scoped to a row group, so a reason reading "the first
         // row group (N rows)" claimed a read that did not happen. What runs is the first N rows;
         // where N came from is a separate fact and is recorded as one.
@@ -1308,11 +1333,31 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
         .strip_prefix(r"\\?\UNC\")
         .or_else(|| text.strip_prefix(r"\\?\"))
         .unwrap_or(text);
-    // `*` and `?` only. `[` is deliberately not treated as a glob character here: a character class
-    // in a source path is exotic, while a bracket in a real directory name is not, and a false
-    // positive turns an ordinary file into a refusal about partitioning it does not have.
-    if scanned.contains('*') || scanned.contains('?') {
-        return Some(format!("{text} is a glob naming more than one file"));
+    // **Every metacharacter DuckDB's own `read_parquet` expands**, not a subset of them: `*` and
+    // `?` wildcards, `[...]` character classes, and `{a,b}` brace alternation. An earlier revision
+    // scanned for `*` and `?` only, on the reasoning that a bracket in a real directory name is
+    // ordinary — which is true, and is the wrong trade to make here.
+    //
+    // **The trade-off, weighed and stated.** A literal file whose name contains `[`, `]`, `{` or
+    // `}` is legal on every filesystem this runs on, and this function now refuses it by name even
+    // though it is one file. That is the safe direction and the false positive is *visible*: the
+    // operator is told, in the refusal, that the path was read as naming more than one file, which
+    // is a sentence they can act on (quote the path, rename the file). The alternative is the
+    // invisible failure: DuckDB expands the class, the source silently becomes a multi-file scan,
+    // and `file_row_number` becomes a per-file ordinal reused across files — the session tier's
+    // identity silently colliding, which is exactly what R-I4 exists to prevent (A5, boundary 7).
+    // A refusal an operator can read beats an identity that is wrong and says nothing.
+    //
+    // Deliberately **not** stat-ing the path first to see whether such a literal file exists: that
+    // would make the refusal depend on what happens to be on disk, so the same path would be
+    // admitted or refused for reasons the operator cannot see, and a file appearing later would
+    // change the answer. The rule is a property of the path text alone.
+    const GLOB_METACHARACTERS: [char; 6] = ['*', '?', '[', ']', '{', '}'];
+    if let Some(found) = GLOB_METACHARACTERS.iter().find(|c| scanned.contains(**c)) {
+        return Some(format!(
+            "{text} carries the glob metacharacter `{found}`, so it names a pattern rather than one \
+             file"
+        ));
     }
     None
 }

@@ -111,6 +111,10 @@ fn describe_response_with_a_caller_asserted_crs_round_trips() {
 /// **And the A2 assertion in its wire form**: this response is the most generation-adjacent shape
 /// the protocol has, and it carries no generation value anywhere. The session statement names the
 /// tier without naming a number, because the number is kernel and client state.
+/// Mutation: add a `dataset_session_generation` member to `IdentityInfo` and populate the
+/// fixture. Expected failure:
+/// `describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_generation` fails
+/// on its A2 sweep — which is the whole point of sweeping the serialized document.
 #[test]
 fn describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_generation() {
     let v = fixture("v0-describe-response-session-ordinal");
@@ -143,7 +147,8 @@ fn describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_ge
     assert_eq!(
         text.matches("generation").count(),
         text.matches("by-construction-within-generation").count(),
-        "the only occurrence of the word on the wire is ADR-016 §6's record value, which names a \
+        "the only occurrence of the word on the wire is the what-was-checked record value, \
+         which names a \
          basis and is not a value (A2): {text}"
     );
     // **A1**, in the same sweep: no snapshot claim in any string this response carries.
@@ -156,6 +161,9 @@ fn describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_ge
 
 /// **`skp/0.3`** — the two typed refusals boundary 9 names, plus the retyped internal-inconsistency
 /// arm, each in its wire shape with its `detail` field populated.
+/// Mutation: drop the `detail` field from `error_of`'s `SourceChanged` arm. Expected failure:
+/// `the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields` fails — a client that
+/// must act on which component changed would have only prose.
 #[test]
 fn the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields() {
     let changed = fixture("v0-error-source_changed");
@@ -167,8 +175,11 @@ fn the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields() {
         parsed.fields.get("detail").map(String::as_str),
         Some("{size, mtime, footer-length, footer-hash}")
     );
-    // A1 again, on the refusal that is most tempting to phrase as a snapshot statement.
-    assert!(!parsed.message.to_lowercase().contains("snapshot consistency, ") || parsed.message.contains("does not establish snapshot consistency"));
+    // A1 again, on the refusal that is most tempting to phrase as a snapshot statement. The
+    // previous form of this line was a tautology — it could not fail — and is replaced by the two
+    // assertions that actually bite: the word appears only inside boundary 4's own denial, and the
+    // affirmative phrasing appears nowhere.
+    assert!(!parsed.message.contains("reads one snapshot"), "{}", parsed.message);
     assert!(parsed.message.contains("does not establish snapshot consistency"));
     assert_eq!(serde_json::to_value(&parsed).unwrap(), changed);
 

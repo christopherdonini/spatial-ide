@@ -87,7 +87,14 @@ pub struct SourceInfo {
 pub struct CrsInfo {
     pub identifier: String,
     pub definition_json: Option<String>,
-    /// `"file"` or `"caller_asserted"`.
+    /// `"file"`, `"caller_asserted"` or `"format-rule"`.
+    ///
+    /// **`"format-rule"` is `skp/0.3`'s value-domain widening of this existing key** — the human's
+    /// ruling of 2026-09-16 (`DECISIONS-PENDING.md` RULED 2026-09-16 — question round 3, item 3).
+    /// An admission GeoParquet's absent-`crs`-key rule supplied used to record `"file"`, which said
+    /// the file declared a CRS it does not declare, and that false record reached published bundle
+    /// manifests. The *specific* rule is carried beside it in [`Self::provenance`]
+    /// (`"crs:format-default"`): this key says a rule supplied it, that one says which.
     pub source: String,
     pub asserted_by: Option<String>,
     pub asserted_at: Option<String>,
@@ -149,10 +156,15 @@ pub struct GeometryInfo {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IdentityInfo {
-    /// `"file:id"` or `"mapped:<column>"`.
+    /// `"file:id"`, `"mapped:<column>"` or `"session-ordinal:file_row_number"`.
     pub source: String,
-    /// `"verified-at-open-full-file"` or `"declared-not-verified"` — never the bare word "unique"
-    /// (ADR-016 §6).
+    /// What was actually checked about uniqueness — **never the bare word "unique"** (ADR-016 §6).
+    ///
+    /// `"verified-at-open-full-file"` or `"declared-not-verified"` are ADR-016 §6's own two values.
+    /// `skp/0.3` adds a third, `"by-construction-within-generation"`, for the session tier: no scan
+    /// ran, and the value names the basis rather than claiming a scan's result. That third value
+    /// comes from the **PROPOSED** ADR-016 Amendment 1, which binds nothing until the human accepts
+    /// it — it is emitted here because this cut implements the tier, not because the ADR lists it.
     pub uniqueness: String,
     pub verified_rows: Option<DecU64>,
     pub max_value: Option<DecU64>,

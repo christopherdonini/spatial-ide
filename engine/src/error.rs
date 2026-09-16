@@ -163,12 +163,17 @@ pub enum EngineError {
 
     /// This engine's own record of an admission contradicts itself.
     ///
-    /// **Not `Source`** — retyped at Brief A P3, a scoped carry-over the brief names. `Source` is
-    /// "the file could not be opened or read at all", and a caller shown that for an internal
-    /// inconsistency would go looking at its file for a defect that is in this code. The only
-    /// construction site is `dataset::open_inner`'s provenance arm, which a `debug_assert` already
-    /// calls unreachable: a provenance class is a recorded fact and is never substituted for a
-    /// missing one, so the alternative to this variant is filling one in.
+    /// **Not `Source`** — retyped at Brief A P3, on this reasoning and on no cited authority:
+    /// `Source` is "the file could not be opened or read at all", and a caller shown that for an
+    /// internal inconsistency would go looking at its own file for a defect that is in this code.
+    /// The only construction site is `dataset::open_inner`'s provenance arm, which a
+    /// `debug_assert` already calls unreachable: a provenance class is a recorded fact and is never
+    /// substituted for a missing one, so the alternative to this variant is filling one in.
+    ///
+    /// It mints a **fifth** typed SKP code for this cut (`engine.internal_inconsistency`) beyond
+    /// boundary 9's three and boundary 8's publish-class one — recorded so an A3/A5 reviewer reads
+    /// the count as the retype it is, not as scope creep. No input reaches it that did not already
+    /// reach `EngineError::Source`.
     InternalInconsistency { detail: String },
 
     /// One feature alone is larger than the largest batch this engine will emit.

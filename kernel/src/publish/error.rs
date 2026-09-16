@@ -170,6 +170,58 @@ pub enum PublishError {
     Canonical(CanonicalError),
 }
 
+impl PublishError {
+    /// This refusal's stable wire code — `publish.` + the variant name in snake case.
+    ///
+    /// **The same shape `skp::error_of` mints for engine errors** (`engine.` + variant name,
+    /// SKP-V0.md `:266`), applied to the publish surface. It exists because a publish refusal
+    /// reaches the shell as `PrepareOutcome::Refused { message }` — a `Display` string — so a
+    /// client that must render code-specific guidance had nothing structural to match on, and the
+    /// wording is the human's at P6 (P3 gate attempt 1, blocking finding 5).
+    ///
+    /// **No wildcard arm.** A new `PublishError` variant fails this build until it is named here,
+    /// the same discipline `error_kind` and `skp::error_of` already carry.
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::DestinationExists { .. } => "publish.destination_exists",
+            Self::DestinationNotWritable { .. } => "publish.destination_not_writable",
+            Self::InsufficientSpace { .. } => "publish.insufficient_space",
+            Self::Io { .. } => "publish.io",
+            Self::SourceNotPinned => "publish.source_not_pinned",
+            Self::LicenseNotCarryable { .. } => "publish.license_not_carryable",
+            Self::LicenseDeclaredTwice { .. } => "publish.license_declared_twice",
+            Self::OperatorLicenseEmpty => "publish.operator_license_empty",
+            Self::ViewerAssetPathRejected { .. } => "publish.viewer_asset_path_rejected",
+            Self::ViewerLicenseIncomplete { .. } => "publish.viewer_license_incomplete",
+            Self::ViewerLicenseNoticeMissing { .. } => "publish.viewer_license_notice_missing",
+            Self::CorrespondingSourceNotDurable { .. } => "publish.corresponding_source_not_durable",
+            Self::DatasetNameRejected { .. } => "publish.dataset_name_rejected",
+            Self::RowFilterNotRecordable => "publish.row_filter_not_recordable",
+            // Brief A settled boundary 8, held at P2 and closed at P3.
+            Self::GeographicCrsNotPublishable { .. } => GEOGRAPHIC_CRS_NOT_PUBLISHABLE_CODE,
+            Self::CeilingExceeded { .. } => "publish.ceiling_exceeded",
+            Self::ReaderCeilingExceeded { .. } => "publish.reader_ceiling_exceeded",
+            Self::Cancelled => "publish.cancelled",
+            Self::StagingNotRemoved { .. } => "publish.staging_not_removed",
+            Self::Engine(_) => "publish.engine",
+            Self::Style(_) => "publish.style",
+            Self::Canonical(_) => "publish.canonical",
+        }
+    }
+
+    /// The string a refusal crosses the Tauri boundary as: `"<code>: <display>"`.
+    ///
+    /// `skp::terminal_detail_of`'s shape, for the publish surface — one convention, so a client
+    /// parses one thing.
+    pub fn refusal_detail(&self) -> String {
+        format!("{}: {self}", self.code())
+    }
+}
+
+/// Boundary 8's refusal code, named so the shell's own case and the kernel's minting site read the
+/// same bytes rather than two spellings that happen to match today.
+pub const GEOGRAPHIC_CRS_NOT_PUBLISHABLE_CODE: &str = "publish.geographic_crs_not_publishable";
+
 impl std::fmt::Display for PublishError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

@@ -1103,27 +1103,26 @@ impl Dataset {
                 // on this connection, and this engine has established no post-interrupt health
                 // guarantee, so discard-and-replace is the declared bounded behaviour rather than
                 // an optimisation. A completed query returns its connection, verified first.
-                let outcome_was_clean = outcome.is_ok();
-                match outcome {
+                //
+                // **The lease is decided here and the terminal is NOT sent here.** The two used to
+                // happen in one `match`, which put `tx.send(Err(e))` before the post-check below —
+                // so a host reading the post-check's flag when the terminal arrived raced the
+                // producer still computing it (P3 gate attempt 1, blocking finding 2). Splitting
+                // them costs nothing and removes the race by construction: by the time any terminal
+                // leaves this thread, the flag is already written.
+                match &outcome {
                     Ok(()) => lease.release_healthy(),
-                    Err(e) => {
-                        drop(lease);
-                        // Best-effort: if the consumer is gone there is nobody to tell, which is
-                        // not an error in itself. H7's "no partial view presented as complete" is
-                        // enforced on the consumer side by the terminal frame, not by this send
-                        // succeeding.
-                        let _ = tx.send(Err(e));
-                    }
+                    Err(_) => drop(lease),
                 }
 
                 // ---------------------------------------------------------------------------
                 // **R-D2's post-check — `ADMISSION-PREREGISTRATION.md` §13 C's named call site.**
                 //
                 // `produce` above has returned, so DuckDB's result iterator is fully drained; the
-                // `match` above has decided the lease, so the lease is released; and `tx` is still
-                // alive, so the terminal has not been emitted — for the `Ok` path the terminal IS
-                // the drop of `tx` at the end of this closure, which is why "before the terminal"
-                // means here and not one line later.
+                // `match` above has decided the lease, so the lease is released; and **no terminal
+                // of any class has been sent yet** — for the `Ok` path the terminal is the drop of
+                // `tx` at the end of this closure, and for every error path it is the `tx.send`
+                // below this block. That is what "before the terminal" means, for all of them.
                 //
                 // **Never inside the batch loop** (§13 C): a per-batch descriptor read would put
                 // filesystem work on the data path (docs/10) and would multiply one refusal into
@@ -1144,12 +1143,30 @@ impl Dataset {
                 //     Nothing anywhere claims the batches already delivered were a snapshot (A1).
                 let post = post_check_source(&post_check_path, &post_check_descriptor);
                 if let Err(EngineError::SourceChanged { detail }) = &post {
-                    // Recorded regardless of which terminal is emitted, so the host can end the
-                    // generation on a cancelled stream too (rule ii).
+                    // Recorded **before any terminal is sent**, so a host that reads this flag when
+                    // a terminal arrives always sees a finished answer — on the clean, the errored
+                    // and the cancelled path alike (rule ii).
                     thread_stats.record_source_changed(detail);
                 }
-                if outcome_was_clean {
-                    if let Err(e) = post {
+
+                // Now, and only now, the terminal.
+                match outcome {
+                    // Rule (i): `ok` only if the post-check found no change; otherwise the terminal
+                    // *is* the typed `engine.source_changed`. On the no-change path nothing is sent
+                    // and the terminal is the drop of `tx` below.
+                    Ok(()) => {
+                        if let Err(e) = post {
+                            let _ = tx.send(Err(e));
+                        }
+                    }
+                    // Rule (ii): the stream's own terminal stands — a cancel is reported as a
+                    // cancel, and any other failure as itself. The source change rides the flag
+                    // recorded above, never this frame.
+                    //
+                    // Best-effort: if the consumer is gone there is nobody to tell, which is not an
+                    // error in itself. H7's "no partial view presented as complete" is enforced on
+                    // the consumer side by the terminal frame, not by this send succeeding.
+                    Err(e) => {
                         let _ = tx.send(Err(e));
                     }
                 }
@@ -1503,12 +1520,7 @@ fn post_check_source(
     path: &std::path::Path,
     opened_with: &crate::descriptor::SourceDescriptor,
 ) -> Result<()> {
-    match crate::descriptor::SourceDescriptor::of(path) {
-        Ok(now) => opened_with.refuse_if_changed(&now),
-        Err(e) => Err(EngineError::SourceChanged {
-            detail: format!("{{the source could not be re-read: {e}}}"),
-        }),
-    }
+    opened_with.refuse_if_changed_or_unreadable(path)
 }
 
 fn quote_ident(name: &str) -> String {

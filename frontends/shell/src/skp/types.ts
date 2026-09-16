@@ -67,7 +67,14 @@ export interface SourceInfo {
 export interface CrsInfo {
   identifier: string;
   definition_json: string | null;
-  source: string; // "file" | "caller_asserted"
+  /** `"file"` | `"caller_asserted"` | `"format-rule"`.
+   *
+   * `"format-rule"` is `skp/0.3`'s value-domain widening of this existing key -- the human's ruling
+   * of 2026-09-16 (`DECISIONS-PENDING.md` RULED 2026-09-16 -- question round 3, item 3). An
+   * admission the format's absent-`crs`-key rule supplied used to record `"file"`, which said the
+   * file declared a CRS it does not declare, and that false record reached published bundle
+   * manifests. `provenance` below carries which rule supplied it. */
+  source: string;
   asserted_by: string | null;
   asserted_at: string | null;
   /** ADR-026 decision 2 (P2): `Some` only when `source === "caller_asserted"` --

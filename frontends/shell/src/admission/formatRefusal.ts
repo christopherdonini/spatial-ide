@@ -54,10 +54,13 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
  * - `engine.identity_ordinal_partitioned_unsupported` (boundary 7, P3): states that a partitioned
  *   source has no single-file row position, and names the two real routes forward.
  * - `publish.geographic_crs_not_publishable` (boundary 8, held at P2 and closed at P3).
+ * - `engine.internal_inconsistency` (the retyped provenance arm): a defect in this program, not in
+ *   the operator's file, and the guidance says so rather than sending them to look at their data.
  *
- * **These four strings are the ones the human sights at P6** (`ADMISSION-PREREGISTRATION.md`
- * §12d's "the four new user-visible states whose strings are sighted at P6"). They are written
- * here so the states exist and can be read; their wording is not settled.
+ * **All four of the strings added here are the human's at P6** (`ADMISSION-PREREGISTRATION.md`
+ * §12d's "the four new user-visible states whose strings are sighted at P6"). They are placeholders
+ * written so the states exist and can be read end to end; **their wording is not settled** and no
+ * test asserts any of them verbatim.
  */
 export function refusalGuidance(code: string): string | null {
   switch (code) {
@@ -83,6 +86,12 @@ export function refusalGuidance(code: string): string | null {
         "see here is a display convention applied at view time, which a published bundle does " +
         "not carry. Nothing has been written. Reproject the source to a projected CRS and open " +
         "that."
+      );
+    case "engine.internal_inconsistency":
+      return (
+        "This is a defect in this program, not in your file: two facts it recorded about the same " +
+        "dataset contradict each other, and it stopped rather than pick one. Nothing was changed. " +
+        "Reporting it with the detail below is the most useful thing you can do with it."
       );
     case "engine.crs_assertion_conflict":
       return (

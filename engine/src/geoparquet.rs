@@ -192,7 +192,7 @@ impl CoordinateUnit {
             "degree" => Self::Degree,
             "metre" => Self::Metre,
             // **Bounded here, at the one construction site** (ADR-010 rule 6: declared, not
-            // discovered) — Brief A P3's scoped carry-over. `Named` holds a string taken verbatim
+            // discovered), at Brief A P3. `Named` holds a string taken verbatim
             // from a file's own PROJJSON, and `describe` and a published bundle's manifest echo it;
             // unbounded, a file could put an arbitrarily long unit name into both. Truncating, not
             // refusing: a unit name is a recorded fact rather than an admission gate, and a file

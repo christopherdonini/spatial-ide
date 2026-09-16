@@ -591,3 +591,113 @@ rule. What it touches: P2's own declared values only. No P1 outcome, prediction 
   prediction is thereby reachable (at the publish preflight, P2's held part). The P4 record names item
   I's original reading, this resolution and its date. The Proposed ADR-013 amendment carries the
   matching clarification, appended the same day.
+
+### Amendment 2 — corrections to Amendment 1, and the P3 gate-fix round (2026-09-16, appended)
+
+**Written after the P3 gate outcomes were seen** (reviewer FAIL and architect FAIL, attempt 1), and
+after the fixes below were written and run. §12e's rule, honoured in this line. **Amendment 1 is not
+edited**: every item here corrects or extends it by appending, and each says which item it touches.
+
+1. **Correcting Amendment 1 item 4's "Rules (i), (ii) and (iii) are implemented as written."** That
+   sentence was not true of rule (ii). The flag rule (ii) needs —
+   `StreamStats::source_changed_detail` — was written by the producer and **read by nobody**, so a
+   cancelled stream's detected change ended no generation; and on the error path the terminal was
+   sent *before* the post-check ran, so even a reader would have raced it. Both are fixed in this
+   round: `crate::EngineSource` reads the flag on every terminal class (clean, error, cancelled, and
+   `Drop` as the backstop) and ends the generation through `SessionInvalidator`; the producer now
+   decides the lease, runs the post-check, records the finding, and only then emits any terminal.
+   Rules (i) and (iii) were as described. **The claim was wrong at the time it was written, and the
+   correction is recorded rather than the original edited.**
+
+2. **`describe.crs.display_convention` is a P2-licensed field, not a boundary-9 one.** Amendment 1
+   item 6 leaned on boundary 9's word "only" while `describe` also carries this fifth member. The
+   licence is separate and predates it: `state/NEXT-CUT.md:102` (P2) puts the ruled equirectangular
+   wording "in status + describe", and the P2 architect's carry-over note requires P3 to carry it
+   "over the wire via describe, never as a second TypeScript literal". So `describe` gains
+   boundary 9's four **plus** this one, by P2's own authority, and the two lists are recorded apart
+   rather than blurred into one.
+
+3. **`crs.source` gains a third value, `format-rule` — the human's ruling of 2026-09-16.**
+   `DECISIONS-PENDING.md` RULED 2026-09-16 — question round 3, item 3, applied verbatim: the value
+   sits beside `file` and `caller_asserted`, `crs.provenance` carries the specific class
+   (`crs:format-default`), the published manifest carries the same value, and it is recorded as a
+   value-domain widening under the `skp/0.3` bump (`protocol/skp/SKP-V0.md`'s own addendum). This
+   settles the P1 reviewer's Finding 1, which Amendment 1 left flagged rather than fixed: recording
+   a format-rule admission as `file` said the file declared a CRS it does not declare, and that
+   false record reached published bundle manifests. Assertions are re-aimed with the ruling named at
+   each site.
+
+4. **The pre-check now maps an unreadable source onto `SourceChanged`, as the post-check always
+   did.** Amendment 1 did not record that the two disagreed. They did: the pre-check propagated
+   `SourceDescriptor::of`'s failure as `EngineError::Source`, so a source deleted or locked
+   mid-session refused with a type the host does not match on and **left the generation live**.
+   Both checks now route through `SourceDescriptor::refuse_if_changed_or_unreadable`, which is the
+   whole of the invariant `descriptor.rs` states.
+
+5. **Correcting Amendment 1 item 5's accounting of `InternalInconsistency`.** Two things in it were
+   wrong. It attributed the retype to "a scoped carry-over the brief names" — **there is no such
+   source**: `state/NEXT-CUT.md` contains no such item, and the claim is withdrawn here and dropped
+   from all four code sites. The retype stands on its own reasoning (`EngineError::Source` means
+   "the file could not be opened or read at all", and a caller shown that for a contradiction in
+   this tree's own record goes looking at their file for a defect that is in this code). And it
+   understated the count: the variant mints a **fifth typed SKP code** for this cut,
+   `engine.internal_inconsistency`, beside boundary 9's three and boundary 8's publish-class one —
+   not merely an `EngineError` variant. No input reaches it that did not already reach
+   `EngineError::Source`.
+
+6. **Correcting Amendment 1 item 1's joining of two different things.** That item reported the
+   escalation probe's corpus figures (240 rows, `min 0`, `max 239`, 240 distinct, from
+   `geopandas/gp-epsg2056-intkey.parquet`) and the standing test in one breath. They are not the
+   same run: the **standing** test
+   (`engine/tests/session_identity.rs::the_vendored_duckdb_exposes_file_row_number_on_read_parquet`)
+   generates its own 500-row fixture and asserts the same *properties* — 0-based, dense, distinct by
+   construction, and available on the bound-parameter form — against that file. The corpus figures
+   stand as what the one-off probe observed on that one corpus file and are **not** re-observed by
+   the standing test; that file is P4's to open under its preregistered expectation.
+
+7. **Correcting Amendment 1 item 3's markdown.** It renders the Windows extended-length prefix as
+   `\?\`; the prefix is `\\?\`, and the doubled backslash was consumed by markdown escaping. The
+   code and its own comment carry the correct form.
+
+8. **R-I4's detection was widened in this round, and the trade-off is recorded.** Amendment 1 item 3
+   described `*` and `?` only, excluding `[` on the reasoning that a bracket in a real directory
+   name is ordinary. DuckDB's `read_parquet` also expands `[...]` character classes and `{a,b}`
+   brace alternation, so all six characters are detected now. **The false positive is accepted and
+   is visible**: a literal file whose name contains one of them is refused by name even though it is
+   one file, and the refusal says the path was read as naming more than one file — a sentence an
+   operator can act on. The alternative is silent: DuckDB expands the pattern, the source becomes a
+   multi-file scan, and `file_row_number` becomes a per-file ordinal reused across files — the
+   session tier's identity colliding with nothing said, which is the outcome R-I4 exists to prevent.
+   The check is deliberately **not** stat-based: it is a property of the path text alone, so the
+   same path is never admitted or refused according to what happens to be on disk.
+
+9. **A descriptor on a filesystem that reports no modification time degrades; it does not refuse.**
+   Not recorded in Amendment 1 because it was not noticed: `components_differing_from` treated an
+   absent mtime as a difference unconditionally, so on such a filesystem every query refused forever
+   with the false sentence "the source file changed". Three cases now, not two — both present, an
+   ordinary comparison; **neither** present, a **degradation** whose text names the unavailable
+   component (boundary 5's "the degradation is shown", applied to mtime as it already was to the
+   footer); one present and the other not, still a difference, because that is observable and
+   fail-closed governs it.
+
+10. **The generation map is bounded.** Not recorded in Amendment 1 because it was not noticed:
+    ticket attributions accumulated for the life of the process, removed only by `close_dataset`.
+    They are pruned now on every mutating call, on the sibling `StreamRegistry`'s own discipline —
+    by age (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, the sum, because a ticket may sit pending for a
+    whole TTL before its terminal clock starts) and by the rule that an attribution naming a
+    generation that is no longer live can only ever answer what a missing entry already answers.
+
+11. **No dead public API.** `GenerationRegistry::is_invalidated` and `::live_generation` had no
+    callers and are gone; `::ticket_is_live` gained the caller it was written for — ticket
+    **redemption** (`EngineSourceFactory::create_from_ticket`), so a ticket whose generation ended
+    between mint and redeem never produces a stream, kernel-authoritatively and without depending on
+    the client's mirror having noticed; and `SkpHost::generations()` is what hands that registry to
+    the factory. `attributed_ticket_count` is new and exists so item 10's bound is assertable rather
+    than asserted about in prose.
+
+12. **What this round still does not build.** Unchanged from Amendment 1 item 9: no gate test
+    (G-A1–G-A4 are P5's), no corpus run (P4), no Part N, no KNOWN-LIMITATIONS, no ADR acceptance
+    (P6), and no duration, rate or performance word anywhere (A6). The pre-check's cost shape — a
+    footer read and a SHA-256 per query issue — is **unchanged and deliberately not weakened**: it
+    is what boundary 4 and R-D2 ask for, and any relaxation is the human's question, not this
+    round's.

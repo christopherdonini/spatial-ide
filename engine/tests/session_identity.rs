@@ -32,6 +32,22 @@ fn write(name: &str, spec: &FixtureSpec) -> PathBuf {
     path
 }
 
+/// Move a file's modification time forward without touching a byte of it.
+///
+/// **The change a mid-scan test can safely make.** Rewriting a file DuckDB is still reading makes
+/// DuckDB fail first, on a truncated read, which is a fact about DuckDB and not about the
+/// post-check. mtime is one of the descriptor's four components, so a test using it exercises the
+/// same path with none of that interference.
+fn touch_modification_time(path: &std::path::Path) {
+    let now = std::time::SystemTime::now() + std::time::Duration::from_secs(120);
+    std::fs::File::options()
+        .write(true)
+        .open(path)
+        .expect("reopen to set mtime")
+        .set_modified(now)
+        .expect("set mtime");
+}
+
 /// A file with no `id` column at all — the R-I3 shape, and the class §3 predicts for six of the
 /// seven corpus files that reach the identity rules.
 fn keyless() -> FixtureSpec {
@@ -51,6 +67,9 @@ fn keyless() -> FixtureSpec {
 /// It asserts availability on the **bound-parameter** form as well as the interpolated one, because
 /// the engine's own stream path binds the file path (`FROM read_parquet(?)`, `trace.rs`) and an
 /// option that only worked with a literal would not reach it.
+/// Mutation: drop `file_row_number=true` from the statement. Expected failure:
+/// `the_vendored_duckdb_exposes_file_row_number_on_read_parquet` fails at `prepare` — which is
+/// the §13 F escalation this test exists to detect if a crate bump ever causes it.
 #[test]
 fn the_vendored_duckdb_exposes_file_row_number_on_read_parquet() {
     let path = write("frn-probe", &keyless());
@@ -96,6 +115,9 @@ fn the_vendored_duckdb_exposes_file_row_number_on_read_parquet() {
 /// and filtered scan, and claims nothing beyond that file. Its *placement* — exposed as a callable
 /// check rather than run at open — is flagged for the architect, because running it at open would
 /// read rows on the path boundary 6 declares reads nothing.
+/// Mutation: have `ordinal_is_physical_not_scan_ordered` compare positions instead of keys (i.e.
+/// assume scan order). Expected failure:
+/// `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture` fails.
 #[test]
 fn the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture() {
     let path = write("frn-physical", &keyless());
@@ -111,6 +133,10 @@ fn the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture(
 
 // ---- R-I3: the session tier ---------------------------------------------------------------------
 
+/// Mutation: restore the `IdentityUnusable` refusal on the no-`id`-column path in
+/// `admit_identity`. Expected failure:
+/// `a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis` fails at
+/// `Dataset::open`.
 #[test]
 fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis() {
     let path = write("r-i3-keyless", &keyless());
@@ -121,7 +147,9 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
     assert_eq!(
         ds.identity().uniqueness().as_str(),
         "by-construction-within-generation",
-        "ADR-016 §6's third value, naming the basis"
+        "the third what-was-checked value, naming the basis. It is the PROPOSED ADR-016 \
+         Amendment 1's, not the accepted ADR's — ADR-016 §6 as accepted lists two, and nothing \
+         here treats the amendment as binding"
     );
     // Nothing counted, so nothing is claimed. `js_exact` in particular must stay unknown rather
     // than default to true (ADR-016 §7).
@@ -134,6 +162,9 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
 
 /// The bare word "unique" appears nowhere in the session tier's record (the proposed ADR-016
 /// Amendment 1's block-on-sight 6), and neither does any snapshot claim (A1).
+/// Mutation: spell `IdUniqueness::ByConstructionWithinGeneration` as `"unique-within-session"`.
+/// Expected failure: `the_session_tier_record_says_neither_unique_nor_snapshot` fails on the
+/// bare-word check.
 #[test]
 fn the_session_tier_record_says_neither_unique_nor_snapshot() {
     let path = write("r-i3-vocabulary", &keyless());
@@ -153,6 +184,10 @@ fn the_session_tier_record_says_neither_unique_nor_snapshot() {
 
 /// A **declared** mapping naming a column the file does not carry still refuses. R-I3 does not
 /// swallow a caller's mistake: the caller named something specific and got it wrong (ADR-016 §3).
+/// Mutation: drop the `matches!(source, IdSource::Mapped { .. })` guard so a bad declaration
+/// falls through to the session tier. Expected failure:
+/// `a_declared_mapping_to_a_missing_column_still_refuses_rather_than_falling_to_the_session_tier`
+/// fails — the caller named a column and would be silently answered about a different identity.
 #[test]
 fn a_declared_mapping_to_a_missing_column_still_refuses_rather_than_falling_to_the_session_tier() {
     let path = write("r-i3-bad-declaration", &keyless());
@@ -173,6 +208,9 @@ fn a_declared_mapping_to_a_missing_column_still_refuses_rather_than_falling_to_t
 
 // ---- R-I4: partitioned sources ------------------------------------------------------------------
 
+/// Mutation: delete the `path.is_dir()` branch in `partitioned_source_detail`. Expected failure:
+/// `a_directory_source_is_refused_by_name_rather_than_as_an_unreadable_file` fails — the source
+/// refuses as a generic unreadable file instead of by R-I4's name.
 #[test]
 fn a_directory_source_is_refused_by_name_rather_than_as_an_unreadable_file() {
     let d = dir().join("r-i4-partition-set");
@@ -185,6 +223,9 @@ fn a_directory_source_is_refused_by_name_rather_than_as_an_unreadable_file() {
     }
 }
 
+/// Mutation: remove the `\\?\` prefix strip. Expected failure:
+/// `a_glob_source_is_refused_by_name_and_a_plain_missing_path_is_not` fails on its canonical-path
+/// case — every canonicalized Windows path reads as a glob.
 #[test]
 fn a_glob_source_is_refused_by_name_and_a_plain_missing_path_is_not() {
     let glob = dir().join("parts-*.parquet");
@@ -213,6 +254,9 @@ fn a_glob_source_is_refused_by_name_and_a_plain_missing_path_is_not() {
 
 // ---- R-D1 / R-D2: the descriptor and the read-around checks -------------------------------------
 
+/// Mutation: set `footer_bytes_read: 0` on the non-degraded construction. Expected failure:
+/// `the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read` fails — boundary 5's
+/// reported-only accounting would report nothing.
 #[test]
 fn the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read() {
     let path = write("r-d1-descriptor", &keyless());
@@ -259,6 +303,9 @@ fn the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_datas
 }
 
 /// The refusal's own text carries boundary 4's limitation and claims nothing more (A1).
+/// Mutation: shorten `EngineError::SourceChanged`'s `Display` to drop boundary 4's limitation
+/// sentence. Expected failure:
+/// `the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim` fails.
 #[test]
 fn the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim() {
     let message = EngineError::SourceChanged { detail: "{size}".into() }.to_string();
@@ -275,6 +322,9 @@ fn the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim() {
 /// A file whose bytes differ only inside a data page, with size, mtime and footer preserved, is
 /// invisible to all four components by construction. This is boundary 4's declared limit made a
 /// test, and nothing here describes it as a check that passed.
+/// Mutation: hash the whole file instead of the footer in `SourceDescriptor::of`. Expected
+/// failure: `a_change_the_descriptor_cannot_see_is_not_reported_and_is_not_a_check_that_passed`
+/// fails — and the descriptor would be performing the whole-file read boundary 6 forbids.
 #[test]
 fn a_change_the_descriptor_cannot_see_is_not_reported_and_is_not_a_check_that_passed() {
     let path = write("m-1c-equivalent", &keyless());
@@ -308,6 +358,9 @@ fn a_change_the_descriptor_cannot_see_is_not_reported_and_is_not_a_check_that_pa
 
 // ---- the declared ceiling ------------------------------------------------------------------------
 
+/// Mutation: change `FOOTER_DESCRIPTOR_MAX_BYTES`. Expected failure:
+/// `the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing` fails against the
+/// preregistered value.
 #[test]
 fn the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing() {
     // The number lives in the preregistration (§7) and in code, never in ADR text.
@@ -315,4 +368,192 @@ fn the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing() {
     // The degradation behaviour itself is unit-tested in `engine/src/descriptor.rs`, over
     // constructed descriptors — writing a real file with an 8 MiB footer is a P4/P5 concern and is
     // not approximated here.
+}
+
+// ---- the post-check's terminal classes, and its ordering ---------------------------------------
+
+/// **§13 C's three rules, on the three terminal classes** — and the ordering the host depends on.
+///
+/// The producer records what the post-check found **before it sends any terminal**, so a host that
+/// reads the flag when a terminal arrives never races the producer still computing it. That
+/// ordering was wrong at P3 gate attempt 1: `tx.send(Err(e))` fired first on the error path.
+///
+/// Mutation recorded in-source: moving the `tx.send` back above `post_check_source` in
+/// `stream.rs`'s producer closure makes the cancelled case below flaky and then failing.
+#[test]
+fn a_clean_stream_whose_source_changed_terminates_as_source_changed() {
+    let path = write("post-check-clean", &keyless());
+    let ds = Dataset::open(&path).expect("opens");
+    let mut stream = ds.stream(&spatial_engine::ViewportQuery::all()).expect("stream issues");
+
+    // Change the source while the stream is open. **The modification time only, bytes untouched**:
+    // rewriting the file under a scan that is still reading it makes DuckDB itself fail first, and
+    // this test is about the post-check's terminal, not about DuckDB's behaviour on a truncated
+    // read. mtime is one of the four components, so what is exercised is the same path.
+    //
+    // The batches already in flight are unaffected — nothing here claims they were a snapshot (A1);
+    // what is asserted is the terminal.
+    touch_modification_time(&path);
+
+    let mut buf = Vec::new();
+    let mut terminal = None;
+    while let Some(item) = stream.next_into(&mut buf) {
+        if let Err(e) = item {
+            terminal = Some(e);
+            break;
+        }
+    }
+    match terminal {
+        Some(EngineError::SourceChanged { detail }) => {
+            assert!(detail.contains("mtime"), "{detail}");
+        }
+        other => panic!(
+            "rule (i): a clean run over a changed source terminates as the typed source-changed \
+             refusal, got {other:?}"
+        ),
+    }
+    // Rule (ii)'s record, written before that terminal was sent.
+    assert!(stream.stats().source_changed_detail().is_some());
+}
+
+/// **Rule (ii): a cancelled stream keeps `cancelled`** — the check still runs and still records,
+/// but a cancel is never *reported* as a source change (ADR-018 vocabulary).
+///
+/// Mutation recorded in-source: making the `Err` arm of the terminal match send the post-check's
+/// error instead of the outcome's turns this stream's terminal into `SourceChanged` and fails here.
+#[test]
+fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_recorded() {
+    let path = write("post-check-cancelled", &keyless());
+    let ds = Dataset::open(&path).expect("opens");
+    let cancel = spatial_engine::CancelToken::new();
+    let mut stream = ds
+        .stream_with_cancel(&spatial_engine::ViewportQuery::all(), cancel.clone())
+        .expect("stream issues");
+    cancel.cancel();
+    touch_modification_time(&path);
+
+    let mut buf = Vec::new();
+    let mut terminal = None;
+    while let Some(item) = stream.next_into(&mut buf) {
+        if let Err(e) = item {
+            terminal = Some(e);
+            break;
+        }
+    }
+    // The terminal a consumer sees is the cancel, whatever the post-check found beside it.
+    assert!(
+        matches!(terminal, Some(EngineError::Cancelled) | None),
+        "a cancel is never reported as a source change, got {terminal:?}"
+    );
+    // And the finding is still recorded, which is what ends the dataset-session generation — the
+    // whole reason the side channel exists. It was written before the terminal above was sent.
+    assert!(
+        stream.stats().source_changed_detail().is_some(),
+        "rule (ii): the check still runs on a cancelled stream and its finding is still recorded"
+    );
+}
+
+/// The post-check finds nothing on an unchanged source, and the flag stays empty — so a host
+/// reading it does not end a session that nothing happened to.
+/// Mutation: have `post_check_source` always record a finding. Expected failure:
+/// `an_unchanged_source_records_no_post_check_finding` fails — and every ordinary query would
+/// end its own dataset session.
+#[test]
+fn an_unchanged_source_records_no_post_check_finding() {
+    let path = write("post-check-unchanged", &keyless());
+    let ds = Dataset::open(&path).expect("opens");
+    let mut stream = ds.stream(&spatial_engine::ViewportQuery::all()).expect("stream issues");
+    let mut buf = Vec::new();
+    while let Some(item) = stream.next_into(&mut buf) {
+        item.expect("an unchanged source streams to a clean terminal");
+    }
+    assert_eq!(stream.stats().source_changed_detail(), None);
+}
+
+// ---- the pre-check and post-check agree on an unreadable source ---------------------------------
+
+/// **P3 gate attempt 1, blocking finding 4.** The pre-check used to propagate a read failure as
+/// `EngineError::Source`, while the post-check mapped the same failure to `SourceChanged` — so a
+/// source deleted mid-session left the generation live, because the host matches on `SourceChanged`.
+///
+/// Mutation recorded in-source: restoring `SourceDescriptor::of(&self.path)?` in
+/// `Dataset::check_source_unchanged` fails this test.
+#[test]
+fn a_source_deleted_mid_session_refuses_as_source_changed_not_as_an_unreadable_file() {
+    let path = write("precheck-deleted", &keyless());
+    let ds = Dataset::open(&path).expect("opens");
+    std::fs::remove_file(&path).expect("delete the source under the open dataset");
+
+    match ds.check_source_unchanged() {
+        Err(EngineError::SourceChanged { detail }) => {
+            assert!(
+                detail.contains("could not be re-read"),
+                "the refusal names the real condition: {detail}"
+            );
+        }
+        other => panic!(
+            "a deleted source must reach the same typed refusal the post-check uses, got {other:?}"
+        ),
+    }
+    // And through the query path, which is what the host actually calls.
+    assert!(matches!(
+        ds.stream(&spatial_engine::ViewportQuery::all()),
+        Err(EngineError::SourceChanged { .. })
+    ));
+}
+
+// ---- R-I4's glob metacharacters -----------------------------------------------------------------
+
+/// Every metacharacter DuckDB's `read_parquet` expands is detected — not just `*` and `?`.
+///
+/// The trade-off this encodes is stated at the detection site: a literal file whose name contains
+/// one of these is refused by name even though it is one file, because the alternative is a silent
+/// multi-file scan in which `file_row_number` is a per-file ordinal reused across files — the
+/// session tier's identity colliding with nothing said.
+///
+/// Mutation recorded in-source: narrowing `GLOB_METACHARACTERS` back to `['*', '?']` fails the
+/// bracket and brace cases.
+#[test]
+fn every_glob_metacharacter_read_parquet_expands_is_refused_by_name() {
+    for name in ["parts-*.parquet", "parts-?.parquet", "parts-[0-9].parquet", "parts-{a,b}.parquet"]
+    {
+        match Dataset::open(dir().join(name)) {
+            Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail }) => {
+                assert!(detail.contains("glob metacharacter"), "{name}: {detail}");
+            }
+            other => panic!("`{name}` must be refused by name, got {:?}", other.err()),
+        }
+    }
+}
+
+// ---- the descriptor's mtime degradation ---------------------------------------------------------
+
+/// **A filesystem reporting no modification time degrades; it does not refuse forever with the
+/// false sentence "the source file changed"** (P3 gate attempt 1, correction 13).
+///
+/// Constructed rather than observed: no filesystem in this workspace withholds an mtime, so the
+/// `(None, None)` pair is built directly. What it pins is the rule, which is where the defect was.
+///
+/// Mutation recorded in-source: restoring the `(Some(a), Some(b)) if a == b => {}, _ => push` form
+/// in `components_differing_from` makes both assertions below fail.
+#[test]
+fn a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever() {
+    let path = write("mtime-degradation", &keyless());
+    let real = SourceDescriptor::of(&path).expect("reads");
+    let without_mtime = real.clone().without_modification_time_for_test();
+
+    // Neither side has one: not a difference. The file did not change; one component is
+    // unavailable, and saying otherwise refuses every query on such a filesystem forever.
+    assert!(
+        without_mtime.components_differing_from(&without_mtime.clone()).is_empty(),
+        "an unavailable component is a degradation, not a detected change"
+    );
+    assert!(without_mtime.refuse_if_changed(&without_mtime.clone()).is_ok());
+    // And the operator is told which component is unavailable, in the descriptor's own words.
+    let degradation = without_mtime.degradation().expect("the degradation is shown, never silent");
+    assert!(degradation.contains("no modification time"), "{degradation}");
+
+    // One side present and the other not IS a difference: that is observable, and fail-closed
+    // still governs it.
+    assert_eq!(real.components_differing_from(&without_mtime), vec!["mtime"]);
 }

@@ -167,6 +167,9 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.sanity.reason).not.toMatch(/passed|valid|verified/i);
   });
 
+  // Mutation: add a generation member to the describe response shape and populate the fixture.
+  // Expected failure: "describe response for a session-ordinal dataset carries the tier, its
+  // statement and the P2-held display convention -- and no generation value" fails its A2 sweep.
   it("describe response for a session-ordinal dataset carries the tier, its statement and the " +
     "P2-held display convention -- and no generation value (skp/0.3, Brief A boundary 9)", () => {
     const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
@@ -201,6 +204,9 @@ describe("SKP v0 shared fixtures", () => {
     expect(text.toLowerCase()).not.toContain("snapshot");
   });
 
+  // Mutation: drop the `detail` field from the source_changed fixture. Expected failure:
+  // "the three new typed refusals carry their code and detail (skp/0.3)" fails -- a client that
+  // must clear residency on a specific component change would have only prose to read.
   it("the three new typed refusals carry their code and detail (skp/0.3)", () => {
     const changed = loadFixture<SkpError>("v0-error-source_changed");
     expect(changed.code).toBe("engine.source_changed");

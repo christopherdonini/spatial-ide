@@ -105,7 +105,9 @@ pub enum IdUniqueness {
     VerifiedAtOpenFullFile,
     /// Declared by the caller and **not** checked. Reachable only by explicit opt-out.
     DeclaredNotVerified,
-    /// **The third §6 value** (the proposed ADR-016 Amendment 1, point 1): the ordinals are
+    /// **A third what-was-checked value, from the PROPOSED ADR-016 Amendment 1, point 1** — the
+    /// accepted ADR's §6 lists two, and that amendment binds nothing until the human accepts it at
+    /// P6. It is emitted because this cut implements the tier: the ordinals are
     /// distinct within one dataset-session generation **because of where they come from**, not
     /// because anything counted them.
     ///

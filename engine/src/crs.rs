@@ -84,6 +84,19 @@ pub enum CrsSource {
     File,
     /// Supplied by the caller for a file that declares nothing. Recorded with who and when.
     CallerAsserted,
+    /// **Supplied by the format's own published rule**, for a file that declares nothing and over
+    /// which no caller asserted anything — GeoParquet's absent-`crs`-key default.
+    ///
+    /// **The human's ruling of 2026-09-16** (`DECISIONS-PENDING.md` RULED 2026-09-16 — question
+    /// round 3, item 3): *"Crs.source gains the third value `format-rule` beside `file` and
+    /// `caller_asserted`, with crs.provenance carrying the specific class (`crs:format-default`)."*
+    ///
+    /// It exists because recording such an admission as `File` was a **false record** that reached
+    /// published artifacts (the P1 reviewer's Finding 1): the file did not declare this CRS —
+    /// nothing in it says `OGC:CRS84` — and a bundle manifest claiming it did says something about
+    /// the file that is not true. The two facts stay apart: this value says *a rule supplied it*,
+    /// and `describe.crs.provenance` says *which rule*.
+    FormatRule,
 }
 
 impl CrsSource {
@@ -91,6 +104,7 @@ impl CrsSource {
         match self {
             Self::File => "file",
             Self::CallerAsserted => "caller_asserted",
+            Self::FormatRule => "format-rule",
         }
     }
 }
@@ -164,6 +178,24 @@ pub struct DatasetCrs {
 impl DatasetCrs {
     /// Admission path 1 — the file declares a CRS. The file's own definition is authoritative and
     /// is passed through verbatim.
+    /// Re-stamp this CRS's recorded **source** as [`CrsSource::FormatRule`].
+    ///
+    /// **Applied by `dataset::open_inner` and nowhere else**, at the one site that knows the
+    /// provenance class the reader established. `crs::admit`'s own decision table is deliberately
+    /// untouched (R-C4 / ADR-032 point 4: that function and `is_x_first` are not this cut's to
+    /// change) — it still decides *which* CRS is admitted and refuses exactly what it refused. Only
+    /// the label on an already-made decision is corrected, which is what the human's ruling of
+    /// 2026-09-16 (`DECISIONS-PENDING.md` RULED 2026-09-16 — question round 3, item 3) asks for.
+    pub(crate) fn recorded_as_format_rule(mut self) -> Self {
+        debug_assert_eq!(
+            self.source,
+            CrsSource::File,
+            "only a file-arm admission is ever re-stamped: a caller's assertion is its own class"
+        );
+        self.source = CrsSource::FormatRule;
+        self
+    }
+
     pub(crate) fn from_file(
         identifier: String,
         definition_json: Option<String>,
