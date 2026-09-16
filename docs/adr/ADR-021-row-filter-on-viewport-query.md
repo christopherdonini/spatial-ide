@@ -209,8 +209,8 @@ held by content — `json` built in — while every product engine connection st
 to autoload, and autoinstall from its repository, any known extension on DuckDB's autoload list on
 first reference. From this amendment the engine sets `autoinstall_known_extensions=false` and
 `autoload_known_extensions=false` on every connection it opens on a product path — one statement,
-`CONFIGURE_SQL` (`engine/src/pool.rs:182-184`), applied by `configure_connection`
-(`engine/src/pool.rs:195-197`) at both product open sites, the pool's `configure_new` and
+`CONFIGURE_SQL` (`engine/src/pool.rs:185-187`), applied by `configure_connection`
+(`engine/src/pool.rs:199-201`) at both product open sites, the pool's `configure_new` and
 `engine/src/layout.rs:269` — asserted fail-closed on every lease class
 (`every_lease_class_opens_with_extension_autoload_and_autoinstall_off`,
 `a_known_extension_reference_fails_closed_on_every_lease_class`), with the retained

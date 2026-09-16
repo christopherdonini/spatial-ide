@@ -826,8 +826,9 @@ mod tests {
     /// expected the fail-closed refusal `requires the extension httpfs to be loaded`, got: IO
     /// Error: Could not connect to server error for HTTP HEAD to
     /// 'https://127.0.0.1:9/none.parquet'*. That message is the extension having been fetched and
-    /// loaded: the pre-fix run of this test wrote `httpfs.duckdb_extension` (28.5 MB — observed once in the mutation run, not asserted) and its
-    /// `.info` under the temp directory below, which is the runtime fetch this piece closes.
+    /// loaded: the pre-fix run of this test wrote `httpfs.duckdb_extension` (28.5 MB — observed once
+    /// in the mutation run, not asserted) and its `.info` under the temp directory below, which is
+    /// the runtime fetch this piece closes.
     #[test]
     fn a_known_extension_reference_fails_closed_on_every_lease_class() {
         for class in [LeaseClass::Stream, LeaseClass::Maintenance, LeaseClass::Admission] {
