@@ -448,6 +448,24 @@ nodes:
     summary: "AUTONOMY.md is written and this file is its first seeded artifact; the queue, hook and site tooling remain to be built"
     dates: {opened: 2026-09-13, done: 2026-09-13}
 
+  - id: self-check-false-readings
+    title: "Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Proposed by the custodian from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
+    dates: {opened: null, done: null}
+
   - id: site-bugs-first
     title: "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)"
     kind: task

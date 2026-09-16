@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T10:17:20.015Z",
-  "plan_hash": "2a7ee8e6c85adf814d2c7b584b7d3d045185d2c36a417db31b027d9c164c0f5e",
+  "generated_at": "2026-09-16T10:22:47.893Z",
+  "plan_hash": "b17f53d176fc1567bbe706d9ed21c496b9339ee69f72c4740a0d9bf19d7828e7",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-builder-route-b",
@@ -292,6 +292,25 @@
     }
   ],
   "proposed": [
+    {
+      "id": "self-check-false-readings",
+      "title": "Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Proposed by the custodian from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
+    },
     {
       "id": "release-v0-1-1",
       "title": "v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it",
