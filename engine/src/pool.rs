@@ -144,7 +144,7 @@ const _: () = assert!(
         == MAX_STREAM_CONNECTIONS + MAX_MAINTENANCE_CONNECTIONS + MAX_ADMISSION_CONNECTIONS
 );
 
-/// The statement every engine connection is configured with, **once, at creation** — the single
+/// The statement every product-path engine connection gets, **once, at creation** — the single
 /// place this repository spells it (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 1).
 ///
 /// **The two extension settings come first, before anything else, and that order is load-bearing.**

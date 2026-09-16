@@ -261,11 +261,11 @@ fn rewrite(
         .map_err(|e| EngineError::ConnectionSetup { detail: e.to_string() })?;
     // **The same configuration the pooled dataset connections get, through the same function** —
     // `pool::configure_connection` (`pool.rs`'s `CONFIGURE_SQL`), not a copy of it. It turns
-    // extension autoload and autoinstall off, so this connection cannot fetch or load an extension
-    // at runtime, and it keeps `enable_geoparquet_conversion=false`, so geometry stays BLOB in and
-    // BLOB out and the WKB bytes that arrive are the WKB bytes that leave. This site used to carry
-    // its own copy of the second setting and knew nothing of the first, which is precisely the
-    // drift the shared function exists to prevent.
+    // extension autoload and autoinstall off, so this connection cannot implicitly load or install
+    // an extension on first reference, and it keeps `enable_geoparquet_conversion=false`, so
+    // geometry stays BLOB in and BLOB out and the WKB bytes that arrive are the WKB bytes that
+    // leave. This site used to carry its own copy of the second setting and knew nothing of the
+    // first, which is precisely the drift the shared function exists to prevent.
     crate::pool::configure_connection(&conn)?;
 
     // ---- the footer keys, carried across verbatim -------------------------------------------
