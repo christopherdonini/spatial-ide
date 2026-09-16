@@ -134,17 +134,21 @@ describe("refusalGuidance", () => {
  * (what ended, whether their file is at fault, what to do) — properties a rewording keeps.
  */
 describe("refusalGuidance for Brief A P3's new states", () => {
-  // Mutation: delete the `engine.source_changed` case from `refusalGuidance`. Expected failure:
-  // "engine.source_changed: says what ended, what to do, and states the check's limit" fails --
-  // the operator would see the raw refusal with no account of what the check cannot do.
-  it("engine.source_changed: says what ended, what to do, and states the check's limit", () => {
-    const guidance = refusalGuidance("engine.source_changed");
-    expect(guidance).not.toBeNull();
-    expect(guidance).toMatch(/no longer the one this session opened/i);
-    expect(guidance).toMatch(/reopen/i);
-    // Boundary 4's limit is carried, and no snapshot is claimed for what came before (A1).
-    expect(guidance).toMatch(/cannot see every possible edit/i);
-    expect(guidance).not.toMatch(/one snapshot/i);
+  // Mutation: restore the pre-round-5 string (the "Everything read so far has been discarded"
+  // wording). Expected failure: "engine.source_changed: says only what is true at this commit"
+  // fails on both the exact-equality assertion and the no-discarding-claim assertion.
+  it("engine.source_changed: says only what is true at this commit", () => {
+    // **Asserted verbatim, unlike its three siblings below** -- the human ruled this exact sentence
+    // (2026-09-16, round 5 item 1) precisely because the previous one described behaviour P3a does
+    // not have. A rewording is a decision, not a refactor, so it must break this test.
+    expect(refusalGuidance("engine.source_changed")).toBe(
+      "The source file changed while it was open; reopen the dataset to continue."
+    );
+    // The specific falsehood that was there: nothing is discarded in P3a, because nothing clears
+    // the resident view until P3b.
+    expect(refusalGuidance("engine.source_changed")).not.toMatch(/discard/i);
+    // And no snapshot is claimed for what came before (A1).
+    expect(refusalGuidance("engine.source_changed")).not.toMatch(/snapshot/i);
   });
 
   // Mutation: drop the "identity column" sentence from that case. Expected failure:
