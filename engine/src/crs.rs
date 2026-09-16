@@ -176,8 +176,6 @@ pub struct DatasetCrs {
 }
 
 impl DatasetCrs {
-    /// Admission path 1 — the file declares a CRS. The file's own definition is authoritative and
-    /// is passed through verbatim.
     /// Re-stamp this CRS's recorded **source** as [`CrsSource::FormatRule`].
     ///
     /// **Applied by `dataset::open_inner` and nowhere else**, at the one site that knows the
@@ -196,6 +194,8 @@ impl DatasetCrs {
         self
     }
 
+    /// Admission path 1 — the file declares a CRS. The file's own definition is authoritative and
+    /// is passed through verbatim.
     pub(crate) fn from_file(
         identifier: String,
         definition_json: Option<String>,

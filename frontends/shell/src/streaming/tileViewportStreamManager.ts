@@ -81,21 +81,6 @@ export interface TileViewportStreamManagerOptions {
    * residency itself is what needs clearing). */
   onTileSuperseded: (tileKey: string, streamHandle: string | null) => void;
   onTerminal?: (tileKey: string, streamHandle: string, terminal: Terminal) => void;
-  /**
-   * **The dataset session ended: the source was observed to have changed** (Brief A settled
-   * boundary 4 -- `state/NEXT-CUT.md:103`'s "residency cleared, picks refused, typed status").
-   *
-   * Fired once, from the terminal that carried `engine.source_changed`. By the time it runs this
-   * manager has already cancelled every in-flight tile, emptied its queue, dropped every ticket
-   * from its live set, and latched itself closed -- `onCameraChange` returns `"session-ended"` from
-   * then on, so nothing is re-requested.
-   *
-   * What the manager cannot do for the owner, and why this callback exists: **residency lives with
-   * the caller** (`TileResidencyAccessor` can answer about one tile but cannot enumerate the
-   * resident set), and so does picking. The owner clears what it holds and refuses picks until the
-   * dataset is reopened. `detail` is the terminal's own text, for the typed status.
-   */
-  onSessionEnded?: (detail: string) => void;
 }
 
 export type TilePlanOutcome =
@@ -713,29 +698,27 @@ export class TileViewportStreamManager {
    *
    * Idempotent -- several tiles' terminals can carry the same code, and a session ends once.
    *
-   * What it does, in the order `state/NEXT-CUT.md:103` names: every ticket leaves the live set, so
-   * a batch still on the wire for any of them is refused by `onBatch`'s live check; every in-flight
-   * and queued tile is dropped through the existing `clearAll`; this manager latches closed, so
-   * `onCameraChange` re-requests nothing until the dataset is reopened (which builds a new
-   * manager); and the owner is told, so it can clear the residency it holds and refuse picks --
-   * the two things that live with the caller and not here.
+   * **What it does**: every ticket leaves the live set, so a batch still on the wire for any of them
+   * is refused by `onBatch`'s live check; every in-flight and queued tile is dropped through the
+   * existing `clearAll`; and this manager latches closed, so `onCameraChange` returns
+   * `"session-ended"` and plans nothing further until the dataset is reopened (which builds a new
+   * manager). `detail` is the terminal's own text, logged and not otherwise acted on here.
+   *
+   * **What it does NOT do, and what P3a therefore does not claim.** It does not clear residency and
+   * it does not refuse picks. Both live with the owner (`candidateArmSession.ts` /
+   * `App.tsx`) -- `TileResidencyAccessor` can answer about one tile but cannot enumerate the
+   * resident set, and this manager has no pick surface at all. Wiring the owner is **P3b**'s, by
+   * the human's ruling of 2026-09-16 (round 4). What an operator sees today is that this manager
+   * stops filling and that stale batches are dropped; the view it already holds stays.
    */
   private endSession(detail: string): void {
     if (this.sessionEnded) return;
     this.sessionEnded = true;
     this.liveTickets.invalidate();
-    // No resident-key hint: this manager does not hold the resident set, and `onSessionEnded` is
-    // how the owner that does is told to clear all of it -- not tile by tile.
+    // No resident-key hint: this manager does not hold the resident set. Clearing what the owner
+    // holds is P3b's; `clearAll` here drops only this manager's own queued and in-flight work.
     this.clearAll();
-    this.opts.onSessionEnded?.(detail);
-  }
-
-  /**
-   * Whether this manager's dataset session ended because the source changed. `true` is permanent
-   * for this manager: reopening the dataset builds a new one.
-   */
-  isSessionEnded(): boolean {
-    return this.sessionEnded;
+    logSessionEvent("warn", `tile-session-ended-source-changed: ${detail}`);
   }
 
   /** Cancels the active stream (if any) for a specific tile, wherever it is in this manager's own

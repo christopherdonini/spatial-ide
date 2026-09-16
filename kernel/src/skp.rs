@@ -255,8 +255,8 @@ impl StreamRegistry {
 /// **What §13 G's naming rule actually required, stated as the code spells it.** The fact this
 /// module owns is the *dataset-session* generation, and no symbol here is the bare word
 /// `generation`: the type is `GenerationRegistry`, the field on [`SkpHost`] is `generations`, and
-/// the methods are `mint_for_open`, `live_or_mint`, `attribute_ticket`, `ticket_is_live`,
-/// `invalidate` and `forget_dataset`. `dataset_session_generation` is the **term of art** this
+/// the methods are `mint_for_open`, `live_or_mint`, `attribute_ticket`, `invalidate`,
+/// `forget_dataset` and `attributed_ticket_count`. `dataset_session_generation` is the **term of art** this
 /// doc comment and the preregistration use for it; it is deliberately not a symbol, because the
 /// value it names never leaves this process and there is nothing for it to label.
 ///
@@ -298,6 +298,17 @@ struct GenerationState {
     /// use). Collapsing the two would refuse `viewport_query` on a perfectly good dataset with a
     /// message saying its file changed, which is a false statement about the file
     /// (`docs/01` principle 8). Only membership here refuses.
+    /// **This set is NOT pruned by age, and the reason is a correctness one rather than an
+    /// oversight.** An entry leaves only on `mint_for_open` (the dataset was reopened) or
+    /// `forget_dataset` (it was closed). Dropping one on a timer would let `live_or_mint` mint a
+    /// fresh generation for a dataset whose source was observed to have changed — silently
+    /// resurrecting exactly what the never-resurrect rule exists to prevent — so the safe fix is
+    /// not the small one and is not taken here.
+    ///
+    /// What it costs: one `String` per dataset that was invalidated and then neither reopened nor
+    /// closed, for the life of the process. Bounded by distinct dataset handles, and `close_dataset`
+    /// is the ordinary end of every one of them. Recorded rather than fixed blind (P3 attempt-2
+    /// should-fix).
     invalidated: std::collections::HashSet<String>,
     next: u64,
 }
@@ -314,6 +325,11 @@ impl GenerationRegistry {
     /// two are independent and this does not rely on that.
     pub fn mint_for_open(&self, dataset: &str) -> u64 {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        // Prunes like every other mutating method — this one was missed at attempt 2, so a process
+        // that only ever opened datasets (never queried) accumulated attributions from earlier
+        // generations. Safe here because pruning only drops entries naming generations that are
+        // already dead.
+        Self::prune_locked(&mut st);
         st.next += 1;
         let g = st.next;
         st.live.insert(dataset.to_string(), g);
@@ -357,23 +373,22 @@ impl GenerationRegistry {
         true
     }
 
-    /// Whether this ticket still belongs to its dataset's live generation.
+    /// How many ticket attributions this registry currently holds.
     ///
-    /// **Fails closed**: an unknown ticket is not live. A ticket whose generation was invalidated
-    /// is not live, and neither is one for a dataset with no live generation at all.
+    /// **An instrument, and its only caller is the test suite — deliberately, and this is a named
+    /// category in this tree rather than a dead `pub`.** `spatial_engine`'s
+    /// `index_consultations()`, `row_group_consultations()` and `attribute_concatenations()` have
+    /// exactly this shape for exactly this reason: the property under test is about the *shipped*
+    /// code, and an accessor compiled only into a test build would let a claim be proven about a
+    /// build nobody runs (`dataset.rs`'s own note on `INDEX_CONSULTATIONS`).
     ///
-    /// Called at **redemption** (`crate::EngineSourceFactory::create_from_ticket`): a ticket minted
-    /// under a live generation whose source was then observed to have changed, and which is
-    /// redeemed after that, must not produce a stream. The kernel is authoritative here and does
-    /// not depend on the client's own live-ticket mirror having noticed first (§13 D: both sides
-    /// fail closed independently).
-    pub fn ticket_is_live(&self, handle: &str) -> bool {
+    /// What it exists for: the bound on this map (`prune_locked`) is **assertable** instead of
+    /// asserted about in prose — `kernel/tests/session_generation.rs` is the caller. It is not a
+    /// rendering input, never reaches the wire, and carries no generation value.
+    pub fn attributed_ticket_count(&self) -> usize {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
-        match st.tickets.get(handle) {
-            Some((dataset, g, _)) => st.live.get(dataset) == Some(g),
-            None => false,
-        }
+        st.tickets.len()
     }
 
     /// Drop ticket attributions that can no longer matter — **the sibling discipline
@@ -389,21 +404,8 @@ impl GenerationRegistry {
     ///    terminal clock, and pruning at the shorter bound would forget a ticket that is still
     ///    live.
     /// 2. **Its generation is no longer the dataset's live one.** Such an entry can only ever
-    ///    answer "not live", which is exactly what a *missing* entry answers — [`ticket_is_live`]
-    ///    fails closed on an unknown handle — so keeping it buys nothing and costs memory.
-    ///
-    /// [`ticket_is_live`]: Self::ticket_is_live
-    /// How many ticket attributions this registry currently holds.
-    ///
-    /// Exists so the bound on the map is **assertable** rather than asserted about in prose —
-    /// `kernel/tests/session_generation.rs` is the caller. It is not a rendering input, never
-    /// reaches the wire, and carries no generation value.
-    pub fn attributed_ticket_count(&self) -> usize {
-        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        Self::prune_locked(&mut st);
-        st.tickets.len()
-    }
-
+    ///    answer about a generation that has already ended, which is what its absence conveys just
+    ///    as well, so keeping it buys nothing and costs memory.
     fn prune_locked(st: &mut GenerationState) {
         let max_age = TICKET_TTL + TERMINAL_ENTRY_MAX_AGE;
         st.tickets.retain(|_, (dataset, g, attributed_at)| {
@@ -560,26 +562,6 @@ impl SkpHost {
         let generations = GenerationRegistry::new();
         let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone());
         Self { catalog, tickets, opens: OpenRegistry::default(), generations, invalidator }
-    }
-
-    /// This host's generation registry.
-    ///
-    /// **Has a real caller**: `frontends/shell/src-tauri`'s app setup hands this same `Arc` to
-    /// `EngineSourceFactory::ticket_only`, which consults `ticket_is_live` at redemption so a
-    /// ticket whose generation ended between mint and redeem never produces a stream. Cloning the
-    /// `Arc` never creates a second mapping — the two must be the same one or the check reads
-    /// state nothing writes.
-    pub fn generations(&self) -> Arc<GenerationRegistry> {
-        self.generations.clone()
-    }
-
-    /// The shared end-a-generation operation, for the producer side.
-    ///
-    /// **Has a real caller**: `wrap_for_data_plane` hands it to every `EngineSource`, which ends
-    /// the session when its stream's **post-check** found a change — the terminal class the host's
-    /// own synchronous pre-check can never see (boundary 4's declared limit).
-    pub fn invalidator(&self) -> Arc<SessionInvalidator> {
-        self.invalidator.clone()
     }
 
     /// The catalog this host mutates. `frontends/shell/src-tauri`'s app setup gives the identical
@@ -1010,14 +992,6 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
 pub fn terminal_detail_of(e: &EngineError) -> String {
     format!("{}: {e}", error_of(e).code)
 }
-
-/// The one code a client must act on structurally: clear residency, refuse picks, refuse new
-/// tickets until reopen (Brief A boundary 4).
-///
-/// Named here so the kernel's own non-`EngineError` producers of this condition — the
-/// dead-generation refusal at ticket redemption — spell it from the same constant `error_of` mints,
-/// and so a test can pin both ends against one symbol.
-pub const SOURCE_CHANGED_CODE: &str = "engine.source_changed";
 
 /// Maps every `EngineError` variant to an SKP error code, verbatim message, and named fields
 /// (SKP-V0.md §5). **No wildcard arm** — a new `EngineError` variant fails this build until it is

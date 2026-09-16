@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { isSourceChangedTerminal, LiveTicketSet, SOURCE_CHANGED_CODE } from "./liveTicketSet";
+import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
 
 /**
  * The client half of Brief A boundary 4, unit-tested on its own terms.
@@ -60,7 +60,10 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     expect(
       isSourceChangedTerminal({
         kind: "ProducerFailed",
-        detail: `${SOURCE_CHANGED_CODE}: refused: the source file changed while it was open ({size})`,
+        // The literal, not a shared constant: the code is spelled independently here and in
+        // `kernel/src/skp.rs`'s `error_of` table, so the two agreeing is evidence rather than
+        // tautology. `kernel/tests/typed_terminal_codes.rs` pins the producing end.
+        detail: "engine.source_changed: refused: the source file changed while it was open ({size})",
       })
     ).toBe(true);
     // An ordinary cancel is not a source change -- the whole point of §13 C rule (ii).

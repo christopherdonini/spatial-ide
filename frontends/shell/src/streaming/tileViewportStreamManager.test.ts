@@ -1286,10 +1286,13 @@ describe("TileViewportStreamManager", () => {
 /**
  * **Brief A settled boundary 4, in the tiled arm** — P3 gate attempt 1, blocking finding 1.
  *
- * At attempt 1 this arm dropped late batches but did nothing else: no residency clearing, no
- * refusal of further work, no typed status. `state/NEXT-CUT.md:103` asks for all three
- * ("residency cleared, picks refused, typed status"), and this manager's own test file was
- * untouched in that diff, which is why it went unseen.
+ * At attempt 1 this arm dropped late batches but did nothing else -- and this manager's own test
+ * file was untouched in that diff, which is why it went unseen.
+ *
+ * **What P3a covers here is the manager's own half only**: tickets dropped, its own queued and
+ * in-flight work cancelled, and the latch that stops it planning again. Owner-side residency
+ * clearing and pick refusal are **P3b**'s (the human's ruling of 2026-09-16, round 4) and are
+ * asserted nowhere in this file.
  *
  * Every terminal here is the shape the kernel actually sends — `"<code>: <display>"`
  * (`kernel/src/skp.rs::terminal_detail_of`, pinned on the Rust side by
@@ -1328,8 +1331,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * `this.liveTickets.invalidate()` attempt 1 shipped fails every assertion below except the
    * late-batch one — which is precisely the gap the gate found. */
   it("ends the whole session from one tile's terminal: work dropped, further planning refused, owner told", async () => {
-    const onSessionEnded = vi.fn();
-    const { manager } = makeManager({ onSessionEnded });
+    const { manager } = makeManager();
     manager.establishGridFrame(ANCHOR);
     viewportQueryMock
       .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
@@ -1346,15 +1348,13 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
     // The generation is per dataset-session, not per tile: ONE tile's terminal ends all of it.
     expect(manager.inFlightCount).toBe(0);
     expect(manager.queuedCount).toBe(0);
-    expect(manager.isSessionEnded()).toBe(true);
 
-    // The typed status reaches the owner, which clears the residency it holds and refuses picks --
-    // the two things that live with the caller, since this manager cannot enumerate the resident
-    // set. The detail is the terminal's own text.
-    expect(onSessionEnded).toHaveBeenCalledTimes(1);
-    expect(onSessionEnded.mock.calls[0][0]).toBe(terminal.detail);
+    // **What P3a does NOT assert.** Nothing here claims the operator's residency is cleared or
+    // that picks are refused -- this manager holds neither. The owner that does is not wired in
+    // this piece; that is P3b's.
 
-    // Refused until reopen: a later camera change plans nothing and mints nothing.
+    // Refused until reopen: a later camera change plans nothing and mints nothing. This is the
+    // latch, observed through the outcome `candidateArmSession.ts` actually reads.
     viewportQueryMock.mockClear();
     expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
     expect(viewportQueryMock).not.toHaveBeenCalled();
@@ -1389,8 +1389,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * Mutation recorded in-source: matching on the refusal's prose instead of its code makes an
    * ordinary terminal that happens to mention a change end the session, and breaks this. */
   it("an ordinary terminal does not end the session", async () => {
-    const onSessionEnded = vi.fn();
-    const { manager } = makeManager({ onSessionEnded });
+    const { manager } = makeManager();
     manager.establishGridFrame(ANCHOR);
     viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
     manager.onCameraChange(ANCHOR);
@@ -1402,8 +1401,6 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
     });
     await flushMicrotasks();
 
-    expect(onSessionEnded).not.toHaveBeenCalled();
-    expect(manager.isSessionEnded()).toBe(false);
     expect(manager.onCameraChange(ANCHOR).kind).not.toBe("session-ended");
   });
 });

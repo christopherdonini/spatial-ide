@@ -665,10 +665,16 @@ and one value-domain widening, all still inside `skp/0.3` while it is unmerged (
 - **Both new refusal surfaces now carry their typed code into the string they cross as.** A
   data-plane terminal's `detail` is `"<code>: <display>"` (`kernel/src/skp.rs::terminal_detail_of`,
   applied at `kernel/src/lib.rs`'s `EngineSource::next_into`), and a publish refusal reaching the
-  shell is `"<code>: <display>"` too (`PublishError::refusal_detail`). **Neither is a wire-format
-  change**: both ride a `String` that already existed, and `protocol/data-plane/` still has an empty
-  diff for this version. It is recorded here because a client now depends on the shape: the code is
-  a **prefix**, and a client matches it as one.
+  shell is `"<code>: <display>"` too (`PublishError::refusal_detail`, applied at **both** of
+  `frontends/shell/src-tauri/src/publish.rs`'s preflight sites). **Scoped to `PublishError`**: the
+  same seam also carries refusals that are not publish errors at all — a permission error, an IPC
+  rejection, the unknown-attempt sentence — and those have no typed code and are not given one. The
+  shell's own parser (`frontends/shell/src/publish/formatPublishRefusal.ts`) reads a `publish.*`
+  prefix when there is one and labels the rest `publish-refused`.
+
+  **Neither is a wire-format change**: both ride a `String` that already existed, and
+  `protocol/data-plane/` still has an empty diff for this version. It is recorded here because a
+  client now depends on the shape: the code is a **prefix**, and a client matches it as one.
 - **`identity.uniqueness`'s documented value set was two and is three.** The third,
   `"by-construction-within-generation"`, comes from the **PROPOSED** ADR-016 Amendment 1, which
   binds nothing until the human accepts it; it is emitted because this cut implements the session

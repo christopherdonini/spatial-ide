@@ -124,37 +124,16 @@ describe("refusalGuidance", () => {
  *
  * The publish case was unreachable then: a publish refusal crossed the Tauri boundary as
  * `PrepareOutcome::Refused { message }`, a `Display` string with no code in it. It now crosses as
- * `"<code>: <display>"` (`PublishError::refusal_detail`, pinned on the Rust side by
- * `kernel/tests/typed_terminal_codes.rs`), so `codeOf` below finds a real code in a real message.
+ * `"<code>: <display>"` (`PublishError::refusal_detail`), and **the product parses it** --
+ * `publish/formatPublishRefusal.ts`, whose own test drives that parser from the kernel's real
+ * output. A test-local parser used to stand in for it here; it is gone, because a test that
+ * re-implements the interface it is meant to be checking proves nothing about the product.
  *
  * **No string here is asserted verbatim.** All four are placeholders for the human's P6 sight; what
  * is asserted is that each state has guidance at all and that it says the thing the operator needs
  * (what ended, whether their file is at fault, what to do) — properties a rewording keeps.
  */
 describe("refusalGuidance for Brief A P3's new states", () => {
-  /** How a client recovers a typed code from a refusal string the kernel prefixed. */
-  function codeOf(detail: string): string {
-    return detail.slice(0, detail.indexOf(":"));
-  }
-
-  // Mutation: return `e.to_string()` instead of `e.refusal_detail()` at the Tauri publish site.
-  // Expected failure: "recovers the publish code from the real prefixed refusal shape, and has
-  // guidance for it" fails -- which is exactly the unreachable case attempt 1 shipped.
-  it("recovers the publish code from the real prefixed refusal shape, and has guidance for it", () => {
-    // The shape `PublishError::refusal_detail` produces, spelled out here rather than invented.
-    const detail =
-      "publish.geographic_crs_not_publishable: refused: OGC:CRS84 is a geographic CRS whose " +
-      "coordinates are in degrees (unit:format-rule), and the bundled viewer has no degrees path";
-    expect(codeOf(detail)).toBe("publish.geographic_crs_not_publishable");
-
-    const guidance = refusalGuidance(codeOf(detail));
-    expect(guidance).not.toBeNull();
-    expect(guidance).toMatch(/degrees/i);
-    // It says nothing was written — a publish refusal that leaves the operator unsure whether a
-    // bundle exists is the thing the preflight ordering exists to make answerable.
-    expect(guidance).toMatch(/nothing has been written/i);
-  });
-
   // Mutation: delete the `engine.source_changed` case from `refusalGuidance`. Expected failure:
   // "engine.source_changed: says what ended, what to do, and states the check's limit" fails --
   // the operator would see the raw refusal with no account of what the check cannot do.

@@ -78,16 +78,15 @@ fn a_ticket_is_attributable_only_under_a_live_generation() {
     let g = GenerationRegistry::new();
     g.mint_for_open("ds_a");
     assert!(g.attribute_ticket("sh_1", "ds_a"), "a live dataset attributes its ticket");
-    assert!(g.ticket_is_live("sh_1"));
+    assert_eq!(g.attributed_ticket_count(), 1);
 
     // The false path: a dataset with no live generation cannot attribute one, and the caller must
     // refuse rather than record a ticket under a generation that does not exist.
     g.invalidate("ds_a");
     assert!(!g.attribute_ticket("sh_2", "ds_a"), "an ended session attributes nothing");
-    assert!(!g.ticket_is_live("sh_2"));
-
-    // Fails closed on a handle it never saw.
-    assert!(!g.ticket_is_live("sh_never_minted"));
+    // And the ticket from the ended generation is gone with it — nothing is left answering about a
+    // generation that no longer exists.
+    assert_eq!(g.attributed_ticket_count(), 0);
 }
 
 /// Mutation recorded in-source: changing `invalidate`'s filter to `d == dataset` alone (dropping
@@ -107,8 +106,9 @@ fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     assert_eq!(ended, vec!["sh_a1".to_string(), "sh_a2".to_string()]);
 
     // The other dataset's session is untouched: a generation is per dataset-session, and one
-    // dataset's changed source says nothing about another's.
-    assert!(g.ticket_is_live("sh_b1"));
+    // dataset's changed source says nothing about another's. Its ticket survives the prune that
+    // swept `ds_a`'s, which is the observable form of "untouched".
+    assert_eq!(g.attributed_ticket_count(), 1);
     assert!(g.live_or_mint("ds_b").is_some());
 
     // Idempotent: invalidating again ends nothing further and returns nothing.
@@ -126,7 +126,7 @@ fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution(
 
     g.forget_dataset("ds_a");
 
-    assert!(!g.ticket_is_live("sh_a1"), "the attribution is gone");
+    assert_eq!(g.attributed_ticket_count(), 0, "the attribution is gone");
     // The invalidation is gone too, so the name is a stranger again rather than a refused one —
     // `close_dataset` then `open_dataset` under the same name is an ordinary reopen.
     assert!(
@@ -156,12 +156,6 @@ fn dead_generation_attributions_are_pruned_rather_than_accumulating() {
     }
     // Every ticket above belongs to a generation that has since ended, and the last `invalidate`
     // swept them. Only a live one would survive, and there is none.
-    for round in 0..50 {
-        assert!(
-            !g.ticket_is_live(&format!("sh_{round}")),
-            "round {round}'s ticket is neither live nor kept"
-        );
-    }
     assert_eq!(g.attributed_ticket_count(), 0, "the map did not grow across 50 ended sessions");
 }
 
@@ -189,10 +183,10 @@ fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
                 let handle = format!("sh_{thread}_{i}");
                 if g.attribute_ticket(&handle, "ds_a") {
                     attributed += 1;
-                    // The invariant, checked from inside the race: a ticket this thread just
-                    // attributed is live unless someone invalidated in between — never some third
-                    // state, and never a panic from a poisoned lock.
-                    let _ = g.ticket_is_live(&handle);
+                    // Read the map from inside the race too: the count is whatever it is at this
+                    // instant, and what is asserted is that reading it neither deadlocks nor
+                    // panics on a poisoned lock.
+                    let _ = g.attributed_ticket_count();
                 }
                 if i % 50 == 49 {
                     g.invalidate("ds_a");

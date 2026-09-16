@@ -506,7 +506,11 @@ fn prepare_with_query(
     // used for anything but this check.
     let pre = match publish::preflight(&request) {
         Ok(p) => p,
-        Err(e) => return PrepareOutcome::Refused { message: e.to_string() },
+        // The same `"<code>: <display>"` shape the pin-free preflight above already sends, so the
+        // shell's `formatPublishRefusal` parses one convention and not two. Without this, SKP-V0.md's
+        // sentence about publish refusals carrying their code would have been true of one of the two
+        // preflight sites and false of the other.
+        Err(e) => return PrepareOutcome::Refused { message: e.refusal_detail() },
     };
 
     let resolved_destination = match permission::grant::resolve_destination(&destination) {

@@ -643,24 +643,20 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     mockStream("sh_a");
     const onBatch = vi.fn();
     const onSuperseded = vi.fn();
-    const onSessionEnded = vi.fn();
-    const manager = new ViewportStreamManager({
-      dataset: "ds_x",
-      onBatch,
-      onSuperseded,
-      onSessionEnded,
-    });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
     await manager.requestViewport(null, null, 1_000);
 
     const terminal = sourceChangedTerminal();
     sinkFor(0).onTerminal(terminal);
 
-    // Residency this manager tracked is gone.
+    // The handles this manager was tracking are dropped.
     expect(manager.activeStreamHandle).toBeNull();
-    // The typed status reaches the owner -- which clears what it holds and refuses picks, the two
-    // things that live with the caller and not here. The detail is the terminal's own text.
-    expect(onSessionEnded).toHaveBeenCalledTimes(1);
-    expect(onSessionEnded.mock.calls[0][0]).toBe(terminal.detail);
+
+    // **What P3a does NOT assert, stated so nobody reads it in.** Nothing here claims the
+    // operator's residency is cleared or that picks are refused: this manager neither holds the
+    // resident geometry nor has a pick surface, and the owner that has both is not wired in this
+    // piece. That is P3b's (the human's ruling of 2026-09-16, round 4). What is true today, and
+    // all that is asserted, is that this manager stops issuing and drops stale batches.
 
     // Refused until reopen: nothing is re-issued, and no second ticket is minted.
     viewportQueryMock.mockClear();
@@ -698,17 +694,14 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
    * whole detail, or matching on the prose instead of the code, breaks this. */
   it("an ordinary cancelled terminal does not end the session", async () => {
     mockStream("sh_a");
-    const onSessionEnded = vi.fn();
     const manager = new ViewportStreamManager({
       dataset: "ds_x",
       onBatch: vi.fn(),
       onSuperseded: vi.fn(),
-      onSessionEnded,
     });
     await manager.requestViewport(null, null, 1_000);
 
     sinkFor(0).onTerminal({ kind: "Cancelled", detail: "engine.cancelled: cancelled" });
-    expect(onSessionEnded).not.toHaveBeenCalled();
 
     // And the manager is still usable: the next request is subject to the ordinary issue-rate
     // throttle, never to the session-ended latch. `"throttled"` is this call's honest outcome here

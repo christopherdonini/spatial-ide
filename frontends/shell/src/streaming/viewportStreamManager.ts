@@ -39,19 +39,6 @@ export interface ViewportStreamManagerOptions {
    * stream this manager has already superseded must not report liveness for a query nobody is
    * waiting on anymore. */
   onStreamOpened?: (streamHandle: string) => void;
-  /**
-   * **The dataset session ended: the source was observed to have changed** (Brief A settled
-   * boundary 4 -- `state/NEXT-CUT.md:103`'s "residency cleared, picks refused, typed status").
-   *
-   * Fired once, from the terminal that carried `engine.source_changed`. By then this manager has
-   * dropped every ticket from its live set -- so a batch still on the wire is refused -- forgotten
-   * its resident handle, and latched itself closed: `requestViewport` returns `"session-ended"`
-   * from here on, so nothing is re-issued until the dataset is reopened.
-   *
-   * The owner clears the residency it holds and refuses picks. Those two live with the caller, not
-   * here. `detail` is the terminal's own text, for the typed status.
-   */
-  onSessionEnded?: (detail: string) => void;
 }
 
 /**
@@ -269,25 +256,26 @@ export class ViewportStreamManager {
         }
         // This ticket is over, whichever terminal it reached; no further batch for it is expected.
         this.liveTickets.retire(streamHandleAtStart);
-        // **The client half of the invalidation path.** A terminal naming `engine.source_changed`
-        // is the kernel telling this client the dataset-session generation ended -- at a stream's
-        // post-check, which is the case boundary 4 declares can only be caught after the query has
-        // finished reading. Every ticket this client holds is dropped, so any batch still on the
-        // wire for any of them is refused by `onBatch`'s live check above; residency is cleared and
-        // picks refused by `App.tsx` off the terminal it receives next.
+        // **What this manager does when the kernel reports the source changed -- and what P3a does
+        // NOT claim.** A terminal naming `engine.source_changed` says the dataset-session
+        // generation ended, at a stream's post-check. This manager drops every ticket it holds (so
+        // any batch still on the wire is refused by `onBatch`'s live check above), forgets the
+        // handles it was tracking, and latches closed so nothing is re-issued.
+        //
+        // **Residency is NOT cleared and picks are NOT refused by this, and P3a claims neither.**
+        // Both live with the owner (`App.tsx` / `candidateArmSession.ts`), which this piece does not
+        // wire -- that is P3b's, by the human's ruling of 2026-09-16 (round 4). Nothing here, and no
+        // test narration, may say the operator's view is cleared: what is true today is that this
+        // manager stops feeding it and that stale batches are dropped.
         if (isSourceChangedTerminal(terminal)) {
           this.sessionEnded = true;
           this.liveTickets.invalidate();
-          // Residency this manager knows about is dropped here; the owner clears what it holds —
-          // and refuses picks — off `onSessionEnded`, because the resident geometry and the pick
-          // index live with the caller and not here.
           this.residentStreamHandle = null;
           this.currentStreamHandle = null;
           logSessionEvent(
             "warn",
             `session-ended-source-changed: ${streamHandleAtStart}: ${terminal.detail}`
           );
-          this.opts.onSessionEnded?.(terminal.detail);
         }
         // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
         // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the

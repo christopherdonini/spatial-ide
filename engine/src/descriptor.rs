@@ -224,11 +224,11 @@ impl SourceDescriptor {
     /// The whole of R-D2's comparison; the pre-check and the post-check both route through it so
     /// the two cannot drift into two different ideas of "changed".
     ///
-    /// **They also share [`Self::refuse_unreadable`] for the case where there is nothing to compare
-    /// against.** The two checks once disagreed there — the pre-check propagated a read failure as
-    /// `EngineError::Source` while the post-check mapped it to `SourceChanged`, so a source deleted
-    /// mid-session left the generation live (P3 gate attempt 1, blocking finding 4). This sentence
-    /// is the invariant; those two functions are the whole of it.
+    /// **They also share [`Self::refuse_if_changed_or_unreadable`] for the case where there is
+    /// nothing to compare against.** The two checks once disagreed there — the pre-check propagated
+    /// a read failure as `EngineError::Source` while the post-check mapped it to `SourceChanged`, so
+    /// a source deleted mid-session left the generation live (P3 gate attempt 1, blocking finding
+    /// 4). This sentence is the invariant; those two functions are the whole of it.
     pub fn refuse_if_changed(&self, now: &Self) -> Result<()> {
         let differing = self.components_differing_from(now);
         if differing.is_empty() {

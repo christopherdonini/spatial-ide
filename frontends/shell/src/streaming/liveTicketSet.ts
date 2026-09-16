@@ -38,7 +38,7 @@ import type { Terminal } from "./transport";
  * The prefix is why this works at all. Before it, the detail was the `Display` text alone and this
  * predicate could never fire (P3 gate attempt 1, blocking finding 1).
  */
-export const SOURCE_CHANGED_CODE = "engine.source_changed";
+const SOURCE_CHANGED_CODE = "engine.source_changed";
 
 /**
  * Whether this terminal is the kernel telling the client its session ended.

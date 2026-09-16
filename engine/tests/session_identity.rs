@@ -440,11 +440,24 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
             break;
         }
     }
-    // The terminal a consumer sees is the cancel, whatever the post-check found beside it.
+    // **Rule (ii)'s actual claim, asserted so it can fail for the reason it names.** The previous
+    // form of this was `matches!(terminal, Some(Cancelled) | None)`, which also passed when the
+    // stream simply drained clean and the cancel was never exercised at all — it could not fail for
+    // its own reason (P3 attempt-2 should-fix). Split in two:
+    //
+    // 1. Whatever terminal a consumer sees, it is **not** the source change. This is the claim.
     assert!(
-        matches!(terminal, Some(EngineError::Cancelled) | None),
+        !matches!(terminal, Some(EngineError::SourceChanged { .. })),
         "a cancel is never reported as a source change, got {terminal:?}"
     );
+    // 2. And when a terminal error did arrive, it is the cancel and nothing else. `None` stays
+    //    admissible and is stated rather than hidden: this fixture is small enough that the
+    //    producer can finish before the cancel reaches DuckDB's interrupt, in which case the stream
+    //    ends clean — a real outcome of a real race, not a defect, and the assertion above is the
+    //    one that holds in both cases.
+    if let Some(e) = &terminal {
+        assert!(matches!(e, EngineError::Cancelled), "the only terminal error here is the cancel: {e:?}");
+    }
     // And the finding is still recorded, which is what ends the dataset-session generation — the
     // whole reason the side channel exists. It was written before the terminal above was sent.
     assert!(

@@ -701,3 +701,134 @@ edited**: every item here corrects or extends it by appending, and each says whi
     footer read and a SHA-256 per query issue — is **unchanged and deliberately not weakened**: it
     is what boundary 4 and R-D2 ask for, and any relaxation is the human's question, not this
     round's.
+
+### Amendment 3 — the P3 split, on the human's ruling (2026-09-16, appended)
+
+**Written after the attempt-2 gate outcomes were seen (reviewer FAIL, architect FAIL) and after the
+human's ruling of 2026-09-16 (round 4) that split the piece.** §12e's rule, honoured in this line.
+Amendments 1 and 2 are not edited; item 11 below corrects one of Amendment 2's claims by appending.
+
+**The ruling, verbatim:**
+
+> "Split P3, on conditions. The landing half (P3a) contains only code with a real product caller and
+> an end-to-end test from the real producer/consumer shape — both gates run the grep: no callback,
+> code path or pub item lands without a caller; the unwired dead-ticket refusal and its fabricated
+> source-change are removed from P3a, not carried; the publish-consumer regression is fixed in P3a
+> (the shell parses the refusal code — no operator-visible regression on main); the Drop-backstop
+> comment corrected. P3a claims nothing about boundary 4: the ADR-016 amendment's acceptance and any
+> statement that detection "clears residency and refuses picks" wait for P3b, and the ledger says
+> so. P3b gets its own preregistration and gates: the owner-side invalidation (residency cleared,
+> picks refused — the consequence P3's own row promised), the kernel-authoritative dead-ticket
+> refusal wired with a real caller and correct unknown-handle behaviour, and the §12e amendment
+> recording the split. No release includes P3a without P3b. Class fix, permanent, in the worker
+> brief and both gate checklists: any cross-module seam is written against the interface the other
+> side actually has — read it first — and is proven by one end-to-end test from the real shape; a
+> test that encodes an imagined interface is a gate failure by name."
+
+**1. What P3a lands.** The session identity tier (R-I3/R-I4) and its record; the structural
+descriptor with the pre-check and the post-check (R-D1/R-D2, §13 C); the kernel's
+`GenerationRegistry` with its pruning, minting, attribution and `end_generation`, all reached from
+`SkpHost`'s own product paths; `SessionInvalidator`, held by every `EngineSource`; the typed code
+carried into both stringified refusal surfaces, each proven end to end from the producing side; SKP
+0.3 with its fixtures; the P2-held publish preflight refusal; and the 2026-09-16 round-3 `crs.source`
+ruling.
+
+**2. What is REMOVED rather than carried.** Every item below had **zero product callers**, verified
+by grep before removal:
+
+- `EngineSourceFactory::ticket_only_with_generations` — nothing ever constructed a factory that
+  held the generation map, so the guard it existed for never ran in any build.
+- The redemption-time `ticket_is_live` guard in `kernel/src/lib.rs`, **and its fabricated
+  source-change refusal**. That refusal told a caller its source "was observed to have changed" for
+  any handle the map did not know — expired, already redeemed, never minted — which is a diagnosis
+  the kernel had not made (`docs/01` principle 8). It is not softened and re-landed; it is gone.
+- `GenerationRegistry::ticket_is_live`, which had no caller left once the guard went. A test-only
+  caller does not count under the ruling.
+- `SkpHost::generations()` and `SkpHost::invalidator()` — accessors for a field the host already
+  passes directly. The **field** stays; the accessors are gone.
+- `onSessionEnded` on both streaming managers, and `TileViewportStreamManager.isSessionEnded()`.
+  No owner subscribed to either.
+
+**3. What is DEFERRED to P3b, and therefore claimed nowhere in P3a.**
+
+- **Owner-side invalidation: residency cleared and picks refused.** P3a's managers drop their
+  tickets, cancel their own queued and in-flight work, and latch closed. They do **not** clear the
+  resident geometry and do **not** refuse picks — neither lives in a manager. Every comment and test
+  narration that said or implied otherwise has been deleted or rewritten; what an operator sees today
+  is that filling stops and stale batches are dropped, and the view already on screen stays.
+- The kernel-authoritative dead-ticket refusal, wired to a real caller, with correct three-valued
+  unknown-handle behaviour.
+- **The ADR-016 Amendment 1 acceptance**, which stays Proposed and binds nothing.
+- Boundary 4's own sentence about detection clearing residency and refusing picks. P3a does not
+  claim boundary 4 is satisfied.
+
+**No release includes P3a without P3b.**
+
+**4. The publish-consumer regression, fixed.** `PublishError::refusal_detail()` produced
+`"<code>: <display>"`, but `frontends/shell/src/publish/formatPublishRefusal.ts` — the real consumer,
+which `PublishPanel.tsx` calls and `RefusalBlock.tsx` renders — hardcoded `code: "publish-refused"`
+and passed the message through whole. So the machine prefix reached the operator as raw text *and*
+the code was discarded, making `refusalGuidance` unreachable for every publish code: an
+operator-visible regression that would have shipped. The consumer now parses the prefix, returns the
+real `publish.*` code, and strips it from the message. Both of `publish.rs`'s preflight sites send
+the prefixed form, so SKP-V0.md's sentence is true of the surface it names, and that sentence is now
+scoped to `PublishError` (the same seam carries permission errors and IPC rejections, which have no
+code and are not given one). The shell's test input is the kernel's own output, captured from a real
+`cargo test` run and pinned on the Rust side as an exact-equality assertion, so a drift fails in the
+producer's suite first.
+
+**5. The `Drop`-backstop comment, corrected.** It claimed `Drop` was a backstop that would catch a
+post-check finding on an abandoned stream. `BatchStream::drop` cancels the token and returns — it
+does **not** join the producer — so the flag may still be empty at that point and nothing is ended
+there. The residual is now stated where the code is: the change is not lost, but its invalidation is
+**deferred to the next query issue's pre-check** rather than happening at drop.
+
+**6. `unreachable!()` retyped.** `dataset::open_inner`'s `CrsSource::FormatRule` arm returned
+`unreachable!()`; a panic in admission would take down a host serving other datasets over a
+contradiction in this tree's own bookkeeping. It returns `EngineError::InternalInconsistency` — the
+variant this cut already owns for exactly that condition — behind an unchanged `debug_assert!`.
+
+**7. Three cannibalised doc comments, restored.** Appending to a file above an existing item had
+left three functions wearing their neighbour's documentation: `admit_identity`'s ADR-016 §3–§6 block
+had migrated onto `partitioned_source_detail`; `DatasetCrs::from_file`'s onto
+`recorded_as_format_rule`; and `prune_locked`'s pruning rationale onto `attributed_ticket_count`.
+Each is back on its own item, and each of the three displaced items now has its own doc. The cite in
+`kernel/tests/session_generation.rs` to "`prune_locked`'s own doc" therefore holds again.
+
+**8. Smaller corrections.** `descriptor.rs`'s intra-doc link named `refuse_unreadable`, which is not
+a symbol — it is `refuse_if_changed_or_unreadable`. `kernel/src/skp.rs`'s naming-rule comment listed
+the registry's methods and omitted `attributed_ticket_count` while naming the now-removed
+`ticket_is_live`. `session_identity.rs`'s cancelled-terminal assertion was
+`matches!(terminal, Some(Cancelled) | None)`, which also passed when the cancel was never exercised
+at all; it is split so each half fails for the reason it names, and the admissible `None` case is
+stated rather than hidden.
+
+**9. The post-check sits inside the cancel-acknowledgement window, recorded in-source.** The R-D2
+post-check runs before `PRODUCER_FINISHED`, the producer's cancel-acknowledgement stamp, so that
+acknowledgement now also covers a bounded metadata-plus-footer read. **No figure is claimed and none
+is implied**; what it costs against `docs/08`'s acknowledgement budget is P5's to measure, and the
+comment exists so that measurement knows the term is there. Observed once during this round, and
+recorded because it bears on that measurement: `engine/tests/slice.rs`'s
+`cancelling_mid_stream_stops_production_promptly` (a pre-existing test with its own declared bound)
+failed once in a full parallel workspace run and passed in isolation, in its own suite, and on an
+immediate re-run of the same full suite. Reported as an observation, not as a measurement.
+
+**10. Correcting Amendment 2 item 8's "deliberately not stat-based".** That sentence described
+R-I4's detection as a property of the path text alone. It is true of the **metacharacter branch**
+only: `partitioned_source_detail`'s first branch is `path.is_dir()`, which is a stat. The accurate
+statement is that the *glob* decision never consults the filesystem, so a pattern is refused
+identically whether or not a literal file of that name happens to exist; the directory decision does
+consult it, and must.
+
+**11. Correcting Amendment 2 item 11.** It said `ticket_is_live` "gained the caller it was written
+for". That was untrue of the tree: the only caller was reached through a constructor no product code
+ever called, so the method was dead in every build that shipped. The claim is withdrawn, and the
+method is removed by item 2 above rather than left with a false justification.
+
+**12. The class rule, recorded here because it is permanent.** Any cross-module seam is written
+against the interface the other side actually has — read first, cited by `file:line` — and is proven
+by one end-to-end test that starts from the real producer or consumer shape. A test that encodes an
+imagined interface is a gate failure by name. P3a's two seams each have one: the data-plane terminal
+(`kernel/tests/typed_terminal_codes.rs` drives a real ticket through the real factory and reads the
+terminal off the real `dyn BatchSource`) and the publish refusal (the shell's parser test, whose
+input is the kernel's captured output).

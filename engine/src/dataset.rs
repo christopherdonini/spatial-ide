@@ -366,14 +366,28 @@ impl Dataset {
                     Some(crs.axis_order()),
                     None,
                 ),
-                // **Unreachable here, and deliberately matched rather than wildcarded.**
+                // **Not reachable today, and deliberately matched rather than wildcarded.**
                 // `CrsSource::FormatRule` is stamped *below* this block, from the very
                 // `crs_provenance` this block computes, so no `DatasetCrs` carries it yet at this
                 // line. A wildcard arm would let a future re-stamp move above this point and
-                // silently take the file branch; this arm makes that a compile error instead.
-                crs::CrsSource::FormatRule => unreachable!(
-                    "`FormatRule` is stamped from `crs_provenance`, which this match computes"
-                ),
+                // silently take the file branch; this arm keeps that visible instead.
+                //
+                // **It refuses typed rather than panicking.** A `panic!` in admission would take a
+                // host serving other datasets down over a contradiction in this tree's own
+                // bookkeeping. This cut already owns the variant for exactly that condition, and
+                // using it keeps one inconsistency one dataset's problem (P3 attempt-2 should-fix).
+                crs::CrsSource::FormatRule => {
+                    debug_assert!(false, "`FormatRule` is stamped below this match, not above it");
+                    return Err(EngineError::InternalInconsistency {
+                        detail: format!(
+                            "{} reached the provenance match already recorded as `crs_source = \
+                             format-rule`, which this reader stamps only after that match has run. \
+                             A provenance class is a recorded fact and is never substituted for a \
+                             missing one",
+                            crs.identifier()
+                        ),
+                    });
+                }
                 // **A provenance class is read or the open stops; it is never substituted.**
                 // `crs::admit` reaches its file arm only because `format_semantics` handed it a
                 // CRS, and every branch that does so sets both provenances — so the `None` arm is
@@ -1294,21 +1308,6 @@ fn covering_sample(
     })
 }
 
-/// Admit the dataset's feature identity — **ADR-016 §3–§6**.
-///
-/// Refusal is the default: absent a declaration, the engine looks for its own `id` column and
-/// refuses if it is not there. A declaration redirects identity to a named source column, and
-/// **changes nothing else** — in particular it does not weaken any check.
-///
-/// The uniqueness scan is what turns "a column exists" into "an id identifies one feature", and it
-/// runs for a **native** column too: ADR-016's Context records that the native column was
-/// previously trusted without it, which is the gap this closes.
-///
-/// A declared column name is the one caller-supplied string that legitimately reaches SQL text
-/// (as a doubled-quote-escaped identifier). What bounds it is **schema membership, not escaping
-/// alone**: the name must first match a field in the file's own Arrow schema, refused typed
-/// otherwise, before any SQL is composed — SKP-V0 §7.4's "never string-concatenated" discipline,
-/// made explicit for the one site that interpolates an identifier at all (docs/09).
 /// Whether this source is **partitioned** — more than one file — and why, or `None`.
 ///
 /// **Structural and narrow, and it opens nothing.** Two shapes count, because they are the two a
@@ -1408,6 +1407,25 @@ pub fn ordinal_is_physical_not_scan_ordered(
         .all(|(ordinal, key)| baseline.get(&ordinal).is_none_or(|k| *k == key)))
 }
 
+/// Admit the dataset's feature identity — **ADR-016 §3–§6**.
+///
+/// Refusal is the default: absent a declaration, the engine looks for its own `id` column and
+/// refuses if it is not there. A declaration redirects identity to a named source column, and
+/// **changes nothing else** — in particular it does not weaken any check.
+///
+/// The uniqueness scan is what turns "a column exists" into "an id identifies one feature", and it
+/// runs for a **native** column too: ADR-016's Context records that the native column was
+/// previously trusted without it, which is the gap this closes.
+///
+/// A declared column name is the one caller-supplied string that legitimately reaches SQL text
+/// (as a doubled-quote-escaped identifier). What bounds it is **schema membership, not escaping
+/// alone**: the name must first match a field in the file's own Arrow schema, refused typed
+/// otherwise, before any SQL is composed — SKP-V0 §7.4's "never string-concatenated" discipline,
+/// made explicit for the one site that interpolates an identifier at all (docs/09).
+///
+/// **Since Brief A P3 it has a third outcome**: where neither a native `id` column nor a
+/// declaration yields an admissible identity on a single file, it admits on the **session tier**
+/// (R-I3) instead of refusing — see that arm's own comment.
 fn admit_identity(
     conn: &Connection,
     path: &str,

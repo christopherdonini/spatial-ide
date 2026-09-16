@@ -245,11 +245,7 @@ pub(crate) fn wrap_for_data_plane(
 /// a raw-`StreamParams` START is refused rather than silently accepted (`kernel/tests/skp_admission.rs`).
 enum AdmissionMode {
     Raw,
-    /// The ticket registry, and the generation map a redeemed ticket is checked against.
-    ///
-    /// The generation map is `Option` because the raw-params tests construct a factory without an
-    /// `SkpHost`; where it is present, redemption consults it (see `create_from_ticket`).
-    TicketOnly(Arc<skp::StreamRegistry>, Option<Arc<skp::GenerationRegistry>>),
+    TicketOnly(Arc<skp::StreamRegistry>),
 }
 
 /// Turns an operation request into an engine stream. This is the whole composition.
@@ -285,25 +281,7 @@ impl EngineSourceFactory {
     /// [`spatial_skp::v0::StreamHandle`] ticket already built and validated by
     /// `SkpHost::viewport_query`, never decoded as [`StreamParams`].
     pub fn ticket_only(catalog: Arc<Catalog>, tickets: Arc<skp::StreamRegistry>) -> Self {
-        Self { catalog, connection_reports: None, mode: AdmissionMode::TicketOnly(tickets, None) }
-    }
-
-    /// As [`Self::ticket_only`], also refusing a ticket whose **dataset-session generation** ended
-    /// between mint and redemption (Brief A boundary 4).
-    ///
-    /// `generations` must be the identical `Arc` the `SkpHost` holds (`SkpHost::generations()`) —
-    /// two registries would mean this check reads state nothing writes. The shell's app setup is
-    /// the caller.
-    pub fn ticket_only_with_generations(
-        catalog: Arc<Catalog>,
-        tickets: Arc<skp::StreamRegistry>,
-        generations: Arc<skp::GenerationRegistry>,
-    ) -> Self {
-        Self {
-            catalog,
-            connection_reports: None,
-            mode: AdmissionMode::TicketOnly(tickets, Some(generations)),
-        }
+        Self { catalog, connection_reports: None, mode: AdmissionMode::TicketOnly(tickets) }
     }
 }
 
@@ -320,9 +298,7 @@ impl SourceFactory for EngineSourceFactory {
         }
         match &self.mode {
             AdmissionMode::Raw => self.create_from_raw_params(request),
-            AdmissionMode::TicketOnly(tickets, generations) => {
-                Self::create_from_ticket(tickets, generations.as_ref(), request)
-            }
+            AdmissionMode::TicketOnly(tickets) => Self::create_from_ticket(tickets, request),
         }
     }
 }
@@ -379,7 +355,6 @@ impl EngineSourceFactory {
     /// process never installs both admission paths (ADR-019's own consequence).
     fn create_from_ticket(
         tickets: &Arc<skp::StreamRegistry>,
-        generations: Option<&Arc<skp::GenerationRegistry>>,
         request: &OpenRequest,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
         let handle_str = std::str::from_utf8(&request.params)
@@ -387,21 +362,17 @@ impl EngineSourceFactory {
         let handle: spatial_skp::v0::StreamHandle = handle_str
             .parse()
             .map_err(|e: String| format!("not a ticket this producer minted: {e}"))?;
-        // **Brief A boundary 4, kernel-authoritative.** A ticket minted under a live generation
-        // whose source was then observed to have changed must not produce a stream, even though
-        // `StreamRegistry` itself still knows the handle. Checked before `redeem` so a refused
-        // ticket is not consumed: a ticket is single-use, and spending it to learn it was dead
-        // would turn a refusal into a second, different refusal on any retry.
-        if let Some(generations) = generations {
-            if !generations.ticket_is_live(handle.as_str()) {
-                return Err(format!(
-                    "{}: ticket `{}` belongs to a dataset session that ended when its source was \
-                     observed to have changed; reopen the dataset",
-                    skp::SOURCE_CHANGED_CODE,
-                    handle.as_str()
-                ));
-            }
-        }
+        // **Redemption does NOT consult the dataset-session generation, and P3a says so here**
+        // rather than leaving the absence to be read as an oversight. A guard was written at P3
+        // attempt 2 and is removed rather than carried: nothing in the product ever constructed a
+        // factory holding the generation map, so the check never ran; and its refusal text asserted
+        // that the source had been observed to change, which for an **unknown** handle — expired,
+        // already redeemed, never minted — was a fabricated diagnosis (`docs/01` principle 8).
+        //
+        // The kernel-authoritative dead-ticket refusal, wired to a real caller and with correct
+        // three-valued unknown-handle behaviour, is **P3b**'s (the human's ruling of 2026-09-16,
+        // round 4). Until then `redeem`'s own three refusals — unknown, cancelled-before-redeem,
+        // already-redeemed — are the whole of what this path says.
         tickets.redeem(handle.as_str())
     }
 }
@@ -429,8 +400,15 @@ impl EngineSource {
     ///
     /// Called on **every terminal class**: the clean end (`next_into` returns `None`), a terminal
     /// error, a cancellation (which arrives as a terminal error and keeps its own `cancelled`
-    /// terminal — a cancel is never reported as a source change), and `Drop` as the backstop for a
-    /// consumer that walked away without draining.
+    /// terminal — a cancel is never reported as a source change), and on `Drop`.
+    ///
+    /// **`Drop` is a best-effort attempt and not a guarantee, and the residual is named rather than
+    /// implied.** `BatchStream::drop` (`engine/src/stream.rs`) cancels the token and returns; it
+    /// does **not** join the producer thread. A consumer that walks away without draining can
+    /// therefore reach this line before the producer has finished its post-check, in which case the
+    /// flag is still empty and nothing is ended here. The change is not lost — the **pre-check**
+    /// refuses the next query issue on that dataset and ends the generation there — but the
+    /// invalidation is deferred to that point instead of happening at drop.
     ///
     /// The producer records the flag **before it sends any terminal**
     /// (`engine/src/stream.rs`), so by the time any of those arrive here the cell is already
@@ -461,8 +439,10 @@ impl Drop for EngineSource {
     /// reports the same facts a completed one does and a measurement cannot silently describe only
     /// its successes.
     fn drop(&mut self) {
-        // The backstop for a consumer that walked away without draining: the producer still ran its
-        // post-check, and a change it found must still end the session.
+        // Best-effort on the abandoned-stream path: `BatchStream::drop` cancels without joining the
+        // producer, so the post-check may not have run yet and this may find nothing. When it does,
+        // the next query issue's pre-check is what ends the generation instead — deferred, not lost.
+        // See `end_session_if_source_changed`'s own note.
         self.end_session_if_source_changed();
         let Some(reports) = self.reports.as_ref() else { return };
         let facts = self.stream.connection_facts();

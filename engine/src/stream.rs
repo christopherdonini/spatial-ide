@@ -1178,6 +1178,15 @@ impl Dataset {
                 // *above* the `detach` and the `match` — review measured it at 33 µs after the last
                 // batch, i.e. covering none of the teardown, so any acknowledgement figure derived
                 // from it would have systematically excluded the term the taxonomy says dominates.
+                //
+                // **The post-check now sits inside this window, and that is recorded here rather
+                // than left for a measurement to discover.** `PRODUCER_FINISHED` is the producer's
+                // cancel-acknowledgement stamp, and the R-D2 post-check above runs before it — so
+                // on the cancel path the acknowledgement now also covers a bounded piece of
+                // filesystem work (a metadata read plus a footer read bounded by
+                // `FOOTER_DESCRIPTOR_MAX_BYTES`). No figure is claimed for it and none is implied:
+                // what it costs against `docs/08`'s acknowledgement budget is **P5's** to measure,
+                // and this comment exists so that measurement knows the term is there.
                 crate::trace::mark(crate::trace::PRODUCER_FINISHED, 0, 0);
             })
             .map_err(|e| {
