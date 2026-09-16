@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import fs from "node:fs";
+import path from "node:path";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const viewportQueryMock = vi.hoisted(() => vi.fn());
@@ -1396,5 +1399,105 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
     await flushMicrotasks();
 
     expect(manager.onCameraChange(ANCHOR).kind).not.toBe("session-ended");
+  });
+  /** The real thrown SKP error for the **pre-check** route (X-3), built from the wire fixture the
+   * Rust host round-trips -- `protocol/skp/tests/data/v0-error-source_changed.json`, read by
+   * `protocol/skp/tests/fixtures.rs`'s
+   * `the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields`. Not an invented shape:
+   * `liveTicketSet.test.ts` asserts that `code + ": " + message` over this same fixture is
+   * byte-identical to the kernel's pinned terminal bytes. */
+  function realSourceChangedRefusal(): SkpCallError {
+    const file = path.resolve(
+      __dirname,
+      "../../../../protocol/skp/tests/data/v0-error-source_changed.json"
+    );
+    return new SkpCallError(JSON.parse(fs.readFileSync(file, "utf-8")));
+  }
+
+  /**
+   * **T7 (P3b §4): the pre-check refusal latches the session on a tile mint.**
+   *
+   * `viewport_query` refuses synchronously with `engine.source_changed` when the live-generation
+   * check has already ended this dataset's session (`kernel/src/skp.rs:666-672`). On this arm that
+   * refusal lands in `mintAndStart`'s catch, where P3a only logged it (`logMintRefused`) and then
+   * planned the next tile -- so an arm that learned the session was over kept asking.
+   *
+   * RECORDED MUTATION: revert the catch to `logMintRefused` only (delete the
+   * `isSourceChangedRefusal` branch). Expected failure: "a source-changed refusal at a tile mint
+   * ends the session, and is not retried" fails on the next-plan assertion -- `onCameraChange`
+   * returns `"planned"` again and mints more tiles.
+   * OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
+   */
+  it("a source-changed refusal at a tile mint ends the session, and is not retried", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR);
+    viewportQueryMock.mockReset().mockRejectedValue(realSourceChangedRefusal());
+
+    manager.onCameraChange(ANCHOR);
+    await flushMicrotasks();
+
+    // The owner is told, once, in the SAME `"<code>: <display>"` shape the terminal route carries.
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+
+    // And nothing is planned or minted afterwards: this is the latch, read through the outcome
+    // `candidateArmSession.ts` actually consumes.
+    expect(manager.inFlightCount).toBe(0);
+    expect(manager.queuedCount).toBe(0);
+    viewportQueryMock.mockClear();
+    expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The refusal is matched on its **code**, never on the retryable set and never on prose: a
+   * source-changed refusal is not `engine.connections_exhausted` and must not be requeued (§7: the
+   * retryable set stays that one code alone).
+   *
+   * RECORDED MUTATION: widen `isSourceChangedRefusal` to `err instanceof SkpCallError` (any typed
+   * refusal, rather than one code). Expected failure: "a source-changed refusal is not retryable,
+   * unlike an exhausted-connection one" fails -- an ordinary capacity refusal, which the declared
+   * retryable set exists to retry, would end the whole session instead.
+   * OBSERVED: FAILED -- this test by name, and with it the four pre-existing entry-87 requeue tests
+   * (`AssertionError: expected "spy" to be called with arguments: [ 'tile-stream-mint-recovered', …`).
+   */
+  it("a source-changed refusal is not retryable, unlike an exhausted-connection one", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR);
+    viewportQueryMock
+      .mockReset()
+      .mockRejectedValue(
+        new SkpCallError({ code: "engine.connections_exhausted", message: "no capacity", fields: {} })
+      );
+
+    manager.onCameraChange(ANCHOR);
+    await flushMicrotasks();
+
+    expect(onSessionEnded).not.toHaveBeenCalled();
+    expect(manager.onCameraChange(ANCHOR).kind).not.toBe("session-ended");
+  });
+
+  /**
+   * The untiled first-look sink's way in (P3b §2a(iii)) -- `notifySourceChanged` is `public` for
+   * exactly one product caller, `candidateArmSession.ts`'s untiled `onTerminal`. Asserted here as
+   * the manager-side contract; the caller itself is asserted in `candidateArmSession.test.ts`.
+   *
+   * RECORDED MUTATION: make `notifySourceChanged` a no-op. Expected failure: "notifySourceChanged
+   * ends the session exactly as a tile terminal does" fails on the outcome assertion.
+   * OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
+   */
+  it("notifySourceChanged ends the session exactly as a tile terminal does", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR);
+
+    manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    // Idempotent, like `endSession` itself.
+    manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
   });
 });

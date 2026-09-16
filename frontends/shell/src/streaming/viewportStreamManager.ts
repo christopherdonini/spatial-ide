@@ -39,6 +39,24 @@ export interface ViewportStreamManagerOptions {
    * stream this manager has already superseded must not report liveness for a query nobody is
    * waiting on anymore. */
   onStreamOpened?: (streamHandle: string) => void;
+  /**
+   * **This dataset's session ended: the source was observed to have changed** (P3b §2a(i); Brief A
+   * boundary 4). Called **exactly once** per manager -- the source-changed branch below latches
+   * before calling -- with the terminal's own `"<code>: <display>"` detail, for the owner to parse
+   * (`formatTerminalRefusal`), never to interpolate raw.
+   *
+   * **The owner is what states the consequence, and it is subscribed in this same diff**: `App.tsx`
+   * wires this to `handleSessionEnded` at its construction site (`App.tsx`'s `[admitted]` effect).
+   * A callback with no product subscriber is a block-on-sight (§8.1), and P3a removed the earlier
+   * version of this option for exactly that reason
+   * (`engine/ADMISSION-PREREGISTRATION.md:749-750`).
+   *
+   * What this manager states by calling it is the manager's own fact -- the kernel reported the
+   * source changed and this manager has stopped. What was discarded, and what an operator should do
+   * about it, belongs to the owner that performs it (the human's ruling of 2026-09-16, round 7:
+   * "Engine messages state engine facts; owners state consequences").
+   */
+  onSessionEnded?: (detail: string) => void;
 }
 
 /**
@@ -256,26 +274,45 @@ export class ViewportStreamManager {
         }
         // This ticket is over, whichever terminal it reached; no further batch for it is expected.
         this.liveTickets.retire(streamHandleAtStart);
-        // **What this manager does when the kernel reports the source changed -- and what P3a does
-        // NOT claim.** A terminal naming `engine.source_changed` says the dataset-session
-        // generation ended, at a stream's post-check. This manager drops every ticket it holds (so
-        // any batch still on the wire is refused by `onBatch`'s live check above), forgets the
-        // handles it was tracking, and latches closed so nothing is re-issued.
+        // **What this manager does when the kernel reports the source changed.** A terminal naming
+        // `engine.source_changed` says the dataset-session generation ended, at a stream's
+        // post-check. This manager drops every ticket it holds (so any batch still on the wire is
+        // refused by `onBatch`'s live check above), latches closed so nothing is re-issued, clears
+        // the canvas's residency through the interface it already has, and tells its owner once.
         //
-        // **Residency is NOT cleared and picks are NOT refused by this, and P3a claims neither.**
-        // Both live with the owner (`App.tsx` / `candidateArmSession.ts`), which this piece does not
-        // wire -- that is P3b's, by the human's ruling of 2026-09-16 (round 4). Nothing here, and no
-        // test narration, may say the operator's view is cleared: what is true today is that this
-        // manager stops feeding it and that stale batches are dropped.
-        if (isSourceChangedTerminal(terminal)) {
+        // **The residency clear goes through `clearResidency()`, not a new canvas method** (P3b
+        // §2a(ii)): that method fires `opts.onSuperseded(resident)`, which `makeManagerCallbacks`
+        // wires to `canvas.clearStream(streamHandle)` (`App.tsx:539-541`;
+        // `frontends/shell/src/canvas/WorkingCanvas.tsx:116`) -- the same path an ordinary
+        // supersede-on-pan already uses. It rests on a structural fact this manager already
+        // guarantees and `viewportStreamManager.test.ts` asserts: the baseline resident set holds at
+        // most one stream's batches at a time, because every issue supersedes through
+        // `clearResidency` (`:324-338`).
+        //
+        // Called BEFORE `residentStreamHandle` is nulled, because `clearResidency` reads that field
+        // to know which stream to clear -- nulling first is exactly what P3a did, and is why the
+        // view stayed.
+        //
+        // **What this manager still does NOT do: refuse picks.** It has no pick surface. The latch
+        // lives with the owner (`App.tsx`'s `latchedHoverReadout` call site), reached through
+        // `onSessionEnded` below.
+        //
+        // `!this.sessionEnded` makes "exactly once" structural rather than argued. P3a's version
+        // set the latch without guarding re-entry, which was harmless while the branch only logged;
+        // with an owner callback on the other side of it, "at most one stream is in flight so a
+        // second terminal cannot arrive" would be a claim resting on another method's invariant.
+        // The tiled sibling already guards this way (`tileViewportStreamManager.ts:714-722`).
+        if (isSourceChangedTerminal(terminal) && !this.sessionEnded) {
           this.sessionEnded = true;
           this.liveTickets.invalidate();
+          this.clearResidency();
           this.residentStreamHandle = null;
           this.currentStreamHandle = null;
           logSessionEvent(
             "warn",
             `session-ended-source-changed: ${streamHandleAtStart}: ${terminal.detail}`
           );
+          this.opts.onSessionEnded?.(terminal.detail);
         }
         // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
         // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the

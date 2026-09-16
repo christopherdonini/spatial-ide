@@ -45,6 +45,7 @@ import { TileViewportStreamManager } from "../streaming/tileViewportStreamManage
 import type { StreamSink } from "../streaming/transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "../streaming/viewportStreamManager";
 import { INITIAL_TILE_KEY, bboxesIntersect, startCandidateArmSession } from "./candidateArmSession";
+import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 import { nextResidencyStatus, residencyStatusText } from "./residencyStatus";
 import type { ResidencyStatus, ResidencyStatusEvent } from "./residencyStatus";
 
@@ -3458,5 +3459,155 @@ describe("entry 84: a clean Completed terminal that delivered no batch marks the
     tileSink.onTerminal({ kind: "Cancelled", detail: "superseded" });
     expect(canvas.markTileResidentEmpty).not.toHaveBeenCalled();
     expect(canvas.markTileComplete).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * **T5 (P3b §4): the owner-side clear on the candidate (tiled) arm, on BOTH of its sinks.**
+ *
+ * The candidate session owns two places a source-changed terminal can arrive: a real grid tile's
+ * stream, through `TileViewportStreamManager`, and its own untiled "first look"/reissue stream,
+ * which the manager never sees. Before P3b the second tested no terminal code at all, so a change
+ * detected on the FIRST query of a tiled session ended nothing (§0 disclosure 4a; §5 prediction 3).
+ *
+ * The input is the kernel's own pinned bytes, never a transcription.
+ */
+describe("candidate arm: a source-changed terminal clears every resident tile (boundary 4)", () => {
+  beforeEach(() => {
+    viewportQueryMock.mockReset().mockResolvedValue({ stream: "sh_1" });
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock
+      .mockReset()
+      .mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock
+      .mockReset()
+      .mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  function sourceChangedTerminal(): { kind: "ProducerFailed"; detail: string } {
+    return { kind: "ProducerFailed", detail: REAL_SOURCE_CHANGED_TERMINAL_DETAIL };
+  }
+
+  // RECORDED MUTATION for "the UNTILED first look's own terminal ends the session and clears every
+  // tile": delete the `isSourceChangedTerminal(terminal)` branch from the untiled sink's
+  // `onTerminal` in `candidateArmSession.ts`. Expected failure: that test fails by name (and ONLY
+  // it -- the tile-stream case below still passes, which is exactly the gap this closes).
+  // OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 0 times`. The
+  // tile-stream case failed too, which is NOT what was predicted and is recorded rather than tidied:
+  // that case reaches its tile terminal through the untiled sink's `return` in the unmutated code,
+  // so deleting the branch changes both. The distinguishing evidence the prediction wanted is
+  // M8 below (subscriber removed) versus this one.
+  it("the UNTILED first look's own terminal ends the session and clears every tile", async () => {
+    const canvas = fakeCanvas();
+    const onSessionEnded = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onSessionEnded });
+    await session.reissueUnrestricted(null, null);
+    // The reissue's own clear happens before the query; only what the terminal causes is counted.
+    (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
+
+    lastSink().onTerminal(sourceChangedTerminal());
+
+    expect(canvas.clearAllTiles).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    // The manager is latched too, not only the session: a later camera change plans nothing.
+    expect(session.manager.onCameraChange({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 })).toEqual({
+      kind: "session-ended",
+    });
+  });
+
+  // RECORDED MUTATION for "a TILE stream's terminal ends the session and clears every tile": remove
+  // the `onSessionEnded` option from the `TileViewportStreamManager` construction in
+  // `candidateArmSession.ts`. Expected failure: that test fails on the `clearAllTiles` assertion --
+  // the manager latches, the operator's tiles stay.
+  // OBSERVED: FAILED -- all three of this block's owner-side tests, on
+  // `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
+  it("a TILE stream's terminal ends the session and clears every tile", async () => {
+    const canvas = fakeCanvas();
+    const onSessionEnded = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onSessionEnded });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    completeUntiledLook(); // establishes the grid frame, so real tiles can be planned
+
+    viewportQueryMock.mockResolvedValue({ stream: "sh_tile_1" });
+    session.manager.onCameraChange({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 });
+    await new Promise((r) => setTimeout(r, 0));
+    (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
+
+    lastSink().onTerminal(sourceChangedTerminal());
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(canvas.clearAllTiles).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+  });
+
+  // RECORDED MUTATION for "the owner is told once, whichever sink or however many terminals":
+  // remove the `sessionEnded` latch from `endCandidateSession`. Expected failure: that test fails on
+  // the call-count assertions -- a second terminal re-clears an already-empty canvas and re-tells
+  // the App a session ended once.
+  // OBSERVED: NO FAILURE -- the suite stayed green, because `TileViewportStreamManager.endSession`
+  // latches before it calls `onSessionEnded` and every route into `endCandidateSession` goes
+  // through that one method. The session-side latch was therefore a branch no input could take, and
+  // it was REMOVED rather than kept with a mutation that cannot bite (finding recorded in
+  // `OWNER-INVALIDATION-PREREGISTRATION.md` §10). This test still asserts the property, now against
+  // the guard that actually provides it -- see M6's mutation above ("notifySourceChanged no-op"),
+  // which fails this block by name.
+  it("the owner is told once, whichever sink or however many terminals", async () => {
+    const canvas = fakeCanvas();
+    const onSessionEnded = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onSessionEnded });
+    await session.reissueUnrestricted(null, null);
+    (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
+
+    const sink = lastSink();
+    sink.onTerminal(sourceChangedTerminal());
+    sink.onTerminal(sourceChangedTerminal());
+    session.manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(canvas.clearAllTiles).toHaveBeenCalledTimes(1);
+  });
+
+  // RECORDED MUTATION for "reissueUnrestricted is refused after the session ended": delete the
+  // `if (sessionEnded) return { kind: "session-ended" };` guard at the top of `reissueUnrestricted`.
+  // Expected failure: that test fails on the outcome assertion -- a filter Apply after the latch
+  // clears the tiles again and mints a query the kernel has already said it will refuse.
+  // OBSERVED: FAILED -- `AssertionError: expected { Object (kind, streamHandle) } to deeply equal
+  // { kind: 'session-ended' }`.
+  it("reissueUnrestricted is refused after the session ended", async () => {
+    const canvas = fakeCanvas();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onTerminal(sourceChangedTerminal());
+    (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
+    viewportQueryMock.mockClear();
+
+    const outcome = await session.reissueUnrestricted(null, null);
+
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+    expect(canvas.clearAllTiles).not.toHaveBeenCalled();
+  });
+
+  // RECORDED MUTATION for "an ordinary untiled terminal clears nothing": relax the untiled sink's
+  // test to a substring search over the detail. Expected failure: that test fails -- an ordinary
+  // completion whose detail happened to quote the code would empty the operator's canvas.
+  // OBSERVED: FAILED -- `AssertionError: expected "spy" to not be called at all, but actually been
+  // called 1 times`.
+  it("an ordinary untiled terminal clears nothing", async () => {
+    const canvas = fakeCanvas();
+    const onSessionEnded = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", canvas, onSessionEnded });
+    await session.reissueUnrestricted(null, null);
+    (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
+
+    lastSink().onTerminal({
+      kind: "Completed",
+      detail: "a note that mentions engine.source_changed in passing",
+    });
+
+    expect(canvas.clearAllTiles).not.toHaveBeenCalled();
+    expect(onSessionEnded).not.toHaveBeenCalled();
   });
 });

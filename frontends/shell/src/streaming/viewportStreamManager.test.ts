@@ -704,4 +704,115 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     const outcome = await manager.requestViewport(null, null, 1_000);
     expect(outcome.kind).not.toBe("session-ended");
   });
+  /**
+   * **T4 (P3b §4): the owner-side clear, on the baseline arm.**
+   *
+   * The whole of boundary 4's "residency cleared" for this arm is that `onSuperseded` fires for the
+   * resident handle -- `App.tsx:539-541` wires that option to `canvas.clearStream(streamHandle)`,
+   * which is the real product path an ordinary supersede-on-pan already uses. Asserted here at the
+   * real option seam rather than against a canvas double, because the seam IS the interface.
+   *
+   * It also asserts the structural fact §5 prediction 5 rests on -- that the baseline resident set
+   * holds at most one stream's batches at a time -- rather than assuming it: two issues, and the
+   * first is superseded before the second's batch is admitted, so one `onSuperseded` for the
+   * *current* resident handle is the whole clear.
+   *
+   * RECORDED MUTATION: remove the `this.clearResidency()` call from the source-changed branch in
+   * `viewportStreamManager.ts` (P3a's shape: null `residentStreamHandle` without clearing).
+   * Expected failure: "a source-changed terminal clears the working canvas residency" fails on the
+   * `onSuperseded` assertion.
+   * OBSERVED (performed once on this branch, then reverted): FAILED --
+   * `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
+   */
+  it("a source-changed terminal clears the working canvas residency", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const onSuperseded = vi.fn();
+    const onSessionEnded = vi.fn();
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch,
+      onSuperseded,
+      onSessionEnded,
+    });
+    await manager.requestViewport(null, null, 1_000);
+
+    // Something is actually resident before the change: a clear that fires over an empty canvas
+    // would assert nothing.
+    sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
+    expect(onBatch).toHaveBeenCalledTimes(1);
+    onSuperseded.mockClear();
+
+    sinkFor(0).onTerminal(sourceChangedTerminal());
+
+    expect(onSuperseded).toHaveBeenCalledTimes(1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+  });
+
+  /**
+   * The at-most-one-resident-stream invariant `clearResidency` rests on (§5 prediction 5): every
+   * issue supersedes through it, so the handle the source-changed branch clears is the only one
+   * that can be resident. Without this, "one `onSuperseded` call is the whole clear" above would be
+   * an assumption about another method.
+   *
+   * RECORDED MUTATION: guard `clearResidency()` in `supersedeCurrent` with `if (previous !== null)`,
+   * which is the pre-fix shape `residentStreamHandle`'s own doc comment records. Expected failure:
+   * "every issue supersedes the previous stream's residency, so at most one stream is ever resident"
+   * fails on the second `onSuperseded` assertion -- a stream that completed on its own leaves
+   * `currentStreamHandle` null, so its residency is never cleared and two streams' batches are
+   * resident at once (the double-residency defect that field exists for).
+   * OBSERVED: FAILED -- this test on `AssertionError: expected "spy" to be called with arguments:
+   * [ 'sh_b' ]`, and with it the pre-existing "a stream that completes naturally before the next
+   * requestViewport is still cleared before the new stream's first batch" (the same defect, named).
+   */
+  it("every issue supersedes the previous stream's residency, so at most one stream is ever resident", async () => {
+    mockStream("sh_a");
+    const onSuperseded = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+    await manager.requestViewport(null, null, 1_000);
+
+    mockStream("sh_b");
+    await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+
+    // `sh_b` now COMPLETES on its own, so `currentStreamHandle` is already null by the next issue
+    // while its batches are still resident -- the case `residentStreamHandle` exists for.
+    sinkFor(1).onTerminal({ kind: "Completed", detail: "" });
+    mockStream("sh_c");
+    onSuperseded.mockClear();
+    await manager.requestViewport(null, null, 1_000 + 2 * (VIEWPORT_QUERY_MIN_INTERVAL_MS + 1));
+    // Exactly the previous one, never an accumulation: `sh_a` is not cleared a second time.
+    expect(onSuperseded).toHaveBeenCalledTimes(1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_b");
+  });
+
+  /**
+   * `onSessionEnded` is called **once per manager**, structurally: the latch guards re-entry, so a
+   * second source-changed terminal (a late one from the same socket) cannot reach the owner twice
+   * and clear a canvas that has already been cleared and refilled by nothing.
+   *
+   * RECORDED MUTATION: drop `&& !this.sessionEnded` from the source-changed branch's condition.
+   * Expected failure: "the owner is told exactly once, however many terminals carry the code" fails
+   * on the call-count assertion.
+   * OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 2 times`.
+   */
+  it("the owner is told exactly once, however many terminals carry the code", async () => {
+    mockStream("sh_a");
+    const onSessionEnded = vi.fn();
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded: vi.fn(),
+      onSessionEnded,
+    });
+    await manager.requestViewport(null, null, 1_000);
+
+    const sink = sinkFor(0);
+    sink.onTerminal(sourceChangedTerminal());
+    sink.onTerminal(sourceChangedTerminal());
+
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+  });
 });

@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { isPickBelowResolution, isPickConfirming, type HoverReadout, type PickResult } from "./pick";
+import {
+  isPickBelowResolution,
+  isPickConfirming,
+  isPickSessionEnded,
+  type HoverReadout,
+  type PickResult,
+} from "./pick";
 
 /**
  * **The marker's text -- FINAL wording** (`HOVER-CONFIRMING-MARKER-PREREGISTRATION.md` M3).
@@ -47,6 +53,25 @@ function idLine(pick: PickResult): string {
  */
 export function HoverReadoutView({ readout }: { readout: HoverReadout }): JSX.Element | null {
   if (readout === null) return null;
+
+  // **Placed FIRST, before every other branch** (P3b §2a(iv)) -- the same structural discipline
+  // this file already states above for the labelled state, applied to the stronger fact. A standing
+  // id must never be rendered after the session ended, and the way to make that true structurally
+  // is that no later branch can be reached once this one matches. `latchedHoverReadout` (`pick.ts`)
+  // already guarantees no other variant arrives while latched; this ordering means the guarantee is
+  // not the only thing holding.
+  //
+  // **The wording is the human's at P6** (§9: the two strings P3b adds join the P6 sight list). No
+  // test asserts it verbatim; `HoverReadoutView.test.tsx` asserts the structural property -- that
+  // the refusal renders and no id does.
+  if (isPickSessionEnded(readout)) {
+    return (
+      <div className="hover-readout hover-readout-session-ended">
+        The source file changed while it was open, so what was on the canvas was cleared and
+        features here can no longer be identified — reopen the dataset to continue.
+      </div>
+    );
+  }
 
   if (isPickBelowResolution(readout)) {
     return (

@@ -76,11 +76,28 @@ export function refusalGuidance(code: string): string | null {
       // source file changed while it was open; reopen the dataset to continue.' -- and P3b restores
       // the stronger sentence when it becomes true, wording at P6."
       //
-      // The discarding sentence described P3b's behaviour: in P3a nothing clears the resident view,
-      // so an operator reading it would have been told their canvas was emptied while it still
-      // showed the old data. The limitation sentences that followed are P6-sight wording and are
-      // NOT reintroduced in another form here.
-      return "The source file changed while it was open; reopen the dataset to continue.";
+      // **This is P3b's half of that ruling: the stronger sentence, now that it is true.** What it
+      // claims, and the only thing it claims, is §2e's declared scope -- on a detected change this
+      // client clears the resident geometry it holds for that dataset and refuses picks until the
+      // dataset is reopened. Both are performed by the code that lands with this string:
+      // `ViewportStreamManager`'s source-changed branch clears through `onSuperseded`→`clearStream`,
+      // `candidateArmSession`'s `endCandidateSession` clears through `clearAllTiles`, and
+      // `App.tsx`'s one `latchedHoverReadout` site refuses every pick until the dataset is reopened.
+      //
+      // **It states the OWNER's consequence and no engine fact** (the human, 2026-09-16, round 7).
+      // What differed, and what the check does not establish, are the engine's own words and arrive
+      // in `message` beside this; repeating or qualifying them here would be the shell speaking for
+      // the engine. In particular it makes **no snapshot claim** about what came before the
+      // detection (A1) -- it says what was cleared, not that what was cleared was consistent.
+      //
+      // **Wording sighted by the human at P6** (`ADMISSION-PREREGISTRATION.md` §12e Amendment 5 (i),
+      // which put this sentence on the sight list precisely because P3b replaces it). Asserted
+      // verbatim by `formatRefusal.test.ts` for the round-5 reason: a rewording is a decision, not a
+      // refactor, and must break a test.
+      return (
+        "The source file changed while it was open. What this canvas had read from it has been " +
+        "cleared, and features here can no longer be identified; reopen the dataset to continue."
+      );
     case "engine.identity_ordinal_partitioned_unsupported":
       return (
         "This source is spread across more than one file. Without an identity column carried in " +
