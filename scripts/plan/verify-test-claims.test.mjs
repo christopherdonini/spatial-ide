@@ -139,7 +139,9 @@ test('a_claim_in_a_done_nodes_gate_file_is_binding', () => {
 // continue;` — the same mutation as above, run once) → plannedGateFiles_ignores_done_nodes_and_gate_none
 // fails: "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal ... actual:
 // [ 'engine/A-PREREGISTRATION.md', 'engine/B-PREREGISTRATION.md' ], expected:
-// [ 'engine/A-PREREGISTRATION.md' ]" (the done node's gate file wrongly exempted).
+// [ 'engine/A-PREREGISTRATION.md' ]" (the done node's gate file wrongly exempted) — a PARAPHRASE of
+// the runner's strict-deep-equal diff, which prints `+ actual - expected` with the single line
+// `+   'engine/B-PREREGISTRATION.md'`; not verbatim.
 test('plannedGateFiles_ignores_done_nodes_and_gate_none', () => {
   const plan = {
     nodes: [
@@ -147,6 +149,19 @@ test('plannedGateFiles_ignores_done_nodes_and_gate_none', () => {
       { id: 'landed', status: 'done', gate: 'engine/B-PREREGISTRATION.md' },
       { id: 'ungated', status: 'ready', gate: 'none' },
       { id: 'no-gate-key', status: 'proposed' },
+    ],
+  };
+  assert.deepEqual([...plannedGateFiles(plan)], ['engine/A-PREREGISTRATION.md']);
+});
+
+// RECORDED MUTATION: drop the PLANNABLE_RE filter in plannedGateFiles (return every not-done gate) →
+// an_adr_named_as_a_gate_is_never_planned fails: "AssertionError [ERR_ASSERTION]: Expected values to
+// be strictly deep-equal" — actual carries 'docs/adr/ADR-999-x.md' beside the preregistration.
+test('an_adr_named_as_a_gate_is_never_planned', () => {
+  const plan = {
+    nodes: [
+      { id: 'a', status: 'ready', gate: 'docs/adr/ADR-999-x.md' },
+      { id: 'b', status: 'ready', gate: 'engine/A-PREREGISTRATION.md' },
     ],
   };
   assert.deepEqual([...plannedGateFiles(plan)], ['engine/A-PREREGISTRATION.md']);

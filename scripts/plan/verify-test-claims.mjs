@@ -167,9 +167,14 @@ export function plannedGateNotes(plan) {
   return notes;
 }
 
-/** The Set of gate paths whose claims are PLANNED (their node is not `done`). Pure. */
+/**
+ * The Set of gate paths whose claims are PLANNED (their node is not `done`). Pure. Only a
+ * preregistration can be planned: the before-code rule is a preregistration rule, so an ADR named
+ * as a node's `gate` is never exempted — its claims stay binding whatever the node's status.
+ */
+export const PLANNABLE_RE = /PREREGISTRATION.*\.md$/;
 export function plannedGateFiles(plan) {
-  return new Set(plannedGateNotes(plan).keys());
+  return new Set([...plannedGateNotes(plan).keys()].filter((g) => PLANNABLE_RE.test(g)));
 }
 
 /**
