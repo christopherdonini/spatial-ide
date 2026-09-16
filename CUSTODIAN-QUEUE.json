@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T20:57:04.947Z",
-  "plan_hash": "5b16ae698748c15866444f748c229784d82c4d204a874c0063c9fb8efcad6347",
+  "generated_at": "2026-09-16T22:05:42.206Z",
+  "plan_hash": "9dabf351e263c336101c5486399ad8bb6744ce1e44f52e07d7d4919a307c40f7",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -246,6 +246,29 @@
       "blocked_by": [
         "drill-clean-clone"
       ]
+    },
+    {
+      "id": "lod-tier-selection",
+      "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
+      "lane": "renderer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "budget_minutes": 480,
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here",
+      "blocked_by": [
+        "lod-tier-builder-route-b",
+        "lod-tier-cache-lifecycle"
+      ]
     }
   ],
   "in_progress": [
@@ -313,6 +336,25 @@
         "done": null
       },
       "summary": "Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form"
+    },
+    {
+      "id": "lod-tier-cache-lifecycle",
+      "title": "LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 8,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 15
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it"
     },
     {
       "id": "engine-tests-configured-connections",

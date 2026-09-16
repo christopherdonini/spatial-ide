@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5b16ae698748c15866444f748c229784d82c4d204a874c0063c9fb8efcad6347`) at `2026-09-16T20:57:04.947Z`.
+Generated from `PLAN.yaml` (sha256 `9dabf351e263c336101c5486399ad8bb6744ce1e44f52e07d7d4919a307c40f7`) at `2026-09-16T22:05:42.206Z`.
 
 ## 1. Next
 
@@ -25,6 +25,7 @@ Generated from `PLAN.yaml` (sha256 `5b16ae698748c15866444f748c229784d82c4d204a87
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: drill-clean-clone
+- **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough — blocked by: lod-tier-builder-route-b, lod-tier-cache-lifecycle
 
 ## 5. In progress
 
@@ -36,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `5b16ae698748c15866444f748c229784d82c4d204a87
 ### Proposed
 
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (phase `prototype`) — never queued until placed
+- **lod-tier-cache-lifecycle** — LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view (phase `prototype`) — never queued until placed
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed

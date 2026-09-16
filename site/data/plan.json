@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T20:57:05.121Z",
-  "plan_hash": "5b16ae698748c15866444f748c229784d82c4d204a874c0063c9fb8efcad6347",
+  "generated_at": "2026-09-16T22:05:42.410Z",
+  "plan_hash": "9dabf351e263c336101c5486399ad8bb6744ce1e44f52e07d7d4919a307c40f7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1194,11 +1194,72 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [
-        93
+        93,
+        97,
+        99
       ],
       "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
       "dates": {
         "opened": "2026-09-16",
+        "done": null
+      }
+    },
+    {
+      "id": "lod-tier-cache-lifecycle",
+      "title": "LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 8,
+      "depends_on": [
+        "lod-tier-builder-route-b"
+      ],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 15
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        99
+      ],
+      "summary": "The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it",
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      }
+    },
+    {
+      "id": "lod-tier-selection",
+      "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
+      "kind": "task",
+      "lane": "renderer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "depends_on": [
+        "lod-tier-builder-route-b",
+        "lod-tier-cache-lifecycle"
+      ],
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 480,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        99
+      ],
+      "summary": "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here",
+      "dates": {
+        "opened": "2026-09-17",
         "done": null
       }
     },
