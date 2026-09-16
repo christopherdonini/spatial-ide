@@ -383,8 +383,17 @@ impl GenerationRegistry {
     /// build nobody runs (`dataset.rs`'s own note on `INDEX_CONSULTATIONS`).
     ///
     /// What it exists for: the bound on this map (`prune_locked`) is **assertable** instead of
-    /// asserted about in prose — `kernel/tests/session_generation.rs` is the caller. It is not a
-    /// rendering input, never reaches the wire, and carries no generation value.
+    /// asserted about in prose. It is not a rendering input, never reaches the wire, and carries no
+    /// generation value.
+    ///
+    /// **Its callers, named so the caller-grep can verify this exemption rather than trust the
+    /// words "test-only"** (the human's ruling of 2026-09-16, round 5 item 3) — all in
+    /// `kernel/tests/session_generation.rs`:
+    /// `dead_generation_attributions_are_pruned_rather_than_accumulating`,
+    /// `a_ticket_is_attributable_only_under_a_live_generation`,
+    /// `invalidate_returns_exactly_the_tickets_of_the_generation_it_ended`,
+    /// `forget_dataset_removes_the_generation_the_invalidation_and_every_attribution`,
+    /// `the_registry_is_consistent_when_two_threads_use_it_at_once`.
     pub fn attributed_ticket_count(&self) -> usize {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);

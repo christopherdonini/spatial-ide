@@ -581,9 +581,34 @@ pub struct StreamStats {
     /// still has to end. This is the record that makes both true at once. It carries the
     /// components that differed, never a generation value (A2).
     source_changed_detail: Mutex<Option<String>>,
+    /// Footer bytes the **post-check** read, bounded by
+    /// [`crate::descriptor::FOOTER_DESCRIPTOR_MAX_BYTES`] (8 MiB).
+    ///
+    /// **Reported so the post-check's cost is never silent** (the human's ruling of 2026-09-16,
+    /// round 5 item 2), on the stats that already travel with a stream's terminal. It is a byte
+    /// count, not a duration, and nothing anywhere claims a duration from it.
+    post_check_bytes_read: AtomicU64,
 }
 
 impl StreamStats {
+    fn record_post_check_bytes(&self, bytes: u64) {
+        self.post_check_bytes_read.store(bytes, Ordering::SeqCst);
+    }
+
+    /// Footer bytes the post-check read for this stream, bounded by
+    /// [`crate::descriptor::FOOTER_DESCRIPTOR_MAX_BYTES`]. `0` before the post-check has run, and
+    /// `0` when the source could not be re-read at all.
+    ///
+    /// **An instrument: its only caller is the test suite** —
+    /// `engine/tests/session_identity.rs::the_post_check_reports_the_footer_bytes_it_read` — and
+    /// not `cfg(test)`-gated, for the reason `SourceDescriptor::footer_bytes_read` is not: the
+    /// obligation is that the *shipped* build reports this cost, and a field present only under
+    /// test would prove that about a build nobody runs. The session log carries the same figure on
+    /// `POST_CHECK_END` for a real run.
+    pub fn post_check_bytes_read(&self) -> u64 {
+        self.post_check_bytes_read.load(Ordering::SeqCst)
+    }
+
     fn record_source_changed(&self, detail: &str) {
         *self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()) =
             Some(detail.to_string());
@@ -1141,7 +1166,18 @@ impl Dataset {
                 //     refusal's own text says so: "may detect a change during a query only after
                 //     that query has finished reading" (`EngineError::SourceChanged`'s `Display`).
                 //     Nothing anywhere claims the batches already delivered were a snapshot (A1).
-                let post = post_check_source(&post_check_path, &post_check_descriptor);
+                // **The post-check's cost is reported, never silent** (the human's ruling of
+                // 2026-09-16, round 5 item 2). The marks bound the interval in the session log; the
+                // bytes come from the read the post-check already performed — counting them by
+                // re-reading would have doubled the very cost this reports — and ride both
+                // `POST_CHECK_END`'s `bytes` field and `StreamStats`, where a stream's terminal
+                // stats already travel. The read is bounded by `FOOTER_DESCRIPTOR_MAX_BYTES`.
+                // **No duration is claimed here or anywhere else**; measuring the interval is P5's.
+                crate::trace::mark(crate::trace::POST_CHECK_BEGIN, 0, 0);
+                let (post, post_check_bytes) =
+                    post_check_source(&post_check_path, &post_check_descriptor);
+                crate::trace::mark(crate::trace::POST_CHECK_END, 0, post_check_bytes);
+                thread_stats.record_post_check_bytes(post_check_bytes);
                 if let Err(EngineError::SourceChanged { detail }) = &post {
                     // Recorded **before any terminal is sent**, so a host that reads this flag when
                     // a terminal arrives always sees a finished answer — on the clean, the errored
@@ -1530,11 +1566,28 @@ impl Dataset {
 /// mapped onto `SourceChanged` with the reason named, because "the file is gone" is precisely the
 /// situation this check exists for and treating an unreadable source as unchanged would be the
 /// silent staleness `docs/01` principle 8 forbids.
+/// Runs the post-check and reports **the footer bytes it read**, so the cost is accounted from the
+/// read that actually happened rather than measured by doing it a second time (the human's ruling
+/// of 2026-09-16, round 5 item 2: reported per cancellation, never silent).
+///
+/// `0` bytes means the source could not be re-read at all — the refusal then says so, and there was
+/// no footer to read.
 fn post_check_source(
     path: &std::path::Path,
     opened_with: &crate::descriptor::SourceDescriptor,
-) -> Result<()> {
-    opened_with.refuse_if_changed_or_unreadable(path)
+) -> (Result<()>, u64) {
+    match crate::descriptor::SourceDescriptor::of(path) {
+        Ok(now) => {
+            let bytes = now.footer_bytes_read();
+            (opened_with.refuse_if_changed(&now), bytes)
+        }
+        Err(e) => (
+            Err(EngineError::SourceChanged {
+                detail: format!("{{the source could not be re-read: {e}}}"),
+            }),
+            0,
+        ),
+    }
 }
 
 fn quote_ident(name: &str) -> String {

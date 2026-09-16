@@ -13,6 +13,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use arrow::array::{Array, FixedSizeListArray, Float64Array, ListArray};
+use spatial_engine::trace;
 use spatial_engine::fixture::{
     write_geoparquet, CoordinateDomain, CrsMode, FixtureFacts, FixtureSpec,
 };
@@ -640,11 +641,26 @@ fn cancelling_mid_stream_stops_production_promptly() {
         .stream_with_cancel(&ViewportQuery::all(), cancel.clone())
         .expect("stream");
 
+    // **Traced, because the interval docs/08 budgets is not one this test can read from a wall
+    // clock.** The budgeted term ends at `cancel_observed`, which the producer stamps on its own
+    // thread (`PRODUCER_CANCELLED`); the consumer's receipt of `Err(Cancelled)` is later and is a
+    // different quantity. Reading the stamps is the only way to assert the declared budget rather
+    // than a proxy for it (the human's ruling of 2026-09-16, round 5 item 2).
+    let guard = trace::start(trace::TraceKey {
+        dataset: "cancel-mid".into(),
+        physical_id: 0,
+        lease_generation: 0,
+        label: "cancelling_mid_stream_stops_production_promptly".into(),
+    })
+    .expect("no other trace is running");
+
     let mut buf = Vec::new();
     s.next_into(&mut buf).expect("first batch").expect("ok");
     buf.clear();
 
     let t0 = Instant::now();
+    // `CancelToken::cancel` stamps `CANCELLATION_REQUESTED` itself (`engine/src/cancel.rs`), so
+    // the budgeted interval's start is the product's own stamp and not one this test invented.
     cancel.cancel();
     while let Some(r) = s.next_into(&mut buf) {
         buf.clear();
@@ -652,13 +668,36 @@ fn cancelling_mid_stream_stops_production_promptly() {
             break;
         }
     }
-    let elapsed = t0.elapsed();
-    // **A liveness bound, not the docs/08 budget** — the same disclosure its sibling above carries,
-    // and it matters more here: this measures the consumer's receipt of `Err(Cancelled)`, which the
-    // producer sends *after* its R-D2 post-check (`stream.rs`'s own note at the `PRODUCER_FINISHED`
-    // stamp). docs/08 budgets `cancel_requested → cancel_observed`, which is stamped earlier and is
-    // not what this line reads. No figure here is a measurement of anything.
-    assert!(elapsed < Duration::from_millis(100), "stream drained in {elapsed:?}");
+    let terminal_received = t0.elapsed();
+    let events = guard.trace().events();
+    drop(guard);
+
+    let at = |name: &str| events.iter().find(|e| e.name == name).map(|e| e.offset_nanos);
+    let requested = at(trace::CANCELLATION_REQUESTED).expect("cancel_requested was stamped");
+    let observed = at(trace::PRODUCER_CANCELLED).expect("cancel_observed was stamped");
+
+    // **THE ASSERTION: the interval docs/08:8 declares a budget for.** `cancel_requested →
+    // cancel_observed`, 100 ms, "scored on the producer's clock" (ADR-018). This is the only figure
+    // here that is checked against a declared number, and it is the number that was declared.
+    let budgeted = Duration::from_nanos(observed.saturating_sub(requested));
+    assert!(
+        budgeted < Duration::from_millis(100),
+        "cancel_requested → cancel_observed took {budgeted:?}, over docs/08:8's declared 100 ms"
+    );
+
+    // **REPORTED, never asserted: the unbudgeted acknowledged term.** docs/08:8 reports the
+    // quiescent term "beside it with no budget", and since P3a the R-D2 post-check runs inside it
+    // — so a bound on this interval would be a budget nobody declared, which is the class of test
+    // that fails once under load and teaches nothing. Printed so a reader of a failing run can see
+    // it, and so P5 knows where to look; **no claim is made about either number**.
+    let post_check_bytes = s.stats().post_check_bytes_read();
+    println!(
+        "cancelling_mid_stream_stops_production_promptly — reported, not asserted: \
+         observed → terminal received {:?} (the unbudgeted acknowledged term, which contains the \
+         R-D2 post-check); post-check read {post_check_bytes} footer bytes, bounded by \
+         FOOTER_DESCRIPTOR_MAX_BYTES",
+        terminal_received.saturating_sub(Duration::from_nanos(observed.saturating_sub(requested)))
+    );
 
     let stats = s.stats();
     assert!(

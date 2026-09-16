@@ -230,6 +230,11 @@ impl DatasetIdentity {
     /// operator in P3a**: the refusal that used to carry it no longer fires on this path, and
     /// `describe` may not gain a field for it (boundary 9's list is closed). Where it is owed is
     /// recorded in `engine/ADMISSION-PREREGISTRATION.md`'s Amendment 4.
+    ///
+    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
+    /// 2026-09-16, round 5 item 3):
+    /// `engine/tests/session_identity.rs::a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis`
+    /// and `engine/tests/identity.rs::a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared`.
     pub fn candidate_columns(&self) -> &[String] {
         &self.candidate_columns
     }

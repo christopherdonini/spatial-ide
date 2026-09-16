@@ -96,6 +96,11 @@ export class LiveTicketSet {
    * `liveTicketSet.test.ts` asserts -- that invalidation really empties the set -- is a property of
    * the code that runs, and a member present only under test would prove it about a build nobody
    * ships. It is never a rendering input and nothing branches on it.
+   *
+   * **Its caller, named so the caller-grep can verify this exemption instead of trusting the words
+   * "test-only"** (the human's ruling of 2026-09-16, round 5 item 3):
+   * `liveTicketSet.test.ts`'s "drops every ticket on invalidation, including ones minted before the
+   * change was seen".
    */
   get size(): number {
     return this.live.size;

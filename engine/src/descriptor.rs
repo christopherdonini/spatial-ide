@@ -171,6 +171,11 @@ impl SourceDescriptor {
     /// into a test build would prove it about a build nobody runs (`dataset.rs`'s own note on
     /// `INDEX_CONSULTATIONS`, and `index_consultations()` / `row_group_consultations()` /
     /// `attribute_concatenations()` beside it).
+    ///
+    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
+    /// 2026-09-16, round 5 item 3) — both in `engine/tests/session_identity.rs`:
+    /// `the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read` and
+    /// `the_post_check_reports_the_footer_bytes_it_read`.
     pub fn footer_bytes_read(&self) -> u64 {
         self.footer_bytes_read
     }
@@ -185,6 +190,13 @@ impl SourceDescriptor {
     /// **An instrument until then: its only caller is the test suite**, not `cfg(test)`-gated for
     /// the reason `footer_bytes_read` above is not — the words have to be the shipped build's.
     /// Several degradations are joined, because a reader eventually owed them is owed all of them.
+    ///
+    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
+    /// 2026-09-16, round 5 item 3) — both in `engine/tests/session_identity.rs`:
+    /// `the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read` (asserts `None` on an
+    /// undegraded descriptor) and
+    /// `a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` (asserts the
+    /// text on a degraded one).
     pub fn degradation(&self) -> Option<String> {
         (!self.degradations.is_empty()).then(|| self.degradations.join("; "))
     }

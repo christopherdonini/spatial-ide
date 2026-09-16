@@ -942,3 +942,71 @@ latches a pick, or renders a session status — those remain P3b's. The test inp
 bytes, captured from a real run and pinned by exact equality in `kernel/tests/typed_terminal_codes.rs`;
 the streaming-manager tests now read the same pinned constant instead of a hand-transcribed string,
 which also closes the attempt-1 reviewer's suggestion 5.
+
+**(viii) The status string, replaced now rather than left false on main.** The human's ruling of
+2026-09-16 (round 5, item 1), verbatim:
+
+> "a false status string does not sit on main between P3a and P3b. Replace P3a's 'Everything read so
+> far has been discarded' now, in one docs-class commit, with a sentence true at that commit — 'The
+> source file changed while it was open; reopen the dataset to continue.' — and P3b restores the
+> stronger sentence when it becomes true, wording at P6."
+
+Applied in its own commit (`docs(shell): the source-changed guidance reads a sentence true at this
+commit`). `refusalGuidance("engine.source_changed")` now returns exactly the ruled sentence and
+nothing else; the limitation sentences that followed it are P6-sight wording and are **not**
+reintroduced in another form. Its test asserts the string **verbatim** — alone among the four
+placeholders — because the human ruled these exact words, so a rewording has to break a test rather
+than pass as a refactor; the file header's "no test asserts any of them verbatim" was corrected in
+the same commit, since that sentence would otherwise have become false there.
+
+**(ix) The cancel window: rule (ii) kept, the cost reported.** The ruling, verbatim:
+
+> "Keep rule (ii); the post-check stays inside the acknowledged term and P5 measures it, no figure
+> claimed before. Two obligations: the post-check's cost is reported per cancellation (session log
+> or the terminal's timing fields, never silent, its ≤ 8 MiB bound named); and the pre-existing
+> slice.rs liveness test is re-aimed to assert the budgeted interval, requested → observed,
+> reporting observed → terminal beside it with the disclaimer — a test asserting a budget nobody
+> declared is the class that fails once under load and teaches nothing."
+
+Both obligations discharged; the post-check is **not** moved.
+
+*The cost, reported through the engine's existing instruments.* `engine/src/trace.rs` gains
+`POST_CHECK_BEGIN` and `POST_CHECK_END` in that module's own shape, so the session log carries the
+interval; `POST_CHECK_END`'s `bytes` field carries the footer bytes the check read, and
+`StreamStats::post_check_bytes_read` carries the same figure where a stream's terminal stats already
+travel. The bound is named at every one of those sites (`FOOTER_DESCRIPTOR_MAX_BYTES`, 8 MiB).
+**The bytes come from the read the post-check already performed** — `post_check_source` now returns
+them — because counting them with a second descriptor read would have doubled the very cost this
+reports. **No duration is claimed in any doc, comment or test.**
+
+*The test, re-aimed.* `engine/tests/slice.rs::cancelling_mid_stream_stops_production_promptly` now
+asserts `cancel_requested → cancel_observed` — read from `CANCELLATION_REQUESTED` (stamped by
+`CancelToken::cancel` itself, not by the test) and `PRODUCER_CANCELLED`, per `trace.rs:363`'s table
+— against the 100 ms `docs/08:8` declares. `observed → terminal received` is **printed, never
+asserted**, with the disclaimer that it is the unbudgeted acknowledged term and now contains the
+post-check, and the post-check's byte count is printed beside it. The test previously bounded the
+consumer's receipt of `Err(Cancelled)` at 100 ms with no disclaimer — a budget nobody declared, and
+the one that failed once under load during P3a's own development (Amendment 3 item 9's observation).
+
+**(x) The accessor exemption, adopted with the human's addition.** The ruling, verbatim:
+
+> "Adopt the architect's sentence as written, with one addition: the accessor's doc names the test
+> that calls it, so the caller-grep can verify the exemption instead of trusting the words
+> 'test-only.' An exemption that can't be grepped is a hole in the rule it exempts from."
+
+So the exemption reads, in full and in force: *"The caller rule exempts instrument accessors: a
+`pub` read-only accessor over state the shipped build already maintains, whose doc declares that its
+only caller is the test suite and why the property must be proven about the shipped build. It
+exempts nothing that acts."* — **and the doc names the test(s) that call it.**
+
+Every declared accessor now names its callers, and each named test was grep-verified to exist:
+`GenerationRegistry::attributed_ticket_count` (five tests in `kernel/tests/session_generation.rs`);
+`SourceDescriptor::footer_bytes_read` and `SourceDescriptor::degradation` (two each in
+`engine/tests/session_identity.rs`); `DatasetIdentity::candidate_columns`
+(`engine/tests/session_identity.rs` and `engine/tests/identity.rs`); `LiveTicketSet.size`
+(`liveTicketSet.test.ts`). `StreamStats::post_check_bytes_read`, added by item (ix), is declared in
+the same shape and names its test.
+
+**Recorded because it is the addition's point:** naming the test converts the exemption from a claim
+into something a reviewer can check mechanically — the same move as pinning a cross-module fixture
+to the producer's own bytes rather than to a transcription.

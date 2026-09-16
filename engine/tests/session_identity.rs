@@ -488,6 +488,40 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
     );
 }
 
+/// **The post-check's cost is reported, not silent** — the human's ruling of 2026-09-16 (round 5,
+/// item 2): "the post-check's cost is reported per cancellation (session log or the terminal's
+/// timing fields, never silent, its <= 8 MiB bound named)".
+///
+/// Two carriers, asserted here on the one that travels with the stream. The other is the session
+/// log: `POST_CHECK_BEGIN`/`POST_CHECK_END` bound the interval and `POST_CHECK_END` carries the
+/// same byte count in its `bytes` field (`engine/src/trace.rs`).
+///
+/// **No duration is asserted or claimed.** What is asserted is that a byte count is reported at
+/// all, and that it is inside the declared bound.
+///
+/// Mutation: drop the `record_post_check_bytes` call from the producer. Expected failure:
+/// `the_post_check_reports_the_footer_bytes_it_read` fails on the non-zero assertion — the cost
+/// would be silent again, which is the thing the ruling forbids.
+#[test]
+fn the_post_check_reports_the_footer_bytes_it_read() {
+    let path = write("post-check-cost", &keyless());
+    let ds = Dataset::open(&path).expect("opens");
+    let mut stream = ds.stream(&spatial_engine::ViewportQuery::all()).expect("stream issues");
+    let mut buf = Vec::new();
+    while let Some(item) = stream.next_into(&mut buf) {
+        item.expect("an unchanged source streams to a clean terminal");
+    }
+
+    let reported = stream.stats().post_check_bytes_read();
+    assert!(reported > 0, "the post-check read a footer and must say how much of one");
+    assert!(
+        reported <= FOOTER_DESCRIPTOR_MAX_BYTES,
+        "the read is bounded by the declared ceiling: {reported} > {FOOTER_DESCRIPTOR_MAX_BYTES}"
+    );
+    // It is the footer it actually read, not a separate accounting that could drift from it.
+    assert_eq!(reported, ds.descriptor().footer_bytes_read());
+}
+
 /// The post-check finds nothing on an unchanged source, and the flag stays empty — so a host
 /// reading it does not end a session that nothing happened to.
 /// Mutation: have `post_check_source` always record a finding. Expected failure:
