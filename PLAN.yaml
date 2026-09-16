@@ -549,13 +549,13 @@ nodes:
     status: in-progress
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
-    needs_human: {kind: ruling, minutes: 15}
+    needs_human: {kind: none, minutes: 0}
     gate: engine/ADMISSION-PREREGISTRATION.md
     evidence: {branch: cut/briefa-p3}
     budget_minutes: 390
     generation: 1
     felt_verdict: true
-    entries: [83, 96]
+    entries: [83, 96, 98]
     summary: "STOPPED 2026-09-16 under Rule 7 (entry 96): both gates FAIL twice on the module-boundary seams (owner-side residency/picks unbuilt; publish code discarded by the shell; dead-ticket refusal unwired + false diagnosis for unknown handles); engine/kernel halves verified sound; the human rules: one more bounded round / split P3 / hold. Earlier: RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting"
     dates: {opened: 2026-09-11, done: null}
 

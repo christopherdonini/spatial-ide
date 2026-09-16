@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T19:55:52.665Z",
-  "plan_hash": "48bdedc15712321e2d6671f204cb71d9e0b8a46ef2461a1ff02a6f090fda2743",
+  "generated_at": "2026-09-16T20:57:04.947Z",
+  "plan_hash": "5b16ae698748c15866444f748c229784d82c4d204a874c0063c9fb8efcad6347",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -258,8 +258,8 @@
       "order": 5,
       "budget_minutes": 390,
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 15
+        "kind": "none",
+        "minutes": 0
       },
       "evidence": {
         "branch": "cut/briefa-p3"
