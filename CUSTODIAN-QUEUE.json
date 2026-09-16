@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T10:22:47.893Z",
-  "plan_hash": "b17f53d176fc1567bbe706d9ed21c496b9339ee69f72c4740a0d9bf19d7828e7",
+  "generated_at": "2026-09-16T10:31:10.241Z",
+  "plan_hash": "a11749195a3298f2b0b444b7dc4d7c814c59ef7b4f713701ea10c4f7c6b7a30a",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-builder-route-b",
@@ -310,6 +310,25 @@
         "done": null
       },
       "summary": "Proposed by the custodian from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
+    },
+    {
+      "id": "engine-tests-configured-connections",
+      "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
     },
     {
       "id": "release-v0-1-1",

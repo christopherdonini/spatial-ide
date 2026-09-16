@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b17f53d176fc1567bbe706d9ed21c496b9339ee69f72c4740a0d9bf19d7828e7`) at `2026-09-16T10:22:47.893Z`.
+Generated from `PLAN.yaml` (sha256 `a11749195a3298f2b0b444b7dc4d7c814c59ef7b4f713701ea10c4f7c6b7a30a`) at `2026-09-16T10:31:10.241Z`.
 
 ## 1. Next
 
@@ -36,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `b17f53d176fc1567bbe706d9ed21c496b9339ee69f72
 ### Proposed
 
 - **self-check-false-readings** — Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff (phase `prototype`) — never queued until placed
+- **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
