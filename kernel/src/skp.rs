@@ -710,6 +710,19 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "timing_dependent_ordering",
             vec![("ordering", ordering.to_string()), ("cut", cut.to_string())],
         ),
+        // **The same kind of stub the `FormatDefaultContradicted` arm above records, and for the
+        // same reason: this match has no wildcard.** `engine/LOD-PREREGISTRATION.md` §7 declares the
+        // LOD refusal identifiers, and `EngineError::LodRefused` carries whichever one fired. No SKP
+        // command builds a tier today — the tier builder's entry point is `engine::lod::build_tiers`
+        // and nothing on the control plane calls it — so this arm is unreachable from the wire; it
+        // exists so that a typed LOD refusal cannot later degrade into "failed" by arriving on a
+        // wildcard. **No wire field, no parameter and no version is added here** (that preregistration's
+        // §5, "declared unchanged"): `refusal` is carried in the same `fields` map every other arm
+        // uses, and `message` is the error's own `Display`.
+        EngineError::LodRefused { refusal, detail } => (
+            "lod_refused",
+            vec![("refusal", refusal.to_string()), ("detail", detail.clone())],
+        ),
     };
     SkpError {
         code: format!("engine.{name}"),
