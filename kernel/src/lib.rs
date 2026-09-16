@@ -258,7 +258,12 @@ pub(crate) fn wrap_for_data_plane(
 /// a raw-`StreamParams` START is refused rather than silently accepted (`kernel/tests/skp_admission.rs`).
 enum AdmissionMode {
     Raw,
-    TicketOnly(Arc<skp::StreamRegistry>),
+    /// **Both registries, because redemption asks both questions.** `tickets` answers "is this
+    /// handle redeemable"; `generations` answers "did the session this handle belongs to end
+    /// because the source was observed to have changed" (P3b §2c). Holding only the first is what
+    /// made P3 attempt 2's guard dead in every build that shipped — nothing ever constructed a
+    /// factory with the second (`engine/ADMISSION-PREREGISTRATION.md:739-741`).
+    TicketOnly { tickets: Arc<skp::StreamRegistry>, generations: Arc<skp::GenerationRegistry> },
 }
 
 /// Turns an operation request into an engine stream. This is the whole composition.
@@ -293,8 +298,22 @@ impl EngineSourceFactory {
     /// `frontends/shell`'s constructor (ADR-019). A START frame's `params` is redeemed as a
     /// [`spatial_skp::v0::StreamHandle`] ticket already built and validated by
     /// `SkpHost::viewport_query`, never decoded as [`StreamParams`].
-    pub fn ticket_only(catalog: Arc<Catalog>, tickets: Arc<skp::StreamRegistry>) -> Self {
-        Self { catalog, connection_reports: None, mode: AdmissionMode::TicketOnly(tickets) }
+    ///
+    /// **`generations` is the same `Arc` the minting host holds** — `SkpHost::generations()`. It is
+    /// a parameter rather than an `Option` because a factory that cannot answer
+    /// [`skp::GenerationRegistry::ticket_liveness`] cannot make the refusal
+    /// [`Self::create_from_ticket`] below owes, and P3 attempt 2 proved that an optional second
+    /// registry is a guard nothing constructs (the human's ruling of 2026-09-16, round 4).
+    pub fn ticket_only(
+        catalog: Arc<Catalog>,
+        tickets: Arc<skp::StreamRegistry>,
+        generations: Arc<skp::GenerationRegistry>,
+    ) -> Self {
+        Self {
+            catalog,
+            connection_reports: None,
+            mode: AdmissionMode::TicketOnly { tickets, generations },
+        }
     }
 }
 
@@ -311,7 +330,9 @@ impl SourceFactory for EngineSourceFactory {
         }
         match &self.mode {
             AdmissionMode::Raw => self.create_from_raw_params(request),
-            AdmissionMode::TicketOnly(tickets) => Self::create_from_ticket(tickets, request),
+            AdmissionMode::TicketOnly { tickets, generations } => {
+                Self::create_from_ticket(tickets, generations, request)
+            }
         }
     }
 }
@@ -368,6 +389,7 @@ impl EngineSourceFactory {
     /// process never installs both admission paths (ADR-019's own consequence).
     fn create_from_ticket(
         tickets: &Arc<skp::StreamRegistry>,
+        generations: &Arc<skp::GenerationRegistry>,
         request: &OpenRequest,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
         let handle_str = std::str::from_utf8(&request.params)
@@ -375,18 +397,40 @@ impl EngineSourceFactory {
         let handle: spatial_skp::v0::StreamHandle = handle_str
             .parse()
             .map_err(|e: String| format!("not a ticket this producer minted: {e}"))?;
-        // **Redemption does NOT consult the dataset-session generation, and P3a says so here**
-        // rather than leaving the absence to be read as an oversight. A guard was written at P3
-        // attempt 2 and is removed rather than carried: nothing in the product ever constructed a
-        // factory holding the generation map, so the check never ran; and its refusal text asserted
-        // that the source had been observed to change, which for an **unknown** handle — expired,
-        // already redeemed, never minted — was a fabricated diagnosis (`docs/01` principle 8).
+        // **The kernel-authoritative dead-ticket refusal (P3b §2c), and the reason exactly one of
+        // the three arms refuses by name.** P3 attempt 2 wrote a two-valued guard, on a factory
+        // nothing ever constructed, that told a caller its source "was observed to have changed"
+        // for any handle the map did not know — expired, already redeemed, never minted. That is a
+        // diagnosis this kernel had not made (`docs/01` principle 8), and the human's ruling of
+        // 2026-09-16 (round 4) removed it rather than carrying it.
         //
-        // The kernel-authoritative dead-ticket refusal, wired to a real caller and with correct
-        // three-valued unknown-handle behaviour, is **P3b**'s (the human's ruling of 2026-09-16,
-        // round 4). Until then `redeem`'s own three refusals — unknown, cancelled-before-redeem,
-        // already-redeemed — are the whole of what this path says.
-        tickets.redeem(handle.as_str())
+        // `Unknown` therefore falls through and says whatever `redeem` says, which is a statement
+        // about a ticket and never about a file.
+        match generations.ticket_liveness(handle.as_str()) {
+            skp::TicketLiveness::EndedBySourceChange => {
+                // The `"<code>: <display>"` shape `skp::terminal_detail_of` mints, which the data
+                // plane sends as `TERM_PRODUCER_FAILED`
+                // (`protocol/data-plane/src/server.rs:388-401`) and the shell's **existing**
+                // `isSourceChangedTerminal` already matches
+                // (`frontends/shell/src/streaming/liveTicketSet.ts:51-53`). No new client code
+                // path, no new field, no new frame.
+                //
+                // `detail` is the pre-check's own sentence, byte-identical
+                // (`kernel/src/skp.rs`'s `viewport_query`), and deliberately not a component list:
+                // this registry holds no descriptor and never read the file, so naming
+                // `{size, mtime, footer-length, footer-hash}` here would be a second fabrication of
+                // the same class. What R-D2 declares `detail` to be on the paths that DO read the
+                // file is a named open item (P3b's §10 amendment).
+                Err(skp::terminal_detail_of(&spatial_engine::EngineError::SourceChanged {
+                    detail: "{this dataset's session ended when its source was observed to have \
+                             changed}"
+                        .to_string(),
+                }))
+            }
+            skp::TicketLiveness::Live | skp::TicketLiveness::Unknown => {
+                tickets.redeem(handle.as_str())
+            }
+        }
     }
 }
 

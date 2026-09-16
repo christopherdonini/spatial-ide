@@ -365,7 +365,16 @@ pub fn run() {
             // before the app finishes starting" async work — `setup` itself is synchronous, and no
             // command can run before it returns.
             let running = tauri::async_runtime::block_on(serve(DataPlaneConfig {
-                factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+                // P3b §2c: the SAME generation registry `host` mints into, so a redemption arriving
+                // after this host ended a dataset's session is refused by name rather than
+                // answered as an expired ticket. `host` is the `SkpHost` constructed at `:271`;
+                // `SkpHost::generations()` is the only way to obtain that `Arc` (the host builds it
+                // privately).
+                factory: Arc::new(EngineSourceFactory::ticket_only(
+                    catalog,
+                    tickets,
+                    host.generations(),
+                )),
                 // No static assets: the shell's own webview loads the frontend directly, unlike
                 // `slice-host`'s browser consumer. This endpoint serves the data plane only.
                 static_dir: None,

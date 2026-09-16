@@ -310,7 +310,53 @@ struct GenerationState {
     /// is the ordinary end of every one of them. Recorded rather than fixed blind (P3 attempt-2
     /// should-fix).
     invalidated: std::collections::HashSet<String>,
+    /// Handles whose generation was **ended by a detected change**, so that a redemption arriving
+    /// after the invalidation can be refused **by name** instead of being answered as though the
+    /// ticket had merely expired (P3b §2c; Brief A boundary 4).
+    ///
+    /// **Why this map is necessary rather than decorative.** [`GenerationRegistry::invalidate`]
+    /// removes the dataset's live generation and then `prune_locked` sweeps every attribution
+    /// naming it, in the same call — so one line later a dead ticket is **indistinguishable from an
+    /// unknown one** in `tickets`. Without this record `ticket_liveness` could never answer
+    /// `EndedBySourceChange` for any handle, and the only honest answer left would be `Unknown`.
+    ///
+    /// **`(dataset, when it was ended)`, not the bare instant the preregistration declared.** The
+    /// dataset is what lets `forget_dataset` and `mint_for_open` drop exactly this dataset's dead
+    /// handles and no others — a reopen or a close must not silently retire another dataset's
+    /// record. Recorded as a §10 deviation in `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`
+    /// rather than taken silently.
+    ///
+    /// **Bounded by the same sum `prune_locked` already uses**, `TICKET_TTL +
+    /// TERMINAL_ENTRY_MAX_AGE`, and by `forget_dataset`/`mint_for_open` — never by a timer that
+    /// could resurrect a generation, which is what `invalidated` above must never be pruned by.
+    /// Dropping an entry here only degrades the refusal to `StreamRegistry::redeem`'s own
+    /// "unknown" answer for a handle nothing else in the process still knows about; it never
+    /// admits a stream.
+    dead_tickets: HashMap<String, (String, Instant)>,
     next: u64,
+}
+
+/// What the **dataset-session generation registry** knows about one ticket handle — three-valued,
+/// deliberately, because two values would make the kernel fabricate a diagnosis.
+///
+/// The P3 attempt-2 defect this type exists to prevent, in the human's own words
+/// (`DECISIONS-PENDING.md:44`, quoted in `engine/ADMISSION-PREREGISTRATION.md:742-744`): a guard
+/// that "told a caller its source 'was observed to have changed' for any handle the map did not
+/// know — expired, already redeemed, never minted — which is a diagnosis the kernel had not made
+/// (`docs/01` principle 8)". [`TicketLiveness::Unknown`] is the third value that keeps that
+/// statement unmade.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TicketLiveness {
+    /// Attributed to this dataset's currently-live generation.
+    Live,
+    /// This handle's generation was ended because the source was observed to have changed. The
+    /// only value a caller may refuse by name on.
+    EndedBySourceChange,
+    /// This registry has **no record** of the handle — never minted, already swept, or minted
+    /// against a `Catalog` entry opened through an entry point that never touched this registry.
+    /// Says nothing at all about the file; the caller must answer from whatever else it knows
+    /// (`StreamRegistry::redeem`'s own three refusals).
+    Unknown,
 }
 
 impl GenerationRegistry {
@@ -336,6 +382,11 @@ impl GenerationRegistry {
         // A fresh open clears an earlier invalidation for the same name: that is what reopening
         // *is*, and boundary 4's refusals say "until reopen" in as many words.
         st.invalidated.remove(dataset);
+        // P3b §2c: and so does its dead-ticket record. A handle minted under the generation that
+        // ended cannot be redeemed after a reopen anyway — `StreamRegistry` swept it long before —
+        // so keeping the record past the reopen would only grow the map for the life of the
+        // process. Scoped to this dataset: another dataset's dead handles are untouched.
+        st.dead_tickets.retain(|_, (d, _)| d != dataset);
         g
     }
 
@@ -400,6 +451,53 @@ impl GenerationRegistry {
         st.tickets.len()
     }
 
+    /// **What this registry knows about one ticket handle — and nothing more** (P3b §2c).
+    ///
+    /// The three answers are exactly [`TicketLiveness`]'s, and the middle one is the only one a
+    /// caller may refuse by name on. A handle this registry has no record of returns
+    /// [`TicketLiveness::Unknown`], never a source-change diagnosis: the kernel does not say a file
+    /// changed because it cannot find a ticket (`docs/01` principle 8; the attempt-2 defect the
+    /// human's round-4 ruling removed, `engine/ADMISSION-PREREGISTRATION.md:742-744`).
+    ///
+    /// **Its product caller is `EngineSourceFactory::create_from_ticket`**
+    /// (`kernel/src/lib.rs:369`), reached on every real START frame through
+    /// `SourceFactory::create` (`kernel/src/lib.rs:301-316`,
+    /// `protocol/data-plane/src/server.rs:384`). This is not an instrument: it acts.
+    pub fn ticket_liveness(&self, handle: &str) -> TicketLiveness {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        Self::prune_locked(&mut st);
+        if st.dead_tickets.contains_key(handle) {
+            return TicketLiveness::EndedBySourceChange;
+        }
+        // Checked against `live` rather than taken from the map's mere presence: `prune_locked`
+        // above already drops attributions naming a dead generation, and this says the same thing a
+        // second way rather than resting on that call's ordering.
+        match st.tickets.get(handle) {
+            Some((dataset, g, _)) if st.live.get(dataset) == Some(g) => TicketLiveness::Live,
+            _ => TicketLiveness::Unknown,
+        }
+    }
+
+    /// How many dead-ticket records this registry currently holds.
+    ///
+    /// **An instrument, and its only caller is the test suite** — the same named category
+    /// [`GenerationRegistry::attributed_ticket_count`] above occupies, with the same justification:
+    /// the property under test is the bound on a map the **shipped** build maintains, and an
+    /// accessor compiled only into a test build would prove it about a build nobody runs. It is not
+    /// a rendering input, never reaches the wire, carries no generation value, and **nothing
+    /// branches on it** — `ticket_liveness` above is what acts.
+    ///
+    /// **Its callers, named so the caller-grep can verify this exemption rather than trust the
+    /// words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4) — both in
+    /// `kernel/tests/session_generation.rs`:
+    /// `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close`,
+    /// `a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it`.
+    pub fn dead_ticket_count(&self) -> usize {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        Self::prune_locked(&mut st);
+        st.dead_tickets.len()
+    }
+
     /// Drop ticket attributions that can no longer matter — **the sibling discipline
     /// [`StreamRegistry::sweep_locked`] applies to its own map, applied here**.
     ///
@@ -420,6 +518,13 @@ impl GenerationRegistry {
         st.tickets.retain(|_, (dataset, g, attributed_at)| {
             attributed_at.elapsed() <= max_age && st.live.get(dataset) == Some(g)
         });
+        // P3b §2c: the dead-ticket record, bounded by the **same sum** rather than by a second
+        // value of its own (§7's declared table). Only condition 1 applies to it — a dead handle's
+        // generation is dead by definition, so condition 2 would drop every entry the instant it
+        // was written. Past this window `StreamRegistry` no longer answers for the handle either
+        // (`sweep_locked`), so the refusal this record would have produced degrades to `redeem`'s
+        // own "unknown" answer — a weaker statement, never a wrong one, and never an admission.
+        st.dead_tickets.retain(|_, (_, ended_at)| ended_at.elapsed() <= max_age);
     }
 
     /// End a dataset's generation, and return every ticket handle that belonged to it.
@@ -444,6 +549,16 @@ impl GenerationRegistry {
             .filter(|(_, (d, tg, _))| d == dataset && *tg == g)
             .map(|(h, _)| h.clone())
             .collect();
+        // **P3b §2c: moved into the dead-ticket record BEFORE the prune, which is the whole reason
+        // that record exists.** `prune_locked` below sweeps these same attributions in this same
+        // call, after which a dead ticket is indistinguishable from an unknown one in `tickets` —
+        // so a redemption arriving a moment later could only ever be answered "unknown". Recording
+        // them here is what lets `ticket_liveness` say `EndedBySourceChange` for exactly the
+        // handles this call ended, and `Unknown` for every other.
+        let ended_at = Instant::now();
+        for h in &ended {
+            st.dead_tickets.insert(h.clone(), (dataset.to_string(), ended_at));
+        }
         // The generation these entries name is gone as of the line above, so `prune_locked`'s
         // second condition now sweeps them — collected first, because the caller still has to
         // cancel them.
@@ -458,6 +573,10 @@ impl GenerationRegistry {
         st.live.remove(dataset);
         st.invalidated.remove(dataset);
         st.tickets.retain(|_, (d, _, _)| d != dataset);
+        // P3b §2c: "entirely" includes the dead-ticket record — a closed dataset's handles are
+        // gone from `StreamRegistry` too, so the record could only answer about tickets nothing
+        // else in the process still knows.
+        st.dead_tickets.retain(|_, (d, _)| d != dataset);
     }
 }
 
@@ -584,6 +703,18 @@ impl SkpHost {
     /// identical `Arc` to redeem what this mints.
     pub fn tickets(&self) -> Arc<StreamRegistry> {
         self.tickets.clone()
+    }
+
+    /// The dataset-session generation registry this host mints into (P3b §2c).
+    /// `EngineSourceFactory::ticket_only` needs the identical `Arc` to answer
+    /// [`GenerationRegistry::ticket_liveness`] about what this host ended — the host constructs the
+    /// registry privately (`Self::new`, `:562`) and nothing else can hand out that `Arc`.
+    ///
+    /// **Its product caller is one line**: `frontends/shell/src-tauri/src/lib.rs:369`,
+    /// `EngineSourceFactory::ticket_only(catalog, tickets, host.generations())`. Same shape as
+    /// [`Self::catalog`] and [`Self::tickets`] above, for the same reason.
+    pub fn generations(&self) -> Arc<GenerationRegistry> {
+        self.generations.clone()
     }
 
     pub fn open_dataset(&self, req: OpenDatasetRequest) -> Result<OpenDatasetResponse, SkpError> {

@@ -99,7 +99,7 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
         .expect("viewport_query mints a ticket");
 
     // The source the data plane would get, built through the factory the shell installs.
-    let factory = EngineSourceFactory::ticket_only(catalog, tickets);
+    let factory = EngineSourceFactory::ticket_only(catalog, tickets, host.generations());
     let (mut source, _cancel) = factory
         .create(&OpenRequest {
             operation: OPERATION.to_string(),

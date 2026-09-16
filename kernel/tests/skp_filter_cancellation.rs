@@ -151,7 +151,7 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     let stream_handle = ticket.stream.clone();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
         static_dir: None,
         expected_origin: None,
     })
