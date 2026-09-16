@@ -194,3 +194,34 @@ String}>`. No new command. No derived-dataset handle.**
 
 *(Resolved at acceptance: the pre-acceptance "may not be described as an SKP capability / no
 conformance claim" restriction — lifted 2026-08-13 by acceptance.)*
+
+## Amendment 2026-09-15 — the no-runtime-fetch property is held by configuration, not only by content
+
+*Appended under the human's ruling of 2026-09-15 (`DECISIONS-PENDING.md`, "RULED 2026-09-15 —
+question round 2", Item 2). The text above is unchanged.*
+
+The Consequences bullet "Security property" records that admission's parser is statically
+linked and that admission performs no runtime extension fetch. On 2026-09-15 the LOD spike's
+route-A check (`spikes/lod-feasibility/README.md`, "Route A static bundling") surfaced that the
+vendored `libduckdb-sys 1.10505.0` compiles DuckDB with `DUCKDB_EXTENSION_AUTOINSTALL_DEFAULT`
+and `DUCKDB_EXTENSION_AUTOLOAD_DEFAULT` set to `"1"` (`build_bundled_cc.rs:96-97`): the property
+held by content — `json` built in — while every product engine connection still permitted DuckDB
+to autoload, and autoinstall from its repository, any known extension on DuckDB's autoload list on
+first reference. From this amendment the engine sets `autoinstall_known_extensions=false` and
+`autoload_known_extensions=false` on every connection it opens on a product path — one statement,
+`CONFIGURE_SQL` (`engine/src/pool.rs:185-187`), applied by `configure_connection`
+(`engine/src/pool.rs:199-201`) at both product open sites, the pool's `configure_new` and
+`engine/src/layout.rs:269` — asserted fail-closed on every lease class
+(`every_lease_class_opens_with_extension_autoload_and_autoinstall_off`,
+`a_known_extension_reference_fails_closed_on_every_lease_class`), with the retained
+`enable_geoparquet_conversion=false` guarded by
+`the_shared_configuration_sets_all_three_settings_on_a_fresh_connection`. The property now reads:
+**the admission parser is statically linked AND DuckDB's extension autoload and autoinstall are
+disabled by configuration on every connection the engine opens on a product path — no product
+engine connection loads or installs an extension implicitly, on first reference or otherwise.**
+These settings bound *implicit* acquisition: an explicit `INSTALL`/`LOAD`, or a later
+`SET …=true`, is outside their scope; the engine issues none, and no admitted predicate can
+(Decision 3 — "`predicate` is a boolean expression, never a statement and never a `SELECT`").
+The two product open sites are named above; connections opened under `#[cfg(test)]` are not
+configured and are outside this property (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §0
+item 2).

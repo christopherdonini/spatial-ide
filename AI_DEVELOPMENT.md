@@ -276,6 +276,13 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   code path or `pub` item lands without a product caller (a test-only caller does not count). The
   lesson's cost: Brief A P3 failed both gates twice on four seams written to imagined interfaces
   (producer→terminal, post-check→kernel, publish→shell, manager→owner) and was split under Rule 7.
+  The caller rule exempts instrument accessors: a `pub` read-only accessor over state the shipped build already maintains, whose doc declares that its only caller is the test suite, names the test that calls it, and says why the property must be proven about the shipped build. It exempts nothing that acts. (The human, 2026-09-16, round 5, item 4.)
+- **Discharge claims name their proof (the human's rule, 2026-09-16, `DECISIONS-PENDING.md` "RULED 2026-09-16 —
+  question round 7"; permanent, in both gate checklists, the worker brief and the template's §10).**
+  Verbatim: "every "discharged" or "done" clause in an amendment names the test or line that proves it, and the gate resolves each — a discharge claim with no resolvable proof is a gate failure by name, the same way an imagined interface and a stale cite are." The lesson's cost: Brief A P3a failed both gates a second time (attempt 2) on
+  amendments stating as done what the tree did not do — the third round of that class. Beside it, on
+  operator-visible text (the same ruling): "Engine messages state engine facts; owners state consequences." — the engine's `SourceChanged` Display had
+  carried the shell's consequence sentence ("everything read is discarded") while the shell discarded nothing.
 
 ### Records, claims and reports
 

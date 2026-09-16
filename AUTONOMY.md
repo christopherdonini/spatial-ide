@@ -155,7 +155,12 @@ self-checks so gates fail only on semantics."* Four mechanical checks are **adde
 3. **A claimed-test-exists check** (`scripts/plan/verify-test-claims.mjs`) — where a document or a
    commit message asserts a named test (the entry-61/64/65/67 failure class: *"the record claimed a
    test the tree lacked"*, `AI_DEVELOPMENT.md` Amendment 1 Context), the named test must be present
-   in the tree. A claimed-but-missing test fails the check.
+   in the tree. A claimed-but-missing test fails the check. **Planned claims (2026-09-16, after
+   `main` ran red on exactly this):** because a preregistration is committed *before any code*
+   (`docs/PREREGISTRATION-TEMPLATE.md`'s header rule) it necessarily names tests that do not exist
+   yet, so a claim in a file that is the `gate` of a `PLAN.yaml` node whose `status` is not `done`
+   is printed as advisory (`planned — node <id> is <status>`) instead of failing, and becomes
+   binding again the moment a node naming it is `done` (binding is sticky: a gate file any `done` node names is never planned, whatever other nodes name it).
 4. **The mutation-per-new-test rule, automated** (`scripts/plan/verify-test-claims.mjs`, the same
    runner) — §14's "one mutation per new test that fails it by name" is verified mechanically rather
    than only self-reported.
@@ -337,6 +342,8 @@ a wire touch, a guarantee change, a new exposure surface — the single-gate rou
 stops and re-enters full gating (the same shape as Amendment 1 §A's "newly discovered semantic →
 stop and queue").
 
+**Size overrun discovered mid-piece (the human, 2026-09-16, round 5, item 2 — the architect's clause, adopted as drafted):** a size overrun discovered mid-piece closes the single-gate route exactly as a §21a category does, except that the piece keeps its five-line form and records the overrun as an amendment (class 6 of `docs/PREREGISTRATION-TEMPLATE.md`, "budget deviation, Scope not edited") — a full preregistration is never written after the code.
+
 ### §21c. The size threshold — the custodian's stated choice, citing the directive
 
 The directive names "a declared size threshold" and leaves the number to the custodian. **The
@@ -346,6 +353,8 @@ exposure surface, no new dependency, and no new user-visible behaviour.** Genera
 crosses any one of the four bounds takes full gating (§21a) regardless of its category. **This
 number is the custodian's stated choice under the directive, not the human's ruling — it is the
 human's to adjust at any time by a one-line note**, and until then it holds as declared.
+
+**The human's one-line note (2026-09-16, `DECISIONS-PENDING.md` "RULED 2026-09-16 — question round 5", item 2, verbatim):** "Insertions plus deletions over non-generated code and tests — deletions count, removing a guard is a larger change than adding a comment — excluding the piece's own preregistration and the governing-doc sentences it is obliged to update; that exempt set enumerated narrowly." The exempt set, enumerated: the piece's own five-line preregistration file, and the sentence(s) in `AUTONOMY.md` / `AI_DEVELOPMENT.md` / `docs/PREREGISTRATION-TEMPLATE.md` that the piece is obliged to update to describe itself — nothing else.
 
 ### §21d. The five-line preregistration (literal template)
 

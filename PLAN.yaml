@@ -453,7 +453,7 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 7
     depends_on: []
     needs_human: {kind: none, minutes: 0}
@@ -464,7 +464,7 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "STOP-THE-LINE 2026-09-16: main red on verify:test-claims since 2a939d3 -- a preregistration committed before code (the template rule) names tests that do not exist yet; fix forward reviewer-gated: claims in a not-done node gate file are advisory (planned), binding once the node is done. Originally proposed from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
-    dates: {opened: 2026-09-16, done: null}
+    dates: {opened: 2026-09-16, done: 2026-09-16}
 
   - id: test-claims-landedness-bound
     title: "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)"
@@ -549,13 +549,13 @@ nodes:
     status: in-progress
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
-    needs_human: {kind: ruling, minutes: 15}
+    needs_human: {kind: none, minutes: 0}
     gate: engine/ADMISSION-PREREGISTRATION.md
     evidence: {branch: cut/briefa-p3}
     budget_minutes: 390
     generation: 1
     felt_verdict: true
-    entries: [83, 96]
+    entries: [83, 96, 98]
     summary: "STOPPED 2026-09-16 under Rule 7 (entry 96): both gates FAIL twice on the module-boundary seams (owner-side residency/picks unbuilt; publish code discarded by the shell; dead-ticket refusal unwired + false diagnosis for unknown handles); engine/kernel halves verified sound; the human rules: one more bounded round / split P3 / hold. Earlier: RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting"
     dates: {opened: 2026-09-11, done: null}
 
@@ -708,7 +708,7 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: in-progress
+    status: done
     order: 6
     depends_on: []
     needs_human: {kind: none, minutes: 0}
@@ -719,7 +719,7 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)"
-    dates: {opened: 2026-09-15, done: null}
+    dates: {opened: 2026-09-15, done: 2026-09-16}
 
   - id: lod-tier-builder-route-b
     title: "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps"

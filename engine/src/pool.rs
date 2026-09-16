@@ -144,7 +144,26 @@ const _: () = assert!(
         == MAX_STREAM_CONNECTIONS + MAX_MAINTENANCE_CONNECTIONS + MAX_ADMISSION_CONNECTIONS
 );
 
-/// The statement every physical connection is configured with, **once, at creation**.
+/// The statement every product-path engine connection gets, **once, at creation** — the single
+/// place this repository spells it (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 1).
+///
+/// **The two extension settings come first, before anything else, and that order is load-bearing.**
+/// The vendored `libduckdb-sys 1.10505.0` compiles DuckDB with
+/// `DUCKDB_EXTENSION_AUTOINSTALL_DEFAULT` and `DUCKDB_EXTENSION_AUTOLOAD_DEFAULT` set to `"1"`
+/// (`build_bundled_cc.rs:96-97`), so a *fresh* connection will, on first reference to any known
+/// extension, load it — and install it from DuckDB's repository, writing to the extension directory
+/// and reaching the network. ADR-021's "Security property" consequence (the admission parser is
+/// statically linked, admission performs no runtime extension fetch) was therefore held by
+/// **content** — `json` is built in — and not by configuration. From ADR-021's amendment of
+/// 2026-09-15 it is held by both: no product engine connection loads or installs an extension
+/// *implicitly*. The two settings bound implicit acquisition (first-reference autoload and
+/// autoinstall) — not an explicit `INSTALL`/`LOAD`, which the engine never issues and no admitted
+/// predicate can express; `#[cfg(test)]` connections are not configured and are outside the claim.
+/// Anything appended to this statement must stay *after* the two settings, so that nothing the
+/// engine itself runs can trigger a load before they take effect.
+///
+/// This does not, and may not, claim that the engine loads no extensions: `core_functions`,
+/// `parquet` and `json` are compiled in (`build_bundled_cc.rs:37-43`) and remain.
 ///
 /// **`enable_geoparquet_conversion` is turned off deliberately, and it is not only a workaround.**
 /// DuckDB (v1.5.5 on the reference profile) will, by default, interpret a file's `geo` metadata and
@@ -163,7 +182,30 @@ const _: () = assert!(
 ///
 /// **Applying it once per connection rather than once per query is the whole point of this
 /// module**: it was previously executed on the query's own critical path.
-const CONFIGURE_SQL: &str = "SET enable_geoparquet_conversion=false";
+const CONFIGURE_SQL: &str = "SET autoinstall_known_extensions=false; \
+                             SET autoload_known_extensions=false; \
+                             SET enable_geoparquet_conversion=false";
+
+/// Apply [`CONFIGURE_SQL`] to a connection the caller opened.
+///
+/// **Crate-private and the only way an engine connection gets configured.** Two product sites open
+/// DuckDB connections — this module's [`ConnectionPool::configure_new`] and `layout.rs`'s variant
+/// rewriter — and before this function existed the second carried its own copy of the statement,
+/// which is exactly how a security-relevant setting goes missing from one path. One function, one
+/// spelling, both sites (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 3).
+///
+/// Failure is `ConnectionSetup`, naming the phase, so a configuration that does not apply is a
+/// typed refusal and never a connection that quietly runs unconfigured.
+pub(crate) fn configure_connection(conn: &Connection) -> Result<()> {
+    apply_configuration(conn, CONFIGURE_SQL)
+}
+
+/// Run a configuration statement, naming the phase in any failure. Shared by
+/// [`configure_connection`] and the pool's test seam so the two cannot report differently.
+fn apply_configuration(conn: &Connection, sql: &str) -> Result<()> {
+    conn.execute_batch(sql)
+        .map_err(|e| EngineError::ConnectionSetup { detail: format!("configure: {e}") })
+}
 
 /// What a lease is for. The three classes are bounded separately over one physical pool.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -278,7 +320,10 @@ impl PoolState {
 pub struct ConnectionPool {
     config: PoolConfig,
     state: Mutex<PoolState>,
-    configure_sql: &'static str,
+    /// `None` is the product: every connection is configured by [`configure_connection`], the one
+    /// function that spells [`CONFIGURE_SQL`]. `Some` is the test seam only — the pool holds no
+    /// copy of the product statement, so it cannot drift from the layout site.
+    configure_sql: Option<&'static str>,
     next_physical_id: AtomicU64,
     physical_created: AtomicU64,
     leases_issued: AtomicU64,
@@ -289,7 +334,7 @@ impl ConnectionPool {
         Arc::new(Self {
             config,
             state: Mutex::new(PoolState::default()),
-            configure_sql: CONFIGURE_SQL,
+            configure_sql: None,
             next_physical_id: AtomicU64::new(1),
             physical_created: AtomicU64::new(0),
             leases_issued: AtomicU64::new(0),
@@ -376,8 +421,11 @@ impl ConnectionPool {
     fn configure_new(&self) -> Result<Connection> {
         let conn = Connection::open_in_memory()
             .map_err(|e| EngineError::ConnectionSetup { detail: format!("open: {e}") })?;
-        conn.execute_batch(self.configure_sql)
-            .map_err(|e| EngineError::ConnectionSetup { detail: format!("configure: {e}") })?;
+        match self.configure_sql {
+            // The product path goes through the shared function, not a copy of it.
+            None => configure_connection(&conn)?,
+            Some(sql) => apply_configuration(&conn, sql)?,
+        }
         Ok(conn)
     }
 
@@ -556,7 +604,7 @@ mod tests {
             let pool = Self::new(config);
             // Safe because nothing has been leased from this pool yet.
             let mut p = Arc::try_unwrap(pool).ok().expect("fresh pool is unshared");
-            p.configure_sql = sql;
+            p.configure_sql = Some(sql);
             Arc::new(p)
         }
     }
@@ -660,6 +708,181 @@ mod tests {
         // permanently exhausted dataset, which is a different failure with a different remedy.
         assert_eq!(pool.live_connections(), 0);
         assert_eq!(pool.physical_connections_created(), 0);
+    }
+
+    // ---- DuckDB extension autoload/autoinstall, off by configuration ---------------------------
+    //
+    // `engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §4. The vendored `libduckdb-sys` compiles
+    // DuckDB with `DUCKDB_EXTENSION_AUTOINSTALL_DEFAULT` and `DUCKDB_EXTENSION_AUTOLOAD_DEFAULT`
+    // set to `"1"`, so the ADR-021 no-runtime-fetch property was held by *content* (`json` built
+    // in) while every connection still permitted DuckDB to load — and install from its repository —
+    // any other known extension on first reference. These three tests assert the configuration that
+    // closes that, fail-closed, on every lease class.
+
+    /// Probe B (preregistration §0 item 3, §7): one statement that references a known extension
+    /// which is **not** built in. Loopback, a closed port, no DNS — with the two settings off the
+    /// statement fails at file-system dispatch, before any socket.
+    const EXTENSION_PROBE_SQL: &str =
+        "SELECT * FROM read_parquet('https://127.0.0.1:9/none.parquet')";
+    /// The fail-closed message (preregistration §7): DuckDB refusing the reference rather than
+    /// satisfying it.
+    const FAIL_CLOSED_TEXT: &str = "requires the extension httpfs to be loaded";
+
+    fn setting(conn: &Connection, name: &str) -> String {
+        conn.query_row(&format!("SELECT current_setting('{name}')::VARCHAR"), [], |r| {
+            r.get::<_, String>(0)
+        })
+        .unwrap_or_else(|e| panic!("reading `{name}`: {e}"))
+    }
+
+    /// Run the probe and return its error text, or `None` if it somehow succeeded.
+    fn probe_error(conn: &Connection) -> Option<String> {
+        let mut stmt = match conn.prepare(EXTENSION_PROBE_SQL) {
+            Ok(s) => s,
+            Err(e) => return Some(e.to_string()),
+        };
+        let mut rows = match stmt.query([]) {
+            Ok(r) => r,
+            Err(e) => return Some(e.to_string()),
+        };
+        loop {
+            match rows.next() {
+                Ok(Some(_)) => {}
+                Ok(None) => return None,
+                Err(e) => return Some(e.to_string()),
+            }
+        }
+    }
+
+    /// `duckdb_extensions()`'s two booleans for httpfs, read as integers so no boolean type mapping
+    /// sits between the assertion and the fact.
+    fn httpfs_installed_loaded(conn: &Connection) -> (i64, i64) {
+        conn.query_row(
+            "SELECT coalesce(max(CASE WHEN installed THEN 1 ELSE 0 END), 0)::BIGINT, \
+             coalesce(max(CASE WHEN loaded THEN 1 ELSE 0 END), 0)::BIGINT \
+             FROM duckdb_extensions() WHERE extension_name = 'httpfs'",
+            [],
+            |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?)),
+        )
+        .expect("duckdb_extensions() is a built-in table function")
+    }
+
+    /// A fresh, empty directory this test owns, so "zero files" is a fact about this run.
+    fn fresh_extension_dir(tag: &str) -> std::path::PathBuf {
+        let d = std::env::temp_dir().join("spatial-engine-extension-autoload-tests").join(tag);
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).expect("create extension dir");
+        d
+    }
+
+    fn count_files(dir: &std::path::Path) -> usize {
+        let mut n = 0;
+        let entries = match std::fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(_) => return 0,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                n += count_files(&path);
+            } else {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    /// T1 (preregistration §4).
+    ///
+    /// RECORDED MUTATION (run 2026-09-15, reverted): remove the two `SET … =false` clauses from
+    /// `CONFIGURE_SQL`. `every_lease_class_opens_with_extension_autoload_and_autoinstall_off`
+    /// fails — *assertion `left == right` failed: class `stream` must not be able to install an
+    /// extension at runtime / left: "true" / right: "false"*.
+    #[test]
+    fn every_lease_class_opens_with_extension_autoload_and_autoinstall_off() {
+        for class in [LeaseClass::Stream, LeaseClass::Maintenance, LeaseClass::Admission] {
+            let pool = ConnectionPool::new(PoolConfig::reuse());
+            let lease = pool.acquire(class).expect("lease");
+            let conn = lease.connection();
+            assert_eq!(
+                setting(conn, "autoinstall_known_extensions"),
+                "false",
+                "class `{}` must not be able to install an extension at runtime",
+                class.as_str()
+            );
+            assert_eq!(
+                setting(conn, "autoload_known_extensions"),
+                "false",
+                "class `{}` must not be able to load an extension at runtime",
+                class.as_str()
+            );
+        }
+    }
+
+    /// T2 (preregistration §4).
+    ///
+    /// RECORDED MUTATION (run 2026-09-15, reverted): the same removal.
+    /// `a_known_extension_reference_fails_closed_on_every_lease_class` fails — *class `stream`:
+    /// expected the fail-closed refusal `requires the extension httpfs to be loaded`, got: IO
+    /// Error: Could not connect to server error for HTTP HEAD to
+    /// 'https://127.0.0.1:9/none.parquet'*. That message is the extension having been fetched and
+    /// loaded: the pre-fix run of this test wrote `httpfs.duckdb_extension` (28.5 MB — observed once
+    /// in the mutation run, not asserted) and its `.info` under the temp directory below, which is
+    /// the runtime fetch this piece closes.
+    #[test]
+    fn a_known_extension_reference_fails_closed_on_every_lease_class() {
+        for class in [LeaseClass::Stream, LeaseClass::Maintenance, LeaseClass::Admission] {
+            let dir = fresh_extension_dir(class.as_str());
+            let pool = ConnectionPool::new(PoolConfig::reuse());
+            let lease = pool.acquire(class).expect("lease");
+            let conn = lease.connection();
+            conn.execute_batch(&format!(
+                "SET extension_directory='{}'",
+                dir.display().to_string().replace('\\', "/")
+            ))
+            .expect("extension_directory is settable at runtime");
+
+            let err = probe_error(conn).unwrap_or_else(|| {
+                panic!("class `{}`: the probe statement must not succeed", class.as_str())
+            });
+            assert!(
+                err.contains(FAIL_CLOSED_TEXT),
+                "class `{}`: expected the fail-closed refusal `{FAIL_CLOSED_TEXT}`, got: {err}",
+                class.as_str()
+            );
+
+            let (installed, loaded) = httpfs_installed_loaded(conn);
+            assert_eq!(installed, 0, "class `{}`: httpfs must not be installed", class.as_str());
+            assert_eq!(loaded, 0, "class `{}`: httpfs must not be loaded", class.as_str());
+            assert_eq!(
+                count_files(&dir),
+                0,
+                "class `{}`: nothing may be written under the extension directory",
+                class.as_str()
+            );
+        }
+    }
+
+    /// T3 (preregistration §4). The shared function is what `layout.rs` calls on its own
+    /// connection, so what it sets is what that site gets — including the setting it used to carry
+    /// itself.
+    ///
+    /// RECORDED MUTATION (run 2026-09-15, reverted): drop `enable_geoparquet_conversion` from
+    /// `CONFIGURE_SQL`. `the_shared_configuration_sets_all_three_settings_on_a_fresh_connection`
+    /// fails — *assertion `left == right` failed: the retained setting must survive every edit to
+    /// the statement / left: "true" / right: "false"* — and T1 and T2 stay green, which is the
+    /// point: nothing else in this file guards the retained setting.
+    #[test]
+    fn the_shared_configuration_sets_all_three_settings_on_a_fresh_connection() {
+        let conn = Connection::open_in_memory().expect("bare connection");
+        configure_connection(&conn).expect("the shared configuration applies");
+        assert_eq!(setting(&conn, "autoinstall_known_extensions"), "false");
+        assert_eq!(setting(&conn, "autoload_known_extensions"), "false");
+        assert_eq!(
+            setting(&conn, "enable_geoparquet_conversion"),
+            "false",
+            "the retained setting must survive every edit to the statement"
+        );
     }
 
     #[test]
