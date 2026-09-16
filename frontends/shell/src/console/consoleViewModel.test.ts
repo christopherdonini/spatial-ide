@@ -13,7 +13,7 @@ import {
 } from "./consoleViewModel";
 import type { BindingCommandEntry, ConsoleEntry, GuiActionEntry, SkpRequestEntry } from "./recorder";
 
-function skpEntry(seq: number, command: string, request: unknown = { skp: "skp/0.2" }): SkpRequestEntry {
+function skpEntry(seq: number, command: string, request: unknown = { skp: "skp/0.3" }): SkpRequestEntry {
   return { seq, kind: "skp-request", command, request, outcome: "ok" };
 }
 
@@ -79,13 +79,13 @@ describe("standingHeaderModel (NEXT-CUT.md P4: the layer-2 honesty statement)", 
 
 describe("buildRowViewModel", () => {
   it("class A: builds commandLabel from the registry and skpVersion from the entry's OWN request.skp field (I3)", () => {
-    const entry = skpEntry(0, "describe", { skp: "skp/0.2", dataset: "ds_x" });
+    const entry = skpEntry(0, "describe", { skp: "skp/0.3", dataset: "ds_x" });
     const vm = buildRowViewModel(entry);
 
     expect(vm.kind).toBe("class-a");
     if (vm.kind !== "class-a") throw new Error("unreachable");
     expect(vm.commandLabel).toBe("describe");
-    expect(vm.skpVersion).toBe("skp/0.2");
+    expect(vm.skpVersion).toBe("skp/0.3");
     expect(vm.rendered.copyText).toContain("ds_x");
   });
 

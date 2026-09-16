@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T19:55:52.791Z",
-  "plan_hash": "48bdedc15712321e2d6671f204cb71d9e0b8a46ef2461a1ff02a6f090fda2743",
+  "generated_at": "2026-09-16T22:38:46.856Z",
+  "plan_hash": "b14c9fdf11b7ea49898fa7401108b318a0a8a06cda06eeb37ffe928ddaf4d51f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -884,19 +884,20 @@
         "sitting-4-rows"
       ],
       "needs_human": {
-        "kind": "ruling",
+        "kind": "sitting",
         "minutes": 15
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p3"
+        "pr": 83
       },
       "budget_minutes": 390,
       "generation": 1,
       "felt_verdict": true,
       "entries": [
         83,
-        96
+        96,
+        98
       ],
       "summary": "STOPPED 2026-09-16 under Rule 7 (entry 96): both gates FAIL twice on the module-boundary seams (owner-side residency/picks unbuilt; publish code discarded by the shell; dead-ticket refusal unwired + false diagnosis for unknown handles); engine/kernel halves verified sound; the human rules: one more bounded round / split P3 / hold. Earlier: RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting",
       "dates": {
@@ -1193,11 +1194,72 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [
-        93
+        93,
+        97,
+        99
       ],
       "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
       "dates": {
         "opened": "2026-09-16",
+        "done": null
+      }
+    },
+    {
+      "id": "lod-tier-cache-lifecycle",
+      "title": "LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 8,
+      "depends_on": [
+        "lod-tier-builder-route-b"
+      ],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 15
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        99
+      ],
+      "summary": "The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it",
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      }
+    },
+    {
+      "id": "lod-tier-selection",
+      "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
+      "kind": "task",
+      "lane": "renderer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "depends_on": [
+        "lod-tier-builder-route-b",
+        "lod-tier-cache-lifecycle"
+      ],
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 480,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        99
+      ],
+      "summary": "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here",
+      "dates": {
+        "opened": "2026-09-17",
         "done": null
       }
     },
@@ -1234,7 +1296,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "in-progress",
       "order": 5,
       "depends_on": [
         "briefa-p3-p6"
@@ -1244,7 +1306,9 @@
         "minutes": 20
       },
       "gate": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/briefa-p3b"
+      },
       "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,

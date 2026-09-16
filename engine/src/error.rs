@@ -154,6 +154,43 @@ pub enum EngineError {
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
     IdentityUnusable { column: String, detail: String, candidate_columns: Vec<String> },
 
+    /// The source is not the file this dataset opened against — the **structural descriptor**
+    /// differs (R-D1/R-D2, `engine/ADMISSION-PREREGISTRATION.md` §2e).
+    ///
+    /// `detail` names **every component that differed** — size, mtime, footer-length, footer-hash —
+    /// because no fixture isolates a single component and an assertion has to be exact without one
+    /// (§4's two recorded coverage gaps, the rule adopted there).
+    ///
+    /// **This is a change detector and it is not a snapshot claim.** It does not establish snapshot
+    /// consistency, it cannot detect every in-place modification, and it may detect a change during
+    /// a query only at the post-check (Brief A boundary 4, its own words). A change it does not see
+    /// is not a check that passed.
+    SourceChanged { detail: String },
+
+    /// A **partitioned** source reached the session-ordinal path — R-I4 (§2d; boundary 7).
+    ///
+    /// The session tier's identity is (dataset-session generation, physical file-row ordinal), and
+    /// a file-row ordinal is a position **within one file**. Across a partition set there is no
+    /// such position without a declared file order, and declaring one would be a packing contract
+    /// this cut does not introduce (A5). Refused by name rather than admitted with an ordinal that
+    /// would silently mean a different row per scan.
+    IdentityOrdinalPartitionedUnsupported { detail: String },
+
+    /// This engine's own record of an admission contradicts itself.
+    ///
+    /// **Not `Source`** — retyped at Brief A P3, on this reasoning and on no cited authority:
+    /// `Source` is "the file could not be opened or read at all", and a caller shown that for an
+    /// internal inconsistency would go looking at its own file for a defect that is in this code.
+    /// The only construction site is `dataset::open_inner`'s provenance arm, which a
+    /// `debug_assert` already calls unreachable: a provenance class is a recorded fact and is never
+    /// substituted for a missing one, so the alternative to this variant is filling one in.
+    ///
+    /// It mints a **fifth** typed SKP code for this cut (`engine.internal_inconsistency`) beyond
+    /// boundary 9's three and boundary 8's publish-class one — recorded so an A3/A5 reviewer reads
+    /// the count as the retype it is, not as scope creep. No input reaches it that did not already
+    /// reach `EngineError::Source`.
+    InternalInconsistency { detail: String },
+
     /// One feature alone is larger than the largest batch this engine will emit.
     ///
     /// Separate from `CeilingExceeded` because the remedy differs and the diagnosis has to name a
@@ -287,6 +324,36 @@ impl fmt::Display for EngineError {
                 "refused: `{column}` cannot serve as stable feature identity — {detail}. \
                  Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"
             ),
+            // **Two sentences, and both are facts about this engine's own check**: what it found
+            // differing, and what the check does not establish (boundary 4's limitation, in that
+            // boundary's own words). No "snapshot" claim and no "was verified" anywhere (A1,
+            // boundary 2).
+            //
+            // **What is deliberately absent: the consequence and the guidance.** The text carried
+            // "Everything read for this session is discarded … reopen the file to continue" until
+            // the human's ruling of 2026-09-16 (question round 7): *"the engine's SourceChanged
+            // Display text states the engine's fact only — 'the source file changed while it was
+            // open (<component>)' — and never a consequence: the engine cannot know what the shell
+            // discarded, so the consequence sentence belongs to the owner that performs it, added
+            // by P3b when it becomes true. Engine messages state engine facts; owners state
+            // consequences."* The owner's sentence lives in
+            // `frontends/shell/src/admission/formatRefusal.ts::refusalGuidance`, and P3b is what
+            // makes a stronger one true.
+            Self::SourceChanged { detail } => write!(
+                f,
+                "refused: the source file changed while it was open ({detail}). This check does not \
+                 establish snapshot consistency, cannot detect every in-place modification, and may \
+                 detect a change during a query only after that query has finished reading"
+            ),
+            Self::IdentityOrdinalPartitionedUnsupported { detail } => write!(
+                f,
+                "refused: this source is partitioned across more than one file ({detail}), and \
+                 session identity is a row's position within one file. Open a single file, or \
+                 declare an identity column that is carried in the data"
+            ),
+            Self::InternalInconsistency { detail } => {
+                write!(f, "internal inconsistency: {detail}")
+            }
             Self::FeatureTooLarge { id, limit, saw } => write!(
                 f,
                 "feature {id} needs about {saw} B on its own, above the declared per-batch \

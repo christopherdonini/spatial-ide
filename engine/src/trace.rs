@@ -427,6 +427,25 @@ pub const FIRST_BATCH_FULL: &str = "first_batch_full";
 pub const BATCH_FULL: &str = "batch_full";
 /// The producer observed cancellation.
 pub const PRODUCER_CANCELLED: &str = "producer_cancelled";
+/// The R-D2 **post-check** began — the structural re-read that decides whether the source changed
+/// under this stream (`engine/src/descriptor.rs`).
+///
+/// **It exists because that read lands inside the unbudgeted acknowledged term.** `docs/08:8`
+/// budgets `cancel_requested → cancel_observed` ([`PRODUCER_CANCELLED`]) and reports the quiescent
+/// term "beside it with no budget"; the post-check runs after the former and before
+/// [`PRODUCER_FINISHED`], so on a cancelled stream it is inside the interval nobody budgets. The
+/// human's ruling of 2026-09-16 (round 5, item 3) keeps it there and requires its cost to be
+/// **reported per cancellation rather than left silent**. This pair is that report.
+///
+/// **No duration is claimed anywhere by this.** The marks record instants; what the interval
+/// between them costs is P5's to measure.
+pub const POST_CHECK_BEGIN: &str = "post_check_begin";
+/// The R-D2 post-check finished, carrying in `bytes` the **footer bytes it read**.
+///
+/// Bounded by `engine::descriptor::FOOTER_DESCRIPTOR_MAX_BYTES` (8 MiB) — the declared ceiling the
+/// descriptor degrades at rather than exceeding, so this figure has a named upper bound and is not
+/// an open-ended read. `rows` is always 0: the post-check reads no rows.
+pub const POST_CHECK_END: &str = "post_check_end";
 /// The producer's lease was resolved and its work is over.
 pub const PRODUCER_FINISHED: &str = "producer_finished";
 

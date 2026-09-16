@@ -78,6 +78,7 @@ pub mod crs_catalog;
 pub mod identity;
 pub mod index;
 pub mod dataset;
+pub mod descriptor;
 pub mod envelope;
 pub mod error;
 #[cfg(feature = "fixture")]
@@ -111,11 +112,15 @@ pub use crs::{
 pub use crs_catalog::{definition_provenance, CatalogEntry};
 pub use dataset::Dataset;
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
+pub use descriptor::{SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES};
 pub use geoparquet::{
     AdmissionRecord, AxisProvenance, CoordinateUnit, CoordinateUnitSource, CrsProvenance,
-    SanityLevel, PINNED_SPEC_VERSIONS, SANITY_SAMPLE_MAX_ROWS,
+    SanityLevel, MAX_UNIT_NAME_BYTES, PINNED_SPEC_VERSIONS, SANITY_SAMPLE_MAX_ROWS,
 };
-pub use identity::{DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
+pub use identity::{
+    DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration, FILE_ROW_NUMBER_COLUMN,
+    SESSION_IDENTITY_STATEMENT,
+};
 pub use error::{EngineError, Result};
 pub use predicate::{
     AdmittedPredicate, FilterError, PredicateAdmitError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH,

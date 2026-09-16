@@ -87,7 +87,14 @@ pub struct SourceInfo {
 pub struct CrsInfo {
     pub identifier: String,
     pub definition_json: Option<String>,
-    /// `"file"` or `"caller_asserted"`.
+    /// `"file"`, `"caller_asserted"` or `"format-rule"`.
+    ///
+    /// **`"format-rule"` is `skp/0.3`'s value-domain widening of this existing key** — the human's
+    /// ruling of 2026-09-16 (`DECISIONS-PENDING.md` RULED 2026-09-16 — question round 3, item 3).
+    /// An admission GeoParquet's absent-`crs`-key rule supplied used to record `"file"`, which said
+    /// the file declared a CRS it does not declare, and that false record reached published bundle
+    /// manifests. The *specific* rule is carried beside it in [`Self::provenance`]
+    /// (`"crs:format-default"`): this key says a rule supplied it, that one says which.
     pub source: String,
     pub asserted_by: Option<String>,
     pub asserted_at: Option<String>,
@@ -105,6 +112,31 @@ pub struct CrsInfo {
     pub axis_order: String,
     /// Always `"none-performed"` in this slice — no axis normalization is performed anywhere.
     pub axis_normalization: String,
+    /// **`skp/0.3`, Brief A boundary 9's `crs.provenance`.** How this dataset's CRS was
+    /// established, as a recorded fact and never a judgement: `"crs:declared"` (the file's own
+    /// `crs` member), `"crs:asserted"` (a caller's assertion) or `"crs:format-default"`
+    /// (GeoParquet's published rule for an absent `crs` key, applied only from text pinned in this
+    /// tree).
+    ///
+    /// **It says nothing about whether the file's producer conformed.** An absent `crs` key is not
+    /// evidence that the producer had no CRS — a real GDAL rewrite of a file declaring EPSG:4326
+    /// wrote no key at all (`engine/ADMISSION-PREREGISTRATION.md` §1) — so this value names the
+    /// route, not a claim about the file.
+    pub provenance: String,
+    /// **`skp/0.3`, Brief A boundary 9's `axis.provenance`.** How the **data's** axis order was
+    /// established: `"axis:declared"` (read from the CRS definition) or `"axis:format-override"`
+    /// (the format's WKB rule, where the definition's own order says otherwise). The definition's
+    /// declared order is retained engine-side as a recorded fact and is never discarded.
+    pub axis_provenance: String,
+    /// **`skp/0.3`** — the P2-held display-convention carrier, closed at P3 rather than carried
+    /// silently. `Some` exactly for a geographic-degrees dataset, carrying
+    /// `spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION` **verbatim from the Rust constant**.
+    ///
+    /// It travels over the wire for one reason: so that no client retypes it. It is a **display
+    /// statement only** — no coordinate value is transformed by anything in this engine,
+    /// `axis_normalization` stays `"none-performed"`, and nothing here licenses a reprojection.
+    /// It is never paraphrased, shortened or reworded.
+    pub display_convention: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -124,14 +156,35 @@ pub struct GeometryInfo {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IdentityInfo {
-    /// `"file:id"` or `"mapped:<column>"`.
+    /// `"file:id"`, `"mapped:<column>"` or `"session-ordinal:file_row_number"`.
     pub source: String,
-    /// `"verified-at-open-full-file"` or `"declared-not-verified"` — never the bare word "unique"
-    /// (ADR-016 §6).
+    /// What was actually checked about uniqueness — **never the bare word "unique"** (ADR-016 §6).
+    ///
+    /// `"verified-at-open-full-file"` or `"declared-not-verified"` are ADR-016 §6's own two values.
+    /// `skp/0.3` adds a third, `"by-construction-within-generation"`, for the session tier: no scan
+    /// ran, and the value names the basis rather than claiming a scan's result. That third value
+    /// comes from the **PROPOSED** ADR-016 Amendment 1, which binds nothing until the human accepts
+    /// it — it is emitted here because this cut implements the tier, not because the ADR lists it.
     pub uniqueness: String,
     pub verified_rows: Option<DecU64>,
     pub max_value: Option<DecU64>,
     pub js_exact: Option<bool>,
+    /// **`skp/0.3`, Brief A boundary 9's `identity.class`.** Which identity tier admitted this
+    /// dataset: `"native"` (the file's own `id` column), `"mapped"` (a caller-declared column) or
+    /// `"session-ordinal"` (neither, on a single file — the session tier).
+    pub class: String,
+    /// **`skp/0.3`** — boundary 9's "session-tier statement", `Some` exactly when `class` is
+    /// `"session-ordinal"`.
+    ///
+    /// Carries `spatial_engine::SESSION_IDENTITY_STATEMENT` verbatim, for the reason
+    /// `CrsInfo::display_convention` carries its own constant: so that no client retypes it. **It
+    /// makes no snapshot claim** — it says the identity does not outlive this open, never that the
+    /// open read one snapshot (Brief A boundary 4, block-on-sight A1).
+    ///
+    /// **No generation value appears here or anywhere else on the wire** (boundary 9;
+    /// `engine/ADMISSION-PREREGISTRATION.md` §13 D). The generation that namespaces the ordinals is
+    /// kernel and client state, minted per open, never persisted and never published.
+    pub session_statement: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -182,6 +235,24 @@ pub struct DescribeResponse {
     pub row_count: RowCount,
     pub extent: Extent,
     pub license: LicenseInfo,
+    /// **`skp/0.3`, Brief A boundary 9's sanity-check level.**
+    pub sanity: SanityInfo,
+}
+
+/// What the range check was decided from at this open — **`skp/0.3`**.
+///
+/// **A sanity check convicts, never confirms** (Brief A settled boundary 2). No value here says a
+/// file passed, is valid, or was verified: `level` names what was read and `reason` names where it
+/// was read from. A file inside ±180/±90 is not thereby correct — a projected file sits inside that
+/// domain too — and the level `"none"` means *not checked*, never *nothing wrong*.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SanityInfo {
+    /// `"metadata"` (footer-resident facts only), `"sample"` (a bounded read of the covering bbox
+    /// columns, never the WKB) or `"none"`.
+    pub level: String,
+    /// What the level was decided from, in the engine's own recorded words.
+    pub reason: String,
 }
 
 // ---------------------------------------------------------------------------------------------

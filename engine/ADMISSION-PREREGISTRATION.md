@@ -237,6 +237,74 @@ DECISIONS-PENDING entry 73 carries them: the polygon-only gate (the ruling); and
 
 *(none — this section opens empty and is append-only from the first commit)*
 
+### Amendment 1 — P3 implementation record (2026-09-15, appended)
+
+**Written AFTER outcomes were seen.** §12e's own rule, honoured in this line: the §13 F escalation
+gate had already been run and passed, and the P3 code had already been written and tested, before
+this amendment was drafted. Nothing above is edited; every item below is a record of what P3 did,
+or a named deviation, and none of it is a prediction.
+
+1. **§13 F's escalation gate — PASSED, and what the probe observed.** The vendored `duckdb`
+   `1.10505.0` (reporting DuckDB `v1.5.5`) accepts `file_row_number = true` on the `read_parquet`
+   path, in the interpolated form and in the **bound-parameter** form the engine's own statements
+   use (`FROM read_parquet(?, file_row_number=true)`). Over a 240-row corpus file it returned
+   `count 240, min 0, max 239, count(DISTINCT) 240`. The escalation was therefore **not** raised and
+   the identity mechanism is unchanged from §2d's. The probe is kept as a standing test
+   (`engine/tests/session_identity.rs`), because the answer is a property of the vendored crate.
+2. **R-I3's reach, narrowed in implementation and recorded here.** R-I3 is implemented for the case
+   where the file carries **no `id` column at all** and no mapping is declared. A file that *does*
+   carry an `id` column which then fails admission — a non-integer type, a negative value, a
+   repeated value — still refuses `identity_unusable` by name and does **not** fall through to the
+   session tier. Reason: those are a different fact (the file offers an identity and it does not
+   work), and routing them to the session tier would have silently changed three existing ADR-016
+   behaviours that A4 protects. Consequence for §3: unchanged — all six predicted session-ordinal
+   corpus admits are no-`id` files.
+3. **R-I4's detection, and its narrowness.** Implemented as a structural check that opens nothing:
+   a **directory**, or a path carrying a `*` or `?` glob metacharacter, is a partitioned source. A
+   missing path or a non-parquet file keeps `EngineError::Source`. `[` is deliberately **not**
+   treated as a glob character (a bracket in a real directory name is ordinary). Windows'
+   extended-length prefix (`\?\`) is stripped before the scan — an earlier revision did not, and
+   every canonicalized path was read as a glob; caught by the kernel's own permission-boundary
+   suite and recorded here rather than only fixed.
+4. **The post-check's call site, as §13 C required P3 to name it.** `engine/src/stream.rs`, inside
+   the producer thread's closure: after `produce(...)` returns (DuckDB's iterator fully drained),
+   after `thread_cancel.detach()`, and after the `match outcome` that releases or discards the
+   lease — and **before** `tx` is dropped, which for a clean run is the terminal itself. Rules (i),
+   (ii) and (iii) are implemented as written; rule (ii) required a side channel, because a cancelled
+   stream keeps its `cancelled` terminal and the change must still end the generation:
+   `StreamStats::source_changed_detail`, which carries the components that differed and never a
+   generation value.
+5. **A fourth `EngineError` variant, beyond boundary 9's three.** `InternalInconsistency` — the
+   retype of `dataset::open_inner`'s provenance arm, which the brief names as a scoped carry-over.
+   It is a retype of an existing failure, not a new refusal: no input reaches it that did not reach
+   `EngineError::Source` before. Recorded here so an A3/A5 reviewer does not read the count as scope
+   creep, in the same shape §13 H records boundary 8's own fourth refusal.
+6. **Two `describe` facts recorded but NOT put on the wire**, because boundary 9's list is closed
+   and says "only": the descriptor's **footer bytes read** and its **degradation text** (§7/§13 A
+   require the degradation to be *shown*), and the **ADR-016 candidate list** on a session-tier open
+   (R-I3 requires it to be *reported*). Both are recorded on the engine and reachable through
+   accessors (`Dataset::descriptor()`, `DatasetIdentity::candidate_columns()`); neither reaches an
+   operator's eye in this cut. Surfacing either needs a `describe` field boundary 9 does not name,
+   which is a decision above P3's authority and is flagged to the architect and the human rather
+   than taken.
+7. **Two existing tests changed, both unavoidable consequences of work the brief assigns, both
+   narrow.** (a) `engine/tests/admission_format_semantics.rs`'s covering-sample assertion quotes the
+   exact wording the brief asks to reword; only the quoted phrase changed and every other assertion
+   in it (the row-group count bounds the read; the file's row count does not; the ceiling does not)
+   stands. (b) `engine/tests/identity.rs`'s keyless-file assertion is the one R-I3 replaces — the
+   consequence §12d already put on the human's sight list by name. The mapped half of that test is
+   untouched. No other existing test was edited (A4/G-A6).
+8. **The invalidation state is three-valued, not two.** "Never had a generation minted" and
+   "generation ended by a detected change" are held apart in the kernel
+   (`GenerationRegistry`): only the second refuses. A `Catalog` this host shares is reachable
+   through entry points that do not run `open_dataset`, and collapsing the two told a caller its
+   file had changed when nothing about the file was ever observed — a false statement, caught by the
+   kernel's own SKP admission suite.
+9. **What P3 did NOT build, so no reader infers it from a green suite.** No gate test: G-A1, G-A2,
+   G-A3 and G-A4 are P5's and are not approximated. No corpus run (P4). No Part N, no
+   KNOWN-LIMITATIONS, no ADR acceptance (P6). No duration, no rate and no performance word anywhere
+   in this piece (A6).
+
 ---
 
 ## 13. Architect-routed answers recorded at P0 (implementation-level; none changes behaviour, authority, a guarantee or scope)
@@ -523,3 +591,749 @@ rule. What it touches: P2's own declared values only. No P1 outcome, prediction 
   prediction is thereby reachable (at the publish preflight, P2's held part). The P4 record names item
   I's original reading, this resolution and its date. The Proposed ADR-013 amendment carries the
   matching clarification, appended the same day.
+
+### Amendment 2 — corrections to Amendment 1, and the P3 gate-fix round (2026-09-16, appended)
+
+**Written after the P3 gate outcomes were seen** (reviewer FAIL and architect FAIL, attempt 1), and
+after the fixes below were written and run. §12e's rule, honoured in this line. **Amendment 1 is not
+edited**: every item here corrects or extends it by appending, and each says which item it touches.
+
+1. **Correcting Amendment 1 item 4's "Rules (i), (ii) and (iii) are implemented as written."** That
+   sentence was not true of rule (ii). The flag rule (ii) needs —
+   `StreamStats::source_changed_detail` — was written by the producer and **read by nobody**, so a
+   cancelled stream's detected change ended no generation; and on the error path the terminal was
+   sent *before* the post-check ran, so even a reader would have raced it. Both are fixed in this
+   round: `crate::EngineSource` reads the flag on every terminal class (clean, error, cancelled, and
+   `Drop` as the backstop) and ends the generation through `SessionInvalidator`; the producer now
+   decides the lease, runs the post-check, records the finding, and only then emits any terminal.
+   Rules (i) and (iii) were as described. **The claim was wrong at the time it was written, and the
+   correction is recorded rather than the original edited.**
+
+2. **`describe.crs.display_convention` is a P2-licensed field, not a boundary-9 one.** Amendment 1
+   item 6 leaned on boundary 9's word "only" while `describe` also carries this fifth member. The
+   licence is separate and predates it: `state/NEXT-CUT.md:102` (P2) puts the ruled equirectangular
+   wording "in status + describe", and the P2 architect's carry-over note requires P3 to carry it
+   "over the wire via describe, never as a second TypeScript literal". So `describe` gains
+   boundary 9's four **plus** this one, by P2's own authority, and the two lists are recorded apart
+   rather than blurred into one.
+
+3. **`crs.source` gains a third value, `format-rule` — the human's ruling of 2026-09-16.**
+   `DECISIONS-PENDING.md` RULED 2026-09-16 — question round 3, item 3, applied verbatim: the value
+   sits beside `file` and `caller_asserted`, `crs.provenance` carries the specific class
+   (`crs:format-default`), the published manifest carries the same value, and it is recorded as a
+   value-domain widening under the `skp/0.3` bump (`protocol/skp/SKP-V0.md`'s own addendum). This
+   settles the P1 reviewer's Finding 1, which Amendment 1 left flagged rather than fixed: recording
+   a format-rule admission as `file` said the file declared a CRS it does not declare, and that
+   false record reached published bundle manifests. Assertions are re-aimed with the ruling named at
+   each site.
+
+4. **The pre-check now maps an unreadable source onto `SourceChanged`, as the post-check always
+   did.** Amendment 1 did not record that the two disagreed. They did: the pre-check propagated
+   `SourceDescriptor::of`'s failure as `EngineError::Source`, so a source deleted or locked
+   mid-session refused with a type the host does not match on and **left the generation live**.
+   Both checks now route through `SourceDescriptor::refuse_if_changed_or_unreadable`, which is the
+   whole of the invariant `descriptor.rs` states.
+
+5. **Correcting Amendment 1 item 5's accounting of `InternalInconsistency`.** Two things in it were
+   wrong. It attributed the retype to "a scoped carry-over the brief names" — **there is no such
+   source**: `state/NEXT-CUT.md` contains no such item, and the claim is withdrawn here and dropped
+   from all four code sites. The retype stands on its own reasoning (`EngineError::Source` means
+   "the file could not be opened or read at all", and a caller shown that for a contradiction in
+   this tree's own record goes looking at their file for a defect that is in this code). And it
+   understated the count: the variant mints a **fifth typed SKP code** for this cut,
+   `engine.internal_inconsistency`, beside boundary 9's three and boundary 8's publish-class one —
+   not merely an `EngineError` variant. No input reaches it that did not already reach
+   `EngineError::Source`.
+
+6. **Correcting Amendment 1 item 1's joining of two different things.** That item reported the
+   escalation probe's corpus figures (240 rows, `min 0`, `max 239`, 240 distinct, from
+   `geopandas/gp-epsg2056-intkey.parquet`) and the standing test in one breath. They are not the
+   same run: the **standing** test
+   (`engine/tests/session_identity.rs::the_vendored_duckdb_exposes_file_row_number_on_read_parquet`)
+   generates its own 500-row fixture and asserts the same *properties* — 0-based, dense, distinct by
+   construction, and available on the bound-parameter form — against that file. The corpus figures
+   stand as what the one-off probe observed on that one corpus file and are **not** re-observed by
+   the standing test; that file is P4's to open under its preregistered expectation.
+
+7. **Correcting Amendment 1 item 3's markdown.** It renders the Windows extended-length prefix as
+   `\?\`; the prefix is `\\?\`, and the doubled backslash was consumed by markdown escaping. The
+   code and its own comment carry the correct form.
+
+8. **R-I4's detection was widened in this round, and the trade-off is recorded.** Amendment 1 item 3
+   described `*` and `?` only, excluding `[` on the reasoning that a bracket in a real directory
+   name is ordinary. DuckDB's `read_parquet` also expands `[...]` character classes and `{a,b}`
+   brace alternation, so all six characters are detected now. **The false positive is accepted and
+   is visible**: a literal file whose name contains one of them is refused by name even though it is
+   one file, and the refusal says the path was read as naming more than one file — a sentence an
+   operator can act on. The alternative is silent: DuckDB expands the pattern, the source becomes a
+   multi-file scan, and `file_row_number` becomes a per-file ordinal reused across files — the
+   session tier's identity colliding with nothing said, which is the outcome R-I4 exists to prevent.
+   The check is deliberately **not** stat-based: it is a property of the path text alone, so the
+   same path is never admitted or refused according to what happens to be on disk.
+
+9. **A descriptor on a filesystem that reports no modification time degrades; it does not refuse.**
+   Not recorded in Amendment 1 because it was not noticed: `components_differing_from` treated an
+   absent mtime as a difference unconditionally, so on such a filesystem every query refused forever
+   with the false sentence "the source file changed". Three cases now, not two — both present, an
+   ordinary comparison; **neither** present, a **degradation** whose text names the unavailable
+   component (boundary 5's "the degradation is shown", applied to mtime as it already was to the
+   footer); one present and the other not, still a difference, because that is observable and
+   fail-closed governs it.
+
+10. **The generation map is bounded.** Not recorded in Amendment 1 because it was not noticed:
+    ticket attributions accumulated for the life of the process, removed only by `close_dataset`.
+    They are pruned now on every mutating call, on the sibling `StreamRegistry`'s own discipline —
+    by age (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, the sum, because a ticket may sit pending for a
+    whole TTL before its terminal clock starts) and by the rule that an attribution naming a
+    generation that is no longer live can only ever answer what a missing entry already answers.
+
+11. **No dead public API.** `GenerationRegistry::is_invalidated` and `::live_generation` had no
+    callers and are gone; `::ticket_is_live` gained the caller it was written for — ticket
+    **redemption** (`EngineSourceFactory::create_from_ticket`), so a ticket whose generation ended
+    between mint and redeem never produces a stream, kernel-authoritatively and without depending on
+    the client's mirror having noticed; and `SkpHost::generations()` is what hands that registry to
+    the factory. `attributed_ticket_count` is new and exists so item 10's bound is assertable rather
+    than asserted about in prose.
+
+12. **What this round still does not build.** Unchanged from Amendment 1 item 9: no gate test
+    (G-A1–G-A4 are P5's), no corpus run (P4), no Part N, no KNOWN-LIMITATIONS, no ADR acceptance
+    (P6), and no duration, rate or performance word anywhere (A6). The pre-check's cost shape — a
+    footer read and a SHA-256 per query issue — is **unchanged and deliberately not weakened**: it
+    is what boundary 4 and R-D2 ask for, and any relaxation is the human's question, not this
+    round's.
+
+### Amendment 3 — the P3 split, on the human's ruling (2026-09-16, appended)
+
+**Written after the attempt-2 gate outcomes were seen (reviewer FAIL, architect FAIL) and after the
+human's ruling of 2026-09-16 (round 4) that split the piece.** §12e's rule, honoured in this line.
+Amendments 1 and 2 are not edited; item 11 below corrects one of Amendment 2's claims by appending.
+
+**The ruling, verbatim:**
+
+> "Split P3, on conditions. The landing half (P3a) contains only code with a real product caller and
+> an end-to-end test from the real producer/consumer shape — both gates run the grep: no callback,
+> code path or pub item lands without a caller; the unwired dead-ticket refusal and its fabricated
+> source-change are removed from P3a, not carried; the publish-consumer regression is fixed in P3a
+> (the shell parses the refusal code — no operator-visible regression on main); the Drop-backstop
+> comment corrected. P3a claims nothing about boundary 4: the ADR-016 amendment's acceptance and any
+> statement that detection "clears residency and refuses picks" wait for P3b, and the ledger says
+> so. P3b gets its own preregistration and gates: the owner-side invalidation (residency cleared,
+> picks refused — the consequence P3's own row promised), the kernel-authoritative dead-ticket
+> refusal wired with a real caller and correct unknown-handle behaviour, and the §12e amendment
+> recording the split. No release includes P3a without P3b. Class fix, permanent, in the worker
+> brief and both gate checklists: any cross-module seam is written against the interface the other
+> side actually has — read it first — and is proven by one end-to-end test from the real shape; a
+> test that encodes an imagined interface is a gate failure by name."
+
+**1. What P3a lands.** The session identity tier (R-I3/R-I4) and its record; the structural
+descriptor with the pre-check and the post-check (R-D1/R-D2, §13 C); the kernel's
+`GenerationRegistry` with its pruning, minting, attribution and `end_generation`, all reached from
+`SkpHost`'s own product paths; `SessionInvalidator`, held by every `EngineSource`; the typed code
+carried into both stringified refusal surfaces, each proven end to end from the producing side; SKP
+0.3 with its fixtures; the P2-held publish preflight refusal; and the 2026-09-16 round-3 `crs.source`
+ruling.
+
+**2. What is REMOVED rather than carried.** Every item below had **zero product callers**, verified
+by grep before removal:
+
+- `EngineSourceFactory::ticket_only_with_generations` — nothing ever constructed a factory that
+  held the generation map, so the guard it existed for never ran in any build.
+- The redemption-time `ticket_is_live` guard in `kernel/src/lib.rs`, **and its fabricated
+  source-change refusal**. That refusal told a caller its source "was observed to have changed" for
+  any handle the map did not know — expired, already redeemed, never minted — which is a diagnosis
+  the kernel had not made (`docs/01` principle 8). It is not softened and re-landed; it is gone.
+- `GenerationRegistry::ticket_is_live`, which had no caller left once the guard went. A test-only
+  caller does not count under the ruling.
+- `SkpHost::generations()` and `SkpHost::invalidator()` — accessors for a field the host already
+  passes directly. The **field** stays; the accessors are gone.
+- `onSessionEnded` on both streaming managers, and `TileViewportStreamManager.isSessionEnded()`.
+  No owner subscribed to either.
+
+**3. What is DEFERRED to P3b, and therefore claimed nowhere in P3a.**
+
+- **Owner-side invalidation: residency cleared and picks refused.** P3a's managers drop their
+  tickets, cancel their own queued and in-flight work, and latch closed. They do **not** clear the
+  resident geometry and do **not** refuse picks — neither lives in a manager. Every comment and test
+  narration that said or implied otherwise has been deleted or rewritten; what an operator sees today
+  is that filling stops and stale batches are dropped, and the view already on screen stays.
+- The kernel-authoritative dead-ticket refusal, wired to a real caller, with correct three-valued
+  unknown-handle behaviour.
+- **The ADR-016 Amendment 1 acceptance**, which stays Proposed and binds nothing.
+- Boundary 4's own sentence about detection clearing residency and refusing picks. P3a does not
+  claim boundary 4 is satisfied.
+
+**No release includes P3a without P3b.**
+
+**4. The publish-consumer regression, fixed.** `PublishError::refusal_detail()` produced
+`"<code>: <display>"`, but `frontends/shell/src/publish/formatPublishRefusal.ts` — the real consumer,
+which `PublishPanel.tsx` calls and `RefusalBlock.tsx` renders — hardcoded `code: "publish-refused"`
+and passed the message through whole. So the machine prefix reached the operator as raw text *and*
+the code was discarded, making `refusalGuidance` unreachable for every publish code: an
+operator-visible regression that would have shipped. The consumer now parses the prefix, returns the
+real `publish.*` code, and strips it from the message. Both of `publish.rs`'s preflight sites send
+the prefixed form, so SKP-V0.md's sentence is true of the surface it names, and that sentence is now
+scoped to `PublishError` (the same seam carries permission errors and IPC rejections, which have no
+code and are not given one). The shell's test input is the kernel's own output, captured from a real
+`cargo test` run and pinned on the Rust side as an exact-equality assertion, so a drift fails in the
+producer's suite first.
+
+**5. The `Drop`-backstop comment, corrected.** It claimed `Drop` was a backstop that would catch a
+post-check finding on an abandoned stream. `BatchStream::drop` cancels the token and returns — it
+does **not** join the producer — so the flag may still be empty at that point and nothing is ended
+there. The residual is now stated where the code is: the change is not lost, but its invalidation is
+**deferred to the next query issue's pre-check** rather than happening at drop.
+
+**6. `unreachable!()` retyped.** `dataset::open_inner`'s `CrsSource::FormatRule` arm returned
+`unreachable!()`; a panic in admission would take down a host serving other datasets over a
+contradiction in this tree's own bookkeeping. It returns `EngineError::InternalInconsistency` — the
+variant this cut already owns for exactly that condition — behind an unchanged `debug_assert!`.
+
+**7. Three cannibalised doc comments, restored.** Appending to a file above an existing item had
+left three functions wearing their neighbour's documentation: `admit_identity`'s ADR-016 §3–§6 block
+had migrated onto `partitioned_source_detail`; `DatasetCrs::from_file`'s onto
+`recorded_as_format_rule`; and `prune_locked`'s pruning rationale onto `attributed_ticket_count`.
+Each is back on its own item, and each of the three displaced items now has its own doc. The cite in
+`kernel/tests/session_generation.rs` to "`prune_locked`'s own doc" therefore holds again.
+
+**8. Smaller corrections.** `descriptor.rs`'s intra-doc link named `refuse_unreadable`, which is not
+a symbol — it is `refuse_if_changed_or_unreadable`. `kernel/src/skp.rs`'s naming-rule comment listed
+the registry's methods and omitted `attributed_ticket_count` while naming the now-removed
+`ticket_is_live`. `session_identity.rs`'s cancelled-terminal assertion was
+`matches!(terminal, Some(Cancelled) | None)`, which also passed when the cancel was never exercised
+at all; it is split so each half fails for the reason it names, and the admissible `None` case is
+stated rather than hidden.
+
+**9. The post-check sits inside the cancel-acknowledgement window, recorded in-source.** The R-D2
+post-check runs before `PRODUCER_FINISHED`, the producer's cancel-acknowledgement stamp, so that
+acknowledgement now also covers a bounded metadata-plus-footer read. **No figure is claimed and none
+is implied**; what it costs against `docs/08`'s acknowledgement budget is P5's to measure, and the
+comment exists so that measurement knows the term is there. Observed once during this round, and
+recorded because it bears on that measurement: `engine/tests/slice.rs`'s
+`cancelling_mid_stream_stops_production_promptly` (a pre-existing test with its own declared bound)
+failed once in a full parallel workspace run and passed in isolation, in its own suite, and on an
+immediate re-run of the same full suite. Reported as an observation, not as a measurement.
+
+**10. Correcting Amendment 2 item 8's "deliberately not stat-based".** That sentence described
+R-I4's detection as a property of the path text alone. It is true of the **metacharacter branch**
+only: `partitioned_source_detail`'s first branch is `path.is_dir()`, which is a stat. The accurate
+statement is that the *glob* decision never consults the filesystem, so a pattern is refused
+identically whether or not a literal file of that name happens to exist; the directory decision does
+consult it, and must.
+
+**11. Correcting Amendment 2 item 11.** It said `ticket_is_live` "gained the caller it was written
+for". That was untrue of the tree: the only caller was reached through a constructor no product code
+ever called, so the method was dead in every build that shipped. The claim is withdrawn, and the
+method is removed by item 2 above rather than left with a false justification.
+
+**12. The class rule, recorded here because it is permanent.** Any cross-module seam is written
+against the interface the other side actually has — read first, cited by `file:line` — and is proven
+by one end-to-end test that starts from the real producer or consumer shape. A test that encodes an
+imagined interface is a gate failure by name. P3a's two seams each have one: the data-plane terminal
+(`kernel/tests/typed_terminal_codes.rs` drives a real ticket through the real factory and reads the
+terminal off the real `dyn BatchSource`) and the publish refusal (the shell's parser test, whose
+input is the kernel's captured output).
+
+### Amendment 4 — P3a's attempt-2 corrections (2026-09-16, appended)
+
+**Written after P3a's attempt-1 gate outcomes were seen (reviewer FAIL, architect FAIL — narrow;
+every removal confirmed absent, the three seams verified from the real shape, this file's Amendment
+3 confirmed append-only with the ruling verbatim).** §12e's rule, honoured in this line. Amendments
+1–3 are not edited; items (i) and (iv) below correct Amendment 3 by appending.
+
+**(i) Correcting Amendment 3 item 3's "Every comment and test narration that said or implied
+otherwise has been deleted or rewritten."** That sentence was untrue of the tree when it was
+written. Two survivors carried the deferred consequence as though P3a delivered it:
+
+- `frontends/shell/src/streaming/viewportStreamManager.test.ts` — a test titled *"clears residency,
+  refuses further requests, and reports the typed status"*, whose body asserted none of the
+  residency clearing. Renamed to what it asserts: *"drops its tickets, refuses further requests, and
+  returns session-ended"*.
+- `frontends/shell/src/streaming/tileViewportStreamManager.ts` — the `endSession` call-site comment
+  claimed "the client half of the invalidation path, **with its consequences**", quoting
+  "residency cleared, picks refused, typed status". Rewritten in the shape its untiled sibling
+  already carried.
+
+Both are now rewritten. Three kernel-side sentences in the same family are marked **(P3b)** rather
+than left in the present tense: `end_generation`'s doc, `terminal_detail_of`'s doc, and
+`EngineSource::next_into`'s comment. **The lesson recorded, since this is the second round in which
+a narration outlived the behaviour it described:** a claim about a consequence belongs with the code
+that performs it, and when the consequence is deferred the claim is deleted rather than reworded
+into the conditional.
+
+**(ii) Boundary 5's "the degradation is shown" is NOT met by P3a.** The descriptor records the text
+— an over-ceiling footer, or a filesystem reporting no modification time — and
+`SourceDescriptor::degradation()` returns it, but **no surface carries it to an operator's eye**.
+The one surface that would fit is a `describe` field, and boundary 9's list is closed
+(`crs.provenance`, `axis.provenance`, `identity.class` + its statement, the sanity level), so P3a
+does not invent one. The code comments that said the text was "in the words shown to the operator"
+are corrected to say that nothing shows it.
+
+**Where it is owed: P6.** §12d already routes the cut's user-visible strings to the human's sight at
+P6 ("the four new user-visible states whose strings are sighted at P6"), and this is a fifth string
+of the same kind — operator-facing words with no settled wording. It is **not** P3b's: P3b's row in
+`state/NEXT-CUT.md` is the owner-side invalidation, the dead-ticket refusal and the ADR-016
+acceptance, and a degradation notice is none of those. The same disposition covers
+`DatasetIdentity::candidate_columns()`, which R-I3 requires to be *recorded* on a session-tier open
+and which likewise reaches no operator in P3a: the refusal that used to carry the list no longer
+fires on that path.
+
+**(iii) The instrument-accessor category, and the exemption's wording.** Both gates passed
+`GenerationRegistry::attributed_ticket_count` on the basis that its doc declares its only caller is
+the test suite and why the property must be proven about the shipped build — the precedent being
+`spatial_engine`'s `index_consultations`, `row_group_consultations` and `attribute_concatenations`.
+P3a applies that consistently:
+
+- **Declared** (four): `GenerationRegistry::attributed_ticket_count`,
+  `SourceDescriptor::footer_bytes_read`, `SourceDescriptor::degradation`,
+  `DatasetIdentity::candidate_columns`, and on the TypeScript side `LiveTicketSet.size`.
+- **Deleted** (three): `SourceDescriptor::byte_size()` and `SourceDescriptor::footer_length()` —
+  nothing needed them, including the test, which reads `footer_bytes_read()` instead; and
+  `dataset::ordinal_is_physical_not_scan_ordered`, which had no product caller **and which the
+  exemption does not cover, because it acts** — it runs two queries rather than reading state the
+  build already maintains. Its evidence is not lost: the check is now a local helper inside the one
+  test that ever called it, so the physical-vs-scan property is still asserted on a written fixture.
+  The corpus-wide verification remains **P4**'s, and P4 may reintroduce a product-side form when it
+  has a product caller to justify one.
+
+  Recorded because it is the exemption's first real boundary case: "read-only accessor over state
+  the shipped build already maintains" excluded it, and the drafted sentence's closing clause — "It
+  exempts nothing that acts" — is what decided it.
+
+**The exemption's wording is pending the human's ruling.** The architect's drafted sentence, recorded
+here unaltered so the ruling has something exact to accept or amend: *"The caller rule exempts
+instrument accessors: a `pub` read-only accessor over state the shipped build already maintains,
+whose doc declares that its only caller is the test suite and why the property must be proven about
+the shipped build. It exempts nothing that acts."*
+
+**(iv) Correcting Amendment 3 item 9's cancel-window term.** That item said the post-check now sits
+inside "`docs/08`'s acknowledgement budget". It does not. `engine/src/trace.rs:363`'s own table
+assigns the instants: *"`cancel_observed` (the worker stopped advancing — **what `docs/08`
+budgets**) and `cancel_acknowledged` (the operation quiescent — what `kernel/RESULTS.md`'s fifth
+section actually measured)"*, with `cancel_observed` = `PRODUCER_CANCELLED` and `cancel_acknowledged`
+= `PRODUCER_FINISHED`. `docs/08:8` budgets `cancel_requested → cancel_observed` and reports
+"`cancel_quiescent` … beside it with no budget". `PRODUCER_CANCELLED` is stamped inside `produce()`,
+**before** the post-check. So the post-check lands in the **unbudgeted quiescent term**, not in the
+budgeted one, and the in-source comment now says so. The observation recorded in Amendment 3 item 9
+stands as an observation and still claims no figure.
+
+**(v) A pointer for readers of §12b's G-A2** (`:221`: "residency cleared; picks refused"). That
+line is a verbatim quotation inside an append-only document and cannot be edited. Read it with
+Amendment 3 item 3: **those two consequences are P3b's**, and G-A2 is not satisfiable by P3a alone.
+P3a satisfies G-A2's earlier clauses — the refusal by name at the pre-check and at the post-check
+paths separately — and nothing more.
+
+**(vi) Recorded for P3b's scope (the attempt-1 reviewer's suggestion 7).** On the latched
+`session-ended` path the baseline owner renders neutral advice — `frontends/shell/src/App.tsx`'s
+"not applied — try again" copy — which cannot succeed until the dataset is reopened, because the
+manager is latched. Today the typed guidance reaches an operator only by the **pre-check** route (a
+`viewport_query` refused synchronously with `engine.source_changed`). P3b owns making the terminal
+route say the same thing.
+
+**(vii) The terminal prefix reaching an operator — fixed in P3a, recorded here.** P3a prefixes every
+engine terminal's `detail` with its typed code, and the baseline owner interpolated that detail
+whole onto the streaming banner (`App.tsx`'s `onFailureTerminal` →
+`setCanvasRefusal("stream <kind>: <detail>")`), so an operator would have read
+`engine.source_changed: refused: …` as raw text on every failing stream. That is the same
+operator-visible regression class the publish consumer had, on the other surface, and the ruling's
+"no operator-visible regression on main" covers both. `frontends/shell/src/streaming/
+formatTerminalRefusal.ts` now splits the code from the text, in the shape of the publish parser, and
+the banner shows the text only. **No owner-side behaviour is added**: nothing clears residency,
+latches a pick, or renders a session status — those remain P3b's. The test input is the kernel's own
+bytes, captured from a real run and pinned by exact equality in `kernel/tests/typed_terminal_codes.rs`;
+the streaming-manager tests now read the same pinned constant instead of a hand-transcribed string,
+which also closes the attempt-1 reviewer's suggestion 5.
+
+**(viii) The status string, replaced now rather than left false on main.** The human's ruling of
+2026-09-16 (round 5, item 1), verbatim:
+
+> "a false status string does not sit on main between P3a and P3b. Replace P3a's 'Everything read so
+> far has been discarded' now, in one docs-class commit, with a sentence true at that commit — 'The
+> source file changed while it was open; reopen the dataset to continue.' — and P3b restores the
+> stronger sentence when it becomes true, wording at P6."
+
+Applied in its own commit (`docs(shell): the source-changed guidance reads a sentence true at this
+commit`). `refusalGuidance("engine.source_changed")` now returns exactly the ruled sentence and
+nothing else; the limitation sentences that followed it are P6-sight wording and are **not**
+reintroduced in another form. Its test asserts the string **verbatim** — alone among the four
+placeholders — because the human ruled these exact words, so a rewording has to break a test rather
+than pass as a refactor; the file header's "no test asserts any of them verbatim" was corrected in
+the same commit, since that sentence would otherwise have become false there.
+
+**(ix) The cancel window: rule (ii) kept, the cost reported.** The ruling, verbatim:
+
+> "Keep rule (ii); the post-check stays inside the acknowledged term and P5 measures it, no figure
+> claimed before. Two obligations: the post-check's cost is reported per cancellation (session log
+> or the terminal's timing fields, never silent, its ≤ 8 MiB bound named); and the pre-existing
+> slice.rs liveness test is re-aimed to assert the budgeted interval, requested → observed,
+> reporting observed → terminal beside it with the disclaimer — a test asserting a budget nobody
+> declared is the class that fails once under load and teaches nothing."
+
+Both obligations discharged; the post-check is **not** moved.
+
+*The cost, reported through the engine's existing instruments.* `engine/src/trace.rs` gains
+`POST_CHECK_BEGIN` and `POST_CHECK_END` in that module's own shape, so the session log carries the
+interval; `POST_CHECK_END`'s `bytes` field carries the footer bytes the check read, and
+`StreamStats::post_check_bytes_read` carries the same figure where a stream's terminal stats already
+travel. The bound is named at every one of those sites (`FOOTER_DESCRIPTOR_MAX_BYTES`, 8 MiB).
+**The bytes come from the read the post-check already performed** — `post_check_source` now returns
+them — because counting them with a second descriptor read would have doubled the very cost this
+reports. **No duration is claimed in any doc, comment or test.**
+
+*The test, re-aimed.* `engine/tests/slice.rs::cancelling_mid_stream_stops_production_promptly` now
+asserts `cancel_requested → cancel_observed` — read from `CANCELLATION_REQUESTED` (stamped by
+`CancelToken::cancel` itself, not by the test) and `PRODUCER_CANCELLED`, per `trace.rs:363`'s table
+— against the 100 ms `docs/08:8` declares. `observed → terminal received` is **printed, never
+asserted**, with the disclaimer that it is the unbudgeted acknowledged term and now contains the
+post-check, and the post-check's byte count is printed beside it. The test previously bounded the
+consumer's receipt of `Err(Cancelled)` at 100 ms with no disclaimer — a budget nobody declared, and
+the one that failed once under load during P3a's own development (Amendment 3 item 9's observation).
+
+**(x) The accessor exemption, adopted with the human's addition.** The ruling, verbatim:
+
+> "Adopt the architect's sentence as written, with one addition: the accessor's doc names the test
+> that calls it, so the caller-grep can verify the exemption instead of trusting the words
+> 'test-only.' An exemption that can't be grepped is a hole in the rule it exempts from."
+
+So the exemption reads, in full and in force: *"The caller rule exempts instrument accessors: a
+`pub` read-only accessor over state the shipped build already maintains, whose doc declares that its
+only caller is the test suite and why the property must be proven about the shipped build. It
+exempts nothing that acts."* — **and the doc names the test(s) that call it.**
+
+Every declared accessor now names its callers, and each named test was grep-verified to exist:
+`GenerationRegistry::attributed_ticket_count` (five tests in `kernel/tests/session_generation.rs`);
+`SourceDescriptor::footer_bytes_read` and `SourceDescriptor::degradation` (two each in
+`engine/tests/session_identity.rs`); `DatasetIdentity::candidate_columns`
+(`engine/tests/session_identity.rs` and `engine/tests/identity.rs`); `LiveTicketSet.size`
+(`liveTicketSet.test.ts`). `StreamStats::post_check_bytes_read`, added by item (ix), is declared in
+the same shape and names its test.
+
+**Recorded because it is the addition's point:** naming the test converts the exemption from a claim
+into something a reviewer can check mechanically — the same move as pinning a cross-module fixture
+to the producer's own bytes rather than to a transcription.
+
+### Amendment 5 — P3a's attempt-3 corrections (2026-09-16, appended)
+
+**Written after P3a's attempt-2 gate outcomes were seen (reviewer FAIL, architect FAIL — narrow;
+`state/gate-log.json`'s `briefa-p3-p6` attempt-4 entries), and after question round 7 ruled the
+scope of this attempt.** §12e's rule, honoured in this line. **Amendments 1–4 are byte-untouched**;
+items (v) and (vi) below correct Amendment 4 by appending, as Amendment 4 itself corrected
+Amendment 3.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7, permanent in
+both gate checklists): *"every "discharged" or "done" clause in an amendment names the test or line
+that proves it, and the gate resolves each — a discharge claim with no resolvable proof is a gate
+failure by name, the same way an imagined interface and a stale cite are."* Every clause below that
+says something is done names either a test by its exact function name or a `file:line`. Where a
+thing is **not** done, this amendment says so and names the open item instead.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md` §10): **class 5** for (i); **class 4** for each
+mutation in (ii); **class 3** for (iii); **post-result records** for (iv), (v), (vi) and (vii).
+
+---
+
+**(i) Class 5 — a scope narrowing on a ruling: the engine's `SourceChanged` `Display` states the
+engine's fact only.** The human's ruling of 2026-09-16 (question round 7), verbatim:
+
+> "Fresh worker, exactly the listed five items, gates attempt 3 — the last attempt for P3a: if
+> either gate fails again, P3a holds and the architect re-scopes the piece before any further worker
+> touches it. Two additions: (1) the engine's SourceChanged Display text states the engine's fact
+> only — "the source file changed while it was open (<component>)" — and never a consequence: the
+> engine cannot know what the shell discarded, so the consequence sentence belongs to the owner that
+> performs it, added by P3b when it becomes true. Engine messages state engine facts; owners state
+> consequences. (2) Fence for the over-claim class, permanent in the gate checklists: every
+> "discharged" or "done" clause in an amendment names the test or line that proves it, and the gate
+> resolves each — a discharge claim with no resolvable proof is a gate failure by name, the same way
+> an imagined interface and a stale cite are."
+
+Applied at `engine/src/error.rs:324`. Deleted from the arm: the consequence sentence ("Everything
+read for this session is discarded and the identities it handed out no longer refer to anything")
+and the guidance ("reopen the file to continue"). Kept: the `refused: ` prefix every variant of the
+enum carries, and boundary 4's limitation sentence — both are facts about the engine's own check,
+which is the test the ruling states. `{detail}` is unchanged.
+
+Re-pinned byte-identically in the three copies, each with its proof:
+
+- the Rust pin — `kernel/tests/typed_terminal_codes.rs`'s
+  `a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code` (exact equality, plus a new
+  sweep asserting the engine's own text contains none of `discard`, `no longer refer`, `reopen the
+  file`);
+- the TS pin — `frontends/shell/src/testUtils/terminalShapes.ts:25-29`
+  (`REAL_SOURCE_CHANGED_TERMINAL_DETAIL`);
+- the SKP wire fixture — `protocol/skp/tests/data/v0-error-source_changed.json:3`, read by
+  `protocol/skp/tests/fixtures.rs`'s
+  `the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields` and by
+  `frontends/shell/src/skp/__tests__/fixtures.test.ts`.
+
+The three were previously tied to each other only by a reviewer reading them. They are now tied
+**mechanically**: `frontends/shell/src/admission/RefusalBlock.test.tsx:57`'s test asserts
+`"engine.source_changed: " + fixture.message === REAL_SOURCE_CHANGED_TERMINAL_DETAIL`, and the Rust
+pin asserts the same literal equals `Display`'s output.
+
+**The whole rendered refusal is now checked as one string, on the filter route.** That test renders
+`RefusalBlock` — the component `frontends/shell/src/filter/FilterPanel.tsx:134` renders inside
+`.filter-refusal`, and the **only** product dispatcher of `refusalGuidance` (`RefusalBlock.tsx:25`;
+grep-verified: no other product module imports it) — over the wire fixture through `formatRefusal`,
+and sweeps `message` **and** guidance together for `discard`, `no longer refer`, `reopen the file`,
+and for any affirmative snapshot claim. The half-checked form is what let the engine's message and
+the owner's guidance disagree while each of their own tests stayed green.
+
+**Two strings join the P6 sight list** (§12d's "the four new user-visible states whose strings are
+sighted at P6", which Amendment 4 (ii) already extended to a fifth):
+
+1. the engine's new `SourceChanged` sentence (`engine/src/error.rs:324`) — the operator-facing words
+   an engine refusal now carries;
+2. the owner's guidance sentence — `refusalGuidance("engine.source_changed")`
+   (`frontends/shell/src/admission/formatRefusal.ts:83`), the human's own ruled wording from round 5
+   item 1, restated here as a P6 sight item because P3b replaces it when the stronger sentence
+   becomes true.
+
+---
+
+**(ii) Class 4 — the mutations added or corrected after the gate findings, each observed once and
+recorded by name.** All four were performed against this branch, the failure observed, and the
+mutation reverted. None is a second harness run; each is a unit or integration run of the named
+test.
+
+| Mutation | Test it must fail | Observed failure |
+| --- | --- | --- |
+| Restore the deleted consequence sentence to the engine's message in both copies the test reads (the SKP fixture and `REAL_SOURCE_CHANGED_TERMINAL_DETAIL`), so only the class assertion bites | `RefusalBlock.test.tsx`'s *"the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform"* | FAILED — `AssertionError: expected 'engine.source_changed refused: the so…' not to match /discard/i` |
+| Restore `(Some(a), Some(b)) if a == b => {}, _ => push("mtime")` in `components_differing_from` | `descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` | FAILED — panicked on the both-absent assertion, `engine/src/descriptor.rs:454-457` in the unmutated file (`descriptor::tests::an_unobservable_modification_time_degrades_while_an_observable_change_in_it_still_differs` failed with it, on its own both-absent assertion at `engine/src/descriptor.rs:375`) |
+| In the `pairs` closure, yield the row's **position in the result set** instead of its `file_row_number` (`.enumerate()`, `(i as i64, key)`) — the scan-ordered reading the test rules out | `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture` | FAILED — panicked at `engine/tests/session_identity.rs:156`: *"on this file the ordinal did not renumber under ORDER BY…"* |
+| Zero `post_check_bytes_read` in `StreamConnectionRecord`'s construction in `impl Drop for EngineSource` | `a_cancelled_stream_s_connection_record_carries_the_post_check_s_cost` | FAILED — panicked at `kernel/tests/post_check_cost_report.rs:100`: *"the post-check read a footer on the cancelled path and the record must say how much of one"* |
+
+The third row replaces a recorded mutation that **was not executable as written**: it named
+`ordinal_is_physical_not_scan_ordered`, deleted by Amendment 4 (iii). Each mutation is also recorded
+in-source beside its test, which is what `node scripts/plan/verify-mutation.mjs` resolves.
+
+---
+
+**(iii) Class 3 — cite fixes: ten in-code cites of the round-5 rulings were off by one item
+number.** `DECISIONS-PENDING.md`'s "RULED 2026-09-16 — question round 5" numbers its items: **1** the
+status string, **2** the §21 housekeeping ruling, **3** the cancel-window guarantee, **4** the
+instrument-accessor exemption.
+
+- The cancel window, `"round 5 item 2"` → `"item 3"`: `engine/src/trace.rs:437`,
+  `engine/src/stream.rs:588`, `:1179`, `:1580`, `engine/tests/slice.rs:648`, and
+  `engine/tests/session_identity.rs:495` — a **sixth** site of the same class, found by the sweep and
+  not on the gate's list.
+- The exemption, `"round 5 item 3"` → `"item 4"`: `kernel/src/skp.rs:390`,
+  `engine/src/descriptor.rs:194`, `:213`, `engine/src/identity.rs:241`,
+  `frontends/shell/src/streaming/liveTicketSet.ts:101`.
+
+Every remaining "round 5" cite in the tree was resolved against the authoritative list and is
+correct: the three item-1 cites (`frontends/shell/src/admission/formatRefusal.ts:66`, `:73`,
+`formatRefusal.test.ts:142`), `AI_DEVELOPMENT.md:279` (item 4) and `AUTONOMY.md:345` (item 2). No
+claim changed; only where a cite points.
+
+---
+
+**(iv) Post-result record — the narrations, the stale record, and the acting `pub`.**
+
+- **The narration that survived the Amendment 4 (i) sweep is gone**, and so is the class of sentence
+  it belonged to. The test comment *"the operator is told which component is unavailable"* and the
+  `expect("the degradation is shown, never silent")` claimed a consequence P3a does not have; the
+  moved test at `engine/src/descriptor.rs:426` now says the degradation is **recorded** and reachable
+  through `degradation()`, shown to nobody. The same sweep over the two files the gate named
+  corrected three more sentences: `of()`'s comment heading (*"Boundary 5's 'the degradation is
+  shown', applied to mtime…"* → the degradation is recorded here, nothing shows it),
+  `components_differing_from`'s *"names it in the operator's own words"* → returns the recorded
+  words, shown to nobody in P3a, and `degradation()`'s own caller list, which now names the tests
+  that exist after the move. `engine/tests/session_identity.rs:474`'s *"whatever terminal a consumer
+  sees"* was read and left: it is about a consumer receiving a terminal, not about a degradation
+  being shown.
+- **The stale intra-doc link is gone.** `engine/src/identity.rs`'s link to
+  `crate::dataset::ordinal_is_physical_not_scan_ordered` named a function Amendment 4 (iii) deleted.
+  The sentence now states the two things that are true — the engine performs no such check at open,
+  and the evidence is the `pairs` closure in `engine/tests/session_identity.rs:136-142` — as a prose
+  cite, because a test is not part of this crate's public item tree. Proof:
+  `cargo doc --no-deps -p spatial-engine` reports **zero** `broken_intra_doc_links` warnings (the
+  crate's remaining doc warnings are pre-existing `private_intra_doc_links` at
+  `engine/src/predicate.rs:258` and `:272`, untouched by this piece).
+- **`SourceDescriptor::without_modification_time_for_test` is deleted** — the identifier no longer
+  occurs anywhere in the tree. It was a `pub` constructor whose only caller was a test and which
+  **acted** — it pushed a fabricated degradation — so the instrument-accessor exemption did not cover
+  it, by that exemption's own closing clause. The literal it duplicated now exists **once**, as the
+  private `ABSENT_MODIFICATION_TIME_DEGRADATION` (`engine/src/descriptor.rs:54`), recorded from one
+  private fn, `SourceDescriptor::record_absent_modification_time` (`:93`), whose only shipped caller
+  is `of()`'s no-mtime branch (`:118-120`).
+- **The shipped path is what the test exercises now.**
+  `descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever`
+  (`engine/src/descriptor.rs:426`) builds its descriptor with the shipped `of()` over a written
+  fixture, applies the same private fn `of()` calls, and asserts `degradation()` returns the shipped
+  const's words and that `components_differing_from` reports no `mtime` difference for
+  `(None, None)`. No new `pub` item, no `#[doc(hidden)]`, nothing test-only on the crate surface.
+
+---
+
+**(v) Correcting Amendment 4 (vi), by appending — the typed guidance and the plain camera pre-check
+route.** Amendment 4 (vi) reads: *"Today the typed guidance reaches an operator only by the
+**pre-check** route (a `viewport_query` refused synchronously with `engine.source_changed`)."* That
+sentence is **false of the tree**, and it was false when it was written.
+
+The plain camera pre-check route is `frontends/shell/src/App.tsx:929-932`
+(`setViewportRefusal(formatRefusal(e.skpError))`), rendering at `:1452-1466`. That JSX renders
+`viewportRefusal.code` and `viewportRefusal.message` and **dispatches no guidance at all** — it does
+not call `refusalGuidance`, and `RefusalBlock.tsx:25` is the only place in the product that does
+(grep-verified). On that route an operator reads the engine's message and nothing else.
+
+`App.tsx` is **not** changed here: that surface is P3b's, and this amendment records the fact rather
+than fixing it. Where the guidance does reach an eye is wherever `RefusalBlock` renders —
+`AdmissionPanel.tsx:376`, `FilterPanel.tsx:134`, `PublishPanel.tsx:652`, `ConsolePanel.tsx:177`.
+
+---
+
+**(vi) Withdrawing Amendment 4 (ix)'s "Both obligations discharged", by appending.** Amendment 4 is
+not edited; this item states what is and is not discharged, each clause with its proof.
+
+**Not discharged when Amendment 4 was written.** The cost obligation rested on two carriers no
+shipped run reads: `engine::trace`'s `POST_CHECK_BEGIN`/`POST_CHECK_END` marks — `trace::ENABLED` is
+`false` by default (`engine/src/trace.rs:88`) and `trace::start` has no product caller, so the marks
+record nothing outside a test that enables them — and `StreamStats::post_check_bytes_read`
+(`engine/src/stream.rs:617`), which at that time had only a test caller. The figure existed; nothing
+in a shipped run reported it. Calling that discharged is the class this amendment's fence exists to
+stop. The **other** obligation of round-5 item 3 — the re-aimed liveness test — was and is
+discharged: `engine/tests/slice.rs`'s `cancelling_mid_stream_stops_production_promptly` asserts
+`cancel_requested → cancel_observed` (`:679-686`) and prints `observed → terminal` beside it with
+the disclaimer (`:688-700`).
+
+**Discharged now, on the kernel binary, with proof:**
+
+- `StreamConnectionRecord::post_check_bytes_read` (`kernel/src/lib.rs:98`), filled in
+  `impl Drop for EngineSource` (`kernel/src/lib.rs:484`) on **every** stream end — cancelled, failed
+  or completed — and printed by its product consumer, `kernel/src/main.rs:141-151`, as
+  `post_check_bytes=… (bound FOOTER_DESCRIPTOR_MAX_BYTES=…)`.
+- The always-on session line, `kernel/src/lib.rs:452`, carries the same figure and the same named
+  bound on the source-changed path; its comment now states what the line is — a record of which
+  stream noticed, how many siblings went with it, and what the post-check cost.
+- Proven end to end from the real product shape by `kernel/tests/post_check_cost_report.rs:56`'s
+  `a_cancelled_stream_s_connection_record_carries_the_post_check_s_cost`: a stream created through
+  `EngineSourceFactory::with_connection_reports` — the constructor `kernel/src/main.rs:157-161` uses
+  — cancelled through the product's own `SourceCancel::cancel`
+  (`protocol/data-plane/src/transport.rs:128-135`), whose record arrives on the channel with
+  `0 < post_check_bytes_read <= FOOTER_DESCRIPTOR_MAX_BYTES`.
+- `StreamStats::post_check_bytes_read`'s instrument-accessor declaration is **retired** rather than
+  restated: it has two product callers now, both in `kernel/src/lib.rs`'s `EngineSource`
+  (`:452`, `:484`), so it stands on the plain caller rule and its doc (`engine/src/stream.rs:602-616`)
+  says so.
+- No SKP field was added: the wire is closed (boundary 9 / ADR-004 Amendment 4), and no new
+  cross-module seam exists — the record and its channel were already there.
+- **No duration is claimed anywhere**: no `ms`, no `µs`, no latency word, no p50/p95 on any of these
+  paths (ADR-018).
+
+**NOT discharged, and named as an open item rather than claimed: *the shell*.** The Tauri shell has
+**no consumer for `StreamConnectionRecord`** — it installs `EngineSourceFactory::ticket_only`
+(`frontends/shell/src-tauri/src/lib.rs:368`), whose `connection_reports` is `None`
+(`kernel/src/lib.rs:296-297`), and `kernel/src/skp.rs:688-697` passes `None` explicitly and says why. Its
+stderr is unattached when the app is launched from the desktop, so the session line at
+`kernel/src/lib.rs:452` reaches nobody there either. **In the shell the post-check's cost is still
+not seen by an operator**, and nothing in this piece changes that.
+
+**Which runs see the report, stated exactly:** the kernel binary's own consumer
+(`kernel/src/main.rs:134-155`, printing on stdout) sees the per-stream record; a **console-attached**
+process sees the session line on stderr (`kernel/src/lib.rs:452`); the desktop shell sees neither.
+
+**Open item for the human (P3b or P6): the shell-side carrier for the post-check's cost.** A
+`StreamConnectionRecord` consumer in `frontends/shell/src-tauri`, or some other surface, is a design
+choice with an operator-visible component, and P3a does not invent one. Recorded here so the gap has
+a name and a place instead of living inside a discharge claim.
+
+---
+
+**(vii) What this amendment does not claim.** P3a still clears no residency, refuses no pick and
+renders no session status — Amendment 3 item 3 and Amendment 4 (v) stand unchanged, and G-A2 remains
+not satisfiable by P3a alone. Boundary 5's "the degradation is shown" remains **not met**
+(Amendment 4 (ii)); this piece deleted the sentences that implied otherwise and added none. The
+ADR-016 amendment's acceptance remains P6's.
+
+---
+
+**(viii) Correcting item (iv)'s doc-warning count, by appending (this amendment's own fence applied
+to itself).** Item (iv) says the crate's remaining `cargo doc` warnings are "pre-existing
+`private_intra_doc_links` at `engine/src/predicate.rs:258` and `:272`". That names two of **eight**.
+The full, verified figure from `cargo doc --no-deps -p spatial-engine` on this branch:
+`broken_intra_doc_links` **0**; `private_intra_doc_links` **8**, at `engine/src/predicate.rs:10`,
+`:13`, `:16`, `:17`, `:52`, `:258`, `:272` and `engine/src/geoparquet.rs:353`. None is in a file this
+piece touches, and none is introduced by it — the claim item (iv) makes (zero broken intra-doc
+links) is unchanged; only its parenthetical was under-counted.
+
+---
+
+**Corrections of record, appended after P3a attempt 3 PASSED both gates (2026-09-17).** Items (ix)
+to (xiv) below are docs-class only: no code behaviour changes, and nothing above this line is
+edited. Each names its proof, per this amendment's own fence.
+
+**(ix) Correcting item (iv)'s "the identifier no longer occurs anywhere in the tree" (architect
+M1).** `engine/ADMISSION-PREREGISTRATION.md:1152-1153` overstates. What is true, with proof: the
+`pub` constructor `SourceDescriptor::without_modification_time_for_test` is **deleted** — there is
+no definition of it and no caller of it anywhere; the shipped no-mtime path is the private const
+`engine/src/descriptor.rs:54`, recorded by the private fn `:93`, called from `of()` at `:118-120`,
+and tested through `of()` by `descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever`
+(`engine/src/descriptor.rs:433`). What survives is the **identifier in prose, naming it as
+deleted**, at exactly two in-code sites — `engine/src/descriptor.rs:412` and
+`engine/tests/session_identity.rs:607` — plus this amendment's own text and the ledger's history
+(`DECISIONS-PENDING.md:182`, `state/gate-log.json:38`). A deleted item and an unmentionable name are
+different things; item (iv) claimed the second.
+
+**(x) Correcting item (i)'s "the `refused: ` prefix every variant of the enum carries" (architect
+M2).** False as stated. **17** arms of `EngineError`'s `Display` carry it —
+`engine/src/error.rs:235`, `:240`, `:245`, `:251`, `:257`, `:263`, `:269`, `:277`, `:283`, `:291`,
+`:306`, `:326`, `:332`, `:349`, `:355`, `:361`, `:367` — and eleven do not: `Cancelled`, `Query`,
+`Arrow`, `Wkb`, `Source`, `GeoMetadata`, `EncodingMismatch`, `CeilingExceeded`,
+`InternalInconsistency`, `FeatureTooLarge`, `ConnectionSetup`.
+
+**The decision stands; the stated ground was wrong.** The prefix is kept on `SourceChanged` not
+because every variant carries it, but because it is **the engine stating its own act**: this engine
+refused this call. That is an engine fact about engine behaviour, which is exactly what the round-7
+rule preserves ("Engine messages state engine facts"). The arms that lack it are the ones that
+report a condition rather than a refusal — a cancellation, a pass-through from DuckDB or Arrow, a
+malformed input surfaced as-is — and the split is `refusal` versus `report`, not an inconsistency.
+
+**(xi) Retiring `SourceDescriptor::footer_bytes_read`'s instrument-accessor declaration (architect
+M3 = reviewer S-1).** Its doc declared "An instrument: its only caller is the test suite". That was
+false of the tree: `post_check_source` (`engine/src/stream.rs:1590`), product code on the producer
+thread, calls it to report the bytes the R-D2 post-check read — which is the figure item (vi) of
+this amendment rests on. The declaration is retired in the same shape as
+`StreamStats::post_check_bytes_read`'s (`engine/src/stream.rs:602-616`): the doc
+(`engine/src/descriptor.rs:185-203`) now names the product caller and says the accessor stands on
+the plain caller rule, with its test callers kept as a reader's aid rather than as an exemption.
+
+**This also corrects Amendment 4 (iii)'s "Declared (four)" list** (`:886-888`), by appending and
+never by editing: of the items that list declares, `SourceDescriptor::footer_bytes_read` is **no
+longer** an instrument accessor (product caller `engine/src/stream.rs:1590`) and
+`StreamStats::post_check_bytes_read` is no longer one either (product callers `kernel/src/lib.rs:452`
+and `:484`, item (vi) above). The declarations that stand, each with its named test grep-verified to
+exist: `GenerationRegistry::attributed_ticket_count` (`kernel/tests/session_generation.rs:77`, `:96`,
+`:121`, `:150`, `:173`), `SourceDescriptor::degradation`, `DatasetIdentity::candidate_columns`
+(`engine/tests/session_identity.rs:168`, `engine/tests/identity.rs:114`) and `LiveTicketSet.size`
+(`frontends/shell/src/streaming/liveTicketSet.test.ts:30`).
+
+**(xii) Correcting Amendment 4 (x)'s location of `degradation()`'s callers (reviewer S-2).**
+`engine/ADMISSION-PREREGISTRATION.md:1004` places `SourceDescriptor::degradation`'s two callers "in
+`engine/tests/session_identity.rs`". After the move recorded in item (iv), they are
+`engine/tests/session_identity.rs:300` (asserts `None` on an undegraded descriptor) and
+`engine/src/descriptor.rs:451` / `:469` (the in-module test, asserting the shipped const's words on
+a degraded one). `degradation()`'s own doc (`engine/src/descriptor.rs:207-224`) already names them
+in that shape; this records the preregistration's copy as corrected.
+
+**(xiii) Class 3 — two correct cites this attempt added, omitted from item (iii)'s enumeration
+(reviewer S-3).** Item (iii) claims to enumerate every remaining "round 5" cite in the tree. Two
+that this attempt itself added were left out, both correct against the authoritative numbering:
+`frontends/shell/src/admission/RefusalBlock.test.tsx:68` (item 1, the status string) and
+`engine/src/descriptor.rs:415` (item 4, the accessor exemption). With these, the enumeration is
+complete.
+
+**(xiv) Class 3 — two cite spans made consistent.** Item (i) cites
+`frontends/shell/src/admission/RefusalBlock.test.tsx:57` for the fixture-to-pin byte-equality
+assertion; the test opens at `:56` and that assertion is at `:60`. And item (iv) cited the `pairs`
+closure as `engine/tests/session_identity.rs:136-142` while `engine/src/identity.rs` cited
+`:127-155` for the same evidence. Both now name the same two spans: the closure is
+`engine/tests/session_identity.rs:136-142`, inside the test
+`the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture`
+(`engine/tests/session_identity.rs:126-159`); `engine/src/identity.rs:63-66` was updated to match.
+
+**(xv) One code-comment correction outside this file, recorded here for completeness.**
+`frontends/shell/src/admission/formatRefusal.test.ts`'s header said "No string here is asserted
+verbatim. All four are placeholders" twelve lines above the verbatim assertion the round-5 ruling
+required. The sentence was true when written and stopped being true when that ruling landed; the
+header now says which one string is asserted verbatim and why, and says that it changed. No
+assertion is altered.

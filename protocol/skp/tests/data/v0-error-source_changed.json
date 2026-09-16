@@ -1,0 +1,7 @@
+{
+  "code": "engine.source_changed",
+  "message": "refused: the source file changed while it was open ({size, mtime, footer-length, footer-hash}). This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading",
+  "fields": {
+    "detail": "{size, mtime, footer-length, footer-hash}"
+  }
+}

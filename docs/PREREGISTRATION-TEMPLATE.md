@@ -128,6 +128,10 @@ freeform amendment.*
    edited to match. If the final figure crosses §21c's bound, the single-gate route closes as §21b's
    mid-piece clause says and the architect gate is taken; the short form stays.
 
+**Every "discharged" / "done" clause names its proof** (the human, 2026-09-16, round 7; permanent in
+both gate checklists): "every "discharged" or "done" clause in an amendment names the test or line that proves it, and the gate resolves each — a discharge claim with no resolvable proof is a gate failure by name, the same way an imagined interface and a stale cite are." Name the test by its function name or the file:line; a clause
+the gate cannot resolve fails the gate.
+
 ---
 
 ## The five-line short form (`AUTONOMY.md` §21d)

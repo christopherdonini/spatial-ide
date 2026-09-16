@@ -26,4 +26,15 @@ pub use handles::{CancelKey, DatasetHandle, StreamHandle};
 /// `open_dataset.identity`, plus `candidate_columns` on the `engine.identity_unusable` refusal.
 /// Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, every fixture on
 /// both sides of the wire updated in this commit (`SKP-V0.md` §8).
-pub const SKP_VERSION: &str = "skp/0.2";
+///
+/// `skp/0.3` (Brief A, P3): `describe` gains the four fields Brief A's settled boundary 9 names —
+/// `crs.provenance`, `crs.axis_provenance`, `identity.class` (with its session-tier statement) and
+/// the sanity-check level — plus the P2-held `crs.display_convention` carrier; and three new typed
+/// refusals appear (`engine.source_changed`, `engine.identity_ordinal_partitioned_unsupported`,
+/// `engine.internal_inconsistency`) beside the publish-class `publish.geographic_crs_not_publishable`.
+/// **No generation value crosses the wire in either direction** (boundary 9;
+/// `engine/ADMISSION-PREREGISTRATION.md` §13 D): generation attribution rides the existing ticket,
+/// and `protocol/data-plane/` has an empty diff. Same discipline for the fourth time:
+/// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
+/// updated in this commit (`SKP-V0.md` §8's `skp/0.3` entry lists the full field set).
+pub const SKP_VERSION: &str = "skp/0.3";

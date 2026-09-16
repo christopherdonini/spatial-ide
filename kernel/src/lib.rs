@@ -83,6 +83,19 @@ pub struct StreamConnectionRecord {
     pub lease_generation: u64,
     /// Whether this query received a connection that already existed and was already configured.
     pub reused_an_existing_connection: bool,
+    /// Footer bytes the **R-D2 post-check** read for this stream, bounded by
+    /// `spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES`. `0` when the post-check had not run by the
+    /// time this record was built, and `0` when the source could not be re-read at all.
+    ///
+    /// **A byte count with a named bound, never a duration** (ADR-018; no `ms`, no p50/p95, no
+    /// latency word anywhere on this path). The bound is `FOOTER_DESCRIPTOR_MAX_BYTES` and the
+    /// consumer prints it beside the figure, so a reader sees what the number is bounded by rather
+    /// than being told it is small.
+    ///
+    /// **Why it rides this record.** `Drop for EngineSource` sends one of these on EVERY stream end
+    /// — cancelled, failed or completed — so a per-cancellation report needs no second channel and
+    /// no new SKP field (the wire is closed: boundary 9 / ADR-004 Amendment 4).
+    pub post_check_bytes_read: u64,
 }
 
 /// Datasets opened at startup, addressable by name — and, since `frontends/shell`, also opened and
@@ -220,8 +233,18 @@ pub(crate) fn wrap_for_data_plane(
     dataset: String,
     dataset_reuses_connections: bool,
     reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+    invalidator: Option<Arc<skp::SessionInvalidator>>,
 ) -> (Box<dyn BatchSource>, Arc<dyn SourceCancel>) {
-    let source = EngineSource { stream, dataset, dataset_reuses_connections, reports };
+    let stats = stream.stats();
+    let source = EngineSource {
+        stream,
+        dataset,
+        dataset_reuses_connections,
+        reports,
+        stats,
+        invalidator,
+        session_ended: false,
+    };
     (Box::new(source), Arc::new(EngineCancel(cancel)))
 }
 
@@ -326,6 +349,10 @@ impl EngineSourceFactory {
             p.dataset,
             ds.connections().config().reuses_connections(),
             self.connection_reports.clone(),
+            // The raw-params path has no `SkpHost`, so there is no dataset-session generation for a
+            // post-check finding to end. The post-check still runs and the terminal still carries
+            // its typed code; only the invalidation has nobody to reach.
+            None,
         ))
     }
 
@@ -348,6 +375,17 @@ impl EngineSourceFactory {
         let handle: spatial_skp::v0::StreamHandle = handle_str
             .parse()
             .map_err(|e: String| format!("not a ticket this producer minted: {e}"))?;
+        // **Redemption does NOT consult the dataset-session generation, and P3a says so here**
+        // rather than leaving the absence to be read as an oversight. A guard was written at P3
+        // attempt 2 and is removed rather than carried: nothing in the product ever constructed a
+        // factory holding the generation map, so the check never ran; and its refusal text asserted
+        // that the source had been observed to change, which for an **unknown** handle — expired,
+        // already redeemed, never minted — was a fabricated diagnosis (`docs/01` principle 8).
+        //
+        // The kernel-authoritative dead-ticket refusal, wired to a real caller and with correct
+        // three-valued unknown-handle behaviour, is **P3b**'s (the human's ruling of 2026-09-16,
+        // round 4). Until then `redeem`'s own three refusals — unknown, cancelled-before-redeem,
+        // already-redeemed — are the whole of what this path says.
         tickets.redeem(handle.as_str())
     }
 }
@@ -357,6 +395,64 @@ struct EngineSource {
     dataset: String,
     dataset_reuses_connections: bool,
     reports: Option<std::sync::mpsc::Sender<StreamConnectionRecord>>,
+    /// This stream's own stats, where its producer records what the **post-check** found
+    /// (`spatial_engine::StreamStats::source_changed_detail`). Held as the `Arc` the producer
+    /// writes through, so this side reads the same cell rather than a copy.
+    stats: Arc<spatial_engine::StreamStats>,
+    /// Where a post-check finding ends the dataset-session generation. `None` for the raw-params
+    /// admission path, which has no `SkpHost` and therefore no generation to end.
+    invalidator: Option<Arc<skp::SessionInvalidator>>,
+    /// Whether this source already ended its session. The operation is idempotent anyway; this
+    /// keeps a drained-then-dropped stream from taking the registry's lock twice for nothing.
+    session_ended: bool,
+}
+
+impl EngineSource {
+    /// **Read the post-check's finding and end the generation if it found a change** — §13 C's
+    /// rule (ii), given the reader it lacked at P3 gate attempt 1.
+    ///
+    /// Called on **every terminal class**: the clean end (`next_into` returns `None`), a terminal
+    /// error, a cancellation (which arrives as a terminal error and keeps its own `cancelled`
+    /// terminal — a cancel is never reported as a source change), and on `Drop`.
+    ///
+    /// **`Drop` is a best-effort attempt and not a guarantee, and the residual is named rather than
+    /// implied.** `BatchStream::drop` (`engine/src/stream.rs`) cancels the token and returns; it
+    /// does **not** join the producer thread. A consumer that walks away without draining can
+    /// therefore reach this line before the producer has finished its post-check, in which case the
+    /// flag is still empty and nothing is ended here. The change is not lost — the **pre-check**
+    /// refuses the next query issue on that dataset and ends the generation there — but the
+    /// invalidation is deferred to that point instead of happening at drop.
+    ///
+    /// The producer records the flag **before it sends any terminal**
+    /// (`engine/src/stream.rs`), so by the time any of those arrive here the cell is already
+    /// written — there is no race between the terminal and the finding it belongs to.
+    fn end_session_if_source_changed(&mut self) {
+        if self.session_ended {
+            return;
+        }
+        let Some(detail) = self.stats.source_changed_detail() else { return };
+        self.session_ended = true;
+        let Some(invalidator) = self.invalidator.as_ref() else { return };
+        let cancelled = invalidator.end_generation(&self.dataset);
+        // **What this line is: a record of which stream noticed, how many siblings went with it,
+        // and what the post-check cost.** The generation is already over by the time it runs —
+        // `end_generation` above did that — so the line reports; it does not decide anything.
+        //
+        // It is the always-on carrier of the post-check's cost on this path (the human's ruling of
+        // 2026-09-16, round 5 item 3: "reported per cancellation … never silent, its <= 8 MiB bound
+        // named"). `engine::trace`'s `POST_CHECK_BEGIN`/`POST_CHECK_END` marks are NOT that carrier
+        // in a shipped run: `trace::ENABLED` is `false` by default and `trace::start` has no product
+        // caller, so those marks record nothing unless a test turns them on. A byte count with its
+        // bound named, and **no duration** (ADR-018).
+        eprintln!(
+            "session ended for dataset `{}`: the source changed during use ({detail}); \
+             {cancelled} in-flight stream(s) cancelled; post_check_bytes={} \
+             (bound FOOTER_DESCRIPTOR_MAX_BYTES={})",
+            self.dataset,
+            self.stats.post_check_bytes_read(),
+            spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES
+        );
+    }
 }
 
 impl Drop for EngineSource {
@@ -367,6 +463,11 @@ impl Drop for EngineSource {
     /// reports the same facts a completed one does and a measurement cannot silently describe only
     /// its successes.
     fn drop(&mut self) {
+        // Best-effort on the abandoned-stream path: `BatchStream::drop` cancels without joining the
+        // producer, so the post-check may not have run yet and this may find nothing. When it does,
+        // the next query issue's pre-check is what ends the generation instead — deferred, not lost.
+        // See `end_session_if_source_changed`'s own note.
+        self.end_session_if_source_changed();
         let Some(reports) = self.reports.as_ref() else { return };
         let facts = self.stream.connection_facts();
         // A closed receiver means nobody is recording, which is not an error.
@@ -376,6 +477,11 @@ impl Drop for EngineSource {
             physical_id: facts.physical_id,
             lease_generation: facts.lease_generation,
             reused_an_existing_connection: facts.reused_an_existing_connection,
+            // The post-check's cost, on the channel that already carries one record per stream end
+            // — cancelled, failed or completed alike. Read from the same `Arc<StreamStats>` the
+            // producer wrote it through; see the field's own doc for why no second channel and no
+            // new SKP field.
+            post_check_bytes_read: self.stats.post_check_bytes_read(),
         });
     }
 }
@@ -383,9 +489,27 @@ impl Drop for EngineSource {
 impl BatchSource for EngineSource {
     fn next_into(&mut self, out: &mut Vec<u8>) -> Option<Result<BatchMeta, String>> {
         match self.stream.next_into(out) {
-            None => None,
+            // The clean terminal: the producer is done and `tx` was dropped. Its post-check has
+            // already run and already recorded anything it found.
+            None => {
+                self.end_session_if_source_changed();
+                None
+            }
             Some(Ok(info)) => Some(Ok(BatchMeta { rows: info.rows as u64 })),
-            Some(Err(e)) => Some(Err(e.to_string())),
+            // Every terminal error, cancellation included.
+            //
+            // **The detail carries the typed code, `"<code>: <display>"`** — P3 gate attempt 1,
+            // architect-ruled. `BatchSource` is typed `Result<_, String>`, so this is where the
+            // typed `EngineError` stops being typed; without the prefix a client that must clear
+            // residency and refuse picks on `engine.source_changed` (**P3b** — no client does
+            // either in P3a) would have to match on prose whose wording is the human's at P6. The code comes from `skp::error_of`'s own table,
+            // so there is one place a code is minted. The data plane is untouched: the prefix rides
+            // the `String` the terminal frame already carries (A3).
+            Some(Err(e)) => {
+                let detail = skp::terminal_detail_of(&e);
+                self.end_session_if_source_changed();
+                Some(Err(detail))
+            }
         }
     }
 

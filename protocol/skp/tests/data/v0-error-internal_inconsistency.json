@@ -1,0 +1,7 @@
+{
+  "code": "engine.internal_inconsistency",
+  "message": "internal inconsistency: EPSG:2056 was admitted as the file's own CRS, but the reader recorded crs_provenance None and axis_provenance None. A provenance class is a recorded fact and is never substituted for a missing one",
+  "fields": {
+    "detail": "EPSG:2056 was admitted as the file's own CRS, but the reader recorded crs_provenance None and axis_provenance None. A provenance class is a recorded fact and is never substituted for a missing one"
+  }
+}

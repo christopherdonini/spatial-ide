@@ -50,6 +50,9 @@
 //! - **`PermissionError::DestinationUnresolvable`** — there is no resolved destination to record.
 //! - **every refusal `publish::preflight` can make**: `RowFilterNotRecordable` (pre-existing;
 //!   missing from an earlier draft of this list, added by the release-cut fix batch),
+//!   **`GeographicCrsNotPublishable`** (Brief A P3, boundary 8 — it runs second in
+//!   `preflight_pinless_parts`, before the destination is resolved, so it takes this same
+//!   no-audit-record shape for the same reason),
 //!   `SourceNotPinned`, `LicenseDeclaredTwice`, `LicenseNotCarryable`, `OperatorLicenseEmpty`, the
 //!   three `ViewerLicense*` refusals, `CorrespondingSourceNotDurable`, `DatasetNameRejected`, and
 //!   any `Style` or `Engine` error — **including `ReaderCeilingExceeded`** (RELEASE-0.1 item 3e,
@@ -225,6 +228,7 @@ fn error_kind(e: &BoundaryError) -> &'static str {
             PublishError::CorrespondingSourceNotDurable { .. } => "CorrespondingSourceNotDurable",
             PublishError::DatasetNameRejected { .. } => "DatasetNameRejected",
             PublishError::RowFilterNotRecordable => "RowFilterNotRecordable",
+            PublishError::GeographicCrsNotPublishable { .. } => "GeographicCrsNotPublishable",
             PublishError::CeilingExceeded { .. } => "CeilingExceeded",
             PublishError::ReaderCeilingExceeded { .. } => "ReaderCeilingExceeded",
             PublishError::Cancelled => "Cancelled",
@@ -280,6 +284,9 @@ fn publish_outcome(e: &PublishError) -> Outcome {
         | PublishError::CorrespondingSourceNotDurable { .. }
         | PublishError::DatasetNameRejected { .. }
         | PublishError::RowFilterNotRecordable
+        // The gate working, not a broken machine: the request describes a dataset this version
+        // cannot publish honestly (Brief A boundary 8).
+        | PublishError::GeographicCrsNotPublishable { .. }
         | PublishError::CeilingExceeded { .. }
         | PublishError::ReaderCeilingExceeded { .. } => Outcome::Refused,
         PublishError::DestinationNotWritable { .. }

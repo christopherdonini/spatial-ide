@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T19:55:52.665Z",
-  "plan_hash": "48bdedc15712321e2d6671f204cb71d9e0b8a46ef2461a1ff02a6f090fda2743",
+  "generated_at": "2026-09-16T22:38:46.638Z",
+  "plan_hash": "b14c9fdf11b7ea49898fa7401108b318a0a8a06cda06eeb37ffe928ddaf4d51f",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -71,28 +71,6 @@
     }
   },
   "blocked_on_dependencies": [
-    {
-      "id": "briefa-p3b-owner-side-invalidation",
-      "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 5,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "sight",
-        "minutes": 20
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-16",
-        "done": null
-      },
-      "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
-      "blocked_by": [
-        "briefa-p3-p6"
-      ]
-    },
     {
       "id": "geometry-types-beyond-polygons",
       "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
@@ -246,6 +224,29 @@
       "blocked_by": [
         "drill-clean-clone"
       ]
+    },
+    {
+      "id": "lod-tier-selection",
+      "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
+      "lane": "renderer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "budget_minutes": 480,
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here",
+      "blocked_by": [
+        "lod-tier-builder-route-b",
+        "lod-tier-cache-lifecycle"
+      ]
     }
   ],
   "in_progress": [
@@ -258,18 +259,18 @@
       "order": 5,
       "budget_minutes": 390,
       "needs_human": {
-        "kind": "ruling",
+        "kind": "sitting",
         "minutes": 15
       },
       "evidence": {
-        "branch": "cut/briefa-p3"
+        "pr": 83
       },
       "dates": {
         "opened": "2026-09-11",
         "done": null
       },
       "summary": "STOPPED 2026-09-16 under Rule 7 (entry 96): both gates FAIL twice on the module-boundary seams (owner-side residency/picks unbuilt; publish code discarded by the shell; dead-ticket refusal unwired + false diagnosis for unknown handles); engine/kernel halves verified sound; the human rules: one more bounded round / split P3 / hold. Earlier: RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting",
-      "evidence_label": "branch `cut/briefa-p3`"
+      "evidence_label": "PR #83"
     },
     {
       "id": "lod-tier-builder-route-b",
@@ -292,6 +293,28 @@
       },
       "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
       "evidence_label": "branch `engine/lod-tier-builder`"
+    },
+    {
+      "id": "briefa-p3b-owner-side-invalidation",
+      "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "evidence": {
+        "branch": "cut/briefa-p3b"
+      },
+      "dates": {
+        "opened": "2026-09-16",
+        "done": null
+      },
+      "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
+      "evidence_label": "branch `cut/briefa-p3b`"
     }
   ],
   "proposed": [
@@ -313,6 +336,25 @@
         "done": null
       },
       "summary": "Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form"
+    },
+    {
+      "id": "lod-tier-cache-lifecycle",
+      "title": "LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 8,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 15
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it"
     },
     {
       "id": "engine-tests-configured-connections",

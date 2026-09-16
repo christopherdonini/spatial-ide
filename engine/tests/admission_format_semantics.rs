@@ -76,6 +76,15 @@ fn f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance()
     assert_eq!(ds.crs().identifier(), "OGC:CRS84");
     assert_eq!(md.get("crs").unwrap(), "OGC:CRS84");
     assert_eq!(md.get("crs_provenance").unwrap(), "crs:format-default");
+    // **DECISIONS-PENDING.md RULED 2026-09-16 — question round 3, item 3.** An admission the format
+    // rule supplied records `crs_source = "format-rule"`, not `"file"`: nothing in this file says
+    // `OGC:CRS84`, and recording it as the file's own declaration was a false record that reached
+    // published manifests (the P1 reviewer's Finding 1). The specific class stays readable beside
+    // it in `crs_provenance`, which is what makes the pair honest rather than merely different.
+    //
+    // Mutation recorded in-source: deleting the `recorded_as_format_rule` call in
+    // `dataset::open_inner` restores `"file"` here and fails this assertion.
+    assert_eq!(md.get("crs_source").unwrap(), "format-rule");
     assert_eq!(md.get("axis_provenance").unwrap(), "axis:format-override");
     assert_eq!(
         md.get("format_rule_reference").unwrap(),
@@ -276,8 +285,12 @@ fn the_sample_level_reads_the_first_row_group_and_not_a_fixed_row_count() {
     let md = envelope_metadata(&ds);
     assert_eq!(md.get("sanity_level").unwrap(), "sample");
     let reason = md.get("sanity_reason").unwrap();
+    // **Brief A P3 reword, and the only change to this assertion.** The statement that runs is
+    // `LIMIT n` over the file, not a read scoped to a row group, so the recorded reason said a read
+    // had happened that had not. What this test asserts is unchanged: the row group's own row count
+    // is what bounded the read, the file's full row count did not, and the declared ceiling did not.
     assert!(
-        reason.contains("the first row group (64 rows)"),
+        reason.contains("the first 64 row(s), N = the first row group's row count (64)"),
         "the row group's own row count is what bounded the read: {reason}"
     );
     assert!(
@@ -350,6 +363,10 @@ fn a_declared_x_first_crs_records_crs_declared_and_axis_declared() {
     let ds = Dataset::open(&path).expect("opens as it always did");
     let md = envelope_metadata(&ds);
     assert_eq!(md.get("crs").unwrap(), "EPSG:2056");
+    // Unchanged by the 2026-09-16 ruling, and asserted beside the format-rule case on purpose: a
+    // file that really does declare its CRS still records `"file"`. The ruling added a third value;
+    // it did not repurpose either of the two that existed (DECISIONS-PENDING.md RULED 2026-09-16 —
+    // question round 3, item 3).
     assert_eq!(md.get("crs_source").unwrap(), "file");
     assert_eq!(md.get("crs_provenance").unwrap(), "crs:declared");
     assert_eq!(md.get("axis_provenance").unwrap(), "axis:declared");

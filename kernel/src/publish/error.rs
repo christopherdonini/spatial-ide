@@ -110,6 +110,24 @@ pub enum PublishError {
     /// rather than emitted and left for a reader to discover.
     RowFilterNotRecordable,
 
+    /// A **geographic-degrees** dataset cannot be published yet — refused at preflight, by name.
+    ///
+    /// **Brief A settled boundary 8**, held at P2 and closed here at P3 ("must be closed at P3, not
+    /// carried silently" — the P2 reviewer). Reusing ADR-025's own pattern (`:3-4`): where the
+    /// preflight can predict the artifact would be wrong, the publish surface refuses, typed,
+    /// before any write, rather than emitting a dead artifact for a reader to discover.
+    ///
+    /// The bundled viewer has no degrees path: it renders in the authoritative project CRS, and the
+    /// shell's own degrees display is an **equirectangular display convention** applied at view
+    /// time, not a property of the data or of any bundle. Publishing a degrees dataset would hand a
+    /// recipient coordinates whose only correct rendering is a convention the bundle does not carry.
+    ///
+    /// **Until Brief B's reader change** — it reopens then, on the same terms ADR-025's own reopen
+    /// condition is written in. Nothing about this refusal claims a transform exists or is planned:
+    /// `axis_normalization` stays `none-performed` everywhere and no coordinate value is
+    /// transformed by anything in this tree.
+    GeographicCrsNotPublishable { crs_identifier: String, unit_source: String },
+
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
 
@@ -151,6 +169,58 @@ pub enum PublishError {
     Style(StyleError),
     Canonical(CanonicalError),
 }
+
+impl PublishError {
+    /// This refusal's stable wire code — `publish.` + the variant name in snake case.
+    ///
+    /// **The same shape `skp::error_of` mints for engine errors** (`engine.` + variant name,
+    /// SKP-V0.md `:266`), applied to the publish surface. It exists because a publish refusal
+    /// reaches the shell as `PrepareOutcome::Refused { message }` — a `Display` string — so a
+    /// client that must render code-specific guidance had nothing structural to match on, and the
+    /// wording is the human's at P6 (P3 gate attempt 1, blocking finding 5).
+    ///
+    /// **No wildcard arm.** A new `PublishError` variant fails this build until it is named here,
+    /// the same discipline `error_kind` and `skp::error_of` already carry.
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::DestinationExists { .. } => "publish.destination_exists",
+            Self::DestinationNotWritable { .. } => "publish.destination_not_writable",
+            Self::InsufficientSpace { .. } => "publish.insufficient_space",
+            Self::Io { .. } => "publish.io",
+            Self::SourceNotPinned => "publish.source_not_pinned",
+            Self::LicenseNotCarryable { .. } => "publish.license_not_carryable",
+            Self::LicenseDeclaredTwice { .. } => "publish.license_declared_twice",
+            Self::OperatorLicenseEmpty => "publish.operator_license_empty",
+            Self::ViewerAssetPathRejected { .. } => "publish.viewer_asset_path_rejected",
+            Self::ViewerLicenseIncomplete { .. } => "publish.viewer_license_incomplete",
+            Self::ViewerLicenseNoticeMissing { .. } => "publish.viewer_license_notice_missing",
+            Self::CorrespondingSourceNotDurable { .. } => "publish.corresponding_source_not_durable",
+            Self::DatasetNameRejected { .. } => "publish.dataset_name_rejected",
+            Self::RowFilterNotRecordable => "publish.row_filter_not_recordable",
+            // Brief A settled boundary 8, held at P2 and closed at P3.
+            Self::GeographicCrsNotPublishable { .. } => GEOGRAPHIC_CRS_NOT_PUBLISHABLE_CODE,
+            Self::CeilingExceeded { .. } => "publish.ceiling_exceeded",
+            Self::ReaderCeilingExceeded { .. } => "publish.reader_ceiling_exceeded",
+            Self::Cancelled => "publish.cancelled",
+            Self::StagingNotRemoved { .. } => "publish.staging_not_removed",
+            Self::Engine(_) => "publish.engine",
+            Self::Style(_) => "publish.style",
+            Self::Canonical(_) => "publish.canonical",
+        }
+    }
+
+    /// The string a refusal crosses the Tauri boundary as: `"<code>: <display>"`.
+    ///
+    /// `skp::terminal_detail_of`'s shape, for the publish surface — one convention, so a client
+    /// parses one thing.
+    pub fn refusal_detail(&self) -> String {
+        format!("{}: {self}", self.code())
+    }
+}
+
+/// Boundary 8's refusal code, named so the shell's own case and the kernel's minting site read the
+/// same bytes rather than two spellings that happen to match today.
+pub const GEOGRAPHIC_CRS_NOT_PUBLISHABLE_CODE: &str = "publish.geographic_crs_not_publishable";
 
 impl std::fmt::Display for PublishError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -245,6 +315,19 @@ impl std::fmt::Display for PublishError {
                  record (docs/01 principle 3). Clear the filter and publish the whole file, or \
                  publish the viewport bbox instead — a filtered-subset bundle format is \
                  bundle_version 2 and does not exist yet"
+            ),
+            // Names the CRS and where the degrees unit was established from, because a
+            // rule-defaulted degrees dataset and a declared one are different facts and an operator
+            // acting on this refusal needs to know which it has (the preregistration's §5
+            // consequence: the two provenance routes must stay distinguishable at sight).
+            Self::GeographicCrsNotPublishable { crs_identifier, unit_source } => write!(
+                f,
+                "refused: {crs_identifier} is a geographic CRS whose coordinates are in degrees \
+                 ({unit_source}), and the bundled viewer has no degrees path — it renders in the \
+                 dataset's own CRS, while this shell's degrees display is a view-time convention a \
+                 bundle does not carry. Publishing it would hand a recipient a bundle nothing can \
+                 render correctly. Reproject the source to a projected CRS and open that, or wait \
+                 for the reader change that adds the degrees path"
             ),
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,
