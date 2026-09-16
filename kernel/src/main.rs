@@ -134,13 +134,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (reports, incoming) = std::sync::mpsc::channel::<spatial_kernel::StreamConnectionRecord>();
     std::thread::Builder::new().name("connection-reporter".into()).spawn(move || {
         for r in incoming {
+            // `post_check_bytes` is the R-D2 post-check's cost for this stream, printed on EVERY
+            // stream end — cancelled, failed or completed — because that is when this record is
+            // sent. Its bound is printed beside it so the figure is read against a declared
+            // ceiling; it is a byte count and never a duration (ADR-018).
             println!(
-                "connection   : dataset={} mode={} physical={} lease={} already_configured={}",
+                "connection   : dataset={} mode={} physical={} lease={} already_configured={} \
+                 post_check_bytes={} (bound FOOTER_DESCRIPTOR_MAX_BYTES={})",
                 r.dataset,
                 if r.dataset_reuses_connections { "reuse" } else { "fresh" },
                 r.physical_id,
                 r.lease_generation,
-                r.reused_an_existing_connection
+                r.reused_an_existing_connection,
+                r.post_check_bytes_read,
+                spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES
             );
             use std::io::Write;
             let _ = std::io::stdout().flush();

@@ -83,6 +83,19 @@ pub struct StreamConnectionRecord {
     pub lease_generation: u64,
     /// Whether this query received a connection that already existed and was already configured.
     pub reused_an_existing_connection: bool,
+    /// Footer bytes the **R-D2 post-check** read for this stream, bounded by
+    /// `spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES`. `0` when the post-check had not run by the
+    /// time this record was built, and `0` when the source could not be re-read at all.
+    ///
+    /// **A byte count with a named bound, never a duration** (ADR-018; no `ms`, no p50/p95, no
+    /// latency word anywhere on this path). The bound is `FOOTER_DESCRIPTOR_MAX_BYTES` and the
+    /// consumer prints it beside the figure, so a reader sees what the number is bounded by rather
+    /// than being told it is small.
+    ///
+    /// **Why it rides this record.** `Drop for EngineSource` sends one of these on EVERY stream end
+    /// — cancelled, failed or completed — so a per-cancellation report needs no second channel and
+    /// no new SKP field (the wire is closed: boundary 9 / ADR-004 Amendment 4).
+    pub post_check_bytes_read: u64,
 }
 
 /// Datasets opened at startup, addressable by name — and, since `frontends/shell`, also opened and
@@ -421,12 +434,23 @@ impl EngineSource {
         self.session_ended = true;
         let Some(invalidator) = self.invalidator.as_ref() else { return };
         let cancelled = invalidator.end_generation(&self.dataset);
-        // Not a log-and-continue: the generation really is over, and this line only records which
-        // stream noticed and how many siblings went with it.
+        // **What this line is: a record of which stream noticed, how many siblings went with it,
+        // and what the post-check cost.** The generation is already over by the time it runs —
+        // `end_generation` above did that — so the line reports; it does not decide anything.
+        //
+        // It is the always-on carrier of the post-check's cost on this path (the human's ruling of
+        // 2026-09-16, round 5 item 3: "reported per cancellation … never silent, its <= 8 MiB bound
+        // named"). `engine::trace`'s `POST_CHECK_BEGIN`/`POST_CHECK_END` marks are NOT that carrier
+        // in a shipped run: `trace::ENABLED` is `false` by default and `trace::start` has no product
+        // caller, so those marks record nothing unless a test turns them on. A byte count with its
+        // bound named, and **no duration** (ADR-018).
         eprintln!(
             "session ended for dataset `{}`: the source changed during use ({detail}); \
-             {cancelled} in-flight stream(s) cancelled",
-            self.dataset
+             {cancelled} in-flight stream(s) cancelled; post_check_bytes={} \
+             (bound FOOTER_DESCRIPTOR_MAX_BYTES={})",
+            self.dataset,
+            self.stats.post_check_bytes_read(),
+            spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES
         );
     }
 }
@@ -453,6 +477,11 @@ impl Drop for EngineSource {
             physical_id: facts.physical_id,
             lease_generation: facts.lease_generation,
             reused_an_existing_connection: facts.reused_an_existing_connection,
+            // The post-check's cost, on the channel that already carries one record per stream end
+            // — cancelled, failed or completed alike. Read from the same `Arc<StreamStats>` the
+            // producer wrote it through; see the field's own doc for why no second channel and no
+            // new SKP field.
+            post_check_bytes_read: self.stats.post_check_bytes_read(),
         });
     }
 }
