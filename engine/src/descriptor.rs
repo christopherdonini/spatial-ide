@@ -45,6 +45,16 @@ pub const FOOTER_DESCRIPTOR_MAX_BYTES: u64 = 8 * 1024 * 1024;
 const PARQUET_TAIL_BYTES: u64 = 8;
 const PARQUET_MAGIC: &[u8; 4] = b"PAR1";
 
+/// The words recorded when the filesystem reports no modification time.
+///
+/// **One literal, one site.** It was written twice — once on the shipped branch of
+/// [`SourceDescriptor::of`] and once in a `pub` test constructor — and the test asserted the copy
+/// the shipped build never produced. The constructor is gone (it acted, so the instrument-accessor
+/// exemption did not cover it); the words live here and `of` is the only thing that records them.
+const ABSENT_MODIFICATION_TIME_DEGRADATION: &str =
+    "the filesystem reported no modification time for this file, so change detection for this \
+     source is byte size, footer length and footer hash only";
+
 /// One open's structural facts about its source file.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceDescriptor {
@@ -73,6 +83,17 @@ pub struct SourceDescriptor {
 }
 
 impl SourceDescriptor {
+    /// Record [`ABSENT_MODIFICATION_TIME_DEGRADATION`] on a descriptor's degradation list.
+    ///
+    /// **Private, and the single site the absent-mtime degradation is recorded from.** [`Self::of`]
+    /// calls it on the one branch that can reach it; `descriptor.rs`'s own
+    /// `a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` calls it on a
+    /// descriptor `of` produced, so the test exercises the shipped words through the shipped code
+    /// rather than a second copy of them.
+    fn record_absent_modification_time(degradations: &mut Vec<String>) {
+        degradations.push(ABSENT_MODIFICATION_TIME_DEGRADATION.to_string());
+    }
+
     /// Read the four components from the file as it is right now.
     ///
     /// Reads at most [`FOOTER_DESCRIPTOR_MAX_BYTES`] plus the eight-byte tail, and **never the
@@ -87,18 +108,15 @@ impl SourceDescriptor {
             .ok()
             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
             .map(|d| d.as_nanos());
-        // **Boundary 5's "the degradation is shown", applied to mtime as well as to the footer.**
-        // A filesystem that reports no modification time has not told this descriptor that anything
-        // changed — it has told it that one component is unavailable. Recording that here is what
-        // lets `components_differing_from` stop reporting a permanent, false "mtime" difference on
-        // such a filesystem (P3 gate attempt 1, correction 13).
+        // **The degradation is RECORDED here — nothing shows it** (Amendment 4 (ii): boundary 5's
+        // "the degradation is shown" is not met by P3a, because no surface carries the text to an
+        // eye). A filesystem that reports no modification time has not told this descriptor that
+        // anything changed; it has told it that one component is unavailable. Recording that here
+        // is what lets `components_differing_from` stop reporting a permanent, false "mtime"
+        // difference on such a filesystem (P3 gate attempt 1, correction 13).
         let mut degradations = Vec::new();
         if modified_nanos.is_none() {
-            degradations.push(
-                "the filesystem reported no modification time for this file, so change detection \
-                 for this source is byte size, footer length and footer hash only"
-                    .to_string(),
-            );
+            Self::record_absent_modification_time(&mut degradations);
         }
 
         let mut f = std::fs::File::open(path)
@@ -192,11 +210,11 @@ impl SourceDescriptor {
     /// Several degradations are joined, because a reader eventually owed them is owed all of them.
     ///
     /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
-    /// 2026-09-16, round 5 item 3) — both in `engine/tests/session_identity.rs`:
-    /// `the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read` (asserts `None` on an
-    /// undegraded descriptor) and
-    /// `a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` (asserts the
-    /// text on a degraded one).
+    /// 2026-09-16, round 5 item 4):
+    /// `engine/tests/session_identity.rs::the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read`
+    /// (asserts `None` on an undegraded descriptor) and this module's own
+    /// `tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever`
+    /// (asserts the shipped const's text on a degraded one).
     pub fn degradation(&self) -> Option<String> {
         (!self.degradations.is_empty()).then(|| self.degradations.join("; "))
     }
@@ -211,7 +229,8 @@ impl SourceDescriptor {
     /// a filesystem that never reports a modification time has told this descriptor that the
     /// component is unavailable, not that the file changed, and reporting it as a change refused
     /// every query on such a filesystem forever with the false sentence "the source file changed".
-    /// That case is a *degradation* and [`Self::degradation`] names it in the operator's own words.
+    /// That case is a *degradation*, and [`Self::degradation`] returns the recorded words naming it
+    /// — recorded, and shown to nobody in P3a (Amendment 4 (ii)).
     /// One side present and the other not: **a difference**, because the metadata really did change
     /// in an observable way — that is the case `ValidityHeuristic::fail_closed_matches` exists for,
     /// and treating an observable change as unchanged is the silent staleness `docs/01` principle 8
@@ -256,26 +275,6 @@ impl SourceDescriptor {
             return Ok(());
         }
         Err(EngineError::SourceChanged { detail: format!("{{{}}}", differing.join(", ")) })
-    }
-
-    /// This descriptor as a filesystem that reports **no modification time** would have produced
-    /// it: the component absent, and the degradation that names it recorded.
-    ///
-    /// **A test constructor, and marked as one in its name**, because no filesystem in this
-    /// workspace withholds an mtime and the rule still has to be pinned — the `(None, None)` case
-    /// once refused every query forever with the false sentence "the source file changed". It is
-    /// not `cfg(test)`-gated for the reason `dataset.rs`'s own counters are not: this crate's
-    /// integration tests link the shipped library, and a constructor compiled only into a unit-test
-    /// build would be unreachable from them.
-    #[doc(hidden)]
-    pub fn without_modification_time_for_test(mut self) -> Self {
-        self.modified_nanos = None;
-        self.degradations.push(
-            "the filesystem reported no modification time for this file, so change detection \
-             for this source is byte size, footer length and footer hash only"
-                .to_string(),
-        );
-        self
     }
 
     /// Re-read `path` and compare, mapping a **failure to read it at all** onto the same typed
@@ -397,5 +396,75 @@ mod tests {
     fn the_declared_footer_ceiling_is_the_preregistered_value() {
         // §7/§13 A. The number lives here and in the preregistration, never in ADR text.
         assert_eq!(FOOTER_DESCRIPTOR_MAX_BYTES, 8_388_608);
+    }
+
+    /// **A filesystem reporting no modification time degrades; it does not refuse forever with the
+    /// false sentence "the source file changed"** (P3 gate attempt 1, correction 13).
+    ///
+    /// **Moved here from `engine/tests/session_identity.rs`, and testing the shipped path now.** It
+    /// used to build its degraded descriptor with `SourceDescriptor::without_modification_time_for_test`
+    /// — a `pub` constructor whose only caller was this test and which **acted**, pushing a
+    /// fabricated degradation whose literal was a second copy of the shipped one. The
+    /// instrument-accessor exemption "exempts nothing that acts" (the human, 2026-09-16, round 5
+    /// item 4), so the constructor is deleted, exactly as
+    /// `dataset::ordinal_is_physical_not_scan_ordered` was. What replaces it: the descriptor comes
+    /// from the **shipped** [`SourceDescriptor::of`] over a real fixture, and the degraded shape is
+    /// produced by the same private [`SourceDescriptor::record_absent_modification_time`] that
+    /// `of`'s no-mtime branch calls, over the one const those words now live in. No filesystem in
+    /// this workspace withholds an mtime, so the `(None, None)` pair is still constructed; what is
+    /// no longer constructed is the engine's own behaviour.
+    ///
+    /// In-module rather than an integration test for the reason the move exists: the private field
+    /// write and the private fn call are both reachable here without a single new `pub` item, no
+    /// `#[doc(hidden)]`, and nothing test-only on the crate's surface.
+    ///
+    /// RECORDED MUTATION: restore the `(Some(a), Some(b)) if a == b => {}, _ => push("mtime")` form
+    /// in `components_differing_from`. Expected failure:
+    /// `a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` fails on its
+    /// both-absent assertion — the case that once refused every query on such a filesystem forever.
+    #[test]
+    fn a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever() {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../target/fixtures/descriptor-unit");
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        let path = dir.join("mtime-degradation.parquet");
+        crate::fixture::write_geoparquet(
+            &path,
+            &crate::fixture::FixtureSpec {
+                features: 64,
+                avg_vertices: 8,
+                identity: crate::fixture::IdentityMode::ForeignKeyColumn,
+                ..Default::default()
+            },
+        )
+        .expect("write fixture");
+
+        // The shipped read, over a real file.
+        let real = SourceDescriptor::of(&path).expect("reads");
+        assert_eq!(real.degradation(), None, "this filesystem does report a modification time");
+
+        // The shape `of` produces on a filesystem that reports none — built by `of`'s own branch
+        // logic, not by a second copy of it.
+        let mut without_mtime = real.clone();
+        without_mtime.modified_nanos = None;
+        SourceDescriptor::record_absent_modification_time(&mut without_mtime.degradations);
+
+        // Neither side has one: NOT a difference. The file did not change; one component is
+        // unavailable, and saying otherwise refuses every query on such a filesystem forever.
+        assert!(
+            without_mtime.components_differing_from(&without_mtime.clone()).is_empty(),
+            "an unavailable component is a degradation, not a detected change"
+        );
+        assert!(without_mtime.refuse_if_changed(&without_mtime.clone()).is_ok());
+
+        // The words are the shipped const's, recorded and reachable — shown to nobody in P3a.
+        assert_eq!(
+            without_mtime.degradation().as_deref(),
+            Some(ABSENT_MODIFICATION_TIME_DEGRADATION)
+        );
+
+        // One side present and the other not IS a difference: that is observable, and fail-closed
+        // still governs it.
+        assert_eq!(real.components_differing_from(&without_mtime), vec!["mtime"]);
     }
 }

@@ -112,12 +112,16 @@ fn the_vendored_duckdb_exposes_file_row_number_on_read_parquet() {
 ///
 /// **This is evidence, not the check.** The corpus-wide verification is P4's, against real files
 /// from independent pipelines; this asserts the property on one written fixture, over a reordered
-/// and filtered scan, and claims nothing beyond that file. Its *placement* — exposed as a callable
-/// check rather than run at open — is flagged for the architect, because running it at open would
-/// read rows on the path boundary 6 declares reads nothing.
-/// Mutation: have `ordinal_is_physical_not_scan_ordered` compare positions instead of keys (i.e.
-/// assume scan order). Expected failure:
-/// `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture` fails.
+/// and filtered scan, and claims nothing beyond that file. **The engine runs nothing of this kind
+/// at open** — running it there would read rows on the path boundary 6 declares reads nothing —
+/// and the `pub fn` it used to call was deleted under the caller rule (Amendment 4 (iii)).
+///
+/// RECORDED MUTATION: in the `pairs` closure below, return the row's *position in the result set*
+/// instead of its `file_row_number` — i.e. `.enumerate()` over the rows and yield `(i as i64, key)`
+/// — which is exactly the scan-ordered reading this test exists to rule out. Expected failure:
+/// `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture` fails on its
+/// `natural.get(ordinal) == Some(key)` assertion, because under `ORDER BY parcel_key DESC` the
+/// positions renumber while the ordinals do not.
 #[test]
 fn the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture() {
     let path = write("frn-physical", &keyless());
@@ -596,33 +600,13 @@ fn every_glob_metacharacter_read_parquet_expands_is_refused_by_name() {
 }
 
 // ---- the descriptor's mtime degradation ---------------------------------------------------------
-
-/// **A filesystem reporting no modification time degrades; it does not refuse forever with the
-/// false sentence "the source file changed"** (P3 gate attempt 1, correction 13).
-///
-/// Constructed rather than observed: no filesystem in this workspace withholds an mtime, so the
-/// `(None, None)` pair is built directly. What it pins is the rule, which is where the defect was.
-///
-/// Mutation recorded in-source: restoring the `(Some(a), Some(b)) if a == b => {}, _ => push` form
-/// in `components_differing_from` makes both assertions below fail.
-#[test]
-fn a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever() {
-    let path = write("mtime-degradation", &keyless());
-    let real = SourceDescriptor::of(&path).expect("reads");
-    let without_mtime = real.clone().without_modification_time_for_test();
-
-    // Neither side has one: not a difference. The file did not change; one component is
-    // unavailable, and saying otherwise refuses every query on such a filesystem forever.
-    assert!(
-        without_mtime.components_differing_from(&without_mtime.clone()).is_empty(),
-        "an unavailable component is a degradation, not a detected change"
-    );
-    assert!(without_mtime.refuse_if_changed(&without_mtime.clone()).is_ok());
-    // And the operator is told which component is unavailable, in the descriptor's own words.
-    let degradation = without_mtime.degradation().expect("the degradation is shown, never silent");
-    assert!(degradation.contains("no modification time"), "{degradation}");
-
-    // One side present and the other not IS a difference: that is observable, and fail-closed
-    // still governs it.
-    assert_eq!(real.components_differing_from(&without_mtime), vec!["mtime"]);
-}
+//
+// `a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` lived here and is
+// now `engine/src/descriptor.rs`'s own in-module test. It had to build a `(None, None)` descriptor,
+// and from an integration test the only way to do that was
+// `SourceDescriptor::without_modification_time_for_test` — a `pub` constructor with no product
+// caller that ACTED, pushing a second copy of the shipped degradation literal, so the assertion
+// proved the test's words rather than the build's. In-module the same descriptor is built by the
+// shipped `of()` plus the private fn `of()` itself calls, and no `pub` item exists for it at all.
+// The narration this test carried ("the operator is told which component is unavailable") went with
+// it: nothing shows the degradation in P3a (Amendment 4 (ii)).
