@@ -1,16 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec206a69d0ac1aab447703c`) at `2026-09-15T12:45:51.165Z`.
+Generated from `PLAN.yaml` (sha256 `2a7ee8e6c85adf814d2c7b584b7d3d045185d2c36a417db31b027d9c164c0f5e`) at `2026-09-16T10:17:20.015Z`.
 
 ## 1. Next
 
-- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) (lane `engine`)
+- **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps (lane `engine`)
 
 ## 2. Ready
 
-- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) (lane `engine`, order 6, budget 90 min)
+- **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps (lane `engine`, order 7, budget 480 min)
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`, order 5, budget 120 min)
-- **marker-wording-final** — The confirming marker's final wording — apply the sitting's felt verdict (lane `shell`, order 10, budget 20 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -30,14 +29,13 @@ Generated from `PLAN.yaml` (sha256 `1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec2
 ## 5. In progress
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
-- **lod-route-b-divergence** — LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only) — evidence: branch `spike/lod-divergence-c3`
+- **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: branch `engine/extension-autoload-off`
 
 ## 6. Proposed / unscheduled
 
 ### Proposed
 
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
-- **adr-031-lod-preregistration** — ADR-031 (LOD) preregistration, once the feasibility spike reports (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed

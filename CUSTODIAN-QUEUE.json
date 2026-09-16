@@ -1,45 +1,45 @@
 {
-  "generated_at": "2026-09-15T12:45:51.165Z",
-  "plan_hash": "1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec206a69d0ac1aab447703c",
+  "generated_at": "2026-09-16T10:17:20.015Z",
+  "plan_hash": "2a7ee8e6c85adf814d2c7b584b7d3d045185d2c36a417db31b027d9c164c0f5e",
   "priorities_approved": true,
   "next": {
-    "id": "engine-extension-autoload-off",
-    "title": "Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate)",
+    "id": "lod-tier-builder-route-b",
+    "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
     "lane": "engine",
     "phase": "prototype",
     "status": "ready",
-    "order": 6,
-    "budget_minutes": 90,
+    "order": 7,
+    "budget_minutes": 480,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-15",
+      "opened": "2026-09-16",
       "done": null
     },
-    "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)"
+    "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim"
   },
   "ready": [
     {
-      "id": "engine-extension-autoload-off",
-      "title": "Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate)",
+      "id": "lod-tier-builder-route-b",
+      "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
       "lane": "engine",
       "phase": "prototype",
       "status": "ready",
-      "order": 6,
-      "budget_minutes": 90,
+      "order": 7,
+      "budget_minutes": 480,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-09-15",
+        "opened": "2026-09-16",
         "done": null
       },
-      "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)"
+      "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim"
     },
     {
       "id": "adr-029-g1-feasibility",
@@ -59,25 +59,6 @@
         "done": null
       },
       "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
-    },
-    {
-      "id": "marker-wording-final",
-      "title": "The confirming marker's final wording — apply the sitting's felt verdict",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 10,
-      "budget_minutes": 20,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR"
     },
     {
       "id": "drill-clean-clone",
@@ -288,26 +269,26 @@
       "evidence_label": "branch `cut/briefa-p3`"
     },
     {
-      "id": "lod-route-b-divergence",
-      "title": "LOD — explain route B's invalid-output divergence and check route A's static-bundling admissibility (reported-only)",
-      "lane": "measurement",
+      "id": "engine-extension-autoload-off",
+      "title": "Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate)",
+      "lane": "engine",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 3,
-      "budget_minutes": 240,
+      "order": 6,
+      "budget_minutes": 90,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "branch": "spike/lod-divergence-c3"
+        "branch": "engine/extension-autoload-off"
       },
       "dates": {
-        "opened": "2026-09-14",
+        "opened": "2026-09-15",
         "done": null
       },
-      "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)",
-      "evidence_label": "branch `spike/lod-divergence-c3`"
+      "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)",
+      "evidence_label": "branch `engine/extension-autoload-off`"
     }
   ],
   "proposed": [
@@ -329,25 +310,6 @@
         "done": null
       },
       "summary": "A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it"
-    },
-    {
-      "id": "adr-031-lod-preregistration",
-      "title": "ADR-031 (LOD) preregistration, once the feasibility spike reports",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "RULED 2026-09-14 (question set C, C3): route B divergence explained first; route A admissible only if the spatial extension bundles statically with no runtime fetch (ADR-021); then the architect drafts the preregistration with the five open questions pre-committed for the human sight (a sight node when the draft exists); no dependency approved by the ruling"
     },
     {
       "id": "adr-032-decision",

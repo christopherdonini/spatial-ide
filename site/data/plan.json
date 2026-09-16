@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-15T12:45:51.263Z",
-  "plan_hash": "1cd2e2bf7ea65005bfd47e7c6204ef2364871a4caec206a69d0ac1aab447703c",
+  "generated_at": "2026-09-16T10:17:20.127Z",
+  "plan_hash": "2a7ee8e6c85adf814d2c7b584b7d3d045185d2c36a417db31b027d9c164c0f5e",
   "priorities_approved": true,
   "lanes": [
     {
@@ -790,7 +790,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": 10,
       "depends_on": [
         "sitting-4-rows",
@@ -801,7 +801,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "pr": 79
+      },
       "budget_minutes": 20,
       "generation": 1,
       "felt_verdict": false,
@@ -812,7 +814,7 @@
       "summary": "After the sitting sights the placeholder marker wording (B1: 'Wording sighted live at the sitting'), apply the human's felt verdict -- the HOVER_CONFIRMING_MARKER_TEXT constant (and, if the human wishes, the trace label, both declared to track it in prereg Amendment 1) -- as a small PR",
       "dates": {
         "opened": "2026-09-14",
-        "done": null
+        "done": "2026-09-15"
       }
     },
     {
@@ -1092,7 +1094,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 6,
       "depends_on": [],
       "needs_human": {
@@ -1100,7 +1102,9 @@
         "minutes": 0
       },
       "gate": "engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "engine/extension-autoload-off"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
@@ -1108,6 +1112,35 @@
       "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)",
       "dates": {
         "opened": "2026-09-15",
+        "done": null
+      }
+    },
+    {
+      "id": "lod-tier-builder-route-b",
+      "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 7,
+      "depends_on": [
+        "adr-031-lod-preregistration"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "engine/LOD-PREREGISTRATION.md",
+      "evidence": null,
+      "budget_minutes": 480,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        93
+      ],
+      "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
+      "dates": {
+        "opened": "2026-09-16",
         "done": null
       }
     },
@@ -1412,7 +1445,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 3,
       "depends_on": [
         "lod-feasibility-spike",
@@ -1424,7 +1457,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "spike/lod-divergence-c3"
+        "pr": 80
       },
       "budget_minutes": 240,
       "generation": 1,
@@ -1435,7 +1468,7 @@
       "summary": "RULED 2026-09-14 (question set C, C3): whether geo SimplifyVwPreserve removes route B invalid-output divergence (plain Douglas-Peucker the expected cause), and whether the DuckDB spatial extension bundles statically with no runtime fetch (ADR-021); reported-only, spike-only dependencies stay spike-only. Machine-sequenced AFTER the sitting (one heavy cargo run at a time)",
       "dates": {
         "opened": "2026-09-14",
-        "done": null
+        "done": "2026-09-15"
       }
     },
     {
@@ -1561,8 +1594,8 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "done",
+      "order": 6,
       "depends_on": [
         "lod-feasibility-spike",
         "lod-route-b-divergence"
@@ -1572,7 +1605,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "commit": "aa5dcdb"
+      },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
@@ -1581,8 +1616,8 @@
       ],
       "summary": "RULED 2026-09-14 (question set C, C3): route B divergence explained first; route A admissible only if the spatial extension bundles statically with no runtime fetch (ADR-021); then the architect drafts the preregistration with the five open questions pre-committed for the human sight (a sight node when the draft exists); no dependency approved by the ruling",
       "dates": {
-        "opened": null,
-        "done": null
+        "opened": "2026-09-15",
+        "done": "2026-09-16"
       }
     },
     {
