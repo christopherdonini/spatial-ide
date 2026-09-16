@@ -84,6 +84,10 @@ pub mod error;
 pub mod fixture;
 pub mod geoarrow;
 pub mod geoparquet;
+/// LOD tier construction — route B, per `engine/LOD-PREREGISTRATION.md`. **Builds tiers; selects
+/// none**: which tier a viewport draws is renderer/shell work under its own gate, and nothing here
+/// is served to a shell by this cut.
+pub mod lod;
 /// Spatially-clustered layout variants — lever B1. Test/measurement support, gated with the
 /// generator for the same reason: rewriting a file is not one of the things `docs/02` scopes to
 /// this module.
