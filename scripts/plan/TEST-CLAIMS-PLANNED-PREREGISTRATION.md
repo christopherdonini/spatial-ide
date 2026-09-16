@@ -1,0 +1,7 @@
+# Preregistration (five-line short form, `AUTONOMY.md` §21d) — verify:test-claims, planned claims
+
+Authority: stop-the-line — `main` red on `verify:test-claims` since 2a939d3 (2026-09-16) — under `PLAN.yaml` node `self-check-false-readings`; `AUTONOMY.md` Appendix A3 (the pre-gate self-checks directive).
+Scope: `scripts/plan/verify-test-claims.mjs`, `scripts/plan/verify-test-claims.test.mjs`, `AUTONOMY.md` §6a (one sentence), and this file; <= 120 non-generated lines.
+Change: a claimed test name is PLANNED, not binding, when the claiming file is the `gate` of a `PLAN.yaml` node whose `status` is not `done` — such findings print as advisory (`planned — node <id> is <status>`) and do not set exit 1, and the same claim is binding again once the node is `done`.
+Tests+mutation: `a_planned_test_in_an_unlanded_preregistration_is_advisory_not_a_failure` (mutation: remove the planned exemption in `runVerifyTestClaims`, so every unmatched claim becomes a binding finding); `a_claim_in_a_done_nodes_gate_file_is_binding` and `plannedGateFiles_ignores_done_nodes_and_gate_none` (mutation: drop the `status` filter in the planned-gate computation, exempting every gate file whatever its node's status) — each mutation run, its observed failure text recorded in a `RECORDED MUTATION` comment above the test, then reverted.
+Out-of-scope: no ADR touched, no security posture, no wire/data-plane change, no stated guarantee changed — the check's recognizer is untouched and no gate verdict is weakened for a landed piece.
