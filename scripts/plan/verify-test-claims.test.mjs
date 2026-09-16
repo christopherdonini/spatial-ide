@@ -166,3 +166,19 @@ test('an_adr_named_as_a_gate_is_never_planned', () => {
   };
   assert.deepEqual([...plannedGateFiles(plan)], ['engine/A-PREREGISTRATION.md']);
 });
+
+// RECORDED MUTATION: drop the `landed` exclusion in plannedGateNotes (plan on status alone) →
+// a_gate_file_named_by_any_done_node_is_never_planned fails: "AssertionError [ERR_ASSERTION]:
+// Expected values to be strictly deep-equal: + actual - expected … +   'engine/S-PREREGISTRATION.md'"
+// (actual: [ 'engine/S-PREREGISTRATION.md', 'engine/T-PREREGISTRATION.md' ], expected:
+// [ 'engine/T-PREREGISTRATION.md' ]) — verbatim lines of the runner's diff, elided with …
+test('a_gate_file_named_by_any_done_node_is_never_planned', () => {
+  const plan = {
+    nodes: [
+      { id: 'landed', status: 'done', gate: 'engine/S-PREREGISTRATION.md' },
+      { id: 'in-flight', status: 'in-progress', gate: 'engine/S-PREREGISTRATION.md' },
+      { id: 'other', status: 'ready', gate: 'engine/T-PREREGISTRATION.md' },
+    ],
+  };
+  assert.deepEqual([...plannedGateFiles(plan)], ['engine/T-PREREGISTRATION.md']);
+});

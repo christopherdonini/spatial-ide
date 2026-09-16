@@ -155,12 +155,18 @@ export function claimFiles(files) {
  * `gate: none` and a missing `gate` are not gate files and are ignored.
  */
 export function plannedGateNotes(plan) {
+  const nodes = (plan?.nodes ?? []).filter((n) => n && typeof n === 'object');
+  // Binding is sticky: a gate file named by ANY `done` node has landed work behind it, so its claims
+  // bind even while another node still names it (the architect gate's finding 5, 2026-09-16 — a
+  // union over nodes would let a later piece keep a landed piece's claims advisory).
+  const landed = new Set(
+    nodes.filter((n) => n.status === 'done').map((n) => n.gate).filter((g) => g && g !== 'none'),
+  );
   const notes = new Map();
-  for (const node of plan?.nodes ?? []) {
-    if (!node || typeof node !== 'object') continue;
+  for (const node of nodes) {
     if (node.status === 'done') continue;
     const gate = node.gate;
-    if (!gate || gate === 'none') continue;
+    if (!gate || gate === 'none' || landed.has(gate)) continue;
     const note = `node ${node.id} is ${node.status}`;
     notes.set(gate, notes.has(gate) ? `${notes.get(gate)}, ${note}` : note);
   }
