@@ -8,7 +8,8 @@
 //!
 //! Tier 0 is **the source itself**: the identity and geometry of record, never rewritten and never
 //! derived. Tiers 1–3 are derived artifacts built by simplifying the source's geometry at the three
-//! declared tolerances of [`LOD_TOLERANCE_LADDER`], one GeoParquet file per tier, in a sidecar
+//! declared minimum triangle areas of [`LOD_MIN_TRIANGLE_AREA_LADDER`], one GeoParquet file per
+//! tier, in a sidecar
 //! directory keyed by the source's content hash under the app-local cache. A tier is **never
 //! authoritative** for identity, geometry, picking or export (`LOD-PREREGISTRATION.md` §8 item 6).
 //!
@@ -61,16 +62,24 @@ use crate::index::{self, ValidityHeuristic};
 // (`ADR-010:70-74`), and lives at its own site with the preregistration cited beside it.
 // ---------------------------------------------------------------------------------------------
 
-/// The three derived tiers' tolerances, **in metres** (`LOD-PREREGISTRATION.md` §7, §2b, §2c).
+/// The three derived tiers' **minimum triangle areas, in square metres** (`LOD-PREREGISTRATION.md`
+/// §7 and §2c as amended by §10 Amendment 7, the human's ruling of 2026-09-16).
 ///
-/// Converted explicitly to the source CRS's linear unit, with the factor and its ADR-026 provenance
-/// recorded on the tier (§2c). Revisable only by a preregistered measurement, never by amendment.
-pub const LOD_TOLERANCE_LADDER: [f64; 3] = [0.1, 1.0, 5.0];
+/// **These are areas, not lengths, and the name says so because the arithmetic depends on it.**
+/// `geo` 0.33.1's Visvalingam–Whyatt takes its `epsilon` as a *minimum triangle area*
+/// (`geo-0.33.1/src/algorithm/simplify_vw.rs:63`, "epsilon is the minimum triangle area"), so a
+/// value of `1.0` on EPSG:2056 means one square metre and never one metre. The values are unchanged
+/// from the ones the spike measured; what changed is what they are called and how they convert.
+///
+/// Converted explicitly into the source CRS's **squared** linear unit
+/// ([`LinearUnit::min_triangle_area_in_unit`]), with the factor and its ADR-026 provenance recorded
+/// on the tier (§2c). Revisable only by a preregistered measurement, never by amendment.
+pub const LOD_MIN_TRIANGLE_AREA_LADDER: [f64; 3] = [0.1, 1.0, 5.0];
 
 /// Derived tiers, over tier 0 = the source (`LOD-PREREGISTRATION.md` §7). Derived from the ladder's
 /// length and asserted equal to it, so the two cannot drift.
 pub const LOD_TIER_COUNT: usize = 3;
-const _: () = assert!(LOD_TIER_COUNT == LOD_TOLERANCE_LADDER.len());
+const _: () = assert!(LOD_TIER_COUNT == LOD_MIN_TRIANGLE_AREA_LADDER.len());
 
 /// Part of [`LodTierKey`]: a builder change invalidates every tier it built
 /// (`LOD-PREREGISTRATION.md` §7; the role `index.rs:42-47`'s `BUILDER_VERSION` plays for the index).
@@ -113,10 +122,20 @@ pub const LOD_CANCEL_OBSERVED_CEILING_MS: u64 = 100;
 /// [`LOD_TIER_LARGER_THAN_SOURCE`].
 pub const LOD_TIER_MAX_RELATIVE_BYTES: f64 = 1.0;
 
-/// Disk ceiling for the whole three-tier set (`LOD-PREREGISTRATION.md` §7) →
-/// [`LOD_TIER_SET_OVER_DISK_CEILING`]. Checked **arithmetically** from the per-tier sizes, never by
-/// holding the ladder on disk (§3's disk discipline).
-pub const LOD_TIER_SET_MAX_BYTES: f64 = 2.0;
+/// The whole set's **hard bound, by construction**: `LOD_TIER_COUNT × LOD_TIER_MAX_RELATIVE_BYTES`
+/// = 3.0 × the source's bytes (`LOD-PREREGISTRATION.md` §10 Amendment 6, the human's ruling of
+/// 2026-09-16).
+///
+/// **It replaces a withdrawn ceiling, and the difference is the point.** The withdrawn
+/// `LOD_TIER_SET_MAX_BYTES = 2.0` was *derived from route A's output sizes*, and route A is out by
+/// ruling — a declared value whose premise is dead. This one is not derived from any measurement at
+/// all: every tier is already refused above `LOD_TIER_MAX_RELATIVE_BYTES` × the source
+/// ([`LOD_TIER_LARGER_THAN_SOURCE`]), so `LOD_TIER_COUNT` of them cannot exceed this, and there is
+/// nothing here for a measurement to falsify. It is what the free-disk preflight requires before the
+/// first tier is written ([`LOD_INSUFFICIENT_DISK`]), and what the built set's disclosed size is read
+/// against.
+pub const LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES: f64 =
+    LOD_TIER_COUNT as f64 * LOD_TIER_MAX_RELATIVE_BYTES;
 
 /// The app-local cache subdirectory tiers live in, under `%LOCALAPPDATA%`
 /// (`LOD-PREREGISTRATION.md` §10 Amendment 1: "the sidecar directory lives in the app-local cache
@@ -156,7 +175,8 @@ pub const LOD_TIER_ROW_GROUP_ROWS: usize = 8_192;
 
 /// The source CRS is geographic / angular (`LOD-PREREGISTRATION.md` §2c, §7).
 ///
-/// A tolerance in degrees is not a length. **This cut's refusal, and a dated gap rather than a
+/// An area in square degrees is not an area (`docs/01`: "area in degrees² is unrepresentable").
+/// **This cut's refusal, and a dated gap rather than a
 /// permanent stance:** Amendment 1 records geographic-CRS tiers as a named follow-on owed its own
 /// preregistered gate, on the corpus fact that most public GeoParquet is geographic.
 pub const LOD_CRS_NOT_LINEAR: &str = "engine.lod_crs_not_linear";
@@ -168,8 +188,14 @@ pub const LOD_CRS_UNIT_UNDECLARED: &str = "engine.lod_crs_unit_undeclared";
 /// A written tier exceeds [`LOD_TIER_MAX_RELATIVE_BYTES`] × its source's bytes (`§7`).
 pub const LOD_TIER_LARGER_THAN_SOURCE: &str = "engine.lod_tier_larger_than_source";
 
-/// The ladder's arithmetic total exceeds [`LOD_TIER_SET_MAX_BYTES`] × its source's bytes (`§7`).
-pub const LOD_TIER_SET_OVER_DISK_CEILING: &str = "engine.lod_tier_set_over_disk_ceiling";
+/// The volume the tier root sits on does not have
+/// [`LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES`] × the source's bytes free — checked **before the first
+/// tier is written** (`§10` Amendment 6).
+///
+/// **Fail-closed.** Free space that cannot be established at all (no such volume; a platform whose
+/// call this cut has not established) refuses here too, naming what it could not establish rather
+/// than writing three tiers' worth of bytes on an assumption.
+pub const LOD_INSUFFICIENT_DISK: &str = "engine.lod_insufficient_disk";
 
 /// `%LOCALAPPDATA%` is not set, so [`LOD_TIER_ROOT`] cannot be resolved.
 ///
@@ -213,7 +239,7 @@ pub const LOD_TIER_RESIDENT_PREFIX: &str = "lod.tier_resident";
 /// (`LOD-PREREGISTRATION.md` §2e; the sentence and the discipline are `index.rs:159-163`'s).
 ///
 /// **Every member is in `PartialEq`**, "so a mismatch cannot be missed by a caller that forgot to
-/// compare one". `Eq` is deliberately *not* derived: `tolerance_metres` is an `f64`, and the one
+/// compare one". `Eq` is deliberately *not* derived: `min_triangle_area_square_metres` is an `f64`, and the one
 /// value that would make `Eq` a lie — `NaN`, which is not equal to itself — fails *closed* here,
 /// producing a key that never admits anything. A tier that cannot be admitted is a miss; a tier
 /// admitted on a comparison that was quietly skipped is the defect this type exists to prevent.
@@ -223,9 +249,10 @@ pub struct LodTierKey {
     /// level up: a tier is identified by the content it was built from, never by a filename.
     pub source_content_hash: String,
     pub builder_version: u32,
-    /// The ladder tolerance **in metres**, before the CRS's linear-unit conversion. Two tiers at
-    /// different tolerances are different derived objects.
-    pub tolerance_metres: f64,
+    /// The ladder's **minimum triangle area, in square metres**, before the CRS's squared
+    /// linear-unit conversion (§10 Amendment 7). Two tiers built at different areas are different
+    /// derived objects.
+    pub min_triangle_area_square_metres: f64,
     /// The simplifier that produced it ([`LOD_SIMPLIFIER`]). VW-preserve and RDP are different
     /// algorithm families, and a tier built by one may never be served for the other.
     pub simplifier: String,
@@ -237,13 +264,13 @@ pub struct LodTierKey {
 impl LodTierKey {
     pub fn new(
         source_content_hash: impl Into<String>,
-        tolerance_metres: f64,
+        min_triangle_area_square_metres: f64,
         id_column: impl Into<String>,
     ) -> Self {
         Self {
             source_content_hash: source_content_hash.into(),
             builder_version: LOD_BUILDER_VERSION,
-            tolerance_metres,
+            min_triangle_area_square_metres,
             simplifier: LOD_SIMPLIFIER.to_string(),
             id_column: id_column.into(),
         }
@@ -256,7 +283,7 @@ impl LodTierKey {
 pub enum TierMiss {
     /// Nothing on disk for this source and tier.
     Absent,
-    /// A different revision, builder, tolerance, simplifier or identity column.
+    /// A different revision, builder, minimum triangle area, simplifier or identity column.
     KeyMismatch,
     /// The source no longer looks like the file the tier was built from (the fail-closed validity
     /// heuristic, `index.rs:193-224` — a heuristic and never an identity).
@@ -389,10 +416,19 @@ pub struct LinearUnit {
 }
 
 impl LinearUnit {
-    /// Convert a ladder tolerance from metres into this unit, explicitly (`§2c`, `docs/01`
-    /// principle 8: every transform explicit, logged and inspectable).
-    pub fn tolerance_in_unit(&self, metres: f64) -> f64 {
-        metres / self.metres_per_unit
+    /// Convert a ladder **minimum triangle area** from square metres into this CRS's **squared**
+    /// linear unit, explicitly (`§2c` as amended by `§10` Amendment 7; `docs/01` principle 8: every
+    /// transform explicit, logged and inspectable).
+    ///
+    /// **The factor is squared, and that is the whole reason this method exists.** The ladder's
+    /// values are areas, so a CRS whose linear unit is the foot needs `area / 0.3048²`, not
+    /// `area / 0.3048`. The direction is *divide*: `metres_per_unit` is metres per one unit, so one
+    /// square metre is `1 / factor²` square units. On EPSG:2056 the factor is one and the two are
+    /// indistinguishable — which is exactly why
+    /// `a_non_metre_crs_squares_the_conversion_factor_for_an_area` exists, since no fixture in this
+    /// tree would ever catch the unsquared form.
+    pub fn min_triangle_area_in_unit(&self, square_metres: f64) -> f64 {
+        square_metres / (self.metres_per_unit * self.metres_per_unit)
     }
 }
 
@@ -405,7 +441,19 @@ impl LinearUnit {
 /// refuses [`LOD_CRS_NOT_LINEAR`]; a unit that could not be established at all, or a non-metre
 /// linear unit whose `conversion_factor` is absent, refuses [`LOD_CRS_UNIT_UNDECLARED`].
 pub(crate) fn linear_unit_of(source: &Dataset) -> Result<LinearUnit> {
-    let Some(definition) = source.crs().definition_json() else {
+    linear_unit_from_definition(source.crs().definition_json(), source.crs().identifier())
+}
+
+/// [`linear_unit_of`]'s whole body, over the definition text and the identifier alone.
+///
+/// **Split out so the squaring can be pinned by a unit test** (`§10` Amendment 7's second rider: the
+/// only CRS §4 exercises has factor 1.0, so the bug this guards against is invisible on every
+/// fixture this tree owns). It reads no `Dataset` and touches no disk.
+pub(crate) fn linear_unit_from_definition(
+    definition_json: Option<&str>,
+    identifier: &str,
+) -> Result<LinearUnit> {
+    let Some(definition) = definition_json else {
         // Nothing was read, so nothing is assumed. An admission that carries no definition at all
         // (the absent-key format rule's OGC:CRS84, `geoparquet.rs:652-669`) is angular anyway, but
         // this arm refuses on what is *missing* rather than on what the rule would have said.
@@ -413,7 +461,7 @@ pub(crate) fn linear_unit_of(source: &Dataset) -> Result<LinearUnit> {
             LOD_CRS_UNIT_UNDECLARED,
             format!(
                 "the admitted CRS `{}` carries no definition to read a linear unit from",
-                source.crs().identifier()
+                identifier
             ),
         ));
     };
@@ -427,10 +475,10 @@ pub(crate) fn linear_unit_of(source: &Dataset) -> Result<LinearUnit> {
         return Err(refusal(
             LOD_CRS_NOT_LINEAR,
             format!(
-                "`{}` is a {crs_type} whose coordinate unit reads `{}`; a tolerance in an angular \
+                "`{}` is a {crs_type} whose coordinate unit reads `{}`; an area in an angular \
                  unit is not a length, and simplifying by one would be the units-unaware \
                  measurement docs/01 forbids",
-                source.crs().identifier(),
+                identifier,
                 unit.as_str()
             ),
         ));
@@ -441,7 +489,7 @@ pub(crate) fn linear_unit_of(source: &Dataset) -> Result<LinearUnit> {
             format!(
                 "`{}` declares no coordinate unit this reader can establish from its own two axes; \
                  no default factor is assumed",
-                source.crs().identifier()
+                identifier
             ),
         ));
     }
@@ -450,7 +498,7 @@ pub(crate) fn linear_unit_of(source: &Dataset) -> Result<LinearUnit> {
             LOD_CRS_NOT_LINEAR,
             format!(
                 "`{}` declares an angular unit object on its coordinate-system axes",
-                source.crs().identifier()
+                identifier
             ),
         ));
     }
@@ -468,7 +516,7 @@ pub(crate) fn linear_unit_of(source: &Dataset) -> Result<LinearUnit> {
                     format!(
                         "`{}` declares the unit `{}` with no usable `conversion_factor` on its \
                          coordinate-system axes; no default factor is assumed",
-                        source.crs().identifier(),
+                        identifier,
                         unit.as_str()
                     ),
                 ))
@@ -560,7 +608,7 @@ impl TierBuildProgress for SilentProgress {
 pub struct TierRecord {
     key: LodTierKey,
     tier: u8,
-    tolerance_source_units: f64,
+    min_triangle_area_source_units: f64,
     unit: LinearUnit,
     features: u64,
     vertices_before: u64,
@@ -578,8 +626,10 @@ impl TierRecord {
     pub fn tier(&self) -> u8 {
         self.tier
     }
-    pub fn tolerance_source_units(&self) -> f64 {
-        self.tolerance_source_units
+    /// The ladder's minimum triangle area **in this CRS's squared linear unit** — the value handed
+    /// to the simplifier (§10 Amendment 7).
+    pub fn min_triangle_area_source_units(&self) -> f64 {
+        self.min_triangle_area_source_units
     }
     pub fn unit(&self) -> &LinearUnit {
         &self.unit
@@ -626,10 +676,15 @@ impl TierRecord {
     fn to_json(&self) -> Value {
         json!({
             "tier": self.tier,
-            "tolerance_metres": self.key.tolerance_metres,
-            "tolerance_source_units": self.tolerance_source_units,
+            // **"minimum triangle area", never "tolerance in metres"** (§10 Amendment 7's first
+            // rider): every description of a tier says what the quantity is, in squared units.
+            "quantity": "minimum triangle area",
+            "min_triangle_area_square_metres": self.key.min_triangle_area_square_metres,
+            "min_triangle_area_source_units": self.min_triangle_area_source_units,
+            "area_unit": format!("square {}", self.unit.name),
             "linear_unit": self.unit.name,
             "metres_per_unit": self.unit.metres_per_unit,
+            "square_metres_per_square_unit": self.unit.metres_per_unit * self.unit.metres_per_unit,
             "crs_definition_provenance": self.unit.definition_provenance,
             "crs_definition_sha256": self.unit.definition_sha256,
             "source_content_hash": self.key.source_content_hash,
@@ -665,12 +720,12 @@ impl TierRecord {
             key: LodTierKey {
                 source_content_hash: str_of("source_content_hash")?,
                 builder_version: u64_of("builder_version")? as u32,
-                tolerance_metres: f64_of("tolerance_metres")?,
+                min_triangle_area_square_metres: f64_of("min_triangle_area_square_metres")?,
                 simplifier: str_of("simplifier")?,
                 id_column: str_of("id_column")?,
             },
             tier: u64_of("tier")? as u8,
-            tolerance_source_units: f64_of("tolerance_source_units")?,
+            min_triangle_area_source_units: f64_of("min_triangle_area_source_units")?,
             unit: LinearUnit {
                 name: str_of("linear_unit")?,
                 metres_per_unit: f64_of("metres_per_unit")?,
@@ -709,6 +764,28 @@ impl TierOutcome {
     }
 }
 
+/// **What the ladder cost on disk, disclosed with the tiers** — the human's ruling of 2026-09-16
+/// (`§10` Amendment 6): "the built set's actual size is disclosed with the tiers (tiers.json + the
+/// prepare report)".
+///
+/// Every field is bytes. **No time figure is here, deliberately**: prep *time* is a measurement and
+/// belongs to the tester (§6, §9), while disk cost is a fact of the artifact on disk.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TierSetDiskCost {
+    /// `(tier, bytes)`, in ladder order.
+    pub per_tier_bytes: Vec<(u8, u64)>,
+    /// What the three files actually take, summed from the per-tier sizes.
+    pub total_bytes: u64,
+    /// `LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES` × the source's bytes — what the preflight required
+    /// before the first tier was written, and what the total is read against.
+    pub hard_bound_bytes: u64,
+    /// The source's own size, so the disclosure is readable without a second lookup.
+    pub source_bytes: u64,
+    /// Free space on the tier root's volume as the preflight established it, before the first tier
+    /// was written. `None` when every tier was reused and no preflight ran.
+    pub free_bytes_before_build: Option<u64>,
+}
+
 /// The ladder, after one call to [`build_tiers`].
 #[derive(Clone, Debug)]
 pub struct TierSet {
@@ -716,6 +793,7 @@ pub struct TierSet {
     source_bytes: u64,
     directory: PathBuf,
     tiers: Vec<TierOutcome>,
+    free_bytes_before_build: Option<u64>,
 }
 
 impl TierSet {
@@ -737,8 +815,101 @@ impl TierSet {
     pub fn total_bytes(&self) -> u64 {
         self.tiers.iter().map(|t| t.record.bytes).sum()
     }
+    /// The set's hard bound for this source: `LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES` × its bytes.
+    pub fn hard_bound_bytes(&self) -> u64 {
+        set_hard_bound_bytes(self.source_bytes)
+    }
+    /// **The prepare report's disk half** (`§10` Amendment 6), in bytes and nothing else.
+    pub fn disk_cost(&self) -> TierSetDiskCost {
+        TierSetDiskCost {
+            per_tier_bytes: self.tiers.iter().map(|t| (t.record.tier, t.record.bytes)).collect(),
+            total_bytes: self.total_bytes(),
+            hard_bound_bytes: self.hard_bound_bytes(),
+            source_bytes: self.source_bytes,
+            free_bytes_before_build: self.free_bytes_before_build,
+        }
+    }
     pub fn manifest_path(&self) -> PathBuf {
         self.directory.join("tiers.json")
+    }
+}
+
+/// The set's hard bound in bytes for a source of `source_bytes`
+/// ([`LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES`]). Saturating, so a pathological size cannot wrap into
+/// a small bound.
+pub fn set_hard_bound_bytes(source_bytes: u64) -> u64 {
+    (source_bytes as f64 * LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES).ceil() as u64
+}
+
+/// Free bytes available to this process on the volume that holds `path`, or `None` when it cannot
+/// be established.
+///
+/// **`GetDiskFreeSpaceExW`, and no new crate for it** (`§10` Amendment 6; `std::fs` has no
+/// free-space call). The in-tree precedent for a Win32 call shaped this way is
+/// `protocol/transport-bakeoff/src/memory.rs:18-40`. The first *existing* ancestor of `path` is
+/// queried, because the tier directory does not exist yet at preflight time and the API needs a
+/// directory that does.
+///
+/// `lpFreeBytesAvailableToCaller` is the value read — free space **available to this caller**, which
+/// is what a quota-bound account can actually write, rather than the volume's total free space.
+#[cfg(windows)]
+pub(crate) fn free_bytes_available(path: &Path) -> Option<u64> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
+
+    let existing = path.ancestors().find(|p| p.is_dir())?;
+    let mut wide: Vec<u16> = existing.as_os_str().encode_wide().collect();
+    wide.push(0);
+    let mut free_to_caller: u64 = 0;
+    // SAFETY: `wide` is a NUL-terminated UTF-16 path that outlives the call, and the three out
+    // parameters are owned `u64`s of exactly the width the API writes. Nothing is retained.
+    let ok = unsafe {
+        GetDiskFreeSpaceExW(
+            wide.as_ptr(),
+            &mut free_to_caller,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        )
+    };
+    if ok == 0 {
+        return None;
+    }
+    Some(free_to_caller)
+}
+
+/// Non-Windows: **not established, rather than guessed**. Windows is this tree's reference platform
+/// (`CLAUDE.md`), and a free-space call this cut has not validated elsewhere is not one it will
+/// pretend to have. `None` fails the preflight closed, which is the safe direction for an operation
+/// about to write three tiers' worth of bytes.
+#[cfg(not(windows))]
+pub(crate) fn free_bytes_available(_path: &Path) -> Option<u64> {
+    None
+}
+
+/// The preflight's comparison, pure and separate from the reading so both halves can be asserted.
+///
+/// `Ok(())` only when `available` is established **and** at least `required`. `available: None` is a
+/// refusal naming what could not be established — never an assumption that there is room.
+pub(crate) fn disk_preflight(required_bytes: u64, available_bytes: Option<u64>) -> Result<()> {
+    match available_bytes {
+        Some(available) if available >= required_bytes => Ok(()),
+        Some(available) => Err(refusal(
+            LOD_INSUFFICIENT_DISK,
+            format!(
+                "the tier set needs {required_bytes} B free before the first tier is written \
+                 ({} × the source's bytes, by construction) and the volume has {available} B \
+                 available to this caller",
+                LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES
+            ),
+        )),
+        None => Err(refusal(
+            LOD_INSUFFICIENT_DISK,
+            format!(
+                "the tier set needs {required_bytes} B free before the first tier is written and \
+                 the free space on the tier root's volume could not be established at all; no tier \
+                 is written on an assumption about disk"
+            ),
+        )),
     }
 }
 
@@ -782,18 +953,27 @@ pub fn build_tiers(
     let source_validity = ValidityHeuristic::of(source.path());
 
     let directory = tier_directory(&content_hash)?;
-    std::fs::create_dir_all(&directory)
-        .map_err(|e| EngineError::Source(format!("create the tier directory: {e}")))?;
+    // **The directory is not created yet, and that ordering is the preflight's** (`§10`
+    // Amendment 6): creating it first would turn "this volume has no room, or is not there at all"
+    // into an unrelated `Source` error raised by `mkdir` before the preflight ever ran. Reading an
+    // absent manifest is already the `Absent` miss, so nothing needs the directory to exist here.
     let on_disk = read_manifest(&directory.join("tiers.json"));
 
+    // **The free-disk preflight, before the first tier is written and not one byte later**
+    // (`§10` Amendment 6). It runs once, lazily: a call that admits all three tiers from disk
+    // writes nothing and is not asked to have room for a set it is not building.
+    let required_bytes = set_hard_bound_bytes(source_bytes);
+    let mut free_bytes_before_build: Option<u64> = None;
+    let mut preflight_done = false;
+
     let mut outcomes: Vec<TierOutcome> = Vec::with_capacity(LOD_TIER_COUNT);
-    for (i, tolerance_metres) in LOD_TOLERANCE_LADDER.iter().copied().enumerate() {
+    for (i, area_square_metres) in LOD_MIN_TRIANGLE_AREA_LADDER.iter().copied().enumerate() {
         if cancel.is_cancelled() {
             progress.cancel_observed(0, 0);
             return Err(EngineError::Cancelled);
         }
         let tier = (i + 1) as u8;
-        let key = LodTierKey::new(content_hash.clone(), tolerance_metres, id_column.clone());
+        let key = LodTierKey::new(content_hash.clone(), area_square_metres, id_column.clone());
 
         // Found by path, admitted by key. A found-but-rejected tier is never served: its reason is
         // recorded and it is rebuilt over.
@@ -808,44 +988,63 @@ pub fn build_tiers(
 
         let record = match record {
             Some(reused) => reused,
-            None => build_one_tier(
-                source,
-                tier,
-                tolerance_metres,
-                &unit,
-                key,
-                &id_column,
-                source_bytes,
-                source_validity.clone(),
-                &directory,
-                workers,
-                cancel,
-                progress,
-            )?,
+            None => {
+                if !preflight_done {
+                    // Before the first tier is written, and before the directory that would hold
+                    // it exists: the reading walks up to the first existing ancestor of the tier
+                    // root, so a root on a volume that is not there reads as "not established" and
+                    // fails closed rather than as a mkdir error.
+                    let available = free_bytes_available(&directory);
+                    disk_preflight(required_bytes, available)?;
+                    free_bytes_before_build = available;
+                    preflight_done = true;
+                    std::fs::create_dir_all(&directory).map_err(|e| {
+                        EngineError::Source(format!("create the tier directory: {e}"))
+                    })?;
+                }
+                build_one_tier(
+                    source,
+                    tier,
+                    area_square_metres,
+                    &unit,
+                    key,
+                    &id_column,
+                    source_bytes,
+                    source_validity.clone(),
+                    &directory,
+                    workers,
+                    cancel,
+                    progress,
+                )?
+            }
         };
         outcomes.push(TierOutcome { record, miss });
     }
 
-    // The ladder's disk ceiling, checked arithmetically from the per-tier sizes (§3, §7).
+    // **No set ceiling is checked here, and the reason is recorded rather than the check simply
+    // absent** (`§10` Amendment 6): the withdrawn 2.0× ceiling was derived from route A's output
+    // sizes and route A is out by ruling. What replaces it is a bound that holds *by construction* —
+    // every tier is already refused above `LOD_TIER_MAX_RELATIVE_BYTES` × the source, so
+    // `LOD_TIER_COUNT` of them cannot exceed `LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES` × it — plus
+    // the preflight above. The assertion states the construction rather than testing a hypothesis.
     let total: u64 = outcomes.iter().map(|o| o.record.bytes).sum();
-    let ceiling = (source_bytes as f64 * LOD_TIER_SET_MAX_BYTES) as u64;
-    if total > ceiling {
-        for o in &outcomes {
-            remove_reporting(&o.record.path)?;
-        }
-        return Err(EngineError::CeilingExceeded {
-            ceiling: LOD_TIER_SET_OVER_DISK_CEILING,
-            limit: ceiling,
-            saw: total,
-        });
-    }
+    debug_assert!(
+        total <= set_hard_bound_bytes(source_bytes),
+        "the per-tier ceiling makes this unreachable: {total} B over a bound of {} B",
+        set_hard_bound_bytes(source_bytes)
+    );
 
     let set = TierSet {
         source_content_hash: content_hash,
         source_bytes,
         directory,
         tiers: outcomes,
+        free_bytes_before_build,
     };
+    // Idempotent: on the all-reused path nothing was built, and the directory the tiers were read
+    // from is already there.
+    std::fs::create_dir_all(set.directory())
+        .map_err(|e| EngineError::Source(format!("create the tier directory: {e}")))?;
     write_manifest(&set, source, &unit)?;
     Ok(set)
 }
@@ -888,6 +1087,7 @@ fn read_manifest(path: &Path) -> HashMap<u8, TierRecord> {
 /// `tiers.json` — **a manifest, not a data path**, so plain diffable text is exactly right here and
 /// JSON never comes near the geometry (`§2d`; `ADR-004:17`).
 fn write_manifest(set: &TierSet, source: &Dataset, unit: &LinearUnit) -> Result<()> {
+    let cost = set.disk_cost();
     let manifest = json!({
         "schema": "spatial-ide/lod-tiers/1",
         "builder_version": LOD_BUILDER_VERSION,
@@ -902,6 +1102,18 @@ fn write_manifest(set: &TierSet, source: &Dataset, unit: &LinearUnit) -> Result<
             "crs_definition_provenance": unit.definition_provenance,
             "crs_definition_sha256": unit.definition_sha256,
             "id_column": source.identity().source().source_column(),
+        },
+        // **The built set's actual size, disclosed with the tiers** (`§10` Amendment 6). Bytes
+        // only: prep *time* is a measurement and is the tester's (§6, §9), and no time figure is
+        // written here or anywhere else in this module.
+        "set": {
+            "bytes": cost.total_bytes,
+            "hard_bound_bytes": cost.hard_bound_bytes,
+            "hard_bound_relative_to_source": LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES,
+            "hard_bound_basis": "tier count x the per-tier ceiling, by construction",
+            "source_bytes": cost.source_bytes,
+            "per_tier_bytes": cost.per_tier_bytes.iter().map(|(t, b)| json!({"tier": t, "bytes": b})).collect::<Vec<_>>(),
+            "free_bytes_before_build": cost.free_bytes_before_build,
         },
         "tiers": set.tiers.iter().map(|o| o.record.to_json()).collect::<Vec<_>>(),
     });
@@ -935,7 +1147,7 @@ enum IdType {
 fn build_one_tier(
     source: &Dataset,
     tier: u8,
-    tolerance_metres: f64,
+    area_square_metres: f64,
     unit: &LinearUnit,
     key: LodTierKey,
     id_column: &str,
@@ -946,11 +1158,11 @@ fn build_one_tier(
     cancel: &CancelToken,
     progress: &dyn TierBuildProgress,
 ) -> Result<TierRecord> {
-    let tolerance = unit.tolerance_in_unit(tolerance_metres);
+    let epsilon = unit.min_triangle_area_in_unit(area_square_metres);
     let out_path = directory.join(format!("tier-{tier}.parquet"));
 
     match write_tier(
-        source, tier, tolerance, id_column, &out_path, workers, cancel, progress,
+        source, tier, epsilon, id_column, &out_path, workers, cancel, progress,
     ) {
         Ok(facts) => {
             let (sha256, _ms) = index::content_hash(&out_path, cancel)?;
@@ -971,7 +1183,7 @@ fn build_one_tier(
             Ok(TierRecord {
                 key,
                 tier,
-                tolerance_source_units: tolerance,
+                min_triangle_area_source_units: epsilon,
                 unit: unit.clone(),
                 features: facts.features,
                 vertices_before: facts.vertices_before,
@@ -1010,7 +1222,7 @@ struct TierFacts {
 fn write_tier(
     source: &Dataset,
     tier: u8,
-    tolerance: f64,
+    epsilon: f64,
     id_column: &str,
     out_path: &Path,
     workers: usize,
@@ -1079,7 +1291,7 @@ fn write_tier(
         let ids = read_ids(&batch, id_column, id_type)?;
         let wkb = read_wkb_column(&batch, &geometry_column)?;
 
-        let rows = simplify_rows(&ids, &wkb, tolerance, tier, workers, cancel, progress, facts.features)?;
+        let rows = simplify_rows(&ids, &wkb, epsilon, tier, workers, cancel, progress, facts.features)?;
         for r in &rows {
             facts.features += 1;
             facts.vertices_before += r.vertices_before;
@@ -1109,7 +1321,7 @@ fn write_tier(
 fn simplify_rows(
     ids: &[u64],
     wkb: &[&[u8]],
-    tolerance: f64,
+    epsilon: f64,
     tier: u8,
     workers: usize,
     cancel: &CancelToken,
@@ -1119,7 +1331,7 @@ fn simplify_rows(
     if workers <= LOD_BUILD_WORKERS_ARM_S {
         // Arm S runs inline: spawning one thread would add a handoff the baseline is supposed to be
         // free of.
-        return simplify_slice(ids, wkb, tolerance, tier, cancel, progress, features_before_batch);
+        return simplify_slice(ids, wkb, epsilon, tier, cancel, progress, features_before_batch);
     }
     let n = ids.len();
     let per = n.div_ceil(workers.max(1));
@@ -1133,7 +1345,7 @@ fn simplify_rows(
             let wkb = &wkb[start..end];
             let done_before = features_before_batch + start as u64;
             handles.push(scope.spawn(move || {
-                simplify_slice(ids, wkb, tolerance, tier, cancel, progress, done_before)
+                simplify_slice(ids, wkb, epsilon, tier, cancel, progress, done_before)
             }));
             start = end;
         }
@@ -1156,7 +1368,7 @@ fn simplify_rows(
 fn simplify_slice(
     ids: &[u64],
     wkb: &[&[u8]],
-    tolerance: f64,
+    epsilon: f64,
     tier: u8,
     cancel: &CancelToken,
     progress: &dyn TierBuildProgress,
@@ -1186,7 +1398,7 @@ fn simplify_slice(
             }
         };
         let vertices_before = ring_vertices(&polygon);
-        let simplified = polygon.simplify_vw_preserve(tolerance);
+        let simplified = polygon.simplify_vw_preserve(epsilon);
 
         // O1's hard gate, per feature, at the moment the geometry exists — not a sampled check and
         // not a post-pass. An invalid output stops the build (§5, I2).
@@ -1196,7 +1408,7 @@ fn simplify_slice(
             return Err(refusal(
                 LOD_INVALID_OUTPUT,
                 format!(
-                    "feature {id} simplified to an invalid Polygon at tolerance {tolerance} \
+                    "feature {id} simplified to an invalid Polygon at minimum triangle area {epsilon} \
                      (source units): {}. The simplifier choice is falsified for this input and no \
                      post-processing step is added to rescue it",
                     errors.join("; ")
@@ -1483,4 +1695,91 @@ fn remove_reporting(path: &Path) -> Result<()> {
 /// caller — a refusal nobody can act on is a log line with a type attached.
 fn refusal(identifier: &'static str, detail: String) -> EngineError {
     EngineError::LodRefused { refusal: identifier, detail }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A projected CRS whose linear unit is the international foot, written the way PROJJSON writes
+    /// a `LinearUnit` object. **Synthetic** — no file in this tree is in such a CRS, which is the
+    /// whole reason the test below exists.
+    fn foot_crs() -> String {
+        r#"{"type":"ProjectedCRS","name":"Synthetic foot CRS",
+            "coordinate_system":{"subtype":"Cartesian","axis":[
+              {"name":"Easting","abbreviation":"X","direction":"east",
+               "unit":{"type":"LinearUnit","name":"foot","conversion_factor":0.3048}},
+              {"name":"Northing","abbreviation":"Y","direction":"north",
+               "unit":{"type":"LinearUnit","name":"foot","conversion_factor":0.3048}}]}}"#
+            .to_string()
+    }
+
+    // RECORDED MUTATION (T14, `LOD-PREREGISTRATION.md` §10 Amendment 7's second rider): use the
+    // unsquared factor in `LinearUnit::min_triangle_area_in_unit`
+    // (`square_metres / self.metres_per_unit`) →
+    // a_non_metre_crs_squares_the_conversion_factor_for_an_area fails by name on
+    // "the factor is SQUARED for an area": it reads 0.32808…, the length conversion, instead of
+    // 1.07639…, the area one. Every fixture in this tree has factor 1.0, where the two are
+    // indistinguishable — this is the only place the difference is visible.
+    #[test]
+    fn a_non_metre_crs_squares_the_conversion_factor_for_an_area() {
+        let definition = foot_crs();
+        let unit = linear_unit_from_definition(Some(&definition), "synthetic:foot")
+            .expect("a projected CRS in feet declares a linear unit");
+        assert_eq!(unit.name, "foot");
+        assert_eq!(unit.metres_per_unit, 0.3048);
+
+        // The ladder's first rung: 0.1 square metres, in square feet.
+        let squared = 0.1_f64 / (0.3048 * 0.3048);
+        let unsquared = 0.1_f64 / 0.3048;
+        let got = unit.min_triangle_area_in_unit(LOD_MIN_TRIANGLE_AREA_LADDER[0]);
+        assert!(
+            (got - squared).abs() < 1e-12,
+            "the factor is SQUARED for an area: expected {squared} square feet for \
+             {} square metres, got {got}",
+            LOD_MIN_TRIANGLE_AREA_LADDER[0]
+        );
+        assert!(
+            (got - unsquared).abs() > 1e-6,
+            "the factor is SQUARED for an area: {got} is the length conversion {unsquared}, which \
+             is the bug this test exists for"
+        );
+
+        // The direction is *divide*, stated so the sign of the error is fixed too: a foot is
+        // shorter than a metre, so one square metre is more than one square foot.
+        assert!(got > LOD_MIN_TRIANGLE_AREA_LADDER[0]);
+        // And a metre CRS is the identity, which is why no fixture catches the mutation.
+        let metre = LinearUnit {
+            name: "metre".into(),
+            metres_per_unit: 1.0,
+            definition_provenance: "pasted".into(),
+            definition_sha256: String::new(),
+        };
+        assert_eq!(metre.min_triangle_area_in_unit(5.0), 5.0);
+    }
+
+    // RECORDED MUTATION (T12's pure half, §10 Amendment 6): make `disk_preflight` return `Ok(())`
+    // when `available_bytes` is `None` → the_preflight_fails_closed_when_free_space_is_unknown
+    // fails by name on "unknown free space is a refusal, not room".
+    #[test]
+    fn the_preflight_fails_closed_when_free_space_is_unknown() {
+        let required = set_hard_bound_bytes(1_000);
+        assert_eq!(required, 3_000, "the bound is tier count x the per-tier ceiling");
+        assert!(disk_preflight(required, Some(required)).is_ok(), "exactly enough is enough");
+        assert!(disk_preflight(required, Some(required + 1)).is_ok());
+
+        match disk_preflight(required, Some(required - 1)) {
+            Err(EngineError::LodRefused { refusal, detail }) => {
+                assert_eq!(refusal, LOD_INSUFFICIENT_DISK);
+                assert!(detail.contains("3000") && detail.contains("2999"), "{detail}");
+            }
+            other => panic!("too little free space must refuse: {other:?}"),
+        }
+        match disk_preflight(required, None) {
+            Err(EngineError::LodRefused { refusal, .. }) => {
+                assert_eq!(refusal, LOD_INSUFFICIENT_DISK, "unknown free space is a refusal, not room")
+            }
+            other => panic!("unknown free space is a refusal, not room: {other:?}"),
+        }
+    }
 }

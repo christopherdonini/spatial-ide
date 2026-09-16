@@ -1893,6 +1893,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "spatial-engine",
+ "windows-sys 0.61.2",
  "wkb",
 ]
 

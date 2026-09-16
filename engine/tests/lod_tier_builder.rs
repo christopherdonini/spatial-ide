@@ -40,7 +40,7 @@ use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, Fixtu
 use spatial_engine::lod::{
     build_tiers, LodTierKey, TierBatch, TierBuildProgress, TierMiss, TierSet, LOD_BUILD_WORKERS,
     LOD_BUILD_WORKERS_ARM_S, LOD_CRS_NOT_LINEAR, LOD_CRS_UNIT_UNDECLARED, LOD_TIER_COUNT,
-    LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_STALE, LOD_TOLERANCE_LADDER,
+    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_STALE,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ fn ring_vertex_counts(p: &geo::Polygon<f64>) -> Vec<usize> {
     v
 }
 
-/// A closed ring of `n` vertices on a circle — dense enough that the ladder's coarser tolerances
+/// A closed ring of `n` vertices on a circle — dense enough that the ladder's coarser rungs
 /// actually remove vertices, which is what keeps a small fixture's three-tier set under
 /// `LOD_TIER_SET_MAX_BYTES`. (A source with nothing to simplify is T10's case, not T4's or T5's.)
 fn dense_circle(cx: f64, cy: f64, r: f64, n: usize) -> Vec<Vec<[f64; 2]>> {
@@ -296,13 +296,12 @@ fn drop_tiers(set: &TierSet) {
 
 // RECORDED MUTATION: replace `SimplifyVwPreserve` with `geo::Simplify` (RDP) in
 // `engine/src/lod.rs::simplify_slice` → tier_build_emits_zero_invalid_polygons fails: at the
-// ladder's 5.0 m tolerance the builder refuses with `engine.lod_invalid_output` naming feature
+// ladder's 5.0 m2 minimum triangle area the builder refuses with `engine.lod_invalid_output` naming feature
 // 37926 and `interior ring at index 0 has a self-intersection`, so the ladder never completes and
 // the test fails on `build the polygons-100k ladder`. Verified mechanically at unit scale by
 // `the_rejected_simplifier_is_the_one_that_emits_invalid_polygons` below, which runs both
 // simplifiers over the same five features and asserts the divergence directly.
 #[test]
-#[ignore = "blocked by LOD-PREREGISTRATION.md §10 Amendment 5 (class 2, recorded after \n            the outcome): the polygons-100k ladder is over LOD_TIER_SET_MAX_BYTES, so \n            build_tiers refuses and there is no ladder to assert over. It passed with the \n            set-ceiling check bypassed in a local probe; un-ignore when the human rules on \n            the ceiling"]
 fn tier_build_emits_zero_invalid_polygons() {
     let l = ladder();
     assert_eq!(l.set.tiers().len(), LOD_TIER_COUNT, "the ladder is the declared three tiers");
@@ -318,9 +317,9 @@ fn tier_build_emits_zero_invalid_polygons() {
         }
         assert!(
             invalid.is_empty(),
-            "tier {} ({} m) wrote {} invalid polygon(s): {}",
+            "tier {} (minimum triangle area {} m2) wrote {} invalid polygon(s): {}",
             record.tier(),
-            record.key().tolerance_metres,
+            record.key().min_triangle_area_square_metres,
             invalid.len(),
             invalid.join(" | ")
         );
@@ -372,7 +371,6 @@ fn the_rejected_simplifier_is_the_one_that_emits_invalid_polygons() {
 // row group and the assertion names the first missing id ("tier 1 is missing 13 source id(s), first
 // 8191").
 #[test]
-#[ignore = "blocked by LOD-PREREGISTRATION.md §10 Amendment 5 (class 2, recorded after \n            the outcome): the polygons-100k ladder is over LOD_TIER_SET_MAX_BYTES, so \n            build_tiers refuses and there is no ladder to assert over. It passed with the \n            set-ceiling check bypassed in a local probe; un-ignore when the human rules on \n            the ceiling"]
 fn tier_preserves_identity_for_every_row() {
     let l = ladder();
     let source: std::collections::BTreeSet<u64> = l.source_ids.iter().copied().collect();
@@ -411,7 +409,6 @@ fn tier_preserves_identity_for_every_row() {
 // engine_opens_its_own_tier fails: `Dataset::open` returns `EngineError::GeoMetadata` at R-P2
 // (`dataset.rs:684-686`) and the test fails by name on "open the tier this engine wrote".
 #[test]
-#[ignore = "blocked by LOD-PREREGISTRATION.md §10 Amendment 5 (class 2, recorded after \n            the outcome): the polygons-100k ladder is over LOD_TIER_SET_MAX_BYTES, so \n            build_tiers refuses and there is no ladder to assert over. It passed with the \n            set-ceiling check bypassed in a local probe; un-ignore when the human rules on \n            the ceiling"]
 fn engine_opens_its_own_tier() {
     let l = ladder();
     let source = Dataset::open(polygons_100k()).expect("open the source");
@@ -454,7 +451,7 @@ fn tier_is_not_served_when_source_content_hash_changes() {
     let record = set.tiers()[0].record();
     let other = LodTierKey::new(
         "0000000000000000000000000000000000000000000000000000000000000000",
-        record.key().tolerance_metres,
+        record.key().min_triangle_area_square_metres,
         record.key().id_column.clone(),
     );
     let validity = spatial_engine::index::ValidityHeuristic::of(&path);
@@ -513,7 +510,7 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
     // produced, and that path always labels it.
     let stale = record
         .admit(
-            &LodTierKey::new("deadbeef", record.key().tolerance_metres, record.key().id_column.clone()),
+            &LodTierKey::new("deadbeef", record.key().min_triangle_area_square_metres, record.key().id_column.clone()),
             spatial_engine::index::ValidityHeuristic::of(&path).as_ref(),
         )
         .expect_err("a mismatched key is a miss");
@@ -575,7 +572,6 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
 // tier_writer_does_not_reorder_rows fails naming the first differing row ("tier 1 row 0: source id
 // 0, tier id 8191").
 #[test]
-#[ignore = "blocked by LOD-PREREGISTRATION.md §10 Amendment 5 (class 2, recorded after \n            the outcome): the polygons-100k ladder is over LOD_TIER_SET_MAX_BYTES, so \n            build_tiers refuses and there is no ladder to assert over. It passed with the \n            set-ceiling check bypassed in a local probe; un-ignore when the human rules on \n            the ceiling"]
 fn tier_writer_does_not_reorder_rows() {
     let l = ladder();
     for outcome in l.set.tiers() {
@@ -599,7 +595,7 @@ fn tier_writer_does_not_reorder_rows() {
 
 // RECORDED MUTATION: delete the angular-unit check in `engine/src/lod.rs::linear_unit_of` (the
 // `crs_type == "GeographicCRS" || unit == Degree` arm) → geographic_crs_source_is_refused_for_tier_building
-// fails: the build is accepted and a degrees-valued tolerance passes into the simplifier, so the
+// fails: the build is accepted and an area in square degrees passes into the simplifier, so the
 // call returns `Ok` and the assertion "a geographic CRS must be refused" fails by name.
 #[test]
 fn geographic_crs_source_is_refused_for_tier_building() {
@@ -673,7 +669,8 @@ fn crs_without_a_declared_linear_unit_is_refused() {
 fn tier_larger_than_its_source_is_refused() {
     let dir = scratch_dir("t10");
     let path = dir.join("nothing-to-simplify.parquet");
-    // A source with no covering bbox column and geometry a 0.1 m tolerance cannot reduce: the tier
+    // A source with no covering bbox column and geometry the ladder's smallest minimum triangle
+    // area cannot reduce: the tier
     // gains its own covering bbox (a property of the tier, §2d) while its geometry stays the size
     // it was, so the output is larger than the input — which is a defect, not a tier.
     write_geoparquet(
@@ -725,23 +722,22 @@ fn tier_larger_than_its_source_is_refused() {
 // the file still decodes, which is the point: a byte-order defect is silent until something
 // compares coordinates.
 #[test]
-#[ignore = "blocked by LOD-PREREGISTRATION.md §10 Amendment 5 (class 2, recorded after \n            the outcome): the polygons-100k ladder is over LOD_TIER_SET_MAX_BYTES, so \n            build_tiers refuses and there is no ladder to assert over. It passed with the \n            set-ceiling check bypassed in a local probe; un-ignore when the human rules on \n            the ceiling"]
 fn wkb_writer_round_trips_the_first_tier_written() {
     let l = ladder();
     let first = l.set.tiers().first().expect("the ladder has a first tier").record();
     assert_eq!(first.tier(), 1);
-    assert_eq!(first.key().tolerance_metres, LOD_TOLERANCE_LADDER[0]);
+    assert_eq!(first.key().min_triangle_area_square_metres, LOD_MIN_TRIANGLE_AREA_LADDER[0]);
 
     // The expected geometry is computed here, independently of the builder: the source's own WKB,
-    // decoded and simplified at the tier's tolerance in source units.
+    // decoded and simplified at the tier's own minimum triangle area, in the source's squared unit.
     let source_polygons = read_polygons(&polygons_100k());
     let tier_polygons = read_polygons(first.path());
     assert_eq!(tier_polygons.len(), source_polygons.len(), "the tier has the source's row count");
 
-    let tolerance = first.tolerance_source_units();
+    let epsilon = first.min_triangle_area_source_units();
     let mut vertices_after = 0u64;
     for (row, (src, got)) in source_polygons.iter().zip(tier_polygons.iter()).enumerate() {
-        let expected = src.simplify_vw_preserve(tolerance);
+        let expected = src.simplify_vw_preserve(epsilon);
         let (ea, ga) = (ring_vertex_counts(&expected), ring_vertex_counts(got));
         assert_eq!(ea.len(), ga.len(), "tier 1 row {row}: ring count");
         assert_eq!(ea, ga, "tier 1 row {row}: per-ring vertex counts");
@@ -769,6 +765,68 @@ fn wkb_writer_round_trips_the_first_tier_written() {
         first.vertices_after(),
         "the record's vertex count is the count of what is on disk"
     );
+}
+
+// ---------------------------------------------------------------------------------------------
+// T13 — §10 Amendment 6: the built set's actual size is disclosed with the tiers.
+// ---------------------------------------------------------------------------------------------
+
+// RECORDED MUTATION: drop the size from the manifest — delete the `"set"` block from
+// `engine/src/lod.rs::write_manifest` → the_built_sets_size_is_disclosed_with_the_tiers fails by
+// name on "tiers.json discloses the set's own size": `manifest["set"]` is `null`, so the assertion
+// that `set.bytes` equals the sum of the tier files' bytes cannot be made at all.
+#[test]
+fn the_built_sets_size_is_disclosed_with_the_tiers() {
+    let l = ladder();
+    let manifest: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(l.set.manifest_path()).expect("read tiers.json"))
+            .expect("tiers.json parses");
+
+    let set = manifest.get("set").expect("tiers.json discloses the set's own size");
+    let disclosed = set.get("bytes").and_then(serde_json::Value::as_u64).expect("set.bytes");
+    let on_disk: u64 = l
+        .set
+        .tiers()
+        .iter()
+        .map(|t| std::fs::metadata(t.record().path()).expect("stat a tier").len())
+        .sum();
+    assert_eq!(disclosed, on_disk, "the disclosed size is the size of the files on disk");
+    assert_eq!(disclosed, l.set.total_bytes(), "and the same the result type reports");
+
+    // The bound it is read against, and the source it is relative to.
+    let bound = set.get("hard_bound_bytes").and_then(serde_json::Value::as_u64).expect("hard bound");
+    assert_eq!(bound, l.set.hard_bound_bytes());
+    assert_eq!(bound, l.set.source_bytes() * 3, "tier count x the per-tier ceiling, by construction");
+    assert!(disclosed <= bound, "the set is within its by-construction bound");
+
+    // Per tier, in ladder order — the disclosure is not one number a reader has to trust.
+    let per_tier = set.get("per_tier_bytes").and_then(serde_json::Value::as_array).expect("per tier");
+    assert_eq!(per_tier.len(), LOD_TIER_COUNT);
+    for (i, entry) in per_tier.iter().enumerate() {
+        assert_eq!(entry.get("tier").and_then(serde_json::Value::as_u64), Some(i as u64 + 1));
+        assert_eq!(
+            entry.get("bytes").and_then(serde_json::Value::as_u64),
+            Some(l.set.tiers()[i].record().bytes())
+        );
+    }
+
+    // The prepare report's disk half carries the same facts as the manifest.
+    let cost = l.set.disk_cost();
+    assert_eq!(cost.total_bytes, disclosed);
+    assert_eq!(cost.hard_bound_bytes, bound);
+    assert!(cost.free_bytes_before_build.is_some(), "the preflight ran and its reading is disclosed");
+
+    // The ruling's first rider, on the tier's own description: areas in squared units, never a
+    // "tolerance in metres".
+    let first = &manifest.get("tiers").and_then(serde_json::Value::as_array).expect("tiers")[0];
+    assert_eq!(
+        first.get("quantity").and_then(serde_json::Value::as_str),
+        Some("minimum triangle area")
+    );
+    assert!(first.get("min_triangle_area_square_metres").is_some());
+    assert!(first.get("area_unit").and_then(serde_json::Value::as_str).unwrap().starts_with("square "));
+    let text = std::fs::read_to_string(l.set.manifest_path()).expect("read tiers.json");
+    assert!(!text.contains("tolerance"), "no tier is described as a tolerance (§10 Amendment 7)");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -861,10 +919,10 @@ fn the_5gb_ladder_under_disk_discipline() {
     for outcome in set.tiers() {
         let record = outcome.record();
         println!(
-            "tier {} tolerance {} m ({} source units) features {} vertices {} -> {} bytes {} sha256 {}",
+            "tier {} minimum triangle area {} m2 ({} source square units) features {} vertices {} -> {} bytes {} sha256 {}",
             record.tier(),
-            record.key().tolerance_metres,
-            record.tolerance_source_units(),
+            record.key().min_triangle_area_square_metres,
+            record.min_triangle_area_source_units(),
             record.features(),
             record.vertices_before(),
             record.vertices_after(),

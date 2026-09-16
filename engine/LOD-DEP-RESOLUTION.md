@@ -149,3 +149,35 @@ node -e "import('./scripts/rustCrateNotices.mjs').then(m => { const c = m.collec
 ```
 
 (`repoRoot` must resolve to the repository root for the canonical texts to be found.)
+
+## 7. Addendum (2026-09-16) — the free-disk preflight's platform call
+
+The human's ruling of 2026-09-16 (question round 6, recorded as `engine/LOD-PREREGISTRATION.md` §10
+Amendment 6) requires a free-disk preflight before the first tier is written. `std::fs` has no
+free-space call, so `engine/src/lod.rs` calls `GetDiskFreeSpaceExW` through `windows-sys`, declared
+under `[target.'cfg(windows)'.dependencies]` with the single feature `Win32_Storage_FileSystem`.
+
+**No crate and no crate version enters either tree.** `windows-sys 0.61.2` was already resolved in
+both lockfiles before this change (the workspace's via `tokio`/`getrandom`/`duckdb`; the shell's via
+those and `tauri`), so it is already in the conveyed artifact's notice set. The lockfile diffs are
+one line each — `windows-sys 0.61.2` added to `spatial-engine`'s own dependency list — and no other
+package or version moved:
+
+```
+ Cargo.lock                           | 1 +
+ frontends/shell/src-tauri/Cargo.lock | 1 +
+```
+
+- **I1 (a second Arrow major): still does not fire.** `windows-sys` reaches no Arrow crate; every
+  `arrow*` and `parquet` stays at 58.4.0.
+- **I4 (licence): nothing added.** No package was added, so the closure recorded in §2 is unchanged.
+  `windows-sys` itself is `MIT OR Apache-2.0`, already recorded in both trees.
+- **ADR-030.** The notice set's Rust source is the shell lockfile, which gains no package — the
+  crate it now names for `spatial-engine` was already enumerated for the artifact. No new SPDX id,
+  so `buildCanonicalLicenseTexts`' fail-closed step still needs exactly the four texts `LICENSES/`
+  carries.
+
+The in-tree precedent for calling a Win32 API this way is `protocol/transport-bakeoff/src/memory.rs`
+(`GetProcessMemoryInfo` through the same crate). On a non-Windows target the reading is `None` and
+the preflight fails closed, which is recorded at the function's own site rather than left to be
+discovered.

@@ -58,6 +58,19 @@ geo = "0.33.1"
 wkb = "0.9.2"
 geo-traits = "0.3.0"
 
+[target.'cfg(windows)'.dependencies]
+# The free-disk preflight the human's ruling of 2026-09-16 (question round 6, recorded as
+# `engine/LOD-PREREGISTRATION.md` §10 Amendment 6) requires before the first tier is written:
+# "the builder requires free space >= the 3.0x bound for that source". `std::fs` has no free-space
+# call, so this is `GetDiskFreeSpaceExW` and nothing else.
+#
+# **No new crate enters the tree.** `windows-sys 0.61.2` is already resolved in both this
+# workspace's `Cargo.lock` and `frontends/shell/src-tauri/Cargo.lock` (so it is already in the
+# conveyed artifact's notice set), and the one feature named here is a module gate on that crate,
+# not another dependency. The in-tree precedent for calling a Win32 API this way is
+# `protocol/transport-bakeoff/src/memory.rs:18-40`. Windows-gated, because the call is.
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }
+
 [dev-dependencies]
 # Enables the fixture writer for this crate's own tests without putting it in the shipped surface.
 spatial-engine = { path = ".", features = ["fixture"] }
