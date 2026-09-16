@@ -1,0 +1,58 @@
+ahash v0.8.12 MIT OR Apache-2.0
+aho-corasick v1.1.5 Unlicense OR MIT
+arrow v58.4.0 Apache-2.0
+arrow-arith v58.4.0 Apache-2.0
+arrow-array v58.4.0 Apache-2.0 AND MIT
+arrow-buffer v58.4.0 Apache-2.0
+arrow-cast v58.4.0 Apache-2.0
+arrow-data v58.4.0 Apache-2.0
+arrow-ipc v58.4.0 Apache-2.0
+arrow-ord v58.4.0 Apache-2.0
+arrow-row v58.4.0 Apache-2.0
+arrow-schema v58.4.0 Apache-2.0
+arrow-select v58.4.0 Apache-2.0
+arrow-string v58.4.0 Apache-2.0
+atoi v2.0.0 MIT
+base64 v0.22.1 MIT OR Apache-2.0
+bitflags v2.13.2 MIT OR Apache-2.0
+byteorder v1.5.0 Unlicense OR MIT
+bytes v1.12.1 MIT
+cfg-if v1.0.4 MIT OR Apache-2.0
+chrono v0.4.45 MIT OR Apache-2.0
+flatbuffers v25.12.19 Apache-2.0
+getrandom v0.3.4 MIT OR Apache-2.0
+half v2.7.1 MIT OR Apache-2.0
+hashbrown v0.17.1 MIT OR Apache-2.0
+integer-encoding v3.0.4 MIT
+lexical-core v1.0.6 MIT/Apache-2.0
+lexical-parse-float v1.0.6 MIT/Apache-2.0
+lexical-parse-integer v1.0.6 MIT/Apache-2.0
+lexical-util v1.0.7 MIT/Apache-2.0
+lexical-write-float v1.0.6 MIT/Apache-2.0
+lexical-write-integer v1.0.6 MIT/Apache-2.0
+libm v0.2.16 MIT
+lod-dep-check-baseline v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check\baseline) 
+memchr v2.8.3 Unlicense OR MIT
+num-bigint v0.4.8 MIT OR Apache-2.0
+num-complex v0.4.6 MIT OR Apache-2.0
+num-integer v0.1.47 MIT OR Apache-2.0
+num-traits v0.2.19 MIT OR Apache-2.0
+once_cell v1.21.4 MIT OR Apache-2.0
+ordered-float v2.10.1 MIT
+parquet v58.4.0 Apache-2.0
+paste v1.0.15 (proc-macro) MIT OR Apache-2.0
+proc-macro2 v1.0.107 MIT OR Apache-2.0
+quote v1.0.47 MIT OR Apache-2.0
+regex v1.13.1 MIT OR Apache-2.0
+regex-automata v0.4.18 MIT OR Apache-2.0
+regex-syntax v0.8.11 MIT OR Apache-2.0
+ryu v1.0.23 Apache-2.0 OR BSL-1.0
+seq-macro v0.3.6 (proc-macro) MIT OR Apache-2.0
+snap v1.1.2 BSD-3-Clause
+syn v2.0.119 MIT OR Apache-2.0
+thrift v0.17.0 Apache-2.0
+twox-hash v2.1.4 MIT
+unicode-ident v1.0.24 (MIT OR Apache-2.0) AND Unicode-3.0
+windows-link v0.2.1 MIT OR Apache-2.0
+zerocopy v0.8.57 BSD-2-Clause OR Apache-2.0 OR MIT
+zerocopy-derive v0.8.57 (proc-macro) BSD-2-Clause OR Apache-2.0 OR MIT
