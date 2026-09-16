@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `02d0f054ef806d36e9d0b47cde6e7a9b28ed993423735b8df98ba2f487ad4f2a`) at `2026-09-16T10:36:08.200Z`.
+Generated from `PLAN.yaml` (sha256 `81b2b5231bfac025c0eb0a4efc4a93e3e7207da69f5b5274f99146101d37d6e8`) at `2026-09-16T11:12:04.581Z`.
 
 ## 1. Next
 
@@ -30,12 +30,12 @@ Generated from `PLAN.yaml` (sha256 `02d0f054ef806d36e9d0b47cde6e7a9b28ed99342373
 
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
 - **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: PR #81
+- **self-check-false-readings** — Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff — evidence: branch `governance/test-claims-planned`
 
 ## 6. Proposed / unscheduled
 
 ### Proposed
 
-- **self-check-false-readings** — Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff (phase `prototype`) — never queued until placed
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed

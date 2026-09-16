@@ -453,18 +453,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
-    order: null
+    status: in-progress
+    order: 7
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {branch: governance/test-claims-planned}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Proposed by the custodian from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
-    dates: {opened: null, done: null}
+    summary: "STOP-THE-LINE 2026-09-16: main red on verify:test-claims since 2a939d3 -- a preregistration committed before code (the template rule) names tests that do not exist yet; fix forward reviewer-gated: claims in a not-done node gate file are advisory (planned), binding once the node is done. Originally proposed from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
+    dates: {opened: 2026-09-16, done: null}
 
   - id: site-bugs-first
     title: "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)"

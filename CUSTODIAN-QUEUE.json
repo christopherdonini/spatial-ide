@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T10:36:08.200Z",
-  "plan_hash": "02d0f054ef806d36e9d0b47cde6e7a9b28ed993423735b8df98ba2f487ad4f2a",
+  "generated_at": "2026-09-16T11:12:04.581Z",
+  "plan_hash": "81b2b5231bfac025c0eb0a4efc4a93e3e7207da69f5b5274f99146101d37d6e8",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-builder-route-b",
@@ -289,28 +289,31 @@
       },
       "summary": "RULED 2026-09-15 (question round 2, item 2): autoinstall_known_extensions=false and autoload_known_extensions=false at every engine connection open (the pool's CONFIGURE_SQL site and layout.rs's direct open, one shared statement), asserted fail-closed on every lease class; full two-agent gate despite size (the no-runtime-fetch property ADR-021 records); that ADR's amendment appended in the same PR for the human's click. Preregistered before code (engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md)",
       "evidence_label": "PR #81"
-    }
-  ],
-  "proposed": [
+    },
     {
       "id": "self-check-false-readings",
       "title": "Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "in-progress",
+      "order": 7,
       "budget_minutes": 60,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "evidence": null,
+      "evidence": {
+        "branch": "governance/test-claims-planned"
+      },
       "dates": {
-        "opened": null,
+        "opened": "2026-09-16",
         "done": null
       },
-      "summary": "Proposed by the custodian from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
-    },
+      "summary": "STOP-THE-LINE 2026-09-16: main red on verify:test-claims since 2a939d3 -- a preregistration committed before code (the template rule) names tests that do not exist yet; fix forward reviewer-gated: claims in a not-done node gate file are advisory (planned), binding once the node is done. Originally proposed from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form",
+      "evidence_label": "branch `governance/test-claims-planned`"
+    }
+  ],
+  "proposed": [
     {
       "id": "engine-tests-configured-connections",
       "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
