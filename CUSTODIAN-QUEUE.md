@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9dabf351e263c336101c5486399ad8bb6744ce1e44f52e07d7d4919a307c40f7`) at `2026-09-16T22:05:42.206Z`.
+Generated from `PLAN.yaml` (sha256 `c66d95b140aea8501901f0185ef1cf4087abb2a67b9003718fff64003e26d8f5`) at `2026-09-16T22:17:05.254Z`.
 
 ## 1. Next
 
@@ -29,7 +29,7 @@ Generated from `PLAN.yaml` (sha256 `9dabf351e263c336101c5486399ad8bb6744ce1e44f5
 
 ## 5. In progress
 
-- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
+- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: PR #83
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: branch `engine/lod-tier-builder`
 
 ## 6. Proposed / unscheduled

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T22:05:42.410Z",
-  "plan_hash": "9dabf351e263c336101c5486399ad8bb6744ce1e44f52e07d7d4919a307c40f7",
+  "generated_at": "2026-09-16T22:17:05.408Z",
+  "plan_hash": "c66d95b140aea8501901f0185ef1cf4087abb2a67b9003718fff64003e26d8f5",
   "priorities_approved": true,
   "lanes": [
     {
@@ -884,12 +884,12 @@
         "sitting-4-rows"
       ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "click",
+        "minutes": 5
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p3"
+        "pr": 83
       },
       "budget_minutes": 390,
       "generation": 1,

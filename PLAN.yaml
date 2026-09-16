@@ -549,9 +549,9 @@ nodes:
     status: in-progress
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: click, minutes: 5}
     gate: engine/ADMISSION-PREREGISTRATION.md
-    evidence: {branch: cut/briefa-p3}
+    evidence: {pr: 83}
     budget_minutes: 390
     generation: 1
     felt_verdict: true
