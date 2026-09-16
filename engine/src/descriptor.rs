@@ -191,7 +191,7 @@ impl SourceDescriptor {
     /// `attribute_concatenations()` beside it).
     ///
     /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
-    /// 2026-09-16, round 5 item 3) — both in `engine/tests/session_identity.rs`:
+    /// 2026-09-16, round 5 item 4) — both in `engine/tests/session_identity.rs`:
     /// `the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read` and
     /// `the_post_check_reports_the_footer_bytes_it_read`.
     pub fn footer_bytes_read(&self) -> u64 {

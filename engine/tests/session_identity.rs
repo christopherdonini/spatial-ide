@@ -493,7 +493,7 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
 }
 
 /// **The post-check's cost is reported, not silent** — the human's ruling of 2026-09-16 (round 5,
-/// item 2): "the post-check's cost is reported per cancellation (session log or the terminal's
+/// item 3): "the post-check's cost is reported per cancellation (session log or the terminal's
 /// timing fields, never silent, its <= 8 MiB bound named)".
 ///
 /// Two carriers, asserted here on the one that travels with the stream. The other is the session

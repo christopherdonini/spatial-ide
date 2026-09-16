@@ -98,7 +98,7 @@ export class LiveTicketSet {
    * ships. It is never a rendering input and nothing branches on it.
    *
    * **Its caller, named so the caller-grep can verify this exemption instead of trusting the words
-   * "test-only"** (the human's ruling of 2026-09-16, round 5 item 3):
+   * "test-only"** (the human's ruling of 2026-09-16, round 5 item 4):
    * `liveTicketSet.test.ts`'s "drops every ticket on invalidation, including ones minted before the
    * change was seen".
    */

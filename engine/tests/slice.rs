@@ -645,7 +645,7 @@ fn cancelling_mid_stream_stops_production_promptly() {
     // clock.** The budgeted term ends at `cancel_observed`, which the producer stamps on its own
     // thread (`PRODUCER_CANCELLED`); the consumer's receipt of `Err(Cancelled)` is later and is a
     // different quantity. Reading the stamps is the only way to assert the declared budget rather
-    // than a proxy for it (the human's ruling of 2026-09-16, round 5 item 2).
+    // than a proxy for it (the human's ruling of 2026-09-16, round 5 item 3).
     let guard = trace::start(trace::TraceKey {
         dataset: "cancel-mid".into(),
         physical_id: 0,

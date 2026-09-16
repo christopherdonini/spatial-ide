@@ -434,7 +434,7 @@ pub const PRODUCER_CANCELLED: &str = "producer_cancelled";
 /// budgets `cancel_requested → cancel_observed` ([`PRODUCER_CANCELLED`]) and reports the quiescent
 /// term "beside it with no budget"; the post-check runs after the former and before
 /// [`PRODUCER_FINISHED`], so on a cancelled stream it is inside the interval nobody budgets. The
-/// human's ruling of 2026-09-16 (round 5, item 2) keeps it there and requires its cost to be
+/// human's ruling of 2026-09-16 (round 5, item 3) keeps it there and requires its cost to be
 /// **reported per cancellation rather than left silent**. This pair is that report.
 ///
 /// **No duration is claimed anywhere by this.** The marks record instants; what the interval

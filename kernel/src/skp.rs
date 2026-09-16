@@ -387,7 +387,7 @@ impl GenerationRegistry {
     /// generation value.
     ///
     /// **Its callers, named so the caller-grep can verify this exemption rather than trust the
-    /// words "test-only"** (the human's ruling of 2026-09-16, round 5 item 3) — all in
+    /// words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4) — all in
     /// `kernel/tests/session_generation.rs`:
     /// `dead_generation_attributions_are_pruned_rather_than_accumulating`,
     /// `a_ticket_is_attributable_only_under_a_live_generation`,
