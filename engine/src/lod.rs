@@ -476,8 +476,8 @@ pub(crate) fn linear_unit_from_definition(
             LOD_CRS_NOT_LINEAR,
             format!(
                 "`{}` is a {crs_type} whose coordinate unit reads `{}`; an area in an angular \
-                 unit is not a length, and simplifying by one would be the units-unaware \
-                 measurement docs/01 forbids",
+                 unit is not an area in a linear unit, and simplifying by one would be the \
+                 units-unaware measurement docs/01 forbids",
                 identifier,
                 unit.as_str()
             ),
@@ -770,6 +770,11 @@ impl TierOutcome {
 ///
 /// Every field is bytes. **No time figure is here, deliberately**: prep *time* is a measurement and
 /// belongs to the tester (§6, §9), while disk cost is a fact of the artifact on disk.
+///
+/// **No product caller until the prepare report exists** (owed to the selection piece, §10
+/// Amendment 8): this type is the shape that report will carry, and today it is read by
+/// `the_built_sets_size_is_disclosed_with_the_tiers` and
+/// `the_preflight_refuses_before_the_first_tier_is_written` alone.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TierSetDiskCost {
     /// `(tier, bytes)`, in ladder order.
@@ -794,6 +799,7 @@ pub struct TierSet {
     directory: PathBuf,
     tiers: Vec<TierOutcome>,
     free_bytes_before_build: Option<u64>,
+    max_simplify: Option<std::time::Duration>,
 }
 
 impl TierSet {
@@ -819,7 +825,30 @@ impl TierSet {
     pub fn hard_bound_bytes(&self) -> u64 {
         set_hard_bound_bytes(self.source_bytes)
     }
+    /// **§6's declared instrument: the largest single `simplify_vw_preserve` call this build made**,
+    /// as a `Duration`. `None` when nothing was built (every tier admitted from disk).
+    ///
+    /// **An instrument accessor** (the caller rule's exemption, the human 2026-09-16 round 5 item
+    /// 4): read-only over state the shipped build already maintains — the maximum is taken inside
+    /// `simplify_slice`, on the same code path a product build runs — and **its only caller today is
+    /// the test suite**, `a_build_measures_the_largest_single_feature_simplify`. It exists because
+    /// `LOD_CANCEL_OBSERVED_CEILING_MS` declares a residual: one feature's simplify call has no
+    /// interruption point inside it, so the residual has to be a measured fact about the shipped
+    /// build rather than a hope about it (§6, §7). **No figure taken from it is written into this
+    /// module, `tiers.json`, any comment or any document** — the value is the tester's to report
+    /// (§6, §9).
+    pub fn max_single_feature_simplify(&self) -> Option<std::time::Duration> {
+        self.max_simplify
+    }
     /// **The prepare report's disk half** (`§10` Amendment 6), in bytes and nothing else.
+    ///
+    /// **An instrument accessor under the same exemption**: read-only over sizes the shipped build
+    /// already recorded and re-`stat`ed, with **no product caller until the prepare report exists**
+    /// (§9 gives this piece no operator surface, and the report is owed to the selection piece —
+    /// §10 Amendment 8). Its only callers today are `the_built_sets_size_is_disclosed_with_the_tiers`
+    /// and `the_preflight_refuses_before_the_first_tier_is_written`, which prove about the shipped
+    /// build that what a caller would be shown is the size on disk and the bound it was read
+    /// against — the property the human's "prep time and disk cost disclosed" boundary rests on.
     pub fn disk_cost(&self) -> TierSetDiskCost {
         TierSetDiskCost {
             per_tier_bytes: self.tiers.iter().map(|t| (t.record.tier, t.record.bytes)).collect(),
@@ -829,14 +858,23 @@ impl TierSet {
             free_bytes_before_build: self.free_bytes_before_build,
         }
     }
+
     pub fn manifest_path(&self) -> PathBuf {
         self.directory.join("tiers.json")
     }
 }
 
 /// The set's hard bound in bytes for a source of `source_bytes`
-/// ([`LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES`]). Saturating, so a pathological size cannot wrap into
-/// a small bound.
+/// ([`LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES`]) — what the preflight requires before the first tier
+/// is written.
+///
+/// **An instrument accessor** (the caller rule's exemption, the human 2026-09-16 round 5 item 4):
+/// a pure read-only function over a declared constant, called inside `build_tiers` on the shipped
+/// path, and **its only external caller is the test suite** —
+/// `the_preflight_refuses_before_the_first_tier_is_written`, which has no `TierSet` to ask
+/// (the build it exercises refuses before one exists) and so must name the required bytes the way
+/// the shipped build computes them. Proving that about the shipped build is the point: a test that
+/// recomputed the bound itself would pass while the builder required something else.
 pub fn set_hard_bound_bytes(source_bytes: u64) -> u64 {
     (source_bytes as f64 * LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES).ceil() as u64
 }
@@ -967,12 +1005,16 @@ pub fn build_tiers(
     let mut preflight_done = false;
 
     let mut outcomes: Vec<TierOutcome> = Vec::with_capacity(LOD_TIER_COUNT);
+    let mut max_simplify = std::time::Duration::ZERO;
     for (i, area_square_metres) in LOD_MIN_TRIANGLE_AREA_LADDER.iter().copied().enumerate() {
+        let tier = (i + 1) as u8;
         if cancel.is_cancelled() {
-            progress.cancel_observed(0, 0);
+            // The tier this build was about to start, never 0: tier 0 is the source in this
+            // module's vocabulary (§2b), and an instrument told "tier 0 stopped" would be told
+            // something that cannot happen.
+            progress.cancel_observed(tier, 0);
             return Err(EngineError::Cancelled);
         }
-        let tier = (i + 1) as u8;
         let key = LodTierKey::new(content_hash.clone(), area_square_metres, id_column.clone());
 
         // Found by path, admitted by key. A found-but-rejected tier is never served: its reason is
@@ -981,13 +1023,34 @@ pub fn build_tiers(
             None => (None, Some(TierMiss::Absent)),
             Some(found) if !found.path.is_file() => (None, Some(TierMiss::Absent)),
             Some(found) => match found.admit(&key, source_validity.as_ref()) {
-                Ok(_admitted) => (Some(found.clone()), None),
+                // **A reused tier is re-`stat`ed, and the bytes on disk are what is disclosed.**
+                // The record's size and hash were written when the file was; a file that has
+                // changed size since is not the artifact the record identifies, so the record's
+                // tier is `Absent` for admission purposes and is rebuilt — a miss, never a
+                // refusal, because rebuilding is what the caller asked for. Bytes only: no
+                // re-hash, which would put a whole-file read on the reuse path the reuse exists to
+                // avoid. The per-tier ceiling is re-applied below on the size that was read, so it
+                // holds in every profile rather than only where `debug_assert!` survives.
+                Ok(_admitted) => match std::fs::metadata(&found.path) {
+                    Ok(md) if md.len() == found.bytes => (Some(found.clone()), None),
+                    Ok(_) | Err(_) => (None, Some(TierMiss::Absent)),
+                },
                 Err(stale) => (None, Some(stale.miss())),
             },
         };
 
         let record = match record {
-            Some(reused) => reused,
+            Some(reused) => {
+                let limit = (source_bytes as f64 * LOD_TIER_MAX_RELATIVE_BYTES) as u64;
+                if reused.bytes > limit {
+                    return Err(EngineError::CeilingExceeded {
+                        ceiling: LOD_TIER_LARGER_THAN_SOURCE,
+                        limit,
+                        saw: reused.bytes,
+                    });
+                }
+                reused
+            }
             None => {
                 if !preflight_done {
                     // Before the first tier is written, and before the directory that would hold
@@ -1002,7 +1065,7 @@ pub fn build_tiers(
                         EngineError::Source(format!("create the tier directory: {e}"))
                     })?;
                 }
-                build_one_tier(
+                let (record, tier_max_simplify) = build_one_tier(
                     source,
                     tier,
                     area_square_metres,
@@ -1015,7 +1078,11 @@ pub fn build_tiers(
                     workers,
                     cancel,
                     progress,
-                )?
+                )?;
+                if tier_max_simplify > max_simplify {
+                    max_simplify = tier_max_simplify;
+                }
+                record
             }
         };
         outcomes.push(TierOutcome { record, miss });
@@ -1027,6 +1094,10 @@ pub fn build_tiers(
     // every tier is already refused above `LOD_TIER_MAX_RELATIVE_BYTES` × the source, so
     // `LOD_TIER_COUNT` of them cannot exceed `LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES` × it — plus
     // the preflight above. The assertion states the construction rather than testing a hypothesis.
+    // **This assertion is not the bound, and must not be read as one**: it is compiled out under
+    // `--release`, which is the tester's build. What enforces the size in every profile is the
+    // per-tier ceiling — applied after each write and again on every reused tier above — together
+    // with the free-disk preflight. This line states the construction those two make true.
     let total: u64 = outcomes.iter().map(|o| o.record.bytes).sum();
     debug_assert!(
         total <= set_hard_bound_bytes(source_bytes),
@@ -1040,6 +1111,7 @@ pub fn build_tiers(
         directory,
         tiers: outcomes,
         free_bytes_before_build,
+        max_simplify: (max_simplify > std::time::Duration::ZERO).then_some(max_simplify),
     };
     // Idempotent: on the all-reused path nothing was built, and the directory the tiers were read
     // from is already there.
@@ -1127,6 +1199,13 @@ fn write_manifest(set: &TierSet, source: &Dataset, unit: &LinearUnit) -> Result<
 // Building one tier.
 // ---------------------------------------------------------------------------------------------
 
+/// One slice's emitted rows and the largest single `simplify_vw_preserve` call inside it (§6's
+/// declared instrument, measured where the call is made).
+struct SliceOutput {
+    rows: Vec<EmittedRow>,
+    max_simplify: std::time::Duration,
+}
+
 /// One emitted row: the identity value, the simplified geometry's WKB, and that geometry's own
 /// bounding box. Carried in the source's row order and never sorted.
 struct EmittedRow {
@@ -1157,7 +1236,7 @@ fn build_one_tier(
     workers: usize,
     cancel: &CancelToken,
     progress: &dyn TierBuildProgress,
-) -> Result<TierRecord> {
+) -> Result<(TierRecord, std::time::Duration)> {
     let epsilon = unit.min_triangle_area_in_unit(area_square_metres);
     let out_path = directory.join(format!("tier-{tier}.parquet"));
 
@@ -1180,19 +1259,22 @@ fn build_one_tier(
                     saw: bytes,
                 });
             }
-            Ok(TierRecord {
-                key,
-                tier,
-                min_triangle_area_source_units: epsilon,
-                unit: unit.clone(),
-                features: facts.features,
-                vertices_before: facts.vertices_before,
-                vertices_after: facts.vertices_after,
-                path: out_path,
-                bytes,
-                sha256,
-                source_validity,
-            })
+            Ok((
+                TierRecord {
+                    key,
+                    tier,
+                    min_triangle_area_source_units: epsilon,
+                    unit: unit.clone(),
+                    features: facts.features,
+                    vertices_before: facts.vertices_before,
+                    vertices_after: facts.vertices_after,
+                    path: out_path,
+                    bytes,
+                    sha256,
+                    source_validity,
+                },
+                facts.max_simplify,
+            ))
         }
         Err(e) => {
             // The partial file is the side effect; removing it is the recovery policy, and its
@@ -1216,6 +1298,8 @@ struct TierFacts {
     features: u64,
     vertices_before: u64,
     vertices_after: u64,
+    /// §6's instrument for this tier: the largest single `simplify_vw_preserve` call it made.
+    max_simplify: std::time::Duration,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1276,7 +1360,12 @@ fn write_tier(
     let mut writer = ArrowWriter::try_new(out, schema.clone(), Some(props))
         .map_err(|e| EngineError::Source(format!("parquet writer: {e}")))?;
 
-    let mut facts = TierFacts { features: 0, vertices_before: 0, vertices_after: 0 };
+    let mut facts = TierFacts {
+        features: 0,
+        vertices_before: 0,
+        vertices_after: 0,
+        max_simplify: std::time::Duration::ZERO,
+    };
     loop {
         // **Before the next batch is pulled, not after.** Reading a batch is a decompress with no
         // interruption point inside it; checking after the pull would put that whole read inside
@@ -1291,7 +1380,12 @@ fn write_tier(
         let ids = read_ids(&batch, id_column, id_type)?;
         let wkb = read_wkb_column(&batch, &geometry_column)?;
 
-        let rows = simplify_rows(&ids, &wkb, epsilon, tier, workers, cancel, progress, facts.features)?;
+        let slice =
+            simplify_rows(&ids, &wkb, epsilon, tier, workers, cancel, progress, facts.features)?;
+        if slice.max_simplify > facts.max_simplify {
+            facts.max_simplify = slice.max_simplify;
+        }
+        let rows = slice.rows;
         for r in &rows {
             facts.features += 1;
             facts.vertices_before += r.vertices_before;
@@ -1327,7 +1421,7 @@ fn simplify_rows(
     cancel: &CancelToken,
     progress: &dyn TierBuildProgress,
     features_before_batch: u64,
-) -> Result<Vec<EmittedRow>> {
+) -> Result<SliceOutput> {
     if workers <= LOD_BUILD_WORKERS_ARM_S {
         // Arm S runs inline: spawning one thread would add a handoff the baseline is supposed to be
         // free of.
@@ -1335,7 +1429,7 @@ fn simplify_rows(
     }
     let n = ids.len();
     let per = n.div_ceil(workers.max(1));
-    let mut results: Vec<Result<Vec<EmittedRow>>> = Vec::new();
+    let mut results: Vec<Result<SliceOutput>> = Vec::new();
     std::thread::scope(|scope| {
         let mut handles = Vec::new();
         let mut start = 0usize;
@@ -1357,12 +1451,18 @@ fn simplify_rows(
     });
 
     let mut rows = Vec::with_capacity(n);
+    let mut max_simplify = std::time::Duration::ZERO;
     // The first error **in slice order**, so which failure a caller sees does not depend on thread
-    // scheduling.
+    // scheduling. The instrument takes the maximum across workers, which is the same value whichever
+    // arm ran — a per-feature maximum is not a function of how the work was divided.
     for r in results {
-        rows.extend(r?);
+        let slice = r?;
+        rows.extend(slice.rows);
+        if slice.max_simplify > max_simplify {
+            max_simplify = slice.max_simplify;
+        }
     }
-    Ok(rows)
+    Ok(SliceOutput { rows, max_simplify })
 }
 
 fn simplify_slice(
@@ -1373,15 +1473,22 @@ fn simplify_slice(
     cancel: &CancelToken,
     progress: &dyn TierBuildProgress,
     features_done_before: u64,
-) -> Result<Vec<EmittedRow>> {
+) -> Result<SliceOutput> {
     let mut out = Vec::with_capacity(ids.len());
+    // The declared cadence, **read rather than restated**: `LOD_CANCEL_CHECK_FEATURES` is the
+    // number of features one uninterrupted run may cover, and at its declared value of 1 that is
+    // every feature. Counted the way `index.rs:66-83` counts its own poll interval — a constant
+    // nothing reads is a constant that can drift away from the code it claims to describe.
+    let mut since_check: u64 = 0;
+    let mut max_simplify = std::time::Duration::ZERO;
     for (i, bytes) in wkb.iter().enumerate() {
         // **Once per feature** (`LOD_CANCEL_CHECK_FEATURES`), not once per row group. The instant
         // the check fires is stamped here, on this thread, before anything unwinds.
-        if cancel.is_cancelled() {
+        if since_check == 0 && cancel.is_cancelled() {
             progress.cancel_observed(tier, features_done_before + i as u64);
             return Err(EngineError::Cancelled);
         }
+        since_check = (since_check + 1) % LOD_CANCEL_CHECK_FEATURES.max(1);
         let id = ids[i];
         let parsed = wkb::reader::read_wkb(bytes)
             .map_err(|e| EngineError::Wkb(format!("feature {id}: {e}")))?;
@@ -1398,7 +1505,16 @@ fn simplify_slice(
             }
         };
         let vertices_before = ring_vertices(&polygon);
+        // **§6's declared instrument**: the simplify call is the uninterruptible window
+        // `LOD_CANCEL_OBSERVED_CEILING_MS` names as its residual, so the residual is measured here
+        // rather than hoped about. Read through `TierSet::max_single_feature_simplify`; no figure
+        // is written to any file, comment or document by this module.
+        let simplify_started = std::time::Instant::now();
         let simplified = polygon.simplify_vw_preserve(epsilon);
+        let simplify_took = simplify_started.elapsed();
+        if simplify_took > max_simplify {
+            max_simplify = simplify_took;
+        }
 
         // O1's hard gate, per feature, at the moment the geometry exists — not a sampled check and
         // not a post-pass. An invalid output stops the build (§5, I2).
@@ -1430,7 +1546,7 @@ fn simplify_slice(
 
         out.push(EmittedRow { id, wkb: bytes_out, bbox, vertices_before, vertices_after });
     }
-    Ok(out)
+    Ok(SliceOutput { rows: out, max_simplify })
 }
 
 /// Every ring's vertices, exterior and interiors — the same counting the spike cross-checked

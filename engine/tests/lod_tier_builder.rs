@@ -166,9 +166,11 @@ fn ring_vertex_counts(p: &geo::Polygon<f64>) -> Vec<usize> {
     v
 }
 
-/// A closed ring of `n` vertices on a circle — dense enough that the ladder's coarser rungs
-/// actually remove vertices, which is what keeps a small fixture's three-tier set under
-/// `LOD_TIER_SET_MAX_BYTES`. (A source with nothing to simplify is T10's case, not T4's or T5's.)
+/// A closed ring of `n` vertices on a circle — dense enough that the ladder's coarser rungs actually
+/// remove vertices, which is what keeps each tier of a small fixture under the per-tier ceiling
+/// `LOD_TIER_MAX_RELATIVE_BYTES`. (A source with nothing to simplify is T10's case, not T4's or
+/// T5's: its tier gains a covering bbox while its geometry stays the size it was, and the per-tier
+/// ceiling refuses it.)
 fn dense_circle(cx: f64, cy: f64, r: f64, n: usize) -> Vec<Vec<[f64; 2]>> {
     let mut ring: Vec<[f64; 2]> = (0..n)
         .map(|i| {
@@ -435,6 +437,111 @@ fn engine_opens_its_own_tier() {
 // fails: `record.admit(&key_from_other_bytes, ..)` returns `Ok`, the assertion "a tier built from
 // other bytes must not be admitted" fails by name, and a tier built from the old bytes would be
 // served for the new ones.
+// RECORDED MUTATION (reviewer/architect attempt-1 SHOULD-FIX, §10 Amendment 8 item (f)): drop the
+// re-`stat` on the reuse path in `engine/src/lod.rs::build_tiers` — take `Ok(_admitted) =>
+// (Some(found.clone()), None)` again → a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size
+// fails by name on "a tier whose bytes changed on disk is not the artifact its record names": the
+// altered tier is admitted, `was_rebuilt()` is false, and the disclosed set size is the record's
+// stale byte count rather than the bytes on disk.
+#[test]
+fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size() {
+    let dir = scratch_dir("reuse-restat");
+    let path = dir.join("source.parquet");
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..32u64)
+        .map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256)))
+        .collect();
+    write_source(&path, &geo_key(&lv95_definition()), &rings);
+
+    let source = Dataset::open(&path).expect("open");
+    let cancel = CancelToken::new();
+    let first = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
+    let tier_one = first.tiers()[0].record().path().to_path_buf();
+    let recorded_bytes = first.tiers()[0].record().bytes();
+
+    // The source is untouched, so its key still admits — and every tier is reused.
+    let reused = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("reuse");
+    assert!(reused.tiers().iter().all(|t| !t.was_rebuilt()), "an unchanged ladder is reused whole");
+
+    // Now the artifact changes under the record: same path, same key, different bytes.
+    {
+        use std::io::Write;
+        let mut f = std::fs::OpenOptions::new().append(true).open(&tier_one).expect("open the tier");
+        f.write_all(&[0u8; 4_096]).expect("alter the tier on disk");
+    }
+    let altered_bytes = std::fs::metadata(&tier_one).expect("stat").len();
+    assert_ne!(altered_bytes, recorded_bytes, "the alteration really changed the file's size");
+
+    let after = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("rebuild");
+    assert!(
+        after.tiers()[0].was_rebuilt(),
+        "a tier whose bytes changed on disk is not the artifact its record names"
+    );
+    assert_eq!(after.tiers()[0].miss(), Some(TierMiss::Absent));
+    assert!(
+        after.tiers()[1..].iter().all(|t| !t.was_rebuilt()),
+        "and the tiers that did not change are still reused"
+    );
+
+    // The disclosure is the size on disk, not the size a record remembers.
+    let on_disk: u64 = after
+        .tiers()
+        .iter()
+        .map(|t| std::fs::metadata(t.record().path()).expect("stat a tier").len())
+        .sum();
+    assert_eq!(after.total_bytes(), on_disk);
+    assert_eq!(after.disk_cost().total_bytes, on_disk);
+    for outcome in after.tiers() {
+        assert_eq!(
+            outcome.record().bytes(),
+            std::fs::metadata(outcome.record().path()).expect("stat").len(),
+            "every disclosed per-tier size is the file's own"
+        );
+    }
+    drop_tiers(&after);
+}
+
+// RECORDED MUTATION (§6's instrument, §10 Amendment 8 item (f)): return `Duration::ZERO` from
+// `simplify_slice`'s `max_simplify` instead of the measured maximum →
+// a_build_measures_the_largest_single_feature_simplify fails by name on "a build that simplified
+// features measures the residual": `max_single_feature_simplify()` is `None`, because the builder
+// reports a maximum only when one was actually taken.
+#[test]
+fn a_build_measures_the_largest_single_feature_simplify() {
+    let dir = scratch_dir("residual-instrument");
+    let path = dir.join("source.parquet");
+    // **Deliberately not byte-identical to any other test's source.** The tier directory is keyed by
+    // the source's content hash, so two tests whose sources have the same bytes would build, alter
+    // and delete tiers in the *same* directory — and this suite runs its tests in parallel threads.
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..24u64)
+        .map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 70.0, 1_200_000.0, 21.0, 192)))
+        .collect();
+    write_source(&path, &geo_key(&lv95_definition()), &rings);
+    let source = Dataset::open(&path).expect("open");
+    let cancel = CancelToken::new();
+
+    let built = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
+    assert!(built.tiers().iter().all(|t| t.was_rebuilt()), "this ladder was built, not reused");
+    let measured = built
+        .max_single_feature_simplify()
+        .expect("a build that simplified features measures the residual");
+    assert!(
+        measured > std::time::Duration::ZERO,
+        "the instrument reports the call it timed, not a placeholder"
+    );
+
+    // §6's instrument is about the *residual* `LOD_CANCEL_OBSERVED_CEILING_MS` declares: one
+    // feature's simplify call has no interruption point inside it. The value is reported, never
+    // asserted against a budget here — the figure is the tester's (§6, §9), and nothing in this
+    // test or in the builder writes it into a file, a comment or a document.
+    let reused = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("reuse");
+    assert!(reused.tiers().iter().all(|t| !t.was_rebuilt()));
+    assert!(
+        reused.max_single_feature_simplify().is_none(),
+        "a run that simplified nothing reports no maximum, rather than a stale or zero one"
+    );
+    drop_tiers(&built);
+}
+
 #[test]
 fn tier_is_not_served_when_source_content_hash_changes() {
     let dir = scratch_dir("t4");
