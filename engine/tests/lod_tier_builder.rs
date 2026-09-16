@@ -437,7 +437,7 @@ fn engine_opens_its_own_tier() {
 // fails: `record.admit(&key_from_other_bytes, ..)` returns `Ok`, the assertion "a tier built from
 // other bytes must not be admitted" fails by name, and a tier built from the old bytes would be
 // served for the new ones.
-// RECORDED MUTATION (reviewer/architect attempt-1 SHOULD-FIX, §10 Amendment 8 item (f)): drop the
+// RECORDED MUTATION (reviewer/architect attempt-1 SHOULD-FIX, §10 Amendment 8 item (i)3): drop the
 // re-`stat` on the reuse path in `engine/src/lod.rs::build_tiers` — take `Ok(_admitted) =>
 // (Some(found.clone()), None)` again → a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size
 // fails by name on "a tier whose bytes changed on disk is not the artifact its record names": the
@@ -500,7 +500,7 @@ fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size()
     drop_tiers(&after);
 }
 
-// RECORDED MUTATION (§6's instrument, §10 Amendment 8 item (f)): return `Duration::ZERO` from
+// RECORDED MUTATION (§6's instrument, §10 Amendment 8 item (i)9): return `Duration::ZERO` from
 // `simplify_slice`'s `max_simplify` instead of the measured maximum →
 // a_build_measures_the_largest_single_feature_simplify fails by name on "a build that simplified
 // features measures the residual": `max_single_feature_simplify()` is `None`, because the builder

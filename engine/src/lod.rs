@@ -771,10 +771,12 @@ impl TierOutcome {
 /// Every field is bytes. **No time figure is here, deliberately**: prep *time* is a measurement and
 /// belongs to the tester (§6, §9), while disk cost is a fact of the artifact on disk.
 ///
-/// **No product caller until the prepare report exists** (owed to the selection piece, §10
-/// Amendment 8): this type is the shape that report will carry, and today it is read by
+/// **Where it is used today** (reviewer SF1, attempt 2): inside this module by `write_manifest`
+/// (`engine/src/lod.rs:1171`), whose `set` block in `tiers.json` is this struct serialized, and by
 /// `the_built_sets_size_is_disclosed_with_the_tiers` and
-/// `the_preflight_refuses_before_the_first_tier_is_written` alone.
+/// `the_preflight_refuses_before_the_first_tier_is_written`. **No product caller outside this
+/// module until the prepare report exists** (owed to the selection piece, §10 Amendment 8): this
+/// type is the shape that report will carry.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TierSetDiskCost {
     /// `(tier, bytes)`, in ladder order.
@@ -842,13 +844,20 @@ impl TierSet {
     }
     /// **The prepare report's disk half** (`§10` Amendment 6), in bytes and nothing else.
     ///
-    /// **An instrument accessor under the same exemption**: read-only over sizes the shipped build
-    /// already recorded and re-`stat`ed, with **no product caller until the prepare report exists**
-    /// (§9 gives this piece no operator surface, and the report is owed to the selection piece —
-    /// §10 Amendment 8). Its only callers today are `the_built_sets_size_is_disclosed_with_the_tiers`
-    /// and `the_preflight_refuses_before_the_first_tier_is_written`, which prove about the shipped
-    /// build that what a caller would be shown is the size on disk and the bound it was read
-    /// against — the property the human's "prep time and disk cost disclosed" boundary rests on.
+    /// **Its callers, as the grep finds them** (reviewer SF1, attempt 2 — a doc that names fewer
+    /// callers than exist is a claim that does not survive its own check): one **shipped in-module
+    /// caller**, `write_manifest` (`engine/src/lod.rs:1171`), which every build reaches — the `set`
+    /// block in `tiers.json` is this value serialized — and three tests,
+    /// `the_built_sets_size_is_disclosed_with_the_tiers` (`engine/tests/lod_tier_builder.rs:492`,
+    /// `:921`) and `the_preflight_refuses_before_the_first_tier_is_written`
+    /// (`engine/tests/lod_tier_preflight.rs:191`).
+    ///
+    /// **What is still true of the `pub` surface**: nothing *outside* this module calls it in a
+    /// product path — §9 gives this piece no operator surface and the prepare report is owed to the
+    /// selection piece (§10 Amendment 8) — so the accessor is `pub` for a consumer that is named
+    /// and gated, while the value it returns is already load-bearing inside the shipped build. The
+    /// tests prove about that build that what a caller would be shown is the size on disk and the
+    /// bound it was read against.
     pub fn disk_cost(&self) -> TierSetDiskCost {
         TierSetDiskCost {
             per_tier_bytes: self.tiers.iter().map(|t| (t.record.tier, t.record.bytes)).collect(),
