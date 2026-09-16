@@ -1010,3 +1010,237 @@ the same shape and names its test.
 **Recorded because it is the addition's point:** naming the test converts the exemption from a claim
 into something a reviewer can check mechanically — the same move as pinning a cross-module fixture
 to the producer's own bytes rather than to a transcription.
+
+### Amendment 5 — P3a's attempt-3 corrections (2026-09-16, appended)
+
+**Written after P3a's attempt-2 gate outcomes were seen (reviewer FAIL, architect FAIL — narrow;
+`state/gate-log.json`'s `briefa-p3-p6` attempt-4 entries), and after question round 7 ruled the
+scope of this attempt.** §12e's rule, honoured in this line. **Amendments 1–4 are byte-untouched**;
+items (v) and (vi) below correct Amendment 4 by appending, as Amendment 4 itself corrected
+Amendment 3.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7, permanent in
+both gate checklists): *"every "discharged" or "done" clause in an amendment names the test or line
+that proves it, and the gate resolves each — a discharge claim with no resolvable proof is a gate
+failure by name, the same way an imagined interface and a stale cite are."* Every clause below that
+says something is done names either a test by its exact function name or a `file:line`. Where a
+thing is **not** done, this amendment says so and names the open item instead.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md` §10): **class 5** for (i); **class 4** for each
+mutation in (ii); **class 3** for (iii); **post-result records** for (iv), (v), (vi) and (vii).
+
+---
+
+**(i) Class 5 — a scope narrowing on a ruling: the engine's `SourceChanged` `Display` states the
+engine's fact only.** The human's ruling of 2026-09-16 (question round 7), verbatim:
+
+> "Fresh worker, exactly the listed five items, gates attempt 3 — the last attempt for P3a: if
+> either gate fails again, P3a holds and the architect re-scopes the piece before any further worker
+> touches it. Two additions: (1) the engine's SourceChanged Display text states the engine's fact
+> only — "the source file changed while it was open (<component>)" — and never a consequence: the
+> engine cannot know what the shell discarded, so the consequence sentence belongs to the owner that
+> performs it, added by P3b when it becomes true. Engine messages state engine facts; owners state
+> consequences. (2) Fence for the over-claim class, permanent in the gate checklists: every
+> "discharged" or "done" clause in an amendment names the test or line that proves it, and the gate
+> resolves each — a discharge claim with no resolvable proof is a gate failure by name, the same way
+> an imagined interface and a stale cite are."
+
+Applied at `engine/src/error.rs:324`. Deleted from the arm: the consequence sentence ("Everything
+read for this session is discarded and the identities it handed out no longer refer to anything")
+and the guidance ("reopen the file to continue"). Kept: the `refused: ` prefix every variant of the
+enum carries, and boundary 4's limitation sentence — both are facts about the engine's own check,
+which is the test the ruling states. `{detail}` is unchanged.
+
+Re-pinned byte-identically in the three copies, each with its proof:
+
+- the Rust pin — `kernel/tests/typed_terminal_codes.rs`'s
+  `a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code` (exact equality, plus a new
+  sweep asserting the engine's own text contains none of `discard`, `no longer refer`, `reopen the
+  file`);
+- the TS pin — `frontends/shell/src/testUtils/terminalShapes.ts:25-29`
+  (`REAL_SOURCE_CHANGED_TERMINAL_DETAIL`);
+- the SKP wire fixture — `protocol/skp/tests/data/v0-error-source_changed.json:3`, read by
+  `protocol/skp/tests/fixtures.rs`'s
+  `the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields` and by
+  `frontends/shell/src/skp/__tests__/fixtures.test.ts`.
+
+The three were previously tied to each other only by a reviewer reading them. They are now tied
+**mechanically**: `frontends/shell/src/admission/RefusalBlock.test.tsx:57`'s test asserts
+`"engine.source_changed: " + fixture.message === REAL_SOURCE_CHANGED_TERMINAL_DETAIL`, and the Rust
+pin asserts the same literal equals `Display`'s output.
+
+**The whole rendered refusal is now checked as one string, on the filter route.** That test renders
+`RefusalBlock` — the component `frontends/shell/src/filter/FilterPanel.tsx:134` renders inside
+`.filter-refusal`, and the **only** product dispatcher of `refusalGuidance` (`RefusalBlock.tsx:25`;
+grep-verified: no other product module imports it) — over the wire fixture through `formatRefusal`,
+and sweeps `message` **and** guidance together for `discard`, `no longer refer`, `reopen the file`,
+and for any affirmative snapshot claim. The half-checked form is what let the engine's message and
+the owner's guidance disagree while each of their own tests stayed green.
+
+**Two strings join the P6 sight list** (§12d's "the four new user-visible states whose strings are
+sighted at P6", which Amendment 4 (ii) already extended to a fifth):
+
+1. the engine's new `SourceChanged` sentence (`engine/src/error.rs:324`) — the operator-facing words
+   an engine refusal now carries;
+2. the owner's guidance sentence — `refusalGuidance("engine.source_changed")`
+   (`frontends/shell/src/admission/formatRefusal.ts:83`), the human's own ruled wording from round 5
+   item 1, restated here as a P6 sight item because P3b replaces it when the stronger sentence
+   becomes true.
+
+---
+
+**(ii) Class 4 — the mutations added or corrected after the gate findings, each observed once and
+recorded by name.** All four were performed against this branch, the failure observed, and the
+mutation reverted. None is a second harness run; each is a unit or integration run of the named
+test.
+
+| Mutation | Test it must fail | Observed failure |
+| --- | --- | --- |
+| Restore the deleted consequence sentence to the engine's message in both copies the test reads (the SKP fixture and `REAL_SOURCE_CHANGED_TERMINAL_DETAIL`), so only the class assertion bites | `RefusalBlock.test.tsx`'s *"the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform"* | FAILED — `AssertionError: expected 'engine.source_changed refused: the so…' not to match /discard/i` |
+| Restore `(Some(a), Some(b)) if a == b => {}, _ => push("mtime")` in `components_differing_from` | `descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever` | FAILED — panicked on the both-absent assertion, `engine/src/descriptor.rs:454-457` in the unmutated file (`descriptor::tests::an_unobservable_modification_time_degrades_while_an_observable_change_in_it_still_differs` failed with it, on its own both-absent assertion at `engine/src/descriptor.rs:375`) |
+| In the `pairs` closure, yield the row's **position in the result set** instead of its `file_row_number` (`.enumerate()`, `(i as i64, key)`) — the scan-ordered reading the test rules out | `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture` | FAILED — panicked at `engine/tests/session_identity.rs:156`: *"on this file the ordinal did not renumber under ORDER BY…"* |
+| Zero `post_check_bytes_read` in `StreamConnectionRecord`'s construction in `impl Drop for EngineSource` | `a_cancelled_stream_s_connection_record_carries_the_post_check_s_cost` | FAILED — panicked at `kernel/tests/post_check_cost_report.rs:100`: *"the post-check read a footer on the cancelled path and the record must say how much of one"* |
+
+The third row replaces a recorded mutation that **was not executable as written**: it named
+`ordinal_is_physical_not_scan_ordered`, deleted by Amendment 4 (iii). Each mutation is also recorded
+in-source beside its test, which is what `node scripts/plan/verify-mutation.mjs` resolves.
+
+---
+
+**(iii) Class 3 — cite fixes: ten in-code cites of the round-5 rulings were off by one item
+number.** `DECISIONS-PENDING.md`'s "RULED 2026-09-16 — question round 5" numbers its items: **1** the
+status string, **2** the §21 housekeeping ruling, **3** the cancel-window guarantee, **4** the
+instrument-accessor exemption.
+
+- The cancel window, `"round 5 item 2"` → `"item 3"`: `engine/src/trace.rs:437`,
+  `engine/src/stream.rs:588`, `:1179`, `:1580`, `engine/tests/slice.rs:648`, and
+  `engine/tests/session_identity.rs:495` — a **sixth** site of the same class, found by the sweep and
+  not on the gate's list.
+- The exemption, `"round 5 item 3"` → `"item 4"`: `kernel/src/skp.rs:390`,
+  `engine/src/descriptor.rs:194`, `:213`, `engine/src/identity.rs:241`,
+  `frontends/shell/src/streaming/liveTicketSet.ts:101`.
+
+Every remaining "round 5" cite in the tree was resolved against the authoritative list and is
+correct: the three item-1 cites (`frontends/shell/src/admission/formatRefusal.ts:66`, `:73`,
+`formatRefusal.test.ts:142`), `AI_DEVELOPMENT.md:279` (item 4) and `AUTONOMY.md:345` (item 2). No
+claim changed; only where a cite points.
+
+---
+
+**(iv) Post-result record — the narrations, the stale record, and the acting `pub`.**
+
+- **The narration that survived the Amendment 4 (i) sweep is gone**, and so is the class of sentence
+  it belonged to. The test comment *"the operator is told which component is unavailable"* and the
+  `expect("the degradation is shown, never silent")` claimed a consequence P3a does not have; the
+  moved test at `engine/src/descriptor.rs:426` now says the degradation is **recorded** and reachable
+  through `degradation()`, shown to nobody. The same sweep over the two files the gate named
+  corrected three more sentences: `of()`'s comment heading (*"Boundary 5's 'the degradation is
+  shown', applied to mtime…"* → the degradation is recorded here, nothing shows it),
+  `components_differing_from`'s *"names it in the operator's own words"* → returns the recorded
+  words, shown to nobody in P3a, and `degradation()`'s own caller list, which now names the tests
+  that exist after the move. `engine/tests/session_identity.rs:474`'s *"whatever terminal a consumer
+  sees"* was read and left: it is about a consumer receiving a terminal, not about a degradation
+  being shown.
+- **The stale intra-doc link is gone.** `engine/src/identity.rs`'s link to
+  `crate::dataset::ordinal_is_physical_not_scan_ordered` named a function Amendment 4 (iii) deleted.
+  The sentence now states the two things that are true — the engine performs no such check at open,
+  and the evidence is the `pairs` closure in `engine/tests/session_identity.rs:136-142` — as a prose
+  cite, because a test is not part of this crate's public item tree. Proof:
+  `cargo doc --no-deps -p spatial-engine` reports **zero** `broken_intra_doc_links` warnings (the
+  crate's remaining doc warnings are pre-existing `private_intra_doc_links` at
+  `engine/src/predicate.rs:258` and `:272`, untouched by this piece).
+- **`SourceDescriptor::without_modification_time_for_test` is deleted** — the identifier no longer
+  occurs anywhere in the tree. It was a `pub` constructor whose only caller was a test and which
+  **acted** — it pushed a fabricated degradation — so the instrument-accessor exemption did not cover
+  it, by that exemption's own closing clause. The literal it duplicated now exists **once**, as the
+  private `ABSENT_MODIFICATION_TIME_DEGRADATION` (`engine/src/descriptor.rs:54`), recorded from one
+  private fn, `SourceDescriptor::record_absent_modification_time` (`:93`), whose only shipped caller
+  is `of()`'s no-mtime branch (`:118-120`).
+- **The shipped path is what the test exercises now.**
+  `descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever`
+  (`engine/src/descriptor.rs:426`) builds its descriptor with the shipped `of()` over a written
+  fixture, applies the same private fn `of()` calls, and asserts `degradation()` returns the shipped
+  const's words and that `components_differing_from` reports no `mtime` difference for
+  `(None, None)`. No new `pub` item, no `#[doc(hidden)]`, nothing test-only on the crate surface.
+
+---
+
+**(v) Correcting Amendment 4 (vi), by appending — the typed guidance and the plain camera pre-check
+route.** Amendment 4 (vi) reads: *"Today the typed guidance reaches an operator only by the
+**pre-check** route (a `viewport_query` refused synchronously with `engine.source_changed`)."* That
+sentence is **false of the tree**, and it was false when it was written.
+
+The plain camera pre-check route is `frontends/shell/src/App.tsx:929-932`
+(`setViewportRefusal(formatRefusal(e.skpError))`), rendering at `:1452-1466`. That JSX renders
+`viewportRefusal.code` and `viewportRefusal.message` and **dispatches no guidance at all** — it does
+not call `refusalGuidance`, and `RefusalBlock.tsx:25` is the only place in the product that does
+(grep-verified). On that route an operator reads the engine's message and nothing else.
+
+`App.tsx` is **not** changed here: that surface is P3b's, and this amendment records the fact rather
+than fixing it. Where the guidance does reach an eye is wherever `RefusalBlock` renders —
+`AdmissionPanel.tsx:376`, `FilterPanel.tsx:134`, `PublishPanel.tsx:652`, `ConsolePanel.tsx:177`.
+
+---
+
+**(vi) Withdrawing Amendment 4 (ix)'s "Both obligations discharged", by appending.** Amendment 4 is
+not edited; this item states what is and is not discharged, each clause with its proof.
+
+**Not discharged when Amendment 4 was written.** The cost obligation rested on two carriers no
+shipped run reads: `engine::trace`'s `POST_CHECK_BEGIN`/`POST_CHECK_END` marks — `trace::ENABLED` is
+`false` by default (`engine/src/trace.rs:88`) and `trace::start` has no product caller, so the marks
+record nothing outside a test that enables them — and `StreamStats::post_check_bytes_read`
+(`engine/src/stream.rs:617`), which at that time had only a test caller. The figure existed; nothing
+in a shipped run reported it. Calling that discharged is the class this amendment's fence exists to
+stop. The **other** obligation of round-5 item 3 — the re-aimed liveness test — was and is
+discharged: `engine/tests/slice.rs`'s `cancelling_mid_stream_stops_production_promptly` asserts
+`cancel_requested → cancel_observed` (`:679-686`) and prints `observed → terminal` beside it with
+the disclaimer (`:688-700`).
+
+**Discharged now, on the kernel binary, with proof:**
+
+- `StreamConnectionRecord::post_check_bytes_read` (`kernel/src/lib.rs:98`), filled in
+  `impl Drop for EngineSource` (`kernel/src/lib.rs:484`) on **every** stream end — cancelled, failed
+  or completed — and printed by its product consumer, `kernel/src/main.rs:141-151`, as
+  `post_check_bytes=… (bound FOOTER_DESCRIPTOR_MAX_BYTES=…)`.
+- The always-on session line, `kernel/src/lib.rs:452`, carries the same figure and the same named
+  bound on the source-changed path; its comment now states what the line is — a record of which
+  stream noticed, how many siblings went with it, and what the post-check cost.
+- Proven end to end from the real product shape by `kernel/tests/post_check_cost_report.rs:56`'s
+  `a_cancelled_stream_s_connection_record_carries_the_post_check_s_cost`: a stream created through
+  `EngineSourceFactory::with_connection_reports` — the constructor `kernel/src/main.rs:157-161` uses
+  — cancelled through the product's own `SourceCancel::cancel`
+  (`protocol/data-plane/src/transport.rs:128-135`), whose record arrives on the channel with
+  `0 < post_check_bytes_read <= FOOTER_DESCRIPTOR_MAX_BYTES`.
+- `StreamStats::post_check_bytes_read`'s instrument-accessor declaration is **retired** rather than
+  restated: it has two product callers now, both in `kernel/src/lib.rs`'s `EngineSource`
+  (`:452`, `:484`), so it stands on the plain caller rule and its doc (`engine/src/stream.rs:602-616`)
+  says so.
+- No SKP field was added: the wire is closed (boundary 9 / ADR-004 Amendment 4), and no new
+  cross-module seam exists — the record and its channel were already there.
+- **No duration is claimed anywhere**: no `ms`, no `µs`, no latency word, no p50/p95 on any of these
+  paths (ADR-018).
+
+**NOT discharged, and named as an open item rather than claimed: *the shell*.** The Tauri shell has
+**no consumer for `StreamConnectionRecord`** — it installs `EngineSourceFactory::ticket_only`
+(`frontends/shell/src-tauri/src/lib.rs:368`), whose `connection_reports` is `None`
+(`kernel/src/lib.rs:296-297`), and `kernel/src/skp.rs:688-697` passes `None` explicitly and says why. Its
+stderr is unattached when the app is launched from the desktop, so the session line at
+`kernel/src/lib.rs:452` reaches nobody there either. **In the shell the post-check's cost is still
+not seen by an operator**, and nothing in this piece changes that.
+
+**Which runs see the report, stated exactly:** the kernel binary's own consumer
+(`kernel/src/main.rs:134-155`, printing on stdout) sees the per-stream record; a **console-attached**
+process sees the session line on stderr (`kernel/src/lib.rs:452`); the desktop shell sees neither.
+
+**Open item for the human (P3b or P6): the shell-side carrier for the post-check's cost.** A
+`StreamConnectionRecord` consumer in `frontends/shell/src-tauri`, or some other surface, is a design
+choice with an operator-visible component, and P3a does not invent one. Recorded here so the gap has
+a name and a place instead of living inside a discharge claim.
+
+---
+
+**(vii) What this amendment does not claim.** P3a still clears no residency, refuses no pick and
+renders no session status — Amendment 3 item 3 and Amendment 4 (v) stand unchanged, and G-A2 remains
+not satisfiable by P3a alone. Boundary 5's "the degradation is shown" remains **not met**
+(Amendment 4 (ii)); this piece deleted the sentences that implied otherwise and added none. The
+ADR-016 amendment's acceptance remains P6's.

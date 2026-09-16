@@ -17,7 +17,7 @@
 //!
 //! **From the real product wiring, not an imagined one** (the seam rule, 2026-09-16 round 4). The
 //! factory is built with `EngineSourceFactory::with_connection_reports`, which is what
-//! `kernel/src/main.rs:151-154` constructs; the stream is created through `SourceFactory::create`
+//! `kernel/src/main.rs:157-161` constructs; the stream is created through `SourceFactory::create`
 //! over an `OpenRequest`, which is what the data plane calls; and the cancel is the product's own
 //! `SourceCancel::cancel`, which is what the binding calls the instant it observes a client abort
 //! (`protocol/data-plane/src/transport.rs:128-135`).

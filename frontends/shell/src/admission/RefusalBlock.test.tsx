@@ -45,15 +45,14 @@ function renderedText(error: SkpError): string {
 }
 
 describe("RefusalBlock, engine.source_changed", () => {
-  // RECORDED MUTATION: restore the deleted consequence sentence ("Everything read for this session
-  // is discarded and the identities it handed out no longer refer to anything; reopen the file to
-  // continue.") to the engine's message in BOTH copies this test reads -- the SKP fixture
+  // RECORDED MUTATION for "the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform":
+  // restore the deleted consequence sentence ("Everything read for this session is discarded and
+  // the identities it handed out no longer refer to anything; reopen the file to continue.") to the
+  // engine's message in BOTH copies this test reads -- the SKP fixture
   // `v0-error-source_changed.json` and the kernel-pinned `REAL_SOURCE_CHANGED_TERMINAL_DETAIL` --
-  // so the byte-equality assertion still passes and only the class assertion bites.
-  // Expected failure: "the rendered refusal states the engine's fact and the owner's sentence, and
-  // no consequence the shell did not perform" fails on the `discard` sweep over the WHOLE rendered
-  // block -- which is the assertion that would have caught P3a attempt 2's over-claim, where the
-  // guidance was clean and the message was not.
+  // so the byte-equality assertion still passes and only the class assertion bites. Expected
+  // failure: that test fails on the `discard` sweep over the WHOLE rendered block, which is the
+  // assertion that would have caught P3a attempt 2's over-claim (guidance clean, message not).
   it("the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform", () => {
     const error = realSourceChangedRefusal();
 
