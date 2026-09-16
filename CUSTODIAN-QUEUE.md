@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b4c6487ebb7ec9d6cabf20e012fc3fa839b9d549343b253f1406b99eba6a5e50`) at `2026-09-16T11:22:26.119Z`.
+Generated from `PLAN.yaml` (sha256 `65be07b936f40d1ac9579852e8cf896af5982483a767d8478ca1109adc6581ca`) at `2026-09-16T11:29:17.417Z`.
 
 ## 1. Next
 
@@ -18,6 +18,7 @@ Generated from `PLAN.yaml` (sha256 `b4c6487ebb7ec9d6cabf20e012fc3fa839b9d549343b
 
 ## 4. Blocked on dependencies
 
+- **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — blocked by: briefa-p3-p6
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half

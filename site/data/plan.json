@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T11:22:26.222Z",
-  "plan_hash": "b4c6487ebb7ec9d6cabf20e012fc3fa839b9d549343b253f1406b99eba6a5e50",
+  "generated_at": "2026-09-16T11:29:17.515Z",
+  "plan_hash": "65be07b936f40d1ac9579852e8cf896af5982483a767d8478ca1109adc6581ca",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1196,6 +1196,35 @@
       "summary": "Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate",
       "dates": {
         "opened": null,
+        "done": null
+      }
+    },
+    {
+      "id": "briefa-p3b-owner-side-invalidation",
+      "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 5,
+      "depends_on": [
+        "briefa-p3-p6"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        96
+      ],
+      "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration owed before code (gate set then); reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
+      "dates": {
+        "opened": "2026-09-16",
         "done": null
       }
     },

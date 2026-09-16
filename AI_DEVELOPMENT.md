@@ -268,6 +268,14 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
 - **Gate defaults: a sibling search on every fix, one mutation on every new test (added
   2026-09-13).** See Amendment 2 §G, verbatim from `AUTONOMY.md` §14; both are also added to the
   preregistration template's gates.
+- **Cross-module seams (the human's rule, 2026-09-16, `DECISIONS-PENDING.md` "RULED 2026-09-16 —
+  question round 4"; permanent, in the worker brief and both gate checklists).** Verbatim: "any
+  cross-module seam is written against the interface the other side actually has — read it first —
+  and is proven by one end-to-end test from the real shape; a test that encodes an imagined
+  interface is a gate failure by name." Both gates also run the caller grep: no callback, option,
+  code path or `pub` item lands without a product caller (a test-only caller does not count). The
+  lesson's cost: Brief A P3 failed both gates twice on four seams written to imagined interfaces
+  (producer→terminal, post-check→kernel, publish→shell, manager→owner) and was split under Rule 7.
 
 ### Records, claims and reports
 
