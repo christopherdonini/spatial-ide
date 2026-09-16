@@ -155,7 +155,10 @@ const _: () = assert!(
 /// and reaching the network. ADR-021's "Security property" consequence (the admission parser is
 /// statically linked, admission performs no runtime extension fetch) was therefore held by
 /// **content** — `json` is built in — and not by configuration. From ADR-021's amendment of
-/// 2026-09-15 it is held by both: no engine connection can fetch or load an extension at runtime.
+/// 2026-09-15 it is held by both: no product engine connection loads or installs an extension
+/// *implicitly*. The two settings bound implicit acquisition (first-reference autoload and
+/// autoinstall) — not an explicit `INSTALL`/`LOAD`, which the engine never issues and no admitted
+/// predicate can express; `#[cfg(test)]` connections are not configured and are outside the claim.
 /// Anything appended to this statement must stay *after* the two settings, so that nothing the
 /// engine itself runs can trigger a load before they take effect.
 ///
@@ -823,7 +826,7 @@ mod tests {
     /// expected the fail-closed refusal `requires the extension httpfs to be loaded`, got: IO
     /// Error: Could not connect to server error for HTTP HEAD to
     /// 'https://127.0.0.1:9/none.parquet'*. That message is the extension having been fetched and
-    /// loaded: the pre-fix run of this test wrote `httpfs.duckdb_extension` (28.5 MB) and its
+    /// loaded: the pre-fix run of this test wrote `httpfs.duckdb_extension` (28.5 MB — observed once in the mutation run, not asserted) and its
     /// `.info` under the temp directory below, which is the runtime fetch this piece closes.
     #[test]
     fn a_known_extension_reference_fails_closed_on_every_lease_class() {
