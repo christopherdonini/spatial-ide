@@ -21,6 +21,7 @@ kernel→data plane, kernel→shell, manager→owner) read the other side's actu
 file:line in your commit; every cross-module path you land carries one end-to-end test that starts
 from the real producer/consumer shape; no callback, option, code path or `pub` item lands without a
 product caller — run the caller grep yourself and paste it in your report, the gates run the same.
+The caller rule exempts instrument accessors: a `pub` read-only accessor over state the shipped build already maintains, whose doc declares that its only caller is the test suite, names the test that calls it, and says why the property must be proven about the shipped build. It exempts nothing that acts. (The human, 2026-09-16, round 5, item 4.)
 
 Report format, hard limit ~20 lines: what was built · tests added/passing (suite summary line, not
 the log) · files touched · anything off-scope you noticed but did NOT do · exact state left

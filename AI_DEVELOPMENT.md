@@ -276,6 +276,7 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   code path or `pub` item lands without a product caller (a test-only caller does not count). The
   lesson's cost: Brief A P3 failed both gates twice on four seams written to imagined interfaces
   (producer→terminal, post-check→kernel, publish→shell, manager→owner) and was split under Rule 7.
+  The caller rule exempts instrument accessors: a `pub` read-only accessor over state the shipped build already maintains, whose doc declares that its only caller is the test suite, names the test that calls it, and says why the property must be proven about the shipped build. It exempts nothing that acts. (The human, 2026-09-16, round 5, item 4.)
 
 ### Records, claims and reports
 

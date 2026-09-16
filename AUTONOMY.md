@@ -342,6 +342,8 @@ a wire touch, a guarantee change, a new exposure surface — the single-gate rou
 stops and re-enters full gating (the same shape as Amendment 1 §A's "newly discovered semantic →
 stop and queue").
 
+**Size overrun discovered mid-piece (the human, 2026-09-16, round 5, item 2 — the architect's clause, adopted as drafted):** a size overrun discovered mid-piece closes the single-gate route exactly as a §21a category does, except that the piece keeps its five-line form and records the overrun as an amendment (class 6 of `docs/PREREGISTRATION-TEMPLATE.md`, "budget deviation, Scope not edited") — a full preregistration is never written after the code.
+
 ### §21c. The size threshold — the custodian's stated choice, citing the directive
 
 The directive names "a declared size threshold" and leaves the number to the custodian. **The
@@ -351,6 +353,8 @@ exposure surface, no new dependency, and no new user-visible behaviour.** Genera
 crosses any one of the four bounds takes full gating (§21a) regardless of its category. **This
 number is the custodian's stated choice under the directive, not the human's ruling — it is the
 human's to adjust at any time by a one-line note**, and until then it holds as declared.
+
+**The human's one-line note (2026-09-16, `DECISIONS-PENDING.md` "RULED 2026-09-16 — question round 5", item 2, verbatim):** "Insertions plus deletions over non-generated code and tests — deletions count, removing a guard is a larger change than adding a comment — excluding the piece's own preregistration and the governing-doc sentences it is obliged to update; that exempt set enumerated narrowly." The exempt set, enumerated: the piece's own five-line preregistration file, and the sentence(s) in `AUTONOMY.md` / `AI_DEVELOPMENT.md` / `docs/PREREGISTRATION-TEMPLATE.md` that the piece is obliged to update to describe itself — nothing else.
 
 ### §21d. The five-line preregistration (literal template)
 

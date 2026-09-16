@@ -1,0 +1,15 @@
+Question round 6 — 2026-09-16 (custodian → human). One piece, two rulings: the LOD tier builder stopped on its own preregistration (DECISIONS-PENDING entry 97).
+
+1. O8 — the tier-set disk ceiling. Built in full per engine/LOD-PREREGISTRATION.md as amended; the dependency step re-run against the real workspace (41 new lockfile entries, all permissive; every arrow*/parquet at 58.4.0). On polygons-100k the declared 3-tier ladder totals 2.051× the source against the declared LOD_TIER_SET_MAX_BYTES = 2.0×; the builder refused engine.lod_tier_set_over_disk_ceiling and kept nothing — exactly §7's behaviour. Vertex reductions matched the spike exactly (O5 met; O1 zero-invalid held); the ladder is simply bigger on disk than the route-A-derived expectation, because the smallest tolerance removes little on this fixture while every tier still carries identity + a recomputed covering bbox + geometry. The per-tier ceiling (1.0× — "a simplified tier larger than its source is a defect") held on every tier. The worker did NOT raise the ceiling or shrink the artifact to fit (dropping the bbox column would sit at ~99.4 % of the ceiling — one compression change from red). Recorded as §10 Amendment 5 (class 2). Five of eleven tests (T1/T2/T3/T7/T11) assert over a built ladder and are #[ignore]d until you rule; all five passed in a local probe that bypassed only the set-ceiling check.
+Options:
+  1. Drop the set ceiling; keep the per-tier ceiling (Recommended): the per-tier one carries a meaning; the set ceiling was an expectation derived from route A's output sizes (route A is out). A class-5 amendment quoting your words; the five tests un-ignored; then the gates.
+  2. Re-declare the set ceiling by a preregistered measurement (the value's own revision rule): the piece waits for that measurement; nothing tuned to the result.
+  3. Change what a tier carries (drop the recomputed bbox column): the ladder fits at ~99.4 %; fragile.
+
+---
+
+2. The simplifier's epsilon is an AREA, not a length. In geo 0.33.1, SimplifyVwPreserve's epsilon is "the minimum triangle area" (simplify_vw.rs:63). §2c declares the ladder as a LENGTH in metres converted by the CRS's linear-unit factor, and the worker implemented §2c literally. Numerically harmless on EPSG:2056 (factor 1.0, the only CRS §4 exercises) — and the spike's measured runs used the raw values 0.1 / 1.0 / 5.0 as areas, so the reductions you have seen are area-semantics reductions — but for any non-metre linear CRS the conversion must be the factor SQUARED, and "0.1 m" means 0.1 m².
+Options:
+  1. Declare VW's semantics honestly (Recommended): the ladder's values are AREAS in the CRS's squared linear unit (0.1 / 1.0 / 5.0 m²), the conversion factor squared, the values kept as measured; a class-5 amendment to §2c and §7; T9's unit-refusal logic unchanged.
+  2. Keep length semantics: area = tolerance² per tier (0.01 / 1 / 25 m²) — a different ladder from the one the spike measured; O5's expectations no longer apply and must be re-measured.
+  3. Hold — you read Amendment 5 and the builder's report first.

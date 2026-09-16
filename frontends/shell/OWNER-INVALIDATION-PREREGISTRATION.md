@@ -1,6 +1,6 @@
 # Preregistration — owner-side invalidation and the kernel-authoritative dead-ticket refusal (Brief A, P3b)
 
-*Custodian's filing note (2026-09-16, not part of the architect's text): written verbatim from the architect's draft to this path by the owning-module rule (`docs/README.md:29`; the predicted diff is shell + kernel with `engine/` empty). Every `file:line` into `engine/ADMISSION-PREREGISTRATION.md` below uses the P3a branch's numbering (§13 C is `:316` there and `:248` on `main` until P3a merges; Amendment 3 is `:705-835` there and not yet on `main`); the `:234` cite for the P6 sight list is imprecise — the four strings are pinned at `frontends/shell/src/admission/formatRefusal.test.ts:181`. Spot-checked by the custodian against the worktree and `main`: the ruling quotes, boundaries 3–4 and 10, G-A2, ADR-010 rules 5–6, the Proposed ADR-016 amendment's rule 3, `App.tsx:1104`, `liveTicketSet.ts:41-52`, `kernel/src/skp.rs:657-663` and `:992-994`, `formatRefusal.ts:67-75`, `pick.ts:26-28`/`:53`, `WorkingCanvas.tsx:116`/`:196-200`, `client.ts:58-65`, `src-tauri/src/lib.rs:368` — all resolve as quoted. A worker re-derives every cite at P3b's own head.*
+*Custodian's filing note (2026-09-16, not part of the architect's text): written verbatim from the architect's draft to this path by the owning-module rule (`docs/README.md:29`; the predicted diff is shell + kernel with `engine/` empty). Every `file:line` into `engine/ADMISSION-PREREGISTRATION.md` below uses the P3a branch's numbering (§13 C is `:316` there and `:248` on `main` until P3a merges; Amendment 3 is `:705-835` there and not yet on `main`); the `:234` cite for the P6 sight list is imprecise — the four strings are pinned at `frontends/shell/src/admission/formatRefusal.test.ts` (`:181` on `cut/briefa-p3`). Spot-checked by the custodian against the worktree and `main`: the ruling quotes, boundaries 3–4 and 10, G-A2, ADR-010 rules 5–6, the Proposed ADR-016 amendment's rule 3, `App.tsx:1104`, `liveTicketSet.ts:41-52`, `kernel/src/skp.rs:657-663` and `:992-994`, `formatRefusal.ts:67-75`, `pick.ts:26-28`/`:53`, `WorkingCanvas.tsx:116`/`:196-200`, `client.ts:58-65`, `src-tauri/src/lib.rs:368` — all resolve as quoted. A worker re-derives every cite at P3b's own head.*
 
 *Drafted 2026-09-16 by the architect agent on the custodian's brief, from: the human's ruling of
 2026-09-16 (`DECISIONS-PENDING.md:20-24`, question round 4); `state/NEXT-CUT.md`'s P3 row (`:103`)
@@ -62,19 +62,19 @@ inferred from the split.
    - **(a) The candidate arm's untiled first-look stream has no source-changed check at all.**
      `isSourceChangedTerminal` is called at exactly two product sites —
      `frontends/shell/src/streaming/viewportStreamManager.ts:270` and
-     `frontends/shell/src/streaming/tileViewportStreamManager.ts:1019`. The candidate session owns a
+     `frontends/shell/src/streaming/tileViewportStreamManager.ts` (`:1019` on `cut/briefa-p3`). The candidate session owns a
      *third* stream sink of its own (`frontends/shell/src/residency/candidateArmSession.ts:1217-1278`,
      the untiled "first look"/reissue), and it tests no terminal code. A change detected on that
      stream's post-check today ends nothing on the client.
    - **(b) The typed code now reaches the operator as raw text on the streaming banner.** P3a
-     prefixes **every** engine terminal with its code (`kernel/src/lib.rs:479-483`,
+     prefixes **every** engine terminal with its code (`kernel/src/lib.rs` (`:479-483` on `cut/briefa-p3`),
      `kernel/src/skp.rs:992-994`), and the baseline owner interpolates the detail whole:
      `setCanvasRefusal(\`stream ${terminal.kind}: ${terminal.detail}\`)` (`frontends/shell/src/App.tsx:1104`).
      No consumer parses a terminal's code prefix — `formatPublishRefusal.ts:37-42` parses the
      *publish* surface only. This is the same class as the publish-consumer regression the ruling
      named, on the other surface.
    - **(c) A string P3a landed is not yet true.** `refusalGuidance("engine.source_changed")`
-     (`frontends/shell/src/admission/formatRefusal.ts:67-75`) tells the operator *"Everything read so
+     (`frontends/shell/src/admission/formatRefusal.ts` (`:67-75` on `cut/briefa-p3`)) tells the operator *"Everything read so
      far has been discarded"*. With residency not cleared (P3a's own statement,
      `ADMISSION-PREREGISTRATION.md:754-758`), that sentence is false of the working canvas today.
      P3b makes it true; it does not edit it (the wording is the human's at P6).
@@ -93,10 +93,10 @@ and records no timing.
   walkthrough row (ADR-018).
 - **No cancellation-vocabulary drift (ADR-018).** A cancelled stream keeps its `cancelled` terminal
   while the change still ends the session — §13 C rule (ii) (`ADMISSION-PREREGISTRATION.md:316`),
-  already implemented at `kernel/src/lib.rs:416-431`. P3b adds no new terminal kind and renames none.
+  already implemented at `kernel/src/lib.rs` (`:416-431` on `cut/briefa-p3`). P3b adds no new terminal kind and renames none.
 - **Wire surface: none added.**
   - The **pre-check refusal already has its control-plane code**: `engine.source_changed` is a
-    declared `skp/0.3` refusal (`protocol/skp/SKP-V0.md:602-608`), minted by
+    declared `skp/0.3` refusal (`protocol/skp/SKP-V0.md` (`:602-608` on `cut/briefa-p3`)), minted by
     `kernel/src/skp.rs::error_of` (`:1040-1041`) and returned from `viewport_query`'s live-generation
     check (`kernel/src/skp.rs:657-663`). The shell already receives it as a thrown
     `SkpCallError` carrying `.skpError.code` (`frontends/shell/src/skp/client.ts:24-31, 58-65`).
@@ -106,10 +106,10 @@ and records no timing.
     `terminal_detail_of` (`kernel/src/skp.rs:992-994`). **No new code, no new field, no new frame.**
   - **`protocol/data-plane/` has an empty diff** (block-on-sight A3, `ADMISSION-PREREGISTRATION.md:212`).
   - **`SKP_VERSION` is unchanged.** `skp/0.3` is not re-opened and `skp/0.4` is not minted
-    (`protocol/skp/SKP-V0.md:628-636`).
+    (`protocol/skp/SKP-V0.md` (`:628-636` on `cut/briefa-p3`)).
 - **Wording of every user-visible string is the human's.** The four states already queued for P6
   sight are unchanged in wording here (`ADMISSION-PREREGISTRATION.md:234`; the four are pinned at
-  `frontends/shell/src/admission/formatRefusal.test.ts:181`). P3b adds at most **two** new strings —
+  `frontends/shell/src/admission/formatRefusal.test.ts` (`:181` on `cut/briefa-p3`)). P3b adds at most **two** new strings —
   the pick-refusal readout and the session-ended status line — and both are the human's at P6. No
   test asserts either verbatim.
 - **No ADR is amended by this file.** Cited: **ADR-010** rule 5 (`:68`, *"Staleness is signalled,
@@ -136,7 +136,7 @@ refusing picks. Each is picked up below by name.
 ### 2a. Owner-side invalidation on the **data-plane terminal** route (`engine.source_changed:` prefix)
 
 The trigger already exists and is unchanged: a terminal whose `detail` **starts with**
-`"engine.source_changed: "` (`frontends/shell/src/streaming/liveTicketSet.ts:41-52`).
+`"engine.source_changed: "` (`frontends/shell/src/streaming/liveTicketSet.ts` (`:41-52` on `cut/briefa-p3`)).
 
 **(i) The notification seam — and it lands with its subscriber in the same diff.** Each manager gains
 one option, `onSessionEnded(detail: string): void`, called **exactly once** per manager (both already
@@ -192,7 +192,7 @@ same commit** — a callback without a product subscriber is a block-on-sight (�
     canvas and rebuilds both managers (`App.tsx:1359-1360`, keyed on `admitted.dataset`).
 - **(v) The typed status.** The terminal's detail is parsed — never interpolated raw — by a new
   `formatTerminalRefusal(detail)` built in the shape of `formatPublishRefusal`
-  (`frontends/shell/src/publish/formatPublishRefusal.ts:37-42`), and `App.tsx:1104`'s
+  (`frontends/shell/src/publish/formatPublishRefusal.ts` (`:37-42` on `cut/briefa-p3`)), and `App.tsx:1104`'s
   `setCanvasRefusal(\`stream ${terminal.kind}: ${terminal.detail}\`)` is replaced by its output, so
   **no machine prefix reaches an operator on any terminal** (disclosure 4b). The session-ended status
   renders in the existing `.canvas-status-stack` (`App.tsx:1429-1488`) through `RefusalBlock`
@@ -266,7 +266,7 @@ separately."* (`ADMISSION-PREREGISTRATION.md:221`).
      `…::ticket_only(catalog, tickets, host.generations())` — `host` is in scope, constructed at
      `frontends/shell/src-tauri/src/lib.rs:271`.
    - `EngineSourceFactory::ticket_only` gains the third parameter (`AdmissionMode::TicketOnly {
-     tickets, generations }`). Existing test callers (e.g. `kernel/tests/typed_terminal_codes.rs:103`)
+     tickets, generations }`). Existing test callers (e.g. `kernel/tests/typed_terminal_codes.rs` (`:103` on `cut/briefa-p3`))
      are updated; **a test caller does not discharge the rule** — `lib.rs:368` is the caller that does.
    - `dead_ticket_count()` — an instrument with the test suite as its only caller, in the **named**
      category `attributed_ticket_count` already occupies with its stated justification
@@ -308,8 +308,8 @@ before and after use (§8.8):
 
 | id | fixture | how produced | used by |
 |---|---|---|---|
-| **X-1** | `target/fixtures/typed-terminals/dead-ticket-refusal.parquet` | `spatial_engine::fixture::write_geoparquet` with `IdentityMode::NativeUnique`, the shape at `kernel/tests/typed_terminal_codes.rs:41-56` | kernel E2E (T1, T2) |
-| **X-2** | the real kernel terminal bytes for `EngineError::SourceChanged` | captured from a `cargo test` run and pinned **on the Rust side** as an exact-equality assertion, the publish precedent (`kernel/tests/typed_terminal_codes.rs:207-215`; consumer pinning at `frontends/shell/src/publish/formatPublishRefusal.test.ts:13-15`) | every shell unit test (T3–T7) |
+| **X-1** | `target/fixtures/typed-terminals/dead-ticket-refusal.parquet` | `spatial_engine::fixture::write_geoparquet` with `IdentityMode::NativeUnique`, the shape at `kernel/tests/typed_terminal_codes.rs` (`:41-56` on `cut/briefa-p3`) | kernel E2E (T1, T2) |
+| **X-2** | the real kernel terminal bytes for `EngineError::SourceChanged` | captured from a `cargo test` run and pinned **on the Rust side** as an exact-equality assertion, the publish precedent (`kernel/tests/typed_terminal_codes.rs` (`:207-215` on `cut/briefa-p3`); consumer pinning at `frontends/shell/src/publish/formatPublishRefusal.test.ts:13-15`) | every shell unit test (T3–T7) |
 | **X-3** | the real thrown SKP error for the pre-check: `error_of(&EngineError::SourceChanged{..})`'s `code` + `message` | pinned on the Rust side in the same test file | T6, T7 |
 | **X-4** | a **scratch copy** of `target/fixtures/manual-walkthrough/100k-happy-path.parquet` (`e2e/regression.mjs:39`; regenerable by `cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture`, `:50`) | copied per run; mutated by an **mtime touch only** (`fs.utimesSync`), bytes untouched, the same single-component mutation the kernel E2E uses (`typed_terminal_codes.rs:61-69`) | E2E (T8) |
 
@@ -435,7 +435,7 @@ exception is `dead_ticket_count`, in the named instrument category (§2c.4).
 - **`engine/` is predicted to be an empty diff** (the descriptor, pre-check and post-check are P3a's,
   landed). If P3b needs an engine change, that is an invalidator (below).
 - Cancellation vocabulary (ADR-018); the `cancelled` terminal's own meaning; `Drop`'s stated residual
-  (`kernel/src/lib.rs:405-411`).
+  (`kernel/src/lib.rs` (`:405-411` on `cut/briefa-p3`)).
 - Every existing identity/CRS suite (A4/G-A6) and the P4/P5 gate work.
 
 **Invalidators — the piece stops and returns to the human:**
@@ -545,3 +545,7 @@ recorded as a §10 amendment — never tuned to a result.
 
 *(none — this section opens empty and is append-only from the first commit. Classes:
 `docs/PREREGISTRATION-TEMPLATE.md:101-122`.)*
+
+**Amendment 1 — class 5, a scope change on the human's ruling. Written 2026-09-16 on acceptance, before any P3b code.** The human's ruling (`DECISIONS-PENDING.md`, "RULED 2026-09-16 — question round 5", item 1), verbatim: **"Accept as pre-committed with one change to (d): a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6. P3b starts after P3a lands; its two new strings join the P6 sight list."** Applied: §0 disclosure 4(c) is discharged on the P3a branch before it merges (the string replaced by the human's sentence); §2a(v) now also restores the stronger sentence when P3b makes it true, its wording the human's at P6; the two new strings (the pick refusal, the session-ended status) join the P6 sight list (§9). Nothing else in §2 changes.
+
+**Amendment 2 — class 3, cite form; mechanical, no claim changed. Written 2026-09-16 on filing.** Fourteen cites named files or lines that exist only on the P3a branch (`cut/briefa-p3`) and not yet on `main` (`kernel/tests/typed_terminal_codes.rs`, `liveTicketSet.ts`, and lines past `main`'s current length in `kernel/src/lib.rs`, `formatRefusal.ts`, `formatRefusal.test.ts`, `tileViewportStreamManager.ts`, `formatPublishRefusal.ts`, `SKP-V0.md`); `scripts/plan/verify-cites.mjs` gates rooted `path:line` references against `main`'s tree, so those fourteen were rewritten as "`path` (`:lines` on `cut/briefa-p3`)" — same file, same lines, the branch named — until P3a merges, after which a worker re-derives them at P3b's head (the header's own rule). The filing note's disclosure that every P3a-branch cite uses the branch's numbering stands. Found because the check failed on `main` after this file was first committed: the custodian had run it before staging the file, and the check reads the index.

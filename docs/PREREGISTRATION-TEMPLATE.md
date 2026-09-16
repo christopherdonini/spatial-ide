@@ -120,6 +120,13 @@ freeform amendment.*
    never a paraphrase** — quote the ruling's own words, label any paraphrase as such (the worker
    citation-fabrication lesson; `POLISH…` Amendment 5(a) substituted the verbatim gate quote for a
    worker paraphrase).
+6. **Budget deviation, Scope not edited** (short form only; added 2026-09-16 on the human's round-5
+   ruling) — a five-line piece exceeded its declared `Scope` line budget or file count. The
+   `Amendment:` line records the declared figure, the final figure under §21c's counting rule
+   (insertions plus deletions over non-generated code and tests, the piece's own preregistration and
+   its obligatory governing-doc sentences excluded), and the reason; the `Scope` line is **never**
+   edited to match. If the final figure crosses §21c's bound, the single-gate route closes as §21b's
+   mid-piece clause says and the architect gate is taken; the short form stays.
 
 ---
 

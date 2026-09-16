@@ -21,6 +21,6 @@ You review Spatial IDE diffs. Checklist, in order of severity:
    plane, kernel→shell, manager→owner): read the consuming side, confirm the producing shape is
    what it actually receives, and confirm one end-to-end test starts from that real shape. Run the
    caller grep: no callback, option, code path or `pub` item in the diff without a product caller —
-   a test-only caller does not count. Either failure is blocking, by name.
+   a test-only caller does not count. Either failure is blocking, by name. The caller rule exempts instrument accessors: a `pub` read-only accessor over state the shipped build already maintains, whose doc declares that its only caller is the test suite, names the test that calls it, and says why the property must be proven about the shipped build. It exempts nothing that acts. (The human, 2026-09-16, round 5, item 4.)
 
 Output: blocking issues first (with doc citations), then suggestions, then nits. Terse — no praise padding.
