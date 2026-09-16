@@ -7,7 +7,7 @@ any cargo add; the piece stops if a second Arrow major appears"). A throwaway pr
 (`Cargo.toml` here: `geo = "=0.33.1"`, `wkb = "=0.9.2"`, `geo-traits = "=0.3.0"` beside the
 workspace's own pins `arrow = { version = "58", default-features = false, features = ["ipc"] }`
 and `parquet = { version = "58", default-features = false, features = ["arrow", "snap"] }`,
-quoted from `Cargo.toml:45` and `engine/Cargo.toml:37`) was resolved with `cargo generate-lockfile`
+quoted from the repo-root `Cargo.toml` (line 45) and `engine/Cargo.toml:37`) was resolved with `cargo generate-lockfile`
 (`Locking 146 packages`; cargo 1.97.1). Nothing under the product tree was touched; nothing compiled.
 
 ## A — I1 (a second Arrow major): does NOT fire
