@@ -29,5 +29,6 @@
   {"node": "engine-extension-autoload-off", "gate": "architect", "attempt": 2, "verdict": "PASS", "date": "2026-09-16"},
   {"node": "engine-extension-autoload-off", "gate": "reviewer", "attempt": 3, "verdict": "PASS", "date": "2026-09-16"},
   {"node": "briefa-p3-p6", "gate": "reviewer", "attempt": 2, "verdict": "FAIL", "date": "2026-09-16"},
-  {"node": "briefa-p3-p6", "gate": "architect", "attempt": 2, "verdict": "FAIL", "date": "2026-09-16"}
+  {"node": "briefa-p3-p6", "gate": "architect", "attempt": 2, "verdict": "FAIL", "date": "2026-09-16"},
+  {"node": "self-check-false-readings", "gate": "reviewer", "attempt": 1, "verdict": "PASS", "date": "2026-09-16"}
 ]
