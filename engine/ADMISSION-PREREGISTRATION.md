@@ -1244,3 +1244,14 @@ renders no session status — Amendment 3 item 3 and Amendment 4 (v) stand uncha
 not satisfiable by P3a alone. Boundary 5's "the degradation is shown" remains **not met**
 (Amendment 4 (ii)); this piece deleted the sentences that implied otherwise and added none. The
 ADR-016 amendment's acceptance remains P6's.
+
+---
+
+**(viii) Correcting item (iv)'s doc-warning count, by appending (this amendment's own fence applied
+to itself).** Item (iv) says the crate's remaining `cargo doc` warnings are "pre-existing
+`private_intra_doc_links` at `engine/src/predicate.rs:258` and `:272`". That names two of **eight**.
+The full, verified figure from `cargo doc --no-deps -p spatial-engine` on this branch:
+`broken_intra_doc_links` **0**; `private_intra_doc_links` **8**, at `engine/src/predicate.rs:10`,
+`:13`, `:16`, `:17`, `:52`, `:258`, `:272` and `engine/src/geoparquet.rs:353`. None is in a file this
+piece touches, and none is introduced by it — the claim item (iv) makes (zero broken intra-doc
+links) is unchanged; only its parenthetical was under-counted.
