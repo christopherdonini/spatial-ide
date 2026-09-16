@@ -61,9 +61,10 @@ pub enum IdSource {
 /// **That this ordinal is physical rather than scan-ordered is the assumption the session tier
 /// rests on** (the proposed ADR-016 Amendment 1, point 1; its block-on-sight 5). **The engine
 /// performs no such check at open**, and this const claims nothing about one: the evidence is a
-/// test's own local helper — the `pairs` closure in
-/// `engine/tests/session_identity.rs` (`the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture`,
-/// `:127-155`), which asserts the property on one written fixture and nothing beyond that file. A
+/// test's own local helper — the `pairs` closure at `engine/tests/session_identity.rs:136-142`,
+/// inside `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture`
+/// (`engine/tests/session_identity.rs:126-159`), which asserts the property on one written fixture
+/// and nothing beyond that file. A
 /// prose cite, not an intra-doc link: a test is not part of this crate's public item tree, and the
 /// `pub fn` this sentence used to link to (`dataset::ordinal_is_physical_not_scan_ordered`) was
 /// deleted under the caller rule — it had no product caller and, because it ran two queries, the

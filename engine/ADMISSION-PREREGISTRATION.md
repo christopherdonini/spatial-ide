@@ -1255,3 +1255,85 @@ The full, verified figure from `cargo doc --no-deps -p spatial-engine` on this b
 `:13`, `:16`, `:17`, `:52`, `:258`, `:272` and `engine/src/geoparquet.rs:353`. None is in a file this
 piece touches, and none is introduced by it — the claim item (iv) makes (zero broken intra-doc
 links) is unchanged; only its parenthetical was under-counted.
+
+---
+
+**Corrections of record, appended after P3a attempt 3 PASSED both gates (2026-09-17).** Items (ix)
+to (xiv) below are docs-class only: no code behaviour changes, and nothing above this line is
+edited. Each names its proof, per this amendment's own fence.
+
+**(ix) Correcting item (iv)'s "the identifier no longer occurs anywhere in the tree" (architect
+M1).** `engine/ADMISSION-PREREGISTRATION.md:1152-1153` overstates. What is true, with proof: the
+`pub` constructor `SourceDescriptor::without_modification_time_for_test` is **deleted** — there is
+no definition of it and no caller of it anywhere; the shipped no-mtime path is the private const
+`engine/src/descriptor.rs:54`, recorded by the private fn `:93`, called from `of()` at `:118-120`,
+and tested through `of()` by `descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever`
+(`engine/src/descriptor.rs:433`). What survives is the **identifier in prose, naming it as
+deleted**, at exactly two in-code sites — `engine/src/descriptor.rs:412` and
+`engine/tests/session_identity.rs:607` — plus this amendment's own text and the ledger's history
+(`DECISIONS-PENDING.md:182`, `state/gate-log.json:38`). A deleted item and an unmentionable name are
+different things; item (iv) claimed the second.
+
+**(x) Correcting item (i)'s "the `refused: ` prefix every variant of the enum carries" (architect
+M2).** False as stated. **17** arms of `EngineError`'s `Display` carry it —
+`engine/src/error.rs:235`, `:240`, `:245`, `:251`, `:257`, `:263`, `:269`, `:277`, `:283`, `:291`,
+`:306`, `:326`, `:332`, `:349`, `:355`, `:361`, `:367` — and eleven do not: `Cancelled`, `Query`,
+`Arrow`, `Wkb`, `Source`, `GeoMetadata`, `EncodingMismatch`, `CeilingExceeded`,
+`InternalInconsistency`, `FeatureTooLarge`, `ConnectionSetup`.
+
+**The decision stands; the stated ground was wrong.** The prefix is kept on `SourceChanged` not
+because every variant carries it, but because it is **the engine stating its own act**: this engine
+refused this call. That is an engine fact about engine behaviour, which is exactly what the round-7
+rule preserves ("Engine messages state engine facts"). The arms that lack it are the ones that
+report a condition rather than a refusal — a cancellation, a pass-through from DuckDB or Arrow, a
+malformed input surfaced as-is — and the split is `refusal` versus `report`, not an inconsistency.
+
+**(xi) Retiring `SourceDescriptor::footer_bytes_read`'s instrument-accessor declaration (architect
+M3 = reviewer S-1).** Its doc declared "An instrument: its only caller is the test suite". That was
+false of the tree: `post_check_source` (`engine/src/stream.rs:1590`), product code on the producer
+thread, calls it to report the bytes the R-D2 post-check read — which is the figure item (vi) of
+this amendment rests on. The declaration is retired in the same shape as
+`StreamStats::post_check_bytes_read`'s (`engine/src/stream.rs:602-616`): the doc
+(`engine/src/descriptor.rs:185-203`) now names the product caller and says the accessor stands on
+the plain caller rule, with its test callers kept as a reader's aid rather than as an exemption.
+
+**This also corrects Amendment 4 (iii)'s "Declared (four)" list** (`:886-888`), by appending and
+never by editing: of the items that list declares, `SourceDescriptor::footer_bytes_read` is **no
+longer** an instrument accessor (product caller `engine/src/stream.rs:1590`) and
+`StreamStats::post_check_bytes_read` is no longer one either (product callers `kernel/src/lib.rs:452`
+and `:484`, item (vi) above). The declarations that stand, each with its named test grep-verified to
+exist: `GenerationRegistry::attributed_ticket_count` (`kernel/tests/session_generation.rs:77`, `:96`,
+`:121`, `:150`, `:173`), `SourceDescriptor::degradation`, `DatasetIdentity::candidate_columns`
+(`engine/tests/session_identity.rs:168`, `engine/tests/identity.rs:114`) and `LiveTicketSet.size`
+(`frontends/shell/src/streaming/liveTicketSet.test.ts:30`).
+
+**(xii) Correcting Amendment 4 (x)'s location of `degradation()`'s callers (reviewer S-2).**
+`engine/ADMISSION-PREREGISTRATION.md:1004` places `SourceDescriptor::degradation`'s two callers "in
+`engine/tests/session_identity.rs`". After the move recorded in item (iv), they are
+`engine/tests/session_identity.rs:300` (asserts `None` on an undegraded descriptor) and
+`engine/src/descriptor.rs:451` / `:469` (the in-module test, asserting the shipped const's words on
+a degraded one). `degradation()`'s own doc (`engine/src/descriptor.rs:207-224`) already names them
+in that shape; this records the preregistration's copy as corrected.
+
+**(xiii) Class 3 — two correct cites this attempt added, omitted from item (iii)'s enumeration
+(reviewer S-3).** Item (iii) claims to enumerate every remaining "round 5" cite in the tree. Two
+that this attempt itself added were left out, both correct against the authoritative numbering:
+`frontends/shell/src/admission/RefusalBlock.test.tsx:68` (item 1, the status string) and
+`engine/src/descriptor.rs:415` (item 4, the accessor exemption). With these, the enumeration is
+complete.
+
+**(xiv) Class 3 — two cite spans made consistent.** Item (i) cites
+`frontends/shell/src/admission/RefusalBlock.test.tsx:57` for the fixture-to-pin byte-equality
+assertion; the test opens at `:56` and that assertion is at `:60`. And item (iv) cited the `pairs`
+closure as `engine/tests/session_identity.rs:136-142` while `engine/src/identity.rs` cited
+`:127-155` for the same evidence. Both now name the same two spans: the closure is
+`engine/tests/session_identity.rs:136-142`, inside the test
+`the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture`
+(`engine/tests/session_identity.rs:126-159`); `engine/src/identity.rs:63-66` was updated to match.
+
+**(xv) One code-comment correction outside this file, recorded here for completeness.**
+`frontends/shell/src/admission/formatRefusal.test.ts`'s header said "No string here is asserted
+verbatim. All four are placeholders" twelve lines above the verbatim assertion the round-5 ruling
+required. The sentence was true when written and stopped being true when that ruling landed; the
+header now says which one string is asserted verbatim and why, and says that it changed. No
+assertion is altered.

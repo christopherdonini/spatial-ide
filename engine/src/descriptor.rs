@@ -184,14 +184,21 @@ impl SourceDescriptor {
 
     /// Footer bytes read for this descriptor, per open. Reported, never gated (boundary 5).
     ///
-    /// **An instrument: its only caller is the test suite**, and deliberately not `cfg(test)`-gated
-    /// — the property is about the *shipped* build's read accounting, and an accessor compiled only
-    /// into a test build would prove it about a build nobody runs (`dataset.rs`'s own note on
-    /// `INDEX_CONSULTATIONS`, and `index_consultations()` / `row_group_consultations()` /
-    /// `attribute_concatenations()` beside it).
+    /// **No longer an instrument accessor: it is product-called.** It was declared under the
+    /// exemption (the human's ruling of 2026-09-16, round 5 item 4) on the claim that its only
+    /// caller was the test suite. That claim was false of the tree: `post_check_source`
+    /// (`engine/src/stream.rs:1590`), product code on the producer thread, calls it to report the
+    /// bytes the R-D2 post-check read. The declaration is retired exactly as
+    /// `StreamStats::post_check_bytes_read`'s was (`engine/src/stream.rs:602-616`); this accessor
+    /// stands on the plain caller rule, with that product caller.
     ///
-    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
-    /// 2026-09-16, round 5 item 4) — both in `engine/tests/session_identity.rs`:
+    /// Still not `cfg(test)`-gated: the property is about the *shipped* build's read accounting, and
+    /// an accessor compiled only into a test build would prove it about a build nobody runs
+    /// (`dataset.rs`'s own note on `INDEX_CONSULTATIONS`, and `index_consultations()` /
+    /// `row_group_consultations()` / `attribute_concatenations()` beside it).
+    ///
+    /// Its test callers, unchanged and still useful to a reader, both in
+    /// `engine/tests/session_identity.rs`:
     /// `the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read` and
     /// `the_post_check_reports_the_footer_bytes_it_read`.
     pub fn footer_bytes_read(&self) -> u64 {

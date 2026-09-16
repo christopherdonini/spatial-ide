@@ -129,9 +129,14 @@ describe("refusalGuidance", () => {
  * output. A test-local parser used to stand in for it here; it is gone, because a test that
  * re-implements the interface it is meant to be checking proves nothing about the product.
  *
- * **No string here is asserted verbatim.** All four are placeholders for the human's P6 sight; what
- * is asserted is that each state has guidance at all and that it says the thing the operator needs
- * (what ended, whether their file is at fault, what to do) — properties a rewording keeps.
+ * **One string here IS asserted verbatim — `engine.source_changed`, in "says only what is true at
+ * this commit" below, because the human ruled its exact words (round 5 item 1).** The header used
+ * to say "no string here is asserted verbatim. All four are placeholders", twelve lines above that
+ * assertion; it was true when written and stopped being true when the ruling landed. The other
+ * three are placeholders for the P6 sight, and
+ * for those what is asserted is that each state has guidance at all and that it says the thing the
+ * operator needs (what ended, whether their file is at fault, what to do) — properties a rewording
+ * keeps.
  */
 describe("refusalGuidance for Brief A P3's new states", () => {
   // Mutation: restore the pre-round-5 string (the "Everything read so far has been discarded"
