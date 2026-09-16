@@ -449,7 +449,7 @@ nodes:
     dates: {opened: 2026-09-13, done: 2026-09-13}
 
   - id: self-check-false-readings
-    title: "Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff"
+    title: "Pre-gate self-checks -- verify:test-claims reads a preregistration's planned tests as advisory until a node naming it as gate is done (the stop-the-line fix); also queued: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff"
     kind: task
     lane: governance
     phase: prototype
@@ -465,6 +465,24 @@ nodes:
     entries: []
     summary: "STOP-THE-LINE 2026-09-16: main red on verify:test-claims since 2a939d3 -- a preregistration committed before code (the template rule) names tests that do not exist yet; fix forward reviewer-gated: claims in a not-done node gate file are advisory (planned), binding once the node is done. Originally proposed from two observations: (1) scripts/plan/site.mjs METRIC_RE (a digit run, optional space, then the letters s-e-c with no trailing word boundary) reads the ADR-021 number followed by the word 'security' as a duration and refuses generation -- a node summary was reworded to dodge it, and this node's own text had to be too; (2) scripts/plan/verify-mutation.mjs credits a mutation only when the preregistration is changed in the SAME diff or the mutation is recorded in the changed test file -- an append-only preregistration committed before code (the required discipline) is invisible to it, so every piece must repeat its mutations in-source. Reviewer-gated docs/tooling fix; five-line short form"
     dates: {opened: 2026-09-16, done: null}
+
+  - id: test-claims-landedness-bound
+    title: "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [self-check-false-readings]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form"
+    dates: {opened: null, done: null}
 
   - id: site-bugs-first
     title: "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)"

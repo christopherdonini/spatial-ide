@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T11:33:21.086Z",
-  "plan_hash": "b07c9ac4d0bcc229171d1746c102877a29378bc6359af6d34342fbef19d027bf",
+  "generated_at": "2026-09-16T11:49:36.169Z",
+  "plan_hash": "acfe337b09c49b6ef1b04c4964efb7ca975ad691af1857d46174442331902ad5",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -317,7 +317,7 @@
     },
     {
       "id": "self-check-false-readings",
-      "title": "Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff",
+      "title": "Pre-gate self-checks -- verify:test-claims reads a preregistration's planned tests as advisory until a node naming it as gate is done (the stop-the-line fix); also queued: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff",
       "lane": "governance",
       "phase": "prototype",
       "status": "in-progress",
@@ -339,6 +339,25 @@
     }
   ],
   "proposed": [
+    {
+      "id": "test-claims-landedness-bound",
+      "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form"
+    },
     {
       "id": "engine-tests-configured-connections",
       "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",

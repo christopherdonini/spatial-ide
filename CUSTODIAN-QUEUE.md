@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b07c9ac4d0bcc229171d1746c102877a29378bc6359af6d34342fbef19d027bf`) at `2026-09-16T11:33:21.086Z`.
+Generated from `PLAN.yaml` (sha256 `acfe337b09c49b6ef1b04c4964efb7ca975ad691af1857d46174442331902ad5`) at `2026-09-16T11:49:36.169Z`.
 
 ## 1. Next
 
@@ -31,12 +31,13 @@ Generated from `PLAN.yaml` (sha256 `b07c9ac4d0bcc229171d1746c102877a29378bc6359a
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: branch `cut/briefa-p3`
 - **engine-extension-autoload-off** — Engine — DuckDB extension autoload/autoinstall OFF by configuration at every connection open; ADR-021 amendment appended (security posture, full gate) — evidence: PR #81
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: branch `engine/lod-tier-builder`
-- **self-check-false-readings** — Pre-gate self-checks -- two false readings found 2026-09-15/16: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff — evidence: branch `governance/test-claims-planned`
+- **self-check-false-readings** — Pre-gate self-checks -- verify:test-claims reads a preregistration's planned tests as advisory until a node naming it as gate is done (the stop-the-line fix); also queued: site.mjs METRIC_RE misreads an ADR number followed by the word 'security' as a duration; verify-mutation only sees a preregistration changed in the same diff — evidence: branch `governance/test-claims-planned`
 
 ## 6. Proposed / unscheduled
 
 ### Proposed
 
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (phase `prototype`) — never queued until placed
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
