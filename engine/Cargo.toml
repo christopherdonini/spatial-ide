@@ -10,7 +10,14 @@ description = "data-engine module (docs/02, docs/05): DuckDB + Arrow, GeoParquet
 [features]
 # Seeded GeoParquet fixture writer. Test support only — gated so it cannot be reached from the
 # shipped path by accident (docs/02 does not scope a synthetic generator to this module).
-fixture = ["dep:parquet"]
+#
+# **The feature no longer carries `dep:parquet`** (`engine/LOD-PREREGISTRATION.md` §8 item 2,
+# approved by the human's ruling of 2026-09-16 recorded in that file's Amendment 2). The LOD tier
+# writer needs the parquet writer on the *shipped* path, so `parquet` is a non-optional dependency
+# below; what this feature still gates is the **synthetic generator** (`fixture.rs`, `layout.rs`)
+# and nothing else. No new crate enters the tree by this change — only which crates are in the
+# conveyed artifact, which is why it reaches ADR-030's notice set.
+fixture = []
 
 [dependencies]
 arrow = { workspace = true }
@@ -34,7 +41,22 @@ serde_json = "1"
 # Content-addressed identity for derived artifacts (docs/02, docs/05): a spatial index is keyed by
 # the content hash of what it was built from, never by a filename.
 sha2 = "0.10"
-parquet = { version = "58", optional = true, default-features = false, features = ["arrow", "snap"] }
+parquet = { version = "58", default-features = false, features = ["arrow", "snap"] }
+# LOD tier construction, route B (`engine/LOD-PREREGISTRATION.md` §2a, §8 item 1). The three
+# versions the human's ruling names, resolved and recorded by the dependency gate step in
+# `engine/LOD-DEP-RESOLUTION.md` (`Cargo.lock` holds the exact resolution; these requirements are
+# written in the same style as every other line here). They are
+# engine-local crates, so they are declared here rather than in `[workspace.dependencies]`, which
+# carries only what more than one member shares (`arrow`, `bytes`, `tokio`) — the same convention
+# `parquet` above already follows.
+#
+# `geo` supplies `SimplifyVwPreserve` and `Validation`; `wkb` decodes and (new relative to the
+# spike) writes WKB; `geo-traits` converts `wkb`'s reader view into `geo_types`. **None of the
+# three reaches any Arrow crate** — invalidator I1 (a second Arrow major) does not fire, re-checked
+# against this workspace at add time.
+geo = "0.33.1"
+wkb = "0.9.2"
+geo-traits = "0.3.0"
 
 [dev-dependencies]
 # Enables the fixture writer for this crate's own tests without putting it in the shipped surface.
