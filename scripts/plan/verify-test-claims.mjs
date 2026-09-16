@@ -29,6 +29,16 @@
 // `#[test]`-annotated ones) is deliberate: it can only make a claim MORE likely to be found, never
 // wrongly reported missing.
 //
+// PLANNED vs BINDING (2026-09-16, stop-the-line: `main` was red on this check since 2a939d3): a
+// preregistration is required to be committed BEFORE any code (docs/PREREGISTRATION-TEMPLATE.md's
+// header rule) and to name its tests in §4 — so between that commit and the piece landing it
+// necessarily names tests that do not exist yet. A claim is therefore PLANNED, not binding, when the
+// claiming file is the `gate` of a `PLAN.yaml` node whose `status` is not `done`. Planned claims are
+// printed as advisory (`planned — node <id> is <status>`) and do not fail the run; once the node is
+// `done` the same claim is binding again, so a piece that lands without its named test still fails
+// the check (the Appendix A3 intent). `plannedGateFiles(plan)` computes the exempt set; if PLAN.yaml
+// cannot be loaded the load error is printed and NOTHING is treated as planned.
+//
 // WHAT THIS DOES NOT CATCH (disclosed): a claim whose name is real but points at a test that does not
 // actually assert what the prose says (this checks the name exists, not its body); a fabricated claim
 // that reuses an existing test's name; and, by the conservative recognizer, a test claim phrased
@@ -39,6 +49,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { loadPlan } from './plan.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -138,29 +149,76 @@ export function claimFiles(files) {
   return files.filter((f) => /PREREGISTRATION.*\.md$/.test(f) || (f.startsWith('docs/adr/') && f.endsWith('.md')));
 }
 
-/** Returns { findings, scanned, claims }. Each finding: { relPath, line, name }. */
-export function runVerifyTestClaims({ repoRoot } = {}) {
+/**
+ * Map<gatePath, note> for every node whose piece has NOT landed (`status !== 'done'`), where the
+ * note reads `node <id> is <status>` (joined with ", " when several such nodes share a gate file).
+ * `gate: none` and a missing `gate` are not gate files and are ignored.
+ */
+export function plannedGateNotes(plan) {
+  const notes = new Map();
+  for (const node of plan?.nodes ?? []) {
+    if (!node || typeof node !== 'object') continue;
+    if (node.status === 'done') continue;
+    const gate = node.gate;
+    if (!gate || gate === 'none') continue;
+    const note = `node ${node.id} is ${node.status}`;
+    notes.set(gate, notes.has(gate) ? `${notes.get(gate)}, ${note}` : note);
+  }
+  return notes;
+}
+
+/** The Set of gate paths whose claims are PLANNED (their node is not `done`). Pure. */
+export function plannedGateFiles(plan) {
+  return new Set(plannedGateNotes(plan).keys());
+}
+
+/**
+ * Returns { findings, planned, scanned, claims }. Each entry: { relPath, line, name }.
+ * `plannedGates` is a Set of repo-relative paths whose unmatched claims are advisory, not binding
+ * (see PLANNED vs BINDING above); anything not in it is binding.
+ */
+export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
+  const exempt = plannedGates ?? new Set();
   const files = gitList(root);
   const index = buildTestNameIndex(root);
   const targets = claimFiles(files);
   const findings = [];
+  const planned = [];
   let claims = 0;
   for (const rel of targets) {
     const text = fs.readFileSync(path.join(root, rel), 'utf8');
+    const isPlanned = exempt.has(rel);
     for (const c of extractClaimedTests(text)) {
       claims++;
-      if (!testExists(c.name, index)) findings.push({ relPath: rel, line: c.line, name: c.name });
+      if (testExists(c.name, index)) continue;
+      (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name });
     }
   }
-  return { findings, scanned: targets.length, claims };
+  return { findings, planned, scanned: targets.length, claims };
 }
 
 function main() {
   const quiet = process.argv.includes('--quiet');
-  const { findings, scanned, claims } = runVerifyTestClaims({ repoRoot: REPO_ROOT });
+  let plannedGates = new Set();
+  let notes = new Map();
+  try {
+    const plan = loadPlan(path.join(REPO_ROOT, 'PLAN.yaml'));
+    notes = plannedGateNotes(plan);
+    plannedGates = plannedGateFiles(plan);
+  } catch (e) {
+    // Never silently exempt: a PLAN.yaml we could not read means nothing is planned, said out loud.
+    console.error(`verify:test-claims — PLAN.yaml did not load (${e.message}); no claim treated as planned.`);
+  }
+  const { findings, planned, scanned, claims } = runVerifyTestClaims({ repoRoot: REPO_ROOT, plannedGates });
+  if (planned.length > 0 && !quiet) {
+    console.error(`verify:test-claims planned (advisory) — ${planned.length} claimed test(s) in a gate file whose node is not done:`);
+    for (const p of planned) {
+      console.error(`  - ${p.relPath}:${p.line} — claims test \`${p.name}\` — planned — ${notes.get(p.relPath) ?? 'node not done'}`);
+    }
+  }
   if (findings.length === 0) {
-    console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist.`);
+    console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned (${planned.length} planned, advisory).`);
     return;
   }
   if (!quiet) {

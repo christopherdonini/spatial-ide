@@ -20,6 +20,7 @@ import {
   extractClaimedTests,
   testExists,
   runVerifyTestClaims,
+  plannedGateFiles,
 } from './verify-test-claims.mjs';
 
 test('isTestShaped accepts narrative-prefixed >= 3-word snake_case, rejects field/symbol names', () => {
@@ -91,4 +92,62 @@ test('runVerifyTestClaims passes an existing claim and flags a claimed-but-missi
   assert.equal(claims, 2);
   assert.equal(findings.length, 1, JSON.stringify(findings));
   assert.equal(findings[0].name, 'a_claimed_test_that_is_missing');
+});
+
+// The planned-claims rule (2026-09-16 stop-the-line). A preregistration is committed before any code
+// (docs/PREREGISTRATION-TEMPLATE.md's header rule) and names its tests, so before the piece lands its
+// named tests do not exist yet; that is planned, not a false claim.
+
+function unlandedPregTree() {
+  return gitTree({
+    'X-PREREGISTRATION.md': 'The new test, by name: `a_test_that_does_not_exist_yet`.\n',
+  });
+}
+
+// RECORDED MUTATION: remove the planned exemption in runVerifyTestClaims (push every unmatched claim
+// to `findings`, ignoring `plannedGates`) → a_planned_test_in_an_unlanded_preregistration_is_advisory_not_a_failure
+// fails: "AssertionError [ERR_ASSERTION]: no binding finding expected ... 1 !== 0" (the other tests pass).
+test('a_planned_test_in_an_unlanded_preregistration_is_advisory_not_a_failure', () => {
+  const dir = unlandedPregTree();
+  const { findings, planned } = runVerifyTestClaims({
+    repoRoot: dir,
+    plannedGates: new Set(['X-PREREGISTRATION.md']),
+  });
+  assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
+  assert.equal(planned.length, 1, JSON.stringify(planned));
+  assert.equal(planned[0].name, 'a_test_that_does_not_exist_yet');
+  assert.equal(planned[0].relPath, 'X-PREREGISTRATION.md');
+});
+
+// RECORDED MUTATION: make plannedGateFiles exempt every gate file regardless of status (delete the
+// `if (node.status === 'done') continue;` filter in plannedGateNotes) → the done node's gate file
+// lands in plannedGates and a_claim_in_a_done_nodes_gate_file_is_binding fails: "AssertionError
+// [ERR_ASSERTION]: [] / 0 !== 1" (actual: 0, expected: 1, operator: strictEqual).
+test('a_claim_in_a_done_nodes_gate_file_is_binding', () => {
+  const dir = unlandedPregTree();
+  // The node LANDED, so its gate file is not in plannedGates and the claim is binding again.
+  const plannedGates = plannedGateFiles({
+    nodes: [{ id: 'landed', status: 'done', gate: 'X-PREREGISTRATION.md' }],
+  });
+  const { findings, planned } = runVerifyTestClaims({ repoRoot: dir, plannedGates });
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].name, 'a_test_that_does_not_exist_yet');
+  assert.equal(planned.length, 0, JSON.stringify(planned));
+});
+
+// RECORDED MUTATION: drop the status filter in plannedGateNotes (delete `if (node.status === 'done')
+// continue;` — the same mutation as above, run once) → plannedGateFiles_ignores_done_nodes_and_gate_none
+// fails: "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal ... actual:
+// [ 'engine/A-PREREGISTRATION.md', 'engine/B-PREREGISTRATION.md' ], expected:
+// [ 'engine/A-PREREGISTRATION.md' ]" (the done node's gate file wrongly exempted).
+test('plannedGateFiles_ignores_done_nodes_and_gate_none', () => {
+  const plan = {
+    nodes: [
+      { id: 'in-flight', status: 'in-progress', gate: 'engine/A-PREREGISTRATION.md' },
+      { id: 'landed', status: 'done', gate: 'engine/B-PREREGISTRATION.md' },
+      { id: 'ungated', status: 'ready', gate: 'none' },
+      { id: 'no-gate-key', status: 'proposed' },
+    ],
+  };
+  assert.deepEqual([...plannedGateFiles(plan)], ['engine/A-PREREGISTRATION.md']);
 });
