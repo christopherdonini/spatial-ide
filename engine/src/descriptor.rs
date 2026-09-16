@@ -63,11 +63,12 @@ pub struct SourceDescriptor {
     /// Footer bytes actually read for this descriptor. **Reported-only, never gated** (boundary 5;
     /// §6's instrument table): nothing compares it to a budget.
     footer_bytes_read: u64,
-    /// Every component this descriptor could **not** establish, in the words shown to the operator.
+    /// Every component this descriptor could **not** establish, in words written to be read by an
+    /// operator — **though in P3a none reaches one**; see [`Self::degradation`].
     ///
     /// A list rather than one string because two can hold at once — a file with an over-ceiling
-    /// footer on a filesystem reporting no modification time degrades twice, and a reader owed
-    /// "the degradation is shown" (boundary 5) is owed both.
+    /// footer on a filesystem reporting no modification time degrades twice, and a reader
+    /// eventually owed "the degradation is shown" (boundary 5) is owed both.
     degradations: Vec<String>,
 }
 
@@ -163,19 +164,27 @@ impl SourceDescriptor {
         })
     }
 
-    pub fn byte_size(&self) -> u64 {
-        self.byte_size
-    }
-    pub fn footer_length(&self) -> u64 {
-        self.footer_length
-    }
     /// Footer bytes read for this descriptor, per open. Reported, never gated (boundary 5).
+    ///
+    /// **An instrument: its only caller is the test suite**, and deliberately not `cfg(test)`-gated
+    /// — the property is about the *shipped* build's read accounting, and an accessor compiled only
+    /// into a test build would prove it about a build nobody runs (`dataset.rs`'s own note on
+    /// `INDEX_CONSULTATIONS`, and `index_consultations()` / `row_group_consultations()` /
+    /// `attribute_concatenations()` beside it).
     pub fn footer_bytes_read(&self) -> u64 {
         self.footer_bytes_read
     }
-    /// What this descriptor could not do, in the words shown to the operator. `None` when all four
-    /// components were established; several degradations are joined, because a reader owed "the
-    /// degradation is shown" is owed all of them.
+    /// What this descriptor could **not** establish. `None` when all four components were.
+    ///
+    /// **Nothing shows this text to an operator in P3a, and it must not be described as though
+    /// something did.** Boundary 5 asks for the degradation to be *shown*; carrying it to an eye
+    /// needs a surface, and the one surface that would fit — a `describe` field — is outside
+    /// boundary 9's closed list, so P3a does not invent one. What P3a has is the text, recorded and
+    /// reachable; **where it is owed is recorded in `ADMISSION-PREREGISTRATION.md`'s Amendment 4**.
+    ///
+    /// **An instrument until then: its only caller is the test suite**, not `cfg(test)`-gated for
+    /// the reason `footer_bytes_read` above is not — the words have to be the shipped build's.
+    /// Several degradations are joined, because a reader eventually owed them is owed all of them.
     pub fn degradation(&self) -> Option<String> {
         (!self.degradations.is_empty()).then(|| self.degradations.join("; "))
     }

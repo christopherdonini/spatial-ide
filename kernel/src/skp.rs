@@ -709,11 +709,14 @@ impl SkpHost {
 
     /// End a dataset's `dataset_session_generation` and cancel every ticket that belonged to it.
     ///
-    /// **Boundary 4's invalidation path, kernel half.** New tickets are refused (the live-generation
-    /// check in `viewport_query`), in-flight producer streams are cancelled through the **existing**
-    /// cancel (`StreamRegistry::cancel`, the same one a data-plane CANCEL frame reaches — ADR-019's
-    /// Consequences), and the client is left to clear residency and refuse picks off the typed
-    /// status it receives.
+    /// **Boundary 4's invalidation path, kernel half — and only that half.** New tickets are
+    /// refused (the live-generation check in `viewport_query`) and in-flight producer streams are
+    /// cancelled through the **existing** cancel (`StreamRegistry::cancel`, the same one a
+    /// data-plane CANCEL frame reaches — ADR-019's Consequences).
+    ///
+    /// **Clearing residency and refusing picks is P3b's** (`state/NEXT-CUT.md`'s split row: "P3a
+    /// claims nothing about boundary 4's owner-side consequences"). No client does either today,
+    /// and this doc does not say one does.
     ///
     /// Idempotent, so the pre-check path and a post-check path observing the same change do not
     /// double-cancel. The operation itself lives on [`SessionInvalidator`], which the producer side
@@ -982,8 +985,9 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
 /// architect-ruled). `BatchSource::next_into` is typed `Result<_, String>`, so the typed
 /// `EngineError` is stringified at `crate::EngineSource::next_into` and everything downstream —
 /// the data-plane terminal frame, the shell's `Terminal.detail` — sees prose only. A client that
-/// must **clear residency and refuse picks** on `engine.source_changed` cannot decide that from
-/// prose without matching on wording, and the wording is the human's at P6. The code table is
+/// must **clear residency and refuse picks** on `engine.source_changed` **(P3b — no client does
+/// either in P3a)** could not decide that from prose without matching on wording, and the wording
+/// is the human's at P6. The code table is
 /// [`error_of`]'s own, so there is exactly one place a code is minted and this cannot drift from
 /// what the control plane reports for the same error.
 ///

@@ -222,6 +222,14 @@ impl DatasetIdentity {
     }
 
     /// Columns an operator could declare a mapping to, on the session tier. Empty elsewhere.
+    ///
+    /// **An instrument: its only caller is the test suite**, and not `cfg(test)`-gated, for the
+    /// reason [`crate::descriptor::SourceDescriptor::footer_bytes_read`] is not — R-I3 requires the
+    /// ADR-016 candidate list to still be *recorded* on a session-tier open, and that has to be
+    /// true of the shipped build rather than of a test build. **No surface carries it to an
+    /// operator in P3a**: the refusal that used to carry it no longer fires on this path, and
+    /// `describe` may not gain a field for it (boundary 9's list is closed). Where it is owed is
+    /// recorded in `engine/ADMISSION-PREREGISTRATION.md`'s Amendment 4.
     pub fn candidate_columns(&self) -> &[String] {
         &self.candidate_columns
     }

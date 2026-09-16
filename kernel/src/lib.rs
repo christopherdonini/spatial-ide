@@ -472,8 +472,8 @@ impl BatchSource for EngineSource {
             // **The detail carries the typed code, `"<code>: <display>"`** — P3 gate attempt 1,
             // architect-ruled. `BatchSource` is typed `Result<_, String>`, so this is where the
             // typed `EngineError` stops being typed; without the prefix a client that must clear
-            // residency and refuse picks on `engine.source_changed` would have to match on prose
-            // whose wording is the human's at P6. The code comes from `skp::error_of`'s own table,
+            // residency and refuse picks on `engine.source_changed` (**P3b** — no client does
+            // either in P3a) would have to match on prose whose wording is the human's at P6. The code comes from `skp::error_of`'s own table,
             // so there is one place a code is minted. The data plane is untouched: the prefix rides
             // the `String` the terminal frame already carries (A3).
             Some(Err(e)) => {

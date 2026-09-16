@@ -1361,52 +1361,6 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
     None
 }
 
-/// The narrow in-code form of the session tier's own assumption: that DuckDB's `file_row_number`
-/// names a **physical** row position rather than a scan-ordered one.
-///
-/// **Proposed placement, flagged for the architect and not wired into `open` here.** It is exposed
-/// as a callable check rather than run unconditionally at admission because running it at open
-/// would read rows on a path boundary 6 declares reads nothing — which would break the very claim
-/// the session tier makes. The corpus-wide verification is **P4**'s (§3/§5); this function is what
-/// P4's run and the tier's own test module call, and nothing in this cut claims its result in
-/// advance.
-///
-/// What it asks: over `limit` rows, does the ordinal stay attached to the same row when the scan is
-/// reordered and filtered? A scan-ordered ordinal renumbers under `ORDER BY`; a physical one does
-/// not. It is evidence, not a proof of the general property — which is why the claim it supports
-/// stays "checked against the corpus at P4", never "guaranteed".
-pub fn ordinal_is_physical_not_scan_ordered(
-    conn: &Connection,
-    path: &str,
-    key_column: &str,
-    limit: usize,
-) -> Result<bool> {
-    let frn = crate::identity::FILE_ROW_NUMBER_COLUMN;
-    let p = path.replace('\'', "''");
-    let k = key_column.replace('"', "\"\"");
-    let natural = format!(
-        "SELECT {frn}, \"{k}\" FROM read_parquet('{p}', file_row_number=true) LIMIT {limit}"
-    );
-    let reordered = format!(
-        "SELECT {frn}, \"{k}\" FROM read_parquet('{p}', file_row_number=true) \
-         ORDER BY \"{k}\" DESC"
-    );
-    let pairs = |sql: &str| -> Result<Vec<(i64, i64)>> {
-        let mut stmt = conn
-            .prepare(sql)
-            .map_err(|e| EngineError::Query(format!("prepare ordinal check: {e}")))?;
-        let rows = stmt
-            .query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?)))
-            .map_err(|e| EngineError::Query(format!("ordinal check: {e}")))?;
-        rows.collect::<std::result::Result<Vec<_>, _>>()
-            .map_err(|e| EngineError::Query(format!("ordinal check row: {e}")))
-    };
-    let baseline: std::collections::HashMap<i64, i64> = pairs(&natural)?.into_iter().collect();
-    Ok(pairs(&reordered)?
-        .into_iter()
-        .all(|(ordinal, key)| baseline.get(&ordinal).is_none_or(|k| *k == key)))
-}
-
 /// Admit the dataset's feature identity — **ADR-016 §3–§6**.
 ///
 /// Refusal is the default: absent a declaration, the engine looks for its own `id` column and

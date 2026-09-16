@@ -1012,10 +1012,18 @@ export class TileViewportStreamManager {
         }
         this.nextBatchSeqByStream.delete(streamHandleAtStart);
         this.liveTickets.retire(streamHandleAtStart);
-        // **The client half of the invalidation path, with its consequences** (boundary 4;
-        // `state/NEXT-CUT.md:103`: "residency cleared, picks refused, typed status"). One tile's
-        // terminal naming `engine.source_changed` ends the whole session, because the generation is
-        // per dataset-session and not per tile.
+        // **The manager's own half of the invalidation path.** One tile's terminal naming
+        // `engine.source_changed` ends the whole session, because the generation is per
+        // dataset-session and not per tile: every ticket leaves the live set, this manager's queued
+        // and in-flight work is cancelled, and it latches closed.
+        //
+        // **Residency is NOT cleared and picks are NOT refused by this, and P3a claims neither.**
+        // Both live with the owner (`candidateArmSession.ts` / `App.tsx`), which this piece does not
+        // wire -- that is P3b's (`state/NEXT-CUT.md`'s split row: "P3a claims nothing about boundary
+        // 4's owner-side consequences"; P3b carries "residency cleared and picks refused in both
+        // owners"). Nothing here, and no test narration, may say the operator's view is cleared:
+        // what is true today is that this manager stops filling it and that stale batches are
+        // dropped.
         if (isSourceChangedTerminal(terminal)) {
           this.endSession(terminal.detail);
         }

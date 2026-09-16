@@ -36,6 +36,7 @@ import { SkpCallError } from "../skp/client";
 import type { StreamSink } from "./transport";
 import type { TileResidencyAccessor, TileViewportStreamManagerOptions } from "./tileViewportStreamManager";
 import { TileViewportStreamManager } from "./tileViewportStreamManager";
+import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 
 const ANCHOR = { xmin: 0, ymin: 0, xmax: 100, ymax: 100 };
 
@@ -1314,17 +1315,10 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
     logSessionEventMock.mockReset();
   });
 
+  /** The kernel's real terminal shape for this refusal -- the bytes
+   * `kernel/tests/typed_terminal_codes.rs` pins by exact equality, not a transcription. */
   function sourceChangedTerminal(): { kind: "ProducerFailed"; detail: string } {
-    return {
-      kind: "ProducerFailed",
-      detail:
-        "engine.source_changed: refused: the source file changed while it was open " +
-        "({size, mtime, footer-length, footer-hash}). Everything read for this session is " +
-        "discarded and the identities it handed out no longer refer to anything; reopen the file " +
-        "to continue. This check does not establish snapshot consistency, cannot detect every " +
-        "in-place modification, and may detect a change during a query only after that query has " +
-        "finished reading",
-    };
+    return { kind: "ProducerFailed", detail: REAL_SOURCE_CHANGED_TERMINAL_DETAIL };
   }
 
   /** Mutation recorded in-source: replacing `this.endSession(...)` in `onTerminal` with the bare

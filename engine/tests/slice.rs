@@ -653,6 +653,11 @@ fn cancelling_mid_stream_stops_production_promptly() {
         }
     }
     let elapsed = t0.elapsed();
+    // **A liveness bound, not the docs/08 budget** — the same disclosure its sibling above carries,
+    // and it matters more here: this measures the consumer's receipt of `Err(Cancelled)`, which the
+    // producer sends *after* its R-D2 post-check (`stream.rs`'s own note at the `PRODUCER_FINISHED`
+    // stamp). docs/08 budgets `cancel_requested → cancel_observed`, which is stamped earlier and is
+    // not what this line reads. No figure here is a measurement of anything.
     assert!(elapsed < Duration::from_millis(100), "stream drained in {elapsed:?}");
 
     let stats = s.stats();

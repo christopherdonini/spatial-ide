@@ -832,3 +832,113 @@ imagined interface is a gate failure by name. P3a's two seams each have one: the
 (`kernel/tests/typed_terminal_codes.rs` drives a real ticket through the real factory and reads the
 terminal off the real `dyn BatchSource`) and the publish refusal (the shell's parser test, whose
 input is the kernel's captured output).
+
+### Amendment 4 — P3a's attempt-2 corrections (2026-09-16, appended)
+
+**Written after P3a's attempt-1 gate outcomes were seen (reviewer FAIL, architect FAIL — narrow;
+every removal confirmed absent, the three seams verified from the real shape, this file's Amendment
+3 confirmed append-only with the ruling verbatim).** §12e's rule, honoured in this line. Amendments
+1–3 are not edited; items (i) and (iv) below correct Amendment 3 by appending.
+
+**(i) Correcting Amendment 3 item 3's "Every comment and test narration that said or implied
+otherwise has been deleted or rewritten."** That sentence was untrue of the tree when it was
+written. Two survivors carried the deferred consequence as though P3a delivered it:
+
+- `frontends/shell/src/streaming/viewportStreamManager.test.ts` — a test titled *"clears residency,
+  refuses further requests, and reports the typed status"*, whose body asserted none of the
+  residency clearing. Renamed to what it asserts: *"drops its tickets, refuses further requests, and
+  returns session-ended"*.
+- `frontends/shell/src/streaming/tileViewportStreamManager.ts` — the `endSession` call-site comment
+  claimed "the client half of the invalidation path, **with its consequences**", quoting
+  "residency cleared, picks refused, typed status". Rewritten in the shape its untiled sibling
+  already carried.
+
+Both are now rewritten. Three kernel-side sentences in the same family are marked **(P3b)** rather
+than left in the present tense: `end_generation`'s doc, `terminal_detail_of`'s doc, and
+`EngineSource::next_into`'s comment. **The lesson recorded, since this is the second round in which
+a narration outlived the behaviour it described:** a claim about a consequence belongs with the code
+that performs it, and when the consequence is deferred the claim is deleted rather than reworded
+into the conditional.
+
+**(ii) Boundary 5's "the degradation is shown" is NOT met by P3a.** The descriptor records the text
+— an over-ceiling footer, or a filesystem reporting no modification time — and
+`SourceDescriptor::degradation()` returns it, but **no surface carries it to an operator's eye**.
+The one surface that would fit is a `describe` field, and boundary 9's list is closed
+(`crs.provenance`, `axis.provenance`, `identity.class` + its statement, the sanity level), so P3a
+does not invent one. The code comments that said the text was "in the words shown to the operator"
+are corrected to say that nothing shows it.
+
+**Where it is owed: P6.** §12d already routes the cut's user-visible strings to the human's sight at
+P6 ("the four new user-visible states whose strings are sighted at P6"), and this is a fifth string
+of the same kind — operator-facing words with no settled wording. It is **not** P3b's: P3b's row in
+`state/NEXT-CUT.md` is the owner-side invalidation, the dead-ticket refusal and the ADR-016
+acceptance, and a degradation notice is none of those. The same disposition covers
+`DatasetIdentity::candidate_columns()`, which R-I3 requires to be *recorded* on a session-tier open
+and which likewise reaches no operator in P3a: the refusal that used to carry the list no longer
+fires on that path.
+
+**(iii) The instrument-accessor category, and the exemption's wording.** Both gates passed
+`GenerationRegistry::attributed_ticket_count` on the basis that its doc declares its only caller is
+the test suite and why the property must be proven about the shipped build — the precedent being
+`spatial_engine`'s `index_consultations`, `row_group_consultations` and `attribute_concatenations`.
+P3a applies that consistently:
+
+- **Declared** (four): `GenerationRegistry::attributed_ticket_count`,
+  `SourceDescriptor::footer_bytes_read`, `SourceDescriptor::degradation`,
+  `DatasetIdentity::candidate_columns`, and on the TypeScript side `LiveTicketSet.size`.
+- **Deleted** (three): `SourceDescriptor::byte_size()` and `SourceDescriptor::footer_length()` —
+  nothing needed them, including the test, which reads `footer_bytes_read()` instead; and
+  `dataset::ordinal_is_physical_not_scan_ordered`, which had no product caller **and which the
+  exemption does not cover, because it acts** — it runs two queries rather than reading state the
+  build already maintains. Its evidence is not lost: the check is now a local helper inside the one
+  test that ever called it, so the physical-vs-scan property is still asserted on a written fixture.
+  The corpus-wide verification remains **P4**'s, and P4 may reintroduce a product-side form when it
+  has a product caller to justify one.
+
+  Recorded because it is the exemption's first real boundary case: "read-only accessor over state
+  the shipped build already maintains" excluded it, and the drafted sentence's closing clause — "It
+  exempts nothing that acts" — is what decided it.
+
+**The exemption's wording is pending the human's ruling.** The architect's drafted sentence, recorded
+here unaltered so the ruling has something exact to accept or amend: *"The caller rule exempts
+instrument accessors: a `pub` read-only accessor over state the shipped build already maintains,
+whose doc declares that its only caller is the test suite and why the property must be proven about
+the shipped build. It exempts nothing that acts."*
+
+**(iv) Correcting Amendment 3 item 9's cancel-window term.** That item said the post-check now sits
+inside "`docs/08`'s acknowledgement budget". It does not. `engine/src/trace.rs:363`'s own table
+assigns the instants: *"`cancel_observed` (the worker stopped advancing — **what `docs/08`
+budgets**) and `cancel_acknowledged` (the operation quiescent — what `kernel/RESULTS.md`'s fifth
+section actually measured)"*, with `cancel_observed` = `PRODUCER_CANCELLED` and `cancel_acknowledged`
+= `PRODUCER_FINISHED`. `docs/08:8` budgets `cancel_requested → cancel_observed` and reports
+"`cancel_quiescent` … beside it with no budget". `PRODUCER_CANCELLED` is stamped inside `produce()`,
+**before** the post-check. So the post-check lands in the **unbudgeted quiescent term**, not in the
+budgeted one, and the in-source comment now says so. The observation recorded in Amendment 3 item 9
+stands as an observation and still claims no figure.
+
+**(v) A pointer for readers of §12b's G-A2** (`:221`: "residency cleared; picks refused"). That
+line is a verbatim quotation inside an append-only document and cannot be edited. Read it with
+Amendment 3 item 3: **those two consequences are P3b's**, and G-A2 is not satisfiable by P3a alone.
+P3a satisfies G-A2's earlier clauses — the refusal by name at the pre-check and at the post-check
+paths separately — and nothing more.
+
+**(vi) Recorded for P3b's scope (the attempt-1 reviewer's suggestion 7).** On the latched
+`session-ended` path the baseline owner renders neutral advice — `frontends/shell/src/App.tsx`'s
+"not applied — try again" copy — which cannot succeed until the dataset is reopened, because the
+manager is latched. Today the typed guidance reaches an operator only by the **pre-check** route (a
+`viewport_query` refused synchronously with `engine.source_changed`). P3b owns making the terminal
+route say the same thing.
+
+**(vii) The terminal prefix reaching an operator — fixed in P3a, recorded here.** P3a prefixes every
+engine terminal's `detail` with its typed code, and the baseline owner interpolated that detail
+whole onto the streaming banner (`App.tsx`'s `onFailureTerminal` →
+`setCanvasRefusal("stream <kind>: <detail>")`), so an operator would have read
+`engine.source_changed: refused: …` as raw text on every failing stream. That is the same
+operator-visible regression class the publish consumer had, on the other surface, and the ruling's
+"no operator-visible regression on main" covers both. `frontends/shell/src/streaming/
+formatTerminalRefusal.ts` now splits the code from the text, in the shape of the publish parser, and
+the banner shows the text only. **No owner-side behaviour is added**: nothing clears residency,
+latches a pick, or renders a session status — those remain P3b's. The test input is the kernel's own
+bytes, captured from a real run and pinned by exact equality in `kernel/tests/typed_terminal_codes.rs`;
+the streaming-manager tests now read the same pinned constant instead of a hand-transcribed string,
+which also closes the attempt-1 reviewer's suggestion 5.

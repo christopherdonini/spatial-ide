@@ -16,6 +16,7 @@ vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 import { debounce } from "./debounce";
 import type { StreamSink } from "./transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS, ViewportStreamManager } from "./viewportStreamManager";
+import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 
 function mockStream(handle: string) {
   viewportQueryMock.mockResolvedValueOnce({ stream: handle, expires_in_ms: 30_000 });
@@ -606,9 +607,9 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
  *
  * Attempt 1's client test invented a terminal shape (`code: prose`) that the kernel never produces,
  * so it passed while the real path could not fire at all. Every terminal here is built by
- * `sourceChangedTerminal`, which spells the shape the kernel actually sends:
- * `"<code>: <display>"` (`kernel/src/skp.rs::terminal_detail_of`, pinned on the Rust side by
- * `kernel/tests/typed_terminal_codes.rs`).
+ * `sourceChangedTerminal`, whose bytes come from `testUtils/terminalShapes.ts` -- captured from a real
+ * `cargo test` run and pinned by exact equality on the producing side
+ * (`kernel/tests/typed_terminal_codes.rs`), never transcribed by hand.
  */
 describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () => {
   beforeEach(() => {
@@ -623,23 +624,16 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   });
 
   /** The kernel's real terminal shape for this refusal. */
+  /** The kernel's real terminal shape for this refusal -- the bytes
+   * `kernel/tests/typed_terminal_codes.rs` pins by exact equality, not a transcription. */
   function sourceChangedTerminal(): { kind: "ProducerFailed"; detail: string } {
-    return {
-      kind: "ProducerFailed",
-      detail:
-        "engine.source_changed: refused: the source file changed while it was open " +
-        "({size, mtime, footer-length, footer-hash}). Everything read for this session is " +
-        "discarded and the identities it handed out no longer refer to anything; reopen the file " +
-        "to continue. This check does not establish snapshot consistency, cannot detect every " +
-        "in-place modification, and may detect a change during a query only after that query has " +
-        "finished reading",
-    };
+    return { kind: "ProducerFailed", detail: REAL_SOURCE_CHANGED_TERMINAL_DETAIL };
   }
 
   /** Mutation recorded in-source: dropping the `terminal_detail_of` prefix kernel-side (so the
    * detail is `Display` text alone) makes `isSourceChangedTerminal` false and fails every
    * assertion below -- which is exactly the defect attempt 1 shipped. */
-  it("clears residency, refuses further requests, and reports the typed status", async () => {
+  it("drops its tickets, refuses further requests, and returns session-ended", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
     const onSuperseded = vi.fn();

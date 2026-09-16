@@ -24,8 +24,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use spatial_data_plane::transport::{BatchSource, OpenRequest};
-use spatial_data_plane::transport::SourceFactory;
+use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
 use spatial_engine::EngineError;
 use spatial_kernel::publish::error::PublishError;
@@ -150,6 +149,20 @@ fn a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code() {
     // wording itself is the human's at P6, so nothing here asserts it verbatim; what is asserted is
     // that `Display`'s output is carried whole.
     assert!(detail.ends_with(&e.to_string()), "the refusal's own text is carried verbatim");
+
+    // **The exact bytes the shell's own tests are written against.** `formatTerminalRefusal.test.ts`
+    // and both streaming-manager test files use this literal; pinning it here means a change to the
+    // code or to the `Display` text fails in the PRODUCER's suite first, instead of leaving the
+    // consumers asserting against a shape that is no longer sent. Same discipline as the publish
+    // seam below, and it retires the hand-transcribed terminal string those tests used to carry.
+    assert_eq!(
+        detail,
+        "engine.source_changed: refused: the source file changed while it was open ({size, mtime, \
+footer-length, footer-hash}). Everything read for this session is discarded and the identities it \
+handed out no longer refer to anything; reopen the file to continue. This check does not establish \
+snapshot consistency, cannot detect every in-place modification, and may detect a change during a \
+query only after that query has finished reading"
+    );
 
     // One source of codes: this is `error_of`'s table, not a second spelling beside it.
     assert_eq!(error_of(&e).code, SOURCE_CHANGED_CODE);

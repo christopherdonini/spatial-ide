@@ -1179,14 +1179,19 @@ impl Dataset {
                 // batch, i.e. covering none of the teardown, so any acknowledgement figure derived
                 // from it would have systematically excluded the term the taxonomy says dominates.
                 //
-                // **The post-check now sits inside this window, and that is recorded here rather
-                // than left for a measurement to discover.** `PRODUCER_FINISHED` is the producer's
-                // cancel-acknowledgement stamp, and the R-D2 post-check above runs before it — so
-                // on the cancel path the acknowledgement now also covers a bounded piece of
-                // filesystem work (a metadata read plus a footer read bounded by
-                // `FOOTER_DESCRIPTOR_MAX_BYTES`). No figure is claimed for it and none is implied:
-                // what it costs against `docs/08`'s acknowledgement budget is **P5's** to measure,
-                // and this comment exists so that measurement knows the term is there.
+                // **The post-check sits inside this window, and it is the UNBUDGETED one.**
+                // `PRODUCER_FINISHED` is the producer's `cancel_acknowledged` — the
+                // operation-quiescent instant (`trace.rs:363`'s own table: "`cancel_acknowledged`
+                // (the operation quiescent)… | [`PRODUCER_FINISHED`]"). `docs/08:8` budgets
+                // `cancel_requested → cancel_observed` and reports the quiescent term "beside it
+                // with no budget", and `cancel_observed` on this side is `PRODUCER_CANCELLED`,
+                // stamped inside `produce()` — **before** the R-D2 post-check above. So the
+                // post-check does not enter the budgeted term at all; it lands in the unbudgeted
+                // quiescent one, as a bounded metadata read plus a footer read bounded by
+                // `FOOTER_DESCRIPTOR_MAX_BYTES`.
+                //
+                // No figure is claimed for it and none is implied. It is recorded so that a
+                // measurement of the quiescent term knows the term is there — **P5's** to make.
                 crate::trace::mark(crate::trace::PRODUCER_FINISHED, 0, 0);
             })
             .map_err(|e| {

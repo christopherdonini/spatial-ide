@@ -123,9 +123,32 @@ fn the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture(
     let path = write("frn-physical", &keyless());
     let p = path.to_str().unwrap().replace('\\', "/");
     let conn = duckdb::Connection::open_in_memory().expect("in-memory connection");
+
+    // **The check lives here, not in the shipped engine.** It was a `pub fn` in `dataset.rs` with
+    // no product caller, and the instrument-accessor exemption does not cover it: it is not a
+    // read-only accessor over state the build already maintains, it *runs two queries*. Under the
+    // caller rule it does not land in P3a. The corpus-wide verification is **P4**'s, and P4 may
+    // reintroduce it product-side when it has a product caller to justify it.
+    let pairs = |sql: &str| -> Vec<(i64, i64)> {
+        let mut stmt = conn.prepare(sql).expect("prepare ordinal check");
+        stmt.query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?)))
+            .expect("ordinal check")
+            .map(|r| r.expect("ordinal check row"))
+            .collect()
+    };
+    let natural: std::collections::HashMap<i64, i64> = pairs(&format!(
+        "SELECT file_row_number, \"parcel_key\" FROM read_parquet('{p}', file_row_number=true)"
+    ))
+    .into_iter()
+    .collect();
+    let reordered = pairs(&format!(
+        "SELECT file_row_number, \"parcel_key\" FROM read_parquet('{p}', file_row_number=true) \
+         ORDER BY \"parcel_key\" DESC"
+    ));
+
+    assert!(!natural.is_empty() && !reordered.is_empty(), "both scans returned rows");
     assert!(
-        spatial_engine::dataset::ordinal_is_physical_not_scan_ordered(&conn, &p, "parcel_key", 500)
-            .expect("the check runs"),
+        reordered.iter().all(|(ordinal, key)| natural.get(ordinal) == Some(key)),
         "on this file the ordinal did not renumber under ORDER BY — consistent with a physical \
          position. The general property is checked against the corpus at P4 and is not claimed here"
     );
@@ -262,13 +285,12 @@ fn the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read() {
     let path = write("r-d1-descriptor", &keyless());
     let ds = Dataset::open(&path).expect("opens");
     let d = ds.descriptor();
-    assert!(d.byte_size() > 0);
-    assert!(d.footer_length() > 0);
     // Reported-only, never gated (boundary 5): this is an accounted fact, and nothing compares it
-    // to a budget anywhere in the tree.
-    assert_eq!(d.footer_bytes_read(), d.footer_length());
+    // to a budget anywhere in the tree. A non-zero count is what "the footer was read" looks like
+    // from outside, and it is under the declared ceiling, so this descriptor is not degraded.
+    assert!(d.footer_bytes_read() > 0);
     assert!(
-        d.footer_length() <= FOOTER_DESCRIPTOR_MAX_BYTES,
+        d.footer_bytes_read() <= FOOTER_DESCRIPTOR_MAX_BYTES,
         "this fixture's footer is far under the declared ceiling, so it is not degraded"
     );
     assert_eq!(d.degradation(), None);

@@ -27,7 +27,8 @@ import type { Terminal } from "./transport";
 
 /**
  * The typed refusal code that ends a dataset-session generation
- * (`kernel/src/skp.rs::SOURCE_CHANGED_CODE`, minted by `error_of` for `EngineError::SourceChanged`).
+ * (minted by `kernel/src/skp.rs`'s `error_of` table for `EngineError::SourceChanged`, and put on
+ * the terminal by `terminal_detail_of` in that same file).
  *
  * **Matched on the code, not on prose.** `Terminal.detail` is `"<code>: <display>"` --
  * `kernel/src/skp.rs::terminal_detail_of`, applied at `kernel/src/lib.rs`'s
@@ -87,7 +88,15 @@ export class LiveTicketSet {
     this.live.clear();
   }
 
-  /** How many tickets are live. For assertions and diagnostics; never a rendering input. */
+  /**
+   * How many tickets are live.
+   *
+   * **An instrument: its only caller is the test suite.** It is not stripped from the shipped build
+   * for the reason the engine's own counters are not (`index_consultations` and its siblings): what
+   * `liveTicketSet.test.ts` asserts -- that invalidation really empties the set -- is a property of
+   * the code that runs, and a member present only under test would prove it about a build nobody
+   * ships. It is never a rendering input and nothing branches on it.
+   */
   get size(): number {
     return this.live.size;
   }

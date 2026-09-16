@@ -60,6 +60,7 @@ import { DEFAULT_STYLE_STATE } from "./style/document";
 import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
+import { formatTerminalRefusal } from "./streaming/formatTerminalRefusal";
 import type { Terminal } from "./streaming/transport";
 import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
@@ -1101,7 +1102,10 @@ export default function App() {
       ...makeManagerCallbacks(canvas, {
         onFailureTerminal: (streamHandle, terminal) => {
           logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
-          setCanvasRefusal(`stream ${terminal.kind}: ${terminal.detail}`);
+          // P3a: the detail now opens with its typed code (`kernel/src/skp.rs::terminal_detail_of`),
+          // which is for the client to match on and not for the operator to read. `message` is the
+          // refusal's own text with that prefix removed; nothing else about this banner changes.
+          setCanvasRefusal(`stream ${terminal.kind}: ${formatTerminalRefusal(terminal.detail).message}`);
           applyScanEvent({ kind: "failed" });
         },
         onDeliveryCompleted: () => {
